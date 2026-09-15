@@ -1,1 +1,1 @@
-{"kind":"roster","text":"builder joins as agent","body":{"actor":"29434efa65c235fd9a90e9964d53b0c0b4919e278b69c69c556f323a62fee406","kind":"agent","name":"builder","role":"participant"}}
+{"target":"git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:849382b450b737927d601270bb9c1c49dac84b59"}
