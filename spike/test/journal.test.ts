@@ -328,7 +328,7 @@ test('one live Journal owns each backend: revoked authority cannot be admitted t
 test('O1-F1 closed memory Context cannot issue or accept from stale authority after a new facade revokes it', t => {
   const backend = new MemoryBackend();
   const a = createJournal(backend);
-  const originalState = structuredClone(a.context.state);
+  const originalState = { participants: [...a.context.state.participants], grantHistory: structuredClone(a.context.state.grantHistory) };
   a.close();
   const b = Journal.open({ backend, writerKey: keys.writer, packages });
   const revoke = act(b, 'alice', K.revoke, { principal: people.alice, capabilities: [CAP.invite] });
@@ -353,7 +353,7 @@ test('O1-F1 closed memory Context cannot issue or accept from stale authority af
   assert.match(String(error), /closed|inactive/);
   assert.deepEqual(cold.context.entries, before);
   assert.equal(backend.retry(envelope.body.action_id!), undefined);
-  assert.deepEqual(a.context.state, originalState); // historical fold inspection is still possible
+  assert.deepEqual({ participants: a.context.state.participants, grantHistory: a.context.state.grantHistory }, originalState); // historical fold inspection is still possible
   assert.deepEqual(cold.context.state.participants, [people.alice]);
   assert.deepEqual(checkContext(cold.context), []);
   cold.close();

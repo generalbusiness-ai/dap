@@ -167,15 +167,16 @@ one-facade correction did not disable the public Context on MemoryBackend.
 The regression-only source `1351ad09df256e6714a1ef2b8ea8598dcbc24113`
 preserves the reviewed runtime from `c9fe7d5` and adds three focused cases.
 Command: `node --test --test-name-pattern=O1-F1 test/journal.test.ts`.
-All three failed as expected; exact output is retained in
+All three tests failed; exact output is retained in
 [run-4-f1-before.txt](ordering-o1-runs/run-4-f1-before.txt).
 
-The memory reproduction recorded Alice's invitation and Bob's acceptance as
-effective through A's closed Context after B revoked Alice's invite authority.
-A's stale fold included Bob, while B and cold replay did not. The two raw
-restoration tests also failed: Context.restore accepted a backend owned by a
-live Journal on both memory and SQLite. These are actual reproduced failures,
-not descriptions of hypothetical bypasses.
+The memory test stopped in setup: FoundationState includes package functions,
+so structuredClone of the complete state threw DataCloneError. This run did
+not reproduce the stale-invitation sequence. The two raw restoration tests
+did reproduce their bypass: Context.restore accepted a backend owned by a live
+Journal on both memory and SQLite. The earlier progress note claiming the
+memory sequence had run was incorrect and has been corrected. A later
+isolated pre-repair run below uses the corrected test harness.
 
 The repair gives Journal and its Context one private ownership lease. Closing
 the Journal permanently invalidates writes through that Context before
@@ -187,3 +188,11 @@ The shared append/admission/transaction algorithm is unchanged. Direct backend
 mutation and malicious in-process code remain outside this cooperative API
 boundary; Context.restore on an unowned backend is still a trusted semantic
 entry point.
+
+
+The first runtime check at `35f103ebac92a1d1025b6b68022c0e219374694d`
+ran `node --test test/journal.test.ts test/codec.test.ts`: 44 passed and one
+failed with that same test-setup DataCloneError. Typecheck passed. Output:
+[run-5-f1-runtime.txt](ordering-o1-runs/run-5-f1-runtime.txt). The harness now
+copies only the plain participant/grant history used for its historical-state
+assertion. No runtime change was needed for this failure.
