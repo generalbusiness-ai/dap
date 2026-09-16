@@ -66,3 +66,34 @@ edited prose; raw historical diagnostics retain their original bytes.
 All original O1/O2/O3/O5 branch tips remain unchanged. This candidate adds no
 main merge, publication or review approval. The additional visibility campaign
 remains deferred as stated above.
+
+
+## G1/G2 integration boundary
+
+The next integration combines the first common candidate
+`3dc6b0953f91661edcc059b56157d349ff31c5b1` with O1 candidate
+`aaa447d9e5ac4d88f07f144d46f2f5e63752c399`. O1's own combined measurement
+belongs to `2c727b7` and its run 14; the aggregate receives a separate frozen
+source and focused run below. All earlier source identities and raw outputs
+remain unchanged. This is preparatory integration pending O1 acceptance and
+the independent reviews of O2, O3 and O5.
+
+The only merge conflict is the profile's appended sections. The resolution
+retains both O3's planned-handover profile and O4's completeness obligations,
+including O1's exact-backend-object lease and raw-Context error boundaries.
+The runtime merges without manual edits: Context's cached position/header
+hash check runs inside append serialization before retry/admission; O3's
+ordering gate remains after exact retry, followed by ordinary transport
+admission for application events. Stale and errored Contexts become inactive.
+Journal's existing ordering verification, lease handling and control verdicts
+are unchanged. The lifecycle manifest is
+`sha256:d94090b21ce42f2eec4a046558b3a776895d82905c2096a19df1f5f02e011f86`;
+the public-opening rule remains
+`sha256:475b415bbf8b16ccdb1bea078174712c57f2b2955ece9338d762abd60228bad8`.
+
+The focused run will use run 1's eight test files plus the new
+`test/context-freshness.test.ts`, followed by typecheck. This includes the
+new raw/owned stale-fold and error regressions alongside retry, handover and
+independent control verification. It does not execute O4 transfers or repeat
+the 600-seed visibility campaign. Historical model outcomes and budgets
+remain those reported in V6.

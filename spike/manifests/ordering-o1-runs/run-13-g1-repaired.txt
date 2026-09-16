@@ -1,0 +1,73 @@
+✔ a submission without a credential is refused; a forged credential for a non-participant is refused (1.523542ms)
+✔ stable facts are checked first: wrong genesis, missing action id, envelope bounds (0.421875ms)
+✔ positions are dense and every header binds its predecessor (1.273208ms)
+✔ the memory backend refuses re-entrant appends (0.180875ms)
+✔ test keys reproduce the independent RFC 8032 Ed25519 vector (1.845541ms)
+✔ fixed vectors pin each signed object, exact UTF-8 bytes, identity and signature (6.595542ms)
+✔ fixed rejection vector: tampered body (0.60225ms)
+✔ fixed rejection vector: actor signs noncanonical bytes (0.612958ms)
+✔ fixed rejection vector: wrong prev, correctly signed (0.151ms)
+✔ fixed rejection vector: wrong commitment, correctly signed (0.279042ms)
+✔ fixed rejection vector: unassigned sequencer key (0.182666ms)
+✔ fixed rejection vector: sequencer signs full header bytes (0.185167ms)
+✔ canonical encoding supports RFC 8785 numbers, UTF-16 ordering and unnormalized strings (0.193ms)
+✔ canonical encoding rejects lossy JS data, invalid Unicode and noncanonical byte inputs (1.326834ms)
+✔ principals and signatures have one exact encoding and must match their signing key (0.983917ms)
+✔ body profile validates required and forbidden fields without interpreting the payload (1.010375ms)
+✔ header-only verification authenticates disclosure evidence and exposes no private fields (1.003875ms)
+✔ wire verification enforces genesis identity, destinations, origin opt-in and evidence placement (3.880917ms)
+✔ wire framing is canonical and decoded entries are independent frozen snapshots (0.331791ms)
+✔ O1-G1 raw Context cannot resume stale admission after Journal closes on memory (10.761958ms)
+ℹ {"storage":"memory","raw":{"error":"Error: Context: stale fold; restore before writing","invitation":null,"redemption":null,"participants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"]},"coldParticipants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"],"coldInviteVerdict":null}
+✔ O1-G1 raw Context cannot resume stale admission after Journal closes on sqlite (9.3465ms)
+ℹ {"storage":"sqlite","raw":{"error":"Error: SQLiteBackend: unavailable or re-entrant transaction","invitation":null,"redemption":null,"participants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"]},"coldParticipants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"],"coldInviteVerdict":null}
+✔ O1-G1 raw Context stays inactive after its own committed append loses its reply on memory (4.797792ms)
+ℹ {"storage":"memory","raw":{"error":"Error: Context: inactive after a write error; restore before writing","invitation":null,"redemption":null,"participants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"]},"coldParticipants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"],"coldInviteVerdict":null}
+✔ O1-G1 raw Context stays inactive after its own committed append loses its reply on sqlite (6.737375ms)
+ℹ {"storage":"sqlite","raw":{"error":"Error: Context: inactive after a write error; restore before writing","invitation":null,"redemption":null,"participants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"]},"coldParticipants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"],"coldInviteVerdict":null}
+✔ O1-G1 two unowned raw Contexts cannot write from different folded heads on memory (3.666333ms)
+✔ O1-G1 two unowned raw Contexts cannot write from different folded heads on sqlite (6.022583ms)
+✔ O1-G1 freshness is checked inside serialization without scanning history for refusal (3.398333ms)
+✔ O1-G1 a current raw Context preserves successful writes and exact retries on memory (4.138333ms)
+✔ O1-G1 a current raw Context preserves successful writes and exact retries on sqlite (5.540375ms)
+✔ V1 Sale visibility trace through verified bytes and memory (122.291666ms)
+✔ V1 Sale visibility trace through verified bytes and sqlite (141.58625ms)
+✔ signed stable facts precede retry and admission; raw Context cannot bypass proof (6.363875ms)
+✔ exclusive SQLite owner excludes a second OS process and releases on close (136.494667ms)
+✔ SIGKILL at before-write preserves one atomic append boundary (79.632875ms)
+✔ SIGKILL at after-entry preserves one atomic append boundary (78.701666ms)
+✔ SIGKILL at after-head preserves one atomic append boundary (83.899917ms)
+✔ SIGKILL at after-retry preserves one atomic append boundary (80.423458ms)
+✔ SIGKILL at after-consumption preserves one atomic append boundary (80.350333ms)
+✔ SIGKILL at after-outbox preserves one atomic append boundary (79.592166ms)
+✔ SIGKILL at before-commit preserves one atomic append boundary (77.134ms)
+✔ SIGKILL at after-commit preserves one atomic append boundary (78.990667ms)
+✔ outbox resumes saved bytes after crash before notification and after delivery before ack (65.5965ms)
+✔ restart rejects tampered stored body despite unchanged signed wire bytes (6.111125ms)
+✔ signed invitations and origin duplicate checks accept finite fractional JCS numbers (7.719584ms)
+✔ outbox awaits asynchronous confirmation and retains failed publications (9.054959ms)
+✔ restart rejects SQL row positions that disagree with signed entry positions (4.948167ms)
+✔ journal pins the signed genesis profile and writer assignment to its backend (4.410167ms)
+✔ V1 signed invitation issued before revocation remains redeemable after SQLite restart (14.940209ms)
+✔ V1 signed unauthorized and unissued invitations cannot admit another participant (13.798708ms)
+✔ initialization SIGKILL at after-entry retains all or none of genesis and origins (69.881166ms)
+✔ initialization SIGKILL at after-commit retains all or none of genesis and origins (69.942167ms)
+✔ uncertain committed response requires reopen before another action (8.1915ms)
+✔ recipient view verification checks original actor proofs and rejects hidden envelope leakage (8.853625ms)
+✔ one live Journal owns each backend: revoked authority cannot be admitted through a stale facade (14.623083ms)
+✔ O1-F1 closed memory Context cannot issue or accept from stale authority after a new facade revokes it (6.883ms)
+ℹ {"staleParticipants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"],"liveParticipants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"],"coldParticipants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"],"coldInviteVerdict":null}
+✔ O1-F1 raw Context restoration or creation cannot bypass a live Journal on memory (3.643875ms)
+✔ O1-F1 raw Context restoration or creation cannot bypass a live Journal on sqlite (5.024291ms)
+✔ O1-F1 a previously acquired raw Context loses write access while Journal owns its backend on memory (4.2635ms)
+✔ O1-F1 a previously acquired raw Context loses write access while Journal owns its backend on sqlite (6.055792ms)
+✔ O1-F1 a lost reply through direct Context.submit invalidates every owned write path on memory (7.61325ms)
+✔ O1-F1 a lost reply through direct Context.submit invalidates every owned write path on sqlite (10.0265ms)
+ℹ tests 60
+ℹ suites 0
+ℹ pass 60
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1472.367042

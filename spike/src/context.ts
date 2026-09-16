@@ -60,6 +60,9 @@ export class Context {
   private readonly maxPayloadBytes: number;
   private readonly encoding?: AppendEncoding;
   readonly #lease?: BackendLease;
+  #inactive = false;
+  #foldedPosition = -1;
+  #foldedHeadHash: string | undefined;
 
   private constructor(backend: Backend, genesisId: string, packages: Record<string, PackageDescriptor>, maxPayloadBytes: number, encoding?: AppendEncoding, lease?: BackendLease) {
     this.backend = backend;
@@ -117,7 +120,10 @@ export class Context {
   }
 
   private fold(entry: Entry, origin: boolean): Verdict {
-    return foldEntry(this.state, { entry, origin, packages: this.packages, entries: this.entries });
+    const verdict = foldEntry(this.state, { entry, origin, packages: this.packages, entries: this.entries });
+    this.#foldedPosition = entry.position;
+    this.#foldedHeadHash = entry.headerHash;
+    return verdict;
   }
 
   /** The serving party issues a credential to a current participant. */
@@ -158,6 +164,7 @@ export class Context {
   /** Submit through the append operation, then fold if newly sequenced. */
   submit(event: EventBody, credential?: TransportCredential, proof?: unknown): (Receipt & { verdict?: Verdict }) | Refusal {
     assertBackendAccess(this.backend, this.#lease);
+    if (this.#inactive) throw new Error('Context: inactive after a write error; restore before writing');
     try {
       const state = this.state;
       const r = append(
@@ -165,6 +172,12 @@ export class Context {
         { event, credential, proof },
         {
           genesis: this.genesisId,
+          assertCurrent: () => {
+            const head = this.backend.head();
+            if ((head?.position ?? -1) !== this.#foldedPosition || head?.headerHash !== this.#foldedHeadHash) {
+              throw new Error('Context: stale fold; restore before writing');
+            }
+          },
           encoding: this.encoding,
           maxPayloadBytes: this.maxPayloadBytes,
           isParticipant: (p) => state.participants.includes(p),
@@ -193,6 +206,7 @@ export class Context {
       const verdict = this.fold(entry, false);
       return { ...r, verdict };
     } catch (error) {
+      this.#inactive = true;
       this.#lease?.invalidate();
       throw error;
     }
