@@ -1,0 +1,36 @@
+{
+  "source": "671400d8d44b661084918a2a70edb917662ec51e",
+  "node": "v26.8.2",
+  "components": {
+    "O1": "4cfc69376fbd513c4cacf5baa0d32c316797cf89",
+    "O2": "b6d156163285c8eaab3d05766dd9b0de35fef79b",
+    "O3": "c527584d5399f20dff33625e20cb97d237bdad98",
+    "O5": "598170fa5907655bc48c346a2dd4dd98853314a8"
+  },
+  "commands": [
+    {
+      "command": [
+        "node",
+        "--test",
+        "test/append.test.ts",
+        "test/codec.test.ts",
+        "test/journal.test.ts",
+        "test/ordering-lifecycle.test.ts",
+        "test/ordering-retry.test.ts",
+        "test/ordering-handover.test.ts",
+        "test/control-verifier.test.ts",
+        "test/control-journal-integration.test.ts"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "campaign": "deferred pending O1 independent review"
+}
