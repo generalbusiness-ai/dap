@@ -1,0 +1,754 @@
+{
+  "seed": 32,
+  "manifest": "sha256:3076d3854901ddeb6b0d5cc379646bb182f89bd61882d648fc9051dfae7d788f",
+  "package": "sha256:622a120962da35c370b093161848677fe086a5d1fa729655fc3ce2ced855bc9b",
+  "snapshot": "spike V4: checker run 7 snapshot: preserve public actor and payload leaks",
+  "genesisNonce": "genesis:32",
+  "steps": [
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "clock",
+      "grants": {
+        "capabilities": [
+          "ai.generalbusiness.dap.observe"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "clock"
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "ai.generalbusiness.dap.observe",
+      "payload": {
+        "fact": {
+          "clock": 3
+        }
+      },
+      "nonce": "n:8f270c5f7661da94"
+    },
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "bob",
+      "grants": {
+        "roles": [
+          "Booker"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "bob"
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 11,
+        "end": 12,
+        "purpose": "purpose 2",
+        "admin": "alice"
+      },
+      "nonce": "n:3633d946b414898b"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "sha256:dddd31256cfd5ab5f580ebc812b7e709978e8c633814b13d2a36b6915fd0477a",
+        "room": "room-1",
+        "start": 11,
+        "end": 12
+      },
+      "nonce": "n:a7ef78c396d18e5c"
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "ai.generalbusiness.dap.observe",
+      "payload": {
+        "fact": {
+          "clock": 6
+        }
+      },
+      "nonce": "n:de29bc7d3eb26d28"
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "com.example.side.note",
+      "payload": {
+        "text": "note 5"
+      },
+      "nonce": "n:c468bc85d1c57953"
+    },
+    {
+      "type": "attach",
+      "actor": "alice",
+      "pkg": "com.example.side",
+      "audience": []
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.side.note",
+      "payload": {
+        "text": "note 7"
+      },
+      "nonce": "n:a7b561bed33fa119"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.free",
+      "payload": {
+        "booking_id": "sha256:dddd31256cfd5ab5f580ebc812b7e709978e8c633814b13d2a36b6915fd0477a"
+      },
+      "nonce": "n:759a80f0bfacb9df"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "sha256:dddd31256cfd5ab5f580ebc812b7e709978e8c633814b13d2a36b6915fd0477a",
+        "room": "room-1",
+        "start": 11,
+        "end": 12
+      },
+      "nonce": "n:e7f49792a3a1e24f"
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "ai.generalbusiness.dap.observe",
+      "payload": {
+        "fact": {
+          "clock": 8
+        }
+      },
+      "nonce": "n:b48e5b7dfbd5c5c8"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.cancel_request",
+      "payload": {
+        "booking_id": "none",
+        "admin": "alice"
+      },
+      "nonce": "n:1dec5485d56cd0d5"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "sha256:dddd31256cfd5ab5f580ebc812b7e709978e8c633814b13d2a36b6915fd0477a",
+        "room": "room-1",
+        "start": 11,
+        "end": 12
+      },
+      "nonce": "n:9c373202470164b4"
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        8
+      ],
+      "to": [
+        "bob"
+      ]
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 20,
+        "end": 26,
+        "purpose": "purpose 14",
+        "admin": "alice"
+      },
+      "nonce": "n:21386e6735dae909"
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "ai.generalbusiness.dap.observe",
+      "payload": {
+        "fact": {
+          "clock": 9
+        }
+      },
+      "nonce": "n:d71ddf919c46a9e7"
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "com.example.side.note",
+      "payload": {
+        "text": "note 16"
+      },
+      "nonce": "n:5510e6289348878d"
+    },
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "carol",
+      "grants": {
+        "roles": [
+          "Booker"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "carol"
+    },
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "dana",
+      "grants": {
+        "roles": [
+          "Booker"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "dana"
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        8
+      ],
+      "to": [
+        "clock"
+      ]
+    },
+    {
+      "type": "act",
+      "actor": "carol",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 21,
+        "end": 22,
+        "purpose": "purpose 20",
+        "admin": "alice"
+      },
+      "nonce": "n:0ac56ff425019e21"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+        "room": "room-1",
+        "start": 21,
+        "end": 22
+      },
+      "nonce": "n:baeceebdac3276c0"
+    },
+    {
+      "type": "act",
+      "actor": "dana",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 14,
+        "end": 16,
+        "purpose": "purpose 22",
+        "admin": "alice"
+      },
+      "nonce": "n:687557eab19d3d02"
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "ai.generalbusiness.dap.observe",
+      "payload": {
+        "fact": {
+          "clock": 10
+        }
+      },
+      "nonce": "n:6be527bd1d7de5a6"
+    },
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "erin",
+      "grants": {
+        "roles": [
+          "Booker"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "erin"
+    },
+    {
+      "type": "act",
+      "actor": "erin",
+      "kind": "com.example.side.note",
+      "payload": {
+        "text": "note 25"
+      },
+      "nonce": "n:bdebf1c791d3e3b3"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "sha256:dddd31256cfd5ab5f580ebc812b7e709978e8c633814b13d2a36b6915fd0477a",
+        "room": "room-1",
+        "start": 11,
+        "end": 12
+      },
+      "nonce": "n:4da1eaa1ff83f293"
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 36,
+        "end": 40,
+        "purpose": "purpose 27",
+        "admin": "alice"
+      },
+      "nonce": "n:74ec8e542a770d02"
+    },
+    {
+      "type": "act",
+      "actor": "carol",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+        "room": "room-1",
+        "start": 21,
+        "end": 22
+      },
+      "nonce": "n:136036e0b393d195"
+    },
+    {
+      "type": "act",
+      "actor": "carol",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 12,
+        "end": 18,
+        "purpose": "purpose 29",
+        "admin": "alice"
+      },
+      "nonce": "n:0033882408294451"
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        9
+      ],
+      "to": [
+        "carol"
+      ]
+    },
+    {
+      "type": "act",
+      "actor": "carol",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 14,
+        "end": 15,
+        "purpose": "purpose 31",
+        "admin": "alice"
+      },
+      "nonce": "n:62898cb8c555ce10"
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        20
+      ],
+      "to": [
+        "dana"
+      ]
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 18,
+        "end": 20,
+        "purpose": "purpose 33",
+        "admin": "alice"
+      },
+      "nonce": "n:bf53ef763fc4a85d"
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        14
+      ],
+      "to": [
+        "carol"
+      ]
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        8
+      ],
+      "to": [
+        "carol"
+      ]
+    },
+    {
+      "type": "act",
+      "actor": "carol",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 1,
+        "end": 2,
+        "purpose": "purpose 36",
+        "admin": "alice"
+      },
+      "nonce": "n:b9e22a8b1a6de290"
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        3
+      ],
+      "to": [
+        "erin"
+      ]
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 32,
+        "end": 35,
+        "purpose": "purpose 38",
+        "admin": "alice"
+      },
+      "nonce": "n:2880e15edb794d0d"
+    },
+    {
+      "type": "act",
+      "actor": "dana",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 29,
+        "end": 35,
+        "purpose": "purpose 39",
+        "admin": "alice"
+      },
+      "nonce": "n:dc501794c8d3d981"
+    },
+    {
+      "type": "act",
+      "actor": "dana",
+      "kind": "com.example.side.note",
+      "payload": {
+        "text": "note 40"
+      },
+      "nonce": "n:f3cee87e6cf99fb6"
+    },
+    {
+      "type": "act",
+      "actor": "carol",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 28,
+        "end": 31,
+        "purpose": "purpose 41",
+        "admin": "alice"
+      },
+      "nonce": "n:3903b65533017fc4"
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        30
+      ],
+      "to": [
+        "carol"
+      ]
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "sha256:5e0064c083871996ddbbef915d5e8f466622136923bcfe0db77837cb5ddfbe2d",
+        "room": "room-1",
+        "start": 14,
+        "end": 15
+      },
+      "nonce": "n:3b610747039e48dd"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "sha256:1c8610b377aec8420d2835f8b2f696373746ab54b99cbee3e22f932dfcbb5b57",
+        "room": "room-1",
+        "start": 29,
+        "end": 35
+      },
+      "nonce": "n:bdcc007c041d17b9"
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "ai.generalbusiness.dap.observe",
+      "payload": {
+        "fact": {
+          "clock": 11
+        }
+      },
+      "nonce": "n:516299c65959e07a"
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "ai.generalbusiness.dap.observe",
+      "payload": {
+        "fact": {
+          "clock": 14
+        }
+      },
+      "nonce": "n:7ff4fcb7014c5152"
+    },
+    {
+      "type": "act",
+      "actor": "erin",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 24,
+        "end": 26,
+        "purpose": "purpose 47",
+        "admin": "alice"
+      },
+      "nonce": "n:bb426488f8001fba"
+    },
+    {
+      "type": "act",
+      "actor": "carol",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 1,
+        "end": 7,
+        "purpose": "purpose 48",
+        "admin": "alice"
+      },
+      "nonce": "n:8b1485241727528d"
+    }
+  ],
+  "violations": [
+    "clock@39 budget: clock can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@39 budget: clock can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@39 budget: bob can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@39 budget: bob can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@39 budget: dana can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@39 budget: dana can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@39 budget: erin can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@39 budget: erin can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@40 budget: clock can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@40 budget: clock can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@40 budget: bob can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@40 budget: bob can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@40 budget: dana can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@40 budget: dana can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@40 budget: erin can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@40 budget: erin can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@41 budget: clock can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@41 budget: clock can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@41 budget: bob can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@41 budget: bob can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@41 budget: dana can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@41 budget: dana can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@41 budget: erin can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@41 budget: erin can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@42 budget: clock can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@42 budget: clock can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@42 budget: bob can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@42 budget: bob can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@42 budget: dana can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@42 budget: dana can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@42 budget: erin can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@42 budget: erin can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@43 budget: clock can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@43 budget: clock can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@43 budget: bob can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@43 budget: bob can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@43 budget: dana can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@43 budget: dana can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@43 budget: erin can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@43 budget: erin can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@44 budget: clock can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@44 budget: clock can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@44 budget: bob can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@44 budget: bob can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@44 budget: dana can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@44 budget: dana can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@44 budget: erin can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@44 budget: erin can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@45 budget: clock can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@45 budget: clock can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@45 budget: bob can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@45 budget: bob can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@45 budget: dana can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@45 budget: dana can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@45 budget: erin can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@45 budget: erin can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@46 budget: clock can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@46 budget: clock can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@46 budget: bob can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@46 budget: bob can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@46 budget: dana can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@46 budget: dana can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@46 budget: erin can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@46 budget: erin can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@47 budget: clock can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@47 budget: clock can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@47 budget: bob can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@47 budget: bob can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@47 budget: dana can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@47 budget: dana can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@47 budget: erin can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@47 budget: erin can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@48 budget: clock can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@48 budget: clock can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@48 budget: bob can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@48 budget: bob can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@48 budget: dana can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@48 budget: dana can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@48 budget: erin can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@48 budget: erin can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@49 budget: clock can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@49 budget: clock can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@49 budget: bob can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@49 budget: bob can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@49 budget: dana can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@49 budget: dana can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@49 budget: erin can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@49 budget: erin can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@50 budget: clock can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@50 budget: clock can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@50 budget: bob can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@50 budget: bob can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@50 budget: dana can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@50 budget: dana can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@50 budget: erin can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@50 budget: erin can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@51 budget: clock can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@51 budget: clock can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@51 budget: bob can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@51 budget: bob can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@51 budget: dana can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@51 budget: dana can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@51 budget: erin can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@51 budget: erin can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@52 budget: clock can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@52 budget: clock can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@52 budget: bob can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@52 budget: bob can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@52 budget: dana can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@52 budget: dana can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@52 budget: erin can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@52 budget: erin can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@53 budget: clock can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@53 budget: clock can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@53 budget: bob can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@53 budget: bob can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@53 budget: dana can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@53 budget: dana can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@53 budget: erin can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@53 budget: erin can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@54 budget: clock can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@54 budget: clock can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@54 budget: bob can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@54 budget: bob can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@54 budget: dana can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@54 budget: dana can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@54 budget: erin can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@54 budget: erin can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@55 budget: clock can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@55 budget: clock can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@55 budget: bob can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@55 budget: bob can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@55 budget: dana can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@55 budget: dana can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@55 budget: erin can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@55 budget: erin can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@56 budget: clock can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@56 budget: clock can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@56 budget: bob can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@56 budget: bob can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@56 budget: dana can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@56 budget: dana can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@56 budget: erin can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@56 budget: erin can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@57 budget: clock can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@57 budget: clock can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@57 budget: bob can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@57 budget: bob can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@57 budget: dana can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@57 budget: dana can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@57 budget: erin can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@57 budget: erin can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@58 budget: clock can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@58 budget: clock can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@58 budget: bob can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@58 budget: bob can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@58 budget: dana can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@58 budget: dana can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@58 budget: erin can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@58 budget: erin can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@59 budget: clock can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "clock@59 budget: clock can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@59 budget: bob can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "bob@59 budget: bob can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@59 budget: dana can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "dana@59 budget: dana can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@59 budget: erin can read public com.example.booking.occupancy at 39 signed by booker carol, linking booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f",
+    "erin@59 budget: erin can link public com.example.booking.occupancy at 39 to booker carol through booking id sha256:1d379c8680120eb7ebc6e682c844960c3194a72a2ee0ab564ca9e62c4cf4656f"
+  ]
+}

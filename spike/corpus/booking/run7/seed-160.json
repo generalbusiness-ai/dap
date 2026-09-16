@@ -1,0 +1,49 @@
+{
+  "seed": 160,
+  "manifest": "sha256:3076d3854901ddeb6b0d5cc379646bb182f89bd61882d648fc9051dfae7d788f",
+  "package": "sha256:622a120962da35c370b093161848677fe086a5d1fa729655fc3ce2ced855bc9b",
+  "snapshot": "spike V4: checker run 7 snapshot: preserve public actor and payload leaks",
+  "expected": "clock@5 budget: clock can read public com.example.booking.occupancy at 5 signed by booker bob, linking booking id sha256:13dcc1dff047578bb168c6d9b9134bf03b1c562ac2c69212cf88a5f00d77ef8a",
+  "steps": [
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "clock",
+      "grants": {
+        "capabilities": [
+          "ai.generalbusiness.dap.observe"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "clock"
+    },
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "bob",
+      "grants": {
+        "roles": [
+          "Booker"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "bob"
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "sha256:13dcc1dff047578bb168c6d9b9134bf03b1c562ac2c69212cf88a5f00d77ef8a",
+        "room": "room-1",
+        "start": 21,
+        "end": 22
+      },
+      "nonce": "n:3c1570fc2f01b39d"
+    }
+  ]
+}

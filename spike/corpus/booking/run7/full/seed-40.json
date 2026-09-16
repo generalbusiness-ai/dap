@@ -1,0 +1,729 @@
+{
+  "seed": 40,
+  "manifest": "sha256:3076d3854901ddeb6b0d5cc379646bb182f89bd61882d648fc9051dfae7d788f",
+  "package": "sha256:622a120962da35c370b093161848677fe086a5d1fa729655fc3ce2ced855bc9b",
+  "snapshot": "spike V4: checker run 7 snapshot: preserve public actor and payload leaks",
+  "genesisNonce": "genesis:40",
+  "steps": [
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "clock",
+      "grants": {
+        "capabilities": [
+          "ai.generalbusiness.dap.observe"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "clock"
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "ai.generalbusiness.dap.observe",
+      "payload": {
+        "fact": {
+          "clock": 3
+        }
+      },
+      "nonce": "n:58f50cb9c2cc7592"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "none",
+        "room": "room-1",
+        "start": 0,
+        "end": 1
+      },
+      "nonce": "n:d4bfb1d8152e3d82"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.free",
+      "payload": {
+        "booking_id": "none"
+      },
+      "nonce": "n:d40168eb6a10a537"
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "ai.generalbusiness.dap.observe",
+      "payload": {
+        "fact": {
+          "clock": 5
+        }
+      },
+      "nonce": "n:b142b117a4628357"
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "ai.generalbusiness.dap.observe",
+      "payload": {
+        "fact": {
+          "clock": 8
+        }
+      },
+      "nonce": "n:0af02a42eab28b1c"
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "ai.generalbusiness.dap.observe",
+      "payload": {
+        "fact": {
+          "clock": 11
+        }
+      },
+      "nonce": "n:0aa00f2dc7afacb7"
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "ai.generalbusiness.dap.observe",
+      "payload": {
+        "fact": {
+          "clock": 12
+        }
+      },
+      "nonce": "n:fd6e62b6882e42d3"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "none",
+        "room": "room-1",
+        "start": 0,
+        "end": 1
+      },
+      "nonce": "n:309d559c35c39b5f"
+    },
+    {
+      "type": "attach",
+      "actor": "alice",
+      "pkg": "com.example.side",
+      "audience": []
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "none",
+        "room": "room-1",
+        "start": 0,
+        "end": 1
+      },
+      "nonce": "n:0a01294a7fb39c80"
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        3
+      ],
+      "to": [
+        "clock"
+      ]
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        3
+      ],
+      "to": [
+        "clock"
+      ]
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "none",
+        "room": "room-1",
+        "start": 0,
+        "end": 1
+      },
+      "nonce": "n:e53a8658c0c00b02"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "none",
+        "room": "room-1",
+        "start": 0,
+        "end": 1
+      },
+      "nonce": "n:ed0a05ab60dc6e99"
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "ai.generalbusiness.dap.observe",
+      "payload": {
+        "fact": {
+          "clock": 15
+        }
+      },
+      "nonce": "n:4900358b02f64c6f"
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        10
+      ],
+      "to": [
+        "clock"
+      ]
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "none",
+        "room": "room-1",
+        "start": 0,
+        "end": 1
+      },
+      "nonce": "n:3943066c0127ed4c"
+    },
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "bob",
+      "grants": {
+        "roles": [
+          "Booker"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "bob"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.side.note",
+      "payload": {
+        "text": "note 18"
+      },
+      "nonce": "n:dc8d1a46a5c3d9f2"
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.free",
+      "payload": {
+        "booking_id": "none"
+      },
+      "nonce": "n:a4e52e75c3f362fd"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "none",
+        "room": "room-1",
+        "start": 0,
+        "end": 1
+      },
+      "nonce": "n:701db578fac1894f"
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 29,
+        "end": 31,
+        "purpose": "purpose 21",
+        "admin": "alice"
+      },
+      "nonce": "n:feecf7cde2dfcb2e"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "sha256:ae99b141cc7a48e0178b52d5cb8840c1419bb20c0b2795b5fd3a46911577a254",
+        "room": "room-1",
+        "start": 29,
+        "end": 31
+      },
+      "nonce": "n:dbcaae1a0955d83f"
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        10
+      ],
+      "to": [
+        "bob"
+      ]
+    },
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "carol",
+      "grants": {
+        "roles": [
+          "Booker"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "carol"
+    },
+    {
+      "type": "act",
+      "actor": "carol",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 28,
+        "end": 30,
+        "purpose": "purpose 25",
+        "admin": "alice"
+      },
+      "nonce": "n:f62ffff9a898325c"
+    },
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "dana",
+      "grants": {
+        "roles": [
+          "Booker"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "dana"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "sha256:ae99b141cc7a48e0178b52d5cb8840c1419bb20c0b2795b5fd3a46911577a254",
+        "room": "room-1",
+        "start": 29,
+        "end": 31
+      },
+      "nonce": "n:b84cd28eb0ce7db1"
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        24
+      ],
+      "to": [
+        "carol"
+      ]
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "sha256:ae99b141cc7a48e0178b52d5cb8840c1419bb20c0b2795b5fd3a46911577a254",
+        "room": "room-1",
+        "start": 29,
+        "end": 31
+      },
+      "nonce": "n:3dd08e2aaf641491"
+    },
+    {
+      "type": "act",
+      "actor": "carol",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 24,
+        "end": 26,
+        "purpose": "purpose 30",
+        "admin": "alice"
+      },
+      "nonce": "n:2cee8d54404c8667"
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "ai.generalbusiness.dap.observe",
+      "payload": {
+        "fact": {
+          "clock": 18
+        }
+      },
+      "nonce": "n:ef51cb63b2cbbde0"
+    },
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "erin",
+      "grants": {
+        "roles": [
+          "Booker"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "erin"
+    },
+    {
+      "type": "act",
+      "actor": "carol",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 1,
+        "end": 7,
+        "purpose": "purpose 33",
+        "admin": "alice"
+      },
+      "nonce": "n:2ac36f1762f1c089"
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "com.example.side.note",
+      "payload": {
+        "text": "note 34"
+      },
+      "nonce": "n:aaac98d98ba653b3"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "sha256:6c7043b8ee245981cd52533c8b99f1c38dd4564dcc919c2aea76837a145d89e3",
+        "room": "room-1",
+        "start": 24,
+        "end": 26
+      },
+      "nonce": "n:c4b9bfb2e289a7a4"
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.cancel_request",
+      "payload": {
+        "booking_id": "sha256:ae99b141cc7a48e0178b52d5cb8840c1419bb20c0b2795b5fd3a46911577a254",
+        "admin": "alice"
+      },
+      "nonce": "n:880de24ef3352158"
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        24
+      ],
+      "to": [
+        "clock"
+      ]
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "com.example.side.note",
+      "payload": {
+        "text": "note 38"
+      },
+      "nonce": "n:7ef0fc5f7f3d8d82"
+    },
+    {
+      "type": "act",
+      "actor": "erin",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 30,
+        "end": 32,
+        "purpose": "purpose 39",
+        "admin": "alice"
+      },
+      "nonce": "n:b586703e5ba13fca"
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        10
+      ],
+      "to": [
+        "bob"
+      ]
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 36,
+        "end": 38,
+        "purpose": "purpose 41",
+        "admin": "alice"
+      },
+      "nonce": "n:947dee166f9c2b94"
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        8
+      ],
+      "to": [
+        "bob"
+      ]
+    },
+    {
+      "type": "act",
+      "actor": "dana",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 2,
+        "end": 7,
+        "purpose": "purpose 43",
+        "admin": "alice"
+      },
+      "nonce": "n:4458feeddcfe4abf"
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 26,
+        "end": 28,
+        "purpose": "purpose 44",
+        "admin": "alice"
+      },
+      "nonce": "n:dad5b9a51f6defbb"
+    },
+    {
+      "type": "act",
+      "actor": "erin",
+      "kind": "com.example.side.note",
+      "payload": {
+        "text": "note 45"
+      },
+      "nonce": "n:c27d64c61a855e5e"
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 1,
+        "end": 2,
+        "purpose": "purpose 46",
+        "admin": "alice"
+      },
+      "nonce": "n:eb4fb35926690c11"
+    },
+    {
+      "type": "act",
+      "actor": "dana",
+      "kind": "com.example.side.note",
+      "payload": {
+        "text": "note 47"
+      },
+      "nonce": "n:22d4c21a6c0ad1d7"
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        11
+      ],
+      "to": [
+        "carol"
+      ]
+    }
+  ],
+  "violations": [
+    "clock@24 budget: clock can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "clock@24 budget: clock can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@25 budget: clock can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "clock@25 budget: clock can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@25 budget: clock can link public com.example.booking.occupancy at 25 to booker bob through booking id none",
+    "clock@26 budget: clock can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "clock@26 budget: clock can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@26 budget: clock can link public com.example.booking.occupancy at 25 to booker bob through booking id none",
+    "clock@27 budget: clock can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "clock@27 budget: clock can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@27 budget: clock can link public com.example.booking.occupancy at 25 to booker bob through booking id none",
+    "clock@28 budget: clock can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "clock@28 budget: clock can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@28 budget: clock can link public com.example.booking.occupancy at 25 to booker bob through booking id none",
+    "clock@29 budget: clock can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "clock@29 budget: clock can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@29 budget: clock can link public com.example.booking.occupancy at 25 to booker bob through booking id none",
+    "clock@30 budget: clock can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "clock@30 budget: clock can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@30 budget: clock can link public com.example.booking.occupancy at 25 to booker bob through booking id none",
+    "clock@31 budget: clock can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "clock@31 budget: clock can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@31 budget: clock can link public com.example.booking.occupancy at 25 to booker bob through booking id none",
+    "clock@32 budget: clock can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "clock@32 budget: clock can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@32 budget: clock can link public com.example.booking.occupancy at 25 to booker bob through booking id none",
+    "clock@33 budget: clock can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "clock@33 budget: clock can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@33 budget: clock can link public com.example.booking.occupancy at 25 to booker bob through booking id none",
+    "clock@34 budget: clock can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "clock@34 budget: clock can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@34 budget: clock can link public com.example.booking.occupancy at 25 to booker bob through booking id none",
+    "clock@35 budget: clock can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "clock@35 budget: clock can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@35 budget: clock can link public com.example.booking.occupancy at 25 to booker bob through booking id none",
+    "clock@36 budget: clock can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "clock@36 budget: clock can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@36 budget: clock can link public com.example.booking.occupancy at 25 to booker bob through booking id none",
+    "clock@37 budget: clock can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "clock@37 budget: clock can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@37 budget: clock can link public com.example.booking.occupancy at 25 to booker bob through booking id none",
+    "carol@37 budget: carol can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "carol@37 budget: carol can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@38 budget: clock can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "clock@38 budget: clock can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@38 budget: clock can link public com.example.booking.occupancy at 25 to booker bob through booking id none",
+    "carol@38 budget: carol can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "carol@38 budget: carol can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@39 budget: clock can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "clock@39 budget: clock can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@39 budget: clock can link public com.example.booking.occupancy at 25 to booker bob through booking id none",
+    "carol@39 budget: carol can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "carol@39 budget: carol can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@40 budget: clock can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "clock@40 budget: clock can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@40 budget: clock can link public com.example.booking.occupancy at 25 to booker bob through booking id none",
+    "carol@40 budget: carol can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "carol@40 budget: carol can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@41 budget: clock can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "clock@41 budget: clock can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@41 budget: clock can link public com.example.booking.occupancy at 25 to booker bob through booking id none",
+    "carol@41 budget: carol can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "carol@41 budget: carol can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@42 budget: clock can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "clock@42 budget: clock can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@42 budget: clock can link public com.example.booking.occupancy at 25 to booker bob through booking id none",
+    "carol@42 budget: carol can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "carol@42 budget: carol can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@43 budget: clock can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "clock@43 budget: clock can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@43 budget: clock can link public com.example.booking.occupancy at 25 to booker bob through booking id none",
+    "carol@43 budget: carol can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "carol@43 budget: carol can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@44 budget: clock can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "clock@44 budget: clock can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@44 budget: clock can link public com.example.booking.occupancy at 25 to booker bob through booking id none",
+    "carol@44 budget: carol can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "carol@44 budget: carol can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@45 budget: clock can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "clock@45 budget: clock can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@45 budget: clock can link public com.example.booking.occupancy at 25 to booker bob through booking id none",
+    "carol@45 budget: carol can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "carol@45 budget: carol can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@46 budget: clock can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "clock@46 budget: clock can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@46 budget: clock can link public com.example.booking.occupancy at 25 to booker bob through booking id none",
+    "carol@46 budget: carol can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "carol@46 budget: carol can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@47 budget: clock can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "clock@47 budget: clock can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@47 budget: clock can link public com.example.booking.occupancy at 25 to booker bob through booking id none",
+    "carol@47 budget: carol can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "carol@47 budget: carol can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@48 budget: clock can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "clock@48 budget: clock can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@48 budget: clock can link public com.example.booking.occupancy at 25 to booker bob through booking id none",
+    "carol@48 budget: carol can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "carol@48 budget: carol can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@49 budget: clock can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "clock@49 budget: clock can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@49 budget: clock can link public com.example.booking.occupancy at 25 to booker bob through booking id none",
+    "carol@49 budget: carol can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "carol@49 budget: carol can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@50 budget: clock can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "clock@50 budget: clock can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@50 budget: clock can link public com.example.booking.occupancy at 25 to booker bob through booking id none",
+    "carol@50 budget: carol can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "carol@50 budget: carol can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@51 budget: clock can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "clock@51 budget: clock can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@51 budget: clock can link public com.example.booking.occupancy at 25 to booker bob through booking id none",
+    "carol@51 budget: carol can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "carol@51 budget: carol can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@52 budget: clock can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "clock@52 budget: clock can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@52 budget: clock can link public com.example.booking.occupancy at 25 to booker bob through booking id none",
+    "carol@52 budget: carol can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "carol@52 budget: carol can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@53 budget: clock can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "clock@53 budget: clock can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@53 budget: clock can link public com.example.booking.occupancy at 25 to booker bob through booking id none",
+    "carol@53 budget: carol can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "carol@53 budget: carol can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@54 budget: clock can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "clock@54 budget: clock can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@54 budget: clock can link public com.example.booking.occupancy at 25 to booker bob through booking id none",
+    "carol@54 budget: carol can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "carol@54 budget: carol can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@55 budget: clock can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "clock@55 budget: clock can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@55 budget: clock can link public com.example.booking.occupancy at 25 to booker bob through booking id none",
+    "carol@55 budget: carol can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "carol@55 budget: carol can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@56 budget: clock can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "clock@56 budget: clock can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@56 budget: clock can link public com.example.booking.occupancy at 25 to booker bob through booking id none",
+    "carol@56 budget: carol can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "carol@56 budget: carol can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@57 budget: clock can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "clock@57 budget: clock can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@57 budget: clock can link public com.example.booking.occupancy at 25 to booker bob through booking id none",
+    "carol@57 budget: carol can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "carol@57 budget: carol can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@58 budget: clock can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "clock@58 budget: clock can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@58 budget: clock can link public com.example.booking.occupancy at 25 to booker bob through booking id none",
+    "carol@58 budget: carol can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "carol@58 budget: carol can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@59 budget: clock can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "clock@59 budget: clock can link public com.example.booking.free at 24 to booker bob through booking id none",
+    "clock@59 budget: clock can link public com.example.booking.occupancy at 25 to booker bob through booking id none",
+    "carol@59 budget: carol can read public com.example.booking.free at 24 signed by booker bob, linking booking id none",
+    "carol@59 budget: carol can link public com.example.booking.free at 24 to booker bob through booking id none"
+  ]
+}

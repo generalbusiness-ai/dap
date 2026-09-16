@@ -44,9 +44,84 @@ legacy visibility path, not a signed replay of all 200 seeds.
 
 After run 1, audit identified a wire presentation omission: signed readable
 views did not carry original envelope bytes, although full-journal verification
-worked. A follow-up will add bytes only to readable signed view entries and
-verify views independently. Run 1 establishes its recorded checks, not that
+worked. The follow-up adds bytes only to readable signed view entries and
+verifies views independently, including every participant/frontier of the
+signed V1 traces. Focused journal checks now pass 24/24; typecheck passes. Run 1 establishes its recorded checks, not that
 missing recipient-facing proof path.
+
+## Final integration boundary
+
+Merge `3c88770` incorporates exact V6 candidate
+`05c98e2d778124648834b9b00e772a6ad270a870`, including V4 main
+`5eff67d81fbbb025f91951571a9f029c0481812a` and the V5/V6 evidence.
+Only README required conflict resolution: the V4, V5, V6 and O1 sections
+are all retained. Context's deterministic nonce option and foundation's
+reviewed authorization behavior merged without a source conflict.
+Earlier O1 and V6 ledgers and raw results remain intact.
+
+The O1 view follow-up delivers original actor proof bytes to authorized
+readers and independently verifies the complete header prefix, visible
+signatures and origin adoption. Outbox callback records are frozen so a
+callback cannot alter which saved identity is acknowledged. These source
+changes precede the final full run; its exact source and result will be
+recorded separately after completion.
+
+## Integrated run 2 and QA finding
+
+Source: `6bd263f029df0ea2c49a9e04dcf1fba4bf7f6962`.
+Commands: `npm test`, `npm run typecheck`, `git diff --check` from `spike`.
+Result: exit 0; **179 tests, 178 passed, 0 ordinary failures, 1 TODO**.
+Focused O1 checks: 49/49. Typecheck and whitespace check passed.
+Full run: 110.9 seconds. Exact output: [run-2.txt](ordering-o1-runs/run-2.txt).
+The TODO is the incoming Club second-admission counterexample, retained by
+user choice. Its inherited test annotation says repair pending; this O1
+record does not commission or claim that repair. The frozen Club manifest
+still passes while that stronger plan expectation fails.
+
+All 600 current manifest seeds had zero violations. Coverage:
+
+| Campaign | Measured coverage |
+|---|---|
+| Sale 200 | 942 joins; 199 attaches; 1,722 disclosures; 195 offers; 25 replacements; 147 withdrawals; 157 counters; 114 accepts, 20 effective; 295 closes; 11,047 entries; zero private disclosures and effective Inspection attaches; 118 unbound Inspection requests |
+| Booking 200 | 955 joins; 198 attaches; 1,629 disclosures; 2,553 requests; 1,497 occupancies, 652 effective and 471 linked; 383 frees; 419 cancels, 324 effective; 1,630 ticks; 12,000 entries |
+| Club 200 | 991 joins; 200 attaches; 1,939 disclosures; 629 applications; 1,575 votes, 1,001 effective; 343 admits, 126 effective; 514 standings; 246 grants; 11,939 entries |
+
+Incoming V4/V6 generator changes mean run 2's Sale seed numbers are not the
+same event streams as run 1. These measurements do not relabel old snapshots.
+The model manifests and packages remain those of the supplied V6 candidate.
+
+After this run, independent internal QA demonstrated a missing ownership
+boundary at this exact source. Two `Journal` facades over one backend held
+separate folds. Facade A revoked Alice's invite authority; stale facade B
+then issued an invitation and accepted it as effective, joining Bob and
+consuming the token. Reopen correctly found the invitation unauthorized and
+acceptance ineffective, so live and replay state disagreed. Run 2's existing
+checks did not cover this sequence. The source snapshot and output are kept;
+a single-facade ownership repair and exact regression follow in a new snapshot.
+
+## Ownership correction and final scoped validation
+
+The follow-up enforces one live `Journal` per backend with a private weak
+ownership map. A second facade is rejected before it can create another
+admission fold. `Journal.close()` invalidates the facade and closes SQLite;
+a fresh backend handle rebuilds state on reopen. Legacy direct backend close
+remains compatible with callers that discard the old facade and handle.
+The profile and regression specify this ownership rule explicitly.
+
+The exact QA sequence is retained as a prevention regression: reject facade B,
+revoke through A, record the unauthorized invitation, refuse its acceptance
+without consuming it, close/reopen, compare state, and recover an exact retry
+with the same ineffective verdict. Memory facade release/reopen is checked too.
+A test-only attempt to clone function-bearing foundation state was corrected
+to compare the retained closed facade's state; no runtime behavior was changed
+for that test issue.
+
+Development focused checks passed 50/50 and typecheck. The next record pins
+the final source and preserves a fresh focused run. This correction changes
+only Journal ownership, its tests and profile documentation; the legacy
+visibility campaign path is unchanged from run 2. Accordingly run 2 remains
+the measured 600-seed integration result, and the final scoped run does not
+pretend to be another campaign.
 
 ## Identities and scope
 

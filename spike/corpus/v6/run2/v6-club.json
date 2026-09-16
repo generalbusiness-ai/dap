@@ -1,0 +1,124 @@
+{
+  "snapshot": "742e64a06d06226b456f489eb53deacc1bc9f5db",
+  "corpus": "v6-club",
+  "manifest": "sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde",
+  "package": "sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e",
+  "mutant": "sha256:276d0f9610eba50cff5a922b06117b5300a918d0c538a629befa1292228e3b1e",
+  "nonce": "v6:club",
+  "originalSteps": 7,
+  "steps": [
+    {
+      "step": {
+        "type": "invite",
+        "inviter": "alice",
+        "invitee": "bob",
+        "grants": {
+          "roles": [
+            "Committee",
+            "Member"
+          ]
+        }
+      },
+      "entries": [
+        {
+          "id": "sha256:3e73b2a8ed8b85302925611134a8c459631fa3edc5a6d0b47c75bcde127631be",
+          "kind": "ai.generalbusiness.dap.invite"
+        }
+      ]
+    },
+    {
+      "step": {
+        "type": "accept",
+        "invitee": "bob"
+      },
+      "entries": [
+        {
+          "id": "sha256:00d2be5cbdf574555cc260b937e4c130852c6c46a54d709e4e33579cba880b22",
+          "kind": "ai.generalbusiness.dap.accept_invite"
+        }
+      ]
+    },
+    {
+      "step": {
+        "type": "invite",
+        "inviter": "alice",
+        "invitee": "dana",
+        "grants": {
+          "roles": []
+        }
+      },
+      "entries": [
+        {
+          "id": "sha256:cb431f70546e211a6216d513b1d3b6c666f23e505c84f894f614629e1250d622",
+          "kind": "ai.generalbusiness.dap.invite"
+        }
+      ]
+    },
+    {
+      "step": {
+        "type": "accept",
+        "invitee": "dana"
+      },
+      "entries": [
+        {
+          "id": "sha256:98ed4464fecc47636bebee69ac6295900bfa6c8f8a64779e205bedbeb0407450",
+          "kind": "ai.generalbusiness.dap.accept_invite"
+        }
+      ]
+    },
+    {
+      "step": {
+        "type": "act",
+        "actor": "dana",
+        "kind": "com.example.club.apply",
+        "payload": {
+          "statement": "please"
+        },
+        "nonce": "v6:5"
+      },
+      "entries": [
+        {
+          "id": "sha256:971e9bd20f74b23e89cb265bd0f5318778652c22b88dfbdf91bbd51b9ca2ae05",
+          "kind": "com.example.club.apply"
+        }
+      ]
+    },
+    {
+      "step": {
+        "type": "act",
+        "actor": "alice",
+        "kind": "com.example.club.standing",
+        "payload": {
+          "member": "bob",
+          "standing": "lapsed"
+        },
+        "nonce": "v6:6"
+      },
+      "entries": [
+        {
+          "id": "sha256:5fac89a5616249aa497becd44bf51aa1a009bde5e80b0cb2a4fbe4c974edc86b",
+          "kind": "com.example.club.standing"
+        }
+      ]
+    },
+    {
+      "step": {
+        "type": "act",
+        "actor": "bob",
+        "kind": "com.example.club.vote",
+        "payload": {
+          "application_id": "sha256:971e9bd20f74b23e89cb265bd0f5318778652c22b88dfbdf91bbd51b9ca2ae05",
+          "choice": "yes"
+        },
+        "nonce": "v6:7"
+      },
+      "entries": [
+        {
+          "id": "sha256:bba005ee18a5807674fba081bffdff6cc4df8fee6069cc4efeb976e4d00a03f5",
+          "kind": "com.example.club.vote"
+        }
+      ],
+      "application": "sha256:971e9bd20f74b23e89cb265bd0f5318778652c22b88dfbdf91bbd51b9ca2ae05"
+    }
+  ]
+}

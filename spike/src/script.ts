@@ -6,11 +6,10 @@ import type { Json } from './canon.ts';
 import { Context, type ContextOptions } from './context.ts';
 import type { PackageDescriptor } from './descriptor.ts';
 import { CAP, K, holdsNow, type FoundationState, type GrantSpec } from './foundation.ts';
-import { nonce } from './canon.ts';
 import type { Entry, Principal } from './types.ts';
 
 export type Step =
-  | { type: 'act'; actor: Principal; kind: string; payload: Json }
+  | { type: 'act'; actor: Principal; kind: string; payload: Json; nonce?: string }
   | { type: 'invite'; inviter: Principal; invitee: Principal; grants: Omit<GrantSpec, 'principal'> }
   | { type: 'accept'; invitee: Principal }
   | { type: 'attach'; actor: Principal; pkg: PackageDescriptor; audience?: Principal[] }
@@ -41,23 +40,101 @@ export interface JoinDisclosure {
 
 /**
  * A model's declared disclosure policy: in its `config.disclosurePolicy`,
- * the kinds a client may disclose beyond their audience (the public
- * ones). The fixture's disclosing client honours it; the checker's budget
- * judges what is readable regardless. Undefined when no model declares
- * one: then anything may be disclosed.
+ * the kinds a client may disclose beyond their audience. An entry is a
+ * kind name (disclosable to any member) or `{ kind, to }` (disclosable
+ * only to holders of the capability `to`, a role-derived recipient). The
+ * fixture's disclosing client honours it; the checker's budget judges
+ * what is readable regardless. Undefined when no model declares one:
+ * then anything may be disclosed to anyone.
  */
-export function disclosableKinds(state: FoundationState): Set<string> | undefined {
-  let out: Set<string> | undefined;
+export interface DisclosurePolicy {
+  /** kind to the capability its recipients must hold, or null for any member */
+  kinds: Map<string, string | null>;
+}
+
+export function disclosurePolicy(state: FoundationState): DisclosurePolicy | undefined {
+  let out: DisclosurePolicy | undefined;
   for (const pkg of state.env.packages) {
     for (const m of Object.values(pkg.models)) {
       const dp = (m.config as { disclosurePolicy?: { kinds?: unknown } } | null)?.disclosurePolicy;
       if (dp && Array.isArray(dp.kinds)) {
-        out ??= new Set();
-        for (const k of dp.kinds) if (typeof k === 'string') out.add(k);
+        out ??= { kinds: new Map() };
+        for (const k of dp.kinds) {
+          if (typeof k === 'string') out.kinds.set(k, null);
+          else if (k && typeof k === 'object' && typeof (k as { kind?: unknown }).kind === 'string') {
+            const to = (k as { to?: unknown }).to;
+            out.kinds.set((k as { kind: string }).kind, typeof to === 'string' ? to : null);
+          }
+        }
       }
     }
   }
   return out;
+}
+
+/** The kinds a client may disclose under the declared policies, or undefined when none is declared. */
+export function disclosableKinds(state: FoundationState): Set<string> | undefined {
+  const dp = disclosurePolicy(state);
+  return dp ? new Set(dp.kinds.keys()) : undefined;
+}
+
+/**
+ * A model's declared effects: in its `config.effects`, acts the fixture's
+ * client performs after an effective event of a kind. The one effect
+ * kind so far is a grant: `{ kind, grant: { roles, principalFrom } }`
+ * grants the roles to the actor of the event whose content id the
+ * effective event's payload names in `principalFrom`, by a participant
+ * holding the grant capability (the creator when they hold it). This is
+ * how a model whose rule admits someone gets them their role: the model
+ * cannot emit `dap.grant` itself.
+ */
+export interface GrantEffect {
+  kind: string;
+  grant: { roles: string[]; principalFrom: string };
+}
+
+export function effectsDeclared(state: FoundationState): GrantEffect[] {
+  const out: GrantEffect[] = [];
+  for (const pkg of state.env.packages) {
+    for (const m of Object.values(pkg.models)) {
+      const effects = (m.config as { effects?: unknown } | null)?.effects;
+      if (!Array.isArray(effects)) continue;
+      for (const e of effects) {
+        const g = e as GrantEffect;
+        if (g && typeof g.kind === 'string' && g.grant && Array.isArray(g.grant.roles) && typeof g.grant.principalFrom === 'string') out.push(g);
+      }
+    }
+  }
+  return out;
+}
+
+/** Perform the declared effects of the effective event at `position`, as the fixture's client would. */
+export function applyEffects(ctx: Context, position: number): void {
+  const entry = ctx.entries[position];
+  if (!entry || !ctx.state.verdicts[position]?.effective) return;
+  for (const effect of effectsDeclared(ctx.state)) {
+    if (effect.kind !== entry.event.kind) continue;
+    const named = (entry.event.payload as Record<string, unknown> | null)?.[effect.grant.principalFrom];
+    const target = ctx.entries.find((e) => e.id === named);
+    const grantor = ctx.state.participants.find((p) => holdsNow(ctx.state, p, CAP.grant));
+    if (!target || !grantor) continue;
+    ctx.act(grantor, K.grant, { principal: target.event.actor, roles: effect.grant.roles }, { nonce: stepNonce(ctx) });
+  }
+}
+
+/** An event-level client policy: kinds alone cannot make an unauthorized
+ * attempt public. Authorized semantic refusals may still be disclosed. */
+export function disclosablePosition(state: FoundationState, entry: Entry): boolean {
+  let declared = false;
+  let allowed = false;
+  for (const pkg of state.env.packages) for (const model of Object.values(pkg.models)) {
+    const policy = (model.config as { disclosurePolicy?: { kinds?: unknown; authorizedOnly?: boolean } } | null)?.disclosurePolicy;
+    if (!Array.isArray(policy?.kinds)) continue;
+    declared = true;
+    const namesKind = policy.kinds.some((k: unknown) => k === entry.event.kind || (k !== null && typeof k === 'object' && (k as { kind?: unknown }).kind === entry.event.kind));
+    if (namesKind && (!policy.authorizedOnly || state.verdicts[entry.position]?.authorized === true)) allowed = true;
+  }
+  return !declared || allowed;
 }
 
 function joinDisclosuresDeclared(state: FoundationState): JoinDisclosure[] {
@@ -106,18 +183,28 @@ export function replay(script: Script): Replay {
   return { ctx, positions };
 }
 
+/** A nonce unique within the context for the next position: system steps use it so a script replays to identical ids. */
+function stepNonce(ctx: Context): string {
+  return 's:' + (ctx.head + 1);
+}
+
 /** Apply one step to a live context; returns the position it landed at, or -1. A join may be followed by the declared join disclosure. */
 export function applyStep(ctx: Context, step: Step, pendingInvites: Pending, joinDisclosure = true): number {
   let pos = -1;
   {
     switch (step.type) {
       case 'act': {
-        const r = ctx.act(step.actor, step.kind, step.payload);
-        if (!('refused' in r)) pos = r.header.position;
+        // A generated step carries its nonce, so the series replays to the same content ids and
+        // a later step may name an earlier event by id.
+        const r = ctx.act(step.actor, step.kind, step.payload, step.nonce ? { nonce: step.nonce } : {});
+        if (!('refused' in r)) {
+          pos = r.header.position;
+          if (joinDisclosure) applyEffects(ctx, pos);
+        }
         break;
       }
       case 'invite': {
-        const r = ctx.act(step.inviter, K.invite, { invitee: step.invitee, grants: { principal: step.invitee, ...step.grants }, token_id: 'token:' + nonce() });
+        const r = ctx.act(step.inviter, K.invite, { invitee: step.invitee, grants: { principal: step.invitee, ...step.grants }, token_id: 'token:' + (ctx.head + 1) }, { nonce: stepNonce(ctx) });
         if (!('refused' in r)) {
           pos = r.header.position;
           if (r.verdict?.effective) pendingInvites.set(step.invitee, pos);
@@ -127,23 +214,23 @@ export function applyStep(ctx: Context, step: Step, pendingInvites: Pending, joi
       case 'accept': {
         const at = pendingInvites.get(step.invitee);
         if (at === undefined) break;
-        const r = ctx.submit(ctx.intent(step.invitee, K.accept_invite, ctx.inviteEnvelope(at) as never));
+        const r = ctx.submit(ctx.intent(step.invitee, K.accept_invite, ctx.inviteEnvelope(at) as never, { nonce: stepNonce(ctx) }));
         if (!('refused' in r)) pos = r.header.position;
         pendingInvites.delete(step.invitee);
         if (joinDisclosure && !('refused' in r) && r.verdict?.effective) {
           const { discloser, positions } = joinBacklog(ctx.state, ctx.entries, pos);
-          if (discloser && positions.length) ctx.act(discloser, K.disclose, { positions, to: [step.invitee] });
+          if (discloser && positions.length) ctx.act(discloser, K.disclose, { positions, to: [step.invitee] }, { nonce: stepNonce(ctx) });
         }
         break;
       }
       case 'attach': {
         ctx.packages[step.pkg.id] = step.pkg;
-        const r = ctx.act(step.actor, K.attach, { package: step.pkg.id, ...(step.audience ? { audience: step.audience } : {}) });
+        const r = ctx.act(step.actor, K.attach, { package: step.pkg.id, ...(step.audience ? { audience: step.audience } : {}) }, { nonce: stepNonce(ctx) });
         if (!('refused' in r)) pos = r.header.position;
         break;
       }
       case 'disclose': {
-        const r = ctx.act(step.actor, K.disclose, { positions: step.positions.filter((i) => i <= ctx.head), to: step.to });
+        const r = ctx.act(step.actor, K.disclose, { positions: step.positions.filter((i) => i <= ctx.head), to: step.to }, { nonce: stepNonce(ctx) });
         if (!('refused' in r)) pos = r.header.position;
         break;
       }

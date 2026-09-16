@@ -16,7 +16,11 @@ O4 test; they do not prove that the runtime performs those transitions.
 ## Trust, finality and progress
 
 There is one authoritative database file per context, one cooperating writer
-process, and one fixed writer key. Participants trust this writer not to
+process, one live `Journal` serving facade per backend, and one fixed writer
+key. Opening a second facade on the same backend is rejected: each facade
+has a folded admission state, so concurrent independent folds would be stale.
+`Journal.close()` invalidates the facade and closes its SQLite handle; reopen
+uses a fresh backend and rebuilds the state before admitting another action. Participants trust this writer not to
 censor, equivocate, substitute another database copy, or expose private
 payloads. The SQLite lock excludes a second process opening this same file.
 It does not fence a malicious writer using another copy, a network filesystem
@@ -76,6 +80,14 @@ An unbound application kind or an unavailable attach can omit evidence and
 receive the existing semantic refusal. Evidence describes a dependency;
 cryptographic verification alone does not prove the writer supplied the
 correct dependency. The existing interpreter/foundation performs that work.
+
+Readable signed `ViewEntry` values carry the original `committed` envelope
+bytes; hidden values carry no envelope, actor, kind, or audience. A recipient
+can call `verifyJournalView` using an independently pinned genesis and writer
+before interpreting the view. It checks every header, readable actor proof,
+body/byte agreement, and origin adoption. It rejects hidden envelope leakage.
+It does not establish freshness or prove that the server chose the correct
+readable positions; those remain distinct serving and semantic questions.
 
 Genesis retains its declared origin bodies for V1 compatibility. Creation
 requires a separate, matching signed envelope for each origin. Their original
@@ -156,4 +168,6 @@ Origin duplicate detection compares canonical bodies and supports finite
 fractional JSON numbers without changing safe-integer fixture outcomes.
 The O1 validation record reports integration checks; it does not rewrite
 V3's historical campaign ledger or claim that its old byte streams had
-signatures. No V4/V5 source changes are included.
+signatures. The final candidate integrates V4/V5 and the V6 report ancestry;
+the O1 layer adds no application model-policy repair. Those experiments keep
+their own historical source and run boundaries.

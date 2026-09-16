@@ -1,9 +1,9 @@
 // Authenticated facade over the existing Context and shared append operation.
 import type { KeyObject } from 'node:crypto';
-import { appendInitial, MemoryBackend, type AppendEncoding, type Backend, type TransportCredential } from './append.ts';
-import { canonicalize, envelopeBytes, envelopeId, principalOf, signHeader, verifyEnvelope, verifyWire, type ActorEnvelope } from './codec.ts';
+import { appendInitial, MemoryBackend, snapshot, type AppendEncoding, type Backend, type TransportCredential } from './append.ts';
+import { canonicalize, envelopeBytes, envelopeId, principalOf, signHeader, verifyEnvelope, verifyHeader, headerHash, verifyWire, type ActorEnvelope } from './codec.ts';
 import { ZERO_HASH } from './canon.ts';
-import { Context } from './context.ts';
+import { Context, type ViewEntry } from './context.ts';
 import type { PackageDescriptor } from './descriptor.ts';
 import { K, type GenesisPayload } from './foundation.ts';
 import { SQLiteBackend } from './sqlite.ts';
@@ -11,6 +11,7 @@ import type { Entry, EventBody } from './types.ts';
 export const O1_PROFILE_VERSION = 'dap.fixture.single-writer/1';
 export const ORDERING_PROFILE = O1_PROFILE_VERSION;
 export const MAX_ENVELOPE_BYTES = 64 * 1024;
+const owners = new WeakMap<Backend, Journal>();
 export interface JournalOptions { backend: Backend; writerKey: KeyObject; packages: Record<string, PackageDescriptor> }
 function encoding(key: KeyObject): AppendEncoding {
   return {
@@ -48,7 +49,9 @@ function verifyEntries(entries: readonly Entry[], writer: string): void {
 export class Journal {
   readonly context: Context;
   private needsReopen = false;
+  private closed = false;
   private constructor(opts: JournalOptions) {
+    if (owners.has(opts.backend)) throw new Error('Journal: backend already has a live facade');
     if (opts.backend instanceof SQLiteBackend && (opts.backend.writer !== principalOf(opts.writerKey) || opts.backend.profile !== O1_PROFILE_VERSION)) throw new Error('Journal: backend assignment mismatch');
     verifyEntries(opts.backend.entries(), principalOf(opts.writerKey));
     this.context = Context.restore(opts.backend, opts.packages, MAX_ENVELOPE_BYTES, encoding(opts.writerKey));
@@ -56,6 +59,7 @@ export class Journal {
       const expected = this.context.entries.filter(e => e.event.kind === K.accept_invite).map(e => (e.event.payload as unknown as { invite: { header: { commitment: string } } }).invite.header.commitment).sort();
       if (canonicalize(expected) !== canonicalize(opts.backend.consumedTokens())) throw new Error('Journal: corrupt invitation consumption index');
     }
+    owners.set(opts.backend, this);
   }
   static create(opts: JournalOptions, signedGenesis: ActorEnvelope | string | Uint8Array, signedOrigins: (ActorEnvelope | string | Uint8Array)[] = []): Journal {
     if (opts.backend.entries().length) throw new Error('Journal: already initialized');
@@ -71,12 +75,20 @@ export class Journal {
     // Preflight the initial fold, then persist all initialization entries in one transaction.
     const preflight = new MemoryBackend();
     appendInitial(preflight, envelopeId(genesis), submissions, encoding(opts.writerKey));
-    new Journal({ ...opts, backend: preflight });
+    new Journal({ ...opts, backend: preflight }).close();
     appendInitial(opts.backend, envelopeId(genesis), submissions, encoding(opts.writerKey));
     return new Journal(opts);
   }
   static open(opts: JournalOptions): Journal { return new Journal(opts); }
+  /** Releases the sole serving fold. SQLite reopen needs a fresh backend handle. */
+  close(): void {
+    if (this.closed) return;
+    if (this.context.backend instanceof SQLiteBackend) this.context.backend.close();
+    this.closed = true;
+    owners.delete(this.context.backend);
+  }
   submit(input: ActorEnvelope | string | Uint8Array, credential?: TransportCredential) {
+    if (this.closed) throw new Error('Journal: facade is closed');
     if (this.needsReopen) throw new Error('Journal: reopen and reconcile after storage or fold error');
     let envelope: ActorEnvelope;
     try { envelope = verifyEnvelope(input); }
@@ -84,4 +96,30 @@ export class Journal {
     try { return this.context.submit(envelope.body, credential, envelope); }
     catch (error) { this.needsReopen = true; throw error; }
   }
+}
+
+/** Recipient-side authentication of a complete header prefix. The caller pins
+ * genesis and writer independently; visibility policy and freshness remain
+ * separate questions for the serving party and semantic interpreter. */
+export function verifyJournalView(view: readonly ViewEntry[], expected: { genesis: string; writer: string }): readonly ViewEntry[] {
+  if (!view[0]?.event || !view[0].committed) throw new Error('Journal view: genesis must be readable');
+  const genesis = verifyEnvelope(view[0].committed);
+  const origins = declared(genesis, expected.writer);
+  let prev = ZERO_HASH;
+  for (let position = 0; position < view.length; position++) {
+    const v = view[position]!;
+    if (v.position !== position) throw new Error('Journal view: non-dense positions');
+    const chain = { genesis: expected.genesis, position, prev };
+    verifyHeader(v.header, expected.writer, chain);
+    if (v.headerHash !== headerHash(v.header)) throw new Error('Journal view: wrong header hash');
+    if (v.event !== undefined) {
+      if (!v.committed) throw new Error('Journal view: missing actor proof');
+      if (Buffer.byteLength(v.committed) > MAX_ENVELOPE_BYTES) throw new Error('Journal view: envelope bounds');
+      const entry = verifyWire({ header: v.header, committed: v.committed }, expected.writer, chain, { allowOrigin: position > 0 && position <= origins.length });
+      if (canonicalize(entry.event) !== canonicalize(v.event)) throw new Error('Journal view: body disagrees with signed bytes');
+      if (position > 0 && position <= origins.length && canonicalize(entry.event) !== canonicalize(origins[position - 1])) throw new Error('Journal view: unadopted origin');
+    } else if (v.committed !== undefined) throw new Error('Journal view: hidden position contains an envelope');
+    prev = v.headerHash;
+  }
+  return snapshot(view);
 }

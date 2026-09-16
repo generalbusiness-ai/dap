@@ -1,0 +1,261 @@
+{
+  "input_snapshot": "742e64a06d06226b456f489eb53deacc1bc9f5db",
+  "command": "cd spike && node --test --test-skip-pattern='case [57], the campaign:' 'test/**/*.test.ts'",
+  "node": "v26.8.2",
+  "exit_code": 0,
+  "summary": {
+    "tests": 127,
+    "pass": 126,
+    "fail": 0,
+    "todo": 1,
+    "campaign_tests_excluded": 3
+  },
+  "cases": [
+    {
+      "id": "sale-audience",
+      "deliberate_change": "Only com.example.sale.offer audience becomes actor-only",
+      "reader": "alice",
+      "frontier": 5,
+      "expected_violation": "mismatch",
+      "oracle_verdict": {
+        "effective": true,
+        "model_reason": null
+      },
+      "view_verdict": {
+        "effective": false,
+        "model_reason": "no_such_offer"
+      },
+      "control_violations": 0,
+      "model": "sale",
+      "manifest": "sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9",
+      "package": "sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85",
+      "mutant": "sha256:cfbe9b57a0d03196eefb2e3df18f1ecfa0817758853fbba2b6c6789bce23fce8",
+      "kind": "com.example.sale.offer",
+      "entries": 6,
+      "violations": 1,
+      "first": "alice@5 mismatch: observe differs at 5 [models.sale.accepted: oracle o1, view null; models.sale.status: oracle decided, view open; outcomes.5.effective: oracle true, view false; outcomes.5.perModel.sale.effective: oracle true, view false; outcomes.5.perModel.sale.reason: oracle null, view no_such_offer; outcomes.5.reason: oracle null, view ineffective]"
+    },
+    {
+      "id": "sale-binding",
+      "deliberate_change": "Private unrelated side-package attach, then public attach adding a handler to the tested kind",
+      "readers": [
+        "alice",
+        "bob"
+      ],
+      "expected_unrelated": {
+        "binding": "unchanged",
+        "activation": "unchanged",
+        "saved_intent": "effective",
+        "frontier": 5
+      },
+      "expected_relevant": {
+        "binding": "changed",
+        "activation": 6,
+        "saved_intent": "stale_binding",
+        "frontier": 7,
+        "paused": false
+      },
+      "expected_fresh": {
+        "verdict": "effective",
+        "frontier": 8
+      },
+      "model": "sale",
+      "manifest": "sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9",
+      "package": "sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85",
+      "unrelated": 4,
+      "shared": 5,
+      "relevant": 6,
+      "stale": 7,
+      "fresh": 8,
+      "violations": 0
+    },
+    {
+      "id": "booking-audience",
+      "deliberate_change": "Only com.example.booking.occupancy audience becomes actor-only",
+      "reader": "bob",
+      "frontier": 4,
+      "expected_violation": "mismatch",
+      "oracle_verdict": {
+        "effective": true,
+        "model_reason": null
+      },
+      "view_verdict": {
+        "effective": false,
+        "model_reason": "no_such_occupancy"
+      },
+      "control_violations": 0,
+      "model": "booking",
+      "manifest": "sha256:cb4514f4967891077ad78e1dd0fba4c17438fb32b98cd8bd790df8531b35dd16",
+      "package": "sha256:0556de5c337344eaa15afcbbbf5d22aa82c384bd6841d4ffb0c07185d4b7ec27",
+      "mutant": "sha256:cad57243b94ef8b451168fc4265cc7fe0463af104d43faced5f8712da2ec9983",
+      "kind": "com.example.booking.occupancy",
+      "entries": 5,
+      "violations": 1,
+      "first": "bob@4 mismatch: observe differs at 4 [outcomes.4.effective: oracle true, view false; outcomes.4.perModel.booking.effective: oracle true, view false; outcomes.4.perModel.booking.reason: oracle null, view no_such_occupancy; outcomes.4.reason: oracle null, view ineffective]"
+    },
+    {
+      "id": "booking-binding",
+      "deliberate_change": "Private unrelated side-package attach, then public attach adding a handler to the tested kind",
+      "readers": [
+        "alice",
+        "bob"
+      ],
+      "expected_unrelated": {
+        "binding": "unchanged",
+        "activation": "unchanged",
+        "saved_intent": "effective",
+        "frontier": 4
+      },
+      "expected_relevant": {
+        "binding": "changed",
+        "activation": 5,
+        "saved_intent": "stale_binding",
+        "frontier": 6,
+        "paused": false
+      },
+      "expected_fresh": {
+        "verdict": "effective",
+        "frontier": 7
+      },
+      "model": "booking",
+      "manifest": "sha256:cb4514f4967891077ad78e1dd0fba4c17438fb32b98cd8bd790df8531b35dd16",
+      "package": "sha256:0556de5c337344eaa15afcbbbf5d22aa82c384bd6841d4ffb0c07185d4b7ec27",
+      "unrelated": 3,
+      "shared": 4,
+      "relevant": 5,
+      "stale": 6,
+      "fresh": 7,
+      "violations": 0
+    },
+    {
+      "id": "club-audience",
+      "deliberate_change": "Only com.example.club.standing audience becomes actor-only",
+      "reader": "bob",
+      "frontier": 7,
+      "expected_violation": "mismatch",
+      "oracle_verdict": {
+        "effective": false,
+        "model_reason": "lapsed"
+      },
+      "view_verdict": {
+        "effective": true,
+        "model_reason": null
+      },
+      "control_violations": 0,
+      "model": "club",
+      "manifest": "sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde",
+      "package": "sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e",
+      "mutant": "sha256:276d0f9610eba50cff5a922b06117b5300a918d0c538a629befa1292228e3b1e",
+      "kind": "com.example.club.standing",
+      "entries": 8,
+      "violations": 2,
+      "first": "bob@7 mismatch: observe differs at 7 [affordances.0: oracle com.example.club.vote, view undefined; models.club.applications.0.votes.yes: oracle 0, view 1; outcomes.7.effective: oracle false, view true; outcomes.7.perModel.club.effective: oracle false, view true; outcomes.7.perModel.club.reason: oracle lapsed, view null; outcomes.7.reason: oracle ineffective, view null]"
+    },
+    {
+      "id": "club-binding",
+      "deliberate_change": "Private unrelated side-package attach, then public attach adding a handler to the tested kind",
+      "readers": [
+        "alice",
+        "bob"
+      ],
+      "expected_unrelated": {
+        "binding": "unchanged",
+        "activation": "unchanged",
+        "saved_intent": "effective",
+        "frontier": 4
+      },
+      "expected_relevant": {
+        "binding": "changed",
+        "activation": 5,
+        "saved_intent": "stale_binding",
+        "frontier": 6,
+        "paused": false
+      },
+      "expected_fresh": {
+        "verdict": "effective",
+        "frontier": 7
+      },
+      "model": "club",
+      "manifest": "sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde",
+      "package": "sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e",
+      "unrelated": 3,
+      "shared": 4,
+      "relevant": 5,
+      "stale": 6,
+      "fresh": 7,
+      "violations": 0
+    },
+    {
+      "id": "hidden-spine-revocation",
+      "model": "sale",
+      "deliberate_change": "Serve a spine revocation only to Alice while keeping recorded events and headers unchanged",
+      "reader": "bob",
+      "frontier": 5,
+      "expected_violation": "mismatch",
+      "oracle_verdict": {
+        "effective": false,
+        "reason": "unauthorized"
+      },
+      "view_verdict": {
+        "effective": true,
+        "reason": null
+      },
+      "control_violations": 0,
+      "restored_violations": 0,
+      "mutation": "hidden-spine-revocation",
+      "manifest": "sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9",
+      "package": "sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85",
+      "at": 4,
+      "violations": 2,
+      "first": "bob@4 mismatch: observe differs at 4 [affordances.0: oracle undefined, view com.example.sale.offer]",
+      "dependent": "bob@5 mismatch: observe differs at 5 [affordances.0: oracle undefined, view com.example.sale.offer; affordances.1: oracle undefined, view com.example.sale.offer_terms; affordances.2: oracle undefined, view com.example.sale.withdraw; models.sale.offers.0: oracle undefined, view {\"id\":\"after-revocation\",\"author\":\"bob\",\"position\":5,\"status; outcomes.5.effective: oracle false, view true; outcomes.5.perModel: oracle undefined, view {\"sale\":{\"effective\":true,\"reason\":null}}; outcomes.5.reason: oracle unauthorized, view null]"
+    }
+  ],
+  "corpus": [
+    {
+      "file": "corpus/v6/run2/v6-sale.json",
+      "original_steps": 4,
+      "minimal_steps": 4,
+      "every_single_deletion_clean": true,
+      "unmutated_control_clean": true
+    },
+    {
+      "file": "corpus/v6/run2/v6-booking.json",
+      "original_steps": 4,
+      "minimal_steps": 4,
+      "every_single_deletion_clean": true,
+      "unmutated_control_clean": true
+    },
+    {
+      "file": "corpus/v6/run2/v6-club.json",
+      "original_steps": 7,
+      "minimal_steps": 7,
+      "every_single_deletion_clean": true,
+      "unmutated_control_clean": true
+    },
+    {
+      "file": "corpus/v6/run2/v6-hidden-revocation.json",
+      "original_steps": 4,
+      "minimal_steps": 3,
+      "every_single_deletion_clean": true,
+      "unmutated_control_clean": true
+    }
+  ],
+  "historical_club_corpus": {
+    "seeds": [
+      81,
+      107,
+      182
+    ],
+    "minimal_steps_each": 7,
+    "literal_description": "Only linked application hash preview remapped; full id checked in vote and projection",
+    "result": "pass"
+  },
+  "campaign_measurements": "run1.json: implementation, models and manifests unchanged",
+  "known_todo": {
+    "plan": "4.2",
+    "expected": "Second admission of an existing Member is ineffective",
+    "actual": "Admission 18 is effective after Member grant 15",
+    "status": "Retained negative result; no policy repair"
+  }
+}
