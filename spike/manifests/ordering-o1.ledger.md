@@ -356,3 +356,22 @@ Current input-file SHA-256 hashes (raw bytes):
 | `spike/manifests/ordering-lifecycle.ts` | `c3c4cb71aefbeafad163a8a4d04e309de96ca0bf920fc321675ac6da0b186e70` |
 | `spike/test/ordering-lifecycle.test.ts` | `03f121dd9f867ae25ec68de9135910e84dd13bfc1d93e34e75e619414a06374e` |
 | `notes/2026-09-14-ordering.md` | `5ccd3c59c01a428a8c43e5adfd3fe2e7ba06108df3bd6ae2fee6923488700bfe` |
+
+## Approved V6 evidence followup integration
+
+O1 integrates approved V6 followup
+`d95e097b1d38a5242754922fe4c8b977462f5555` in merge
+`cae3256304205533586e1b30e70150a49874b000`, preserving corrected O1
+candidate `03a943dd81dc444bb10435d50b0e8648d2eda424`. V6 approval report
+`ca3caf40a066c506e9dfdcc827e9620b2831d243` is independently issued and
+ratified. That approval covers V6's evidence followup; O1 still requires its
+own re-review.
+
+The followup adds retained Club A5 negative traces and direct corpus replay
+checks, plus their reports. Runtime, application models and experiment
+manifests are unchanged by this integration. The planned validation is the
+full noncampaign suite and typecheck, with four executing/failing Club TODOs
+now expected. It excludes only the three 200-seed campaigns, which passed at
+O1 runtime source `747a0905dc80f15a108fd62bdc5399e9f31f4431`; the final
+O1 specification boundary remains `4329569392c7696e0857539eae6947903c8a5ba8`.
+Neither earlier measurement is relabelled as a run of this integration.
