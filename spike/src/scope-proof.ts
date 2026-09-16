@@ -89,7 +89,7 @@ export function verifyPublicProof(proof: PublicProof, expected: { genesis: strin
     });
     verifyJournalView(view, { genesis: expected.genesis, writer: expected.initialWriter });
     let ordering = initialOrdering(view[0]!.event!);
-    for (const entry of view.slice(1, -1)) if (entry.event) ordering = advanceOrdering(ordering, { position: entry.position, header: entry.header, event: entry.event } as never);
+    for (const entry of view.slice(1, -1)) if (entry.event) ordering = advanceOrdering(ordering, { position: entry.position, header: entry.header, headerHash: entry.headerHash, id: entry.header.commitment, event: entry.event, committed: entry.committed });
     const { certificate, ...unsigned } = proof;
     const body: CompletenessCertificate['body'] = { type: 'dap.fixture.public-proof-completeness/1', rule: PUBLIC_PROOF_RULE_ID, genesis: proof.genesis, frontier: proof.frontier, proof_hash: digest(unsigned) };
     if (!certificate || Object.keys(certificate).sort().join(',') !== 'body,sig,signer' || certificate.signer !== ordering.writer || canonicalize(certificate.body) !== canonicalize(body) || typeof certificate.sig !== 'string') throw new ScopeProofError('scope proof: completeness certificate mismatch');
@@ -110,10 +110,10 @@ function digest(value: unknown): string { return 'sha256:' + createHash('sha256'
 // within this boundary. Unexpected errors retain their identity and are thrown.
 const WIRE_REJECTIONS = new Set([
   'Journal: expected genesis', 'Journal: wrong writer (initial assignment)',
-  'Journal: invalid origins', 'Journal: unsupported profile',
-  'ordering: malformed control payload', 'ordering: invalid v2 sequencing fields',
+  'Journal: invalid origins', 'Journal: unsupported profile', 'Journal: duplicate commitment',
+  'ordering: malformed control payload', 'ordering: invalid v3 sequencing fields',
   'ordering: control key must differ from writer',
-  ...['genesis must be readable','non-dense positions','wrong header hash',
+  ...['genesis must be readable','non-dense positions','wrong header hash','duplicate commitment',
     'missing actor proof','envelope bounds','body disagrees with signed bytes',
     'unadopted origin','hidden position contains an envelope',
     'missing assignment opening after seal','retired_writer','handover_not_enabled',

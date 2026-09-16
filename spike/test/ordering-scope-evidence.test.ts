@@ -1,14 +1,15 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import { sign, verify } from 'node:crypto';
 import { LifecycleWorld, buildThrough, keys, packages, principals } from '../fixtures/ordering-lifecycle-runner.ts';
 import { forkSource, laterProof } from '../fixtures/ordering-scope-faults.ts';
 import { ScopeJournal, replayScope } from '../src/scope.ts';
-import { publicProof, publicProofBytes, verifyPublicProof, assertPublicData } from '../src/scope-proof.ts';
+import { publicProof, publicProofBytes, verifyPublicProof, assertPublicData, ScopeProofError } from '../src/scope-proof.ts';
 import { SQLiteBackend } from '../src/sqlite.ts';
 import { O1_PROFILE_VERSION } from '../src/journal.ts';
 import { join } from 'node:path';
 import { MemoryBackend } from '../src/append.ts';
-import { canonicalize, envelopeBytes, envelopeId, signEvent, verifyEnvelope, type ActorEnvelope } from '../src/codec.ts';
+import { canonicalize, envelopeBytes, envelopeId, signEvent, signHeader, headerHash, verifyHeader, publicKeyOf, verifyEnvelope, type ActorEnvelope } from '../src/codec.ts';
 import { ScopeProfileError, SCOPE_KINDS, scopeId } from '../src/scope-profile.ts';
 import { K, holdsNow } from '../src/foundation.ts';
 import { SALE } from '../fixtures/sale.ts';
@@ -182,4 +183,32 @@ for (const storage of ['memory','sqlite'] as const) test('O4 withdrawn o3 cannot
     const stripped = structuredClone(proof); delete stripped.source.positions[16]!.committed;
     failed(world.activate([stripped,world.proof('D')]),/completeness/); dormant(world);
   } finally { world.close(); healthy.close(); }
+});
+
+
+for (const storage of ['memory','sqlite'] as const) test('O4 H1 a signed duplicate-commitment fault proof refuses activation without poisoning the destination: ' + storage, () => {
+  const world = buildThrough('destination-started',{},storage);
+  try {
+    const original = world.proof('S');
+    const packet = structuredClone(original.source);
+    const last = packet.positions.at(-1)!;
+    const expected = { genesis:packet.genesis,position:packet.frontier + 1,prev:headerHash(last.header) };
+    const header = signHeader({ ...expected,commitment:last.header.commitment },keys.W1);
+    verifyHeader(header,principals.W1,expected);
+    // Explicit faulty-writer packet: reuse the actual actor envelope in a new
+    // correctly signed header. The healthy source journal remains untouched.
+    assert.equal(verifyEnvelope(last.committed!).body.kind,K.scope_release);
+    packet.positions.push({ header,committed:last.committed! });packet.frontier++;
+    const { certificate,...unsigned } = packet;
+    const body = { ...certificate.body,frontier:packet.frontier,proof_hash:scopeId(unsigned) };
+    packet.certificate = { body,signer:principals.W1,sig:sign(null,Buffer.from(canonicalize(body)),keys.W1).toString('base64url') };
+    assert.equal(verify(null,Buffer.from(canonicalize(body)),publicKeyOf(principals.W1),Buffer.from(packet.certificate.sig,'base64url')),true);
+    assert.throws(()=>verifyPublicProof(packet,{ genesis:packet.genesis,initialWriter:principals.W0,frontier:packet.frontier },packages),error=>error instanceof ScopeProofError && error.message==='Journal view: duplicate commitment');
+    const refusal = world.activate([{ source:packet,release:original.release },world.proof('D')]);
+    failed(refusal,/^Journal view: duplicate commitment$/);dormant(world);
+    assert.equal(world.contexts.S!.journal.context.head,24);
+    const honest = world.activate();assert.ok(!('refused' in honest));assert.equal(honest.verdict?.effective,true);
+    assert.equal(world.contexts.F!.state.activations,1);
+    recordScope('h1-duplicate-commitment-' + storage,{ faultyWriterPacket:packet,refusal,honest,sourceHead:world.contexts.S!.journal.context.head,final:world.snapshot() });
+  } finally {world.close();}
 });
