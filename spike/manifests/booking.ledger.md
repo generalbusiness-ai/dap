@@ -30,7 +30,9 @@ cannot see a request is not its booker; `freed` over `expired` over
 name. The author's own predictions of failure: a cancel naming a
 different admin than its request; a second cancel whose first the
 reader cannot see; requests addressed to a non-admin; join disclosure
-widening a narrowed observation.
+widening a narrowed observation. The explicit `admin` payload fields on
+request and cancel are additions in the frozen Booking manifest, not
+fields prescribed by the plan's §4.1 schema.
 
 ## Run 1
 
@@ -41,7 +43,7 @@ All six predeclared cases pass (two requests for one slot, free exactly
 one, duplicate publication, only the admin publishes, expiry, the
 cross-view case from checker's review 05048fbb). The campaign passes:
 200 of 200 seeds with zero violations of the property, the pause rule,
-the invariants and the privacy budget, over 12000 entries with 974
+the invariants and the privacy budget, exactly 12000 entries with 974
 joins, 197 narrow side attaches, 1646 disclosures, 2564 requests, 1425
 publications (653 effective), 401 frees, 439 cancels and 1581 clock
 ticks.
@@ -49,9 +51,9 @@ ticks.
 The privacy budget of this run is the frozen manifest's: it checks the
 projection only. Checker's V3 review (report 8c0d324b, V3-F1) showed
 that a projection-only check misses private payloads a participant can
-read after a disclosure; the harness's budget now also receives the
-participant's readable view, and the Booking manifest's check is
-amended to use it in the next run. That amendment changes the manifest
+read after a disclosure. The harness already supplied the participant's
+readable view before Booking's freeze (V3 run 3, `498f258`); Booking's
+manifest guard did not use it until the next run. That amendment changes the manifest
 identity and is recorded there as a revised experiment.
 
 ## Run 2
@@ -80,7 +82,7 @@ package after fix 1:
 
 All six predeclared cases pass. The campaign passes: 200 of 200 seeds
 with zero violations of the property, the pause rule, the invariants and
-the privacy budget, over 12000 entries with 974 joins, 197 narrow side
+the privacy budget, exactly 12000 entries with 974 joins, 197 narrow side
 attaches, 1638 disclosures, 2569 requests, 1426 publications (654
 effective), 401 frees, 439 cancels and 1582 clock ticks.
 
@@ -93,10 +95,22 @@ cancels and occupancies named requests that never existed in the
 replayed series; found by the Club run 1 campaign). Manifest and package
 as at run 3.
 
+The seeded per-act nonces in `3b4f727` consume two extra values from
+the generator's random stream per act. This changes the choices in all
+200 Sale seeds as well as fixing replay ids (checker V4-F4); seed 1 first
+diverges at step 6. Earlier ledgers' seed references, including Sale's
+7, 72, 96 and the run-1 list, reproduce only with their snapshot's
+generator. The committed literal corpora are unaffected. Sale must be
+revalidated with the current generator; its coverage is recorded in the
+V4 correction run below.
+
 All six predeclared cases pass. The campaign passes: 200 of 200 seeds
-with zero violations, now with genuine coverage of the linkage: 323
-effective cancels of real requests (run 3 had none) and 489 effective
-occupancies naming a real request. The run-3 result stands; its coverage
+with zero violations under that guard, with 325 effective cancels of
+real requests (run 3 had none) and 472 effective occupancies naming an
+earlier effective request. The earlier figures 323 and 489 were
+unsupported and are corrected here: checker reproduced 325 and 472 at
+`d9dee03` itself (V4-F3), matching run 6. No cause for the incorrect
+figures is established. The run-3 result stands; its coverage
 claim for cancels and published requests was vacuous and is corrected
 here.
 
@@ -150,20 +164,54 @@ and no one-step deletion preserves their readable-events privacy
 failure. Literal private disclosures still violate the current model's
 budget, as expected for the client policy in fix 1.
 
-The current campaign has zero violations over 12000 entries: 955 joins,
+The current campaign has zero violations exactly 12000 entries: 955 joins,
 198 narrow attaches, 1629 disclosures, 2554 requests, 1496 publications
 (652 effective), 384 frees, 419 cancels (325 effective) and 1630 ticks.
 Of the effective occupancies, 472 name an earlier effective request.
 These two linkage measures are now produced and required by the
-committed campaign test. They are the current measured counts; run 4's
-reported 323 cancels and 489 linked occupancies remain in its historical
-record and are not the run-6 measurements.
+committed campaign test. Checker subsequently reproduced the same counts
+at run 4's exact snapshot; run 4's unsupported figures have been
+corrected above. The earlier description of them as historical
+measurements was incorrect.
 
 `npm run typecheck` and `git diff --check` pass. A separate generation
 and replay check over all 200 seeds confirms that two independent
 generations produce identical event ids at every position. The preserved
 run-2 model and generator were also compared with `7b24e86`: only their
 import paths differ.
+
+## Run 7: the corrected public-event guard, before repair
+
+Snapshot commit: "spike V4: checker run 7 snapshot: preserve public actor
+and payload leaks". Checker report `5014a7f1` (V4-F1/F2) exposed a gap in
+the readable-events guard. It checked private requests and cancels, but
+not the actors, linked booking ids or extra private fields of readable
+occupancies, frees and observations. Earlier zero-violation claims are
+limited to the earlier guard; they did not establish the stated booker
+budget. The amended manifest is a new experiment identity:
+`sha256:3076d3854901ddeb6b0d5cc379646bb182f89bd61882d648fc9051dfae7d788f`.
+The model remains unchanged:
+`sha256:622a120962da35c370b093161848677fe086a5d1fa729655fc3ce2ced855bc9b`.
+
+`node scripts/booking-public-campaign.ts` checks all 200 seeds before
+repair and finds **99 failing seeds**, all privacy-budget failures.
+Every failing series is retained in full and shrunk under
+`corpus/booking/run7/`; `seeds.txt` gives the exact list. This includes
+unauthorized Booker-signed observations as well as occupancy/free
+attempts. Seed 1 position 50 exposes Carol's actor and the content id of
+her own earlier effective request to other bookers. The full record
+preserves that linkage even when shrinking removes the private request.
+
+The four focused F1/F2 tests pass as detection tests: the seed-1 leak,
+and an authorized occupancy, free and clock observation each carrying
+extra `booker` and `purpose` fields. All three hostile publications remain
+effective and readable to Carol, and the corrected guard reports them.
+No schema enforcement or admission repair is claimed for such hostile
+clients. `npm run typecheck` passes.
+
+The previous run-2 budget is kept in `corpus/booking/run2/budget.ts` so
+its historical corpus is not silently assigned the amended semantics.
+The fixes remain 1 and 0 added kinds at this pre-repair snapshot.
 
 ## Fixes
 

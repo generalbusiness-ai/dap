@@ -134,6 +134,64 @@ export function bookingInvariants(state: FoundationState, frontier: number, entr
 
 // ----- the privacy budget over observations -----
 
+function record(value: unknown): Record<string, unknown> | undefined {
+  return value !== null && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : undefined;
+}
+
+/** Booker authority comes from effective public spine grants, not a payload's claim. */
+function applyBookerGrant(bookers: Set<Principal>, value: unknown, revoke = false): void {
+  const g = record(value);
+  if (!g || typeof g.principal !== 'string') return;
+  const grantsRequest = Array.isArray(g.roles) && g.roles.includes('Booker') || Array.isArray(g.capabilities) && g.capabilities.includes(BOOKING + 'request');
+  if (grantsRequest) {
+    if (revoke) bookers.delete(g.principal);
+    else bookers.add(g.principal);
+  }
+}
+
+/** Public fields must not carry private identity or purpose, including nested observation facts. */
+function privatePublicFields(value: unknown, path = 'payload'): string[] {
+  if (Array.isArray(value)) return value.flatMap((v, i) => privatePublicFields(v, `${path}[${i}]`));
+  const obj = record(value);
+  if (!obj) return [];
+  return Object.entries(obj).flatMap(([key, child]) =>
+    key === 'booker' || key === 'purpose' ? [`${path}.${key}`] : privatePublicFields(child, `${path}.${key}`),
+  );
+}
+
+/** Ineffective public-kind attempts can disclose actors and link a booking id to its booker. */
+export function publicBookingLeaks(obs: Pick<Observation, 'outcomes'>, p: Principal, admin: Principal, view: readonly { position: number; event?: EventBody }[]): string[] {
+  const out: string[] = [];
+  const bookers = new Set<Principal>();
+  const linked = new Map<string, Principal>();
+  for (const v of view) {
+    const ev = v.event;
+    if (!ev) continue;
+    const payload = record(ev.payload);
+    const publicKind = ev.kind === BOOKING + 'occupancy' || ev.kind === BOOKING + 'free' || ev.kind === K.observe;
+    if (publicKind) {
+      const id = typeof payload?.booking_id === 'string' ? payload.booking_id : undefined;
+      if (bookers.has(ev.actor) && p !== ev.actor && p !== admin) {
+        out.push(`${p} can read public ${ev.kind} at ${v.position} signed by booker ${ev.actor}${id ? `, linking booking id ${id}` : ''}`);
+        if (id) linked.set(id, ev.actor);
+      }
+      const booker = id ? linked.get(id) : undefined;
+      if (booker && booker !== p && p !== admin) out.push(`${p} can link public ${ev.kind} at ${v.position} to booker ${booker} through booking id ${id}`);
+      if (p !== admin && p !== payload?.booker) {
+        for (const field of privatePublicFields(ev.payload)) out.push(`${p} can read private field ${field} on public ${ev.kind} at ${v.position}`);
+      }
+    }
+    if (!obs.outcomes[String(v.position)]?.effective) continue;
+    if (ev.kind === K.genesis && Array.isArray(payload?.grants)) for (const grant of payload.grants) applyBookerGrant(bookers, grant);
+    if (ev.kind === K.grant || ev.kind === K.revoke) applyBookerGrant(bookers, ev.payload, ev.kind === K.revoke);
+    if (ev.kind === K.accept_invite) {
+      const invite = record(record(payload?.invite)?.event);
+      applyBookerGrant(bookers, record(invite?.payload)?.grants);
+    }
+  }
+  return out;
+}
+
 /** The parties who may read a private Booking event, from recorded facts: the booker (its actor) and the admin. */
 export function privateParties(view: readonly { position: number; event?: EventBody }[], i: number, admin: Principal): Principal[] | undefined {
   const ev = view[i]?.event;
@@ -149,7 +207,7 @@ export function privateParties(view: readonly { position: number; event?: EventB
  * occupancy.
  */
 export function bookingBudgetViolations(obs: Observation, p: Principal, admin: Principal, view: readonly { position: number; event?: EventBody }[] = []): string[] {
-  const out: string[] = [];
+  const out: string[] = publicBookingLeaks(obs, p, admin, view);
   for (const v of view) {
     if (!v.event) continue;
     const parties = privateParties(view, v.position, admin);

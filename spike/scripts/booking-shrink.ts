@@ -10,11 +10,11 @@ import { serializeSteps, writeCorpus } from '../src/corpus.ts';
 import { replay, shrink } from '../src/script.ts';
 import { generate } from '../corpus/booking/run2/generate.ts';
 import { bookingPackage } from '../corpus/booking/run2/model.ts';
-import { ADMIN, BOOKING_MANIFEST_ID, bookingBounds, bookingBudgetViolations, bookingGeneratorSpec, bookingInvariants } from '../manifests/booking.ts';
+import { ADMIN, bookingBounds, bookingGeneratorSpec, bookingInvariants } from '../manifests/booking.ts';
+import { bookingBudgetViolations } from '../corpus/booking/run2/budget.ts';
 import { hasPrivateDisclosure } from '../corpus/booking/privacy-failure.ts';
 
 const manifest = 'sha256:771a9cb82aff7b03bf50b55b490e35710da3e3072bd8877a7b79a13100bfc3f7';
-assert.equal(BOOKING_MANIFEST_ID, manifest, 'recovery must use the run-2 manifest');
 const dir = fileURLToPath(new URL('../corpus/booking/run2/', import.meta.url));
 const spec = bookingGeneratorSpec(bookingPackage);
 const failing: number[] = [];

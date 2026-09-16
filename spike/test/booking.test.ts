@@ -13,7 +13,7 @@ import { CAP, K } from '../src/foundation.ts';
 import { generate } from '../src/generate.ts';
 import { oracleObserve } from '../src/oracle.ts';
 import { applyStep, replay, type Pending } from '../src/script.ts';
-import { nonce } from '../src/canon.ts';
+import { nonce, type Json } from '../src/canon.ts';
 import { BOOKING, bookingPackage } from '../fixtures/booking.ts';
 import {
   ADMIN,
@@ -233,4 +233,33 @@ test('the repair ledger exists, its totals agree with its entries, and it states
   assert.equal(totals[3], within ? 'within' : 'exceeded', 'the stated budget outcome matches the counts');
   t.diagnostic(`fixes ${fixes}, added kinds ${addedKinds}, budget ${totals[3]}`);
   assert.equal(typeof CAP.observe, 'string');
+});
+
+for (const kind of [BOOKING + 'occupancy', BOOKING + 'free', K.observe]) {
+  test(`V4-F2: the budget detects private fields published through ${kind}`, () => {
+    const ctx = room([BOB, CAROL]);
+    const req = request(ctx, BOB, 10, 12);
+    if (kind === BOOKING + 'free') assert.equal(publish(ctx, ADMIN, req.id, 10, 12).verdict.effective, true);
+    const secret = { booker: BOB, purpose: 'secret plan' };
+    const payload: Json = kind === K.observe ? { fact: { clock: 1, ...secret } }
+      : kind === BOOKING + 'free' ? { booking_id: req.id, ...secret }
+      : { booking_id: req.id, room: ROOM, start: 10, end: 12, ...secret };
+    const r = ctx.act(kind === K.observe ? CLOCK : ADMIN, kind, payload);
+    assert.ok(!('refused' in r) && r.verdict?.effective, 'authorized hostile publication remains possible without closed schema enforcement');
+    const leaks = bookingBudgetViolations(oracleObserve(ctx, CAROL, ctx.head, ctx.head), CAROL, ADMIN, ctx.view(CAROL));
+    assert.ok(leaks.some((v) => v.includes('private field') && v.includes('booker')), leaks.join('\n'));
+    assert.ok(leaks.some((v) => v.includes('private field') && v.includes('purpose')), leaks.join('\n'));
+    assert.ok(fullCheck(ctx).some((v) => v.kind === 'budget' && v.participant === CAROL));
+  });
+}
+
+test('V4-F1: seed 1 position 50 exposes Carol and her own request id under the unrepaired audience', () => {
+  const { ctx } = replay(generate(bookingGeneratorSpec(bookingPackage), 1));
+  const event = ctx.entries[50]!.event;
+  assert.equal(event.kind, BOOKING + 'occupancy');
+  assert.equal(event.actor, CAROL);
+  const id = (event.payload as { booking_id: string }).booking_id;
+  assert.ok(ctx.entries.slice(0, 50).some((e) => e.id === id && e.event.actor === CAROL && e.event.kind === BOOKING + 'request'));
+  const leaks = fullCheck(ctx, [50]);
+  assert.ok(leaks.some((v) => v.kind === 'budget' && v.participant === BOB && v.detail.includes('signed by booker carol')));
 });

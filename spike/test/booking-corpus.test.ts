@@ -8,7 +8,8 @@ import { replay } from '../src/script.ts';
 import { bookingPackage as run2Package } from '../corpus/booking/run2/model.ts';
 import { hasPrivateDisclosure } from '../corpus/booking/privacy-failure.ts';
 import { bookingPackage } from '../fixtures/booking.ts';
-import { ADMIN, BOOKING_MANIFEST_ID, bookingBase, bookingBudgetViolations, bookingInvariants, sidePackage } from '../manifests/booking.ts';
+import { ADMIN, bookingBase, bookingInvariants, sidePackage } from '../manifests/booking.ts';
+import { bookingBudgetViolations } from '../corpus/booking/run2/budget.ts';
 
 test('run 2 corpus: all 139 recovered privacy failures replay and are deletion-minimal', (t) => {
   const dir = fileURLToPath(new URL('../corpus/booking/run2/', import.meta.url));
@@ -17,7 +18,7 @@ test('run 2 corpus: all 139 recovered privacy failures replay and are deletion-m
   assert.equal(entries.length, 139);
   assert.deepEqual(entries.map(({ entry }) => entry.seed).sort((a, b) => Number(a) - Number(b)), seeds);
   for (const { name, entry } of entries) {
-    assert.equal(entry.manifest, BOOKING_MANIFEST_ID, `${name} manifest`);
+    assert.equal(entry.manifest, 'sha256:771a9cb82aff7b03bf50b55b490e35710da3e3072bd8877a7b79a13100bfc3f7', `${name} historical manifest`);
     assert.equal(entry.package, run2Package.id, `${name} kept model`);
     assert.match(entry.expected, / budget: /);
     const script = toScript(entry, bookingBase(run2Package), { [sidePackage.name]: sidePackage });
