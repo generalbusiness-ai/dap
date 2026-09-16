@@ -6,11 +6,10 @@ import type { Json } from './canon.ts';
 import { Context, type ContextOptions } from './context.ts';
 import type { PackageDescriptor } from './descriptor.ts';
 import { CAP, K, holdsNow, type FoundationState, type GrantSpec } from './foundation.ts';
-import { nonce } from './canon.ts';
 import type { Entry, Principal } from './types.ts';
 
 export type Step =
-  | { type: 'act'; actor: Principal; kind: string; payload: Json }
+  | { type: 'act'; actor: Principal; kind: string; payload: Json; nonce?: string }
   | { type: 'invite'; inviter: Principal; invitee: Principal; grants: Omit<GrantSpec, 'principal'> }
   | { type: 'accept'; invitee: Principal }
   | { type: 'attach'; actor: Principal; pkg: PackageDescriptor; audience?: Principal[] }
@@ -106,18 +105,25 @@ export function replay(script: Script): Replay {
   return { ctx, positions };
 }
 
+/** A nonce unique within the context for the next position: system steps use it so a script replays to identical ids. */
+function stepNonce(ctx: Context): string {
+  return 's:' + (ctx.head + 1);
+}
+
 /** Apply one step to a live context; returns the position it landed at, or -1. A join may be followed by the declared join disclosure. */
 export function applyStep(ctx: Context, step: Step, pendingInvites: Pending, joinDisclosure = true): number {
   let pos = -1;
   {
     switch (step.type) {
       case 'act': {
-        const r = ctx.act(step.actor, step.kind, step.payload);
+        // A generated step carries its nonce, so the series replays to the same content ids and
+        // a later step may name an earlier event by id.
+        const r = ctx.act(step.actor, step.kind, step.payload, step.nonce ? { nonce: step.nonce } : {});
         if (!('refused' in r)) pos = r.header.position;
         break;
       }
       case 'invite': {
-        const r = ctx.act(step.inviter, K.invite, { invitee: step.invitee, grants: { principal: step.invitee, ...step.grants }, token_id: 'token:' + nonce() });
+        const r = ctx.act(step.inviter, K.invite, { invitee: step.invitee, grants: { principal: step.invitee, ...step.grants }, token_id: 'token:' + (ctx.head + 1) }, { nonce: stepNonce(ctx) });
         if (!('refused' in r)) {
           pos = r.header.position;
           if (r.verdict?.effective) pendingInvites.set(step.invitee, pos);
@@ -127,23 +133,23 @@ export function applyStep(ctx: Context, step: Step, pendingInvites: Pending, joi
       case 'accept': {
         const at = pendingInvites.get(step.invitee);
         if (at === undefined) break;
-        const r = ctx.submit(ctx.intent(step.invitee, K.accept_invite, ctx.inviteEnvelope(at) as never));
+        const r = ctx.submit(ctx.intent(step.invitee, K.accept_invite, ctx.inviteEnvelope(at) as never, { nonce: stepNonce(ctx) }));
         if (!('refused' in r)) pos = r.header.position;
         pendingInvites.delete(step.invitee);
         if (joinDisclosure && !('refused' in r) && r.verdict?.effective) {
           const { discloser, positions } = joinBacklog(ctx.state, ctx.entries, pos);
-          if (discloser && positions.length) ctx.act(discloser, K.disclose, { positions, to: [step.invitee] });
+          if (discloser && positions.length) ctx.act(discloser, K.disclose, { positions, to: [step.invitee] }, { nonce: stepNonce(ctx) });
         }
         break;
       }
       case 'attach': {
         ctx.packages[step.pkg.id] = step.pkg;
-        const r = ctx.act(step.actor, K.attach, { package: step.pkg.id, ...(step.audience ? { audience: step.audience } : {}) });
+        const r = ctx.act(step.actor, K.attach, { package: step.pkg.id, ...(step.audience ? { audience: step.audience } : {}) }, { nonce: stepNonce(ctx) });
         if (!('refused' in r)) pos = r.header.position;
         break;
       }
       case 'disclose': {
-        const r = ctx.act(step.actor, K.disclose, { positions: step.positions.filter((i) => i <= ctx.head), to: step.to });
+        const r = ctx.act(step.actor, K.disclose, { positions: step.positions.filter((i) => i <= ctx.head), to: step.to }, { nonce: stepNonce(ctx) });
         if (!('refused' in r)) pos = r.header.position;
         break;
       }
