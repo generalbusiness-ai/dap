@@ -1,0 +1,344 @@
+{
+  "source_snapshot": "e627460daf788d6dbf6d3f8cbaa28f8f0fc0368b",
+  "baseline": "19af1c8fb46cc91c61a2027647f04a6f305b5cdc",
+  "commands": {
+    "tests": "cd spike && node --test --test-skip-pattern='case [57], the campaign:' 'test/**/*.test.ts'",
+    "typecheck": "npm --prefix spike run typecheck"
+  },
+  "results": {
+    "tests": 133,
+    "pass": 129,
+    "fail": 0,
+    "todo": 4,
+    "campaign_tests_excluded": 3,
+    "test_exit": 0,
+    "typecheck_exit": 0
+  },
+  "log_normalization": {
+    "description": "Trailing spaces/tabs stripped from each line in the new follow-up test log only; no lines removed. Historical logs unchanged.",
+    "raw_stdout_sha256": "b00f62dc1861c79fffb56f967da5ce581d867d56e681bf10c7664200328c9cbe",
+    "normalized_stdout_sha256": "264fd0c035c84be6911031d5adb9129065f69e2f694ca7c56c2f4d876aae5c29"
+  },
+  "a5": [
+    {
+      "record": "corpus/club/a5-followup1/invitation-acceptance.json",
+      "target": {
+        "position": 6,
+        "id": "sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402",
+        "kind": "ai.generalbusiness.dap.accept_invite",
+        "effective": true
+      },
+      "votes": [
+        9,
+        10
+      ],
+      "admit": 11,
+      "grants": [
+        {
+          "position": 12,
+          "payload": {
+            "principal": "dana",
+            "roles": [
+              "Member"
+            ]
+          }
+        }
+      ],
+      "readers": [
+        {
+          "reader": "alice",
+          "votes": [
+            true,
+            true
+          ],
+          "admit": true
+        },
+        {
+          "reader": "bob",
+          "votes": [
+            true,
+            true
+          ],
+          "admit": true
+        },
+        {
+          "reader": "carol",
+          "votes": [
+            true,
+            true
+          ],
+          "admit": true
+        },
+        {
+          "reader": "dana",
+          "votes": [
+            true,
+            true
+          ],
+          "admit": true
+        },
+        {
+          "reader": "frank",
+          "votes": [
+            true,
+            true
+          ],
+          "admit": true
+        }
+      ],
+      "original_steps": 11,
+      "minimal_steps": 5,
+      "invariant_findings": 9,
+      "all_single_deletions_clean": true
+    },
+    {
+      "record": "corpus/club/a5-followup1/malformed-apply.json",
+      "target": {
+        "position": 9,
+        "id": "sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736",
+        "kind": "com.example.club.apply",
+        "effective": false
+      },
+      "votes": [
+        10,
+        11
+      ],
+      "admit": 12,
+      "grants": [
+        {
+          "position": 13,
+          "payload": {
+            "principal": "dana",
+            "roles": [
+              "Member"
+            ]
+          }
+        }
+      ],
+      "readers": [
+        {
+          "reader": "alice",
+          "votes": [
+            true,
+            true
+          ],
+          "admit": true
+        },
+        {
+          "reader": "bob",
+          "votes": [
+            true,
+            true
+          ],
+          "admit": true
+        },
+        {
+          "reader": "carol",
+          "votes": [
+            true,
+            true
+          ],
+          "admit": true
+        },
+        {
+          "reader": "dana",
+          "votes": [
+            true,
+            true
+          ],
+          "admit": true
+        },
+        {
+          "reader": "frank",
+          "votes": [
+            true,
+            true
+          ],
+          "admit": true
+        }
+      ],
+      "original_steps": 12,
+      "minimal_steps": 6,
+      "invariant_findings": 9,
+      "all_single_deletions_clean": true
+    },
+    {
+      "record": "corpus/club/a5-followup1/standing-reason.json",
+      "target": {
+        "position": 9,
+        "id": "sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+        "kind": "com.example.club.standing_reason",
+        "effective": true
+      },
+      "votes": [
+        10,
+        11
+      ],
+      "admit": 12,
+      "grants": [
+        {
+          "position": 13,
+          "payload": {
+            "principal": "alice",
+            "roles": [
+              "Member"
+            ]
+          }
+        }
+      ],
+      "readers": [
+        {
+          "reader": "alice",
+          "votes": [
+            true,
+            true
+          ],
+          "admit": true
+        },
+        {
+          "reader": "bob",
+          "votes": [
+            true,
+            true
+          ],
+          "admit": true
+        },
+        {
+          "reader": "carol",
+          "votes": [
+            true,
+            true
+          ],
+          "admit": true
+        },
+        {
+          "reader": "dana",
+          "votes": [
+            true,
+            true
+          ],
+          "admit": true
+        },
+        {
+          "reader": "frank",
+          "votes": [
+            true,
+            true
+          ],
+          "admit": true
+        }
+      ],
+      "original_steps": 12,
+      "minimal_steps": 4,
+      "invariant_findings": 9,
+      "all_single_deletions_clean": true
+    }
+  ],
+  "committed_corpus": [
+    {
+      "committedCorpus": "v6-sale",
+      "recordSnapshot": "742e64a06d06226b456f489eb53deacc1bc9f5db",
+      "violations": 1,
+      "finding": "alice@5 mismatch: observe differs at 5 [models.sale.accepted: oracle o1, view null; models.sale.status: oracle decided, view open; outcomes.5.effective: oracle true, view false; outcomes.5.perModel.sale.effective: oracle true, view false; outcomes.5.perModel.sale.reason: oracle null, view no_such_offer; outcomes.5.reason: oracle null, view ineffective]",
+      "deletions": 4,
+      "control": "clean"
+    },
+    {
+      "committedCorpus": "v6-booking",
+      "recordSnapshot": "742e64a06d06226b456f489eb53deacc1bc9f5db",
+      "violations": 1,
+      "finding": "bob@4 mismatch: observe differs at 4 [outcomes.4.effective: oracle true, view false; outcomes.4.perModel.booking.effective: oracle true, view false; outcomes.4.perModel.booking.reason: oracle null, view no_such_occupancy; outcomes.4.reason: oracle null, view ineffective]",
+      "deletions": 4,
+      "control": "clean"
+    },
+    {
+      "committedCorpus": "v6-club",
+      "recordSnapshot": "742e64a06d06226b456f489eb53deacc1bc9f5db",
+      "violations": 2,
+      "finding": "bob@7 mismatch: observe differs at 7 [affordances.0: oracle com.example.club.vote, view undefined; models.club.applications.0.votes.yes: oracle 0, view 1; outcomes.7.effective: oracle false, view true; outcomes.7.perModel.club.effective: oracle false, view true; outcomes.7.perModel.club.reason: oracle lapsed, view null; outcomes.7.reason: oracle ineffective, view null]",
+      "deletions": 7,
+      "control": "clean"
+    },
+    {
+      "committedCorpus": "v6-hidden-revocation",
+      "recordSnapshot": "742e64a06d06226b456f489eb53deacc1bc9f5db",
+      "violations": 1,
+      "finding": "bob@4 mismatch: observe differs at 4 [affordances.0: oracle undefined, view com.example.sale.offer]",
+      "deletions": 3,
+      "control": "clean"
+    }
+  ],
+  "mutation_identities": [
+    {
+      "model": "sale",
+      "manifest": "sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9",
+      "package": "sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85",
+      "mutant": "sha256:cfbe9b57a0d03196eefb2e3df18f1ecfa0817758853fbba2b6c6789bce23fce8"
+    },
+    {
+      "model": "booking",
+      "manifest": "sha256:cb4514f4967891077ad78e1dd0fba4c17438fb32b98cd8bd790df8531b35dd16",
+      "package": "sha256:0556de5c337344eaa15afcbbbf5d22aa82c384bd6841d4ffb0c07185d4b7ec27",
+      "mutant": "sha256:cad57243b94ef8b451168fc4265cc7fe0463af104d43faced5f8712da2ec9983"
+    },
+    {
+      "model": "club",
+      "manifest": "sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde",
+      "package": "sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e",
+      "mutant": "sha256:276d0f9610eba50cff5a922b06117b5300a918d0c538a629befa1292228e3b1e"
+    }
+  ],
+  "scope": "No production, generator, model fixture or frozen-manifest changes; no campaigns rerun; no acceptance-policy repair.",
+  "preservation_check": {
+    "basis": "19af1c8fb46cc91c61a2027647f04a6f305b5cdc",
+    "unchanged_files": [
+      "spike/corpus/v6/run2/v6-booking.json",
+      "spike/corpus/v6/run2/v6-club.json",
+      "spike/corpus/v6/run2/v6-hidden-revocation.json",
+      "spike/corpus/v6/run2/v6-sale.json",
+      "spike/evidence/v6/historical-club-772a514.log",
+      "spike/evidence/v6/run1.json",
+      "spike/evidence/v6/run1.log",
+      "spike/evidence/v6/run2.json",
+      "spike/evidence/v6/run2.log",
+      "spike/fixtures/booking.ts",
+      "spike/fixtures/club-baseline.ts",
+      "spike/fixtures/club.ts",
+      "spike/fixtures/discussion.ts",
+      "spike/fixtures/inspection.ts",
+      "spike/fixtures/sale.ts",
+      "spike/manifests/booking.ledger.md",
+      "spike/manifests/booking.md",
+      "spike/manifests/booking.ts",
+      "spike/manifests/club.ledger.md",
+      "spike/manifests/club.md",
+      "spike/manifests/club.ts",
+      "spike/manifests/discussion.md",
+      "spike/manifests/discussion.ts",
+      "spike/manifests/sale.ledger.md",
+      "spike/manifests/sale.md",
+      "spike/manifests/sale.ts",
+      "spike/src/append.ts",
+      "spike/src/canon.ts",
+      "spike/src/checker.ts",
+      "spike/src/context.ts",
+      "spike/src/corpus.ts",
+      "spike/src/descriptor.ts",
+      "spike/src/foundation.ts",
+      "spike/src/generate.ts",
+      "spike/src/interpret.ts",
+      "spike/src/observe.ts",
+      "spike/src/oracle.ts",
+      "spike/src/script.ts",
+      "spike/src/types.ts"
+    ],
+    "excluded_path": "spike/manifests/v6.ledger.md",
+    "comparison": "exact file bytes"
+  },
+  "typecheck_log_normalization": {
+    "description": "One final empty line removed from npm output; all nonempty output preserved.",
+    "raw_output_commit": "b0c9042289c7ae5022540fab3b628bf032255205",
+    "raw_stdout_sha256": "c13cdfb986ee40a7a2614e780678b6307a8b1368291811d1a2cae9e00dfd60cd",
+    "normalized_stdout_sha256": "7fd480dd7dd091c141c00281796ec8a8af5020ae92c3c0dcc5ba7cd02ff401d5"
+  }
+}
