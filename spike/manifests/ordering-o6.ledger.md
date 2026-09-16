@@ -411,3 +411,58 @@ Only report/ledger notes record these findings here. Runtime, types, fixture
 bytes, O4 `edacc32` identities and O6 measured source `8c5598ff` are unchanged.
 No tests or campaigns were run for this documentation update. The Sale
 repair-budget failure and Club's original A1/A5 negatives remain intact.
+
+
+## K1–K4 integration and declared run 5
+
+O6 integrates frozen O4 source
+`2ee1b43a9fc7c3af2b99d991f36d78a4dbcde443` without a conflict. All runtime,
+fixture, profile and lifecycle-manifest bytes equal that O4 source. The O6
+bootstrap fixture and tests are unchanged. Earlier O6 candidate `4be9b2c`
+and runs 1–4 remain historical; its 22 early published path artifacts cannot
+serve as exact-head artifacts for this successor.
+
+Ratified independent review
+`git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:10521cbe232b5d7eb00b6dd2d79436e208ec4f1a`
+requested four O4 repairs despite reproducing 449 selected tests, 445 pass,
+zero ordinary failures and four retained Club TODOs, with typecheck passing.
+That was a reviewer measurement at edacc, not approval and not a new builder
+run. The earlier aggregate `936acce` was separately approved and landed as
+`6881b6a5a22584d534f2729002da0c582c97876a`; that acceptance does not cover
+these O4 changes.
+
+K1 makes the Inspection audience total for malformed participant payloads.
+K2 opts ScopeJournal and every nested proof/export interpretation into strict
+exception propagation, preserving the original thrown value and refusing to
+serve an indeterminate facade until healthy reopen. Ordinary legacy Journal
+and interpretation retain their error-verdict behavior. K3 revises the public
+opening rule to `/2`: a listed-kind attempt may stay hidden only when its
+assigned audience is exactly the actor and its source verdict is known and
+determinately ineffective. Unknown, placeholder/error and effective authority
+cases do not qualify. The source writer is trusted for this classification
+as well as completeness; the destination cannot independently classify an
+opaque hidden body. K4 names the already-delivered Inspection mandate and
+result, including Bob's S20 access and Kim's F1 access, without claiming
+requester anonymity or narrowing the delivered proof.
+
+Combined lifecycle manifest:
+`sha256:a766fe56564b026a96c37630d261512c0f608adf5ec7c5ee2d11aca23eaf45fe`.
+Scope implementation:
+`sha256:942f4d202400bcbb1d9fe8a008785acd4f7650112e9f775baaa3f711d5cb131e`.
+Scope package:
+`sha256:0a3201eade9021c0898e20f41b3b4a16c2f6add3dea8a8ad3161cd7d83312572`.
+Inspection package:
+`sha256:18a886c149b383b8630836307195c1a89b90c463e7e32df6e0663b5d4ecc3030`.
+Opening rule:
+`sha256:701403e9c51e6449ca797545818a8b63602a20a9b43c2ace064e9a38ab55b66c`.
+The certificate envelope remains `dap.fixture.public-proof-completeness/1`;
+movable writer profile remains `/3`. Sale and the fixed join policy are
+unchanged. Old signed scope packets retain their old source boundary.
+
+After a clean source freeze, run 5 will execute only the two O6 bootstrap
+checks, whole-tree typecheck and the actual SQLite CLI against a new database.
+The fresh output will retain its real signed bytes even if they match run 4:
+the ordinary Sale bootstrap does not select the Scope or Inspection package.
+O4 owns the combined noncampaign validation and regenerated scope evidence;
+O6 does not repeat that suite or the 600-seed campaigns. Final O4/O6 independent
+acceptance remains pending.
