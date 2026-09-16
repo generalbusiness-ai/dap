@@ -1,0 +1,1491 @@
+{
+  "source": "f8987d22890e7cf2471d7124544c539d69c0a835",
+  "stage": "complete TAP results; wrapper failure preserved; child exit status unknown",
+  "rawResult": "spike/manifests/ordering-o4-runs/run-9/result.json",
+  "sourceIndex": "spike/manifests/ordering-o4-runs/run-9/source.json",
+  "preservedEvidenceIndex": "spike/manifests/ordering-o4-runs/run-9/preserved-e046-evidence.json",
+  "identities": {
+    "scopeImplementation": "sha256:cbc58a25deebafd4bcb6318c8eace26027ffa09ed796061efdf27770feee67fe",
+    "scopeProfile": "dap.fixture.scope/1",
+    "scopePackage": "sha256:21195fc775e76dd7bcc0e0dc57488527c01260de4cb17b7f0de021d00161bed5",
+    "inspectionPackage": "sha256:18a886c149b383b8630836307195c1a89b90c463e7e32df6e0663b5d4ecc3030",
+    "salePackage": "sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85",
+    "publicProofRule": "sha256:9e9bcbdd74fe244fb63c5e339256ab508b2b3251d2e8fa642b3309cd1f1049e6",
+    "manifestPublicRule": "sha256:9e9bcbdd74fe244fb63c5e339256ab508b2b3251d2e8fa642b3309cd1f1049e6",
+    "manifest": "sha256:92ad0023e387cd4a6305d074ab99f7a29cbcc1699cd88b8dcf439a446ef58828",
+    "joinPolicy": "sha256:ac852ebab4f55816e55cd0fd71b7280267bffaca097046d4880b24ac63b01455",
+    "movableWriterProfile": "dap.fixture.single-writer/3"
+  },
+  "commands": [
+    {
+      "name": "noncampaign",
+      "argv": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "--test-skip-pattern=case [57], the campaign:",
+        "spike/test/**/*.test.ts"
+      ],
+      "cwd": "/private/tmp/dap-o4-transfer-lifecycle",
+      "environment": {
+        "DAP_O4_RECORD_DIR": "/private/tmp/dap-o4-l1-l3-run9/observations"
+      },
+      "exitCode": null,
+      "exitCodeNote": "The original wrapper failed during diagnostic parsing after this child completed, before persisting its exit status. Outcomes are established by the complete terminal TAP summary; no child exit code is claimed.",
+      "totals": {
+        "tests": 492,
+        "suites": 0,
+        "pass": 488,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 4,
+        "duration_ms": 42880.439375
+      },
+      "o4Subset": {
+        "tests": 167,
+        "pass": 167,
+        "fail": 0,
+        "separateInvocation": false
+      },
+      "lookupDiagnostics": [
+        {
+          "storage": "memory",
+          "totalLookups": 120,
+          "originalExceptions": 120,
+          "exactRetryRecoveries": 120,
+          "returnedFaultVerdicts": 0
+        },
+        {
+          "storage": "sqlite",
+          "totalLookups": 120,
+          "originalExceptions": 120,
+          "exactRetryRecoveries": 120,
+          "returnedFaultVerdicts": 0
+        }
+      ]
+    },
+    {
+      "name": "typecheck",
+      "argv": [
+        "npm",
+        "run",
+        "typecheck",
+        "--prefix",
+        "spike"
+      ],
+      "cwd": "/private/tmp/dap-o4-transfer-lifecycle",
+      "exitCode": 0,
+      "seconds": 0.8620611670048675,
+      "recoveryInvocation": true
+    }
+  ],
+  "diagnostics": {
+    "parsed": 34,
+    "retainedVerbatim": 1,
+    "verbatimLines": [
+      3499
+    ]
+  },
+  "wrapper": {
+    "exitCode": 1,
+    "failedScript": "runner-failed.py",
+    "errorRecord": "wrapper-error.txt",
+    "failedAfter": "noncampaign completed",
+    "recoveryScript": "resume.py",
+    "noncampaignRepeated": false
+  },
+  "campaignsRepeated": false,
+  "scope": "The 167 O4 checks are a subset of the single noncampaign invocation, not a separate run. Typecheck alone ran during wrapper recovery. No tests were executed during this records task.",
+  "todoPolicy": "Four executing Club negatives remain retained by user choice.",
+  "componentMeasurements": {
+    "L1": {
+      "source": "28981dd1982e02b40fc154d43972c19d82ebc7bf",
+      "focusedTests": 33,
+      "pass": 33,
+      "typecheckExitCode": 0
+    },
+    "L2First": {
+      "source": "086fb8a8e97f6045bd4518246838842f1d7d631a",
+      "focusedTests": 49,
+      "pass": 49,
+      "separateD1Tests": 1,
+      "separateD1Pass": 1,
+      "typecheckExitCode": 0,
+      "laterFinding": "Malformed embedded-header numeric data remained outside validation boundary; preserved and corrected in final component source."
+    },
+    "L2Final": {
+      "source": "8f48a39e7cf54678fd8c314bd57c4549dac7ba3d",
+      "focusedTests": 12,
+      "pass": 12,
+      "typecheckExitCode": 0
+    },
+    "L3": {
+      "source": "d987cd149c0fa0eda85235f0f8f10a56012d3bf2",
+      "focusedTests": 55,
+      "pass": 55,
+      "typecheckExitCode": 0
+    }
+  },
+  "observationFiles": 100,
+  "observations": {
+    "duplicate-inspection-import-memory.json": "sha256:902c6fab495dd25c8803f1e54796f462aa04f8e9c4e5d49607a481c8983a780c",
+    "duplicate-inspection-import-sqlite.json": "sha256:902c6fab495dd25c8803f1e54796f462aa04f8e9c4e5d49607a481c8983a780c",
+    "duplicate-state-import-memory.json": "sha256:dc738040b65675d72564c39db2b1b1e685cb93390d0dee592b3731e9b695188b",
+    "duplicate-state-import-sqlite.json": "sha256:dc738040b65675d72564c39db2b1b1e685cb93390d0dee592b3731e9b695188b",
+    "exact-retry-activation-memory.json": "sha256:13f2be86aa575755d957f14c3989c085baa283a09c45a67c13bfba2289d8af84",
+    "exact-retry-activation-sqlite.json": "sha256:13f2be86aa575755d957f14c3989c085baa283a09c45a67c13bfba2289d8af84",
+    "g2-current-authorization-memory.json": "sha256:76c5c58fdbce9f8d10014309aa42055315ec8a875a66f0c9ee641345060c4ee7",
+    "g2-current-authorization-sqlite.json": "sha256:76c5c58fdbce9f8d10014309aa42055315ec8a875a66f0c9ee641345060c4ee7",
+    "g2-current-closed-memory.json": "sha256:68dc652d3db18c5918b5ea00b98adfaec0249d088126c63bad77300ca2017645",
+    "g2-current-closed-sqlite.json": "sha256:68dc652d3db18c5918b5ea00b98adfaec0249d088126c63bad77300ca2017645",
+    "g2-intervening-exercise-memory.json": "sha256:cab26c563ee407585b1d84c5aa922f8732ce23993f76b3c87d0bf45663b9adf6",
+    "g2-intervening-exercise-sqlite.json": "sha256:cab26c563ee407585b1d84c5aa922f8732ce23993f76b3c87d0bf45663b9adf6",
+    "g2-participant-event-memory.json": "sha256:78e662ff0d628041356446eaa7513e611ed18dab5674020d5797cf8c8b551cde",
+    "g2-participant-event-sqlite.json": "sha256:78e662ff0d628041356446eaa7513e611ed18dab5674020d5797cf8c8b551cde",
+    "goal-1-history-matrix-memory.json": "sha256:05e0d7ba572ea08d672b918187a777f5e7486648d7ac782783c89e59c1b821ed",
+    "goal-1-history-matrix-sqlite.json": "sha256:05e0d7ba572ea08d672b918187a777f5e7486648d7ac782783c89e59c1b821ed",
+    "h1-duplicate-commitment-memory.json": "sha256:e4745f5616ef64355238a60ad225e85d5790207c18b298f85446924dd81ad6ae",
+    "h1-duplicate-commitment-sqlite.json": "sha256:e4745f5616ef64355238a60ad225e85d5790207c18b298f85446924dd81ad6ae",
+    "healthy-memory.json": "sha256:6759810f66e38705d7e2646104e91e9ac6f9c06418f5e50bf0b71ba166ddb552",
+    "healthy-sqlite.json": "sha256:6759810f66e38705d7e2646104e91e9ac6f9c06418f5e50bf0b71ba166ddb552",
+    "intervening-dormant-exercise-memory.json": "sha256:ba4ea11d93b7dfb38e133a61b7f3188f046ded51a53010034134d210b825357b",
+    "intervening-dormant-exercise-sqlite.json": "sha256:ba4ea11d93b7dfb38e133a61b7f3188f046ded51a53010034134d210b825357b",
+    "intervening-participant-event-memory.json": "sha256:f9e60c3f1cd04dce00f4959812a5fc033292f9c6140ad370afd0c20cc840a8cb",
+    "intervening-participant-event-sqlite.json": "sha256:f9e60c3f1cd04dce00f4959812a5fc033292f9c6140ad370afd0c20cc840a8cb",
+    "k1-participant-input-memory.json": "sha256:53d6b5ddfa41336c5bfc409c3e2b8d181fe4fbb97cd9f051b39e0b703c94f2b5",
+    "k1-participant-input-sqlite.json": "sha256:53d6b5ddfa41336c5bfc409c3e2b8d181fe4fbb97cd9f051b39e0b703c94f2b5",
+    "k3-bob-unauthorized-accept-memory.json": "sha256:8c6451f8ff9870b99ee24c2c870f8c92d77dc038ca4ba125576209ad64a64743",
+    "k3-bob-unauthorized-accept-sqlite.json": "sha256:8c6451f8ff9870b99ee24c2c870f8c92d77dc038ca4ba125576209ad64a64743",
+    "k3-bob-unauthorized-close-memory.json": "sha256:b6b0adeb9e38013ec463a467ff365501f48b25f6c619c7e779ea52579d8637eb",
+    "k3-bob-unauthorized-close-sqlite.json": "sha256:b6b0adeb9e38013ec463a467ff365501f48b25f6c619c7e779ea52579d8637eb",
+    "k3-carol-malformed-grant-memory.json": "sha256:22f3a906298a883fc4ae82d90dbc0d424efd826c5c0cb18b8f56facb4099e77f",
+    "k3-carol-malformed-grant-sqlite.json": "sha256:22f3a906298a883fc4ae82d90dbc0d424efd826c5c0cb18b8f56facb4099e77f",
+    "k3-member-scope-attempts-memory.json": "sha256:5293828ca6a1dca0fcf63524963c00a06b8c7612e5add77095dedfc768f1285c",
+    "k3-member-scope-attempts-sqlite.json": "sha256:5293828ca6a1dca0fcf63524963c00a06b8c7612e5add77095dedfc768f1285c",
+    "k4-inspection-disclosure-memory.json": "sha256:f188a7d2bd39978ee178cb6dc5e0eeef3fbe19bc9982e32bcec096a5f184ba34",
+    "k4-inspection-disclosure-sqlite.json": "sha256:f188a7d2bd39978ee178cb6dc5e0eeef3fbe19bc9982e32bcec096a5f184ba34",
+    "l1-property-inputs-memory.json": "sha256:14541d0d7429addbebb2dde52f184046daae89b63e7ee65ad0eea579a789a3b2",
+    "l1-property-inputs-sqlite.json": "sha256:14541d0d7429addbebb2dde52f184046daae89b63e7ee65ad0eea579a789a3b2",
+    "l3-unbound-D-memory.json": "sha256:a4470c97ee9f935df7ce00f1265c4075fdb9a15c7ad08b40ffb99f6392e2f47f",
+    "l3-unbound-D-sqlite.json": "sha256:a4470c97ee9f935df7ce00f1265c4075fdb9a15c7ad08b40ffb99f6392e2f47f",
+    "l3-unbound-F-memory.json": "sha256:766ac70e33328cdd03716ee21d9b06833f14af695a82fbc487cb4a2eec8cdd98",
+    "l3-unbound-F-sqlite.json": "sha256:766ac70e33328cdd03716ee21d9b06833f14af695a82fbc487cb4a2eec8cdd98",
+    "l3-unbound-I-memory.json": "sha256:009bfe7f56eab609eb193d292161538fa016aca52f3fde053aa896a6342026fa",
+    "l3-unbound-I-sqlite.json": "sha256:009bfe7f56eab609eb193d292161538fa016aca52f3fde053aa896a6342026fa",
+    "materialized-genesis-mutations-memory.json": "sha256:b52bfbef813817a0d0bac8eff0703246bc9d931a8d9ef494e2a608174ad095f3",
+    "materialized-genesis-mutations-sqlite.json": "sha256:b52bfbef813817a0d0bac8eff0703246bc9d931a8d9ef494e2a608174ad095f3",
+    "mismatched-buyer-memory.json": "sha256:56882c4dec36f77524bda74ade9bcb3545143b98bcbe335a2b01a322e765a64c",
+    "mismatched-buyer-sqlite.json": "sha256:56882c4dec36f77524bda74ade9bcb3545143b98bcbe335a2b01a322e765a64c",
+    "move-preserves-retry-memory.json": "sha256:3d4d4ffb41f7f9af4030c11d81b2e133e2f5bd83cb2cad981758a301b477b297",
+    "move-preserves-retry-sqlite.json": "sha256:3d4d4ffb41f7f9af4030c11d81b2e133e2f5bd83cb2cad981758a301b477b297",
+    "one-source-release-missing-memory.json": "sha256:94813adcaca3f9441fc26f90ca75320af2250d79a38e19683b006272b01f0908",
+    "one-source-release-missing-sqlite.json": "sha256:94813adcaca3f9441fc26f90ca75320af2250d79a38e19683b006272b01f0908",
+    "origin-spends-transferred-right-memory.json": "sha256:b9a08df232d3368b1ae9820dc851511e20abd8c07a7d8d46c95a611cf896cddb",
+    "origin-spends-transferred-right-sqlite.json": "sha256:b9a08df232d3368b1ae9820dc851511e20abd8c07a7d8d46c95a611cf896cddb",
+    "receipt-for-ineffective-release-memory.json": "sha256:d9cb2b895cff8750d92bc015a315ddeb3f1545e2019a16ccb8e62df1d39f1448",
+    "receipt-for-ineffective-release-sqlite.json": "sha256:d9cb2b895cff8750d92bc015a315ddeb3f1545e2019a16ccb8e62df1d39f1448",
+    "receipt-for-unauthorized-release-memory.json": "sha256:1110641ec2535951915f734c1070aaef036366e3eb802f0ee5e142bb4c66c2b4",
+    "receipt-for-unauthorized-release-sqlite.json": "sha256:1110641ec2535951915f734c1070aaef036366e3eb802f0ee5e142bb4c66c2b4",
+    "release-already-released-right-memory.json": "sha256:cf49830938f8735ba943246a36da1050ac6a7768fd0f92f49253dabc7a283a42",
+    "release-already-released-right-sqlite.json": "sha256:cf49830938f8735ba943246a36da1050ac6a7768fd0f92f49253dabc7a283a42",
+    "release-unowned-right-memory.json": "sha256:97834d7b4bfb3a47590ff7f553cba3e480473aa15a70a42ed081e8202cd1fcdf",
+    "release-unowned-right-sqlite.json": "sha256:97834d7b4bfb3a47590ff7f553cba3e480473aa15a70a42ed081e8202cd1fcdf",
+    "repeated-activation-after-restart-memory.json": "sha256:5eda028a9b3b975959f4b17144688616930496597e8828b98fb202a5eb44cb15",
+    "repeated-activation-after-restart-sqlite.json": "sha256:5eda028a9b3b975959f4b17144688616930496597e8828b98fb202a5eb44cb15",
+    "restart-before-activation-memory.json": "sha256:f22a8ab0606cea2cd99caab016876aa9a88f2045a6ed24b678fd3415c3e2156b",
+    "restart-before-activation-sqlite.json": "sha256:f22a8ab0606cea2cd99caab016876aa9a88f2045a6ed24b678fd3415c3e2156b",
+    "retired-writer-continuation-memory.json": "sha256:bb75928448f2ebe9b0dad868adaab7a568cc8b0bd08111f4f776f0c5d8515fdc",
+    "retired-writer-continuation-sqlite.json": "sha256:bb75928448f2ebe9b0dad868adaab7a568cc8b0bd08111f4f776f0c5d8515fdc",
+    "spend-before-activation-D-memory.json": "sha256:c7b78ff79f51e6a7d70b9c8294b8ca9488e97397d3bcd8928ab795dd371d19f7",
+    "spend-before-activation-D-sqlite.json": "sha256:c7b78ff79f51e6a7d70b9c8294b8ca9488e97397d3bcd8928ab795dd371d19f7",
+    "spend-before-activation-F-deliver-memory.json": "sha256:8117a4ffa5868934e0422e216ce0c5739926de6824fd7824604760240f0809f2",
+    "spend-before-activation-F-deliver-sqlite.json": "sha256:8117a4ffa5868934e0422e216ce0c5739926de6824fd7824604760240f0809f2",
+    "spend-before-activation-F-memory.json": "sha256:06916bc95d54a9c0210acb11ad8dfbf03ca32aa80d2c3a351468f2f9364c78c4",
+    "spend-before-activation-F-sqlite.json": "sha256:06916bc95d54a9c0210acb11ad8dfbf03ca32aa80d2c3a351468f2f9364c78c4",
+    "spend-before-activation-S-memory.json": "sha256:3d91ee26d073b431c0612d7275fc0fa38f27a395fbbe2b9ad528b048fbca9d5e",
+    "spend-before-activation-S-sqlite.json": "sha256:3d91ee26d073b431c0612d7275fc0fa38f27a395fbbe2b9ad528b048fbca9d5e",
+    "stale-export-prefix-memory.json": "sha256:1619893bf9d0fc205dfe1f9deec0012ac9742e9463fe6cc3e7de7842a09371cf",
+    "stale-export-prefix-sqlite.json": "sha256:1619893bf9d0fc205dfe1f9deec0012ac9742e9463fe6cc3e7de7842a09371cf",
+    "stale-source-proposal-at-destination-memory.json": "sha256:7d3fa84509f186e5cd00d9fbd38a16a752ddf0fdf506aaeace18178d0dffe15b",
+    "stale-source-proposal-at-destination-sqlite.json": "sha256:7d3fa84509f186e5cd00d9fbd38a16a752ddf0fdf506aaeace18178d0dffe15b",
+    "stale-source-proposal-at-source-memory.json": "sha256:605f810cea7c7cd363444b6005a58fc91ca8d846127336ccbcdd3bf494953cff",
+    "stale-source-proposal-at-source-sqlite.json": "sha256:605f810cea7c7cd363444b6005a58fc91ca8d846127336ccbcdd3bf494953cff",
+    "timeout-after-hidden-activation-memory.json": "sha256:230b448130b0911ae0f334fcd72a6e9052e982ba2eef52c64afd3c5774236ff2",
+    "timeout-after-hidden-activation-sqlite.json": "sha256:230b448130b0911ae0f334fcd72a6e9052e982ba2eef52c64afd3c5774236ff2",
+    "two-sources-export-same-right-memory.json": "sha256:358b87d7f5f77c21d36faeaaf52c6e51129c735165175264d0f116c24ee9d1ae",
+    "two-sources-export-same-right-sqlite.json": "sha256:358b87d7f5f77c21d36faeaaf52c6e51129c735165175264d0f116c24ee9d1ae",
+    "unassigned-writer-candidates-memory.json": "sha256:10065d99ec505a1882e084523b349c50c42de72938a5d07955935d1e23df3f20",
+    "unassigned-writer-candidates-sqlite.json": "sha256:10065d99ec505a1882e084523b349c50c42de72938a5d07955935d1e23df3f20",
+    "unauthorized-release-memory.json": "sha256:bb36c5884f2a5e2a86be86506af9fc65c294c6e8e8f5500550c0403f3902a197",
+    "unauthorized-release-sqlite.json": "sha256:bb36c5884f2a5e2a86be86506af9fc65c294c6e8e8f5500550c0403f3902a197",
+    "unexpected-audience-handler-memory.json": "sha256:bf0966dc2e89e98fcef844f3344f9b57941d555d4de63fe89efc0397bb60e423",
+    "unexpected-audience-handler-sqlite.json": "sha256:bf0966dc2e89e98fcef844f3344f9b57941d555d4de63fe89efc0397bb60e423",
+    "unexpected-fold-handler-memory.json": "sha256:9ddb2160269daad131c37ff3f71f33ff3e80797723226400d7036258ac4d9cfd",
+    "unexpected-fold-handler-sqlite.json": "sha256:9ddb2160269daad131c37ff3f71f33ff3e80797723226400d7036258ac4d9cfd",
+    "unexpected-replay-error-memory.json": "sha256:3166c8cd6d7ac6b4593092b0fdfc541e53e6b7b0f52e2974ff0279777b91ebf7",
+    "unexpected-replay-error-sqlite.json": "sha256:3166c8cd6d7ac6b4593092b0fdfc541e53e6b7b0f52e2974ff0279777b91ebf7",
+    "withheld-release-evidence-memory.json": "sha256:01843e630a8d218d712d48276bdd52b8a554f396ece3c7c984c58663d7136539",
+    "withheld-release-evidence-sqlite.json": "sha256:01843e630a8d218d712d48276bdd52b8a554f396ece3c7c984c58663d7136539",
+    "wrong-destination-release-memory.json": "sha256:240764e201c10b853f0c872abf9150f2ded19d350ee09a9adf588fac5bae557d",
+    "wrong-destination-release-sqlite.json": "sha256:240764e201c10b853f0c872abf9150f2ded19d350ee09a9adf588fac5bae557d"
+  },
+  "actual": {
+    "memory": {
+      "contexts": {
+        "D": {
+          "genesis": "sha256:e03adde9cc8c12fc934657f139228de7b1de4bcdb8468c0e582edc9ea03a7b50",
+          "head": 1,
+          "headHash": "sha256:d269982c5fd428e2fe1922ae450ca4ca41cbbe4f665aee5751b1df1d8fcc1aaf",
+          "initialWriter": "ed25519:kQnbVfeXl6OWRi-4lcKtzqfoaDwvMFbAelR1FVU3tz4"
+        },
+        "F": {
+          "genesis": "sha256:af7e6be2a3dbe24df46e734fcb9d88a24ed592f2964c6e2a652081fb35923622",
+          "head": 3,
+          "headHash": "sha256:2a9959a5c3845b1fef4a8ad6982d023687b81adea6aa7b025d2b98a4cf5a6199",
+          "initialWriter": "ed25519:7kXsuaygGgq9g-9W3ZhcjIdObn9K687fIL2NiMKgrdc"
+        },
+        "I": {
+          "genesis": "sha256:aeda4e1162109a9bea5cbceb4c170fe2d4b7a014e2732be3da31c69bdf925d95",
+          "head": 1,
+          "headHash": "sha256:0d403713e88d2e71c7b308527815eec9b1f4b88a3f825582afe0ac005ab6852e",
+          "initialWriter": "ed25519:vtfSq2aNo--tYTmY8G96v3h186a3Z3qfPOlH1313YKY"
+        },
+        "S": {
+          "genesis": "sha256:b6edff8b971452f441085ddde8d4fd9103dab1cfb4edeb432edc5da94fafa856",
+          "head": 24,
+          "headHash": "sha256:d8a06e497c84804a8f4e473e6bca6938a32eed5cd9ac713552d40880f5bcb518",
+          "initialWriter": "ed25519:dPhc2jTRwnxGIUhHMekVecPZxs_A2UsoGqEekWIFiqk"
+        }
+      },
+      "proofs": {
+        "D": {
+          "identity": "sha256:afc814a30da3f7f03a4a0f5157f7473da1bde2a93c4ac3132f51276ff3141a30",
+          "frontier": 1,
+          "genesis": "sha256:e03adde9cc8c12fc934657f139228de7b1de4bcdb8468c0e582edc9ea03a7b50"
+        },
+        "F": {
+          "identity": "sha256:cefabde32558279ea5d17ef3736173fb6729ed4f0c9c2cb9d05f2d7c8b4cb174",
+          "frontier": 3,
+          "genesis": "sha256:af7e6be2a3dbe24df46e734fcb9d88a24ed592f2964c6e2a652081fb35923622"
+        },
+        "I": {
+          "identity": "sha256:88f091941c8d592fe04367db1c6350bf0b1c351c7aa5fd4845e7bc7a3dc957b0",
+          "frontier": 1,
+          "genesis": "sha256:aeda4e1162109a9bea5cbceb4c170fe2d4b7a014e2732be3da31c69bdf925d95"
+        },
+        "S": {
+          "identity": "sha256:6ab92a891f8814cd7d004d301e36873a32f42f243cd77abc3bfb0545d11841d4",
+          "frontier": 24,
+          "genesis": "sha256:b6edff8b971452f441085ddde8d4fd9103dab1cfb4edeb432edc5da94fafa856"
+        }
+      },
+      "healthyBoundaries": 20,
+      "adverseCases": 29,
+      "adverseSteps": 43,
+      "mutations": {
+        "cases": 209,
+        "categories": {
+          "codec malformed_envelope": 18,
+          "profile invalid_genesis": 154,
+          "unauthorized": 5,
+          "destination_mismatch": 30,
+          "profile unsupported_profile": 2
+        }
+      },
+      "matrix": {
+        "actualReaders": [
+          "alice",
+          "bob",
+          "carol",
+          "ivan",
+          "kim"
+        ],
+        "completedHeads": {
+          "F": 3,
+          "S": 24
+        },
+        "immediatelyAcrossAttachQuestions": 143,
+        "actualReaderPreAttachQuestions": 55,
+        "completedTransferHistoricalQuestions": 100
+      },
+      "k1": {
+        "malformedInputs": 21,
+        "exactRetryChecks": 63,
+        "recordedColdRetries": 21,
+        "recordedCompletedRetries": 21,
+        "immediateRetryEvidence": "executed assertions in ordering-scope-participant-input.test.ts; not duplicated in JSON",
+        "releases": {
+          "S": 45,
+          "D": 1
+        },
+        "activationEffective": true,
+        "final": {
+          "activations": 1,
+          "deliveryConfirmed": true,
+          "destination": "active",
+          "exports": {
+            "D": {
+              "buyer": "bob",
+              "delivery_slot": 25
+            },
+            "S": {
+              "accepted_offer": "o3",
+              "winner": "bob"
+            }
+          },
+          "fulfilled": true,
+          "heads": {
+            "D": 1,
+            "F": 3,
+            "I": 1,
+            "S": 45
+          },
+          "imports": [
+            "S-export",
+            "D-export"
+          ],
+          "inspection": {
+            "attached": true,
+            "imports": 1,
+            "requested": true,
+            "resultInI": "pass:o2",
+            "resultInS": "pass:o2"
+          },
+          "owners": {
+            "R_deliver": [],
+            "R_fulfil": [],
+            "R_sell": []
+          },
+          "releases": [
+            "S",
+            "D"
+          ],
+          "rights": {
+            "R_deliver": {
+              "D": "released",
+              "F": "spent",
+              "I": "absent",
+              "S": "absent"
+            },
+            "R_fulfil": {
+              "D": "absent",
+              "F": "spent",
+              "I": "absent",
+              "S": "released"
+            },
+            "R_sell": {
+              "D": "absent",
+              "F": "absent",
+              "I": "absent",
+              "S": "spent"
+            }
+          },
+          "sale": {
+            "accepted_offer": "o3",
+            "status": "closed",
+            "winner": "bob"
+          },
+          "verifiedProofs": [
+            "S",
+            "D"
+          ],
+          "writers": {
+            "D": "WD",
+            "F": "WF",
+            "I": "WI",
+            "S": "W1"
+          }
+        }
+      },
+      "k3": [
+        {
+          "file": "k3-bob-unauthorized-accept-memory.json",
+          "memberAttempts": 1,
+          "releaseEffective": true,
+          "activationEffective": true,
+          "activations": 1
+        },
+        {
+          "file": "k3-bob-unauthorized-close-memory.json",
+          "memberAttempts": 1,
+          "releaseEffective": true,
+          "activationEffective": true,
+          "activations": 1
+        },
+        {
+          "file": "k3-carol-malformed-grant-memory.json",
+          "memberAttempts": 1,
+          "releaseEffective": true,
+          "activationEffective": true,
+          "activations": 1
+        },
+        {
+          "file": "k3-member-scope-attempts-memory.json",
+          "memberAttempts": 6,
+          "releaseEffective": true,
+          "activationEffective": true,
+          "activations": 1
+        }
+      ],
+      "l1": {
+        "savedInputs": 33,
+        "exactRetryChecks": 99,
+        "final": {
+          "activations": 1,
+          "deliveryConfirmed": true,
+          "destination": "active",
+          "exports": {
+            "D": {
+              "buyer": "bob",
+              "delivery_slot": 25
+            },
+            "S": {
+              "accepted_offer": "o3",
+              "winner": "bob"
+            }
+          },
+          "fulfilled": true,
+          "heads": {
+            "D": 5,
+            "F": 11,
+            "I": 5,
+            "S": 42
+          },
+          "imports": [
+            "S-export",
+            "D-export"
+          ],
+          "inspection": {
+            "attached": true,
+            "imports": 1,
+            "requested": true,
+            "resultInI": "pass:o2",
+            "resultInS": "pass:o2"
+          },
+          "owners": {
+            "R_deliver": [],
+            "R_fulfil": [],
+            "R_sell": []
+          },
+          "releases": [
+            "S",
+            "D"
+          ],
+          "rights": {
+            "R_deliver": {
+              "D": "released",
+              "F": "spent",
+              "I": "absent",
+              "S": "absent"
+            },
+            "R_fulfil": {
+              "D": "absent",
+              "F": "spent",
+              "I": "absent",
+              "S": "released"
+            },
+            "R_sell": {
+              "D": "absent",
+              "F": "absent",
+              "I": "absent",
+              "S": "spent"
+            }
+          },
+          "sale": {
+            "accepted_offer": "o3",
+            "status": "closed",
+            "winner": "bob"
+          },
+          "verifiedProofs": [
+            "S",
+            "D"
+          ],
+          "writers": {
+            "D": "WD",
+            "F": "WF",
+            "I": "WI",
+            "S": "W1"
+          }
+        }
+      },
+      "l2": [
+        {
+          "storage": "memory",
+          "phase": "cold-open",
+          "cryptoSites": 9,
+          "injectedCases": 17,
+          "originalExceptions": 17,
+          "coldExactRetries": 17
+        },
+        {
+          "storage": "memory",
+          "phase": "activation",
+          "cryptoSites": 135,
+          "injectedCases": 151,
+          "originalExceptions": 151,
+          "durableExactRetries": 151,
+          "returnedFaultVerdicts": 0
+        },
+        {
+          "storage": "memory",
+          "malformedCases": 13,
+          "newPositions": 0,
+          "healthyAppendAndColdRetry": true
+        },
+        {
+          "storage": "memory",
+          "phase": "signatures",
+          "coldVerificationCalls": 51,
+          "coldInjectedCases": 51,
+          "activationVerificationCalls": 124,
+          "activationSigningCalls": 1,
+          "selectedActivationCases": [
+            {
+              "at": 1,
+              "call": "verify",
+              "outcome": "precommit refusal",
+              "committedBeforeRetry": false,
+              "retry": "fresh append"
+            },
+            {
+              "at": 64,
+              "call": "verify",
+              "outcome": "original exception",
+              "committedBeforeRetry": true,
+              "retry": "exact replay"
+            },
+            {
+              "at": 125,
+              "call": "verify",
+              "outcome": "original exception",
+              "committedBeforeRetry": true,
+              "retry": "exact replay"
+            },
+            {
+              "at": 3,
+              "call": "sign",
+              "outcome": "original exception",
+              "committedBeforeRetry": false,
+              "retry": "fresh append"
+            }
+          ]
+        }
+      ],
+      "l3": {
+        "D": {
+          "attemptVerdict": {
+            "authorized": false,
+            "effective": false,
+            "known": false,
+            "reason": "unhandled"
+          },
+          "attemptPosition": 1,
+          "proofIdentity": "sha256:82ec36cb3ba577134aaa08b33892cc65fc6403b95c8f13e3672a67b44934d5b2",
+          "proofFrontier": 2,
+          "releaseEffective": true,
+          "activationEffective": true,
+          "resultEffective": null,
+          "final": {
+            "activations": 1,
+            "deliveryConfirmed": true,
+            "destination": "active",
+            "exports": {
+              "D": {
+                "buyer": "bob",
+                "delivery_slot": 25
+              },
+              "S": {
+                "accepted_offer": "o3",
+                "winner": "bob"
+              }
+            },
+            "fulfilled": true,
+            "heads": {
+              "D": 2,
+              "F": 3,
+              "I": 1,
+              "S": 24
+            },
+            "imports": [
+              "S-export",
+              "D-export"
+            ],
+            "inspection": {
+              "attached": true,
+              "imports": 1,
+              "requested": true,
+              "resultInI": "pass:o2",
+              "resultInS": "pass:o2"
+            },
+            "owners": {
+              "R_deliver": [],
+              "R_fulfil": [],
+              "R_sell": []
+            },
+            "releases": [
+              "S",
+              "D"
+            ],
+            "rights": {
+              "R_deliver": {
+                "D": "released",
+                "F": "spent",
+                "I": "absent",
+                "S": "absent"
+              },
+              "R_fulfil": {
+                "D": "absent",
+                "F": "spent",
+                "I": "absent",
+                "S": "released"
+              },
+              "R_sell": {
+                "D": "absent",
+                "F": "absent",
+                "I": "absent",
+                "S": "spent"
+              }
+            },
+            "sale": {
+              "accepted_offer": "o3",
+              "status": "closed",
+              "winner": "bob"
+            },
+            "verifiedProofs": [
+              "S",
+              "D"
+            ],
+            "writers": {
+              "D": "WD",
+              "F": "WF",
+              "I": "WI",
+              "S": "W1"
+            }
+          }
+        },
+        "I": {
+          "attemptVerdict": {
+            "authorized": false,
+            "effective": false,
+            "known": false,
+            "reason": "unhandled"
+          },
+          "attemptPosition": 1,
+          "proofIdentity": "sha256:3737140260b5afc8e388e93a1ab69c80c2eabe6c770bcc0ed73cd6510e76c989",
+          "proofFrontier": 2,
+          "releaseEffective": null,
+          "activationEffective": null,
+          "resultEffective": true,
+          "final": null
+        },
+        "F": {
+          "attemptVerdict": {
+            "authorized": false,
+            "effective": false,
+            "known": false,
+            "reason": "unhandled"
+          },
+          "attemptPosition": 2,
+          "proofIdentity": "sha256:d442ed7ada82e7544b00ab6eb967804ecf75d372e790aea7c52ebb31f80c6741",
+          "proofFrontier": 4,
+          "releaseEffective": null,
+          "activationEffective": null,
+          "resultEffective": null,
+          "final": {
+            "activations": 1,
+            "deliveryConfirmed": true,
+            "destination": "active",
+            "exports": {
+              "D": {
+                "buyer": "bob",
+                "delivery_slot": 25
+              },
+              "S": {
+                "accepted_offer": "o3",
+                "winner": "bob"
+              }
+            },
+            "fulfilled": true,
+            "heads": {
+              "D": 1,
+              "F": 4,
+              "I": 1,
+              "S": 24
+            },
+            "imports": [
+              "S-export",
+              "D-export"
+            ],
+            "inspection": {
+              "attached": true,
+              "imports": 1,
+              "requested": true,
+              "resultInI": "pass:o2",
+              "resultInS": "pass:o2"
+            },
+            "owners": {
+              "R_deliver": [],
+              "R_fulfil": [],
+              "R_sell": []
+            },
+            "releases": [
+              "S",
+              "D"
+            ],
+            "rights": {
+              "R_deliver": {
+                "D": "released",
+                "F": "spent",
+                "I": "absent",
+                "S": "absent"
+              },
+              "R_fulfil": {
+                "D": "absent",
+                "F": "spent",
+                "I": "absent",
+                "S": "released"
+              },
+              "R_sell": {
+                "D": "absent",
+                "F": "absent",
+                "I": "absent",
+                "S": "spent"
+              }
+            },
+            "sale": {
+              "accepted_offer": "o3",
+              "status": "closed",
+              "winner": "bob"
+            },
+            "verifiedProofs": [
+              "S",
+              "D"
+            ],
+            "writers": {
+              "D": "WD",
+              "F": "WF",
+              "I": "WI",
+              "S": "W1"
+            }
+          }
+        }
+      },
+      "k4": {
+        "phases": [
+          {
+            "phase": "live",
+            "sourceReaders": [
+              "alice",
+              "bob",
+              "carol",
+              "ivan"
+            ],
+            "destinationReaders": [
+              "alice",
+              "bob",
+              "kim"
+            ],
+            "bobReadsRequest": false,
+            "bobGetsDerivedProof": true
+          },
+          {
+            "phase": "cold",
+            "sourceReaders": [
+              "alice",
+              "bob",
+              "carol",
+              "ivan"
+            ],
+            "destinationReaders": [
+              "alice",
+              "bob",
+              "kim"
+            ],
+            "bobReadsRequest": false,
+            "bobGetsDerivedProof": true
+          }
+        ],
+        "expectation": {
+          "activation": {
+            "audience": "spine",
+            "context": "F",
+            "currentParticipants": [
+              "alice",
+              "bob",
+              "kim"
+            ],
+            "position": 1
+          },
+          "admit": {
+            "audience": "members",
+            "context": "S",
+            "position": 20,
+            "readers": [
+              "alice",
+              "bob",
+              "carol",
+              "ivan"
+            ]
+          },
+          "inspectionFounders": [
+            "ivan"
+          ],
+          "mandate": {
+            "inspector": "ivan",
+            "offer": "o2",
+            "prefix": 14,
+            "source": "S"
+          },
+          "request": {
+            "bodyInPublicProof": false,
+            "context": "S",
+            "position": 14,
+            "readers": [
+              "alice",
+              "carol",
+              "ivan"
+            ]
+          },
+          "requesterFieldInMandate": false,
+          "result": {
+            "offer": "o2",
+            "result": "pass:o2"
+          }
+        }
+      }
+    },
+    "sqlite": {
+      "contexts": {
+        "D": {
+          "genesis": "sha256:e03adde9cc8c12fc934657f139228de7b1de4bcdb8468c0e582edc9ea03a7b50",
+          "head": 1,
+          "headHash": "sha256:d269982c5fd428e2fe1922ae450ca4ca41cbbe4f665aee5751b1df1d8fcc1aaf",
+          "initialWriter": "ed25519:kQnbVfeXl6OWRi-4lcKtzqfoaDwvMFbAelR1FVU3tz4"
+        },
+        "F": {
+          "genesis": "sha256:af7e6be2a3dbe24df46e734fcb9d88a24ed592f2964c6e2a652081fb35923622",
+          "head": 3,
+          "headHash": "sha256:2a9959a5c3845b1fef4a8ad6982d023687b81adea6aa7b025d2b98a4cf5a6199",
+          "initialWriter": "ed25519:7kXsuaygGgq9g-9W3ZhcjIdObn9K687fIL2NiMKgrdc"
+        },
+        "I": {
+          "genesis": "sha256:aeda4e1162109a9bea5cbceb4c170fe2d4b7a014e2732be3da31c69bdf925d95",
+          "head": 1,
+          "headHash": "sha256:0d403713e88d2e71c7b308527815eec9b1f4b88a3f825582afe0ac005ab6852e",
+          "initialWriter": "ed25519:vtfSq2aNo--tYTmY8G96v3h186a3Z3qfPOlH1313YKY"
+        },
+        "S": {
+          "genesis": "sha256:b6edff8b971452f441085ddde8d4fd9103dab1cfb4edeb432edc5da94fafa856",
+          "head": 24,
+          "headHash": "sha256:d8a06e497c84804a8f4e473e6bca6938a32eed5cd9ac713552d40880f5bcb518",
+          "initialWriter": "ed25519:dPhc2jTRwnxGIUhHMekVecPZxs_A2UsoGqEekWIFiqk"
+        }
+      },
+      "proofs": {
+        "D": {
+          "identity": "sha256:afc814a30da3f7f03a4a0f5157f7473da1bde2a93c4ac3132f51276ff3141a30",
+          "frontier": 1,
+          "genesis": "sha256:e03adde9cc8c12fc934657f139228de7b1de4bcdb8468c0e582edc9ea03a7b50"
+        },
+        "F": {
+          "identity": "sha256:cefabde32558279ea5d17ef3736173fb6729ed4f0c9c2cb9d05f2d7c8b4cb174",
+          "frontier": 3,
+          "genesis": "sha256:af7e6be2a3dbe24df46e734fcb9d88a24ed592f2964c6e2a652081fb35923622"
+        },
+        "I": {
+          "identity": "sha256:88f091941c8d592fe04367db1c6350bf0b1c351c7aa5fd4845e7bc7a3dc957b0",
+          "frontier": 1,
+          "genesis": "sha256:aeda4e1162109a9bea5cbceb4c170fe2d4b7a014e2732be3da31c69bdf925d95"
+        },
+        "S": {
+          "identity": "sha256:6ab92a891f8814cd7d004d301e36873a32f42f243cd77abc3bfb0545d11841d4",
+          "frontier": 24,
+          "genesis": "sha256:b6edff8b971452f441085ddde8d4fd9103dab1cfb4edeb432edc5da94fafa856"
+        }
+      },
+      "healthyBoundaries": 20,
+      "adverseCases": 29,
+      "adverseSteps": 43,
+      "mutations": {
+        "cases": 209,
+        "categories": {
+          "codec malformed_envelope": 18,
+          "profile invalid_genesis": 154,
+          "unauthorized": 5,
+          "destination_mismatch": 30,
+          "profile unsupported_profile": 2
+        }
+      },
+      "matrix": {
+        "actualReaders": [
+          "alice",
+          "bob",
+          "carol",
+          "ivan",
+          "kim"
+        ],
+        "completedHeads": {
+          "F": 3,
+          "S": 24
+        },
+        "immediatelyAcrossAttachQuestions": 143,
+        "actualReaderPreAttachQuestions": 55,
+        "completedTransferHistoricalQuestions": 100
+      },
+      "k1": {
+        "malformedInputs": 21,
+        "exactRetryChecks": 63,
+        "recordedColdRetries": 21,
+        "recordedCompletedRetries": 21,
+        "immediateRetryEvidence": "executed assertions in ordering-scope-participant-input.test.ts; not duplicated in JSON",
+        "releases": {
+          "S": 45,
+          "D": 1
+        },
+        "activationEffective": true,
+        "final": {
+          "activations": 1,
+          "deliveryConfirmed": true,
+          "destination": "active",
+          "exports": {
+            "D": {
+              "buyer": "bob",
+              "delivery_slot": 25
+            },
+            "S": {
+              "accepted_offer": "o3",
+              "winner": "bob"
+            }
+          },
+          "fulfilled": true,
+          "heads": {
+            "D": 1,
+            "F": 3,
+            "I": 1,
+            "S": 45
+          },
+          "imports": [
+            "S-export",
+            "D-export"
+          ],
+          "inspection": {
+            "attached": true,
+            "imports": 1,
+            "requested": true,
+            "resultInI": "pass:o2",
+            "resultInS": "pass:o2"
+          },
+          "owners": {
+            "R_deliver": [],
+            "R_fulfil": [],
+            "R_sell": []
+          },
+          "releases": [
+            "S",
+            "D"
+          ],
+          "rights": {
+            "R_deliver": {
+              "D": "released",
+              "F": "spent",
+              "I": "absent",
+              "S": "absent"
+            },
+            "R_fulfil": {
+              "D": "absent",
+              "F": "spent",
+              "I": "absent",
+              "S": "released"
+            },
+            "R_sell": {
+              "D": "absent",
+              "F": "absent",
+              "I": "absent",
+              "S": "spent"
+            }
+          },
+          "sale": {
+            "accepted_offer": "o3",
+            "status": "closed",
+            "winner": "bob"
+          },
+          "verifiedProofs": [
+            "S",
+            "D"
+          ],
+          "writers": {
+            "D": "WD",
+            "F": "WF",
+            "I": "WI",
+            "S": "W1"
+          }
+        }
+      },
+      "k3": [
+        {
+          "file": "k3-bob-unauthorized-accept-sqlite.json",
+          "memberAttempts": 1,
+          "releaseEffective": true,
+          "activationEffective": true,
+          "activations": 1
+        },
+        {
+          "file": "k3-bob-unauthorized-close-sqlite.json",
+          "memberAttempts": 1,
+          "releaseEffective": true,
+          "activationEffective": true,
+          "activations": 1
+        },
+        {
+          "file": "k3-carol-malformed-grant-sqlite.json",
+          "memberAttempts": 1,
+          "releaseEffective": true,
+          "activationEffective": true,
+          "activations": 1
+        },
+        {
+          "file": "k3-member-scope-attempts-sqlite.json",
+          "memberAttempts": 6,
+          "releaseEffective": true,
+          "activationEffective": true,
+          "activations": 1
+        }
+      ],
+      "l1": {
+        "savedInputs": 33,
+        "exactRetryChecks": 99,
+        "final": {
+          "activations": 1,
+          "deliveryConfirmed": true,
+          "destination": "active",
+          "exports": {
+            "D": {
+              "buyer": "bob",
+              "delivery_slot": 25
+            },
+            "S": {
+              "accepted_offer": "o3",
+              "winner": "bob"
+            }
+          },
+          "fulfilled": true,
+          "heads": {
+            "D": 5,
+            "F": 11,
+            "I": 5,
+            "S": 42
+          },
+          "imports": [
+            "S-export",
+            "D-export"
+          ],
+          "inspection": {
+            "attached": true,
+            "imports": 1,
+            "requested": true,
+            "resultInI": "pass:o2",
+            "resultInS": "pass:o2"
+          },
+          "owners": {
+            "R_deliver": [],
+            "R_fulfil": [],
+            "R_sell": []
+          },
+          "releases": [
+            "S",
+            "D"
+          ],
+          "rights": {
+            "R_deliver": {
+              "D": "released",
+              "F": "spent",
+              "I": "absent",
+              "S": "absent"
+            },
+            "R_fulfil": {
+              "D": "absent",
+              "F": "spent",
+              "I": "absent",
+              "S": "released"
+            },
+            "R_sell": {
+              "D": "absent",
+              "F": "absent",
+              "I": "absent",
+              "S": "spent"
+            }
+          },
+          "sale": {
+            "accepted_offer": "o3",
+            "status": "closed",
+            "winner": "bob"
+          },
+          "verifiedProofs": [
+            "S",
+            "D"
+          ],
+          "writers": {
+            "D": "WD",
+            "F": "WF",
+            "I": "WI",
+            "S": "W1"
+          }
+        }
+      },
+      "l2": [
+        {
+          "storage": "sqlite",
+          "phase": "cold-open",
+          "cryptoSites": 9,
+          "injectedCases": 17,
+          "originalExceptions": 17,
+          "coldExactRetries": 17
+        },
+        {
+          "storage": "sqlite",
+          "phase": "activation",
+          "cryptoSites": 135,
+          "injectedCases": 151,
+          "originalExceptions": 151,
+          "durableExactRetries": 151,
+          "returnedFaultVerdicts": 0
+        },
+        {
+          "storage": "sqlite",
+          "malformedCases": 13,
+          "newPositions": 0,
+          "healthyAppendAndColdRetry": true
+        },
+        {
+          "storage": "sqlite",
+          "phase": "signatures",
+          "coldVerificationCalls": 51,
+          "coldInjectedCases": 51,
+          "activationVerificationCalls": 124,
+          "activationSigningCalls": 1,
+          "selectedActivationCases": [
+            {
+              "at": 1,
+              "call": "verify",
+              "outcome": "precommit refusal",
+              "committedBeforeRetry": false,
+              "retry": "fresh append"
+            },
+            {
+              "at": 64,
+              "call": "verify",
+              "outcome": "original exception",
+              "committedBeforeRetry": true,
+              "retry": "exact replay"
+            },
+            {
+              "at": 125,
+              "call": "verify",
+              "outcome": "original exception",
+              "committedBeforeRetry": true,
+              "retry": "exact replay"
+            },
+            {
+              "at": 3,
+              "call": "sign",
+              "outcome": "original exception",
+              "committedBeforeRetry": false,
+              "retry": "fresh append"
+            }
+          ]
+        }
+      ],
+      "l3": {
+        "D": {
+          "attemptVerdict": {
+            "authorized": false,
+            "effective": false,
+            "known": false,
+            "reason": "unhandled"
+          },
+          "attemptPosition": 1,
+          "proofIdentity": "sha256:82ec36cb3ba577134aaa08b33892cc65fc6403b95c8f13e3672a67b44934d5b2",
+          "proofFrontier": 2,
+          "releaseEffective": true,
+          "activationEffective": true,
+          "resultEffective": null,
+          "final": {
+            "activations": 1,
+            "deliveryConfirmed": true,
+            "destination": "active",
+            "exports": {
+              "D": {
+                "buyer": "bob",
+                "delivery_slot": 25
+              },
+              "S": {
+                "accepted_offer": "o3",
+                "winner": "bob"
+              }
+            },
+            "fulfilled": true,
+            "heads": {
+              "D": 2,
+              "F": 3,
+              "I": 1,
+              "S": 24
+            },
+            "imports": [
+              "S-export",
+              "D-export"
+            ],
+            "inspection": {
+              "attached": true,
+              "imports": 1,
+              "requested": true,
+              "resultInI": "pass:o2",
+              "resultInS": "pass:o2"
+            },
+            "owners": {
+              "R_deliver": [],
+              "R_fulfil": [],
+              "R_sell": []
+            },
+            "releases": [
+              "S",
+              "D"
+            ],
+            "rights": {
+              "R_deliver": {
+                "D": "released",
+                "F": "spent",
+                "I": "absent",
+                "S": "absent"
+              },
+              "R_fulfil": {
+                "D": "absent",
+                "F": "spent",
+                "I": "absent",
+                "S": "released"
+              },
+              "R_sell": {
+                "D": "absent",
+                "F": "absent",
+                "I": "absent",
+                "S": "spent"
+              }
+            },
+            "sale": {
+              "accepted_offer": "o3",
+              "status": "closed",
+              "winner": "bob"
+            },
+            "verifiedProofs": [
+              "S",
+              "D"
+            ],
+            "writers": {
+              "D": "WD",
+              "F": "WF",
+              "I": "WI",
+              "S": "W1"
+            }
+          }
+        },
+        "I": {
+          "attemptVerdict": {
+            "authorized": false,
+            "effective": false,
+            "known": false,
+            "reason": "unhandled"
+          },
+          "attemptPosition": 1,
+          "proofIdentity": "sha256:3737140260b5afc8e388e93a1ab69c80c2eabe6c770bcc0ed73cd6510e76c989",
+          "proofFrontier": 2,
+          "releaseEffective": null,
+          "activationEffective": null,
+          "resultEffective": true,
+          "final": null
+        },
+        "F": {
+          "attemptVerdict": {
+            "authorized": false,
+            "effective": false,
+            "known": false,
+            "reason": "unhandled"
+          },
+          "attemptPosition": 2,
+          "proofIdentity": "sha256:d442ed7ada82e7544b00ab6eb967804ecf75d372e790aea7c52ebb31f80c6741",
+          "proofFrontier": 4,
+          "releaseEffective": null,
+          "activationEffective": null,
+          "resultEffective": null,
+          "final": {
+            "activations": 1,
+            "deliveryConfirmed": true,
+            "destination": "active",
+            "exports": {
+              "D": {
+                "buyer": "bob",
+                "delivery_slot": 25
+              },
+              "S": {
+                "accepted_offer": "o3",
+                "winner": "bob"
+              }
+            },
+            "fulfilled": true,
+            "heads": {
+              "D": 1,
+              "F": 4,
+              "I": 1,
+              "S": 24
+            },
+            "imports": [
+              "S-export",
+              "D-export"
+            ],
+            "inspection": {
+              "attached": true,
+              "imports": 1,
+              "requested": true,
+              "resultInI": "pass:o2",
+              "resultInS": "pass:o2"
+            },
+            "owners": {
+              "R_deliver": [],
+              "R_fulfil": [],
+              "R_sell": []
+            },
+            "releases": [
+              "S",
+              "D"
+            ],
+            "rights": {
+              "R_deliver": {
+                "D": "released",
+                "F": "spent",
+                "I": "absent",
+                "S": "absent"
+              },
+              "R_fulfil": {
+                "D": "absent",
+                "F": "spent",
+                "I": "absent",
+                "S": "released"
+              },
+              "R_sell": {
+                "D": "absent",
+                "F": "absent",
+                "I": "absent",
+                "S": "spent"
+              }
+            },
+            "sale": {
+              "accepted_offer": "o3",
+              "status": "closed",
+              "winner": "bob"
+            },
+            "verifiedProofs": [
+              "S",
+              "D"
+            ],
+            "writers": {
+              "D": "WD",
+              "F": "WF",
+              "I": "WI",
+              "S": "W1"
+            }
+          }
+        }
+      },
+      "k4": {
+        "phases": [
+          {
+            "phase": "live",
+            "sourceReaders": [
+              "alice",
+              "bob",
+              "carol",
+              "ivan"
+            ],
+            "destinationReaders": [
+              "alice",
+              "bob",
+              "kim"
+            ],
+            "bobReadsRequest": false,
+            "bobGetsDerivedProof": true
+          },
+          {
+            "phase": "cold",
+            "sourceReaders": [
+              "alice",
+              "bob",
+              "carol",
+              "ivan"
+            ],
+            "destinationReaders": [
+              "alice",
+              "bob",
+              "kim"
+            ],
+            "bobReadsRequest": false,
+            "bobGetsDerivedProof": true
+          }
+        ],
+        "expectation": {
+          "activation": {
+            "audience": "spine",
+            "context": "F",
+            "currentParticipants": [
+              "alice",
+              "bob",
+              "kim"
+            ],
+            "position": 1
+          },
+          "admit": {
+            "audience": "members",
+            "context": "S",
+            "position": 20,
+            "readers": [
+              "alice",
+              "bob",
+              "carol",
+              "ivan"
+            ]
+          },
+          "inspectionFounders": [
+            "ivan"
+          ],
+          "mandate": {
+            "inspector": "ivan",
+            "offer": "o2",
+            "prefix": 14,
+            "source": "S"
+          },
+          "request": {
+            "bodyInPublicProof": false,
+            "context": "S",
+            "position": 14,
+            "readers": [
+              "alice",
+              "carol",
+              "ivan"
+            ]
+          },
+          "requesterFieldInMandate": false,
+          "result": {
+            "offer": "o2",
+            "result": "pass:o2"
+          }
+        }
+      }
+    }
+  },
+  "proofIdentityDefinition": "sha256 of codec canonicalize(full PublicProof packet including its certificate)",
+  "backendIdentityAgreement": true,
+  "audit": {
+    "frozenSourceAndConfigurationBlobsUnchanged": 94,
+    "e046EvidenceFilesByteIdentical": 475,
+    "noSourceTestProfileOrManifestEditsAfterMeasurement": true
+  },
+  "completedUtc": "2026-09-16T22:40:23.639152+00:00"
+}
