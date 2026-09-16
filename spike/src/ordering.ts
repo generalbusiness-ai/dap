@@ -23,8 +23,11 @@ export function initialOrdering(genesis: EventBody): OrderingState {
   const s = object(object(genesis.payload).sequencing);
   if (s.profile !== FIXED_WRITER_PROFILE && s.profile !== HANDOVER_PROFILE) throw new Error('Journal: unsupported profile');
   publicKeyOf(s.writer as string);
-  if (s.profile === HANDOVER_PROFILE) publicKeyOf(s.control as string);
-  else if (s.control !== undefined) throw new Error('ordering: v1 cannot install control authority');
+  if (s.profile === HANDOVER_PROFILE) {
+    if (Object.keys(s).sort().join(',') !== 'control,profile,writer') throw new Error('ordering: invalid v2 sequencing fields');
+    publicKeyOf(s.control as string);
+    if (s.control === s.writer) throw new Error('ordering: control key must differ from writer');
+  }
   return { profile: s.profile, initialWriter: s.writer as string, writer: s.writer as string,
     ...(s.profile === HANDOVER_PROFILE ? { control: s.control as string } : {}), epoch: 0, writers: [s.writer as string] };
 }
@@ -52,6 +55,7 @@ export function orderingAdmission(state: OrderingState, head: Entry, event: Even
       if (p.epoch !== state.epoch + 1) return { refused: true, reason: 'wrong_ordering_epoch' };
       if (event.actor !== state.control) return { refused: true, reason: 'wrong_control_authority' };
       publicKeyOf(p.writer as string);
+      if (p.writer === state.control) return { refused: true, reason: 'control_key_is_writer' };
       if (state.writers.includes(p.writer as string)) return { refused: true, reason: 'writer_already_used' };
     }
     return 'control';

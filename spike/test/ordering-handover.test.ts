@@ -8,7 +8,7 @@ import { MemoryBackend, snapshot } from '../src/append.ts';
 import { envelopeId, signEvent, signHeader, verifyWire } from '../src/codec.ts';
 import { K } from '../src/foundation.ts';
 import { Journal, verifyJournalView } from '../src/journal.ts';
-import { SEAL, ASSIGN } from '../src/ordering.ts';
+import { ASSIGN } from '../src/ordering.ts';
 import { acceptance, act, invite } from './fixtures/o1-fixture.ts';
 import { create, sqlite, seal, assign, controlKey, control, successorKey, successor, competitor, keys, people, packages, envelopeBytes } from './fixtures/o3-fixture.ts';
 import type { Entry } from '../src/types.ts';
@@ -22,6 +22,9 @@ for (const storage of ['memory', 'sqlite'] as const) test('O3 same-context hando
   const path = join(dir(), 'journal.db');
   let backend = storage === 'memory' ? new MemoryBackend() : sqlite(path);
   let j = create(backend);
+  assert.equal(j.context.state.participants.includes(control), false);
+  assert.equal(j.context.state.grantHistory.some(g => g.principal === control), false);
+  assert.equal(j.context.credentialFor(control), undefined);
   const invitation = invite(j, 'bob');
   const consumed = acceptance(j, 'bob', invitation);
   const prior = accepted(j.submit(consumed));
@@ -125,6 +128,8 @@ test('O3 rejects forged and wrong authority, stale or swapped predecessor hashes
     assert.deepEqual(j.context.entries, entries); assert.deepEqual(backend.pending(), pending);
     assert.equal(backend.retry(envelope.body.action_id!), undefined);
   }
+  assert.equal(j.context.state.participants.includes(people.alice), true);
+  assert.equal(j.context.state.grantHistory.some(g => g.principal === people.alice), true);
   const s = seal(j);
   refused({ ...s, sig: 'A'.repeat(86) }, 'invalid_envelope');
   refused(signEvent({ ...s.body, actor: people.alice }, keys.alice), 'wrong_seal_authority');
@@ -140,6 +145,7 @@ test('O3 rejects forged and wrong authority, stale or swapped predecessor hashes
   refused(signEvent({ ...a.body, payload: { ...a.body.payload as object, epoch: 2 } }, controlKey), 'wrong_ordering_epoch');
   refused(signEvent({ ...a.body, payload: { ...a.body.payload as object, writer: [successor, competitor] } }, controlKey), 'malformed_control');
   refused(signEvent({ ...a.body, payload: { ...a.body.payload as object, writer: people.writer } }, controlKey), 'writer_already_used');
+  refused(signEvent({ ...a.body, payload: { ...a.body.payload as object, writer: control } }, controlKey), 'control_key_is_writer');
   accepted(j.submit(a)); j.close();
 });
 
@@ -163,5 +169,21 @@ test('O3 cold authentication rejects a correctly signed control with wrong paylo
     const entries = [...j.context.entries.slice(0, -1), snapshot(bad)]; j.close();
     const copy = new MemoryBackend(); copy.serialized(() => { for (const entry of entries) copy.commit(entry, undefined, undefined); });
     assert.throws(() => Journal.open({ backend: copy, writerKey: keys.writer, packages }), wrong === 'payload' ? /wrong_control_predecessor/ : /wrong prev/);
+  }
+});
+
+
+test('O3 v2 pins distinct writer/control keys and exact sequencing fields before any durable initialization', () => {
+  const source = create(new MemoryBackend());
+  const genesis = source.context.entries[0]!.event, origin = source.context.entries[1]!.committed!;
+  source.close();
+  for (const [sequencing, reason] of [
+    [{ profile: 'dap.fixture.single-writer/2', writer: people.writer, control: people.writer }, /control key must differ/],
+    [{ profile: 'dap.fixture.single-writer/2', writer: people.writer, control, epoch: 0 }, /invalid v2 sequencing fields/],
+  ] as const) {
+    const backend = sqlite(join(dir(), 'journal.db'));
+    const body = { ...genesis, payload: { ...genesis.payload as object, sequencing } };
+    assert.throws(() => Journal.create({ backend, writerKey: keys.writer, packages }, signEvent(body, keys.alice), [origin]), reason);
+    assert.deepEqual(backend.entries(), []); assert.deepEqual(backend.pending(), []); backend.close();
   }
 });

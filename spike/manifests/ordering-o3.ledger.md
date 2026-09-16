@@ -59,3 +59,25 @@ explanation. This is one compatibility wording repair and no protocol repair.
 Before the second run, the nomination test also checks a successor's open
 against the actual nominated context and its journal, rather than against an
 empty backend. Ordinary nominations still must not authorize it.
+
+## Run 2
+
+Source: `aae4051eae9b977d9b25f1a8d5e1966ddfe3bf23`. Commands: `npm test`,
+then `npm run typecheck`. Raw output:
+[run-2.txt](ordering-o3-runs/run-2.txt).
+
+The full integration run executed 200 tests: 199 passed, zero ordinary
+failures, and one executing/failing Club TODO retained from V5. All three
+200-seed campaigns passed: Sale, Booking and Club under their frozen
+manifests. This does not make the original Club admission policy pass.
+All 11 O3 tests passed; typecheck passed.
+
+After this run, O3 and O5 made the declared independent-key profile exact:
+reject identical genesis writer/control keys, assigning the control key as a
+writer, and extra v2 sequencing fields. Existing v1 metadata remains ignored
+for assignment as before. Tests now explicitly assert that the control key is
+not an application participant and holds no grants, while its valid controls
+succeed. A granted member and the retiring writer without the control key are
+refused. The nomination case checks the actual journal. These changes will
+receive a focused ordering regression run; the unchanged visibility campaigns
+will not be rerun solely for this schema validation tightening.
