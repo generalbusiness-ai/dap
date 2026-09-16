@@ -1,6 +1,7 @@
 # Experiment manifest: Sale
 
-Frozen before the baseline (spike plan §4.7). The partition-plus-decision
+Originally frozen before the baseline (spike plan §4.7); subsequent
+experiment revisions are identified in [the ledger](sale.ledger.md). The partition-plus-decision
 shape of the views note: offers are private in their amounts and public
 in their existence, and one decision spans both. The model is authored by
 an agent under the protocol of spike plan §4.5, from this manifest and
@@ -46,9 +47,18 @@ requester, seller and inspector, no capability.
 - Offer stubs, withdrawals, accepts: members when recorded, subject to
   disclosure.
 
-The budget is checked on the projection: no principal's observation
-carries an amount or a counter of an offer they did not author unless
-they are the seller, and no inspection request they are not party to.
+The budget is checked on readable events and on the projection. Recorded
+facts identify the listing's seller and the private event's actor. A
+counter's other party is the author of the effective stub with that id
+recorded before the counter, as established by the visible outcomes.
+The recorder of a refused stub is not a party merely because that attempt
+used the same id. If no effective stub exists, only the seller and the
+counter's actor are parties. Later stubs cannot authorize an earlier
+counter. An inspection request also names its inspector. A disclosure
+that makes a private event readable by anyone else violates the budget,
+even when their projection hides the payload. Likewise, no observation
+may carry another offerer's amount or counter unless the observer is the
+seller, or an inspection request to which they are not a party.
 
 ## Projection shape
 

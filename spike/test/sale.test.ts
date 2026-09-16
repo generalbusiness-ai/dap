@@ -13,7 +13,8 @@ import { generate } from '../src/generate.ts';
 import { foldPrefix, oracleObserve } from '../src/oracle.ts';
 import { replay, type Step } from '../src/script.ts';
 import { SALE, salePackage } from '../fixtures/sale.ts';
-import { INSPECTION } from '../fixtures/inspection.ts';
+import { salePackage as run6Package } from '../corpus/sale/run6/model.ts';
+import { INSPECTION, inspectionPackage } from '../fixtures/inspection.ts';
 import {
   ALICE,
   BOB,
@@ -38,7 +39,7 @@ const fullCheck = (ctx: ReturnType<typeof replay>['ctx'], frontiers?: number[]) 
 const brief = (vs: Violation[]) => vs.slice(0, 6).map(describeViolation).join('\n') + (vs.length > 6 ? `\n... ${vs.length} violations` : '');
 
 /**
- * The authored model declares a join disclosure (fix 1 in the ledger), so
+ * The authored model declares a join disclosure (fix 2 in the ledger), so
  * every join in the predeclared cases is followed by one `dap.disclose`
  * from the seller. In the trace, Ivan's join at 13 is followed by the
  * disclosure of the stubs at 6 and 8, at position 14; every later
@@ -66,10 +67,16 @@ function shiftedProjection(p: string): SaleProjection {
 }
 
 test('case 1, the trace: positions 0 to 19 replay with the readability of the table, the literal projections and the outcomes at 17 and 18, under the model\'s declared join disclosure', (t) => {
-  // the literal trace, without the declared disclosure: reported, not required
+  // Preserve the original dependency failure as well as the repaired trace.
   const literal = replay({ base: saleBase(), steps: saleTraceSteps(), joinDisclosure: false });
   assert.equal(literal.ctx.head, 19);
   const literalViolations = fullCheck(literal.ctx);
+  assert.equal(literalViolations.length, 5, 'the literal trace retains its five dependency violations');
+  assert.equal(literalViolations[0]!.participant, IVAN);
+  assert.equal(literalViolations[0]!.frontier, 15);
+  assert.equal(literalViolations[0]!.kind, 'mismatch');
+  assert.equal(literalViolations[0]!.expected?.outcomes['15']?.effective, true);
+  assert.equal(literalViolations[0]!.actual?.outcomes['15']?.perModel?.['sale']?.reason, 'no_such_offer');
   t.diagnostic(`literal trace without the join disclosure: ${literalViolations.length} violations` + (literalViolations.length ? '; first: ' + describeViolation(literalViolations[0]!) : ''));
 
   const { ctx } = replay({ base: saleBase(), steps: saleTraceSteps() });
@@ -98,6 +105,9 @@ test('case 2, replacement with a hidden predecessor: Ivan sees o3 open replacing
   const steps: Step[] = [...saleTraceSteps().slice(0, 15), { type: 'act', actor: ALICE, kind: SALE + 'accept', payload: { offer_id: 'o1' } }];
   const literal = replay({ base: saleBase(), steps, joinDisclosure: false });
   const literalViolations = fullCheck(literal.ctx);
+  assert.equal(literalViolations.length, 3);
+  assert.equal(literalViolations[0]!.participant, IVAN);
+  assert.equal(literalViolations[0]!.frontier, 15);
   t.diagnostic(`literal case 2 without the join disclosure: ${literalViolations.length} violations` + (literalViolations.length ? '; first: ' + describeViolation(literalViolations[0]!) : ''));
 
   const { ctx } = replay({ base: saleBase(), steps }); // 14 backlog, 15 request, 16 o3, 17 terms, 18 accept o1
@@ -157,7 +167,7 @@ test('case 4, late joiner judging a public event on a hidden fact: a withdrawal 
 test('case 5, the campaign: every manifest seed replays with zero violations of the property, the pause rule, the invariants and the privacy budget', (t) => {
   const limit = process.env['SALE_SEEDS'] ? Number(process.env['SALE_SEEDS']) : saleBounds.seeds.length;
   const seeds = saleBounds.seeds.slice(0, limit);
-  const counts = { joins: 0, attaches: 0, disclosures: 0, offers: 0, replacements: 0, withdrawals: 0, counters: 0, accepts: 0, effectiveAccepts: 0, closes: 0, entries: 0 };
+  const counts = { joins: 0, attaches: 0, disclosures: 0, offers: 0, replacements: 0, withdrawals: 0, counters: 0, accepts: 0, effectiveAccepts: 0, closes: 0, entries: 0, privateDisclosures: 0, inspectionAttaches: 0, inspectionRequests: 0, unboundInspectionRequests: 0 };
   const failures: { seed: number; violations: Violation[] }[] = [];
   const started = Date.now();
   for (const seed of seeds) {
@@ -179,7 +189,21 @@ test('case 5, the campaign: every manifest seed replays with zero violations of 
       if (s.type === 'act' && s.kind === SALE + 'accept') counts.accepts++;
       if (s.type === 'act' && s.kind === SALE + 'close') counts.closes++;
     }
-    for (let i = 0; i <= ctx.head; i++) if (ctx.entries[i]!.event.kind === SALE + 'accept' && ctx.state.verdicts[i]?.effective) counts.effectiveAccepts++;
+    for (let i = 0; i <= ctx.head; i++) {
+      const entry = ctx.entries[i]!;
+      if (entry.event.kind === SALE + 'accept' && ctx.state.verdicts[i]?.effective) counts.effectiveAccepts++;
+      if (entry.event.kind === INSPECTION + 'request') {
+        counts.inspectionRequests++;
+        if (ctx.state.verdicts[i]?.reason === 'unhandled') counts.unboundInspectionRequests++;
+      }
+      if (entry.event.kind === K.attach && ctx.state.verdicts[i]?.effective &&
+          (entry.event.payload as { package?: string }).package === inspectionPackage.id) counts.inspectionAttaches++;
+      if (entry.event.kind === K.disclose && ctx.state.verdicts[i]?.effective) {
+        for (const at of (entry.event.payload as { positions: number[] }).positions) {
+          if ([SALE + 'offer_terms', SALE + 'counter', INSPECTION + 'request'].includes(ctx.entries[at]!.event.kind)) counts.privateDisclosures++;
+        }
+      }
+    }
     const violations = fullCheck(ctx);
     if (violations.length) failures.push({ seed, violations });
   }
@@ -220,8 +244,8 @@ test('V3-F1: a private payload disclosed to a non-party is a budget violation on
   assert.match(violations[0]!.detail, /carol can read the sale\.offer_terms at 7/);
 });
 
-test('V3-F2: a counter naming someone other than the stub\'s author is ineffective, and its delivery to that person is reported by the budget', () => {
-  const { ctx } = replay({ base: saleBase(), steps: saleTraceSteps().slice(0, 5) }); // through 6: Bob's stub o1
+test('V3-F2: the kept run-6 model refuses a wrong-party counter, and the budget reports its misdelivery', () => {
+  const { ctx } = replay({ base: saleBase(run6Package), steps: saleTraceSteps().slice(0, 5) }); // through 6: Bob's stub o1
   const wrong = ctx.act(ALICE, SALE + 'counter', { offer_id: 'o1', amount: 780, author: CAROL });
   assert.ok(!('refused' in wrong));
   assert.equal(wrong.verdict?.effective, false);
@@ -253,4 +277,95 @@ test('V3-F3: null private payloads are recorded with a deterministic ineffective
   assert.ok(!('refused' in ok) && ok.verdict?.effective);
   const violations = fullCheck(ctx);
   assert.deepEqual(violations, [], brief(violations));
+});
+
+// ----- checker's second V3 review (report 796c6510), G1 -----
+
+const failedStubAttempts: { actor: string; roles: string[]; payload: Record<string, string>; reason: string }[] = [
+  { actor: CAROL, roles: ['Buyer'], payload: { offer_id: 'o1', replaces: 'zzz' }, reason: 'no_such_offer' },
+  { actor: IVAN, roles: ['Inspector'], payload: { offer_id: 'o1' }, reason: 'unauthorized' },
+];
+for (const failed of failedStubAttempts) {
+  for (const pkg of [run6Package, salePackage]) {
+  const kept = pkg === run6Package;
+  test(`V3-G1: an ineffective stub by ${failed.actor} does not make them a counter party (${kept ? 'kept run-6 guard regression' : 'current audience'})`, () => {
+    const { ctx } = replay({ base: saleBase(pkg), steps: [
+      { type: 'invite', inviter: ALICE, invitee: BOB, grants: { roles: ['Buyer'] } },
+      { type: 'accept', invitee: BOB },
+      { type: 'invite', inviter: ALICE, invitee: failed.actor, grants: { roles: failed.roles } },
+      { type: 'accept', invitee: failed.actor },
+      { type: 'act', actor: failed.actor, kind: SALE + 'offer', payload: failed.payload },
+    ] });
+    assert.equal(ctx.state.verdicts[6]?.effective, false);
+    assert.equal(ctx.state.verdicts[6]?.perModel?.['sale']?.reason ?? ctx.state.verdicts[6]?.reason, failed.reason);
+    const sendCounter = () => {
+      const r = ctx.act(ALICE, SALE + 'counter', { offer_id: 'o1', amount: 777, author: failed.actor });
+      assert.ok(!('refused' in r));
+      assert.equal(r.verdict?.effective, false);
+      assert.equal(ctx.view(failed.actor)[r.header.position]!.event !== undefined, kept);
+      return r;
+    };
+    // With no effective stub, its refused recorder still is not a party.
+    const missing = sendCounter();
+    assert.equal(missing.verdict?.perModel?.['sale']?.reason, 'no_such_offer');
+    let violations = fullCheck(ctx, [ctx.head]).filter((v) => v.kind === 'budget' && v.participant === failed.actor);
+    assert.equal(violations.length, kept ? 1 : 0);
+    if (kept) assert.match(violations[0]!.detail, /whose parties are alice\+alice$/);
+    // A later effective stub owns the id, even though the failed one came first.
+    const stub = ctx.act(BOB, SALE + 'offer', { offer_id: 'o1' });
+    assert.ok(!('refused' in stub) && stub.verdict?.effective);
+    const wrong = sendCounter();
+    assert.equal(wrong.verdict?.perModel?.['sale']?.reason, 'not_author');
+    violations = fullCheck(ctx, [ctx.head]).filter((v) => v.kind === 'budget' && v.participant === failed.actor);
+    assert.equal(violations.length, kept ? 2 : 0);
+    if (kept) {
+      assert.match(violations[0]!.detail, /whose parties are alice\+alice$/);
+      assert.match(violations[1]!.detail, /whose parties are alice\+alice\+bob$/);
+    }
+    const right = ctx.act(ALICE, SALE + 'counter', { offer_id: 'o1', amount: 780, author: BOB });
+    assert.ok(!('refused' in right) && right.verdict?.effective);
+    assert.ok(ctx.view(BOB)[right.header.position]!.event);
+    assert.equal(ctx.view(failed.actor)[right.header.position]!.event, undefined);
+    assert.deepEqual(fullCheck(ctx, [ctx.head]).filter((v) => v.participant !== failed.actor), []);
+  });
+}
+}
+
+
+test('Fix 7: wrong-author, malformed, unauthorized and stale counters never address a supplied non-party, and late members replay them consistently', () => {
+  const { ctx } = replay({ base: saleBase(), steps: saleTraceSteps().slice(0, 5) });
+  const attempts = [
+    { actor: ALICE, payload: { offer_id: 'o1', amount: 777, author: CAROL }, reason: 'not_author' },
+    { actor: ALICE, payload: { offer_id: 'o1', amount: 'bad', author: CAROL }, reason: 'malformed' },
+    { actor: BOB, payload: { offer_id: 'o1', amount: 777, author: CAROL }, reason: 'unauthorized' },
+  ];
+  for (const attempt of attempts) {
+    const r = ctx.act(attempt.actor, SALE + 'counter', attempt.payload);
+    assert.ok(!('refused' in r));
+    assert.equal(r.verdict?.effective, false);
+    assert.equal(r.verdict?.perModel?.['sale']?.reason ?? r.verdict?.reason, attempt.reason);
+    assert.equal(ctx.view(CAROL)[r.header.position]!.event, undefined);
+    assert.ok(ctx.view(ALICE)[r.header.position]!.event);
+    assert.ok(ctx.view(BOB)[r.header.position]!.event);
+  }
+  const stale = ctx.act(ALICE, SALE + 'counter', { offer_id: 'o1', amount: 777, author: CAROL }, { expected_binding: 'sha256:' + 'f'.repeat(64) });
+  assert.ok(!('refused' in stale));
+  assert.equal(stale.verdict?.reason, 'stale_binding');
+  assert.equal(ctx.view(CAROL)[stale.header.position]!.event, undefined);
+  assert.deepEqual(fullCheck(ctx), []);
+
+  // Dana's declared backlog gives her the effective stub before she authors
+  // an unauthorized counter. Cold replay uses her own preceding state.
+  const late = replay({ base: saleBase(), steps: [
+    ...saleTraceSteps().slice(0, 5),
+    { type: 'invite', inviter: ALICE, invitee: DANA, grants: { roles: ['Buyer'] } },
+    { type: 'accept', invitee: DANA },
+    { type: 'act', actor: DANA, kind: SALE + 'counter', payload: { offer_id: 'o1', amount: 778, author: CAROL } },
+  ] }).ctx;
+  assert.equal(late.state.verdicts[late.head]?.reason, 'unauthorized');
+  assert.ok(late.view(DANA)[late.head]!.event);
+  assert.ok(late.view(BOB)[late.head]!.event);
+  assert.equal(late.view(CAROL)[late.head]!.event, undefined);
+  assert.deepEqual(foldPrefix(late, late.head).models, late.state.models);
+  assert.deepEqual(fullCheck(late), []);
 });
