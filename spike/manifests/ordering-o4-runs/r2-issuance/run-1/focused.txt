@@ -1,0 +1,67 @@
+✔ test keys reproduce the independent RFC 8032 Ed25519 vector (1.914ms)
+✔ fixed vectors pin each signed object, exact UTF-8 bytes, identity and signature (6.9605ms)
+✔ fixed rejection vector: tampered body (0.459583ms)
+✔ fixed rejection vector: actor signs noncanonical bytes (0.631083ms)
+✔ fixed rejection vector: wrong prev, correctly signed (0.292667ms)
+✔ fixed rejection vector: wrong commitment, correctly signed (0.44725ms)
+✔ fixed rejection vector: unassigned sequencer key (0.235375ms)
+✔ fixed rejection vector: sequencer signs full header bytes (0.231709ms)
+✔ canonical encoding supports RFC 8785 numbers, UTF-16 ordering and unnormalized strings (0.22425ms)
+✔ canonical encoding rejects lossy JS data, invalid Unicode and noncanonical byte inputs (1.206209ms)
+✔ principals and signatures have one exact encoding and must match their signing key (0.921334ms)
+✔ body profile validates required and forbidden fields without interpreting the payload (1.029375ms)
+✔ header-only verification authenticates disclosure evidence and exposes no private fields (0.958459ms)
+✔ wire verification enforces genesis identity, destinations, origin opt-in and evidence placement (3.692209ms)
+✔ wire framing is canonical and decoded entries are independent frozen snapshots (0.337875ms)
+✔ authorized issue, issuer revoked, then redeemed: effective (authority judged at issuance) (2.229542ms)
+✔ unissued token: refused at admission, never sequenced (0.38825ms)
+✔ unauthorized issuer: the invite is sequenced but ineffective, and its token admits nobody (0.715416ms)
+✔ member-side verification refuses a header that is not in the chain (0.3135ms)
+✔ wrong invitee cannot redeem (0.346417ms)
+✔ exact retry of a committed acceptance after consumption returns the receipt; changed content and reuse are refused (0.424542ms)
+✔ O4 R2 every issuance hash/key fault rejects cold open and preserves healthy replay: memory (460.047042ms)
+ℹ {"storage":"memory","phase":"cold-open","cryptoSites":["createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash"],"injectedCases":17,"originalExceptions":17,"coldExactRetries":17}
+✔ O4 R2 every issuance hash/key fault rejects cold open and preserves healthy replay: sqlite (500.731416ms)
+ℹ {"storage":"sqlite","phase":"cold-open","cryptoSites":["createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash"],"injectedCases":17,"originalExceptions":17,"coldExactRetries":17}
+✔ O4 R2 every nested issuance hash/key fault disables activation facade without changing durable bytes: memory (15726.864083ms)
+ℹ {"storage":"memory","phase":"activation","cryptoSites":["createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash"],"injectedCases":151,"originalExceptions":151,"durableExactRetries":151,"returnedFaultVerdicts":0}
+✔ O4 R2 every nested issuance hash/key fault disables activation facade without changing durable bytes: sqlite (16243.844916ms)
+ℹ {"storage":"sqlite","phase":"activation","cryptoSites":["createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash"],"injectedCases":151,"originalExceptions":151,"durableExactRetries":151,"returnedFaultVerdicts":0}
+✔ O4 R2 signed and legacy issuance preserve every hash-stage fault value (98.356083ms)
+ℹ {"boundary":"legacy","sites":["createHash","update","digest","createHash","update","digest"],"thrownValuesPerSite":8}
+ℹ {"boundary":"signed","sites":["createPublicKey","createHash","update","digest","createHash","update","digest"],"thrownValuesPerSite":8}
+✔ O4 R2 malformed signed and legacy issuance stays an admission refusal and leaves Scope usable: memory (120.007208ms)
+ℹ {"storage":"memory","malformedCases":7,"newPositions":0,"healthyAppendAndColdRetry":true}
+✔ O4 R2 malformed signed and legacy issuance stays an admission refusal and leaves Scope usable: sqlite (137.108042ms)
+ℹ {"storage":"sqlite","malformedCases":7,"newPositions":0,"healthyAppendAndColdRetry":true}
+✔ O4 R2 codec-looking unexpected TypeError and opaque values remain exceptions in wireInput (92.86425ms)
+✔ O4 L2 signature faults during cold open and representative activation stages preserve recovery: memory (773.580833ms)
+ℹ {"storage":"memory","phase":"signatures","coldVerificationCalls":51,"coldInjectedCases":51,"activationVerificationCalls":124,"activationSigningCalls":1,"selectedActivationCases":[{"at":1,"call":"verify","outcome":"precommit refusal","committedBeforeRetry":false,"retry":"fresh append"},{"at":64,"call":"verify","outcome":"original exception","committedBeforeRetry":true,"retry":"exact replay"},{"at":125,"call":"verify","outcome":"original exception","committedBeforeRetry":true,"retry":"exact replay"},{"at":3,"call":"sign","outcome":"original exception","committedBeforeRetry":false,"retry":"fresh append"}]}
+✔ O4 L2 signature faults during cold open and representative activation stages preserve recovery: sqlite (834.162541ms)
+ℹ {"storage":"sqlite","phase":"signatures","coldVerificationCalls":51,"coldInjectedCases":51,"activationVerificationCalls":124,"activationSigningCalls":1,"selectedActivationCases":[{"at":1,"call":"verify","outcome":"precommit refusal","committedBeforeRetry":false,"retry":"fresh append"},{"at":64,"call":"verify","outcome":"original exception","committedBeforeRetry":true,"retry":"exact replay"},{"at":125,"call":"verify","outcome":"original exception","committedBeforeRetry":true,"retry":"exact replay"},{"at":3,"call":"sign","outcome":"original exception","committedBeforeRetry":false,"retry":"fresh append"}]}
+✔ O4 L2 declared malformed proof bytes remain policy refusals and permit later activation: memory (361.40425ms)
+✔ O4 L2 declared malformed proof bytes remain policy refusals and permit later activation: sqlite (389.224792ms)
+✔ O4 G2 failed activation, dormant exercise and exact retries permit later activation: memory (731.890833ms)
+✔ O4 G2 failed activation, dormant exercise and exact retries permit later activation: sqlite (734.114416ms)
+✔ O4 G2 another participant admitted event cannot block activation: memory (370.249375ms)
+✔ O4 G2 another participant admitted event cannot block activation: sqlite (398.94275ms)
+✔ O4 G2 keeps current authorization gate: memory (286.811875ms)
+✔ O4 G2 keeps current closed gate: memory (287.210959ms)
+✔ O4 G2 keeps current authorization gate: sqlite (321.937583ms)
+✔ O4 G2 keeps current closed gate: sqlite (315.3315ms)
+✔ O4 unexpected post-commit replay error is thrown and disables facade: memory (404.25725ms)
+✔ O4 unexpected post-commit replay error is thrown and disables facade: sqlite (434.346792ms)
+✔ O4 malformed release-proof shape has an explicit policy refusal: memory (308.99675ms)
+✔ O4 malformed release-proof shape has an explicit policy refusal: sqlite (337.150375ms)
+✔ O4 thrown fold handler is a real failure with durable bytes: memory (122.178083ms)
+✔ O4 thrown audience handler is a real failure with durable bytes: memory (125.340875ms)
+✔ O4 thrown fold handler is a real failure with durable bytes: sqlite (144.433125ms)
+✔ O4 thrown audience handler is a real failure with durable bytes: sqlite (142.3105ms)
+ℹ tests 49
+ℹ suites 0
+ℹ pass 49
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 35823.377209

@@ -1,0 +1,18 @@
+{
+  "source": "086fb8a8e97f6045bd4518246838842f1d7d631a",
+  "reproductionOwner": "root",
+  "command": [
+    "node",
+    "/tmp/dap-o4-l2-header-repro-fixed.mjs"
+  ],
+  "env": {
+    "WT": "/tmp/dap-o4-l2-header-before"
+  },
+  "notes": "Original unexpected validation failure on both stores. failed-harness files separately retain a local diagnostic cleanup error: LifecycleWorld.restart read a fault-closed SQLite handle. Corrected root script explicitly reopens the saved backend/assignment.",
+  "sha256": {
+    "failed-harness.mjs": "a9ccabaf16f92cea584812809b7e8c111fb8ff87bffe63a96b2962a2ea4048ca",
+    "malformed-header.mjs": "634766d7bb97ab8dd265e3d642dd288bd7c6d692afe1f1deb2e7183f1ef74804",
+    "failed-harness-output.txt": "c1d00f0c96b4709a397862442ccff47ec510951dc95c5a82d48db10249547d8f",
+    "output.txt": "56caca173fa3c3b6c4f6b3ec20456990402f1bca914ae55faca8b02f8b269409"
+  }
+}

@@ -571,7 +571,13 @@ export function verifyIssuance(evidence: IssuanceEvidence, acceptPayload: unknow
   const commitment = 'sha256:' + createHash('sha256').update(bytes, 'utf8').digest('hex');
   if (at.id !== commitment || emb.header.commitment !== commitment) return { ok: false, reason: 'not_in_chain' };
   const { seq_sig: _signature, ...preimage } = emb.header;
-  if (contentId(preimage as unknown as Json) !== at.headerHash) return { ok: false, reason: 'not_in_chain' };
+  let headerBytes: string;
+  try { headerBytes = canonicalize(preimage as unknown as Json); }
+  catch (error) {
+    if (isCanonicalValidationError(error)) return { ok: false, reason: 'malformed' };
+    throw error;
+  }
+  if ('sha256:' + createHash('sha256').update(headerBytes, 'utf8').digest('hex') !== at.headerHash) return { ok: false, reason: 'not_in_chain' };
   if (emb.event.kind !== K.invite) return { ok: false, reason: 'not_an_invite' };
   if (emb.event.genesis !== emb.header.genesis) return { ok: false, reason: 'wrong_genesis' };
   // The issuance must have been effective. Effectiveness of an invite is decided by public facts

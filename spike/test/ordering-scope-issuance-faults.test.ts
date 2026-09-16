@@ -177,6 +177,10 @@ for (const storage of ['memory', 'sqlite'] as const) test('O4 R2 malformed signe
       { name: 'legacy-fraction', payload: { invite: { event: { ...original.invite.event, payload: { n: 0.5 } }, header: original.invite.header } }, reason: 'malformed' },
       { name: 'untrusted-commitment', payload: { invite: { ...original.invite, event: { ...original.invite.event, nonce: 'ff'.repeat(16) } } }, reason: 'not_in_chain' },
     ];
+    for (const fields of [
+      { extra: 0.5 }, { extra: -0.5 }, { extra: Number.MAX_SAFE_INTEGER + 1 },
+      { activation: 0.5 }, { requires: [0.5] }, { nested: { value: 1e-7 } },
+    ]) malformed.push({ name: 'header ' + JSON.stringify(fields), payload: { invite: { ...original.invite, header: { ...original.invite.header, ...fields } } }, reason: 'malformed' });
     const head = ctx.head;
     for (const { name, payload, reason } of malformed) {
       assert.deepEqual(verifyIssuance(evidence, payload), { ok: false, reason }, name);
