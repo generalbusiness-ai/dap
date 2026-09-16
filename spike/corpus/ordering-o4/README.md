@@ -115,3 +115,31 @@ packets with real actor envelopes, newly signed headers and completeness
 certificates. They retain actual destination refusal and the subsequent
 honest activation. They are not honest producer outputs. This revision does
 not overwrite any prior packet or rerun the historical campaigns implicitly.
+
+
+Run 8 is the combined K1–K4 correction, measured at
+`2ee1b43a9fc7c3af2b99d991f36d78a4dbcde443`. Its manifest is `a766fe56`,
+opening rule `701403e9`, scope implementation `942f4d20`, Scope package
+`0a3201ea` and Inspection package `18a886c1`; full identities are recorded
+in `manifests/ordering-o4-runs/run-8.json`. All earlier runs retain their
+original packages, rules and failure/source boundaries.
+
+From that exact source and the repository root, reproduce into a fresh
+external directory:
+
+```sh
+DAP_O4_RECORD_DIR=/tmp/o4-k1-k4-observations node --test \
+  --test-reporter=tap --test-skip-pattern='case [57], the campaign:' \
+  'spike/test/**/*.test.ts'
+npm run typecheck --prefix spike
+```
+
+The retained `run-8-runner.py` accepts checkout, exact source SHA and a fresh
+output-directory argument, verifies a clean frozen source before/after each
+command, and captures identities and file hashes. `run-8-summary.mjs` derives
+actual proof/context IDs and case counts from those observations; it does not
+run a second lifecycle or supply expected outcomes. The 144 passing O4 checks
+are a subset of the one 469-test noncampaign command, not an additional run.
+The 92 new observations include K1 malformed-input continuations, K3 failed
+member transfers and K4 derived disclosure. The K2 lookup-sweep counts are
+in the raw TAP and run-8 JSON. Three 200-seed campaigns remain excluded.

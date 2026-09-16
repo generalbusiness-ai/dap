@@ -1,0 +1,763 @@
+{
+  "source": "2ee1b43a9fc7c3af2b99d991f36d78a4dbcde443",
+  "identities": {
+    "scopeImplementation": "sha256:942f4d202400bcbb1d9fe8a008785acd4f7650112e9f775baaa3f711d5cb131e",
+    "scopeProfile": "dap.fixture.scope/1",
+    "scopePackage": "sha256:0a3201eade9021c0898e20f41b3b4a16c2f6add3dea8a8ad3161cd7d83312572",
+    "inspectionPackage": "sha256:18a886c149b383b8630836307195c1a89b90c463e7e32df6e0663b5d4ecc3030",
+    "salePackage": "sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85",
+    "publicProofRule": "sha256:701403e9c51e6449ca797545818a8b63602a20a9b43c2ace064e9a38ab55b66c",
+    "manifestPublicRule": "sha256:701403e9c51e6449ca797545818a8b63602a20a9b43c2ace064e9a38ab55b66c",
+    "manifest": "sha256:a766fe56564b026a96c37630d261512c0f608adf5ec7c5ee2d11aca23eaf45fe",
+    "joinPolicy": "sha256:ac852ebab4f55816e55cd0fd71b7280267bffaca097046d4880b24ac63b01455",
+    "movableWriterProfile": "dap.fixture.single-writer/3"
+  },
+  "commands": [
+    {
+      "name": "noncampaign",
+      "argv": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "--test-skip-pattern=case [57], the campaign:",
+        "spike/test/**/*.test.ts"
+      ],
+      "cwd": "/private/tmp/dap-o4-transfer-lifecycle",
+      "environment": {
+        "DAP_O4_RECORD_DIR": "/private/tmp/dap-o4-k1-k4-run8/observations"
+      },
+      "exitCode": 0,
+      "seconds": 28.960378292002133,
+      "totals": {
+        "tests": 469,
+        "suites": 0,
+        "pass": 465,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 4,
+        "duration_ms": 28925.871542
+      },
+      "o4Subset": {
+        "tests": 144,
+        "pass": 144,
+        "fail": 0,
+        "separateInvocation": false
+      },
+      "lookupDiagnostics": [
+        {
+          "storage": "memory",
+          "totalLookups": 120,
+          "originalExceptions": 120,
+          "exactRetryRecoveries": 120,
+          "returnedFaultVerdicts": 0
+        },
+        {
+          "storage": "sqlite",
+          "totalLookups": 120,
+          "originalExceptions": 120,
+          "exactRetryRecoveries": 120,
+          "returnedFaultVerdicts": 0
+        }
+      ]
+    },
+    {
+      "name": "typecheck",
+      "argv": [
+        "npm",
+        "run",
+        "typecheck",
+        "--prefix",
+        "spike"
+      ],
+      "cwd": "/private/tmp/dap-o4-transfer-lifecycle",
+      "environment": {
+        "DAP_O4_RECORD_DIR": "/private/tmp/dap-o4-k1-k4-run8/observations"
+      },
+      "exitCode": 0,
+      "seconds": 0.8347908340074355
+    }
+  ],
+  "campaignsRepeated": false,
+  "observations": {
+    "duplicate-inspection-import-memory.json": "sha256:56c78622442f8f267bf3f1fc8d430f6fa89925a5d8a844763acb587b2efb79b3",
+    "duplicate-inspection-import-sqlite.json": "sha256:56c78622442f8f267bf3f1fc8d430f6fa89925a5d8a844763acb587b2efb79b3",
+    "duplicate-state-import-memory.json": "sha256:5fd397c170f8e116e91867edb78ef41bf3fb654e00ccbd01260b76d381d937dd",
+    "duplicate-state-import-sqlite.json": "sha256:5fd397c170f8e116e91867edb78ef41bf3fb654e00ccbd01260b76d381d937dd",
+    "exact-retry-activation-memory.json": "sha256:88246f32359fd12620bcd8f8f5dc252219e6f57765be15258d903c0e4277c0ed",
+    "exact-retry-activation-sqlite.json": "sha256:88246f32359fd12620bcd8f8f5dc252219e6f57765be15258d903c0e4277c0ed",
+    "g2-current-authorization-memory.json": "sha256:cac8a0db50266862e8f9adbce68eb141ec5dd3256dbc2719ffe54e0a7cdef526",
+    "g2-current-authorization-sqlite.json": "sha256:cac8a0db50266862e8f9adbce68eb141ec5dd3256dbc2719ffe54e0a7cdef526",
+    "g2-current-closed-memory.json": "sha256:9aadc5098a4c088bfc51de26ee1751072811386330a293035f3f22f54de52fbd",
+    "g2-current-closed-sqlite.json": "sha256:9aadc5098a4c088bfc51de26ee1751072811386330a293035f3f22f54de52fbd",
+    "g2-intervening-exercise-memory.json": "sha256:8af890358fa0827b008645ae5217e06b304baf842fff8c2940ac54a93872baef",
+    "g2-intervening-exercise-sqlite.json": "sha256:8af890358fa0827b008645ae5217e06b304baf842fff8c2940ac54a93872baef",
+    "g2-participant-event-memory.json": "sha256:02056d88bfbd5e9afc2a0bacdbf3ea5d7b97f1610d1a8bbf49fef615a6811edc",
+    "g2-participant-event-sqlite.json": "sha256:02056d88bfbd5e9afc2a0bacdbf3ea5d7b97f1610d1a8bbf49fef615a6811edc",
+    "goal-1-history-matrix-memory.json": "sha256:49ab5107e2f3bbc7830ed3dc11940db9757ce5f42205e7dd1297fd9e146f2d2b",
+    "goal-1-history-matrix-sqlite.json": "sha256:49ab5107e2f3bbc7830ed3dc11940db9757ce5f42205e7dd1297fd9e146f2d2b",
+    "h1-duplicate-commitment-memory.json": "sha256:9f3ae564d152ce25512d47b3d3cb56ac787cecc06861c965fee98ec698f6f65a",
+    "h1-duplicate-commitment-sqlite.json": "sha256:9f3ae564d152ce25512d47b3d3cb56ac787cecc06861c965fee98ec698f6f65a",
+    "healthy-memory.json": "sha256:7b431801fa498c26cc9e763f5c484a43f7bc30069e0d19e1563d5a199f958878",
+    "healthy-sqlite.json": "sha256:7b431801fa498c26cc9e763f5c484a43f7bc30069e0d19e1563d5a199f958878",
+    "intervening-dormant-exercise-memory.json": "sha256:2bb8713ae67d5ad1c151349f31c0becc752427c716cf94b299c3756ccfbd6fc3",
+    "intervening-dormant-exercise-sqlite.json": "sha256:2bb8713ae67d5ad1c151349f31c0becc752427c716cf94b299c3756ccfbd6fc3",
+    "intervening-participant-event-memory.json": "sha256:937afd23f59db35d4ead729f515b39b7d63d712d1b0111dcdba5f0515af1f508",
+    "intervening-participant-event-sqlite.json": "sha256:937afd23f59db35d4ead729f515b39b7d63d712d1b0111dcdba5f0515af1f508",
+    "k1-participant-input-memory.json": "sha256:0254af3a14318ac5788f25e55f8f506f1471e8548e2e7d53cff914c95435e94b",
+    "k1-participant-input-sqlite.json": "sha256:0254af3a14318ac5788f25e55f8f506f1471e8548e2e7d53cff914c95435e94b",
+    "k3-bob-unauthorized-accept-memory.json": "sha256:a98c9eff75381c67abff0644abc1888a2a6e770263ed78a07a831a40de7118c9",
+    "k3-bob-unauthorized-accept-sqlite.json": "sha256:a98c9eff75381c67abff0644abc1888a2a6e770263ed78a07a831a40de7118c9",
+    "k3-bob-unauthorized-close-memory.json": "sha256:3613c8ab8d1d9893ed8c7138d1c1c22302a29d89c3c667e2378fec34946cf5a4",
+    "k3-bob-unauthorized-close-sqlite.json": "sha256:3613c8ab8d1d9893ed8c7138d1c1c22302a29d89c3c667e2378fec34946cf5a4",
+    "k3-carol-malformed-grant-memory.json": "sha256:a5213a54aa9f6f377bfab5153f5cdf1832d89f15931ecbcc56e4cb42665f99ea",
+    "k3-carol-malformed-grant-sqlite.json": "sha256:a5213a54aa9f6f377bfab5153f5cdf1832d89f15931ecbcc56e4cb42665f99ea",
+    "k3-member-scope-attempts-memory.json": "sha256:1b4fe8cbd8dbf3c76aadd8101af06e524f02ad7dee67012d334830a6bcaf6bd7",
+    "k3-member-scope-attempts-sqlite.json": "sha256:1b4fe8cbd8dbf3c76aadd8101af06e524f02ad7dee67012d334830a6bcaf6bd7",
+    "k4-inspection-disclosure-memory.json": "sha256:e01faf61b83e33b82566b529050828e730f030fe03e480241ea5dc342cba0bcc",
+    "k4-inspection-disclosure-sqlite.json": "sha256:e01faf61b83e33b82566b529050828e730f030fe03e480241ea5dc342cba0bcc",
+    "materialized-genesis-mutations-memory.json": "sha256:24da2ead223e3fbfa8ab3e6f50d77fd009eca2700e4d4ed69e1d93de3cfb5e09",
+    "materialized-genesis-mutations-sqlite.json": "sha256:24da2ead223e3fbfa8ab3e6f50d77fd009eca2700e4d4ed69e1d93de3cfb5e09",
+    "mismatched-buyer-memory.json": "sha256:49516fbb650691abf17393837e199a7a084a0dc44a607ad3ffcd41df3de24567",
+    "mismatched-buyer-sqlite.json": "sha256:49516fbb650691abf17393837e199a7a084a0dc44a607ad3ffcd41df3de24567",
+    "move-preserves-retry-memory.json": "sha256:6d64b2ff5b9334b68c3a65d54723c712635c0477bee9c6201a7f41a819fac9a6",
+    "move-preserves-retry-sqlite.json": "sha256:6d64b2ff5b9334b68c3a65d54723c712635c0477bee9c6201a7f41a819fac9a6",
+    "one-source-release-missing-memory.json": "sha256:8e89ab6a51b31d86b74c2e27b28caa926b398d1e1e54606aac61d3bb4ca7eccc",
+    "one-source-release-missing-sqlite.json": "sha256:8e89ab6a51b31d86b74c2e27b28caa926b398d1e1e54606aac61d3bb4ca7eccc",
+    "origin-spends-transferred-right-memory.json": "sha256:f039eb446dbbaa3edd6a8926e5b8e8483c7ce58dc4d05f5eae9dab6dc4c54ad0",
+    "origin-spends-transferred-right-sqlite.json": "sha256:f039eb446dbbaa3edd6a8926e5b8e8483c7ce58dc4d05f5eae9dab6dc4c54ad0",
+    "receipt-for-ineffective-release-memory.json": "sha256:05f6a820c3e50cd07574d8081fc33702b4d8230e36afb30641b4666572aed720",
+    "receipt-for-ineffective-release-sqlite.json": "sha256:05f6a820c3e50cd07574d8081fc33702b4d8230e36afb30641b4666572aed720",
+    "receipt-for-unauthorized-release-memory.json": "sha256:573677228a21d7b7e08cc9dcaeff273411985495b1a1a2f206eec944bf3c23eb",
+    "receipt-for-unauthorized-release-sqlite.json": "sha256:573677228a21d7b7e08cc9dcaeff273411985495b1a1a2f206eec944bf3c23eb",
+    "release-already-released-right-memory.json": "sha256:5a7e38d37ffe035eaceaf9ba0120024a3fe87262617a38a0c8bcb662c1d74a83",
+    "release-already-released-right-sqlite.json": "sha256:5a7e38d37ffe035eaceaf9ba0120024a3fe87262617a38a0c8bcb662c1d74a83",
+    "release-unowned-right-memory.json": "sha256:259d3f863a00de59c60994d4edaa59ddba352a0133f7f16ad4f3ed11c399a103",
+    "release-unowned-right-sqlite.json": "sha256:259d3f863a00de59c60994d4edaa59ddba352a0133f7f16ad4f3ed11c399a103",
+    "repeated-activation-after-restart-memory.json": "sha256:faf255219067d6fc11765628e37b9e14a4ba602686c6e6722ded779fa4fc03fb",
+    "repeated-activation-after-restart-sqlite.json": "sha256:faf255219067d6fc11765628e37b9e14a4ba602686c6e6722ded779fa4fc03fb",
+    "restart-before-activation-memory.json": "sha256:def88db1b244eaf65e268b4ebfc1c02479b90989fdbfa9d8914f0dcb8d8e5474",
+    "restart-before-activation-sqlite.json": "sha256:def88db1b244eaf65e268b4ebfc1c02479b90989fdbfa9d8914f0dcb8d8e5474",
+    "retired-writer-continuation-memory.json": "sha256:ebb53cfdf762216cfbf4f286d3a123032dffc6be78e385e04cc384bb71b64628",
+    "retired-writer-continuation-sqlite.json": "sha256:ebb53cfdf762216cfbf4f286d3a123032dffc6be78e385e04cc384bb71b64628",
+    "spend-before-activation-D-memory.json": "sha256:c2fd90d6ff984c1c534095572df5054a2d80c4a7c635eeab1889840ab9370c90",
+    "spend-before-activation-D-sqlite.json": "sha256:c2fd90d6ff984c1c534095572df5054a2d80c4a7c635eeab1889840ab9370c90",
+    "spend-before-activation-F-deliver-memory.json": "sha256:a96bf041549dedd41d06acb67dd65541d88956101ac7796a80ccfea62fa98eaa",
+    "spend-before-activation-F-deliver-sqlite.json": "sha256:a96bf041549dedd41d06acb67dd65541d88956101ac7796a80ccfea62fa98eaa",
+    "spend-before-activation-F-memory.json": "sha256:d430886c62064344c62a8dc445fa227c1222d957a6d03e16b15863cc52ae7af0",
+    "spend-before-activation-F-sqlite.json": "sha256:d430886c62064344c62a8dc445fa227c1222d957a6d03e16b15863cc52ae7af0",
+    "spend-before-activation-S-memory.json": "sha256:a2ac7e5cdda883e234788c32cf140558b3c1b473365038be18226c786ddceb8f",
+    "spend-before-activation-S-sqlite.json": "sha256:a2ac7e5cdda883e234788c32cf140558b3c1b473365038be18226c786ddceb8f",
+    "stale-export-prefix-memory.json": "sha256:cd615cea7f763024ba6a6702a78a960b32e6f6207a27a144547b4791168b8874",
+    "stale-export-prefix-sqlite.json": "sha256:cd615cea7f763024ba6a6702a78a960b32e6f6207a27a144547b4791168b8874",
+    "stale-source-proposal-at-destination-memory.json": "sha256:1fc2dd99a05ddff1fa5f8ded1a27f628528d6b2ae1c5decb0b0a9b2f96fba5ef",
+    "stale-source-proposal-at-destination-sqlite.json": "sha256:1fc2dd99a05ddff1fa5f8ded1a27f628528d6b2ae1c5decb0b0a9b2f96fba5ef",
+    "stale-source-proposal-at-source-memory.json": "sha256:a61cf9a9acb2f444f6a988f408313d37181126ee851232c70c4efce4daa11a5f",
+    "stale-source-proposal-at-source-sqlite.json": "sha256:a61cf9a9acb2f444f6a988f408313d37181126ee851232c70c4efce4daa11a5f",
+    "timeout-after-hidden-activation-memory.json": "sha256:d555d66320cfca913efe280ad1eeba30cfb7fdd759369d1d2abca08d87b49be9",
+    "timeout-after-hidden-activation-sqlite.json": "sha256:d555d66320cfca913efe280ad1eeba30cfb7fdd759369d1d2abca08d87b49be9",
+    "two-sources-export-same-right-memory.json": "sha256:0e8827d520567b5ed9253be320341f63bd760da7c101bcd1375dcdb7355cc2c0",
+    "two-sources-export-same-right-sqlite.json": "sha256:0e8827d520567b5ed9253be320341f63bd760da7c101bcd1375dcdb7355cc2c0",
+    "unassigned-writer-candidates-memory.json": "sha256:aceac98a7e20da48098edb4c44a2a478df647d27d4b6f10317b9667d69e4351e",
+    "unassigned-writer-candidates-sqlite.json": "sha256:aceac98a7e20da48098edb4c44a2a478df647d27d4b6f10317b9667d69e4351e",
+    "unauthorized-release-memory.json": "sha256:9784c8872f1f73d8102a8ccbe9eae9fa39df19b0ed38659ee9a24f92c951079f",
+    "unauthorized-release-sqlite.json": "sha256:9784c8872f1f73d8102a8ccbe9eae9fa39df19b0ed38659ee9a24f92c951079f",
+    "unexpected-audience-handler-memory.json": "sha256:2852ef547a7824981ba55447c63f968bddf077777d3893e6d56065fdf505fcaf",
+    "unexpected-audience-handler-sqlite.json": "sha256:2852ef547a7824981ba55447c63f968bddf077777d3893e6d56065fdf505fcaf",
+    "unexpected-fold-handler-memory.json": "sha256:021a1e2a6ddead5f62f6651c0d967063ec8871b70a93c0f2164575fb67e20d24",
+    "unexpected-fold-handler-sqlite.json": "sha256:021a1e2a6ddead5f62f6651c0d967063ec8871b70a93c0f2164575fb67e20d24",
+    "unexpected-replay-error-memory.json": "sha256:c20f2eac2d1052d0bc16744998644948950df88e41fcde1d77db4491cdf96308",
+    "unexpected-replay-error-sqlite.json": "sha256:c20f2eac2d1052d0bc16744998644948950df88e41fcde1d77db4491cdf96308",
+    "withheld-release-evidence-memory.json": "sha256:5a391dfda6b3183abe0f052297d6ed2b9403f7c858fd55be53398a153eb22ca0",
+    "withheld-release-evidence-sqlite.json": "sha256:5a391dfda6b3183abe0f052297d6ed2b9403f7c858fd55be53398a153eb22ca0",
+    "wrong-destination-release-memory.json": "sha256:4254d71673ee3aaaff33ad797f7320017a635572ce34a78e4ab27f0f6fa99861",
+    "wrong-destination-release-sqlite.json": "sha256:4254d71673ee3aaaff33ad797f7320017a635572ce34a78e4ab27f0f6fa99861"
+  },
+  "completedUtc": "2026-09-16T20:52:11.236821+00:00",
+  "proofIdentityDefinition": "sha256 of codec canonicalize(full PublicProof packet including its certificate)",
+  "actual": {
+    "memory": {
+      "contexts": {
+        "D": {
+          "genesis": "sha256:86e3c97ec6ca4d5db67155f12269f07c13862b85120f282335649178c3cd4188",
+          "head": 1,
+          "headHash": "sha256:c0d9d85408d39b66d8b246d80cebe02cef2d895a7c003c3f94434f0c5b0f295f",
+          "initialWriter": "ed25519:kQnbVfeXl6OWRi-4lcKtzqfoaDwvMFbAelR1FVU3tz4"
+        },
+        "F": {
+          "genesis": "sha256:9d33a9774747ae8ec10e484fd2ffafb4d4edc88c31a24ffd74a644302a40249b",
+          "head": 3,
+          "headHash": "sha256:0d0663fedfb012def499df852b869ef093f008055326300609657ec7ebf0a15e",
+          "initialWriter": "ed25519:7kXsuaygGgq9g-9W3ZhcjIdObn9K687fIL2NiMKgrdc"
+        },
+        "I": {
+          "genesis": "sha256:f106ac1cf65d6a8ec43333029f3009d339157abbda9a43fc5ed57b6b4c2af21b",
+          "head": 1,
+          "headHash": "sha256:97c1d8aa333c5c2123204d925a0d9ebbab9fa7eec54bc41d225bb84b87d504d6",
+          "initialWriter": "ed25519:vtfSq2aNo--tYTmY8G96v3h186a3Z3qfPOlH1313YKY"
+        },
+        "S": {
+          "genesis": "sha256:2fb182dc1c3701215f636ae0cdb7bcc43fc9c28b8e8d6d5c30d5106e3b1747b0",
+          "head": 24,
+          "headHash": "sha256:b4fe25b756c1ee737d4a50e8007a969b42495c372f709f72b7ffc59b873ed40b",
+          "initialWriter": "ed25519:dPhc2jTRwnxGIUhHMekVecPZxs_A2UsoGqEekWIFiqk"
+        }
+      },
+      "proofs": {
+        "D": {
+          "identity": "sha256:2d02c70544c9167e88627e75a1700c762ee14f1cc09bdb7fff36b71a2c3a20c9",
+          "frontier": 1,
+          "genesis": "sha256:86e3c97ec6ca4d5db67155f12269f07c13862b85120f282335649178c3cd4188"
+        },
+        "F": {
+          "identity": "sha256:daba7c4125d825912265fbfc928351d439beaee48f646bca75dc1b449daae502",
+          "frontier": 3,
+          "genesis": "sha256:9d33a9774747ae8ec10e484fd2ffafb4d4edc88c31a24ffd74a644302a40249b"
+        },
+        "I": {
+          "identity": "sha256:dde86704bb36c4199371c2bfc7a9ad0b3a8f9bb04960e82661c10a2ede3a2053",
+          "frontier": 1,
+          "genesis": "sha256:f106ac1cf65d6a8ec43333029f3009d339157abbda9a43fc5ed57b6b4c2af21b"
+        },
+        "S": {
+          "identity": "sha256:f263b89f5b6b5ff3a82b84b4aa99b23da4573f515a9ce4231fbd50053de79705",
+          "frontier": 24,
+          "genesis": "sha256:2fb182dc1c3701215f636ae0cdb7bcc43fc9c28b8e8d6d5c30d5106e3b1747b0"
+        }
+      },
+      "healthyBoundaries": 20,
+      "adverseCases": 29,
+      "adverseSteps": 43,
+      "mutations": {
+        "cases": 209,
+        "categories": {
+          "codec malformed_envelope": 18,
+          "profile invalid_genesis": 154,
+          "unauthorized": 5,
+          "destination_mismatch": 30,
+          "profile unsupported_profile": 2
+        }
+      },
+      "matrix": {
+        "actualReaders": [
+          "alice",
+          "bob",
+          "carol",
+          "ivan",
+          "kim"
+        ],
+        "completedHeads": {
+          "F": 3,
+          "S": 24
+        },
+        "immediatelyAcrossAttachQuestions": 143,
+        "actualReaderPreAttachQuestions": 55,
+        "completedTransferHistoricalQuestions": 100
+      },
+      "k1": {
+        "malformedInputs": 21,
+        "exactRetryChecks": 63,
+        "recordedColdRetries": 21,
+        "recordedCompletedRetries": 21,
+        "immediateRetryEvidence": "executed assertions in ordering-scope-participant-input.test.ts; not duplicated in JSON",
+        "releases": {
+          "S": 45,
+          "D": 1
+        },
+        "activationEffective": true,
+        "final": {
+          "activations": 1,
+          "deliveryConfirmed": true,
+          "destination": "active",
+          "exports": {
+            "D": {
+              "buyer": "bob",
+              "delivery_slot": 25
+            },
+            "S": {
+              "accepted_offer": "o3",
+              "winner": "bob"
+            }
+          },
+          "fulfilled": true,
+          "heads": {
+            "D": 1,
+            "F": 3,
+            "I": 1,
+            "S": 45
+          },
+          "imports": [
+            "S-export",
+            "D-export"
+          ],
+          "inspection": {
+            "attached": true,
+            "imports": 1,
+            "requested": true,
+            "resultInI": "pass:o2",
+            "resultInS": "pass:o2"
+          },
+          "owners": {
+            "R_deliver": [],
+            "R_fulfil": [],
+            "R_sell": []
+          },
+          "releases": [
+            "S",
+            "D"
+          ],
+          "rights": {
+            "R_deliver": {
+              "D": "released",
+              "F": "spent",
+              "I": "absent",
+              "S": "absent"
+            },
+            "R_fulfil": {
+              "D": "absent",
+              "F": "spent",
+              "I": "absent",
+              "S": "released"
+            },
+            "R_sell": {
+              "D": "absent",
+              "F": "absent",
+              "I": "absent",
+              "S": "spent"
+            }
+          },
+          "sale": {
+            "accepted_offer": "o3",
+            "status": "closed",
+            "winner": "bob"
+          },
+          "verifiedProofs": [
+            "S",
+            "D"
+          ],
+          "writers": {
+            "D": "WD",
+            "F": "WF",
+            "I": "WI",
+            "S": "W1"
+          }
+        }
+      },
+      "k3": [
+        {
+          "file": "k3-bob-unauthorized-accept-memory.json",
+          "memberAttempts": 1,
+          "releaseEffective": true,
+          "activationEffective": true,
+          "activations": 1
+        },
+        {
+          "file": "k3-bob-unauthorized-close-memory.json",
+          "memberAttempts": 1,
+          "releaseEffective": true,
+          "activationEffective": true,
+          "activations": 1
+        },
+        {
+          "file": "k3-carol-malformed-grant-memory.json",
+          "memberAttempts": 1,
+          "releaseEffective": true,
+          "activationEffective": true,
+          "activations": 1
+        },
+        {
+          "file": "k3-member-scope-attempts-memory.json",
+          "memberAttempts": 6,
+          "releaseEffective": true,
+          "activationEffective": true,
+          "activations": 1
+        }
+      ],
+      "k4": {
+        "phases": [
+          {
+            "phase": "live",
+            "sourceReaders": [
+              "alice",
+              "bob",
+              "carol",
+              "ivan"
+            ],
+            "destinationReaders": [
+              "alice",
+              "bob",
+              "kim"
+            ],
+            "bobReadsRequest": false,
+            "bobGetsDerivedProof": true
+          },
+          {
+            "phase": "cold",
+            "sourceReaders": [
+              "alice",
+              "bob",
+              "carol",
+              "ivan"
+            ],
+            "destinationReaders": [
+              "alice",
+              "bob",
+              "kim"
+            ],
+            "bobReadsRequest": false,
+            "bobGetsDerivedProof": true
+          }
+        ],
+        "expectation": {
+          "activation": {
+            "audience": "spine",
+            "context": "F",
+            "currentParticipants": [
+              "alice",
+              "bob",
+              "kim"
+            ],
+            "position": 1
+          },
+          "admit": {
+            "audience": "members",
+            "context": "S",
+            "position": 20,
+            "readers": [
+              "alice",
+              "bob",
+              "carol",
+              "ivan"
+            ]
+          },
+          "inspectionFounders": [
+            "ivan"
+          ],
+          "mandate": {
+            "inspector": "ivan",
+            "offer": "o2",
+            "prefix": 14,
+            "source": "S"
+          },
+          "request": {
+            "bodyInPublicProof": false,
+            "context": "S",
+            "position": 14,
+            "readers": [
+              "alice",
+              "carol",
+              "ivan"
+            ]
+          },
+          "requesterFieldInMandate": false,
+          "result": {
+            "offer": "o2",
+            "result": "pass:o2"
+          }
+        }
+      }
+    },
+    "sqlite": {
+      "contexts": {
+        "D": {
+          "genesis": "sha256:86e3c97ec6ca4d5db67155f12269f07c13862b85120f282335649178c3cd4188",
+          "head": 1,
+          "headHash": "sha256:c0d9d85408d39b66d8b246d80cebe02cef2d895a7c003c3f94434f0c5b0f295f",
+          "initialWriter": "ed25519:kQnbVfeXl6OWRi-4lcKtzqfoaDwvMFbAelR1FVU3tz4"
+        },
+        "F": {
+          "genesis": "sha256:9d33a9774747ae8ec10e484fd2ffafb4d4edc88c31a24ffd74a644302a40249b",
+          "head": 3,
+          "headHash": "sha256:0d0663fedfb012def499df852b869ef093f008055326300609657ec7ebf0a15e",
+          "initialWriter": "ed25519:7kXsuaygGgq9g-9W3ZhcjIdObn9K687fIL2NiMKgrdc"
+        },
+        "I": {
+          "genesis": "sha256:f106ac1cf65d6a8ec43333029f3009d339157abbda9a43fc5ed57b6b4c2af21b",
+          "head": 1,
+          "headHash": "sha256:97c1d8aa333c5c2123204d925a0d9ebbab9fa7eec54bc41d225bb84b87d504d6",
+          "initialWriter": "ed25519:vtfSq2aNo--tYTmY8G96v3h186a3Z3qfPOlH1313YKY"
+        },
+        "S": {
+          "genesis": "sha256:2fb182dc1c3701215f636ae0cdb7bcc43fc9c28b8e8d6d5c30d5106e3b1747b0",
+          "head": 24,
+          "headHash": "sha256:b4fe25b756c1ee737d4a50e8007a969b42495c372f709f72b7ffc59b873ed40b",
+          "initialWriter": "ed25519:dPhc2jTRwnxGIUhHMekVecPZxs_A2UsoGqEekWIFiqk"
+        }
+      },
+      "proofs": {
+        "D": {
+          "identity": "sha256:2d02c70544c9167e88627e75a1700c762ee14f1cc09bdb7fff36b71a2c3a20c9",
+          "frontier": 1,
+          "genesis": "sha256:86e3c97ec6ca4d5db67155f12269f07c13862b85120f282335649178c3cd4188"
+        },
+        "F": {
+          "identity": "sha256:daba7c4125d825912265fbfc928351d439beaee48f646bca75dc1b449daae502",
+          "frontier": 3,
+          "genesis": "sha256:9d33a9774747ae8ec10e484fd2ffafb4d4edc88c31a24ffd74a644302a40249b"
+        },
+        "I": {
+          "identity": "sha256:dde86704bb36c4199371c2bfc7a9ad0b3a8f9bb04960e82661c10a2ede3a2053",
+          "frontier": 1,
+          "genesis": "sha256:f106ac1cf65d6a8ec43333029f3009d339157abbda9a43fc5ed57b6b4c2af21b"
+        },
+        "S": {
+          "identity": "sha256:f263b89f5b6b5ff3a82b84b4aa99b23da4573f515a9ce4231fbd50053de79705",
+          "frontier": 24,
+          "genesis": "sha256:2fb182dc1c3701215f636ae0cdb7bcc43fc9c28b8e8d6d5c30d5106e3b1747b0"
+        }
+      },
+      "healthyBoundaries": 20,
+      "adverseCases": 29,
+      "adverseSteps": 43,
+      "mutations": {
+        "cases": 209,
+        "categories": {
+          "codec malformed_envelope": 18,
+          "profile invalid_genesis": 154,
+          "unauthorized": 5,
+          "destination_mismatch": 30,
+          "profile unsupported_profile": 2
+        }
+      },
+      "matrix": {
+        "actualReaders": [
+          "alice",
+          "bob",
+          "carol",
+          "ivan",
+          "kim"
+        ],
+        "completedHeads": {
+          "F": 3,
+          "S": 24
+        },
+        "immediatelyAcrossAttachQuestions": 143,
+        "actualReaderPreAttachQuestions": 55,
+        "completedTransferHistoricalQuestions": 100
+      },
+      "k1": {
+        "malformedInputs": 21,
+        "exactRetryChecks": 63,
+        "recordedColdRetries": 21,
+        "recordedCompletedRetries": 21,
+        "immediateRetryEvidence": "executed assertions in ordering-scope-participant-input.test.ts; not duplicated in JSON",
+        "releases": {
+          "S": 45,
+          "D": 1
+        },
+        "activationEffective": true,
+        "final": {
+          "activations": 1,
+          "deliveryConfirmed": true,
+          "destination": "active",
+          "exports": {
+            "D": {
+              "buyer": "bob",
+              "delivery_slot": 25
+            },
+            "S": {
+              "accepted_offer": "o3",
+              "winner": "bob"
+            }
+          },
+          "fulfilled": true,
+          "heads": {
+            "D": 1,
+            "F": 3,
+            "I": 1,
+            "S": 45
+          },
+          "imports": [
+            "S-export",
+            "D-export"
+          ],
+          "inspection": {
+            "attached": true,
+            "imports": 1,
+            "requested": true,
+            "resultInI": "pass:o2",
+            "resultInS": "pass:o2"
+          },
+          "owners": {
+            "R_deliver": [],
+            "R_fulfil": [],
+            "R_sell": []
+          },
+          "releases": [
+            "S",
+            "D"
+          ],
+          "rights": {
+            "R_deliver": {
+              "D": "released",
+              "F": "spent",
+              "I": "absent",
+              "S": "absent"
+            },
+            "R_fulfil": {
+              "D": "absent",
+              "F": "spent",
+              "I": "absent",
+              "S": "released"
+            },
+            "R_sell": {
+              "D": "absent",
+              "F": "absent",
+              "I": "absent",
+              "S": "spent"
+            }
+          },
+          "sale": {
+            "accepted_offer": "o3",
+            "status": "closed",
+            "winner": "bob"
+          },
+          "verifiedProofs": [
+            "S",
+            "D"
+          ],
+          "writers": {
+            "D": "WD",
+            "F": "WF",
+            "I": "WI",
+            "S": "W1"
+          }
+        }
+      },
+      "k3": [
+        {
+          "file": "k3-bob-unauthorized-accept-sqlite.json",
+          "memberAttempts": 1,
+          "releaseEffective": true,
+          "activationEffective": true,
+          "activations": 1
+        },
+        {
+          "file": "k3-bob-unauthorized-close-sqlite.json",
+          "memberAttempts": 1,
+          "releaseEffective": true,
+          "activationEffective": true,
+          "activations": 1
+        },
+        {
+          "file": "k3-carol-malformed-grant-sqlite.json",
+          "memberAttempts": 1,
+          "releaseEffective": true,
+          "activationEffective": true,
+          "activations": 1
+        },
+        {
+          "file": "k3-member-scope-attempts-sqlite.json",
+          "memberAttempts": 6,
+          "releaseEffective": true,
+          "activationEffective": true,
+          "activations": 1
+        }
+      ],
+      "k4": {
+        "phases": [
+          {
+            "phase": "live",
+            "sourceReaders": [
+              "alice",
+              "bob",
+              "carol",
+              "ivan"
+            ],
+            "destinationReaders": [
+              "alice",
+              "bob",
+              "kim"
+            ],
+            "bobReadsRequest": false,
+            "bobGetsDerivedProof": true
+          },
+          {
+            "phase": "cold",
+            "sourceReaders": [
+              "alice",
+              "bob",
+              "carol",
+              "ivan"
+            ],
+            "destinationReaders": [
+              "alice",
+              "bob",
+              "kim"
+            ],
+            "bobReadsRequest": false,
+            "bobGetsDerivedProof": true
+          }
+        ],
+        "expectation": {
+          "activation": {
+            "audience": "spine",
+            "context": "F",
+            "currentParticipants": [
+              "alice",
+              "bob",
+              "kim"
+            ],
+            "position": 1
+          },
+          "admit": {
+            "audience": "members",
+            "context": "S",
+            "position": 20,
+            "readers": [
+              "alice",
+              "bob",
+              "carol",
+              "ivan"
+            ]
+          },
+          "inspectionFounders": [
+            "ivan"
+          ],
+          "mandate": {
+            "inspector": "ivan",
+            "offer": "o2",
+            "prefix": 14,
+            "source": "S"
+          },
+          "request": {
+            "bodyInPublicProof": false,
+            "context": "S",
+            "position": 14,
+            "readers": [
+              "alice",
+              "carol",
+              "ivan"
+            ]
+          },
+          "requesterFieldInMandate": false,
+          "result": {
+            "offer": "o2",
+            "result": "pass:o2"
+          }
+        }
+      }
+    }
+  },
+  "backendIdentityAgreement": true,
+  "stage": "complete",
+  "observationDirectory": "spike/manifests/ordering-o4-runs/run-8-observations",
+  "sourceIndex": "spike/manifests/ordering-o4-runs/run-8-source.json",
+  "scope": "One full noncampaign invocation and whole-tree typecheck; O4 subset counts are from that invocation, not a separate run.",
+  "todoPolicy": "Four executing user-retained Club negative cases; no newly commissioned Club repair.",
+  "campaignExclusion": "Three named 200-seed campaigns excluded by test-skip-pattern. Prior 600-seed O4 evidence remains at b35b267, before later source repairs.",
+  "integration": {
+    "K1": "bb87c5d98cadaf5ea9fdf99bc5837d5bb2aa62b9",
+    "combinedSource": "2ee1b43a9fc7c3af2b99d991f36d78a4dbcde443",
+    "upstreamMain": "6881b6a5a22584d534f2729002da0c582c97876a",
+    "originalReviewedO4": "edacc32db1495504d10ae7a92f02af272e49e9f2"
+  },
+  "k3HistoricalBoundary": "The final K3 component measured 47/49 at 82119b5, then 2/2 corrected placeholder tests at 1bf5355. Run 8 is the first combined invocation; earlier failures/results are preserved.",
+  "postMeasurementAudit": {
+    "unchangedSourceBlobs": 88,
+    "unchangedPriorEvidenceFiles": 377,
+    "priorEvidenceScope": "All files already tracked at measured source in spike/manifests/ordering-o4-runs and spike/corpus/ordering-o4, except the corpus README with appended reproduction instructions.",
+    "regeneratedObservationFiles": 92,
+    "runtimeFixtureTestManifestChanges": 0
+  }
+}

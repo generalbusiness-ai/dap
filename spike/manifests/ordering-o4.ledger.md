@@ -3,13 +3,16 @@
 Request: `git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:1b6384e27d6dbfd5a22da3330378776d32ad23ab`.
 Promise: `18ba74b01cbbea27e2d8c18b063ff482428c95aa` in that workroom.
 
-The current contract is lifecycle manifest
+The current combined K1–K4 contract is lifecycle manifest
+`sha256:a766fe56564b026a96c37630d261512c0f608adf5ec7c5ee2d11aca23eaf45fe`.
+Runs 5–7 used historical manifest
 `sha256:d94090b21ce42f2eec4a046558b3a776895d82905c2096a19df1f5f02e011f86`.
 Runs 1–4 used `sha256:fc55bfa123891e750f7bbe3a0d9cb33b5f65c07750db08bc984544ed2dd6b378`,
 which superseded historical `63be83e6` before the O4 baseline. Every earlier
 manifest and result remains available at its recorded source boundary.
-The explicit opening rule is
-`sha256:475b415bbf8b16ccdb1bea078174712c57f2b2955ece9338d762abd60228bad8`.
+The current explicit opening rule is
+`sha256:701403e9c51e6449ca797545818a8b63602a20a9b43c2ace064e9a38ab55b66c`.
+Runs 1–7 retain their historical `475b415b` rule and exact source boundaries.
 
 The scope profile, runtime and evidence verifier are in `src/scope*.ts`;
 `ordering-profile.md` defines the trusted completeness assertion and explicit
@@ -527,3 +530,90 @@ branch merges. K4 owns the separate disclosure additions. Both the manifest
 pin test and combined scope/package identities require recomputation after
 integration. No broad suite, full campaign, publication or independent
 approval is claimed by this component handoff.
+
+
+## Combined K1–K4 validation: run 8
+
+Frozen source `2ee1b43a9fc7c3af2b99d991f36d78a4dbcde443` integrates the
+four review corrections. The merged manifest preserves K4's explicit
+Inspection-derived disclosure and K3's structured hidden-failure rule.
+The strict K2 interpretation option remains selected at every scope/proof
+replay, and the K1 Inspection guard remains in the identified package.
+The original reviewed candidate `edacc32`, all earlier experiments and every
+component's failing/passing output remain available unchanged.
+
+The one noncampaign invocation passed: **469 tests, 465 pass, zero ordinary
+failures and four executing Club TODOs retained by the user**. All **144 O4
+checks passed within that invocation**, without a separate focused rerun.
+Whole-tree typecheck passed. The commands took 28.960 and 0.835 seconds,
+respectively, on Node v26.8.2. The three named 200-seed campaigns were
+explicitly excluded; the earlier full 600-seed result remains measured at
+`b35b267`, not at this new source. `run-8.json` records exact arguments,
+exit codes, counts and observation hashes; `run-8-source.json` pins every
+tracked runtime, fixture, test and lifecycle-contract blob at measurement.
+Raw TAP/typecheck output and the actual runner are retained beside them.
+
+The combined content identities are:
+
+| Item | Content id |
+|---|---|
+| Scope implementation | `sha256:942f4d202400bcbb1d9fe8a008785acd4f7650112e9f775baaa3f711d5cb131e` |
+| Scope package | `sha256:0a3201eade9021c0898e20f41b3b4a16c2f6add3dea8a8ad3161cd7d83312572` |
+| Inspection package | `sha256:18a886c149b383b8630836307195c1a89b90c463e7e32df6e0663b5d4ecc3030` |
+| Sale package, unchanged | `sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85` |
+| Public opening rule | `sha256:701403e9c51e6449ca797545818a8b63602a20a9b43c2ace064e9a38ab55b66c` |
+| Lifecycle manifest | `sha256:a766fe56564b026a96c37630d261512c0f608adf5ec7c5ee2d11aca23eaf45fe` |
+
+The 92 fresh observation files are generated at this source. Each backend
+executes 20 healthy boundaries, 29 adverse cases comprising 43 steps, and
+209 materialized genesis variants. Mutation outcomes remain 30 destination
+mismatches, five actual authorization failures, 154 invalid-genesis, 18
+malformed-envelope and two unsupported-profile rejections. Unexpected
+exceptions never count as successful negative cases. The historical-view
+matrix retains 55 reader/prefix questions, 100 historical questions after
+completed transfer and 143 questions immediately across attachment per
+backend. Actual S/I/D/F genesis, header and full-packet proof identities agree
+across memory and SQLite; their full hashes and derivation are in run 8.
+No historical packet is relabelled as current evidence.
+
+K1 checks 21 malformed Inspection inputs and 63 immediate/cold/completed
+exact retries per backend. Those histories complete Inspection, Sale,
+handover, releases at S45/D1, one activation and both destination spends,
+then reopen identically. K2 sweeps all 120 activation registry lookups on
+each backend: all 240 injections throw the original value, close the
+indeterminate facade, preserve committed bytes and recover the effective
+saved receipt after healthy reopen. No injected fault returns a policy
+verdict. Strict cold-open, export/proof non-Error failures, handler faults
+and ordinary Journal's unchanged legacy behavior also pass.
+
+K3's eight transfer checks now pass together with the entire proof suite.
+Each backend covers three isolated failed member actions and six system/
+application scope attempts, followed by effective source release and one
+effective activation. Effective narrow authority, unknown outcomes and
+placeholder/error outcomes still cannot be classified as harmless hidden
+failures. The preceding component record remains 47/49 plus a later 2/2
+correction, not a retroactively combined 49/49 result.
+
+K4 checks live and reopened signed views for four S readers and three F
+participants per backend. Bob lacks the private S14 request body but receives
+the derived signed Inspection mandate and result via S20. F readers, including
+Kim, receive those same derived facts through activation. The request body
+and explicit requester field remain absent from the public packet; secrecy
+of the mandate, result or requester linkage is not claimed. This is explicit
+disclosure accounting, not a privacy-removal change.
+
+The trusted serving writer still supplies completeness and hidden-failure
+classification; destination semantics independently verify release effect
+and authority. A malicious signed omission remains outside completeness
+trust, and source members can recompute the claim. The other recorded limits
+remain: ordinary source close does not prohibit an authorized release;
+copies of one signed F genesis can activate independently; direct backend
+mutation is outside cooperative ownership, with unchanged-head rewrites
+checked on cold open; the shared foundation recognizes scope-bearing setup,
+while full validation requires ScopeJournal. The original late-Ivan Sale
+limitation and user-retained Club negatives are unchanged.
+
+Only fresh run-8 observations/results and these documentation updates follow
+the measured source. Runtime, tests, fixtures, manifest and all prior evidence
+remain byte-identical. This is builder validation ready for independent
+review, not an independent checker verdict or permission to land O4.
