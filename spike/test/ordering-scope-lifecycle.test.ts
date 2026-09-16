@@ -19,7 +19,7 @@ function perform(world: LifecycleWorld, action: LifecycleAction): any {
       if (alias.endsWith('-valid-A')) return world.proof(name);
       if (alias.endsWith('-valid-B')) return laterProof(world, name);
       const actual = alternateRelease(world, alias);
-      if (alias === 'S-ordered-but-unauthorized') assert.match(actual.producerRefusal!, /narrower audience/);
+      if (alias === 'S-ordered-but-unauthorized') { assert.equal(actual.producerRefusal, undefined); assert.equal((actual.verdict as any).authorized, false); }
       return actual.proof;
     }));
     case 'restart': world.restart(context); return { unchanged: true };
@@ -56,7 +56,7 @@ function outcome(result: any): { verdict: string; reason: string | null } {
   if (result.refused) return { verdict: 'refused', reason: result.reason };
   if (result.replay) return { verdict: 'unchanged', reason: 'original_receipt' };
   if (result.unchanged) return { verdict: 'unchanged', reason: null };
-  return { verdict: result.verdict?.effective ? 'effective' : 'ineffective', reason: result.verdict?.reason ?? null };
+  return { verdict: result.verdict?.effective ? 'effective' : 'ineffective', reason: result.verdict?.perModel?.sale?.reason ?? result.verdict?.reason ?? null };
 }
 test('O4 actual signed lifecycle matches all 20 predeclared boundaries', () => {
   const world = new LifecycleWorld();

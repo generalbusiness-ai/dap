@@ -3,14 +3,14 @@ import type { KeyObject } from 'node:crypto';
 import { snapshot } from './append.ts';
 import { canonicalize, envelopeId, verifyEnvelope, type ActorEnvelope } from './codec.ts';
 import { Journal, type JournalOptions } from './journal.ts';
-import { K, heldAt } from './foundation.ts';
+import { F0_ID, RUNTIME, K, heldAt } from './foundation.ts';
 import { interpretView } from './interpret.ts';
 import type { PackageDescriptor } from './descriptor.ts';
 import type { Entry, EventBody, Receipt, Refusal, Verdict } from './types.ts';
 import type { TransportCredential } from './append.ts';
 import type { ViewEntry } from './context.ts';
 import { publicProof, verifyPublicProof, assertPublicData, type PublicProof } from './scope-proof.ts';
-import { SCOPE_KINDS, SCOPE_NS, TRANSFORM, JOIN_POLICY_ID, scopeId, scopeSetup, scopeImplementationId, type ScopeSetup } from './scope-profile.ts';
+import { SCOPE_KINDS, SCOPE_NS, TRANSFORM, JOIN_POLICY_ID, scopeId, scopeSetup, scopeImplementationId, ScopeProfileError, type ScopeSetup } from './scope-profile.ts';
 import type { SaleState } from '../fixtures/sale.ts';
 import type { InspectionState } from '../fixtures/inspection.ts';
 
@@ -60,15 +60,19 @@ function object(value: unknown): Record<string, any> {
 }
 function identity(exported: Omit<SourceExport, 'identity'>): SourceExport { return { ...exported, identity: scopeId(exported) }; }
 function validateExport(value: unknown): SourceExport {
-  const e = object(value) as unknown as SourceExport;
+  const fail = (): never => { throw new ScopeProfileError('invalid export'); };
+  if (!value || typeof value !== 'object' || Array.isArray(value)) fail();
+  const e = value as SourceExport;
+  if (Object.keys(e).sort().join(',') !== 'dependencies,factPositions,facts,genesis,identity,initialWriter,prefix,rights' || !e.prefix || typeof e.prefix !== 'object' || Object.keys(e.prefix).sort().join(',') !== 'commitment,headerHash,position' || !Number.isSafeInteger(e.prefix.position) || e.prefix.position < 0 || !Array.isArray(e.rights) || !e.rights.length || !e.dependencies || typeof e.dependencies !== 'object' || Object.keys(e.dependencies).sort().join(',') !== 'implementation,packages' || e.dependencies.implementation !== scopeImplementationId() || !Array.isArray(e.dependencies.packages) || !e.dependencies.packages.every(p => typeof p === 'string') || !Array.isArray(e.factPositions) || !e.factPositions.every(p => Number.isSafeInteger(p) && p >= 0 && p <= e.prefix.position) || !e.facts || typeof e.facts !== 'object' || Array.isArray(e.facts)) fail();
+  if (![e.genesis,e.prefix.headerHash,e.prefix.commitment,e.identity].every(v => typeof v === 'string' && /^sha256:[0-9a-f]{64}$/.test(v)) || typeof e.initialWriter !== 'string' || !e.rights.every(r => r && Object.keys(r).sort().join(',') === 'name,owner' && ['R_sell','R_fulfil','R_deliver'].includes(r.name) && typeof r.owner === 'string')) fail();
   const { identity: id, ...preimage } = e;
-  if (scopeId(preimage) !== id || !e.prefix || !Array.isArray(e.rights) || !e.rights.length || !e.dependencies || e.dependencies.implementation !== scopeImplementationId()) throw new Error('invalid_export');
+  if (scopeId(preimage) !== id) fail();
   assertPublicData(e);
   return e;
 }
 function init(genesis: EventBody, id: string): ScopeState {
   const setup = scopeSetup(genesis);
-  if (!setup) throw new Error('scope: genesis does not select scope runtime');
+  if (!setup) throw new ScopeProfileError('scope: genesis does not select scope runtime');
   const state: ScopeState = {
     genesis: id, setup, rights: {}, sale: { status: 'open', accepted_offer: null, winner: null },
     inspection: { attached: false, requested: false, result: null, importedResult: null, imports: 0 },
@@ -77,20 +81,24 @@ function init(genesis: EventBody, id: string): ScopeState {
   for (const [name, owner] of Object.entries(setup.owners)) state.rights[name as RightName] = { owner, status: setup.role === 'fulfilment' ? 'dormant' : 'live' };
   if (setup.role === 'delivery') state.facts = { ...setup.facts! };
   if (setup.role === 'fulfilment') {
-    const transition = object((genesis.payload as Record<string, unknown>).transition) as unknown as Transition;
-    if (transition.transformation !== TRANSFORM || !transition.identity || transition.manifest !== JOIN_POLICY_ID || !Array.isArray(transition.sources) || transition.sources.length !== 2 || !Array.isArray(transition.retainedDependencies)) throw new Error('scope: invalid transition');
+    const raw = (genesis.payload as Record<string, unknown>).transition;
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new ScopeProfileError('transition shape');
+    const transition = raw as Transition;
+    if (transition.transformation !== TRANSFORM || !transition.identity || transition.manifest !== JOIN_POLICY_ID || !Array.isArray(transition.sources) || transition.sources.length !== 2 || !Array.isArray(transition.retainedDependencies)) throw new ScopeProfileError('scope: invalid transition');
+    for (const source of transition.sources) validateExport(source);
+    if (Object.keys(transition).sort().join(',') !== 'identity,manifest,retainedDependencies,sources,transformation' || transition.identity !== scopeId({ manifest: JOIN_POLICY_ID, sources: transition.sources.map(s => s.identity) })) throw new ScopeProfileError('invalid transition identity or fields');
     const seen = new Set<string>();
     for (const raw of transition.sources) {
       const e = validateExport(raw);
       for (const right of e.rights) {
-        if (seen.has(right.name) || setup.owners[right.name] !== right.owner) throw new Error('scope: duplicate or wrong conditional owner');
+        if (seen.has(right.name) || setup.owners[right.name] !== right.owner) throw new ScopeProfileError('scope: duplicate or wrong conditional owner');
         seen.add(right.name);
       }
       state.imports.push(e.identity);
     }
-    if ([...seen].sort().join(',') !== 'R_deliver,R_fulfil') throw new Error('scope: missing conditional right');
+    if ([...seen].sort().join(',') !== 'R_deliver,R_fulfil') throw new ScopeProfileError('scope: missing conditional right');
     const retained = [...new Set(transition.sources.flatMap(e => [...e.dependencies.packages, e.dependencies.implementation]))].sort();
-    if (canonicalize(retained) !== canonicalize(transition.retainedDependencies)) throw new Error('scope: missing retained dependencies');
+    if (canonicalize(retained) !== canonicalize(transition.retainedDependencies)) throw new ScopeProfileError('scope: missing retained dependencies');
     state.transition = transition;
     state.facts = Object.assign({}, ...transition.sources.map(e => e.facts));
   }
@@ -130,6 +138,7 @@ function replayScopeView(view: ViewEntry[], genesis: string, packages: Record<st
       state.inspection.requested = (inspection?.requests.length ?? 0) > 0;
     }
     if (!scopeKinds.has(event.kind)) { state.verdicts[position] = original; continue; }
+    if (event.kind.startsWith(SCOPE_NS) && !(original.known && original.authorized && original.perModel?.scope?.reason === 'scope_runtime_required')) { state.verdicts[position] = original; continue; }
     const held = (principal: string, cap: string) => heldAt(current, principal, cap, position);
     let result: Verdict;
     try {
@@ -273,13 +282,19 @@ export class ScopeJournal {
     if (!scopeSetup(journal.context.entries[0]!.event)) throw new Error('scope: profile required');
     this.journal = journal; this.packages = packages; this.writerKey = writerKey;
   }
-  static create(opts: JournalOptions, genesis: ActorEnvelope | string, origins: (ActorEnvelope | string)[] = []): ScopeJournal { return new ScopeJournal(Journal.create(opts, genesis, origins), opts.packages, opts.writerKey); }
+  static create(opts: JournalOptions, genesis: ActorEnvelope | string, origins: (ActorEnvelope | string)[] = []): ScopeJournal {
+    const envelope = verifyEnvelope(genesis);
+    validateScopeGenesis(envelope.body, opts.packages);
+    init(envelope.body, envelopeId(envelope));
+    return new ScopeJournal(Journal.create(opts, envelope, origins), opts.packages, opts.writerKey);
+  }
   static open(opts: JournalOptions): ScopeJournal { return new ScopeJournal(Journal.open(opts), opts.packages, opts.writerKey); }
   get state(): ScopeState {
     const state = replayScopeView(this.fullView(), this.journal.context.genesisId, this.packages);
     const inspection = this.journal.context.state.models.inspection as unknown as InspectionState | undefined;
     return snapshot({ ...state, inspection: { ...state.inspection, requested: (inspection?.requests.length ?? 0) > 0 } });
   }
+  interpret(principal: string, basis = this.journal.context.head): ScopeState { return replayScopeView(this.journal.context.view(principal, basis), this.journal.context.genesisId, this.packages, 0, basis); }
   proof(frontier = this.journal.context.head): PublicProof { return publicProof(this.journal, frontier, this.writerKey); }
   private fullView(): ViewEntry[] { return this.journal.context.entries.map(entry => ({ position: entry.position, event: entry.event, header: entry.header, headerHash: entry.headerHash, committed: entry.committed, via: 'audience' })); }
   export(names: RightName[], frontier = this.journal.context.head): SourceExport { const view = this.fullView().slice(0, frontier + 1); return exportFrom(replayScopeView(view, this.journal.context.genesisId, this.packages), view, frontier, names, this.packages); }
@@ -291,4 +306,20 @@ export class ScopeJournal {
     return { ...result, verdict: this.state.verdicts[result.header.position] };
   }
   close(): void { this.journal.close(); }
+}
+
+/** Strict genesis surface for the explicitly selected scope fixture. */
+function validateScopeGenesis(event: EventBody, packages: Record<string, PackageDescriptor>): void {
+  const fail = (message: string): never => { throw new ScopeProfileError(message); };
+  if (event.kind !== K.genesis || !event.payload || typeof event.payload !== 'object' || Array.isArray(event.payload)) fail('expected genesis payload');
+  const p = event.payload as Record<string, any>;
+  const required = ['foundation','runtime','sequencing','grants','bindings','origins','referents','route','scope'];
+  if (required.some(k => !Object.hasOwn(p, k)) || Object.keys(p).some(k => ![...required,'transition'].includes(k))) fail('genesis fields');
+  if (p.foundation !== F0_ID || p.runtime !== RUNTIME) fail('unsupported foundation or runtime');
+  if (!p.sequencing || typeof p.sequencing !== 'object' || Array.isArray(p.sequencing)) fail('sequencing object');
+  if (!Array.isArray(p.grants) || !p.grants.every((g: any) => g && typeof g === 'object' && !Array.isArray(g) && typeof g.principal === 'string' && Object.keys(g).every(k => ['principal','roles','rights','capabilities'].includes(k)) && ['roles','rights','capabilities'].every(k => g[k] === undefined || Array.isArray(g[k]) && g[k].every((v: unknown) => typeof v === 'string')))) fail('grant shape');
+  if (!Array.isArray(p.bindings) || !p.bindings.length || !p.bindings.every((b: any) => b && typeof b === 'object' && Object.keys(b).every(k => ['package','resolution'].includes(k)) && typeof b.package === 'string' && !!packages[b.package])) fail('binding shape or missing package');
+  if (!Array.isArray(p.origins) || !Array.isArray(p.referents) || !p.referents.every((r: unknown) => typeof r === 'string') || typeof p.route !== 'string' || !p.route) fail('origins, referents or route shape');
+  const setup = scopeSetup(event); if (!setup) fail('missing setup');
+  if (setup!.role !== 'fulfilment' && p.transition !== undefined) fail('unexpected transition');
 }

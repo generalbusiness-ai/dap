@@ -87,7 +87,7 @@ export class LifecycleWorld {
   startSale() {
     const origin = signEvent({ kind: SALE + 'listing', actor: principals.alice, nonce: this.nonce(), payload: { referent: 'guitar-1', ask: 800 } }, keys.alice);
     this.create('S', 'alice', 'W0', this.setup('sale', ['alice'], { R_sell: principals.alice }), [
-      { principal: principals.alice, roles: ['Seller'], capabilities: [CAP.invite, CAP.attach, CAP.grant, CAP.disclose, CAP.observe, CAP.admit, K.scope_release, SCOPE_KINDS.exercise] },
+      { principal: principals.alice, roles: ['Seller'], capabilities: [CAP.invite, CAP.attach, CAP.grant, CAP.disclose, CAP.observe, CAP.admit, K.scope_release, SCOPE_KINDS.exercise, SCOPE_KINDS.recover] },
     ], [salePackage.id, scopePackage.id], [origin]);
   }
   saleThrough10() {
@@ -130,7 +130,7 @@ export class LifecycleWorld {
   }
   continueWriter() { return this.emit('S', 'alice', K.observe, { fact: { continued: true } }); }
   startDelivery() { this.create('D', 'kim', 'WD', this.setup('delivery', ['kim', 'alice', 'bob'], { R_deliver: principals.kim }, { facts: { buyer: principals[this.variant.deliveryBuyer ?? 'bob'], delivery_slot: 25 } }),
-    [{ principal: principals.kim, capabilities: [K.scope_release, SCOPE_KINDS.exercise] }], [scopePackage.id]); }
+    [{ principal: principals.kim, capabilities: [K.scope_release, SCOPE_KINDS.exercise, SCOPE_KINDS.recover] }], [scopePackage.id]); }
   describeDestination() {
     this.exports.S = this.contexts.S!.export(['R_fulfil']); this.exports.D = this.contexts.D!.export(['R_deliver']);
     const sources = [this.exports.S, this.exports.D];

@@ -14,7 +14,7 @@ export function forkSource(world: LifecycleWorld, name: 'S' | 'D', frontier: num
   const backend = new MemoryBackend();
   for (const entry of source.context.entries.slice(0, frontier + 1)) {
     const retry = entry.event.action_id ? source.context.backend.retry(entry.event.action_id) : undefined;
-    const token = entry.event.kind === K.accept_invite ? (entry.event.payload as { token_id: string }).token_id : undefined;
+    const token = entry.event.kind === K.accept_invite ? (entry.event.payload as { invite: { header: { commitment: string } } }).invite.header.commitment : undefined;
     backend.serialized(() => backend.commit(entry, retry, token));
   }
   return ScopeJournal.open({ backend, writerKey: keys[name === 'S' && frontier >= 22 ? 'W1' : name === 'S' ? 'W0' : 'WD'], packages });
