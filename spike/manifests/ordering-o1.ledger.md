@@ -196,3 +196,50 @@ failed with that same test-setup DataCloneError. Typecheck passed. Output:
 [run-5-f1-runtime.txt](ordering-o1-runs/run-5-f1-runtime.txt). The harness now
 copies only the plain participant/grant history used for its historical-state
 assertion. No runtime change was needed for this failure.
+
+The corrected regression was then committed over the original reviewed runtime
+in isolated source `b8fe4965efdd9b06371e950535837dfc6e1ccdac`, based on
+`c9fe7d5f6f5624dd6407d57ff213038c8e955e0c`. Its `journal.test.ts` bytes
+are exactly those of repaired-harness source
+`940506b473abc808666560d5e757811f985fcdaa`, Git blob
+`0e9fa5376b8496ea731d05a0ab80aa76457d6f31`. The old runtime is unchanged.
+Command: `node --test --test-name-pattern=O1-F1 spike/test/journal.test.ts`
+from that isolated checkout. All five regression cases fail there.
+[run-6-f1-before-corrected.txt](ordering-o1-runs/run-6-f1-before-corrected.txt)
+records the actual stale memory invitation at 3 and acceptance at 4 as
+effective, Bob present only in A's stale fold, and cold replay judging the
+invitation unauthorized. It also records both backends' raw restoration and
+previously acquired raw-Context bypasses. This is the product-failure evidence;
+it supersedes no historical log and does not turn the earlier setup failure
+into a product observation.
+
+At repaired source `940506b473abc808666560d5e757811f985fcdaa`, the same
+corrected harness ran with `node --test test/journal.test.ts test/codec.test.ts`:
+45 passed, zero failures, including all five F1 regressions. Output:
+[run-7-f1-repaired.txt](ordering-o1-runs/run-7-f1-repaired.txt). Its appended
+typecheck passed while the independently owned F2 documentation/lifecycle
+files were being prepared; the later combined-source check below is the
+whole-tree typecheck boundary. Runtime and journal/codec test inputs during
+this focused run were exactly those of `940506b`.
+
+## Review correction O1-F2 and combined validation boundary
+
+The lifecycle specification now distinguishes a different valid genesis
+(`ineffective`, `destination_mismatch`) from a malformed or wrongly signed
+candidate rejected at a recognized codec/profile boundary before activation.
+All 115 changed-genesis cases require zero activations and no live destination
+rights. An unrecognized exception is a test failure. Ordering §7 and the
+withheld-evidence expectations now permit an admitted unsuccessful activation
+attempt followed by the first effective activation at a later position;
+transferred rights remain dormant until then, and exact retry adds no position.
+
+The revised lifecycle manifest ID is
+`sha256:d7419b5d85d9acd4767b8733b47729c29f49088a0495ee246c60c2da658a7613`.
+It retains the historical manifest identity and source references rather than
+relabelling the old runs. This revision precedes O4's formal baseline, not its
+existing prototype. The separately agreed public-opening rule has ID
+`sha256:475b415bbf8b16ccdb1bea078174712c57f2b2955ece9338d762abd60228bad8`;
+it pins 21 kinds and no wildcard. The profile also names the verified header
+class leakage, view completeness/truncation/extra-field limits, and the exact
+normal-close versus crash ownership checks. The documentation agent prepared
+these five paths and computed their identities; it did not run their tests.

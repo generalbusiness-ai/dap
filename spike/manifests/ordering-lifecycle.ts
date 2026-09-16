@@ -73,6 +73,29 @@ export const amountPrivacy = {
   forbiddenExportFields: ['amount', 'acceptedAmount', 'counter', 'terms', 'offer_terms'],
 };
 
+// Ratified pre-formal-O4-baseline disclosure/completeness rule. O4 must pin
+// this identity in its implemented certificate and destination profile.
+export const publicOpeningRule = {
+  type: 'dap.fixture.scope-public-openings/1',
+  kinds: [
+    'ai.generalbusiness.dap.genesis', 'ai.generalbusiness.dap.accept_invite',
+    'ai.generalbusiness.dap.grant', 'ai.generalbusiness.dap.revoke',
+    'ai.generalbusiness.dap.attach', 'ai.generalbusiness.dap.close',
+    'ai.generalbusiness.dap.scope.release', 'ai.generalbusiness.dap.scope.activate',
+    'ai.generalbusiness.dap.admit', 'ai.generalbusiness.dap.seq.request',
+    'ai.generalbusiness.dap.seq.seal', 'ai.generalbusiness.dap.seq.assign',
+    'com.example.sale.listing', 'com.example.sale.offer', 'com.example.sale.withdraw',
+    'com.example.sale.accept', 'com.example.sale.close',
+    'com.example.scope.result', 'com.example.scope.exercise',
+    'com.example.scope.import-export', 'com.example.scope.recover',
+  ].sort(),
+  requiredAudience: ['members', 'spine'],
+  otherPositions: 'hidden',
+  bannedFields: ['amount', 'acceptedAmount', 'counter', 'terms', 'offer_terms'].sort(),
+  excludedKinds: ['ai.generalbusiness.dap.disclose', 'ai.generalbusiness.dap.observe'].sort(),
+};
+export const PUBLIC_OPENING_RULE_ID = contentId(publicOpeningRule);
+
 // The labels below are handles for O4 to bind to actual content ids, keys,
 // packages and signatures. This is a semantic template, not a codec vector.
 // Neither the template nor its eventual signed genesis contains releases.
@@ -331,19 +354,36 @@ export function genesisPaths(value: Json = destinationGenesisTemplate, path = ''
   if (value === null || typeof value !== 'object') return [path];
   return [path, ...Object.entries(value).flatMap(([key, child]) => genesisPaths(child, `${path}/${key}`))];
 }
+// These are conditional validation outcomes, not permission to treat any
+// thrown exception as an ineffective activation. O4 records the exact known
+// diagnostic at its codec/profile boundary; unrecognized errors fail the run.
+const changedGenesisExpectation = {
+  activations: 0, activeDestinationRights: [] as string[],
+  validDifferentGenesis: { verdict: 'ineffective', reason: 'destination_mismatch' },
+  invalidGenesis: {
+    verdict: 'rejected_before_activation',
+    recognizedRejections: [
+      { boundary: 'codec', reason: 'malformed_envelope' },
+      { boundary: 'codec', reason: 'invalid_actor_signature' },
+      { boundary: 'profile', reason: 'invalid_genesis' },
+      { boundary: 'profile', reason: 'unsupported_profile' },
+    ],
+  },
+  unrecognizedError: 'test_failure',
+};
 export const changedGenesisCases: Array<{
   id: string; from: string; mutation: { path: string; operation: 'replace' | 'remove' | 'add' };
-  expected: { verdict: string; reason: string; activations: number; activeDestinationRights: string[] };
+  expected: typeof changedGenesisExpectation;
 }> = genesisPaths().flatMap((path) => (['replace', 'remove'] as const).map((mutation) => ({
   id: `changed-genesis:${mutation}:${path || '/'}`,
   from: 'destination-started',
   mutation: { path, operation: mutation },
-  expected: { verdict: 'ineffective', reason: 'destination_mismatch', activations: 0, activeDestinationRights: [] },
+  expected: structuredClone(changedGenesisExpectation),
 })));
 changedGenesisCases.push({
   id: 'changed-genesis:add:/extra', from: 'destination-started',
   mutation: { path: '/extra', operation: 'add' },
-  expected: { verdict: 'ineffective', reason: 'destination_mismatch', activations: 0, activeDestinationRights: [] },
+  expected: structuredClone(changedGenesisExpectation),
 });
 
 export const replayObligations = {

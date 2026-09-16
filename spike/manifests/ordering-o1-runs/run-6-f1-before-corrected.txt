@@ -1,0 +1,107 @@
+✖ O1-F1 closed memory Context cannot issue or accept from stale authority after a new facade revokes it (10.601875ms)
+ℹ {"issued":{"header":{"commitment":"sha256:84fda6f4227938bb546616d5332c894299df5b47482df6fe99ef869ce13c2c1d","genesis":"sha256:10991f6a9ddbba5ede7eeaf373e5b548f6dc6e1a0690d89a7ff3f406c881973d","position":3,"prev":"sha256:2f3e9da7c199d583372d4e04f666d24ffe8e9ebbc24da9d08d54764fcf914acf","seq_sig":"A-MCLCsq4njF5jDy2NzspVy-I2XQJSTumXeuWcNtsDNkA1qHR3tGxRe4ExdZamXEGTgOkH36GskJyr5Nm1v0Cg"},"headerHash":"sha256:8ead613a1d24b6da5037cd095d551b4548f958d07c5f669580eb9bdfd197748d","replay":false,"verdict":{"known":true,"authorized":true,"effective":true}},"redeemed":{"header":{"commitment":"sha256:0d677a5a4c5d94b38d1c11932d8e02d8d51082ab0ddf8d17f30e71501ac48977","genesis":"sha256:10991f6a9ddbba5ede7eeaf373e5b548f6dc6e1a0690d89a7ff3f406c881973d","position":4,"prev":"sha256:8ead613a1d24b6da5037cd095d551b4548f958d07c5f669580eb9bdfd197748d","seq_sig":"7icv4Qmhj3_ZIzLsZoBH9JBvGoNF0LupjxPwVyl5YhyMGriBqRrRHqEbltHJO6u8NVXqaMCR6RaEhL7JvOxjCQ"},"headerHash":"sha256:2be9d71bda6420b61d480eec443ce7e24ffc623f596c4ca6b8941a03cf9bd0ee","replay":false,"verdict":{"known":true,"authorized":true,"effective":true}},"staleParticipants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w","ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q"],"liveParticipants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"],"coldParticipants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"],"coldInviteVerdict":{"known":true,"authorized":false,"effective":false,"reason":"unauthorized"}}
+✖ O1-F1 raw Context restoration or creation cannot bypass a live Journal on memory (3.5505ms)
+✖ O1-F1 raw Context restoration or creation cannot bypass a live Journal on sqlite (4.912875ms)
+✖ O1-F1 a previously acquired raw Context loses write access while Journal owns its backend on memory (4.514875ms)
+✖ O1-F1 a previously acquired raw Context loses write access while Journal owns its backend on sqlite (6.528166ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 0
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 99.9495
+
+✖ failing tests:
+
+test at spike/test/journal.test.ts:328:1
+✖ O1-F1 closed memory Context cannot issue or accept from stale authority after a new facade revokes it (10.601875ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /closed|inactive/. Input:
+  
+  'undefined'
+  
+      at TestContext.<anonymous> (file:///private/tmp/dap-o1-f1-before-check/spike/test/journal.test.ts:353:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'undefined',
+    expected: /closed|inactive/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at spike/test/journal.test.ts:362:54
+✖ O1-F1 raw Context restoration or creation cannot bypass a live Journal on memory (3.5505ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///private/tmp/dap-o1-f1-before-check/spike/test/journal.test.ts:365:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /owned|live facade/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at spike/test/journal.test.ts:362:54
+✖ O1-F1 raw Context restoration or creation cannot bypass a live Journal on sqlite (4.912875ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///private/tmp/dap-o1-f1-before-check/spike/test/journal.test.ts:365:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /owned|live facade/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at spike/test/journal.test.ts:374:54
+✖ O1-F1 a previously acquired raw Context loses write access while Journal owns its backend on memory (4.514875ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///private/tmp/dap-o1-f1-before-check/spike/test/journal.test.ts:385:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /owned|live facade/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at spike/test/journal.test.ts:374:54
+✖ O1-F1 a previously acquired raw Context loses write access while Journal owns its backend on sqlite (6.528166ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///private/tmp/dap-o1-f1-before-check/spike/test/journal.test.ts:385:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /owned|live facade/,
+    operator: 'throws',
+    diff: 'simple'
+  }

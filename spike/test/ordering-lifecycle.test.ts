@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { contentId, type Json } from '../src/canon.ts';
 import {
-  ORDERING_LIFECYCLE_MANIFEST_ID, ORDERING_LIFECYCLE_PROSE,
+  ORDERING_LIFECYCLE_MANIFEST_ID, ORDERING_LIFECYCLE_PROSE, PUBLIC_OPENING_RULE_ID, publicOpeningRule,
   activeOwners, amountPrivacy, boundary, changedGenesisCases, compareLifecycleObservation,
   contexts, deliveryExport, destinationGenesisTemplate, exportReferences, genesisPaths,
   healthyLifecycle, lifecycleCases, lifecycleInvariantViolations, replayObligations, rights, saleExport,
@@ -72,7 +72,8 @@ test('manifest identity binds the prose and executable source, independently rec
   const prose = readFileSync(new URL('../manifests/ordering-lifecycle.md', import.meta.url), 'utf8');
   const executable = readFileSync(new URL('../manifests/ordering-lifecycle.ts', import.meta.url), 'utf8');
   assert.equal(ORDERING_LIFECYCLE_PROSE, prose);
-  assert.equal(ORDERING_LIFECYCLE_MANIFEST_ID, 'sha256:63be83e60036a5936569c478da7a8c7be6b8ab1c744d59ef3296b7d6182b5a9d');
+  assert.notEqual(ORDERING_LIFECYCLE_MANIFEST_ID, 'sha256:63be83e60036a5936569c478da7a8c7be6b8ab1c744d59ef3296b7d6182b5a9d', 'historical manifest is not relabelled');
+  assert.equal(ORDERING_LIFECYCLE_MANIFEST_ID, 'sha256:d7419b5d85d9acd4767b8733b47729c29f49088a0495ee246c60c2da658a7613');
   assert.equal(ORDERING_LIFECYCLE_MANIFEST_ID, contentId({ prose: contentId(prose), executable: contentId(executable) }));
   assert.notEqual(ORDERING_LIFECYCLE_MANIFEST_ID, contentId({ prose: contentId(prose + '\nchanged'), executable: contentId(executable) }));
   assert.notEqual(ORDERING_LIFECYCLE_MANIFEST_ID, contentId({ prose: contentId(prose), executable: contentId(executable + '\n// changed') }));
@@ -189,10 +190,29 @@ test('restarts, alternative valid proof material and timeouts cannot duplicate o
   assert.equal(withheld.steps[0]!.expected.activations, 0);
   assert.equal(withheld.steps[1]!.expected.activations, 0);
   assert.equal(withheld.steps[2]!.expected.activations, 1);
+  assert.equal(withheld.steps[0]!.verdict, 'ineffective');
+  assert.equal(withheld.steps[0]!.expected.heads.F, 1);
+  assert.equal(withheld.steps[0]!.expected.rights.R_fulfil.F, 'dormant');
+  assert.equal(withheld.steps[2]!.verdict, 'effective');
+  assert.equal(withheld.steps[2]!.expected.heads.F, 2, 'a later attempt may first activate');
   assert.equal(withheld.steps[1]!.expected.rights.R_fulfil.S, 'released');
   const hidden = lifecycleCases.find((item) => item.id === 'timeout-after-hidden-activation')!;
   assert.equal(hidden.steps[0]!.expected.rights.R_fulfil.S, 'released');
   assert.equal(hidden.steps[0]!.expected.rights.R_fulfil.F, 'live');
+});
+
+test('public proof disclosure has a finite named rule and keeps private source kinds excluded', () => {
+  assert.equal(PUBLIC_OPENING_RULE_ID, contentId(publicOpeningRule));
+  assert.equal(publicOpeningRule.type, 'dap.fixture.scope-public-openings/1');
+  assert.equal(publicOpeningRule.kinds.length, 21);
+  assert.equal(new Set(publicOpeningRule.kinds).size, 21);
+  assert.deepEqual(publicOpeningRule.requiredAudience, ['members', 'spine']);
+  assert.equal(publicOpeningRule.otherPositions, 'hidden');
+  for (const kind of ['com.example.sale.offer', 'ai.generalbusiness.dap.accept_invite', 'ai.generalbusiness.dap.revoke', 'ai.generalbusiness.dap.scope.release']) assert.ok(publicOpeningRule.kinds.includes(kind));
+  for (const kind of ['com.example.sale.offer_terms', 'com.example.sale.counter', 'com.example.inspection.request', 'ai.generalbusiness.dap.disclose', 'ai.generalbusiness.dap.observe', 'com.example.scope.undeclared']) assert.ok(!publicOpeningRule.kinds.includes(kind));
+  assert.deepEqual(publicOpeningRule.bannedFields, ['acceptedAmount', 'amount', 'counter', 'offer_terms', 'terms']);
+  assert.ok(ORDERING_LIFECYCLE_PROSE.includes('Kim is not a member of S'));
+  assert.ok(ORDERING_LIFECYCLE_PROSE.includes('not for any release'));
 });
 
 test('public exports are exact, source-linked and exclude the private accepted amount', () => {
@@ -239,7 +259,15 @@ test('changed-genesis enumeration covers every field, container, removal and add
       } else target[key] = { changed: true };
     }
     assert.notEqual(contentId(changed), original, item.id);
-    assert.equal(item.expected.reason, 'destination_mismatch');
+    assert.deepEqual(item.expected.validDifferentGenesis, { verdict: 'ineffective', reason: 'destination_mismatch' });
+    assert.equal(item.expected.invalidGenesis.verdict, 'rejected_before_activation');
+    assert.deepEqual(item.expected.invalidGenesis.recognizedRejections, [
+      { boundary: 'codec', reason: 'malformed_envelope' },
+      { boundary: 'codec', reason: 'invalid_actor_signature' },
+      { boundary: 'profile', reason: 'invalid_genesis' },
+      { boundary: 'profile', reason: 'unsupported_profile' },
+    ]);
+    assert.equal(item.expected.unrecognizedError, 'test_failure');
     assert.equal(item.expected.activations, 0);
     assert.deepEqual(item.expected.activeDestinationRights, []);
   }
