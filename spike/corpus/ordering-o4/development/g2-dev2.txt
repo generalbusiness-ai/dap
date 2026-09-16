@@ -1,0 +1,10 @@
+✔ O4 thrown audience handler is a real failure with durable bytes: memory (236.286583ms)
+✔ O4 thrown audience handler is a real failure with durable bytes: sqlite (237.189291ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 550.003417

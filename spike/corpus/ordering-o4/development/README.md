@@ -106,3 +106,9 @@ checks pass. The two thrown-audience fixtures fail because attaching another
 handler preserves the existing kind's audience policy, so the new throwing
 policy never runs. The correction gives that fixture its own bound kind and
 uses its actual audience; no production binding policy changes.
+
+`g2-dev2.txt` records source `281664af595408bd8bbc874f2d04d38ef136637e`:
+the bounded throwing-audience followup passes on memory and SQLite (2/2).
+The fixture now invokes its own active audience, and both live submit and
+cold exact retry surface the actual handler failure while preserving the
+committed position and bytes. Typecheck passed before this source commit.
