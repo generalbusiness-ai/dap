@@ -116,8 +116,14 @@ A test-only attempt to clone function-bearing foundation state was corrected
 to compare the retained closed facade's state; no runtime behavior was changed
 for that test issue.
 
-Development focused checks passed 50/50 and typecheck. The next record pins
-the final source and preserves a fresh focused run. This correction changes
+Run 3 source: `bdb275f4c5c9e3fa8756a5a7dd709b76d857e249`.
+Fresh commands from `spike`:
+`node --test test/journal.test.ts test/codec.test.ts test/ordering-lifecycle.test.ts`,
+`npm run typecheck`, and `git diff --check`.
+Result: **50/50 passed**, zero failures/TODOs; typecheck and whitespace check
+passed. Exact output: [run-3.txt](ordering-o1-runs/run-3.txt). This includes
+25 journal, 15 codec, and 10 lifecycle tests. Environment: Node 26.8.2,
+SQLite 3.53.4, Darwin arm64; focused run 1.63 seconds. This correction changes
 only Journal ownership, its tests and profile documentation; the legacy
 visibility campaign path is unchanged from run 2. Accordingly run 2 remains
 the measured 600-seed integration result, and the final scoped run does not
@@ -125,16 +131,31 @@ pretend to be another campaign.
 
 ## Identities and scope
 
-- Profile: `dap.fixture.single-writer/1`.
+- Profile: `dap.fixture.single-writer/1`; document SHA-256:
+  `sha256:fbc4d00e3f3eca6401541359642cdcf013c2c9ff821c2300d7afe8774b77e8fc`.
+- Codec source SHA-256:
+  `sha256:39e2060dd76bf8f6ec2e6378be79e663a1b983671277d927257b8f7b2a10d96f`.
+- Fixed vector file SHA-256:
+  `sha256:255fa95a57bcd5ccd136512e1b6f2429f8e05750a6648284d2e03db3eb421969`.
 - Lifecycle manifest: `sha256:63be83e60036a5936569c478da7a8c7be6b8ab1c744d59ef3296b7d6182b5a9d`.
 - Lifecycle coverage: 20 healthy boundaries, 27 adverse branches, and 115
   changed-genesis variants; exact owner/state comparison hooks are executable.
 - Signed traces use different envelope commitments from legacy body IDs.
   Existing safe-integer fixture identities and visibility policies are retained.
-- No model-policy fix is claimed and no V3 historical campaign is relabeled.
+- O1 adds zero application model-policy fixes and zero application kinds;
+  it does not relabel any historical visibility campaign.
 - No O2–O6 completion is claimed. O1 supplies the crash machinery and expected
   lifecycle traces for those later tasks.
 
 The promise covers application-process crashes on the same host and intact
 local disk. It excludes power/host/disk loss, malicious equivocation or rollback,
 filesystem-lock failures, and concurrent writers using independent copies.
+
+
+The integrated campaign identities are unchanged from V6:
+
+| Experiment | Manifest | Package |
+|---|---|---|
+| Sale | `sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9` | `sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85` |
+| Booking | `sha256:cb4514f4967891077ad78e1dd0fba4c17438fb32b98cd8bd790df8531b35dd16` | `sha256:0556de5c337344eaa15afcbbbf5d22aa82c384bd6841d4ffb0c07185d4b7ec27` |
+| Club | `sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde` | `sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e` |
