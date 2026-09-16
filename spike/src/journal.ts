@@ -7,7 +7,8 @@ import { Context, type ViewEntry } from './context.ts';
 import type { PackageDescriptor } from './descriptor.ts';
 import { K, type GenesisPayload } from './foundation.ts';
 import { SQLiteBackend } from './sqlite.ts';
-import type { Entry, EventBody } from './types.ts';
+import type { Entry, EventBody, Receipt, Refusal, Verdict } from './types.ts';
+import { advanceOrdering, initialOrdering, orderingAdmission, HANDOVER_PROFILE, SEAL, ASSIGN, type OrderingState } from './ordering.ts';
 export const O1_PROFILE_VERSION = 'dap.fixture.single-writer/1';
 export const ORDERING_PROFILE = O1_PROFILE_VERSION;
 export const MAX_ENVELOPE_BYTES = 64 * 1024;
@@ -21,30 +22,46 @@ function encoding(key: KeyObject): AppendEncoding {
       return { id: envelopeId(envelope), actorSig: envelope.sig, committed: envelopeBytes(envelope) };
     },
     sign: header => signHeader(header, key),
+    admission(event, backend) {
+      const state = verifyEntries(backend.entries());
+      return state.profile === HANDOVER_PROFILE ? orderingAdmission(state, backend.head()!, event, principalOf(key)) : undefined;
+    },
   };
 }
 function declared(genesis: ActorEnvelope, writer: string): EventBody[] {
   if (genesis.body.kind !== K.genesis) throw new Error('Journal: expected genesis');
   const payload = genesis.body.payload as unknown as GenesisPayload;
-  if (payload.sequencing?.profile !== ORDERING_PROFILE || payload.sequencing.writer !== writer) throw new Error('Journal: unsupported profile or wrong writer');
+  const state = initialOrdering(genesis.body);
+  if (state.initialWriter !== writer) throw new Error('Journal: wrong initial writer');
   if (!Array.isArray(payload.origins)) throw new Error('Journal: invalid origins');
   return payload.origins;
 }
-function verifyEntries(entries: readonly Entry[], writer: string): void {
+function verifyEntries(entries: readonly Entry[]): OrderingState {
   if (!entries[0]?.committed) throw new Error('Journal: missing verified genesis');
   const genesis = verifyEnvelope(entries[0].committed);
-  const origins = declared(genesis, writer);
+  let state = initialOrdering(genesis.body);
+  const origins = declared(genesis, state.initialWriter);
   if (entries.length < origins.length + 1) throw new Error('Journal: incomplete initialization');
   let prev = ZERO_HASH;
   for (let position = 0; position < entries.length; position++) {
     const entry = entries[position]!;
     if (!entry.committed) throw new Error('Journal: missing committed bytes');
     if (Buffer.byteLength(entry.committed) > MAX_ENVELOPE_BYTES) throw new Error('Journal: envelope bounds');
-    const verified = verifyWire({ header: entry.header, committed: entry.committed }, writer, { genesis: envelopeId(genesis), position, prev }, { allowOrigin: position > 0 && position <= origins.length });
+    const verified = verifyWire({ header: entry.header, committed: entry.committed }, state.writer, { genesis: envelopeId(genesis), position, prev }, { allowOrigin: position > 0 && position <= origins.length });
     if (canonicalize(verified) !== canonicalize(entry)) throw new Error('Journal: stored entry disagrees with verified bytes');
     if (position > 0 && position <= origins.length && canonicalize(entry.event) !== canonicalize(origins[position - 1])) throw new Error('Journal: unadopted origin');
+    if (position > origins.length && state.profile === HANDOVER_PROFILE) {
+      const admission = orderingAdmission(state, entries[position - 1]!, entry.event, state.writer);
+      if (admission && admission !== 'control') throw new Error('Journal: ' + admission.reason);
+      state = advanceOrdering(state, entry);
+    }
     prev = entry.headerHash;
   }
+  return state;
+}
+function backendAssignment(opts: JournalOptions, state: OrderingState): void {
+  if (opts.backend instanceof SQLiteBackend && (opts.backend.writer !== state.initialWriter || opts.backend.profile !== state.profile)) throw new Error('Journal: backend assignment mismatch');
+  if (!state.writers.includes(principalOf(opts.writerKey))) throw new Error('Journal: unassigned writer key');
 }
 export class Journal {
   readonly context: Context;
@@ -52,8 +69,8 @@ export class Journal {
   private closed = false;
   private constructor(opts: JournalOptions) {
     if (owners.has(opts.backend)) throw new Error('Journal: backend already has a live facade');
-    if (opts.backend instanceof SQLiteBackend && (opts.backend.writer !== principalOf(opts.writerKey) || opts.backend.profile !== O1_PROFILE_VERSION)) throw new Error('Journal: backend assignment mismatch');
-    verifyEntries(opts.backend.entries(), principalOf(opts.writerKey));
+    const state = verifyEntries(opts.backend.entries());
+    backendAssignment(opts, state);
     this.context = Context.restore(opts.backend, opts.packages, MAX_ENVELOPE_BYTES, encoding(opts.writerKey));
     if (opts.backend instanceof SQLiteBackend) {
       const expected = this.context.entries.filter(e => e.event.kind === K.accept_invite).map(e => (e.event.payload as unknown as { invite: { header: { commitment: string } } }).invite.header.commitment).sort();
@@ -63,8 +80,8 @@ export class Journal {
   }
   static create(opts: JournalOptions, signedGenesis: ActorEnvelope | string | Uint8Array, signedOrigins: (ActorEnvelope | string | Uint8Array)[] = []): Journal {
     if (opts.backend.entries().length) throw new Error('Journal: already initialized');
-    if (opts.backend instanceof SQLiteBackend && (opts.backend.writer !== principalOf(opts.writerKey) || opts.backend.profile !== O1_PROFILE_VERSION)) throw new Error('Journal: backend assignment mismatch');
     const genesis = verifyEnvelope(signedGenesis);
+    backendAssignment(opts, initialOrdering(genesis.body));
     const origins = signedOrigins.map(o => verifyEnvelope(o));
     const adopted = declared(genesis, principalOf(opts.writerKey));
     if (canonicalize(adopted) !== canonicalize(origins.map(o => o.body))) throw new Error('Journal: origin proofs do not match genesis');
@@ -87,13 +104,29 @@ export class Journal {
     this.closed = true;
     owners.delete(this.context.backend);
   }
-  submit(input: ActorEnvelope | string | Uint8Array, credential?: TransportCredential) {
+  /** Ordering state, independently authenticated from the committed chain. */
+  get ordering(): OrderingState { return snapshot(verifyEntries(this.context.entries)); }
+  controlVerdictAt(position: number): Verdict | undefined {
+    const entries = this.context.entries.slice(0, position + 1);
+    const entry = entries[position];
+    if (!entry || (entry.event.kind !== SEAL && entry.event.kind !== ASSIGN)) return undefined;
+    const state = verifyEntries(entries);
+    return state.profile === HANDOVER_PROFILE ? { known: true, authorized: true, effective: true } : undefined;
+  }
+  submit(input: ActorEnvelope | string | Uint8Array, credential?: TransportCredential): (Receipt & { verdict?: Verdict; controlVerdict?: Verdict }) | Refusal {
     if (this.closed) throw new Error('Journal: facade is closed');
     if (this.needsReopen) throw new Error('Journal: reopen and reconcile after storage or fold error');
     let envelope: ActorEnvelope;
     try { envelope = verifyEnvelope(input); }
     catch { return { refused: true as const, reason: 'invalid_envelope' }; }
-    try { return this.context.submit(envelope.body, credential, envelope); }
+    try {
+      const result = this.context.submit(envelope.body, credential, envelope);
+      if ('refused' in result) return result;
+      const controlVerdict = this.controlVerdictAt(result.header.position);
+      if (!controlVerdict) return result;
+      const { verdict: _applicationPlaceholder, ...receipt } = result;
+      return { ...receipt, controlVerdict };
+    }
     catch (error) { this.needsReopen = true; throw error; }
   }
 }
@@ -105,20 +138,30 @@ export function verifyJournalView(view: readonly ViewEntry[], expected: { genesi
   if (!view[0]?.event || !view[0].committed) throw new Error('Journal view: genesis must be readable');
   const genesis = verifyEnvelope(view[0].committed);
   const origins = declared(genesis, expected.writer);
+  let state = initialOrdering(genesis.body);
+  let previousEntry: Entry | undefined;
   let prev = ZERO_HASH;
   for (let position = 0; position < view.length; position++) {
     const v = view[position]!;
     if (v.position !== position) throw new Error('Journal view: non-dense positions');
     const chain = { genesis: expected.genesis, position, prev };
-    verifyHeader(v.header, expected.writer, chain);
+    verifyHeader(v.header, state.writer, chain);
     if (v.headerHash !== headerHash(v.header)) throw new Error('Journal view: wrong header hash');
     if (v.event !== undefined) {
       if (!v.committed) throw new Error('Journal view: missing actor proof');
       if (Buffer.byteLength(v.committed) > MAX_ENVELOPE_BYTES) throw new Error('Journal view: envelope bounds');
-      const entry = verifyWire({ header: v.header, committed: v.committed }, expected.writer, chain, { allowOrigin: position > 0 && position <= origins.length });
+      const entry = verifyWire({ header: v.header, committed: v.committed }, state.writer, chain, { allowOrigin: position > 0 && position <= origins.length });
       if (canonicalize(entry.event) !== canonicalize(v.event)) throw new Error('Journal view: body disagrees with signed bytes');
       if (position > 0 && position <= origins.length && canonicalize(entry.event) !== canonicalize(origins[position - 1])) throw new Error('Journal view: unadopted origin');
+      if (position > origins.length && state.profile === HANDOVER_PROFILE) {
+        const admission = orderingAdmission(state, previousEntry!, entry.event, state.writer);
+        if (admission && admission !== 'control') throw new Error('Journal view: ' + admission.reason);
+        state = advanceOrdering(state, entry);
+      }
     } else if (v.committed !== undefined) throw new Error('Journal view: hidden position contains an envelope');
+    if (state.sealed && v.event === undefined) throw new Error('Journal view: missing assignment opening after seal');
+    // Admission uses only the predecessor's position and commitment, even when hidden.
+    previousEntry = { position, header: v.header } as Entry;
     prev = v.headerHash;
   }
   return snapshot(view);

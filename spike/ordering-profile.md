@@ -171,3 +171,70 @@ V3's historical campaign ledger or claim that its old byte streams had
 signatures. The final candidate integrates V4/V5 and the V6 report ancestry;
 the O1 layer adds no application model-policy repair. Those experiments keep
 their own historical source and run boundaries.
+
+## O3: planned handover profile
+
+`dap.fixture.single-writer/2` is a separate opt-in profile. Its signed genesis
+pins `sequencing: {profile, writer, control}`: the initial writer and one
+Ed25519 ordering-control key. That control key needs no application grant or
+participant credential. The profile retains the v1 codec, retention promise,
+SQLite boundary and wire vectors. Existing v1 genesis bytes do not gain a
+handover rule. There is no automatic replacement, control-key rotation,
+quorum, lease, or transition between profiles.
+
+At head H in epoch e (initially 0), the retiring writer signs an actor envelope
+of kind `dap.seq.seal` with exactly `{epoch: e, predecessor: H.header.commitment}`.
+The same writer signs its header at H+1. Sealing pauses ordinary new appends;
+only the next assignment can extend the journal. The control key signs an
+actor envelope of kind `dap.seq.assign` with exactly
+`{epoch: e+1, predecessor: seal.header.commitment, writer: successor}`. The
+retiring writer appends and signs that entry at H+2. Its committed assignment
+immediately installs the successor for H+3. A writer key already used in this
+context cannot be installed again. Kind names above use the existing
+`ai.generalbusiness.dap.` namespace on the wire.
+
+There are two deliberately different hashes. The control payload's
+`predecessor` binds the previous **signed-envelope commitment**, as ordering
+note §6 specifies. Every authenticated `header.prev` binds the previous
+**header preimage hash**, as the codec specifies. Both links refer backward;
+neither names the entry containing it. A seal or assign carrying the previous
+header hash in its payload is refused. A header carrying the previous envelope
+commitment in `prev` fails ordinary header verification. The genesis identity
+and signed chain bind the unchanged profile and durability promise, so assign
+cannot substitute different retention or control rules.
+
+`append.ts` still owns the only append and retry algorithm. Stable signed bytes
+are checked first. Exact retry and changed-content refusal occur inside the
+serialized boundary before the new ordering gate. Only new actions check
+whether this facade's signing key is currently assigned, whether a seal has
+paused work, and whether the control proof is valid. Valid seal/assign events
+use profile authority instead of participant admission; other events retain
+ordinary admission. One commit saves the entry, head, retry and outbox records.
+No refusal or retry adds an outbox row.
+
+SQLite metadata pins the initial writer and profile, not a second mutable
+assignment. `Journal.open` verifies all saved signatures and the control chain,
+then derives the current assignment. A successor opens the same authoritative
+journal after the former facade closes. A reconnected former writer may open
+it to recover exact receipts, but cannot append a new action. Another key that
+was never assigned cannot open it. The existing exclusive file lock and one
+facade per backend still apply. Copying a database does not fence a dishonest
+old writer; this remains the one trusted writer profile.
+
+The public Journal result distinguishes authority layers. A committed v2
+seal/assign returns `controlVerdict: {known:true, authorized:true,
+effective:true}` and omits the application `verdict`. `controlVerdictAt(position)`
+authenticates the saved prefix and produces the same result after cold open or
+an exact retry. `Journal.ordering` reports the verified current assignment.
+The legacy F0 fold still has a `not_in_v1` placeholder for sequencing controls;
+that internal placeholder is not the outcome of the ordering operation. No
+application capability is consulted to install a writer. A `dap.seq.request`
+remains an application request and never changes the ordering state.
+
+The serving view places controls on the existing spine. `verifyJournalView`
+can follow a visible valid control chain and authenticate the new writer's
+headers, including hidden application positions. Hidden headers do not reveal
+kind names; verification alone cannot prove that a server supplied every
+required spine opening. O5 separately tests an independent verifier against
+its declared complete-control-input contract. O3 does not count its own
+transition function as independent evidence of invariant 19.

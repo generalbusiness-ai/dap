@@ -112,7 +112,7 @@ export interface GrantSpec {
 export interface GenesisPayload {
   foundation: string;
   runtime: string;
-  sequencing: { profile: 'single-writer' | 'dap.fixture.single-writer/1'; writer: Principal };
+  sequencing: { profile: 'single-writer' | 'dap.fixture.single-writer/1' | 'dap.fixture.single-writer/2'; writer: Principal; control?: Principal };
   grants: GrantSpec[];
   /** descriptor ids of packages attached at genesis, with resolutions */
   bindings: { package: string; resolution?: AttachResolution }[];
