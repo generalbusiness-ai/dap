@@ -93,3 +93,30 @@ The repair gives that test-case array an explicit JSON-compatible dictionary
 type. It changes no runtime or test data. Total repairs so far: one error-text
 compatibility repair and one test type annotation, with no failed protocol
 case or model change.
+
+## Run 4 and candidate
+
+Source: `acfe25223fb83f5925db601181aaf970a5d8ed71`. The same focused
+command as runs 1 and 3 passed all 71 tests, including all 12 O3 tests and
+all six O3 SIGKILL cases. Typecheck passed. Raw output:
+[run-4.txt](ordering-o3-runs/run-4.txt).
+
+The final record commit changes only this ledger and run-4 output. Runtime and
+test files therefore remain exactly those of the measured source above. O1
+`c9fe7d5f6f5624dd6407d57ff213038c8e955e0c` and O2
+`b6d156163285c8eaab3d05766dd9b0de35fef79b` are integrated ancestors.
+
+The full 600-seed result belongs to run 2's source, before the documented v2
+schema tightening. The final focused checks cover that tightening and the
+test annotation repair. The Sale/Booking/Club fixture code, manifests, codec
+and v1 fixed vectors remain unchanged since run 2. There is no claim that a
+second full 201-test suite was run at the final source.
+
+`git diff --check` passed for the O3 source, tests, profile and ledger against
+O2. Raw Node logs retain their original bytes, including whitespace in printed
+assertion diagnostics. No historical evidence files were normalized.
+
+The current implementation reauthenticates the saved chain when deriving the
+ordering state and admitting new signed events. Its work grows with the
+retained prefix; no throughput or incremental-verification claim is made.
+Independent checker approval remains pending.
