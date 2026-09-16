@@ -1,0 +1,53 @@
+{
+  "seed": 146,
+  "manifest": "sha256:7e0f89716d6d5d9c40c1a5d0e4692bb605d1ad1504d0ad1a3be0bb59d34116b5",
+  "package": "sha256:1d7e17d8eca7c9fcf0f0b6f0d0e0fa92ab5acaa8a6da3300b29b6173ec7b9729",
+  "snapshot": "run1",
+  "expected": "dana@7 mismatch: observe differs at 7 [affordances.0: oracle undefined, view com.example.sale.offer; models.sale.accepted: oracle o3, view null; models.sale.status: oracle decided, view open; outcomes.7.effective: oracle true, view false; outcomes.7.perModel.sale.effective: oracle true, view false; outcomes.7.perModel.sale.reason: oracle null, view no_such_offer; outcomes.7.reason: oracle null, view ineffective]",
+  "steps": [
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "carol",
+      "grants": {
+        "roles": [
+          "Buyer"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "carol"
+    },
+    {
+      "type": "act",
+      "actor": "carol",
+      "kind": "com.example.sale.offer",
+      "payload": {
+        "offer_id": "o3"
+      }
+    },
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "dana",
+      "grants": {
+        "roles": [
+          "Buyer"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "dana"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.sale.accept",
+      "payload": {
+        "offer_id": "o3"
+      }
+    }
+  ]
+}

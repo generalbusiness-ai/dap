@@ -11,21 +11,14 @@
 // refused event necessarily saw that fact. Concretely:
 //
 // - The listing and the close are spine, so `not_open` is safe everywhere.
-// - Stubs, withdrawals and accepts are members events. A member who joins
-//   later holds only their headers, yet must judge every later withdrawal,
-//   replacement and accept of those stubs exactly as the oracle does. The
-//   model therefore declares a dependency (`config.joinDisclosure`, fix 2):
-//   when a participant joins, the seller discloses to them every effective
-//   offer, withdraw and accept recorded before their join. With that, a
-//   stub unknown to a view is a stub that does not exist, and `no_such_offer`
-//   reads the same everywhere (fix 3: no withdrawal or replacement of an
-//   unknown stub is effective). The disclosure adds no reader beyond the
-//   privacy budget: those kinds are members when recorded, subject to
-//   disclosure; terms and counters are never part of it.
+// - A withdrawal or a replacement of a stub the viewer never saw is still
+//   effective and is recorded against the stub's id, because a member who
+//   joined after the stub reads the withdrawal but not the stub (manifest
+//   case 4). A later accept of that id is then `withdrawn` in every view.
 // - An accept checks stub-specific facts (withdrawn, replaced) before the
-//   decision, and the decision before the stub's existence, so a viewer
-//   agrees with everyone else on `already_decided` whenever they can see
-//   the decision.
+//   decision, and the decision before the stub's existence, so a viewer who
+//   holds only the header of the stub but sees the decision (Ivan at 18)
+//   agrees with everyone else: `already_decided`.
 // - Terms and counters refuse on the decision only for the accepted stub
 //   itself, because their readers (author and seller) were members at the
 //   decision; a withdrawal never consults the decision, because a member
@@ -35,8 +28,8 @@
 // produced it and shows it only when that position is visible to the
 // principal; amounts and counters go only to their author and the seller.
 
-import { descriptorId, type AudienceCtx, type ModelSpec, type PackageDescriptor } from '../src/descriptor.ts';
-import { MEMBERS, SPINE, named, type EventBody } from '../src/types.ts';
+import { descriptorId, type ModelSpec, type PackageDescriptor } from '../../../src/descriptor.ts';
+import { MEMBERS, SPINE, named, type EventBody } from '../../../src/types.ts';
 
 const NS = 'com.example.sale.';
 
@@ -78,7 +71,7 @@ export interface SaleState {
   terms: OfferTerms[];
   /** effective counters, in position order; the latest visible one is the counter */
   counters: OfferCounter[];
-  /** effective withdrawals, by stub id */
+  /** effective withdrawals, by stub id, including withdrawals of stubs this view never saw */
   withdrawals: Withdrawal[];
   /** the decision: the accepted stub and the position of the accept */
   accepted: { id: string; position: number } | null;
@@ -86,33 +79,6 @@ export interface SaleState {
   closedAt: number | null;
   outcome: string | null;
 }
-
-/**
- * The model's declared dependency (fix 2). A member who joins after a stub,
- * withdrawal or accept was recorded must still judge later events about
- * that stub as the oracle does, and nothing visible to them says the stub
- * exists. So on every join, the seller discloses to the newcomer every
- * effective event of these kinds recorded before the join. The harness
- * honours this on each join; the model cannot emit `dap.disclose` itself.
- */
-export type SaleConfig = {
-  joinDisclosure: {
-    /** who discloses: the listing's seller */
-    by: 'seller';
-    /** the kinds whose effective positions are disclosed to the newcomer */
-    kinds: string[];
-    effectiveOnly: true;
-  };
-  /**
-   * The model's disclosure policy (fix 4): the kinds a participant's client
-   * may disclose beyond their audience. Only the sale's public kinds and
-   * the foundation's invitation and attach are listed. Terms, counters and
-   * inspection requests are absent, so a conforming client never widens
-   * an amount, a counter or an inspection request to a non-party; the
-   * privacy budget names their readers and no disclosure may add one.
-   */
-  disclosurePolicy: { kinds: string[] };
-};
 
 type StubStatus = 'open' | 'withdrawn' | 'replaced' | 'accepted' | 'declined';
 type Visible = (position: number) => boolean;
@@ -147,9 +113,9 @@ function decisionVisible(state: SaleState, visible: Visible): boolean {
   return state.accepted !== null && visible(state.accepted.position);
 }
 
-/** An id is taken once an effective stub carries it. */
+/** An id is taken once any stub, replacement or withdrawal has named it. */
 function idTaken(state: SaleState, id: string): boolean {
-  return state.offers.some((o) => o.id === id);
+  return state.offers.some((o) => o.id === id || o.replaces === id) || state.withdrawals.some((w) => w.id === id);
 }
 
 function latestTerms(state: SaleState, id: string, visible: Visible): OfferTerms | undefined {
@@ -178,14 +144,9 @@ function refuse(state: SaleState, reason: string) {
   return { effective: false, state, reason };
 }
 
-export const saleModel: ModelSpec<SaleState, SaleConfig> = {
+export const saleModel: ModelSpec<SaleState, Record<string, never>> = {
   id: 'sale',
-  config: {
-    joinDisclosure: { by: 'seller', kinds: [NS + 'offer', NS + 'withdraw', NS + 'accept'], effectiveOnly: true },
-    disclosurePolicy: {
-      kinds: [NS + 'listing', NS + 'offer', NS + 'withdraw', NS + 'accept', NS + 'close', 'ai.generalbusiness.dap.invite', 'ai.generalbusiness.dap.attach'],
-    },
-  },
+  config: {},
   init: () => ({ status: 'unopened', offers: [], terms: [], counters: [], withdrawals: [], accepted: null, closedAt: null, outcome: null }),
   roles: {
     Seller: [NS + 'accept_offer', NS + 'counter', NS + 'close'],
@@ -230,12 +191,11 @@ export const saleModel: ModelSpec<SaleState, SaleConfig> = {
         if (replaces !== null && (!isId(replaces) || replaces === id)) return refuse(state, 'malformed');
         if (idTaken(state, id)) return refuse(state, 'duplicate_offer');
         if (replaces !== null) {
+          // Facts that later members can read come first; the stub itself may be hidden from them.
           if (withdrawalOf(state, replaces, everything)) return refuse(state, 'withdrawn');
           if (replacementOf(state, replaces, everything)) return refuse(state, 'replaced');
-          // Every reader knows every effective stub (join disclosure), so an unknown stub does not exist.
           const old = stubOf(state, replaces);
-          if (!old) return refuse(state, 'no_such_offer');
-          if (old.author !== event.actor) return refuse(state, 'not_author');
+          if (old && old.author !== event.actor) return refuse(state, 'not_author');
         }
         const stub: OfferStub = { id, author: event.actor, position: ctx.position, replaces };
         return { effective: true, state: { ...state, offers: [...state.offers, stub] } };
@@ -254,15 +214,11 @@ export const saleModel: ModelSpec<SaleState, SaleConfig> = {
         return { effective: true, state: { ...state, terms: [...state.terms, terms] } };
       }
       case NS + 'counter': {
+        // The payload's `author` field is read by the audience rule; its value carries no meaning for the fold.
         if (!Number.isInteger(p.amount) || typeof p.author !== 'string') return refuse(state, 'malformed');
         if (withdrawalOf(state, id, everything)) return refuse(state, 'withdrawn');
         if (replacementOf(state, id, everything)) return refuse(state, 'replaced');
-        const stub = stubOf(state, id);
-        if (!stub) return refuse(state, 'no_such_offer');
-        // A counter must name the actual offerer (fix 5). The audience independently derives
-        // recipients from the preceding effective stub, so a mismatched payload cannot
-        // deliver this private amount to a non-party, even when the fold refuses it (fix 7).
-        if (p.author !== stub.author) return refuse(state, 'not_author');
+        if (!stubOf(state, id)) return refuse(state, 'no_such_offer');
         if (state.accepted !== null && state.accepted.id === id) return refuse(state, 'already_decided');
         const counter: OfferCounter = { id, position: ctx.position, amount: p.amount as number };
         return { effective: true, state: { ...state, counters: [...state.counters, counter] } };
@@ -270,11 +226,10 @@ export const saleModel: ModelSpec<SaleState, SaleConfig> = {
       case NS + 'withdraw': {
         if (withdrawalOf(state, id, everything)) return refuse(state, 'withdrawn');
         if (replacementOf(state, id, everything)) return refuse(state, 'replaced');
-        // Every reader knows every effective stub (join disclosure), so an unknown stub does not
-        // exist. The decision is not consulted: a member who joined after it may not see it.
+        // A stub this view never read is withdrawn on its author's word; the oracle, which read
+        // it, checks authorship. The decision is not consulted: a later member may not see it.
         const stub = stubOf(state, id);
-        if (!stub) return refuse(state, 'no_such_offer');
-        if (stub.author !== event.actor) return refuse(state, 'not_author');
+        if (stub && stub.author !== event.actor) return refuse(state, 'not_author');
         const withdrawal: Withdrawal = { id, actor: event.actor, position: ctx.position };
         return { effective: true, state: { ...state, withdrawals: [...state.withdrawals, withdrawal] } };
       }
@@ -348,23 +303,12 @@ export const saleModel: ModelSpec<SaleState, SaleConfig> = {
   },
 };
 
-// Private audience rules are total over runtime JSON (fix 6). Invalid
-// terms name only their actor. Counters derive their other parties from
-// preceding public state (fix 7), never from a supplied recipient.
-function namedParty(ev: EventBody, field: string): string {
-  const p = ev.payload;
-  const v = typeof p === 'object' && p !== null && !Array.isArray(p) ? (p as Record<string, unknown>)[field] : undefined;
-  return typeof v === 'string' ? v : ev.actor;
-}
 function sellerAndAuthor(_: unknown, ev: EventBody) {
-  return named(ev.actor, namedParty(ev, 'seller'));
+  return named(ev.actor, (ev.payload as { seller?: string }).seller ?? ev.actor);
 }
-/** A refused attempt cannot make a non-party a reader (fix 7). */
-function counterParties(ctx: AudienceCtx, ev: EventBody) {
-  const state = ctx.modelState('sale') as SaleState | undefined;
-  const p = ev.payload;
-  const stub = isRecord(p) && isId(p.offer_id) ? state?.offers.find((o) => o.id === p.offer_id) : undefined;
-  return named(ev.actor, ...(state?.seller ? [state.seller] : []), ...(stub ? [stub.author] : []));
+/** A counter is by the seller; the payload names the offer's author so the audience can. */
+function counterParties(_: unknown, ev: EventBody) {
+  return named(ev.actor, (ev.payload as { author?: string }).author ?? ev.actor);
 }
 const membersAudience = () => MEMBERS;
 const spineAudience = () => SPINE;

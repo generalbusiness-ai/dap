@@ -12,6 +12,7 @@
 // actor alone, so bad data is never served to anyone else.
 
 import { contentId, type Json } from './canon.ts';
+import { snapshot } from './append.ts';
 import {
   attach as attachPackage,
   bindingId,
@@ -342,6 +343,7 @@ export function foldEntry(state: FoundationState, input: FoldInput): Verdict {
   const membersBefore = [...state.participants];
   let verdict: Verdict;
   let audience: Audience | undefined;
+  let modelsBefore: FoundationState['models'] | undefined;
 
   if (pos === 0) {
     verdict = foldGenesis(state, ev, packages);
@@ -361,6 +363,9 @@ export function foldEntry(state: FoundationState, input: FoldInput): Verdict {
       }
     }
   } else {
+    // Handlers receive cloned inputs. Keep the original values until the
+    // audience succeeds, so a refused event cannot leave a model effect.
+    modelsBefore = { ...state.models };
     verdict = foldApplication(state, entry);
   }
 
@@ -379,7 +384,30 @@ export function foldEntry(state: FoundationState, input: FoldInput): Verdict {
       }
     } else {
       const binding = state.env.kinds[ev.kind];
-      audience = binding ? capped(binding.audience({ position: pos, members: membersBefore }, ev), binding.ceiling, membersBefore) : MEMBERS;
+      // A kind no binding resolves cannot be judged, and refusing an act must not disclose its
+      // payload (design note §8): the actor alone reads it.
+      if (!binding) audience = named(ev.actor);
+      else {
+        // A model's audience rule runs on runtime JSON; if it throws, the event is recorded as
+        // ineffective and readable by its actor alone, so the series stays replayable.
+        try {
+          const declaring = state.env.packages.find((p) => p.id === binding.packageId);
+          const allowed = declaring?.kinds[ev.kind]?.handlers ?? [];
+          audience = capped(binding.audience({
+            position: pos,
+            members: membersBefore,
+            modelState: (id) => {
+              if (!allowed.includes(id)) throw new Error('undeclared audience model read: ' + id);
+              const before = modelsBefore?.[id];
+              return before === undefined ? undefined : snapshot(before);
+            },
+          }, ev), binding.ceiling, membersBefore);
+        } catch (e) {
+          if (modelsBefore) state.models = modelsBefore;
+          verdict = { known: true, authorized: verdict.authorized, effective: false, reason: 'audience_error:' + (e instanceof Error ? e.message : String(e)) };
+          audience = named(ev.actor);
+        }
+      }
     }
   }
   state.audiences[pos] = audience;
