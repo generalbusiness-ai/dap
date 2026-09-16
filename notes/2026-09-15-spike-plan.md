@@ -4,11 +4,13 @@ status: >-
   implementation-design plan for the two dap spikes, written against the
   outline landed at 0fb712b. Makes every fixture decision the outline left to
   the spikes, writes out the predeclarations the views note requires, and
-  breaks the work into reviewable tasks. Revised after checker's review
-  a1cf99a3: signed objects and preimages pinned, invitation authority pinned,
-  outbox added, the privacy budgets restored to the landed limits, Club policy
-  and the transfer lifecycle fixed. Adopts nothing for production; every
-  choice here is a fixture choice and says what it does not claim.
+  breaks the work into reviewable tasks. Revised after checker's reviews
+  a1cf99a3 and 05048fbb and the simplification review a81abca9: one shared
+  append operation, cold replay, the smallest fixture domains, flat package
+  descriptors, one experiment manifest per model, a staged semantic checker,
+  a repair ledger; the transfer fixture exports no amount and joins both
+  releases before activating. Adopts nothing for production; every choice
+  here is a fixture choice and says what it does not claim.
 design: notes/2026-09-14-evolving-spaces-design.md
 views: notes/2026-09-14-one-series-many-views.md
 ordering: notes/2026-09-14-ordering.md
@@ -35,6 +37,47 @@ Both spikes report against the goal criteria of design note §0. Goal 1 and
 goal 2 are measured by the visibility spike, goal 4 by the ordering spike,
 and goal 3 by inspection of the narrative only.
 
+### Simplifications adopted
+
+From checker's simplification review (workroom report `a81abca9`), all
+seven, each a fixture or workflow choice that preserves every required
+case:
+
+1. **One append operation.** Exact-retry lookup, changed-content refusal,
+   admission, entry construction and the required writes live in one
+   function; the in-memory and SQLite backends supply only storage and the
+   transaction boundary it runs inside.
+2. **Cold replay.** Every tested frontier is rebuilt from genesis: the
+   principal's visible history for the view, the complete history for the
+   oracle. No incremental projection, invalidation index or snapshot
+   migration. The invalid-cache test discards a snapshot with the wrong
+   visibility basis and rebuilds.
+3. **Staged semantic checker.** The visibility harness takes
+   already-verified entries with real positions, actors, grants, audiences
+   and withheld payloads, so the first counterexample does not wait for
+   the codec. The codec and its vectors gate O1, and the ordering stages
+   replay the same semantic traces through the real boundary. This is a
+   staging boundary, not a second cryptosystem; the early visibility
+   result is conditional on authentic input.
+4. **Smallest fixture domains.** One room and integer clock ticks; one
+   club application type, one small committee, one quorum rule; an
+   explicit set of rights with copy, union and duplicate rejection for
+   transfers; Discussion as the worked example with deterministic checks
+   only. The limits are named in §4 so a small fixture does not become a
+   broad claim.
+5. **Flat package descriptors.** A package is a pinned table of
+   TypeScript functions and explicit per-kind bindings; attach activates a
+   descriptor at a recorded boundary; an ambiguous or unsupported
+   combination is an explicit result. No discovery, general resolver or
+   renderer.
+6. **One experiment manifest per model.** Promises, privacy budget, split
+   schema, constraint inventory, budgets, seeds, bounds and expected
+   outcomes in one reviewed file; the generator, checker and report read
+   it and cite its content id (§4.7).
+7. **Repair ledger.** One immutable snapshot per checker run and a ledger
+   of every semantic change with its discovery source, counterexample and
+   constraint; one commit per fix is allowed but not required (§4.3).
+
 ## 2. Fixture decisions
 
 Each row is a decision, with the reason and what it does not claim. Every
@@ -53,7 +96,11 @@ profile of design note §2, which remains open.
 | Fixed foundation `F0` | The system kinds of design §2 with their audiences (`spine`, `members`, named sets), the bootstrap entitlement, the invitation token, the origin contract, the namespace check; content id pinned in every genesis; no successor foundation | Both spikes need one foundation; upgrades are deferred (design §2, foundation lineage) | Foundation evolution |
 | Invitation token and authority | The token is the `dap.invite` event's own committed bytes: `{genesis, invitee, grants, token_id}` signed by the inviter. `dap.accept_invite` embeds that envelope and its authenticated header. A member verifies: the header is in the chain at its position; the issuer held `dap.invite` at that position, from the spine grant history; the `token_id` is unconsumed. **Authority is judged at issuance.** A revocation of the issuer after issuance does not invalidate an issued token; a token whose header is not in the chain, or whose issuer lacked `dap.invite` at that position, is refused | Members verify a newcomer's grants from the acceptance alone (design §2, grant evidence), and the verdict does not depend on when the acceptance arrives | Revocable invitations; the redeemed invite's payload stays private (embedding it in a spine event publishes it at redemption; an unredeemed invitation stays private) |
 | Runtime profile id | `dap.fixture.ts/1`: models are TypeScript functions `fold(state, event, env) -> state`, `audience(state, event) -> set`, `observe(p, state, n) -> projection`, `affordances(p, state) -> constructors`, `invariants(state) -> violations` | The views note allows ordinary functions with declarative folds as a separate step | Determinism across machines beyond what the test corpus shows |
-| In-memory sequencer | Single process; dense positions; retry index by `action_id`; returns a header per append; admission after retry recovery as in ordering §3 | The visibility spike needs order, not durability | Durability, crash recovery, or concurrency across processes |
+| Append operation | One function used by both backends: verify stable facts, exact-retry lookup, changed-content refusal, admission, entry construction, the writes; it runs inside the backend's transaction or serialization boundary (ordering §3 steps 2 to 6) | One place for the order of checks and invitation consumption, so the two experiments cannot drift | Two independent kernels; the control verifier stays separate |
+| In-memory backend | Single process; dense positions; a map for the retry index; no durability | The visibility spike needs order, not durability | Durability, crash recovery, or concurrency across processes |
+| Replay | Cold replay from genesis at every tested frontier, for views and for the oracle; rebuild after disclosure | Fewer mutable states and no cache bugs in a corpus of at most 60 positions | Incremental performance; measure before optimizing |
+| Package descriptors | A package is a pinned table of functions with explicit per-kind bindings: handler order, audience policy, capability contract, cross-namespace reads; attach installs a descriptor from `n+1`; ambiguity is an explicit refusal | Tests activation boundaries, stale binding and composition without a general package system (design §3) | Package discovery, a general resolver, or presentation |
+| Experiment manifest | One file per model under `spike/manifests/`, content id cited by every run and report (§4.7) | One source for specification, generator and report | Anything derived from the candidate implementation |
 | Durable journal | SQLite through `node:sqlite`, one file per context, an exclusive lock per journal, the sole authoritative store; one transaction per append writes the entry, the head, the retry record, any invitation consumption, and an **outbox row** for the pending publication | The ordering note §3 wants one durable transaction, a conditional append and a resumable publication; SQLite gives all three with no external service (goal 4) | Survival of host or disk loss; only survival of process crash and restart on the same disk |
 | Publication recovery | On restart the writer replays every outbox row not marked delivered; delivery is idempotent by header hash; a delivered row is marked in its own transaction after the subscriber acknowledges | Ordering §3 step 7: a crash before notification resumes the saved publication and creates no second order | Exactly-once delivery to subscribers; duplicates are possible and harmless |
 | Durability promise | An acknowledged append survives process crash and restart on the same disk, under `PRAGMA synchronous=FULL` | Stated so the crash schedule tests exactly this (ordering §9) | Anything a mirror or replica would add |
@@ -79,10 +126,12 @@ serialization; `sha256(x)` is `sha256:<hex>` over `bytes(x)`.
 | Position 0 | `genesis` is the genesis identity, `prev` is `sha256:` followed by 64 zeros, `commitment` is the genesis identity |
 | Predecessor | `prev` at position `n` is the header hash at `n-1` |
 
-V1 and O1 commit fixed vectors: for each object above, a positive vector
-with the exact bytes and hash, and negative vectors for a tampered body, a
+O1 commits fixed vectors: for each object above, a positive vector with
+the exact bytes and hash, and negative vectors for a tampered body, a
 signature over the wrong bytes, a wrong `prev`, a wrong `commitment`, and a
-sequencer signature by a key the profile does not name.
+sequencer signature by a key the profile does not name. The visibility
+harness consumes verified entries and does not implement this encoding;
+O1 replays the visibility traces through it.
 
 ## 3. Components of the visibility harness
 
@@ -115,7 +164,7 @@ here.
 
 | Model | Promises | Privacy budget (maximum readers) |
 |---|---|---|
-| Sale | At most one accepted offer. An accept is effective only for an existing, open, unwithdrawn, unreplaced stub, by a holder of `sale.accept_offer`. Every offerer's view shows the decision. The winner and the seller see the accepted amount. | Amount and counter of an offer: its author and the seller. Inspection request: requester, seller, inspector. Participation and offer stubs: members at the time. |
+| Sale | At most one accepted offer. An accept is effective only for an existing, open, unwithdrawn, unreplaced stub, by a holder of `sale.accept_offer`. Every offerer's view shows the decision. The winner and the seller see the accepted amount. | Amount and counter of an offer: its author and the seller. Inspection request: requester, seller, inspector. Participation: all present and future participants (spine). Offer stubs: members when recorded, subject to the declared disclosure policy. |
 | Booking | No two effective occupancies overlap on one room. Whether a slot is occupied is visible to all members. An occupancy expires when the clock passes its end. | Purpose and the booker's identity: the booker and the admin. Occupancy facts carry no booker. |
 | Club | An application is accepted when a quorum of the committee has voted and a majority of votes cast are yes; §4.2 fixes the numbers. Standing is set by the treasurer and visible to members; a member not in good standing cannot vote. A newly added committee member can vote only on applications disclosed to them. | Application contents: the applicant and the committee. The reason for a standing decision: the member concerned and the committee. Votes and outcomes: members. |
 
@@ -132,9 +181,12 @@ facts. This is the sale's pattern with the seller in the admin's place.
 - `booking.occupancy` (members): `{booking_id, room, start, end}` by a
   holder of `booking.publish`. Effective on public state alone: no
   overlap with an effective, unexpired, uncancelled occupancy on that
-  room, and the actor holds `booking.publish`. Whether a request exists is
-  not a precondition; the admin's client is responsible for publishing only
-  for real requests, and the checker compares public state only.
+  room, no effective occupancy already carries this `booking_id`, and the
+  actor holds `booking.publish`. A later publication of the same id is
+  ineffective with `duplicate_id`; updating a booking is free then
+  publish, never replace. Whether a request exists is not a precondition;
+  the admin's client is responsible for publishing only for real requests,
+  and the checker compares public state only.
 - `booking.cancel_request` (booker, admin): `{booking_id}` by the booker.
 - `booking.free` (members): `{booking_id}` by a holder of
   `booking.publish`. Effective if the occupancy exists and is not already
@@ -144,10 +196,19 @@ facts. This is the sale's pattern with the seller in the admin's place.
   is still an occupancy for that viewer. Linkage is the content id.
 - Expiry: a `dap.observe{time}` by the clock actor makes every occupancy
   whose `end` has passed expired; expired occupancies do not occupy.
+- Domain: one room; time is integer ticks from the clock actor.
+  Multi-room routing is out of scope and the report says so.
 - Predeclared cases: two requests for the same slot, the admin publishes
   one occupancy, the other request stays pending; the admin frees exactly
-  one of two occupancies on the same room; a booker who is not the admin
-  cannot publish.
+  one of two occupancies; a second publication with the same id is
+  ineffective; a booker who is not the admin cannot publish.
+- Predeclared cross-view case, from checker's review `05048fbb`: a
+  members-only occupancy exists before J joins; an overlapping occupancy
+  is published after; the full fold rejects the second, and J holds only
+  the first's header. Freeing the earlier occupancy has the same missing
+  input. The candidate must supply public history or explicit evidence
+  without exposing the booker; whether the predeclared schema already
+  does so is recorded, and any repair after the baseline counts.
 
 ### 4.2 Club policy
 
@@ -170,9 +231,22 @@ facts. This is the sale's pattern with the seller in the admin's place.
   is ineffective; a committee member added after the application can vote
   only after `dap.disclose` of the application to them, and their vote
   before that disclosure is ineffective with `unknown_application`.
+- Domain: one application type, a three-member committee, one quorum
+  rule, good or lapsed standing. Other club policies are out of scope and
+  the report says so.
 - Constraint inventory for the budget: quorum (admit reads votes) and
   standing (vote reads standing). These are the two constraints §4.3
   budgets.
+- Predeclared cross-view cases, from checker's review `05048fbb`: an
+  ordinary member must judge a committee member's vote as effective after
+  a private disclosure of the application and as `unknown_application`
+  before it, from `{application_id, vote}` alone; and `club.admit` must
+  grant the applicant's Member role while an ordinary member cannot read
+  the private application that names the applicant. The candidate must
+  make the evidence visible without exposing application contents, or
+  restructure; the outcome for an ordinary member is compared like any
+  other, and neither the privacy limit nor an observable outcome is
+  dropped to make the comparison pass.
 
 ### 4.3 Counting convention
 
@@ -182,8 +256,13 @@ facts. This is the sale's pattern with the seller in the admin's place.
 - A **fix** is one semantic change after the baseline to a model's
   audience rule, kind set, dependency declaration or fold rule, whoever
   found the need for it: the checker, the invariant tests, the author, or
-  the reviewer. Each fix is its own commit naming the failure it corrects
-  and who found it.
+  the reviewer.
+- The **repair ledger** (`spike/manifests/<model>.ledger.md`) records
+  every fix with its discovery source, the counterexample or failure, the
+  constraint affected and the before and after diff. One immutable
+  snapshot commit is made per checker run; several fixes may share a
+  snapshot. One commit per fix is allowed and makes bisection easier, but
+  the ledger, not the commit count, is the measurement.
 - An **added kind** is a fix that introduces a kind; it counts as one fix
   and one added kind.
 - The **constraint inventory**: Sale has one cross-partition constraint
@@ -196,8 +275,11 @@ facts. This is the sale's pattern with the seller in the admin's place.
 
 ### 4.4 Corpus bounds
 
-At most 6 participants, at most 60 positions, at least 200 seeds per model.
-The seed list is committed. Every failing series is shrunk and committed.
+At most 6 participants, at most 60 positions, at least 200 seeds for
+Sale, Booking and Club. Discussion is the worked example and runs a fixed
+set of deterministic checks: normal replay, pause and resume, a planted
+fault, shrinking. The seed list is in each manifest. Every failing series
+is shrunk and committed.
 
 ### 4.5 Agent-authoring protocol for goal 2
 
@@ -220,24 +302,48 @@ fixed before the ordering spike starts. This is the fixture O4 executes.
 | S, the sale | The guitar sale of the trace; Alice is Seller | `R_sell` (accept one offer), owner Alice; after position 17, `R_fulfil` (declare the sale complete), owner Alice |
 | I, inspection (spawned from S) | Mandate: inspect offer o2; Ivan is Inspector | none; returns a signed result |
 | D, delivery | Kim, a courier, arranges delivery of the guitar; Alice and Bob are participants | `R_deliver` (confirm delivery), owner Kim |
-| F, fulfilment (destination of the join) | Orders the future of completing the sale; Alice, Bob and Kim are participants | receives `R_fulfil` from S and `R_deliver` from D |
+| F, fulfilment (destination of the join) | Orders the future of completing the sale; Alice, Bob and Kim are participants | receives `R_fulfil` from S and `R_deliver` from D in one joint transition |
+
+The join is one transition with one destination commitment: F's genesis is
+written first (ordering §7, Describe); S releases `R_fulfil` and D
+releases `R_deliver` to that commitment; F activates once, after
+verifying both proofs. A missing source release leaves the activate
+ineffective and every transferred right dormant; a repeat activate has no
+further effect.
 
 | Boundary | Expected active owner |
 |---|---|
-| Before S releases `R_fulfil` | S, Alice |
-| After the release, before F activates | dormant everywhere; any use in S or F is ineffective |
+| Before S releases `R_fulfil` | S, Alice; `R_deliver` in D, Kim |
+| After S's release, before D's | `R_fulfil` dormant everywhere; `R_deliver` still D, Kim; F's activate is ineffective |
+| After both releases, before F activates | both dormant everywhere; any use in S, D or F is ineffective |
 | After F's activate is effective | F, Alice for `R_fulfil`; F, Kim for `R_deliver` |
 | D attempts to release `R_fulfil` | ineffective in D: D never owned it |
 | A second release of `R_fulfil` from S | ineffective in S: already released |
 
-Export transformation and reconciliation: S exports `{winner, amount}` from
-its public decision at 17; D exports `{buyer, delivery_slot}`; F's genesis
-pins the transformation that seats both and the rule that if D's buyer is
-not S's winner, activation is ineffective with `mismatch`. Duplicate
-imports of the same export are ineffective after the first. Stale source
-proposals (an offer signed against S before the release) stay bound to S.
-The move of S's writer from W0 to W1 happens before the release, and the
-retry results of S survive it.
+Exported state is an explicit set of rights and the public facts below,
+with copy, union and duplicate rejection as the only operations; no
+general reconciliation or migration engine. S exports
+`{accepted_offer, winner}` from the public stub at 15 and the public
+decision at 17, the winner being the stub's author; it exports no amount,
+which is private to Alice and Bob. D exports `{buyer, delivery_slot}`.
+F's genesis pins the transformation that seats both and the rule that if
+D's buyer is not S's winner, activation is ineffective with `mismatch`.
+Duplicate imports of the same export are ineffective after the first.
+Stale source proposals (an offer signed against S before the release)
+stay bound to S. The move of S's writer from W0 to W1 happens before the
+release, and the retry results of S survive it. Arbitrary business
+mergers are out of scope and the report says so.
+
+### 4.7 Experiment manifest
+
+One file per model, `spike/manifests/<model>.md`, reviewed and frozen
+before the baseline: the promises and privacy budget of §4; the schema
+(§4.1 or §4.2); the constraint inventory and budgets of §4.3; the corpus
+bounds and seed list of §4.4; the expected outcomes and predeclared cases,
+written independently of the candidate fold; the domain limits. The
+generator reads its seeds and bounds from it; the checker reads the
+expected outcomes; every run and the final report cite its content id. A
+manifest changed after the baseline is a new experiment.
 
 ## 5. Work breakdown
 
@@ -252,9 +358,9 @@ passed.
 
 | Task | Entry | Exit | Review gate |
 |---|---|---|---|
-| V1 Foundation fixture and kernel | This plan approved | `F0` folds the system kinds with `spine` and `members`; bootstrap entitlement, invitation authority per §2, origin contract and namespace check implemented; the signed-object vectors of §2.1 committed and passing; invitation cases: authorized issue then issuer revoked then redeemed (effective), unissued token (refused), unauthorized issuer (refused), exact retry of a committed acceptance after consumption (receipt returned); the in-memory sequencer appends with retry recovery before admission; the sale trace positions 0 to 5 replay from the narrative with the audiences the views note gives | Checker verifies against design §2, ordering §3 and §2.1 |
-| V2 Interpreter, oracle, checker, Discussion | V1 | Interpreter with `Paused{at, reason, last}`; oracle under basis `n`; checker passes on Discussion for 200 seeds; the pause rule tested with an unavailable package; a planted audience bug is found by the mutation runner; shrinking yields a minimal trace | Checker verifies the comparison rule against views note *The property* |
-| V3 Sale by agent | V2 | Sale authored under the protocol of §4; property holds for 200 seeds; the views note trace 0 to 19 reproduces the table; the replacement-stub case and the late-joiner cases pass; fix count within budget or the overrun reported | Checker verifies the trace and the recorded fixes |
+| V1 Foundation fixture and append operation | This plan approved | `F0` folds the system kinds with `spine` and `members`; bootstrap entitlement, invitation authority per §2, origin contract, namespace check and flat package descriptors implemented; the shared append operation over the in-memory backend, taking verified entries (§1, staged checker); invitation cases: authorized issue then issuer revoked then redeemed (effective), unissued token (refused), unauthorized issuer (refused), exact retry of a committed acceptance after consumption (receipt returned); the sale trace positions 0 to 5 replay from the narrative with the audiences the views note gives | Checker verifies against design §2, ordering §3 and the descriptor rule |
+| V2 Interpreter, oracle, checker, Discussion | V1 | Interpreter with `Paused{at, reason, last}` by cold replay; oracle under basis `n`; the Discussion manifest and its deterministic checks pass: normal replay, pause and resume with an unavailable package, a planted audience bug found by the mutation runner, shrinking to a minimal trace, invalid-cache discard and rebuild | Checker verifies the comparison rule against views note *The property* and the manifest |
+| V3 Sale by agent | V2 | Sale manifest frozen; Sale authored under §4.5; property holds for 200 seeds; the views note trace 0 to 19 reproduces the table; the replacement-stub case and the late-joiner cases pass; the ledger's fix count within budget or the overrun reported | Checker verifies the trace, the manifest id and the ledger |
 | V4 Booking by agent | V2 (parallel with V3) | Booking with the §4.1 schema; clock actor; overlap and expiry promises hold; the predeclared cases pass; no public event carries the booker; fix count recorded | Checker verifies the §4.1 cases and the booker budget |
 | V5 Club by agent | V2 (parallel with V3) | Club with the §4.2 policy; the expected traces pass; disclosure before and after activation; dependency-incomplete disclosure pauses; a new committee member's backlog by disclosure; fix count recorded | Checker verifies the §4.2 traces independently of the candidate fold |
 | V6 Mutations and report | V3, V4, V5 | One audience rule broken per model and found; the unrelated private attach does not stale and the relevant binding change does; report against budgets and goals 1 and 2; falsification verdict stated | Checker verifies the report's claims against the committed runs |
@@ -263,10 +369,10 @@ passed.
 
 | Task | Entry | Exit | Review gate |
 |---|---|---|---|
-| O1 Profile and journal | V1; may overlap V2 and V3 | Sequencing profile document for the fixture; SQLite journal with exclusive lock and outbox; the §2.1 vectors passing against the journal; the durability promise; the §4.6 lifecycle fixture written as expected traces; a crash harness that kills the process at named points | Checker verifies against ordering §1, §3 and §5 and approves the §4.6 traces |
+| O1 Profile, codec and journal | V1; may overlap V2 and V3 | Sequencing profile document for the fixture; the §2.1 codec with its vectors; SQLite backend under the shared append operation, with exclusive lock and outbox; the visibility traces of V1 replayed through the real codec and journal; the durability promise; the §4.6 lifecycle fixture written as expected traces; a crash harness that kills the process at named points | Checker verifies against ordering §1, §3 and §5, the vectors, and approves the §4.6 traces |
 | O2 Single writer, retry, admission | O1 and V3 | Concurrent appends; exact retries after lost replies, including a consumed invitation and a removed member; changed content refused; crash before append, after append before reply, before notification with the outbox replaying the saved entry and no new action; restart without rollback | Checker verifies the crash schedule against ordering §3 and §9 |
 | O3 Handover | O2 | Seal, assign, successor per ordering §6; interrupted between seal and assign; two nominations from one head; reconnected former writer refused | Checker verifies predecessor bindings |
-| O4 Transfer lifecycle | O3 | The §4.6 fixture end to end: start the sale, attach Inspection mid-stream, spawn I, admit its result, move S's writer, release `R_fulfil` with a destination commitment, activate F idempotently, join D; every negative case of ordering §9 and every boundary of §4.6 has the expected owner; pre-attach outcomes equal before and after replay | Checker verifies the destination commitment, the owners at each boundary and the negative cases |
+| O4 Transfer lifecycle | O3 | The §4.6 fixture end to end: start the sale, attach Inspection mid-stream, spawn I, admit its result, move S's writer, write F's genesis, release `R_fulfil` from S and `R_deliver` from D to its commitment, activate F once after both proofs, then repeat the activate; every negative case of ordering §9 and every boundary of §4.6 has the expected owner, including activation attempted with one release missing; pre-attach outcomes equal before and after replay | Checker verifies the destination commitment, the owners at each boundary and the negative cases |
 | O5 Isolated control verifier | O3 | A verifier given only genesis, `dap.seq.*` entries and headers accepts a valid handover and rejects forged, skipped, wrong-head and wrongly authorized transitions and a bare request | Checker verifies invariant 19 |
 | O6 Report | O4, O5 | One process, one host, no external services, context created and joined through the envelope and route; goal 4 and goal 1 criteria; what the spike does and does not establish | Checker verifies the claims |
 
@@ -286,3 +392,10 @@ passed.
 - **Replication, anonymous pools, automatic failover.** The ordering spike
   is one trusted writer (ordering §2, §6).
 - **A user test of goal 3.** The narrative is the check for now (design §0).
+- **Incremental projection and its performance.** Cold replay is enough
+  for the corpus; measure before optimizing.
+- **A general package system, discovery or presentation.** Flat
+  descriptors test the same boundaries.
+- **Multi-room booking, other club policies, arbitrary business
+  mergers.** The fixtures are the smallest that exercise each property,
+  and each report names its domain.

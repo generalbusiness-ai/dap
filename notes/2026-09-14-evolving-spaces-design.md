@@ -509,6 +509,12 @@ Presentation is a separate **presentation environment**: packages publish
 default bindings; clients may replace non-semantic presentation. A renderer
 binds only to a model's `observe` projection.
 
+The spikes realize a package as a **flat descriptor**: a pinned table of
+functions with explicit per-kind bindings, installed by `dap.attach` at a
+recorded boundary, with ambiguity an explicit refusal. That is enough to
+test activation boundaries, stale bindings and composition; discovery, a
+general resolver and presentation are later steps, not removed concepts.
+
 ---
 
 ## 4. No separate API
@@ -807,41 +813,18 @@ choice of Git, atproto, Nostr, MLS, SQL, JSONata or a renderer.
 
 ---
 
-## 12. Review findings and where they landed
+## 12. Review history
 
-Checker's review of 9a0d7eb (workroom report `564bf07f`) made thirteen
-findings. Each is resolved in the owning note or deferred with the fixture
-that pins it.
+The concrete corrections from review live in their owning sections; this
+section only points at the archived reports in the gitseq workroom.
 
-| Finding | Resolution |
-|---|---|
-| H1 genesis and invitation circular | §2 Crystallization: envelope `{L, G, route}`; invitations issued through the join path, never carried by the origin |
-| H2 late joiners lack public history | §1 and §2: `spine` audience, bootstrap entitlement, grant evidence embedded in `accept_invite` |
-| H3 release not bound to one genesis | §9 and ordering note §7: the commitment is the destination genesis's content id; proofs live in the activate event, so identity is unique by construction. A first draft stripped receipt slots from a template, which checker's second review (R1) showed is many-to-one |
-| H4 retry checked after credential | §2 Transport admission and ordering note §3: retry recovery precedes admission |
-| M1 view equation lacks principal | §1 Audience and view: interpreter `I(p, V, n)` with visibility basis and processing frontier kept apart; a pause carries `last` and is compared under the same basis (second review, R2); invariant 19 qualified |
-| M2 buyer identity vs public roster | §2, §8 and views note trace: privacy promise stated |
-| M3 one invitation, three responders | §2 Crystallization: one invitation per responder |
-| M4 namespace owner vs upgrades | §2: foundation lineage and `dap.foundation`; upgrades deferred, spikes fix one foundation |
-| M5 no cost threshold | views note, What the spike tests: predeclared budgets |
-| M6 Atseq does not prove locality | §3 and §11: expected binding identity; locality is a dap obligation with two tests |
-| J1 origin contract | §2 Crystallization: origin contract; general origin language deferred |
-| L1 activate position | §2 table and §9: first entry after genesis and origins |
-| L2 invariant 10 vs transfer bootstrap | §10 invariant 10 amended |
-
-Also decided: the sale's eligibility semantics (views note, split offer) and
-the classification of hidden revocations (views note, What the spike tests).
-
-Checker's second review of the revision (workroom report `e7ea1e91`) made
-seven further findings, R1 to R7: the destination commitment (above), the
-pause comparison (above), three narrative corrections (unsupported labels on
-hidden positions, the timing of the mistaken accept, late-joiner wording),
-the handover's predecessor bindings (ordering note §6) and the missing
-attach in the ordering lifecycle (ordering note §9). A third review
-(report `5a412b87`) found the §5 lifecycle diagram still teaching the old
-invitation-in-listing flow and three overstated narrative summaries, and
-gave a writing review. All are applied in this revision, including the
-introduction, the six first-use definitions and the reading path above.
+| Report | Head reviewed | Outcome |
+|---|---|---|
+| `564bf07f` | `9a0d7eb` | thirteen findings on the first outline; the bootstrap, audiences, interpreter, split offer, append order, destination commitment, foundation lineage and binding identity in this revision answer them |
+| `e7ea1e91` | `2d98cb05` | seven findings: the destination genesis is its own commitment and proofs move to activate; the interpreter keeps visibility basis and processing frontier apart; narrative corrections |
+| `5a412b87` | `c502e41b` | two documentation corrections and the writing review that gave this note its introduction, definitions and reading path |
+| `2dec44aa` | `62943df5` | approved; landed as `0fb712b` |
+| `a81abca9` | `0fb712b` and the spike plan | advisory simplification review; adopted in the spike plan |
 
 ---
 
