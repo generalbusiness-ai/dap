@@ -131,9 +131,10 @@ retain actual states, receipts, signed genesis variants and proof bytes.
 
 The development evidence also preserves five real proof failures: extra
 private fields and omitted attach, grant, revoke or withdrawal openings.
-Withdrawing o3 or revoking release authority could be hidden while leaving
-headers intact, making replay invent an effective release. The adopted
-completeness certificate closes that gap only under the trust stated below.
+An omitted revocation restored close capability in replay; an omitted
+withdrawal made a refused public-offer acceptance appear effective. These
+failures showed why release replay needs complete authority openings. The
+adopted completeness certificate closes that gap only under the trust stated below.
 Another development defect let Scope spend a right despite an attached
 handler's refusal; Scope now honors other handlers before replacing its own
 legacy placeholder. [Development failures and repairs][o4-development]
