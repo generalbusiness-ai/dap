@@ -1,14 +1,12 @@
 # Visibility spike report
 
-**Draft: source experiments assessed below; V6 integration validation, mutation and
-binding results are pending.** This report does not approve the V4 candidate
-or claim that the combined V6 tree has passed. It preserves the reviewed
-V3 result and the negative V5 result; later validation must name its exact
-input commit.
+**V6 validation is recorded below; independent review of this report and
+the integrated candidate is pending.** Sale and Booking have independent
+approvals. Club's original admission policy remains a negative result.
 
 The small-repair claim did not hold: **Sale required six semantic repairs
 against a budget of two. Club does not meet the original admission policy.**
-The repaired Sale and Booking candidates show useful agreement across
+The repaired Sale and Booking implementations show useful agreement across
 partial views within their revised, bounded experiments. Agreement alone
 did not establish the business promises or privacy budgets.
 
@@ -16,13 +14,14 @@ Hugh chose to retain Club's negative result for V6, without commissioning
 a revised Club experiment or changing its privacy promise. That instruction
 is recorded in workroom assert
 `git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:bdcfbdc00e9861fb9f8e9b3d21f3104796d8be93`.
-The earlier decision draft is not an adopted protocol.
+The [decision record][club-decision] preserves that choice and the
+uncommissioned alternatives.
 
 ## Findings against the goals
 
 | Criterion | Finding |
 |---|---|
-| Goal 1: attach a package mid-stream and preserve prior outcomes | Existing deterministic tests support bounded activation, replay, dependency pause/resume and binding locality. V6's combined-tree verification remains pending below. This does not establish state migration or arbitrary model composition. |
+| Goal 1: attach a package mid-stream and preserve prior outcomes | Integrated deterministic tests support bounded activation, replay, dependency pause/resume and binding locality. All three V6 binding cases pass. This does not establish state migration or arbitrary model composition. |
 | Goal 2: an agent reaches consistency within the declared repair budget | **Not met.** Sale exceeds its budget; Club's smaller count applies to an incomplete policy. Booking's candidate is within its model budget but includes revised guards and a separate foundation repair. |
 | Predeclared falsification condition | The repair-budget branch is **falsified by Sale**. The evidence does not prove that every model must reveal every private event, nor that every privacy-preserving Club protocol is impossible. |
 
@@ -39,7 +38,7 @@ contain a privacy violation; it establishes detection, not safe delivery.
 | Model and source | Review/validation status | Model repair budget |
 |---|---|---|
 | [Sale at `009b5226`][sale] | Approved in workroom review #520; 88 tests pass, including 200/200 seeds under the corrected guard. Landed as main `7bd311f221c62615c55b659f0a693e42db887fba`, with the same tree. | **7 recorded fixes, 6 semantic; 0 added kinds. Over budget: 2 fixes, 1 kind.** Fix 6 is recorded robustness work, not a semantic fix. |
-| [Booking candidate `127af627`][booking] | Awaiting exact-head review at this report's draft boundary. Builder records 110 tests passing, including Booking and Sale campaigns, each 200/200. Typecheck and diff check pass. | **2 model fixes, 0 added kinds; within the 2-fix, 1-kind budget.** Foundation authorization/audience repair is separate. |
+| [Booking at `127af627`][booking] | Approved in workroom review #1017; checker reproduced 110 passing tests, including Booking and Sale campaigns, each 200/200, and typecheck. Main merge `5eff67d81fbbb025f91951571a9f029c0481812a` has the same tree. A historical corpus file retains an EOF blank line. | **2 model fixes, 0 added kinds; within the 2-fix, 1-kind budget.** Foundation authorization/audience repair is separate. |
 | [Club evidence `772a514`][club] | Original acceptance fails. Latest non-campaign validation: 96 pass and 1 failing TODO among 97 tests. The prior validation-run-3 campaign passed 200/200 under the unchanged, narrower manifest. | **1 fix, 0 added kinds.** One standing/vote-related fix, zero quorum fixes; below the per-constraint limit but not a successful implementation of the required policy. |
 
 V3 approval is exact event
@@ -48,6 +47,11 @@ It approves the reported overrun and disclosed trace reproduction; it does
 not change the authoring budget. The [counting convention][counting]
 counts semantic repairs regardless of which agent found or implemented them.
 Sale's and Booking's original split kinds were predeclared, not added kinds.
+
+V4 approval is exact event
+`git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:1def477d5a5f2df385b71c0c94ce0e0532f9c8fb`.
+It accepts the corrected experiment with the stated limits, including the
+key-based payload guard and client disclosure policy.
 
 ## What changed during measurement
 
@@ -152,14 +156,19 @@ generated results still have important limits:
 
 - Booking's authorized admin or clock can publish extra private fields.
   The nine hostile-field tests detect those violations; no schema or
-  admission rule prevents them. Different admins on request and cancel
-  remain outside the generated domain. [Booking limits][booking]
+  admission rule prevents them. The guard recognizes exact `booker` and
+  `purpose` keys; renamed keys, case variations and string encodings fall
+  outside it. Revoked Bookers are absent from its later actor guard.
+  Different admins on request and cancel remain outside the generated
+  domain. [Booking limits][booking]
 - Club accepts extra private fields in public application kinds without
   the current budget flagging them. Revocation is not generated, and its
   current-holder budget can falsely treat a former committee member's
   previously read application as a new leak. [Club scope][club-scope]
 - Client disclosure policies constrain the exercised clients. A literal
   hostile disclosure can still violate privacy under a repaired model.
+  The foundation lets a `dap.disclose` holder disclose a position they
+  cannot themselves read; the fixture's disclosure policy is essential.
   Missing model-level history can produce a reported mismatch instead of
   a pause; dependency pauses cover activation and attach evidence, not
   every business precondition.
@@ -192,24 +201,76 @@ Booking received the Sale example/ledger, and Club received both Sale and
 Booking. Post-baseline corrections and learned examples must remain part
 of the authoring evidence.
 
-## V6 integration gate — pending
+## V6 integration results
 
-Formal V6 results require the exact validation snapshot and its output.
-The integration state is recorded separately; source results above are
-not substitutes for the combined run.
+The [V6 ledger][v6-ledger] separates the input snapshots from their measured
+results. The integration preserves the three model and manifest identities
+listed above, combines V3's audience-state contract, V4's authorization
+clamp and client disclosure filter, and V5's role audiences, public
+disclosure records and grant-effect hooks. V6 adds no model fixes or kinds.
+V4's unauthorized-attempt clamp also changes Club's readable event sets;
+unchanged model bytes do not make the old V5 run a measurement of V6.
 
-| Required check | Result at draft boundary |
+| Validation boundary | Measured result |
 |---|---|
-| Combined input head; package and manifest identities | Sources integrated at [`7d965265b0d3f22dba1142045784ac5f9a040461`](https://github.com/generalbusiness-ai/dap/tree/7d965265b0d3f22dba1142045784ac5f9a040461); integration agent reports unchanged model/manifest inputs and a clean typecheck. Formal validation snapshot pending. |
-| One deliberately broken audience per measured model; checker detects each | Pending; record mutation, affected reader/frontier, violation type and retained evidence |
-| Unrelated private attach leaves saved binding valid; relevant change stales it | Pending combined-tree run |
-| Prior outcomes replay unchanged; cache/disclosure/dependency boundaries | Pending combined-tree run |
-| Integrated regressions/campaigns and typecheck | Pending; report the Club failing TODO separately from pass counts |
-| Independent V4 review and V6 exact-head review | Pending; replace neither with builder validation |
+| Full run 1, `1db4d6fca0b40fd910cb00ce86060bc00ddce15d` | 130 tests: 128 pass, one ordinary failure, one executing/failing Club TODO. All three 200-seed campaigns pass. [Output][v6-run1-log], [results][v6-run1] |
+| Historical Club corpus, exact V5 `772a514` | All three literal descriptions reproduce; all three seven-step traces are deletion-minimal and repaired controls are clean. [Output][v6-club-log] |
+| Run 2, `742e64a06d06226b456f489eb53deacc1bc9f5db` | 127 selected tests: 126 pass, zero ordinary failures, one executing/failing Club TODO. The three campaign tests were excluded by name. Typecheck passes. [Output][v6-run2-log], [results][v6-run2] |
+
+Run 1's ordinary failure was a historical Club corpus assertion: V3's
+audience-read contract changes the linked application's event hash, while
+the original `unknown_application` mismatch still reproduces. Run 2 remaps
+only that hash preview in the expected description and separately checks
+the full linked id in the vote and projection. It preserves the corpus
+bytes, deletion checks and repaired controls. No production, model or
+manifest code changed between the two runs, so run 1 remains the full
+600-seed measurement. The two runs are not a single all-passing suite.
+The Club TODO still fails because admission 18 is effective after Dana's
+Member grant at 15.
+
+The deliberately broken audiences each change one kind's audience only.
+Their original packages pass the same traces. The revocation mutation
+changes serving alone while preserving recorded events and headers; it
+deliberately violates F0's public-spine contract.
+
+| V6 case | Reader and frontier | Measured finding |
+|---|---|---|
+| Sale: actor-only `offer` | Alice, 5 | One mismatch: oracle accepts, view rejects with `no_such_offer`. |
+| Booking: actor-only `occupancy` | Bob, 4 | One mismatch: oracle accepts, view rejects with `no_such_occupancy`. |
+| Club: actor-only `standing` | Bob, 7 | Two mismatches: view accepts a vote the oracle rejects as `lapsed`. |
+| Sale binding locality | Alice and Bob | Unrelated private attach 4 leaves saved intent 5 effective; relevant attach 6 makes saved intent 7 `stale_binding`; fresh intent 8 succeeds. |
+| Booking binding locality | Alice and Bob | Corresponding positions 3, 4, 5, 6, 7; the same outcomes. |
+| Club binding locality | Alice and Bob | Corresponding positions 3, 4, 5, 6, 7; the same outcomes. |
+| Hidden spine revocation | Bob, 4 and 5 | Two mismatches: obsolete affordances at 4, then an unauthorized offer judged effective at 5. Restoring compliant serving is clean. |
+
+Both readers interpret the obsolete binding rather than pause. Each
+binding case has zero all-frontier consistency, invariant or privacy
+violations. Both runs reproduce these seven findings.
+
+Four [planted-fault traces][v6-corpus] are retained: Sale has four steps,
+Booking four, Club seven, and hidden revocation three after shrinking from
+four. Every single-step deletion removes the mismatch and each unmutated
+control is clean. The revocation minimum retains the affordance mismatch;
+the original test separately proves the next unauthorized offer outcome.
+The committed corpus records match run 2's emitted diagnostics, with the
+run's input snapshot added as provenance.
 
 The integrated generator retains V5's position-before-recipient draw order.
-Fresh Sale and Booking counts therefore remain pending; the V4 candidate's
-counts above must not be copied into the combined result.
+These are fresh run-1 measurements, each with 200 seeds and zero violations
+of its frozen checks:
+
+| Model | Entries | Selected coverage |
+|---|---:|---|
+| Sale | 11,047 | 195 offers, 20 effective accepts, 118 unbound Inspection requests. |
+| Booking | 12,000 | 2,553 requests; 652 effective occupancies, 471 linked; 324 effective cancels; 1,630 ticks. |
+| Club | 11,939 | 629 applications; 1,575 votes, 1,001 effective; 343 admits, 126 effective; 514 standings; 246 generated grants. |
+
+Existing regressions exercise replay, disclosure, dependency and cache
+boundaries alongside the new cases. This supports the measured examples,
+not arbitrary histories. Raw test output is retained, including Node's
+whitespace-only diagnostic lines. The historical Booking budget file also
+retains its EOF blank line; a clean working diff is not a clean diff from
+the earlier main tree. Independent V6 review remains required before landing.
 
 The visibility harness uses authenticated entries as an assumption,
 ordinary TypeScript functions, cold replay and an in-memory sequencer.
@@ -235,3 +296,11 @@ of the [spike plan][plan].
 [club-scope]: https://github.com/generalbusiness-ai/dap/blob/772a514a08c2fac72fe534c8490c8d33a3e1c2d1/spike/manifests/club.ledger.md#L187-L220
 [club-recovery]: https://github.com/generalbusiness-ai/dap/blob/772a514a08c2fac72fe534c8490c8d33a3e1c2d1/spike/corpus/README.md#L24-L42
 [corpus]: https://github.com/generalbusiness-ai/dap/blob/127af627529362c66e4944ce0418913f1f31f3ed/spike/corpus/README.md
+[club-decision]: https://github.com/generalbusiness-ai/dap/blob/d14dc07104ece67aca9a895441c6a985cb2fa6ab/notes/2026-09-16-club-admission-decision.md
+[v6-ledger]: https://github.com/generalbusiness-ai/dap/blob/602f4584a77882b08fdadf9a3f211893895c14c8/spike/manifests/v6.ledger.md
+[v6-run1]: https://github.com/generalbusiness-ai/dap/blob/e0d83bf092f8b1d75036ebd5aab868aba69b0510/spike/evidence/v6/run1.json
+[v6-run1-log]: https://github.com/generalbusiness-ai/dap/blob/e0d83bf092f8b1d75036ebd5aab868aba69b0510/spike/evidence/v6/run1.log
+[v6-club-log]: https://github.com/generalbusiness-ai/dap/blob/e0d83bf092f8b1d75036ebd5aab868aba69b0510/spike/evidence/v6/historical-club-772a514.log
+[v6-run2]: https://github.com/generalbusiness-ai/dap/blob/e0d83bf092f8b1d75036ebd5aab868aba69b0510/spike/evidence/v6/run2.json
+[v6-run2-log]: https://github.com/generalbusiness-ai/dap/blob/e0d83bf092f8b1d75036ebd5aab868aba69b0510/spike/evidence/v6/run2.log
+[v6-corpus]: https://github.com/generalbusiness-ai/dap/tree/e0d83bf092f8b1d75036ebd5aab868aba69b0510/spike/corpus/v6/run2
