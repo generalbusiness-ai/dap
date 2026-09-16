@@ -62,3 +62,12 @@ through valid Inspection, Sale, writer handover, release, destination activation
 and both spends. It uses actual shifted release positions, reopens all four
 journals, and retries every old malformed request again after completion.
 The final source will be frozen before its measurements are recorded.
+
+## Result
+
+Run 1 preserves the first post-repair measurement and its invalid early-export
+assertion. Run 2 at `9250db72f6003aeb92a8481a09b6b248d09d03f0` passes both
+backend lifecycle tests and typecheck. The six unchanged genuine-fault checks
+passed at run 1. See each run directory for exact commands, output and signed
+observations. K1 changes only the Inspection audience callback and its dedicated
+regression/evidence; the separate K2 error-propagation repair is not included.
