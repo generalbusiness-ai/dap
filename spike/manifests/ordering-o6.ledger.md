@@ -466,3 +466,31 @@ the ordinary Sale bootstrap does not select the Scope or Inspection package.
 O4 owns the combined noncampaign validation and regenerated scope evidence;
 O6 does not repeat that suite or the 600-seed campaigns. Final O4/O6 independent
 acceptance remains pending.
+
+
+## K1–K4 run 5
+
+Frozen O6 source: `b6c7ab7a2f93d3c0393143bf19cbbbe4746dc21d`.
+Node `v26.8.2`, Darwin. Both bootstrap tests pass, with zero failures, skips
+or TODOs. Whole-tree typecheck and the actual SQLite CLI each exit 0; CLI
+stderr is empty. [run-5.json](ordering-o6-runs/run-5.json) records commands,
+exits, elapsed time and the combined scope identities. Raw outputs are
+[tests](ordering-o6-runs/run-5-tests.txt), [typecheck](ordering-o6-runs/typecheck-5.txt)
+and the [new CLI transcript](ordering-o6-runs/run-5-demo.json).
+
+The complete transcript equals run 4 except for process id and the new local
+database path. Its ordinary Sale-only genesis does not select the revised
+Inspection or Scope package. Fresh generation therefore retains G
+`sha256:080afaa386822dba15e5f694e16c554cf305ff06f031df9709b8a01935b1503c`,
+L `sha256:1a2a4d30944bc14b399a54f9c19419201730d6874aed4c4fcb5c697fccca1fd6`
+and the same immediate/reopened retry receipt
+`sha256:c6e06aeedc59bac6120eaba9d463ea2ffe3d3d76a520e08a15167a8c4daf91e6`.
+The view is verified again, with four entries and four pending publications
+after reopen. This is a new measured execution, not reused run-4 output.
+
+No implementation changed during or after this measurement. O4's combined
+run 8 is a separate source/invocation; its final record will be incorporated
+before the final report. No aggregate, O4 or campaign test was repeated here.
+The 22 early artifacts at old head `4be9b2c` remain historical and cannot be
+reused as this candidate's delivery. All old O6 and O4 records are retained;
+O4/O6 independent approval remains pending.
