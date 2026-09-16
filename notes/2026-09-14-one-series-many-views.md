@@ -335,19 +335,28 @@ visibility, and its authoring cost is small for the common shapes.**
 
 Three models with different shapes — **Sale** (partition + decision), **Room
 booking** (field split + time), **Club membership** (role-derived audience +
-retroactive disclosure) — as ordinary functions; declarative folds are a
-separately proven step. One fixed foundation, with the bootstrap of design
-note §2 (envelope, route, one invitation per responder) as the fixture's
-join path. An in-memory sequencer as a fixture (it establishes nothing about
-durable append or recovery; the ordering note's spike does that). An
-abstract authenticated-header fixture for hidden positions (it establishes
-no cryptographic hiding). A generator producing series from each
+retroactive disclosure) — as ordinary functions in the smallest domains that
+exercise each property, with a uniform **Discussion** model as the worked
+example checked deterministically rather than by a seed campaign;
+declarative folds are a separately proven step. One fixed foundation, with
+the bootstrap of design note §2 (envelope, route, one invitation per
+responder) as the fixture's join path, and packages as flat descriptors.
+An in-memory backend under the same append operation the ordering spike
+uses (it establishes nothing about durable append or recovery; the
+ordering note's spike does that). Verified entries as input, so the
+semantic result does not wait for the codec and is conditional on
+authentic input; the ordering spike replays the same traces through the
+real header format. Every frontier is rebuilt from genesis, for the view
+and for the oracle; there is no incremental projection to get wrong. A generator producing series from each
 participant's affordances, including `dap.attach` mid-stream and one with a
 narrow audience, plus signed ineffective attempts: stale or conflicting
 actions, unauthorized actors, nonexistent, withdrawn or replaced targets,
 late joiners missing earlier shared decisions, a late joiner who receives a
-replacement stub whose predecessor is hidden, one unrelated private attach
-that must not stale a shared act, and one relevant binding change that must.
+replacement stub whose predecessor is hidden, a late joiner who must judge a
+public event that depends on a members-only fact recorded before they
+joined, a public act whose precondition was disclosed privately, one
+unrelated private attach that must not stale a shared act, and one relevant
+binding change that must.
 
 A hidden revocation is not a compliant history: the foundation forbids
 private grant and revoke audiences. The generator produces it as a mutation
@@ -367,7 +376,9 @@ fact:
   at most 1 added kind per cross-partition constraint;
 - the corpus bounds: at most 6 participants, at most 60 positions, at least
   200 seeds per model;
-- the Booking split schema, its linkage and its partial-completion rule.
+- the Booking split schema, its linkage and its partial-completion rule;
+- all of the above frozen in one experiment manifest per model, cited by
+  content id in every run and in the report.
 
 For every series, participant and frontier, check
 `observe(p, I(p, V(p,n), n)) ≡ observe(p, fold(S[0..n]), n)` on interpreted
