@@ -1,15 +1,21 @@
-# Club admission: decision draft
+# Club admission: retain the negative result
 
-**Draft for Hugh. No policy adopted; no revised model authorized.**
+**Decision: retain the original privacy promise and report the failed
+admission acceptance in V6. No revised Club experiment is commissioned.**
+
+Hugh selected this outcome on 2026-09-16: “Keep the negative result and
+report it in V6.” Builder recorded the direct instruction at
+`git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:bdcfbdc00e9861fb9f8e9b3d21f3104796d8be93`.
+The alternative designs below explain the tradeoff; they are not adopted.
 
 Request: `git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:659bc09467d9f31adc5cc6afd797877a6082c79f`.
 Basis: checker report #512,
 `git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:636030cb538a2fd495a6abe9eed18c7e59f5306e`.
 
-## Recommended decision
+## Decision
 
 **Retain V5's negative result against the original acceptance condition
-and carry it into V6, unless Hugh wants another experiment.** The narrower
+and carry it into V6.** The narrower
 frozen manifest passed its campaign but omitted the applicant's existing
 Member status. A research spike need not add mechanisms to erase that
 negative result. Keep the current privacy promise and evidence; do not
@@ -141,8 +147,8 @@ completion is promised.
   Preserve the original runs. A3's passing-policy-failure test and A4's
   historical wording/provenance corrections remain separate work.
 
-Detailed machinery is deferred until a route is chosen. This draft makes
-no model change, revised manifest or new checker claim.
+The chosen outcome adds no protocol machinery. This decision makes no
+model change, revised manifest or new checker claim.
 
 ## Examined evidence
 
