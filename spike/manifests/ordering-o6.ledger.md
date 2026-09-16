@@ -87,3 +87,35 @@ The demonstration's stderr was empty and is retained separately.
 No implementation repair was needed after the first frozen source.
 These are two focused tests and a CLI execution, not a full-suite campaign.
 O4 results and integration remain pending.
+
+## Combined integration input
+
+O6 merges measured O4 candidate
+`7d9efba41747e3c3bbd19b32dc238f6b4444247b` and measured O2/O3/O5
+integration candidate `3dc6b0953f91661edcc059b56157d349ff31c5b1`.
+O4 contains the repaired O1 Context/Journal lease and approved V6 evidence
+follow-up `d95e097b1d38a5242754922fe4c8b977462f5555`, with all four
+executing Club negative TODOs. The original O6 bootstrap files are retained.
+
+The O4 merge is clean. The second merge conflicts only on two blank lines
+in `src/journal.ts`; the resolution retains the exact O4 file bytes. Journal,
+Context, ownership and foundation therefore remain byte-for-byte O4 inputs.
+O5 adds only its independent control verifier to the runtime source set.
+The scope implementation remains
+`sha256:96f811a0a50ec77a81f14768d01565ce3d38dd2ae1472c722c6ae96422bdae03`
+and the public opening rule remains
+`sha256:475b415bbf8b16ccdb1bea078174712c57f2b2955ece9338d762abd60228bad8`.
+No performance or application-policy source change is included.
+
+Report QA found a concrete coverage gap in O4's initial replay regression:
+it compares only Alice at frontier 10 across completion, while its original
+Sale 0–19 comparison stops at sale-closed. The O4 owner is adding the required
+reader/frontier follow-up before O6's final source freeze. The initial O4
+measurements remain intact and will not be described as that wider check.
+
+After integrating that measured follow-up, O6 will freeze and run the full
+noncampaign suite, typecheck and the standalone bootstrap CLI. The three
+200-seed campaign tests will be excluded by name because production sources
+are unchanged from the measured O4 input; all other current tests remain
+selected, including four executing/failing Club TODOs. Results will be
+recorded after the frozen input, without relabelling earlier campaigns.
