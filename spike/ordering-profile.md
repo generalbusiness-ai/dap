@@ -175,8 +175,9 @@ their own historical source and run boundaries.
 ## O3: planned handover profile
 
 `dap.fixture.single-writer/2` is a separate opt-in profile. Its signed genesis
-pins `sequencing: {profile, writer, control}`: the initial writer and one
-Ed25519 ordering-control key. That control key needs no application grant or
+pins exactly `sequencing: {profile, writer, control}`: the initial writer and one
+Ed25519 ordering-control key distinct from every assigned writer key. That
+control key needs no application grant or
 participant credential. The profile retains the v1 codec, retention promise,
 SQLite boundary and wire vectors. Existing v1 genesis bytes do not gain a
 handover rule. There is no automatic replacement, control-key rotation,

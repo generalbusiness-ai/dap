@@ -59,3 +59,64 @@ explanation. This is one compatibility wording repair and no protocol repair.
 Before the second run, the nomination test also checks a successor's open
 against the actual nominated context and its journal, rather than against an
 empty backend. Ordinary nominations still must not authorize it.
+
+## Run 2
+
+Source: `aae4051eae9b977d9b25f1a8d5e1966ddfe3bf23`. Commands: `npm test`,
+then `npm run typecheck`. Raw output:
+[run-2.txt](ordering-o3-runs/run-2.txt).
+
+The full integration run executed 200 tests: 199 passed, zero ordinary
+failures, and one executing/failing Club TODO retained from V5. All three
+200-seed campaigns passed: Sale, Booking and Club under their frozen
+manifests. This does not make the original Club admission policy pass.
+All 11 O3 tests passed; typecheck passed.
+
+After this run, O3 and O5 made the declared independent-key profile exact:
+reject identical genesis writer/control keys, assigning the control key as a
+writer, and extra v2 sequencing fields. Existing v1 metadata remains ignored
+for assignment as before. Tests now explicitly assert that the control key is
+not an application participant and holds no grants, while its valid controls
+succeed. A granted member and the retiring writer without the control key are
+refused. The nomination case checks the actual journal. These changes will
+receive a focused ordering regression run; the unchanged visibility campaigns
+will not be rerun solely for this schema validation tightening.
+
+## Run 3
+
+Source: `8756c233463e2fdf1428902e072e525aed3b6604`. The same five-file
+focused command as run 1 executed 71 tests: all passed, including 12 O3 tests.
+Typecheck failed in the newly added negative-genesis test: TypeScript inferred
+an optional `epoch: undefined` on a test-case union, incompatible with JSON.
+The preserved [run-3.txt](ordering-o3-runs/run-3.txt) contains the exact error.
+The repair gives that test-case array an explicit JSON-compatible dictionary
+type. It changes no runtime or test data. Total repairs so far: one error-text
+compatibility repair and one test type annotation, with no failed protocol
+case or model change.
+
+## Run 4 and candidate
+
+Source: `acfe25223fb83f5925db601181aaf970a5d8ed71`. The same focused
+command as runs 1 and 3 passed all 71 tests, including all 12 O3 tests and
+all six O3 SIGKILL cases. Typecheck passed. Raw output:
+[run-4.txt](ordering-o3-runs/run-4.txt).
+
+The final record commit changes only this ledger and run-4 output. Runtime and
+test files therefore remain exactly those of the measured source above. O1
+`c9fe7d5f6f5624dd6407d57ff213038c8e955e0c` and O2
+`b6d156163285c8eaab3d05766dd9b0de35fef79b` are integrated ancestors.
+
+The full 600-seed result belongs to run 2's source, before the documented v2
+schema tightening. The final focused checks cover that tightening and the
+test annotation repair. The Sale/Booking/Club fixture code, manifests, codec
+and v1 fixed vectors remain unchanged since run 2. There is no claim that a
+second full 201-test suite was run at the final source.
+
+`git diff --check` passed for the O3 source, tests, profile and ledger against
+O2. Raw Node logs retain their original bytes, including whitespace in printed
+assertion diagnostics. No historical evidence files were normalized.
+
+The current implementation reauthenticates the saved chain when deriving the
+ordering state and admitting new signed events. Its work grows with the
+retained prefix; no throughput or incremental-verification claim is made.
+Independent checker approval remains pending.
