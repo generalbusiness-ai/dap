@@ -135,3 +135,51 @@ This combined source freezes the inputs for O6 run 2 below. No runtime
 conflict or behavior change requires another 600-seed campaign; the complete
 noncampaign suite and actual CLI will validate integration of the measured
 components and the retained bootstrap.
+
+## Combined run 2 — before G1/G2 repairs
+
+Frozen source: `f9995e8761f23bbf0e71f004b29199c05ee35663`.
+Node `v26.8.2`, Darwin. From `spike/`:
+
+```sh
+node --test --test-skip-pattern='case [57], the campaign:' test/**/*.test.ts
+npm run typecheck
+node test/fixtures/o6-bootstrap.ts /absolute/path/to/new-journal.db
+```
+
+The selected suite exits 0: 371 tests, 367 pass, zero ordinary failures,
+four executing/failing Club TODOs, zero counted skips. The three campaign
+tests were excluded by name; Node does not include them in the skipped count.
+Typecheck exits 0. The standalone demonstration exits 0 in one process
+(PID 73291), with empty stderr and a new local SQLite file. Its output equals
+run 1 except for PID and database path: all signed bytes, receipts, views,
+participant state and pending publications are identical.
+
+Outputs: [run-2-tests.txt](ordering-o6-runs/run-2-tests.txt),
+[typecheck-2.txt](ordering-o6-runs/typecheck-2.txt),
+[run-2-demo.json](ordering-o6-runs/run-2-demo.json), and
+[run-2.json](ordering-o6-runs/run-2.json) with exact commands and exits.
+No runtime or test source changed after this freeze. No 600-seed campaign
+was repeated; the full campaign boundary remains O4 run 2 at
+`b35b267ea5392e5361905018ee350ec4df07aa55`.
+
+This result is not acceptance. O1's ratified second review,
+`git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:3d76d2b9d7f1fce8c577243ba330e15208b975c4`,
+requests G1 and G2 repairs. G1 exposes a stale raw Context that writes again
+after a Journal closes on memory, plus a raw Context that remains active
+after its own lost reply. Backend wrappers also bypass the object-keyed
+ownership guard; its precise trust boundary must be stated. G2 exposes an
+O4 `activation_order` rule that permanently blocks activation after an
+intervening non-activate entry, conflicting with the intended activation
+phase. The review also requires O4 to stop treating arbitrary thrown errors
+as successful recognized rejections.
+
+The explicit design decision
+`git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:c2982a6e6756f4fed08e5a82acc8b05a65127745`
+allows otherwise admissible intervening entries while transferred rights
+remain dormant, retains ordinary authorization/closed-context gates, and
+requires later activation to check genesis-pinned inputs independently of
+those entries. Exact retry of a failed attempt retains its failed receipt;
+a fresh complete attempt may first activate. This decision is not yet a
+measured repair in run 2. Final O6 integration and acceptance await the
+revised O1 and O4 inputs and their separately recorded checks.

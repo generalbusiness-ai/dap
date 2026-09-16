@@ -1,0 +1,726 @@
+✔ a submission without a credential is refused; a forged credential for a non-participant is refused (2.323292ms)
+✔ stable facts are checked first: wrong genesis, missing action id, envelope bounds (0.592208ms)
+✔ positions are dense and every header binds its predecessor (1.396791ms)
+✔ the memory backend refuses re-entrant appends (0.189ms)
+✔ audience reads frozen preceding state without changing model state or earlier audiences (16.244292ms)
+✔ attaching a handler retains the original audience read scope and rolls back undeclared reads (2.614084ms)
+✔ binding identity includes the audience read scope even when resolved handlers match (0.264166ms)
+✔ an audience error discards all model effects, survives retry, and replays consistently (20.077917ms)
+✔ run 2 corpus: all 139 recovered privacy failures replay and are deletion-minimal (12823.303667ms)
+ℹ 139 recovered failures, all deletion-minimal; explicit private disclosures remain budget violations under the repaired model
+✔ run 7 corpus pins the unrepaired foundation snapshot and preserves every failing full series (15.859667ms)
+✔ the manifest is one experiment identity over its prose and executable part, and the prose states the same bounds (0.741792ms)
+ℹ BOOKING_MANIFEST_ID sha256:cb4514f4967891077ad78e1dd0fba4c17438fb32b98cd8bd790df8531b35dd16
+ℹ booking package sha256:0556de5c337344eaa15afcbbbf5d22aa82c384bd6841d4ffb0c07185d4b7ec27
+✔ case 1, two requests for one slot: the admin publishes one, the other stays pending and its publication is overlap (51.397625ms)
+✔ case 2, free exactly one: two occupancies, one freed, the other active; a second free is already_free (75.313208ms)
+✔ case 3, duplicate publication: a second occupancy with the same booking id is duplicate_id (11.135917ms)
+✔ case 4, only the admin publishes: a booker's occupancy is unauthorized before any model rule (20.613583ms)
+✔ case 5, expiry: when the clock reaches an occupancy's end it is expired for every member, and an overlapping occupancy is then effective (74.571125ms)
+✔ case 6, cross-view: an occupancy before J joins, an overlapping publication after, and a free of the earlier one are judged the same way in every view (104.79275ms)
+✔ the repair ledger exists, its totals agree with its entries, and it states the budget outcome (2.600292ms)
+ℹ fixes 2, added kinds 0, budget within
+✔ V4-F2: the budget detects private fields published through com.example.booking.occupancy (33.248583ms)
+✔ V4-F2: the budget detects private fields published through com.example.booking.free (18.822958ms)
+✔ V4-F2: the budget detects private fields published through ai.generalbusiness.dap.observe (17.571792ms)
+✔ V4-F2: the budget detects a spoofed booker claim naming the reader published through com.example.booking.occupancy (17.769709ms)
+✔ V4-F2: the budget detects a spoofed booker claim naming the reader published through com.example.booking.free (17.125208ms)
+✔ V4-F2: the budget detects a spoofed booker claim naming the reader published through ai.generalbusiness.dap.observe (15.450042ms)
+✔ V4-F2: the budget detects nested private fields published through com.example.booking.occupancy (14.965875ms)
+✔ V4-F2: the budget detects nested private fields published through com.example.booking.free (26.417375ms)
+✔ V4-F2: the budget detects nested private fields published through ai.generalbusiness.dap.observe (23.630584ms)
+✔ V4-F1: seed 1 position 50 keeps Carol and her own request id private; hostile redisclosure is detected (32.042917ms)
+✔ V4-F1: current authority controls publication; authorized refusals, stale and closed attempts retain their audience (99.575417ms)
+▶ post-baseline A5: invariants detect votes and admission naming invitation-acceptance
+  ⚠ original policy requires rejection of invalid targets and no admission grant (1.256458ms) # V5-A5 retained negative result; no policy repair commissioned
+✔ post-baseline A5: invariants detect votes and admission naming invitation-acceptance (487.003125ms)
+ℹ {"clubA5":"invitation-acceptance","manifest":"sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde","package":"sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e","nonce":"v6-followup:a5:invitation-acceptance","target":{"position":6,"id":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","kind":"ai.generalbusiness.dap.accept_invite","effective":true},"votes":[9,10],"admit":11,"grants":[{"position":12,"payload":{"principal":"dana","roles":["Member"]}}],"readers":[{"reader":"alice","votes":[true,true],"admit":true},{"reader":"bob","votes":[true,true],"admit":true},{"reader":"carol","votes":[true,true],"admit":true},{"reader":"dana","votes":[true,true],"admit":true},{"reader":"frank","votes":[true,true],"admit":true}],"findings":["*@9 invariant: vote at 9 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","*@10 invariant: vote at 9 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","*@10 invariant: vote at 10 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","*@11 invariant: vote at 9 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","*@11 invariant: vote at 10 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","*@11 invariant: admit at 11 of unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","*@12 invariant: vote at 9 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","*@12 invariant: vote at 10 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","*@12 invariant: admit at 11 of unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402"],"steps":[{"step":{"type":"invite","inviter":"alice","invitee":"bob","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:f8e2b2760606029da0845a7d1a315291e617637c63b050ebb68630514b7b6367","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"bob"},"entries":[{"id":"sha256:efb8d15b0646f022fab90d7fa589e5c858af4582891d05da9f2faf860eb75974","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"carol","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:2c862f052244d244f6849a5f8550c6296624802360d2d5ffdf61af5be3c7aba5","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"carol"},"entries":[{"id":"sha256:0f0864ee38e0f0f414103426c0077d1f1e4def4c230d92a73a4186d6a6585445","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"dana","grants":{"roles":[]}},"entries":[{"id":"sha256:6ad4fb318d409b441764b707208069089d376825d667dd7564cc3e5af42e788b","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"dana"},"entries":[{"id":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"frank","grants":{"roles":["Member"]}},"entries":[{"id":"sha256:a17796beda7c55ae1c20e6f4932a7898d8d592fa7140165d1422f310a57a3a65","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"frank"},"entries":[{"id":"sha256:b8d9f7790068c1434997289287b529a5db9ceb85715fdc63409cdff2e61c153a","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"act","actor":"bob","kind":"com.example.club.vote","payload":{"application_id":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","choice":"yes"},"nonce":"a5:8"},"entries":[{"id":"sha256:632055e52d15f825f7a76c0a99f68d18f486456eb6c09c2f60112308e6531cd3","kind":"com.example.club.vote"}],"application":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402"},{"step":{"type":"act","actor":"carol","kind":"com.example.club.vote","payload":{"application_id":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","choice":"yes"},"nonce":"a5:9"},"entries":[{"id":"sha256:fda5a153a368c42c7ed414a49abd94a20f220d4b7a674e92987ddad8a594a9c1","kind":"com.example.club.vote"}],"application":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402"},{"step":{"type":"act","actor":"alice","kind":"com.example.club.admit","payload":{"application_id":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402"},"nonce":"a5:10"},"entries":[{"id":"sha256:f451b2ca7acf3076ef78633c5e8ac889fe58deff8dae5c8a7218a00d0fe28fa0","kind":"com.example.club.admit"},{"id":"sha256:a754806be4313ee8d4f36e37459779495610a4623c19fd82107ebe76e88e6ff9","kind":"ai.generalbusiness.dap.grant"}],"application":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402"}],"minimal":[{"step":{"type":"invite","inviter":"alice","invitee":"bob","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:f8e2b2760606029da0845a7d1a315291e617637c63b050ebb68630514b7b6367","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"bob"},"entries":[{"id":"sha256:efb8d15b0646f022fab90d7fa589e5c858af4582891d05da9f2faf860eb75974","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"dana","grants":{"roles":[]}},"entries":[{"id":"sha256:6ad4fb318d409b441764b707208069089d376825d667dd7564cc3e5af42e788b","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"dana"},"entries":[{"id":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"act","actor":"bob","kind":"com.example.club.vote","payload":{"application_id":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","choice":"yes"},"nonce":"a5:8"},"entries":[{"id":"sha256:632055e52d15f825f7a76c0a99f68d18f486456eb6c09c2f60112308e6531cd3","kind":"com.example.club.vote"}],"application":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402"}]}
+▶ post-baseline A5: invariants detect votes and admission naming malformed-apply
+  ⚠ original policy requires rejection of invalid targets and no admission grant (0.297333ms) # V5-A5 retained negative result; no policy repair commissioned
+✔ post-baseline A5: invariants detect votes and admission naming malformed-apply (424.841584ms)
+ℹ {"clubA5":"malformed-apply","manifest":"sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde","package":"sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e","nonce":"v6-followup:a5:malformed-apply","target":{"position":9,"id":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","kind":"com.example.club.apply","effective":false},"votes":[10,11],"admit":12,"grants":[{"position":13,"payload":{"principal":"dana","roles":["Member"]}}],"readers":[{"reader":"alice","votes":[true,true],"admit":true},{"reader":"bob","votes":[true,true],"admit":true},{"reader":"carol","votes":[true,true],"admit":true},{"reader":"dana","votes":[true,true],"admit":true},{"reader":"frank","votes":[true,true],"admit":true}],"findings":["*@10 invariant: vote at 10 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","*@11 invariant: vote at 10 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","*@11 invariant: vote at 11 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","*@12 invariant: vote at 10 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","*@12 invariant: vote at 11 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","*@12 invariant: admit at 12 of unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","*@13 invariant: vote at 10 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","*@13 invariant: vote at 11 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","*@13 invariant: admit at 12 of unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736"],"steps":[{"step":{"type":"invite","inviter":"alice","invitee":"bob","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:5efae4c957e9ffd536fb4792e17bd3859d4bf40bfd6112b2d7d5d0bf192b2c07","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"bob"},"entries":[{"id":"sha256:652cef6366598679e968e08a6a92073b4031f5b9ef6e668ab950ac7a16962ff7","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"carol","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:6dbefe6ff4ceb5da17f9f5efc1b14111d624f39029bea047b182bba7ae2dff92","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"carol"},"entries":[{"id":"sha256:a3effcce32797773f4e151ef320c41e9294ef145c8ec7ce955f1a55fcde3ace5","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"dana","grants":{"roles":[]}},"entries":[{"id":"sha256:cfb273dd78ce62e8b78692805e96e0778043c3e99521c32f205ce67b5070813a","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"dana"},"entries":[{"id":"sha256:52b396f21bd7075cdda314069da7237e0d440a6225b667cf0c4b8075209461d0","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"frank","grants":{"roles":["Member"]}},"entries":[{"id":"sha256:9c29a84f5149dc5aefb9e903b0055760b44ce5b4935c99f9c414dfe8ecfa44d5","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"frank"},"entries":[{"id":"sha256:727b5c7f0f81e145be8267dffbf05b031f50a5e76aa85f47c1e5e0a94dbfc6e1","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"act","actor":"dana","kind":"com.example.club.apply","payload":{"statement":17},"nonce":"a5:8"},"entries":[{"id":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","kind":"com.example.club.apply"}]},{"step":{"type":"act","actor":"bob","kind":"com.example.club.vote","payload":{"application_id":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","choice":"yes"},"nonce":"a5:9"},"entries":[{"id":"sha256:d3de847e94ade9127f25543fadba6a4ccfd0fff85ce31ab431ba4342f5438365","kind":"com.example.club.vote"}],"application":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736"},{"step":{"type":"act","actor":"carol","kind":"com.example.club.vote","payload":{"application_id":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","choice":"yes"},"nonce":"a5:10"},"entries":[{"id":"sha256:4be906ea88e31394bcd43a900c4433174599b9f22562cfa14d374e46c545f4b3","kind":"com.example.club.vote"}],"application":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736"},{"step":{"type":"act","actor":"alice","kind":"com.example.club.admit","payload":{"application_id":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736"},"nonce":"a5:11"},"entries":[{"id":"sha256:9e0bb3f36faee4bb5407d592e3acbe1adde72f9f69a3966061dbcdfe2d12e31c","kind":"com.example.club.admit"},{"id":"sha256:be683307f1918e59caab7323b3a10efc44c9f02a9c5f6b95db6ce8585d9b01f7","kind":"ai.generalbusiness.dap.grant"}],"application":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736"}],"minimal":[{"step":{"type":"invite","inviter":"alice","invitee":"bob","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:5efae4c957e9ffd536fb4792e17bd3859d4bf40bfd6112b2d7d5d0bf192b2c07","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"bob"},"entries":[{"id":"sha256:652cef6366598679e968e08a6a92073b4031f5b9ef6e668ab950ac7a16962ff7","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"dana","grants":{"roles":[]}},"entries":[{"id":"sha256:cfb273dd78ce62e8b78692805e96e0778043c3e99521c32f205ce67b5070813a","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"dana"},"entries":[{"id":"sha256:52b396f21bd7075cdda314069da7237e0d440a6225b667cf0c4b8075209461d0","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"act","actor":"dana","kind":"com.example.club.apply","payload":{"statement":17},"nonce":"a5:8"},"entries":[{"id":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","kind":"com.example.club.apply"}]},{"step":{"type":"act","actor":"bob","kind":"com.example.club.vote","payload":{"application_id":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","choice":"yes"},"nonce":"a5:9"},"entries":[{"id":"sha256:d3de847e94ade9127f25543fadba6a4ccfd0fff85ce31ab431ba4342f5438365","kind":"com.example.club.vote"}],"application":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736"}]}
+▶ post-baseline A5: invariants detect votes and admission naming standing-reason
+  ⚠ original policy requires rejection of invalid targets and no admission grant (0.290708ms) # V5-A5 retained negative result; no policy repair commissioned
+✔ post-baseline A5: invariants detect votes and admission naming standing-reason (312.418208ms)
+ℹ {"clubA5":"standing-reason","manifest":"sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde","package":"sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e","nonce":"v6-followup:a5:standing-reason","target":{"position":9,"id":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","kind":"com.example.club.standing_reason","effective":true},"votes":[10,11],"admit":12,"grants":[{"position":13,"payload":{"principal":"alice","roles":["Member"]}}],"readers":[{"reader":"alice","votes":[true,true],"admit":true},{"reader":"bob","votes":[true,true],"admit":true},{"reader":"carol","votes":[true,true],"admit":true},{"reader":"dana","votes":[true,true],"admit":true},{"reader":"frank","votes":[true,true],"admit":true}],"findings":["*@10 invariant: vote at 10 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","*@11 invariant: vote at 10 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","*@11 invariant: vote at 11 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","*@12 invariant: vote at 10 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","*@12 invariant: vote at 11 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","*@12 invariant: admit at 12 of unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","*@13 invariant: vote at 10 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","*@13 invariant: vote at 11 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","*@13 invariant: admit at 12 of unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"],"steps":[{"step":{"type":"invite","inviter":"alice","invitee":"bob","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:1cd4cd1c3b0ffc6884370cbb9d75deace66b85bf6c650c44f63400d306d7920e","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"bob"},"entries":[{"id":"sha256:39aa2439256a95b04087b2f285626a4b0bd8d24652c28753e00b322c4140baba","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"carol","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:da31de3a21d459bbde38aacc48766635fbddbad71cf4d772575e9e7de8d749b8","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"carol"},"entries":[{"id":"sha256:70e92440be9b93badac5ca1c684c57672ed3e83f0dc98a98f193c70fe1da2bd1","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"dana","grants":{"roles":[]}},"entries":[{"id":"sha256:82066a312c85860039f63e39fd97ed5abe3e2ba74e7684dc5296b7adb88f63a8","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"dana"},"entries":[{"id":"sha256:720923b61c08be8c6e196d688f3dba317614c519e80e0be1f193c86b6bc3e9a4","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"frank","grants":{"roles":["Member"]}},"entries":[{"id":"sha256:b2c53e1d54dc0ec05c0c6b67afe498df6d2b51eec4aec49c367359d8c0b60e2b","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"frank"},"entries":[{"id":"sha256:c624a58e82907beadbd925b6194f58599fbf88a2c3074979cd3ecf46f593cb47","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"act","actor":"alice","kind":"com.example.club.standing_reason","payload":{"member":"dana","text":"private reason, not an application"},"nonce":"a5:8"},"entries":[{"id":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","kind":"com.example.club.standing_reason"}]},{"step":{"type":"act","actor":"bob","kind":"com.example.club.vote","payload":{"application_id":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","choice":"yes"},"nonce":"a5:9"},"entries":[{"id":"sha256:28583cb1694a7351446b112cfbb524e5461c58e121c49b03c074a3d993715756","kind":"com.example.club.vote"}],"application":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"},{"step":{"type":"act","actor":"carol","kind":"com.example.club.vote","payload":{"application_id":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","choice":"yes"},"nonce":"a5:10"},"entries":[{"id":"sha256:64d93c1e0993f8529264dff3764d6fb6b43cff1bd0674921c8e595e32a71a422","kind":"com.example.club.vote"}],"application":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"},{"step":{"type":"act","actor":"alice","kind":"com.example.club.admit","payload":{"application_id":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"},"nonce":"a5:11"},"entries":[{"id":"sha256:f578658d5cf3fa76bcbfbb13eb4939f8fc90e495e11d4faa31b1920bf325eb55","kind":"com.example.club.admit"},{"id":"sha256:3423e61343784c1f9cb6fbc3b4ef9d4a13068c98c19f5da5e08388e62835ab72","kind":"ai.generalbusiness.dap.grant"}],"application":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"}],"minimal":[{"step":{"type":"invite","inviter":"alice","invitee":"bob","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:1cd4cd1c3b0ffc6884370cbb9d75deace66b85bf6c650c44f63400d306d7920e","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"bob"},"entries":[{"id":"sha256:39aa2439256a95b04087b2f285626a4b0bd8d24652c28753e00b322c4140baba","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"act","actor":"alice","kind":"com.example.club.standing_reason","payload":{"member":"dana","text":"private reason, not an application"},"nonce":"a5:8"},"entries":[{"id":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","kind":"com.example.club.standing_reason"}]},{"step":{"type":"act","actor":"bob","kind":"com.example.club.vote","payload":{"application_id":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","choice":"yes"},"nonce":"a5:9"},"entries":[{"id":"sha256:28583cb1694a7351446b112cfbb524e5461c58e121c49b03c074a3d993715756","kind":"com.example.club.vote"}],"application":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"}]}
+✔ Club baseline corpus: all three recorded seeds reproduce, are deletion-minimal with links preserved, and pass under the repaired model (468.330625ms)
+ℹ seed 81: 56 -> 7 steps; baseline mismatch, repaired clean; application sha256:89924c7ce0dc9ce04507ba8c5d0a87aabad44d546de84cb98f3254e5de7b0c2a -> sha256:e87e8afb059e1b5e803e8e3185e9aa8e73c4c556071a47011517c4d8fddae264
+ℹ seed 107: 55 -> 7 steps; baseline mismatch, repaired clean; application sha256:4f0f3e78520528dcab968444b6a6cff82b228527073747195cd54bb3e3bc31a3 -> sha256:d65ff528f2c97768b9d4047ab5de6e70432c904d018c39066a129a8c8276bbb0
+ℹ seed 182: 56 -> 7 steps; baseline mismatch, repaired clean; application sha256:68a19df79a2ff25c4314170bda712055b392130f69916d53da3186853d271781 -> sha256:ab2f75ce53c1a698561eabe21d46129607400de4a54d198b10f18a316c5c49e5
+ℹ manifest sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde; baseline sha256:6aeac545386d59b2d4645bfa9d951b576ae66119484f723d1fb765ff1a02a08f; repaired sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e
+✔ the manifest is one experiment identity over its prose and executable part, and the prose states the same bounds (0.945958ms)
+ℹ CLUB_MANIFEST_ID sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde
+ℹ club package sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e
+✔ case 1, quorum: three committee members, two yes votes, admit is effective and the applicant is granted Member (106.469833ms)
+✔ case 2, no quorum: one vote, admit is no_quorum; a no vote and a yes vote is no_majority (61.225708ms)
+✔ case 3, lapsed: a lapsed committee member's vote is lapsed, the admit that relied on it is no_quorum, and a second vote by one member is already_voted (73.883125ms)
+✔ case 4, late committee member: a vote before any disclosure of the application is unknown_application, after a disclosure it is effective, and every member judges both the same way (140.519292ms)
+✔ Club disclosure across activation: payload before activation pauses until closure (73.254916ms)
+✔ Club disclosure across activation: activation before payload (66.763583ms)
+✔ post-baseline A2: an ordinary Member judges a late committee vote before and after private application disclosure (74.756583ms)
+✔ post-baseline A2: an ordinary Member verifies admission and the Member grant without reading the application (55.011167ms)
+⚠ plan §4.2: a second admission is ineffective once the applicant holds Member (92.289333ms) # V5-A1: revised experiment and policy repair pending
+ℹ plan §4.2 violated: admit at 18 is effective after Dana already received Member at 15; frozen-manifest checks still pass
+✔ the repair ledger exists, its totals agree with its entries, and it states the budget outcome (0.341416ms)
+ℹ fixes 1, added kinds 0, budget within
+✔ test keys reproduce the independent RFC 8032 Ed25519 vector (12.490417ms)
+✔ fixed vectors pin each signed object, exact UTF-8 bytes, identity and signature (25.804833ms)
+✔ fixed rejection vector: tampered body (0.671666ms)
+✔ fixed rejection vector: actor signs noncanonical bytes (0.424458ms)
+✔ fixed rejection vector: wrong prev, correctly signed (9.620083ms)
+✔ fixed rejection vector: wrong commitment, correctly signed (0.481167ms)
+✔ fixed rejection vector: unassigned sequencer key (0.278292ms)
+✔ fixed rejection vector: sequencer signs full header bytes (0.266041ms)
+✔ canonical encoding supports RFC 8785 numbers, UTF-16 ordering and unnormalized strings (0.277334ms)
+✔ canonical encoding rejects lossy JS data, invalid Unicode and noncanonical byte inputs (2.806833ms)
+✔ principals and signatures have one exact encoding and must match their signing key (1.158542ms)
+✔ body profile validates required and forbidden fields without interpreting the payload (0.95075ms)
+✔ header-only verification authenticates disclosure evidence and exposes no private fields (0.961417ms)
+✔ wire verification enforces genesis identity, destinations, origin opt-in and evidence placement (4.90425ms)
+✔ wire framing is canonical and decoded entries are independent frozen snapshots (0.541ms)
+✔ O5 isolated reader verifies an actual O3 SQLite handover and successor (159.632417ms)
+ℹ o5-journal-proof:{"proof":{"pinnedGenesis":"sha256:2929d8774bb1808175f99c797ff3283831a6ce48615941bdb4f4617b5fcf5d97","genesis":{"header":{"commitment":"sha256:2929d8774bb1808175f99c797ff3283831a6ce48615941bdb4f4617b5fcf5d97","genesis":"sha256:2929d8774bb1808175f99c797ff3283831a6ce48615941bdb4f4617b5fcf5d97","position":0,"prev":"sha256:0000000000000000000000000000000000000000000000000000000000000000","seq_sig":"kEeG6jKnpZYTKK-3vNf4RTb2g6qCi8e-Ur80mm4mPOopgQI6rbfRoKoUtvABuUHLPjw9Vem6dhKsOUR3EufXBg"},"committed":"{\"body\":{\"actor\":\"ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w\",\"kind\":\"ai.generalbusiness.dap.genesis\",\"nonce\":\"02020202020202020202020202020202\",\"payload\":{\"bindings\":[{\"package\":\"sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85\"}],\"foundation\":\"sha256:5a7be1514529bac249c683ada733e64273f94b2700abf8a55c47dcb7ebfb8d78\",\"grants\":[{\"capabilities\":[\"ai.generalbusiness.dap.invite\",\"ai.generalbusiness.dap.attach\",\"ai.generalbusiness.dap.grant\",\"ai.generalbusiness.dap.disclose\",\"ai.generalbusiness.dap.close\"],\"principal\":\"ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w\",\"roles\":[\"Seller\"]}],\"origins\":[{\"actor\":\"ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w\",\"kind\":\"com.example.sale.listing\",\"nonce\":\"01010101010101010101010101010101\",\"payload\":{\"ask\":800,\"referent\":\"guitar-1\"}}],\"referents\":[\"guitar-1\"],\"route\":\"route:o1-test\",\"runtime\":\"dap.fixture.ts/1\",\"sequencing\":{\"control\":\"ed25519:iodf_x6zhFFXes1a_uQFRWVo3XyJ4JCGOgVXvHr0nxc\",\"profile\":\"dap.fixture.single-writer/2\",\"writer\":\"ed25519:bnoc3Smwt4_ROvTFWY_v9O8qlxZuPKby5Pv8zYBQW_E\"}}},\"sig\":\"ywuN0Ze0uRdIG5YtlZMOyhWCVWTgIg98ufAhfYHf2HnuZSJU4M0N8yUwHm2Q9EQC2OaxSmpwakemmxnkx6EJAw\"}"},"entries":[{"header":{"commitment":"sha256:2f34e40e1201e9915671e467eab3035014b78e0579275669844ba20780a696f3","genesis":"sha256:2929d8774bb1808175f99c797ff3283831a6ce48615941bdb4f4617b5fcf5d97","position":1,"prev":"sha256:252f0339de31c0befe6c8ccd57a4b7151876bf4bc8aae181ec067963e2c60b79","seq_sig":"rYoKsIXMX6PIbGW5bYJuhm72CAtb9OLO1Lxw-igC-uP_AMNfyaHxAyfFCCdgScRrKNVrsV-fkgf2rBKrPUOmBg"}},{"header":{"commitment":"sha256:5f05fb41741274df707b9cd60c8038002c9525a0a748c68eb56721cf1cf010c6","genesis":"sha256:2929d8774bb1808175f99c797ff3283831a6ce48615941bdb4f4617b5fcf5d97","position":2,"prev":"sha256:5db106de9a189722a96832101454b80d51ab1e1da8cbcc197e9e90afda5261de","seq_sig":"M5JAQsZBZORKscsuz3hdNfPvbK_kbMIqiUeOY1KVkA9GuHsYEMrb8DgZUA5vZXUvGJwh0Az572dAwnoykAYbCg"},"committed":"{\"body\":{\"action_id\":\"o5-real-seal\",\"actor\":\"ed25519:iodf_x6zhFFXes1a_uQFRWVo3XyJ4JCGOgVXvHr0nxc\",\"genesis\":\"sha256:2929d8774bb1808175f99c797ff3283831a6ce48615941bdb4f4617b5fcf5d97\",\"kind\":\"ai.generalbusiness.dap.seq.seal\",\"nonce\":\"a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1\",\"payload\":{\"epoch\":0,\"predecessor\":\"sha256:2f34e40e1201e9915671e467eab3035014b78e0579275669844ba20780a696f3\"}},\"sig\":\"BaMAlI5INrAwr8AGyWV2N1xq37gBYt2KoAm5HhNWsk8CYbEtL0zBBY8uNnCoBnBZG95s6FJRLW1KA8jZdc_7BQ\"}"},{"header":{"commitment":"sha256:241371fc298de0a26553eb3989b043f0a3bd28999e5c907881e7945a3de3d72c","genesis":"sha256:2929d8774bb1808175f99c797ff3283831a6ce48615941bdb4f4617b5fcf5d97","position":3,"prev":"sha256:fbf7f99c6f4b7b8d8ea807f5b52d49aadcf4c93e410d2b051e04c319c33d380a","seq_sig":"wkl3rRUn5aA596FCBpsYfVABFMTCWzeO3SFRSn0jtZg8P_DI5MEcrOthiEKH6-B2Yyf4B3LpVXFazZozCd-qDQ"},"committed":"{\"body\":{\"action_id\":\"o5-real-assign\",\"actor\":\"ed25519:iodf_x6zhFFXes1a_uQFRWVo3XyJ4JCGOgVXvHr0nxc\",\"genesis\":\"sha256:2929d8774bb1808175f99c797ff3283831a6ce48615941bdb4f4617b5fcf5d97\",\"kind\":\"ai.generalbusiness.dap.seq.assign\",\"nonce\":\"a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2\",\"payload\":{\"epoch\":1,\"predecessor\":\"sha256:5f05fb41741274df707b9cd60c8038002c9525a0a748c68eb56721cf1cf010c6\",\"writer\":\"ed25519:6kpsY-KcUgq-9VB7Ey7F-ZVHdq6-vnuSQh7qaRRG0iw\"}},\"sig\":\"dOStTL3rFAhl-mNT-LUwzhCrSkr-fMPqbGxS4ZbOvL8626YHCLTTKoVI0q9l1N8gEb05QdDoWNNB1yTHAnchAQ\"}"},{"header":{"commitment":"sha256:1b7cd5e680709977ac7af5c3a98dc54cc9691a838638e752ddc9a5ba63af6200","genesis":"sha256:2929d8774bb1808175f99c797ff3283831a6ce48615941bdb4f4617b5fcf5d97","position":4,"prev":"sha256:4506a04b2c47f8b694610ba28ee09bb34ef635157551f3a76298806055339b66","seq_sig":"7zco7uuTYs-INWsoSEJRTQHBtPl8krouTmXBWI2iLTkLjMv47fJqHMVRg_TulLxkqRWMH9TwL8mI3JHqWw-1DA"}}]},"result":{"genesis":"sha256:2929d8774bb1808175f99c797ff3283831a6ce48615941bdb4f4617b5fcf5d97","profile":"dap.fixture.single-writer/2","control":"ed25519:iodf_x6zhFFXes1a_uQFRWVo3XyJ4JCGOgVXvHr0nxc","epoch":1,"writer":"ed25519:6kpsY-KcUgq-9VB7Ey7F-ZVHdq6-vnuSQh7qaRRG0iw","sealed":false,"head":{"position":4,"headerHash":"sha256:9d46e26f804e295dcc046440bcc7e094db702e518bf89743869d24355ba038db","commitment":"sha256:1b7cd5e680709977ac7af5c3a98dc54cc9691a838638e752ddc9a5ba63af6200"},"assignments":[{"epoch":0,"writer":"ed25519:bnoc3Smwt4_ROvTFWY_v9O8qlxZuPKby5Pv8zYBQW_E","firstPosition":0},{"epoch":1,"writer":"ed25519:6kpsY-KcUgq-9VB7Ey7F-ZVHdq6-vnuSQh7qaRRG0iw","firstPosition":4}],"controlEntries":2,"opaqueEntries":2}}
+✔ O5 spec proof: genesis-only (3.261625ms)
+✔ O5 spec proof: ordinary-payload-unavailable (1.077292ms)
+✔ O5 spec proof: two-client-nominations-have-no-authority (16.563959ms)
+✔ O5 spec proof: interrupted-after-seal (1.978ms)
+✔ O5 spec proof: valid-handover (19.134375ms)
+✔ O5 spec proof: two-handovers (4.772625ms)
+✔ O5 spec proof: v1-fixed-writer (0.728667ms)
+✔ O5 spec proof: v1-request-does-not-assign (0.922041ms)
+✔ O5 spec proof: v1-seal-cannot-change-profile (1.163833ms)
+✔ O5 spec proof: genesis-control-is-writer (0.350875ms)
+✔ O5 spec proof: unsupported-profile (0.412458ms)
+✔ O5 spec proof: wrong-genesis-pin (0.257583ms)
+✔ O5 spec proof: assign-without-seal (1.108333ms)
+✔ O5 spec proof: request-does-not-authorize-successor (1.245541ms)
+✔ O5 spec proof: retired-writer-continuation (2.124333ms)
+✔ O5 spec proof: successor-cannot-sign-assignment (1.467208ms)
+✔ O5 spec proof: writer-is-not-seal-authority (0.997167ms)
+✔ O5 spec proof: stranger-is-not-seal-authority (1.199292ms)
+✔ O5 spec proof: writer-is-not-assign-authority (1.706208ms)
+✔ O5 spec proof: successor-is-not-assign-authority (1.786209ms)
+✔ O5 spec proof: seal-predecessor-is-not-header-hash (0.973958ms)
+✔ O5 spec proof: assign-predecessor-is-not-header-hash (1.683959ms)
+✔ O5 spec proof: stale-assign-head (4.226666ms)
+✔ O5 spec proof: skipped-seal-epoch (1.004ms)
+✔ O5 spec proof: skipped-assign-epoch (1.853917ms)
+✔ O5 spec proof: negative-epoch (0.978542ms)
+✔ O5 spec proof: fractional-epoch (1.781375ms)
+✔ O5 spec proof: ordinary-after-seal (2.22375ms)
+✔ O5 spec proof: request-after-seal (1.913875ms)
+✔ O5 spec proof: seal-after-seal (3.192916ms)
+✔ O5 spec proof: second-competing-assignment (2.313917ms)
+✔ O5 spec proof: retired-key-cannot-be-revived (2.841625ms)
+✔ O5 spec proof: control-cannot-become-writer (5.26275ms)
+✔ O5 spec proof: unknown-control-kind (1.174375ms)
+✔ O5 spec proof: extra-control-payload-field (1.04325ms)
+✔ O5 spec proof: missing-control-payload-field (0.994208ms)
+✔ O5 spec proof: application-opening-is-not-accepted (1.136417ms)
+✔ O5 spec proof: wrong-prev-header-hash (0.624583ms)
+✔ O5 spec proof: skipped-position (0.527625ms)
+✔ O5 spec proof: receipt-retry-is-not-a-second-position (0.6225ms)
+✔ O5 spec proof: wrong-body-destination (0.965416ms)
+✔ O5 spec proof: forged-actor-signature (1.105375ms)
+✔ O5 spec proof: forged-writer-signature (0.591917ms)
+✔ O5 spec proof: missing-assign-opening-detected-after-seal (1.49375ms)
+✔ O5 spec proof: missing-controls-detected-at-successor-signature (1.486917ms)
+✔ O5 spec proof: opening-exposes-same-sealed-suffix (1.151417ms)
+✔ O5 spec proof: LIMIT-hidden-seal-and-old-writer-suffix (10.529542ms)
+✔ O5 compare: ordinary-signed-head-fork (1.570917ms)
+✔ O5 compare: competing-signed-assignments (18.5215ms)
+✔ O5 compare: same-history (22.781875ms)
+✔ O5 compare: one-history-is-prefix (3.599334ms)
+✔ O5 omission limit uses identical headers and cannot be mistaken for completeness proof (2.186375ms)
+✔ O5 proof boundary rejects unrelated inputs and does not mutate callers (7.378625ms)
+✔ O5 executes with packages, application payloads and grant folds unavailable (88.615333ms)
+✔ a package declaring a name under the system prefix is refused, whatever it claims about itself (16.4085ms)
+✔ a descriptor whose id does not match its content is refused (0.173417ms)
+✔ two handlers for one kind without a resolution is ambiguous; a resolution naming exactly both is accepted (0.407167ms)
+✔ resolution retains the capability and the active audience policy: attaching a handler never widens (4.193417ms)
+✔ identities follow executable content: a changed fold changes descriptor and binding ids (0.347209ms)
+✔ binding identity is per kind: an unrelated attach does not change it; a relevant change does (0.475625ms)
+✔ an application intent captures its binding by default; a relevant attach stales it, an unrelated private attach does not; a missing binding is refused (1.827833ms)
+✔ the manifest is one experiment identity over its prose, its executable part and the package, and the prose states the same bounds (1.366459ms)
+ℹ DISCUSSION_MANIFEST_ID sha256:d5f67ab9b25babd202cd5d1c0bbae80271f92df6aa421eb666eb2af777668c9f
+✔ normal replay: generated series over the manifest seeds have zero violations, and the corpus exercises joins, a side attach and disclosures (155.333792ms)
+✔ pause and resume: a client without the side package pauses at the attach and resumes to equality with it (16.998041ms)
+✔ planted fault: closing privately breaks the shared outcome for a late joiner, and the checker finds it (30.146917ms)
+✔ shrinking: the failing series reduces to a minimal script that still fails (33.612917ms)
+✔ expected outcomes, independent of the fold: closure is seen by a late joiner; posts are seen exactly by members at the time and by disclosure; a post after closure and an unauthorized post are ineffective (24.039209ms)
+✔ F5: the generator never exceeds its entry bound, even when a compound step would (3.762791ms)
+✔ the sale trace 0 to 5 interprets to the oracle for every participant at every frontier (58.457542ms)
+✔ a late joiner, a members-audience event before they joined, a disclosure and an as-of query keep the property (65.733959ms)
+✔ the views note's pause example: a disclosure followed by an unavailable package pauses with last through the position before, under the disclosure's basis, and resumes (2.839791ms)
+✔ a dependency-incomplete disclosure pauses: the event is disclosed but the attach it needs is not (0.520958ms)
+✔ a cached interpretation is reused only for the same principal, view content, basis and packages; a pause is never reused (4.595083ms)
+✔ F2: a disclosed event whose binding the principal cannot resolve pauses with dependency_missing, and resumes once the attach is disclosed (0.922ms)
+✔ F1: a contradiction that changes no displayed state is caught through outcomes: a shared decision whose fold reads private votes (0.93325ms)
+✔ G1: an always-effective co-handler cannot mask a contradiction; per-handler outcomes are compared (0.776334ms)
+✔ G2: a disclosed intent that is genuinely stale is a stale_binding verdict, not a permanent pause (7.86475ms)
+✔ G3: affordances come from the visible binding, so a hidden attach with its own affordances causes no false mismatch (0.723166ms)
+✔ H1: a binding identity restored by an unseen attach is a missing dependency, not a stale intent: activation provenance decides (1.174041ms)
+✔ J1: a saved intent sequenced after a hidden attach is a missing dependency for a viewer who sees the intent but not the attach; the header carries the activation (0.84275ms)
+✔ K1: a disclosed attach that builds on a hidden attach is a missing dependency: the header names what it requires (1.785958ms)
+✔ L1: the facts an attach is refused on are among its requirements: a conflicting model definition and a repeated package (1.965167ms)
+✔ L2: a malformed attach payload is recorded with a malformed verdict, its exact retry replays, and a valid submission follows; evidence extraction never throws (0.486958ms)
+✔ M1: evidence handlers follow the branch attach takes: a resolution on a new kind is ignored, and the installer of the bound model is required (0.669708ms)
+✔ M2: a package name inherited from Object.prototype is not a package: recorded as package_unavailable, exact retry replays, and evidence extraction never throws (0.803667ms)
+✔ N1: an attach the sequencer could not resolve stays ineffective for every judge, whatever package a client has or fetches later; a new attach succeeds once the sequencer has it (0.599042ms)
+✔ authorized issue, issuer revoked, then redeemed: effective (authority judged at issuance) (22.648875ms)
+✔ unissued token: refused at admission, never sequenced (3.425333ms)
+✔ unauthorized issuer: the invite is sequenced but ineffective, and its token admits nobody (1.128416ms)
+✔ member-side verification refuses a header that is not in the chain (0.349125ms)
+✔ wrong invitee cannot redeem (0.337708ms)
+✔ exact retry of a committed acceptance after consumption returns the receipt; changed content and reuse are refused (0.4655ms)
+✔ V1 Sale visibility trace through verified bytes and memory (341.479541ms)
+✔ V1 Sale visibility trace through verified bytes and sqlite (244.916875ms)
+✔ signed stable facts precede retry and admission; raw Context cannot bypass proof (10.307542ms)
+✔ exclusive SQLite owner excludes a second OS process and releases on close (191.359625ms)
+✔ SIGKILL at before-write preserves one atomic append boundary (116.822625ms)
+✔ SIGKILL at after-entry preserves one atomic append boundary (116.409875ms)
+✔ SIGKILL at after-head preserves one atomic append boundary (117.444042ms)
+✔ SIGKILL at after-retry preserves one atomic append boundary (111.813959ms)
+✔ SIGKILL at after-consumption preserves one atomic append boundary (118.3685ms)
+✔ SIGKILL at after-outbox preserves one atomic append boundary (98.218708ms)
+✔ SIGKILL at before-commit preserves one atomic append boundary (102.592375ms)
+✔ SIGKILL at after-commit preserves one atomic append boundary (100.819083ms)
+✔ outbox resumes saved bytes after crash before notification and after delivery before ack (81.175208ms)
+✔ restart rejects tampered stored body despite unchanged signed wire bytes (7.059375ms)
+✔ signed invitations and origin duplicate checks accept finite fractional JCS numbers (11.735583ms)
+✔ outbox awaits asynchronous confirmation and retains failed publications (11.994292ms)
+✔ restart rejects SQL row positions that disagree with signed entry positions (8.423833ms)
+✔ journal pins the signed genesis profile and writer assignment to its backend (4.932416ms)
+✔ V1 signed invitation issued before revocation remains redeemable after SQLite restart (20.895666ms)
+✔ V1 signed unauthorized and unissued invitations cannot admit another participant (25.891375ms)
+✔ initialization SIGKILL at after-entry retains all or none of genesis and origins (87.348167ms)
+✔ initialization SIGKILL at after-commit retains all or none of genesis and origins (83.76375ms)
+✔ uncertain committed response requires reopen before another action (11.110667ms)
+✔ recipient view verification checks original actor proofs and rejects hidden envelope leakage (14.104125ms)
+✔ one live Journal owns each backend: revoked authority cannot be admitted through a stale facade (23.540291ms)
+✔ O1-F1 closed memory Context cannot issue or accept from stale authority after a new facade revokes it (8.390667ms)
+ℹ {"staleParticipants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"],"liveParticipants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"],"coldParticipants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"],"coldInviteVerdict":null}
+✔ O1-F1 raw Context restoration or creation cannot bypass a live Journal on memory (5.796458ms)
+✔ O1-F1 raw Context restoration or creation cannot bypass a live Journal on sqlite (7.336042ms)
+✔ O1-F1 a previously acquired raw Context loses write access while Journal owns its backend on memory (5.573209ms)
+✔ O1-F1 a previously acquired raw Context loses write access while Journal owns its backend on sqlite (8.58825ms)
+✔ O1-F1 a lost reply through direct Context.submit invalidates every owned write path on memory (12.555875ms)
+✔ O1-F1 a lost reply through direct Context.submit invalidates every owned write path on sqlite (16.604708ms)
+✔ O6: a newcomer reaches the published route, redeems a signed invitation, verifies and retries after reopen (64.240333ms)
+ℹ {"genesis":"sha256:0bfc9037fbd0189013eee796dfdb15e98a59cf5a11c7cd7977fcb3d756c235ad","origin":"sha256:1a2a4d30944bc14b399a54f9c19419201730d6874aed4c4fcb5c697fccca1fd6","route":"fixture:ordering-o6/guitar","positions":[0,1,2,3],"admission":{"known":true,"authorized":true,"effective":true},"receipt":"sha256:e6ac6a751ec148523bdb59fddf7d7fc641a6c833ae44bc9e66d8017b83bc6839","retry":"sha256:e6ac6a751ec148523bdb59fddf7d7fc641a6c833ae44bc9e66d8017b83bc6839","reopenedRetry":"sha256:e6ac6a751ec148523bdb59fddf7d7fc641a6c833ae44bc9e66d8017b83bc6839"}
+✔ O6: malformed, forged, unadopted or mismatched publications cannot resolve a journal (11.951958ms)
+✔ O3 same-context handover preserves prefix, dense positions, retry results, control verdicts and publication on memory (102.056292ms)
+✔ O3 same-context handover preserves prefix, dense positions, retry results, control verdicts and publication on sqlite (159.000625ms)
+✔ O3 SIGKILL during seal at before-commit retains the committed control boundary (118.394625ms)
+✔ O3 SIGKILL during seal at after-commit retains the committed control boundary (104.749667ms)
+✔ O3 SIGKILL during seal at after-receipt retains the committed control boundary (120.464625ms)
+✔ O3 SIGKILL during assign at before-commit retains the committed control boundary (118.376666ms)
+✔ O3 SIGKILL during assign at after-commit retains the committed control boundary (123.226208ms)
+✔ O3 SIGKILL during assign at after-receipt retains the committed control boundary (118.822208ms)
+✔ O3 independent nominations and two signed assignments cannot install two successors (48.442417ms)
+✔ O3 rejects forged and wrong authority, stale or swapped predecessor hashes, skipped seals and malformed nominations without an append (51.596708ms)
+✔ O3 cold authentication rejects a correctly signed control with wrong payload predecessor or wrong header predecessor (33.029667ms)
+✔ O3 v2 pins distinct writer/control keys and exact sequencing fields before any durable initialization (12.970375ms)
+✔ manifest identity binds the prose and executable source, independently recomputed (0.97375ms)
+ℹ ORDERING_LIFECYCLE_MANIFEST_ID sha256:fc55bfa123891e750f7bbe3a0d9cb33b5f65c07750db08bc984544ed2dd6b378
+✔ every healthy boundary states all heads, writers, right statuses and exact active owners (2.623833ms)
+✔ join boundaries have two releases, dormant initialization and one activation followed by progress (0.330083ms)
+✔ all adverse cases have resolvable branches, full safe observations and exact reason coverage (1.775333ms)
+✔ restarts, alternative valid proof material and timeouts cannot duplicate or revive authority (0.17025ms)
+✔ public proof disclosure has a finite named rule and keeps private source kinds excluded (0.092917ms)
+✔ public exports are exact, source-linked and exclude the private accepted amount (0.12ms)
+✔ changed-genesis enumeration covers every field, container, removal and added field (9.597709ms)
+✔ independent safety checks detect double ownership, premature activation and import duplication (1.799042ms)
+✔ future observation comparison rejects changed, missing and additional state, including unsafe mutations (3.140375ms)
+✔ replay obligations preserve pre-attach outcomes, local import timing and writer retry identity (0.204458ms)
+✔ O2 concurrent clients: barrier-six-forward (519.947334ms)
+✔ O2 concurrent clients: barrier-six-reverse (515.833125ms)
+✔ O2 concurrent clients: barrier-six-rotated (455.320167ms)
+✔ O2 invitation lost-reply schedule: before-append (103.026875ms)
+✔ O2 invitation lost-reply schedule: after-consumption (103.863834ms)
+✔ O2 invitation lost-reply schedule: after-commit (100.980959ms)
+✔ O2 invitation lost-reply schedule: after-reply-before-notification (101.683375ms)
+✔ O2 publication SIGKILL replays the exact saved wire entry without a new action (177.620958ms)
+✔ O2 removed-participant admission fixture recovers a lost reply after authenticated restart (97.6915ms)
+materialized genesis mutations: 209
+materialized genesis mutations: 209
+✔ O4 release proof pins come from F genesis: r=p+1, exact prefix and source writer: memory (1039.207625ms)
+✔ O4 release proof pins come from F genesis: r=p+1, exact prefix and source writer: sqlite (808.965125ms)
+✔ O4 altered public proof bodies cannot activate a destination: memory (669.973791ms)
+✔ O4 altered public proof bodies cannot activate a destination: sqlite (658.601417ms)
+✔ O4 actual revoked release source cannot be repaired by stripping its revocation: memory (449.027166ms)
+✔ O4 actual revoked release source cannot be repaired by stripping its revocation: sqlite (484.729459ms)
+✔ O4 public/full scope replay agrees at every opened release-prefix position: memory (680.5105ms)
+✔ O4 public/full scope replay agrees at every opened release-prefix position: sqlite (712.570292ms)
+✔ O4 actual activation, exports and F views disclose public source bodies without private bytes: memory (689.165625ms)
+✔ O4 actual activation, exports and F views disclose public source bodies without private bytes: sqlite (721.174042ms)
+✔ O4 every materialized signed F genesis field/container is bound before either release: memory (2905.214541ms)
+✔ O4 every materialized signed F genesis field/container is bound before either release: sqlite (3162.317042ms)
+✔ O4 withdrawn o3 cannot be restored by stripping the real withdrawal: memory (685.558125ms)
+✔ O4 withdrawn o3 cannot be restored by stripping the real withdrawal: sqlite (734.831917ms)
+✔ O4 actual signed lifecycle matches all 20 predeclared boundaries: memory (1895.360041ms)
+✔ O4 actual signed lifecycle matches all 20 predeclared boundaries: sqlite (1364.988875ms)
+✔ O4 actual adverse trace: one-source-release-missing:memory (603.13875ms)
+✔ O4 actual adverse trace: withheld-release-evidence:memory (914.029291ms)
+✔ O4 actual adverse trace: restart-before-activation:memory (640.465833ms)
+✔ O4 actual adverse trace: repeated-activation-after-restart:memory (955.422709ms)
+✔ O4 actual adverse trace: exact-retry-activation:memory (650.370875ms)
+✔ O4 actual adverse trace: timeout-after-hidden-activation:memory (646.530167ms)
+✔ O4 actual adverse trace: duplicate-inspection-import:memory (240.474584ms)
+✔ O4 actual adverse trace: duplicate-state-import:memory (662.873292ms)
+✔ O4 actual adverse trace: stale-source-proposal-at-source:memory (457.238417ms)
+✔ O4 actual adverse trace: stale-source-proposal-at-destination:memory (630.692375ms)
+✔ O4 actual adverse trace: unauthorized-release:memory (419.392875ms)
+✔ O4 actual adverse trace: release-unowned-right:memory (400.995291ms)
+✔ O4 actual adverse trace: release-already-released-right:memory (472.016083ms)
+✔ O4 actual adverse trace: receipt-for-ineffective-release:memory (609.192166ms)
+✔ O4 actual adverse trace: receipt-for-unauthorized-release:memory (609.428041ms)
+✔ O4 actual adverse trace: wrong-destination-release:memory (620.411084ms)
+✔ O4 actual adverse trace: two-sources-export-same-right:memory (532.201708ms)
+✔ O4 actual adverse trace: mismatched-buyer:memory (612.955417ms)
+✔ O4 actual adverse trace: stale-export-prefix:memory (438.28625ms)
+✔ O4 actual adverse trace: spend-before-activation-S:memory (526.140667ms)
+✔ O4 actual adverse trace: spend-before-activation-D:memory (502.967833ms)
+✔ O4 actual adverse trace: spend-before-activation-F:memory (504.688917ms)
+✔ O4 actual adverse trace: spend-before-activation-F-deliver:memory (505.260542ms)
+✔ O4 actual adverse trace: origin-spends-transferred-right:memory (508.24ms)
+✔ O4 actual adverse trace: move-preserves-retry:memory (339.099625ms)
+✔ O4 actual adverse trace: unassigned-writer-candidates:memory (348.335291ms)
+✔ O4 actual adverse trace: retired-writer-continuation:memory (365.129834ms)
+✔ O4 actual adverse trace: one-source-release-missing:sqlite (617.7375ms)
+✔ O4 actual adverse trace: withheld-release-evidence:sqlite (946.89075ms)
+✔ O4 actual adverse trace: restart-before-activation:sqlite (686.98925ms)
+✔ O4 actual adverse trace: repeated-activation-after-restart:sqlite (1023.850125ms)
+✔ O4 actual adverse trace: exact-retry-activation:sqlite (696.963083ms)
+✔ O4 actual adverse trace: timeout-after-hidden-activation:sqlite (696.351875ms)
+✔ O4 actual adverse trace: duplicate-inspection-import:sqlite (263.088083ms)
+✔ O4 actual adverse trace: duplicate-state-import:sqlite (699.319417ms)
+✔ O4 actual adverse trace: stale-source-proposal-at-source:sqlite (491.222ms)
+✔ O4 actual adverse trace: stale-source-proposal-at-destination:sqlite (665.859792ms)
+✔ O4 actual adverse trace: unauthorized-release:sqlite (446.781917ms)
+✔ O4 actual adverse trace: release-unowned-right:sqlite (425.71075ms)
+✔ O4 actual adverse trace: release-already-released-right:sqlite (503.035083ms)
+✔ O4 actual adverse trace: receipt-for-ineffective-release:sqlite (634.534792ms)
+✔ O4 actual adverse trace: receipt-for-unauthorized-release:sqlite (639.998208ms)
+✔ O4 actual adverse trace: wrong-destination-release:sqlite (646.762792ms)
+✔ O4 actual adverse trace: two-sources-export-same-right:sqlite (562.810625ms)
+✔ O4 actual adverse trace: mismatched-buyer:sqlite (650.108459ms)
+✔ O4 actual adverse trace: stale-export-prefix:sqlite (459.648958ms)
+✔ O4 actual adverse trace: spend-before-activation-S:sqlite (557.984666ms)
+✔ O4 actual adverse trace: spend-before-activation-D:sqlite (540.985ms)
+✔ O4 actual adverse trace: spend-before-activation-F:sqlite (539.687833ms)
+✔ O4 actual adverse trace: spend-before-activation-F-deliver:sqlite (535.598459ms)
+✔ O4 actual adverse trace: origin-spends-transferred-right:sqlite (536.388125ms)
+✔ O4 actual adverse trace: move-preserves-retry:sqlite (363.357ms)
+✔ O4 actual adverse trace: unassigned-writer-candidates:sqlite (371.061667ms)
+✔ O4 actual adverse trace: retired-writer-continuation:sqlite (393.103833ms)
+✔ O4 scope exercise honors attached refusing handler: memory (450.545834ms)
+✔ O4 scope exercise honors attached refusing handler: sqlite (359.940416ms)
+✔ O4 preserves original Sale 0–19 outcomes, model and member readability (242.106875ms)
+✔ O4 later attach, handover and transfer preserve actual pre-attach as-of replay (410.335958ms)
+✔ O4 goal 1: all actual readers and historical frontiers survive attach, handover and completed transfer: memory (1367.544125ms)
+✔ O4 goal 1: all actual readers and historical frontiers survive attach, handover and completed transfer: sqlite (1678.179458ms)
+✔ a listing origin opens the sale; the origin actor needs no grant (1.352875ms)
+✔ the same origin adopted twice is a genesis error (0.27375ms)
+✔ an origin whose kind does not resolve is an unhandled verdict and inert (0.529458ms)
+✔ an origin binds no expected binding: a foreign binding on an origin is ignored (1.084291ms)
+✔ a listing submitted later, not as an origin, is refused by the model (0.957209ms)
+✔ C1: a second issuance with the same label is its own token; admission and verification use the same issuance object and a tampered envelope supplies nothing (2.747917ms)
+✔ C1: an unauthorized issuance is never an issued token, at admission or in the fold (0.835916ms)
+✔ C3a: a narrow attach caps every kind it declares; a members-audience event of that package is not served beyond the cap (1.464375ms)
+✔ C3b: observe honours a declared narrower audience (0.674458ms)
+✔ C5: an intent bound to another context cannot be adopted as an origin; a system kind cannot be an origin (1.019709ms)
+✔ C8: committed entries and receipts are snapshots; a caller cannot rewrite them (0.431875ms)
+✔ C9: a malformed system payload is a deterministic ineffective verdict with the actor as its only reader; folding and retry continue (0.516542ms)
+✔ C10: close stops application events and leaves foundation administration open (0.560792ms)
+✔ a capped package cannot widen through a members policy either (0.67875ms)
+✔ D1: a member who never saw the private invitation verifies the acceptance from headers and the spine alone (0.906625ms)
+✔ D2: captured values are outside the identity, so they must live in config, which is inside it (0.264875ms)
+✔ D2: an installed descriptor is frozen; replacing a fold after attach throws and changes nothing (0.085292ms)
+✔ D2: a second definition under a model name in use is refused unless it is the same definition (0.135334ms)
+✔ D3: observe may narrow only to current members; naming a future member is ineffective and read by the actor alone (0.407542ms)
+✔ E1: a module-local helper is part of identity; same text and config in different modules bind differently and conflict on a shared model name (0.683ms)
+✔ E2: a shallow-frozen input descriptor is frozen recursively on attach; a nested config cannot change (0.099334ms)
+✔ run 1 corpus: every shrunk series still fails against the run-1 model with the recorded failure kind, and is reported against the current model (535.696ms)
+ℹ seed-103: 3 steps; run-1 model invariant; current model clean
+ℹ seed-121: 3 steps; run-1 model invariant; current model clean
+ℹ seed-129: 3 steps; run-1 model invariant; current model clean
+ℹ seed-138: 3 steps; run-1 model invariant; current model clean
+ℹ seed-146: 6 steps; run-1 model mismatch; current model clean
+ℹ seed-158: 6 steps; run-1 model mismatch; current model clean
+ℹ seed-172: 3 steps; run-1 model invariant; current model clean
+ℹ seed-183: 3 steps; run-1 model invariant; current model clean
+ℹ seed-189: 3 steps; run-1 model invariant; current model clean
+ℹ seed-56: 3 steps; run-1 model invariant; current model clean
+ℹ seed-65: 8 steps; run-1 model mismatch; current model clean
+ℹ seed-72: 3 steps; run-1 model invariant; current model clean
+ℹ seed-74: 3 steps; run-1 model invariant; current model clean
+ℹ seed-79: 6 steps; run-1 model mismatch; current model clean
+ℹ seed-8: 6 steps; run-1 model mismatch; current model clean
+ℹ seed-86: 6 steps; run-1 model mismatch; current model clean
+ℹ seed-96: 3 steps; run-1 model invariant; current model clean
+✔ run 6 corpus: the current foundation fixes unauthorized leaks; the repaired audience fixes the remaining authorized leaks (615.448ms)
+ℹ seed-112: 5 steps; kept model clean under current foundation; current model clean
+ℹ seed-141: 5 steps; kept model clean under current foundation; current model clean
+ℹ seed-160: 5 steps; kept model clean under current foundation; current model clean
+ℹ seed-172: 3 steps; kept model budget violation; current model clean
+ℹ seed-181: 3 steps; kept model budget violation; current model clean
+ℹ seed-193: 5 steps; kept model clean under current foundation; current model clean
+ℹ seed-197: 5 steps; kept model clean under current foundation; current model clean
+ℹ seed-200: 3 steps; kept model budget violation; current model clean
+ℹ seed-42: 5 steps; kept model clean under current foundation; current model clean
+✔ positions 0 to 5 carry the kinds and audiences of the trace (3.480541ms)
+✔ Alice reads every position; hidden count 0 (1.035708ms)
+✔ Bob's view: spine plus his own invitation; Carol's invitation is a header (1.190875ms)
+✔ Carol's view: spine plus her own invitation; Bob's invitation is a header (1.237292ms)
+✔ a late joiner receives the whole spine and addressed events, and members audiences are not retroactive (1.198208ms)
+✔ case 1, the trace: positions 0 to 19 replay with the readability of the table, the literal projections and the outcomes at 17 and 18, under the model's declared join disclosure (237.392375ms)
+ℹ literal trace without the join disclosure: 5 violations; first: ivan@15 mismatch: observe differs at 15 [models.sale.offers.0: oracle {"id":"o3","author":"bob","position":15,"status":"open","rep, view undefined; outcomes.15.effective: oracle true, view false; outcomes.15.perModel.sale.effective: oracle true, view false; outcomes.15.perModel.sale.reason: oracle null, view no_such_offer; outcomes.15.reason: oracle null, view ineffective]
+✔ case 2, replacement with a hidden predecessor: Ivan sees o3 open replacing o1, and a later accept of o1 is ineffective for everyone (175.31525ms)
+ℹ literal case 2 without the join disclosure: 3 violations; first: ivan@15 mismatch: observe differs at 15 [models.sale.offers.0: oracle {"id":"o3","author":"bob","position":15,"status":"open","rep, view undefined; outcomes.15.effective: oracle true, view false; outcomes.15.perModel.sale.effective: oracle true, view false; outcomes.15.perModel.sale.reason: oracle null, view no_such_offer; outcomes.15.reason: oracle null, view ineffective]
+✔ case 3, late joiner after the decision: a second accept is ineffective in every view, equality holds at every frontier, and a disclosure of the decision keeps it (174.111541ms)
+✔ case 4, late joiner judging a public event on a hidden fact: a withdrawal of a stub recorded before Dana joined, then an accept of it, are judged the same way in every view (61.556ms)
+✔ the repair ledger exists, its totals agree with its entries, and it states the budget outcome (0.487416ms)
+ℹ fixes 7, added kinds 0, budget exceeded
+✔ V3-F1: a private payload disclosed to a non-party is a budget violation on what they can read, whatever the projection hides (5.001375ms)
+✔ V3-F2: the kept run-6 model refuses a wrong-party counter, and the budget reports its misdelivery (8.72875ms)
+✔ V3-F3: null private payloads are recorded with a deterministic ineffective verdict, replay cold, retry exactly, and a valid action follows (60.219792ms)
+✔ V3-G1: an ineffective stub by carol does not make them a counter party (kept run-6 guard regression) (11.544041ms)
+✔ V3-G1: an ineffective stub by carol does not make them a counter party (current audience) (11.430042ms)
+✔ V3-G1: an ineffective stub by ivan does not make them a counter party (kept run-6 guard regression) (11.651291ms)
+✔ V3-G1: an ineffective stub by ivan does not make them a counter party (current audience) (10.955208ms)
+✔ Fix 7: wrong-author, malformed, unauthorized and stale counters never address a supplied non-party, and late members replay them consistently (67.578792ms)
+✔ O4 public proof reconstructs signed Sale facts and grants across handover on memory (139.038792ms)
+✔ O4 public proof reconstructs signed Sale facts and grants across handover on sqlite (164.217167ms)
+✔ O4 source pins distinguish genesis, initial writer and requested frontier (173.3055ms)
+✔ O4 public proof rejects malformed, tampered and incomplete authenticated prefixes (139.320916ms)
+✔ O4 public proof rejects missing, changed and forged handover evidence (154.106125ms)
+✔ O4 public proof rejects private bodies supplied at their genuine signed positions (133.029417ms)
+✔ O4 public proof rejects a public kind carrying nested private extras despite valid signatures (132.824334ms)
+✔ O4 public proof rejects private data attached outside its declared shape (115.024792ms)
+✔ O4 public proof requires semantic packages and disclosed attachment bodies (131.019209ms)
+✔ O4 public proof cannot hide an authenticated grant body as a private position (116.576709ms)
+✔ O4 public proof cannot hide an authenticated revoke body as a private position (116.93525ms)
+✔ O4 public proof cannot omit a withdrawal to turn a refused acceptance into a decision (139.181417ms)
+✔ O4 certificate binds every authority opening on memory (155.240666ms)
+✔ O4 certificate signer follows the frontier header across assignment on memory (201.184958ms)
+✔ O4 certificate strictly pins type, rule, genesis, frontier and shape on memory (145.807084ms)
+✔ O4 producer refuses a capped authority audience on memory (102.65075ms)
+✔ O4 malicious writer omissions exceed destination trust but member recomputation detects them on memory (139.174834ms)
+✔ O4 public and full semantic verdicts agree at every opening of every certified prefix on memory (238.313791ms)
+✔ O4 disclosure and observation remain hidden under the named public rule on memory (111.237584ms)
+✔ O4 certificate binds every authority opening on sqlite (145.725375ms)
+✔ O4 certificate signer follows the frontier header across assignment on sqlite (202.261708ms)
+✔ O4 certificate strictly pins type, rule, genesis, frontier and shape on sqlite (155.981834ms)
+✔ O4 producer refuses a capped authority audience on sqlite (109.61125ms)
+✔ O4 malicious writer omissions exceed destination trust but member recomputation detects them on sqlite (146.561875ms)
+✔ O4 public and full semantic verdicts agree at every opening of every certified prefix on sqlite (252.936542ms)
+✔ O4 disclosure and observation remain hidden under the named public rule on sqlite (122.910042ms)
+✔ V6 sale: the checker detects one narrowed audience rule (152.787458ms)
+ℹ {"model":"sale","manifest":"sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9","package":"sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85","mutant":"sha256:cfbe9b57a0d03196eefb2e3df18f1ecfa0817758853fbba2b6c6789bce23fce8","kind":"com.example.sale.offer","entries":6,"violations":1,"first":"alice@5 mismatch: observe differs at 5 [models.sale.accepted: oracle o1, view null; models.sale.status: oracle decided, view open; outcomes.5.effective: oracle true, view false; outcomes.5.perModel.sale.effective: oracle true, view false; outcomes.5.perModel.sale.reason: oracle null, view no_such_offer; outcomes.5.reason: oracle null, view ineffective]"}
+ℹ {"corpus":"v6-sale","manifest":"sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9","package":"sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85","mutant":"sha256:cfbe9b57a0d03196eefb2e3df18f1ecfa0817758853fbba2b6c6789bce23fce8","nonce":"v6:sale","originalSteps":4,"steps":[{"step":{"type":"invite","inviter":"alice","invitee":"bob","grants":{"roles":["Buyer"]}},"entries":[{"id":"sha256:259c64ab91c0a4c5f3173ea3c5ecd1dae31aad3ef0e38755a2e7367c6447f98c","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"bob"},"entries":[{"id":"sha256:77a3b1ced99c3f404c8bb40c85057b56bc453d593419e97f92b83c59559166cb","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"act","actor":"bob","kind":"com.example.sale.offer","payload":{"offer_id":"o1"},"nonce":"v6:4"},"entries":[{"id":"sha256:586281868199913bc072a9dad01e8e9bc2b55193dbe2d1880bd0e0e79a7a4067","kind":"com.example.sale.offer"}]},{"step":{"type":"act","actor":"alice","kind":"com.example.sale.accept","payload":{"offer_id":"o1"},"nonce":"v6:5"},"entries":[{"id":"sha256:beb1444a0c93de85bcecbb333105df27860c50dcaf3140a8ad7fa1ef1eecc8f6","kind":"com.example.sale.accept"}]}]}
+ℹ {"committedCorpus":"v6-sale","recordSnapshot":"742e64a06d06226b456f489eb53deacc1bc9f5db","violations":1,"finding":"alice@5 mismatch: observe differs at 5 [models.sale.accepted: oracle o1, view null; models.sale.status: oracle decided, view open; outcomes.5.effective: oracle true, view false; outcomes.5.perModel.sale.effective: oracle true, view false; outcomes.5.perModel.sale.reason: oracle null, view no_such_offer; outcomes.5.reason: oracle null, view ineffective]","deletions":4,"control":"clean"}
+✔ V6 sale: an unrelated private attach preserves a shared intent; a relevant binding change stales it (22.773625ms)
+ℹ {"model":"sale","manifest":"sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9","package":"sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85","unrelated":4,"shared":5,"relevant":6,"stale":7,"fresh":8,"violations":0}
+✔ V6 booking: the checker detects one narrowed audience rule (62.505875ms)
+ℹ {"model":"booking","manifest":"sha256:cb4514f4967891077ad78e1dd0fba4c17438fb32b98cd8bd790df8531b35dd16","package":"sha256:0556de5c337344eaa15afcbbbf5d22aa82c384bd6841d4ffb0c07185d4b7ec27","mutant":"sha256:cad57243b94ef8b451168fc4265cc7fe0463af104d43faced5f8712da2ec9983","kind":"com.example.booking.occupancy","entries":5,"violations":1,"first":"bob@4 mismatch: observe differs at 4 [outcomes.4.effective: oracle true, view false; outcomes.4.perModel.booking.effective: oracle true, view false; outcomes.4.perModel.booking.reason: oracle null, view no_such_occupancy; outcomes.4.reason: oracle null, view ineffective]"}
+ℹ {"corpus":"v6-booking","manifest":"sha256:cb4514f4967891077ad78e1dd0fba4c17438fb32b98cd8bd790df8531b35dd16","package":"sha256:0556de5c337344eaa15afcbbbf5d22aa82c384bd6841d4ffb0c07185d4b7ec27","mutant":"sha256:cad57243b94ef8b451168fc4265cc7fe0463af104d43faced5f8712da2ec9983","nonce":"v6:booking","originalSteps":4,"steps":[{"step":{"type":"invite","inviter":"alice","invitee":"bob","grants":{"roles":["Booker"]}},"entries":[{"id":"sha256:42d07670362f88fe8988e267a1536926ba8165f29be51dbfd980371a047c2930","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"bob"},"entries":[{"id":"sha256:8a5603ece26d4a971c03c9a4d9be8bbab7ee515faf8e214867e0ad79d9a46b0c","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"act","actor":"alice","kind":"com.example.booking.occupancy","payload":{"booking_id":"b1","room":"room-1","start":1,"end":3},"nonce":"v6:3"},"entries":[{"id":"sha256:31588b6760af1ccb145acf78489915373aca9a9614dac855977ae2f24c1c9174","kind":"com.example.booking.occupancy"}]},{"step":{"type":"act","actor":"alice","kind":"com.example.booking.free","payload":{"booking_id":"b1"},"nonce":"v6:4"},"entries":[{"id":"sha256:cfd639cbd2ad61d9d1072479a17e906843e4dc09f68c06c4217e4a5e40f8b2c1","kind":"com.example.booking.free"}]}]}
+ℹ {"committedCorpus":"v6-booking","recordSnapshot":"742e64a06d06226b456f489eb53deacc1bc9f5db","violations":1,"finding":"bob@4 mismatch: observe differs at 4 [outcomes.4.effective: oracle true, view false; outcomes.4.perModel.booking.effective: oracle true, view false; outcomes.4.perModel.booking.reason: oracle null, view no_such_occupancy; outcomes.4.reason: oracle null, view ineffective]","deletions":4,"control":"clean"}
+✔ V6 booking: an unrelated private attach preserves a shared intent; a relevant binding change stales it (10.972875ms)
+ℹ {"model":"booking","manifest":"sha256:cb4514f4967891077ad78e1dd0fba4c17438fb32b98cd8bd790df8531b35dd16","package":"sha256:0556de5c337344eaa15afcbbbf5d22aa82c384bd6841d4ffb0c07185d4b7ec27","unrelated":3,"shared":4,"relevant":5,"stale":6,"fresh":7,"violations":0}
+✔ V6 club: the checker detects one narrowed audience rule (312.348958ms)
+ℹ {"model":"club","manifest":"sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde","package":"sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e","mutant":"sha256:276d0f9610eba50cff5a922b06117b5300a918d0c538a629befa1292228e3b1e","kind":"com.example.club.standing","entries":8,"violations":2,"first":"bob@7 mismatch: observe differs at 7 [affordances.0: oracle com.example.club.vote, view undefined; models.club.applications.0.votes.yes: oracle 0, view 1; outcomes.7.effective: oracle false, view true; outcomes.7.perModel.club.effective: oracle false, view true; outcomes.7.perModel.club.reason: oracle lapsed, view null; outcomes.7.reason: oracle ineffective, view null]"}
+ℹ {"corpus":"v6-club","manifest":"sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde","package":"sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e","mutant":"sha256:276d0f9610eba50cff5a922b06117b5300a918d0c538a629befa1292228e3b1e","nonce":"v6:club","originalSteps":7,"steps":[{"step":{"type":"invite","inviter":"alice","invitee":"bob","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:3e73b2a8ed8b85302925611134a8c459631fa3edc5a6d0b47c75bcde127631be","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"bob"},"entries":[{"id":"sha256:00d2be5cbdf574555cc260b937e4c130852c6c46a54d709e4e33579cba880b22","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"dana","grants":{"roles":[]}},"entries":[{"id":"sha256:cb431f70546e211a6216d513b1d3b6c666f23e505c84f894f614629e1250d622","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"dana"},"entries":[{"id":"sha256:98ed4464fecc47636bebee69ac6295900bfa6c8f8a64779e205bedbeb0407450","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"act","actor":"dana","kind":"com.example.club.apply","payload":{"statement":"please"},"nonce":"v6:5"},"entries":[{"id":"sha256:971e9bd20f74b23e89cb265bd0f5318778652c22b88dfbdf91bbd51b9ca2ae05","kind":"com.example.club.apply"}]},{"step":{"type":"act","actor":"alice","kind":"com.example.club.standing","payload":{"member":"bob","standing":"lapsed"},"nonce":"v6:6"},"entries":[{"id":"sha256:5fac89a5616249aa497becd44bf51aa1a009bde5e80b0cb2a4fbe4c974edc86b","kind":"com.example.club.standing"}]},{"step":{"type":"act","actor":"bob","kind":"com.example.club.vote","payload":{"application_id":"sha256:971e9bd20f74b23e89cb265bd0f5318778652c22b88dfbdf91bbd51b9ca2ae05","choice":"yes"},"nonce":"v6:7"},"entries":[{"id":"sha256:bba005ee18a5807674fba081bffdff6cc4df8fee6069cc4efeb976e4d00a03f5","kind":"com.example.club.vote"}],"application":"sha256:971e9bd20f74b23e89cb265bd0f5318778652c22b88dfbdf91bbd51b9ca2ae05"}]}
+ℹ {"committedCorpus":"v6-club","recordSnapshot":"742e64a06d06226b456f489eb53deacc1bc9f5db","violations":2,"finding":"bob@7 mismatch: observe differs at 7 [affordances.0: oracle com.example.club.vote, view undefined; models.club.applications.0.votes.yes: oracle 0, view 1; outcomes.7.effective: oracle false, view true; outcomes.7.perModel.club.effective: oracle false, view true; outcomes.7.perModel.club.reason: oracle lapsed, view null; outcomes.7.reason: oracle ineffective, view null]","deletions":7,"control":"clean"}
+✔ V6 club: an unrelated private attach preserves a shared intent; a relevant binding change stales it (12.63575ms)
+ℹ {"model":"club","manifest":"sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde","package":"sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e","unrelated":3,"shared":4,"relevant":5,"stale":6,"fresh":7,"violations":0}
+✔ V6 serving mutation: hiding a spine revocation is detected without changing the recorded history (69.714333ms)
+ℹ {"mutation":"hidden-spine-revocation","manifest":"sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9","package":"sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85","at":4,"violations":2,"first":"bob@4 mismatch: observe differs at 4 [affordances.0: oracle undefined, view com.example.sale.offer]","dependent":"bob@5 mismatch: observe differs at 5 [affordances.0: oracle undefined, view com.example.sale.offer; affordances.1: oracle undefined, view com.example.sale.offer_terms; affordances.2: oracle undefined, view com.example.sale.withdraw; models.sale.offers.0: oracle undefined, view {\"id\":\"after-revocation\",\"author\":\"bob\",\"position\":5,\"status; outcomes.5.effective: oracle false, view true; outcomes.5.perModel: oracle undefined, view {\"sale\":{\"effective\":true,\"reason\":null}}; outcomes.5.reason: oracle unauthorized, view null]"}
+ℹ {"corpus":"v6-hidden-revocation","manifest":"sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9","package":"sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85","nonce":"v6:hidden-revocation","originalSteps":4,"steps":[{"step":{"type":"invite","inviter":"alice","invitee":"bob","grants":{"roles":["Buyer"]}},"entries":[{"id":"sha256:5c9e71807414f9c4c05adee9e28c369cb4ae7f4a0db9b9e70d885cf7dc0610de","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"bob"},"entries":[{"id":"sha256:06d6fbf8d7a3cf5d1e681dae6c07c72763af2c8104ed23f9c78f13d1d45a927c","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"act","actor":"alice","kind":"ai.generalbusiness.dap.revoke","payload":{"principal":"bob","roles":["Buyer"]},"nonce":"v6:4"},"entries":[{"id":"sha256:38fbbe9950ebbf57179ba60bd4b6ab6f6e4625d5c187483fe73a2faf15e0df30","kind":"ai.generalbusiness.dap.revoke"}]}]}
+ℹ {"committedCorpus":"v6-hidden-revocation","recordSnapshot":"742e64a06d06226b456f489eb53deacc1bc9f5db","violations":1,"finding":"bob@4 mismatch: observe differs at 4 [affordances.0: oracle undefined, view com.example.sale.offer]","deletions":3,"control":"clean"}
+ℹ tests 371
+ℹ suites 0
+ℹ pass 367
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 4
+ℹ duration_ms 33848.992083
+
+✖ failing tests:
+
+test at test/club-a5.test.ts:76:11
+⚠ original policy requires rejection of invalid targets and no admission grant (1.256458ms) # V5-A5 retained negative result; no policy repair commissioned
+  AssertionError [ERR_ASSERTION]: votes and admission must refer to an effective application; invalid targets must not grant Member
+  + actual - expected
+  
+    {
+  +   grants: 1,
+  -   grants: 0,
+      readers: [
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'alice',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        },
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'bob',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        },
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'carol',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        },
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'dana',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        },
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'frank',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        }
+      ]
+    }
+  
+      at TestContext.<anonymous> (file:///private/tmp/dap-o6-ordering-report/spike/test/club-a5.test.ts:77:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at TestContext.test (node:internal/test_runner/test:400:20)
+      at TestContext.<anonymous> (file:///private/tmp/dap-o6-ordering-report/spike/test/club-a5.test.ts:76:11)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: { readers: [ [Object], [Object], [Object], [Object], [Object] ], grants: 1 },
+    expected: { readers: [ [Object], [Object], [Object], [Object], [Object] ], grants: 0 },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at test/club-a5.test.ts:76:11
+⚠ original policy requires rejection of invalid targets and no admission grant (0.297333ms) # V5-A5 retained negative result; no policy repair commissioned
+  AssertionError [ERR_ASSERTION]: votes and admission must refer to an effective application; invalid targets must not grant Member
+  + actual - expected
+  
+    {
+  +   grants: 1,
+  -   grants: 0,
+      readers: [
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'alice',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        },
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'bob',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        },
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'carol',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        },
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'dana',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        },
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'frank',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        }
+      ]
+    }
+  
+      at TestContext.<anonymous> (file:///private/tmp/dap-o6-ordering-report/spike/test/club-a5.test.ts:77:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at TestContext.test (node:internal/test_runner/test:400:20)
+      at TestContext.<anonymous> (file:///private/tmp/dap-o6-ordering-report/spike/test/club-a5.test.ts:76:11)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: { readers: [ [Object], [Object], [Object], [Object], [Object] ], grants: 1 },
+    expected: { readers: [ [Object], [Object], [Object], [Object], [Object] ], grants: 0 },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at test/club-a5.test.ts:76:11
+⚠ original policy requires rejection of invalid targets and no admission grant (0.290708ms) # V5-A5 retained negative result; no policy repair commissioned
+  AssertionError [ERR_ASSERTION]: votes and admission must refer to an effective application; invalid targets must not grant Member
+  + actual - expected
+  
+    {
+  +   grants: 1,
+  -   grants: 0,
+      readers: [
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'alice',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        },
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'bob',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        },
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'carol',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        },
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'dana',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        },
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'frank',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        }
+      ]
+    }
+  
+      at TestContext.<anonymous> (file:///private/tmp/dap-o6-ordering-report/spike/test/club-a5.test.ts:77:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at TestContext.test (node:internal/test_runner/test:400:20)
+      at TestContext.<anonymous> (file:///private/tmp/dap-o6-ordering-report/spike/test/club-a5.test.ts:76:11)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: { readers: [ [Object], [Object], [Object], [Object], [Object] ], grants: 1 },
+    expected: { readers: [ [Object], [Object], [Object], [Object], [Object] ], grants: 0 },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at test/club.test.ts:265:1
+⚠ plan §4.2: a second admission is ineffective once the applicant holds Member (92.289333ms) # V5-A1: revised experiment and policy repair pending
+  AssertionError [ERR_ASSERTION]: the plan requires rejection of an existing Member
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///private/tmp/dap-o6-ordering-report/spike/test/club.test.ts:283:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
