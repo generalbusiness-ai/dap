@@ -69,3 +69,105 @@ test('O4 later attach, handover and transfer preserve actual pre-attach as-of re
     if (after.kind==='interpreted') { assert.equal(after.state.models.inspection,undefined); assert.equal(after.state.verdicts.length,11); }
   } finally { world.close(); }
 });
+
+// Goal 1's complete matrix uses actual replay results, not the manifest's
+// literal projection maps. Historical client/full disagreements are preserved:
+// this checks that later events do not rewrite either earlier interpretation.
+import type { Context } from '../src/context.ts';
+import { foldPrefix } from '../src/oracle.ts';
+import { observe, type Observation } from '../src/observe.ts';
+import { verifyJournalView } from '../src/journal.ts';
+import { recordScope } from '../fixtures/ordering-scope-records.ts';
+
+function historicalSourceQuestion(context: Context, reader: string, frontier: number) {
+  const view = context.view(reader,frontier);
+  const full = foldPrefix(context,frontier);
+  const client = interpretView(reader,view,frontier,context.packages);
+  assert.equal(client.kind,'interpreted',`${reader}@${frontier} must be interpretable`);
+  if (client.kind !== 'interpreted') throw new Error('unresolved historical source');
+  const visible = (position: number) => !!view[position]?.event;
+  return {
+    reader,frontier,basis:frontier,
+    view,
+    fullSource:{
+      eventIds:context.entries.slice(0,frontier + 1).map(entry=>entry.id),
+      verdicts:full.verdicts,audiences:full.audiences,participants:full.participants,
+      sale:full.models.sale,
+    },
+    fullProjection:observe(full,reader,frontier,visible),
+    clientOutcomes:client.outcomes,
+    clientProjection:observe(client.state,reader,frontier,visible),
+  };
+}
+function saleProjection(observation: Observation) {
+  return { participants:observation.participants,closed:observation.closed,models:{ sale:observation.models.sale },outcomes:observation.outcomes };
+}
+for (const storage of ['memory','sqlite'] as const) test('O4 goal 1: all actual readers and historical frontiers survive attach, handover and completed transfer: ' + storage, () => {
+  const original = replay({ base:saleBase(),steps:saleTraceSteps(),joinDisclosure:false }).ctx;
+  const world = new LifecycleWorld({},storage);
+  // Capture all fixture principals before future memberships are known. After
+  // completion, the actual source/destination participant union selects readers.
+  const candidates = Object.values(principals);
+  const prefix = new Map<string,ReturnType<typeof historicalSourceQuestion>>();
+  const sale = new Map<string,ReturnType<typeof historicalSourceQuestion>>();
+  const captured = (map: typeof prefix, through: number) => {
+    for (const reader of candidates) for (let frontier = 0; frontier <= through; frontier++) {
+      map.set(`${reader}@${frontier}`,historicalSourceQuestion(world.contexts.S!.journal.context,reader,frontier));
+    }
+  };
+  const acrossAttach: string[] = [];
+  try {
+    for (const [name,operation] of healthyOperations) {
+      operation(world);
+      if (name === 'before-attach') captured(prefix,10);
+      if (name === 'inspection-attached') {
+        for (const [key,before] of prefix) {
+          assert.deepEqual(historicalSourceQuestion(world.contexts.S!.journal.context,before.reader,before.frontier),before,'immediately across attach: ' + key);
+          acrossAttach.push(key);
+        }
+      }
+      if (name === 'sale-closed') captured(sale,19);
+    }
+    const source = world.contexts.S!;
+    assert.equal(source.journal.context.head,24);
+    assert.equal(source.journal.ordering.writer,principals.W1);
+    assert.equal(world.contexts.F!.journal.context.head,3);
+    assert.equal(world.contexts.F!.state.fulfilled,true);
+    assert.equal(world.contexts.F!.state.delivered,true);
+    const readers = [...new Set([...source.journal.context.state.participants,...world.contexts.F!.journal.context.state.participants])];
+    // Also prove the fixture really exercised all four original Sale readers
+    // and the later destination participant who never joined S.
+    assert.deepEqual(new Set(readers),new Set([...original.state.participants.map(name=>principals[name as keyof typeof principals]),principals.kim]));
+    assert.equal(source.journal.context.state.participants.includes(principals.kim),false);
+    const matrix: unknown[] = [];
+    for (const reader of readers) for (let frontier = 0; frontier <= 19; frontier++) {
+      const key = `${reader}@${frontier}`;
+      const after = historicalSourceQuestion(source.journal.context,reader,frontier);
+      verifyJournalView(after.view,{ genesis:source.journal.context.genesisId,writer:principals.W0 });
+      assert.deepEqual(after,sale.get(key),'after completed transfer: ' + key);
+      if (frontier <= 10) {
+        assert.ok(acrossAttach.includes(key));
+        assert.deepEqual(after,prefix.get(key),'pre-attach matrix after completed transfer: ' + key);
+      }
+      const alias = normalize(reader);
+      const old = historicalSourceQuestion(original,alias,frontier);
+      assert.deepEqual(normalize(after.fullSource.verdicts),old.fullSource.verdicts,'original full-source outcomes: ' + key);
+      assert.deepEqual(normalize(after.fullSource.audiences),old.fullSource.audiences,'original audiences: ' + key);
+      assert.deepEqual(normalize(after.fullSource.sale),old.fullSource.sale,'original full Sale fold: ' + key);
+      assert.deepEqual(normalize(saleProjection(after.fullProjection)),saleProjection(old.fullProjection),'original full Sale projection: ' + key);
+      assert.deepEqual(normalize(after.clientOutcomes),old.clientOutcomes,'original client outcomes: ' + key);
+      assert.deepEqual(normalize(saleProjection(after.clientProjection)),saleProjection(old.clientProjection),'original client Sale projection: ' + key);
+      assert.deepEqual(after.view.map(entry=>!!entry.event),old.view.map(entry=>!!entry.event),'original readability: ' + key);
+      matrix.push({ reader:alias,frontier,basis:frontier,before:normalize(sale.get(key)),after:normalize(after),original:{ fullProjection:saleProjection(old.fullProjection),clientProjection:saleProjection(old.clientProjection),clientOutcomes:old.clientOutcomes } });
+    }
+    recordScope('goal-1-history-matrix-' + storage,{
+      actualReaders:normalize(readers),sourceGenesis:source.journal.context.genesisId,
+      completedHeads:{ S:source.journal.context.head,F:world.contexts.F!.journal.context.head },
+      immediatelyAcrossAttachQuestions:acrossAttach.length,
+      actualReaderPreAttachQuestions:readers.length * 11,
+      completedTransferHistoricalQuestions:readers.length * 20,
+      compared:'actual identities, full verdicts/audiences, signed views, client outcomes and original Sale projections at matching original bases',
+      matrix,
+    });
+  } finally { world.close(); }
+});
