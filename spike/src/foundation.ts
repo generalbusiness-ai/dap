@@ -342,6 +342,7 @@ export function foldEntry(state: FoundationState, input: FoldInput): Verdict {
   const membersBefore = [...state.participants];
   let verdict: Verdict;
   let audience: Audience | undefined;
+  let modelsBefore: FoundationState['models'] | undefined;
 
   if (pos === 0) {
     verdict = foldGenesis(state, ev, packages);
@@ -361,6 +362,9 @@ export function foldEntry(state: FoundationState, input: FoldInput): Verdict {
       }
     }
   } else {
+    // Handlers receive cloned inputs. Keep the original values until the
+    // audience succeeds, so a refused event cannot leave a model effect.
+    modelsBefore = { ...state.models };
     verdict = foldApplication(state, entry);
   }
 
@@ -388,6 +392,7 @@ export function foldEntry(state: FoundationState, input: FoldInput): Verdict {
         try {
           audience = capped(binding.audience({ position: pos, members: membersBefore }, ev), binding.ceiling, membersBefore);
         } catch (e) {
+          if (modelsBefore) state.models = modelsBefore;
           verdict = { known: true, authorized: verdict.authorized, effective: false, reason: 'audience_error:' + (e instanceof Error ? e.message : String(e)) };
           audience = named(ev.actor);
         }
