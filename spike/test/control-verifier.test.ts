@@ -57,7 +57,7 @@ test('O5 proof boundary rejects unrelated inputs and does not mutate callers', (
   assert.equal(JSON.stringify(proof), before);
   assert.ok(Object.isFrozen(result.assignments));
   assert.throws(() => verifyControlSpine({ ...proof, packages: {} } as ControlProof), /proof_shape/);
-  assert.throws(() => verifyControlSpine({ ...proof, entries: [{ ...proof.entries[0]!, payload: {} }] } as ControlProof), /entry_shape/);
+  assert.throws(() => verifyControlSpine({ ...proof, entries: [{ ...proof.entries[0]!, payload: {} }] } as unknown as ControlProof), /entry_shape/);
   assert.throws(() => compareControlSpines(proof, fixture.proofs.find(p => p.name === 'v1-fixed-writer')!.proof), /different_genesis/);
 });
 test('O5 executes with packages, application payloads and grant folds unavailable', t => {

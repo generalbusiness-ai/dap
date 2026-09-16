@@ -64,7 +64,7 @@ not a new committed position.
 
 ## Measurements
 
-Focused run 1 source: `462d7de` (full commit recorded by Git). Command from
+Focused run 1 source: `462d7de` (the source-freeze commit). Command from
 `spike`: `node --test test/control-verifier.test.ts`. Result: 53 passed,
 one failed, zero skips or TODOs. The isolated subprocess was denied access
 while Node resolved macOS's `/var` symlink; no verifier assertion failed.
@@ -73,5 +73,15 @@ The test now resolves the temporary directory before starting permission mode.
 The first typecheck could not find the newly created worktree's dependencies;
 `npm ci --ignore-scripts --no-audit --no-fund` installed the committed lockfile.
 
-Final O3 integration, repeated measurement and independent checker review
-remain completion gates.
+Focused run 2 source: `ac5630356e71749b841340cf0023a353e41c793e`,
+which integrates O3 final candidate `c527584d5399f20dff33625e20cb97d237bdad98`.
+The same focused command passed all 54 checks, including isolation, with no
+failures, skips or TODOs; see [run-2.txt](ordering-o5-runs/run-2.txt).
+TypeScript then rejected one deliberate malformed-input test cast; the cast
+now explicitly passes through `unknown`, with no runtime or verifier change.
+
+The next frozen source adds an actual O3 SQLite-produced handover, with
+explicit expected seal/assign/successor positions 2/3/4. Its projected proof
+is checked in the restricted subprocess and emitted for retention. O3 is a
+producer of this input, not the source of the expected control result.
+Full integration measurement and independent checker review remain gates.
