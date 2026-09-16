@@ -54,6 +54,7 @@ and every run cites the identity it ran under.
 | Frozen, before the baseline | `sha256:4123f7b5f8610fd09ca5042a169b57fff8756dc6d0089ac2196ecdf7c42ac52b` | as frozen |
 | Run 1 corrections | `sha256:7e0f89716d6d5d9c40c1a5d0e4692bb605d1ad1504d0ad1a3be0bb59d34116b5` | the counter kind's payload names the offer's author (prose table and trace step 10); the side package projects visible notes; affordance weights so a series is not closed at once |
 | Run 3 | `sha256:9ac768d2eedc48f0802d468eac9234d0bfd3b98d58113f850bb3bf70dd132d4a` | the privacy budget is checked on what a participant can read, with the parties of each private event derived from recorded facts (checker's V3-F1) |
+| Run 5 | `sha256:847db513a904db2e0de933224d9c4bbabee2a24249e3e81a4030a2f256baabbf` | the budget check's readable-view argument became required, so no caller can fall back to the projection-only check; no semantic change |
 
 ## Run 1
 
@@ -163,7 +164,8 @@ not a model fix: an application event whose kind has no binding at its
 position is recorded with an actor-only audience (design note §8). The
 budget checks now require the readable view as an argument, so a caller
 cannot silently fall back to the projection-only check (the author's
-caution). Manifest revision "Run 3"; package as at run 4.
+caution). Manifest revision "Run 5" (the signature change only); package
+as at run 4, `sha256:0b252fc3b30ddf7d3b7a57ac2630b8cc1ac682b253da1118f8d3706f8953dde7`.
 
 The trace, cases 2 to 4, the three reproduced counterexamples, the run-1
 corpus and the campaign pass: **200 of 200 seeds** with zero violations
