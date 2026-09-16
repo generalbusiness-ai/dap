@@ -196,7 +196,7 @@ test('the repair ledger exists, its totals agree with its entries, and it states
   const ledger = readFileSync(fileURLToPath(new URL('../manifests/sale.ledger.md', import.meta.url)), 'utf8');
   const fixes = (ledger.match(/^### Fix \d+/gm) ?? []).length;
   const addedKinds = (ledger.match(/^- Added kind: yes/gm) ?? []).length;
-  const totals = /^Totals: (\d+) fixes?, (\d+) added kinds?, budget (within|exceeded)/m.exec(ledger);
+  const totals = /^Totals: (\d+) fix(?:es)?, (\d+) added kinds?, budget (within|exceeded)/m.exec(ledger);
   assert.ok(totals, 'the ledger states its totals');
   assert.equal(Number(totals[1]), fixes, 'fix total matches the entries');
   assert.equal(Number(totals[2]), addedKinds, 'added-kind total matches the entries');

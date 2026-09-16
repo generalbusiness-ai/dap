@@ -72,8 +72,61 @@ model cannot stop a client from disclosing; whether to declare a
 disclosure policy for the fixture's client to honour is the author's
 decision and is counted if made.
 
+## Run 3
+
+Snapshot commit: see `git log`, "checker run 3". Manifest as at run 2;
+package after fix 1:
+`sha256:622a120962da35c370b093161848677fe086a5d1fa729655fc3ce2ced855bc9b`.
+
+All six predeclared cases pass. The campaign passes: 200 of 200 seeds
+with zero violations of the property, the pause rule, the invariants and
+the privacy budget, over 12000 entries with 974 joins, 197 narrow side
+attaches, 1638 disclosures, 2569 requests, 1426 publications (654
+effective), 401 frees, 439 cancels and 1582 clock ticks.
+
 ## Fixes
 
-(none)
+### Fix 1: a disclosure policy naming the public kinds
 
-Totals: 0 fixes, 0 added kinds, budget within
+- Discovery source: checker run 2, readable-events budget, after
+  checker's V3-F1
+- Counterexample: seed 1, erin, position 31: Erin can read Dana's
+  request (parties dana+alice) from frontier 57 on, after the fixture's
+  disclosing client, acting as the admin's client, disclosed that
+  position to her. Also seed 3, bob, position 40: Bob can read Erin's
+  cancel. Every run-2 failure has this shape; the property, the pause
+  rule and the invariants held throughout.
+- Constraint affected: none (no overlap is untouched); the privacy
+  budget for purpose and booker
+- Added kind: no
+- Before/after: before, the model declared nothing about disclosure, so
+  the fixture's client could widen any earlier position to any member,
+  including a request or a cancel, whose payloads carry the booker and
+  the purpose. After, the model declares `config.disclosurePolicy`: a
+  client may disclose `booking.occupancy`, `booking.free`, the clock
+  observation `dap.observe` and `dap.attach` beyond their audience, and
+  nothing else. Occupancies, frees and ticks are the public facts the
+  join disclosure already relies on; an attach is part of any
+  disclosure's dependency closure (design note §8). Requests and
+  cancels are forbidden: their readers are fixed at the booker and the
+  admin by the budget. The fixture's disclosing client honours the
+  declaration (`disclosableKinds` in `src/script.ts`); the checker still
+  judges what is readable, so a client that ignored the policy would
+  still be caught. The fold and the projection are unchanged. Discloses
+  nothing more; it narrows what a client may widen.
+
+Known limit of the predeclared schema, not counted: a cancel's readers
+are its actor and the admin the cancel names; the request it cancels is
+readable by its booker and the admin the request names. If a booker
+named different admins in the two events, the cancel's admin would read
+the cancel without the request and judge `not_booker` where the oracle
+judges effective (and likewise `already_cancelled` for a second cancel
+whose first that admin cannot read). No fold rule closes this at no
+cost, because that reader holds no evidence of the request; the only
+repairs are a rule the reader cannot check (refuse a cancel whose admin
+differs from the request's, which the same reader cannot see) or a
+change to the predeclared audience rule. The generator always names the
+real admin, so the campaign does not exercise it, and the model leaves
+the rule as written.
+
+Totals: 1 fix, 0 added kinds, budget within

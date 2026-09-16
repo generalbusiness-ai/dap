@@ -30,6 +30,11 @@
 //   is `not_booker` and reads the same everywhere the two admins agree.
 // - Time only moves forward under the domain; the fold takes the maximum
 //   of the ticks it has seen, so it never depends on their order.
+// - A client, not the model, decides what to disclose. The model declares
+//   which kinds a client may disclose beyond their audience
+//   (`config.disclosurePolicy`, fix 1): occupancies, frees, clock ticks
+//   and attaches. Requests and cancels carry the booker and the purpose,
+//   whose readers the privacy budget fixes at the booker and the admin.
 //
 // The projection derives every row from the position of the event that
 // produced it and shows it only when that position is visible to the
@@ -42,6 +47,8 @@ import { MEMBERS, named, type EventBody } from '../src/types.ts';
 const NS = 'com.example.booking.';
 /** The system kind of an ambient fact; the clock arrives as `{fact: {clock}}`. */
 const OBSERVE = 'ai.generalbusiness.dap.observe';
+/** The system kind that installs a package; part of any disclosure's dependency closure. */
+const ATTACH = 'ai.generalbusiness.dap.attach';
 
 export interface BookingRequest {
   /** the booking id: the content id of the request event */
@@ -109,6 +116,16 @@ export type BookingConfig = {
     by: 'admin';
     kinds: string[];
     effectiveOnly: true;
+  };
+  /**
+   * The model's declared disclosure policy (fix 1): the kinds a client may
+   * disclose beyond their audience. Occupancies, frees and clock ticks are
+   * public facts; an attach is part of any disclosure's dependency closure
+   * (design note §8). Requests and cancels are never on the list: a client
+   * that discloses one widens the booker and the purpose past the budget.
+   */
+  disclosurePolicy: {
+    kinds: string[];
   };
 };
 
@@ -185,7 +202,11 @@ function refuse(state: BookingState, reason: string) {
 
 export const bookingModel: ModelSpec<BookingState, BookingConfig> = {
   id: 'booking',
-  config: { room: 'room-1', joinDisclosure: { by: 'admin', kinds: [NS + 'occupancy', NS + 'free', OBSERVE], effectiveOnly: true } },
+  config: {
+    room: 'room-1',
+    joinDisclosure: { by: 'admin', kinds: [NS + 'occupancy', NS + 'free', OBSERVE], effectiveOnly: true },
+    disclosurePolicy: { kinds: [NS + 'occupancy', NS + 'free', OBSERVE, ATTACH] },
+  },
   ambient: true,
   init: () => ({ now: null, ticks: [], requests: [], cancels: [], occupancies: [], frees: [] }),
   roles: {
