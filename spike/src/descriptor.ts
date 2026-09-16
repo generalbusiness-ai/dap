@@ -112,8 +112,9 @@ export function codeId(fn: (...args: never[]) => unknown): string {
   return contentId(fn.toString());
 }
 
-export function modelId(m: ModelSpec): Json {
-  return { init: codeId(m.init), fold: codeId(m.fold), config: m.config, roles: (m.roles ?? {}) as Json };
+/** A model's identity: its functions' text, its config, its roles, and the fingerprint of the module that defines it. */
+export function modelId(m: ModelSpec, module: string | undefined): Json {
+  return { init: codeId(m.init), fold: codeId(m.fold), config: m.config, roles: (m.roles ?? {}) as Json, module: module ? moduleHash(module) : null };
 }
 
 const moduleHashes = new Map<string, string>();
@@ -128,20 +129,25 @@ export function moduleHash(url: string): string {
   return h;
 }
 
-/** Freeze a descriptor and everything reachable from it, functions included. */
-export function freezeDescriptor<T>(value: T): T {
-  if ((typeof value === 'object' || typeof value === 'function') && value !== null && !Object.isFrozen(value)) {
+/**
+ * Freeze a descriptor and everything reachable from it, functions
+ * included. Children are visited even when the parent was already frozen,
+ * so a shallow-frozen input cannot leave a nested config mutable.
+ */
+export function freezeDescriptor<T>(value: T, seen: Set<unknown> = new Set()): T {
+  if ((typeof value === 'object' || typeof value === 'function') && value !== null && !seen.has(value)) {
+    seen.add(value);
     Object.freeze(value);
-    for (const v of Object.values(value as Record<string, unknown>)) freezeDescriptor(v);
+    for (const v of Object.values(value as Record<string, unknown>)) freezeDescriptor(v, seen);
   }
   return value;
 }
 
-function bindingSurface(b: KindBinding): Json {
+function bindingSurface(b: KindBinding, module: string | undefined): Json {
   return {
     schema: b.schema,
     handlers: b.handlers,
-    audience: { id: b.audienceId, code: codeId(b.audience) },
+    audience: { id: b.audienceId, code: codeId(b.audience), module: module ? moduleHash(module) : null },
     capability: b.capability ?? null,
     crossReads: b.crossReads ?? [],
   };
@@ -152,8 +158,8 @@ export function descriptorId(pkg: Omit<PackageDescriptor, 'id'>): string {
   return contentId({
     name: pkg.name,
     module: pkg.module ? moduleHash(pkg.module) : null,
-    models: Object.fromEntries(Object.keys(pkg.models).sort().map((m) => [m, modelId(pkg.models[m]!)])),
-    kinds: Object.fromEntries(Object.keys(pkg.kinds).sort().map((k) => [k, bindingSurface(pkg.kinds[k]!)])),
+    models: Object.fromEntries(Object.keys(pkg.models).sort().map((m) => [m, modelId(pkg.models[m]!, pkg.module)])),
+    kinds: Object.fromEntries(Object.keys(pkg.kinds).sort().map((k) => [k, bindingSurface(pkg.kinds[k]!, pkg.module)])),
     capabilities: [...pkg.capabilities].sort(),
   });
 }
@@ -181,9 +187,12 @@ export function attach(env: Environment, pkg: PackageDescriptor, opts: AttachOpt
   if (usesSystemPrefix(pkg)) return { ok: false, reason: 'namespace' };
   if (env.packages.some((p) => p.id === pkg.id)) return { ok: false, reason: 'duplicate_package' };
   // A model name resolves to exactly one definition: a second definition under a name in use is refused.
+  // The comparison is the complete identity, defining module included.
   for (const [name, m] of Object.entries(pkg.models)) {
-    const existing = findModel(env, name);
-    if (existing && contentId(modelId(existing)) !== contentId(modelId(m))) return { ok: false, reason: 'model_conflict' };
+    const existing = findModelWithPackage(env, name);
+    if (existing && contentId(modelId(existing.model, existing.pkg.module)) !== contentId(modelId(m, pkg.module))) {
+      return { ok: false, reason: 'model_conflict' };
+    }
   }
   // Installed definitions are frozen: nothing changes after attach without another attach.
   freezeDescriptor(pkg);
@@ -222,29 +231,35 @@ export function attach(env: Environment, pkg: PackageDescriptor, opts: AttachOpt
   return { ok: true, env: { ...env, packages: [...env.packages, pkg], kinds } };
 }
 
-export function findModel(env: Environment, id: string): ModelSpec | undefined {
-  for (const pkg of env.packages) if (pkg.models[id]) return pkg.models[id];
+export function findModelWithPackage(env: Environment, id: string): { model: ModelSpec; pkg: PackageDescriptor } | undefined {
+  for (const pkg of env.packages) if (pkg.models[id]) return { model: pkg.models[id]!, pkg };
   return undefined;
+}
+
+export function findModel(env: Environment, id: string): ModelSpec | undefined {
+  return findModelWithPackage(env, id)?.model;
 }
 
 /**
  * The expected-binding identity of a kind (design note §3): the kind and
- * its schema, the ordered handlers by code, the audience policy by id and
- * code, the capability contract, the runtime profile, the declared
+ * its schema, the ordered handlers by complete identity (code, config and
+ * defining module), the audience policy by id, code and defining module,
+ * the capability contract, the runtime profile, the declared
  * cross-namespace reads and any ceiling. Per kind, so an unrelated attach
  * does not change it.
  */
 export function bindingId(env: Environment, kind: Kind): string | undefined {
   const b = env.kinds[kind];
   if (!b) return undefined;
+  const declaring = env.packages.find((p) => p.id === b.packageId);
   return contentId({
     kind,
     schema: b.schema,
     handlers: b.handlers.map((h) => {
-      const m = findModel(env, h);
-      return { id: h, code: m ? modelId(m) : null };
+      const m = findModelWithPackage(env, h);
+      return { id: h, identity: m ? modelId(m.model, m.pkg.module) : null };
     }),
-    audience: { id: b.audienceId, code: codeId(b.audience) },
+    audience: { id: b.audienceId, code: codeId(b.audience), module: declaring?.module ? moduleHash(declaring.module) : null },
     capability: b.capability ?? null,
     runtime: env.runtime,
     crossReads: b.crossReads ?? [],

@@ -10,6 +10,8 @@ import { RUNTIME } from '../src/foundation.ts';
 import { MEMBERS } from '../src/types.ts';
 import { SALE, salePackage } from '../fixtures/sale.ts';
 import { ALICE, ALICE_CAPS, BOB, CAROL, accept, invite, listing, pkg, saleContext } from './helpers.ts';
+import { counterPackage as counterAdd1 } from './fixtures/counter-add1.ts';
+import { counterPackage as counterAdd100 } from './fixtures/counter-add100.ts';
 
 test('C1: a second issuance with the same label is its own token; admission and verification use the same issuance object and a tampered envelope supplies nothing', () => {
   const ctx = saleContext();
@@ -237,4 +239,44 @@ test('D3: observe may narrow only to current members; naming a future member is 
   const ok = ctx.act(ALICE, K.observe, { fact: { t: 8 }, audience: [BOB] });
   assert.ok(!('refused' in ok) && ok.verdict?.effective);
   assert.deepEqual(ctx.state.audiences[ok.header.position], { kind: 'named', principals: [ALICE, BOB] });
+});
+
+// ----- third review (workroom report c64636e7), E1 and E2 -----
+
+test('E1: a module-local helper is part of identity; same text and config in different modules bind differently and conflict on a shared model name', () => {
+  const a = counterAdd1('com.example.counter.a');
+  const b = counterAdd100('com.example.counter.b');
+  assert.notEqual(a.id, b.id);
+  const ea = attach(emptyEnvironment(RUNTIME), a);
+  const eb = attach(emptyEnvironment(RUNTIME), b);
+  assert.ok(ea.ok && eb.ok);
+  assert.notEqual(bindingId(ea.env, 'com.example.counter.a'), bindingId(eb.env, 'com.example.counter.b'));
+  // the +100 module under the same model name, for a new kind, into the +1 environment
+  assert.deepEqual(attach(ea.env, b), { ok: false, reason: 'model_conflict' });
+  // and the same module for a second kind is fine: identical definition
+  const a2 = counterAdd1('com.example.counter.c');
+  assert.ok(attach(ea.env, a2).ok);
+  // executed semantics follow the module: a context on each package counts differently
+  const run = (p: PackageDescriptor, kind: string) => {
+    const ctx = Context.create({ creator: ALICE, packages: { [p.id]: p }, bindings: [{ package: p.id }], grants: [{ principal: ALICE, capabilities: [] }] });
+    const r = ctx.act(ALICE, kind, {});
+    assert.ok(!('refused' in r) && r.verdict?.effective);
+    return (ctx.state.models['counter'] as { count: number }).count;
+  };
+  assert.equal(run(a, 'com.example.counter.a'), 1);
+  assert.equal(run(b, 'com.example.counter.b'), 100);
+});
+
+test('E2: a shallow-frozen input descriptor is frozen recursively on attach; a nested config cannot change', () => {
+  const p = pkg('prefrozen', { 'com.example.prefrozen.tick': ['prefrozen'] }, { config: { step: 1 } });
+  Object.freeze(p);
+  assert.equal(Object.isFrozen(p.models['prefrozen']!.config), false);
+  const out = attach(emptyEnvironment(RUNTIME), p);
+  assert.ok(out.ok);
+  assert.equal(Object.isFrozen(p.models['prefrozen']!.config), true);
+  const before = bindingId(out.env, 'com.example.prefrozen.tick');
+  assert.throws(() => {
+    (p.models['prefrozen']!.config as { step: number }).step = 100;
+  }, TypeError);
+  assert.equal(bindingId(out.env, 'com.example.prefrozen.tick'), before);
 });
