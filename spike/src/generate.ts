@@ -64,12 +64,14 @@ export function generate(spec: GeneratorSpec, seed: number): Script {
   const r = rng(seed);
   const pick = <T>(xs: T[]): T => xs[Math.floor(r() * xs.length)]!;
   const steps: Step[] = [];
-  const script: Script = { base: spec.base, steps };
+  // The genesis nonce is seeded too, so every content id in the series replays identically.
+  const base: Script['base'] = { ...spec.base, nonce: 'genesis:' + seed };
+  const script: Script = { base, steps };
   let joinedCount = 0;
   let attachedSide = false;
   // One live context stepped by the same applyStep that replay uses, so the
   // generated script replays to exactly this series.
-  const ctx = Context.create({ ...spec.base, packages: { ...spec.base.packages } });
+  const ctx = Context.create({ ...base, packages: { ...base.packages } });
   const pending: Pending = new Map();
   const push = (s: Step) => {
     steps.push(s);
@@ -122,11 +124,12 @@ export function generate(spec: GeneratorSpec, seed: number): Script {
       }
     }
     // an ineffective attempt: a participant emits a kind they lack the capability for
+    const seededNonce = () => 'n:' + Math.floor(r() * 0xffffffff).toString(16).padStart(8, '0') + Math.floor(r() * 0xffffffff).toString(16).padStart(8, '0');
     if (roll < 0.26 + ineffectiveRate) {
       const actor = pick(members);
       const kinds = Object.keys(spec.payloads);
       const kind = pick(kinds);
-      push({ type: 'act', actor, kind, payload: spec.payloads[kind]!(r, { members, step, actor, state: ctx.state, entries: ctx.entries }) });
+      push({ type: 'act', actor, kind, payload: spec.payloads[kind]!(r, { members, step, actor, state: ctx.state, entries: ctx.entries }), nonce: seededNonce() });
       continue;
     }
     // an ordinary affordance
@@ -134,7 +137,7 @@ export function generate(spec: GeneratorSpec, seed: number): Script {
     const aff = observe(ctx.state, actor, ctx.head, () => true).affordances.filter((k) => k in spec.payloads);
     if (aff.length === 0) continue;
     const kind = weighted(r, aff, spec.weights ?? {});
-    push({ type: 'act', actor, kind, payload: spec.payloads[kind]!(r, { members, step, actor, state: ctx.state, entries: ctx.entries }) });
+    push({ type: 'act', actor, kind, payload: spec.payloads[kind]!(r, { members, step, actor, state: ctx.state, entries: ctx.entries }), nonce: seededNonce() });
   }
   return script;
 }
