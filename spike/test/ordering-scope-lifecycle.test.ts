@@ -73,6 +73,12 @@ for (const storage of ['memory','sqlite'] as const) test('O4 actual signed lifec
       assert.deepEqual(world.snapshot(), healthyLifecycle[index]!.expected, id);
       observations.push({ id,actual:world.snapshot(),identities:recordedIdentities(world) });
     }
+    const source = world.contexts.S!.journal.context.entries;
+    assert.equal((source[0]!.event.payload as { sequencing:{ profile:string } }).sequencing.profile,'dap.fixture.single-writer/3');
+    for (const position of [21,22]) {
+      const predecessor = source[position - 1]!;
+      assert.deepEqual((source[position]!.event.payload as { predecessor:unknown }).predecessor,{ position:predecessor.position,headerHash:predecessor.headerHash });
+    }
     recordScope('healthy-' + storage, { observations,destinationGenesis:world.destination,proofs:{ S:world.proof('S').source,D:world.proof('D').source,I:world.contexts.I!.proof(),F:world.contexts.F!.proof() } });
   } finally { world.close(); }
 });

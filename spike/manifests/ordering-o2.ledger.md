@@ -13,7 +13,7 @@ its process starts.
 
 | Named schedule | Expected result |
 |---|---|
-| `barrier-six-forward`, `barrier-six-reverse`, `barrier-six-rotated` | Six independent OS client processes release together to one local socket writer. Each schedule sends 42 requests: 24 distinct offers, 12 copies of one exact intent, and six attempts under one action identity split between two signed contents. There are exactly 26 new entries, 13 replays, and three `changed_content` refusals. Every receipt matches its saved intent, position and predecessor; restart preserves the entire prefix and authenticates the chain. |
+| `barrier-six-forward`, `barrier-six-reverse`, `barrier-six-rotated` | Six independent OS client processes release together to one local socket writer. Each client sends its requests in one socket write, and the writer applies each received batch contiguously. Each schedule sends 42 requests: 24 distinct offers, 12 copies of one exact intent, and six attempts under one action identity split between two signed contents. There are exactly 26 new entries, 13 replays, and three `changed_content` refusals. Every receipt matches its saved intent, position and predecessor; restart preserves the entire prefix and authenticates the chain. |
 | `before-append` | SIGKILL before submission leaves no receipt, entry, consumed token, or publication. The saved intent appends once after restart. |
 | `after-consumption` | SIGKILL after the transaction's consumption write rolls the whole append back. Retry appends once and consumes the same invitation. |
 | `after-commit` | SIGKILL immediately after SQLite commit and before the reply retains entry, receipt, consumption and outbox row. Exact retry returns the saved receipt with no second action. |
@@ -21,17 +21,27 @@ its process starts.
 | `after-delivery-before-ack` | A separate publishing process writes the saved wire entry, then dies before outbox acknowledgment. Restart repeats those exact bytes once; delivery acknowledgment and further retries add no action or publication. |
 | Removed participant at the admission interface | A real Journal append is committed and its process killed before reply. After authenticated restart, the fixture supplies a current-participant answer excluding the original actor. Exact saved retry without a credential returns the persisted receipt. A fresh action with the old credential is refused as `not_a_participant`; changed content is refused before that admission check. A second restart preserves the same result. |
 
-The three concurrent schedules vary client-local request ordering. OS arrival
-order is deliberately unspecified. They establish serialization under the
+The three concurrent schedules vary client-local request ordering. They do
+not force interleaving between individual requests from different clients;
+each socket batch is applied contiguously. OS arrival order is deliberately
+unspecified. The schedules establish serialization under the
 profile's synchronous signer and single authoritative file, not arrival-time
 fairness, asynchronous signing, independent database copies, or malicious
-writer exclusion.
+writer exclusion. These concurrent schedules alone do not distinguish
+retry-before-admission from the reverse; the consumed-invitation and changed
+current-participant cases exercise that boundary.
 
 F0 has no participant-removal event. The removed-participant case exercises
 the existing serving-party admission interface with controlled current
-membership. It does **not** establish a complete removal protocol or alter
-participation history. Root accepted this explicit boundary before the tests
-were implemented.
+membership. The original receipt is committed through a real signed Journal
+before the process crash and authenticated reopen. The changed-membership
+checks then call shared `append` directly with a controlled `AdmissionContext`,
+bypassing `Journal.submit`, the O1 folded-frontier freshness check and the O3
+ordering hook. Those calls only replay a receipt or refuse an action; no new
+event is sequenced or persisted at this seam. It does **not** establish a
+complete removal protocol, alter participation history or prove removal
+through the full Journal path. Root accepted this explicit boundary before
+the tests were implemented.
 
 The durability scope is unchanged from O1: application-process crash on the
 same host with intact local disk. There is no host-loss, disk-loss, malicious
@@ -117,3 +127,43 @@ The exact commands, component scope and outputs are linked from
 Only evidence records follow that measurement. No additional 600-seed run or
 component review approval is claimed; this ledger remains the O2
 reporting artifact at the common candidate head.
+
+
+## O-H1/O-H2 revised contract and evidence boundary
+
+Ratified review
+`git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:5643a940fde2c3c372d48ae89ee34e8e35593cf3`
+found two blocking issues in the combined candidate
+`1ba67c39062ddf44508b14c0716817cfa9735964`: movable ordering controls bound
+only an entry commitment, permitting relocation to another head, and the
+ordering hook reverified the full chain under the write lock on every new
+append, including fixed-writer journals. The earlier passing O2 and combined
+runs remain their actual measured evidence; they did not establish exact-head
+control binding or bounded append work.
+
+Builder decision for Hugh under his unattended spike instruction,
+`git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:2d7edc9c76b3d657a2a9fbb3fa6ffa819cb25492`,
+adopts movable `dap.fixture.single-writer/3`. Seal and assign bind exact
+`{position, headerHash}` predecessors; journal, view and control proof checks
+also reject an entry commitment repeated at another position. Exact retry
+continues to return the original receipt without an append. Old movable `/2`
+pins, fixtures and measurements remain historical and are unsupported by
+the revised authenticated boundary. Fixed-writer O1 wire bytes do not change.
+
+The O-H2 repair requires full verification at create/open, incremental
+verification or a cache of the verified ordering prefix during append, and
+no ordering-admission hook for fixed-writer journals. The accepted O1
+freshness and error-invalidation guarantees remain. Bounded work at 100, 400
+and 1,000 entries must be measured on both memory and SQLite at a named frozen
+source; no result or speedup is inferred from the earlier short schedules.
+The intended bound concerns added ordering/authentication work. The existing
+application fold still materializes history, so it is not a claim of globally
+constant-time Context or SQLite append.
+
+The shared runtime and independent-verifier owners retain their own code and
+failure evidence. Their subsequent frozen validation and benchmark boundaries
+belong in [the integration ledger](ordering-integration.ledger.md) and the
+[O3 record](ordering-o3.ledger.md); this section records the revised contract
+and O2 scope, not completion or independent approval of the repair. No new
+600-seed campaign or removal protocol is claimed. The original O2 request
+and its historical run files remain unchanged.

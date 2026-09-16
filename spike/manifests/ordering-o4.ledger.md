@@ -244,3 +244,58 @@ passes at the same frozen source. No full O4 or campaign run was repeated.
 O4's 122 passing checks remain the run-5 measurement at `91941fa`; the
 600-seed evidence remains run 2 before G1/G2. Only this integration record,
 raw outputs and ledger text are added after the run-6 frozen source.
+
+
+## H1/H2 integration: movable writer profile /3
+
+The prior candidates `d4decf8`, `2b48c4c`, `91941fa` and `ca2d105` and all of
+their records remain historical. The aggregate's H1 review found that a
+commitment-only predecessor permits relocation, and H2 found repeated
+whole-chain verification on append. The adopted repair changes the movable
+profile to `dap.fixture.single-writer/3`: control actors sign the exact
+predecessor `{position,headerHash}`, repeated commitments are rejected, and
+the live Journal maintains a verified ordering prefix. Fixed-writer admission
+has no ordering hook. An unexpected external tail requires reopen rather
+than making a cached ordering lookup silently trust it.
+
+O4 merge `362141640ff1d87c31e48440503ed35e6933bd27` integrates frozen aggregate
+source `773a38ec8367d0b563f7741d1ff902aceb72350c`. The next merge
+`c17d8c09ff4c4e5e8f64d29996502833d06fdc6b` includes `713315d`'s malformed-test
+Json annotation and preserved aggregate results; the aggregate runtime is
+unchanged by that correction. A preparatory O4 typecheck encountered that
+same inherited TS2322 error before its owner's fix. The aggregate run-4
+record preserves the failing source/output. No O4 lifecycle run was taken
+before integrating the correction.
+
+The bounded O4 changes materialize S21/S22 controls with exact predecessor
+objects, pass each authenticated header hash to the proof verifier's ordering
+reconstruction, and recognize the new declared /3 and duplicate-commitment
+wire rejections inside the existing narrow input-validation boundary. Other
+exceptions still escape and disable an indeterminate ScopeJournal. The
+SourceExport prefix retains its distinct position, headerHash and commitment
+fields; it was already bound to the exact source prefix.
+
+The healthy test now checks the actual /3 genesis and both control payloads.
+A new memory/SQLite fault packet repeats a real actor-signed release envelope
+in another correctly writer-signed header and has a valid completeness
+signature. Public-proof verification and F activation reject the duplicate
+commitment; F stays dormant and then accepts a fresh honest proof once. The
+healthy source is untouched. This is explicitly a faulty-writer packet,
+not output that the honest producer could append.
+
+The lifecycle manifest remains `d94090b2`, opening rule `475b415b` and join
+policy `ac852eba`. The scope implementation changes to
+`sha256:f17f15a85088f645191959d8b1c21b0f415aa7b74449d7b13ee82e2e48dc8bea`,
+and its Scope package to
+`sha256:edea788ed6dab13a1a5ae255909dfa607f9d67a4c38571a35e04c7c9bb8eb623`.
+Sale and Inspection package identities remain unchanged. Every fixture
+context, export, proof and certificate is generated again under the new
+identity; no old /2 packet is migrated or called current evidence.
+
+Run 7 will measure the O4 lifecycle, proof, mutation, historical-view and
+error-boundary suites at a fresh committed source and record actual states.
+No new 600-seed campaign is planned. The aggregate owns H2 performance
+measurements; O4's existing full semantic replay per state query remains a
+separate bounded-fixture cost, not a claim of incremental scope evaluation.
+Publication and independent review remain pending the accepted aggregate
+and its final runtime boundary.

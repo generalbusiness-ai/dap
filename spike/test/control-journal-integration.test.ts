@@ -6,7 +6,7 @@ import { cpSync, mkdtempSync, mkdirSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { envelopeBytes, signEvent } from '../src/codec.ts';
+import { envelopeBytes, headerHash, signEvent, signHeader } from '../src/codec.ts';
 import { verifyControlSpine, type ControlProof } from '../src/control-verifier.ts';
 import { Journal } from '../src/journal.ts';
 import { SYSTEM_PREFIX } from '../src/types.ts';
@@ -20,14 +20,25 @@ test('O5 isolated reader verifies an actual O3 SQLite handover and successor', t
   t.after(() => journal.close());
   assert.equal(journal.context.entries.length, 2); // genesis and declared origin
   const genesis = journal.context.genesisId;
+  const initial = journal.context.entries;
+  const repeatedOrigin: ControlProof = {
+    pinnedGenesis: genesis,
+    genesis: { header: initial[0]!.header, committed: initial[0]!.committed! },
+    entries: [
+      { header: initial[1]!.header },
+      { header: signHeader({ ...initial[1]!.header, position: 2, prev: headerHash(initial[1]!.header) }, keys.writer) },
+    ],
+  };
+  assert.throws(() => verifyControlSpine(repeatedOrigin), /repeated_commitment/);
+  assert.equal(journal.context.entries.length, 2); // only the proof was tampered
   const seal = signEvent(journal.context.intent(control, SYSTEM_PREFIX + 'seq.seal', {
-    epoch: 0, predecessor: journal.context.entries[1]!.header.commitment,
+    epoch: 0, predecessor: { position: 1, headerHash: headerHash(journal.context.entries[1]!.header) },
   }, { action_id: 'o5-real-seal', nonce: 'a1'.repeat(16) }), controlKey);
   const sealed = journal.submit(envelopeBytes(seal));
   assert.ok(!('refused' in sealed), JSON.stringify(sealed));
   assert.equal(sealed.header.position, 2);
   const assign = signEvent(journal.context.intent(control, SYSTEM_PREFIX + 'seq.assign', {
-    epoch: 1, predecessor: sealed.header.commitment, writer: successor,
+    epoch: 1, predecessor: { position: 2, headerHash: sealed.headerHash }, writer: successor,
   }, { action_id: 'o5-real-assign', nonce: 'a2'.repeat(16) }), controlKey);
   const assigned = journal.submit(envelopeBytes(assign));
   assert.ok(!('refused' in assigned), JSON.stringify(assigned));

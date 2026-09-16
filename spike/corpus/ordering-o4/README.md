@@ -92,3 +92,26 @@ The three 200-seed campaigns are explicitly excluded from this run. Their
 last O4 full measurement remains source `b35b267`, before G1/G2. New observation
 files include the committed failure envelopes and real cold-retry result;
 deterministic handler exceptions remain failures, never policy verdicts.
+
+
+Run 7 is the /3 movable-writer revision. Use its exact recorded source;
+run-5/run-6 /2 packets remain historical. The lifecycle manifest and public
+opening rule are unchanged, while the scope implementation and generated
+context/export/proof identities change. The five O4 files can be reproduced
+with a fresh observation directory:
+
+```
+DAP_O4_RECORD_DIR=/tmp/o4-v3-observations node --test \
+  spike/test/scope-proof.test.ts \
+  spike/test/ordering-scope-lifecycle.test.ts \
+  spike/test/ordering-scope-evidence.test.ts \
+  spike/test/ordering-scope-regressions.test.ts \
+  spike/test/ordering-scope-phase.test.ts
+npm run typecheck --prefix spike
+```
+
+The extra duplicate-commitment records contain explicitly faulty-writer
+packets with real actor envelopes, newly signed headers and completeness
+certificates. They retain actual destination refusal and the subsequent
+honest activation. They are not honest producer outputs. This revision does
+not overwrite any prior packet or rerun the historical campaigns implicitly.

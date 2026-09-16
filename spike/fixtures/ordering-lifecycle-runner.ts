@@ -124,10 +124,13 @@ export class LifecycleWorld {
   }
   saleThrough19() { this.emit('S', 'alice', SALE + 'accept', { offer_id: 'o2' }); return this.emit('S', 'alice', SALE + 'close', { outcome: 'sold' }); }
   importInspection() { const proof = this.contexts.I!.proof(); return this.emit('S', 'alice', K.admit, { proof: proof as never, position: 1, identity: proof.genesis + ':1' }); }
-  seal() { const s = this.contexts.S!.journal; return this.emit('S', 'control', SEAL, { epoch: s.ordering.epoch, predecessor: s.context.entries.at(-1)!.id }); }
+  seal() {
+    const s = this.contexts.S!.journal, head = s.context.entries.at(-1)!;
+    return this.emit('S', 'control', SEAL, { epoch: s.ordering.epoch, predecessor: { position: head.position, headerHash: head.headerHash } });
+  }
   assign() {
-    const s = this.contexts.S!.journal;
-    const result = this.emit('S', 'control', ASSIGN, { epoch: s.ordering.epoch + 1, predecessor: s.context.entries.at(-1)!.id, writer: principals.W1 });
+    const s = this.contexts.S!.journal, head = s.context.entries.at(-1)!;
+    const result = this.emit('S', 'control', ASSIGN, { epoch: s.ordering.epoch + 1, predecessor: { position: head.position, headerHash: head.headerHash }, writer: principals.W1 });
     if (!('refused' in result)) this.restart('S', 'W1');
     return result;
   }

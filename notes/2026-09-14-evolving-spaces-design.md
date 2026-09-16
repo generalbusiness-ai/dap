@@ -385,7 +385,9 @@ There are two authority systems, and they are kept apart on purpose:
   `dap.seq.assign` / `dap.seq.seal`. Under the default profile every reader
   verifies the ordering-control chain — genesis plus every `dap.seq.*` entry
   — **without running any application fold**, because those entries are
-  spine system kinds with self-contained proofs.
+  spine system kinds with self-contained proofs. This assumes that the
+  complete required control spine is supplied; verification of one prefix
+  does not establish its freshness or prove that no opening was withheld.
 - **Application authority** is folded from grants. It can *request* an
   ordering change (`dap.seq.request`) and the profile's keys may honour it; a
   profile may delegate enactment to a folded capability, but then readers
@@ -728,7 +730,7 @@ interleaves two logs and never establishes joint authority.
 | **Spawn** | child gets a declared mandate; parent keeps its responsibilities | child: own genesis and assignment |
 | **Split** | `dap.scope.release` at the source naming a destination commitment; `dap.scope.activate` at the destination, after genesis and any origins, against verified release evidence | distinct contexts, independent orders |
 | **Join** | each source releases to one agreed destination with reconciliation rules | destination orders the combined *future* |
-| **Move** | unchanged | `dap.seq.assign` from an exact head |
+| **Move** | unchanged | in movable `/3`, control-signed seal binds the exact current `{position, headerHash}`; assign binds the exact seal head |
 | **Import / present together** | `dap.admit`, or render several histories side by side | unchanged |
 
 What must hold: a release is verified effective — or attested by a principal
@@ -741,6 +743,21 @@ the first effective activation; old proposals are not retargeted; a join orders 
 only; and release-then-activate may *block*, because a timeout cannot
 restore source authority while delayed activation remains possible. The
 commitment, the protocols and the failure cases are in the ordering note.
+
+For the revised movable profile `dap.fixture.single-writer/3`, “exact head”
+means the preceding position and authenticated header preimage hash, both
+inside the control-signed `predecessor` object. The hash already binds the
+entry commitment; it is not replaced by that commitment and needs no
+redundant commitment field. A journal, view or control proof must also reject
+the same entry commitment at multiple positions. Exact retry retains the
+original receipt and position. The prior movable `/2` format is unsupported
+at this revised boundary; its pins and measurements remain historical, and
+fixed-writer O1 wire bytes remain unchanged. This is the builder decision
+for Hugh under his unattended spike instruction,
+`git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:2d7edc9c76b3d657a2a9fbb3fa6ffa819cb25492`,
+not a claim of completed implementation or independent acceptance.
+Ordinary writer forks, omitted control openings, database copies and rollback
+remain within the existing trusted-writer limits described in ordering §6.
 
 The activation phase permits otherwise admissible unrelated destination
 events before success, under ordinary admission, authorization and effect
