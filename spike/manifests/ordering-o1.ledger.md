@@ -28,9 +28,25 @@ campaign was run before the source snapshot below.
 
 ## Full integration run
 
-Pending on this source snapshot. The next record commit will identify this
-exact source commit, preserve the test output and report the result. The
-historical Sale ledger and its source-bound corpus remain unchanged.
+Run 1 source: `5219ad71de4d34fd7f70682c22b1c98fd5fff182`.
+Commands: `npm test`, `npm run typecheck`, `git diff --check` from `spike`.
+Result: **136/136 tests passed**, typecheck and whitespace check passed.
+Node 26.8.2; full run 69.0 seconds. Exact output is retained in
+[run-1.txt](ordering-o1-runs/run-1.txt).
+
+The 200-seed Sale campaign had zero violations. Coverage: 946 joins,
+199 attaches, 1,716 disclosures, 273 offers, 31 replacements, 175 withdrawals,
+159 counters, 111 acceptance attempts, 18 effective accepts, 279 closes,
+11,171 entries, zero private disclosures, zero effective Inspection attaches,
+and 120 unbound Inspection requests. V3's reviewed seven-fix overrun and
+historical corpus are unchanged; this is a fresh integration run over the
+legacy visibility path, not a signed replay of all 200 seeds.
+
+After run 1, audit identified a wire presentation omission: signed readable
+views did not carry original envelope bytes, although full-journal verification
+worked. A follow-up will add bytes only to readable signed view entries and
+verify views independently. Run 1 establishes its recorded checks, not that
+missing recipient-facing proof path.
 
 ## Identities and scope
 
