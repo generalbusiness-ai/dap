@@ -107,3 +107,20 @@ The fixed join policy is
 After the measured source, only records and reproduction documentation are
 added. There are no further runtime fixes or rerun campaigns. The result is
 ready for independent checking; this ledger is not an independent verdict.
+
+
+The O6 report review found a goal-1 coverage gap at `7d9efba`: the earlier
+pre-attach test compared Alice at frontier 10 only, and the original Sale
+comparison stopped at sale-closed. Run 2 remains valid evidence for those
+checks, not the full required reader/frontier matrix. The bounded followup
+adds every actual S/F participant reader at original bases 0–10 across the
+attach and completion, and bases 0–19 after completed handover and transfer,
+using actual signed views/full folds and an independent original Sale replay.
+
+Run 3 source `e11e334e5e42c44b03ca3d5b70a6721b8cc06cfa`: 4/6 focused tests
+passed, 2 failed; typecheck passed. The new matrix failed when comparing
+alias-normalized named audience arrays: cryptographic key order differs
+from original human-name order, while recipients are the same. Exact signed
+before/after equality remains required; the cross-fixture comparison needs
+recipient-set normalization. This is a test comparison correction, with no
+runtime/profile/manifest change. No 600-seed campaign was repeated.

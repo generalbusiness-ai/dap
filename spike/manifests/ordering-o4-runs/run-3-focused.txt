@@ -1,0 +1,86 @@
+✔ O4 scope exercise honors attached refusing handler: memory (226.821583ms)
+✔ O4 scope exercise honors attached refusing handler: sqlite (229.440125ms)
+✔ O4 preserves original Sale 0–19 outcomes, model and member readability (169.71175ms)
+✔ O4 later attach, handover and transfer preserve actual pre-attach as-of replay (309.683542ms)
+✖ O4 goal 1: all actual readers and historical frontiers survive attach, handover and completed transfer: memory (724.425792ms)
+✖ O4 goal 1: all actual readers and historical frontiers survive attach, handover and completed transfer: sqlite (1011.319709ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 4
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2756.495709
+
+✖ failing tests:
+
+test at spike/test/ordering-scope-regressions.test.ts:105:53
+✖ O4 goal 1: all actual readers and historical frontiers survive attach, handover and completed transfer: memory (724.425792ms)
+  AssertionError [ERR_ASSERTION]: original audiences: ed25519:rNsOKXQ_DMuGhtChBMuW4Fq-_sFTh2XnWVhp99yMSao@2
+  + actual - expected
+  ... Skipped lines
+  
+    [
+      {
+        kind: 'spine'
+      },
+      {
+  ...
+        principals: [
+  +       'bob',
+          'alice',
+  -       'bob'
+        ]
+      }
+    ]
+  
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/ordering-scope-regressions.test.ts:155:14)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ { kind: 'spine' }, { kind: 'spine' }, { kind: 'named', principals: [Array] } ],
+    expected: [ { kind: 'spine' }, { kind: 'spine' }, { kind: 'named', principals: [Array] } ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at spike/test/ordering-scope-regressions.test.ts:105:53
+✖ O4 goal 1: all actual readers and historical frontiers survive attach, handover and completed transfer: sqlite (1011.319709ms)
+  AssertionError [ERR_ASSERTION]: original audiences: ed25519:rNsOKXQ_DMuGhtChBMuW4Fq-_sFTh2XnWVhp99yMSao@2
+  + actual - expected
+  ... Skipped lines
+  
+    [
+      {
+        kind: 'spine'
+      },
+      {
+  ...
+        principals: [
+  +       'bob',
+          'alice',
+  -       'bob'
+        ]
+      }
+    ]
+  
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/ordering-scope-regressions.test.ts:155:14)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ { kind: 'spine' }, { kind: 'spine' }, { kind: 'named', principals: [Array] } ],
+    expected: [ { kind: 'spine' }, { kind: 'spine' }, { kind: 'named', principals: [Array] } ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
