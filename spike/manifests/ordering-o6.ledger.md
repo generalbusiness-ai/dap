@@ -593,3 +593,32 @@ No source changed during measurement. O4's combined run 9 is a separate
 invocation and will be incorporated at its actual result boundary. No
 O4/full suite or campaign was repeated here. Historical O6 candidates and
 measurements remain intact; independent O4/O6 approval remains pending.
+
+
+Final O4 records candidate `15b660caaf06e1ea4698e83a94e3717cfd48572b`
+is integrated in O6 by merge `ee15bba119e48e517c8cc3a610af9ce3d6796ebe`. Local verification matches
+all 94 source/configuration blobs pinned at `f8987d22` and all 100 new
+observation hashes. O4 retains all 475 prior e046 evidence files. The 25
+historical O6 run-1 through run-5 files and both bootstrap files remain
+byte-identical to candidate `864fc8b`. No runtime or test edit followed O6's
+measured `1ea700b1` source; this O4 tail adds records and documentation only.
+
+O4 run 9's complete terminal TAP establishes 492 selected tests, 488 pass,
+zero ordinary failures, four retained Club TODOs and all 167 O4 checks within
+one invocation. The reporting wrapper failed afterward while parsing one
+TAP-escaped V6 diagnostic, before persisting the child's exit code. That code
+is null/unknown; it is not reported as zero. Recovery kept 34 parsed JSON
+diagnostics and one verbatim line and ran only typecheck, which exited 0.
+The original wrapper exit 1, raw TAP, runner, recovery script and error are
+preserved with the run. Neither recovery nor this O6 integration reran the
+noncampaign suite or a campaign.
+
+Those O4 measurements are distinct from O6 run 6's recorded exit-zero
+bootstrap tests, typecheck and actual CLI. Updated runtime/rule/proof ids do
+not change the ordinary Sale-only demonstration's signed output. The report
+names both bounded hidden-entry classifications and their writer trust,
+possible duplicate live rights under a false certificate, source-reader
+limits, the TypeScript-only construction restriction and remaining postfault
+read-access/precommit refusal boundaries. Internal factual QA found and
+corrected a historical source-equality wording ambiguity; it was read-only
+and is not independent checker approval. O4/O6 remain unapproved candidates.
