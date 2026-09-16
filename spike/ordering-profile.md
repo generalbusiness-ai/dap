@@ -182,9 +182,9 @@ SQLite boundary and wire vectors. Existing v1 genesis bytes do not gain a
 handover rule. There is no automatic replacement, control-key rotation,
 quorum, lease, or transition between profiles.
 
-At head H in epoch e (initially 0), the retiring writer signs an actor envelope
+At head H in epoch e (initially 0), the ordering-control key signs an actor envelope
 of kind `dap.seq.seal` with exactly `{epoch: e, predecessor: H.header.commitment}`.
-The same writer signs its header at H+1. Sealing pauses ordinary new appends;
+The retiring writer appends it and signs its header at H+1. Sealing pauses ordinary new appends;
 only the next assignment can extend the journal. The control key signs an
 actor envelope of kind `dap.seq.assign` with exactly
 `{epoch: e+1, predecessor: seal.header.commitment, writer: successor}`. The

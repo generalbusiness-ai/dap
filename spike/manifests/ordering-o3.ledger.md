@@ -27,6 +27,10 @@ Before the measured run, the test cases require:
 
 Runtime code and tests will be committed before the first measured execution.
 Results below will preserve any failures and identify every later repair.
+Before execution, the parent reconciled the design system-kind table with
+ordering §6: both seal and assign actor envelopes require the control key;
+the retiring writer appends both and signs their headers. This corrected the
+first implementation before any measured test run.
 
 ## Limits
 

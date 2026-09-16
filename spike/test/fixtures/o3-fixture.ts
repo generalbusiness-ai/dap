@@ -19,7 +19,7 @@ export function create(backend: Backend) {
   return Journal.create({ backend, writerKey: keys.writer, packages }, signEvent(genesis, keys.alice), [entries[1]!.committed!]);
 }
 export function seal(j: Journal, action = 'o3-seal') {
-  return signEvent(j.context.intent(people.writer, SEAL, { epoch: j.ordering.epoch, predecessor: j.context.entries.at(-1)!.header.commitment }, { action_id: action, nonce: '31'.repeat(16) }), keys.writer);
+  return signEvent(j.context.intent(control, SEAL, { epoch: j.ordering.epoch, predecessor: j.context.entries.at(-1)!.header.commitment }, { action_id: action, nonce: '31'.repeat(16) }), controlKey);
 }
 export function assign(j: Journal, writer = successor, action = 'o3-assign') {
   return signEvent(j.context.intent(control, ASSIGN, { epoch: j.ordering.epoch + 1, predecessor: j.context.entries.at(-1)!.header.commitment, writer }, { action_id: action, nonce: '32'.repeat(16) }), controlKey);

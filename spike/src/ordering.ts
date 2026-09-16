@@ -46,7 +46,7 @@ export function orderingAdmission(state: OrderingState, head: Entry, event: Even
     if (p.predecessor !== head.header.commitment) return { refused: true, reason: 'wrong_control_predecessor' };
     if (event.kind === SEAL) {
       if (p.epoch !== state.epoch) return { refused: true, reason: 'wrong_ordering_epoch' };
-      if (event.actor !== state.writer) return { refused: true, reason: 'wrong_seal_authority' };
+      if (event.actor !== state.control) return { refused: true, reason: 'wrong_seal_authority' };
     } else {
       if (!state.sealed || state.sealed.position !== head.position || state.sealed.commitment !== head.header.commitment) return { refused: true, reason: 'assignment_without_seal' };
       if (p.epoch !== state.epoch + 1) return { refused: true, reason: 'wrong_ordering_epoch' };

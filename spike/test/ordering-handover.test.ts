@@ -125,7 +125,8 @@ test('O3 rejects forged and wrong authority, stale or swapped predecessor hashes
   const s = seal(j);
   refused({ ...s, sig: 'A'.repeat(86) }, 'invalid_envelope');
   refused(signEvent({ ...s.body, actor: people.alice }, keys.alice), 'wrong_seal_authority');
-  refused(signEvent({ ...s.body, payload: { epoch: 0, predecessor: j.context.entries.at(-1)!.headerHash } }, keys.writer), 'wrong_control_predecessor');
+  refused(signEvent({ ...s.body, actor: people.writer }, keys.writer), 'wrong_seal_authority');
+  refused(signEvent({ ...s.body, payload: { epoch: 0, predecessor: j.context.entries.at(-1)!.headerHash } }, controlKey), 'wrong_control_predecessor');
   refused(assign(j), 'assignment_without_seal');
   accepted(j.submit(ordinary(j, 'intervening'), j.context.credentialFor(people.alice)));
   refused(s, 'wrong_control_predecessor');
@@ -144,7 +145,7 @@ test('O3 cold authentication rejects a correctly signed control with wrong paylo
     const backend = new MemoryBackend(), j = create(backend);
     const before = j.context.entries.at(-1)!;
     const source = seal(j);
-    const envelope = wrong === 'payload' ? signEvent({ ...source.body, payload: { epoch: 0, predecessor: before.headerHash } }, keys.writer) : source;
+    const envelope = wrong === 'payload' ? signEvent({ ...source.body, payload: { epoch: 0, predecessor: before.headerHash } }, controlKey) : source;
     const sr = accepted(j.submit(seal(j)));
     const header = signHeader({ ...sr.header, ...(wrong === 'header' ? { prev: before.header.commitment } : {}) }, keys.writer);
     // Build an actor-authenticated corrupt copy using the codec. This does not
