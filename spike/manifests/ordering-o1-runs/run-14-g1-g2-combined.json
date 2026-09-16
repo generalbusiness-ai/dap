@@ -1,0 +1,27 @@
+{
+  "source": "2c727b7d8db28c17b51a0aaa34ea5151f2eb44a4",
+  "lifecycle_manifest": "sha256:d94090b21ce42f2eec4a046558b3a776895d82905c2096a19df1f5f02e011f86",
+  "public_opening_rule": "sha256:475b415bbf8b16ccdb1bea078174712c57f2b2955ece9338d762abd60228bad8",
+  "excluded": "Three 200-seed campaigns; prior successful 600-seed source remains 747a0905dc80f15a108fd62bdc5399e9f31f4431, before this G1 runtime correction.",
+  "commands": [
+    {
+      "command": [
+        "node",
+        "--test",
+        "--test-skip-pattern=case [57], the campaign:",
+        "test/**/*.test.ts"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 12.285
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.698
+    }
+  ]
+}

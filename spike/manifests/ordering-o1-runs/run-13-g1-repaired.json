@@ -1,0 +1,18 @@
+{
+  "source": "81a95d09c0ffb8cf2e65565b05d451b939371290",
+  "scope": "Runtime-only focused checks; six G2 documentation/specification paths remain uncommitted and are not imported by these tests.",
+  "commands": [
+    {
+      "command": [
+        "node",
+        "--test",
+        "test/context-freshness.test.ts",
+        "test/append.test.ts",
+        "test/codec.test.ts",
+        "test/journal.test.ts"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 1.504
+    }
+  ]
+}

@@ -342,7 +342,7 @@ are not per-application choices.
 | `dap.observe` | members, unless the event names a narrower set | `dap.observe` | an ambient fact — time, a draw, a measurement — asserted by a designated actor |
 | `dap.close` | spine | `dap.close` | the context stops admitting application events |
 | `dap.scope.release` | spine | `dap.scope.release` | freezes or releases named rights for a described transition |
-| `dap.scope.activate` | spine | — | first entry after genesis and any origins in a destination context; carries the release proofs and binds the release |
+| `dap.scope.activate` | spine | destination's activation grant | attempt after genesis and any origins; verifies release proofs against genesis-pinned inputs and makes transferred rights live at the first effective activation |
 | `dap.seq.request` | spine | `dap.seq.request` | application authority *asks* for an ordering change |
 | `dap.seq.assign`, `dap.seq.seal` | spine | ordering-control keys | *enact* an assignment change or seal a head |
 
@@ -737,10 +737,30 @@ the destination genesis names — before activation; a release names a
 id, so one release admits exactly one genesis by construction and an
 exclusive right is never live in two places; release proofs travel in the
 activate event, not the genesis; transferred rights are dormant until
-activation; old proposals are not retargeted; a join orders the future
+the first effective activation; old proposals are not retargeted; a join orders the future
 only; and release-then-activate may *block*, because a timeout cannot
 restore source authority while delayed activation remains possible. The
 commitment, the protocols and the failure cases are in the ordering note.
+
+The activation phase permits otherwise admissible unrelated destination
+events before success, under ordinary admission, authorization and effect
+rules. Transferred rights remain dormant; an otherwise authorized exercise
+is ineffective with `dormant_right`. A failed activation consumes its
+admitted position, and a later fresh attempt may succeed when the evidence
+is complete. An intervening non-activate event does not permanently block
+activation or replace the genesis-pinned transition, source identities,
+export prefixes or retained inputs. Current authorization and closed-context
+gates still apply. Exact retry of a failed or successful attempt returns its
+saved receipt without a new position; later activation attempts after the
+first success have no further effect.
+
+This replaces the earlier first-entry clause by the **builder design
+decision for Hugh**, under his instruction to make normal spike decisions
+and complete unattended, recorded as
+`git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:c2982a6e6756f4fed08e5a82acc8b05a65127745`.
+It is not a design change commissioned by the checker or an implementation
+approval. [Ordering §7](2026-09-14-ordering.md#7-transitions-that-change-scope)
+and the lifecycle manifest define the matching protocol and expected cases.
 
 ---
 

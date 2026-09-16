@@ -1,0 +1,23 @@
+{
+  "source": "10fa069b2e4b4089cbdaf7f577da0feb8db5f3c5",
+  "results": [
+    {
+      "storage": "memory",
+      "first": 2,
+      "next": 3,
+      "retryHash": "sha256:4dc2767893de60df52f3685c7c7a95ef00cce66fdac9d61364830e127d025482",
+      "headReadsOnCurrentRetry": 1,
+      "insideSerialization": true,
+      "coldRetrySame": true
+    },
+    {
+      "storage": "sqlite",
+      "first": 2,
+      "next": 3,
+      "retryHash": "sha256:4dc2767893de60df52f3685c7c7a95ef00cce66fdac9d61364830e127d025482",
+      "headReadsOnCurrentRetry": 1,
+      "insideSerialization": true,
+      "coldRetrySame": true
+    }
+  ]
+}

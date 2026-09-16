@@ -82,3 +82,33 @@ and O1 repair `03a943dd`: 4/4 pass, including attached-handler live/cold refusal
 on memory and SQLite, original Sale 0–19 outcomes/readability and exact
 pre-attach view replay. The merge keeps O3's control admission and verdicts
 while adding O1's private backend lease and both error invalidation paths.
+
+`g2-before.txt` records exact source
+`a9aa702a46e374d003d1fed953468f8625e99c91`: 12 signed memory/SQLite regression
+checks, 2 passed and 10 failed; typecheck passed before that source commit.
+The added tests reproduce permanent `activation_order` after dormant exercise
+or another participant's admitted event; the same obsolete restriction masks
+the closed-context gate. A registry exception deliberately named
+`ineffective_release` is swallowed after the activation bytes commit, and a
+null release proof becomes a JavaScript TypeError string in a policy verdict.
+The two current-authorization checks pass. This is a preserved development
+failure boundary under review `3d76d2b9` and design decision `c2982a6e`, not the
+formal G2 baseline. Formal measurement awaits integrated G1 and manifest fixes.
+
+Development source `b9eaeec` initially failed typecheck: the new throwing-audience
+fixture used the context argument as the event. No runtime check was run at
+that source. Its next commit corrects the callback's second argument.
+
+`g2-dev1.txt` records source `f8c774bd4b9c1fc00f13fc727c749b86c1063462`:
+42 tests, 40 passed and 2 failed, zero TODOs; typecheck passed. The original
+12 G2/error checks and all 26 public-proof checks pass. Both thrown-fold
+checks pass. The two thrown-audience fixtures fail because attaching another
+handler preserves the existing kind's audience policy, so the new throwing
+policy never runs. The correction gives that fixture its own bound kind and
+uses its actual audience; no production binding policy changes.
+
+`g2-dev2.txt` records source `281664af595408bd8bbc874f2d04d38ef136637e`:
+the bounded throwing-audience followup passes on memory and SQLite (2/2).
+The fixture now invokes its own active audience, and both live submit and
+cold exact retry surface the actual handler failure while preserving the
+committed position and bytes. Typecheck passed before this source commit.

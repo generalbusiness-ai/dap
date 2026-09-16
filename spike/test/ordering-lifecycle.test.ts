@@ -72,8 +72,16 @@ test('manifest identity binds the prose and executable source, independently rec
   const prose = readFileSync(new URL('../manifests/ordering-lifecycle.md', import.meta.url), 'utf8');
   const executable = readFileSync(new URL('../manifests/ordering-lifecycle.ts', import.meta.url), 'utf8');
   assert.equal(ORDERING_LIFECYCLE_PROSE, prose);
-  assert.notEqual(ORDERING_LIFECYCLE_MANIFEST_ID, 'sha256:63be83e60036a5936569c478da7a8c7be6b8ab1c744d59ef3296b7d6182b5a9d', 'historical manifest is not relabelled');
-  assert.equal(ORDERING_LIFECYCLE_MANIFEST_ID, 'sha256:fc55bfa123891e750f7bbe3a0d9cb33b5f65c07750db08bc984544ed2dd6b378');
+  for (const historicalId of [
+    'sha256:63be83e60036a5936569c478da7a8c7be6b8ab1c744d59ef3296b7d6182b5a9d',
+    'sha256:d7419b5d85d9acd4767b8733b47729c29f49088a0495ee246c60c2da658a7613',
+    'sha256:75de2a860b049b5d9dcad3dab234be14d7a965d53df2e0d0eae8de6f05a1b327',
+    'sha256:fc55bfa123891e750f7bbe3a0d9cb33b5f65c07750db08bc984544ed2dd6b378',
+  ]) {
+    assert.notEqual(ORDERING_LIFECYCLE_MANIFEST_ID, historicalId, 'historical manifest is not relabelled');
+    assert.ok(prose.includes(historicalId), 'retain historical manifest identity');
+  }
+  assert.equal(ORDERING_LIFECYCLE_MANIFEST_ID, 'sha256:d94090b21ce42f2eec4a046558b3a776895d82905c2096a19df1f5f02e011f86');
   assert.equal(ORDERING_LIFECYCLE_MANIFEST_ID, contentId({ prose: contentId(prose), executable: contentId(executable) }));
   assert.notEqual(ORDERING_LIFECYCLE_MANIFEST_ID, contentId({ prose: contentId(prose + '\nchanged'), executable: contentId(executable) }));
   assert.notEqual(ORDERING_LIFECYCLE_MANIFEST_ID, contentId({ prose: contentId(prose), executable: contentId(executable + '\n// changed') }));
@@ -130,6 +138,8 @@ test('all adverse cases have resolvable branches, full safe observations and exa
   const expectedReasons: Record<string, string | null> = {
     'one-source-release-missing': 'missing_release',
     'withheld-release-evidence': null,
+    'intervening-dormant-exercise': 'original_receipt',
+    'intervening-participant-event': null,
     'restart-before-activation': null,
     'repeated-activation-after-restart': 'already_active',
     'exact-retry-activation': 'original_receipt',
@@ -199,6 +209,62 @@ test('restarts, alternative valid proof material and timeouts cannot duplicate o
   const hidden = lifecycleCases.find((item) => item.id === 'timeout-after-hidden-activation')!;
   assert.equal(hidden.steps[0]!.expected.rights.R_fulfil.S, 'released');
   assert.equal(hidden.steps[0]!.expected.rights.R_fulfil.F, 'live');
+});
+
+test('failed activation and an intervening dormant exercise permit fresh activation, preserving both retry receipts', () => {
+  const scenario = lifecycleCases.find((item) => item.id === 'intervening-dormant-exercise')!;
+  assert.equal(scenario.from, 'destination-started');
+  assert.equal(scenario.variant, undefined, 'same pinned destination genesis throughout');
+  assert.deepEqual(scenario.steps.map((step) => [step.action.operation, step.verdict, step.reason, step.expected.heads.F]), [
+    ['scope.activate', 'ineffective', 'missing_release', 1],
+    ['exact-retry', 'unchanged', 'original_receipt', 1],
+    ['exercise-right', 'ineffective', 'dormant_right', 2],
+    ['exact-retry', 'unchanged', 'original_receipt', 2],
+    ['scope.activate', 'effective', null, 3],
+    ['exact-retry', 'unchanged', 'original_receipt', 3],
+    ['exact-retry', 'unchanged', 'original_receipt', 3],
+  ]);
+  assert.deepEqual(scenario.steps.filter((step) => step.action.operation === 'exact-retry').map((step) => step.action.input), [
+    { original: 'F@1' }, { original: 'F@1' }, { original: 'F@3' }, { original: 'F@1' },
+  ]);
+  for (const [index, step] of scenario.steps.entries()) {
+    const active = index >= 4;
+    assert.equal(step.expected.activations, active ? 1 : 0);
+    assert.equal(step.expected.destination, active ? 'active' : 'started');
+    for (const right of ['R_fulfil', 'R_deliver'] as const) assert.equal(step.expected.rights[right].F, active ? 'live' : 'dormant');
+    assert.deepEqual(step.expected.exports, boundary('destination-started').exports);
+    assert.deepEqual(step.expected.releases, ['S', 'D']);
+    assert.deepEqual([step.expected.heads.S, step.expected.heads.D], [24, 1]);
+    if (step.action.operation === 'exact-retry') assert.deepEqual(step.expected, scenario.steps[index - 1]!.expected);
+  }
+  assert.deepEqual(scenario.steps[4]!.action.input, { proofs: ['S-valid-A', 'D-valid-A'], freshAction: true });
+  assert.deepEqual(scenario.steps[4]!.expected.owners, boundary('destination-activated').owners);
+  const permanentlyBlocked = structuredClone(scenario.steps[4]!.expected);
+  permanentlyBlocked.destination = 'started';
+  permanentlyBlocked.activations = 0;
+  permanentlyBlocked.rights = structuredClone(scenario.steps[3]!.expected.rights);
+  permanentlyBlocked.owners = structuredClone(scenario.steps[3]!.expected.owners);
+  assert.ok(compareLifecycleObservation(scenario.steps[4]!.expected, permanentlyBlocked).length > 0, 'permanent activation barrier violates the declared outcome');
+});
+
+test('another admitted participant event cannot occupy a permanent activation slot', () => {
+  const scenario = lifecycleCases.find((item) => item.id === 'intervening-participant-event')!;
+  assert.equal(scenario.from, 'destination-started');
+  assert.equal(scenario.variant, undefined);
+  assert.deepEqual(scenario.steps[0]!.action, {
+    operation: 'participant-observation', context: 'F', actor: 'bob', input: { fact: { note: 'waiting' } },
+  });
+  assert.deepEqual(scenario.steps.map((step) => [step.verdict, step.reason, step.expected.heads.F, step.expected.activations]), [
+    ['ineffective', 'unauthorized', 1, 0], ['effective', null, 2, 1],
+  ]);
+  const before = boundary('destination-started');
+  assert.deepEqual(scenario.steps[0]!.expected.rights, before.rights);
+  assert.deepEqual(scenario.steps[0]!.expected.owners, before.owners);
+  assert.equal(scenario.steps[1]!.action.actor, 'alice');
+  assert.deepEqual(scenario.steps[1]!.action.input, { proofs: ['S-valid-A', 'D-valid-A'], freshAction: true });
+  assert.deepEqual(scenario.steps[1]!.expected.owners, boundary('destination-activated').owners);
+  assert.deepEqual(scenario.steps[1]!.expected.exports, before.exports);
+  assert.deepEqual(scenario.steps[1]!.expected.verifiedProofs, ['S', 'D']);
 });
 
 test('public proof disclosure has a finite named rule and keeps private source kinds excluded', () => {

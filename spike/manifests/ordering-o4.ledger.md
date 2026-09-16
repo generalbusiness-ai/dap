@@ -3,10 +3,11 @@
 Request: `git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:1b6384e27d6dbfd5a22da3330378776d32ad23ab`.
 Promise: `18ba74b01cbbea27e2d8c18b063ff482428c95aa` in that workroom.
 
-The formal contract is lifecycle manifest
-`sha256:fc55bfa123891e750f7bbe3a0d9cb33b5f65c07750db08bc984544ed2dd6b378`.
-It supersedes historical `63be83e6` before the O4 baseline; the historical
-manifest and every earlier result remain available in their source commits.
+The current contract is lifecycle manifest
+`sha256:d94090b21ce42f2eec4a046558b3a776895d82905c2096a19df1f5f02e011f86`.
+Runs 1–4 used `sha256:fc55bfa123891e750f7bbe3a0d9cb33b5f65c07750db08bc984544ed2dd6b378`,
+which superseded historical `63be83e6` before the O4 baseline. Every earlier
+manifest and result remains available at its recorded source boundary.
 The explicit opening rule is
 `sha256:475b415bbf8b16ccdb1bea078174712c57f2b2955ece9338d762abd60228bad8`.
 
@@ -16,7 +17,7 @@ source-to-F disclosures. The scope implementation content id hashes its
 actual code and transitive local harness boundary. It is measured alongside
 package ids for each run. Runtime and fixtures import no expected lifecycle
 states. Tests drive signed operations and compare observed states against
-all 20 healthy boundaries and all 27 adverse branches on memory and SQLite.
+all 20 healthy boundaries and the current 29 adverse branches on memory and SQLite.
 Fully materialized genesis mutations enumerate every actual signed field and
 container; malformed codec/profile rejections are named, unauthorized valid
 variants retain authorization precedence, and authorized valid variants must
@@ -64,8 +65,9 @@ This experiment claims only O4, not general context merging or O5 verification.
 
 ## Formal runs
 
-Run 1 source `ee86290f753cbfe3efcd9dcbb3128697d6b38016` used the revised
-manifest and opening rule above. Focused run: 100 tests, 98 passed, 2 failed,
+Run 1 source `ee86290f753cbfe3efcd9dcbb3128697d6b38016` used manifest
+`sha256:fc55bfa123891e750f7bbe3a0d9cb33b5f65c07750db08bc984544ed2dd6b378`
+and the unchanged opening rule `sha256:475b415bbf8b16ccdb1bea078174712c57f2b2955ece9338d762abd60228bad8`. Focused run: 100 tests, 98 passed, 2 failed,
 zero TODOs; typecheck passed. Both failures occurred while recording the
 move-preserves-retry observations, after actual state/verdict assertions
 passed: legacy successful verdicts contain optional undefined reason fields.
@@ -104,8 +106,9 @@ and Scope
 The fixed join policy is
 `sha256:ac852ebab4f55816e55cd0fd71b7280267bffaca097046d4880b24ac63b01455`.
 
-After the measured source, only records and reproduction documentation are
-added. There are no further runtime fixes or rerun campaigns. The result is
+Between the run-2 measured source and its candidate `7d9efba`, only records
+and reproduction documentation were added; no runtime fixes or campaigns
+occurred in that interval. The result is
 ready for independent checking; this ledger is not an independent verdict.
 
 
@@ -151,3 +154,68 @@ view, including private terms readable by their authorized reader; they are
 not the public export/proof or F-view packets tested by the privacy checks.
 The full 600-seed run remains run 2 and was not automatically repeated for
 these added historical assertions. The goal-1 evidence gap is closed.
+
+
+## G2 correction and G1 integration
+
+Review `3d76d2b9d7f1fce8c577243ba330e15208b975c4` identified that an intervening
+non-activation entry made F permanently unusable. Root decision
+`c2982a6e6756f4fed08e5a82acc8b05a65127745` explicitly permits otherwise admitted
+entries during the activation phase, while retaining current authorization,
+closed-state and genesis-pinned proof gates. This is a recorded design change.
+The new manifest adds two actual adverse traces, increasing the count from
+27 to 29; old expectations and results remain under their original ids.
+
+The source removes `activation_order`, adds an explicit closed-context gate,
+and checks later activation independently of unrelated intervening entries.
+The new signed memory/SQLite regressions cover failed activation, dormant
+exercise, a fresh complete activation, Bob's admitted unauthorized observation,
+and exact retries both before and after success. The authorization and close
+branches prepare their extra grants before source releases, preserving F's
+complete genesis commitment.
+
+The same review's error-boundary concern is repaired separately: explicit
+scope/profile/proof refusals remain verdicts, while unexpected replay and
+handler failures escape. A post-commit scope failure closes the facade and
+held Context. Reopen retains exact bytes; the transient-registry regression
+recovers the original receipt and effective activation once. A deterministic
+throwing handler remains a real failure on cold retry. The test error named
+`ineffective_release` is deliberately an ordinary Error, so matching a known
+policy reason cannot turn it into a refusal. Failed development snapshots and
+fixture corrections are retained in `corpus/ordering-o4/development`.
+
+Integration merge `71f2c9922576a1584d0a45b7d01999b760088093` includes final O1
+G1 candidate `aaa447d9e5ac4d88f07f144d46f2f5e63752c399` and its revised G2
+manifest. G1 compares the exact folded head inside serialized append and
+invalidates stale/erroring raw Contexts. O3 control admission is preserved.
+The runtime and Scope package identities therefore change; historical O4
+proof packets must still be replayed at their historical source snapshots.
+
+The combined scope implementation is
+`sha256:1090e6c785ebf4e8060be60672a9503ae4bcbb4220a31f2c117bf42b6532f8db`,
+and the Scope package is
+`sha256:fd46665bc03857cadf6cec9e4964018780c93639482d42dccfb2b891195b2ed6`.
+Sale and Inspection package ids, the fixed join policy and the opening rule
+are unchanged. Formal run 5 uses source `91941fa55928668a7a25413bedd3b38f15677b4e` and
+this new manifest. The complete noncampaign run passes: 345 tests, 341 pass,
+zero ordinary failures, zero skipped and four executing retained Club TODOs.
+Typecheck passes. The 122 O4 tests all pass within that same invocation;
+there is no second duplicate lifecycle run. The three 200-seed campaigns
+were explicitly excluded by name. Their prior evidence remains run 2,
+explicitly before G1/G2, and is not attributed to the corrected runtime.
+
+The 78 actual observation files contain both backends' 20 healthy boundaries,
+29 adverse branches, 209 materialized genesis variants, all-reader historical
+matrices and new phase/error cases. Both backends preserve F1's failed receipt
+through retry, dormant exercise at F2, fresh success at F3, successful retry,
+and the original failed retry after success. Bob's admitted unauthorized F1
+observation is followed by effective Alice activation at F2. All earlier
+proof/privacy, revoked/withdrawn-source and historical Sale checks still pass.
+No unexpected exception was accepted as a mutation-policy rejection.
+
+Run-5 records and this result update are the only changes after the frozen
+source; no runtime, fixture, test or manifest changed during measurement.
+The candidate is ready for independent checking; this record is not a verdict.
+
+Raw run-5 text retains the whitespace emitted by Node, including the retained
+TODO assertion diagnostics and the typecheck command's final blank line.

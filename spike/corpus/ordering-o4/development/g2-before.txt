@@ -1,0 +1,226 @@
+✖ O4 G2 failed activation, dormant exercise and exact retries permit later activation: memory (652.923458ms)
+✖ O4 G2 failed activation, dormant exercise and exact retries permit later activation: sqlite (660.67175ms)
+✖ O4 G2 another participant admitted event cannot block activation: memory (429.972833ms)
+✖ O4 G2 another participant admitted event cannot block activation: sqlite (464.3915ms)
+✔ O4 G2 keeps current authorization gate: memory (392.700083ms)
+✖ O4 G2 keeps current closed gate: memory (368.356708ms)
+✔ O4 G2 keeps current authorization gate: sqlite (425.048917ms)
+✖ O4 G2 keeps current closed gate: sqlite (407.068167ms)
+✖ O4 unexpected post-commit replay error is thrown and disables facade: memory (447.720083ms)
+✖ O4 unexpected post-commit replay error is thrown and disables facade: sqlite (486.038875ms)
+✖ O4 malformed release-proof shape has an explicit policy refusal: memory (431.458375ms)
+✖ O4 malformed release-proof shape has an explicit policy refusal: sqlite (455.608625ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 2
+ℹ fail 10
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5703.655167
+
+✖ failing tests:
+
+test at spike/test/ordering-scope-phase.test.ts:21:53
+✖ O4 G2 failed activation, dormant exercise and exact retries permit later activation: memory (652.923458ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  false !== true
+  
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/ordering-scope-phase.test.ts:29:95)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at spike/test/ordering-scope-phase.test.ts:21:53
+✖ O4 G2 failed activation, dormant exercise and exact retries permit later activation: sqlite (660.67175ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  false !== true
+  
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/ordering-scope-phase.test.ts:29:95)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at spike/test/ordering-scope-phase.test.ts:35:53
+✖ O4 G2 another participant admitted event cannot block activation: memory (429.972833ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  false !== true
+  
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/ordering-scope-phase.test.ts:40:95)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at spike/test/ordering-scope-phase.test.ts:35:53
+✖ O4 G2 another participant admitted event cannot block activation: sqlite (464.3915ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  false !== true
+  
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/ordering-scope-phase.test.ts:40:95)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at spike/test/ordering-scope-phase.test.ts:44:109
+✖ O4 G2 keeps current closed gate: memory (368.356708ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'activation_order'
+  - 'closed'
+  
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/ordering-scope-phase.test.ts:54:52)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'activation_order',
+    expected: 'closed',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at spike/test/ordering-scope-phase.test.ts:44:109
+✖ O4 G2 keeps current closed gate: sqlite (407.068167ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'activation_order'
+  - 'closed'
+  
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/ordering-scope-phase.test.ts:54:52)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'activation_order',
+    expected: 'closed',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at spike/test/ordering-scope-phase.test.ts:58:53
+✖ O4 unexpected post-commit replay error is thrown and disables facade: memory (447.720083ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/ordering-scope-phase.test.ts:69:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at spike/test/ordering-scope-phase.test.ts:58:53
+✖ O4 unexpected post-commit replay error is thrown and disables facade: sqlite (486.038875ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/ordering-scope-phase.test.ts:69:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at spike/test/ordering-scope-phase.test.ts:81:53
+✖ O4 malformed release-proof shape has an explicit policy refusal: memory (431.458375ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /^malformed/. Input:
+  
+  "Cannot read properties of null (reading 'source')"
+  
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/ordering-scope-phase.test.ts:85:58)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "Cannot read properties of null (reading 'source')",
+    expected: /^malformed/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at spike/test/ordering-scope-phase.test.ts:81:53
+✖ O4 malformed release-proof shape has an explicit policy refusal: sqlite (455.608625ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /^malformed/. Input:
+  
+  "Cannot read properties of null (reading 'source')"
+  
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/ordering-scope-phase.test.ts:85:58)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "Cannot read properties of null (reading 'source')",
+    expected: /^malformed/,
+    operator: 'match',
+    diff: 'simple'
+  }

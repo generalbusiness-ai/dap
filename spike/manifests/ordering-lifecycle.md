@@ -7,15 +7,26 @@ note §7 and §9. The executable companion is `ordering-lifecycle.ts`.
 content ids of this prose and that module. A change to either is a new
 manifest; O4 must cite the identity it executes.
 
-This revision corrects the activation phase and malformed-genesis outcomes
-after O1 review, and records the adopted public-proof completeness and
-disclosure boundary. It is a **pre-formal-O4-baseline correction**: an O4
-prototype and failing development checks already exist. The historical
-manifest `sha256:63be83e60036a5936569c478da7a8c7be6b8ab1c744d59ef3296b7d6182b5a9d`
-and its run records remain historical evidence, not results for this revision.
-Completeness decision:
+This revision defines intervening destination events and retry of failed
+activation, retaining the earlier malformed-genesis outcomes and adopted
+public-proof completeness and disclosure boundary. The activation phase is
+a **builder design decision for Hugh**, made under his instruction to make
+normal spike decisions and complete unattended:
+`git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:c2982a6e6756f4fed08e5a82acc8b05a65127745`.
+It is not a design change commissioned by the checker or an implementation
+approval. This is a **pre-formal-O4-baseline revision**: an O4 prototype and
+failing development checks already exist. The following manifest identities
+and their runs remain historical evidence, not results for this revision:
+
+- `sha256:63be83e60036a5936569c478da7a8c7be6b8ab1c744d59ef3296b7d6182b5a9d`;
+- `sha256:d7419b5d85d9acd4767b8733b47729c29f49088a0495ee246c60c2da658a7613`;
+- `sha256:75de2a860b049b5d9dcad3dab234be14d7a965d53df2e0d0eae8de6f05a1b327`;
+- `sha256:fc55bfa123891e750f7bbe3a0d9cb33b5f65c07750db08bc984544ed2dd6b378`.
+
+Their source and run boundaries remain in the [O1 ledger](ordering-o1.ledger.md).
+Ratified checker design assessment:
 `git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:ca04cc02027b9070bb60e3852ac19e21ae7931f4`;
-disclosure adoption:
+builder adoption, including the disclosure boundary:
 `git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:42ffb3413ded6c33fb39d25296cd04ce0f005d6a`.
 
 The tests in `test/ordering-lifecycle.test.ts` check the specification's
@@ -122,10 +133,19 @@ the same transition. At F1 the two rights become live together, exactly
 once. Kim confirms delivery at F2 and Alice fulfils at F3; both rights are
 then spent. This is the healthy progress check.
 An admitted unsuccessful activation takes a position but leaves the rights
-dormant. When missing proof is supplied, a later attempt may first activate:
-the withheld-evidence branch fails at F1 and succeeds at F2. An intervening
-attempt to exercise a dormant right is ineffective. After the first success,
-later activation has no further effect; an exact retry takes no new position.
+dormant. When missing proof is supplied, a later fresh attempt may first
+activate: the withheld-evidence branch fails at F1 and succeeds at F2.
+Otherwise admissible unrelated destination events may occur before success,
+under ordinary admission, authorization and effect rules. An otherwise
+authorized exercise of a transferred right is ineffective with `dormant_right`.
+Mere intervening history, including an ineffective event by another participant,
+must not permanently block activation. Each attempt still verifies the
+transition, source identities, exact export prefixes and retained inputs
+pinned by F's genesis and independently proven releases. Current authorization
+and closed-context gates still apply; intervening history cannot replace the
+genesis pins. After the first success, later activation has no further effect.
+An exact retry of a failed or successful attempt returns that attempt's saved
+receipt with no new position, even after a later attempt succeeds.
 
 ## Export, import and privacy rules
 
@@ -177,6 +197,55 @@ There is no inferred order between S's earlier events and D's earlier
 events. The `imports` list records adopted state identities, including
 dormant initialization; `exports` records effective source exports.
 
+## O4 completeness contract and required tests
+
+Ratified checker assessment `ca04cc02027b9070bb60e3852ac19e21ae7931f4` and
+builder adoption `42ffb3413ded6c33fb39d25296cd04ce0f005d6a` require all seven
+profile obligations, defined fully in
+[O4: public-proof completeness](../ordering-profile.md#o4-public-proof-completeness):
+
+- **A1 — Serving-party trust:** F pins trust in completeness only; release
+  effect remains independently replayed.
+- **A2 — Exact public-data rule:** the 21 authority kinds, assigned audiences,
+  excluded disclose/observe kinds, banned fields and named rule content id.
+- **A3 — Exact certificate format:** canonical packet digest, type, rule,
+  genesis and frontier; strict fields and private-data checks.
+- **A4 — Frontier header signer:** W0 through assign H+2, W1 from H+3.
+- **A5 — Genesis-pinned release boundary:** source and export prefix p come
+  from F's genesis; r = p+1; frontier >= r; effect evaluated through r.
+- **A6 — Independent destination checks:** shapes, chains, signatures,
+  actor proofs, dependency pause, grants, release authority and effect.
+- **A7 — Remaining trust limits:** malicious omission or tailoring,
+  historical retired-key trust, forks and copies; member recomputation and
+  transferable signed evidence of an incomplete packet.
+
+The O4 formal baseline must execute all nine groups using actual signed
+journals on **memory and SQLite**, retaining observed outcomes:
+
+1. **Removed authority openings.** Refuse a certified packet with a grant,
+   revoke, withdraw or attach body removed. The five original failing
+   development checks must become refusals.
+2. **Stripped branches cannot activate.** Neither the withdraw-stripped nor
+   the revoke-stripped source branch may activate F.
+3. **Release frontier coverage.** Refuse a certificate below r. A valid
+   certificate at a later frontier gives the same release verdict at r.
+4. **Wrong frontier signer.** Refuse a non-writer, the successor at or before
+   H+2, and W0 from H+3 onward; the assign header at H+2 still belongs to W0.
+5. **Certificate and packet mutations.** Refuse changed type, rule, genesis
+   or frontier, and extra fields in the certificate or public proof.
+6. **Capped authority audience.** An authority-kind event with a narrower
+   assigned audience makes the producer refuse certification.
+7. **Malicious valid signature.** Record a writer's signed omission as
+   outside destination protection; source-member recomputation detects it.
+8. **Full/public differential.** For every certified packet, compare public
+   replay with full-journal verdicts at every opened position and at release r.
+9. **Activation bytes.** Check actual serialized activate payloads for absence
+   of amounts, counters, terms and private inspection-request bodies.
+
+These are required evidence groups, not results of O1's manifest-shape tests.
+The disclosure accounting above records the decision's B1/B2 specification
+obligations; actual recipient observations and byte checks remain O4's work.
+
 ## Independent branches and adverse cases
 
 Each `lifecycleCases` item branches from its named healthy snapshot.
@@ -198,13 +267,29 @@ baseline.
 - **Withheld evidence.** Both sources released, but D's proof is withheld.
   Activation is ineffective and both rights stay dormant. A timeout
   cannot revive S. Supplying both proofs later activates F once.
+- **Intervening dormant exercise (`intervening-dormant-exercise`).** Start
+  from `destination-started`. Alice's missing-proof activation at F1 is
+  ineffective with `missing_release`. An exact retry returns F1's saved
+  receipt. Alice's exercise at F2 is ineffective with `dormant_right`, and
+  retrying failed F1 still takes no position. A fresh activation with both
+  valid proofs succeeds at F3. Exact retries of successful F3 and failed F1
+  both return their own saved receipts and keep the head at F3.
+- **Another participant's event (`intervening-participant-event`).** Bob is
+  an admitted F founder but has no observe capability. His signed
+  `dap.observe` of `{fact: {note: "waiting"}}` takes F1 and is ineffective
+  with `unauthorized` under the ordinary foundation rule. Alice's fresh
+  activation with both valid proofs succeeds at F2. Bob's ineffective event
+  creates no permanent activation barrier and changes no genesis pin.
+  O4 must execute both intervening cases on memory and SQLite, using actual
+  authenticated entries and saved retry receipts.
 - **Restart.** Restart before activation preserves the dormant state.
   Restart after activation preserves F's authority and activation count.
   Repeating activation with a fresh action id is ineffective with
   `already_active`; different valid proof material for the same releases
-  has the same outcome. An exact retry returns the original receipt and
-  takes no position. Timeout recovery is also ineffective when activation
-  happened but its reply was withheld; no source regains a right.
+  has the same outcome. An exact retry of a failed or successful attempt
+  returns that attempt's original receipt and takes no position. Timeout
+  recovery is also ineffective when activation happened but its reply was
+  withheld; no source regains a right.
 - **Source-bound proposals.** Bob's offer signed for S while open at S14
   stays bound to S. S's already closed Sale judges it ineffective with the
   per-model reason `not_open`; its observed Sale status remains `closed`.

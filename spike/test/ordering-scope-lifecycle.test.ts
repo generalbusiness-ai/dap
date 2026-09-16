@@ -30,6 +30,7 @@ function perform(world: LifecycleWorld, action: LifecycleAction): any {
     case 'import-export': return world.emit(context, actor, SCOPE_KINDS.importExport, { identity: world.exports.S!.identity });
     case 'submit-signed-source-proposal': return world.emit(context, actor, '', {}, world.pendingSourceProposal);
     case 'scope.release': return world.release(context as 'S' | 'D', actor, input.right ?? 'R_fulfil', input.proposedPrefix ? world.contexts.S!.export(['R_fulfil'], 22) : world.exports[context as 'S' | 'D']);
+    case 'participant-observation': return world.emit(context, actor, K.observe, input);
     case 'exercise-right': return world.exercise(context, actor, input.right);
     case 'adopt-origin-at-start': return { verdict: world.contexts.F!.state.verdicts[1] };
     case 'continue-from-nomination': {
