@@ -494,3 +494,22 @@ before the final report. No aggregate, O4 or campaign test was repeated here.
 The 22 early artifacts at old head `4be9b2c` remain historical and cannot be
 reused as this candidate's delivery. All old O6 and O4 records are retained;
 O4/O6 independent approval remains pending.
+
+
+Final O4 evidence candidate `e0467ae9c44d99e10f38916b74f047b4e9183c5c`
+is integrated by O6 merge `a861624b7636eaea2dc9f9654bee85f72b46a9ba`. O4 run 8 at `2ee1b43a`
+passes 469 selected tests, 465 pass, zero ordinary failures and four retained
+Club TODOs; all 144 O4 checks pass within that same noncampaign invocation.
+Whole-tree typecheck passes. The 92 fresh observations repeat 20 healthy
+boundaries, 29 adverse cases and 209 genesis variants per backend, alongside
+55/100/143 historical matrices and the K1–K4 regressions. K2 reports 120
+original exceptions and 120 exact retry recoveries per backend. These are
+O4's measurements, not an O6 rerun; the 600-seed boundary remains historical.
+
+Local integration verification matches all 88 blobs in O4's run-8 source
+index and all 92 observation hashes. The O6 bootstrap and every run-1 through
+run-4 evidence file remain byte-identical to `4be9b2c`; run 5 remains pinned
+to `b6c7ab7a`. This final O4 merge adds only evidence and documentation after
+those measured sources, so no additional test run is required. The final
+report cites these exact records and preserves the independent-review
+boundary: repaired O4 and O6 are still candidates awaiting their own approval.
