@@ -1,0 +1,94 @@
+COMMAND ["node", "--test", "test/ordering-scope-completeness.test.ts", "test/scope-proof.test.ts", "test/ordering-lifecycle.test.ts"]
+✔ manifest identity binds the prose and executable source, independently recomputed (1.330417ms)
+ℹ ORDERING_LIFECYCLE_MANIFEST_ID sha256:bdb831b32915c0b209afcbcdfc8c24e671dcd60eb4dd1ffca17a2b6300ae5746
+✔ every healthy boundary states all heads, writers, right statuses and exact active owners (1.555042ms)
+✔ join boundaries have two releases, dormant initialization and one activation followed by progress (0.293709ms)
+✔ all adverse cases have resolvable branches, full safe observations and exact reason coverage (1.791916ms)
+✔ restarts, alternative valid proof material and timeouts cannot duplicate or revive authority (0.1565ms)
+✔ failed activation and an intervening dormant exercise permit fresh activation, preserving both retry receipts (0.312166ms)
+✔ another admitted participant event cannot occupy a permanent activation slot (0.091416ms)
+✔ public proof disclosure has a finite named rule and keeps private source kinds excluded (0.1035ms)
+✔ public exports are exact, source-linked and exclude the private accepted amount (0.128208ms)
+✔ changed-genesis enumeration covers every field, container, removal and added field (2.779958ms)
+✔ independent safety checks detect double ownership, premature activation and import duplication (0.218125ms)
+✔ future observation comparison rejects changed, missing and additional state, including unsafe mutations (0.122666ms)
+✔ replay obligations preserve pre-attach outcomes, local import timing and writer retry identity (0.094125ms)
+✔ O4 K3 ordinary member scope attempts cannot strand certification: memory (486.195583ms)
+✔ O4 K3 ordinary member scope attempts cannot strand certification: sqlite (496.402875ms)
+✔ O4 K3 failed actor-only attempt permits certified transfer: bob-unauthorized-accept memory (429.415333ms)
+✔ O4 K3 failed actor-only attempt permits certified transfer: carol-malformed-grant memory (418.125584ms)
+✔ O4 K3 failed actor-only attempt permits certified transfer: bob-unauthorized-close memory (416.041291ms)
+✔ O4 K3 failed actor-only attempt permits certified transfer: bob-unauthorized-accept sqlite (459.021625ms)
+✔ O4 K3 failed actor-only attempt permits certified transfer: carol-malformed-grant sqlite (461.39ms)
+✔ O4 K3 failed actor-only attempt permits certified transfer: bob-unauthorized-close sqlite (456.263583ms)
+✔ O4 public proof reconstructs signed Sale facts and grants across handover on memory (37.66225ms)
+✔ O4 public proof reconstructs signed Sale facts and grants across handover on sqlite (52.647ms)
+✔ O4 source pins distinguish genesis, initial writer and requested frontier (28.255625ms)
+✔ O4 public proof rejects malformed, tampered and incomplete authenticated prefixes (29.671834ms)
+✔ O4 public proof rejects missing, changed and forged handover evidence (40.154917ms)
+✔ O4 public proof rejects private bodies supplied at their genuine signed positions (25.824333ms)
+✔ O4 public proof rejects a public kind carrying nested private extras despite valid signatures (21.500542ms)
+✔ O4 public proof rejects private data attached outside its declared shape (22.567916ms)
+✔ O4 public proof requires semantic packages and disclosed attachment bodies (42.730291ms)
+✔ O4 public proof cannot hide an authenticated grant body as a private position (28.39125ms)
+✔ O4 public proof cannot hide an authenticated revoke body as a private position (28.738208ms)
+✔ O4 public proof cannot omit a withdrawal to turn a refused acceptance into a decision (38.676167ms)
+✔ O4 certificate binds every authority opening on memory (55.533625ms)
+✔ O4 certificate signer follows the frontier header across assignment on memory (77.852583ms)
+✔ O4 certificate strictly pins type, rule, genesis, frontier and shape on memory (73.595916ms)
+✔ O4 producer refuses a capped authority audience on memory (23.843833ms)
+✔ O4 malicious writer omissions exceed destination trust but member recomputation detects them on memory (49.879667ms)
+✖ O4 actor-only unknown and placeholder outcomes cannot justify hiding on memory (21.096792ms)
+✔ O4 public and full semantic verdicts agree at every opening of every certified prefix on memory (88.319459ms)
+✔ O4 disclosure and observation remain hidden under the named public rule on memory (30.206541ms)
+✔ O4 certificate binds every authority opening on sqlite (65.969291ms)
+✔ O4 certificate signer follows the frontier header across assignment on sqlite (89.159875ms)
+✔ O4 certificate strictly pins type, rule, genesis, frontier and shape on sqlite (83.85575ms)
+✔ O4 producer refuses a capped authority audience on sqlite (33.7435ms)
+✔ O4 malicious writer omissions exceed destination trust but member recomputation detects them on sqlite (58.699ms)
+✖ O4 actor-only unknown and placeholder outcomes cannot justify hiding on sqlite (30.739167ms)
+✔ O4 public and full semantic verdicts agree at every opening of every certified prefix on sqlite (99.160209ms)
+✔ O4 disclosure and observation remain hidden under the named public rule on sqlite (40.554459ms)
+ℹ tests 49
+ℹ suites 0
+ℹ pass 47
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3712.316625
+
+✖ failing tests:
+
+test at test/scope-proof.test.ts:317:3
+✖ O4 actor-only unknown and placeholder outcomes cannot justify hiding on memory (21.096792ms)
+  TypeError: codec: expected_binding must be a sha256 identity
+      at fail (file:///private/tmp/dap-o4-k3-completeness/spike/src/codec.ts:23:47)
+      at digest (file:///private/tmp/dap-o4-k3-completeness/spike/src/codec.ts:109:55)
+      at bodyShape (file:///private/tmp/dap-o4-k3-completeness/spike/src/codec.ts:151:7)
+      at signEvent (file:///private/tmp/dap-o4-k3-completeness/spike/src/codec.ts:166:3)
+      at act (file:///private/tmp/dap-o4-k3-completeness/spike/test/fixtures/o1-fixture.ts:23:39)
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-k3-completeness/spike/test/scope-proof.test.ts:334:33)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+
+test at test/scope-proof.test.ts:317:3
+✖ O4 actor-only unknown and placeholder outcomes cannot justify hiding on sqlite (30.739167ms)
+  TypeError: codec: expected_binding must be a sha256 identity
+      at fail (file:///private/tmp/dap-o4-k3-completeness/spike/src/codec.ts:23:47)
+      at digest (file:///private/tmp/dap-o4-k3-completeness/spike/src/codec.ts:109:55)
+      at bodyShape (file:///private/tmp/dap-o4-k3-completeness/spike/src/codec.ts:151:7)
+      at signEvent (file:///private/tmp/dap-o4-k3-completeness/spike/src/codec.ts:166:3)
+      at act (file:///private/tmp/dap-o4-k3-completeness/spike/test/fixtures/o1-fixture.ts:23:39)
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-k3-completeness/spike/test/scope-proof.test.ts:334:33)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+COMMAND ["npm", "run", "typecheck"]
+
+> dap-spike@0.0.1 typecheck
+> tsc -p tsconfig.json
+

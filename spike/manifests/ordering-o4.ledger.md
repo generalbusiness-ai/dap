@@ -417,3 +417,16 @@ its scope implementation is
 and Scope package is
 `sha256:b5eb69362b0e6de96e9dda2997a5399cc061f6f9e184b82145218afb5e2227a0`.
 These remain K3 component identities, not identities for merged K1/K2/K4.
+
+
+At refined frozen source `82119b5`, 47 of 49 focused checks passed and
+typecheck passed. All eight actual transfer checks passed, including the
+six scope-kind member attempts on each backend, effective actor-only refusal,
+and all existing proof/mutation/privacy checks. Two new placeholder tests
+stopped at their first setup case: the helper tried to sign an unbound kind
+without a valid `expected_binding` identity. The codec correctly refused it,
+before the intended unknown-kind fold. The correction supplies a canonical
+zero digest only for this deliberately unbound attempt, so it reaches the
+foundation's unknown verdict; no runtime or rule changes. Exact failed output
+and eight signed observations remain in `k3-final.*` and
+`k3-final-observations`. They are not relabelled as a passing run.

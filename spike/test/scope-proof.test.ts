@@ -331,7 +331,11 @@ for (const storage of ['memory', 'sqlite'] as const) {
           effective(act(journal, 'alice', K.grant, { principal: people.alice, capabilities: [kind] }));
         }
         certified(journal);
-        const result = accepted(act(journal, 'alice', kind, {}));
+        const intent = journal.context.intent(people.alice, kind, {});
+        // An unbound intent has no binding id; provide a valid wire identity
+        // so the signed attempt reaches the foundation's unknown-kind verdict.
+        if (reason === 'unknown') intent.expected_binding = 'sha256:' + '0'.repeat(64);
+        const result = accepted(journal.submit(envelopeBytes(signEvent(intent, keys.alice)), journal.context.credentialFor(people.alice)));
         assert.equal(result.verdict?.effective, false);
         assert.deepEqual(journal.context.state.audiences[result.header.position], { kind: 'named', principals: [people.alice] });
         assert.throws(() => certified(journal), /authority body has narrower audience/, reason);
