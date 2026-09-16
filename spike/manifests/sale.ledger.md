@@ -136,6 +136,33 @@ the series unreplayable (the harness now also records an audience
 error as an ineffective, actor-only event, so a model bug cannot break
 replay).
 
+## Run 4
+
+Snapshot commit: see `git log`, "checker run 4". Manifest revision "Run
+3"; package after fixes 4 to 6 is printed by the test run.
+
+The author's fixes 4 to 6 applied (a disclosure policy for the fixture's
+client; a counter must name the stub's author; total audience rules).
+The trace, cases 2 to 4, checker's three reproduced counterexamples
+(kept as tests V3-F1 to V3-F3) and the run-1 corpus pass. The campaign
+fails **60 of 200 seeds**, all one signature, and none of them the
+model's: a `com.example.inspection.request` emitted by the generator's
+ineffective-attempt path in a series that never attached the Inspection
+package. The foundation recorded an application kind with no binding
+under the default `members` audience with an `unhandled` verdict, so its
+private payload was readable by every member. The author reported it as
+a foundation finding: an unbound kind's payload cannot be judged and
+should not be readable beyond its actor (design note §8: refusing an act
+must not disclose its payload). The 100 run-3 failures from disclosures
+are gone: the declared policy is honoured.
+
+## Run 5
+
+Snapshot commit: see `git log`, "checker run 5". Foundation corrected,
+not a model fix: an application event whose kind has no binding at its
+position is recorded with an actor-only audience. Results are recorded
+in the snapshot's commit message and below once run.
+
 ## Fixes
 
 ### Fix 1: the counter names the offer's author, so its audience is seller and author
@@ -210,4 +237,80 @@ replaces the hidden o1: `no_such_offer` against effective), so cases 1
 to 4 and the campaign all depend on the harness applying the declared
 disclosure on every join, including the joins in the predeclared cases.
 
-Totals: 3 fixes, 0 added kinds, budget exceeded
+### Fix 4: a disclosure policy for the sale's public kinds
+
+- Discovery source: checker review 8c0d324b, V3-F1
+- Counterexample: the trace with Bob's terms at 7 disclosed by Alice to
+  Carol: Carol reads 700 while her projection hides it; seed 7 likewise.
+  Under the readable-view budget, 100 of 200 seeds failed with no model
+  change, every one a disclosure of terms, a counter or an inspection
+  request to a non-party by the fixture's disclosing client.
+- Constraint affected: none
+- Added kind: no
+- Before/after: before, the model said nothing about what a client may
+  disclose, so the seller's client widened any position. After, the
+  model declares `config.disclosurePolicy.kinds`: a client may disclose
+  beyond its audience only `sale.listing`, `sale.offer`, `sale.withdraw`,
+  `sale.accept` and `sale.close` (the sale's public kinds, already
+  "members when recorded, subject to disclosure" in the budget) and the
+  foundation's `dap.invite` and `dap.attach` (an invitation reveals
+  participation and grants, which are public by the spine; a narrow
+  attach must stay disclosable for the pause and stale-binding cases).
+  It forbids disclosing `sale.offer_terms`, `sale.counter` and
+  `com.example.inspection.request`, whose readers the budget fixes at
+  recording. The policy binds a conforming client; the checker still
+  judges what is readable, so a non-conforming client is still caught.
+
+### Fix 5: a counter must name the offerer
+
+- Discovery source: checker review 8c0d324b, V3-F2
+- Counterexample: Bob's stub o1; Alice counters
+  `{offer_id: 'o1', amount: 780, author: 'carol'}`: effective, Carol
+  reads 780 and Bob holds a header.
+- Constraint affected: none
+- Added kind: no
+- Before/after: before, the fold type-checked `author` and gave it no
+  meaning, while the predeclared audience delivered the counter to
+  whoever it named. After, a counter whose `author` is not the stub's
+  author is ineffective with `not_author` (checked after `no_such_offer`,
+  before `already_decided`), so no effective counter is ever addressed
+  to a non-party. The delivery itself still happens before the fold and
+  the budget reports it; that is the predeclared schema's cost, and the
+  fixture's clients never do it. Discloses nothing more.
+
+### Fix 6: the private audience rules are total
+
+- Discovery source: checker review 8c0d324b, V3-F3
+- Counted: no. Who reads a malformed private attempt is unchanged: the
+  audience rule threw, and the harness now records a thrown rule as
+  readable by the actor alone; the total rule returns the actor alone
+  for the same inputs. The change is robustness of the rule's code, not
+  of any audience or fold outcome; it does change the binding identity,
+  as any edit to the rule's text does.
+- Counterexample: `sale.offer_terms` or `sale.counter` with payload
+  `null`: `sellerAndAuthor` and `counterParties` threw, and the series
+  could not be replayed.
+- Constraint affected: none
+- Added kind: no
+- Before/after: before, both rules read a field of the payload without
+  checking it was an object. After, a shared `namedParty` reads the field
+  only from an object payload and returns the actor when the field is
+  not a string, so both rules are total over runtime JSON; the fold then
+  refuses the event as `malformed`.
+
+Verification after fixes 4 to 6 (package printed by the test run):
+the trace and cases 2, 3 and 4 pass; the campaign fails 60 of 200
+seeds, every violation of one signature: a member who is not a party
+can read a `com.example.inspection.request` whose verdict is `unhandled`
+because the Inspection package is bound in none of the 200 generated
+series, and the foundation records an application kind with no binding
+under the default `members` audience (`foldEntry`: `binding ? capped(...)
+: MEMBERS`). The Sale model binds no such kind and has no rule that can
+narrow it; the author reports it as a foundation finding: an unbound
+kind's payload cannot be judged, so it should not be readable beyond its
+actor (design note §8, "refusing an act must not disclose its private
+payload"), or the generator should not emit a kind that no visible
+binding resolves except as a deliberately unhandled attempt with a
+public payload.
+
+Totals: 6 fixes, 0 added kinds, budget exceeded (fixes 1 to 5 are semantic; fix 6 is recorded here and not counted as semantic, see its entry)

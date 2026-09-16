@@ -103,6 +103,15 @@ export type SaleConfig = {
     kinds: string[];
     effectiveOnly: true;
   };
+  /**
+   * The model's disclosure policy (fix 4): the kinds a participant's client
+   * may disclose beyond their audience. Only the sale's public kinds and
+   * the foundation's invitation and attach are listed. Terms, counters and
+   * inspection requests are absent, so a conforming client never widens
+   * an amount, a counter or an inspection request to a non-party; the
+   * privacy budget names their readers and no disclosure may add one.
+   */
+  disclosurePolicy: { kinds: string[] };
 };
 
 type StubStatus = 'open' | 'withdrawn' | 'replaced' | 'accepted' | 'declined';
@@ -171,7 +180,12 @@ function refuse(state: SaleState, reason: string) {
 
 export const saleModel: ModelSpec<SaleState, SaleConfig> = {
   id: 'sale',
-  config: { joinDisclosure: { by: 'seller', kinds: [NS + 'offer', NS + 'withdraw', NS + 'accept'], effectiveOnly: true } },
+  config: {
+    joinDisclosure: { by: 'seller', kinds: [NS + 'offer', NS + 'withdraw', NS + 'accept'], effectiveOnly: true },
+    disclosurePolicy: {
+      kinds: [NS + 'listing', NS + 'offer', NS + 'withdraw', NS + 'accept', NS + 'close', 'ai.generalbusiness.dap.invite', 'ai.generalbusiness.dap.attach'],
+    },
+  },
   init: () => ({ status: 'unopened', offers: [], terms: [], counters: [], withdrawals: [], accepted: null, closedAt: null, outcome: null }),
   roles: {
     Seller: [NS + 'accept_offer', NS + 'counter', NS + 'close'],
@@ -240,11 +254,15 @@ export const saleModel: ModelSpec<SaleState, SaleConfig> = {
         return { effective: true, state: { ...state, terms: [...state.terms, terms] } };
       }
       case NS + 'counter': {
-        // The payload's `author` field is read by the audience rule; its value carries no meaning for the fold.
         if (!Number.isInteger(p.amount) || typeof p.author !== 'string') return refuse(state, 'malformed');
         if (withdrawalOf(state, id, everything)) return refuse(state, 'withdrawn');
         if (replacementOf(state, id, everything)) return refuse(state, 'replaced');
-        if (!stubOf(state, id)) return refuse(state, 'no_such_offer');
+        const stub = stubOf(state, id);
+        if (!stub) return refuse(state, 'no_such_offer');
+        // The audience delivers the counter to whoever `author` names, before this fold runs. A
+        // counter that names anyone but the offerer is refused, so no effective counter is
+        // ever addressed to a non-party (fix 5); the misdelivery itself is the schema's cost.
+        if (p.author !== stub.author) return refuse(state, 'not_author');
         if (state.accepted !== null && state.accepted.id === id) return refuse(state, 'already_decided');
         const counter: OfferCounter = { id, position: ctx.position, amount: p.amount as number };
         return { effective: true, state: { ...state, counters: [...state.counters, counter] } };
@@ -330,12 +348,20 @@ export const saleModel: ModelSpec<SaleState, SaleConfig> = {
   },
 };
 
+// The private audience rules are total over runtime JSON (fix 6): a payload
+// that is not an object, or whose party field is not a string, addresses
+// the event to its actor alone, and the fold then refuses it as malformed.
+function namedParty(ev: EventBody, field: string): string {
+  const p = ev.payload;
+  const v = typeof p === 'object' && p !== null && !Array.isArray(p) ? (p as Record<string, unknown>)[field] : undefined;
+  return typeof v === 'string' ? v : ev.actor;
+}
 function sellerAndAuthor(_: unknown, ev: EventBody) {
-  return named(ev.actor, (ev.payload as { seller?: string }).seller ?? ev.actor);
+  return named(ev.actor, namedParty(ev, 'seller'));
 }
 /** A counter is by the seller; the payload names the offer's author so the audience can. */
 function counterParties(_: unknown, ev: EventBody) {
-  return named(ev.actor, (ev.payload as { author?: string }).author ?? ev.actor);
+  return named(ev.actor, namedParty(ev, 'author'));
 }
 const membersAudience = () => MEMBERS;
 const spineAudience = () => SPINE;

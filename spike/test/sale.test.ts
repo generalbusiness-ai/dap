@@ -10,9 +10,10 @@ import { test } from 'node:test';
 import { checkContext, describeViolation, type Violation } from '../src/checker.ts';
 import { K } from '../src/foundation.ts';
 import { generate } from '../src/generate.ts';
-import { oracleObserve } from '../src/oracle.ts';
+import { foldPrefix, oracleObserve } from '../src/oracle.ts';
 import { replay, type Step } from '../src/script.ts';
 import { SALE, salePackage } from '../fixtures/sale.ts';
+import { INSPECTION } from '../fixtures/inspection.ts';
 import {
   ALICE,
   BOB,
@@ -202,4 +203,54 @@ test('the repair ledger exists, its totals agree with its entries, and it states
   const within = fixes <= 2 && addedKinds <= 1;
   assert.equal(totals[3], within ? 'within' : 'exceeded', 'the stated budget outcome matches the counts');
   t.diagnostic(`fixes ${fixes}, added kinds ${addedKinds}, budget ${totals[3]}`);
+});
+
+// ----- checker's V3 review (workroom report 8c0d324b): reproduced counterexamples kept as tests -----
+
+test('V3-F1: a private payload disclosed to a non-party is a budget violation on what they can read, whatever the projection hides', () => {
+  const { ctx } = replay({ base: saleBase(), steps: saleTraceSteps().slice(0, 8) }); // through 9: Bob's terms at 7
+  const d = ctx.act(ALICE, K.disclose, { positions: [7], to: [CAROL] });
+  assert.ok(!('refused' in d) && d.verdict?.effective);
+  const view = ctx.view(CAROL);
+  assert.equal((view[7]!.event?.payload as { amount?: number })?.amount, 700); // Carol can read it
+  const carol = oracleObserve(ctx, CAROL, ctx.head, ctx.head).models['sale'] as { offers: { id: string; amount: number | null }[] };
+  assert.equal(carol.offers.find((o) => o.id === 'o1')?.amount, null); // the projection still hides it
+  const violations = fullCheck(ctx, [ctx.head]).filter((v) => v.kind === 'budget' && v.participant === CAROL);
+  assert.ok(violations.length > 0, 'the readable terms are reported');
+  assert.match(violations[0]!.detail, /carol can read the sale\.offer_terms at 7/);
+});
+
+test('V3-F2: a counter naming someone other than the stub\'s author is ineffective, and its delivery to that person is reported by the budget', () => {
+  const { ctx } = replay({ base: saleBase(), steps: saleTraceSteps().slice(0, 5) }); // through 6: Bob's stub o1
+  const wrong = ctx.act(ALICE, SALE + 'counter', { offer_id: 'o1', amount: 780, author: CAROL });
+  assert.ok(!('refused' in wrong));
+  assert.equal(wrong.verdict?.effective, false);
+  assert.equal(wrong.verdict?.perModel?.['sale']?.reason, 'not_author');
+  assert.ok(ctx.view(CAROL)[wrong.header.position]!.event, 'the predeclared audience still delivers it to Carol');
+  const violations = fullCheck(ctx, [ctx.head]).filter((v) => v.kind === 'budget' && v.participant === CAROL);
+  assert.ok(violations.length > 0, 'the misdirected counter is a budget violation');
+  const right = ctx.act(ALICE, SALE + 'counter', { offer_id: 'o1', amount: 780, author: BOB });
+  assert.ok(!('refused' in right) && right.verdict?.effective);
+  assert.ok(ctx.view(BOB)[right.header.position]!.event && !ctx.view(CAROL)[right.header.position]!.event);
+  assert.deepEqual(fullCheck(ctx, [ctx.head]).filter((v) => v.participant !== CAROL), []);
+});
+
+test('V3-F3: null private payloads are recorded with a deterministic ineffective verdict, replay cold, retry exactly, and a valid action follows', () => {
+  const { ctx } = replay({ base: saleBase(), steps: saleTraceSteps().slice(0, 10) }); // through 11: the inspection attach
+  const cases: [string, string][] = [[ALICE, INSPECTION + 'request'], [BOB, SALE + 'offer_terms'], [ALICE, SALE + 'counter']];
+  for (const [actor, kind] of cases) {
+    const ev = ctx.intent(actor, kind, null);
+    const r = ctx.submit(ev, ctx.credentialFor(actor));
+    assert.ok(!('refused' in r), kind);
+    assert.equal(r.verdict?.effective, false, kind);
+    assert.ok(ctx.state.verdicts[r.header.position], kind + ' has a recorded verdict');
+    const again = ctx.submit(ev, ctx.credentialFor(actor));
+    assert.ok(!('refused' in again) && again.replay && again.header.position === r.header.position, kind + ' retries exactly');
+    assert.ok(!('refused' in again) && again.verdict?.effective === false, kind + ' retry carries the verdict');
+  }
+  assert.doesNotThrow(() => foldPrefix(ctx, ctx.head));
+  const ok = ctx.act(BOB, SALE + 'offer_terms', { offer_id: 'o1', amount: 700, seller: ALICE });
+  assert.ok(!('refused' in ok) && ok.verdict?.effective);
+  const violations = fullCheck(ctx);
+  assert.deepEqual(violations, [], brief(violations));
 });
