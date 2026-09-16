@@ -91,3 +91,94 @@ What V1 does not claim:
 - no scope transfer or sequencing control: `dap.admit`, `dap.scope.*` and
   `dap.seq.*` are known kinds that fold to `not_in_v1`;
 - no foundation upgrade.
+
+## V2: interpreter, oracle, checker, Discussion
+
+What it contains:
+
+- `src/observe.ts`: `observe(p, state, n)`, the projection the property
+  compares: the foundation's public facts, the outcome of every event the
+  principal can see, the binding identity of every kind they can resolve,
+  each model's own `observe` for the principal, and the affordances the
+  principal holds. A package is in the projection only if the principal
+  can see the attach that installed it.
+- `src/interpret.ts`: the view interpreter `I(p, V(p,n), n)`: cold replay
+  from genesis over the principal's view under basis `n`; hidden positions
+  enter as headers and leave a placeholder; `Paused{at, reason, last}` when
+  a package is unavailable or a disclosed position depends on semantics the
+  principal cannot resolve, with `last` the result through the position
+  before under the same basis; a cache keyed by principal, context, view
+  content, basis and available packages, which never reuses a pause.
+  Disclosure completeness is checked by the recipient, from evidence the
+  sequencer puts in the header. The header names positions, never
+  packages:
+  - `activation`, on an application event: the attach (or genesis) that
+    produced the binding the event was judged under at its own position;
+  - `requires`, on an attach: every installed fact the attach consulted,
+    whether it was then accepted or refused: an earlier installation of
+    the same package, the installers of models already defined under
+    names it defines, the installers of the models its handlers name,
+    and the attach that produced the current binding of each kind it
+    rebinds;
+  - the pause rule: a disclosed event whose activation is hidden, or a
+    disclosed attach with a hidden requirement, pauses with
+    `dependency_missing`; an attach the sequencer resolved pauses with
+    `package_unavailable` until the viewer's client has its package, and
+    one the sequencer could not resolve (no `requires` in its header) is
+    an ineffective attempt for every judge, whatever their client can
+    fetch then or later, enforced by the common fold from the header; an
+    event or attach whose evidence is all visible is judged,
+    and its verdict, effective, `stale_binding` or a refused attach, is
+    the genuine one.
+  The chain closes by induction: a visible requirement was judged when
+  it was reached with its own requirements checked the same way, so a
+  view that sees an event's evidence resolves the binding the sequencer
+  did. The intent's own `expected_binding` and `expected_activation`
+  are preserved as what the author saw and cannot serve as evidence: a
+  hidden attach between composing and sequencing changes the verdict.
+- `src/oracle.ts`: `fold(S[0..m])` over the complete series and
+  `observe(p, state, n)` under basis `n`; never available to a model.
+- `src/checker.ts`: for every participant and frontier, equality of the
+  interpreted observation with the oracle's; the pause rule and resume;
+  invariants evaluated on the oracle's state; the mutation runner's
+  audience replacement.
+- `src/script.ts`: a series as replayable steps; greedy deletion to a
+  deletion-minimal failing script.
+- `src/generate.ts`: a seeded, bounded, affordance-driven generator that
+  injects late joiners, a narrow side attach, disclosures and ineffective
+  attempts.
+- `fixtures/discussion.ts` and `manifests/discussion.md`: the worked
+  example and its frozen manifest, with the machine-readable bounds, seeds
+  and invariants in `manifests/discussion.ts`. The manifest identity binds
+  the prose, the executable part and the package; the test run prints it
+  as a diagnostic, and a report cites that value.
+
+What the tests show:
+
+- the sale trace 0 to 5 through the interpreter equals the oracle for
+  Alice, Bob and Carol at every frontier; a late joiner and a disclosure
+  keep the property;
+- the views note's pause example: a disclosure followed by an unavailable
+  package pauses with `last` through the position before, under the
+  disclosure's basis, and resumes to equality once the package is
+  supplied; a dependency-incomplete disclosure pauses, including one
+  whose binding was restored by an attach the recipient has not seen,
+  while a visible but superseded activation is stale, not paused;
+- the Discussion manifest's deterministic checks: normal replay over
+  seeds 1 to 8 with zero violations, pause and resume, the planted close
+  audience fault found, shrinking to a deletion-minimal script,
+  invalid-cache discard and rebuild, and literal expected observations
+  derived from the events and membership alone, which a wrong projection
+  fails although it passes the equality check;
+- a contradiction that changes no displayed state is caught through
+  outcomes: a narrow attach that changes a shared kind makes a member who
+  cannot see it judge the next event stale while the oracle says
+  effective.
+
+What V2 does not claim:
+
+- no models beyond Discussion and the Sale listing: Sale, Booking and Club
+  are V3 to V5, and their fix counts are not measured here;
+- no codec, no signatures, no durability (O1);
+- the Discussion runs are harness checks, not a falsification campaign:
+  the manifest says so.

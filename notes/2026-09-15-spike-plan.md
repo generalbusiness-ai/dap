@@ -105,6 +105,7 @@ profile of design note §2, which remains open.
 | Publication recovery | On restart the writer replays every outbox row not marked delivered; delivery is idempotent by header hash; a delivered row is marked in its own transaction after the subscriber acknowledges | Ordering §3 step 7: a crash before notification resumes the saved publication and creates no second order | Exactly-once delivery to subscribers; duplicates are possible and harmless |
 | Durability promise | An acknowledged append survives process crash and restart on the same disk, under `PRAGMA synchronous=FULL` | Stated so the crash schedule tests exactly this (ordering §9) | Anything a mirror or replica would add |
 | Serving party | The same process as the sequencer, running the foundation fold to evaluate audiences and issue transport credentials | The first trusted profile (design §2) | Any separation of sequencer and serving party |
+| Disclosure completeness | Checked by the recipient's interpreter from evidence the sequencer puts in the header; see §2.2 | Design §8 leaves the checking party open; the recipient needs nothing from the discloser and only public metadata from the serving party | That the discloser or the serving party never checks; the production choice stays open |
 | Clock and randomness | A designated `clock` actor holding `dap.observe`, driven by the generator; no wall-clock reads inside any fold | Views note cliff 4 | A real time source |
 
 ### 2.1 Signed objects and preimages
@@ -132,6 +133,29 @@ signature over the wrong bytes, a wrong `prev`, a wrong `commitment`, and a
 sequencer signature by a key the profile does not name. The visibility
 harness consumes verified entries and does not implement this encoding;
 O1 replays the visibility traces through it.
+
+### 2.2 Disclosure completeness evidence
+
+The header of every sequenced event names positions, never packages:
+
+- `activation`, on an application event: the attach (or genesis) that
+  produced the binding the sequencer judged the event under at its own
+  position. An intent's own provenance cannot serve: a hidden attach
+  between composing and sequencing changes the verdict.
+- `requires`, on an attach: every installed fact the attach consulted,
+  whether it was accepted or refused: an earlier installation of the same
+  package, the installers of models already defined under names it
+  defines, the installers of the models its handlers name, and the attach
+  that produced the current binding of each kind it rebinds. A single
+  pointer to the latest activation cannot show a composed binding's chain
+  complete.
+- The pause rule: a disclosed event whose activation is hidden, or a
+  disclosed attach with a hidden requirement, pauses with
+  `dependency_missing`; one whose evidence is all visible is judged, and
+  the verdict is the genuine one.
+
+The chain closes by induction: a visible requirement was judged when it
+was reached, with its own requirements checked the same way.
 
 ## 3. Components of the visibility harness
 

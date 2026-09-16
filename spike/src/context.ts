@@ -4,7 +4,7 @@
 // (design note §2, first trusted profile).
 
 import { contentId, nonce, type Json } from './canon.ts';
-import { bindingId, type PackageDescriptor } from './descriptor.ts';
+import { attachRequires, bindingId, packageIn, type PackageDescriptor } from './descriptor.ts';
 import {
   F0_ID,
   K,
@@ -12,14 +12,16 @@ import {
   foldEntry,
   initialFoundationState,
   issuanceEvidence,
+  originsCount,
   verifyIssuance,
-  visibleTo,
+  visibilityOf,
+  type Visibility,
   type AcceptInvitePayload,
   type FoundationState,
   type GenesisPayload,
 } from './foundation.ts';
 import { MemoryBackend, append, appendUnadmitted, type Backend, type TransportCredential } from './append.ts';
-import { SYSTEM_PREFIX, type Entry, type EventBody, type Principal, type Receipt, type Refusal, type Verdict } from './types.ts';
+import { SYSTEM_PREFIX, type Entry, type EventBody, type Header, type Principal, type Receipt, type Refusal, type Verdict } from './types.ts';
 
 export interface ContextOptions {
   creator: Principal;
@@ -38,7 +40,11 @@ export interface ViewEntry {
   position: number;
   /** present when visible; absent when only the header is */
   event?: EventBody;
+  /** the authenticated header, always present (design note §1: hidden positions carry headers) */
+  header: Header;
   headerHash: string;
+  /** how the position is visible: by its audience, by a later disclosure, or hidden */
+  via: Visibility;
 }
 
 export class Context {
@@ -103,12 +109,19 @@ export class Context {
     return bindingId(this.state.env, kind);
   }
 
+  /** The position of the attach that produced the current binding of `kind`. */
+  currentActivation(kind: string): number | undefined {
+    return this.state.env.kinds[kind]?.attachedAt;
+  }
+
   /**
    * Build a sequenced intent for this context. An application intent
    * captures the binding active when it is composed, unless one is given.
    */
-  intent(actor: Principal, kind: string, payload: Json, opts: { action_id?: string; expected_binding?: string } = {}): EventBody {
-    const expected = opts.expected_binding ?? (kind.startsWith(SYSTEM_PREFIX) ? undefined : this.currentBinding(kind));
+  intent(actor: Principal, kind: string, payload: Json, opts: { action_id?: string; expected_binding?: string; expected_activation?: number } = {}): EventBody {
+    const application = !kind.startsWith(SYSTEM_PREFIX);
+    const expected = opts.expected_binding ?? (application ? this.currentBinding(kind) : undefined);
+    const activation = opts.expected_activation ?? (application ? this.currentActivation(kind) : undefined);
     return {
       kind,
       payload,
@@ -117,6 +130,7 @@ export class Context {
       genesis: this.genesisId,
       action_id: opts.action_id ?? 'action:' + nonce(),
       ...(expected ? { expected_binding: expected } : {}),
+      ...(activation !== undefined ? { expected_activation: activation } : {}),
     };
   }
 
@@ -137,6 +151,16 @@ export class Context {
           return v.ok ? { tokenId: v.tokenId, invitee: v.invite.invitee } : undefined;
         },
         acceptKind: K.accept_invite,
+        activationOf: (kind) => state.env.kinds[kind]?.attachedAt,
+        requiresOf: (ev) => {
+          // Evidence is extracted from runtime JSON before the fold validates it: never throw here.
+          if (ev.kind !== K.attach) return undefined;
+          const p = ev.payload;
+          if (!p || typeof p !== 'object' || Array.isArray(p)) return undefined;
+          const { package: pkgId, resolution } = p as { package?: unknown; resolution?: unknown };
+          const pkg = packageIn(this.packages, pkgId);
+          return pkg ? attachRequires(state.env, pkg, resolution) : undefined;
+        },
       },
     );
     if ('refused' in r) return r;
@@ -147,7 +171,7 @@ export class Context {
   }
 
   /** Convenience: submit as a current participant with the serving party's credential. */
-  act(actor: Principal, kind: string, payload: Json, opts: { action_id?: string; expected_binding?: string } = {}) {
+  act(actor: Principal, kind: string, payload: Json, opts: { action_id?: string; expected_binding?: string; expected_activation?: number } = {}) {
     return this.submit(this.intent(actor, kind, payload, opts), this.credentialFor(actor));
   }
 
@@ -163,12 +187,18 @@ export class Context {
     return { invite: { event: e.event, header: e.header } };
   }
 
+  /** The number of adopted origins, from the genesis at position 0. */
+  get origins(): number {
+    return originsCount(this.entries[0]!.event);
+  }
+
   /** V(p, n): the view of `p` under basis `n`, positions preserved, headers for hidden positions. */
   view(p: Principal, n: number = this.head): ViewEntry[] {
     const out: ViewEntry[] = [];
     for (let i = 0; i <= n; i++) {
       const e = this.entries[i]!;
-      out.push(visibleTo(this.state, p, i, n) ? { position: i, event: e.event, headerHash: e.headerHash } : { position: i, headerHash: e.headerHash });
+      const via = visibilityOf(this.state, p, i, n);
+      out.push(via === 'hidden' ? { position: i, header: e.header, headerHash: e.headerHash, via } : { position: i, event: e.event, header: e.header, headerHash: e.headerHash, via });
     }
     return out;
   }

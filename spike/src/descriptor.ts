@@ -27,6 +27,16 @@ export interface FoldResult<S = Json> {
   reason?: string;
 }
 
+/** What a model's observe and affordances may consult: the principal's visibility and authority under a basis. */
+export interface ObserveCtx {
+  principal: Principal;
+  basis: number;
+  members: Principal[];
+  /** whether the principal can read the event at this position under the basis */
+  visible(position: number): boolean;
+  holds(capability: string): boolean;
+}
+
 export interface ModelSpec<S = Json, C extends Json = Json> {
   id: string;
   /**
@@ -39,6 +49,14 @@ export interface ModelSpec<S = Json, C extends Json = Json> {
   init(config: C): S;
   /** Fold one event of a kind this model handles. */
   fold(state: S, event: EventBody, ctx: FoldCtx, config: C): FoldResult<S>;
+  /**
+   * The projection the property compares (design note §1): what this
+   * principal may see of the state, outcomes and bindings. Absent means
+   * the whole model state, which is right only for a uniform model.
+   */
+  observe?(p: Principal, state: S, ctx: ObserveCtx, config: C): Json;
+  /** The kinds this principal may emit now. Absent means every bound kind whose capability the principal holds. */
+  affordances?(p: Principal, state: S, ctx: ObserveCtx, config: C): string[];
   /** Roles this model defines: role name to capability names. */
   roles?: Record<string, string[]>;
 }
@@ -81,12 +99,18 @@ export interface ResolvedBinding extends KindBinding {
   packageId: string;
   /** audience ceiling inherited from a narrow attach (design note §2) */
   ceiling?: Principal[];
+  /** the position of the attach (or genesis, 0) that produced this resolved state */
+  attachedAt: number;
+  /** the resolved state before that attach, so a viewer who cannot see it judges by the earlier one */
+  previous?: ResolvedBinding;
 }
 
 export interface Environment {
   runtime: string;
   packages: PackageDescriptor[];
   kinds: Record<Kind, ResolvedBinding>;
+  /** the position of the attach (or genesis, 0) that installed each package; observe filters by its visibility */
+  attachedAt: Record<string, number>;
 }
 
 /** Resolution an attach may carry for kinds that would otherwise be ambiguous: the handler order only. */
@@ -98,10 +122,17 @@ export interface AttachOptions {
   resolution?: AttachResolution;
   /** principals the attach was addressed to; every kind it declares is capped to them */
   ceiling?: Principal[];
+  /** the position of the installing event; 0 for a genesis binding */
+  position?: number;
+}
+
+/** A package by id from a registry of runtime JSON keys: own entries only, so an inherited name is not a package. */
+export function packageIn(registry: Record<string, PackageDescriptor>, id: unknown): PackageDescriptor | undefined {
+  return typeof id === 'string' && Object.hasOwn(registry, id) ? registry[id] : undefined;
 }
 
 export function emptyEnvironment(runtime: string): Environment {
-  return { runtime, packages: [], kinds: {} };
+  return { runtime, packages: [], kinds: {}, attachedAt: {} };
 }
 
 export type AttachRefusal = 'namespace' | 'ambiguous_binding' | 'duplicate_package' | 'unknown_handler' | 'descriptor_id_mismatch' | 'conflicting_capability' | 'model_conflict';
@@ -114,7 +145,15 @@ export function codeId(fn: (...args: never[]) => unknown): string {
 
 /** A model's identity: its functions' text, its config, its roles, and the fingerprint of the module that defines it. */
 export function modelId(m: ModelSpec, module: string | undefined): Json {
-  return { init: codeId(m.init), fold: codeId(m.fold), config: m.config, roles: (m.roles ?? {}) as Json, module: module ? moduleHash(module) : null };
+  return {
+    init: codeId(m.init),
+    fold: codeId(m.fold),
+    observe: m.observe ? codeId(m.observe) : null,
+    affordances: m.affordances ? codeId(m.affordances) : null,
+    config: m.config,
+    roles: (m.roles ?? {}) as Json,
+    module: module ? moduleHash(module) : null,
+  };
 }
 
 const moduleHashes = new Map<string, string>();
@@ -204,7 +243,7 @@ export function attach(env: Environment, pkg: PackageDescriptor, opts: AttachOpt
     const res = resolution[kind];
     if (!existing) {
       for (const h of binding.handlers) if (!allModels.has(h)) return { ok: false, reason: 'unknown_handler' };
-      kinds[kind] = { ...binding, packageId: pkg.id, ...(opts.ceiling ? { ceiling: [...opts.ceiling].sort() } : {}) };
+      kinds[kind] = { ...binding, packageId: pkg.id, attachedAt: opts.position ?? 0, ...(opts.ceiling ? { ceiling: [...opts.ceiling].sort() } : {}) };
       continue;
     }
     // A kind already bound: a resolution must name exactly the union of handlers, in an order.
@@ -226,9 +265,56 @@ export function attach(env: Environment, pkg: PackageDescriptor, opts: AttachOpt
       capability: existing.capability ?? binding.capability,
       crossReads: [...new Set([...(existing.crossReads ?? []), ...(binding.crossReads ?? [])])].sort(),
       ceiling: intersect(existing.ceiling, opts.ceiling),
+      attachedAt: opts.position ?? 0,
+      previous: existing,
     };
   }
-  return { ok: true, env: { ...env, packages: [...env.packages, pkg], kinds } };
+  return { ok: true, env: { ...env, packages: [...env.packages, pkg], kinds, attachedAt: { ...env.attachedAt, [pkg.id]: opts.position ?? 0 } } };
+}
+
+/**
+ * The positions an attach of `pkg` builds on in `env`: every installed
+ * fact that `attach` consults, whether it then accepts or refuses. That
+ * is the earlier installation of the same package (duplicate_package),
+ * the installer of every model already defined under a name the package
+ * defines (model_conflict), the installer of every model its handlers
+ * name, and the attach that produced the current binding of each kind it
+ * rebinds (ambiguity, contracts). Sorted, without duplicates. The
+ * sequencer records these in the attach's header as its dependency
+ * evidence, so a viewer who sees them all judges the attach as the
+ * sequencer did. Safe on runtime JSON: a malformed resolution is ignored
+ * here and refused by the fold.
+ */
+export function attachRequires(env: Environment, pkg: PackageDescriptor, resolution?: unknown): number[] {
+  const out = new Set<number>();
+  const installedAt = (pkgId: string) => {
+    const at = env.attachedAt[pkgId];
+    if (at !== undefined) out.add(at);
+  };
+  if (env.packages.some((p) => p.id === pkg.id)) installedAt(pkg.id);
+  for (const name of Object.keys(pkg.models)) {
+    const owner = findModelWithPackage(env, name);
+    if (owner) installedAt(owner.pkg.id);
+  }
+  const res = resolution && typeof resolution === 'object' && !Array.isArray(resolution) ? (resolution as Record<string, unknown>) : {};
+  for (const [kind, binding] of Object.entries(pkg.kinds)) {
+    const existing = env.kinds[kind];
+    // The same branch attach takes: a new kind is bound by the package's own handlers and a
+    // resolution is ignored; an existing kind consults its binding, the package's handlers and
+    // the resolution's handlers.
+    const handlers = new Set(binding.handlers);
+    if (existing) {
+      out.add(existing.attachedAt);
+      const r = res[kind];
+      const given = r && typeof r === 'object' && Array.isArray((r as { handlers?: unknown }).handlers) ? (r as { handlers: unknown[] }).handlers : [];
+      for (const h of given) if (typeof h === 'string') handlers.add(h);
+    }
+    for (const h of handlers) {
+      const found = findModelWithPackage(env, h);
+      if (found) installedAt(found.pkg.id);
+    }
+  }
+  return [...out].sort((a, b) => a - b);
 }
 
 export function findModelWithPackage(env: Environment, id: string): { model: ModelSpec; pkg: PackageDescriptor } | undefined {
@@ -251,6 +337,11 @@ export function findModel(env: Environment, id: string): ModelSpec | undefined {
 export function bindingId(env: Environment, kind: Kind): string | undefined {
   const b = env.kinds[kind];
   if (!b) return undefined;
+  return bindingIdOf(env, kind, b);
+}
+
+/** The identity of one resolved state of a kind's binding. */
+export function bindingIdOf(env: Environment, kind: Kind, b: ResolvedBinding): string {
   const declaring = env.packages.find((p) => p.id === b.packageId);
   return contentId({
     kind,
@@ -265,4 +356,16 @@ export function bindingId(env: Environment, kind: Kind): string | undefined {
     crossReads: b.crossReads ?? [],
     ceiling: b.ceiling ?? null,
   });
+}
+
+/**
+ * The binding a viewer judges a kind by: the latest resolved state whose
+ * producing attach the viewer can see. A narrow attach that a viewer
+ * cannot see does not change the semantics they resolve; if it changes a
+ * shared outcome, the checker's outcome comparison catches it.
+ */
+export function visibleBinding(env: Environment, kind: Kind, visible: (position: number) => boolean): ResolvedBinding | undefined {
+  let b: ResolvedBinding | undefined = env.kinds[kind];
+  while (b && !visible(b.attachedAt)) b = b.previous;
+  return b;
 }

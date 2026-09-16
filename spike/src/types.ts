@@ -18,6 +18,8 @@ export interface EventBody {
   genesis?: string;
   action_id?: string;
   expected_binding?: string;
+  /** the position of the attach (or genesis, 0) that produced the expected binding: activation provenance */
+  expected_activation?: number;
 }
 
 /** The authenticated header's preimage. The sequencer signature is O1's. */
@@ -26,6 +28,20 @@ export interface Header {
   position: number;
   prev: string;
   commitment: string;
+  /**
+   * For an application event: the position of the attach (or genesis, 0)
+   * that produced the binding the sequencer judged the event under. Public
+   * metadata like the position itself; it names a position, never a
+   * package. A viewer who cannot see that position cannot judge the event.
+   */
+  activation?: number;
+  /**
+   * For an attach: the positions of the attaches (or genesis, 0) whose
+   * installed models and bindings this attach builds on, as the sequencer
+   * resolved it. A viewer who cannot see one of them cannot judge the
+   * attach, nor anything judged under the binding it produces.
+   */
+  requires?: number[];
 }
 
 export interface Entry {
