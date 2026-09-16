@@ -178,7 +178,9 @@ and 279 closes.
 
 ## Run 6
 
-Snapshot commit: see `git log`, "checker run 6 snapshot". Review report
+Snapshot commit: `56f7aa3` ("checker run 6 snapshot: type hostile payload records").
+The prior preparation commit `62b9f13` stopped at typecheck before any
+checker run; its test payload annotation was then corrected. Review report
 796c6510 (V3-G1) found that the privacy guard treated the first recorded
 stub with an id as effective. The executable manifest now checks the
 visible outcome and requires an effective Sale stub recorded before the
@@ -196,8 +198,21 @@ repair, not a Sale fix.
 
 Manifest `sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9`;
 package `sha256:5ec9a10356ed47b1bc13ca4242631eefc69c9898f5c507e22639325eaeb6b48f`.
-Results will be recorded after the snapshot run.
-The campaign's zero-violations assertion is retained.
+Results: **9 of 200 seeds fail**, all privacy-budget violations from
+counters delivered to someone without an effective stub: 42, 112, 141,
+160, 172, 181, 193, 197 and 200. The predeclared cases, F1 to F3, both G1
+reproductions and the asserted literal-trace failures pass (10 tests
+pass; the campaign test fails). Typecheck passes. The campaign's
+zero-violations assertion is retained, and this snapshot does not meet
+that exit condition.
+
+Coverage remains 11171 entries, 946 joins, 199 side attaches, 1716
+disclosures, 273 stubs (31 replacements), 175 withdrawals, 159 counters,
+111 accepts (18 effective) and 279 closes. There are **zero private
+disclosures and zero Inspection-package attaches**. All 120 inspection
+requests are unbound attempts, so the generated campaign exercises
+private delivery but not the Inspection model; the hand-written trace
+and F3 regression exercise the attached Inspection package.
 
 Run 1's 17 shrunk failures are kept in [the run-1 corpus](../corpus/sale/run1/).
 Newly exposed run-6 failures are kept separately with their run identity.
