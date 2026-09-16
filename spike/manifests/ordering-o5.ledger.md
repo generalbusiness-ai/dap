@@ -148,3 +148,65 @@ The exact commands, component scope and outputs are linked from
 Only evidence records follow that measurement. No additional 600-seed run or
 component review approval is claimed; this ledger remains the O5
 reporting artifact at the common candidate head.
+
+
+## O-H1 correction: exact-head control signatures
+
+Ratified review `5643a940fde2c3c372d48ae89ee34e8e35593cf3` found a real
+wrong-head acceptance at common candidate
+`1ba67c39062ddf44508b14c0716817cfa9735964`. The old commitment-only control
+signature allowed the retiring writer to repeat commitment C at positions 2
+and 4, insert D, then move the same seal from its intended position 3 to
+position 5. The old verifier accepted epoch 1 with the successor beginning
+at position 7. This corrects the earlier wrong-head claim; the original
+measurements above remain historical results, not evidence of rejecting
+this attack.
+
+[The before record](ordering-o5-runs/h1-before/record.json) retains the
+checker's exact probe, the original 47 signed `/2` vectors and generator,
+their SHA-256 hashes, and the reproduced acceptance output. The original
+probe's hard-coded temporary checkout no longer existed; its first run is
+retained as a module-path setup failure. A second copy changes only its
+import directory to four modules exported unchanged from `1ba67c3`; that
+run reproduces the acceptance. No historical raw evidence was rewritten.
+
+Builder decision `2d7edc9c76b3d657a2a9fbb3fa6ffa819cb25492` chooses the
+stronger correction, `dap.fixture.single-writer/3`. Both control payloads
+now carry predecessor exactly `{position, headerHash}`: seal names the
+immediately previous authenticated head, and assign names the immediately
+previous seal head. The header hash also commits to that entry's commitment.
+Both fields are required; extra fields, strings, arrays and incomplete
+predecessors are rejected. The retiring writer still signs both headers,
+the independent genesis control key signs both actor envelopes, and writer
+assignment changes only after assign. `/2` is unsupported at this revised
+boundary; `/1` fixed-writer valid proof bytes stay unchanged.
+
+The verifier independently rejects any repeated entry commitment at a new
+position, including genesis, opaque application headers and fixed-writer
+proofs. Exact retries are still represented by one original position. Its
+only local imports remain codec, canon and types; the revised O3 transition
+algorithm was neither read nor reused. A Set tracks commitments in one
+forward scan rather than rescanning prior entries.
+
+The revised codec-only generator declares 76 proof cases, including the
+checker's A,C,D,C,seal pattern, repeated hidden/genesis commitments, and two
+individually unique histories containing exactly the same control-signed
+seal bytes. One changes the predecessor position; the other keeps its
+position and changes only its ancestry/header hash. Both must fail exact-head
+binding. A reused assign after a different valid seal also fails. Existing
+valid handovers, authority, forgery, omission and conflict cases remain.
+The historical `/2` inputs remain separately retained, not silently replaced
+as evidence. The fixed-writer compatibility check compares exact old/new
+proof bytes. A real-journal projection check repeats its signed origin
+commitment at a newly signed position and expects rejection without changing
+the journal. Permission isolation now evaluates every declared vector in
+one process, in addition to the separate actual-journal proof.
+
+**Acceptance still assumes every control opening is supplied.** Exact-head
+binding and duplicate detection do not identify hidden control kinds. The
+same-header visible/hidden seal counterexample remains an explicit accepted
+limitation; neither this correction nor conflicting-history evidence proves
+completeness, freshness, availability, fork choice or rollback protection.
+
+Source freeze and focused validation are pending in the common integration.
+No new 600-seed campaign or independent approval is claimed.

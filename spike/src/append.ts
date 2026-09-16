@@ -54,6 +54,8 @@ export interface AppendEncoding {
   sign(header: Header): Header;
   /** After exact retry, under serialization: ordering authorization, without an application fold. */
   admission?(event: EventBody, backend: Backend): 'control' | Refusal | undefined;
+  /** Called synchronously only after the serialized transaction returns successfully. */
+  committed?(entry: Entry): void;
 }
 
 /** What admission needs from the serving party, which runs the fold. */
@@ -133,7 +135,8 @@ export function append(backend: Backend, sub: Submission, ctx: AdmissionContext)
   if (Buffer.byteLength(prepared?.committed ?? JSON.stringify(ev.payload)) > ctx.maxPayloadBytes) return { refused: true, reason: 'envelope_bounds' };
   const id = prepared?.id ?? contentId(ev as unknown as Json);
 
-  return backend.serialized((): Receipt | Refusal => {
+  let committed: Entry | undefined;
+  const result = backend.serialized((): Receipt | Refusal => {
     ctx.assertCurrent?.();
     // 2. Exact retry, before admission.
     const prior = backend.retry(ev.action_id!);
@@ -162,8 +165,13 @@ export function append(backend: Backend, sub: Submission, ctx: AdmissionContext)
     const evidence: HeaderEvidence = ev.kind.startsWith(SYSTEM_PREFIX) ? { requires: ctx.requiresOf(ev) } : { activation: ctx.activationOf(ev.kind) };
     const { entry, receipt } = construct(backend, ctx.genesis, ev, evidence, prepared, ctx.encoding);
     backend.commit(entry, deepFreeze({ actionId: ev.action_id!, contentId: id, receipt }), consume);
+    committed = entry;
     return receipt;
   });
+  // SQLite COMMIT and any after-commit fault happen before serialized returns.
+  // A lost reply leaves the caller's cache unchanged and poisons its Context.
+  if (committed) ctx.encoding?.committed?.(committed);
+  return result;
 }
 
 /** Append without admission: genesis and adopted origins at context creation. */

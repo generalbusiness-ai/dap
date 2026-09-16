@@ -117,3 +117,33 @@ and the focused run required no further repair. Original run 1 and every
 component run remain byte-identical. No 600-seed campaign, O4 runtime result,
 review approval, main merge or publication is claimed. The component reporting
 artifacts share the resulting candidate and cite this exact boundary.
+
+## O-H1/O-H2 repair source preparation
+
+Ratified review `5643a940fde2c3c372d48ae89ee34e8e35593cf3` requests two
+repairs to reviewed aggregate `1ba67c39062ddf44508b14c0716817cfa9735964`.
+The original O2/O3/O5 requests and promises remain the implementation bases.
+Builder decision `2d7edc9c76b3d657a2a9fbb3fa6ffa819cb25492` selects movable
+profile /3 and exact `{position, headerHash}` control predecessors. O3 owns
+the runtime/cache correction; O5 independently derives its verifier and proof
+fixtures from that agreed wire contract; O2 aligns the notes/profile. O5 does
+not use the runtime transition function as its oracle.
+
+Regression-only source `a658326` ran four focused checks on the unchanged
+reviewed runtime: all four failed. The two repeated-commitment checks reached
+Journal.open and found no expected exception; their later view assertions did
+not execute in that failing run. The two bounded-work checks observed full
+journal reads under serialization. Preserve the exact source and output:
+[run-3-before-h1-h2.json](ordering-integration-runs/run-3-before-h1-h2.json),
+[run-3-before-h1-h2.txt](ordering-integration-runs/run-3-before-h1-h2.txt).
+O5 separately retains the checker's original /2 relocation proof and its
+accepted old-runtime output; its prior 47-proof fixture and generator bytes
+remain archived alongside their exact historical source.
+
+The lifecycle manifest remains
+`sha256:d94090b21ce42f2eec4a046558b3a776895d82905c2096a19df1f5f02e011f86`,
+and the public opening rule remains
+`sha256:475b415bbf8b16ccdb1bea078174712c57f2b2955ece9338d762abd60228bad8`.
+These symbolic lifecycle expectations do not pin the retired /2 wire payload.
+The earlier 600-seed runs retain their original source boundaries. No new
+campaign run is planned solely for this authenticated ordering correction.

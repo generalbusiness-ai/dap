@@ -8,7 +8,7 @@ import { ZERO_HASH } from './canon.ts';
 import { SYSTEM_PREFIX, type Header } from './types.ts';
 
 const FIXED = 'dap.fixture.single-writer/1';
-const MOVABLE = 'dap.fixture.single-writer/2';
+const MOVABLE = 'dap.fixture.single-writer/3';
 const SEQ = SYSTEM_PREFIX + 'seq.';
 
 /** Every seq opening must be supplied. Kind-free headers cannot prove this. */
@@ -81,6 +81,7 @@ function check(input: ControlProof): { result: ControlResult; headers: Header[];
   let writer = initialWriter, epoch = 0, sealed = false;
   let controlEntries = 0, opaqueEntries = 0;
   const usedWriters = new Set([writer]);
+  const commitments = new Set([first.header.commitment]);
   const assignments = [{ epoch, writer, firstPosition: 0 }];
   const headers = [first.header], writers = [writer];
 
@@ -91,6 +92,10 @@ function check(input: ControlProof): { result: ControlResult; headers: Header[];
     const expected = { genesis: proof.pinnedGenesis, position, prev: headerHash(previous) };
     // Both seal and assign are still committed by the retiring writer.
     verifyHeader(item.header, writer, expected);
+    // A retry has no new position. Even opaque entries expose commitments,
+    // so a repeated entry is detectable without its opening or any grant fold.
+    if (commitments.has(item.header.commitment)) fail('repeated_commitment', position);
+    commitments.add(item.header.commitment);
     const signer = writer;
     if (!Object.hasOwn(item, 'committed')) {
       if (sealed) fail('sealed_requires_assign', position);
@@ -110,7 +115,8 @@ function check(input: ControlProof): { result: ControlResult; headers: Header[];
         const seal = kind === SEQ + 'seal';
         const body = exact(entry.event.payload, seal ? ['epoch', 'predecessor'] : ['epoch', 'predecessor', 'writer'], 'control_payload_shape');
         if (!Number.isSafeInteger(body.epoch) || (body.epoch as number) < 0) fail('invalid_epoch', position);
-        if (body.predecessor !== previous.commitment) fail('wrong_predecessor_commitment', position);
+        const predecessor = exact(body.predecessor, ['position', 'headerHash'], 'predecessor_shape');
+        if (predecessor.position !== previous.position || predecessor.headerHash !== expected.prev) fail('wrong_predecessor_head', position);
         if (seal) {
           if (sealed) fail('sealed_requires_assign', position);
           if (body.epoch !== epoch) fail('wrong_seal_epoch', position);

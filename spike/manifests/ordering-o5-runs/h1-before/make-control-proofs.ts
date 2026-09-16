@@ -15,8 +15,8 @@ let nonce = 0;
 function event(kind: string, payload: Json, actor: KeyObject, genesis?: string): EventBody {
   return { kind, payload, actor: id(actor), nonce: (++nonce).toString(16).padStart(32, '0'), ...(genesis ? { genesis, action_id: 'o5:' + nonce, ...(!kind.startsWith(SYSTEM_PREFIX) ? { expected_binding: ZERO_HASH } : {}) } : {}) };
 }
-function origin(profile = 'dap.fixture.single-writer/3', ctl = control): ControlProof {
-  const e = signEvent(event(SYSTEM_PREFIX + 'genesis', { sequencing: { profile, writer: id(old), ...(['dap.fixture.single-writer/2', 'dap.fixture.single-writer/3'].includes(profile) ? { control: id(ctl) } : {}) } }, applicant), applicant);
+function origin(profile = 'dap.fixture.single-writer/2', ctl = control): ControlProof {
+  const e = signEvent(event(SYSTEM_PREFIX + 'genesis', { sequencing: { profile, writer: id(old), ...(profile === 'dap.fixture.single-writer/2' ? { control: id(ctl) } : {}) } }, applicant), applicant);
   const genesis = envelopeId(e);
   return { pinnedGenesis: genesis, genesis: { header: signHeader({ genesis, position: 0, prev: ZERO_HASH, commitment: genesis }, old), committed: envelopeBytes(e) }, entries: [] };
 }
@@ -32,16 +32,10 @@ function append(p: ControlProof, kind: string, payload: Json, actor = control, s
 function opaque(p: ControlProof, signer = old, tag = 'private'): ControlProof {
   return append(p, 'private.example.' + tag, { secret: 'not retained in proof' }, applicant, signer, true);
 }
-function head(p: ControlProof): Json { return { position: last(p).position, headerHash: headerHash(last(p)) }; }
-function resequence(p: ControlProof, item: ControlProof['entries'][number], signer = old): ControlProof {
-  const q = structuredClone(p);
-  q.entries.push({ ...structuredClone(item), header: signHeader({ ...item.header, position: q.entries.length + 1, prev: headerHash(last(q)) }, signer) });
-  return q;
-}
-function seal(p: ControlProof, epoch = 0, actor = control, signer = old, predecessor: Json = head(p)) {
+function seal(p: ControlProof, epoch = 0, actor = control, signer = old, predecessor = last(p).commitment) {
   return append(p, seq + 'seal', { epoch, predecessor }, actor, signer);
 }
-function assign(p: ControlProof, writer = next, epoch = 1, actor = control, signer = old, predecessor: Json = head(p)) {
+function assign(p: ControlProof, writer = next, epoch = 1, actor = control, signer = old, predecessor = last(p).commitment) {
   return append(p, seq + 'assign', { epoch, predecessor, writer: id(writer) }, actor, signer);
 }
 function headerChange(p: ControlProof, change: Partial<Header>, signer = old): ControlProof {
@@ -68,7 +62,7 @@ const fixed = origin('dap.fixture.single-writer/1');
 pass('v1-fixed-writer', opaque(fixed));
 pass('v1-request-does-not-assign', append(fixed, seq + 'request', { writer: id(next) }, applicant));
 reject('v1-seal-cannot-change-profile', seal(fixed), 'fixed_writer_profile');
-reject('genesis-control-is-writer', origin('dap.fixture.single-writer/3', old), 'control_is_writer');
+reject('genesis-control-is-writer', origin('dap.fixture.single-writer/2', old), 'control_is_writer');
 reject('unsupported-profile', origin('invented.profile/3'), 'unsupported_profile');
 reject('wrong-genesis-pin', { ...base, pinnedGenesis: ZERO_HASH }, 'wrong_genesis_pin');
 reject('assign-without-seal', assign(normal), 'assign_requires_seal');
@@ -79,9 +73,9 @@ reject('writer-is-not-seal-authority', seal(normal, 0, old), 'wrong_control_acto
 reject('stranger-is-not-seal-authority', seal(normal, 0, applicant), 'wrong_control_actor');
 reject('writer-is-not-assign-authority', assign(sealed, next, 1, old), 'wrong_control_actor');
 reject('successor-is-not-assign-authority', assign(sealed, next, 1, next), 'wrong_control_actor');
-reject('seal-predecessor-is-not-bare-header-hash', seal(normal, 0, control, old, headerHash(last(normal))), 'predecessor_shape');
-reject('assign-predecessor-is-not-bare-header-hash', assign(sealed, next, 1, control, old, headerHash(last(sealed))), 'predecessor_shape');
-reject('stale-assign-head', assign(sealed, next, 1, control, old, head(normal)), 'wrong_predecessor_head');
+reject('seal-predecessor-is-not-header-hash', seal(normal, 0, control, old, headerHash(last(normal))), 'wrong_predecessor_commitment');
+reject('assign-predecessor-is-not-header-hash', assign(sealed, next, 1, control, old, headerHash(last(sealed))), 'wrong_predecessor_commitment');
+reject('stale-assign-head', assign(sealed, next, 1, control, old, last(normal).commitment), 'wrong_predecessor_commitment');
 reject('skipped-seal-epoch', seal(normal, 1), 'wrong_seal_epoch');
 reject('skipped-assign-epoch', assign(sealed, next, 2), 'wrong_assign_epoch');
 reject('negative-epoch', seal(normal, -1), 'invalid_epoch');
@@ -93,7 +87,7 @@ reject('second-competing-assignment', assign(assigned, third, 2, control, next),
 reject('retired-key-cannot-be-revived', assign(seal(complete, 1, control, next), old, 2, control, next), 'writer_reuse');
 reject('control-cannot-become-writer', assign(sealed, control), 'control_is_writer');
 reject('unknown-control-kind', append(normal, seq + 'reset', { writer: id(next) }), 'unknown_control_kind');
-reject('extra-control-payload-field', append(normal, seq + 'seal', { epoch: 0, predecessor: head(normal), control: id(next) }), 'control_payload_shape');
+reject('extra-control-payload-field', append(normal, seq + 'seal', { epoch: 0, predecessor: last(normal).commitment, control: id(next) }), 'control_payload_shape');
 reject('missing-control-payload-field', append(normal, seq + 'seal', { epoch: 0 }), 'control_payload_shape');
 reject('application-opening-is-not-accepted', append(normal, 'private.example.offer', { secret: 'application payload' }, applicant), 'non_control_opening');
 reject('wrong-prev-header-hash', headerChange(seal(normal), { prev: last(normal).commitment }), 'wrong prev');
@@ -118,55 +112,10 @@ const matchedSuffix = opaque(matchedSeal);
 reject('opening-exposes-same-sealed-suffix', matchedSuffix, 'sealed_requires_assign');
 const matchedHidden = structuredClone(matchedSuffix); delete matchedHidden.entries[1]!.committed;
 pass('LIMIT-hidden-seal-and-old-writer-suffix', matchedHidden);
-// /3 exact-head and uniqueness checks are declared independently of the verifier.
-reject('legacy-movable-v2-is-unsupported', origin('dap.fixture.single-writer/2'), 'unsupported_profile');
-for (const [kind, prior] of [['seal', normal], ['assign', sealed]] as const) {
-  const malformed: Array<[string, Json]> = [
-    ['commitment-string', last(prior).commitment],
-    ['position-only', { position: last(prior).position }],
-    ['hash-only', { headerHash: headerHash(last(prior)) }],
-    ['extra-commitment', { position: last(prior).position, headerHash: headerHash(last(prior)), commitment: last(prior).commitment }],
-    ['null', null], ['array', [last(prior).position, headerHash(last(prior))]],
-  ];
-  for (const [label, predecessor] of malformed) {
-    const proof = kind === 'seal' ? seal(prior, 0, control, old, predecessor) : assign(prior, next, 1, control, old, predecessor);
-    reject(kind + '-predecessor-' + label, proof, 'predecessor_shape');
-  }
-  for (const [label, predecessor] of [
-    ['wrong-position', { position: last(prior).position + 1, headerHash: headerHash(last(prior)) }],
-    ['wrong-hash', { position: last(prior).position, headerHash: ZERO_HASH }],
-    ['commitment-in-hash', { position: last(prior).position, headerHash: last(prior).commitment }],
-    ['string-position', { position: String(last(prior).position), headerHash: headerHash(last(prior)) }],
-  ] as Array<[string, Json]>) {
-    const proof = kind === 'seal' ? seal(prior, 0, control, old, predecessor) : assign(prior, next, 1, control, old, predecessor);
-    reject(kind + '-predecessor-' + label, proof, 'wrong_predecessor_head');
-  }
-}
-reject('repeated-hidden-commitment', resequence(normal, normal.entries[0]!), 'repeated_commitment');
-reject('repeated-genesis-commitment', resequence(base, { header: base.genesis.header }), 'repeated_commitment');
-const fixedEntry = opaque(fixed);
-reject('fixed-writer-repeated-commitment', resequence(fixedEntry, fixedEntry.entries[0]!), 'repeated_commitment');
-const observedC = opaque(normal, old, 'C');
-const authorizedSeal = seal(observedC);
-// The checker sequence A,C,D,C,seal repeats C before relocating the signed seal.
-const insertedD = opaque(observedC, old, 'D');
-const duplicateC = resequence(insertedD, observedC.entries.at(-1)!);
-const movedSeal = resequence(duplicateC, authorizedSeal.entries.at(-1)!);
-reject('checker-seal-relocation-with-repeated-C', assign(movedSeal), 'repeated_commitment');
-// Two individually unique histories contain exactly the same seal envelope.
-// One moves C to a different position; the other changes only C's ancestry.
-pass('exact-head-authorized-seal', authorizedSeal, 0, old, true);
-const differentPrefix = opaque(base, old, 'different-prefix');
-const movedC = resequence(resequence(differentPrefix, normal.entries[0]!), observedC.entries.at(-1)!);
-reject('same-seal-envelope-at-different-position', resequence(movedC, authorizedSeal.entries.at(-1)!), 'wrong_predecessor_head');
-const samePositionC = resequence(differentPrefix, observedC.entries.at(-1)!);
-reject('same-seal-position-different-header-hash', resequence(samePositionC, authorizedSeal.entries.at(-1)!), 'wrong_predecessor_head');
-const alternateSeal = seal(requested);
-reject('same-assign-envelope-after-different-seal', resequence(alternateSeal, assigned.entries.at(-1)!), 'wrong_predecessor_head');
 const forkA = opaque(normal, old, 'a'), forkB = opaque(normal, old, 'b');
 const assignmentA = assign(sealed, next), assignmentB = assign(sealed, third);
 writeFileSync(new URL('control-proofs.json', import.meta.url), JSON.stringify({
-  schema: 2, profile: 'dap.fixture.single-writer/3', description: 'O5 proof inputs contain genesis, control envelopes, and other headers only. Expected decisions were declared before running the verifier.',
+  schema: 1, description: 'O5 proof inputs contain genesis, control envelopes, and other headers only. Expected decisions were declared before running the verifier.',
   proofs,
   comparisons: [
     { name: 'ordinary-signed-head-fork', left: forkA, right: forkB, conflictAt: 2 },

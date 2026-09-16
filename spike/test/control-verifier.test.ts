@@ -60,6 +60,25 @@ test('O5 proof boundary rejects unrelated inputs and does not mutate callers', (
   assert.throws(() => verifyControlSpine({ ...proof, entries: [{ ...proof.entries[0]!, payload: {} }] } as unknown as ControlProof), /entry_shape/);
   assert.throws(() => compareControlSpines(proof, fixture.proofs.find(p => p.name === 'v1-fixed-writer')!.proof), /different_genesis/);
 });
+test('O5 H1 rejects relocated exact control bytes on individually unique histories', () => {
+  const original = fixture.proofs.find(p => p.name === 'exact-head-authorized-seal')!.proof;
+  assert.equal(verifyControlSpine(original).sealed, true);
+  for (const name of ['same-seal-envelope-at-different-position', 'same-seal-position-different-header-hash']) {
+    const moved = fixture.proofs.find(p => p.name === name)!.proof;
+    assert.equal(moved.entries.at(-1)!.committed, original.entries.at(-1)!.committed);
+    const commitments = [moved.genesis.header, ...moved.entries.map(e => e.header)].map(h => h.commitment);
+    assert.equal(new Set(commitments).size, commitments.length);
+    assert.throws(() => verifyControlSpine(moved), /wrong_predecessor_head/);
+  }
+});
+test('O5 H1 retains historical v2 vectors and unchanged fixed-writer proof bytes', () => {
+  const historical = JSON.parse(readFileSync(new URL('../manifests/ordering-o5-runs/h1-before/control-proofs.json', import.meta.url), 'utf8')) as { proofs: Case[] };
+  assert.equal(historical.proofs.length, 47);
+  assert.throws(() => verifyControlSpine(historical.proofs.find(p => p.name === 'valid-handover')!.proof), /unsupported_profile/);
+  for (const name of ['v1-fixed-writer', 'v1-request-does-not-assign']) {
+    assert.deepEqual(fixture.proofs.find(p => p.name === name)!.proof, historical.proofs.find(p => p.name === name)!.proof);
+  }
+});
 test('O5 executes with packages, application payloads and grant folds unavailable', t => {
   const directory = realpathSync(mkdtempSync(join(tmpdir(), 'dap-o5-isolated-')));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
@@ -67,12 +86,17 @@ test('O5 executes with packages, application payloads and grant folds unavailabl
   for (const file of ['control-verifier.ts', 'codec.ts', 'canon.ts', 'types.ts']) cpSync(new URL('../src/' + file, import.meta.url), join(directory, 'src', file));
   const driver = join(directory, 'test', 'fixtures', 'o5-isolated.ts');
   cpSync(new URL('./fixtures/o5-isolated.ts', import.meta.url), driver);
-  const proof = fixture.proofs.find(p => p.name === 'two-handovers')!.proof;
-  // No application envelope is carried in this proof. Permission mode also
+  // No application envelope is supplied in valid inputs. Permission mode also
   // denies accidental filesystem imports outside the four-module directory.
   const result = spawnSync(process.execPath, ['--permission', '--allow-fs-read=' + directory, driver], {
-    input: JSON.stringify(proof), encoding: 'utf8', cwd: directory, timeout: 10000,
+    input: JSON.stringify(fixture.proofs.map(p => p.proof)), encoding: 'utf8', cwd: directory, timeout: 10000,
   });
   assert.equal(result.status, 0, result.stderr);
-  assert.deepEqual(JSON.parse(result.stdout), verifyControlSpine(proof));
+  const outcomes = JSON.parse(result.stdout) as Array<{ accept: boolean; result?: unknown; error?: string }>;
+  assert.equal(outcomes.length, fixture.proofs.length);
+  fixture.proofs.forEach(({ proof, expected }, i) => {
+    assert.equal(outcomes[i]!.accept, expected.accept);
+    if (expected.accept) assert.deepEqual(outcomes[i]!.result, verifyControlSpine(proof));
+    else assert.ok(outcomes[i]!.error?.includes(expected.code!));
+  });
 });

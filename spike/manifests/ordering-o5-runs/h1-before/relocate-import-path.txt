@@ -1,0 +1,1 @@
+ACCEPT seal intended after position 2 accepted at position 5 {"epoch":1,"sealed":false,"head":6,"assignments":[0,7],"dupCommitmentPositions":[2,4]}

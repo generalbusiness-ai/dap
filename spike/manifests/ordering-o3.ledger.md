@@ -152,3 +152,45 @@ The exact commands, component scope and outputs are linked from
 Only evidence records follow that measurement. No additional 600-seed run or
 component review approval is claimed; this ledger remains the O3
 reporting artifact at the common candidate head.
+
+## Ratified O-H1/O-H2 correction: profile /3 and incremental verification
+
+The earlier /2 runs above remain historical measurements. Ratified checker
+report `5643a940fde2c3c372d48ae89ee34e8e35593cf3` found that their control
+signatures named an envelope commitment rather than an exact predecessor
+head, and that the admission hook repeated full-chain signature verification
+under the append lock. Builder decision
+`2d7edc9c76b3d657a2a9fbb3fa6ffa819cb25492` selects the new movable profile
+`dap.fixture.single-writer/3`; /2 is unsupported at the revised boundary.
+
+Seal and assign now carry an exact predecessor object `{position, headerHash}`
+with no extra fields. Seal binds the current head; assign binds the seal head.
+All authenticated journal and view chains reject repeated commitments, including
+genesis and origins. New live writes also check commitment uniqueness before
+commit. Exact retries retain their old position and receipt. Fixed /1 wire
+construction and codec vectors are unchanged.
+
+Full authentication at create/open builds a private cache of the verified
+head, ordering state, commitments and accepted control positions. A moving
+profile admission validates the proposed event against the same cached/backend
+head under serialization. Fixed /1 installs no ordering-admission hook. Header
+signing checks that the new header extends the verified head and has a new
+commitment. Only after the serialized transaction returns successfully does
+the authenticated encoding advance the cache using the verified actor envelope
+and newly signed header. Direct owned Context writes share this encoding.
+A transaction, lost-reply, cache-callback or fold exception triggers the existing
+Context/lease poisoning; fresh open verifies all durable entries again. An
+unexpected signed tail is refused until reopen. Cached state returned to a
+caller is a frozen snapshot.
+
+Regression-only source `a658326` preserves the reviewed runtime. Its four
+checks fail: both fixed/moving journal chains accept repeated commitments,
+and both profiles scan the full journal under the append lock. Exact failure
+evidence is retained in the integration run-3-before records. Repaired checks
+add exact-head relocation without duplicate commitments, full/hidden views,
+preflight origin duplication, /2 rejection, missing retry-row duplication,
+direct Context writes, committed lost replies and cache callback errors.
+
+The optimization bounds added ordering/authentication work per ordinary append;
+it does not remove the existing application fold's history reads. Benchmark
+and final measured-source details will be linked from the integration ledger.
