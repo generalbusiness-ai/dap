@@ -1,0 +1,60 @@
+{
+  "snapshot": "742e64a06d06226b456f489eb53deacc1bc9f5db",
+  "corpus": "v6-hidden-revocation",
+  "manifest": "sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9",
+  "package": "sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85",
+  "nonce": "v6:hidden-revocation",
+  "originalSteps": 4,
+  "steps": [
+    {
+      "step": {
+        "type": "invite",
+        "inviter": "alice",
+        "invitee": "bob",
+        "grants": {
+          "roles": [
+            "Buyer"
+          ]
+        }
+      },
+      "entries": [
+        {
+          "id": "sha256:5c9e71807414f9c4c05adee9e28c369cb4ae7f4a0db9b9e70d885cf7dc0610de",
+          "kind": "ai.generalbusiness.dap.invite"
+        }
+      ]
+    },
+    {
+      "step": {
+        "type": "accept",
+        "invitee": "bob"
+      },
+      "entries": [
+        {
+          "id": "sha256:06d6fbf8d7a3cf5d1e681dae6c07c72763af2c8104ed23f9c78f13d1d45a927c",
+          "kind": "ai.generalbusiness.dap.accept_invite"
+        }
+      ]
+    },
+    {
+      "step": {
+        "type": "act",
+        "actor": "alice",
+        "kind": "ai.generalbusiness.dap.revoke",
+        "payload": {
+          "principal": "bob",
+          "roles": [
+            "Buyer"
+          ]
+        },
+        "nonce": "v6:4"
+      },
+      "entries": [
+        {
+          "id": "sha256:38fbbe9950ebbf57179ba60bd4b6ab6f6e4625d5c187483fe73a2faf15e0df30",
+          "kind": "ai.generalbusiness.dap.revoke"
+        }
+      ]
+    }
+  ]
+}

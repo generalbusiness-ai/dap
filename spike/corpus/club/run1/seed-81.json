@@ -1,0 +1,131 @@
+{
+  "seed": 81,
+  "manifest": "sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde",
+  "package": "sha256:6aeac545386d59b2d4645bfa9d951b576ae66119484f723d1fb765ff1a02a08f",
+  "snapshot": "V5 validation run 3; reconstructed from baseline 8557249 and recorded run-1 seed",
+  "expected": "dana@7 mismatch: observe differs at 7 [models.club.applications.0: oracle undefined, view {\"id\":\"sha256:89924c7ce0dc9ce04507ba8c5d0a87aabad44d546de84c; outcomes.7.effective: oracle false, view true; outcomes.7.perModel.club.effective: oracle false, view true; outcomes.7.perModel.club.reason: oracle unknown_application, view null; outcomes.7.reason: oracle ineffective, view null]",
+  "nonce": "genesis:81",
+  "originalSteps": 56,
+  "steps": [
+    {
+      "step": {
+        "type": "invite",
+        "inviter": "alice",
+        "invitee": "dana",
+        "grants": {
+          "roles": []
+        }
+      },
+      "entries": [
+        {
+          "id": "sha256:cb87772078ccf1134f406b588bd05e33ff03d121734470b79f4f317f435b3ee9",
+          "kind": "ai.generalbusiness.dap.invite"
+        }
+      ]
+    },
+    {
+      "step": {
+        "type": "accept",
+        "invitee": "dana"
+      },
+      "entries": [
+        {
+          "id": "sha256:5934a915476be3dbcb5cac377d09369cf041a21772a55c9953db53fdf63acb94",
+          "kind": "ai.generalbusiness.dap.accept_invite"
+        },
+        {
+          "id": "sha256:ab7aa85af0529186943f8a668fd62895f94b93d70f37bf68c44f9537b254906b",
+          "kind": "ai.generalbusiness.dap.disclose"
+        }
+      ]
+    },
+    {
+      "step": {
+        "type": "invite",
+        "inviter": "alice",
+        "invitee": "frank",
+        "grants": {
+          "roles": []
+        }
+      },
+      "entries": [
+        {
+          "id": "sha256:adb2876002fb389711c805521df16f6e361a34b2018b82b6fef08ad72f3ce0d1",
+          "kind": "ai.generalbusiness.dap.invite"
+        }
+      ]
+    },
+    {
+      "step": {
+        "type": "accept",
+        "invitee": "frank"
+      },
+      "entries": [
+        {
+          "id": "sha256:bf6eb7d6efba078a3b41b50647353ca72e727e273f5ca45ae5454644a3f16208",
+          "kind": "ai.generalbusiness.dap.accept_invite"
+        },
+        {
+          "id": "sha256:3b83a66070fbd57d2f2d6d300a95d2a565e250165dd78c210a3ae82955e5037b",
+          "kind": "ai.generalbusiness.dap.disclose"
+        }
+      ]
+    },
+    {
+      "step": {
+        "type": "act",
+        "actor": "frank",
+        "kind": "com.example.club.apply",
+        "payload": {
+          "statement": "let me in 24"
+        },
+        "nonce": "n:a85e75779a30bfe1"
+      },
+      "entries": [
+        {
+          "id": "sha256:89924c7ce0dc9ce04507ba8c5d0a87aabad44d546de84cb98f3254e5de7b0c2a",
+          "kind": "com.example.club.apply"
+        }
+      ]
+    },
+    {
+      "step": {
+        "type": "act",
+        "actor": "alice",
+        "kind": "ai.generalbusiness.dap.grant",
+        "payload": {
+          "principal": "frank",
+          "roles": [
+            "Committee"
+          ]
+        },
+        "nonce": "n:d4f948000e1d94c1"
+      },
+      "entries": [
+        {
+          "id": "sha256:ef3cea78ee9a746087248aa8767c52ae3e642bb860a5fcc098396753cb8ce84a",
+          "kind": "ai.generalbusiness.dap.grant"
+        }
+      ]
+    },
+    {
+      "step": {
+        "type": "act",
+        "actor": "frank",
+        "kind": "com.example.club.vote",
+        "payload": {
+          "application_id": "sha256:89924c7ce0dc9ce04507ba8c5d0a87aabad44d546de84cb98f3254e5de7b0c2a",
+          "choice": "yes"
+        },
+        "nonce": "n:34a49a4acb01d31e"
+      },
+      "entries": [
+        {
+          "id": "sha256:3283ea5cf14b26772b72fdaf70912860b4fe072f05dfbc27f61e56413d7aa913",
+          "kind": "com.example.club.vote"
+        }
+      ],
+      "application": "sha256:89924c7ce0dc9ce04507ba8c5d0a87aabad44d546de84cb98f3254e5de7b0c2a"
+    }
+  ]
+}

@@ -50,8 +50,8 @@ const IVAN_BACKLOG_AT = 14;
 const shiftPos = (i: number) => (i >= IVAN_BACKLOG_AT ? i + 1 : i);
 
 function shiftedReadability(p: string, pattern: string): string {
-  const own = p === ALICE || p === IVAN ? 'r' : 'h';
-  let out = pattern.slice(0, IVAN_BACKLOG_AT) + own + pattern.slice(IVAN_BACKLOG_AT);
+  // a disclosure act is readable by every member (positions and recipients, never payloads)
+  let out = pattern.slice(0, IVAN_BACKLOG_AT) + 'r' + pattern.slice(IVAN_BACKLOG_AT);
   if (p === IVAN) out = out.slice(0, 6) + 'r' + out.slice(7, 8) + 'r' + out.slice(9);
   return out;
 }

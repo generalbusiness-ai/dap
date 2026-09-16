@@ -77,7 +77,7 @@ export const SYSTEM_KINDS: Record<string, { audience: 'spine' | 'members' | 'inv
   [K.accept_invite]: { audience: 'spine', requires: null },
   [K.grant]: { audience: 'spine', requires: CAP.grant },
   [K.revoke]: { audience: 'spine', requires: CAP.grant },
-  [K.disclose]: { audience: 'recipients_actor', requires: CAP.disclose },
+  [K.disclose]: { audience: 'members', requires: CAP.disclose },
   [K.admit]: { audience: 'declared', requires: CAP.admit },
   [K.observe]: { audience: 'members', requires: CAP.observe },
   [K.close]: { audience: 'spine', requires: CAP.close },
@@ -348,7 +348,7 @@ export function foldEntry(state: FoundationState, input: FoldInput): Verdict {
   if (pos === 0) {
     verdict = foldGenesis(state, ev, packages);
   } else if (origin) {
-    verdict = foldOrigin(state, entry);
+    verdict = foldOrigin(state, entry, entries);
   } else if (ev.kind.startsWith(SYSTEM_PREFIX)) {
     const v = validPayload(ev.kind, ev.payload);
     if (v === undefined) {
@@ -363,16 +363,16 @@ export function foldEntry(state: FoundationState, input: FoldInput): Verdict {
       }
       // An effective ambient fact is folded by every model that opted in; the system verdict
       // stands, and each model's own outcome is recorded beside it.
-      if (ev.kind === K.observe && verdict.effective) {
+      if ((ev.kind === K.observe || ev.kind === K.disclose) && verdict.effective) {
         const ambient = state.env.packages.flatMap((p) => Object.values(p.models).filter((m) => m.ambient).map((m) => m.id));
-        if (ambient.length) verdict = { ...verdict, perModel: dispatch(state, entry, ambient, false).perModel };
+        if (ambient.length) verdict = { ...verdict, perModel: dispatch(state, entry, ambient, false, entries).perModel };
       }
     }
   } else {
     // Handlers receive cloned inputs. Keep the original values until the
     // audience succeeds, so a refused event cannot leave a model effect.
     modelsBefore = { ...state.models };
-    verdict = foldApplication(state, entry);
+    verdict = foldApplication(state, entry, entries);
   }
 
   // Possessing a credential permits recording an attempt, not publishing
@@ -412,6 +412,7 @@ export function foldEntry(state: FoundationState, input: FoldInput): Verdict {
           audience = capped(binding.audience({
             position: pos,
             members: membersBefore,
+            holders: (cap) => membersBefore.filter((m) => heldAt(state, m, cap, pos)),
             modelState: (id) => {
               if (!allowed.includes(id)) throw new Error('undeclared audience model read: ' + id);
               const before = modelsBefore?.[id];
@@ -460,11 +461,11 @@ function foldGenesis(state: FoundationState, ev: EventBody, packages: Record<str
 }
 
 /** An adopted origin: an assertion by its original actor under the initial bindings' origin rules. */
-function foldOrigin(state: FoundationState, entry: Entry): Verdict {
+function foldOrigin(state: FoundationState, entry: Entry, entries: readonly Entry[]): Verdict {
   const ev = entry.event;
   const binding = state.env.kinds[ev.kind];
   if (!binding) return { known: false, authorized: false, effective: false, reason: 'unhandled' };
-  return dispatch(state, entry, binding.handlers, true);
+  return dispatch(state, entry, binding.handlers, true, entries);
 }
 
 function foldSystem(state: FoundationState, entry: Entry, packages: Record<string, PackageDescriptor>, entries: readonly Entry[]): Verdict {
@@ -589,7 +590,7 @@ function foldAccept(state: FoundationState, entry: Entry, entries: readonly Entr
   return { known: true, authorized: true, effective: true };
 }
 
-function foldApplication(state: FoundationState, entry: Entry): Verdict {
+function foldApplication(state: FoundationState, entry: Entry, entries: readonly Entry[]): Verdict {
   const ev = entry.event;
   const pos = entry.position;
   const binding = state.env.kinds[ev.kind];
@@ -601,14 +602,25 @@ function foldApplication(state: FoundationState, entry: Entry): Verdict {
   if (binding.capability && !heldAt(state, ev.actor, binding.capability, pos)) {
     return { known: true, authorized: false, effective: false, reason: 'unauthorized' };
   }
-  return dispatch(state, entry, binding.handlers, false);
+  return dispatch(state, entry, binding.handlers, false, entries);
 }
 
-function dispatch(state: FoundationState, entry: Entry, handlers: string[], origin: boolean): Verdict {
+function dispatch(state: FoundationState, entry: Entry, handlers: string[], origin: boolean, entries: readonly Entry[]): Verdict {
   const ev = entry.event;
   const perModel: Verdict['perModel'] = {};
   let anyEffective = false;
-  const ctx = { position: entry.position, id: entry.id, members: [...state.participants], origin };
+  const members = [...state.participants];
+  const ctx = {
+    position: entry.position,
+    id: entry.id,
+    members,
+    origin,
+    holders: (cap: string) => members.filter((m) => heldAt(state, m, cap, entry.position)),
+    // Public facts of the chain a model may consult: the commitment at any earlier position, hidden or
+    // not (the interpreter's chain carries headers for hidden positions), and who held a capability there.
+    commitmentAt: (i: number) => (i >= 0 && i <= entry.position ? entries[i]?.id : undefined),
+    holdersAt: (cap: string, i: number) => (i >= 0 && i <= entry.position ? (i === entry.position ? members : (state.membersAt[i] ?? [])).filter((m) => heldAt(state, m, cap, i)) : []),
+  };
   for (const modelId of handlers) {
     const model = findModel(state.env, modelId);
     if (!model) {

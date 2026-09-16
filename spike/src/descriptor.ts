@@ -17,6 +17,16 @@ export interface FoldCtx {
   position: number;
   /** the content id of the event being folded: a stable, opaque name for what it records */
   id: string;
+  /** the participants holding a capability by grants before this position (the spine's authority) */
+  holders(capability: string): Principal[];
+  /**
+   * The content id committed in the authenticated header at `position`,
+   * hidden or not, for 0 <= position <= this position: the public fact that
+   * the event with that id is there. Undefined outside that range.
+   */
+  commitmentAt(position: number): string | undefined;
+  /** the participants as of `position` holding the capability by grants before it: what the audience context's holders gave there */
+  holdersAt(capability: string, position: number): Principal[];
   /** participants after folding the preceding position */
   members: Principal[];
   /** whether the event is an adopted origin (no grant, no expected binding) */
@@ -62,9 +72,10 @@ export interface ModelSpec<S = Json, C extends Json = Json> {
   /** Roles this model defines: role name to capability names. */
   roles?: Record<string, string[]>;
   /**
-   * Whether effective `dap.observe` events (ambient facts asserted by a
-   * designated actor: time, a draw) are folded by this model too. Part of
-   * the model's identity when set.
+   * Whether effective ambient system events are folded by this model too:
+   * `dap.observe` (facts asserted by a designated actor: time, a draw) and
+   * `dap.disclose` (positions shown to recipients). Part of the model's
+   * identity when set.
    */
   ambient?: boolean;
 }
@@ -72,6 +83,8 @@ export interface ModelSpec<S = Json, C extends Json = Json> {
 export interface AudienceCtx {
   position: number;
   members: Principal[];
+  /** the participants holding a capability by grants before this position: a role-derived audience */
+  holders(capability: string): Principal[];
   /** Frozen copy of a handler's preceding state. Reads outside the active
    * audience policy's original handler declaration throw. */
   modelState(modelId: string): Json | undefined;
