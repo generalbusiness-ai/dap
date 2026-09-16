@@ -293,6 +293,15 @@ the ledger and not exercised by the corpus; Club is V5 and the report V6.
 
 ## V5: Club by agent
 
+V5 is **incomplete against spike plan §4.2**. The frozen manifest omitted
+its condition that an admitted applicant must not already hold Member.
+Validation run 3 records two applications by Dana, first admission and
+Member grant, then a second effective admission. Every view agrees, so
+the narrower manifest's consistency checks pass while the plan's policy
+fails. Enforcing the omitted condition needs additional public evidence
+or a changed trust/schema contract, hence a revised experiment; the
+existing result below does not establish the full plan's promise.
+
 Measured result first: the agent-authored Club model needed **1 fix, 0
 added kinds, within the budget** of 4 fixes and 2 kinds over its two
 constraints (quorum and standing). The baseline passed three of the four
@@ -331,10 +340,17 @@ capability holders, the fold's public chain facts, and reproducible
 content ids in generated series (a generator defect found by this
 campaign; Booking was revalidated under it).
 
-What the tests show: the four predeclared cases of §4.2 (quorum with the
-Member grant, no quorum and no majority, lapsed and already voted, the
+What the tests show: the four frozen-manifest cases derived from §4.2
+(quorum with the Member grant, no quorum and no majority, lapsed and already voted, the
 late committee member before and after disclosure) and the 200-seed
-campaign pass; the ledger's totals agree with its entries.
+campaign pass; the ledger's totals agree with its entries. Validation run
+3 also exercises Club payload disclosure before and after activation
+disclosure, the dependency-incomplete pause and resumption, and confirms
+that a later activation preserves an earlier application. The three
+recorded baseline failures are reconstructed and shrunk to seven linked
+steps each under `corpus/club/run1/`, fail on the preserved baseline and
+pass on the repaired model. The ledger identifies the missing historical
+run-1 snapshot; later reconstruction does not cure that protocol gap.
 
 What V5 does not claim: one application type, a three-member committee
 and one quorum rule; no revocation is generated; a vote naming a content

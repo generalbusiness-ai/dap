@@ -91,7 +91,8 @@ separate family in the corpus.
 
 ## Run 2
 
-Snapshot commit: see `git log`, "checker run 2". Manifest unchanged
+Snapshot commit: `09d5ebcc64d02ac178475984f32d38e2e6201e01`,
+"checker run 2". Manifest unchanged
 (`sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde`);
 harness commit `7cd0467` ("the fold context offers the chain's public
 facts: commitmentAt and holdersAt") added the contract fix 1 reads;
@@ -167,7 +168,7 @@ Totals: 1 fix, 0 added kinds, budget within
 
 ## Validation run 3: evidence recovery and acceptance audit
 
-Input snapshot: commit named "spike V5: freeze validation run 3 evidence".
+Input snapshot: `c94ae6e`, "spike V5: freeze validation run 3 evidence".
 This run reconstructs the three recorded baseline failures (81, 107, 182)
 from the exact baseline source, preserved at `fixtures/club-baseline.ts`
 so its imports and package identity do not change. These are newly
@@ -182,8 +183,48 @@ The candidate and frozen manifest are unchanged from run 2. The run adds
 explicit disclosure-before/after-activation checks, the incomplete
 dependency pause and resumption, and a counterexample to plan §4.2's
 already-Member condition. The counterexample is reported as a known
-acceptance failure, not a successful policy test. Results will be
-recorded in the corresponding result snapshot.
+acceptance failure, not a successful policy test.
+
+Validation under Node 26.8.2:
+
+- `node scripts/club-shrink.ts`: all three recorded run-1 seeds reproduced.
+  Seeds 81 and 182 shrank from 56 steps to 7, seed 107 from 55 to 7.
+  Every preserved series fails on the baseline and passes on the repaired
+  model. `node --test test/club-corpus.test.ts` also verifies every single
+  deletion and the exact recorded violation, 1/1 test passed.
+- `node --test --test-name-pattern='^(?!case 5,)' test/club.test.ts`:
+  10/10 tests passed. This Node version matched the file-level name too,
+  so the command ran the full 200-seed campaign despite the intended
+  exclusion. All 200 seeds passed in 110284 ms, with exactly the run-2
+  counts: 11939 entries, 991 joins, 200 side attaches, 1939 disclosures,
+  629 applications, 1575 votes (1001 effective), 343 admits (126
+  effective), 514 standing events, 246 generated grants. The
+  already-Member test is successful *reproduction of a plan failure*:
+  Dana's first admit is at 14, Member grant at 15, and second admit at
+  18 is effective. Both applications were recorded before either admit.
+  An ordinary Member, Erin, cannot read either applicant field but
+  agrees with the oracle on both admissions.
+- `node --test --test-skip-pattern='the campaign' 'test/**/*.test.ts'`:
+  all 95 selected non-campaign tests passed, including the Club corpus,
+  activation cases, and the recorded acceptance gap. The three model
+  campaigns were excluded from this regression pass.
+- `npm run typecheck`: passed.
+
+Manifest `sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde`;
+baseline package `sha256:6aeac545386d59b2d4645bfa9d951b576ae66119484f723d1fb765ff1a02a08f`;
+repaired package `sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e`.
+
+The reconstructed corpus also corrects run 1's overly narrow account:
+not every mismatch is the late voter's own view. At seed 81 position 54,
+Frank votes and Dana's view diverges; at seed 107 position 50, Frank
+votes and Erin's view diverges. Shrinking preserves the same missing
+application-position evidence, and the recorded first mismatches are
+Dana@7, Frank@7 and Erin@7 for seeds 81, 107 and 182 respectively.
+
+Run 3 makes no model fix: totals remain 1 standing-related fix, 0 quorum
+fixes and 0 added kinds, within each constraint's budget. It does not
+repair the missing historical run-1 snapshot or make the original
+protocol fully conformant.
 
 ### Acceptance gap: a second application admits an existing Member
 
