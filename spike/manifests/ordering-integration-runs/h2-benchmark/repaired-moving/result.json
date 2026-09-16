@@ -1,0 +1,249 @@
+{
+  "sourceHead": "773a38ec8367d0b563f7741d1ff902aceb72350c",
+  "source": "/tmp/dap-o-h2-evidence.f7dfyn0r/repaired/spike",
+  "profile": "dap.fixture.single-writer/3",
+  "harnessSha256": "5702225f7b024f62d68ff6abb08f860efa93964b4a90109a91be7995ad8cea59",
+  "started": "2026-09-16T18:58:12.662Z",
+  "node": "v26.8.2",
+  "host": {
+    "hostname": "hakuin",
+    "platform": "darwin",
+    "release": "27.0.0",
+    "arch": "arm64",
+    "logicalCpus": 18,
+    "cpuModel": "Apple M5 Max",
+    "totalMemory": 68719476736,
+    "load": [
+      2.6103515625,
+      5.61474609375,
+      9.2412109375
+    ]
+  },
+  "instrumentation": "crypto.verify/sign wrappers count calls; backend.entries wrapper counts calls and returned rows. Wrappers preserve results and count only the measured 20-offer windows. No process isolation or exclusive host reservation.",
+  "workload": "Reviewer bench shape: one listing + Bob invite/accept; oN fill offers to 100,400,1000 entries; mN measured offers, 20 per boundary; each includes event construction, actor signing, Journal.submit and fold. Runtime generates fresh intent nonces.",
+  "windows": [
+    {
+      "storage": "memory",
+      "target": 100,
+      "firstPosition": 100,
+      "samples": 20,
+      "filled": 96,
+      "warmMs": 40.755083,
+      "started": "2026-09-16T18:58:12.716Z",
+      "elapsedMs": 8.78995900000001,
+      "msPerAppend": 0.4394979500000005,
+      "processCpuMs": {
+        "user": 8.999,
+        "system": 0.119
+      },
+      "loadBefore": [
+        2.6103515625,
+        5.61474609375,
+        9.2412109375
+      ],
+      "loadAfter": [
+        2.6103515625,
+        5.61474609375,
+        9.2412109375
+      ],
+      "counts": {
+        "cryptoVerify": 40,
+        "cryptoSign": 40,
+        "entriesCalls": 40,
+        "entriesReturned": 4420
+      },
+      "perAppend": {
+        "cryptoVerify": 2,
+        "cryptoSign": 2,
+        "entriesCalls": 2,
+        "entriesReturned": 221
+      }
+    },
+    {
+      "storage": "memory",
+      "target": 400,
+      "firstPosition": 400,
+      "samples": 20,
+      "filled": 280,
+      "warmMs": 137.345958,
+      "started": "2026-09-16T18:58:12.863Z",
+      "elapsedMs": 10.928917000000013,
+      "msPerAppend": 0.5464458500000007,
+      "processCpuMs": {
+        "user": 11.146,
+        "system": 0.118
+      },
+      "loadBefore": [
+        2.6103515625,
+        5.61474609375,
+        9.2412109375
+      ],
+      "loadAfter": [
+        2.6103515625,
+        5.61474609375,
+        9.2412109375
+      ],
+      "counts": {
+        "cryptoVerify": 40,
+        "cryptoSign": 40,
+        "entriesCalls": 40,
+        "entriesReturned": 16420
+      },
+      "perAppend": {
+        "cryptoVerify": 2,
+        "cryptoSign": 2,
+        "entriesCalls": 2,
+        "entriesReturned": 821
+      }
+    },
+    {
+      "storage": "memory",
+      "target": 1000,
+      "firstPosition": 1000,
+      "samples": 20,
+      "filled": 580,
+      "warmMs": 371.668584,
+      "started": "2026-09-16T18:58:13.246Z",
+      "elapsedMs": 15.603749999999991,
+      "msPerAppend": 0.7801874999999996,
+      "processCpuMs": {
+        "user": 15.069,
+        "system": 0.738
+      },
+      "loadBefore": [
+        2.6103515625,
+        5.61474609375,
+        9.2412109375
+      ],
+      "loadAfter": [
+        2.6103515625,
+        5.61474609375,
+        9.2412109375
+      ],
+      "counts": {
+        "cryptoVerify": 40,
+        "cryptoSign": 40,
+        "entriesCalls": 40,
+        "entriesReturned": 40420
+      },
+      "perAppend": {
+        "cryptoVerify": 2,
+        "cryptoSign": 2,
+        "entriesCalls": 2,
+        "entriesReturned": 2021
+      }
+    },
+    {
+      "storage": "sqlite",
+      "target": 100,
+      "firstPosition": 100,
+      "samples": 20,
+      "filled": 96,
+      "warmMs": 109.36816699999997,
+      "started": "2026-09-16T18:58:13.383Z",
+      "elapsedMs": 26.51374999999996,
+      "msPerAppend": 1.325687499999998,
+      "processCpuMs": {
+        "user": 21.886,
+        "system": 4.198
+      },
+      "loadBefore": [
+        2.6103515625,
+        5.61474609375,
+        9.2412109375
+      ],
+      "loadAfter": [
+        2.6103515625,
+        5.61474609375,
+        9.2412109375
+      ],
+      "counts": {
+        "cryptoVerify": 40,
+        "cryptoSign": 40,
+        "entriesCalls": 40,
+        "entriesReturned": 4420
+      },
+      "perAppend": {
+        "cryptoVerify": 2,
+        "cryptoSign": 2,
+        "entriesCalls": 2,
+        "entriesReturned": 221
+      }
+    },
+    {
+      "storage": "sqlite",
+      "target": 400,
+      "firstPosition": 400,
+      "samples": 20,
+      "filled": 280,
+      "warmMs": 673.382334,
+      "started": "2026-09-16T18:58:14.084Z",
+      "elapsedMs": 49.85783300000003,
+      "msPerAppend": 2.4928916500000016,
+      "processCpuMs": {
+        "user": 43.872,
+        "system": 4.204
+      },
+      "loadBefore": [
+        2.6103515625,
+        5.61474609375,
+        9.2412109375
+      ],
+      "loadAfter": [
+        2.6103515625,
+        5.61474609375,
+        9.2412109375
+      ],
+      "counts": {
+        "cryptoVerify": 40,
+        "cryptoSign": 40,
+        "entriesCalls": 40,
+        "entriesReturned": 16420
+      },
+      "perAppend": {
+        "cryptoVerify": 2,
+        "cryptoSign": 2,
+        "entriesCalls": 2,
+        "entriesReturned": 821
+      }
+    },
+    {
+      "storage": "sqlite",
+      "target": 1000,
+      "firstPosition": 1000,
+      "samples": 20,
+      "filled": 580,
+      "warmMs": 3106.081333,
+      "started": "2026-09-16T18:58:17.242Z",
+      "elapsedMs": 118.99837499999921,
+      "msPerAppend": 5.949918749999961,
+      "processCpuMs": {
+        "user": 100.422,
+        "system": 18.176
+      },
+      "loadBefore": [
+        2.80126953125,
+        5.6044921875,
+        9.21630859375
+      ],
+      "loadAfter": [
+        2.80126953125,
+        5.6044921875,
+        9.21630859375
+      ],
+      "counts": {
+        "cryptoVerify": 40,
+        "cryptoSign": 40,
+        "entriesCalls": 40,
+        "entriesReturned": 40420
+      },
+      "perAppend": {
+        "cryptoVerify": 2,
+        "cryptoSign": 2,
+        "entriesCalls": 2,
+        "entriesReturned": 2021
+      }
+    }
+  ],
+  "finished": "2026-09-16T18:58:17.362Z"
+}

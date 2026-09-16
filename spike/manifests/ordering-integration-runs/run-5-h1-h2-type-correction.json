@@ -1,0 +1,45 @@
+{
+  "source": "713315d17030fbafae275dbde3e04c7c1e7dd2f4",
+  "full_suite_and_benchmark_source": "773a38ec8367d0b563f7741d1ff902aceb72350c",
+  "runtime_sha256_identical_at_both_sources": {
+    "spike/src/append.ts": "bda403bbf5a7f735032de356e4f37367606a658516edbdf134421954ea2eb5f8",
+    "spike/src/canon.ts": "cbc7f68be9a6c49eb5b4fd6403d285ca634120ebde5c9592d91a516fa4956bdd",
+    "spike/src/checker.ts": "91625033431ff38e59d2a697d9568dfe20ae7fd357af828d9baccc748e8ecbf3",
+    "spike/src/codec.ts": "39e2060dd76bf8f6ec2e6378be79e663a1b983671277d927257b8f7b2a10d96f",
+    "spike/src/context.ts": "a769b3e98876179f6373894165fc189e7ebeaf9c20b656cc6070a1c6aef84ac4",
+    "spike/src/control-verifier.ts": "17a62d5bd66b3290f6228dc7bdf510289685b596c315240c19a1f13521cd1891",
+    "spike/src/corpus.ts": "26239886794b6fcc19c7f2db71be6be4f8fb79eccea40d23be8fe6f3739d6c24",
+    "spike/src/descriptor.ts": "80634fdc1ca2dba87a3a31d434f53581ac45dc00a9f7464e6c94f50c3da04b49",
+    "spike/src/foundation.ts": "b4c5457ac16dc139eec091507100cc63033a83e4e7e14653f27ba74419196b98",
+    "spike/src/generate.ts": "deb13881823cdfca49fb6125d2b84d3fb4432f22096f118a7e66c19b9eb530b1",
+    "spike/src/interpret.ts": "62de677ee7fa22c3f21a7c14c89b216148b37c28feb16878b8311bbded2d391c",
+    "spike/src/journal.ts": "dd9db679ee3fda927a22ba28f8fe568b113d32166b8cb50ff279e7ded32aaf11",
+    "spike/src/observe.ts": "21a88a2e6fb2ec387a7738bcdbe525d73634cc1caa2f9be2af913353a1262db2",
+    "spike/src/oracle.ts": "f3ed8a6232f20446d61e83815eafb3c7451d46cee91ea094e019b478fa04abdd",
+    "spike/src/ordering.ts": "5c91f897f08d3308a7cff597f01491d85feb0623ea1dd429e3f2cdfd35f57ce2",
+    "spike/src/ownership.ts": "c826cfb34e8784347cf26d6d157a2c27ca2db47e26ce85ec9ef5ef2cd40281f1",
+    "spike/src/script.ts": "64776e892fc67741b688c20b6cf11672fea082b41f070bb3518db3809444ef38",
+    "spike/src/sqlite.ts": "5dfdc9734f7ca8f823ab343b005b0a8575d303d404f1686c4b3d72e6278a3ad0",
+    "spike/src/types.ts": "3539141c8f736192919960302ccdc36b48a34fb1b4043915fb5ff559ef998f36"
+  },
+  "commands": [
+    {
+      "command": [
+        "node",
+        "--test",
+        "test/ordering-handover.test.ts"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.718
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.754
+    }
+  ]
+}

@@ -292,10 +292,29 @@ Sale and Inspection package identities remain unchanged. Every fixture
 context, export, proof and certificate is generated again under the new
 identity; no old /2 packet is migrated or called current evidence.
 
-Run 7 will measure the O4 lifecycle, proof, mutation, historical-view and
-error-boundary suites at a fresh committed source and record actual states.
-No new 600-seed campaign is planned. The aggregate owns H2 performance
+Run 7 at frozen source `e8ccb2ef2c21510b84d0466193c2b3381f89316b` passes
+124/124 O4 lifecycle, proof, mutation, historical-view and error-boundary
+checks, with zero failures, skips or TODOs. Whole-tree typecheck passes.
+The 80 observation files contain both backends' 20 healthy boundaries,
+29 adverse cases and 209 actual genesis variants, plus phase/error, historical
+matrix and signed duplicate-commitment evidence. Each backend again yields
+30 destination_mismatch, 5 unauthorized, 154 invalid-genesis, 18 malformed-codec
+and 2 unsupported-profile mutation outcomes; no unknown exception passes.
+The all-reader matrices remain 55 pre-attach questions and 100 completed
+historical questions, plus 143 questions immediately across attachment.
+The measured source/proof ids agree across memory and SQLite and are retained
+in `run-7.json`, including the definition of each full-packet proof hash.
+No full O4 integration suite or 600-seed campaign was repeated in run 7. The aggregate owns H2 performance
 measurements; O4's existing full semantic replay per state query remains a
 separate bounded-fixture cost, not a claim of incremental scope evaluation.
 Publication and independent review remain pending the accepted aggregate
 and its final runtime boundary.
+
+After run 7, O4 integrates final aggregate candidate
+`936acce94e5cd024b0164fc6cd2af027f611545e`. Its changes after `713315d` are
+benchmark/validation records and ledgers only. Every source, fixture, test
+and lifecycle-manifest blob present at `e8ccb2e` is preserved; the per-file
+hashes are in `run-7-integration.json`. The scope runtime remains `f17f15a8`
+and Scope package `edea788e`. No tests or campaigns were repeated for this
+evidence merge. Aggregate acceptance is still an upstream review condition,
+not a claim made by this O4 validation record.

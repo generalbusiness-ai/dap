@@ -194,3 +194,19 @@ direct Context writes, committed lost replies and cache callback errors.
 The optimization bounds added ordering/authentication work per ordinary append;
 it does not remove the existing application fold's history reads. Benchmark
 and final measured-source details will be linked from the integration ledger.
+
+The repaired full noncampaign run at
+`773a38ec8367d0b563f7741d1ff902aceb72350c` passes 321 tests with no ordinary
+failures and four retained Club TODOs (325 selected). This includes 12 O3
+handover and 16 new O-H1/O-H2 journal/head/cache tests. Its typecheck failure
+was a malformed-test array annotation, preserved in integration run 4.
+At `713315d17030fbafae275dbde3e04c7c1e7dd2f4`, the annotation is corrected:
+12 handover tests and typecheck pass; all 19 runtime files remain identical.
+
+The [integration ledger](ordering-integration.ledger.md#o-h1o-h2-final-validation-and-benchmark-boundaries)
+records both source boundaries and the benchmark. At 100/400/1000 entries,
+both repaired profiles use exactly two Ed25519 verifications per ordinary
+append, matching accepted O1 instead of the reviewed aggregate's growing
+222/822/2022 average counts. This removes repeated full-prefix authentication;
+existing application fold costs remain. All changes after final validation
+are records only. No independent approval or 600-seed rerun is claimed.

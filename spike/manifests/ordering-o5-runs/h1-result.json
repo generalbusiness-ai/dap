@@ -23,5 +23,12 @@
     "verifier": "17a62d5bd66b3290f6228dc7bdf510289685b596c315240c19a1f13521cd1891",
     "journalProof": "de84ec2fb7ddadfeeb8b85746068a8210478a9e0bc5c42c02da67fdf662d29b7",
     "combinedOutput": "9823b46ffe22648c3d5b5019cf56c45f7ca8293a2b9113026b7bed138f674456"
+  },
+  "typecheckFollowup": {
+    "source": "713315d17030fbafae275dbde3e04c7c1e7dd2f4",
+    "exitCode": 0,
+    "handoverTests": 12,
+    "record": "../ordering-integration-runs/run-5-h1-h2-type-correction.json",
+    "change": "O3 malformed-payload test Json[] annotation only; O5 source, fixtures and tests unchanged."
   }
 }

@@ -229,8 +229,15 @@ positions 2/3/4. No O5 algorithm or fixture repair followed this measurement.
 
 Whole-tree typecheck at this exact source failed with TS2322 in the O3
 malformed-payload test (`ordering-handover.test.ts:143`): inferred optional
-`undefined` properties were not assignable to Json. The runtime owner is
-correcting that test annotation only and will retain the next focused/typecheck
-boundary separately. The failed output remains in
+`undefined` properties were not assignable to Json. The runtime owner corrected that test annotation only; the next
+focused/typecheck boundary remains separate. The failed output remains in
 [the combined run](ordering-integration-runs/run-4-h1-h2-combined.txt).
 No new 600-seed campaign or independent approval is claimed.
+
+
+At correction source `713315d17030fbafae275dbde3e04c7c1e7dd2f4`, all 12
+handover checks and whole-tree typecheck pass. The [correction record](ordering-integration-runs/run-5-h1-h2-type-correction.json)
+retains commands, output links and matching hashes for all 19 runtime files
+against `773a38e`. All six O5 source/test/fixture files are also unchanged.
+The 86 O5 checks and full noncampaign result remain measured at `773a38e`;
+no new broad or campaign run is claimed for the annotation correction.
