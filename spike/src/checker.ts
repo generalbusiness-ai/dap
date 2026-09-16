@@ -16,12 +16,12 @@ import type { FoundationState } from './foundation.ts';
 import { interpretView, type Interpreted } from './interpret.ts';
 import { observe, type Observation } from './observe.ts';
 import { foldPrefix, oracleObserve } from './oracle.ts';
-import type { Principal } from './types.ts';
+import type { Entry, Principal } from './types.ts';
 
 export interface Violation {
   participant: Principal;
   frontier: number;
-  kind: 'mismatch' | 'pause_rule' | 'pause_resume' | 'invariant';
+  kind: 'mismatch' | 'pause_rule' | 'pause_resume' | 'invariant' | 'budget';
   detail: string;
   expected?: Observation;
   actual?: Observation;
@@ -31,8 +31,10 @@ export interface CheckOptions {
   participants?: Principal[];
   /** what each participant's client can fetch; default: everything the context knows */
   available?: (p: Principal) => Record<string, PackageDescriptor>;
-  /** invariants over the oracle's state, declared independently of the folds */
-  invariants?: (state: FoundationState, frontier: number) => string[];
+  /** invariants over the oracle's state and the recorded entries, declared independently of the folds */
+  invariants?: (state: FoundationState, frontier: number, entries: readonly Entry[]) => string[];
+  /** a privacy budget over the oracle's observation for a principal, declared independently of the folds */
+  budget?: (obs: Observation, p: Principal, frontier: number) => string[];
   /** frontiers to check; default: every position */
   frontiers?: number[];
 }
@@ -54,11 +56,14 @@ export function checkContext(ctx: Context, opts: CheckOptions = {}): Violation[]
   for (const n of frontiers) {
     if (opts.invariants) {
       const s = foldPrefix(ctx, n);
-      for (const detail of opts.invariants(s, n)) out.push({ participant: '*', frontier: n, kind: 'invariant', detail });
+      for (const detail of opts.invariants(s, n, ctx.entries)) out.push({ participant: '*', frontier: n, kind: 'invariant', detail });
     }
     for (const p of participants) {
       const view = ctx.view(p, n);
       const r = interpretView(p, view, n, available(p));
+      if (opts.budget) {
+        for (const detail of opts.budget(oracleObserve(ctx, p, n, n), p, n)) out.push({ participant: p, frontier: n, kind: 'budget', detail });
+      }
       if (r.kind === 'interpreted') {
         const actual = observeInterpreted(r, view);
         const expected = oracleObserve(ctx, p, n, n);

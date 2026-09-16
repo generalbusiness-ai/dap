@@ -27,13 +27,22 @@ export interface Replay {
   positions: number[];
 }
 
+/** The replay's bookkeeping between steps: invitations issued and not yet redeemed. */
+export type Pending = Map<Principal, number>;
+
 /** Rebuild a context from a script. Refused submissions are recorded as -1 and do not stop the replay. */
 export function replay(script: Script): Replay {
   const ctx = Context.create({ ...script.base, packages: { ...script.base.packages } });
   const positions: number[] = [];
-  const pendingInvites = new Map<Principal, number>();
-  for (const step of script.steps) {
-    let pos = -1;
+  const pendingInvites: Pending = new Map();
+  for (const step of script.steps) positions.push(applyStep(ctx, step, pendingInvites));
+  return { ctx, positions };
+}
+
+/** Apply one step to a live context; returns the position it landed at, or -1. */
+export function applyStep(ctx: Context, step: Step, pendingInvites: Pending): number {
+  let pos = -1;
+  {
     switch (step.type) {
       case 'act': {
         const r = ctx.act(step.actor, step.kind, step.payload);
@@ -68,9 +77,8 @@ export function replay(script: Script): Replay {
         break;
       }
     }
-    positions.push(pos);
   }
-  return { ctx, positions };
+  return pos;
 }
 
 /**
