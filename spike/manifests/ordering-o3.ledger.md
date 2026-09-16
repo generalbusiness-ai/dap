@@ -40,3 +40,22 @@ freshness. It tests one control key, an unchanged profile, and new successor
 keys; a key cannot be reinstated. The F0 application fold does not decide
 ordering authority. O4 transfer execution and O5 independent verification
 remain separate tasks.
+
+## Run 1
+
+Source: `3cdd1f3bbbf02289ea0d7dc394dcca4fa3e22801`, including O2
+`b6d156163285c8eaab3d05766dd9b0de35fef79b` and final O1. The exact command was
+`node --test test/ordering-handover.test.ts test/ordering-retry.test.ts test/journal.test.ts test/codec.test.ts test/ordering-lifecycle.test.ts`,
+followed by `npm run typecheck`. Raw output:
+[run-1.txt](ordering-o3-runs/run-1.txt).
+
+Seventy tests executed: 69 passed, one failed. All 11 O3 tests passed, including
+all six child-process crashes. The existing recipient-view test expected the
+error text `wrong writer`; O3 had changed it to `wrong initial writer`. The
+underlying wrong-key rejection still occurred. Typecheck passed. The repair
+restores the old message substring while retaining the initial-assignment
+explanation. This is one compatibility wording repair and no protocol repair.
+
+Before the second run, the nomination test also checks a successor's open
+against the actual nominated context and its journal, rather than against an
+empty backend. Ordinary nominations still must not authorize it.

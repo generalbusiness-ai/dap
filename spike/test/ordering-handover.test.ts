@@ -100,10 +100,13 @@ for (const stage of ['seal', 'assign'] as const) for (const point of ['before-co
 });
 
 test('O3 independent nominations and two signed assignments cannot install two successors', async () => {
-  const backend = sqlite(join(dir(), 'journal.db')), j = create(backend);
+  const path = join(dir(), 'journal.db');
+  let backend = sqlite(path), j = create(backend);
   for (const writer of [successor, competitor]) accepted(act(j, 'alice', K.seq_request, { writer }));
   assert.equal(j.ordering.writer, people.writer); assert.equal(j.ordering.epoch, 0);
-  assert.throws(() => Journal.open({ backend: new MemoryBackend(), writerKey: successorKey, packages }), /missing verified genesis/);
+  j.close(); backend = sqlite(path);
+  assert.throws(() => Journal.open({ backend, writerKey: successorKey, packages }), /unassigned writer key/);
+  j = Journal.open({ backend, writerKey: keys.writer, packages });
   accepted(j.submit(seal(j)));
   const a = assign(j), b = assign(j, competitor, 'competing');
   const [first, second] = await Promise.all([Promise.resolve().then(() => j.submit(a)), Promise.resolve().then(() => j.submit(b))]);

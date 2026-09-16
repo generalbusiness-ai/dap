@@ -32,7 +32,7 @@ function declared(genesis: ActorEnvelope, writer: string): EventBody[] {
   if (genesis.body.kind !== K.genesis) throw new Error('Journal: expected genesis');
   const payload = genesis.body.payload as unknown as GenesisPayload;
   const state = initialOrdering(genesis.body);
-  if (state.initialWriter !== writer) throw new Error('Journal: wrong initial writer');
+  if (state.initialWriter !== writer) throw new Error('Journal: wrong writer (initial assignment)');
   if (!Array.isArray(payload.origins)) throw new Error('Journal: invalid origins');
   return payload.origins;
 }
