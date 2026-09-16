@@ -365,14 +365,27 @@ and content id are exported as `PUBLIC_PROOF_RULE` and
 
 For every position through the frontier, a listed kind is opened when its
 assigned audience is spine or members. There is one bounded exception:
-`ineffectiveActorOnly: 'hidden'` permits a header-only position when the full
-source fold records `effective === false` and its assigned audience is
-exactly `named: [event.actor]`. Missing or indeterminate verdicts do not
-qualify. Every other narrower listed-kind audience makes the producer refuse
+The rule's `ineffectiveActorOnly` object requires `known: true` and
+`effective: false`, and selects `body: 'hidden'` when the full source fold
+records that determinate ineffective verdict and its assigned audience is
+exactly `named: [event.actor]`. Missing or unknown verdicts do not qualify. The top-level and per-model
+reasons `not_in_v1`, `package_unavailable`, `scope_runtime_required` and
+`unhandled`, or prefixes `audience_error:` and `fold_error:`, are indeterminate
+and cannot justify hiding. Every other narrower listed-kind audience makes the producer refuse
 certification, including an effective body capped to its actor. Every
 unlisted position is hidden. `dap.disclose` is excluded because it can carry private bodies;
 `dap.observe` is excluded because observations are not release or grant
 inputs in this fixed scope policy. No wildcard kind admission applies.
+The fixed system scope operations keep spine audiences (admit keeps members),
+including malformed member attempts, so their base-fold `not_in_v1` placeholder
+never needs the hiding exception. For the four application Scope kinds, an
+ordinary member lacking the kind capability receives an actor-only known
+`unauthorized` refusal; Scope preserves that refusal and adds no effect.
+Authorized Scope placeholders retain the fixed spine audience and remain
+opened. A binding ceiling requires an attachment; an effective narrow
+attachment itself still prevents certification. The producer does not treat
+base-fold placeholders as authoritative Scope outcomes or add recursive replay.
+
 Opened bodies recursively reject `amount`, `acceptedAmount`, `counter`,
 `terms` and `offer_terms`, including nested signed-envelope payloads.
 
@@ -448,16 +461,18 @@ exact source, profile and manifest and satisfy the nine tests listed in
 2. **A2 — Exact public-data rule.** For every position through the certified
    frontier, open each authority-set kind only if its assigned audience is
    `spine` or `members`. An actor-only position with source verdict
-   `effective === false` is the sole exception and retains only its header;
+   known, determinate `effective === false` is the sole exception and retains
+   only its header;
    this classification is explicitly trusted. Every other narrower audience,
    including an effective body with a binding ceiling, makes the producer
    refuse certification; it must neither hide that body nor widen its audience.
-   Missing or indeterminate effect cannot permit hiding. Unlisted positions
+   The named rule excludes unknown outcomes, the four placeholder reasons
+   and two error prefixes above, including per-model reasons. Unlisted positions
    retain only their headers.
    Opened bodies pass the recursive banned-field check for `amount`,
    `acceptedAmount`, `counter`, `terms` and `offer_terms`. The named rule is
    `dap.fixture.scope-public-openings/2`, content id
-   `sha256:614f837e0f4f795625bc69d690a13c3d2a38c28e1a349bc49ed6db35cc972a71`,
+   `sha256:701403e9c51e6449ca797545818a8b63602a20a9b43c2ace064e9a38ab55b66c`,
    defined by `publicOpeningRule` in `manifests/ordering-lifecycle.ts`.
    Its 21 exact authority kinds are:
 

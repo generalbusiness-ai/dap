@@ -314,6 +314,31 @@ for (const storage of ['memory', 'sqlite'] as const) {
     }
   });
 
+  test('O4 actor-only unknown and placeholder outcomes cannot justify hiding on ' + storage, () => {
+    const kind = 'com.example.scope.result';
+    for (const reason of ['unknown', 'not_in_v1', 'scope_runtime_required', 'package_unavailable', 'unhandled', 'fold_error:qa', 'audience_error:qa']) {
+      const base: Omit<PackageDescriptor, 'id'> = {
+        name: 'com.example.indeterminate-proof', module: import.meta.url,
+        models: { pending: { id: 'pending', config: { reason }, init: () => ({}), fold: (state, _event, _ctx, config) => ({ state, effective: false, reason: (config as { reason: string }).reason }) } },
+        capabilities: [kind],
+        kinds: { [kind]: { kind, schema: {}, handlers: ['pending'], capability: kind, audienceId: 'actor-only', audience: (_ctx, event) => ({ kind: 'named', principals: [event.actor] }) } },
+      };
+      const descriptor = { id: descriptorId(base), ...base };
+      const { journal } = source(storage, false, { ...available, [descriptor.id]: descriptor });
+      try {
+        if (reason !== 'unknown') {
+          effective(act(journal, 'alice', K.attach, { package: descriptor.id }));
+          effective(act(journal, 'alice', K.grant, { principal: people.alice, capabilities: [kind] }));
+        }
+        certified(journal);
+        const result = accepted(act(journal, 'alice', kind, {}));
+        assert.equal(result.verdict?.effective, false);
+        assert.deepEqual(journal.context.state.audiences[result.header.position], { kind: 'named', principals: [people.alice] });
+        assert.throws(() => certified(journal), /authority body has narrower audience/, reason);
+      } finally { journal.close(); }
+    }
+  });
+
   test('O4 public and full semantic verdicts agree at every opening of every certified prefix on ' + storage, t => {
     const { journal, expected } = source(storage); t.after(() => journal.close());
     for (let frontier = 0; frontier <= journal.context.head; frontier++) {

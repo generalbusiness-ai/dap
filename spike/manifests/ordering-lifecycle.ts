@@ -90,7 +90,11 @@ export const publicOpeningRule = {
     'com.example.scope.import-export', 'com.example.scope.recover',
   ].sort(),
   requiredAudience: ['members', 'spine'],
-  ineffectiveActorOnly: 'hidden',
+  ineffectiveActorOnly: {
+    body: 'hidden', known: true, effective: false,
+    indeterminateReasons: ['not_in_v1', 'package_unavailable', 'scope_runtime_required', 'unhandled'],
+    indeterminateReasonPrefixes: ['audience_error:', 'fold_error:'],
+  },
   otherPositions: 'hidden',
   bannedFields: ['amount', 'acceptedAmount', 'counter', 'terms', 'offer_terms'].sort(),
   excludedKinds: ['ai.generalbusiness.dap.disclose', 'ai.generalbusiness.dap.observe'].sort(),

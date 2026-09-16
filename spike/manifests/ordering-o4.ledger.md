@@ -382,3 +382,38 @@ The corrected test first certifies the healthy prefix, then asserts an
 effective attachment with exact actor-only Alice audience refuses immediately.
 It also retains the subsequent capped-offer refusal. Runtime, rule and
 component identities are unchanged by that test correction.
+
+
+The two corrected capped-audience checks and typecheck pass at
+`813c84cb5f39651477f1b89d54d3f34bee6ea3c3`; their separate results are
+[k3-capped-followup.json](ordering-o4-runs/k3-capped-followup.json).
+A subsequent source audit identified a necessary refinement before handoff:
+base-fold `not_in_v1` and `scope_runtime_required` are placeholders, not
+Scope effect decisions. The final K3 rule therefore requires a known,
+determinate ineffective verdict. Its structured `ineffectiveActorOnly`
+object pins `body: 'hidden'`, `known: true`, `effective: false`, the exact
+indeterminate reasons (`not_in_v1`, `package_unavailable`,
+`scope_runtime_required`, `unhandled`) and error prefixes (`audience_error:`,
+`fold_error:`), checked on both top-level and per-model outcomes. The final
+rule id is `sha256:701403e9c51e6449ca797545818a8b63602a20a9b43c2ace064e9a38ab55b66c`.
+The provisional `614f837e` rule remains confined to its earlier source.
+
+Both system scope operations retain spine audiences even for null member
+attempts; admit retains members. The four application Scope kinds retain
+spine unless the publication-capability gate makes a known unauthorized
+attempt actor-only. Scope preserves that authorization failure. Authorized
+placeholders therefore remain open, and ordinary failed member attempts
+can still be certified. Narrowing a binding requires an attachment, whose
+own effective narrow authority body still prevents certification. No extra
+semantic or recursive replay is introduced.
+
+The refined tests add both system scope operations and all four application
+Scope kinds by an ordinary member, followed by release/certification and
+activation, on both backends. A separate producer test refuses unknown and
+placeholder/error-reason actor-only cases. The final component manifest is
+`sha256:bdb831b32915c0b209afcbcdfc8c24e671dcd60eb4dd1ffca17a2b6300ae5746`;
+its scope implementation is
+`sha256:c1bdb2acda60062a57dd2942ecc5824a9d7f63ee1f5205736065989965f8978d`
+and Scope package is
+`sha256:b5eb69362b0e6de96e9dda2997a5399cc061f6f9e184b82145218afb5e2227a0`.
+These remain K3 component identities, not identities for merged K1/K2/K4.

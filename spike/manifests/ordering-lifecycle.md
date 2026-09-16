@@ -180,9 +180,11 @@ extends original members-at-recording visibility; the report must count it
 and must not claim that the original reader set remained unchanged.
 `publicOpeningRule` in the executable manifest names the exact kind list,
 required audiences and banned fields for `dap.fixture.scope-public-openings/2`.
-Its `ineffectiveActorOnly: 'hidden'` exception applies only when the source
-verdict is exactly `effective === false` and the audience is exactly the
-actor alone. That position stays header-only. Every other narrower
+Its `ineffectiveActorOnly` exception requires a known, determinate source
+verdict with `effective === false` and an audience of exactly the actor alone.
+The rule explicitly excludes `not_in_v1`, `package_unavailable`,
+`scope_runtime_required`, `unhandled`, and `audience_error:` / `fold_error:`
+reason prefixes, including per-model reasons. That position stays header-only. Every other narrower
 listed-kind audience still makes the producer refuse certification, including
 an effective actor-only body; it may not hide or widen that body. An absent
 or indeterminate verdict cannot qualify. Every unlisted position stays
@@ -244,6 +246,9 @@ journals on **memory and SQLite**, retaining observed outcomes:
    refuse certification. Bob's unauthorized acceptance/close and Carol's
    malformed grant remain hidden, confer no authority, and do not block a
    later authorized release, certification and activation on memory or SQLite.
+   Ordinary member attempts at both system scope operations and all four
+   application Scope kinds must likewise preserve later certification. Unknown
+   and placeholder actor-only outcomes must refuse, not masquerade as failures.
 7. **Malicious valid signature.** Record a writer's signed omission as
    outside destination protection; source-member recomputation detects it.
 8. **Full/public differential.** For every certified packet, compare public

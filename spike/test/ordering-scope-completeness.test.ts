@@ -7,11 +7,44 @@ import { K, holdsNow } from '../src/foundation.ts';
 import { verifyPublicProof } from '../src/scope-proof.ts';
 import type { ScopeJournal } from '../src/scope.ts';
 import type { Json } from '../src/canon.ts';
+import { SCOPE_KINDS } from '../src/scope-profile.ts';
 
 function accepted(result: ReturnType<ScopeJournal['submit']>) {
   assert.ok(!('refused' in result), JSON.stringify(result));
   return result;
 }
+for (const storage of ['memory', 'sqlite'] as const) test('O4 K3 ordinary member scope attempts cannot strand certification: ' + storage, () => {
+  const world = buildThrough('writer-continued', {}, storage);
+  try {
+    const failures = [];
+    for (const kind of [K.scope_release, K.scope_activate, ...Object.values(SCOPE_KINDS)]) {
+      const failed = accepted(world.emit('S', 'bob', kind, null));
+      assert.equal(failed.verdict?.effective, false, kind);
+      const proof = world.contexts.S!.proof();
+      const position = failed.header.position;
+      const audience = world.contexts.S!.journal.context.state.audiences[position]!;
+      if (kind === K.scope_release || kind === K.scope_activate) {
+        assert.equal(audience.kind, 'spine');
+        assert.equal(typeof proof.positions[position]!.committed, 'string');
+      } else {
+        assert.deepEqual(audience, { kind: 'named', principals: [principals.bob] });
+        assert.equal(proof.positions[position]!.committed, undefined);
+      }
+      failures.push({ kind, failed, audience });
+    }
+    world.startDelivery(); world.describeDestination();
+    const released = accepted(world.release('S'));
+    assert.equal(released.verdict?.effective, true);
+    assert.equal(accepted(world.release('D')).verdict?.effective, true);
+    world.restart('S');
+    const proof = world.contexts.S!.proof();
+    world.startDestination();
+    const activated = accepted(world.activate([{ source: proof, release: released.header.position }, world.proof('D')]));
+    assert.equal(activated.verdict?.effective, true);
+    world.restart('F'); assert.equal(world.contexts.F!.state.activations, 1);
+    recordScope('k3-member-scope-attempts-' + storage, { failures, proof, released, activated, final: world.snapshot() });
+  } finally { world.close(); }
+});
 const attempts: Array<{ name: string; actor: 'bob' | 'carol'; kind: string; payload: Json; reason: string }> = [
   { name: 'bob-unauthorized-accept', actor: 'bob', kind: SALE + 'accept', payload: { offer_id: 'o3' }, reason: 'unauthorized' },
   { name: 'carol-malformed-grant', actor: 'carol', kind: K.grant, payload: { nope: true }, reason: 'malformed' },
