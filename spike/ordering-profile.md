@@ -286,7 +286,12 @@ from the authenticated envelope and new signed header only after the
 backend's serialization call returns with the transaction committed. An
 unexpected head requires reopen. Owned direct Context writes share this
 encoding; cached ordering and control verdict queries use the authenticated
-prefix rather than re-verifying the full chain.
+prefix rather than re-verifying the full chain. This live cache trusts older
+stored rows while the head is unchanged: a rewrite of an older row is not
+detected by live cached authentication. A cold open verifies the full stored
+history and rejects that tampering. Direct backend mutation and hostile
+in-process code remain outside the cooperative Journal ownership boundary;
+the cache is not an integrity monitor for a writable database.
 
 Fixed-writer journals must omit the ordering-admission hook entirely.
 The O1 folded-frontier check and permanent error invalidation remain: cached
@@ -336,10 +341,15 @@ independent evidence of invariant 19.
 
 O4 selects `dap.fixture.scope/1` in genesis. This explicitly adds founding
 participants for the Inspection, Delivery and Fulfilment fixture contexts.
-The founders are authenticated by genesis, validated by the scope profile,
-and used by live and cold foundation admission, member audiences and
-participant observations. Founding participation creates no transferred
-right: F's declared rights remain dormant until the first effective activation.
+A genesis carrying `scope` explicitly opts into the shared foundation's
+scope setup validation and founding-participant semantics, even when opened
+through plain `Journal`. Its valid founders become participants for live and
+cold admission, member audiences and participant observations; a malformed
+setup throws `ScopeProfileError`. A genesis without `scope` keeps the ordinary
+single founder. This is an intentional shared-fold extension. It does not
+make plain `Journal` enforce the full ScopeJournal contract: scope transition,
+release, activation and proof validation still require that facade.
+Founding participation creates no transferred right: F's declared rights remain dormant until the first effective activation.
 S retains its original single founder and invitation trace. The profile and
 its implementation content identity are pinned in every scope genesis.
 
@@ -405,9 +415,23 @@ Activation explicitly discloses the source spine and member authority
 bodies to every F reader. For the fixture that includes Alice, Bob and Kim;
 Carol's offer stub and source participation reach Kim, who was not an S
 member. These are disclosures under the Sale budget's existing
-subject-to-disclosure clause. Private amounts, counters, terms and the
-private Inspection request are never included. This is broader disclosure
-of public source membership data, not an unchanged source recipient set.
+subject-to-disclosure clause. The admitted Inspection proof at S20 also
+contains I's signed genesis mandate: source S's genesis, request position 14,
+offer `o2` and inspector Ivan, plus I1's result `pass:o2`. S14's request body
+was readable only by Alice, Carol and Ivan. Bob already receives these
+request-derived facts through S20's members audience; Kim receives them
+through F1, whose spine audience exposes them to every F reader. The proof
+also exposes I's founding participant Ivan. This is an explicit disclosure
+of request-derived content, not just public source membership data.
+
+The S14 request body and its explicit requester attribution are absent from
+the carried proof. The mandate has no requester field. That narrow statement
+does not promise secrecy of the request's subject, inspector, source position
+or result, nor prevent inference about its requester; Carol's identity and
+offer stub are separately disclosed. Sale amounts, counters and terms remain
+excluded. The focused disclosure observation checks the actual signed S14,
+S20 and F1 openings and their recipient views; delivered proof content is not
+silently narrowed to preserve the former privacy claim.
 
 A dishonest writer can omit an authority body and sign an incomplete
 projection, or tailor projections to recipients. The destination cannot
@@ -499,10 +523,19 @@ exact source, profile and manifest and satisfy the nine tests listed in
    against their source view and recompute the opening set, and a signed
    incomplete certificate is transferable evidence. A retired key remains
    trusted for the earlier prefixes whose headers it signed. Forks, database
-   copies and equivocation remain outside this fixture's protection.
+   copies and equivocation remain outside this fixture's protection. The same
+   signed destination genesis can also be instantiated on separate journal
+   copies, each activating independently with live rights. The release binds
+   one genesis identity, not one globally unique destination instance.
 
 
 ## O4: activation phase and unexpected failures
+
+An authorized owner can release a live source right after ordinary `dap.close`
+on that source. The current scope release semantics do not treat source
+closure as a release prohibition; destination activation still checks its own
+closed-context gate. This documents the existing behavior rather than adding
+a new close policy.
 
 Decision `c2982a6e6756f4fed08e5a82acc8b05a65127745` removes the earlier
 uninterrupted-activation restriction. An admitted destination event can

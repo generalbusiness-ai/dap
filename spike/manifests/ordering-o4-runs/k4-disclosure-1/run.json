@@ -1,0 +1,82 @@
+{
+  "source": "e90b64b2e2b1e3f31a92aa00ecc77126c036d0bf",
+  "base": "edacc32db1495504d10ae7a92f02af272e49e9f2",
+  "stage": "complete",
+  "request": "git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:1b6384e27d6dbfd5a22da3330378776d32ad23ab",
+  "manifest": "sha256:b2501d040c87c31fee574549254902cc00b3a86d98a94098d7b8296bef2c59e6",
+  "scopeImplementation": "sha256:f17f15a85088f645191959d8b1c21b0f415aa7b74449d7b13ee82e2e48dc8bea",
+  "openingRule": "sha256:475b415bbf8b16ccdb1bea078174712c57f2b2955ece9338d762abd60228bad8",
+  "packages": [
+    "sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85",
+    "sha256:e2de918015c64401234c5df0291c8db399c7ce5997f6673662d7cc91a9c9c6e7",
+    "sha256:edea788ed6dab13a1a5ae255909dfa607f9d67a4c38571a35e04c7c9bb8eb623"
+  ],
+  "focused": {
+    "command": [
+      "node",
+      "--test",
+      "spike/test/ordering-lifecycle.test.ts",
+      "spike/test/ordering-scope-disclosure.test.ts"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 1.6662418842315674,
+    "tests": 15,
+    "pass": 15,
+    "fail": 0,
+    "skipped": 0,
+    "todo": 0,
+    "manifestChecks": 13,
+    "actualDisclosureChecks": 2
+  },
+  "typecheck": {
+    "command": [
+      "npm",
+      "run",
+      "typecheck",
+      "--prefix",
+      "spike"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 1.0982251167297363
+  },
+  "observations": {
+    "memory": {
+      "path": "spike/manifests/ordering-o4-runs/k4-disclosure-1/observations/k4-inspection-disclosure-memory.json",
+      "sha256": "477b1d6450395cf66c03a9b18bed6c88b7e894a41848f3f9067f834d0876b545",
+      "phases": [
+        "live",
+        "cold"
+      ],
+      "sourceViewsPerPhase": 4,
+      "destinationViewsPerPhase": 3,
+      "sourceGenesis": "sha256:0d0384bbe662fc90e9495c21f5f9a62629f8f280345f3dd8f1dc7e5bb4d5de2e",
+      "destinationGenesis": "sha256:37af8e9b2a4422de93b6f980e850bee326ff29df27bce09a31505eb791c62f6b"
+    },
+    "sqlite": {
+      "path": "spike/manifests/ordering-o4-runs/k4-disclosure-1/observations/k4-inspection-disclosure-sqlite.json",
+      "sha256": "477b1d6450395cf66c03a9b18bed6c88b7e894a41848f3f9067f834d0876b545",
+      "phases": [
+        "live",
+        "cold"
+      ],
+      "sourceViewsPerPhase": 4,
+      "destinationViewsPerPhase": 3,
+      "sourceGenesis": "sha256:0d0384bbe662fc90e9495c21f5f9a62629f8f280345f3dd8f1dc7e5bb4d5de2e",
+      "destinationGenesis": "sha256:37af8e9b2a4422de93b6f980e850bee326ff29df27bce09a31505eb791c62f6b"
+    }
+  },
+  "scope": "K4 disclosure/specification correction only; no K1-K3 runtime repair in this source",
+  "runtimeAndFixturesUnchangedFrom": "edacc32db1495504d10ae7a92f02af272e49e9f2",
+  "fullSuiteRepeated": false,
+  "campaignRepeated": false,
+  "approvalBoundary": "Component validation only; O4 edacc has changes requested in independent review 10521cbe. Aggregate approval of 936/688 does not approve O4.",
+  "sourceBlobs": {
+    "spike/manifests/ordering-lifecycle.md": "e221bb247dee989ff77b4cc0b8fda68893ebb917",
+    "spike/manifests/ordering-lifecycle.ts": "bb0c3ab5c4a361f939065653ac27ba8ec60dffef",
+    "spike/manifests/ordering-o4.ledger.md": "042db4f03f7378487e61b52e8784ddaf33023587",
+    "spike/ordering-profile.md": "76ef67489ce2fe84bafa534831c2c88d61ba5d2e",
+    "spike/test/ordering-lifecycle.test.ts": "831caf4aa5a5d5bc4d7d930fb3b0f264bc0467bc",
+    "spike/test/ordering-scope-disclosure.test.ts": "ae8dfeb90e3aaab8f35c46ce67d99e8bcdee1dc6",
+    "spike/test/ordering-scope-evidence.test.ts": "c5076f0c6318b8987fd28332b5369555038c047d"
+  }
+}

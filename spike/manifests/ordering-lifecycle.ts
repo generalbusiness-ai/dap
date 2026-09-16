@@ -73,6 +73,18 @@ export const amountPrivacy = {
   forbiddenExportFields: ['amount', 'acceptedAmount', 'counter', 'terms', 'offer_terms'],
 };
 
+// K4 explicitly accounts for the request-derived data already carried by the
+// admitted Inspection proof. Source is a symbolic context name, not a fake id.
+export const inspectionDisclosure = {
+  request: { context: 'S', position: 14, readers: ['alice', 'carol', 'ivan'], bodyInPublicProof: false },
+  admit: { context: 'S', position: 20, audience: 'members', readers: ['alice', 'bob', 'carol', 'ivan'] },
+  activation: { context: 'F', position: 1, audience: 'spine', currentParticipants: ['alice', 'bob', 'kim'] },
+  mandate: { source: 'S', prefix: 14, offer: 'o2', inspector: 'ivan' },
+  inspectionFounders: ['ivan'],
+  result: { offer: 'o2', result: 'pass:o2' },
+  requesterFieldInMandate: false,
+};
+
 // Ratified pre-formal-O4-baseline disclosure/completeness rule. O4 must pin
 // this identity in its implemented certificate and destination profile.
 export const publicOpeningRule = {
