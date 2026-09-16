@@ -1,0 +1,16 @@
+{
+  "name": "dap-spike",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "dap spike harness: fixture code for the visibility and ordering spikes. Not a product.",
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "test": "node --test 'test/**/*.test.ts'",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.8.0"
+  }
+}
