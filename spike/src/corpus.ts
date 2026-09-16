@@ -5,7 +5,7 @@
 
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { PackageDescriptor } from './descriptor.ts';
+import { packageIn, type PackageDescriptor } from './descriptor.ts';
 import type { Script, Step } from './script.ts';
 
 export interface CorpusEntry {
@@ -33,7 +33,7 @@ export function deserializeSteps(steps: unknown[], byName: Record<string, Packag
   return steps.map((s) => {
     const step = s as Step & { pkg?: unknown };
     if (step.type === 'attach') {
-      const pkg = byName[String(step.pkg)];
+      const pkg = packageIn(byName, String(step.pkg));
       if (!pkg) throw new Error('corpus names an unknown package: ' + String(step.pkg));
       return { ...step, pkg };
     }
