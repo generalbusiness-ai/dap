@@ -13,6 +13,12 @@ views: notes/2026-09-14-one-series-many-views.md
 
 ## What the app is
 
+Alice sells a guitar. Bob and Carol bid for it without seeing each other's
+prices. Ivan inspects it. Dana joins after it is sold and is shown what
+Alice chooses to share. This note walks that sale as each of them would
+see it on a phone, and says at every step what the design lets the screen
+show and what it withholds.
+
 A general-purpose dap mobile app is one client for every package. It has no
 code for sales, bookings or clubs. It renders what a model's `observe`
 projection exposes: an anchor for the referent, a thread of visible events,
@@ -47,7 +53,9 @@ comprehension criterion from the design note's goals. Each path below is
 written so a reader can check that all three are answered at every step.
 
 Positions are the ones in the views note's trace. A step is written
-`[position, kind]`. Audiences: S is the spine, every participant present and
+`[position, kind]`, where the position is the one the event eventually
+occupies once recorded; Alice writes the listing before anything is
+recorded, and it lands at position 1 after the genesis at 0. Audiences: S is the spine, every participant present and
 future; M is members, the participants as of that position; otherwise the
 named people.
 
@@ -104,8 +112,8 @@ against each offer.
 counter is visible to Alice and Bob only. `observe.offers[]` shows o1 as
 "countered at 780" for Alice.
 
-**Attaching Inspection.** Carol asks in the thread whether the neck has been
-inspected. Alice taps Attach package and picks Inspection
+**Attaching Inspection.** Alice decides an inspection would help. She taps
+Attach package and picks Inspection
 `[11, dap.attach]`. The attach is spine: every participant, present and
 future, sees the sale gain an Inspection model from position 12 onward. Her
 client fetches the package and its presentation bindings. Nothing before
@@ -324,15 +332,16 @@ Dana as a second Seller `[20, dap.invite]` and Dana accepts
 sale went.
 
 **Before disclosure.** Dana's client receives the spine from 0: genesis,
-listing, every acceptance, the attach, the close, and her own invitation at
-20. It receives headers for every position whose audience excluded her:
+listing, every invitation acceptance, the attach, the close, and her own
+invitation at 20. It receives headers for every position whose audience excluded her:
 the three invitations addressed to others (2, 4, 12), every terms event,
 the counter and the inspection request. It also receives only headers for
 the members-audience stubs and accepts at positions 6, 8, 15, 17 and 18,
 because membership at join gives no retroactive access; the audience of an
 event is set at its position and Dana was not a member then.
 
-So Dana's `observe.thread[]` is the spine plus headers.
+So Dana's `observe.thread[]` is the spine, her invitation at 20, and
+headers.
 `observe.hidden_count` is 13. `observe.sale` is `closed`; the close is
 spine, so she knows the sale ended. She does not know who won or what was
 offered. `observe.offers[]` is empty. Her screen answers the three
@@ -372,11 +381,15 @@ The paths above are written so the constraints show. A client may soften
 them in presentation; it may not hide them.
 
 - **Participation is public inside the context.** Every member sees every
-  other member as a context-scoped principal with a role. Bob and Carol know
-  a second Buyer exists from the moment they join.
-- **Offer existence is public inside the context.** The stub tells every
-  member who offered, whether an offer was withdrawn or replaced, and which
-  offer won. Only the terms are private.
+  other member as a context-scoped principal with a role. Carol sees Bob on
+  entry; Bob learns a second Buyer exists when Carol's acceptance is
+  recorded at 5.
+- **Offer existence is public among the members at the time.** A stub is
+  readable by everyone who was a member when it was recorded, and tells
+  them who offered and whether the offer was withdrawn or replaced. Someone
+  who joins later holds only its header until it is disclosed, as Ivan and
+  Dana show. The acceptance, not the stub, is what names the winner. Only
+  the terms are private to author and seller.
 - **The hidden count is shown.** Every screen states how many positions the
   viewer cannot read, as numbered gaps. A header says nothing about the kind
   of event it hides, so the client labels nothing it cannot establish from

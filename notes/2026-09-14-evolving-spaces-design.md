@@ -15,6 +15,35 @@ narrative: notes/2026-09-15-sale-as-experienced.md
 
 # Evolving Spaces: minimal design for situational applications
 
+## In one paragraph
+
+dap lets people coordinate around a sale, a booking, a trip or any other
+shared activity. Each activity records signed actions in one agreed order.
+Packages supply the rules that turn those actions into the current state
+and the actions available next. People may read different parts of the
+history, but the design requires their views to agree on every shared
+decision. In a guitar sale, buyers keep their prices private while seeing
+enough to agree which offer was accepted. This is a proposed design; the
+experiments that would establish its key properties have not yet run.
+
+Reading path: the [sale as experienced](2026-09-15-sale-as-experienced.md)
+for the concrete picture; this note for the objects and rules; the
+[views note](2026-09-14-one-series-many-views.md) for the consistency
+requirement; the [ordering note](2026-09-14-ordering.md) for storage,
+trust and failure.
+
+Six words, as dap uses them:
+
+- **fold**: apply the rules to the recorded events, in order, to calculate
+  state and outcomes;
+- **model**: the rules and state for one part of an activity (§3);
+- **principal**: an identity that signs actions (§8);
+- **affordance**: an action the model currently offers this person or agent
+  (§4);
+- **content id**: an identifier derived from exact content, so that
+  changing the content changes the identity (§7);
+- **spike**: a small experiment that tests one design claim.
+
 ## Thesis
 
 An **evolving space** is a bounded *semantic interaction* embedded in an
@@ -470,9 +499,9 @@ spike tests it with one unrelated private attach that must not stale and one
 relevant binding change that must.
 
 The active, fully resolved composition in a view is its **semantic
-environment**: an immutable closure of package and artifact content ids,
-bindings and the runtime profile, derived from genesis and the effective
-`dap.attach` events visible in that view. There need not be one environment
+environment**: the exact package versions, artifacts, bindings and runtime
+profile needed to interpret the history, fixed by content id, derived from
+genesis and the effective `dap.attach` events visible in that view. There need not be one environment
 for everyone in a context. Failure to fetch a package pauses the viewer; it
 does not remove them from an audience.
 
@@ -502,18 +531,24 @@ transport interfaces.
 ## 5. Lifecycle: semantics can precede the space
 
 ```text
-standalone initiating event
-        │  carries semantics + invitation capability and/or rendezvous route
-        ▼
-responses
-        │  ├──► redeem invitation → sequenced in the initiator's context
-        │  └──► reach the rendezvous → either party crystallizes, adopting both
-        ▼
+one room                                   separate contexts
+────────                                   ─────────────────
+sign L (referent, description, route)      sign L (referent, description, route)
+sign G adopting L                          publish L
+publish envelope {L, G, route}             responses reach the route
+responder reaches the route                either party signs a new G
+issue that responder's invitation            adopting L and the response
+responder redeems it into G                and invites the other
+        │                                          │
+        ▼                                          ▼
 sequenced interaction
         ├── attach packages      ├── invite, grant, disclose
         ├── admit assertions     ├── spawn, split, join
         └── close, become inert, or continue as something else
 ```
+
+`L` never names the genesis that adopts it. Whether the published bytes
+name an existing genesis is what selects the path.
 
 This supports intent-first interaction: an actor publishes a structured
 intention without first entering a provider's application.[^vrm] The
@@ -523,8 +558,9 @@ Qredo's unpublished Rendezvous Protocol.[^qrp]
 
 Whether several responses become **views of one context** (private threads,
 one shared decision) or **separate contexts** (independent order, trust and
-lifecycle; the same origin adopted by each) is decided by what the initiating
-event carries. Separate contexts do not enforce a shared constraint merely by
+lifecycle; the same origin adopted by each) is decided by what is published:
+an envelope naming an existing genesis, or a bare `L` with a route.
+Separate contexts do not enforce a shared constraint merely by
 sharing a referent; they need a common decision authority or a coordinating
 context. Choose separate contexts when independence is wanted, or when the
 view-consistency property cannot be met at acceptable disclosure cost.
@@ -801,8 +837,11 @@ seven further findings, R1 to R7: the destination commitment (above), the
 pause comparison (above), three narrative corrections (unsupported labels on
 hidden positions, the timing of the mistaken accept, late-joiner wording),
 the handover's predecessor bindings (ordering note §6) and the missing
-attach in the ordering lifecycle (ordering note §9). All are applied in this
-revision.
+attach in the ordering lifecycle (ordering note §9). A third review
+(report `5a412b87`) found the §5 lifecycle diagram still teaching the old
+invitation-in-listing flow and three overstated narrative summaries, and
+gave a writing review. All are applied in this revision, including the
+introduction, the six first-use definitions and the reading path above.
 
 ---
 

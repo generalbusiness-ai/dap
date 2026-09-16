@@ -5,10 +5,18 @@ Project name for this phase: **dap**; system namespace `ai.generalbusiness.dap.`
 Dated notes (YYYY-MM-DD-title.md) to capture designs, implementation plans,
 and discussion summaries.  Frontmatter "status" should be maintained.
 
-The goals, in priority order, are in the design note's §0: evolvability,
-ease of programming as an agent, comprehension simplicity for a person,
-lightweight decentralization. Each has one criterion the spikes report
-against.
+dap lets people coordinate around a sale, a booking or any other shared
+activity. Each activity records signed actions in one agreed order;
+packages supply the rules that turn those actions into state and next
+actions; people may read different parts of the history, but their views
+must agree on every shared decision. This is a proposed design whose
+experiments have not yet run.
+
+**First reading:** start with the sale as experienced, then the design
+note, then the views note, then ordering. The design note opens with the
+goals (§0), in priority order: evolvability, ease of programming as an
+agent, comprehension simplicity for a person, lightweight
+decentralization. Each has one criterion the spikes report against.
 
 Four notes, each owning one concern:
 
