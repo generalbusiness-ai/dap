@@ -1,0 +1,55 @@
+{
+  "source": "2a57bd2ab0b1e30912f1e2bc044951d71477c5cc",
+  "node": "v26.8.2",
+  "components": {
+    "O1": "aaa447d9e5ac4d88f07f144d46f2f5e63752c399",
+    "O2": "b6d156163285c8eaab3d05766dd9b0de35fef79b",
+    "O3": "c527584d5399f20dff33625e20cb97d237bdad98",
+    "O5": "598170fa5907655bc48c346a2dd4dd98853314a8"
+  },
+  "previous_integration_candidate": "3dc6b0953f91661edcc059b56157d349ff31c5b1",
+  "manifest": "sha256:d94090b21ce42f2eec4a046558b3a776895d82905c2096a19df1f5f02e011f86",
+  "public_opening_rule": "sha256:475b415bbf8b16ccdb1bea078174712c57f2b2955ece9338d762abd60228bad8",
+  "commands": [
+    {
+      "command": [
+        "node",
+        "--test",
+        "test/append.test.ts",
+        "test/codec.test.ts",
+        "test/journal.test.ts",
+        "test/context-freshness.test.ts",
+        "test/ordering-lifecycle.test.ts",
+        "test/ordering-retry.test.ts",
+        "test/ordering-handover.test.ts",
+        "test/control-verifier.test.ts",
+        "test/control-journal-integration.test.ts"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "results": {
+    "tests": 149,
+    "pass": 149,
+    "fail": 0,
+    "skipped": 0,
+    "todo": 0,
+    "duration_ms": 2197.178875,
+    "groups": {
+      "append_codec_journal_freshness_lifecycle": 73,
+      "O2": 9,
+      "O3": 12,
+      "O5": 55
+    }
+  },
+  "campaign": "not rerun; original source-specific measurements preserved",
+  "scope": "focused preparatory integration, not O4 transfer execution or review approval"
+}

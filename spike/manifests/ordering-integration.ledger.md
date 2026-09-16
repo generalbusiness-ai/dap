@@ -73,7 +73,7 @@ remains deferred as stated above.
 The next integration combines the first common candidate
 `3dc6b0953f91661edcc059b56157d349ff31c5b1` with O1 candidate
 `aaa447d9e5ac4d88f07f144d46f2f5e63752c399`. O1's own combined measurement
-belongs to `2c727b7` and its run 14; the aggregate receives a separate frozen
+belongs to `2c727b7d8db28c17b51a0aaa34ea5151f2eb44a4` and its run 14; the aggregate receives a separate frozen
 source and focused run below. All earlier source identities and raw outputs
 remain unchanged. This is preparatory integration pending O1 acceptance and
 the independent reviews of O2, O3 and O5.
@@ -97,3 +97,23 @@ new raw/owned stale-fold and error regressions alongside retry, handover and
 independent control verification. It does not execute O4 transfers or repeat
 the 600-seed visibility campaign. Historical model outcomes and budgets
 remain those reported in V6.
+
+
+## Focused integration run 2
+
+Frozen source: `2a57bd2ab0b1e30912f1e2bc044951d71477c5cc`. This is the single merge of final O1 candidate
+`aaa447d9e5ac4d88f07f144d46f2f5e63752c399` into the first common candidate.
+All **149 focused tests passed**, with zero failures, skips or TODOs;
+typecheck passed. The groups were 73 append/codec/journal/freshness/lifecycle
+checks, nine O2 retry/admission checks, 12 O3 handover checks, and 55 O5
+independent control-verifier checks. Test duration was 2,197.2 ms on Node
+26.8.2. Exact source, component heads, commands and exit codes are in
+[run-2.json](ordering-integration-runs/run-2.json); raw output is in
+[run-2.txt](ordering-integration-runs/run-2.txt).
+
+The record commit adds only this ledger, the three component ledger links
+and the two run records. No runtime or test changed after the frozen source,
+and the focused run required no further repair. Original run 1 and every
+component run remain byte-identical. No 600-seed campaign, O4 runtime result,
+review approval, main merge or publication is claimed. The component reporting
+artifacts share the resulting candidate and cite this exact boundary.
