@@ -144,3 +144,27 @@ test('O1-G1 freshness is checked inside serialization without scanning history f
   assert.equal(backend.head()!.position, 2);
   assert.equal(backend.retry('g1-invite'), undefined);
 });
+
+for (const storage of ['memory', 'sqlite'] as const) test('O1-G1 a current raw Context preserves successful writes and exact retries on ' + storage, () => {
+  const file = path();
+  let backend: Backend = storage === 'memory' ? new MemoryBackend() : sqlite(file);
+  createJournal(backend).close();
+  if (storage === 'sqlite') backend = sqlite(file);
+  const raw = Context.restore(backend, packages);
+  if (storage === 'memory') {
+    // Ownership alone does not stale a raw fold when the owner makes no writes.
+    Journal.open({ backend, writerKey: keys.writer, packages }).close();
+  }
+  const revoke = raw.intent(people.alice, K.revoke, { principal: people.alice, capabilities: [CAP.invite] }, { action_id: 'g1-current-revoke', nonce: 'c4'.repeat(16) });
+  const first = raw.submit(revoke, raw.credentialFor(people.alice));
+  assert.ok(!('refused' in first) && first.verdict?.effective);
+  const before = backend.entries();
+  const retry = raw.submit(revoke); // Exact retry still precedes credential admission.
+  assert.ok(!('refused' in retry) && retry.replay);
+  assert.deepEqual(retry, { ...first, replay: true });
+  assert.deepEqual(backend.entries(), before);
+  const continued = raw.submit(invitation(raw), raw.credentialFor(people.alice));
+  assert.ok(!('refused' in continued) && continued.verdict?.reason === 'unauthorized');
+  assert.equal(continued.header.position, first.header.position + 1);
+  if (backend instanceof SQLiteBackend) backend.close();
+});
