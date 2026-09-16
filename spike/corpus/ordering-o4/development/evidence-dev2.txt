@@ -1,0 +1,60 @@
+failed mutation { path: '/body/payload/grants/0', operation: 'remove' } AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
++ actual - expected
+
++ 'unauthorized'
+- 'destination_mismatch'
+
+    at TestContext.<anonymous> (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/ordering-scope-evidence.test.ts:142:16)
+    at Test.runInAsyncScope (node:async_hooks:226:14)
+    at Test.run (node:internal/test_runner/test:1402:25)
+    at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+    at Test.postRun (node:internal/test_runner/test:1542:19)
+    at Test.run (node:internal/test_runner/test:1467:12)
+    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: 'unauthorized',
+  expected: 'destination_mismatch',
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+✔ O4 release proof pins come from F genesis: r=p+1, exact prefix and source writer (805.66775ms)
+✔ O4 altered public proof bodies cannot activate a destination (716.862334ms)
+✔ O4 actual revoked release source cannot be repaired by stripping its revocation (489.806541ms)
+✔ O4 public/full scope replay agrees at every opened release-prefix position (772.665291ms)
+✔ O4 actual activation, exports and F views disclose public source bodies without private bytes (823.985458ms)
+✖ O4 every materialized signed F genesis field/container is bound before either release (551.17775ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 5
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4255.761334
+
+✖ failing tests:
+
+test at spike/test/ordering-scope-evidence.test.ts:121:1
+✖ O4 every materialized signed F genesis field/container is bound before either release (551.17775ms)
+  AssertionError [ERR_ASSERTION]: unrecognized exception: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'unauthorized'
+  - 'destination_mismatch'
+  
+      at recognized (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/ordering-scope-evidence.test.ts:119:10)
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/ordering-scope-evidence.test.ts:145:62)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: undefined,
+    operator: 'fail',
+    diff: 'simple'
+  }

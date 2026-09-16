@@ -1,0 +1,128 @@
+{
+  "source": "b35b267ea5392e5361905018ee350ec4df07aa55",
+  "manifest": "sha256:fc55bfa123891e750f7bbe3a0d9cb33b5f65c07750db08bc984544ed2dd6b378",
+  "scopeProfile": "dap.fixture.scope/1",
+  "scopeImplementation": "sha256:96f811a0a50ec77a81f14768d01565ce3d38dd2ae1472c722c6ae96422bdae03",
+  "joinPolicy": "sha256:ac852ebab4f55816e55cd0fd71b7280267bffaca097046d4880b24ac63b01455",
+  "publicProofRule": "sha256:475b415bbf8b16ccdb1bea078174712c57f2b2955ece9338d762abd60228bad8",
+  "packages": [
+    "sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85",
+    "sha256:e2de918015c64401234c5df0291c8db399c7ce5997f6673662d7cc91a9c9c6e7",
+    "sha256:cd4037a57efd089fba49b5db78c3bda02a89403ef4300006ee9604033e120e05"
+  ],
+  "integration": {
+    "o1": "03a943dd81dc444bb10435d50b0e8648d2eda424",
+    "o3": "c527584d5399f20dff33625e20cb97d237bdad98",
+    "o1FinalEvidence": "4cfc69376fbd513c4cacf5baa0d32c316797cf89"
+  },
+  "stage": "complete",
+  "focused": {
+    "tests": 100,
+    "pass": 100,
+    "fail": 0,
+    "todo": 0,
+    "healthyBoundariesPerBackend": 20,
+    "adverseCasesPerBackend": 27,
+    "materializedGenesisMutationsPerBackend": 209,
+    "observationFiles": 58
+  },
+  "typecheck": "pass",
+  "full": {
+    "command": "npm test --prefix spike",
+    "exit_code": 0,
+    "tests": 315,
+    "pass": 311,
+    "fail": 0,
+    "skipped": 0,
+    "todo": 4,
+    "todo_policy": "User-retained Club negative and three approved V6 A5 followups execute; none skipped",
+    "campaigns": [
+      {
+        "model": "Booking",
+        "seeds": 200,
+        "milliseconds": 80775,
+        "coverage": {
+          "joins": 955,
+          "attaches": 198,
+          "disclosures": 1629,
+          "requests": 2553,
+          "occupancies": 1497,
+          "effectiveOccupancies": 652,
+          "linkedOccupancies": 471,
+          "frees": 383,
+          "cancels": 419,
+          "effectiveCancels": 324,
+          "ticks": 1630,
+          "entries": 12000
+        }
+      },
+      {
+        "model": "Club",
+        "seeds": 200,
+        "milliseconds": 117324,
+        "coverage": {
+          "joins": 991,
+          "attaches": 200,
+          "disclosures": 1939,
+          "applications": 629,
+          "votes": 1575,
+          "effectiveVotes": 1001,
+          "admits": 343,
+          "effectiveAdmits": 126,
+          "standings": 514,
+          "grants": 246,
+          "entries": 11939
+        }
+      },
+      {
+        "model": "Sale",
+        "seeds": 200,
+        "milliseconds": 75179,
+        "coverage": {
+          "joins": 942,
+          "attaches": 199,
+          "disclosures": 1722,
+          "offers": 195,
+          "replacements": 25,
+          "withdrawals": 147,
+          "counters": 157,
+          "accepts": 114,
+          "effectiveAccepts": 20,
+          "closes": 295,
+          "entries": 11047,
+          "privateDisclosures": 0,
+          "inspectionAttaches": 0,
+          "inspectionRequests": 118,
+          "unboundInspectionRequests": 118
+        }
+      }
+    ]
+  },
+  "commands": [
+    {
+      "command": "DAP_O4_RECORD_DIR=spike/manifests/ordering-o4-runs/run-2-observations node --test spike/test/scope-proof.test.ts spike/test/ordering-scope-lifecycle.test.ts spike/test/ordering-scope-evidence.test.ts spike/test/ordering-scope-regressions.test.ts",
+      "exit_code": 0
+    },
+    {
+      "command": "npm run typecheck --prefix spike",
+      "exit_code": 0
+    },
+    {
+      "command": "npm test --prefix spike",
+      "exit_code": 0
+    }
+  ],
+  "fixes_after_run_1": {
+    "runtime": 0,
+    "profile": 0,
+    "manifest": 0,
+    "observation_recorder": 1
+  },
+  "genesis_mutations_per_backend": {
+    "destination_mismatch": 30,
+    "unauthorized": 5,
+    "profile invalid_genesis": 154,
+    "codec malformed_envelope": 18,
+    "profile unsupported_profile": 2
+  }
+}

@@ -1,0 +1,361 @@
+{
+  "source_snapshot": "e627460daf788d6dbf6d3f8cbaa28f8f0fc0368b",
+  "status": "Known policy failure; original expectation retained as executing TODO",
+  "expected": {
+    "votes_effective": [
+      false,
+      false
+    ],
+    "admit_effective": false,
+    "member_grants_after_admit": 0
+  },
+  "clubA5": "standing-reason",
+  "manifest": "sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde",
+  "package": "sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e",
+  "nonce": "v6-followup:a5:standing-reason",
+  "target": {
+    "position": 9,
+    "id": "sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+    "kind": "com.example.club.standing_reason",
+    "effective": true
+  },
+  "votes": [
+    10,
+    11
+  ],
+  "admit": 12,
+  "grants": [
+    {
+      "position": 13,
+      "payload": {
+        "principal": "alice",
+        "roles": [
+          "Member"
+        ]
+      }
+    }
+  ],
+  "readers": [
+    {
+      "reader": "alice",
+      "votes": [
+        true,
+        true
+      ],
+      "admit": true
+    },
+    {
+      "reader": "bob",
+      "votes": [
+        true,
+        true
+      ],
+      "admit": true
+    },
+    {
+      "reader": "carol",
+      "votes": [
+        true,
+        true
+      ],
+      "admit": true
+    },
+    {
+      "reader": "dana",
+      "votes": [
+        true,
+        true
+      ],
+      "admit": true
+    },
+    {
+      "reader": "frank",
+      "votes": [
+        true,
+        true
+      ],
+      "admit": true
+    }
+  ],
+  "findings": [
+    "*@10 invariant: vote at 10 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+    "*@11 invariant: vote at 10 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+    "*@11 invariant: vote at 11 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+    "*@12 invariant: vote at 10 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+    "*@12 invariant: vote at 11 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+    "*@12 invariant: admit at 12 of unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+    "*@13 invariant: vote at 10 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+    "*@13 invariant: vote at 11 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+    "*@13 invariant: admit at 12 of unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"
+  ],
+  "steps": [
+    {
+      "step": {
+        "type": "invite",
+        "inviter": "alice",
+        "invitee": "bob",
+        "grants": {
+          "roles": [
+            "Committee",
+            "Member"
+          ]
+        }
+      },
+      "entries": [
+        {
+          "id": "sha256:1cd4cd1c3b0ffc6884370cbb9d75deace66b85bf6c650c44f63400d306d7920e",
+          "kind": "ai.generalbusiness.dap.invite"
+        }
+      ]
+    },
+    {
+      "step": {
+        "type": "accept",
+        "invitee": "bob"
+      },
+      "entries": [
+        {
+          "id": "sha256:39aa2439256a95b04087b2f285626a4b0bd8d24652c28753e00b322c4140baba",
+          "kind": "ai.generalbusiness.dap.accept_invite"
+        }
+      ]
+    },
+    {
+      "step": {
+        "type": "invite",
+        "inviter": "alice",
+        "invitee": "carol",
+        "grants": {
+          "roles": [
+            "Committee",
+            "Member"
+          ]
+        }
+      },
+      "entries": [
+        {
+          "id": "sha256:da31de3a21d459bbde38aacc48766635fbddbad71cf4d772575e9e7de8d749b8",
+          "kind": "ai.generalbusiness.dap.invite"
+        }
+      ]
+    },
+    {
+      "step": {
+        "type": "accept",
+        "invitee": "carol"
+      },
+      "entries": [
+        {
+          "id": "sha256:70e92440be9b93badac5ca1c684c57672ed3e83f0dc98a98f193c70fe1da2bd1",
+          "kind": "ai.generalbusiness.dap.accept_invite"
+        }
+      ]
+    },
+    {
+      "step": {
+        "type": "invite",
+        "inviter": "alice",
+        "invitee": "dana",
+        "grants": {
+          "roles": []
+        }
+      },
+      "entries": [
+        {
+          "id": "sha256:82066a312c85860039f63e39fd97ed5abe3e2ba74e7684dc5296b7adb88f63a8",
+          "kind": "ai.generalbusiness.dap.invite"
+        }
+      ]
+    },
+    {
+      "step": {
+        "type": "accept",
+        "invitee": "dana"
+      },
+      "entries": [
+        {
+          "id": "sha256:720923b61c08be8c6e196d688f3dba317614c519e80e0be1f193c86b6bc3e9a4",
+          "kind": "ai.generalbusiness.dap.accept_invite"
+        }
+      ]
+    },
+    {
+      "step": {
+        "type": "invite",
+        "inviter": "alice",
+        "invitee": "frank",
+        "grants": {
+          "roles": [
+            "Member"
+          ]
+        }
+      },
+      "entries": [
+        {
+          "id": "sha256:b2c53e1d54dc0ec05c0c6b67afe498df6d2b51eec4aec49c367359d8c0b60e2b",
+          "kind": "ai.generalbusiness.dap.invite"
+        }
+      ]
+    },
+    {
+      "step": {
+        "type": "accept",
+        "invitee": "frank"
+      },
+      "entries": [
+        {
+          "id": "sha256:c624a58e82907beadbd925b6194f58599fbf88a2c3074979cd3ecf46f593cb47",
+          "kind": "ai.generalbusiness.dap.accept_invite"
+        }
+      ]
+    },
+    {
+      "step": {
+        "type": "act",
+        "actor": "alice",
+        "kind": "com.example.club.standing_reason",
+        "payload": {
+          "member": "dana",
+          "text": "private reason, not an application"
+        },
+        "nonce": "a5:8"
+      },
+      "entries": [
+        {
+          "id": "sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+          "kind": "com.example.club.standing_reason"
+        }
+      ]
+    },
+    {
+      "step": {
+        "type": "act",
+        "actor": "bob",
+        "kind": "com.example.club.vote",
+        "payload": {
+          "application_id": "sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+          "choice": "yes"
+        },
+        "nonce": "a5:9"
+      },
+      "entries": [
+        {
+          "id": "sha256:28583cb1694a7351446b112cfbb524e5461c58e121c49b03c074a3d993715756",
+          "kind": "com.example.club.vote"
+        }
+      ],
+      "application": "sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"
+    },
+    {
+      "step": {
+        "type": "act",
+        "actor": "carol",
+        "kind": "com.example.club.vote",
+        "payload": {
+          "application_id": "sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+          "choice": "yes"
+        },
+        "nonce": "a5:10"
+      },
+      "entries": [
+        {
+          "id": "sha256:64d93c1e0993f8529264dff3764d6fb6b43cff1bd0674921c8e595e32a71a422",
+          "kind": "com.example.club.vote"
+        }
+      ],
+      "application": "sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"
+    },
+    {
+      "step": {
+        "type": "act",
+        "actor": "alice",
+        "kind": "com.example.club.admit",
+        "payload": {
+          "application_id": "sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"
+        },
+        "nonce": "a5:11"
+      },
+      "entries": [
+        {
+          "id": "sha256:f578658d5cf3fa76bcbfbb13eb4939f8fc90e495e11d4faa31b1920bf325eb55",
+          "kind": "com.example.club.admit"
+        },
+        {
+          "id": "sha256:3423e61343784c1f9cb6fbc3b4ef9d4a13068c98c19f5da5e08388e62835ab72",
+          "kind": "ai.generalbusiness.dap.grant"
+        }
+      ],
+      "application": "sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"
+    }
+  ],
+  "minimal": [
+    {
+      "step": {
+        "type": "invite",
+        "inviter": "alice",
+        "invitee": "bob",
+        "grants": {
+          "roles": [
+            "Committee",
+            "Member"
+          ]
+        }
+      },
+      "entries": [
+        {
+          "id": "sha256:1cd4cd1c3b0ffc6884370cbb9d75deace66b85bf6c650c44f63400d306d7920e",
+          "kind": "ai.generalbusiness.dap.invite"
+        }
+      ]
+    },
+    {
+      "step": {
+        "type": "accept",
+        "invitee": "bob"
+      },
+      "entries": [
+        {
+          "id": "sha256:39aa2439256a95b04087b2f285626a4b0bd8d24652c28753e00b322c4140baba",
+          "kind": "ai.generalbusiness.dap.accept_invite"
+        }
+      ]
+    },
+    {
+      "step": {
+        "type": "act",
+        "actor": "alice",
+        "kind": "com.example.club.standing_reason",
+        "payload": {
+          "member": "dana",
+          "text": "private reason, not an application"
+        },
+        "nonce": "a5:8"
+      },
+      "entries": [
+        {
+          "id": "sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+          "kind": "com.example.club.standing_reason"
+        }
+      ]
+    },
+    {
+      "step": {
+        "type": "act",
+        "actor": "bob",
+        "kind": "com.example.club.vote",
+        "payload": {
+          "application_id": "sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+          "choice": "yes"
+        },
+        "nonce": "a5:9"
+      },
+      "entries": [
+        {
+          "id": "sha256:28583cb1694a7351446b112cfbb524e5461c58e121c49b03c074a3d993715756",
+          "kind": "com.example.club.vote"
+        }
+      ],
+      "application": "sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"
+    }
+  ]
+}

@@ -1,0 +1,112 @@
+✔ O4 public proof reconstructs signed Sale facts and grants across handover on memory (98.067917ms)
+✔ O4 public proof reconstructs signed Sale facts and grants across handover on sqlite (111.4665ms)
+✔ O4 source pins distinguish genesis, initial writer and requested frontier (91.29375ms)
+✔ O4 public proof rejects malformed, tampered and incomplete authenticated prefixes (87.53175ms)
+✔ O4 public proof rejects missing, changed and forged handover evidence (96.022875ms)
+✔ O4 public proof rejects private bodies supplied at their genuine signed positions (83.57025ms)
+✔ O4 public proof rejects a public kind carrying nested private extras despite valid signatures (84.308292ms)
+✖ O4 public proof rejects private data attached outside its declared shape (91.331ms)
+✖ O4 public proof requires semantic packages and disclosed attachment bodies (102.405959ms)
+✖ O4 public proof cannot hide an authenticated grant body as a private position (92.029375ms)
+✖ O4 public proof cannot hide an authenticated revoke body as a private position (89.882584ms)
+✖ O4 public proof cannot omit a withdrawal to turn a refused acceptance into a decision (104.0135ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 7
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1203.243417
+
+✖ failing tests:
+
+test at test/scope-proof.test.ts:172:1
+✖ O4 public proof rejects private data attached outside its declared shape (91.331ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/scope-proof.test.ts:177:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /private|unexpected|shape|field/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at test/scope-proof.test.ts:181:1
+✖ O4 public proof requires semantic packages and disclosed attachment bodies (102.405959ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/scope-proof.test.ts:186:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /semantic|binding|missing|public/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at test/scope-proof.test.ts:189:50
+✖ O4 public proof cannot hide an authenticated grant body as a private position (92.029375ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/scope-proof.test.ts:193:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /semantic|binding|missing|public|grant|revoke/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at test/scope-proof.test.ts:189:50
+✖ O4 public proof cannot hide an authenticated revoke body as a private position (89.882584ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/scope-proof.test.ts:193:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /semantic|binding|missing|public|grant|revoke/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at test/scope-proof.test.ts:196:1
+✖ O4 public proof cannot omit a withdrawal to turn a refused acceptance into a decision (104.0135ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/scope-proof.test.ts:202:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /semantic|binding|missing|public|withdraw/,
+    operator: 'throws',
+    diff: 'simple'
+  }

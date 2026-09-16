@@ -1,0 +1,99 @@
+✔ O4 actual signed lifecycle matches all 20 predeclared boundaries (681.567958ms)
+✔ O4 actual adverse trace: one-source-release-missing (482.803791ms)
+✖ O4 actual adverse trace: withheld-release-evidence (566.696625ms)
+✔ O4 actual adverse trace: restart-before-activation (532.694875ms)
+✔ O4 actual adverse trace: repeated-activation-after-restart (752.648083ms)
+✔ O4 actual adverse trace: exact-retry-activation (569.460792ms)
+✔ O4 actual adverse trace: timeout-after-hidden-activation (573.393917ms)
+✔ O4 actual adverse trace: duplicate-inspection-import (213.704459ms)
+✔ O4 actual adverse trace: duplicate-state-import (575.599875ms)
+✖ O4 actual adverse trace: stale-source-proposal-at-source (391.15225ms)
+✔ O4 actual adverse trace: stale-source-proposal-at-destination (557.571ms)
+✔ O4 actual adverse trace: unauthorized-release (383.627875ms)
+✔ O4 actual adverse trace: release-unowned-right (364.764333ms)
+✔ O4 actual adverse trace: release-already-released-right (432.978083ms)
+✔ O4 actual adverse trace: receipt-for-ineffective-release (533.170375ms)
+✖ O4 actual adverse trace: receipt-for-unauthorized-release (471.909083ms)
+✔ O4 actual adverse trace: wrong-destination-release (552.264875ms)
+✔ O4 actual adverse trace: two-sources-export-same-right (489.968042ms)
+✔ O4 actual adverse trace: mismatched-buyer (545.335291ms)
+✔ O4 actual adverse trace: stale-export-prefix (402.815167ms)
+✔ O4 actual adverse trace: spend-before-activation-S (493.976ms)
+✔ O4 actual adverse trace: spend-before-activation-D (474.227917ms)
+✔ O4 actual adverse trace: spend-before-activation-F (472.87325ms)
+✔ O4 actual adverse trace: spend-before-activation-F-deliver (469.959708ms)
+✔ O4 actual adverse trace: origin-spends-transferred-right (481.401417ms)
+✔ O4 actual adverse trace: move-preserves-retry (316.738458ms)
+✔ O4 actual adverse trace: unassigned-writer-candidates (299.286917ms)
+✔ O4 actual adverse trace: retired-writer-continuation (340.8915ms)
+ℹ tests 28
+ℹ suites 0
+ℹ pass 25
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 13504.690083
+
+✖ failing tests:
+
+test at spike/test/ordering-scope-lifecycle.test.ts:72:40
+✖ O4 actual adverse trace: withheld-release-evidence (566.696625ms)
+  Error: scope proof: authority body has narrower audience
+      at file:///private/tmp/dap-o4-transfer-lifecycle/spike/src/scope-proof.ts:61:75
+      at Array.map (<anonymous>)
+      at publicProof (file:///private/tmp/dap-o4-transfer-lifecycle/spike/src/scope-proof.ts:58:29)
+      at ScopeJournal.proof (file:///private/tmp/dap-o4-transfer-lifecycle/spike/src/scope.ts:283:69)
+      at LifecycleWorld.proof (file:///private/tmp/dap-o4-transfer-lifecycle/spike/fixtures/ordering-lifecycle-runner.ts:153:113)
+      at file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/ordering-scope-lifecycle.test.ts:19:52
+      at Array.map (<anonymous>)
+      at perform (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/ordering-scope-lifecycle.test.ts:17:63)
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/ordering-scope-lifecycle.test.ts:78:22)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+
+test at spike/test/ordering-scope-lifecycle.test.ts:72:40
+✖ O4 actual adverse trace: stale-source-proposal-at-source (391.15225ms)
+  AssertionError [ERR_ASSERTION]: {"header":{"activation":0,"commitment":"sha256:d37ea5db1d14359129434b8e71a40fa9cea2d409b9959ca2efffb456bdac9bef","genesis":"sha256:a8146e64cdb816ff6059ae295b81e20a5c042ca7fb3481745a5a3f33022022ec","position":25,"prev":"sha256:406481915330def72981d95330279d40550f2240fcee8b869445bb20ea4b2632","seq_sig":"6b4mW7JBlG9QOqST3B6H5nOzHHhjjd3rO2oDWfQIcQxaknnDJUg7G-TSPdMpQJeLQFs4UnwMY9mJL6YH2n_iDQ"},"headerHash":"sha256:c71ec891238b2070f542bd969780a5108c9d319c4668ac9fc900860a7f9947cc","replay":false,"verdict":{"known":true,"authorized":true,"effective":false,"reason":"ineffective","perModel":{"sale":{"effective":false,"reason":"not_open"}}}}
+  + actual - expected
+  
+    {
+  +   reason: 'ineffective',
+  -   reason: 'closed',
+      verdict: 'ineffective'
+    }
+  
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/ordering-scope-lifecycle.test.ts:79:14)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: { verdict: 'ineffective', reason: 'ineffective' },
+    expected: { verdict: 'ineffective', reason: 'closed' },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at spike/test/ordering-scope-lifecycle.test.ts:72:40
+✖ O4 actual adverse trace: receipt-for-unauthorized-release (471.909083ms)
+  AssertionError [ERR_ASSERTION]: The "string" argument must be of type string. Received type undefined (undefined)
+      at file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/ordering-scope-lifecycle.test.ts:22:58
+      at Array.map (<anonymous>)
+      at perform (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/ordering-scope-lifecycle.test.ts:17:63)
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/ordering-scope-lifecycle.test.ts:78:22)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /narrower audience/,
+    operator: 'match',
+    diff: 'simple'
+  }

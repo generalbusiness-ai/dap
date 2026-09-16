@@ -1,0 +1,26 @@
+{
+  "source": "747a0905dc80f15a108fd62bdc5399e9f31f4431",
+  "earlierSource": "940506b473abc808666560d5e757811f985fcdaa",
+  "probeSha256": "4af1c74a2882755ed34fbfc5a68a505a0f5571e8688aeb5bd5422f18b365cea2",
+  "originalProbe": {
+    "exit": 1,
+    "expected": "stops at first attempted invitation after lost committed revocation response",
+    "error": "Context: owning facade is closed or inactive",
+    "output": "qa-original-probe-fixed.txt"
+  },
+  "focusedRegressions": {
+    "command": "node --test --test-name-pattern='lost reply through direct Context.submit' test/journal.test.ts",
+    "exit": 0,
+    "tests": 2,
+    "pass": 2,
+    "fail": 0,
+    "skipped": 0,
+    "todo": 0,
+    "storage": [
+      "memory",
+      "sqlite"
+    ],
+    "output": "qa-direct-error-regressions.txt"
+  },
+  "inspection": "Context.submit wraps append, receipt lookup and fold in lease-invalidating catch. Journal.submit retains its own catch. Inactive lease reserves ownership until close/release; reopen rebuilds state before exact retry."
+}
