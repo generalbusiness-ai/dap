@@ -55,6 +55,8 @@ export interface AdmissionContext {
   acceptKind: string;
   /** The position of the attach (or genesis) whose binding an application event of `kind` is judged under now. */
   activationOf(kind: string): number | undefined;
+  /** For an attach event: the positions whose installed models and bindings it builds on now. */
+  requiresOf(event: EventBody): number[] | undefined;
 }
 
 export function deepFreeze<T>(value: T): T {
@@ -69,18 +71,30 @@ export function snapshot<T>(value: T): T {
   return deepFreeze(structuredClone(value));
 }
 
-export function makeHeader(genesis: string, position: number, prev: string, commitment: string, activation?: number): { header: Header; headerHash: string } {
-  const header: Header = { genesis, position, prev, commitment, ...(activation !== undefined ? { activation } : {}) };
+export interface HeaderEvidence {
+  activation?: number;
+  requires?: number[];
+}
+
+export function makeHeader(genesis: string, position: number, prev: string, commitment: string, evidence: HeaderEvidence = {}): { header: Header; headerHash: string } {
+  const header: Header = {
+    genesis,
+    position,
+    prev,
+    commitment,
+    ...(evidence.activation !== undefined ? { activation: evidence.activation } : {}),
+    ...(evidence.requires !== undefined ? { requires: [...evidence.requires] } : {}),
+  };
   return { header, headerHash: contentId(header as unknown as Json) };
 }
 
-function construct(backend: Backend, genesis: string, ev: EventBody, activation?: number): { entry: Entry; receipt: Receipt } {
+function construct(backend: Backend, genesis: string, ev: EventBody, evidence: HeaderEvidence = {}): { entry: Entry; receipt: Receipt } {
   const frozen = snapshot(ev);
   const id = contentId(frozen as unknown as Json);
   const head = backend.head();
   const position = head ? head.position + 1 : 0;
   const prev = head ? head.headerHash : ZERO_HASH;
-  const { header, headerHash } = makeHeader(genesis, position, prev, id, activation);
+  const { header, headerHash } = makeHeader(genesis, position, prev, id, evidence);
   const entry: Entry = deepFreeze({ position, event: frozen, id, header, headerHash });
   const receipt: Receipt = deepFreeze({ header, headerHash, replay: false });
   return { entry, receipt };
@@ -115,9 +129,10 @@ export function append(backend: Backend, sub: Submission, ctx: AdmissionContext)
       if (!sub.credential || sub.credential.principal !== ev.actor) return { refused: true, reason: 'no_credential' };
       if (!ctx.isParticipant(ev.actor)) return { refused: true, reason: 'not_a_participant' };
     }
-    // 4. Position and header, stating the activation an application event is judged under. 5. One write.
-    const activation = ev.kind.startsWith(SYSTEM_PREFIX) ? undefined : ctx.activationOf(ev.kind);
-    const { entry, receipt } = construct(backend, ctx.genesis, ev, activation);
+    // 4. Position and header, stating the evidence a viewer needs to judge the event: the activation an
+    // application event is judged under, or the positions an attach builds on. 5. One write.
+    const evidence: HeaderEvidence = ev.kind.startsWith(SYSTEM_PREFIX) ? { requires: ctx.requiresOf(ev) } : { activation: ctx.activationOf(ev.kind) };
+    const { entry, receipt } = construct(backend, ctx.genesis, ev, evidence);
     backend.commit(entry, deepFreeze({ actionId: ev.action_id!, contentId: id, receipt }), consume);
     return receipt;
   });

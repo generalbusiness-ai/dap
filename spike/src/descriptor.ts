@@ -267,6 +267,31 @@ export function attach(env: Environment, pkg: PackageDescriptor, opts: AttachOpt
   return { ok: true, env: { ...env, packages: [...env.packages, pkg], kinds, attachedAt: { ...env.attachedAt, [pkg.id]: opts.position ?? 0 } } };
 }
 
+/**
+ * The positions an attach of `pkg` builds on in `env`: the attach that
+ * installed each model its handlers name (when another package provides
+ * it), and the attach that produced the current binding of each kind it
+ * rebinds. Sorted, without duplicates. The sequencer records these in
+ * the attach's header as its dependency evidence.
+ */
+export function attachRequires(env: Environment, pkg: PackageDescriptor, resolution: AttachResolution = {}): number[] {
+  const out = new Set<number>();
+  for (const [kind, binding] of Object.entries(pkg.kinds)) {
+    const existing = env.kinds[kind];
+    if (existing) out.add(existing.attachedAt);
+    const handlers = resolution[kind]?.handlers ?? binding.handlers;
+    for (const h of handlers) {
+      if (pkg.models[h]) continue;
+      const found = findModelWithPackage(env, h);
+      if (found) {
+        const at = env.attachedAt[found.pkg.id];
+        if (at !== undefined) out.add(at);
+      }
+    }
+  }
+  return [...out].sort((a, b) => a - b);
+}
+
 export function findModelWithPackage(env: Environment, id: string): { model: ModelSpec; pkg: PackageDescriptor } | undefined {
   for (const pkg of env.packages) if (pkg.models[id]) return { model: pkg.models[id]!, pkg };
   return undefined;

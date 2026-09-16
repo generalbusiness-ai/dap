@@ -101,6 +101,12 @@ export function interpretView(p: Principal, view: ViewEntry[], basis: number, av
     if (ev.kind === K.attach && i > 0) {
       const pkg = (ev.payload as unknown as AttachPayload)?.package;
       if (typeof pkg === 'string' && !available[pkg]) return paused(i, 'package_unavailable');
+      // A disclosed attach builds on earlier attaches: the header names them. One that is hidden
+      // here means the disclosure was dependency-incomplete, and the attach cannot be judged. A
+      // visible requirement was itself judged when it was reached, so the chain closes.
+      if (v.via === 'disclosure') {
+        for (const r of v.header.requires ?? []) if (!view[r]?.event) return paused(i, 'dependency_missing');
+      }
     }
     if (i === 0) {
       const gp = ev.payload as unknown as { bindings?: { package: string }[] };
@@ -113,7 +119,8 @@ export function interpretView(p: Principal, view: ViewEntry[], basis: number, av
       // event was judged under at its own position. The intent's own provenance cannot serve, since
       // a hidden attach between the intent's activation and its sequencing changes the verdict.
       // If the header's activation is hidden in this view, the event cannot be judged. If it is
-      // visible, this view resolves the same binding the sequencer did, so the fold's verdict,
+      // visible, that attach was judged when it was reached, with its own requirements checked the
+      // same way, so this view resolves the binding the sequencer did and the fold's verdict,
       // effective or stale_binding, is the genuine one.
       const activation = v.header.activation;
       if (activation === undefined) {

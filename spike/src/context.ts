@@ -4,7 +4,7 @@
 // (design note §2, first trusted profile).
 
 import { contentId, nonce, type Json } from './canon.ts';
-import { bindingId, type PackageDescriptor } from './descriptor.ts';
+import { attachRequires, bindingId, type AttachResolution, type PackageDescriptor } from './descriptor.ts';
 import {
   F0_ID,
   K,
@@ -152,6 +152,12 @@ export class Context {
         },
         acceptKind: K.accept_invite,
         activationOf: (kind) => state.env.kinds[kind]?.attachedAt,
+        requiresOf: (ev) => {
+          if (ev.kind !== K.attach) return undefined;
+          const p = ev.payload as { package?: string; resolution?: AttachResolution } | null;
+          const pkg = p?.package ? this.packages[p.package] : undefined;
+          return pkg ? attachRequires(state.env, pkg, p?.resolution) : undefined;
+        },
       },
     );
     if ('refused' in r) return r;

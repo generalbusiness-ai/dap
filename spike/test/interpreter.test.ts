@@ -410,3 +410,50 @@ test('J1: a saved intent sequenced after a hidden attach is a missing dependency
   }
   assert.deepEqual(checkContext(ctx, { participants: [BOB], frontiers: [6] }), []);
 });
+
+// ----- checker's fifth V2 review (workroom report 82371892), K1 -----
+
+test('K1: a disclosed attach that builds on a hidden attach is a missing dependency: the header names what it requires', () => {
+  const base = noopBase();
+  const ctx = Context.create({ creator: ALICE, packages: { [base.id]: base }, bindings: [{ package: base.id }], grants: [{ principal: ALICE, capabilities: ALICE_CAPS }] });
+  accept(ctx, BOB, invite(ctx, ALICE, BOB, [])); // 1, 2
+  const audit = pkg('audit', { 'com.example.base.tick': ['audit'] });
+  // a package with no models of its own, declaring the kind over the two installed models
+  const reorderBase: Omit<PackageDescriptor, 'id'> = {
+    name: 'reorder',
+    models: {},
+    capabilities: [],
+    kinds: { 'com.example.base.tick': { kind: 'com.example.base.tick', schema: { v: 1 }, handlers: ['base', 'audit'], audienceId: 'members', audience: () => MEMBERS } },
+  };
+  const reorder: PackageDescriptor = { id: descriptorId(reorderBase), ...reorderBase };
+  ctx.packages[audit.id] = audit;
+  ctx.packages[reorder.id] = reorder;
+  const a = ctx.act(ALICE, K.attach, { package: audit.id, resolution: { 'com.example.base.tick': { handlers: ['base', 'audit'] } }, audience: [] }); // 3, hidden from Bob
+  assert.ok(!('refused' in a) && a.verdict?.effective);
+  const b = ctx.act(ALICE, K.attach, { package: reorder.id, resolution: { 'com.example.base.tick': { handlers: ['audit', 'base'] } }, audience: [] }); // 4, builds on 3
+  assert.ok(!('refused' in b) && b.verdict?.effective);
+  assert.deepEqual(ctx.entries[4]!.header.requires, [0, 3]); // the genesis binding of the kind and the attach that installed audit
+  const tick = ctx.act(ALICE, 'com.example.base.tick', {}); // 5, activation 4
+  assert.ok(!('refused' in tick) && tick.verdict?.effective && tick.verdict.perModel?.['audit']?.effective && tick.verdict.perModel?.['base']?.effective);
+  assert.equal(ctx.entries[5]!.header.activation, 4);
+  ctx.act(ALICE, K.disclose, { positions: [4, 5], to: [BOB] }); // 6: the attach and the event, not what the attach builds on
+  const view6 = ctx.view(BOB, 6);
+  const r = interpretView(BOB, view6, 6, ctx.packages);
+  assert.equal(r.kind, 'paused');
+  if (r.kind === 'paused') {
+    assert.equal(r.at, 4);
+    assert.equal(r.reason, 'dependency_missing');
+    assert.ok(isDeepStrictEqual(observeInterpreted(r.last, view6), oracleObserve(ctx, BOB, 3, 6)));
+  }
+  assert.deepEqual(checkContext(ctx, { participants: [BOB], frontiers: [6] }), []);
+  ctx.act(ALICE, K.disclose, { positions: [3], to: [BOB] }); // 7: the requirement arrives
+  const view7 = ctx.view(BOB, 7);
+  const r2 = interpretView(BOB, view7, 7, ctx.packages);
+  assert.equal(r2.kind, 'interpreted');
+  if (r2.kind === 'interpreted') {
+    assert.equal(r2.outcomes[4]?.effective, true);
+    assert.equal(r2.outcomes[5]?.effective, true);
+    assert.ok(isDeepStrictEqual(observeInterpreted(r2, view7), oracleObserve(ctx, BOB, 7, 7)));
+  }
+  assert.deepEqual(checkContext(ctx, { participants: [BOB], frontiers: [7] }), []);
+});
