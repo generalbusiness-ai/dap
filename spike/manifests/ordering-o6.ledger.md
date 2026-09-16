@@ -7,7 +7,8 @@ including O3, O2, O1 and V6.
 ## Declared demonstration
 
 The new `test/fixtures/o6-bootstrap.ts` is an executable in-process route
-registry. It reuses the ordinary v2 codec, Journal, SQLite, invitation
+registry. The initial experiment uses movable profile `/2`, the existing
+codec, Journal, SQLite, invitation
 admission and recipient interpretation. It introduces no foundation kind,
 admission rule, production dispatcher or network service.
 
@@ -299,3 +300,29 @@ creation, invitation, view authentication, retry/reopen and the malformed
 publication/route boundary under `/3`. It does not repeat O4's concurrent
 suite, the aggregate's tests or the 600-seed campaigns. No final aggregate
 acceptance, O4 acceptance, publication or landing is implied.
+
+## Profile /3 run 4
+
+Frozen source: `8c5598ff79c017067ae5eed117ad6d0c05f46400`.
+Node `v26.8.2`, Darwin. Both O6 bootstrap tests pass with zero failures,
+skips or TODOs. Whole-tree typecheck and the direct SQLite CLI exit 0.
+This is a focused O6 measurement, not another combined suite or campaign.
+Exact commands and exits: [run-4.json](ordering-o6-runs/run-4.json).
+Raw output: [run-4-tests.txt](ordering-o6-runs/run-4-tests.txt),
+[typecheck-4.txt](ordering-o6-runs/typecheck-4.txt), and
+[run-4-demo.json](ordering-o6-runs/run-4-demo.json). CLI stderr is empty.
+
+The actual demonstration uses profile `dap.fixture.single-writer/3` and
+context `sha256:080afaa386822dba15e5f694e16c554cf305ff06f031df9709b8a01935b1503c`.
+Initial admission, retry and reopened retry share receipt
+`sha256:c6e06aeedc59bac6120eaba9d463ea2ffe3d3d76a520e08a15167a8c4daf91e6`.
+After reopen there are four entries and four unchanged pending publications.
+The exact signed standalone L and route equal run 3; G and its descendants
+are newly generated and signed under `/3`. Their old identities and complete
+transcripts remain in runs 1–3. No fixture implementation repair was needed.
+
+Runtime, fixture, test and manifest source remained unchanged during this
+run. Only evidence and report updates follow it. The source includes O4's
+frozen `e8ccb2e` inputs; O4's own concurrent run and upstream independent
+acceptance must be recorded separately. The four Club negatives are untouched
+but were not selected by this two-test O6 command.

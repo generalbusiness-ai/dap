@@ -1,0 +1,58 @@
+{
+  "input_snapshot": "8c5598ff79c017067ae5eed117ad6d0c05f46400",
+  "node": "v26.8.2",
+  "scope": "O6 bootstrap only, whole-tree typecheck and real SQLite CLI; no repeated O4, aggregate or campaign suite",
+  "o4_input": "e8ccb2ef2c21510b84d0466193c2b3381f89316b",
+  "runs": [
+    {
+      "name": "run-4-tests",
+      "command": [
+        "node",
+        "--test",
+        "test/ordering-bootstrap.test.ts"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 0.205,
+      "summary": {
+        "tests": 2,
+        "pass": 2,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    {
+      "name": "typecheck-4",
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 1.759
+    },
+    {
+      "name": "run-4-demo",
+      "command": [
+        "node",
+        "test/fixtures/o6-bootstrap.ts",
+        "/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/dap-o6-demo-profile3-m0e8fokl/journal.db"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 0.137
+    }
+  ],
+  "demo": {
+    "profile": "dap.fixture.single-writer/3",
+    "genesis": "sha256:080afaa386822dba15e5f694e16c554cf305ff06f031df9709b8a01935b1503c",
+    "origin": "sha256:1a2a4d30944bc14b399a54f9c19419201730d6874aed4c4fcb5c697fccca1fd6",
+    "route": "fixture:ordering-o6/guitar",
+    "receipt": "sha256:c6e06aeedc59bac6120eaba9d463ea2ffe3d3d76a520e08a15167a8c4daf91e6",
+    "entriesAfterReopen": 4,
+    "pendingPublications": 4,
+    "standaloneLUnchangedFromRun3": true,
+    "signedGenesisChangedFromRun3": true,
+    "stderrEmpty": true
+  }
+}
