@@ -1,0 +1,4 @@
+open lookups 3
+{"n":1,"original":true,"message":"Error: cold-registry-fault"}
+{"n":2,"original":true,"message":"Error: cold-registry-fault"}
+{"n":3,"returned":true,"foldErrors":[{"known":true,"authorized":false,"effective":false,"reason":"fold_error:cold-registry-fault"}]}

@@ -67,9 +67,10 @@ function bindingsOf(state: FoundationState): Record<string, string> {
 
 /**
  * Interpret a view. `available` is what the principal's client can fetch;
- * `limit` interprets a prefix (used for `last`).
+ * `limit` interprets a prefix (used for `last`). Strict semantic verification
+ * opts into original exception propagation instead of legacy error verdicts.
  */
-export function interpretView(p: Principal, view: ViewEntry[], basis: number, available: Record<string, PackageDescriptor>, limit: number = view.length - 1): Interpretation {
+export function interpretView(p: Principal, view: ViewEntry[], basis: number, available: Record<string, PackageDescriptor>, limit: number = view.length - 1, options: { throwOnError?: boolean } = {}): Interpretation {
   const genesis = view[0];
   if (!genesis?.event) throw new Error('the genesis is always visible');
   const state = initialFoundationState(genesis.header.commitment);
@@ -83,7 +84,7 @@ export function interpretView(p: Principal, view: ViewEntry[], basis: number, av
     basis,
     at,
     reason,
-    last: interpretView(p, view, basis, available, at - 1) as Interpreted,
+    last: interpretView(p, view, basis, available, at - 1, options) as Interpreted,
   });
 
   for (let i = 0; i <= limit && i < view.length; i++) {
@@ -133,7 +134,7 @@ export function interpretView(p: Principal, view: ViewEntry[], basis: number, av
       }
     }
     const origin = i > 0 && i <= origins;
-    const verdict = foldEntry(state, { entry: asEntry(v), origin, packages: available, entries: chain });
+    const verdict = foldEntry(state, { entry: asEntry(v), origin, packages: available, entries: chain, throwOnError: options.throwOnError });
     outcomes[i] = verdict;
   }
   return { kind: 'interpreted', principal: p, basis, frontier: Math.min(limit, view.length - 1), state, outcomes, bindings: bindingsOf(state) };

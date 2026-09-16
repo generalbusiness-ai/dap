@@ -97,7 +97,7 @@ export function verifyPublicProof(proof: PublicProof, expected: { genesis: strin
     if (signature.length !== 64 || signature.toString('base64url') !== certificate.sig || !verify(null, Buffer.from(canonicalize(body)), publicKeyOf(ordering.writer), signature)) throw new ScopeProofError('scope proof: invalid completeness signature');
     return view;
   });
-  const interpreted = interpretView('scope-evidence-reader', view, proof.frontier, packages);
+  const interpreted = interpretView('scope-evidence-reader', view, proof.frontier, packages, proof.frontier, { throwOnError: true });
   if (interpreted.kind !== 'interpreted') throw new ScopeProofError('scope proof: missing semantic or binding evidence at ' + interpreted.at);
   return { view, interpreted };
 }

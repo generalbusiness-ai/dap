@@ -1,0 +1,20 @@
+lookups in one submit 120
+N 10 effective
+N 46 effective
+N 52 effective
+N 58 effective
+N 64 effective
+N 70 effective
+N 76 effective
+N 88 effective
+N 94 effective
+N 100 effective
+N 106 effective
+N 112 {"known":true,"authorized":true,"effective":false,"reason":"ineffective_release"}
+memory {
+ "fault blocked blocked coldHead=1 coldActs=1 replay:true final=1/1": 107,
+ "ok:true   coldHead=1 coldActs=1 replay:true final=1/1": 11,
+ "other:scope: handler failure at 11: fold_error:injected-registry-fault   coldHead=1 coldActs=1 replay:true final=1/1": 1,
+ "ok:false   coldHead=1 coldActs=1 replay:true final=1/1": 1
+}
+anomalies [{"n":40,"first":"other:scope: handler failure at 11: fold_error:injected-registry-fault","coldHead":1,"coldActs":1,"retry":"replay:true","finalHead":1,"finalActs":1}]
