@@ -7,13 +7,15 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
-import { checkContext, describeViolation, type Violation } from '../src/checker.ts';
+import { checkContext, describeViolation, observeInterpreted, type Violation } from '../src/checker.ts';
 import { Context } from '../src/context.ts';
 import { K, holdsNow } from '../src/foundation.ts';
 import { generate } from '../src/generate.ts';
+import { interpretView } from '../src/interpret.ts';
 import { foldPrefix, oracleObserve } from '../src/oracle.ts';
 import { applyStep, replay, type Pending } from '../src/script.ts';
 import { CLUB, clubPackage } from '../fixtures/club.ts';
+import { pkg } from './helpers.ts';
 import {
   BOB,
   CAROL,
@@ -142,6 +144,75 @@ test('case 4, late committee member: a vote before any disclosure of the applica
   act(ctx, pending, BOB, CLUB + 'vote', { application_id: app.id, choice: 'yes' });
   const admit = act(ctx, pending, FOUNDER, CLUB + 'admit', { application_id: app.id });
   assert.equal(admit.verdict.effective, true);
+  const violations = fullCheck(ctx);
+  assert.deepEqual(violations, [], brief(violations));
+});
+
+for (const activationFirst of [false, true]) {
+  test(`Club disclosure across activation: ${activationFirst ? 'activation before payload' : 'payload before activation pauses until closure'}`, () => {
+    const { ctx, pending } = club([DANA, ERIN]);
+    const before = act(ctx, pending, DANA, CLUB + 'apply', { statement: 'before activation' });
+    act(ctx, pending, FOUNDER, K.grant, { principal: ERIN, roles: ['Committee', 'Member'] });
+    act(ctx, pending, FOUNDER, K.disclose, { positions: [before.position], to: [ERIN] });
+    const disclosedBefore = ctx.head;
+    assert.equal(ctx.entries[before.position]!.header.activation, 0);
+    assert.equal(ctx.view(ERIN)[before.position]?.event?.kind, CLUB + 'apply');
+
+    const audit = pkg('club_audit', { [CLUB + 'apply']: ['club_audit'] });
+    ctx.packages[audit.id] = audit;
+    const attach = act(ctx, pending, FOUNDER, K.attach, {
+      package: audit.id, audience: [], resolution: { [CLUB + 'apply']: { handlers: ['club', 'club_audit'] } },
+    });
+    assert.equal(attach.verdict.effective, true);
+    const after = act(ctx, pending, DANA, CLUB + 'apply', { statement: 'after activation' });
+    assert.equal(after.verdict.effective, true);
+    assert.equal(ctx.entries[after.position]!.header.activation, attach.position);
+    assert.equal(ctx.view(ERIN)[attach.position]?.event, undefined);
+    assert.equal(ctx.view(ERIN)[after.position]?.event, undefined);
+    const first = activationFirst ? attach.position : after.position;
+    const second = activationFirst ? after.position : attach.position;
+    act(ctx, pending, FOUNDER, K.disclose, { positions: [first], to: [ERIN] });
+    const basis = ctx.head;
+    const view = ctx.view(ERIN, basis);
+    const partial = interpretView(ERIN, view, basis, ctx.packages);
+    if (activationFirst) {
+      assert.equal(partial.kind, 'interpreted');
+      if (partial.kind === 'interpreted') assert.deepEqual(observeInterpreted(partial, view), oracleObserve(ctx, ERIN, basis, basis));
+    } else {
+      assert.equal(partial.kind, 'paused');
+      if (partial.kind !== 'paused') return;
+      assert.equal(partial.at, after.position);
+      assert.equal(partial.reason, 'dependency_missing');
+      assert.deepEqual(observeInterpreted(partial.last, view), oracleObserve(ctx, ERIN, after.position - 1, basis));
+    }
+    act(ctx, pending, FOUNDER, K.disclose, { positions: [second], to: [ERIN] });
+    const resumedView = ctx.view(ERIN);
+    const resumed = interpretView(ERIN, resumedView, ctx.head, ctx.packages);
+    assert.equal(resumed.kind, 'interpreted');
+    if (resumed.kind === 'interpreted') assert.deepEqual(observeInterpreted(resumed, resumedView), oracleObserve(ctx, ERIN, ctx.head, ctx.head));
+    assert.deepEqual(oracleObserve(ctx, ERIN, before.position, disclosedBefore), oracleObserve(ctx, ERIN, before.position, ctx.head), 'later activation preserves the earlier application');
+    const violations = fullCheck(ctx);
+    assert.deepEqual(violations, [], brief(violations));
+  });
+}
+
+test('recorded plan mismatch: a second application by an existing Member is admitted under the frozen manifest', (t) => {
+  const { ctx, pending } = club([DANA, ERIN]);
+  act(ctx, pending, FOUNDER, K.grant, { principal: ERIN, roles: ['Member'] });
+  const admissions: number[] = [];
+  const applications = ['first application', 'second application'].map((statement) => act(ctx, pending, DANA, CLUB + 'apply', { statement }));
+  for (const app of applications) {
+    act(ctx, pending, BOB, CLUB + 'vote', { application_id: app.id, choice: 'yes' });
+    act(ctx, pending, CAROL, CLUB + 'vote', { application_id: app.id, choice: 'yes' });
+    const alreadyMember = holdsNow(ctx.state, DANA, CLUB + 'member');
+    const admit = act(ctx, pending, FOUNDER, CLUB + 'admit', { application_id: app.id });
+    assert.equal(admit.verdict.effective, true);
+    assert.equal(alreadyMember, admissions.length > 0);
+    assert.equal(proj(ctx, ERIN).applications.find((a) => a.id === app.id)?.applicant, null);
+    admissions.push(admit.position);
+  }
+  // This proves the acceptance gap; it is not an expected-policy pass.
+  t.diagnostic(`plan §4.2 violated: admit at ${admissions[1]} is effective after Dana already received Member at ${admissions[0]! + 1}; frozen-manifest checks still pass`);
   const violations = fullCheck(ctx);
   assert.deepEqual(violations, [], brief(violations));
 });

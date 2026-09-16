@@ -66,7 +66,9 @@ themselves.
 
 ## Run 1
 
-Snapshot commit: see `git log`, "checker run 1". Manifest and package as
+No separate run-1 snapshot was committed. The baseline and harness
+commits are preserved, and run 2 records the results retrospectively;
+this does not meet the plan's one-snapshot-per-run protocol. Manifest and package as
 at the baseline; the harness commit `4d38cf1` ("a generated series
 replays to identical content ids") preceded the run: generated ids did
 not survive replay because nonces were random, so generated votes named
@@ -162,3 +164,42 @@ event and no widening.
   through them; exercised by the campaign's joins after disclosures.
 
 Totals: 1 fix, 0 added kinds, budget within
+
+## Validation run 3: evidence recovery and acceptance audit
+
+Input snapshot: commit named "spike V5: freeze validation run 3 evidence".
+This run reconstructs the three recorded baseline failures (81, 107, 182)
+from the exact baseline source, preserved at `fixtures/club-baseline.ts`
+so its imports and package identity do not change. These are newly
+reconstructed traces, not files retained from the original run. The
+script checks that the linked representation reproduces every original
+entry before shrinking. Corpus replay preserves application-id and
+disclosure-position links when deleting a producer or changing the
+package; a use whose producer was removed is omitted. Minimality means
+no single step deletion under those rules preserves the mismatch.
+
+The candidate and frozen manifest are unchanged from run 2. The run adds
+explicit disclosure-before/after-activation checks, the incomplete
+dependency pause and resumption, and a counterexample to plan §4.2's
+already-Member condition. The counterexample is reported as a known
+acceptance failure, not a successful policy test. Results will be
+recorded in the corresponding result snapshot.
+
+### Acceptance gap: a second application admits an existing Member
+
+Plan §4.2 requires an admission to be ineffective when the applicant
+already holds Member. The frozen manifest omitted that condition, and
+the baseline design choices above explicitly declined to enforce it.
+Two applications by Dana can each gain two yes votes; the first admission
+grants Dana Member, and the second admission still succeeds. The
+`already_admitted` rule applies only to the same application id.
+
+Ordinary members can read the votes, admissions and Member grants, but
+cannot link the opaque application id to its private applicant. A fold
+that checks the private applicant only where readable would break view
+consistency. Implementing the plan's rule needs additional public
+evidence or a changed trust/schema contract, declared in a revised
+manifest. Under plan §4.7 that is a new experiment. The existing passing
+campaign and one-fix result apply only to the narrower frozen manifest;
+V5 is incomplete against the approved plan until this gap is resolved.
+No model fix or experiment revision is included in validation run 3.
