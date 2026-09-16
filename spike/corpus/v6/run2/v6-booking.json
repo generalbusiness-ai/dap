@@ -1,0 +1,78 @@
+{
+  "snapshot": "742e64a06d06226b456f489eb53deacc1bc9f5db",
+  "corpus": "v6-booking",
+  "manifest": "sha256:cb4514f4967891077ad78e1dd0fba4c17438fb32b98cd8bd790df8531b35dd16",
+  "package": "sha256:0556de5c337344eaa15afcbbbf5d22aa82c384bd6841d4ffb0c07185d4b7ec27",
+  "mutant": "sha256:cad57243b94ef8b451168fc4265cc7fe0463af104d43faced5f8712da2ec9983",
+  "nonce": "v6:booking",
+  "originalSteps": 4,
+  "steps": [
+    {
+      "step": {
+        "type": "invite",
+        "inviter": "alice",
+        "invitee": "bob",
+        "grants": {
+          "roles": [
+            "Booker"
+          ]
+        }
+      },
+      "entries": [
+        {
+          "id": "sha256:42d07670362f88fe8988e267a1536926ba8165f29be51dbfd980371a047c2930",
+          "kind": "ai.generalbusiness.dap.invite"
+        }
+      ]
+    },
+    {
+      "step": {
+        "type": "accept",
+        "invitee": "bob"
+      },
+      "entries": [
+        {
+          "id": "sha256:8a5603ece26d4a971c03c9a4d9be8bbab7ee515faf8e214867e0ad79d9a46b0c",
+          "kind": "ai.generalbusiness.dap.accept_invite"
+        }
+      ]
+    },
+    {
+      "step": {
+        "type": "act",
+        "actor": "alice",
+        "kind": "com.example.booking.occupancy",
+        "payload": {
+          "booking_id": "b1",
+          "room": "room-1",
+          "start": 1,
+          "end": 3
+        },
+        "nonce": "v6:3"
+      },
+      "entries": [
+        {
+          "id": "sha256:31588b6760af1ccb145acf78489915373aca9a9614dac855977ae2f24c1c9174",
+          "kind": "com.example.booking.occupancy"
+        }
+      ]
+    },
+    {
+      "step": {
+        "type": "act",
+        "actor": "alice",
+        "kind": "com.example.booking.free",
+        "payload": {
+          "booking_id": "b1"
+        },
+        "nonce": "v6:4"
+      },
+      "entries": [
+        {
+          "id": "sha256:cfd639cbd2ad61d9d1072479a17e906843e4dc09f68c06c4217e4a5e40f8b2c1",
+          "kind": "com.example.booking.free"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "snapshot": "742e64a06d06226b456f489eb53deacc1bc9f5db",
+  "corpus": "v6-sale",
+  "manifest": "sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9",
+  "package": "sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85",
+  "mutant": "sha256:cfbe9b57a0d03196eefb2e3df18f1ecfa0817758853fbba2b6c6789bce23fce8",
+  "nonce": "v6:sale",
+  "originalSteps": 4,
+  "steps": [
+    {
+      "step": {
+        "type": "invite",
+        "inviter": "alice",
+        "invitee": "bob",
+        "grants": {
+          "roles": [
+            "Buyer"
+          ]
+        }
+      },
+      "entries": [
+        {
+          "id": "sha256:259c64ab91c0a4c5f3173ea3c5ecd1dae31aad3ef0e38755a2e7367c6447f98c",
+          "kind": "ai.generalbusiness.dap.invite"
+        }
+      ]
+    },
+    {
+      "step": {
+        "type": "accept",
+        "invitee": "bob"
+      },
+      "entries": [
+        {
+          "id": "sha256:77a3b1ced99c3f404c8bb40c85057b56bc453d593419e97f92b83c59559166cb",
+          "kind": "ai.generalbusiness.dap.accept_invite"
+        }
+      ]
+    },
+    {
+      "step": {
+        "type": "act",
+        "actor": "bob",
+        "kind": "com.example.sale.offer",
+        "payload": {
+          "offer_id": "o1"
+        },
+        "nonce": "v6:4"
+      },
+      "entries": [
+        {
+          "id": "sha256:586281868199913bc072a9dad01e8e9bc2b55193dbe2d1880bd0e0e79a7a4067",
+          "kind": "com.example.sale.offer"
+        }
+      ]
+    },
+    {
+      "step": {
+        "type": "act",
+        "actor": "alice",
+        "kind": "com.example.sale.accept",
+        "payload": {
+          "offer_id": "o1"
+        },
+        "nonce": "v6:5"
+      },
+      "entries": [
+        {
+          "id": "sha256:beb1444a0c93de85bcecbb333105df27860c50dcaf3140a8ad7fa1ef1eecc8f6",
+          "kind": "com.example.sale.accept"
+        }
+      ]
+    }
+  ]
+}

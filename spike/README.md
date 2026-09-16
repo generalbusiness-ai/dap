@@ -408,3 +408,31 @@ pause; extra payload fields are not refused; revocation can produce a
 privacy-budget false positive; votes after admission are allowed. The
 fixture requires its full join-disclosure and grant-effect policy. The
 mutation runner across models and the final report are V6.
+
+## V6: integrated mutations and binding checks
+
+The integrated harness retains V3's audience reads and rollback, V4's
+unauthorized audience and disclosure guard, and V5's role-derived
+audiences, public chain facts and grant effects. Its full run at
+`1db4d6f` passes all three 200-seed campaigns. A historical Club corpus
+assertion initially failed because V3's binding contract changes event
+ids; the recorded failure still reproduces. The original corpus passes
+literally at `772a514`, and the integrated test now checks the correctly
+linked id and the same semantic finding. The follow-up at `742e64a`
+passes 126 noncampaign tests with zero ordinary failures and retains one
+executing, failing Club acceptance TODO.
+
+`test/v6.test.ts` detects one deliberately narrowed audience in each
+model: Sale `offer`, Booking `occupancy` and Club `standing`. It also
+detects a hidden spine revocation without changing the recorded history.
+Every fault has a clean control and a committed deletion-minimal trace
+under `corpus/v6/run2/`. For each model, an unrelated private attach
+preserves a saved shared intent; a relevant visible binding change makes
+an earlier intent `stale_binding` for every reader, and a fresh intent
+succeeds. These checks introduce no model repair or new kind.
+
+`manifests/v6.ledger.md` and `evidence/v6/` retain exact snapshots, commands,
+logs, machine-readable cases and measured campaign coverage. The final
+report must assess these bounded results alongside the existing repair
+budgets, protocol gaps and negative Club result; passing consistency does
+not establish the omitted admission predicate.
