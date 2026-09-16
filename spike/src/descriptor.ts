@@ -19,6 +19,14 @@ export interface FoldCtx {
   id: string;
   /** the participants holding a capability by grants before this position (the spine's authority) */
   holders(capability: string): Principal[];
+  /**
+   * The content id committed in the authenticated header at `position`,
+   * hidden or not, for 0 <= position <= this position: the public fact that
+   * the event with that id is there. Undefined outside that range.
+   */
+  commitmentAt(position: number): string | undefined;
+  /** the participants as of `position` holding the capability by grants before it: what the audience context's holders gave there */
+  holdersAt(capability: string, position: number): Principal[];
   /** participants after folding the preceding position */
   members: Principal[];
   /** whether the event is an adopted origin (no grant, no expected binding) */
