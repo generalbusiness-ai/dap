@@ -1,0 +1,18 @@
+bob unauthorized sale.accept -> S24 verdict {"known":true,"authorized":false,"effective":false,"reason":"unauthorized"} audience {"kind":"named","principals":["bob"]}
+  alice release at S25 {"known":true,"authorized":true,"effective":true}
+  S proof producer: ScopeProofError scope proof: authority body has narrower audience
+  frontier 23 certifiable
+  frontier 24 refused: scope proof: authority body has narrower audience
+  frontier 25 refused: scope proof: authority body has narrower audience
+carol malformed grant payload -> S24 verdict {"known":true,"authorized":false,"effective":false,"reason":"malformed"} audience {"kind":"named","principals":["carol"]}
+  alice release at S25 {"known":true,"authorized":true,"effective":true}
+  S proof producer: ScopeProofError scope proof: authority body has narrower audience
+  frontier 23 certifiable
+  frontier 24 refused: scope proof: authority body has narrower audience
+  frontier 25 refused: scope proof: authority body has narrower audience
+bob sale.close without capability -> S24 verdict {"known":true,"authorized":false,"effective":false,"reason":"unauthorized"} audience {"kind":"named","principals":["bob"]}
+  alice release at S25 {"known":true,"authorized":true,"effective":true}
+  S proof producer: ScopeProofError scope proof: authority body has narrower audience
+  frontier 23 certifiable
+  frontier 24 refused: scope proof: authority body has narrower audience
+  frontier 25 refused: scope proof: authority body has narrower audience
