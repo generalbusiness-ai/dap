@@ -375,3 +375,22 @@ now expected. It excludes only the three 200-seed campaigns, which passed at
 O1 runtime source `747a0905dc80f15a108fd62bdc5399e9f31f4431`; the final
 O1 specification boundary remains `4329569392c7696e0857539eae6947903c8a5ba8`.
 Neither earlier measurement is relabelled as a run of this integration.
+
+At frozen integration source
+`9575c7c410a9c09f15fbe1a08bef3a6e27503b7e`, the full noncampaign run
+selected 191 tests: 187 passed, zero ordinary failures, four executing/failing
+Club TODOs, zero skipped among the selected tests. The three campaigns were
+excluded by the test-name filter. Typecheck passed. Exact source, commands
+and exit codes are in
+[run-11-v6-integration.json](ordering-o1-runs/run-11-v6-integration.json),
+with output in
+[run-11-v6-integration.txt](ordering-o1-runs/run-11-v6-integration.txt).
+
+The final integration record commit changes only this ledger and the run-11
+records. The prior full 600-seed runtime boundary `747a090`, final
+specification boundary `4329569`, and corrected O1 candidate `03a943dd`
+remain intact. The V6 main wrapper
+`aa3dc03c57c2a54dbfcfa42659c2a14d52fbd27d` has the same tree as approved
+`d95e097`; the O1 branch has integrated the approved candidate directly.
+No additional campaign or identical-tree wrapper merge was needed. O1's
+independent re-review remains pending.

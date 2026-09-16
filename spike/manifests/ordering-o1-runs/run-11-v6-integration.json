@@ -1,0 +1,25 @@
+{
+  "source": "9575c7c410a9c09f15fbe1a08bef3a6e27503b7e",
+  "node": "v26.8.2",
+  "commands": [
+    {
+      "command": [
+        "node",
+        "--test",
+        "--test-skip-pattern=case [57], the campaign:",
+        "test/**/*.test.ts"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "campaign_boundary": "747a0905dc80f15a108fd62bdc5399e9f31f4431",
+  "specification_boundary": "4329569392c7696e0857539eae6947903c8a5ba8"
+}
