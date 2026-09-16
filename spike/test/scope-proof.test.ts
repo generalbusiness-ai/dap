@@ -314,9 +314,9 @@ for (const storage of ['memory', 'sqlite'] as const) {
     }
   });
 
-  test('O4 actor-only unknown and placeholder outcomes cannot justify hiding on ' + storage, () => {
+  test('O4 L3 later binding preserves earlier unbound proof but bound indeterminate outcomes cannot hide on ' + storage, () => {
     const kind = 'com.example.scope.result';
-    for (const reason of ['unknown', 'not_in_v1', 'scope_runtime_required', 'package_unavailable', 'unhandled', 'fold_error:qa', 'audience_error:qa']) {
+    for (const reason of ['model_unavailable', 'not_in_v1', 'scope_runtime_required', 'package_unavailable', 'unhandled', 'fold_error:qa', 'audience_error:qa']) {
       const base: Omit<PackageDescriptor, 'id'> = {
         name: 'com.example.indeterminate-proof', module: import.meta.url,
         models: { pending: { id: 'pending', config: { reason }, init: () => ({}), fold: (state, _event, _ctx, config) => ({ state, effective: false, reason: (config as { reason: string }).reason }) } },
@@ -326,19 +326,24 @@ for (const storage of ['memory', 'sqlite'] as const) {
       const descriptor = { id: descriptorId(base), ...base };
       const { journal } = source(storage, false, { ...available, [descriptor.id]: descriptor });
       try {
-        if (reason !== 'unknown') {
-          effective(act(journal, 'alice', K.attach, { package: descriptor.id }));
-          effective(act(journal, 'alice', K.grant, { principal: people.alice, capabilities: [kind] }));
-        }
-        certified(journal);
+        const earlyIntent = journal.context.intent(people.alice, kind, {}, { expected_binding: 'sha256:' + '0'.repeat(64) });
+        const early = accepted(journal.submit(envelopeBytes(signEvent(earlyIntent, keys.alice)), journal.context.credentialFor(people.alice)));
+        assert.deepEqual(early.verdict, { known: false, authorized: false, effective: false, reason: 'unhandled' });
+        const beforeAttach = certified(journal);
+        assert.deepEqual(beforeAttach.positions[early.header.position], { header: early.header });
+        effective(act(journal, 'alice', K.attach, { package: descriptor.id }));
+        effective(act(journal, 'alice', K.grant, { principal: people.alice, capabilities: [kind] }));
+        assert.deepEqual(certified(journal, early.header.position), beforeAttach);
+        const boundProof = certified(journal);
+        assert.deepEqual(boundProof.positions[early.header.position], { header: early.header });
+        // Missing reader-side code is not evidence that this bound kind is absent.
+        assert.throws(() => verifyPublicProof(boundProof, { genesis: boundProof.genesis, initialWriter: boundProof.initialWriter }, available), /semantic|binding/);
         const intent = journal.context.intent(people.alice, kind, {});
-        // An unbound intent has no binding id; provide a valid wire identity
-        // so the signed attempt reaches the foundation's unknown-kind verdict.
-        if (reason === 'unknown') intent.expected_binding = 'sha256:' + '0'.repeat(64);
         const result = accepted(journal.submit(envelopeBytes(signEvent(intent, keys.alice)), journal.context.credentialFor(people.alice)));
         assert.equal(result.verdict?.effective, false);
         assert.deepEqual(journal.context.state.audiences[result.header.position], { kind: 'named', principals: [people.alice] });
         assert.throws(() => certified(journal), /authority body has narrower audience/, reason);
+        assert.deepEqual(certified(journal, early.header.position), beforeAttach);
       } finally { journal.close(); }
     }
   });

@@ -1,0 +1,11 @@
+{
+  "source": "e0467ae9c44d99e10f38916b74f047b4e9183c5c",
+  "command": "WT=/tmp/dap-o4-l3-unbound node k3-d-strand.mjs memory|sqlite",
+  "files": {
+    "k3-d-strand.mjs": "fd7545c817c253d5e58ffef0f540f821302b74d8719f39974eb981276243ad42",
+    "memory.out": "a2233a0f616a366c6cb94e797da1a4e0dfbcb215e84053b80bf72984e225a2f4",
+    "sqlite.out": "e111ac9653abe26b6e3d563e0cfc042f3e96a4f029a9ac0f1f1597b541ae54b2",
+    "sqlite.err": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "memory.err": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}
