@@ -56,3 +56,35 @@ also covers cold-open absorption, non-Error registry faults throughout export
 and proof interpretation, unavailable reads, unlisted wireInput errors,
 ordinary policy refusals and throwing application handlers. No broad suite,
 full lifecycle record regeneration or 600-seed campaign is claimed here.
+
+## Measured repair result
+
+Frozen source `953653b4f2989d68a13f80d7dca1d83f7992d5df` passes all 22
+focused tests and whole-tree typecheck. The focused test command took 24.972
+seconds and typecheck 0.872 seconds. Exact commands, exit codes and runtime
+file hashes are in [focused.json](ordering-o4-runs/k2/focused.json); raw
+output is in [focused.txt](ordering-o4-runs/k2/focused.txt).
+
+The activation sweep counts 120 registry lookups on each backend. Every one
+of the 240 injections throws the exact original Error object; no fault returns
+an ordinary verdict. Every failed call leaves exactly the submitted bytes at
+position 1, blocks the retained ScopeJournal and direct Context writer, and
+blocks interpret/export through the unavailable facade. Healthy cold reopen
+shows one activation, and exact retry returns its saved hash and effective
+verdict without another position or activation.
+
+The additional focused cases pass: strict cold open propagates the previously
+absorbed third lookup while ordinary Journal still records its legacy error
+verdict; all export and public-proof registry lookups preserve a non-Error
+throw value; an unlisted error inside wireInput preserves object identity;
+known malformed/missing/unauthorized/closed policy outcomes remain verdicts.
+The QA fold/audience fixtures retain their durable bytes, fail strict cold
+open with the original exception, and retain ordinary Journal behavior.
+
+Only this ledger and the focused run records are added after the measured
+source. No K1/K3/K4 changes are included, no frozen O4/O6 worktree was edited,
+and no existing runtime/package/proof identity records were regenerated. Root
+will integrate the disjoint repairs and regenerate final identities/evidence.
+The expected merge overlap with K3 is only the final interpretView call in
+verifyPublicProof, which must retain `{throwOnError:true}`. K1 edits the
+Inspection fixture audience and does not overlap runtime plumbing.
