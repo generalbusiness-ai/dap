@@ -73,3 +73,37 @@ The strict codec correctly refused non-JSON data. The observation sink must
 encode that JavaScript value explicitly; runtime/wire behavior is unchanged.
 The run, identities and 56 completed observation files are retained in
 `ordering-o4-runs/run-1*`. No full campaign was run at this failed boundary.
+
+
+Run 2 source `b35b267ea5392e5361905018ee350ec4df07aa55` changes only the
+observation sink after run 1 and integrates O1 final evidence/V6 ancestry
+`4cfc69376fbd513c4cacf5baa0d32c316797cf89`. The signed runtime/profile/package
+identities are unchanged. The recorder preserves optional undefined API
+fields as the explicit diagnostic marker `{"$undefined":true}`.
+
+Focused result: 100/100 pass, zero failures/TODOs. The 58 retained observation
+files include both backends' 20 healthy boundaries, 27 adverse branches and
+209 actual genesis mutations. Per backend the mutations yielded 30
+`destination_mismatch`, 5 `unauthorized`, 154 recognized invalid-genesis,
+18 malformed-codec and 2 unsupported-profile rejections. Every variant had
+zero activations and no live F rights. No unknown exception was counted.
+Typecheck passed. Full integration result: 315 tests, 311 pass, zero fail,
+zero skipped, 4 executing Club TODOs. All 600 seeds ran (200 each Sale,
+Booking and Club); exact coverage is retained in `run-2.json` and raw output.
+These TODOs are the retained user choice and approved V6 negative cases,
+not newly commissioned repairs awaiting work.
+
+The measured scope implementation is
+`sha256:96f811a0a50ec77a81f14768d01565ce3d38dd2ae1472c722c6ae96422bdae03`.
+Package ids: Sale
+`sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85`,
+Inspection
+`sha256:e2de918015c64401234c5df0291c8db399c7ce5997f6673662d7cc91a9c9c6e7`,
+and Scope
+`sha256:cd4037a57efd089fba49b5db78c3bda02a89403ef4300006ee9604033e120e05`.
+The fixed join policy is
+`sha256:ac852ebab4f55816e55cd0fd71b7280267bffaca097046d4880b24ac63b01455`.
+
+After the measured source, only records and reproduction documentation are
+added. There are no further runtime fixes or rerun campaigns. The result is
+ready for independent checking; this ledger is not an independent verdict.
