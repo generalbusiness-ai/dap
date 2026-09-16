@@ -73,10 +73,10 @@ export const amountPrivacy = {
   forbiddenExportFields: ['amount', 'acceptedAmount', 'counter', 'terms', 'offer_terms'],
 };
 
-// Ratified pre-formal-O4-baseline disclosure/completeness rule. O4 must pin
+// K3 revises the trusted-writer disclosure/completeness rule. O4 must pin
 // this identity in its implemented certificate and destination profile.
 export const publicOpeningRule = {
-  type: 'dap.fixture.scope-public-openings/1',
+  type: 'dap.fixture.scope-public-openings/2',
   kinds: [
     'ai.generalbusiness.dap.genesis', 'ai.generalbusiness.dap.accept_invite',
     'ai.generalbusiness.dap.grant', 'ai.generalbusiness.dap.revoke',
@@ -90,6 +90,7 @@ export const publicOpeningRule = {
     'com.example.scope.import-export', 'com.example.scope.recover',
   ].sort(),
   requiredAudience: ['members', 'spine'],
+  ineffectiveActorOnly: 'hidden',
   otherPositions: 'hidden',
   bannedFields: ['amount', 'acceptedAmount', 'counter', 'terms', 'offer_terms'].sort(),
   excludedKinds: ['ai.generalbusiness.dap.disclose', 'ai.generalbusiness.dap.observe'].sort(),

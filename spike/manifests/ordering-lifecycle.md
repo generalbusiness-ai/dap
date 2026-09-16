@@ -72,7 +72,9 @@ F additionally trusts the source writer's signed completeness certificate
 for the set of public openings under the named rule, not for any release
 effect. F's genesis must pin that trust, source identity and export prefix.
 The producer performs a serving-party function that reads event kinds and
-assigned audiences; a pure ordering signature does not establish completeness.
+assigned audiences and source verdicts; a pure ordering signature does not
+establish completeness. Classification of an ineffective actor-only attempt
+is part of that serving trust; a hidden failed attempt supplies no authority.
 O4's profile and formal baseline must pin the exact implemented rule content
 id and certificate checks before this expectation is claimed as executed.
 
@@ -177,10 +179,14 @@ embedded issuance proofs. Kim is not a member of S. The disclosure therefore
 extends original members-at-recording visibility; the report must count it
 and must not claim that the original reader set remained unchanged.
 `publicOpeningRule` in the executable manifest names the exact kind list,
-required audiences and banned fields for `dap.fixture.scope-public-openings/1`.
-An authority-kind event with a narrower assigned audience makes the producer
-refuse certification, rather than hiding it or widening it. Every other
-position stays header-only. `dap.disclose` is excluded because this proof
+required audiences and banned fields for `dap.fixture.scope-public-openings/2`.
+Its `ineffectiveActorOnly: 'hidden'` exception applies only when the source
+verdict is exactly `effective === false` and the audience is exactly the
+actor alone. That position stays header-only. Every other narrower
+listed-kind audience still makes the producer refuse certification, including
+an effective actor-only body; it may not hide or widen that body. An absent
+or indeterminate verdict cannot qualify. Every unlisted position stays
+header-only. `dap.disclose` is excluded because this proof
 uses the fixed assigned-audience rule, not source recipient disclosures;
 `dap.observe` is excluded because ambient facts are outside this fixture's
 release dependencies. A dependency needing either would require a revised
@@ -233,8 +239,11 @@ journals on **memory and SQLite**, retaining observed outcomes:
    H+2, and W0 from H+3 onward; the assign header at H+2 still belongs to W0.
 5. **Certificate and packet mutations.** Refuse changed type, rule, genesis
    or frontier, and extra fields in the certificate or public proof.
-6. **Capped authority audience.** An authority-kind event with a narrower
-   assigned audience makes the producer refuse certification.
+6. **Capped authority audience.** An effective authority-kind event with a
+   narrower assigned audience, even exactly actor-only, makes the producer
+   refuse certification. Bob's unauthorized acceptance/close and Carol's
+   malformed grant remain hidden, confer no authority, and do not block a
+   later authorized release, certification and activation on memory or SQLite.
 7. **Malicious valid signature.** Record a writer's signed omission as
    outside destination protection; source-member recomputation detects it.
 8. **Full/public differential.** For every certified packet, compare public
@@ -365,3 +374,13 @@ may block indefinitely. A timeout supplies no evidence for safe recovery.
 Its eventual O4 result concerns this lifecycle; passing the present O1
 manifest tests establishes only that these expectations are consistent,
 complete for the listed cases, and checked against deliberate mutations.
+
+
+K3 revises the named public-opening rule under builder decision
+`b70fbd1f1ee8ed3d6a7008456d0292330d92c263` following review `10521cbe`.
+The former manifest `sha256:d94090b21ce42f2eec4a046558b3a776895d82905c2096a19df1f5f02e011f86`
+and `/1` opening-rule packets remain evidence at their original sources.
+The new exception does not prove its own classification: a dishonest writer
+can misclassify effective authority. Source members with complete openings
+can recompute the effect and audience and retain the conflicting signed
+packets; the destination cannot discover the lie from an opaque header.

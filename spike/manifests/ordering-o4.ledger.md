@@ -318,3 +318,51 @@ hashes are in `run-7-integration.json`. The scope runtime remains `f17f15a8`
 and Scope package `edea788e`. No tests or campaigns were repeated for this
 evidence merge. Aggregate acceptance is still an upstream review condition,
 not a claim made by this O4 validation record.
+
+
+## O4-K3: failed actor-only attempts and completeness
+
+Review `10521cbe` found that one ineffective member attempt permanently
+prevented source certification although a later authorized release remained
+effective. The checker's original probe and output are retained byte-for-byte
+under [k3-before](ordering-o4-runs/k3-before/record.json). Regression-only
+source `b4cb584` retains `edacc32` runtime: all six new memory/SQLite checks
+fail at certification with `authority body has narrower audience`.
+The exact source, command and raw output are in
+[k3-before.json](ordering-o4-runs/k3-before.json) and
+[k3-before.txt](ordering-o4-runs/k3-before.txt).
+
+Builder adoption `b70fbd1f1ee8ed3d6a7008456d0292330d92c263` chooses the
+bounded hidden-failure rule. `dap.fixture.scope-public-openings/2` adds
+`ineffectiveActorOnly: 'hidden'` to its canonical declaration. A listed-kind
+entry may stay header-only only when the full source verdict is exactly
+`effective === false` and its assigned audience is exactly the actor alone.
+No missing/indeterminate verdict qualifies. Other listed-kind narrow
+audiences still refuse, including effective actor-only bodies. The
+certificate envelope remains `dap.fixture.public-proof-completeness/1`
+and binds the new rule content id:
+`sha256:614f837e0f4f795625bc69d690a13c3d2a38c28e1a349bc49ed6db35cc972a71`.
+
+The six regressions cover Bob's unauthorized accept, Carol's malformed grant
+and Bob's unauthorized close on both backends. They check actor-only refusal,
+header-only certification, exact retry, cold-reopened identical proof, effective
+source release, and one effective destination activation with Alice still the
+fulfilment owner. Public replay gives the hidden attempt no authority. The
+existing capped-audience test now explicitly checks an effective actor-only
+body still refuses certification. Existing malicious-writer and source-member
+recomputation cases remain in the focused proof suite.
+
+Classification is part of the existing trusted serving-writer completeness
+assumption. A dishonest writer may classify effective authority as hidden;
+the destination cannot detect that lie from opaque headers. Source members
+with complete openings can recompute source effect and audience and retain
+conflicting signed packets. This change does not weaken authentication,
+release authorization or effect through the genesis-pinned release position.
+Old opening-rule packets are historical and are not migrated automatically.
+
+This K3 component changes the rule, scope implementation, Scope package,
+manifest and generated genesis/proof identities. Its component-only manifest
+is `sha256:e97568583079211cb99cdd572fa5e23b749e8a95c621324e1fec56858d387e53`;
+source and focused validation will be recorded separately. The fixed join
+policy is unchanged. K1/K2/K4 integration must recompute final combined
+identities; no component measurement establishes that future combined source.

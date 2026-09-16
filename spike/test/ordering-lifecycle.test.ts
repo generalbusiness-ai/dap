@@ -81,7 +81,7 @@ test('manifest identity binds the prose and executable source, independently rec
     assert.notEqual(ORDERING_LIFECYCLE_MANIFEST_ID, historicalId, 'historical manifest is not relabelled');
     assert.ok(prose.includes(historicalId), 'retain historical manifest identity');
   }
-  assert.equal(ORDERING_LIFECYCLE_MANIFEST_ID, 'sha256:d94090b21ce42f2eec4a046558b3a776895d82905c2096a19df1f5f02e011f86');
+  assert.equal(ORDERING_LIFECYCLE_MANIFEST_ID, 'sha256:e97568583079211cb99cdd572fa5e23b749e8a95c621324e1fec56858d387e53');
   assert.equal(ORDERING_LIFECYCLE_MANIFEST_ID, contentId({ prose: contentId(prose), executable: contentId(executable) }));
   assert.notEqual(ORDERING_LIFECYCLE_MANIFEST_ID, contentId({ prose: contentId(prose + '\nchanged'), executable: contentId(executable) }));
   assert.notEqual(ORDERING_LIFECYCLE_MANIFEST_ID, contentId({ prose: contentId(prose), executable: contentId(executable + '\n// changed') }));
@@ -269,7 +269,9 @@ test('another admitted participant event cannot occupy a permanent activation sl
 
 test('public proof disclosure has a finite named rule and keeps private source kinds excluded', () => {
   assert.equal(PUBLIC_OPENING_RULE_ID, contentId(publicOpeningRule));
-  assert.equal(publicOpeningRule.type, 'dap.fixture.scope-public-openings/1');
+  assert.equal(publicOpeningRule.type, 'dap.fixture.scope-public-openings/2');
+  assert.equal(publicOpeningRule.ineffectiveActorOnly, 'hidden');
+  assert.equal(PUBLIC_OPENING_RULE_ID, 'sha256:614f837e0f4f795625bc69d690a13c3d2a38c28e1a349bc49ed6db35cc972a71');
   assert.equal(publicOpeningRule.kinds.length, 21);
   assert.equal(new Set(publicOpeningRule.kinds).size, 21);
   assert.deepEqual(publicOpeningRule.requiredAudience, ['members', 'spine']);

@@ -354,7 +354,7 @@ not a production proof of completeness. Provenance: decisions
 `ca04cc02027b9070bb60e3852ac19e21ae7931f4` and
 `42ffb3413ded6c33fb39d25296cd04ce0f005d6a` in the dap workroom.
 
-The rule is `dap.fixture.scope-public-openings/1`, whose canonical declaration
+The rule is `dap.fixture.scope-public-openings/2`, whose canonical declaration
 and content id are exported as `PUBLIC_PROOF_RULE` and
 `PUBLIC_PROOF_RULE_ID` by `src/scope-proof.ts`. It opens exactly these kinds:
 
@@ -363,11 +363,14 @@ and content id are exported as `PUBLIC_PROOF_RULE` and
 - Sale listing, offer, withdraw, accept and close;
 - the four Scope kinds result, exercise, import-export and recover.
 
-For every position through the frontier, a listed kind must be opened and
-its assigned audience must be spine or members. A narrower audience makes
-the producer refuse certification. This includes an attach ceiling and an
-unauthorized attempt assigned only to its actor. Every other position is
-hidden. `dap.disclose` is excluded because it can carry private bodies;
+For every position through the frontier, a listed kind is opened when its
+assigned audience is spine or members. There is one bounded exception:
+`ineffectiveActorOnly: 'hidden'` permits a header-only position when the full
+source fold records `effective === false` and its assigned audience is
+exactly `named: [event.actor]`. Missing or indeterminate verdicts do not
+qualify. Every other narrower listed-kind audience makes the producer refuse
+certification, including an effective body capped to its actor. Every
+unlisted position is hidden. `dap.disclose` is excluded because it can carry private bodies;
 `dap.observe` is excluded because observations are not release or grant
 inputs in this fixed scope policy. No wildcard kind admission applies.
 Opened bodies recursively reject `amount`, `acceptedAmount`, `counter`,
@@ -412,12 +415,18 @@ of public source membership data, not an unchanged source recipient set.
 A dishonest writer can omit an authority body and sign an incomplete
 projection, or tailor projections to recipients. The destination cannot
 detect that completeness lie from headers that deliberately reveal no
-kind. Source members can recompute the rule and retain both signed packets
+kind. This includes falsely classifying effective authority as an ineffective
+actor-only attempt. Classifying the exception is part of the existing
+serving-writer trust; a hidden failed attempt supplies no authority during
+destination replay. Source members with the complete openings can recompute
+both effect and audience and then the rule and retain both signed packets
 as transferable evidence. Retired writer keys can certify their historical
 prefixes; source forks and database copies remain possible. None of these
 limits permits the destination to skip independent authorization or effect
 verification. Explicit hostile fixtures may create such signed alternate
-branches, but the honest producer continues to refuse narrow audiences.
+branches, but the honest producer continues to refuse effective narrow
+authority audiences. The `/1` rule and its older packets remain historical;
+certificates under that rule are not silently reinterpreted as `/2`.
 
 ## O4: checker contract obligations
 
@@ -432,19 +441,23 @@ exact source, profile and manifest and satisfy the nine tests listed in
 
 1. **A1 — Serving-party trust.** F's own genesis names the source writer as
    trusted to certify the completeness of public openings. The certificate
-   says nothing about release effectiveness. Its producer reads kinds and
-   assigned audiences as a serving-party function; pure ordering does not
+   says nothing about release effectiveness. Its producer reads kinds,
+   assigned audiences and source verdicts as a serving-party function; pure ordering does not
    establish completeness. F still reconstructs source semantics and grants
    to verify each release independently.
 2. **A2 — Exact public-data rule.** For every position through the certified
    frontier, open each authority-set kind only if its assigned audience is
-   `spine` or `members`. A narrower audience, including a binding ceiling,
-   makes the producer refuse certification; it must neither hide that body
-   nor widen its audience. Every other position retains only its header.
+   `spine` or `members`. An actor-only position with source verdict
+   `effective === false` is the sole exception and retains only its header;
+   this classification is explicitly trusted. Every other narrower audience,
+   including an effective body with a binding ceiling, makes the producer
+   refuse certification; it must neither hide that body nor widen its audience.
+   Missing or indeterminate effect cannot permit hiding. Unlisted positions
+   retain only their headers.
    Opened bodies pass the recursive banned-field check for `amount`,
    `acceptedAmount`, `counter`, `terms` and `offer_terms`. The named rule is
-   `dap.fixture.scope-public-openings/1`, content id
-   `sha256:475b415bbf8b16ccdb1bea078174712c57f2b2955ece9338d762abd60228bad8`,
+   `dap.fixture.scope-public-openings/2`, content id
+   `sha256:614f837e0f4f795625bc69d690a13c3d2a38c28e1a349bc49ed6db35cc972a71`,
    defined by `publicOpeningRule` in `manifests/ordering-lifecycle.ts`.
    Its 21 exact authority kinds are:
 
