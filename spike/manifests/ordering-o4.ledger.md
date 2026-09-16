@@ -55,7 +55,7 @@ lying projection by recomputing the rule. It is not an effectiveness oracle.
 The public source membership/offer bodies are intentionally disclosed to all
 F spine readers, including Kim and Carol's participation/stub. Private Sale
 amounts, terms, counters and Inspection request bodies are absent from the
-produced export/proof/activation/view bytes. Arbitrary hostile clients can
+produced export/proof/activation/F-view bytes. Arbitrary hostile clients can
 still publish their own private data through general journal payloads; this
 fixture does not introduce a general schema-admission or DLP mechanism.
 The original late-Ivan Sale projection limitation is preserved, not repaired
@@ -124,3 +124,30 @@ from original human-name order, while recipients are the same. Exact signed
 before/after equality remains required; the cross-fixture comparison needs
 recipient-set normalization. This is a test comparison correction, with no
 runtime/profile/manifest change. No 600-seed campaign was repeated.
+
+
+Run 4 source `faf26c07d1cadf073a92bac0bb7b01ed3d6333ec`: 6/6 bounded
+regression tests passed, zero failures/TODOs; typecheck passed. No runtime,
+profile, package, manifest or fixture source changed from the full run-2
+boundary. The run checks both memory and SQLite after actual S24/F3 completion,
+with W1 current, delivery confirmed and fulfilment spent. The dynamically
+verified reader union is Alice, Bob, Carol, Ivan and Kim (Kim never joined S).
+For each backend it compares all 55 actual-reader questions at original bases
+0–10 across the attach and completed lifecycle, and all 100 reader/frontier
+questions at bases 0–19 after handover and transfer. Immediately across attach
+it additionally checks all 13 fixture principals × 11 bases = 143 questions.
+
+Comparisons include exact signed event identities/views, full prefix verdicts,
+audiences and actual client projections before/after. Each completed-history
+question also compares the full Sale model, visible full-source outcomes,
+client outcomes, Sale projections and readability with a separately executed
+original Sale trace. Named audience recipients are sorted only for the
+cross-fixture key-to-alias comparison; exact signed before/after equality is
+unchanged. The known late-Ivan client/full projection difference is preserved
+by comparing each path to its original path, not falsely asserting equality.
+Actual observations are retained in `run-4-observations`. Those history-audit
+records contain synthetic source full folds and each source reader's real
+view, including private terms readable by their authorized reader; they are
+not the public export/proof or F-view packets tested by the privacy checks.
+The full 600-seed run remains run 2 and was not automatically repeated for
+these added historical assertions. The goal-1 evidence gap is closed.
