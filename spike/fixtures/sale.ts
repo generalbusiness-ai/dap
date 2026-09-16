@@ -1,8 +1,8 @@
 // The Sale package, as far as V1 needs it: the listing origin opens the
 // sale, the Seller role, and the kinds of the views note's split offer
-// declared so that binding identities exist. Folds for offers and accepts
-// are V3's, authored by an agent from the manifest; only the listing
-// origin rule is implemented here.
+// declared with their schemas so that binding identities exist. Folds for
+// offers and accepts are V3's, authored by an agent from the manifest;
+// only the listing origin rule is implemented here.
 
 import { descriptorId, type ModelSpec, type PackageDescriptor } from '../src/descriptor.ts';
 import { MEMBERS, SPINE, named, type EventBody } from '../src/types.ts';
@@ -39,20 +39,24 @@ export const saleModel: ModelSpec<SaleState> = {
   },
 };
 
-const sellerAndAuthor = { audienceId: 'seller+author', audience: (_: unknown, ev: EventBody) => named(ev.actor, (ev.payload as { seller?: string }).seller ?? ev.actor) };
+function sellerAndAuthor(_: unknown, ev: EventBody) {
+  return named(ev.actor, (ev.payload as { seller?: string }).seller ?? ev.actor);
+}
+const membersAudience = () => MEMBERS;
+const spineAudience = () => SPINE;
 
 const base: Omit<PackageDescriptor, 'id'> = {
   name: 'com.example.sale',
   models: { sale: saleModel as unknown as ModelSpec },
   capabilities: [NS + 'accept_offer', NS + 'counter', NS + 'close', NS + 'make_offer', NS + 'withdraw_own_offer'],
   kinds: {
-    [NS + 'listing']: { kind: NS + 'listing', handlers: ['sale'], audienceId: 'spine', audience: () => SPINE },
-    [NS + 'offer']: { kind: NS + 'offer', handlers: ['sale'], audienceId: 'members', audience: () => MEMBERS, capability: NS + 'make_offer' },
-    [NS + 'offer_terms']: { kind: NS + 'offer_terms', handlers: ['sale'], ...sellerAndAuthor, capability: NS + 'make_offer' },
-    [NS + 'withdraw']: { kind: NS + 'withdraw', handlers: ['sale'], audienceId: 'members', audience: () => MEMBERS, capability: NS + 'withdraw_own_offer' },
-    [NS + 'counter']: { kind: NS + 'counter', handlers: ['sale'], ...sellerAndAuthor, capability: NS + 'counter' },
-    [NS + 'accept']: { kind: NS + 'accept', handlers: ['sale'], audienceId: 'members', audience: () => MEMBERS, capability: NS + 'accept_offer' },
-    [NS + 'close']: { kind: NS + 'close', handlers: ['sale'], audienceId: 'spine', audience: () => SPINE, capability: NS + 'close' },
+    [NS + 'listing']: { kind: NS + 'listing', schema: { referent: 'string', ask: 'integer' }, handlers: ['sale'], audienceId: 'spine', audience: spineAudience },
+    [NS + 'offer']: { kind: NS + 'offer', schema: { offer_id: 'string', replaces: 'string?' }, handlers: ['sale'], audienceId: 'members', audience: membersAudience, capability: NS + 'make_offer' },
+    [NS + 'offer_terms']: { kind: NS + 'offer_terms', schema: { offer_id: 'string', amount: 'integer', seller: 'string' }, handlers: ['sale'], audienceId: 'seller+author', audience: sellerAndAuthor, capability: NS + 'make_offer' },
+    [NS + 'withdraw']: { kind: NS + 'withdraw', schema: { offer_id: 'string' }, handlers: ['sale'], audienceId: 'members', audience: membersAudience, capability: NS + 'withdraw_own_offer' },
+    [NS + 'counter']: { kind: NS + 'counter', schema: { offer_id: 'string', amount: 'integer', seller: 'string' }, handlers: ['sale'], audienceId: 'seller+author', audience: sellerAndAuthor, capability: NS + 'counter' },
+    [NS + 'accept']: { kind: NS + 'accept', schema: { offer_id: 'string' }, handlers: ['sale'], audienceId: 'members', audience: membersAudience, capability: NS + 'accept_offer' },
+    [NS + 'close']: { kind: NS + 'close', schema: { outcome: 'string' }, handlers: ['sale'], audienceId: 'spine', audience: spineAudience, capability: NS + 'close' },
   },
 };
 

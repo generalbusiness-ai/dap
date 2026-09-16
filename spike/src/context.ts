@@ -4,20 +4,21 @@
 // (design note §2, first trusted profile).
 
 import { contentId, nonce, type Json } from './canon.ts';
-import type { PackageDescriptor } from './descriptor.ts';
+import { bindingId, type PackageDescriptor } from './descriptor.ts';
 import {
   F0_ID,
   K,
   RUNTIME,
   foldEntry,
   initialFoundationState,
+  verifyIssuance,
   visibleTo,
   type AcceptInvitePayload,
   type FoundationState,
   type GenesisPayload,
 } from './foundation.ts';
 import { MemoryBackend, append, appendUnadmitted, type Backend, type TransportCredential } from './append.ts';
-import type { Entry, EventBody, Principal, Receipt, Refusal, Verdict } from './types.ts';
+import { SYSTEM_PREFIX, type Entry, type EventBody, type Principal, type Receipt, type Refusal, type Verdict } from './types.ts';
 
 export interface ContextOptions {
   creator: Principal;
@@ -96,8 +97,17 @@ export class Context {
     return this.state.participants.includes(p) ? { principal: p } : undefined;
   }
 
-  /** Build a sequenced intent for this context. */
+  /** The binding an application intent for `kind` must expect right now. */
+  currentBinding(kind: string): string | undefined {
+    return bindingId(this.state.env, kind);
+  }
+
+  /**
+   * Build a sequenced intent for this context. An application intent
+   * captures the binding active when it is composed, unless one is given.
+   */
   intent(actor: Principal, kind: string, payload: Json, opts: { action_id?: string; expected_binding?: string } = {}): EventBody {
+    const expected = opts.expected_binding ?? (kind.startsWith(SYSTEM_PREFIX) ? undefined : this.currentBinding(kind));
     return {
       kind,
       payload,
@@ -105,7 +115,7 @@ export class Context {
       nonce: nonce(),
       genesis: this.genesisId,
       action_id: opts.action_id ?? 'action:' + nonce(),
-      ...(opts.expected_binding ? { expected_binding: opts.expected_binding } : {}),
+      ...(expected ? { expected_binding: expected } : {}),
     };
   }
 
@@ -119,14 +129,11 @@ export class Context {
         genesis: this.genesisId,
         maxPayloadBytes: this.maxPayloadBytes,
         isParticipant: (p) => state.participants.includes(p),
-        issuedInvite: (tokenId) => {
-          const rec = state.invites[tokenId];
-          return rec ? { invitee: rec.invitee } : undefined;
-        },
-        tokenOf: (ev) => {
-          const p = ev.payload as unknown as AcceptInvitePayload;
-          const inv = p?.invite?.event?.payload as unknown as { token_id?: string } | undefined;
-          return inv?.token_id;
+        // Admission and the members' verification use the same issuance object: the embedded envelope,
+        // checked against the chain and the fold. Nothing is looked up by a caller-chosen label.
+        issuedInvite: (ev) => {
+          const v = verifyIssuance(state, this.entries, ev.payload);
+          return v.ok ? { tokenId: v.tokenId, invitee: v.invite.invitee } : undefined;
         },
         acceptKind: K.accept_invite,
       },

@@ -2,16 +2,21 @@
 //
 // System kinds, their audiences and required capabilities, the foundation
 // fold (participation, grants, revocations, attach, invite issuance and
-// redemption, disclosure, close), the bootstrap entitlement and the
-// namespace check. Scope transfer and sequencing-control kinds are named
-// here but not folded in V1; they are O3 and O4.
+// redemption, disclosure, observe, close), the bootstrap entitlement and
+// the namespace check. Scope transfer, admission of external assertions
+// and sequencing-control kinds are named here but not folded in V1; they
+// are O3, O4 and later.
+//
+// Every system payload is validated before use. A malformed payload is a
+// deterministic ineffective verdict with the narrowest audience, the
+// actor alone, so bad data is never served to anyone else.
 
 import { contentId, type Json } from './canon.ts';
 import {
   attach as attachPackage,
   bindingId,
-  descriptorId,
   emptyEnvironment,
+  findModel,
   type AttachResolution,
   type Environment,
   type PackageDescriptor,
@@ -127,13 +132,18 @@ export interface AcceptInvitePayload {
 export interface AttachPayload {
   package: string;
   resolution?: AttachResolution;
-  /** narrower audience, at the author's risk (design note §2) */
+  /** narrower audience, at the author's risk (design note §2); every kind the package declares is capped to it */
   audience?: Principal[];
 }
 
 export interface DisclosePayload {
   positions: number[];
   to: Principal[];
+}
+
+export interface ObservePayload {
+  fact: Json;
+  audience?: Principal[];
 }
 
 // ----- foundation state -----
@@ -146,6 +156,7 @@ export interface GrantRecord {
 }
 
 export interface InviteRecord {
+  /** the token identity: the content id of the effective invite entry */
   tokenId: string;
   position: number;
   issuer: Principal;
@@ -158,6 +169,7 @@ export interface FoundationState {
   participants: Principal[];
   /** every grant and revocation with its position; authority at a position is derived from it */
   grantHistory: GrantRecord[];
+  /** effective issuances, keyed by the invite entry's content id */
   invites: Record<string, InviteRecord>;
   /** tokens redeemed by an effective accept, as the fold sees them */
   redeemed: string[];
@@ -188,6 +200,43 @@ export function initialFoundationState(genesisId: string): FoundationState {
     verdicts: [],
     models: {},
   };
+}
+
+// ----- validation -----
+
+const isStr = (x: unknown): x is string => typeof x === 'string' && x.length > 0;
+const isStrArr = (x: unknown): x is string[] => Array.isArray(x) && x.every(isStr);
+const isIntArr = (x: unknown): x is number[] => Array.isArray(x) && x.every((n) => Number.isSafeInteger(n) && n >= 0);
+const isObj = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && x !== null && !Array.isArray(x);
+
+function validGrantSpec(x: unknown): x is GrantSpec {
+  return isObj(x) && isStr(x.principal) && (x.capabilities === undefined || isStrArr(x.capabilities)) && (x.roles === undefined || isStrArr(x.roles));
+}
+
+/** Validate a system payload. Returns the typed payload or undefined. */
+function validPayload(kind: Kind, payload: unknown): unknown | undefined {
+  switch (kind) {
+    case K.attach:
+      return isObj(payload) && isStr(payload.package) && (payload.audience === undefined || isStrArr(payload.audience)) && (payload.resolution === undefined || isObj(payload.resolution)) ? payload : undefined;
+    case K.invite:
+      return isObj(payload) && isStr(payload.invitee) && isStr(payload.token_id) && validGrantSpec(payload.grants) ? payload : undefined;
+    case K.accept_invite: {
+      if (!isObj(payload) || !isObj(payload.invite)) return undefined;
+      const inv = payload.invite;
+      return isObj(inv.event) && isObj(inv.header) && Number.isSafeInteger(inv.header.position) && isStr(inv.header.commitment) ? payload : undefined;
+    }
+    case K.grant:
+    case K.revoke:
+      return validGrantSpec(payload) ? payload : undefined;
+    case K.disclose:
+      return isObj(payload) && isIntArr(payload.positions) && isStrArr(payload.to) ? payload : undefined;
+    case K.observe:
+      return isObj(payload) && 'fact' in payload && (payload.audience === undefined || isStrArr(payload.audience)) ? payload : undefined;
+    case K.close:
+      return payload === null || isObj(payload) ? payload ?? {} : undefined;
+    default:
+      return payload;
+  }
 }
 
 // ----- authority -----
@@ -246,6 +295,14 @@ function systemAudience(kind: Kind, event: EventBody): Audience {
   }
 }
 
+/** Apply an attachment ceiling: nothing a capped package declares is visible beyond the cap. */
+function capped(aud: Audience, ceiling: Principal[] | undefined, members: Principal[]): Audience {
+  if (!ceiling) return aud;
+  if (aud.kind === 'spine') return named(...ceiling);
+  if (aud.kind === 'members') return named(...members.filter((p) => ceiling.includes(p)));
+  return named(...aud.principals.filter((p) => ceiling.includes(p)));
+}
+
 // ----- the fold -----
 
 export interface FoldInput {
@@ -257,11 +314,13 @@ export interface FoldInput {
   entries: readonly Entry[];
 }
 
+export type GenesisErrorCode = 'duplicate_origin' | 'no_writer' | 'foundation_mismatch' | 'origin_bound' | 'system_origin';
+
 export interface GenesisError extends Error {
-  code: 'duplicate_origin' | 'no_writer' | 'foundation_mismatch';
+  code: GenesisErrorCode;
 }
 
-export function genesisError(code: GenesisError['code'], message: string): GenesisError {
+export function genesisError(code: GenesisErrorCode, message: string): GenesisError {
   const e = new Error(message) as GenesisError;
   e.code = code;
   return e;
@@ -278,27 +337,46 @@ export function foldEntry(state: FoundationState, input: FoldInput): Verdict {
   const pos = entry.position;
   const membersBefore = [...state.participants];
   let verdict: Verdict;
+  let audience: Audience | undefined;
 
   if (pos === 0) {
     verdict = foldGenesis(state, ev, packages);
+  } else if (origin) {
+    verdict = foldOrigin(state, entry);
   } else if (ev.kind.startsWith(SYSTEM_PREFIX)) {
-    verdict = foldSystem(state, entry, packages, entries);
+    const v = validPayload(ev.kind, ev.payload);
+    if (v === undefined) {
+      verdict = { known: true, authorized: false, effective: false, reason: 'malformed' };
+      audience = named(ev.actor);
+    } else {
+      try {
+        verdict = foldSystem(state, entry, packages, entries);
+      } catch (e) {
+        verdict = { known: true, authorized: false, effective: false, reason: 'fold_error:' + (e instanceof Error ? e.message : String(e)) };
+        audience = named(ev.actor);
+      }
+    }
   } else {
-    verdict = foldApplication(state, entry, origin);
+    verdict = foldApplication(state, entry);
   }
 
   // Audience is set at the position under the rule active before it.
-  let audience: Audience;
-  if (origin || pos === 0) audience = SPINE;
-  else if (ev.kind.startsWith(SYSTEM_PREFIX)) {
-    audience = systemAudience(ev.kind, ev);
-    if (ev.kind === K.attach) {
-      const p = ev.payload as unknown as AttachPayload;
-      if (p.audience) audience = named(ev.actor, ...p.audience);
+  if (!audience) {
+    if (origin || pos === 0) audience = SPINE;
+    else if (ev.kind.startsWith(SYSTEM_PREFIX)) {
+      audience = systemAudience(ev.kind, ev);
+      if (ev.kind === K.attach) {
+        const p = ev.payload as unknown as AttachPayload;
+        if (p.audience) audience = named(ev.actor, ...p.audience);
+      }
+      if (ev.kind === K.observe) {
+        const p = ev.payload as unknown as ObservePayload;
+        if (p.audience) audience = named(ev.actor, ...p.audience);
+      }
+    } else {
+      const binding = state.env.kinds[ev.kind];
+      audience = binding ? capped(binding.audience({ position: pos, members: membersBefore }, ev), binding.ceiling, membersBefore) : MEMBERS;
     }
-  } else {
-    const binding = state.env.kinds[ev.kind];
-    audience = binding ? binding.audience({ position: pos, members: membersBefore }, ev) : MEMBERS;
   }
   state.audiences[pos] = audience;
   state.membersAt[pos] = [...state.participants];
@@ -312,6 +390,9 @@ function foldGenesis(state: FoundationState, ev: EventBody, packages: Record<str
   if (!p.sequencing?.writer) throw genesisError('no_writer', 'genesis names no writer');
   const seen = new Set<string>();
   for (const o of p.origins) {
+    // An origin is a standalone assertion: it binds no genesis and no action, and it is never a system command.
+    if (o.genesis !== undefined || o.action_id !== undefined) throw genesisError('origin_bound', 'an origin may not carry a genesis or an action id');
+    if (o.kind.startsWith(SYSTEM_PREFIX)) throw genesisError('system_origin', 'a system kind cannot be adopted as an origin');
     const id = contentId(o as unknown as Json);
     if (seen.has(id)) throw genesisError('duplicate_origin', `origin ${id} adopted twice`);
     seen.add(id);
@@ -320,7 +401,7 @@ function foldGenesis(state: FoundationState, ev: EventBody, packages: Record<str
   for (const b of p.bindings) {
     const pkg = packages[b.package];
     if (!pkg) throw genesisError('foundation_mismatch', `genesis binds unknown package ${b.package}`);
-    const out = attachPackage(state.env, pkg, b.resolution);
+    const out = attachPackage(state.env, pkg, { resolution: b.resolution });
     if (!out.ok) throw genesisError('foundation_mismatch', `genesis binding refused: ${out.reason}`);
     state.env = out.env;
     for (const m of Object.values(pkg.models)) state.models[m.id] = m.init();
@@ -329,15 +410,20 @@ function foldGenesis(state: FoundationState, ev: EventBody, packages: Record<str
   return { known: true, authorized: true, effective: true };
 }
 
+/** An adopted origin: an assertion by its original actor under the initial bindings' origin rules. */
+function foldOrigin(state: FoundationState, entry: Entry): Verdict {
+  const ev = entry.event;
+  const binding = state.env.kinds[ev.kind];
+  if (!binding) return { known: false, authorized: false, effective: false, reason: 'unhandled' };
+  return dispatch(state, entry, binding.handlers, true);
+}
+
 function foldSystem(state: FoundationState, entry: Entry, packages: Record<string, PackageDescriptor>, entries: readonly Entry[]): Verdict {
   const ev = entry.event;
   const pos = entry.position;
   const row = SYSTEM_KINDS[ev.kind];
   if (!row) return { known: false, authorized: false, effective: false, reason: 'unhandled' };
   if (NOT_IN_V1.has(ev.kind)) return { known: true, authorized: false, effective: false, reason: 'not_in_v1' };
-  if (state.closed && ev.kind !== K.disclose) {
-    return { known: true, authorized: false, effective: false, reason: 'closed' };
-  }
   if (row.requires && !heldAt(state, ev.actor, row.requires, pos)) {
     return { known: true, authorized: false, effective: false, reason: 'unauthorized' };
   }
@@ -346,7 +432,7 @@ function foldSystem(state: FoundationState, entry: Entry, packages: Record<strin
       const p = ev.payload as unknown as AttachPayload;
       const pkg = packages[p.package];
       if (!pkg) return { known: true, authorized: true, effective: false, reason: 'package_unavailable' };
-      const out = attachPackage(state.env, pkg, p.resolution);
+      const out = attachPackage(state.env, pkg, { resolution: p.resolution, ...(p.audience ? { ceiling: [ev.actor, ...p.audience] } : {}) });
       if (!out.ok) return { known: true, authorized: true, effective: false, reason: out.reason };
       state.env = out.env;
       for (const m of Object.values(pkg.models)) if (!(m.id in state.models)) state.models[m.id] = m.init();
@@ -354,9 +440,8 @@ function foldSystem(state: FoundationState, entry: Entry, packages: Record<strin
     }
     case K.invite: {
       const p = ev.payload as unknown as InvitePayload;
-      if (!p.invitee || !p.token_id) return { known: true, authorized: true, effective: false, reason: 'malformed' };
-      if (state.invites[p.token_id]) return { known: true, authorized: true, effective: false, reason: 'duplicate_token' };
-      state.invites[p.token_id] = { tokenId: p.token_id, position: pos, issuer: ev.actor, invitee: p.invitee, grants: p.grants };
+      // token_id is the inviter's label; the token's identity is this entry's content id.
+      state.invites[entry.id] = { tokenId: entry.id, position: pos, issuer: ev.actor, invitee: p.invitee, grants: p.grants };
       return { known: true, authorized: true, effective: true };
     }
     case K.accept_invite:
@@ -382,27 +467,40 @@ function foldSystem(state: FoundationState, entry: Entry, packages: Record<strin
   return { known: true, authorized: true, effective: false, reason: 'unhandled' };
 }
 
-/** Verification a member performs from the acceptance alone (spike plan §2, invitation authority). */
-export function verifyEmbeddedInvite(
-  state: FoundationState,
-  entries: readonly Entry[],
-  accept: EventBody,
-): { ok: true; invite: InvitePayload; issuer: Principal; position: number } | { ok: false; reason: string } {
-  const p = accept.payload as unknown as AcceptInvitePayload;
-  const emb = p?.invite;
-  if (!emb?.event || !emb?.header) return { ok: false, reason: 'malformed' };
+export type Issuance = { ok: true; tokenId: string; invite: InvitePayload; issuer: Principal; position: number } | { ok: false; reason: string };
+
+/**
+ * Verification of the issuance object an acceptance embeds, from the
+ * chain and the spine alone (spike plan §2, invitation authority). The
+ * token's identity is the content id of the effective invite entry, so
+ * an ineffective duplicate or a tampered envelope can never supply
+ * evidence. This checks the issuance only; who may redeem it, and
+ * whether it was already redeemed, are the redemption's questions.
+ */
+export function verifyIssuance(state: FoundationState, entries: readonly Entry[], acceptPayload: unknown): Issuance {
+  const v = validPayload(K.accept_invite, acceptPayload);
+  if (v === undefined) return { ok: false, reason: 'malformed' };
+  const emb = (v as AcceptInvitePayload).invite;
   const at = entries[emb.header.position];
   if (!at) return { ok: false, reason: 'not_in_chain' };
   const commitment = contentId(emb.event as unknown as Json);
   if (at.id !== commitment || emb.header.commitment !== commitment) return { ok: false, reason: 'not_in_chain' };
   if (contentId(emb.header as unknown as Json) !== at.headerHash) return { ok: false, reason: 'not_in_chain' };
   if (emb.event.kind !== K.invite) return { ok: false, reason: 'not_an_invite' };
-  const inv = emb.event.payload as unknown as InvitePayload;
-  if (inv.invitee !== accept.actor) return { ok: false, reason: 'wrong_invitee' };
+  // The issuance must have been effective: an unauthorized or malformed invite issues nothing.
+  if (!state.verdicts[emb.header.position]?.effective) return { ok: false, reason: 'issuance_ineffective' };
   // Authority is judged at issuance.
   if (!heldAt(state, emb.event.actor, CAP.invite, emb.header.position)) return { ok: false, reason: 'issuer_unauthorized' };
-  if (state.redeemed.includes(inv.token_id)) return { ok: false, reason: 'already_redeemed' };
-  return { ok: true, invite: inv, issuer: emb.event.actor, position: emb.header.position };
+  return { ok: true, tokenId: at.id, invite: emb.event.payload as unknown as InvitePayload, issuer: emb.event.actor, position: emb.header.position };
+}
+
+/** A member's verification of an acceptance: the issuance, then the redemption. */
+export function verifyEmbeddedInvite(state: FoundationState, entries: readonly Entry[], accept: EventBody): Issuance {
+  const v = verifyIssuance(state, entries, accept.payload);
+  if (!v.ok) return v;
+  if (v.invite.invitee !== accept.actor) return { ok: false, reason: 'wrong_invitee' };
+  if (state.redeemed.includes(v.tokenId)) return { ok: false, reason: 'already_redeemed' };
+  return v;
 }
 
 function foldAccept(state: FoundationState, entry: Entry, entries: readonly Entry[]): Verdict {
@@ -411,37 +509,46 @@ function foldAccept(state: FoundationState, entry: Entry, entries: readonly Entr
   if (state.participants.includes(entry.event.actor)) {
     return { known: true, authorized: true, effective: false, reason: 'already_participant' };
   }
-  state.redeemed.push(v.invite.token_id);
+  state.redeemed.push(v.tokenId);
   state.participants.push(entry.event.actor);
   applyGrant(state, entry.position, { ...v.invite.grants, principal: entry.event.actor }, 'grant');
   return { known: true, authorized: true, effective: true };
 }
 
-function foldApplication(state: FoundationState, entry: Entry, origin: boolean): Verdict {
+function foldApplication(state: FoundationState, entry: Entry): Verdict {
   const ev = entry.event;
   const pos = entry.position;
   const binding = state.env.kinds[ev.kind];
   if (!binding) return { known: false, authorized: false, effective: false, reason: 'unhandled' };
   if (state.closed) return { known: true, authorized: false, effective: false, reason: 'closed' };
-  if (!origin) {
-    if (ev.expected_binding !== undefined && ev.expected_binding !== bindingId(state.env, ev.kind)) {
-      return { known: true, authorized: false, effective: false, reason: 'stale_binding' };
-    }
-    if (binding.capability && !heldAt(state, ev.actor, binding.capability, pos)) {
-      return { known: true, authorized: false, effective: false, reason: 'unauthorized' };
-    }
+  // A sequenced application intent binds the semantics it expects (design note §3; spike plan §2).
+  if (ev.expected_binding === undefined) return { known: true, authorized: false, effective: false, reason: 'no_expected_binding' };
+  if (ev.expected_binding !== bindingId(state.env, ev.kind)) return { known: true, authorized: false, effective: false, reason: 'stale_binding' };
+  if (binding.capability && !heldAt(state, ev.actor, binding.capability, pos)) {
+    return { known: true, authorized: false, effective: false, reason: 'unauthorized' };
   }
+  return dispatch(state, entry, binding.handlers, false);
+}
+
+function dispatch(state: FoundationState, entry: Entry, handlers: string[], origin: boolean): Verdict {
+  const ev = entry.event;
   const perModel: Verdict['perModel'] = {};
   let anyEffective = false;
-  const ctx = { position: pos, members: [...state.participants], origin };
-  for (const modelId of binding.handlers) {
+  const ctx = { position: entry.position, members: [...state.participants], origin };
+  for (const modelId of handlers) {
     const model = findModel(state.env, modelId);
     if (!model) {
       perModel[modelId] = { effective: false, reason: 'model_unavailable' };
       continue;
     }
     const before = state.models[modelId] ?? model.init();
-    const r = model.fold(before, ev, ctx);
+    let r;
+    try {
+      r = model.fold(structuredClone(before), ev, ctx);
+    } catch (e) {
+      perModel[modelId] = { effective: false, reason: 'fold_error:' + (e instanceof Error ? e.message : String(e)) };
+      continue;
+    }
     if (r.effective) {
       state.models[modelId] = r.state;
       anyEffective = true;
@@ -449,11 +556,6 @@ function foldApplication(state: FoundationState, entry: Entry, origin: boolean):
     perModel[modelId] = { effective: r.effective, reason: r.reason };
   }
   return { known: true, authorized: true, effective: anyEffective, reason: anyEffective ? undefined : 'ineffective', perModel };
-}
-
-function findModel(env: Environment, id: string) {
-  for (const pkg of env.packages) if (pkg.models[id]) return pkg.models[id];
-  return undefined;
 }
 
 /** Visibility of position `i` to `p` under basis `n` (design note §1, §2 bootstrap entitlement). */
@@ -465,5 +567,3 @@ export function visibleTo(state: FoundationState, p: Principal, i: number, n: nu
   if (aud.kind === 'members' && (state.membersAt[i] ?? []).includes(p)) return true;
   return state.disclosures.some((d) => d.position <= n && d.to.includes(p) && d.positions.includes(i));
 }
-
-export const foundationDescriptorId = descriptorId;

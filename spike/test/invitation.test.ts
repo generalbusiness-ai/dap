@@ -71,7 +71,7 @@ test('exact retry of a committed acceptance after consumption returns the receip
   const { event, result } = accept(ctx, BOB, pos, 'action:accept-1');
   assert.ok(!('refused' in result));
   assert.equal(result.replay, false);
-  assert.equal(ctx.backend.isConsumed((event.payload as { invite: { event: { payload: { token_id: string } } } }).invite.event.payload.token_id), true);
+  assert.equal(ctx.backend.isConsumed(ctx.entries[pos]!.id), true);
   // exact retry
   const again = ctx.submit(event);
   assert.ok(!('refused' in again));

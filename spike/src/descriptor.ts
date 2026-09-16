@@ -1,9 +1,12 @@
 // Flat package descriptors (spike plan §2, simplification 5).
 //
 // A package is a pinned table of functions with explicit per-kind
-// bindings. Attach installs a descriptor from n+1; ambiguity is an
-// explicit refusal; names under the system prefix are refused for any
-// package that is not the foundation.
+// bindings. Executable artifacts are identified by the content of their
+// source, kinds by their schema, so two descriptors with different
+// semantics never share an identity. Attach installs a descriptor from
+// n+1; ambiguity is an explicit refusal; names under the system prefix
+// are refused for every package, because the foundation is pinned in the
+// genesis and upgrades are deferred.
 
 import { contentId, type Json } from './canon.ts';
 import { SYSTEM_PREFIX, type Audience, type EventBody, type Kind, type Principal } from './types.ts';
@@ -38,9 +41,11 @@ export interface AudienceCtx {
 
 export interface KindBinding {
   kind: Kind;
+  /** the payload schema, part of the kind's identity */
+  schema: Json;
   /** handler models, in order */
   handlers: string[];
-  /** id of the audience policy, part of the binding identity */
+  /** id of the audience policy; the policy function's source is part of the binding identity too */
   audienceId: string;
   audience: (ctx: AudienceCtx, event: EventBody) => Audience;
   /** capability an actor must hold; origins are exempt */
@@ -54,11 +59,12 @@ export interface PackageDescriptor {
   models: Record<string, ModelSpec>;
   kinds: Record<Kind, KindBinding>;
   capabilities: string[];
-  foundation?: boolean;
 }
 
 export interface ResolvedBinding extends KindBinding {
   packageId: string;
+  /** audience ceiling inherited from a narrow attach (design note §2) */
+  ceiling?: Principal[];
 }
 
 export interface Environment {
@@ -67,18 +73,52 @@ export interface Environment {
   kinds: Record<Kind, ResolvedBinding>;
 }
 
-/** Resolution an attach may carry for kinds that would otherwise be ambiguous. */
+/** Resolution an attach may carry for kinds that would otherwise be ambiguous: the handler order only. */
 export interface AttachResolution {
-  [kind: Kind]: { handlers: string[]; audienceId?: string };
+  [kind: Kind]: { handlers: string[] };
+}
+
+export interface AttachOptions {
+  resolution?: AttachResolution;
+  /** principals the attach was addressed to; every kind it declares is capped to them */
+  ceiling?: Principal[];
 }
 
 export function emptyEnvironment(runtime: string): Environment {
   return { runtime, packages: [], kinds: {} };
 }
 
-export type AttachOutcome =
-  | { ok: true; env: Environment }
-  | { ok: false; reason: 'namespace' | 'ambiguous_binding' | 'duplicate_package' | 'unknown_handler' };
+export type AttachRefusal = 'namespace' | 'ambiguous_binding' | 'duplicate_package' | 'unknown_handler' | 'descriptor_id_mismatch' | 'conflicting_capability';
+export type AttachOutcome = { ok: true; env: Environment } | { ok: false; reason: AttachRefusal };
+
+/** Identity of executable code: the content of its source. */
+export function codeId(fn: (...args: never[]) => unknown): string {
+  return contentId(fn.toString());
+}
+
+function modelId(m: ModelSpec): Json {
+  return { init: codeId(m.init), fold: codeId(m.fold), roles: (m.roles ?? {}) as Json };
+}
+
+function bindingSurface(b: KindBinding): Json {
+  return {
+    schema: b.schema,
+    handlers: b.handlers,
+    audience: { id: b.audienceId, code: codeId(b.audience) },
+    capability: b.capability ?? null,
+    crossReads: b.crossReads ?? [],
+  };
+}
+
+/** Content id of a descriptor: its models' code, its kinds' schemas and bindings, its capabilities. */
+export function descriptorId(pkg: Omit<PackageDescriptor, 'id'>): string {
+  return contentId({
+    name: pkg.name,
+    models: Object.fromEntries(Object.keys(pkg.models).sort().map((m) => [m, modelId(pkg.models[m]!)])),
+    kinds: Object.fromEntries(Object.keys(pkg.kinds).sort().map((k) => [k, bindingSurface(pkg.kinds[k]!)])),
+    capabilities: [...pkg.capabilities].sort(),
+  });
+}
 
 function usesSystemPrefix(pkg: PackageDescriptor): boolean {
   const names = [
@@ -90,69 +130,79 @@ function usesSystemPrefix(pkg: PackageDescriptor): boolean {
   return names.some((n) => n.startsWith(SYSTEM_PREFIX));
 }
 
+function intersect(a: Principal[] | undefined, b: Principal[] | undefined): Principal[] | undefined {
+  if (!a) return b ? [...b].sort() : undefined;
+  if (!b) return [...a].sort();
+  return a.filter((p) => b.includes(p)).sort();
+}
+
 /** Install a package into an environment. Pure: returns a new environment or a refusal. */
-export function attach(env: Environment, pkg: PackageDescriptor, resolution: AttachResolution = {}): AttachOutcome {
-  if (!pkg.foundation && usesSystemPrefix(pkg)) return { ok: false, reason: 'namespace' };
+export function attach(env: Environment, pkg: PackageDescriptor, opts: AttachOptions = {}): AttachOutcome {
+  const { id: _id, ...surface } = pkg;
+  if (pkg.id !== descriptorId(surface)) return { ok: false, reason: 'descriptor_id_mismatch' };
+  if (usesSystemPrefix(pkg)) return { ok: false, reason: 'namespace' };
   if (env.packages.some((p) => p.id === pkg.id)) return { ok: false, reason: 'duplicate_package' };
+  const resolution = opts.resolution ?? {};
   const kinds: Record<Kind, ResolvedBinding> = { ...env.kinds };
   const allModels = new Set([...env.packages, pkg].flatMap((p) => Object.keys(p.models)));
   for (const [kind, binding] of Object.entries(pkg.kinds)) {
     const existing = kinds[kind];
     const res = resolution[kind];
-    if (existing && !res) return { ok: false, reason: 'ambiguous_binding' };
-    const handlers = res ? res.handlers : binding.handlers;
-    for (const h of handlers) if (!allModels.has(h)) return { ok: false, reason: 'unknown_handler' };
-    // A resolution must name every handler that would otherwise apply.
-    if (existing && res) {
-      const expected = new Set([...existing.handlers, ...binding.handlers]);
-      const given = new Set(handlers);
-      if (expected.size !== given.size || [...expected].some((h) => !given.has(h))) {
-        return { ok: false, reason: 'ambiguous_binding' };
-      }
+    if (!existing) {
+      for (const h of binding.handlers) if (!allModels.has(h)) return { ok: false, reason: 'unknown_handler' };
+      kinds[kind] = { ...binding, packageId: pkg.id, ...(opts.ceiling ? { ceiling: [...opts.ceiling].sort() } : {}) };
+      continue;
+    }
+    // A kind already bound: a resolution must name exactly the union of handlers, in an order.
+    if (!res) return { ok: false, reason: 'ambiguous_binding' };
+    const expected = new Set([...existing.handlers, ...binding.handlers]);
+    const given = new Set(res.handlers);
+    if (expected.size !== given.size || [...expected].some((h) => !given.has(h)) || res.handlers.length !== given.size) {
+      return { ok: false, reason: 'ambiguous_binding' };
+    }
+    for (const h of res.handlers) if (!allModels.has(h)) return { ok: false, reason: 'unknown_handler' };
+    // Contracts are retained: the capability may not be dropped or replaced, and the
+    // audience policy stays the active one, so attaching a handler never widens an audience.
+    if (existing.capability && binding.capability && existing.capability !== binding.capability) {
+      return { ok: false, reason: 'conflicting_capability' };
     }
     kinds[kind] = {
-      ...binding,
-      handlers,
-      audienceId: res?.audienceId ?? binding.audienceId,
-      packageId: pkg.id,
+      ...existing,
+      handlers: res.handlers,
+      capability: existing.capability ?? binding.capability,
+      crossReads: [...new Set([...(existing.crossReads ?? []), ...(binding.crossReads ?? [])])].sort(),
+      ceiling: intersect(existing.ceiling, opts.ceiling),
     };
   }
   return { ok: true, env: { ...env, packages: [...env.packages, pkg], kinds } };
 }
 
+export function findModel(env: Environment, id: string): ModelSpec | undefined {
+  for (const pkg of env.packages) if (pkg.models[id]) return pkg.models[id];
+  return undefined;
+}
+
 /**
- * The expected-binding identity of a kind (design note §3): the kind, the
- * ordered handler list, the audience policy id, the capability contract,
- * the runtime profile and the handlers' declared cross-namespace reads.
- * Per kind, so an unrelated attach does not change it.
+ * The expected-binding identity of a kind (design note §3): the kind and
+ * its schema, the ordered handlers by code, the audience policy by id and
+ * code, the capability contract, the runtime profile, the declared
+ * cross-namespace reads and any ceiling. Per kind, so an unrelated attach
+ * does not change it.
  */
 export function bindingId(env: Environment, kind: Kind): string | undefined {
   const b = env.kinds[kind];
   if (!b) return undefined;
   return contentId({
     kind,
-    handlers: b.handlers,
-    audience: b.audienceId,
+    schema: b.schema,
+    handlers: b.handlers.map((h) => {
+      const m = findModel(env, h);
+      return { id: h, code: m ? modelId(m) : null };
+    }),
+    audience: { id: b.audienceId, code: codeId(b.audience) },
     capability: b.capability ?? null,
     runtime: env.runtime,
     crossReads: b.crossReads ?? [],
-  });
-}
-
-/** Content id of a descriptor's declared surface; functions are identified by the names that bind them. */
-export function descriptorId(pkg: Omit<PackageDescriptor, 'id'>): string {
-  return contentId({
-    name: pkg.name,
-    foundation: pkg.foundation ?? false,
-    models: Object.fromEntries(Object.keys(pkg.models).sort().map((m) => [m, pkg.models[m]!.roles ?? {}])),
-    kinds: Object.fromEntries(
-      Object.keys(pkg.kinds)
-        .sort()
-        .map((k) => {
-          const b = pkg.kinds[k]!;
-          return [k, { handlers: b.handlers, audience: b.audienceId, capability: b.capability ?? null, crossReads: b.crossReads ?? [] }];
-        }),
-    ),
-    capabilities: [...pkg.capabilities].sort(),
+    ceiling: b.ceiling ?? null,
   });
 }

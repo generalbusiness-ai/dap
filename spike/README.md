@@ -21,8 +21,10 @@ npm run typecheck    # tsc --noEmit
 What it contains:
 
 - `src/canon.ts`: RFC 8785 canonical JSON, `sha256:` content ids, nonces.
-- `src/descriptor.ts`: flat package descriptors, attach with ambiguity and
-  namespace refusal, the per-kind expected-binding identity.
+- `src/descriptor.ts`: flat package descriptors identified by the content
+  of their code and schemas; attach with ambiguity, namespace and id
+  refusal, contracts retained on resolution so a handler never widens an
+  audience; the per-kind expected-binding identity.
 - `src/foundation.ts`: the fixed foundation F0: the system kinds with their
   audiences (`spine`, `members`, named sets) and required capabilities; the
   fold for genesis, attach, invite, accept_invite, grant, revoke, disclose,
@@ -33,7 +35,9 @@ What it contains:
 - `src/append.ts`: the one append operation for every backend: stable
   facts, exact-retry lookup with changed-content refusal, then admission
   (transport credential or one-use invitation), then the header and one
-  write. `MemoryBackend` supplies storage and a serialization boundary.
+  write. Committed data is snapshotted and frozen, so a caller's later
+  mutation cannot change what was committed. `MemoryBackend` supplies
+  storage and a serialization boundary.
 - `src/context.ts`: a context: genesis adopting origins, submission through
   the append operation, the full-series fold, `V(p, n)` with headers for
   hidden positions, hidden counts.
@@ -57,7 +61,16 @@ What the tests show:
   dense positions, predecessor hashes, re-entrancy;
 - the sale trace, positions 0 to 5, with the audiences of the views note
   and the views of Alice, Bob and Carol from the narrative; a late joiner's
-  bootstrap entitlement; disclosure and an as-of query.
+  bootstrap entitlement; disclosure and an as-of query;
+- regressions for checker's review of the first candidate (workroom
+  report `d74d2ac5`): admission and members verify the same issuance
+  object, so a duplicate or tampered envelope supplies nothing; attachment
+  ceilings and observe narrowing; identities follow executable content; a
+  foreign-context intent or a system kind cannot be an origin; an
+  application intent captures its binding by default and a missing one is
+  refused; committed entries are immutable snapshots; a malformed system
+  payload is an ineffective verdict readable only by its actor; close
+  leaves foundation administration open.
 
 What V1 does not claim:
 
