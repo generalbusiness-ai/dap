@@ -73,7 +73,7 @@ test('manifest identity binds the prose and executable source, independently rec
   const executable = readFileSync(new URL('../manifests/ordering-lifecycle.ts', import.meta.url), 'utf8');
   assert.equal(ORDERING_LIFECYCLE_PROSE, prose);
   assert.notEqual(ORDERING_LIFECYCLE_MANIFEST_ID, 'sha256:63be83e60036a5936569c478da7a8c7be6b8ab1c744d59ef3296b7d6182b5a9d', 'historical manifest is not relabelled');
-  assert.equal(ORDERING_LIFECYCLE_MANIFEST_ID, 'sha256:d7419b5d85d9acd4767b8733b47729c29f49088a0495ee246c60c2da658a7613');
+  assert.equal(ORDERING_LIFECYCLE_MANIFEST_ID, 'sha256:75de2a860b049b5d9dcad3dab234be14d7a965d53df2e0d0eae8de6f05a1b327');
   assert.equal(ORDERING_LIFECYCLE_MANIFEST_ID, contentId({ prose: contentId(prose), executable: contentId(executable) }));
   assert.notEqual(ORDERING_LIFECYCLE_MANIFEST_ID, contentId({ prose: contentId(prose + '\nchanged'), executable: contentId(executable) }));
   assert.notEqual(ORDERING_LIFECYCLE_MANIFEST_ID, contentId({ prose: contentId(prose), executable: contentId(executable + '\n// changed') }));
@@ -136,7 +136,7 @@ test('all adverse cases have resolvable branches, full safe observations and exa
     'timeout-after-hidden-activation': 'no_safe_recovery_evidence',
     'duplicate-inspection-import': 'duplicate_import',
     'duplicate-state-import': 'duplicate_import',
-    'stale-source-proposal-at-source': 'closed',
+    'stale-source-proposal-at-source': 'not_open',
     'stale-source-proposal-at-destination': 'wrong_genesis',
     'unauthorized-release': 'unauthorized',
     'release-unowned-right': 'unowned_right',

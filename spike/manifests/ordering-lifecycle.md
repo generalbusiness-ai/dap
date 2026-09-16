@@ -206,7 +206,8 @@ baseline.
   takes no position. Timeout recovery is also ineffective when activation
   happened but its reply was withheld; no source regains a right.
 - **Source-bound proposals.** Bob's offer signed for S while open at S14
-  stays bound to S. S's already closed Sale rejects it with `closed`.
+  stays bound to S. S's already closed Sale judges it ineffective with the
+  per-model reason `not_open`; its observed Sale status remains `closed`.
   F refuses the same envelope with `wrong_genesis`; it is never retargeted.
   A release proposal naming stale source prefix S22 instead of S23 is
   ineffective with `stale_export`.

@@ -301,7 +301,7 @@ export const lifecycleCases: LifecycleCase[] = [
   },
   ineffective('duplicate-inspection-import', 'inspection-imported', action('import-result', 'S', 'alice', { result: 'I@1', identity: 'inspection-result' }), 'duplicate_import'),
   ineffective('duplicate-state-import', 'destination-activated', action('import-export', 'F', 'alice', { export: 'S-export' }), 'duplicate_import'),
-  ineffective('stale-source-proposal-at-source', 'sale-released', action('submit-signed-source-proposal', 'S', 'bob', { signedAt: 'S@14', genesis: 'S', offer: 'o4' }), 'closed'),
+  ineffective('stale-source-proposal-at-source', 'sale-released', action('submit-signed-source-proposal', 'S', 'bob', { signedAt: 'S@14', genesis: 'S', offer: 'o4' }), 'not_open'),
   {
     id: 'stale-source-proposal-at-destination', from: 'destination-activated', steps: [
       caseStep(action('submit-signed-source-proposal', 'F', 'bob', { signedAt: 'S@14', genesis: 'S', offer: 'o4' }), 'refused', 'wrong_genesis', activated),

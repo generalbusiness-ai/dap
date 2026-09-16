@@ -389,3 +389,45 @@ for (const storage of ['memory', 'sqlite'] as const) test('O1-F1 a previously ac
   assert.deepEqual(journal.context.state.participants, [people.alice]);
   journal.close();
 });
+
+
+for (const storage of ['memory', 'sqlite'] as const) test('O1-F1 a lost reply through direct Context.submit invalidates every owned write path on ' + storage, () => {
+  let armed = false;
+  class LostReply extends MemoryBackend {
+    override commit(...args: Parameters<MemoryBackend['commit']>): void {
+      super.commit(...args);
+      if (armed) { armed = false; throw new Error('lost response after commit'); }
+    }
+  }
+  const path = join(dir(), 'journal.db');
+  let backend = storage === 'memory' ? new LostReply() : new SQLiteBackend(path, {
+    writer: people.writer, profile: O1_PROFILE_VERSION,
+    fault(point) { if (armed && point === 'after-commit') { armed = false; throw new Error('lost response after commit'); } },
+  });
+  const j = createJournal(backend);
+  const revoke = signEvent(j.context.intent(people.alice, K.revoke, {
+    principal: people.alice, capabilities: [CAP.invite],
+  }, { action_id: 'direct-lost-revocation', nonce: 'a1'.repeat(16) }), keys.alice);
+  armed = true;
+  assert.throws(() => j.context.submit(revoke.body, j.context.credentialFor(people.alice), revoke), /lost response/);
+  assert.equal(backend.head()!.position, 2); // the revocation is already committed
+  const before = backend.entries();
+  const payload = { invitee: people.bob, grants: { principal: people.bob, roles: ['Buyer'] }, token_id: 'direct-stale-invite' };
+  assert.throws(() => act(j, 'alice', K.invite, payload, 'direct-stale-invite'), /inactive/);
+  assert.throws(() => j.context.submit(revoke.body, undefined, revoke), /inactive/);
+  assert.throws(() => j.context.act(people.alice, K.invite, payload), /inactive/);
+  assert.deepEqual(backend.entries(), before);
+  assert.equal(backend.retry('direct-stale-invite'), undefined);
+  j.close();
+  if (storage === 'sqlite') backend = sqlite(path);
+  const cold = Journal.open({ backend, writerKey: keys.writer, packages });
+  const retried = cold.submit(revoke);
+  assert.ok(!('refused' in retried) && retried.replay && retried.verdict?.effective);
+  assert.equal(retried.headerHash, before[2]!.headerHash);
+  const invitation = act(cold, 'alice', K.invite, payload, 'direct-stale-invite');
+  assert.ok(!('refused' in invitation) && invitation.verdict?.reason === 'unauthorized');
+  assert.deepEqual(cold.submit(acceptance(cold, 'bob', invitation.header.position)), { refused: true, reason: 'invitation_not_issued' });
+  assert.deepEqual(cold.context.state.participants, [people.alice]);
+  assert.deepEqual(checkContext(cold.context), []);
+  cold.close();
+});

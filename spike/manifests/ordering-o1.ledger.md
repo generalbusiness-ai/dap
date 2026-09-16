@@ -243,3 +243,45 @@ it pins 21 kinds and no wildcard. The profile also names the verified header
 class leakage, view completeness/truncation/extra-field limits, and the exact
 normal-close versus crash ownership checks. The documentation agent prepared
 these five paths and computed their identities; it did not run their tests.
+
+At combined source `b92cc4ff4105332394439293d4930b7fc07ca5d9`, `npm test`
+executed 186 tests: 185 passed, zero ordinary failures, and the one retained
+Club TODO. All 600 visibility campaign seeds passed. Typecheck passed. Exact
+commands, source and exit codes are in
+[run-8-full.json](ordering-o1-runs/run-8-full.json), with output in
+[run-8-full.txt](ordering-o1-runs/run-8-full.txt).
+
+That run was already frozen and executing when internal QA found a further
+F1 path: direct public `Journal.context.submit` could commit a revocation and
+lose its reply without passing through Journal.submit's error handler. A
+later Journal invitation and acceptance then used the Context's stale state.
+This is a real remaining defect at `940506b`/`b92cc4f`; the successful run did
+not cover it and is not evidence that F1 was complete.
+
+QA's original probe and output are retained byte for byte as
+[f1-direct-context-940506b.mjs](ordering-o1-runs/f1-direct-context-940506b.mjs)
+and [f1-direct-context-940506b.json](ordering-o1-runs/f1-direct-context-940506b.json).
+To reproduce, restore source `940506b473abc808666560d5e757811f985fcdaa`,
+copy the probe to that checkout's `spike/qa-context-error.mjs`, and run
+`node qa-context-error.mjs` there. The relative imports are deliberately those
+of the original probe. Its SHA-256 is
+`4af1c74a2882755ed34fbfc5a68a505a0f5571e8688aeb5bd5422f18b365cea2`;
+the output SHA-256 is
+`3832b31416945fa16f95f76eec142a1076ab6de1ae761327bed04b8eb69ef376`.
+
+The correction now also invalidates the lease inside Context.submit's own
+append/fold exception handler. Journal.submit keeps its handler for failures
+after Context returns. Two regressions cover committed revocation/lost reply
+through direct Context.submit on memory and SQLite, refusal through every
+owned write entry point afterward, and correct receipt recovery after reopen.
+No append, retry, admission, or storage transaction rule changes.
+
+Before the final source freeze, the specification owner corrected the
+stale-source-proposal expectation from `closed` to the existing Sale model's
+actual per-model reason `not_open`; the observed Sale status remains closed.
+The revised manifest ID is
+`sha256:75de2a860b049b5d9dcad3dab234be14d7a965d53df2e0d0eae8de6f05a1b327`.
+The public-opening rule ID is unchanged. Ordering §7 now explicitly forbids
+origins or intervening events from exercising dormant transferred rights,
+without forbidding their unrelated effects. The earlier `d7419b5` manifest
+and run 8 remain their own measured boundary.

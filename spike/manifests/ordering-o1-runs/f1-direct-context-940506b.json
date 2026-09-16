@@ -1,0 +1,20 @@
+{
+  "source": "940506b473abc808666560d5e757811f985fcdaa",
+  "revocation": 2,
+  "invitation": 3,
+  "redemption": 4,
+  "liveParticipants": [
+    "ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w",
+    "ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q"
+  ],
+  "coldParticipants": [
+    "ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"
+  ],
+  "coldInviteVerdict": {
+    "known": true,
+    "authorized": false,
+    "effective": false,
+    "reason": "unauthorized"
+  },
+  "head": 4
+}

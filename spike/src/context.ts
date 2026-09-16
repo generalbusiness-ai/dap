@@ -158,39 +158,44 @@ export class Context {
   /** Submit through the append operation, then fold if newly sequenced. */
   submit(event: EventBody, credential?: TransportCredential, proof?: unknown): (Receipt & { verdict?: Verdict }) | Refusal {
     assertBackendAccess(this.backend, this.#lease);
-    const state = this.state;
-    const r = append(
-      this.backend,
-      { event, credential, proof },
-      {
-        genesis: this.genesisId,
-        encoding: this.encoding,
-        maxPayloadBytes: this.maxPayloadBytes,
-        isParticipant: (p) => state.participants.includes(p),
-        // Admission and the members' verification use the same issuance object: the embedded envelope,
-        // checked against the chain and the fold. Nothing is looked up by a caller-chosen label.
-        issuedInvite: (ev) => {
-          const v = verifyIssuance(issuanceEvidence(state, this.entries), ev.payload);
-          return v.ok ? { tokenId: v.tokenId, invitee: v.invite.invitee } : undefined;
+    try {
+      const state = this.state;
+      const r = append(
+        this.backend,
+        { event, credential, proof },
+        {
+          genesis: this.genesisId,
+          encoding: this.encoding,
+          maxPayloadBytes: this.maxPayloadBytes,
+          isParticipant: (p) => state.participants.includes(p),
+          // Admission and the members' verification use the same issuance object: the embedded envelope,
+          // checked against the chain and the fold. Nothing is looked up by a caller-chosen label.
+          issuedInvite: (ev) => {
+            const v = verifyIssuance(issuanceEvidence(state, this.entries), ev.payload);
+            return v.ok ? { tokenId: v.tokenId, invitee: v.invite.invitee } : undefined;
+          },
+          acceptKind: K.accept_invite,
+          activationOf: (kind) => state.env.kinds[kind]?.attachedAt,
+          requiresOf: (ev) => {
+            // Evidence is extracted from runtime JSON before the fold validates it: never throw here.
+            if (ev.kind !== K.attach) return undefined;
+            const p = ev.payload;
+            if (!p || typeof p !== 'object' || Array.isArray(p)) return undefined;
+            const { package: pkgId, resolution } = p as { package?: unknown; resolution?: unknown };
+            const pkg = packageIn(this.packages, pkgId);
+            return pkg ? attachRequires(state.env, pkg, resolution) : undefined;
+          },
         },
-        acceptKind: K.accept_invite,
-        activationOf: (kind) => state.env.kinds[kind]?.attachedAt,
-        requiresOf: (ev) => {
-          // Evidence is extracted from runtime JSON before the fold validates it: never throw here.
-          if (ev.kind !== K.attach) return undefined;
-          const p = ev.payload;
-          if (!p || typeof p !== 'object' || Array.isArray(p)) return undefined;
-          const { package: pkgId, resolution } = p as { package?: unknown; resolution?: unknown };
-          const pkg = packageIn(this.packages, pkgId);
-          return pkg ? attachRequires(state.env, pkg, resolution) : undefined;
-        },
-      },
-    );
-    if ('refused' in r) return r;
-    if (r.replay) return { ...r, verdict: state.verdicts[r.header.position] };
-    const entry = this.entries[r.header.position]!;
-    const verdict = this.fold(entry, false);
-    return { ...r, verdict };
+      );
+      if ('refused' in r) return r;
+      if (r.replay) return { ...r, verdict: state.verdicts[r.header.position] };
+      const entry = this.entries[r.header.position]!;
+      const verdict = this.fold(entry, false);
+      return { ...r, verdict };
+    } catch (error) {
+      this.#lease?.invalidate();
+      throw error;
+    }
   }
 
   /** Convenience: submit as a current participant with the serving party's credential. */
