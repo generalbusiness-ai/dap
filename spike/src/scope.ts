@@ -1,7 +1,7 @@
 import type { KeyObject } from 'node:crypto';
 // Fixed O4 scope semantics. No expectation-manifest dependency.
 import { snapshot } from './append.ts';
-import { canonicalize, envelopeId, verifyEnvelope, type ActorEnvelope } from './codec.ts';
+import { canonicalize, envelopeId, verifyEnvelope, isCodecValidationError, type ActorEnvelope } from './codec.ts';
 import { Journal, type JournalOptions } from './journal.ts';
 import { F0_ID, RUNTIME, K, heldAt } from './foundation.ts';
 import { interpretView } from './interpret.ts';
@@ -183,7 +183,7 @@ function replayScopeView(view: ViewEntry[], genesis: string, packages: Record<st
             let body: EventBody;
             try { body = verifyEnvelope(release.committed).body; }
             catch (error) {
-              if (error instanceof TypeError && error.message.startsWith('codec: ')) throw new ScopeRefusal('malformed_release_proof: ' + error.message);
+              if (isCodecValidationError(error)) throw new ScopeRefusal('malformed_release_proof: ' + error.message);
               throw error;
             }
             const exported = validateExport(object(body.payload).export);
@@ -257,8 +257,12 @@ function replayScopeView(view: ViewEntry[], genesis: string, packages: Record<st
       } else if (event.kind === SCOPE_KINDS.importExport) result = bad(state.imports.includes(p.identity) ? 'duplicate_import' : 'unapproved_import');
       else result = bad('no_safe_recovery_evidence');
     } catch (error) {
-      if (!(error instanceof ScopeRefusal || error instanceof ScopeProfileError || error instanceof ScopeProofError)) throw error;
-      result = bad(error.message);
+      let reason: string | undefined;
+      try {
+        if (error instanceof ScopeRefusal || error instanceof ScopeProfileError || error instanceof ScopeProofError) reason = error.message;
+      } catch { /* exception inspection must not replace the original value */ }
+      if (reason === undefined) throw error;
+      result = bad(reason);
     }
     state.verdicts[position] = result;
   }
@@ -292,7 +296,7 @@ export class ScopeJournal {
   readonly packages: Record<string, PackageDescriptor>;
   private readonly writerKey: KeyObject;
   private unavailable = false;
-  constructor(journal: Journal, packages: Record<string, PackageDescriptor>, writerKey: KeyObject) {
+  private constructor(journal: Journal, packages: Record<string, PackageDescriptor>, writerKey: KeyObject) {
     if (!scopeSetup(journal.context.entries[0]!.event)) throw new Error('scope: profile required');
     this.journal = journal; this.packages = packages; this.writerKey = writerKey;
   }

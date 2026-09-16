@@ -3,7 +3,7 @@
 // It never decides whether a release was effective or imports expected outcomes.
 import { createHash, sign, verify, type KeyObject } from 'node:crypto';
 import { snapshot } from './append.ts';
-import { canonicalize, headerHash, verifyEnvelope, publicKeyOf, principalOf } from './codec.ts';
+import { canonicalize, headerHash, verifyEnvelope, publicKeyOf, principalOf, isCodecValidationError } from './codec.ts';
 import { Journal, verifyJournalView } from './journal.ts';
 import { K } from './foundation.ts';
 import { SCOPE_KINDS } from './scope-profile.ts';
@@ -160,10 +160,13 @@ const WIRE_REJECTIONS = new Set([
 function wireInput<T>(validate: () => T): T {
   try { return validate(); }
   catch (error) {
-    if (error instanceof TypeError && error.message.startsWith('codec: ') ||
-        error instanceof Error && WIRE_REJECTIONS.has(error.message)) {
-      throw new ScopeProofError(error.message);
-    }
+    let reason: string | undefined;
+    // Exception inspection can itself throw (for example, a revoked Proxy).
+    // Such a value is not a declared wire refusal; preserve it unchanged.
+    try {
+      if (isCodecValidationError(error) || error instanceof Error && WIRE_REJECTIONS.has(error.message)) reason = error.message;
+    } catch { /* retain the original unexpected value */ }
+    if (reason !== undefined) throw new ScopeProofError(reason);
     throw error;
   }
 }

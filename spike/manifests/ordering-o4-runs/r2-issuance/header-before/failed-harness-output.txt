@@ -1,0 +1,14 @@
+{"storage":"memory","headBefore":17,"outcome":{"threw":"TypeError: canonicalize: only safe integers are allowed, got 0.5"},"next":{"threw":"Error: scope: facade unavailable; reopen after replay failure"},"coldHead":17,"coldBob":true}
+file:///private/tmp/dap-o4-r2-issuance/spike/src/sqlite.ts:77
+  entries()                   { return Object.freeze(this.db.prepare('SELECT body FROM entries ORDER BY position').all().map(r => deepFreeze(JSON.parse(String(r.body))         ))); }
+                                                             ^
+
+Error: database is not open
+    at SQLiteBackend.entries (file:///private/tmp/dap-o4-r2-issuance/spike/src/sqlite.ts:77:62)
+    at get entries (file:///private/tmp/dap-o4-r2-issuance/spike/src/context.ts:117:25)
+    at LifecycleWorld.restart (file:///private/tmp/dap-o4-r2-issuance/spike/fixtures/ordering-lifecycle-runner.ts:163:75)
+    at file:///private/tmp/dap-o4-r2-issuance/spike/manifests/ordering-o4-runs/r2-issuance/header-before/malformed-header.mjs:16:11 {
+  code: 'ERR_INVALID_STATE'
+}
+
+Node.js v26.8.2

@@ -1,0 +1,51 @@
+[
+  {
+    "command": [
+      "node",
+      "/private/tmp/claude-501/-Users-hughpyle-play-dap/55890269-4b7b-4cda-8c2b-ab7134ad403a/scratchpad/o4r2-fault-repros/k2-issuance.mjs",
+      "memory"
+    ],
+    "env": {
+      "WT": "/tmp/dap-o4-r2-issuance"
+    },
+    "source": "e0467ae9c44d99e10f38916b74f047b4e9183c5c",
+    "exit": 0,
+    "seconds": 2.482931499995175,
+    "output": "k2-issuance-memory.txt",
+    "harnessSHA256": "42449cecdd9a768f9f4ff25165b1f8fb1a562b562c2b93a79fcf090229a919de"
+  },
+  {
+    "command": [
+      "node",
+      "/private/tmp/claude-501/-Users-hughpyle-play-dap/55890269-4b7b-4cda-8c2b-ab7134ad403a/scratchpad/o4r2-fault-repros/k2-issuance.mjs",
+      "sqlite"
+    ],
+    "env": {
+      "WT": "/tmp/dap-o4-r2-issuance"
+    },
+    "source": "e0467ae9c44d99e10f38916b74f047b4e9183c5c",
+    "exit": 0,
+    "seconds": 2.795413500003633,
+    "output": "k2-issuance-sqlite.txt",
+    "harnessSHA256": "42449cecdd9a768f9f4ff25165b1f8fb1a562b562c2b93a79fcf090229a919de"
+  },
+  {
+    "command": [
+      "node",
+      "/private/tmp/claude-501/-Users-hughpyle-play-dap/55890269-4b7b-4cda-8c2b-ab7134ad403a/scratchpad/o4r2-fault-repros/deep-diag.mjs",
+      "memory",
+      "crypto",
+      "error",
+      "1"
+    ],
+    "env": {
+      "WT": "/tmp/dap-o4-r2-issuance",
+      "ONLY": "2307,2450"
+    },
+    "source": "e0467ae9c44d99e10f38916b74f047b4e9183c5c",
+    "exit": 0,
+    "seconds": 0.9690709999995306,
+    "output": "deep-diag-memory.txt",
+    "harnessSHA256": "17c9dcd548f46120661276a6f50002de138ffb71e66d8ffb0e2f19ccbe6ab98e"
+  }
+]
