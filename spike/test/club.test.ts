@@ -1,7 +1,8 @@
 // The Club manifest's predeclared cases and campaign (spike plan V5,
-// §4.2, §4.3 to §4.7). Every expectation here comes from
-// manifests/club.md and manifests/club.ts, written before the baseline;
-// nothing reads the candidate model's state.
+// §4.2, §4.3 to §4.7), plus explicitly marked post-baseline verification.
+// The original cases come from the frozen manifest. The added A2 cases
+// and A1 TODO come from the plan and checker assessment #512; they were
+// missing from the frozen manifest. Nothing reads the candidate's state.
 
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -23,6 +24,7 @@ import {
   DANA,
   ERIN,
   FOUNDER,
+  FRANK,
   clubBase,
   clubBounds,
   clubBudgetViolations,
@@ -40,9 +42,20 @@ const fullCheck = (ctx: Context, frontiers?: number[]) =>
   });
 const brief = (vs: Violation[]) => vs.slice(0, 6).map(describeViolation).join('\n') + (vs.length > 6 ? `\n... ${vs.length} violations` : '');
 
-type Proj = { applications: { id: string; status: string; votes: { yes: number; no: number }; applicant: string | null }[]; standing: Record<string, string> };
+type Proj = { applications: { id: string; status: string; votes: { yes: number; no: number }; applicant: string | null; statement: string | null }[]; standing: Record<string, string> };
 const proj = (ctx: Context, p: string, n = ctx.head) => oracleObserve(ctx, p, n, n).models['club'] as Proj;
 const reasonAt = (ctx: Context, p: string, i: number) => oracleObserve(ctx, p, ctx.head, ctx.head).outcomes[String(i)]?.perModel?.['club']?.reason;
+
+/** Read this participant's own view, then compare it with the oracle. */
+function interpretedObservation(ctx: Context, p: string, frontier = ctx.head) {
+  const view = ctx.view(p, frontier);
+  const result = interpretView(p, view, frontier, ctx.packages);
+  assert.equal(result.kind, 'interpreted');
+  if (result.kind !== 'interpreted') throw new Error(`${p} unexpectedly paused`);
+  const observation = observeInterpreted(result, view);
+  assert.deepEqual(observation, oracleObserve(ctx, p, frontier, frontier));
+  return observation;
+}
 
 /** The founder, Bob and Carol on the committee, plus the named applicants joined with no roles; effects and join disclosures honoured. */
 function club(applicants: string[]): { ctx: Context; pending: Pending } {
@@ -196,7 +209,60 @@ for (const activationFirst of [false, true]) {
   });
 }
 
-test('recorded plan mismatch: a second application by an existing Member is admitted under the frozen manifest', (t) => {
+test('post-baseline A2: an ordinary Member judges a late committee vote before and after private application disclosure', () => {
+  const { ctx, pending } = club([DANA, ERIN, FRANK]);
+  act(ctx, pending, FOUNDER, K.grant, { principal: FRANK, roles: ['Member'] });
+  assert.equal(holdsNow(ctx.state, FRANK, CLUB + 'member'), true);
+  assert.equal(holdsNow(ctx.state, FRANK, CLUB + 'vote'), false);
+  const app = act(ctx, pending, DANA, CLUB + 'apply', { statement: 'private application' });
+  act(ctx, pending, FOUNDER, K.grant, { principal: ERIN, roles: ['Committee', 'Member'] });
+
+  const early = act(ctx, pending, ERIN, CLUB + 'vote', { application_id: app.id, choice: 'yes' });
+  const beforeDisclosure = interpretedObservation(ctx, FRANK, early.position);
+  assert.equal(ctx.view(FRANK, early.position)[app.position]?.event, undefined);
+  assert.equal(beforeDisclosure.outcomes[String(early.position)]?.effective, false);
+  assert.equal(beforeDisclosure.outcomes[String(early.position)]?.perModel?.['club']?.reason, 'unknown_application');
+
+  const disclosure = act(ctx, pending, FOUNDER, K.disclose, { positions: [app.position], to: [ERIN] });
+  assert.equal(disclosure.verdict.effective, true);
+  assert.equal(ctx.view(FRANK)[disclosure.position]?.event?.kind, K.disclose, 'the act is visible to the ordinary Member');
+  assert.equal(ctx.view(ERIN)[app.position]?.event?.kind, CLUB + 'apply', 'only the named recipient receives the application');
+  assert.equal(ctx.view(FRANK)[app.position]?.event, undefined);
+  const late = act(ctx, pending, ERIN, CLUB + 'vote', { application_id: app.id, choice: 'yes' });
+  const afterDisclosure = interpretedObservation(ctx, FRANK, late.position);
+  assert.equal(afterDisclosure.outcomes[String(early.position)]?.perModel?.['club']?.reason, 'unknown_application');
+  assert.equal(afterDisclosure.outcomes[String(late.position)]?.effective, true);
+  const row = (afterDisclosure.models['club'] as Proj).applications.find((a) => a.id === app.id);
+  assert.deepEqual(row && [row.applicant, row.statement, row.votes], [null, null, { yes: 1, no: 0 }]);
+  assert.equal(ctx.view(FRANK)[app.position]?.event, undefined);
+  const violations = fullCheck(ctx);
+  assert.deepEqual(violations, [], brief(violations));
+});
+
+test('post-baseline A2: an ordinary Member verifies admission and the Member grant without reading the application', () => {
+  const { ctx, pending } = club([DANA, FRANK]);
+  act(ctx, pending, FOUNDER, K.grant, { principal: FRANK, roles: ['Member'] });
+  assert.equal(holdsNow(ctx.state, FRANK, CLUB + 'member'), true);
+  assert.equal(holdsNow(ctx.state, FRANK, CLUB + 'vote'), false);
+  const app = act(ctx, pending, DANA, CLUB + 'apply', { statement: 'private application' });
+  act(ctx, pending, BOB, CLUB + 'vote', { application_id: app.id, choice: 'yes' });
+  act(ctx, pending, CAROL, CLUB + 'vote', { application_id: app.id, choice: 'yes' });
+  const admit = act(ctx, pending, FOUNDER, CLUB + 'admit', { application_id: app.id });
+  const observed = interpretedObservation(ctx, FRANK);
+  assert.equal(observed.outcomes[String(admit.position)]?.effective, true);
+  const grant = ctx.view(FRANK)[admit.position + 1]?.event;
+  assert.equal(grant?.kind, K.grant);
+  assert.deepEqual(grant?.payload, { principal: DANA, roles: ['Member'] });
+  assert.equal(observed.outcomes[String(admit.position + 1)]?.effective, true);
+  assert.equal(holdsNow(ctx.state, DANA, CLUB + 'member'), true);
+  assert.equal(ctx.view(FRANK)[app.position]?.event, undefined);
+  const row = (observed.models['club'] as Proj).applications.find((a) => a.id === app.id);
+  assert.deepEqual(row && [row.applicant, row.statement, row.status, row.votes], [null, null, 'admitted', { yes: 2, no: 0 }]);
+  const violations = fullCheck(ctx);
+  assert.deepEqual(violations, [], brief(violations));
+});
+
+test('plan §4.2: a second admission is ineffective once the applicant holds Member', { todo: 'V5-A1: revised experiment and policy repair pending' }, (t) => {
   const { ctx, pending } = club([DANA, ERIN]);
   act(ctx, pending, FOUNDER, K.grant, { principal: ERIN, roles: ['Member'] });
   const admissions: number[] = [];
@@ -206,15 +272,15 @@ test('recorded plan mismatch: a second application by an existing Member is admi
     act(ctx, pending, CAROL, CLUB + 'vote', { application_id: app.id, choice: 'yes' });
     const alreadyMember = holdsNow(ctx.state, DANA, CLUB + 'member');
     const admit = act(ctx, pending, FOUNDER, CLUB + 'admit', { application_id: app.id });
-    assert.equal(admit.verdict.effective, true);
+    if (!alreadyMember) assert.equal(admit.verdict.effective, true);
     assert.equal(alreadyMember, admissions.length > 0);
     assert.equal(proj(ctx, ERIN).applications.find((a) => a.id === app.id)?.applicant, null);
     admissions.push(admit.position);
   }
-  // This proves the acceptance gap; it is not an expected-policy pass.
   t.diagnostic(`plan §4.2 violated: admit at ${admissions[1]} is effective after Dana already received Member at ${admissions[0]! + 1}; frozen-manifest checks still pass`);
   const violations = fullCheck(ctx);
   assert.deepEqual(violations, [], brief(violations));
+  assert.equal(ctx.state.verdicts[admissions[1]!]!.effective, false, 'the plan requires rejection of an existing Member');
 });
 
 test('case 5, the campaign: every manifest seed replays with zero violations of the property, the pause rule, the invariants and the privacy budget', (t) => {

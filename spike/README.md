@@ -300,16 +300,25 @@ Member grant, then a second effective admission. Every view agrees, so
 the narrower manifest's consistency checks pass while the plan's policy
 fails. Enforcing the omitted condition needs additional public evidence
 or a changed trust/schema contract, hence a revised experiment; the
-existing result below does not establish the full plan's promise.
+existing result below does not establish the full plan's promise. A5 also
+allows votes and admissions naming events that are not effective
+applications; both predicates need the revised experiment. A2's dedicated
+ordinary-member cases were missing from the frozen manifest and original
+tests. They are now post-baseline tests; their manifest predeclaration
+remains pending that revision. The two-application policy test asserts
+rejection and is a failing TODO, not a passing test for broken behavior.
 
 Measured result first: the agent-authored Club model needed **1 fix, 0
 added kinds, within the budget** of 4 fixes and 2 kinds over its two
 constraints (quorum and standing). The baseline passed three of the four
-predeclared cases and 197 of 200 seeds; the one failure family was the
-one the author predicted before any run: a committee member granted
-after an application, voting before any disclosure of it, judged their
-own vote effective while the oracle said `unknown_application`, because
-nothing they could read tied the application id to a position. The fix
+frozen-manifest cases and 197 of 200 seeds after the replay-nonce
+repair. The baseline header predicted disagreement about a committee
+member granted after an application and voting before disclosure. Some
+readers judged the vote effective while the oracle said
+`unknown_application`, because they could not tie the application id to
+a position. In case 4 the late voter's own view diverged; the failing
+campaign also included Dana's and Erin's views of Frank's vote and Dana's
+view of Erin's vote. The fix
 reads the chain's public commitments: the fold context now offers
 `commitmentAt(position)` (the header's commitment at any earlier
 position, hidden or not) and `holdersAt(capability, position)`, and the
@@ -327,7 +336,7 @@ applicant Member; the committee is whoever holds `vote`, asked of the
 audience and fold contexts (role-derived audiences).
 
 What it contains: `manifests/club.md` and `manifests/club.ts` (the
-frozen manifest: the §4.2 policy, promises, the privacy budget on
+frozen manifest: the narrower policy and promises, the privacy budget on
 readable events and observations with the committee derived from grants,
 projection shape, reason vocabulary, budget, bounds, the committee joined
 by a prelude, invariants including the disclosure-before-vote rule and
@@ -341,8 +350,8 @@ content ids in generated series (a generator defect found by this
 campaign; Booking was revalidated under it).
 
 What the tests show: the four frozen-manifest cases derived from §4.2
-(quorum with the Member grant, no quorum and no majority, lapsed and already voted, the
-late committee member before and after disclosure) and the 200-seed
+(quorum with the Member grant, no quorum and no majority, lapsed and
+already voted, the late committee member before and after disclosure) and the 200-seed
 campaign pass; the ledger's totals agree with its entries. Validation run
 3 also exercises Club payload disclosure before and after activation
 disclosure, the dependency-incomplete pause and resumption, and confirms
@@ -351,9 +360,15 @@ recorded baseline failures are reconstructed and shrunk to seven linked
 steps each under `corpus/club/run1/`, fail on the preserved baseline and
 pass on the repaired model. The ledger identifies the missing historical
 run-1 snapshot; later reconstruction does not cure that protocol gap.
+Validation run 4 adds explicit ordinary-member checks for the private
+application disclosure and the admission's public Member grant. It also
+corrects the baseline prediction provenance and records the shared
+`dap.disclose` audience change at `57aad39`.
 
-What V5 does not claim: one application type, a three-member committee
-and one quorum rule; no revocation is generated; a vote naming a content
-id that is not an application is judged by position only; the mutation
-runner across models and the report are V6.
-
+The scope is one application type, a three-member initial committee and
+one quorum rule. The ledger records further limitations: incomplete
+model-level disclosure dependencies can cause mismatches instead of a
+pause; extra payload fields are not refused; revocation can produce a
+privacy-budget false positive; votes after admission are allowed. The
+fixture requires its full join-disclosure and grant-effect policy. The
+mutation runner across models and the final report are V6.
