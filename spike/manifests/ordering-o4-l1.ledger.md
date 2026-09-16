@@ -49,7 +49,7 @@ No new schema or role policy is introduced. Scope treats unowned property-name
 rights as unowned. Unexpected registry/handler exceptions still propagate;
 this repair does not weaken strict scope replay.
 
-No descriptor module or descriptor identity formula changes. Sale and
+Package modules and the descriptor identity formula are unchanged. Sale and
 Inspection descriptors should retain their identities; the scope runtime
 fingerprint and Scope package must change because descriptor/foundation/
 context/interpret/scope code changed. Final combined identities are root's
@@ -82,7 +82,7 @@ focused checks**, with no failures, skips or TODOs. Whole-tree typecheck
 passes. The single focused invocation includes five new L1 cases, existing
 descriptor and origin checks, and all 16 scope phase/exception-boundary cases.
 Exact command arguments, raw output, source blobs, dependency/configuration
-blobs and eight observations are retained in `corpus/ordering-o4/l1/run1`.
+blobs and 16 observations are retained in `corpus/ordering-o4/l1/run1`.
 The earlier uncommitted compiler-only development check is labelled as such;
 it is not a lifecycle result or a frozen-source measurement.
 
