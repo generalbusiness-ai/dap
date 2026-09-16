@@ -46,9 +46,12 @@ half-open, `[start, end)`, in integer ticks.
 - Occupancy and free facts: members; they carry no booker.
 - Participation: spine.
 
-The budget is checked on the projection: for a principal other than the
-admin, every request in their observation is their own, and no occupancy
-carries a `purpose` or a `booker`.
+The budget is checked on what a participant can read and on the
+projection: a request or cancel readable by anyone but its booker and
+the admin is a violation; for a principal other than the admin, every
+request in their observation is their own; and no occupancy carries a
+`purpose` or a `booker`. (Amended after run 1 per checker's V3-F1; the
+run-1 check was projection-only.)
 
 ## Projection shape
 

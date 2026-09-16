@@ -54,6 +54,24 @@ participant's readable view, and the Booking manifest's check is
 amended to use it in the next run. That amendment changes the manifest
 identity and is recorded there as a revised experiment.
 
+## Run 2
+
+Snapshot commit: see `git log`, "checker run 2". Manifest revised: the
+budget is now checked on what a participant can read (checker's V3-F1,
+report 8c0d324b), manifest id
+`sha256:771a9cb82aff7b03bf50b55b490e35710da3e3072bd8877a7b79a13100bfc3f7`
+(run 1 ran under `sha256:8dc4524c99d2e7c17d1bdd7c12fa2679db83596a3176e580cc298a0f10b82bf3`);
+package unchanged from the baseline.
+
+All six predeclared cases still pass. The campaign fails **139 of 200
+seeds**, every violation a budget one: a request (3413 occurrences) or a
+cancel (443) readable by a member who is neither its booker nor the
+admin, because the fixture's disclosing client (the generator, acting as
+the admin's client) discloses random earlier positions to members. The
+model cannot stop a client from disclosing; whether to declare a
+disclosure policy for the fixture's client to honour is the author's
+decision and is counted if made.
+
 ## Fixes
 
 (none)

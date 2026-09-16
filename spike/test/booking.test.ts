@@ -33,7 +33,7 @@ import {
   tick,
 } from '../manifests/booking.ts';
 
-const budget = (obs: Parameters<typeof bookingBudgetViolations>[0], p: string) => bookingBudgetViolations(obs, p, ADMIN);
+const budget = (obs: Parameters<typeof bookingBudgetViolations>[0], p: string, _n: number, view: Parameters<typeof bookingBudgetViolations>[3]) => bookingBudgetViolations(obs, p, ADMIN, view);
 const fullCheck = (ctx: Context, frontiers?: number[]) => checkContext(ctx, { invariants: bookingInvariants, budget, ...(frontiers ? { frontiers } : {}) });
 const brief = (vs: Violation[]) => vs.slice(0, 6).map(describeViolation).join('\n') + (vs.length > 6 ? `\n... ${vs.length} violations` : '');
 
