@@ -53,6 +53,35 @@ schedules, not a seeded campaign.
 TypeScript and `git diff --check` also passed. Dependencies were installed
 from the committed lockfile with `npm ci --ignore-scripts --no-audit --no-fund`.
 
-No append or model change was needed for these checks. Final integration
-waits for O1's single-facade ownership correction and the accepted O1/V6
-source. This focused run does not validate those subsequent changes.
+No append or model change was needed for these checks. This focused run
+precedes O1's single-facade ownership correction and the combined V6 source.
+
+Full integration run 2 source:
+`d3ff5f1b665e1096efecab08b1952b91fa01c99b`. This merges O1's ownership
+repair `bdb275f4c5c9e3fa8756a5a7dd709b76d857e249`, including V6 source
+`05c98e2d778124648834b9b00e772a6ad270a870`, before measurement.
+Commands from `spike`: `npm test` and `npm run typecheck`.
+Node 26.8.2. Result: **189 tests, 188 passed, zero ordinary failures,
+one executing/failing Club TODO**, zero skips; exit status 0; 111.3 seconds.
+All nine O2 checks passed again. TypeScript passed. The raw test output is
+retained unchanged in [run-2.txt](ordering-o2-runs/run-2.txt).
+
+All three 200-seed visibility campaigns completed with zero declared
+violations: Sale 11,047 entries (195 offers, 20 effective accepts); Booking
+12,000 entries (652 effective occupancies, 471 linked occupancies, 324
+effective cancels); Club 11,939 entries (1,001 effective votes, 126 effective
+admits). These are legacy visibility-path integration campaigns, not signed
+replays of all 600 series. Club's original admission policy failure remains
+the executing TODO, as chosen by the user and reported in V6. Sale's repair
+budget overrun is unchanged. Ordering success does not reverse either result.
+
+After run 2, O1's final candidate
+`c9fe7d5f6f5624dd6407d57ff213038c8e955e0c` was merged to retain its final
+ledger and run output. That merge changes only O1 validation records relative
+to the measured O2 source. O2 adds only this ledger, its two run logs, and the
+two test files. No O2 production change or model-policy fix is claimed.
+
+Whitespace checks pass for O2's source and edited prose. Raw Node output is
+preserved, including whitespace-only lines in the retained Club TODO stack
+trace; no claim is made that historical corpora or raw logs pass a whole-tree
+whitespace check. Independent review remains the completion gate.
