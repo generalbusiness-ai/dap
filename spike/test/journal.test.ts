@@ -10,6 +10,7 @@ import { canonicalize, encodeWire, envelopeBytes, signEvent, verifyHeader, verif
 import { ZERO_HASH } from '../src/canon.ts';
 import { checkContext } from '../src/checker.ts';
 import { CAP, K } from '../src/foundation.ts';
+import { Context } from '../src/context.ts';
 import { Journal, O1_PROFILE_VERSION, verifyJournalView } from '../src/journal.ts';
 import { SQLiteBackend, CRASH_POINTS } from '../src/sqlite.ts';
 import { SALE } from '../fixtures/sale.ts';
@@ -320,4 +321,50 @@ test('one live Journal owns each backend: revoked authority cannot be admitted t
   first.close();
   const second = Journal.open({ backend: memory, writerKey: keys.writer, packages });
   assert.deepEqual(second.context.state, first.context.state); second.close();
+});
+
+
+test('O1-F1 closed memory Context cannot issue or accept from stale authority after a new facade revokes it', t => {
+  const backend = new MemoryBackend();
+  const a = createJournal(backend);
+  const originalState = structuredClone(a.context.state);
+  a.close();
+  const b = Journal.open({ backend, writerKey: keys.writer, packages });
+  const revoke = act(b, 'alice', K.revoke, { principal: people.alice, capabilities: [CAP.invite] });
+  assert.ok(!('refused' in revoke) && revoke.verdict?.effective);
+  const before = b.context.entries;
+  const envelope = signEvent(a.context.intent(people.alice, K.invite, {
+    invitee: people.bob, grants: { principal: people.bob, roles: ['Buyer'] }, token_id: 'closed-context-token',
+  }, { action_id: 'closed-context-invite', nonce: 'ab'.repeat(16) }), keys.alice);
+  let error: unknown, issued: ReturnType<Context['submit']> | undefined, redeemed: ReturnType<Context['submit']> | undefined;
+  try {
+    issued = a.context.submit(envelope.body, a.context.credentialFor(people.alice), envelope);
+    if (!('refused' in issued)) {
+      const accept = acceptance(a, 'bob', issued.header.position, 'closed-context-accept');
+      redeemed = a.context.submit(accept.body, undefined, accept);
+    }
+  } catch (e) { error = e; }
+  const staleParticipants = [...a.context.state.participants];
+  const liveParticipants = [...b.context.state.participants];
+  b.close();
+  const cold = Journal.open({ backend, writerKey: keys.writer, packages });
+  t.diagnostic(JSON.stringify({ issued, redeemed, staleParticipants, liveParticipants, coldParticipants: cold.context.state.participants, coldInviteVerdict: issued && !('refused' in issued) ? cold.context.verdictAt(issued.header.position) : null }));
+  assert.match(String(error), /closed|inactive/);
+  assert.deepEqual(cold.context.entries, before);
+  assert.equal(backend.retry(envelope.body.action_id!), undefined);
+  assert.deepEqual(a.context.state, originalState); // historical fold inspection is still possible
+  assert.deepEqual(cold.context.state.participants, [people.alice]);
+  assert.deepEqual(checkContext(cold.context), []);
+  cold.close();
+});
+
+for (const storage of ['memory', 'sqlite'] as const) test('O1-F1 raw Context restoration or creation cannot bypass a live Journal on ' + storage, () => {
+  const backend = storage === 'memory' ? new MemoryBackend() : sqlite(join(dir(), 'journal.db'));
+  const journal = createJournal(backend), entries = journal.context.entries;
+  assert.throws(() => Context.restore(backend, packages), /owned|live facade/);
+  assert.throws(() => Context.create({ creator: people.alice, packages, backend }), /owned|live facade/);
+  assert.deepEqual(journal.context.entries, entries);
+  const result = act(journal, 'alice', K.observe, { fact: {} }, 'active-owner');
+  assert.ok(!('refused' in result));
+  journal.close();
 });
