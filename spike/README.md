@@ -290,3 +290,54 @@ What V4 does not claim: one room and integer ticks only; the clock is a
 fixture actor driven by the generator; a cancel naming a different admin
 than its request is a known limit of the predeclared schema, recorded in
 the ledger and not exercised by the corpus; Club is V5 and the report V6.
+
+## V5: Club by agent
+
+Measured result first: the agent-authored Club model needed **1 fix, 0
+added kinds, within the budget** of 4 fixes and 2 kinds over its two
+constraints (quorum and standing). The baseline passed three of the four
+predeclared cases and 197 of 200 seeds; the one failure family was the
+one the author predicted before any run: a committee member granted
+after an application, voting before any disclosure of it, judged their
+own vote effective while the oracle said `unknown_application`, because
+nothing they could read tied the application id to a position. The fix
+reads the chain's public commitments: the fold context now offers
+`commitmentAt(position)` (the header's commitment at any earlier
+position, hidden or not) and `holdersAt(capability, position)`, and the
+vote rule judges every late member's vote the same way for every
+reader. The author chose that over a stub kind because the commitment
+already is the public fact the design relies on to verify hidden
+positions; the ledger records the reasoning.
+
+Assumptions the result rests on: disclosure acts are visible to every
+member (positions and recipients, never payloads), so a vote's
+precondition is judgeable by everyone; the fixture's client honours the
+model's declared join disclosure, disclosure policy (applications only
+to holders of `vote`) and the grant effect that gives an admitted
+applicant Member; the committee is whoever holds `vote`, asked of the
+audience and fold contexts (role-derived audiences).
+
+What it contains: `manifests/club.md` and `manifests/club.ts` (the
+frozen manifest: the §4.2 policy, promises, the privacy budget on
+readable events and observations with the committee derived from grants,
+projection shape, reason vocabulary, budget, bounds, the committee joined
+by a prelude, invariants including the disclosure-before-vote rule and
+the Member grant after an admit, the generator's builders with late
+committee grants); `fixtures/club.ts` (the model, authored under spike
+plan §4.5); `manifests/club.ledger.md`. Harness additions for V5:
+role-derived audiences, members-visible disclosure acts, ambient
+disclosures, declared grant effects, disclosure policies bound to
+capability holders, the fold's public chain facts, and reproducible
+content ids in generated series (a generator defect found by this
+campaign; Booking was revalidated under it).
+
+What the tests show: the four predeclared cases of §4.2 (quorum with the
+Member grant, no quorum and no majority, lapsed and already voted, the
+late committee member before and after disclosure) and the 200-seed
+campaign pass; the ledger's totals agree with its entries.
+
+What V5 does not claim: one application type, a three-member committee
+and one quorum rule; no revocation is generated; a vote naming a content
+id that is not an application is judged by position only; the mutation
+runner across models and the report are V6.
+
