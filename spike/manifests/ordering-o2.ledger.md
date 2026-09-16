@@ -167,3 +167,13 @@ belong in [the integration ledger](ordering-integration.ledger.md) and the
 and O2 scope, not completion or independent approval of the repair. No new
 600-seed campaign or removal protocol is claimed. The original O2 request
 and its historical run files remain unchanged.
+
+The H1/H2 corrected integration's full noncampaign run at
+`773a38ec8367d0b563f7741d1ff902aceb72350c` includes all nine O2 tests, which
+pass unchanged. The shared total is 325 selected, 321 passed, zero ordinary
+failures and four retained Club TODOs. The type-only handover test correction
+at `713315d17030fbafae275dbde3e04c7c1e7dd2f4` passes its 12 affected tests
+and whole-tree typecheck, with identical runtime bytes. The
+[integration ledger](ordering-integration.ledger.md#o-h1o-h2-final-validation-and-benchmark-boundaries)
+retains the exact commands, source boundaries and bounded authentication-work
+measurements. This is not a new O2 campaign run or independent approval.

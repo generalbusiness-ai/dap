@@ -309,3 +309,12 @@ measurements; O4's existing full semantic replay per state query remains a
 separate bounded-fixture cost, not a claim of incremental scope evaluation.
 Publication and independent review remain pending the accepted aggregate
 and its final runtime boundary.
+
+After run 7, O4 integrates final aggregate candidate
+`936acce94e5cd024b0164fc6cd2af027f611545e`. Its changes after `713315d` are
+benchmark/validation records and ledgers only. Every source, fixture, test
+and lifecycle-manifest blob present at `e8ccb2e` is preserved; the per-file
+hashes are in `run-7-integration.json`. The scope runtime remains `f17f15a8`
+and Scope package `edea788e`. No tests or campaigns were repeated for this
+evidence merge. Aggregate acceptance is still an upstream review condition,
+not a claim made by this O4 validation record.

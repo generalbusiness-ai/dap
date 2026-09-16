@@ -170,3 +170,44 @@ The cache retains a commitment set and control-position set, using O(n)
 identifiers for an n-entry journal. It removes repeated historical signature
 verification on live append. Existing Context history reads and application
 fold costs remain unchanged; no globally constant append-cost claim is made.
+
+## O-H1/O-H2 final validation and benchmark boundaries
+
+At corrected source `713315d17030fbafae275dbde3e04c7c1e7dd2f4`, all 12
+handover tests and whole-tree typecheck pass. The only executable-source
+change since `773a38e` is the malformed-input test's explicit JSON annotation.
+[Run 5 metadata](ordering-integration-runs/run-5-h1-h2-type-correction.json)
+records both sources and matching SHA-256 hashes for all 19 runtime modules;
+[run 5 output](ordering-integration-runs/run-5-h1-h2-type-correction.txt)
+records the commands. Full-suite and benchmark results remain attributed to
+`773a38e`. Subsequent changes are evidence and ledger records only.
+
+The independent benchmark uses one frozen harness, run once per source/profile
+in sequential isolated archives. At 100, 400 and 1000 entries, the reviewed
+aggregate averaged 222, 822 and 2022 Ed25519 verifications per ordinary append
+over its 20-offer windows. Accepted O1 and both repaired profiles use exactly
+2 verifications and 2 signatures per append at all sizes. Full-history API
+reads fall from 4 calls to the accepted O1 count of 2; the remaining calls
+return increasing rows for the application fold.
+
+| Repaired profile | Storage | 100 entries, ms/append | 400 | 1000 |
+|---|---|---:|---:|---:|
+| Fixed /1 | Memory | 0.430 | 0.545 | 0.721 |
+| Fixed /1 | SQLite | 1.314 | 2.534 | 5.800 |
+| Movable /3 | Memory | 0.439 | 0.546 | 0.780 |
+| Movable /3 | SQLite | 1.326 | 2.493 | 5.950 |
+
+All measured actions append once and are effective. The shared host was less
+loaded during the repaired runs, so timings are representative observations,
+not a statistical speedup claim. The deterministic work counts establish the
+removed whole-prefix verification. These ordinary-action measurements do not
+claim constant total append cost, constant reopen cost or measured control
+operation latency. [Benchmark summary](ordering-integration-runs/h2-benchmark/comparison-summary.md)
+links the exact commits, source hashes, fixed harness, commands and raw
+results. All evidence files were copied byte-for-byte from the isolated
+benchmark directory; archives and SQLite database files are not included.
+
+The final grouped artifact manifest uses `713315d` as its final validation
+source, with `773a38e` separately named for the full suite and benchmark.
+The four retained Club negative-result TODOs and all earlier campaign/source
+boundaries remain intact. Independent workroom re-review is pending.
