@@ -84,6 +84,22 @@ the privacy budget, over 12000 entries with 974 joins, 197 narrow side
 attaches, 1638 disclosures, 2569 requests, 1426 publications (654
 effective), 401 frees, 439 cancels and 1582 clock ticks.
 
+## Run 4
+
+Snapshot commit: see `git log`, "checker run 4". Harness corrected, not a
+model fix: a generated series now replays to identical content ids (the
+generator's captured request ids had not survived replay, so generated
+cancels and occupancies named requests that never existed in the
+replayed series; found by the Club run 1 campaign). Manifest and package
+as at run 3.
+
+All six predeclared cases pass. The campaign passes: 200 of 200 seeds
+with zero violations, now with genuine coverage of the linkage: 323
+effective cancels of real requests (run 3 had none) and 489 effective
+occupancies naming a real request. The run-3 result stands; its coverage
+claim for cancels and published requests was vacuous and is corrected
+here.
+
 ## Fixes
 
 ### Fix 1: a disclosure policy naming the public kinds
