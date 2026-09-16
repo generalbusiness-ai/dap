@@ -1,0 +1,26 @@
+{
+  "provenance": "Retrospective companion added for checker report #1805, after the original run-2 records; these are not original manifest predeclarations.",
+  "record_snapshot": "742e64a06d06226b456f489eb53deacc1bc9f5db",
+  "defining_module": "spike/test/v6.test.ts",
+  "entry_ids": "Unmutated control event ids used as link labels; replay computes mutant event ids and remaps references.",
+  "cases": {
+    "v6-sale": {
+      "violations": 1, "reader": "alice", "frontier": 5,
+      "oracleEffective": true, "viewEffective": false,
+      "oracleModelReason": null, "viewModelReason": "no_such_offer"
+    },
+    "v6-booking": {
+      "violations": 1, "reader": "bob", "frontier": 4,
+      "oracleEffective": true, "viewEffective": false,
+      "oracleModelReason": null, "viewModelReason": "no_such_occupancy"
+    },
+    "v6-club": {
+      "violations": 2, "reader": "bob", "frontier": 7,
+      "oracleEffective": false, "viewEffective": true,
+      "oracleModelReason": "lapsed", "viewModelReason": null
+    },
+    "v6-hidden-revocation": {
+      "violations": 1, "reader": "bob", "frontier": 4
+    }
+  }
+}

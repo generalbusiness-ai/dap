@@ -1,8 +1,10 @@
 # Visibility spike report
 
-**V6 validation is recorded below; independent review of this report and
-the integrated candidate is pending.** Sale and Booking have independent
-approvals. Club's original admission policy remains a negative result.
+**Historical V6 was independently approved in review #1805 at
+`05c98e2d778124648834b9b00e772a6ad270a870` and landed as main
+`19af1c8fb46cc91c61a2027647f04a6f305b5cdc`.** Club's original admission
+policy remains a negative result. This follow-up corrects the report's
+scope; its additional executable results await a new immutable snapshot.
 
 The small-repair claim did not hold: **Sale required six semantic repairs
 against a budget of two. Club does not meet the original admission policy.**
@@ -21,13 +23,20 @@ uncommissioned alternatives.
 
 | Criterion | Finding |
 |---|---|
-| Goal 1: attach a package mid-stream and preserve prior outcomes | Integrated deterministic tests support bounded activation, replay, dependency pause/resume and binding locality. All three V6 binding cases pass. This does not establish state migration or arbitrary model composition. |
-| Goal 2: an agent reaches consistency within the declared repair budget | **Not met.** Sale exceeds its budget; Club's smaller count applies to an incomplete policy. Booking's candidate is within its model budget but includes revised guards and a separate foundation repair. |
-| Predeclared falsification condition | The repair-budget branch is **falsified by Sale**. The evidence does not prove that every model must reveal every private event, nor that every privacy-preserving Club protocol is impossible. |
+| Goal 1: evolvability | Integrated deterministic tests support the criterion of attaching a package mid-stream while preserving prior outcomes, with bounded activation, replay, dependency pause/resume and binding locality. All three historical V6 binding cases pass. This does not establish state migration or arbitrary model composition. |
+| Goal 2: ease of programming as an agent | **Not met.** Sale exceeds the repair budget; Club's smaller count applies to an incomplete policy. Landed Booking is within its model budget but includes revised guards and a separate foundation repair. |
+| Predeclared falsification: repair budget | **Falsified by Sale.** Six semantic repairs exceed the two-fix budget. |
+| Predeclared falsification: widening every audience until everyone sees everything | **Not observed in the bounded repaired Sale and Booking results.** They retain private audiences and pass their revised checks without making every event public. Club's original policy still fails, so this is not a successful three-model demonstration or a proof about every possible model. |
 
 These are the [design's goal criteria][goals] and the [views note's explicit
-falsification condition][falsification]. Goals 3 and 4 are not measured
-here: no user-comprehension trial or durable ordering result is claimed.
+falsification condition][falsification]. Goal 3, **comprehension simplicity
+for a person**, asks whether a newcomer can answer from the screen what
+the context is about, what they can do and what they cannot see and why.
+The narrative provides an inspection, not a user trial. Goal 4,
+**lightweight decentralization**, requires one process on one host with no
+external services, including context creation and joining in the ordering
+fixture. That criterion belongs to the ordering spike and is not measured
+by this visibility report.
 
 ## Exact source results
 
@@ -53,6 +62,14 @@ V4 approval is exact event
 It accepts the corrected experiment with the stated limits, including the
 key-based payload guard and client disclosure policy.
 
+V6 approval is exact event
+`git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:1998582d8f1d14adfeca07b170f392f517b0dbdb`
+(review #1805). It approves the historical candidate and accurate negative
+result at `05c98e2d778124648834b9b00e772a6ad270a870`, with six nonblocking
+follow-ups. Main `19af1c8fb46cc91c61a2027647f04a6f305b5cdc` is the landing
+wrapper. This approval does not cover later follow-up changes or turn the
+retained Club acceptance failure into a pass.
+
 ## What changed during measurement
 
 The plan makes a post-baseline manifest change a **new experiment**.
@@ -72,7 +89,7 @@ original pre-replay-fix tree produced 196/200 failures according to checker
 
 The exact identities used by the latest source results are:
 
-| Model | Manifest | Candidate package |
+| Model | Manifest | Repaired package |
 |---|---|---|
 | Sale | `sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9` | `sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85` |
 | Booking | `sha256:cb4514f4967891077ad78e1dd0fba4c17438fb32b98cd8bd790df8531b35dd16` | `sha256:0556de5c337344eaa15afcbbbf5d22aa82c384bd6841d4ffb0c07185d4b7ec27` |
@@ -94,9 +111,9 @@ worked example, not a fourth 200-seed authoring trial.
 
 | Campaign boundary | Recorded coverage |
 |---|---|
-| Sale, approved V3 tree | 11,171 entries; 273 offers, 18 effective accepts; 120 unbound Inspection requests; zero Inspection attaches and zero private disclosures. |
-| Sale, V4 candidate integration | 11,047 entries; 195 offers, 20 effective accepts; 118 unbound Inspection requests; still zero Inspection attaches and zero private disclosures. |
-| Booking, V4 candidate run 9 | 12,000 entries; 2,555 requests; 652 effective occupancies, 472 linked to earlier effective requests; 325 effective cancels; 1,630 clock ticks. |
+| Sale, approved V3 tree | 11,171 entries; 273 stubs, 18 effective accepts; 120 unbound Inspection requests; zero Inspection attaches and zero private disclosures. |
+| Sale, landed V4 integration | 11,047 entries; 195 offers, 20 effective accepts; 118 unbound Inspection requests; still zero Inspection attaches and zero private disclosures. |
+| Booking, landed V4 run 9 | 12,000 entries; 2,555 requests; 652 effective occupancies, 472 linked to earlier effective requests; 325 effective cancels; 1,630 clock ticks. |
 | Club, historical validation run 3 | 11,939 entries; 629 applications; 1,001 effective votes; 126 effective admits and their grant effects; 1,939 disclosures. This is not an A1/A5 acceptance pass. |
 
 The [V4 integration record][booking-integration] supplies the changed Sale
@@ -228,10 +245,23 @@ manifest code changed between the two runs, so run 1 remains the full
 The Club TODO still fails because admission 18 is effective after Dana's
 Member grant at 15.
 
-The deliberately broken audiences each change one kind's audience only.
-Their original packages pass the same traces. The revocation mutation
-changes serving alone while preserving recorded events and headers; it
-deliberately violates F0's public-spine contract.
+Each of the three model mutations changes one kind's audience only and
+uses one hand-built trace, followed by deletion-minimal shrinking. These
+are targeted detection cases, not mutation campaigns across 200 seeds or
+a complete survey of audience faults. Their original packages pass the
+same traces. Each selected narrowing hides a prerequisite from an affected
+reader while a later dependent event stays readable; that dependence
+produces the measured mismatch. Narrowing an audience alone does not
+guarantee detection.
+
+The checker has no independent rule requiring particular events to remain
+readable: no "must-readable" floor. Its observations use the supplied
+visibility, and its privacy budgets limit disclosure. A narrower audience
+can therefore pass when it produces no observed disagreement or declared
+invariant violation. The results below establish detection for these
+traces, not completeness against arbitrary under-delivery. The revocation
+mutation changes serving alone while preserving recorded events and
+headers; it deliberately violates F0's public-spine contract.
 
 | V6 case | Reader and frontier | Measured finding |
 |---|---|---|
@@ -245,7 +275,18 @@ deliberately violates F0's public-spine contract.
 
 Both readers interpret the obsolete binding rather than pause. Each
 binding case has zero all-frontier consistency, invariant or privacy
-violations. Both runs reproduce these seven findings.
+violations. Both runs reproduce these seven findings. The unrelated
+private attach preserves saved and freshly resolved binding identifiers
+by value; this does not establish reuse of an interpreter cache. The
+existing cache contract discards a result when its basis or view changes.
+
+These historical V6 cases use a public relevant attach. A private relevant
+attach also imposes its audience ceiling on every kind it declares,
+following the existing C3a rule. That ceiling can exclude even an event's
+actor when the actor is outside it. Binding staleness does not imply that
+the resulting event remains shared or that a reader with missing attach
+evidence can interpret it. This is an existing boundary, not a new
+follow-up implementation or policy change.
 
 Four [planted-fault traces][v6-corpus] are retained: Sale has four steps,
 Booking four, Club seven, and hidden revocation three after shrinking from
@@ -270,7 +311,8 @@ boundaries alongside the new cases. This supports the measured examples,
 not arbitrary histories. Raw test output is retained, including Node's
 whitespace-only diagnostic lines. The historical Booking budget file also
 retains its EOF blank line; a clean working diff is not a clean diff from
-the earlier main tree. Independent V6 review remains required before landing.
+the earlier main tree. Historical V6 review and landing are recorded above;
+the nonblocking follow-up requires its own validation and review.
 
 The visibility harness uses authenticated entries as an assumption,
 ordinary TypeScript functions, cold replay and an in-memory sequencer.
