@@ -73,3 +73,45 @@ One focused invocation will include this regression and the existing descriptor,
 origin, and scope exception-boundary tests, followed by whole-tree typecheck.
 The root will run the combined noncampaign suite after merging L1–L3. This
 component does not rerun broad suites or campaigns and claims no review verdict.
+
+
+## Measured component result
+
+Frozen source `28981dd1982e02b40fc154d43972c19d82ebc7bf` passes all **33
+focused checks**, with no failures, skips or TODOs. Whole-tree typecheck
+passes. The single focused invocation includes five new L1 cases, existing
+descriptor and origin checks, and all 16 scope phase/exception-boundary cases.
+Exact command arguments, raw output, source blobs, dependency/configuration
+blobs and eight observations are retained in `corpus/ordering-o4/l1/run1`.
+The earlier uncommitted compiler-only development check is labelled as such;
+it is not a lifecycle result or a frozen-source measurement.
+
+Each backend records 33 signed test inputs and 99 exact retry checks across
+immediate, cold and post-completion states. The four names are tested as
+unknown application kinds in S/I/D/F, unknown roles in grants/revocations and
+invitation acceptance, unavailable package names and unowned rights. The
+real transfer ends at S42/I5/D5/F11, with one activation, delivery confirmed
+and fulfilment complete. Reopening every context yields the identical final
+snapshot. The positive property-name tests also pass: four own model/kind/
+role declarations, `__proto__` rebinding, per-model outcomes, observations,
+client binding maps and cold replay remain usable with ordinary object
+prototypes. No inherited object is resolved as a registry entry.
+
+The measured component identities are:
+
+- scope implementation `sha256:f891ce00e1f6578863eb5424b7410c625d031914bfd58ae336f36350142d2111`;
+- Scope package `sha256:a948ef9a269688c1bd40b01f78dab2749c96b15283450956fea36ef414a6452e`;
+- unchanged Sale `sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85`;
+- unchanged Inspection `sha256:18a886c149b383b8630836307195c1a89b90c463e7e32df6e0663b5d4ecc3030`;
+- unchanged foundation table `sha256:5a7be1514529bac249c683ada733e64273f94b2700abf8a55c47dcb7ebfb8d78`.
+
+The opening rule remains `701403e9` and lifecycle manifest `a766fe56` for
+this isolated component. These are not the future L1–L3 combined identities.
+No profile or manifest prose changed here. Existing package definitions keep
+their ids; old signed histories remain pinned to their historical runtime
+and are not silently reinterpreted as this new Scope implementation.
+
+Only these results, observations and documentation follow the measured
+source. Root owns the combined integration, one noncampaign run, publication
+and independent review. This component does not claim to fix L2/L3 or the
+shared profile's other recorded limits, and no broad suite or campaign ran.

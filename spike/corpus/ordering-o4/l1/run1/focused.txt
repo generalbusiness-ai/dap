@@ -1,0 +1,208 @@
+TAP version 13
+# Subtest: a package declaring a name under the system prefix is refused, whatever it claims about itself
+ok 1 - a package declaring a name under the system prefix is refused, whatever it claims about itself
+  ---
+  duration_ms: 2.898542
+  type: 'test'
+  ...
+# Subtest: a descriptor whose id does not match its content is refused
+ok 2 - a descriptor whose id does not match its content is refused
+  ---
+  duration_ms: 0.200292
+  type: 'test'
+  ...
+# Subtest: two handlers for one kind without a resolution is ambiguous; a resolution naming exactly both is accepted
+ok 3 - two handlers for one kind without a resolution is ambiguous; a resolution naming exactly both is accepted
+  ---
+  duration_ms: 0.469708
+  type: 'test'
+  ...
+# Subtest: resolution retains the capability and the active audience policy: attaching a handler never widens
+ok 4 - resolution retains the capability and the active audience policy: attaching a handler never widens
+  ---
+  duration_ms: 0.668125
+  type: 'test'
+  ...
+# Subtest: identities follow executable content: a changed fold changes descriptor and binding ids
+ok 5 - identities follow executable content: a changed fold changes descriptor and binding ids
+  ---
+  duration_ms: 0.232333
+  type: 'test'
+  ...
+# Subtest: binding identity is per kind: an unrelated attach does not change it; a relevant change does
+ok 6 - binding identity is per kind: an unrelated attach does not change it; a relevant change does
+  ---
+  duration_ms: 0.33125
+  type: 'test'
+  ...
+# Subtest: an application intent captures its binding by default; a relevant attach stales it, an unrelated private attach does not; a missing binding is refused
+ok 7 - an application intent captures its binding by default; a relevant attach stales it, an unrelated private attach does not; a missing binding is refused
+  ---
+  duration_ms: 1.423125
+  type: 'test'
+  ...
+# Subtest: O4 G2 failed activation, dormant exercise and exact retries permit later activation: memory
+ok 8 - O4 G2 failed activation, dormant exercise and exact retries permit later activation: memory
+  ---
+  duration_ms: 754.811209
+  type: 'test'
+  ...
+# Subtest: O4 G2 failed activation, dormant exercise and exact retries permit later activation: sqlite
+ok 9 - O4 G2 failed activation, dormant exercise and exact retries permit later activation: sqlite
+  ---
+  duration_ms: 784.232209
+  type: 'test'
+  ...
+# Subtest: O4 G2 another participant admitted event cannot block activation: memory
+ok 10 - O4 G2 another participant admitted event cannot block activation: memory
+  ---
+  duration_ms: 390.944125
+  type: 'test'
+  ...
+# Subtest: O4 G2 another participant admitted event cannot block activation: sqlite
+ok 11 - O4 G2 another participant admitted event cannot block activation: sqlite
+  ---
+  duration_ms: 417.671125
+  type: 'test'
+  ...
+# Subtest: O4 G2 keeps current authorization gate: memory
+ok 12 - O4 G2 keeps current authorization gate: memory
+  ---
+  duration_ms: 298.225
+  type: 'test'
+  ...
+# Subtest: O4 G2 keeps current closed gate: memory
+ok 13 - O4 G2 keeps current closed gate: memory
+  ---
+  duration_ms: 302.402416
+  type: 'test'
+  ...
+# Subtest: O4 G2 keeps current authorization gate: sqlite
+ok 14 - O4 G2 keeps current authorization gate: sqlite
+  ---
+  duration_ms: 338.923625
+  type: 'test'
+  ...
+# Subtest: O4 G2 keeps current closed gate: sqlite
+ok 15 - O4 G2 keeps current closed gate: sqlite
+  ---
+  duration_ms: 329.63525
+  type: 'test'
+  ...
+# Subtest: O4 unexpected post-commit replay error is thrown and disables facade: memory
+ok 16 - O4 unexpected post-commit replay error is thrown and disables facade: memory
+  ---
+  duration_ms: 418.268667
+  type: 'test'
+  ...
+# Subtest: O4 unexpected post-commit replay error is thrown and disables facade: sqlite
+ok 17 - O4 unexpected post-commit replay error is thrown and disables facade: sqlite
+  ---
+  duration_ms: 449.276917
+  type: 'test'
+  ...
+# Subtest: O4 malformed release-proof shape has an explicit policy refusal: memory
+ok 18 - O4 malformed release-proof shape has an explicit policy refusal: memory
+  ---
+  duration_ms: 318.757042
+  type: 'test'
+  ...
+# Subtest: O4 malformed release-proof shape has an explicit policy refusal: sqlite
+ok 19 - O4 malformed release-proof shape has an explicit policy refusal: sqlite
+  ---
+  duration_ms: 349.403667
+  type: 'test'
+  ...
+# Subtest: O4 thrown fold handler is a real failure with durable bytes: memory
+ok 20 - O4 thrown fold handler is a real failure with durable bytes: memory
+  ---
+  duration_ms: 126.235959
+  type: 'test'
+  ...
+# Subtest: O4 thrown audience handler is a real failure with durable bytes: memory
+ok 21 - O4 thrown audience handler is a real failure with durable bytes: memory
+  ---
+  duration_ms: 126.308208
+  type: 'test'
+  ...
+# Subtest: O4 thrown fold handler is a real failure with durable bytes: sqlite
+ok 22 - O4 thrown fold handler is a real failure with durable bytes: sqlite
+  ---
+  duration_ms: 149.469333
+  type: 'test'
+  ...
+# Subtest: O4 thrown audience handler is a real failure with durable bytes: sqlite
+ok 23 - O4 thrown audience handler is a real failure with durable bytes: sqlite
+  ---
+  duration_ms: 147.205458
+  type: 'test'
+  ...
+# Subtest: O4 L1 property-name attempts retain retries, cold state and completed transfer: memory
+ok 24 - O4 L1 property-name attempts retain retries, cold state and completed transfer: memory
+  ---
+  duration_ms: 1965.700417
+  type: 'test'
+  ...
+# Subtest: O4 L1 property-name attempts retain retries, cold state and completed transfer: sqlite
+ok 25 - O4 L1 property-name attempts retain retries, cold state and completed transfer: sqlite
+  ---
+  duration_ms: 2064.309209
+  type: 'test'
+  ...
+# Subtest: O4 L1 explicitly owned property-name kinds, models, roles and resolutions still work: memory
+ok 26 - O4 L1 explicitly owned property-name kinds, models, roles and resolutions still work: memory
+  ---
+  duration_ms: 7.195167
+  type: 'test'
+  ...
+# Subtest: O4 L1 explicitly owned property-name kinds, models, roles and resolutions still work: sqlite
+ok 27 - O4 L1 explicitly owned property-name kinds, models, roles and resolutions still work: sqlite
+  ---
+  duration_ms: 10.912125
+  type: 'test'
+  ...
+# Subtest: O4 L1 registry inheritance is absent while own data keys survive copying and serialization
+ok 28 - O4 L1 registry inheritance is absent while own data keys survive copying and serialization
+  ---
+  duration_ms: 0.451
+  type: 'test'
+  ...
+# Subtest: a listing origin opens the sale; the origin actor needs no grant
+ok 29 - a listing origin opens the sale; the origin actor needs no grant
+  ---
+  duration_ms: 1.477584
+  type: 'test'
+  ...
+# Subtest: the same origin adopted twice is a genesis error
+ok 30 - the same origin adopted twice is a genesis error
+  ---
+  duration_ms: 0.340209
+  type: 'test'
+  ...
+# Subtest: an origin whose kind does not resolve is an unhandled verdict and inert
+ok 31 - an origin whose kind does not resolve is an unhandled verdict and inert
+  ---
+  duration_ms: 0.633958
+  type: 'test'
+  ...
+# Subtest: an origin binds no expected binding: a foreign binding on an origin is ignored
+ok 32 - an origin binds no expected binding: a foreign binding on an origin is ignored
+  ---
+  duration_ms: 0.775167
+  type: 'test'
+  ...
+# Subtest: a listing submitted later, not as an origin, is refused by the model
+ok 33 - a listing submitted later, not as an origin, is refused by the model
+  ---
+  duration_ms: 0.946667
+  type: 'test'
+  ...
+1..33
+# tests 33
+# suites 0
+# pass 33
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 5794.997375
