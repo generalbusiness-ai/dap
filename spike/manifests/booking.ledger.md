@@ -133,6 +133,38 @@ generator's campaign. The existing campaign now also counts and requires
 effective cancels and occupancies linked to real requests, to prevent the
 coverage gap recorded in run 4 from returning unnoticed.
 
+## Run 6: final V4 validation
+
+Snapshot commit: "spike V4: checker run 6 snapshot: validate the recovered
+corpus and current campaign". Manifest
+`sha256:771a9cb82aff7b03bf50b55b490e35710da3e3072bd8877a7b79a13100bfc3f7`,
+current package
+`sha256:622a120962da35c370b093161848677fe086a5d1fa729655fc3ce2ced855bc9b`.
+No model change or new fix.
+
+`node --test test/booking.test.ts test/booking-corpus.test.ts` passes all
+10 tests: the six predeclared cases, the 200-seed campaign, manifest and
+ledger checks, and the recovered corpus. All 139 recovered failures
+still produce a privacy-budget violation under the kept run-2 model,
+and no one-step deletion preserves their readable-events privacy
+failure. Literal private disclosures still violate the current model's
+budget, as expected for the client policy in fix 1.
+
+The current campaign has zero violations over 12000 entries: 955 joins,
+198 narrow attaches, 1629 disclosures, 2554 requests, 1496 publications
+(652 effective), 384 frees, 419 cancels (325 effective) and 1630 ticks.
+Of the effective occupancies, 472 name an earlier effective request.
+These two linkage measures are now produced and required by the
+committed campaign test. They are the current measured counts; run 4's
+reported 323 cancels and 489 linked occupancies remain in its historical
+record and are not the run-6 measurements.
+
+`npm run typecheck` and `git diff --check` pass. A separate generation
+and replay check over all 200 seeds confirms that two independent
+generations produce identical event ids at every position. The preserved
+run-2 model and generator were also compared with `7b24e86`: only their
+import paths differ.
+
 ## Fixes
 
 ### Fix 1: a disclosure policy naming the public kinds
