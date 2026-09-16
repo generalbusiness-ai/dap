@@ -2,8 +2,8 @@
 
 **Candidate report; final O6 integration measurements are pending below.**
 The measured bootstrap meets goal 4's local fixture criterion. O4 executes
-the transfer lifecycle under an explicit trusted-writer completeness rule;
-its final replay coverage follow-up is pending. These are measured candidate
+the transfer lifecycle under an explicit trusted-writer completeness rule
+and its replay follow-up supports goal 1 for that fixture. These are measured candidate
 results, not independent acceptance or landing. O1's re-review and the
 ordering candidates' subsequent reviews remain separate gates.
 
@@ -19,7 +19,7 @@ tolerance, production hosting or a user-comprehension study.
 | Criterion | Finding |
 |---|---|
 | Goal 4: one process, one host, no external services; create and join a context | **Met within the O6 fixture.** One Node process creates a local SQLite journal from signed L and G, publishes their envelope, resolves its route, issues and redeems a signed invitation, verifies the view and recovers the same receipt after retry and reopen. |
-| Goal 1: attach a package mid-stream and preserve all prior outcomes | O4 executes the signed lifecycle and preserves the original Sale trace. Its first measured replay regression checked Alice at frontier 10 across completion; the required wider reader/frontier follow-up is pending. O1's expectation tests alone do not execute transfer. |
+| Goal 1: attach a package mid-stream and preserve all prior outcomes | **Supported for the executed O4 fixture.** Signed histories, prior outcomes, audiences and original Sale projections replay unchanged across attach, handover and completed transfer on memory and SQLite. This is not general migration or arbitrary composition. |
 | Goal 2: agent authoring within the small repair budget | The visibility result is unchanged: Sale exceeded its budget; Club fails the original admission policy. Ordering does not repair either result. |
 | Goal 3: newcomer comprehension from the screen | Not measured. The route is an executable fixture, with no production screen or user study. |
 
@@ -38,7 +38,7 @@ requirement even when Node exits zero.
 | O1 codec and journal | Repaired full source `747a0905`: 188 tests, 187 pass, one failing Club TODO; 600 visibility seeds clean. Final specification `43295693`: 11/11 lifecycle checks. V6 integration `9575c7c4`: 191 selected tests, 187 pass, four failing TODOs; three campaigns excluded. Typecheck passes at each boundary. | Earlier passing snapshots missed ownership bypasses. A private lease now rejects closed or raw Context writes against a Journal-owned backend; both Journal and direct Context append/fold errors invalidate it. Final specification changes do not relabel the preceding full run. [Ledger][o1] |
 | O2 concurrency, retry and admission | Focused `ea2b65e6`: 9/9. Integrated `d3ff5f1b`: 189 tests, 188 pass, one failing Club TODO; 600 visibility seeds clean; typecheck passes. | Three schedules submit 126 requests through six concurrent client processes per schedule: 78 new entries, 39 exact replays, nine changed-content refusals. No append or model change was needed. Participant removal is controlled at the admission interface because F0 has no removal event. [Ledger][o2] |
 | O3 handover | Focused `3cdd1f3b`: 69/70; all 11 O3 checks pass. Full `aae4051e`: 200 tests, 199 pass, one failing Club TODO; 600 seeds clean. Focused `8756c233`: 71/71 but typecheck fails. Final focused `acfe2522`: 71/71 and typecheck passes. | First failure was changed error wording, corrected for compatibility. The later v2 schema tightening requires distinct control/writer keys and exact sequencing fields. Its negative test needed a type annotation. No failed protocol case was repaired after measurement; the tightening is still a later source boundary. [Ledger][o3] |
-| O4 transfer lifecycle | Formal run 1 `ee86290f`: 98/100 focused checks, two recorder failures; typecheck passes. Run 2 `b35b267e`: 100/100 focused; full 315 tests, 311 pass, four executing Club TODOs, zero ordinary failures; 600 seeds and typecheck pass. | Both first-run failures were non-JSON optional `undefined` fields in diagnostics after semantic assertions passed. The recorder now marks them explicitly; runtime, profile and package identities are unchanged. Per backend: 20 healthy boundaries, 27 adverse branches and 209 actual signed-genesis mutations. Wider replay coverage follow-up pending. [Ledger][o4] |
+| O4 transfer lifecycle | Formal run 1 `ee86290f`: 98/100 focused checks, two recorder failures; typecheck passes. Run 2 `b35b267e`: 100/100 focused; full 315 tests, 311 pass, four executing Club TODOs, zero ordinary failures; 600 seeds and typecheck pass. Replay follow-up `faf26c07`: 6/6 plus typecheck. | First-run diagnostic encoding was repaired without changing signed runtime inputs. Per backend: 20 healthy boundaries, 27 adverse branches and 209 actual signed-genesis mutations. The wider replay follow-up is separately measured; no campaign was repeated for it. [Ledger][o4] |
 | O5 isolated control verifier | Focused `462d7dec`: 53 pass, one isolation-runner failure. Focused `ac563035`: 54/54, then a test-only cast fails typecheck. Full `0a1daff7`: 256 tests, 255 pass, one failing Club TODO; all 55 O5 checks and 600 visibility seeds pass; typecheck passes. | Repairs resolve the macOS temporary-directory symlink for permission mode and annotate the malformed-input cast. No verifier algorithm repair followed the first frozen source. One isolated input comes from a real O3 SQLite handover. [Ledger][o5] |
 | O6 envelope and route | Focused `c75894b8`: 2/2 plus typecheck. The direct CLI demonstration also exits zero. | Source was frozen before tests and the demonstration. No bootstrap implementation repair followed. Final combined noncampaign checks are pending below. [Ledger][o6] |
 
@@ -91,6 +91,23 @@ later-frontier proof material, has no further effect. An exact retry recovers
 its original receipt. A timeout cannot restore source authority when F may
 already have activated. These blocked cases are safety results, not an
 availability guarantee.
+
+Report QA exposed an initial replay-test gap, so O4 added a separate measured
+follow-up. At `faf26c07`, each backend checks the actual S/F reader union
+Alice, Bob, Carol, Ivan and Kim: 55 reader/base questions at 0–10 across
+attach and completion, and 100 questions at 0–19 after S24/F3. Immediately
+across attach it also checks all 13 fixture principals at 11 bases, or 143
+questions. Exact signed histories, full-prefix outcomes, audiences and client
+observations are compared before/after, then against a separate original Sale
+replay. These overlapping question sets are not added into a unique-case count.
+
+The first follow-up at `e11e334e` passed 4/6 tests: cross-fixture audience
+arrays had different key/alias ordering. Sorting recipients for that
+comparison fixed the test while exact signed before/after equality remains
+required. The known late-Ivan client/full projection difference is preserved,
+not erased. [Replay matrix evidence][o4-replay] contains synthetic full folds
+and each reader's own history, including authorized private terms; those audit
+records are not the public proof packets delivered to F.
 
 The formal lifecycle manifest is
 `sha256:fc55bfa123891e750f7bbe3a0d9cb33b5f65c07750db08bc984544ed2dd6b378`;
@@ -264,8 +281,9 @@ negative results or commissions a new Club privacy experiment.
 
 O6 has integrated the measured O4 and ordering candidates. Its only merge
 conflict was two blank lines in Journal; it retained O4's exact bytes to
-preserve the scope implementation identity. No performance patch or new
-runtime behavior is introduced. The final replay follow-up and combined
+preserve the scope implementation identity. O4's replay follow-up
+`4ea7d966cc44fc2641e4f99516403bb46d50ba7f` is also integrated.
+No performance patch or new runtime behavior is introduced. Final combined
 noncampaign source/results remain to be recorded here; no full-suite result
 at the eventual combined head is claimed.
 
@@ -282,8 +300,9 @@ at the eventual combined head is claimed.
 [o6-tests]: https://github.com/generalbusiness-ai/dap/blob/c75894b8312b9046ac5975b4cda1c67149ed850d/spike/test/ordering-bootstrap.test.ts
 [o6-demo]: https://github.com/generalbusiness-ai/dap/blob/416e70615982778ae54bdfa4827cb7c87a3e058e/spike/manifests/ordering-o6-runs/run-1-demo.json
 [visibility]: https://github.com/generalbusiness-ai/dap/blob/d95e097b1d38a5242754922fe4c8b977462f5555/spike/REPORT.md
-[o4]: https://github.com/generalbusiness-ai/dap/blob/7d9efba41747e3c3bbd19b32dc238f6b4444247b/spike/manifests/ordering-o4.ledger.md
+[o4]: https://github.com/generalbusiness-ai/dap/blob/4ea7d966cc44fc2641e4f99516403bb46d50ba7f/spike/manifests/ordering-o4.ledger.md
 [o4-results]: https://github.com/generalbusiness-ai/dap/tree/7d9efba41747e3c3bbd19b32dc238f6b4444247b/spike/manifests/ordering-o4-runs/run-2-observations
 [o4-development]: https://github.com/generalbusiness-ai/dap/blob/7d9efba41747e3c3bbd19b32dc238f6b4444247b/spike/corpus/ordering-o4/development/README.md
 [lifecycle]: https://github.com/generalbusiness-ai/dap/blob/7d9efba41747e3c3bbd19b32dc238f6b4444247b/spike/manifests/ordering-lifecycle.md
 [ordering-integration]: https://github.com/generalbusiness-ai/dap/blob/3dc6b0953f91661edcc059b56157d349ff31c5b1/spike/manifests/ordering-integration.ledger.md
+[o4-replay]: https://github.com/generalbusiness-ai/dap/blob/4ea7d966cc44fc2641e4f99516403bb46d50ba7f/spike/manifests/ordering-o4-runs/run-4.json

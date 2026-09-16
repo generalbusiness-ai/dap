@@ -61,3 +61,15 @@ The retained attached-handler shell probe records its original fixed working
 directory; to replay it elsewhere, point that `cd` at a detached worktree of
 its stated `df68429` source. Running it against repaired source demonstrates
 the correction, not the original failure.
+
+
+The goal-1 followup preserves the original full-suite source and adds a
+bounded historical matrix at `faf26c07d1cadf073a92bac0bb7b01ed3d6333ec`.
+Run `node --test spike/test/ordering-scope-regressions.test.ts` at that source,
+optionally setting a new `DAP_O4_RECORD_DIR`, to reproduce run 4. It checks all
+five actual source/destination participant readers at bases 0–10 and 0–19
+after completed transfer on memory and SQLite, against captured actual signed
+histories and independently executed original Sale projections/outcomes.
+The two matrix files are source-history audit records, containing each
+reader's legitimate source view and full synthetic source folds; they are
+separate from the public transfer proof and destination-view packets.

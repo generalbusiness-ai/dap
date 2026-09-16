@@ -1,0 +1,14 @@
+✔ O4 scope exercise honors attached refusing handler: memory (227.149916ms)
+✔ O4 scope exercise honors attached refusing handler: sqlite (231.440916ms)
+✔ O4 preserves original Sale 0–19 outcomes, model and member readability (169.612125ms)
+✔ O4 later attach, handover and transfer preserve actual pre-attach as-of replay (311.076333ms)
+✔ O4 goal 1: all actual readers and historical frontiers survive attach, handover and completed transfer: memory (1271.21125ms)
+✔ O4 goal 1: all actual readers and historical frontiers survive attach, handover and completed transfer: sqlite (1705.626583ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4001.095083

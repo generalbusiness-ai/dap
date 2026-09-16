@@ -119,3 +119,19 @@ noncampaign suite, typecheck and the standalone bootstrap CLI. The three
 are unchanged from the measured O4 input; all other current tests remain
 selected, including four executing/failing Club TODOs. Results will be
 recorded after the frozen input, without relabelling earlier campaigns.
+
+The completed O4 follow-up is now integrated at exact candidate
+`4ea7d966cc44fc2641e4f99516403bb46d50ba7f`, measured source
+`faf26c07d1cadf073a92bac0bb7b01ed3d6333ec`. Its six bounded checks and
+typecheck passed. For each backend it covers 55 actual-reader questions at
+bases 0–10 across attach/completion and 100 at bases 0–19 after completion;
+143 questions across the attach include all 13 fixture principals. The
+original unsuccessful set-order comparison at `e11e334e` is retained in
+O4's run-3 record. The correction sorts recipients only across key/alias
+representations; exact signed before/after equality remains required.
+Runtime, profile, manifest and fixtures are unchanged from O4's full run.
+
+This combined source freezes the inputs for O6 run 2 below. No runtime
+conflict or behavior change requires another 600-seed campaign; the complete
+noncampaign suite and actual CLI will validate integration of the measured
+components and the retained bootstrap.
