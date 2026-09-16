@@ -39,6 +39,27 @@ export interface JoinDisclosure {
   effectiveOnly?: boolean;
 }
 
+/**
+ * A model's declared disclosure policy: in its `config.disclosurePolicy`,
+ * the kinds a client may disclose beyond their audience (the public
+ * ones). The fixture's disclosing client honours it; the checker's budget
+ * judges what is readable regardless. Undefined when no model declares
+ * one: then anything may be disclosed.
+ */
+export function disclosableKinds(state: FoundationState): Set<string> | undefined {
+  let out: Set<string> | undefined;
+  for (const pkg of state.env.packages) {
+    for (const m of Object.values(pkg.models)) {
+      const dp = (m.config as { disclosurePolicy?: { kinds?: unknown } } | null)?.disclosurePolicy;
+      if (dp && Array.isArray(dp.kinds)) {
+        out ??= new Set();
+        for (const k of dp.kinds) if (typeof k === 'string') out.add(k);
+      }
+    }
+  }
+  return out;
+}
+
 function joinDisclosuresDeclared(state: FoundationState): JoinDisclosure[] {
   const out: JoinDisclosure[] = [];
   for (const pkg of state.env.packages) {
@@ -144,7 +165,7 @@ export function shrink(script: Script, fails: (s: Script) => boolean): Script {
   while (changed) {
     changed = false;
     for (let i = current.steps.length - 1; i >= 0; i--) {
-      const candidate: Script = { base: current.base, steps: current.steps.filter((_, j) => j !== i) };
+      const candidate: Script = { ...current, steps: current.steps.filter((_, j) => j !== i) };
       if (fails(candidate)) {
         current = candidate;
         changed = true;

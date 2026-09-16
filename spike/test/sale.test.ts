@@ -32,7 +32,7 @@ import {
   saleTraceSteps,
 } from '../manifests/sale.ts';
 
-const budget = (obs: Parameters<typeof saleBudgetViolations>[0], p: string) => saleBudgetViolations(obs, p, ALICE);
+const budget = (obs: Parameters<typeof saleBudgetViolations>[0], p: string, _n: number, view: Parameters<typeof saleBudgetViolations>[3]) => saleBudgetViolations(obs, p, ALICE, view);
 const fullCheck = (ctx: ReturnType<typeof replay>['ctx'], frontiers?: number[]) => checkContext(ctx, { invariants: saleInvariants, budget, ...(frontiers ? { frontiers } : {}) });
 const brief = (vs: Violation[]) => vs.slice(0, 6).map(describeViolation).join('\n') + (vs.length > 6 ? `\n... ${vs.length} violations` : '');
 

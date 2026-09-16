@@ -379,7 +379,17 @@ export function foldEntry(state: FoundationState, input: FoldInput): Verdict {
       }
     } else {
       const binding = state.env.kinds[ev.kind];
-      audience = binding ? capped(binding.audience({ position: pos, members: membersBefore }, ev), binding.ceiling, membersBefore) : MEMBERS;
+      if (!binding) audience = MEMBERS;
+      else {
+        // A model's audience rule runs on runtime JSON; if it throws, the event is recorded as
+        // ineffective and readable by its actor alone, so the series stays replayable.
+        try {
+          audience = capped(binding.audience({ position: pos, members: membersBefore }, ev), binding.ceiling, membersBefore);
+        } catch (e) {
+          verdict = { known: true, authorized: verdict.authorized, effective: false, reason: 'audience_error:' + (e instanceof Error ? e.message : String(e)) };
+          audience = named(ev.actor);
+        }
+      }
     }
   }
   state.audiences[pos] = audience;

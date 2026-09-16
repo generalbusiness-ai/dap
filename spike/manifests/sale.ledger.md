@@ -24,20 +24,36 @@ invariant that every effective withdrawal names a stub by its author;
 (3) any refusal on a hidden stub (`not_author`, `duplicate_offer`, an
 accept of a stub the viewer never read) is inconsistent for late joiners.
 
-## Predeclaration corrections (harness, not fixes)
+## Corrections after the baseline, and how they are counted
 
-Found by checker run 1 on the trace, corrected by the builder before the
-findings were handed to the author, because they are defects in the
-harness's predeclared fixture, not in the model:
+Found by checker run 1 on the trace and corrected by the builder before
+the findings were handed to the author. Checker's review of the first
+candidate (workroom report 8c0d324b, V3-F4) ruled that spike plan §4.3
+counts every post-baseline semantic change to the measured model's
+audience or fold rules, whoever finds or implements it. So:
 
-- The counter kind's audience function named the seller twice (the V1
-  kinds table read `seller` from a payload the seller writes), so Bob
-  never read position 10. The counter payload now names the offer's
-  `author`; the manifest's kind table and trace say so. Manifest id after
-  the correction: `sha256:7e0f89716d6d5d9c40c1a5d0e4692bb605d1ad1504d0ad1a3be0bb59d34116b5`.
-- The campaign's unrelated side package (a harness fixture) had no
-  projection of its own, so a disclosed narrow attach showed a member the
-  full count of notes they could not read. It now projects visible notes.
+- The counter kind's audience function named the seller twice (the
+  predeclared kinds table read `seller` from a payload the seller
+  writes), so Bob never read position 10. The counter payload now names
+  the offer's `author`, and the fold's malformed check reads that field.
+  This changed the measured package's audience rule and schema after the
+  baseline: **counted as Fix 1** below, although the builder made it.
+- The campaign's unrelated side package (a harness fixture, not the
+  measured model) had no projection of its own, so a disclosed narrow
+  attach showed a member the full count of notes they could not read. It
+  now projects visible notes. Not a Sale fix.
+
+## Experiment revisions
+
+Spike plan §4.7 calls a manifest changed after the baseline a new
+experiment. The manifest changed twice; each revision is identified here
+and every run cites the identity it ran under.
+
+| Revision | Manifest id | Change |
+|---|---|---|
+| Frozen, before the baseline | `sha256:4123f7b5f8610fd09ca5042a169b57fff8756dc6d0089ac2196ecdf7c42ac52b` | as frozen |
+| Run 1 corrections | `sha256:7e0f89716d6d5d9c40c1a5d0e4692bb605d1ad1504d0ad1a3be0bb59d34116b5` | the counter kind's payload names the offer's author (prose table and trace step 10); the side package projects visible notes; affordance weights so a series is not closed at once |
+| Run 3 | `sha256:9ac768d2eedc48f0802d468eac9234d0bfd3b98d58113f850bb3bf70dd132d4a` | the privacy budget is checked on what a participant can read, with the parties of each private event derived from recorded facts (checker's V3-F1) |
 
 ## Run 1
 
@@ -90,16 +106,59 @@ and reproduces the table with every later position shifted by one; the
 test asserts that reproduction and reports the literal trace's
 violations as a diagnostic.
 
+## Run 3
+
+Snapshot commit: see `git log`, "checker run 3". Manifest revision "Run
+3" above; package unchanged from run 2
+(`sha256:48da26fcab894a9158d1671a77488b248597d4b7309fa10955b09019d6c062a4`).
+
+Checker's review of the first candidate (report 8c0d324b) found that the
+run-2 privacy check tested the projection only: a private payload
+disclosed to a non-party was readable in their view while their
+projection still hid it (V3-F1, reproduced on the trace with Bob's terms
+disclosed to Carol, and in seed 7). The harness now gives the budget
+check the participant's readable view, and the manifest's check derives
+each private event's parties from recorded facts (the listing's actor,
+the event's actor, the stub's author for a counter, the named
+inspector). Under that check, with no other change, **100 of 200 seeds
+fail**: every failure is the fixture's disclosing client (the generator,
+acting as the seller's client) widening a private kind (terms, a
+counter, an inspection request) to a non-party. The model cannot stop a
+seller's client from disclosing; what it can do is declare which kinds
+may be widened, for the disclosing client to honour. That is the
+author's to decide and is counted if made.
+
+Also found by the same review, handed to the author: V3-F2, an
+effective counter may name the wrong offerer and be delivered to them
+(the fold gave `author` no meaning); V3-F3, the private audience
+functions throw on a null payload, so a malformed private attempt made
+the series unreplayable (the harness now also records an audience
+error as an ineffective, actor-only event, so a model bug cannot break
+replay).
+
 ## Fixes
 
-Both fixes answer one finding: every run-1 signature is a member who
+### Fix 1: the counter names the offer's author, so its audience is seller and author
+
+- Discovery source: checker run 1 (the trace, position 10 unreadable by Bob) | builder
+- Counterexample: the trace; Bob's readability was `rrrrhrrrrhhrhrhrrrrr`
+  against the table's `rrrrhrrrrhrrhrhrrrrr`
+- Constraint affected: none
+- Added kind: no
+- Before/after: before, the predeclared counter kind carried `seller`
+  and its audience named the actor (the seller) and the seller; after,
+  it carries `author` and the audience names the seller and that
+  author. Made by the builder as a correction of the predeclared kinds
+  table, counted as a fix per checker's V3-F4.
+
+Fixes 2 and 3 answer one finding: every run-1 signature is a member who
 joined after a stub, withdrawal or accept was recorded and must judge a
 later event about that stub. No fold rule can close that gap, because
 nothing the newcomer can read says the stub exists; the views note's rule
 ("any state a participant's fold depends on must be reachable through
 events that participant can see") is met by making the backlog reachable.
 
-### Fix 1: join disclosure of the public sale events
+### Fix 2: join disclosure of the public sale events
 
 - Discovery source: checker run 1 (signatures 1, 2, 4) | author
   (predicted in the baseline: item 3)
@@ -120,7 +179,7 @@ events that participant can see") is met by making the backlog reachable.
   declaration with a `dap.disclose` by the seller after each
   `dap.accept_invite`; the model cannot emit it.
 
-### Fix 2: an unknown stub does not exist
+### Fix 3: an unknown stub does not exist
 
 - Discovery source: checker run 1 (signature 3) | invariant | author
   (predicted in the baseline: item 2)
@@ -135,7 +194,7 @@ events that participant can see") is met by making the backlog reachable.
 - Before/after: before, a withdrawal or a `replaces` naming a stub the
   view had not read was effective and recorded against the id (a
   tombstone), because manifest case 4 needed a newcomer to judge a
-  withdrawal of a hidden stub as the oracle does. With fix 1 every
+  withdrawal of a hidden stub as the oracle does. With fix 2 every
   reader knows every effective stub, so the tombstone is unnecessary
   and wrong: a withdrawal or a replacement of an unknown stub is now
   `no_such_offer`, and an id is taken only by an effective stub.
@@ -151,4 +210,4 @@ replaces the hidden o1: `no_such_offer` against effective), so cases 1
 to 4 and the campaign all depend on the harness applying the declared
 disclosure on every join, including the joins in the predeclared cases.
 
-Totals: 2 fixes, 0 added kinds, budget within
+Totals: 3 fixes, 0 added kinds, budget exceeded

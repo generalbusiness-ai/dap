@@ -14,7 +14,7 @@ const sigs = new Map<string, { seeds: number[]; example: string }>();
 const failing: number[] = [];
 for (const seed of seeds) {
   const { ctx } = replay(generate(saleGeneratorSpec(salePackage), seed));
-  const vs = checkContext(ctx, { invariants: saleInvariants, budget: (o, p) => saleBudgetViolations(o, p, ALICE) });
+  const vs = checkContext(ctx, { invariants: saleInvariants, budget: (o, p, _n, view) => saleBudgetViolations(o, p, ALICE, view) });
   if (!vs.length) continue;
   failing.push(seed);
   const seen = new Set<string>();

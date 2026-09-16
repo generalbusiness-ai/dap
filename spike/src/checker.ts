@@ -10,7 +10,7 @@
 // finds a planted audience bug.
 
 import { isDeepStrictEqual } from 'node:util';
-import type { Context } from './context.ts';
+import type { Context, ViewEntry } from './context.ts';
 import { descriptorId, type PackageDescriptor } from './descriptor.ts';
 import type { FoundationState } from './foundation.ts';
 import { interpretView, type Interpreted } from './interpret.ts';
@@ -33,8 +33,12 @@ export interface CheckOptions {
   available?: (p: Principal) => Record<string, PackageDescriptor>;
   /** invariants over the oracle's state and the recorded entries, declared independently of the folds */
   invariants?: (state: FoundationState, frontier: number, entries: readonly Entry[]) => string[];
-  /** a privacy budget over the oracle's observation for a principal, declared independently of the folds */
-  budget?: (obs: Observation, p: Principal, frontier: number) => string[];
+  /**
+   * A privacy budget declared independently of the folds, checked on what the
+   * participant can actually read (their view: every readable event, by
+   * audience or disclosure) and on the oracle's observation for them.
+   */
+  budget?: (obs: Observation, p: Principal, frontier: number, view: ViewEntry[]) => string[];
   /** frontiers to check; default: every position */
   frontiers?: number[];
 }
@@ -62,7 +66,7 @@ export function checkContext(ctx: Context, opts: CheckOptions = {}): Violation[]
       const view = ctx.view(p, n);
       const r = interpretView(p, view, n, available(p));
       if (opts.budget) {
-        for (const detail of opts.budget(oracleObserve(ctx, p, n, n), p, n)) out.push({ participant: p, frontier: n, kind: 'budget', detail });
+        for (const detail of opts.budget(oracleObserve(ctx, p, n, n), p, n, view)) out.push({ participant: p, frontier: n, kind: 'budget', detail });
       }
       if (r.kind === 'interpreted') {
         const actual = observeInterpreted(r, view);

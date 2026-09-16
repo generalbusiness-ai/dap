@@ -225,9 +225,34 @@ export function saleInvariants(state: FoundationState, frontier: number, entries
 
 // ----- the privacy budget over observations -----
 
-/** Violations of the privacy budget in one observation: amounts or counters of others' offers, or inspection requests p is not party to. */
-export function saleBudgetViolations(obs: Observation, p: Principal, seller: Principal): string[] {
+/** The parties who may read a private Sale event, from recorded facts: the listing's seller, the event's actor, and for a counter the stub's author. */
+export function privateParties(view: readonly { position: number; event?: EventBody }[], i: number): Principal[] | undefined {
+  const ev = view[i]?.event;
+  if (!ev) return undefined;
+  const seller = view[1]?.event?.actor ?? ALICE;
+  const p = ev.payload as { offer_id?: string; inspector?: string } | null;
+  if (ev.kind === SALE + 'offer_terms') return [ev.actor, seller];
+  if (ev.kind === SALE + 'counter') {
+    const stub = view.find((v) => v.event?.kind === SALE + 'offer' && (v.event.payload as { offer_id?: string })?.offer_id === p?.offer_id);
+    return [ev.actor, seller, ...(stub?.event ? [stub.event.actor] : [])];
+  }
+  if (ev.kind === INSPECTION + 'request') return [ev.actor, seller, ...(typeof p?.inspector === 'string' ? [p.inspector] : [])];
+  return undefined;
+}
+
+/**
+ * Violations of the privacy budget: on what p can actually read, a private
+ * event (terms, counter, inspection request) whose parties, from recorded
+ * facts, do not include p; and on the projection, amounts or counters of
+ * others' offers, or inspection requests p is not party to.
+ */
+export function saleBudgetViolations(obs: Observation, p: Principal, seller: Principal, view: readonly { position: number; event?: EventBody }[] = []): string[] {
   const out: string[] = [];
+  for (const v of view) {
+    if (!v.event) continue;
+    const parties = privateParties(view, v.position);
+    if (parties && !parties.includes(p)) out.push(`${p} can read the ${v.event.kind.replace(/^com\.example\./, '')} at ${v.position}, whose parties are ${parties.join('+')}`);
+  }
   const sale = obs.models['sale'] as { offers?: { id: string; author: string; amount: unknown; counter: unknown }[]; acceptedAmount?: unknown } | undefined;
   for (const o of sale?.offers ?? []) {
     if (o.author === p || p === seller) continue;
