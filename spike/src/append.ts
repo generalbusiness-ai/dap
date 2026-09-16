@@ -59,6 +59,8 @@ export interface AppendEncoding {
 /** What admission needs from the serving party, which runs the fold. */
 export interface AdmissionContext {
   genesis: string;
+  /** Refuse a stale serving fold under the same serialization boundary, before retry/admission. */
+  assertCurrent?(): void;
   encoding?: AppendEncoding;
   maxPayloadBytes: number;
   isParticipant(p: Principal): boolean;
@@ -132,6 +134,7 @@ export function append(backend: Backend, sub: Submission, ctx: AdmissionContext)
   const id = prepared?.id ?? contentId(ev as unknown as Json);
 
   return backend.serialized((): Receipt | Refusal => {
+    ctx.assertCurrent?.();
     // 2. Exact retry, before admission.
     const prior = backend.retry(ev.action_id!);
     if (prior) {

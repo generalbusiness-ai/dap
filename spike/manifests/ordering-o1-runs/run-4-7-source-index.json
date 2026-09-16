@@ -1,0 +1,54 @@
+{
+  "purpose": "Crosslinks reconstructed from the contemporaneous ledger; historical log bytes are unchanged. Commands run in spike unless an explicit cwd says otherwise.",
+  "runs": [
+    {
+      "log": "spike/manifests/ordering-o1-runs/run-4-f1-before.txt",
+      "source": "1351ad09df256e6714a1ef2b8ea8598dcbc24113",
+      "runtime_base": "c9fe7d5f6f5624dd6407d57ff213038c8e955e0c",
+      "command": [
+        "node",
+        "--test",
+        "--test-name-pattern=O1-F1",
+        "test/journal.test.ts"
+      ],
+      "result": "3 failed: memory harness DataCloneError before product sequence; memory/SQLite raw restore bypass reproduced."
+    },
+    {
+      "log": "spike/manifests/ordering-o1-runs/run-5-f1-runtime.txt",
+      "source": "35f103ebac92a1d1025b6b68022c0e219374694d",
+      "command": [
+        "node",
+        "--test",
+        "test/journal.test.ts",
+        "test/codec.test.ts"
+      ],
+      "result": "44 passed, 1 harness DataCloneError; appended typecheck passed."
+    },
+    {
+      "log": "spike/manifests/ordering-o1-runs/run-6-f1-before-corrected.txt",
+      "source": "b8fe4965efdd9b06371e950535837dfc6e1ccdac",
+      "runtime_base": "c9fe7d5f6f5624dd6407d57ff213038c8e955e0c",
+      "test_source": "940506b473abc808666560d5e757811f985fcdaa",
+      "journal_test_git_blob": "0e9fa5376b8496ea731d05a0ab80aa76457d6f31",
+      "command": [
+        "node",
+        "--test",
+        "--test-name-pattern=O1-F1",
+        "spike/test/journal.test.ts"
+      ],
+      "cwd": "isolated repository root",
+      "result": "All 5 corrected regressions failed on old runtime; memory stale invitation/acceptance and raw restore/acquired-context bypasses reproduced."
+    },
+    {
+      "log": "spike/manifests/ordering-o1-runs/run-7-f1-repaired.txt",
+      "source": "940506b473abc808666560d5e757811f985fcdaa",
+      "command": [
+        "node",
+        "--test",
+        "test/journal.test.ts",
+        "test/codec.test.ts"
+      ],
+      "result": "45 passed; appended typecheck passed with independently edited F2 paths still in preparation, so not a whole-tree immutable source measurement."
+    }
+  ]
+}

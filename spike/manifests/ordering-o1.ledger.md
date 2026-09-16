@@ -129,7 +129,10 @@ visibility campaign path is unchanged from run 2. Accordingly run 2 remains
 the measured 600-seed integration result, and the final scoped run does not
 pretend to be another campaign.
 
-## Identities and scope
+## Historical identities and scope at the original O1 candidate
+
+This section records the original `c9fe7d5` boundary. Later profile and
+manifest identities are recorded under their own measured sources below.
 
 - Profile: `dap.fixture.single-writer/1`; document SHA-256:
   `sha256:fbc4d00e3f3eca6401541359642cdcf013c2c9ff821c2300d7afe8774b77e8fc`.
@@ -394,3 +397,101 @@ remain intact. The V6 main wrapper
 `d95e097`; the O1 branch has integrated the approved candidate directly.
 No additional campaign or identical-tree wrapper merge was needed. O1's
 independent re-review remains pending.
+
+## Second review correction O1-G1: every Context must be current
+
+Review `3d76d2b9d7f1fce8c577243ba330e15208b975c4` found that a raw
+Context could resume stale admission after Journal released ownership, and
+that a raw Context did not disable itself after its own lost reply.
+Regression-only source `c49e1c87abb88f3db887d6380a99011ae8a2c9af`
+retains the `4cfc693` runtime. Four regressions ran: one passed and three
+failed. The memory after-close case and both raw lost-reply cases recorded
+invitation 3 and redemption 4 as effective with Bob in the stale fold, while
+cold replay kept only Alice and judged the invitation unauthorized. The
+SQLite after-close case already refused through its closed handle. Exact
+source, command and output are retained in
+[run-12-g1-before.json](ordering-o1-runs/run-12-g1-before.json) and
+[run-12-g1-before.txt](ordering-o1-runs/run-12-g1-before.txt).
+
+The correction caches a Context's position and header hash only after a fold
+succeeds. The shared append serialization boundary calls a supplied freshness
+check before retry/admission; it compares one backend.head() with that cache.
+A stale write is refused and disables the Context. Every Context, including
+raw instances without a lease, also disables itself after its own append or
+fold error. A fresh restore/open is required before another write. Retry
+still precedes current admission after this serving-state consistency check.
+The new guard does not obtain or scan backend.entries().
+
+Additional checks cover two unowned raw Contexts competing over one backend
+and a scheduled head advance immediately before serialization. The scheduled
+case makes full-history reads unavailable during stale refusal, ensuring the
+freshness guard uses the current head rather than a history scan.
+
+## Second review correction O1-G2: activation phase and declared obligations
+
+Builder design decision for Hugh
+`c2982a6e6756f4fed08e5a82acc8b05a65127745` permits ordinary destination
+events before activation while transferred rights remain dormant. It preserves
+the genesis-pinned inputs, current authorization, closed-context gates and
+exact retry receipts. The specification adds failed-activation, dormant-exercise,
+fresh-activation and intervening-participant traces. The profile and manifest
+also state all A1–A7 public-proof requirements and the nine O4 evidence groups.
+These are O4 obligations, not evidence that O1 implements scope transfer.
+
+The new lifecycle manifest is
+`sha256:d94090b21ce42f2eec4a046558b3a776895d82905c2096a19df1f5f02e011f86`.
+The public-opening rule remains
+`sha256:475b415bbf8b16ccdb1bea078174712c57f2b2955ece9338d762abd60228bad8`.
+Historical manifest identities and raw run outputs are retained. A source
+index now crosslinks runs 4–7 without changing their output bytes:
+[run-4-7-source-index.json](ordering-o1-runs/run-4-7-source-index.json).
+
+At runtime source `81a95d09c0ffb8cf2e65565b05d451b939371290`, 60 focused
+checks pass: 9 Context freshness/current-retry, 4 append, 15 codec and 32
+Journal checks. The six G2 specification paths were uncommitted during that
+runtime-only run and were not imported by the selected tests. Exact source,
+command and exit code are in
+[run-13-g1-repaired.json](ordering-o1-runs/run-13-g1-repaired.json); output is
+in [run-13-g1-repaired.txt](ordering-o1-runs/run-13-g1-repaired.txt). A current
+raw Context retains a successful write's exact receipt and verdict on retry
+without a credential; it can then continue under its current state. A raw
+MemoryBackend Context also remains usable after a Journal takes and releases
+ownership without advancing the head.
+
+The combined source will receive one full noncampaign suite and typecheck.
+No new 600-seed run is claimed: the earlier campaign remains measured at
+`747a0905dc80f15a108fd62bdc5399e9f31f4431`, before this G1 runtime correction.
+
+## G1/G2 final measured boundary
+
+The combined source is `2c727b7d8db28c17b51a0aaa34ea5151f2eb44a4`. Its
+full noncampaign suite selected 202 tests: 198 passed, zero ordinary failures,
+four executing/failing retained Club TODOs, zero skipped among selected tests.
+The three 200-seed campaigns were excluded. Whole-tree typecheck passed.
+Commands, source, identities and exit codes are retained in
+[run-14-g1-g2-combined.json](ordering-o1-runs/run-14-g1-g2-combined.json);
+raw output is in
+[run-14-g1-g2-combined.txt](ordering-o1-runs/run-14-g1-g2-combined.txt).
+The noncampaign test command took 12.285 seconds and typecheck 0.698 seconds
+in this environment. This is not a new measurement of the older 600 seeds.
+
+Bounded internal QA from `ordering_o5` found no further defect within the
+declared cooperative boundary. It inspected and tested source `10fa069`,
+whose runtime bytes match `81a95d0` and this combined source. Original
+reviewer L1/L1s/L5 sequences now refuse stale raw writes; cold signed retry
+recovers the correct Alice-only state. Its additional signed-raw probe on
+memory and SQLite confirms exactly one head read inside serialization for a
+current retry, unchanged entries/outbox, continued current writes and cold
+Journal retry. The seven-test earlier harness passes at its actual source.
+[Retained QA](ordering-o1-runs/g1-qa/README.md) contains the original scripts,
+output and [summary](ordering-o1-runs/g1-qa/qa-g1-summary.json), copied without
+rewriting their bytes. This QA is not workroom checker approval.
+
+Only this ledger and retained evidence change after the combined measurement.
+The new runtime checks use exact backend object identity and a current head,
+not underlying-store discovery or a full history scan. Wrappers, aliases and
+direct backend mutation remain outside the cooperative promise. Raw restore
+without an encoding is still a trusted unsigned semantic path; later
+authenticated Journal.open rejects its unsigned entries. O4's runtime
+activation correction and completeness obligations need their own evidence.
+Independent O1 re-review remains pending.
