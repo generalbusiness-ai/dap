@@ -321,3 +321,38 @@ This specification-only refinement changes the manifest ID to
 The opening-rule ID and all runtime files remain unchanged. Its focused
 lifecycle/typecheck run is recorded separately below; run 9 remains the full
 runtime/campaign measurement at its actual `75de2a86` manifest boundary.
+
+
+## Corrected candidate: final measured boundaries
+
+At `4329569392c7696e0857539eae6947903c8a5ba8`, the final 11 lifecycle
+checks and whole-tree typecheck pass. Exact source/commands/exit codes:
+[run-10-lifecycle.json](ordering-o1-runs/run-10-lifecycle.json); output:
+[run-10-lifecycle.txt](ordering-o1-runs/run-10-lifecycle.txt). No runtime or
+visibility campaign inputs changed after the full run at `747a090`. The final
+commit adds only this evidence text and run-10 records. Independent checker
+re-review remains pending.
+
+The final scoped diff check covers changed source, tests, specification and
+this ledger against the reviewed `c9fe7d5` candidate. Raw diagnostic logs are
+retained unchanged; historical claims of a clean working-tree diff do not
+mean those recorded log files have no trailing whitespace against main.
+No historical source snapshot, fixed vector or failure log was normalized.
+
+Current input-file SHA-256 hashes (raw bytes):
+
+| File | SHA-256 |
+|---|---|
+| `spike/src/context.ts` | `d5bbdca7ca033d1791ace678972fd997831c32e424dab7478933ea314c4a6fb2` |
+| `spike/src/journal.ts` | `d57bdcaa63d52960e96f13de01b9bdd511df8a8bb67774772efe4531b152adf1` |
+| `spike/src/ownership.ts` | `c826cfb34e8784347cf26d6d157a2c27ca2db47e26ce85ec9ef5ef2cd40281f1` |
+| `spike/src/codec.ts` | `39e2060dd76bf8f6ec2e6378be79e663a1b983671277d927257b8f7b2a10d96f` |
+| `spike/src/append.ts` | `7b7c7be30c5feee150d33a498bcf1ef43de7defbe2774fd477d0eef311b6f1e5` |
+| `spike/src/sqlite.ts` | `5dfdc9734f7ca8f823ab343b005b0a8575d303d404f1686c4b3d72e6278a3ad0` |
+| `spike/test/journal.test.ts` | `7c9c0988676a43aeebcf7873344b458ec55a98cf3c8f82bee92f22c418c39bcb` |
+| `spike/test/fixtures/codec-vectors.json` | `255fa95a57bcd5ccd136512e1b6f2429f8e05750a6648284d2e03db3eb421969` |
+| `spike/ordering-profile.md` | `489534f39d3efa779626d327f56c1769968c3744176a3461bfe359c32c727ad1` |
+| `spike/manifests/ordering-lifecycle.md` | `f68d9d52b118d26129ea4a543894f09ba187ce53ace6d1e2ac1fc68c106e331c` |
+| `spike/manifests/ordering-lifecycle.ts` | `c3c4cb71aefbeafad163a8a4d04e309de96ca0bf920fc321675ac6da0b186e70` |
+| `spike/test/ordering-lifecycle.test.ts` | `03f121dd9f867ae25ec68de9135910e84dd13bfc1d93e34e75e619414a06374e` |
+| `notes/2026-09-14-ordering.md` | `5ccd3c59c01a428a8c43e5adfd3fe2e7ba06108df3bd6ae2fee6923488700bfe` |
