@@ -12,6 +12,9 @@ handover, consensus, transfer activation, the isolated control verifier, or
 the O2 concurrency campaign. The executable transfer expectations in
 [the lifecycle manifest](manifests/ordering-lifecycle.md) specify the future
 O4 test; they do not prove that the runtime performs those transitions.
+The current O1 corrections precede O4's formal baseline, not its existing
+prototype implementation. Historical profile hashes and run records name
+their original bytes; this edited document has a different content hash.
 
 ## Trust, finality and progress
 
@@ -19,8 +22,15 @@ There is one authoritative database file per context, one cooperating writer
 process, one live `Journal` serving facade per backend, and one fixed writer
 key. Opening a second facade on the same backend is rejected: each facade
 has a folded admission state, so concurrent independent folds would be stale.
-`Journal.close()` invalidates the facade and closes its SQLite handle; reopen
-uses a fresh backend and rebuilds the state before admitting another action. Participants trust this writer not to
+`Journal.close()` permanently disables writes through that facade's Context
+on every backend and closes its SQLite handle. `Context.create` and
+`Context.restore` refuse a backend owned by a live Journal; a raw Context
+acquired earlier also cannot submit or act while that Journal owns it.
+After a storage or fold error, the owned Context is inactive until
+close/reopen. Reopen uses a fresh SQLite backend handle, or may reuse a
+released MemoryBackend; both rebuild state before admitting another action.
+Direct Backend mutation and malicious in-process
+code are outside this cooperative ownership boundary. Participants trust this writer not to
 censor, equivocate, substitute another database copy, or expose private
 payloads. The SQLite lock excludes a second process opening this same file.
 It does not fence a malicious writer using another copy, a network filesystem
@@ -33,7 +43,7 @@ checks credentials or invitation issuance; chooses the successor and signs
 its header; and calls the backend's atomic write. Signing is synchronous
 Ed25519 inside the serialization boundary. The adapter contains no separate
 admission or append algorithm. The serving `Context` folds only after commit.
-`Context.restore` is an explicitly trusted semantic entry point;
+`Context.restore` on an unowned backend is an explicitly trusted semantic entry point;
 `Journal.open` is the authenticated boundary for saved wire bytes.
 
 A returned receipt is final under these trust assumptions. Later appends
@@ -80,14 +90,22 @@ An unbound application kind or an unavailable attach can omit evidence and
 receive the existing semantic refusal. Evidence describes a dependency;
 cryptographic verification alone does not prove the writer supplied the
 correct dependency. The existing interpreter/foundation performs that work.
+These public pointers also disclose an event class when present:
+`activation` identifies a bound application event and `requires` an attach.
+The header omits the exact kind and actor, but it is not class-opaque.
 
 Readable signed `ViewEntry` values carry the original `committed` envelope
-bytes; hidden values carry no envelope, actor, kind, or audience. A recipient
+bytes; the serving fixture's hidden values carry no envelope, actor, exact
+kind or audience. A recipient
 can call `verifyJournalView` using an independently pinned genesis and writer
 before interpreting the view. It checks every header, readable actor proof,
-body/byte agreement, and origin adoption. It rejects hidden envelope leakage.
-It does not establish freshness or prove that the server chose the correct
-readable positions; those remain distinct serving and semantic questions.
+body/byte agreement, and adoption of readable origins. It rejects an envelope
+placed in a hidden entry's `committed` field. It does not prove that an
+entitled opening was supplied, detect a signed but truncated prefix, or
+authenticate arbitrary extra `ViewEntry` properties outside the checked
+header and envelope fields. Completeness, expected terminal head, freshness
+and readable-position selection remain separate serving questions. Do not
+treat unchecked display metadata or other extras as signed facts.
 
 Genesis retains its declared origin bodies for V1 compatibility. Creation
 requires a separate, matching signed envelope for each origin. Their original
@@ -150,7 +168,10 @@ all append records absent; the post-commit interruption must retain all of
 them, including the consumed invitation and recoverable receipt. Another
 process dies at `after-publish-before-ack`; replay permits one duplicate
 notification and preserves the original bytes. A separate process verifies
-writer exclusion and release of ownership on close/crash.
+writer exclusion and release of ownership after a normal close, followed
+by successful reopen. The named SIGKILL tests separately establish their
+recorded crash/reopen boundaries; the exclusion test itself is not a crash
+ownership experiment.
 
 The V1 Sale trace 0–5 runs with real keys, actor envelopes, signed headers and
 wire verification on memory and SQLite, with the narrative's exact visible

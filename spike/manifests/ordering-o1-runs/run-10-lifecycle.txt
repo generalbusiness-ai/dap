@@ -1,0 +1,24 @@
+✔ manifest identity binds the prose and executable source, independently recomputed (0.6705ms)
+ℹ ORDERING_LIFECYCLE_MANIFEST_ID sha256:fc55bfa123891e750f7bbe3a0d9cb33b5f65c07750db08bc984544ed2dd6b378
+✔ every healthy boundary states all heads, writers, right statuses and exact active owners (1.423667ms)
+✔ join boundaries have two releases, dormant initialization and one activation followed by progress (0.18675ms)
+✔ all adverse cases have resolvable branches, full safe observations and exact reason coverage (1.356291ms)
+✔ restarts, alternative valid proof material and timeouts cannot duplicate or revive authority (0.141292ms)
+✔ public proof disclosure has a finite named rule and keeps private source kinds excluded (0.083792ms)
+✔ public exports are exact, source-linked and exclude the private accepted amount (0.1055ms)
+✔ changed-genesis enumeration covers every field, container, removal and added field (2.133709ms)
+✔ independent safety checks detect double ownership, premature activation and import duplication (0.281ms)
+✔ future observation comparison rejects changed, missing and additional state, including unsafe mutations (0.230208ms)
+✔ replay obligations preserve pre-attach outcomes, local import timing and writer retry identity (0.097542ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 69.827708
+
+> dap-spike@0.0.1 typecheck
+> tsc -p tsconfig.json
+

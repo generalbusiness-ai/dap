@@ -1,0 +1,22 @@
+{
+  "source": "4329569392c7696e0857539eae6947903c8a5ba8",
+  "node": "v26.8.2",
+  "commands": [
+    {
+      "command": [
+        "node",
+        "--test",
+        "test/ordering-lifecycle.test.ts"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "exit_code": 0
+    }
+  ]
+}
