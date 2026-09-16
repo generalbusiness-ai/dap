@@ -51,11 +51,17 @@ The sole append operation in `src/append.ts` checks stable signed bytes,
 destination and bounds; looks up an exact retry before current admission;
 checks credentials or invitation issuance; chooses the successor and signs
 its header; and calls the backend's atomic write. Signing is synchronous
-Ed25519 inside the serialization boundary. The adapter contains no separate
-admission or append algorithm. The serving `Context` folds only after commit.
+Ed25519 inside the serialization boundary. Journal supplies an
+ordering-admission hook through its encoding for the movable profile;
+`append.ts` invokes it after exact retry. It is not a second append or
+transport-admission algorithm. The revised fixed-writer contract omits that
+ordering-admission hook. The serving `Context` folds only after commit.
 `Context.restore` on an unowned backend is an explicitly trusted semantic
 entry point. Its ordinary raw writes store unsigned entries; a later
 `Journal.open` rejects those entries for missing committed bytes.
+Supplying a caller-owned encoding to raw restore does not acquire Journal's
+movable ordering-admission policy: a hook-free raw Context can write after
+a seal, but `Journal.open` rejects the resulting profile-invalid history.
 `Journal.open` is the authenticated boundary for saved wire bytes.
 
 A returned receipt is final under these trust assumptions. Later appends
@@ -207,44 +213,90 @@ their own historical source and run boundaries.
 
 ## O3: planned handover profile
 
-`dap.fixture.single-writer/2` is a separate opt-in profile. Its signed genesis
+The revised contract is `dap.fixture.single-writer/3`, a separate opt-in
+profile. Its signed genesis
 pins exactly `sequencing: {profile, writer, control}`: the initial writer and one
 Ed25519 ordering-control key distinct from every assigned writer key. That
 control key needs no application grant or
 participant credential. The profile retains the v1 codec, retention promise,
 SQLite boundary and wire vectors. Existing v1 genesis bytes do not gain a
 handover rule. There is no automatic replacement, control-key rotation,
-quorum, lease, or transition between profiles.
+quorum, wall-clock authority lease, or transition between profiles.
 
-At head H in epoch e (initially 0), the ordering-control key signs an actor envelope
-of kind `dap.seq.seal` with exactly `{epoch: e, predecessor: H.header.commitment}`.
-The retiring writer appends it and signs its header at H+1. Sealing pauses ordinary new appends;
-only the next assignment can extend the journal. The control key signs an
-actor envelope of kind `dap.seq.assign` with exactly
-`{epoch: e+1, predecessor: seal.header.commitment, writer: successor}`. The
-retiring writer appends and signs that entry at H+2. Its committed assignment
-immediately installs the successor for H+3. A writer key already used in this
-context cannot be installed again. Kind names above use the existing
-`ai.generalbusiness.dap.` namespace on the wire.
+This contract follows the builder design decision for Hugh under his
+unattended spike instruction:
+`git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:2d7edc9c76b3d657a2a9fbb3fa6ffa819cb25492`,
+following ratified review
+`git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:5643a940fde2c3c372d48ae89ee34e8e35593cf3`.
+The revised Journal, recipient-view and independent-control-verifier
+boundaries must reject old movable `/2` genesis and proof formats. Historical
+`/2` fixtures, genesis pins, failures and measurements remain bound to their
+original commits. They are not relabelled as `/3` results or migrated by
+changing a profile field. The O1 fixed-writer wire bytes and vectors remain
+unchanged. The current repair needs its own frozen source, focused validation
+and bounded-cost evidence in the O2/O3/O5 and integration ledgers; this
+contract statement is not that evidence or independent approval.
 
-There are two deliberately different hashes. The control payload's
-`predecessor` binds the previous **signed-envelope commitment**, as ordering
-note §6 specifies. Every authenticated `header.prev` binds the previous
-**header preimage hash**, as the codec specifies. Both links refer backward;
-neither names the entry containing it. A seal or assign carrying the previous
-header hash in its payload is refused. A header carrying the previous envelope
-commitment in `prev` fails ordinary header verification. The genesis identity
-and signed chain bind the unchanged profile and durability promise, so assign
-cannot substitute different retention or control rules.
+At committed position H in epoch e (initially 0), the ordering-control key
+signs a `dap.seq.seal` actor envelope with exactly
+`{epoch: e, predecessor: {position: H, headerHash: head.headerHash}}`.
+The retiring writer appends it and signs its header at H+1. Sealing pauses
+ordinary new appends; only the next assignment can extend the journal.
+The control key signs `dap.seq.assign` with exactly
+`{epoch: e+1, predecessor: {position: H+1, headerHash: seal.headerHash}, writer: successor}`.
+The retiring writer appends and signs it at H+2. Its committed assignment
+installs the successor for H+3. A writer key already used in this context
+cannot be installed again. The wire kinds retain the existing
+`ai.generalbusiness.dap.` prefix.
+
+The predecessor object has exactly `position` and `headerHash`; missing or
+extra fields, an entry commitment in place of the header hash, or a different
+position are refused. Seal binds the exact current head and assign the exact
+seal head. `headerHash` is the codec's canonical header preimage hash,
+excluding `seq_sig`; it already binds the entry commitment, so the payload
+has no redundant predecessor commitment. Each ordinary `header.prev` also
+binds the previous header hash. All these links point backward. The signed
+genesis binds the profile and durability promise; assign cannot substitute
+different retention or control rules.
+
+Journal verification, recipient-view verification and independent control
+proof verification must reject an entry commitment appearing at more than
+one position, including header-only positions. This check is independent of
+the exact-head control binding and independently excludes the relocated-seal
+proof containing a repeated commitment.
+An exact retry returns its original saved receipt and position; it creates
+no new entry and is not a repeated commitment in the journal.
 
 `append.ts` still owns the only append and retry algorithm. Stable signed bytes
 are checked first. Exact retry and changed-content refusal occur inside the
-serialized boundary before the new ordering gate. Only new actions check
+serialized boundary after O1's folded-frontier freshness check and before
+the ordering gate. Only new actions check
 whether this facade's signing key is currently assigned, whether a seal has
 paused work, and whether the control proof is valid. Valid seal/assign events
 use profile authority instead of participant admission; other events retain
 ordinary admission. One commit saves the entry, head, retry and outbox records.
 No refusal or retry adds an outbox row.
+
+The O-H2 repair requires full authenticated verification at create/open to
+build a private cache of the verified head, ordering state, commitments and
+control positions. The movable-profile hook compares the cached head with
+the backend head and validates the proposed action; signing checks the next
+position, previous header hash and commitment uniqueness. The cache advances
+from the authenticated envelope and new signed header only after the
+backend's serialization call returns with the transaction committed. An
+unexpected head requires reopen. Owned direct Context writes share this
+encoding; cached ordering and control verdict queries use the authenticated
+prefix rather than re-verifying the full chain.
+
+Fixed-writer journals must omit the ordering-admission hook entirely.
+The O1 folded-frontier check and permanent error invalidation remain: cached
+state cannot authorize a stale or errored Context, including after an
+uncertain commit reply or a fold error. This bounds the **added ordering and
+authentication work**, not the whole application path. The foundation fold
+still materializes history, and total Context or SQLite append cost is not
+claimed to be O(1). Work and timings at 100, 400 and 1,000 entries on memory
+and SQLite require a recorded source and results; this contract statement
+makes no unmeasured latency or throughput claim.
 
 SQLite metadata pins the initial writer and profile, not a second mutable
 assignment. `Journal.open` verifies all saved signatures and the control chain,
@@ -255,10 +307,10 @@ was never assigned cannot open it. The existing exclusive file lock and one
 facade per backend still apply. Copying a database does not fence a dishonest
 old writer; this remains the one trusted writer profile.
 
-The public Journal result distinguishes authority layers. A committed v2
+The public Journal result distinguishes authority layers. A committed `/3`
 seal/assign returns `controlVerdict: {known:true, authorized:true,
 effective:true}` and omits the application `verdict`. `controlVerdictAt(position)`
-authenticates the saved prefix and produces the same result after cold open or
+reports the authenticated control outcome and produces the same result after cold open or
 an exact retry. `Journal.ordering` reports the verified current assignment.
 The legacy F0 fold still has a `not_in_v1` placeholder for sequencing controls;
 that internal placeholder is not the outcome of the ordering operation. No
@@ -269,9 +321,16 @@ The serving view places controls on the existing spine. `verifyJournalView`
 can follow a visible valid control chain and authenticate the new writer's
 headers, including hidden application positions. Hidden headers do not reveal
 kind names; verification alone cannot prove that a server supplied every
-required spine opening. O5 separately tests an independent verifier against
-its declared complete-control-input contract. O3 does not count its own
-transition function as independent evidence of invariant 19.
+required spine opening. **O5's invariant-19 result assumes that the complete
+required control spine is supplied.** Its verifier authenticates the given
+prefix, not its freshness or status as the latest head. A prefix ending
+between seal and assign establishes a sealed prefix; hidden omitted controls
+cannot in general be inferred from headers alone. Exact-head signatures and
+duplicate-commitment checks do not prevent ordinary writer forks, database
+copies or rollback to an older file. Comparing signed histories may reveal
+equivocation; readers kept apart may not detect it. These trusted-writer
+limits are unchanged. O3 does not count its own transition function as
+independent evidence of invariant 19.
 
 ## O4: public-proof completeness
 
