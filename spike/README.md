@@ -122,9 +122,12 @@ What it contains:
     rebinds;
   - the pause rule: a disclosed event whose activation is hidden, or a
     disclosed attach with a hidden requirement, pauses with
-    `dependency_missing`; an event or attach whose evidence is all
-    visible is judged, and its verdict, effective, `stale_binding` or a
-    refused attach, is the genuine one.
+    `dependency_missing`; an attach the sequencer resolved pauses with
+    `package_unavailable` until the viewer's client has its package, and
+    one the sequencer could not resolve (no `requires` in its header) is
+    judged; an event or attach whose evidence is all visible is judged,
+    and its verdict, effective, `stale_binding` or a refused attach, is
+    the genuine one.
   The chain closes by induction: a visible requirement was judged when
   it was reached with its own requirements checked the same way, so a
   view that sees an event's evidence resolves the binding the sequencer

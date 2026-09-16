@@ -20,6 +20,7 @@ import {
   type AttachResolution,
   type Environment,
   type PackageDescriptor,
+  packageIn,
 } from './descriptor.ts';
 import {
   MEMBERS,
@@ -403,7 +404,7 @@ function foldGenesis(state: FoundationState, ev: EventBody, packages: Record<str
   }
   state.participants = [ev.actor];
   for (const b of p.bindings) {
-    const pkg = packages[b.package];
+    const pkg = packageIn(packages, b.package);
     if (!pkg) throw genesisError('foundation_mismatch', `genesis binds unknown package ${b.package}`);
     const out = attachPackage(state.env, pkg, { resolution: b.resolution, position: 0 });
     if (!out.ok) throw genesisError('foundation_mismatch', `genesis binding refused: ${out.reason}`);
@@ -434,7 +435,7 @@ function foldSystem(state: FoundationState, entry: Entry, packages: Record<strin
   switch (ev.kind) {
     case K.attach: {
       const p = ev.payload as unknown as AttachPayload;
-      const pkg = packages[p.package];
+      const pkg = packageIn(packages, p.package);
       if (!pkg) return { known: true, authorized: true, effective: false, reason: 'package_unavailable' };
       const out = attachPackage(state.env, pkg, { resolution: p.resolution, position: pos, ...(p.audience ? { ceiling: [ev.actor, ...p.audience] } : {}) });
       if (!out.ok) return { known: true, authorized: true, effective: false, reason: out.reason };

@@ -11,7 +11,7 @@
 
 import { contentId } from './canon.ts';
 import type { PackageDescriptor } from './descriptor.ts';
-import { bindingId } from './descriptor.ts';
+import { bindingId, packageIn } from './descriptor.ts';
 import { K, foldEntry, initialFoundationState, originsCount, type AttachPayload, type FoundationState } from './foundation.ts';
 import type { ViewEntry } from './context.ts';
 import { SYSTEM_PREFIX, named, type Entry, type Principal, type Verdict } from './types.ts';
@@ -99,8 +99,11 @@ export function interpretView(p: Principal, view: ViewEntry[], basis: number, av
     const ev = v.event;
     // Pauses are decided before the position is installed.
     if (ev.kind === K.attach && i > 0) {
+      // An attach whose header carries no requirements is one the sequencer could not resolve (an
+      // unknown package or a malformed payload): it is judged, never awaited. One the sequencer
+      // resolved pauses until this viewer's client has the package too.
       const pkg = (ev.payload as unknown as AttachPayload)?.package;
-      if (typeof pkg === 'string' && !available[pkg]) return paused(i, 'package_unavailable');
+      if (v.header.requires !== undefined && typeof pkg === 'string' && !packageIn(available, pkg)) return paused(i, 'package_unavailable');
       // A disclosed attach builds on earlier attaches: the header names them. One that is hidden
       // here means the disclosure was dependency-incomplete, and the attach cannot be judged. A
       // visible requirement was itself judged when it was reached, so the chain closes.
@@ -110,7 +113,7 @@ export function interpretView(p: Principal, view: ViewEntry[], basis: number, av
     }
     if (i === 0) {
       const gp = ev.payload as unknown as { bindings?: { package: string }[] };
-      for (const b of gp.bindings ?? []) if (!available[b.package]) return paused(i, 'package_unavailable');
+      for (const b of gp.bindings ?? []) if (!packageIn(available, b.package)) return paused(i, 'package_unavailable');
     }
     if (v.via === 'disclosure' && !ev.kind.startsWith(SYSTEM_PREFIX)) {
       // Disclosed, but the semantics it needs were not: the disclosure was dependency-incomplete.

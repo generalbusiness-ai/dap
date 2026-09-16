@@ -126,6 +126,11 @@ export interface AttachOptions {
   position?: number;
 }
 
+/** A package by id from a registry of runtime JSON keys: own entries only, so an inherited name is not a package. */
+export function packageIn(registry: Record<string, PackageDescriptor>, id: unknown): PackageDescriptor | undefined {
+  return typeof id === 'string' && Object.hasOwn(registry, id) ? registry[id] : undefined;
+}
+
 export function emptyEnvironment(runtime: string): Environment {
   return { runtime, packages: [], kinds: {}, attachedAt: {} };
 }
@@ -294,10 +299,17 @@ export function attachRequires(env: Environment, pkg: PackageDescriptor, resolut
   const res = resolution && typeof resolution === 'object' && !Array.isArray(resolution) ? (resolution as Record<string, unknown>) : {};
   for (const [kind, binding] of Object.entries(pkg.kinds)) {
     const existing = env.kinds[kind];
-    if (existing) out.add(existing.attachedAt);
-    const r = res[kind];
-    const given = r && typeof r === 'object' && Array.isArray((r as { handlers?: unknown }).handlers) ? ((r as { handlers: unknown[] }).handlers.filter((h) => typeof h === 'string') as string[]) : undefined;
-    for (const h of given ?? binding.handlers) {
+    // The same branch attach takes: a new kind is bound by the package's own handlers and a
+    // resolution is ignored; an existing kind consults its binding, the package's handlers and
+    // the resolution's handlers.
+    const handlers = new Set(binding.handlers);
+    if (existing) {
+      out.add(existing.attachedAt);
+      const r = res[kind];
+      const given = r && typeof r === 'object' && Array.isArray((r as { handlers?: unknown }).handlers) ? (r as { handlers: unknown[] }).handlers : [];
+      for (const h of given) if (typeof h === 'string') handlers.add(h);
+    }
+    for (const h of handlers) {
       const found = findModelWithPackage(env, h);
       if (found) installedAt(found.pkg.id);
     }

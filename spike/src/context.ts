@@ -4,7 +4,7 @@
 // (design note §2, first trusted profile).
 
 import { contentId, nonce, type Json } from './canon.ts';
-import { attachRequires, bindingId, type PackageDescriptor } from './descriptor.ts';
+import { attachRequires, bindingId, packageIn, type PackageDescriptor } from './descriptor.ts';
 import {
   F0_ID,
   K,
@@ -158,7 +158,7 @@ export class Context {
           const p = ev.payload;
           if (!p || typeof p !== 'object' || Array.isArray(p)) return undefined;
           const { package: pkgId, resolution } = p as { package?: unknown; resolution?: unknown };
-          const pkg = typeof pkgId === 'string' ? this.packages[pkgId] : undefined;
+          const pkg = packageIn(this.packages, pkgId);
           return pkg ? attachRequires(state.env, pkg, resolution) : undefined;
         },
       },

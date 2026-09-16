@@ -522,3 +522,62 @@ test('L2: a malformed attach payload is recorded with a malformed verdict, its e
   assert.deepEqual(good.header.requires, [0]);
   assert.equal(ctx.head, 8);
 });
+
+// ----- checker's seventh V2 review (workroom report abe19a90), M1 and M2 -----
+
+test('M1: evidence handlers follow the branch attach takes: a resolution on a new kind is ignored, and the installer of the bound model is required', () => {
+  const ctx = Context.create({ creator: ALICE, packages: {}, bindings: [], grants: [{ principal: ALICE, capabilities: ALICE_CAPS }] });
+  accept(ctx, BOB, invite(ctx, ALICE, BOB, [])); // 1, 2
+  const modelOnly = pkg('model_only', {}, { modelId: 'shared' });
+  const kindBase: Omit<PackageDescriptor, 'id'> = {
+    name: 'newkind',
+    models: {},
+    capabilities: [],
+    kinds: { 'com.example.new.tick': { kind: 'com.example.new.tick', schema: { v: 1 }, handlers: ['shared'], audienceId: 'members', audience: () => MEMBERS } },
+  };
+  const kindPkg: PackageDescriptor = { id: descriptorId(kindBase), ...kindBase };
+  ctx.packages[modelOnly.id] = modelOnly;
+  ctx.packages[kindPkg.id] = kindPkg;
+  const a = ctx.act(ALICE, K.attach, { package: modelOnly.id, audience: [] }); // 3, hidden from Bob
+  assert.ok(!('refused' in a) && a.verdict?.effective);
+  const b = ctx.act(ALICE, K.attach, { package: kindPkg.id, resolution: { 'com.example.new.tick': { handlers: [] } }, audience: [] }); // 4: new kind, the resolution is ignored
+  assert.ok(!('refused' in b) && b.verdict?.effective);
+  assert.deepEqual(ctx.state.env.kinds['com.example.new.tick']?.handlers, ['shared']);
+  assert.deepEqual(ctx.entries[4]!.header.requires, [3]);
+  ctx.act(ALICE, K.disclose, { positions: [4], to: [BOB] }); // 5
+  const view5 = ctx.view(BOB, 5);
+  const r = interpretView(BOB, view5, 5, ctx.packages);
+  assert.equal(r.kind, 'paused');
+  if (r.kind === 'paused') {
+    assert.equal(r.at, 4);
+    assert.equal(r.reason, 'dependency_missing');
+    assert.ok(isDeepStrictEqual(observeInterpreted(r.last, view5), oracleObserve(ctx, BOB, 3, 5)));
+  }
+  assert.deepEqual(checkContext(ctx, { participants: [BOB], frontiers: [5] }), []);
+  ctx.act(ALICE, K.disclose, { positions: [3], to: [BOB] }); // 6
+  const r2 = interpretView(BOB, ctx.view(BOB, 6), 6, ctx.packages);
+  assert.equal(r2.kind, 'interpreted');
+  if (r2.kind === 'interpreted') assert.equal(r2.outcomes[4]?.effective, true);
+  assert.deepEqual(checkContext(ctx, { participants: [BOB], frontiers: [6] }), []);
+});
+
+test('M2: a package name inherited from Object.prototype is not a package: recorded as package_unavailable, exact retry replays, and evidence extraction never throws', () => {
+  const base = noopBase();
+  const ctx = Context.create({ creator: ALICE, packages: { [base.id]: base }, bindings: [{ package: base.id }], grants: [{ principal: ALICE, capabilities: ALICE_CAPS }] });
+  let position = 1;
+  for (const name of ['toString', 'constructor', '__proto__', 'hasOwnProperty', 'sha256:0000']) {
+    const ev = ctx.intent(ALICE, K.attach, { package: name });
+    const r = ctx.submit(ev, ctx.credentialFor(ALICE));
+    assert.ok(!('refused' in r), name);
+    assert.equal(r.header.position, position++, name);
+    assert.deepEqual(r.verdict, { known: true, authorized: true, effective: false, reason: 'package_unavailable' }, name);
+    assert.equal(r.header.requires, undefined, name);
+    const again = ctx.submit(ev, ctx.credentialFor(ALICE));
+    assert.ok(!('refused' in again) && again.replay && again.header.position === r.header.position, name);
+  }
+  // the same names in a genesis binding or an interpreter's availability table are not packages either
+  assert.throws(() => Context.create({ creator: ALICE, packages: {}, bindings: [{ package: 'toString' }], grants: [] }));
+  const r = interpretView(BOB, ctx.view(ALICE, 5), 5, ctx.packages);
+  assert.equal(r.kind, 'interpreted');
+  assert.deepEqual(checkContext(ctx, { participants: [ALICE] }), []);
+});
