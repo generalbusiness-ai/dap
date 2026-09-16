@@ -36,6 +36,10 @@ export interface GeneratorSpec {
   payloads: Record<string, (r: () => number, ctx: { members: Principal[]; step: number }) => Json>;
   /** an unrelated package that a narrow attach may install mid-stream */
   sidePackage?: PackageDescriptor;
+  /**
+   * maxPositions is the number of entries the series may hold, genesis and
+   * origins included; maxParticipants counts every participant.
+   */
   bounds: { maxPositions: number; maxParticipants: number };
 }
 
@@ -49,11 +53,13 @@ export function generate(spec: GeneratorSpec, seed: number): Script {
   // Rebuild after each step: cold replay is the rule and the corpus is small.
   for (let step = 0; step < spec.bounds.maxPositions; step++) {
     const { ctx } = replay(script);
-    if (ctx.head >= spec.bounds.maxPositions) break;
+    const entries = ctx.head + 1;
+    const room = spec.bounds.maxPositions - entries;
+    if (room <= 0) break;
     const members = [...ctx.state.participants];
     const roll = r();
-    // late joiner
-    if (roll < 0.12 && joinedCount < spec.newcomers.length && members.length < spec.bounds.maxParticipants) {
+    // late joiner: an invite and an accept, two entries, only when both fit
+    if (roll < 0.12 && room >= 2 && joinedCount < spec.newcomers.length && members.length < spec.bounds.maxParticipants) {
       const invitee = spec.newcomers[joinedCount++]!;
       const inviter = members.find((m) => observe(ctx.state, m, ctx.head, () => true).affordances.includes(K.invite));
       if (inviter) {

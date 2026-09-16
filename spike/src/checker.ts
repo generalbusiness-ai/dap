@@ -6,8 +6,8 @@
 // same basis, and equality must resume once the missing dependency is
 // supplied. Invariants are declared independently of any fold and are
 // evaluated on the oracle's state. A failing series is shrunk to a
-// minimal one, and the mutation runner confirms the checker finds a
-// planted audience bug.
+// deletion-minimal one, and the mutation runner confirms the checker
+// finds a planted audience bug.
 
 import { isDeepStrictEqual } from 'node:util';
 import type { Context } from './context.ts';
@@ -53,7 +53,7 @@ export function checkContext(ctx: Context, opts: CheckOptions = {}): Violation[]
   const out: Violation[] = [];
   for (const n of frontiers) {
     if (opts.invariants) {
-      const s = n === ctx.head ? ctx.state : foldPrefix(ctx, n);
+      const s = foldPrefix(ctx, n);
       for (const detail of opts.invariants(s, n)) out.push({ participant: '*', frontier: n, kind: 'invariant', detail });
     }
     for (const p of participants) {

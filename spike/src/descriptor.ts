@@ -99,6 +99,10 @@ export interface ResolvedBinding extends KindBinding {
   packageId: string;
   /** audience ceiling inherited from a narrow attach (design note §2) */
   ceiling?: Principal[];
+  /** the position of the attach (or genesis, 0) that produced this resolved state */
+  attachedAt: number;
+  /** the resolved state before that attach, so a viewer who cannot see it judges by the earlier one */
+  previous?: ResolvedBinding;
 }
 
 export interface Environment {
@@ -234,7 +238,7 @@ export function attach(env: Environment, pkg: PackageDescriptor, opts: AttachOpt
     const res = resolution[kind];
     if (!existing) {
       for (const h of binding.handlers) if (!allModels.has(h)) return { ok: false, reason: 'unknown_handler' };
-      kinds[kind] = { ...binding, packageId: pkg.id, ...(opts.ceiling ? { ceiling: [...opts.ceiling].sort() } : {}) };
+      kinds[kind] = { ...binding, packageId: pkg.id, attachedAt: opts.position ?? 0, ...(opts.ceiling ? { ceiling: [...opts.ceiling].sort() } : {}) };
       continue;
     }
     // A kind already bound: a resolution must name exactly the union of handlers, in an order.
@@ -256,6 +260,8 @@ export function attach(env: Environment, pkg: PackageDescriptor, opts: AttachOpt
       capability: existing.capability ?? binding.capability,
       crossReads: [...new Set([...(existing.crossReads ?? []), ...(binding.crossReads ?? [])])].sort(),
       ceiling: intersect(existing.ceiling, opts.ceiling),
+      attachedAt: opts.position ?? 0,
+      previous: existing,
     };
   }
   return { ok: true, env: { ...env, packages: [...env.packages, pkg], kinds, attachedAt: { ...env.attachedAt, [pkg.id]: opts.position ?? 0 } } };
@@ -281,6 +287,11 @@ export function findModel(env: Environment, id: string): ModelSpec | undefined {
 export function bindingId(env: Environment, kind: Kind): string | undefined {
   const b = env.kinds[kind];
   if (!b) return undefined;
+  return bindingIdOf(env, kind, b);
+}
+
+/** The identity of one resolved state of a kind's binding. */
+export function bindingIdOf(env: Environment, kind: Kind, b: ResolvedBinding): string {
   const declaring = env.packages.find((p) => p.id === b.packageId);
   return contentId({
     kind,
@@ -295,4 +306,16 @@ export function bindingId(env: Environment, kind: Kind): string | undefined {
     crossReads: b.crossReads ?? [],
     ceiling: b.ceiling ?? null,
   });
+}
+
+/**
+ * The binding a viewer judges a kind by: the latest resolved state whose
+ * producing attach the viewer can see. A narrow attach that a viewer
+ * cannot see does not change the semantics they resolve; if it changes a
+ * shared outcome, the checker's outcome comparison catches it.
+ */
+export function visibleBinding(env: Environment, kind: Kind, visible: (position: number) => boolean): ResolvedBinding | undefined {
+  let b: ResolvedBinding | undefined = env.kinds[kind];
+  while (b && !visible(b.attachedAt)) b = b.previous;
+  return b;
 }

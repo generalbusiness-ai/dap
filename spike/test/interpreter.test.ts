@@ -11,6 +11,8 @@ import { oracleObserve } from '../src/oracle.ts';
 import { SALE } from '../fixtures/sale.ts';
 import { DISCUSSION, discussionPackage } from '../fixtures/discussion.ts';
 import { ALICE, ALICE_CAPS, BOB, CAROL, accept, invite, pkg, saleContext } from './helpers.ts';
+import { MEMBERS, named, type EventBody } from '../src/types.ts';
+import { descriptorId, type PackageDescriptor } from '../src/descriptor.ts';
 import { Context } from '../src/context.ts';
 
 function trace() {
@@ -112,7 +114,7 @@ test('a dependency-incomplete disclosure pauses: the event is disclosed but the 
   }
 });
 
-test('a cached interpretation is reused under its basis and discarded under another', () => {
+test('a cached interpretation is reused only for the same principal, view content, basis and packages; a pause is never reused', () => {
   const ctx = discussionContext();
   accept(ctx, BOB, invite(ctx, ALICE, BOB, ['Member']));
   for (let i = 0; i < 19; i++) ctx.act(ALICE, DISCUSSION + 'post', { text: 'p' + i });
@@ -122,7 +124,106 @@ test('a cached interpretation is reused under its basis and discarded under anot
   assert.equal(first.reused, false);
   const again = interpretCached(first.cache, BOB, ctx.view(BOB, 21), 21, ctx.packages);
   assert.equal(again.reused, true);
+  // another basis: discarded
   const moved = interpretCached(first.cache, BOB, ctx.view(BOB, 22), 22, ctx.packages);
   assert.equal(moved.reused, false);
-  assert.equal(moved.cache.basis, 22);
+  // another principal at the same numbers: discarded, and the result is theirs
+  const other = interpretCached(first.cache, ALICE, ctx.view(ALICE, 21), 21, ctx.packages);
+  assert.equal(other.reused, false);
+  assert.equal(other.result.principal, ALICE);
+  // a pause is never reused: once the package arrives, the rebuild interprets
+  const side = pkg('side', { 'com.example.side.note': ['side'] });
+  ctx.packages[side.id] = side;
+  ctx.act(ALICE, K.attach, { package: side.id }); // open attach
+  const n = ctx.head;
+  const withoutSide = { [discussionPackage.id]: discussionPackage };
+  const paused = interpretCached(undefined, BOB, ctx.view(BOB, n), n, withoutSide);
+  assert.equal(paused.result.kind, 'paused');
+  const arrived = interpretCached(paused.cache, BOB, ctx.view(BOB, n), n, ctx.packages);
+  assert.equal(arrived.reused, false);
+  assert.equal(arrived.result.kind, 'interpreted');
+});
+
+// ----- checker's V2 review (workroom report 06ea1952), F1 and F2 -----
+
+function noopBase() {
+  // a no-op base kind whose state never changes, so a contradiction cannot show in displayed state
+  return pkg('base', { 'com.example.base.tick': { handlers: ['base'], audienceId: 'members', audience: () => MEMBERS } });
+}
+
+test('F2: a disclosed event whose binding the principal cannot resolve pauses with dependency_missing, and resumes once the attach is disclosed', () => {
+  const base = noopBase();
+  const ctx = Context.create({ creator: ALICE, packages: { [base.id]: base }, bindings: [{ package: base.id }], grants: [{ principal: ALICE, capabilities: ALICE_CAPS }] });
+  accept(ctx, BOB, invite(ctx, ALICE, BOB, [])); // 1, 2
+  const audit = pkg('audit', { 'com.example.base.tick': ['audit'] });
+  ctx.packages[audit.id] = audit;
+  const a = ctx.act(ALICE, K.attach, { package: audit.id, resolution: { 'com.example.base.tick': { handlers: ['base', 'audit'] } }, audience: [] }); // 3, Alice alone
+  assert.ok(!('refused' in a) && a.verdict?.effective);
+  const tick = ctx.act(ALICE, 'com.example.base.tick', {}); // 4, effective under the new binding
+  assert.ok(!('refused' in tick) && tick.verdict?.effective);
+  const d = ctx.act(ALICE, K.disclose, { positions: [4], to: [BOB] }); // 5: the event, not the attach
+  assert.ok(!('refused' in d) && d.verdict?.effective);
+  const r = interpretView(BOB, ctx.view(BOB, 5), 5, ctx.packages);
+  assert.equal(r.kind, 'paused');
+  if (r.kind === 'paused') {
+    assert.equal(r.at, 4);
+    assert.equal(r.reason, 'dependency_missing');
+    assert.ok(isDeepStrictEqual(observeInterpreted(r.last, ctx.view(BOB, 5)), oracleObserve(ctx, BOB, 3, 5)));
+  }
+  // the checker applies the pause rule without a violation
+  assert.deepEqual(checkContext(ctx, { participants: [BOB], frontiers: [5] }), []);
+  // disclosing the attach too completes the dependency: interpreted, effective, equal
+  const d2 = ctx.act(ALICE, K.disclose, { positions: [3], to: [BOB] }); // 6
+  assert.ok(!('refused' in d2) && d2.verdict?.effective);
+  const view6 = ctx.view(BOB, 6);
+  const r2 = interpretView(BOB, view6, 6, ctx.packages);
+  assert.equal(r2.kind, 'interpreted');
+  if (r2.kind === 'interpreted') {
+    assert.equal(r2.outcomes[4]?.effective, true);
+    assert.ok(isDeepStrictEqual(observeInterpreted(r2, view6), oracleObserve(ctx, BOB, 6, 6)));
+  }
+});
+
+test('F1: a contradiction that changes no displayed state is caught through outcomes: a shared decision whose fold reads private votes', () => {
+  // votes are private to the voter and Alice; the decision is members-visible and effective only with two votes;
+  // the projection shows nothing, so only the outcomes can reveal the contradiction (views note, position 18)
+  const tallyBase: Omit<PackageDescriptor, 'id'> = {
+    name: 'com.example.tally',
+    models: {
+      tally: {
+        id: 'tally',
+        config: {},
+        init: () => ({ votes: 0, decided: false }),
+        fold: (s: { votes: number; decided: boolean }, ev: EventBody) => {
+          if (ev.kind === 'com.example.tally.vote') return { effective: true, state: { ...s, votes: s.votes + 1 } };
+          if (ev.kind === 'com.example.tally.decide') return s.votes >= 2 ? { effective: true, state: { ...s, decided: true } } : { effective: false, state: s, reason: 'not_enough_votes' };
+          return { effective: false, state: s, reason: 'unhandled' };
+        },
+        observe: () => ({}),
+      } as unknown as PackageDescriptor['models'][string],
+    },
+    capabilities: [],
+    kinds: {
+      'com.example.tally.vote': { kind: 'com.example.tally.vote', schema: {}, handlers: ['tally'], audienceId: 'voter+alice', audience: (_c, ev) => named(ev.actor, ALICE) },
+      'com.example.tally.decide': { kind: 'com.example.tally.decide', schema: {}, handlers: ['tally'], audienceId: 'members', audience: () => MEMBERS },
+    },
+  };
+  const tally: PackageDescriptor = { id: descriptorId(tallyBase), ...tallyBase };
+  const ctx = Context.create({ creator: ALICE, packages: { [tally.id]: tally }, bindings: [{ package: tally.id }], grants: [{ principal: ALICE, capabilities: ALICE_CAPS }] });
+  accept(ctx, BOB, invite(ctx, ALICE, BOB, [])); // 1, 2
+  accept(ctx, CAROL, invite(ctx, ALICE, CAROL, [])); // 3, 4
+  ctx.act(BOB, 'com.example.tally.vote', {}); // 5, Bob and Alice
+  ctx.act(CAROL, 'com.example.tally.vote', {}); // 6, Carol and Alice
+  const decide = ctx.act(ALICE, 'com.example.tally.decide', {}); // 7, members
+  assert.ok(!('refused' in decide) && decide.verdict?.effective);
+  const violations = checkContext(ctx, { participants: [BOB], frontiers: [7] });
+  assert.equal(violations.length, 1, JSON.stringify(violations.map((v) => [v.participant, v.frontier, v.kind])));
+  const v = violations[0]!;
+  assert.equal(v.kind, 'mismatch');
+  assert.equal(v.expected?.outcomes['7']?.effective, true);
+  assert.equal(v.actual?.outcomes['7']?.reason, 'ineffective');
+  // the displayed state is identical on both sides: only the outcome differs
+  assert.deepEqual(v.actual?.models, v.expected?.models);
+  // Alice, who sees every vote, agrees with the oracle
+  assert.deepEqual(checkContext(ctx, { participants: [ALICE], frontiers: [7] }), []);
 });

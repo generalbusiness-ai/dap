@@ -9,6 +9,7 @@
 // before, under the same basis. The pause is a diagnostic, never a
 // verdict on any event.
 
+import { contentId } from './canon.ts';
 import type { PackageDescriptor } from './descriptor.ts';
 import { bindingId } from './descriptor.ts';
 import { K, foldEntry, initialFoundationState, originsCount, type AttachPayload, type FoundationState } from './foundation.ts';
@@ -105,9 +106,13 @@ export function interpretView(p: Principal, view: ViewEntry[], basis: number, av
       const gp = ev.payload as unknown as { bindings?: { package: string }[] };
       for (const b of gp.bindings ?? []) if (!available[b.package]) return paused(i, 'package_unavailable');
     }
-    if (v.via === 'disclosure' && !ev.kind.startsWith(SYSTEM_PREFIX) && !state.env.kinds[ev.kind]) {
+    if (v.via === 'disclosure' && !ev.kind.startsWith(SYSTEM_PREFIX)) {
       // Disclosed, but the semantics it needs were not: the disclosure was dependency-incomplete.
-      return paused(i, 'dependency_missing');
+      // Either the kind is unknown here, or the event expects a binding this principal cannot
+      // resolve because the attach that produced it was not disclosed. An event visible by its
+      // own audience is judged, and a mismatch there is a genuine stale_binding verdict.
+      if (!state.env.kinds[ev.kind]) return paused(i, 'dependency_missing');
+      if (ev.expected_binding !== undefined && ev.expected_binding !== bindingId(state.env, ev.kind)) return paused(i, 'dependency_missing');
     }
     const origin = i > 0 && i <= origins;
     const verdict = foldEntry(state, { entry: asEntry(v), origin, packages: available, entries: chain });
@@ -116,11 +121,28 @@ export function interpretView(p: Principal, view: ViewEntry[], basis: number, av
   return { kind: 'interpreted', principal: p, basis, frontier: Math.min(limit, view.length - 1), state, outcomes, bindings: bindingsOf(state) };
 }
 
-/** A cached interpretation is valid only under the basis it was built for (views note: an invalidated cache is discarded and rebuilt). */
+/**
+ * A cached interpretation is valid only for the exact question it answered:
+ * this principal, this context, this view content under this basis, with
+ * these packages available. Anything else is discarded and rebuilt (views
+ * note: an invalidated cache is discarded). A paused result is never
+ * reused, because what it waited for may have arrived.
+ */
 export interface InterpretationCache {
-  basis: number;
-  frontier: number;
+  key: string;
   result: Interpretation;
+}
+
+export function cacheKey(p: Principal, view: ViewEntry[], basis: number, available: Record<string, PackageDescriptor>): string {
+  return contentId({
+    principal: p,
+    basis,
+    frontier: view.length - 1,
+    genesis: view[0]?.header.genesis ?? null,
+    // the view's content: every header hash, and whether each position is readable
+    view: view.map((v) => (v.event ? '+' : '-') + v.headerHash),
+    available: Object.keys(available).sort(),
+  });
 }
 
 export function interpretCached(
@@ -130,8 +152,8 @@ export function interpretCached(
   basis: number,
   available: Record<string, PackageDescriptor>,
 ): { result: Interpretation; reused: boolean; cache: InterpretationCache } {
-  const frontier = view.length - 1;
-  if (cache && cache.basis === basis && cache.frontier === frontier) return { result: cache.result, reused: true, cache };
+  const key = cacheKey(p, view, basis, available);
+  if (cache && cache.key === key && cache.result.kind === 'interpreted') return { result: cache.result, reused: true, cache };
   const result = interpretView(p, view, basis, available);
-  return { result, reused: false, cache: { basis, frontier, result } };
+  return { result, reused: false, cache: { key, result } };
 }

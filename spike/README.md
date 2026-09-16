@@ -97,29 +97,36 @@ What V1 does not claim:
 What it contains:
 
 - `src/observe.ts`: `observe(p, state, n)`, the projection the property
-  compares: the foundation's public facts, each model's own `observe` for
-  the principal, and the affordances the principal holds.
+  compares: the foundation's public facts, the outcome of every event the
+  principal can see, the binding identity of every kind they can resolve,
+  each model's own `observe` for the principal, and the affordances the
+  principal holds. A package is in the projection only if the principal
+  can see the attach that installed it.
 - `src/interpret.ts`: the view interpreter `I(p, V(p,n), n)`: cold replay
   from genesis over the principal's view under basis `n`; hidden positions
   enter as headers and leave a placeholder; `Paused{at, reason, last}` when
   a package is unavailable or a disclosed position depends on semantics the
-  principal cannot resolve, with `last` the result through the position
-  before under the same basis; a cache valid only for the basis it was
-  built under.
+  principal cannot resolve (an unknown kind, or an expected binding the
+  principal's environment does not produce), with `last` the result
+  through the position before under the same basis; a cache keyed by
+  principal, context, view content, basis and available packages, which
+  never reuses a pause.
 - `src/oracle.ts`: `fold(S[0..m])` over the complete series and
   `observe(p, state, n)` under basis `n`; never available to a model.
 - `src/checker.ts`: for every participant and frontier, equality of the
   interpreted observation with the oracle's; the pause rule and resume;
   invariants evaluated on the oracle's state; the mutation runner's
   audience replacement.
-- `src/script.ts`: a series as replayable steps; greedy shrinking to a
-  minimal failing script.
+- `src/script.ts`: a series as replayable steps; greedy deletion to a
+  deletion-minimal failing script.
 - `src/generate.ts`: a seeded, bounded, affordance-driven generator that
   injects late joiners, a narrow side attach, disclosures and ineffective
   attempts.
 - `fixtures/discussion.ts` and `manifests/discussion.md`: the worked
   example and its frozen manifest, with the machine-readable bounds, seeds
-  and invariants in `manifests/discussion.ts`.
+  and invariants in `manifests/discussion.ts`. The manifest identity binds
+  the prose, the executable part and the package; the test run prints it
+  as a diagnostic, and a report cites that value.
 
 What the tests show:
 
@@ -132,8 +139,14 @@ What the tests show:
   supplied; a dependency-incomplete disclosure pauses;
 - the Discussion manifest's deterministic checks: normal replay over
   seeds 1 to 8 with zero violations, pause and resume, the planted close
-  audience fault found, shrinking to a minimal script, invalid-cache
-  discard and rebuild.
+  audience fault found, shrinking to a deletion-minimal script,
+  invalid-cache discard and rebuild, and literal expected observations
+  derived from the events and membership alone, which a wrong projection
+  fails although it passes the equality check;
+- a contradiction that changes no displayed state is caught through
+  outcomes: a narrow attach that changes a shared kind makes a member who
+  cannot see it judge the next event stale while the oracle says
+  effective.
 
 What V2 does not claim:
 

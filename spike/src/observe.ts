@@ -5,7 +5,7 @@
 // principal, and the affordances the principal holds.
 
 import type { Json } from './canon.ts';
-import { findModel, type ObserveCtx } from './descriptor.ts';
+import { bindingIdOf, findModel, visibleBinding, type ObserveCtx } from './descriptor.ts';
 import { K, SYSTEM_KINDS, holdsNow, type FoundationState } from './foundation.ts';
 import type { Principal } from './types.ts';
 
@@ -14,6 +14,10 @@ export interface Observation {
   closed: boolean;
   /** kinds bound in the environment the principal can resolve */
   kinds: string[];
+  /** the expected-binding identity of each such kind: the semantics the principal would judge an event by */
+  bindings: Record<string, string>;
+  /** the outcome of every event the principal can see: effective or not, and why */
+  outcomes: Record<string, { effective: boolean; reason: string | null }>;
   models: Record<string, Json>;
   affordances: string[];
 }
@@ -85,10 +89,24 @@ export function observe(state: FoundationState, p: Principal, basis: number, vis
       models[m.id] = m.observe ? m.observe(p, mstate, ctx, m.config) : mstate;
     }
   }
+  const kinds = Object.keys(state.env.kinds).filter((k) => packageVisible(state, state.env.kinds[k]!.packageId, visible)).sort();
+  const bindings: Record<string, string> = {};
+  for (const k of kinds) {
+    const b = visibleBinding(state.env, k, visible);
+    if (b) bindings[k] = bindingIdOf(state.env, k, b);
+  }
+  const outcomes: Observation['outcomes'] = {};
+  for (let i = 0; i < state.verdicts.length; i++) {
+    const v = state.verdicts[i];
+    if (!v || !visible(i)) continue;
+    outcomes[String(i)] = { effective: v.effective, reason: v.reason ?? null };
+  }
   return {
     participants: [...state.participants],
     closed: state.closed,
-    kinds: Object.keys(state.env.kinds).filter((k) => packageVisible(state, state.env.kinds[k]!.packageId, visible)).sort(),
+    kinds,
+    bindings,
+    outcomes,
     models,
     affordances: [...new Set([...foundationAffordances(state, p), ...modelAffordances(state, p, ctx)])].sort(),
   };

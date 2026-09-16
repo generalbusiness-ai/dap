@@ -21,7 +21,8 @@ export function foldPrefix(ctx: Context, m: number): FoundationState {
 
 /** observe(p, fold(S[0..m]), n): the full fold through m, observed by p under basis n. */
 export function oracleObserve(ctx: Context, p: Principal, m: number, basis: number): Observation {
-  const state = m === ctx.head ? ctx.state : foldPrefix(ctx, m);
+  // Cold replay at every frontier, the head included: one rule, no special case.
+  const state = foldPrefix(ctx, m);
   // Visibility under the basis comes from the audiences at each position and disclosures up to the basis.
   return observe(state, p, basis, (i) => i <= m && visibleTo(ctx.state, p, i, basis));
 }

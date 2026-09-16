@@ -74,9 +74,11 @@ export function replay(script: Script): Replay {
 }
 
 /**
- * Shrink a failing script: greedily drop steps while the failure persists,
- * then drop steps from the end. Small and deterministic; enough for a
- * corpus of at most sixty positions.
+ * Shrink a failing script by greedy deletion: drop any single step while
+ * the failure persists, until no single deletion keeps it failing. The
+ * result is deletion-minimal, not necessarily the globally shortest
+ * failing trace. Small and deterministic; enough for a corpus of at most
+ * sixty positions.
  */
 export function shrink(script: Script, fails: (s: Script) => boolean): Script {
   let current = script;
