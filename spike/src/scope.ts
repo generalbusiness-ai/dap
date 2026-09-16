@@ -1,0 +1,274 @@
+// Fixed O4 scope semantics. No expectation-manifest dependency.
+import { snapshot } from './append.ts';
+import { canonicalize, envelopeId, verifyEnvelope, type ActorEnvelope } from './codec.ts';
+import { Journal, type JournalOptions } from './journal.ts';
+import { K, heldAt } from './foundation.ts';
+import { interpretView } from './interpret.ts';
+import type { PackageDescriptor } from './descriptor.ts';
+import type { Entry, EventBody, Receipt, Refusal, Verdict } from './types.ts';
+import type { TransportCredential } from './append.ts';
+import { publicProof, verifyPublicProof, assertPublicData, type PublicProof } from './scope-proof.ts';
+import { SCOPE_KINDS, SCOPE_NS, TRANSFORM, scopeId, scopeSetup, scopeImplementationId, type ScopeSetup } from './scope-profile.ts';
+import type { SaleState } from '../fixtures/sale.ts';
+import type { InspectionState } from '../fixtures/inspection.ts';
+
+export type RightName = 'R_sell' | 'R_fulfil' | 'R_deliver';
+export type RightState = { owner: string; status: 'live' | 'spent' | 'released' | 'dormant' };
+export interface SourceExport {
+  identity: string;
+  genesis: string;
+  initialWriter: string;
+  prefix: { position: number; headerHash: string; commitment: string };
+  rights: { name: RightName; owner: string }[];
+  facts: Record<string, string | number>;
+  factPositions: number[];
+  dependencies: { implementation: string; packages: string[] };
+}
+export interface Transition {
+  identity: string;
+  manifest: string;
+  sources: SourceExport[];
+  transformation: typeof TRANSFORM;
+  retainedDependencies: string[];
+}
+export interface ReleaseProof { source: PublicProof; release: number }
+export interface ScopeState {
+  genesis: string;
+  setup: ScopeSetup;
+  rights: Partial<Record<RightName, RightState>>;
+  sale: { status: 'open' | 'accepted' | 'closed'; accepted_offer: string | null; winner: string | null };
+  inspection: { attached: boolean; requested: boolean; result: string | null; importedResult: string | null; imports: number };
+  transition?: Transition;
+  active: boolean;
+  activations: number;
+  releases: { position: number; destination: string; transition: string; exported: SourceExport }[];
+  verifiedProofs: string[];
+  imports: string[];
+  facts: Record<string, string | number>;
+  delivered: boolean;
+  fulfilled: boolean;
+  verdicts: Record<number, Verdict>;
+}
+const good = (): Verdict => ({ known: true, authorized: true, effective: true });
+const bad = (reason: string, authorized = true): Verdict => ({ known: true, authorized, effective: false, reason });
+const scopeKinds = new Set<string>([K.scope_release, K.scope_activate, K.admit, ...Object.values(SCOPE_KINDS)]);
+function object(value: unknown): Record<string, any> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('malformed');
+  return value as Record<string, any>;
+}
+function identity(exported: Omit<SourceExport, 'identity'>): SourceExport { return { ...exported, identity: scopeId(exported) }; }
+function validateExport(value: unknown): SourceExport {
+  const e = object(value) as unknown as SourceExport;
+  const { identity: id, ...preimage } = e;
+  if (scopeId(preimage) !== id || !e.prefix || !Array.isArray(e.rights) || !e.rights.length || !e.dependencies || e.dependencies.implementation !== scopeImplementationId()) throw new Error('invalid_export');
+  assertPublicData(e);
+  return e;
+}
+function init(genesis: EventBody, id: string): ScopeState {
+  const setup = scopeSetup(genesis);
+  if (!setup) throw new Error('scope: genesis does not select scope runtime');
+  const state: ScopeState = {
+    genesis: id, setup, rights: {}, sale: { status: 'open', accepted_offer: null, winner: null },
+    inspection: { attached: false, requested: false, result: null, importedResult: null, imports: 0 },
+    active: false, activations: 0, releases: [], verifiedProofs: [], imports: [], facts: {}, delivered: false, fulfilled: false, verdicts: {},
+  };
+  for (const [name, owner] of Object.entries(setup.owners)) state.rights[name as RightName] = { owner, status: setup.role === 'fulfilment' ? 'dormant' : 'live' };
+  if (setup.role === 'delivery') state.facts = { ...setup.facts! };
+  if (setup.role === 'fulfilment') {
+    const transition = object((genesis.payload as Record<string, unknown>).transition) as unknown as Transition;
+    if (transition.transformation !== TRANSFORM || !transition.identity || !transition.manifest || !Array.isArray(transition.sources) || transition.sources.length !== 2 || !Array.isArray(transition.retainedDependencies)) throw new Error('scope: invalid transition');
+    const seen = new Set<string>();
+    for (const raw of transition.sources) {
+      const e = validateExport(raw);
+      for (const right of e.rights) {
+        if (seen.has(right.name) || setup.owners[right.name] !== right.owner) throw new Error('scope: duplicate or wrong conditional owner');
+        seen.add(right.name);
+      }
+      state.imports.push(e.identity);
+    }
+    if ([...seen].sort().join(',') !== 'R_deliver,R_fulfil') throw new Error('scope: missing conditional right');
+    state.transition = transition;
+    state.facts = Object.assign({}, ...transition.sources.map(e => e.facts));
+  }
+  return state;
+}
+
+/** Replays the actual authenticated public prefix, then recomputes scope
+ * effects from the source models and grants at each position. */
+export function replayScope(proof: PublicProof, packages: Record<string, PackageDescriptor>, depth = 0): ScopeState {
+  if (depth > 4) throw new Error('scope: proof nesting bound');
+  const { view } = verifyPublicProof(proof, { genesis: proof.genesis, initialWriter: proof.initialWriter }, packages);
+  const state = init(view[0]!.event!, proof.genesis);
+  for (let position = 0; position < view.length; position++) {
+    const v = view[position]!;
+    if (!v.event) continue;
+    const base = interpretView('scope-evidence-reader', view, proof.frontier, packages, position);
+    if (base.kind !== 'interpreted') throw new Error('scope: unresolved source semantics');
+    const current = base.state;
+    const event = v.event;
+    const original = current.verdicts[position]!;
+    if (state.setup.role === 'sale') {
+      const sale = current.models.sale as unknown as SaleState | undefined;
+      if (sale?.accepted) {
+        const offer = sale.offers.find(o => o.id === sale.accepted!.id);
+        if (!offer || !sale.seller) throw new Error('scope: incomplete public decision');
+        state.sale = { status: sale.status === 'closed' ? 'closed' : 'accepted', accepted_offer: offer.id, winner: offer.author };
+        if (state.rights.R_sell?.status === 'live') {
+          state.rights.R_sell.status = 'spent';
+          state.rights.R_fulfil = { owner: sale.seller, status: 'live' };
+        }
+      }
+      state.inspection.attached = current.env.packages.some(p => Object.hasOwn(p.models, 'inspection'));
+      const inspection = current.models.inspection as unknown as InspectionState | undefined;
+      state.inspection.requested = (inspection?.requests.length ?? 0) > 0;
+    }
+    if (!scopeKinds.has(event.kind)) { state.verdicts[position] = original; continue; }
+    const held = (principal: string, cap: string) => heldAt(current, principal, cap, position);
+    let result: Verdict;
+    try {
+      const p = object(event.payload);
+      if (event.kind === K.scope_release) {
+        if (!held(event.actor, K.scope_release)) result = bad('unauthorized', false);
+        else {
+          const e = validateExport(p.export);
+          const right = state.rights[p.right as RightName];
+          if (!right) result = bad('unowned_right');
+          else if (right.status === 'released') result = bad('already_released');
+          else if (right.status !== 'live') result = bad('spent_right');
+          else if (right.owner !== event.actor) result = bad('unauthorized', false);
+          else if (e.prefix.position !== position - 1 || e.prefix.headerHash !== view[position - 1]!.headerHash || e.prefix.commitment !== view[position - 1]!.header.commitment) result = bad('stale_export');
+          else {
+            const expected = exportFrom(state, proof, position - 1, [p.right], packages);
+            if (canonicalize(e) !== canonicalize(expected)) result = bad('invalid_export');
+            else if (typeof p.destination !== 'string' || !/^sha256:[0-9a-f]{64}$/.test(p.destination) || typeof p.transition !== 'string') result = bad('malformed');
+            else {
+              right.status = 'released';
+              state.releases.push({ position, destination: p.destination, transition: p.transition, exported: e });
+              result = good();
+            }
+          }
+        }
+      } else if (event.kind === K.scope_activate) {
+        if (!held(event.actor, K.scope_activate)) result = bad('unauthorized', false);
+        else if (!state.transition) result = bad('not_a_destination');
+        else if (state.active) result = bad('already_active');
+        else {
+          const proofs = Array.isArray(p.proofs) ? p.proofs as ReleaseProof[] : [];
+          const claimedRights: string[] = [];
+          for (const item of proofs) {
+            const release = item.source.positions[item.release];
+            if (!release?.committed) throw new Error('ineffective_release');
+            const body = verifyEnvelope(release.committed).body;
+            const exported = object(body.payload).export as SourceExport;
+            for (const r of exported?.rights ?? []) claimedRights.push(r.name);
+          }
+          if (new Set(claimedRights).size !== claimedRights.length) result = bad('duplicate_right');
+          else {
+            const verified: string[] = [];
+            for (const item of proofs) {
+              const source = state.transition.sources.find(s => s.genesis === item.source.genesis);
+              if (!source) throw new Error('wrong_source');
+              const releaseState = replayScope(item.source, packages, depth + 1);
+              const releaseVerdict = releaseState.verdicts[item.release];
+              if (!releaseVerdict?.authorized) throw new Error('unauthorized_release');
+              if (!releaseVerdict.effective) throw new Error('ineffective_release');
+              const release = releaseState.releases.find(r => r.position === item.release);
+              if (!release) throw new Error('ineffective_release');
+              if (release.destination !== state.genesis || release.transition !== state.transition.identity) throw new Error('destination_mismatch');
+              if (canonicalize(release.exported) !== canonicalize(source)) throw new Error('source_binding_mismatch');
+              verified.push(source.genesis);
+            }
+            if (new Set(verified).size !== state.transition.sources.length) {
+              state.verifiedProofs = verified; result = bad('missing_release');
+            } else {
+              const sale = state.transition.sources.find(s => 'winner' in s.facts);
+              const delivery = state.transition.sources.find(s => 'buyer' in s.facts);
+              if (!sale || !delivery || sale.facts.winner !== delivery.facts.buyer) result = bad('mismatch');
+              else {
+                state.verifiedProofs = verified;
+                for (const right of Object.values(state.rights)) right!.status = 'live';
+                state.active = true; state.activations++; result = good();
+              }
+            }
+          }
+        }
+      } else if (event.kind === K.admit) {
+        if (!held(event.actor, K.admit)) result = bad('unauthorized', false);
+        else if (state.imports.includes(p.identity)) result = bad('duplicate_import');
+        else {
+          const external = replayScope(p.proof, packages, depth + 1);
+          if (external.setup.role !== 'inspection' || p.proof.frontier !== p.position || !external.inspection.result || p.identity !== external.genesis + ':' + p.position || !external.verdicts[p.position]?.effective || external.setup.mandate?.source !== state.genesis) result = bad('invalid_result');
+          else {
+            state.inspection.importedResult = external.inspection.result;
+            state.inspection.imports++; state.imports.push(p.identity); result = good();
+          }
+        }
+      } else if (event.kind === SCOPE_KINDS.result) {
+        if (state.setup.role !== 'inspection' || !held(event.actor, SCOPE_KINDS.result) || state.setup.mandate?.inspector !== event.actor) result = bad('unauthorized', false);
+        else if (p.offer !== state.setup.mandate.offer || typeof p.result !== 'string') result = bad('wrong_mandate');
+        else { state.inspection.result = p.result; result = good(); }
+      } else if (event.kind === SCOPE_KINDS.exercise) {
+        const right = state.rights[p.right as RightName];
+        if (!right) result = bad('unowned_right');
+        else if (right.status === 'released') result = bad('released_right');
+        else if (right.status === 'dormant') result = bad('dormant_right');
+        else if (right.status === 'spent') result = bad('spent_right');
+        else if (right.owner !== event.actor || !held(event.actor, SCOPE_KINDS.exercise)) result = bad('unauthorized', false);
+        else {
+          right.status = 'spent';
+          if (p.right === 'R_deliver') state.delivered = true;
+          if (p.right === 'R_fulfil') state.fulfilled = true;
+          result = good();
+        }
+      } else if (event.kind === SCOPE_KINDS.importExport) result = bad(state.imports.includes(p.identity) ? 'duplicate_import' : 'unapproved_import');
+      else result = bad('no_safe_recovery_evidence');
+    } catch (error) { result = bad(error instanceof Error ? error.message : 'malformed'); }
+    state.verdicts[position] = result;
+  }
+  return snapshot(state);
+}
+function exportFrom(state: ScopeState, proof: PublicProof, prefix: number, names: RightName[], packages: Record<string, PackageDescriptor>): SourceExport {
+  const rightList = names.map(name => {
+    const right = state.rights[name];
+    if (!right || right.status !== 'live') throw new Error('unowned_right');
+    return { name, owner: right.owner };
+  });
+  let facts: SourceExport['facts'];
+  let factPositions: number[];
+  if (state.setup.role === 'sale' && state.sale.accepted_offer && state.sale.winner) {
+    facts = { accepted_offer: state.sale.accepted_offer, winner: state.sale.winner };
+    const { interpreted } = verifyPublicProof({ ...proof, frontier: prefix, positions: proof.positions.slice(0, prefix + 1) }, { genesis: proof.genesis, initialWriter: proof.initialWriter, frontier: prefix }, packages);
+    const sale = interpreted.state.models.sale as unknown as SaleState;
+    factPositions = [sale.offers.find(o => o.id === sale.accepted!.id)!.position, sale.accepted!.position];
+  } else if (state.setup.role === 'delivery') { facts = { ...state.facts }; factPositions = [0]; }
+  else throw new Error('no_exportable_facts');
+  const entry = proof.positions[prefix]!;
+  const { interpreted } = verifyPublicProof({ ...proof, frontier: prefix, positions: proof.positions.slice(0, prefix + 1) }, { genesis: proof.genesis, initialWriter: proof.initialWriter, frontier: prefix }, packages);
+  return identity({ genesis: proof.genesis, initialWriter: proof.initialWriter, prefix: { position: prefix, headerHash: interpreted.state.verdicts.length ? viewHash(entry.header) : '', commitment: entry.header.commitment }, rights: rightList, facts, factPositions,
+    dependencies: { implementation: scopeImplementationId(), packages: interpreted.state.env.packages.map(p => p.id).sort() } });
+}
+import { headerHash as viewHash } from './codec.ts';
+export class ScopeJournal {
+  readonly journal: Journal;
+  readonly packages: Record<string, PackageDescriptor>;
+  constructor(journal: Journal, packages: Record<string, PackageDescriptor>) {
+    if (!scopeSetup(journal.context.entries[0]!.event)) throw new Error('scope: profile required');
+    this.journal = journal; this.packages = packages;
+  }
+  static create(opts: JournalOptions, genesis: ActorEnvelope | string, origins: (ActorEnvelope | string)[] = []): ScopeJournal { return new ScopeJournal(Journal.create(opts, genesis, origins), opts.packages); }
+  static open(opts: JournalOptions): ScopeJournal { return new ScopeJournal(Journal.open(opts), opts.packages); }
+  get state(): ScopeState {
+    const state = replayScope(publicProof(this.journal), this.packages);
+    const inspection = this.journal.context.state.models.inspection as unknown as InspectionState | undefined;
+    return snapshot({ ...state, inspection: { ...state.inspection, requested: (inspection?.requests.length ?? 0) > 0 } });
+  }
+  export(names: RightName[]): SourceExport { const proof = publicProof(this.journal); return exportFrom(replayScope(proof, this.packages), proof, proof.frontier, names, this.packages); }
+  submit(input: ActorEnvelope | string, credential?: TransportCredential): (Receipt & { verdict?: Verdict; controlVerdict?: Verdict }) | Refusal {
+    const result = this.journal.submit(input, credential);
+    if ('refused' in result || result.controlVerdict) return result;
+    const event = verifyEnvelope(input).body;
+    if (!scopeKinds.has(event.kind)) return result;
+    return { ...result, verdict: this.state.verdicts[result.header.position] };
+  }
+  close(): void { this.journal.close(); }
+}

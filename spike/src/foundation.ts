@@ -12,6 +12,7 @@
 // actor alone, so bad data is never served to anyone else.
 
 import { createHash } from 'node:crypto';
+import { scopeSetup } from './scope-profile.ts';
 import { canonicalize as canonicalWire, envelopeId } from './codec.ts';
 import { contentId, type Json } from './canon.ts';
 import { snapshot } from './append.ts';
@@ -449,7 +450,8 @@ function foldGenesis(state: FoundationState, ev: EventBody, packages: Record<str
     if (seen.has(id)) throw genesisError('duplicate_origin', `origin ${id} adopted twice`);
     seen.add(id);
   }
-  state.participants = [ev.actor];
+  const scope = scopeSetup(ev);
+  state.participants = scope ? [...scope.founders] : [ev.actor];
   for (const b of p.bindings) {
     const pkg = packageIn(packages, b.package);
     if (!pkg) throw genesisError('foundation_mismatch', `genesis binds unknown package ${b.package}`);
