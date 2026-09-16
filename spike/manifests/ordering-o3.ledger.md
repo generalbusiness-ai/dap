@@ -120,3 +120,20 @@ The current implementation reauthenticates the saved chain when deriving the
 ordering state and admitting new signed events. Its work grows with the
 retained prefix; no throughput or incremental-verification claim is made.
 Independent checker approval remains pending.
+
+
+## Combined O2/O3/O5 candidate
+
+The current integration on `request/ordering-o2-o3-o5` incorporates corrected
+O1/V6 candidate `4cfc69376fbd513c4cacf5baa0d32c316797cf89`, retaining this
+O3 request, implementation and historical evidence. Its common source,
+merge resolution and focused verification are recorded in
+[the integration ledger](ordering-integration.ledger.md). This ledger remains
+the O3 reporting artifact at that same candidate head. Component review
+approvals and an additional 600-seed run are not claimed.
+
+
+The common frozen source `671400d8d44b661084918a2a70edb917662ec51e`
+passed all 138 focused integration checks and typecheck. The exact output and
+scope are in the linked integration record. The final common candidate adds
+only evidence after that run; no subsequent source or test repair occurred.
