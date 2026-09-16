@@ -180,6 +180,8 @@ export interface FoundationState {
   audiences: Audience[];
   /** participants after each position */
   membersAt: Principal[][];
+  /** the kind recorded at each position the folder has seen */
+  kindsAt: (string | undefined)[];
   verdicts: Verdict[];
   /** model states by model id */
   models: Record<string, Json>;
@@ -197,6 +199,7 @@ export function initialFoundationState(genesisId: string): FoundationState {
     disclosures: [],
     audiences: [],
     membersAt: [],
+    kindsAt: [],
     verdicts: [],
     models: {},
   };
@@ -380,6 +383,7 @@ export function foldEntry(state: FoundationState, input: FoldInput): Verdict {
   }
   state.audiences[pos] = audience;
   state.membersAt[pos] = [...state.participants];
+  state.kindsAt[pos] = ev.kind;
   state.verdicts[pos] = verdict;
   return verdict;
 }

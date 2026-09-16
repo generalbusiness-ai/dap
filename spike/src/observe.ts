@@ -16,8 +16,12 @@ export interface Observation {
   kinds: string[];
   /** the expected-binding identity of each such kind: the semantics the principal would judge an event by */
   bindings: Record<string, string>;
-  /** the outcome of every event the principal can see: effective or not, and why */
-  outcomes: Record<string, { effective: boolean; reason: string | null }>;
+  /**
+   * The outcome of every event the principal can see: the verdict, and
+   * the per-handler outcome for each handler of the binding the principal
+   * resolves (design note §3: effectiveness is per handling model).
+   */
+  outcomes: Record<string, { effective: boolean; reason: string | null; perModel?: Record<string, { effective: boolean; reason: string | null }> }>;
   models: Record<string, Json>;
   affordances: string[];
 }
@@ -46,6 +50,11 @@ export function foundationAffordances(state: FoundationState, p: Principal): str
   return out.sort();
 }
 
+/** The kind recorded at a position, from the foundation's own record of kinds. */
+function kindAt(state: FoundationState, i: number): string | undefined {
+  return state.kindsAt[i];
+}
+
 /** Whether the principal can see the attach that installed a package, so the package is part of their environment. */
 function packageVisible(state: FoundationState, pkgId: string, visible: VisibilityFn): boolean {
   const at = state.env.attachedAt[pkgId];
@@ -56,10 +65,13 @@ function packageVisible(state: FoundationState, pkgId: string, visible: Visibili
 export function modelAffordances(state: FoundationState, p: Principal, ctx: ObserveCtx): string[] {
   const out = new Set<string>();
   if (state.closed) return [];
-  const byModel = new Map<string, string[]>();
-  for (const [kind, b] of Object.entries(state.env.kinds)) {
-    if (!packageVisible(state, b.packageId, ctx.visible)) continue;
-    for (const h of b.handlers) byModel.set(h, [...(byModel.get(h) ?? []), kind]);
+  // Handlers and capability contracts come from the binding the principal resolves, never from
+  // an attach they cannot see, so bindings, models and affordances share one view-specific environment.
+  const byModel = new Map<string, { kind: string; capability?: string }[]>();
+  for (const kind of Object.keys(state.env.kinds)) {
+    const b = visibleBinding(state.env, kind, ctx.visible);
+    if (!b || !packageVisible(state, b.packageId, ctx.visible)) continue;
+    for (const h of b.handlers) byModel.set(h, [...(byModel.get(h) ?? []), { kind, capability: b.capability }]);
   }
   for (const [modelId, kinds] of byModel) {
     const model = findModel(state.env, modelId);
@@ -68,10 +80,7 @@ export function modelAffordances(state: FoundationState, p: Principal, ctx: Obse
     if (model.affordances) {
       for (const k of model.affordances(p, mstate, ctx, model.config)) out.add(k);
     } else {
-      for (const k of kinds) {
-        const cap = state.env.kinds[k]!.capability;
-        if (!cap || ctx.holds(cap)) out.add(k);
-      }
+      for (const { kind, capability } of kinds) if (!capability || ctx.holds(capability)) out.add(kind);
     }
   }
   return [...out].sort();
@@ -99,7 +108,16 @@ export function observe(state: FoundationState, p: Principal, basis: number, vis
   for (let i = 0; i < state.verdicts.length; i++) {
     const v = state.verdicts[i];
     if (!v || !visible(i)) continue;
-    outcomes[String(i)] = { effective: v.effective, reason: v.reason ?? null };
+    const entry: Observation['outcomes'][string] = { effective: v.effective, reason: v.reason ?? null };
+    if (v.perModel) {
+      // per-handler outcomes, restricted to the handlers of the binding this principal resolves for that kind
+      const kind = kindAt(state, i);
+      const b = kind ? visibleBinding(state.env, kind, visible) : undefined;
+      const handlers = new Set(b?.handlers ?? Object.keys(v.perModel));
+      entry.perModel = {};
+      for (const [h, r] of Object.entries(v.perModel)) if (handlers.has(h)) entry.perModel[h] = { effective: r.effective, reason: r.reason ?? null };
+    }
+    outcomes[String(i)] = entry;
   }
   return {
     participants: [...state.participants],

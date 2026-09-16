@@ -110,7 +110,7 @@ test('shrinking: the failing series reduces to a minimal script that still fails
   assert.ok(minimal.steps.some((s) => s.type === 'accept'));
 });
 
-/** The manifest's expected observations, derived from the scripted events and membership alone: no fold, no observe. */
+/** The manifest's expected observations, derived from the recorded events, their verdicts, membership at recording and disclosures; it never calls a model's observe. */
 function expectedDiscussion(ctx: ReturnType<typeof replay>['ctx'], p: string, n: number) {
   const entries = ctx.entries;
   const memberAt = (i: number) => (ctx.state.membersAt[i] ?? []).includes(p);

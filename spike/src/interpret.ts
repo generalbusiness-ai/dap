@@ -10,8 +10,8 @@
 // verdict on any event.
 
 import { contentId } from './canon.ts';
-import type { PackageDescriptor } from './descriptor.ts';
-import { bindingId } from './descriptor.ts';
+import type { PackageDescriptor, ResolvedBinding } from './descriptor.ts';
+import { bindingId, bindingIdOf } from './descriptor.ts';
 import { K, foldEntry, initialFoundationState, originsCount, type AttachPayload, type FoundationState } from './foundation.ts';
 import type { ViewEntry } from './context.ts';
 import { SYSTEM_PREFIX, named, type Entry, type Principal, type Verdict } from './types.ts';
@@ -57,6 +57,13 @@ function chainOf(view: ViewEntry[]): Entry[] {
     header: v.header,
     headerHash: v.headerHash,
   }));
+}
+
+/** Every binding identity this principal's environment has produced for a kind, current and superseded. */
+function knownBindings(state: FoundationState, kind: string): Set<string> {
+  const out = new Set<string>();
+  for (let b: ResolvedBinding | undefined = state.env.kinds[kind]; b; b = b.previous) out.add(bindingIdOf(state.env, kind, b));
+  return out;
 }
 
 function bindingsOf(state: FoundationState): Record<string, string> {
@@ -108,11 +115,12 @@ export function interpretView(p: Principal, view: ViewEntry[], basis: number, av
     }
     if (v.via === 'disclosure' && !ev.kind.startsWith(SYSTEM_PREFIX)) {
       // Disclosed, but the semantics it needs were not: the disclosure was dependency-incomplete.
-      // Either the kind is unknown here, or the event expects a binding this principal cannot
-      // resolve because the attach that produced it was not disclosed. An event visible by its
-      // own audience is judged, and a mismatch there is a genuine stale_binding verdict.
-      if (!state.env.kinds[ev.kind]) return paused(i, 'dependency_missing');
-      if (ev.expected_binding !== undefined && ev.expected_binding !== bindingId(state.env, ev.kind)) return paused(i, 'dependency_missing');
+      // The kind may be unknown here, or the event may expect a binding this principal has never
+      // seen produced. A binding this principal has seen produced at some earlier attach is a
+      // genuine stale_binding verdict, not a missing dependency: their history explains it.
+      const current = state.env.kinds[ev.kind];
+      if (!current) return paused(i, 'dependency_missing');
+      if (ev.expected_binding !== undefined && !knownBindings(state, ev.kind).has(ev.expected_binding)) return paused(i, 'dependency_missing');
     }
     const origin = i > 0 && i <= origins;
     const verdict = foldEntry(state, { entry: asEntry(v), origin, packages: available, entries: chain });

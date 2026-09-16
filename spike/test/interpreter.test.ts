@@ -227,3 +227,101 @@ test('F1: a contradiction that changes no displayed state is caught through outc
   // Alice, who sees every vote, agrees with the oracle
   assert.deepEqual(checkContext(ctx, { participants: [ALICE], frontiers: [7] }), []);
 });
+
+// ----- checker's second V2 review (workroom report a9020394), G1 to G3 -----
+
+function tallyPackage(): PackageDescriptor {
+  const base: Omit<PackageDescriptor, 'id'> = {
+    name: 'com.example.tally',
+    models: {
+      tally: {
+        id: 'tally',
+        config: {},
+        init: () => ({ votes: 0, decided: false }),
+        fold: (s: { votes: number; decided: boolean }, ev: EventBody) => {
+          if (ev.kind === 'com.example.tally.vote') return { effective: true, state: { ...s, votes: s.votes + 1 } };
+          if (ev.kind === 'com.example.tally.decide') return s.votes >= 2 ? { effective: true, state: { ...s, decided: true } } : { effective: false, state: s, reason: 'not_enough_votes' };
+          return { effective: false, state: s, reason: 'unhandled' };
+        },
+        observe: () => ({}),
+      } as unknown as PackageDescriptor['models'][string],
+    },
+    capabilities: [],
+    kinds: {
+      'com.example.tally.vote': { kind: 'com.example.tally.vote', schema: {}, handlers: ['tally'], audienceId: 'voter+alice', audience: (_c, ev) => named(ev.actor, ALICE) },
+      'com.example.tally.decide': { kind: 'com.example.tally.decide', schema: {}, handlers: ['tally'], audienceId: 'members', audience: () => MEMBERS },
+    },
+  };
+  return { id: descriptorId(base), ...base };
+}
+
+test('G1: an always-effective co-handler cannot mask a contradiction; per-handler outcomes are compared', () => {
+  const tally = tallyPackage();
+  const ctx = Context.create({ creator: ALICE, packages: { [tally.id]: tally }, bindings: [{ package: tally.id }], grants: [{ principal: ALICE, capabilities: ALICE_CAPS }] });
+  accept(ctx, BOB, invite(ctx, ALICE, BOB, [])); // 1, 2
+  accept(ctx, CAROL, invite(ctx, ALICE, CAROL, [])); // 3, 4
+  // a public attach adds a no-op audit handler to decide
+  const audit = pkg('audit', { 'com.example.tally.decide': ['audit'] });
+  ctx.packages[audit.id] = audit;
+  const a = ctx.act(ALICE, K.attach, { package: audit.id, resolution: { 'com.example.tally.decide': { handlers: ['tally', 'audit'] } } }); // 5
+  assert.ok(!('refused' in a) && a.verdict?.effective);
+  ctx.act(BOB, 'com.example.tally.vote', {}); // 6
+  ctx.act(CAROL, 'com.example.tally.vote', {}); // 7
+  const decide = ctx.act(ALICE, 'com.example.tally.decide', {}); // 8
+  assert.ok(!('refused' in decide) && decide.verdict?.effective);
+  const violations = checkContext(ctx, { participants: [BOB], frontiers: [8] });
+  assert.equal(violations.length, 1, JSON.stringify(violations.map((v) => [v.participant, v.frontier, v.kind])));
+  const v = violations[0]!;
+  // the aggregate verdict agrees (audit is effective on both sides); the tally handler does not
+  assert.equal(v.expected?.outcomes['8']?.effective, true);
+  assert.equal(v.actual?.outcomes['8']?.effective, true);
+  assert.equal(v.expected?.outcomes['8']?.perModel?.['tally']?.effective, true);
+  assert.equal(v.actual?.outcomes['8']?.perModel?.['tally']?.reason, 'not_enough_votes');
+  assert.deepEqual(v.actual?.models, v.expected?.models);
+});
+
+test('G2: a disclosed intent that is genuinely stale is a stale_binding verdict, not a permanent pause', () => {
+  const base = noopBase();
+  const ctx = Context.create({ creator: ALICE, packages: { [base.id]: base }, bindings: [{ package: base.id }], grants: [{ principal: ALICE, capabilities: ALICE_CAPS }] });
+  const saved = ctx.intent(ALICE, 'com.example.base.tick', {}); // bound to the genesis binding
+  const audit = pkg('audit', { 'com.example.base.tick': ['audit'] });
+  ctx.packages[audit.id] = audit;
+  const a = ctx.act(ALICE, K.attach, { package: audit.id, resolution: { 'com.example.base.tick': { handlers: ['base', 'audit'] } } }); // 1, public
+  assert.ok(!('refused' in a) && a.verdict?.effective);
+  const stale = ctx.submit(saved, ctx.credentialFor(ALICE)); // 2
+  assert.ok(!('refused' in stale) && stale.verdict?.reason === 'stale_binding');
+  accept(ctx, BOB, invite(ctx, ALICE, BOB, [])); // 3, 4
+  const d = ctx.act(ALICE, K.disclose, { positions: [2], to: [BOB] }); // 5
+  assert.ok(!('refused' in d) && d.verdict?.effective);
+  const view = ctx.view(BOB, 5);
+  const r = interpretView(BOB, view, 5, ctx.packages);
+  assert.equal(r.kind, 'interpreted');
+  if (r.kind === 'interpreted') {
+    assert.equal(r.outcomes[2]?.reason, 'stale_binding');
+    assert.ok(isDeepStrictEqual(observeInterpreted(r, view), oracleObserve(ctx, BOB, 5, 5)));
+  }
+  assert.deepEqual(checkContext(ctx, { participants: [BOB], frontiers: [5] }), []);
+});
+
+test('G3: affordances come from the visible binding, so a hidden attach with its own affordances causes no false mismatch', () => {
+  const base = noopBase();
+  const ctx = Context.create({ creator: ALICE, packages: { [base.id]: base }, bindings: [{ package: base.id }], grants: [{ principal: ALICE, capabilities: ALICE_CAPS }] });
+  accept(ctx, BOB, invite(ctx, ALICE, BOB, [])); // 1, 2
+  // a private attach adds a no-op handler to base.tick and its own kind with an affordance function
+  const auditBase: Omit<PackageDescriptor, 'id'> = {
+    name: 'audit',
+    models: { audit: { id: 'audit', config: {}, init: () => ({}), fold: (s: Record<string, never>) => ({ effective: true, state: s }), affordances: () => ['com.example.audit.note'] } as unknown as PackageDescriptor['models'][string] },
+    capabilities: [],
+    kinds: {
+      'com.example.base.tick': { kind: 'com.example.base.tick', schema: { v: 1 }, handlers: ['audit'], audienceId: 'members', audience: () => MEMBERS },
+      'com.example.audit.note': { kind: 'com.example.audit.note', schema: {}, handlers: ['audit'], audienceId: 'members', audience: () => MEMBERS },
+    },
+  };
+  const audit: PackageDescriptor = { id: descriptorId(auditBase), ...auditBase };
+  ctx.packages[audit.id] = audit;
+  const a = ctx.act(ALICE, K.attach, { package: audit.id, resolution: { 'com.example.base.tick': { handlers: ['base', 'audit'] } }, audience: [] }); // 3, Alice alone
+  assert.ok(!('refused' in a) && a.verdict?.effective);
+  assert.deepEqual(checkContext(ctx, { participants: [BOB, ALICE], frontiers: [3] }), []);
+  assert.ok(!oracleObserve(ctx, BOB, 3, 3).affordances.includes('com.example.audit.note'));
+  assert.ok(oracleObserve(ctx, ALICE, 3, 3).affordances.includes('com.example.audit.note'));
+});
