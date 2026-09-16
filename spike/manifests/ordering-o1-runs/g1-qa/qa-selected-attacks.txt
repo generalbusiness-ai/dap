@@ -1,0 +1,38 @@
+source /tmp/dap-o1-g1-qa.W6WFtP/spike/
+
+== L1 pre-existing raw Context, then Journal owns, then Journal closes (memory)
+ raw encoding supplied: false
+  J revokes alice invite                                           {"known":true,"authorized":true,"effective":true}
+  raw.submit invite while J owns                                   THREW: Context: backend is owned by a live Journal facade
+  raw stale read: raw.head / raw grants for alice at 2             head 2 verdictAt(2) undefined view(alice)[2].via hidden
+  after J.close: raw.submit stale invite                           THREW: Context: stale fold; restore before writing
+  cold Journal.open: reopened head 2 participants ["alice"] checker 0 
+ raw encoding supplied: true
+  J revokes alice invite                                           {"known":true,"authorized":true,"effective":true}
+  raw.submit invite while J owns                                   THREW: Context: backend is owned by a live Journal facade
+  raw stale read: raw.head / raw grants for alice at 2             head 2 verdictAt(2) undefined view(alice)[2].via hidden
+  after J.close: raw.submit stale invite                           THREW: Context: stale fold; restore before writing
+  cold Journal.open: reopened head 2 participants ["alice"] checker 0 
+
+== L1s pre-existing raw Context on SQLite, Journal owns then closes
+  after J.close: raw.submit stale invite (same handle)             THREW: SQLiteBackend: unavailable or re-entrant transaction
+  raw.head read after close                                        THREW: database is not open
+
+== L5 fold-phase error (entries() throws once after commit) and lost reply, Journal vs raw Context
+  Journal.submit: revoke with fold-phase error                     THREW: injected fold-phase read error
+  Journal.submit: committed head                                   2
+  Journal.submit: stale invite through J.submit                    THREW: Journal: reopen and reconcile after storage or fold error
+  Journal.submit: stale invite through J.context.submit            THREW: Context: owning facade is closed or inactive
+  Journal.submit: Journal.open before close                        THREW: Journal: backend already has a live facade
+  Journal.submit: cold retry replay true hash same true verdict {"known":true,"authorized":true,"effective":true} head 2 participants ["alice"]
+  Journal.submit: cold fresh invite {"known":true,"authorized":false,"effective":false,"reason":"unauthorized"}
+  Context.submit: revoke with fold-phase error                     THREW: injected fold-phase read error
+  Context.submit: committed head                                   2
+  Context.submit: stale invite through J.submit                    THREW: Context: owning facade is closed or inactive
+  Context.submit: stale invite through J.context.submit            THREW: Context: owning facade is closed or inactive
+  Context.submit: Journal.open before close                        THREW: Journal: backend already has a live facade
+  Context.submit: cold retry replay true hash same true verdict {"known":true,"authorized":true,"effective":true} head 2 participants ["alice"]
+  Context.submit: cold fresh invite {"known":true,"authorized":false,"effective":false,"reason":"unauthorized"}
+  raw unowned Context: revoke with lost reply                      THREW: lost reply
+  raw unowned Context: stale invite after lost reply               THREW: Context: inactive after a write error; restore before writing
+  raw unowned cold: reopened head 2 participants ["alice"] checker 0 

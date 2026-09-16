@@ -461,3 +461,37 @@ ownership without advancing the head.
 The combined source will receive one full noncampaign suite and typecheck.
 No new 600-seed run is claimed: the earlier campaign remains measured at
 `747a0905dc80f15a108fd62bdc5399e9f31f4431`, before this G1 runtime correction.
+
+## G1/G2 final measured boundary
+
+The combined source is `2c727b7d8db28c17b51a0aaa34ea5151f2eb44a4`. Its
+full noncampaign suite selected 202 tests: 198 passed, zero ordinary failures,
+four executing/failing retained Club TODOs, zero skipped among selected tests.
+The three 200-seed campaigns were excluded. Whole-tree typecheck passed.
+Commands, source, identities and exit codes are retained in
+[run-14-g1-g2-combined.json](ordering-o1-runs/run-14-g1-g2-combined.json);
+raw output is in
+[run-14-g1-g2-combined.txt](ordering-o1-runs/run-14-g1-g2-combined.txt).
+The noncampaign test command took 12.285 seconds and typecheck 0.698 seconds
+in this environment. This is not a new measurement of the older 600 seeds.
+
+Bounded internal QA from `ordering_o5` found no further defect within the
+declared cooperative boundary. It inspected and tested source `10fa069`,
+whose runtime bytes match `81a95d0` and this combined source. Original
+reviewer L1/L1s/L5 sequences now refuse stale raw writes; cold signed retry
+recovers the correct Alice-only state. Its additional signed-raw probe on
+memory and SQLite confirms exactly one head read inside serialization for a
+current retry, unchanged entries/outbox, continued current writes and cold
+Journal retry. The seven-test earlier harness passes at its actual source.
+[Retained QA](ordering-o1-runs/g1-qa/README.md) contains the original scripts,
+output and [summary](ordering-o1-runs/g1-qa/qa-g1-summary.json), copied without
+rewriting their bytes. This QA is not workroom checker approval.
+
+Only this ledger and retained evidence change after the combined measurement.
+The new runtime checks use exact backend object identity and a current head,
+not underlying-store discovery or a full history scan. Wrappers, aliases and
+direct backend mutation remain outside the cooperative promise. Raw restore
+without an encoding is still a trusted unsigned semantic path; later
+authenticated Journal.open rejects its unsigned entries. O4's runtime
+activation correction and completeness obligations need their own evidence.
+Independent O1 re-review remains pending.

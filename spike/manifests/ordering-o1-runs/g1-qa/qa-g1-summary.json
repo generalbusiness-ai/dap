@@ -1,0 +1,30 @@
+{
+  "source": "10fa069b2e4b4089cbdaf7f577da0feb8db5f3c5",
+  "laterSameRuntime": "81a95d09c0ffb8cf2e65565b05d451b939371290",
+  "result": "No further defect found within the declared cooperative boundary.",
+  "commands": [
+    {
+      "command": "node qa-selected-attacks.mjs /tmp/dap-o1-g1-qa.W6WFtP/spike",
+      "exit": 0,
+      "output": "qa-selected-attacks.txt",
+      "scope": "Original reviewer L1/L1s/L5 blocks with OUT redirected; excluded aliases/wrappers/direct backend attacks."
+    },
+    {
+      "command": "node --test test/context-freshness.test.ts",
+      "exit": 0,
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "output": "qa-freshness-tests.txt"
+    },
+    {
+      "command": "node qa-current-retry.mjs",
+      "exit": 0,
+      "output": "qa-current-retry.json",
+      "scope": "Signed raw Context on memory and SQLite; exact current retry without credential, subsequent append, authenticated cold Journal retry."
+    }
+  ],
+  "inspection": "assertCurrent uses one backend.head() inside shared append serialization, before retry/admission. Folded position/header hash are updated only after foldEntry returns. Append/fold errors inactivate raw Context and invalidate any owned lease.",
+  "instrumentation": "Current exact retry performs exactly one backend.head() under serialization on each backend, adds no entry/outbox row and retains its receipt.",
+  "limits": "No owner-tree edits, broad suite, campaign, push, merge or formal review approval. Backend wrappers/aliases remain intentionally outside the cooperative boundary."
+}
