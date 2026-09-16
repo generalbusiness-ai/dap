@@ -18,7 +18,7 @@ goals (§0), in priority order: evolvability, ease of programming as an
 agent, comprehension simplicity for a person, lightweight
 decentralization. Each has one criterion the spikes report against.
 
-Four notes, each owning one concern:
+Five notes, each owning one concern:
 
 - [Evolving spaces](2026-09-14-evolving-spaces-design.md) — what the things
   are: goals, referents, events, contexts, audiences, packages, authority,
@@ -32,6 +32,9 @@ Four notes, each owning one concern:
 - [The sale as experienced](2026-09-15-sale-as-experienced.md) — the trace
   as five people would live it in a general-purpose dap mobile app, with
   every screen element traced to `observe` and every constraint shown.
+- [Spike plan](2026-09-15-spike-plan.md) — the fixture decisions, the
+  predeclarations, and the task breakdown for the visibility spike and the
+  ordering spike.
 
 Links into gitseq, atseq and noseq assume sibling checkouts beside this repository;
 each cited note records the inspected commit.
