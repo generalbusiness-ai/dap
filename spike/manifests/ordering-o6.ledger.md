@@ -224,3 +224,39 @@ the unchanged O5 verifier and its tests. The separate narrow check passes
 55 O5 tests and typecheck. In O6 those O5 files were already present, so this
 last merge adds only the O4 integration ledger and run-6 evidence. Runtime,
 profile and manifest bytes equal that final O4 wrapper exactly.
+
+## Final combined run 3
+
+Frozen source: `19b6d4346fcb13d33e71ee3d2fbdbb780c44ee67`.
+Node `v26.8.2`, Darwin. The exact commands use run 2's noncampaign filter,
+whole-tree typecheck and the standalone bootstrap CLI with a new SQLite file.
+
+The complete selected suite exits 0: **402 tests, 398 pass, zero ordinary
+failures, four executing/failing Club TODOs**, zero counted skips. The three
+200-seed campaigns are excluded by name; no reduced-seed substitute ran.
+Typecheck and the real CLI demonstration both exit 0. The selected tests
+include all 122 O4 checks, 55 O5 checks and both O6 bootstrap checks, within
+one invocation. Exact commands, exits and timing are in
+[run-3.json](ordering-o6-runs/run-3.json); complete output is in
+[run-3-tests.txt](ordering-o6-runs/run-3-tests.txt) and
+[typecheck-3.txt](ordering-o6-runs/typecheck-3.txt).
+
+The [actual CLI output](ordering-o6-runs/run-3-demo.json) equals run 1 except
+for PID and the new database path. All envelope bytes, signatures, receipt
+hashes, participant state, verified views and four pending publications are
+unchanged. Stderr is empty and retained. This preserves the goal-4 evidence
+under the repaired runtime, without claiming a new process-crash experiment
+or network deployment.
+
+No source changed during measurement and no repair followed it. The frozen
+runtime, profile and lifecycle identities remain those of final O4 `d4decf8`;
+the bootstrap source remains `c75894b8`. The only subsequent changes are this
+record, raw output and the final report. Earlier O6 runs, both G1/G2 failure
+records and every historical manifest/source identity are retained. The full
+600-seed boundary remains O4 `b35b267`, before G1/G2; no passing full campaign
+is claimed for the final source.
+
+Bounded internal factual QA of the report at `19b6d43` found no contradiction
+in component counts, corrected identities, failures or trust boundaries.
+It made no edits and ran no tests. This QA and the measurements are not
+independent workroom approval or landing; those remain separate actions.

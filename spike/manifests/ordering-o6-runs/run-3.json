@@ -1,0 +1,59 @@
+{
+  "input_snapshot": "19b6d4346fcb13d33e71ee3d2fbdbb780c44ee67",
+  "node": "v26.8.2",
+  "runs": [
+    {
+      "name": "run-3-tests",
+      "command": [
+        "node",
+        "--test",
+        "--test-skip-pattern=case [57], the campaign:",
+        "test/**/*.test.ts"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 61.837,
+      "summary": {
+        "tests": 402,
+        "pass": 398,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 4
+      },
+      "campaign_tests_excluded": 3
+    },
+    {
+      "name": "typecheck-3",
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 0.91
+    },
+    {
+      "name": "run-3-demo",
+      "command": [
+        "node",
+        "test/fixtures/o6-bootstrap.ts",
+        "/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/dap-o6-demo-g1g2-ra008_9n/journal.db"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 0.099
+    }
+  ],
+  "full_campaign_boundary": "b35b267ea5392e5361905018ee350ec4df07aa55",
+  "campaign_boundary_relation": "Before G1/G2 runtime and manifest repairs; not a campaign result for this source",
+  "campaigns_repeated": false,
+  "retained_negative": "Four executing Club TODOs: original A1 and three A5 cases",
+  "demo_comparison": {
+    "reference": "run-1-demo.json",
+    "different_fields": [
+      "database",
+      "pid"
+    ],
+    "all_signed_content_equal": true,
+    "stderr_empty": true
+  }
+}
