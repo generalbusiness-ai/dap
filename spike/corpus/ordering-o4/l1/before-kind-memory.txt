@@ -1,0 +1,1 @@
+{"storage":"memory","kind":"__proto__","point":"destination-activated","context":"F","actor":"kim","headBefore":1,"submitThrew":"Cannot read properties of undefined (reading 'map')","backendHead1":2,"cold1":"threw: Cannot read properties of undefined (reading 'map')","backendHead2":2,"cold2":"threw: Cannot read properties of undefined (reading 'map')"}
