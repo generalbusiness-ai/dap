@@ -379,7 +379,9 @@ export function foldEntry(state: FoundationState, input: FoldInput): Verdict {
       }
     } else {
       const binding = state.env.kinds[ev.kind];
-      if (!binding) audience = MEMBERS;
+      // A kind no binding resolves cannot be judged, and refusing an act must not disclose its
+      // payload (design note §8): the actor alone reads it.
+      if (!binding) audience = named(ev.actor);
       else {
         // A model's audience rule runs on runtime JSON; if it throws, the event is recorded as
         // ineffective and readable by its actor alone, so the series stays replayable.

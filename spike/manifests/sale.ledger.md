@@ -160,8 +160,33 @@ are gone: the declared policy is honoured.
 
 Snapshot commit: see `git log`, "checker run 5". Foundation corrected,
 not a model fix: an application event whose kind has no binding at its
-position is recorded with an actor-only audience. Results are recorded
-in the snapshot's commit message and below once run.
+position is recorded with an actor-only audience (design note §8). The
+budget checks now require the readable view as an argument, so a caller
+cannot silently fall back to the projection-only check (the author's
+caution). Manifest revision "Run 3"; package as at run 4.
+
+The trace, cases 2 to 4, the three reproduced counterexamples, the run-1
+corpus and the campaign pass: **200 of 200 seeds** with zero violations
+of the property, the pause rule, the invariants and the privacy budget on
+readable events, over 11171 entries with 946 joins, 199 narrow side
+attaches, 1716 disclosures (of public kinds only), 273 stubs (31
+replacements), 175 withdrawals, 159 counters, 111 accepts (18 effective)
+and 279 closes.
+
+## Result
+
+Sale, the partition-plus-decision shape: **6 fixes recorded, 5 of them
+semantic, 0 added kinds, against a budget of 2 fixes and 1 kind: budget
+exceeded.** Of the five semantic fixes, one (fix 1) corrected the
+predeclared counter kind, two (fixes 2 and 3) made newcomers complete by
+a declared join disclosure and dropped the tombstone rule, one (fix 4)
+declared a disclosure policy once the privacy budget was checked on
+readable events, and one (fix 5) closed a misdirected-counter hole the
+reviewer found. The experiment's manifest was revised twice after the
+baseline; both revisions are identified above. The views note's trace
+as literally drawn is dependency-incomplete for Ivan under the fixed
+model and passes only with the declared join disclosure added; both
+results are kept visible in the tests.
 
 ## Fixes
 

@@ -246,7 +246,7 @@ export function privateParties(view: readonly { position: number; event?: EventB
  * facts, do not include p; and on the projection, amounts or counters of
  * others' offers, or inspection requests p is not party to.
  */
-export function saleBudgetViolations(obs: Observation, p: Principal, seller: Principal, view: readonly { position: number; event?: EventBody }[] = []): string[] {
+export function saleBudgetViolations(obs: Observation, p: Principal, seller: Principal, view: readonly { position: number; event?: EventBody }[]): string[] {
   const out: string[] = [];
   for (const v of view) {
     if (!v.event) continue;

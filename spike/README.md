@@ -185,54 +185,68 @@ What V2 does not claim:
 
 ## V3: Sale by agent
 
+Measured result first: the agent-authored Sale model needed **6 fixes,
+5 of them semantic, 0 added kinds, against a budget of 2 fixes and 1
+kind: budget exceeded** (`manifests/sale.ledger.md`, "Result"). The
+final model passes the views note's trace under a declared join
+disclosure, the predeclared cases, checker's reproduced
+counterexamples, the run-1 corpus and 200 of 200 seeds with zero
+violations of the property, the pause rule, the invariants and a
+privacy budget checked on what each participant can actually read.
+
+Assumptions the result rests on: the fixture's disclosing client (the
+creator's) honours the model's declared join disclosure and disclosure
+policy, emitting ordinary `dap.disclose` events; who checks completeness
+in production stays open (design §8). The manifest was revised twice
+after the baseline (the counter kind's payload; the readable-events
+budget), so the experiment is the revised one; the ledger identifies
+every revision and every run cites its identity.
+
+The trace, original and repaired:
+
+| Case | Positions | Result |
+|---|---|---|
+| The views note's trace as drawn | 0 to 19 | 5 violations; the first at Ivan@15: o3 replacing the hidden o1 is effective for the oracle and `no_such_offer` for Ivan (`joinDisclosure: false` in the test, reported as a diagnostic) |
+| The trace under the declared join disclosure | 0 to 20, Ivan's backlog at 14 | reproduces the table with every later position shifted by one; the literal projections at 20; 17 effective, 18 `already_decided` for every participant |
+| Case 2, hidden predecessor, as drawn | | 3 violations, first at Ivan@15 |
+| Case 2 under the declared disclosure | | Ivan reads o1 and sees o3 open replacing it; the accept of o1 is ineffective for everyone |
+
 What it contains:
 
 - `manifests/sale.md` and `manifests/sale.ts`: the Sale experiment
-  manifest, frozen before the baseline: the predeclared split schema,
-  promises, privacy budget, projection shape, reason vocabulary, the
-  budget of 2 fixes and 1 added kind, bounds of 6 participants, 60
-  positions and seeds 1 to 200, the views note trace as a script with its
-  readability and literal projections, the late-joiner and hidden
+  manifest: the predeclared split schema, promises, privacy budget,
+  projection shape, reason vocabulary, budget, bounds of 6 participants,
+  60 positions and seeds 1 to 200, the views note trace as a script with
+  its readability and literal projections, the late-joiner and hidden
   predecessor cases, invariants over recorded events and verdicts, and
-  the privacy budget over observations. The manifest identity binds the
-  prose and the executable part; the package under test is cited beside
-  it, since it changes with every fix.
-- `fixtures/sale.ts`: the Sale model, authored by an agent under the
-  protocol of spike plan §4.5 from the notes and the manifest, with no
-  test or checker access before the baseline. `fixtures/inspection.ts`
-  is the harness-provided mid-stream attach of the trace.
-- `manifests/sale.ledger.md`: the repair ledger: baseline, harness
-  corrections, each checker run, each fix with its discovery source and
-  counterexample, and the totals against the budget.
-- `scripts/sale-campaign.ts`: the campaign grouped by failure signature.
-- Harness additions: the generator steps one live context and gives
-  payload builders the state and entries, with affordance weights; the
-  checker takes a privacy-budget check and gives invariants the entries;
-  `describeViolation` names the differing paths; a model may declare a
-  join disclosure in its config, and the replay honours it after every
-  effective join as one `dap.disclose` by a holder of the capability.
+  the privacy budget over readable events (each private event's parties
+  derived from recorded facts) and observations. The manifest identity
+  binds the prose and the executable part; the package under test is
+  cited beside it.
+- `fixtures/sale.ts`: the Sale model, authored by an agent under spike
+  plan §4.5 with no test or checker access before the baseline, then
+  repaired by the same agent from checker-run findings.
+  `fixtures/inspection.ts` is the harness-provided mid-stream attach.
+- `manifests/sale.ledger.md`: the repair ledger: baseline, corrections
+  and how they are counted, experiment revisions, every checker run,
+  every fix with its discovery source and counterexample, the result.
+- `corpus/sale/run1/`: the 17 failing series of run 1, shrunk to
+  deletion-minimal scripts and kept with the run-1 model; the corpus
+  test replays them against that model and the current one.
+- `scripts/sale-campaign.ts` (failures by signature) and
+  `scripts/sale-shrink.ts` (the corpus).
+- Harness additions: the generator steps one live context, gives payload
+  builders the state and entries, weights affordances, honours a
+  declared join disclosure after each join and a declared disclosure
+  policy when it discloses; the checker takes a privacy budget over the
+  readable view and the observation, and gives invariants the entries;
+  an audience rule that throws is recorded as an ineffective, actor-only
+  event; an application kind with no binding is readable by its actor
+  alone; `describeViolation` names the differing paths; a corpus module.
 
-What the tests show:
-
-- the trace reproduces the views note's table under the model's declared
-  join disclosure (Ivan's backlog at 14 shifts the later positions by
-  one), with the literal projections, the readability of every position
-  for Alice, Bob, Carol and Ivan, and the outcomes at 17 and 18;
-- the hidden-predecessor, late-joiner-after-decision and
-  late-joiner-on-hidden-fact cases hold in every view;
-- 200 of 200 seeds pass with zero violations of the property, the pause
-  rule, the invariants and the privacy budget;
-- the ledger's totals agree with its entries: 2 fixes, 0 added kinds,
-  within budget.
-
-What V3 does not claim:
-
-- the join disclosure is a fixture policy: the creator's client discloses
-  the declared backlog after each join; who checks completeness in
-  production stays open (design §8);
-- the trace as literally drawn in the views note is dependency-incomplete
-  for Ivan under this model (ledger, run 2); the note's expectation for a
-  hidden predecessor is not met by this fold, and the finding is
-  reported rather than hidden;
-- Booking and Club are V4 and V5; the mutation runner across models and
-  the report are V6.
+What V3 does not claim: the join disclosure and disclosure policy are
+fixture policies of the creator's client; the predeclared counter kind
+lets a seller misdirect a counter's delivery (the fold refuses it and
+the budget reports it; the fixture's clients never do it); Booking and
+Club are V4 and V5; the mutation runner across models and the report
+are V6.
