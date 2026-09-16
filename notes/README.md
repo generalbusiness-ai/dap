@@ -5,17 +5,33 @@ Project name for this phase: **dap**; system namespace `ai.generalbusiness.dap.`
 Dated notes (YYYY-MM-DD-title.md) to capture designs, implementation plans,
 and discussion summaries.  Frontmatter "status" should be maintained.
 
-Three notes, each owning one concern:
+dap lets people coordinate around a sale, a booking or any other shared
+activity. Each activity records signed actions in one agreed order;
+packages supply the rules that turn those actions into state and next
+actions; people may read different parts of the history, but their views
+must agree on every shared decision. This is a proposed design whose
+experiments have not yet run.
+
+**First reading:** start with the sale as experienced, then the design
+note, then the views note, then ordering. The design note opens with the
+goals (§0), in priority order: evolvability, ease of programming as an
+agent, comprehension simplicity for a person, lightweight
+decentralization. Each has one criterion the spikes report against.
+
+Four notes, each owning one concern:
 
 - [Evolving spaces](2026-09-14-evolving-spaces-design.md) — what the things
-  are: referents, events, contexts, audiences, packages, authority, boundaries,
-  invariants, precedents.
+  are: goals, referents, events, contexts, audiences, packages, authority,
+  boundaries, invariants, precedents, and where review findings landed.
 - [One series, many views](2026-09-14-one-series-many-views.md) — how many
   views share one order: the consistency property, a worked trace, the same
   property across applications, where authoring gets hard, the visibility spike.
 - [Ordering](2026-09-14-ordering.md) — how a context gets, keeps, moves and
   hands over its order: trust and failure, the single-writer implementation,
   split/join protocols, the ordering spike.
+- [The sale as experienced](2026-09-15-sale-as-experienced.md) — the trace
+  as five people would live it in a general-purpose dap mobile app, with
+  every screen element traced to `observe` and every constraint shown.
 
 Links into gitseq, atseq and noseq assume sibling checkouts beside this repository;
 each cited note records the inspected commit.

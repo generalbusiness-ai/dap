@@ -2,15 +2,47 @@
 date: 2026-09-14
 updated: 2026-09-15
 status: >-
-  draft design for dap. Defines the objects, the foundation (genesis, system
-  namespace, two-layer authority, crystallization), semantics, authority,
+  draft design for dap, revised 2026-09-15 after checker's review of 9a0d7eb.
+  Defines the goals, the objects, the foundation (genesis, system namespace,
+  two audiences, two-layer authority, crystallization), semantics, authority,
   boundaries and invariants. View consistency and transition safety are
-  hypotheses tested by the companion notes' spikes. No implementation adopted.
+  hypotheses tested by the companion notes' spikes. Foundation upgrades and
+  per-audience encryption are deferred. No implementation adopted.
 views: notes/2026-09-14-one-series-many-views.md
 ordering: notes/2026-09-14-ordering.md
+narrative: notes/2026-09-15-sale-as-experienced.md
 ---
 
 # Evolving Spaces: minimal design for situational applications
+
+## In one paragraph
+
+dap lets people coordinate around a sale, a booking, a trip or any other
+shared activity. Each activity records signed actions in one agreed order.
+Packages supply the rules that turn those actions into the current state
+and the actions available next. People may read different parts of the
+history, but the design requires their views to agree on every shared
+decision. In a guitar sale, buyers keep their prices private while seeing
+enough to agree which offer was accepted. This is a proposed design; the
+experiments that would establish its key properties have not yet run.
+
+Reading path: the [sale as experienced](2026-09-15-sale-as-experienced.md)
+for the concrete picture; this note for the objects and rules; the
+[views note](2026-09-14-one-series-many-views.md) for the consistency
+requirement; the [ordering note](2026-09-14-ordering.md) for storage,
+trust and failure.
+
+Six words, as dap uses them:
+
+- **fold**: apply the rules to the recorded events, in order, to calculate
+  state and outcomes;
+- **model**: the rules and state for one part of an activity (§3);
+- **principal**: an identity that signs actions (§8);
+- **affordance**: an action the model currently offers this person or agent
+  (§4);
+- **content id**: an identifier derived from exact content, so that
+  changing the content changes the identity (§7);
+- **spike**: a small experiment that tests one design claim.
 
 ## Thesis
 
@@ -45,6 +77,69 @@ shared facts, not identical private state or identical installed models.
 
 ---
 
+## 0. Goals and priorities
+
+Four goals, in priority order. When two pull against each other, the earlier
+one wins unless a note says otherwise and says why. Each goal has one
+criterion that a spike or a review can check.
+
+1. **Evolvability.** Purposes multiply and change within one interaction's
+   lifetime and across an ecosystem of packages. *Criterion:* a context can
+   attach a package mid-stream and every prior outcome replays unchanged.
+   Both spikes test this.
+2. **Ease of programming as an agent.** Flexibility only takes root if an
+   agent can author semantics quickly and safely. *Criterion:* an agent given
+   the foundation and one example package can author a model for the
+   partition-plus-decision shape that passes the consistency checker within
+   the fix budget the views note predeclares. The visibility spike measures
+   this by having each model authored from its specification by an agent,
+   with fix counts recorded.
+3. **Comprehension simplicity for a person.** Especially at onboarding, and
+   as their interactions evolve. *Criterion:* a newcomer can answer three
+   questions from the screen alone: what is this about, what can I do now,
+   and what can I not see and why. The narrative note checks this against
+   the sale; a user test is deferred.
+4. **Lightweight decentralization.** A community or business evaluating dap
+   must be able to stand it up cheaply. *Criterion:* the single-writer
+   profile runs as one process on one host with no external services, and a
+   context can be created and joined inside the ordering spike's fixture.
+
+Where existing decisions serve or cost a goal:
+
+| Decision | Serves | Costs |
+|---|---|---|
+| Immutable packages, activation at an exact boundary (§3, §6, §7) | 1 | 2: authors must reason about boundaries |
+| No separate API; affordances drive humans and agents alike (§4) | 2, 3 | — |
+| Two named audiences, `spine` and `members` (§2) | 3: a newcomer always has the whole spine | 3: participation is public inside a context |
+| Split kinds rather than per-field audiences (views note, cliff 6) | 2: no projection machinery | 2, 3: more kinds, more events on screen |
+| Trusted serving party in the first profile (§2, views note) | 4: one host | 4: that host is trusted for audience enforcement |
+| Single-writer sequencing profile (ordering note §3) | 4 | availability depends on one writer |
+| Two-layer authority, control verifiable without folds (§2) | 4: cheap verification | 2: two vocabularies to learn |
+| Hidden positions carry authenticated headers (§1) | 3: the count of what you cannot see is honest | 3: the count itself must be explained |
+
+### The referent as the person's anchor
+
+A referent is identity only: an opaque tag, pinned at genesis, with explicit
+acts for saying two tags name one thing (§9). What a person sees is not the
+referent but an **anchor**: a title, a summary, an image, a status line.
+Three things are kept apart:
+
+- **Identity** is the tag. It never changes.
+- **Description** is signed events with audiences, like everything else: a
+  user-typed title, an assistant-written summary, a photo. Provenance and
+  audience come free. The initial description travels in the initiating
+  event so that an envelope (§2) renders as a card before anyone joins.
+- **Anchor** is a client-composed, perspective-level rendering over the
+  `observe` projections of every context that shares the tag. Two contexts
+  sharing a tag do not share a decision authority, so a status shown on an
+  anchor is attributed to the context it came from.
+
+A reserved anchor projection in `observe` (title, summary, media, status) is
+a candidate convention so that a general-purpose client has one place to
+look. It is not adopted here.
+
+---
+
 ## 1. Core objects
 
 ### Referent
@@ -65,9 +160,10 @@ determine how it is to be interpreted.
 An event may exist **standalone** — signed, published somewhere, belonging to
 no context — or **sequenced** — bound by a context's entry to a position and
 predecessor. A sequenced intent also binds the context's genesis, an action
-identity for exact retry, and the semantic binding it expects. An event's
-audience is derived under pinned rules; it is never a recipient list chosen by
-the author.
+identity for exact retry, and the semantic binding it expects. An adopted
+origin (§2) is the exception: it predates the context, so it binds neither.
+An event's audience is derived under pinned rules; it is never a recipient
+list chosen by the author.
 
 ### Context
 
@@ -116,24 +212,46 @@ complete payload. Its initial audience is derived from the preceding state
 and the signed event under an already active, pinned audience rule; later
 authorized `disclose` events may extend it; it never shrinks.
 
+The foundation names two audiences. **`spine`** is every participant, present
+and future: a participant who joins at position `n` is entitled to the whole
+spine from position 0. **`members`** is the participants as of the position,
+and is not retroactive. System kinds are spine unless §2 says otherwise;
+application kinds default to members and may narrow.
+
 At frontier `n`, participant `p` sees `V(p,n)`: the subsequence through `n`
 whose audiences include `p` as of that frontier, positions preserved. Hidden
 positions carry authenticated commitments and linkage sufficient to verify
 the chain without their payloads.
 
-Each participant folds their own view with the same pinned programs for the
-models they share. A seller's room and a buyer's thread are two renderings of
-one series; neither is stored. The required property is
+Each participant interprets their own view with the same pinned programs for
+the models they share. Two clocks are kept apart: the **visibility basis**
+`n`, the frontier as of which audiences and disclosures are evaluated, and
+the **processing frontier**, the last position the interpreter has
+installed. The **view interpreter** `I(p, V(p,n), n)` takes the principal,
+the view under basis `n`, and `n`, and returns either
+`Interpreted{state, outcomes, bindings, affordances(p)}` at processing
+frontier `n`, or `Paused{at k, reason, last}` where `last` is the
+interpreted result through `k-1` under the same basis `n`. Hidden positions
+enter as authenticated headers. A seller's room and a buyer's thread are
+two renderings of one series; neither is stored. The required property, on
+the interpreted case, is
 
 ```text
-fold(V(p,n)) = observe(p, fold(S[0..n]), n)
+observe(p, I(p, V(p,n), n))  =  observe(p, fold(S[0..n]), n)
 ```
 
-where `observe` is a model-declared projection of state, outcomes, bindings
-and affordances, and **presentation bindings may render only what `observe`
-exposes** — so nothing the application shows can escape the property. The
-complete-series fold is a specification oracle, not an access grant. The
-views note carries the trace, the use cases, the authoring cost and the spike.
+where `observe(p, state, n)` is a model-declared projection of state,
+outcomes, bindings and affordances for one principal under basis `n`, and
+**presentation bindings may render only what `observe` exposes** — so
+nothing the application shows can escape the property. A paused result is
+compared at its processing frontier under the same basis:
+`observe(p, last) = observe(p, fold(S[0..k-1]), n)`; once the missing
+dependency is supplied it resumes to equality at `n`. This is not an as-of
+query: an as-of query at `k-1` uses basis `k-1`. The pause itself is an
+interpreter diagnostic that reaches presentation as `observe.paused`; it is
+never a verdict on any event. The complete-series fold is a specification
+oracle, not an access grant. The views note carries the trace, the use
+cases, the authoring cost and the spike.
 
 ### Perspective
 
@@ -160,9 +278,9 @@ exactly one content id; a name that resolves to two is a binding error
 surfaced at attach, never at fold time.
 
 The prefix **`ai.generalbusiness.dap.`** is the **system namespace**. Only the
-foundation package pinned in a context's genesis may define names under it;
-the foundation fold refuses any application attach that declares a name with
-that prefix. Applications use their own prefixes (`com.example.sale.offer`).
+foundation lineage — the package pinned in a context's genesis and its
+activated successors — may define names under it; the foundation fold
+refuses any application attach that declares a name with that prefix. Applications use their own prefixes (`com.example.sale.offer`).
 Namespacing therefore does three jobs: it marks what the foundation owns and
 an application cannot shadow; it makes bootstrapping legible (the first
 events in any context are all system kinds); and it keeps authored
@@ -188,13 +306,15 @@ pins — completely and in one place —
 4. the **initial assignment**: the writer key or validator set for epoch 0;
 5. **initial grants**: the capabilities held at position 0 — at minimum who
    may `dap.attach`, `dap.invite` and `dap.grant`, otherwise nothing can
-   happen;
+   happen — and who holds `dap.foundation`, the capability to attach a
+   successor foundation;
 6. **initial bindings**: application packages attached at genesis, with their
    binding resolutions (may be none);
 7. **origin events**: zero or more standalone signed events adopted, in
    declared order, as entries 1..k, with their bytes retained and actor
-   signatures verified;
-8. **referents**.
+   signatures verified, under the origin contract below;
+8. **referents**, and the **join path**: the rendezvous route through which
+   a stranger asks to be invited.
 
 The runtime profile is a genesis pin so that a context's history is
 replayable forever under one language; **which language** is an open decision
@@ -210,32 +330,51 @@ are not per-application choices.
 
 | Kind | Audience | Requires | Effect |
 |---|---|---|---|
-| `dap.genesis` | everyone | — | entry 0; pins items 1–8 above |
-| `dap.attach` | everyone, unless the event names a narrower set | `dap.attach` | activates packages and their binding resolutions from `n+1` |
+| `dap.genesis` | spine | — | entry 0; pins items 1–8 above |
+| adopted origins | spine | — | entries 1..k; assertions by their original actors |
+| `dap.attach` | spine, unless the event names a narrower set | `dap.attach` | activates packages and their binding resolutions from `n+1` |
+| `dap.attach` marked `foundation_successor` | spine | `dap.foundation` | activates a successor foundation from `n+1` |
 | `dap.invite` | inviter, invitee | `dap.invite` | creates a one-use invitation capability carrying a role or grants |
-| `dap.accept_invite` | everyone | the invitation capability | the actor becomes a participant with the invited grants |
-| `dap.grant`, `dap.revoke` | everyone | `dap.grant` | capability or role change; authority is shared state |
+| `dap.accept_invite` | spine | the invitation capability | the actor becomes a participant with the invited grants; the event embeds the capability it redeems |
+| `dap.grant`, `dap.revoke` | spine | `dap.grant` | capability or role change; authority is shared state |
 | `dap.disclose` | recipients, actor | `dap.disclose` | extends the audience of named earlier positions |
 | `dap.admit` | as declared by the admitting model | `dap.admit` | admits an external assertion as a local event of a named kind |
-| `dap.observe` | everyone | `dap.observe` | an ambient fact — time, a draw, a measurement — asserted by a designated actor |
-| `dap.close` | everyone | `dap.close` | the context stops admitting application events |
-| `dap.scope.release` | everyone | `dap.scope.release` | freezes or releases named rights for a described transition |
-| `dap.scope.activate` | everyone | — | first entry of a destination context binding a release |
-| `dap.seq.request` | everyone | `dap.seq.request` | application authority *asks* for an ordering change |
-| `dap.seq.assign`, `dap.seq.seal` | everyone | ordering-control keys | *enact* an assignment change or seal a head |
+| `dap.observe` | members, unless the event names a narrower set | `dap.observe` | an ambient fact — time, a draw, a measurement — asserted by a designated actor |
+| `dap.close` | spine | `dap.close` | the context stops admitting application events |
+| `dap.scope.release` | spine | `dap.scope.release` | freezes or releases named rights for a described transition |
+| `dap.scope.activate` | spine | — | first entry after genesis and any origins in a destination context; carries the release proofs and binds the release |
+| `dap.seq.request` | spine | `dap.seq.request` | application authority *asks* for an ordering change |
+| `dap.seq.assign`, `dap.seq.seal` | spine | ordering-control keys | *enact* an assignment change or seal a head |
+
+**Bootstrap entitlement.** On joining, a participant receives the complete
+spine from position 0, every event whose audience includes them, and an
+authenticated header for every other position. A late joiner can therefore
+verify ordering control, resolve the semantic environment and judge
+authority without any disclosure. Application history stays hidden until
+disclosed.
+
+**Grant evidence.** `dap.invite` is private to inviter and invitee, so the
+invitation capability it creates is a signed token naming the genesis, the
+grants and a one-use id. `dap.accept_invite` embeds that token. Existing
+members verify the newcomer's grants from the accept alone.
 
 Two defaults follow from the views property and are deliberate:
-**participation and authority are visible to everyone** (`accept_invite`,
-`grant`, `revoke`), because `everyone` in every other rule is computed from
-them and a hidden revocation is a consistency failure by definition. Private
-authority structures need separate contexts. And **a narrow `dap.attach` is
-legal but is the author's risk**: its kinds' audiences are bounded by the
-attach's audience, and the consistency checker is what catches a narrow
-attachment that changes a shared outcome.
+**participation and authority are visible to every participant**
+(`accept_invite`, `grant`, `revoke`), because `members` in every other rule
+is computed from them and a hidden revocation is a consistency failure by
+definition. Private authority structures need separate contexts. Buyer
+anonymity toward other buyers is therefore not something a context can
+promise; the sale's privacy promise is stated in the views note. And **a
+narrow `dap.attach` is legal but is the author's risk**: its kinds' audiences
+are bounded by the attach's audience, and the consistency checker is what
+catches a narrow attachment that changes a shared outcome.
 
-The foundation itself evolves by `dap.attach` of a new foundation version
-under the old foundation's rules — the same mechanism as everything else, and
-the reason the system namespace is a prefix rather than a fixed list.
+**Foundation lineage.** Genesis pins the trust-root foundation package. A
+successor foundation is a `dap.attach` marked `foundation_successor`, by a
+holder of `dap.foundation`, with audience spine. Names under the system
+prefix may be defined by the root or by any successor in the activated
+lineage, and by nothing else. Both spikes fix one foundation; upgrades are
+deferred and untested.
 
 ### Two layers of authority
 
@@ -243,22 +382,28 @@ There are two authority systems, and they are kept apart on purpose:
 
 - **Ordering control** is held by the keys or validators named in the
   sequencing profile. It enacts assignment, handover and sealing through
-  `dap.seq.assign` / `dap.seq.seal`. Every reader verifies the ordering-control
-  chain — genesis plus every `dap.seq.*` entry — **without running any
-  application fold**, because those entries are system kinds with audience
-  `everyone` and self-contained proofs.
+  `dap.seq.assign` / `dap.seq.seal`. Under the default profile every reader
+  verifies the ordering-control chain — genesis plus every `dap.seq.*` entry
+  — **without running any application fold**, because those entries are
+  spine system kinds with self-contained proofs.
 - **Application authority** is folded from grants. It can *request* an
   ordering change (`dap.seq.request`) and the profile's keys may honour it; a
   profile may delegate enactment to a folded capability, but then readers
-  must fold to verify, and the default profile does not.
+  must fold to verify. The default profile does not, and invariant 19 is
+  stated for profiles that do not.
 
-Between them sits **transport admission**. The sequencer accepts a submission
-only with a **transport credential**: issued by the serving party — which runs
-the fold and knows who participates — to current participants, or the
-one-use invitation capability itself for exactly one `dap.accept_invite`. The
-sequencer never folds; the serving party bridges folded participation to
-kernel admission. In the first trusted profile the sequencer and serving party
-are one host, and the distinction is a contract, not a deployment.
+Between them sits **transport admission**. The sequencer accepts a new
+submission only with a **transport credential**: issued by the serving party
+— which runs the fold and knows who participates — to current participants,
+or the one-use invitation capability itself for exactly one
+`dap.accept_invite`. Admission is checked **after** exact-retry recovery:
+an authenticated resubmission of an action already committed returns its
+existing receipt before any credential or membership check, so a consumed
+invitation never blocks recovery of the receipt its own acceptance
+produced. The ordering note gives the append path. The sequencer never
+folds; the serving party bridges folded participation to kernel admission.
+In the first trusted profile the sequencer and serving party are one host,
+and the distinction is a contract, not a deployment.
 
 ### Crystallization and origin
 
@@ -268,23 +413,43 @@ and "respond and tear off":
 
 - **Adoption.** A genesis may name standalone signed events as origin entries
   1..k. Any holder of a standalone event may adopt it; the same event can be
-  entry 1 of many contexts. Adopted origins are visible to every participant.
-- **Invitation.** A standalone event may carry an invitation capability into
-  an already-existing context — the listing is published *from* the seller's
-  context and says "redeem this to become a Buyer here."
+  entry 1 of many contexts. Adopted origins are spine.
+- **Invitation.** An already-existing context issues one-use invitations
+  through its join path. A stranger who holds the envelope (below) sends a
+  join request to the route; a holder of `dap.invite` — the initiator's
+  client, or a serving party acting under a declared policy such as "anyone
+  reaching the route becomes a Buyer" — sequences one `dap.invite` per
+  responder, and the responder redeems it with `dap.accept_invite`. One
+  invitation, one use, one responder.
+
+The initiating event never references the genesis that adopts it; that
+would be circular, since the genesis content id depends on the origin's
+bytes. Instead the initiator signs the **initiating event** `L` (referent,
+initial description, rendezvous route), signs a genesis `G` adopting `L`,
+and publishes an **envelope** `{L, G, route}`. The envelope is ungoverned
+signed bytes — whoever has it has it; discovery and transport are outside
+the semantic model. It renders as a card before anyone joins. `L` inside the
+context is governed by the audience rules; it is the same signed bytes as
+`L` in the envelope, and only the first has a position.
 
 So an initiator who wants one room with private threads crystallizes first
-and publishes an event carrying an invitation; responders redeem it and their
-responses are sequenced in that context. An initiator who wants tear-offs
-publishes an event carrying only a rendezvous route; either party may
+and publishes the envelope; responders reach the route, are invited, and
+their responses are sequenced in that context. An initiator who wants
+tear-offs publishes `L` with a route and no genesis; either party may
 crystallize a context adopting the initiating event and the response as
-origins, and invite the other. Which happens is decided by what the published
-event carries, not by a framework switch.
+origins, and invite the other. Which happens is decided by what the
+published bytes carry, not by a framework switch.
 
-The **published copy** of an initiating event is ungoverned bytes — whoever
-has it has it; discovery and transport are outside the semantic model. The
-**adopted copy** is governed by the context's audience rules. They are the
-same signed bytes; only the second has a position.
+**Origin contract.** An origin is adopted as an assertion by its original
+actor; the adopter's signature on the genesis is what authorizes the
+adoption, and the original actor needs no grant in the new context. It is
+interpreted under the initial bindings with the original actor as author,
+and each handling model declares its origin rule — for the sale, a Listing
+origin opens the sale. An origin whose kind does not resolve in the initial
+bindings is an unhandled verdict and inert. The same content id twice in one
+genesis is a genesis error. Origins predate the context, so they bind no
+genesis and no expected binding, and `stale_binding` never applies to them.
+A general origin language beyond this is deferred.
 
 ---
 
@@ -321,14 +486,22 @@ model accepts the transition). Effectiveness is per handling model. An
 unhandled kind is a verdict; an unavailable definition is a pause.
 
 An intent whose **expected binding is no longer active** at its position is
-ineffective with `stale_binding`, never rewritten. Unrelated private
-attachments do not change a shared kind's binding and so do not stale shared
-acts. (Carried from atseq, where it was proven.)
+ineffective with `stale_binding`, never rewritten. The expected binding of a
+kind is the content id of: the kind's schema id, the ordered handler list,
+the audience policy id, the capability contract ids the handlers reference
+for this kind, the runtime profile id, and the handlers' declared
+cross-namespace reads. An intent is stale if and only if that identity
+differs at its position. Because the identity is per kind, an unrelated
+private attachment does not stale a shared act. Atseq proved retaining
+signed intents and refusing a stale definition against one whole-application
+definition; per-kind locality is a dap obligation, and the views note's
+spike tests it with one unrelated private attach that must not stale and one
+relevant binding change that must.
 
 The active, fully resolved composition in a view is its **semantic
-environment**: an immutable closure of package and artifact content ids,
-bindings and the runtime profile, derived from genesis and the effective
-`dap.attach` events visible in that view. There need not be one environment
+environment**: the exact package versions, artifacts, bindings and runtime
+profile needed to interpret the history, fixed by content id, derived from
+genesis and the effective `dap.attach` events visible in that view. There need not be one environment
 for everyone in a context. Failure to fetch a package pauses the viewer; it
 does not remove them from an audience.
 
@@ -358,18 +531,24 @@ transport interfaces.
 ## 5. Lifecycle: semantics can precede the space
 
 ```text
-standalone initiating event
-        │  carries semantics + invitation capability and/or rendezvous route
-        ▼
-responses
-        │  ├──► redeem invitation → sequenced in the initiator's context
-        │  └──► reach the rendezvous → either party crystallizes, adopting both
-        ▼
+one room                                   separate contexts
+────────                                   ─────────────────
+sign L (referent, description, route)      sign L (referent, description, route)
+sign G adopting L                          publish L
+publish envelope {L, G, route}             responses reach the route
+responder reaches the route                either party signs a new G
+issue that responder's invitation            adopting L and the response
+responder redeems it into G                and invites the other
+        │                                          │
+        ▼                                          ▼
 sequenced interaction
         ├── attach packages      ├── invite, grant, disclose
         ├── admit assertions     ├── spawn, split, join
         └── close, become inert, or continue as something else
 ```
+
+`L` never names the genesis that adopts it. Whether the published bytes
+name an existing genesis is what selects the path.
 
 This supports intent-first interaction: an actor publishes a structured
 intention without first entering a provider's application.[^vrm] The
@@ -379,8 +558,9 @@ Qredo's unpublished Rendezvous Protocol.[^qrp]
 
 Whether several responses become **views of one context** (private threads,
 one shared decision) or **separate contexts** (independent order, trust and
-lifecycle; the same origin adopted by each) is decided by what the initiating
-event carries. Separate contexts do not enforce a shared constraint merely by
+lifecycle; the same origin adopted by each) is decided by what is published:
+an envelope naming an existing genesis, or a bare `L` with a route.
+Separate contexts do not enforce a shared constraint merely by
 sharing a referent; they need a common decision authority or a coordinating
 context. Choose separate contexts when independence is wanted, or when the
 view-consistency property cannot be met at acceptable disclosure cost.
@@ -446,7 +626,9 @@ Two questions are never conflated: **which events may this principal read at
 this frontier** (audience policy, enforced by the serving party or an
 encryption protocol) and **what events may this principal cause to become
 effective** (application capability). One context-wide decryption key cannot
-enforce different audiences.
+enforce different audiences. A context-scoped principal is still an
+identity: participation is visible to every participant (§2), even when a
+participant uses a key created for this interaction alone.
 
 A **capability** is semantic authority scoped by kind, model, state and payload
 predicates; a **role** is a named bundle of capabilities, and stays optional:
@@ -461,14 +643,17 @@ role Seller:  sale.accept_offer, sale.reject_offer
 ```
 
 Grants and revocations are `dap.grant` / `dap.revoke` events, visible to
-everyone (§2), folded into authority state — so *was Bob authorized to make
+every participant (§2), folded into authority state — so *was Bob authorized to make
 event #42 when it was committed?* is determinate for every viewer. Refusing an
 act must not disclose its private payload.
 
 ### Disclosure
 
-Role membership is evaluated when an event's initial audience is set; joining
-later reveals nothing earlier. `dap.disclose{positions, to}` extends the
+Role membership is evaluated when an event's initial audience is set. A
+late joiner receives the spine and any earlier event explicitly addressed
+to them, such as their own invitation, and nothing else from before they
+joined; a `members` audience is never widened by a later join.
+`dap.disclose{positions, to}` extends the
 audience of past events; it is visible to its recipients and its actor, and
 to nobody else unless further disclosed. The recipient may need to rebuild
 from the earliest newly visible position with original order and semantic
@@ -535,17 +720,21 @@ interleaves two logs and never establishes joint authority.
 | Operation | Decision scope | Sequencing |
 |---|---|---|
 | **Spawn** | child gets a declared mandate; parent keeps its responsibilities | child: own genesis and assignment |
-| **Split** | `dap.scope.release` at the source; `dap.scope.activate` at the destination against verified release evidence | distinct contexts, independent orders |
+| **Split** | `dap.scope.release` at the source naming a destination commitment; `dap.scope.activate` at the destination, after genesis and any origins, against verified release evidence | distinct contexts, independent orders |
 | **Join** | each source releases to one agreed destination with reconciliation rules | destination orders the combined *future* |
 | **Move** | unchanged | `dap.seq.assign` from an exact head |
 | **Import / present together** | `dap.admit`, or render several histories side by side | unchanged |
 
 What must hold: a release is verified effective — or attested by a principal
-the destination genesis names — before activation; an exclusive right is never
-live in two places; old proposals are not retargeted; a join orders the
-future only; and release-then-activate may *block*, because a timeout cannot
+the destination genesis names — before activation; a release names a
+**destination commitment**, which is the destination genesis's own content
+id, so one release admits exactly one genesis by construction and an
+exclusive right is never live in two places; release proofs travel in the
+activate event, not the genesis; transferred rights are dormant until
+activation; old proposals are not retargeted; a join orders the future
+only; and release-then-activate may *block*, because a timeout cannot
 restore source authority while delayed activation remains possible. The
-protocols and failure cases are in the ordering note.
+commitment, the protocols and the failure cases are in the ordering note.
 
 ---
 
@@ -567,7 +756,9 @@ protocols and failure cases are in the ordering note.
    capability content ids.**
 9. **Audience and application authority are distinct; both obey pinned
    rules.**
-10. **Cross-context state enters only through explicit `dap.admit`.**
+10. **Cross-context state enters only through explicit `dap.admit`, or
+    through a destination genesis's pinned transformation of a released
+    export, made live by `dap.scope.activate`.**
 11. **Contexts may overlap around shared referents without any claiming the
     whole situation.**
 12. **The same affordances drive humans and agents; there is no parallel
@@ -576,19 +767,21 @@ protocols and failure cases are in the ordering note.
     mechanism.**
 14. **A context may begin late and end early.**
 15. **Audience grows only through explicit `dap.disclose`; replay preserves
-    original positions.**
+    original positions.** The spine audience includes future participants by
+    definition, so a join does not grow it.
 16. **A view has every dependency of its visible outcomes, including
     semantics and authority.**
 17. **Folding each view agrees with the complete-series fold on `observe`,
     and presentation renders only `observe`.**
 18. **Scope transfers preserve prior outcomes and never duplicate exclusive
     authority; sequencing moves preserve the committed prefix.**
-19. **Ordering control is verifiable from system-kind entries alone, without
-    any application fold.**
-20. **Only the pinned foundation defines names under
-    `ai.generalbusiness.dap.`.**
+19. **Under the default sequencing profile, ordering control is verifiable
+    from spine system-kind entries alone, without any application fold.**
+20. **Only the pinned foundation and its activated successors define names
+    under `ai.generalbusiness.dap.`.**
 
-Invariants 16–18 are hypotheses until the companion spikes test them.
+Invariants 16–18 are hypotheses until the companion spikes test them; the
+ordering spike verifies 19 with an isolated control verifier.
 
 ---
 
@@ -602,14 +795,53 @@ choice of Git, atproto, Nostr, MLS, SQL, JSONata or a renderer.
   (specified, not implemented).[^gitseq]
 - **Atseq** (`e5856bd9`): a completed, independently reviewed spike with
   retained definitions, activation at an exact boundary, unchanged signed
-  retries with `stale_binding`-style refusal, atomic projection/frontier
-  updates and offline reconstruction. It did not test private subsequence
-  folds or migrations; its measured full-prefix costs argue for cold replay as
-  an oracle with incremental paths measured separately.[^atseq]
+  retries with `stale_binding`-style refusal against one whole-application
+  definition, atomic projection/frontier updates and offline reconstruction.
+  It did not test private subsequence folds, per-kind binding locality or
+  migrations; its measured full-prefix costs argue for cold replay as an
+  oracle with incremental paths measured separately.[^atseq]
 - **Noseq** (`1c158d80`): bounded confidentiality and recovery investigations
   that make retained decryption inputs, historical authority and serving trust
   explicit. No completed confidential runtime; its rule that local resource
   failures are never application verdicts is adopted here.[^noseq]
+
+---
+
+## 12. Review findings and where they landed
+
+Checker's review of 9a0d7eb (workroom report `564bf07f`) made thirteen
+findings. Each is resolved in the owning note or deferred with the fixture
+that pins it.
+
+| Finding | Resolution |
+|---|---|
+| H1 genesis and invitation circular | §2 Crystallization: envelope `{L, G, route}`; invitations issued through the join path, never carried by the origin |
+| H2 late joiners lack public history | §1 and §2: `spine` audience, bootstrap entitlement, grant evidence embedded in `accept_invite` |
+| H3 release not bound to one genesis | §9 and ordering note §7: the commitment is the destination genesis's content id; proofs live in the activate event, so identity is unique by construction. A first draft stripped receipt slots from a template, which checker's second review (R1) showed is many-to-one |
+| H4 retry checked after credential | §2 Transport admission and ordering note §3: retry recovery precedes admission |
+| M1 view equation lacks principal | §1 Audience and view: interpreter `I(p, V, n)` with visibility basis and processing frontier kept apart; a pause carries `last` and is compared under the same basis (second review, R2); invariant 19 qualified |
+| M2 buyer identity vs public roster | §2, §8 and views note trace: privacy promise stated |
+| M3 one invitation, three responders | §2 Crystallization: one invitation per responder |
+| M4 namespace owner vs upgrades | §2: foundation lineage and `dap.foundation`; upgrades deferred, spikes fix one foundation |
+| M5 no cost threshold | views note, What the spike tests: predeclared budgets |
+| M6 Atseq does not prove locality | §3 and §11: expected binding identity; locality is a dap obligation with two tests |
+| J1 origin contract | §2 Crystallization: origin contract; general origin language deferred |
+| L1 activate position | §2 table and §9: first entry after genesis and origins |
+| L2 invariant 10 vs transfer bootstrap | §10 invariant 10 amended |
+
+Also decided: the sale's eligibility semantics (views note, split offer) and
+the classification of hidden revocations (views note, What the spike tests).
+
+Checker's second review of the revision (workroom report `e7ea1e91`) made
+seven further findings, R1 to R7: the destination commitment (above), the
+pause comparison (above), three narrative corrections (unsupported labels on
+hidden positions, the timing of the mistaken accept, late-joiner wording),
+the handover's predecessor bindings (ordering note §6) and the missing
+attach in the ordering lifecycle (ordering note §9). A third review
+(report `5a412b87`) found the §5 lifecycle diagram still teaching the old
+invitation-in-listing flow and three overstated narrative summaries, and
+gave a writing review. All are applied in this revision, including the
+introduction, the six first-use definitions and the reading path above.
 
 ---
 

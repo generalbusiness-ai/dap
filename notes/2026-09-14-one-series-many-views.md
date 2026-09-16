@@ -2,12 +2,15 @@
 date: 2026-09-14
 updated: 2026-09-15
 status: >-
-  draft core design for dap. One question, one worked trace, the property it relies on,
-  the same property across a range of applications, where authoring gets hard,
-  and the spike that tests it. The trace specifies intended outcomes; no model
-  has yet been shown to satisfy them. Adopts nothing.
+  draft core design for dap, revised 2026-09-15 after checker's review of
+  9a0d7eb. One question, one worked trace, the property it relies on, the same
+  property across a range of applications, where authoring gets hard, and the
+  spike that tests it. The trace now uses a split offer so that the shared
+  decision needs no hidden input; it specifies intended outcomes, and no
+  model has yet been shown to satisfy them. Adopts nothing beyond that.
 design: notes/2026-09-14-evolving-spaces-design.md
 ordering: notes/2026-09-14-ordering.md
+narrative: notes/2026-09-15-sale-as-experienced.md
 ---
 
 # One series, many views
@@ -36,21 +39,24 @@ are the other two notes' concerns.
 2. Every event has an **audience** — the set of principals who may see it. It
    is folded state: set from the preceding state and the signed event by an
    already active, pinned audience rule, and thereafter only *extended* by
-   later visible disclosure events. It never shrinks; you cannot un-see.
+   later visible disclosure events. It never shrinks; you cannot un-see. The
+   foundation names two audiences: `spine`, every participant present and
+   future, which a late joiner receives in full; and `members`, the
+   participants as of the position.
 3. A participant `p` sees `V(p,n)`: the events through position `n` whose
    audience includes `p` as of frontier `n`. Positions are preserved; hidden
    positions carry commitments and authenticated linkage sufficient to verify
    the chain without reading their payloads.
-4. Every participant folds **their own view** with the **same fold program**.
-   Their semantic environment is likewise derived from the `dap.attach` events in
-   their view. Nobody folds anything they cannot see.
-5. The model must be written so that **folding a view agrees with folding the
-   whole series** on everything the viewer can see. This is what makes "one
-   room" and "a subset thread" the same design.
+4. Every participant interprets **their own view** with the **same
+   programs**. Their semantic environment is likewise derived from the
+   `dap.attach` events in their view. Nobody folds anything they cannot see.
+5. The model must be written so that **interpreting a view agrees with
+   folding the whole series** on everything the viewer can see. This is what
+   makes "one room" and "a subset thread" the same design.
 
 For a participant entitled to the complete series, the room is `fold(S)`. A
-thread is `fold(V(p,n))` rendered for someone else. Both are derived; caching
-a projection does not make it a separate history.
+thread is `I(p, V(p,n), n)` rendered for someone else. Both are derived;
+caching a projection does not make it a separate history.
 
 ## The trace
 
@@ -61,66 +67,119 @@ ones.
 
 Alice sells a guitar. Bob and Carol make offers. Alice attaches an inspection
 package mid-way, accepts one offer, and later mistakenly tries to accept the
-other. Entry 0 is `dap.genesis` and is omitted; the listing is an adopted
-origin at entry 1. Bob, Carol and Ivan became participants by redeeming the
-invitation the published listing carried (`dap.accept_invite`, visible to
-all), so `everyone` — participants at that position — is shared state.
-Recipient lists are serving policy, not payload fields.
+other. Alice signed the listing as a standalone event, signed a genesis
+adopting it as entry 1, and published the envelope; Bob, Carol and Ivan each
+reached the route, received their own one-use `dap.invite`, and redeemed it
+with `dap.accept_invite` (design note §2). Recipient lists are serving
+policy, not payload fields.
+
+**The offer is split** (cliff 6, split in v1) so that the shared decision
+depends only on public state:
 
 ```text
-Listing         → everyone
-Offer           → { author, seller }
-Counter         → { seller, author of the offer countered }
-Accept          → { seller, every principal who has made an offer }   ← includes settled offers
-Close           → everyone
-dap.attach      → everyone                                            ← foundation default
-InspectionReq   → { requester, seller, inspector }
+sale.offer          → members            public stub: offer id, optional replaces
+sale.offer_terms    → { author, seller } the amount
+sale.withdraw       → members            offer id
+sale.counter        → { seller, author } offer id, amount
+sale.accept         → members            offer id; fold checks the stub only
+sale.close          → spine
+inspection.request  → { requester, seller, inspector }
+dap.invite          → { inviter, invitee }
+dap.accept_invite, dap.attach, Listing (origin), dap.genesis → spine
 ```
 
-| n | event | by | audience | Alice's fold | Bob's fold | Carol's fold |
+`sale.accept{o}` is effective when the stub `o` exists, is not withdrawn,
+is not replaced, the sale is open, and the actor holds `sale.accept_offer`.
+Every one of those facts is public. A nonexistent, withdrawn or replaced
+target is ineffective for everyone for the same reason. A stub's
+`replaces` marks the named earlier stub replaced in any view where that
+stub is visible; a viewer who joined after the earlier stub, and so holds
+only its header, interprets the new stub as open and nothing else. That is
+consistent with the full fold on everything such a viewer can observe, and
+the spike checks it.
+
+**The privacy promise**, stated plainly: who participates is public inside
+the context, as context-scoped principals. That an offer exists, who made
+it, and whether it was withdrawn or replaced is public inside the context.
+Amounts, counters and inspection requests are private to the principals
+their audience rule names. Buyer anonymity toward other buyers is not
+promised; a model that needs it needs separate contexts.
+
+S = spine, M = members; A, B, C, I are Alice, Bob, Carol, Ivan.
+
+| n | event | by | audience | Alice's view | Bob's view | Carol's view |
 |--:|---|---|---|---|---|---|
-| 1 | `Listing{guitar, ask 800}` (adopted origin) | Alice | all | open | open | open |
-| 2 | `Offer{700}` | Bob | A, B | offers: {2 open} | offers: {2 open} | *(hash)* |
-| 3 | `Offer{750}` | Carol | A, C | offers: {2, 3 open} | *(hash)* | offers: {3 open} |
-| 4 | `Counter{to 2, 780}` | Alice | A, B | 2 countered | 2 countered | *(hash)* |
-| 5 | `dap.attach{Inspection}` | Alice | all | env += Inspection | env += Inspection | env += Inspection |
-| 6 | `InspectionReq{}` | Carol | A, C, Ivan | 3: inspection requested | *(hash)* | 3: inspection requested |
-| 7 | `Offer{780}` | Bob | A, B | {2 superseded, 3, 7 open} | {2 superseded, 7 open} | *(hash)* |
-| 8 | `Accept{offer 7}` | Alice | A, B, C | 7 accepted; 3 declined | 7 accepted | 3 declined (another won) |
-| 9 | `Accept{offer 3}` | Alice | A, B, C | **ineffective**: already accepted | ineffective | **ineffective**: already accepted |
-| 10 | `Close{sold}` | Alice | all | closed | closed | closed |
+| 0 | `dap.genesis` (adopts 1; Sale; Alice Seller) | A | S | env = Sale | env = Sale | env = Sale |
+| 1 | `Listing{guitar, ask 800}` (origin) | A | S | open | open | open |
+| 2 | `dap.invite{Bob, Buyer}` | A | A, B | — | — | *(header)* |
+| 3 | `dap.accept_invite` | B | S | Bob: Buyer | Bob: Buyer | Bob: Buyer |
+| 4 | `dap.invite{Carol, Buyer}` | A | A, C | — | *(header)* | — |
+| 5 | `dap.accept_invite` | C | S | Carol: Buyer | Carol: Buyer | Carol: Buyer |
+| 6 | `sale.offer{o1}` | B | M | o1 open (Bob) | o1 open | o1 open (Bob) |
+| 7 | `sale.offer_terms{o1, 700}` | B | A, B | o1 = 700 | o1 = 700 | *(header)* |
+| 8 | `sale.offer{o2}` | C | M | o2 open (Carol) | o2 open (Carol) | o2 open |
+| 9 | `sale.offer_terms{o2, 750}` | C | A, C | o2 = 750 | *(header)* | o2 = 750 |
+| 10 | `sale.counter{o1, 780}` | A | A, B | o1 countered 780 | o1 countered 780 | *(header)* |
+| 11 | `dap.attach{Inspection}` | A | S | env += Inspection | env += Inspection | env += Inspection |
+| 12 | `dap.invite{Ivan, Inspector}` | A | A, I | — | *(header)* | *(header)* |
+| 13 | `dap.accept_invite` | I | S | Ivan: Inspector | Ivan: Inspector | Ivan: Inspector |
+| 14 | `inspection.request{o2}` | C | A, C, I | o2: inspection requested | *(header)* | o2: inspection requested |
+| 15 | `sale.offer{o3, replaces o1}` | B | M | o1 replaced; o3 open | o1 replaced; o3 open | o1 replaced; o3 open (Bob) |
+| 16 | `sale.offer_terms{o3, 780}` | B | A, B | o3 = 780 | o3 = 780 | *(header)* |
+| 17 | `sale.accept{o3}` | A | M | decided: o3 (780); o2 declined | decided: o3, mine, 780 | decided: o3 (Bob); o2 declined |
+| 18 | `sale.accept{o2}` | A | M | **ineffective**: already decided | ineffective | **ineffective**: already decided |
+| 19 | `sale.close{sold}` | A | S | closed | closed | closed |
 
-Bob and Carol never receive each other's payloads or identities. They do
-learn from the shared decision that another offer exists, and chain
-verification shows them how many positions they cannot read.
+Bob and Carol never receive each other's amounts, counters or inspection
+requests. They do see each other's participation and each other's offer
+stubs, and chain verification shows them how many positions they cannot
+read.
 
-**Position 9 is the point.** It is ineffective for everyone for the same
-reason — but only because `Accept` is visible to every offerer. Had position
-8's audience been `{seller, accepted buyer}`, Carol would miss the decision
-and judge position 9 *effective* while Alice refused it: same series, same
-fold, contradictory outcomes, and sequencing alone cannot detect it.
+**Position 18 is the point.** It is ineffective for everyone for the same
+reason — but only because `sale.accept` is visible to every member and its
+rule reads only public state. Had position 17's audience been `{seller,
+accepted buyer}`, Carol would miss the decision and judge position 18
+*effective* while Alice refused it: same series, same programs,
+contradictory outcomes, and sequencing alone cannot detect it. Had the
+accept's rule needed the amount at 16, Carol could not judge 17 at all.
 
-**One condition remains open before this trace is executable.** Carol cannot
-check that offer 7 exists and is eligible; she holds only its commitment. If
-`Accept`'s fold rule requires that hidden input, widening the audience does not
-fix the model. The spike must choose: disclose eligibility evidence; treat the
-seller's decision as an explicitly authorized attestation whose shared effect
-does not depend on private validation; or restructure the events. The choice
-must also handle a nonexistent or withdrawn target. A signature authenticates
-Alice's assertion; it does not prove her hidden premises.
+The earlier draft of this trace left one condition open: Carol could not
+check that the accepted offer existed. The split stub closes it. The cost is
+stated above: offer existence and authorship are public. That is the first
+measured fix of this kind, and the spike counts the rest.
 
 ## The property
 
-For every participant `p` and frontier `n`:
+The view interpreter `I(p, V(p,n), n)` takes the principal, the view under
+visibility basis `n`, and `n`, and returns
+`Interpreted{state, outcomes, bindings, affordances(p)}` or
+`Paused{at k, reason, last}`, where `last` is the result through `k-1`
+under the same basis. For every participant `p` and frontier `n` where the
+result is interpreted:
 
 ```text
-fold(V(p,n))  ≡  observe(p, fold(S[0..n]), n)
+observe(p, I(p, V(p,n), n))  ≡  observe(p, fold(S[0..n]), n)
 ```
 
 The model declares `observe`: the visible state, outcomes, semantic bindings
-and affordances to compare. It cannot hide a contradiction by excluding an
-outcome the application presents as shared. The full fold is a specification
-oracle, not something every participant may run.
+and affordances for one principal to compare. Two principals with the same
+visible history and different grants get different affordances, and the
+equation says so on both sides. It cannot hide a contradiction by excluding
+an outcome the application presents as shared. The full fold is a
+specification oracle, not something every participant may run.
+
+A paused result is not compared at `n`. Its `last` is compared at the
+processing frontier under the same basis,
+`observe(p, last) = observe(p, fold(S[0..k-1]), n)`, and once the missing
+dependency is supplied the result must resume to equality at `n`. The
+basis matters: Dana, rebuilding after a disclosure at 22 and pausing at 11
+because a package is missing, holds a projection through 10 that includes
+positions disclosed at 22. That is not her view as of 10, and the oracle it
+is compared with is the full fold through 10 observed under basis 22. An
+as-of query at 10 uses basis 10 and is a different question. Hidden
+positions enter the interpreter as authenticated headers. The pause is an
+interpreter diagnostic surfaced as `observe.paused`, never a verdict on an
+event.
 
 The rule this imposes on an author:
 
@@ -158,7 +217,7 @@ is what the property forces the author to make visible.
 | **Club membership** | applications: applicant + committee; roster: members; dues: member + treasurer | quorum, eligibility, "in good standing" read private status | the *status*, never the reason. A new committee member needs the backlog (§6, cliff 3) |
 | **Chess** | uniform | none | nothing for visibility; the fold is the rules of chess (§6, cliff 5) |
 | **Poker** | dealt cards: that player; bets: all; showdown: all | winner reads hidden hands | authenticated `Reveal` openings against earlier commitments, with secret randomness so small card domains cannot be guessed from hashes. Fair dealing and uniqueness need rules or dealer trust (§6, cliff 4) |
-| **Sale** | offers: buyer + seller | one accepted offer | the decision and its validation evidence or attestation policy (the trace) |
+| **Sale** | offer stubs: members; terms: buyer + seller | one accepted offer | the decision, and the stub it validates against (the trace) |
 | **Multi-agent workroom** | uniform | none | nothing for visibility; ceremony and domain-rule complexity remain |
 
 Two shapes account for most of the table. **Uniform** — everyone sees
@@ -184,12 +243,14 @@ Beyond that count, hardness arrives at recognisable cliffs:
 
 2. **Partition plus decisions.** A few visible facts per cross-partition
    constraint. The author must *notice* each dependency; the failure is the
-   position-9 contradiction, silent without the check.
+   position-18 contradiction, silent without the check.
 
 3. **Retroactive visibility.** A new committee member, a late joiner, a newly
-   assigned reviewer. Audience is set at the event's position, so by default
-   they see nothing earlier. The answer is an explicit `Disclose{positions,
-   to}` act — sequenced, visible, auditable, the only way an audience grows.
+   assigned reviewer. Audience is set at the event's position, so they
+   receive the spine and any earlier event addressed to them, and nothing
+   else from before they joined. The answer is an explicit
+   `Disclose{positions, to}` act — sequenced, visible, auditable, the only
+   way an audience grows.
    Revealed events keep their original positions; the recipient may need to
    replay from the earliest affected position with every prior decision, grant
    and attachment it depends on. An as-of query before the disclosure keeps
@@ -246,6 +307,11 @@ Named rather than hidden:
 
 - A participant sees *how many* positions they cannot read — a leak of shape,
   not content. A model that must hide the count needs a separate context.
+- A late joiner receives the whole spine and any event addressed to them
+  (design note §2). The count of hidden positions is over every position
+  outside the viewer's audience, including private system events such as
+  invitations addressed to someone else. A header says nothing about the
+  kind of the event it hides.
 - The serving party can withhold an opening behind a valid commitment. A
   verified chain proves integrity of the prefix, not complete delivery of
   everything the reader was entitled to, nor freshness of the head.
@@ -270,28 +336,63 @@ visibility, and its authoring cost is small for the common shapes.**
 Three models with different shapes — **Sale** (partition + decision), **Room
 booking** (field split + time), **Club membership** (role-derived audience +
 retroactive disclosure) — as ordinary functions; declarative folds are a
-separately proven step. An in-memory sequencer as a fixture (it establishes
-nothing about durable append or recovery; the ordering note's spike does
-that). A generator producing series from each participant's affordances,
-including `dap.attach` mid-stream and one with a narrow audience, plus
-signed ineffective attempts: stale or conflicting actions, unauthorized
-actors, nonexistent or withdrawn targets, hidden revocations, late joiners
-missing earlier shared decisions.
+separately proven step. One fixed foundation, with the bootstrap of design
+note §2 (envelope, route, one invitation per responder) as the fixture's
+join path. An in-memory sequencer as a fixture (it establishes nothing about
+durable append or recovery; the ordering note's spike does that). An
+abstract authenticated-header fixture for hidden positions (it establishes
+no cryptographic hiding). A generator producing series from each
+participant's affordances, including `dap.attach` mid-stream and one with a
+narrow audience, plus signed ineffective attempts: stale or conflicting
+actions, unauthorized actors, nonexistent, withdrawn or replaced targets,
+late joiners missing earlier shared decisions, a late joiner who receives a
+replacement stub whose predecessor is hidden, one unrelated private attach
+that must not stale a shared act, and one relevant binding change that must.
+
+A hidden revocation is not a compliant history: the foundation forbids
+private grant and revoke audiences. The generator produces it as a mutation
+of the foundation or serving contract, and the checker must detect it.
+
+**Predeclared before generation**, so the verdict cannot be tuned after the
+fact:
+
+- each model's business promises and privacy budget. Sale: amounts never
+  widen beyond author and seller; participation and offer existence are
+  public. Booking: purpose and booker never widen beyond booker and admin;
+  occupancy is public. Club: the reason for a status never widens beyond
+  applicant and committee; the status is visible to members;
+- the starting model: the one written from the specification before any
+  checker run, by an agent, with the fix count recorded (design note goal 2);
+- the fix budget for the partition-plus-decision shape: at most 2 fixes and
+  at most 1 added kind per cross-partition constraint;
+- the corpus bounds: at most 6 participants, at most 60 positions, at least
+  200 seeds per model;
+- the Booking split schema, its linkage and its partial-completion rule.
 
 For every series, participant and frontier, check
-`fold(V(p,n)) ≡ observe(p, fold(S[0..n]), n)`. Declare `observe` and the
-application invariants independently of the view-fold implementation; compare
-outcomes and affordances as well as state. Include disclosure before and after
-activation, dependency-incomplete disclosure, unavailable source, and replay
-from an invalidated cache. Decide the Sale trace's validation semantics before
-generating.
+`observe(p, I(p, V(p,n), n)) ≡ observe(p, fold(S[0..n]), n)` on interpreted
+results, and the pause rule on paused ones. Declare `observe` and the
+application invariants independently of the interpreter implementation;
+compare outcomes and affordances as well as state; never weaken an invariant
+to make the checker pass. Include disclosure before and after activation,
+dependency-incomplete disclosure, a disclosure followed by an unavailable
+package so that the rebuild pauses mid-way, unavailable source, a late
+joiner with only the spine, and replay from an invalidated cache. This spike tests
+new-model initialization only; migration of preceding state is untested.
 
 Report per model: violations in the first draft; fixes to reach zero; kinds
-split or added; disclosure added; cliffs hit. Then break one audience rule in
-each model and confirm the checker finds it. Record generator bounds and
-seeds; keep minimal failing traces.
+split or added; disclosure added; cliffs hit; the fix count against the
+budget. Then break one audience rule in each model and confirm the checker
+finds it. Record generator bounds and seeds; keep minimal failing traces.
+Report against the goal criteria of design note §0: goal 1 by replay across
+the mid-stream attach, goal 2 by the agent-authored fix counts.
 
-Falsified if realistic models satisfy the property only by widening every
-audience until everyone sees everything — in which case "a subset thread" was
-never a real design and those participants need separate contexts — or if the
-fix counts for the partition-plus-decision shape are not small.
+The result is a bounded outcome for these three candidates. Zero violations
+on the corpus is evidence for them, not a proof about all models; a failed
+draft is evidence against that draft, not a proof that every model must
+collapse visibility.
+
+Falsified if these models satisfy the property only by widening every
+audience until everyone sees everything — in which case "a subset thread"
+was never a real design and those participants need separate contexts — or
+if the fix counts for the partition-plus-decision shape exceed the budget.
