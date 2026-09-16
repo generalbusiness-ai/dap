@@ -47,7 +47,7 @@ test('resolution retains the capability and the active audience policy: attachin
   assert.equal(after.audienceId, before.audienceId);
   assert.equal(after.audience, before.audience);
   const ev: EventBody = { kind: SALE + 'offer_terms', payload: { seller: ALICE }, actor: BOB, nonce: 'n' };
-  assert.deepEqual(after.audience({ position: 9, members: [ALICE, BOB, 'carol'] }, ev), named(ALICE, BOB));
+  assert.deepEqual(after.audience({ position: 9, members: [ALICE, BOB, 'carol'], holders: () => [] }, ev), named(ALICE, BOB));
   // a conflicting capability cannot be resolved
   const conflict = pkg('conflict', { [SALE + 'offer_terms']: { handlers: ['conflict'], capability: 'com.example.other.cap' } });
   assert.deepEqual(attach(env0.env, conflict, { resolution: { [SALE + 'offer_terms']: { handlers: ['sale', 'conflict'] } } }), { ok: false, reason: 'conflicting_capability' });

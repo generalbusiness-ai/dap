@@ -76,7 +76,7 @@ export const SYSTEM_KINDS: Record<string, { audience: 'spine' | 'members' | 'inv
   [K.accept_invite]: { audience: 'spine', requires: null },
   [K.grant]: { audience: 'spine', requires: CAP.grant },
   [K.revoke]: { audience: 'spine', requires: CAP.grant },
-  [K.disclose]: { audience: 'recipients_actor', requires: CAP.disclose },
+  [K.disclose]: { audience: 'members', requires: CAP.disclose },
   [K.admit]: { audience: 'declared', requires: CAP.admit },
   [K.observe]: { audience: 'members', requires: CAP.observe },
   [K.close]: { audience: 'spine', requires: CAP.close },
@@ -361,7 +361,7 @@ export function foldEntry(state: FoundationState, input: FoldInput): Verdict {
       }
       // An effective ambient fact is folded by every model that opted in; the system verdict
       // stands, and each model's own outcome is recorded beside it.
-      if (ev.kind === K.observe && verdict.effective) {
+      if ((ev.kind === K.observe || ev.kind === K.disclose) && verdict.effective) {
         const ambient = state.env.packages.flatMap((p) => Object.values(p.models).filter((m) => m.ambient).map((m) => m.id));
         if (ambient.length) verdict = { ...verdict, perModel: dispatch(state, entry, ambient, false).perModel };
       }
@@ -392,7 +392,7 @@ export function foldEntry(state: FoundationState, input: FoldInput): Verdict {
         // A model's audience rule runs on runtime JSON; if it throws, the event is recorded as
         // ineffective and readable by its actor alone, so the series stays replayable.
         try {
-          audience = capped(binding.audience({ position: pos, members: membersBefore }, ev), binding.ceiling, membersBefore);
+          audience = capped(binding.audience({ position: pos, members: membersBefore, holders: (cap) => membersBefore.filter((m) => heldAt(state, m, cap, pos)) }, ev), binding.ceiling, membersBefore);
         } catch (e) {
           verdict = { known: true, authorized: verdict.authorized, effective: false, reason: 'audience_error:' + (e instanceof Error ? e.message : String(e)) };
           audience = named(ev.actor);
@@ -582,7 +582,8 @@ function dispatch(state: FoundationState, entry: Entry, handlers: string[], orig
   const ev = entry.event;
   const perModel: Verdict['perModel'] = {};
   let anyEffective = false;
-  const ctx = { position: entry.position, id: entry.id, members: [...state.participants], origin };
+  const members = [...state.participants];
+  const ctx = { position: entry.position, id: entry.id, members, origin, holders: (cap: string) => members.filter((m) => heldAt(state, m, cap, entry.position)) };
   for (const modelId of handlers) {
     const model = findModel(state.env, modelId);
     if (!model) {

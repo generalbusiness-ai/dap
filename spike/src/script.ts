@@ -41,23 +41,86 @@ export interface JoinDisclosure {
 
 /**
  * A model's declared disclosure policy: in its `config.disclosurePolicy`,
- * the kinds a client may disclose beyond their audience (the public
- * ones). The fixture's disclosing client honours it; the checker's budget
- * judges what is readable regardless. Undefined when no model declares
- * one: then anything may be disclosed.
+ * the kinds a client may disclose beyond their audience. An entry is a
+ * kind name (disclosable to any member) or `{ kind, to }` (disclosable
+ * only to holders of the capability `to`, a role-derived recipient). The
+ * fixture's disclosing client honours it; the checker's budget judges
+ * what is readable regardless. Undefined when no model declares one:
+ * then anything may be disclosed to anyone.
  */
-export function disclosableKinds(state: FoundationState): Set<string> | undefined {
-  let out: Set<string> | undefined;
+export interface DisclosurePolicy {
+  /** kind to the capability its recipients must hold, or null for any member */
+  kinds: Map<string, string | null>;
+}
+
+export function disclosurePolicy(state: FoundationState): DisclosurePolicy | undefined {
+  let out: DisclosurePolicy | undefined;
   for (const pkg of state.env.packages) {
     for (const m of Object.values(pkg.models)) {
       const dp = (m.config as { disclosurePolicy?: { kinds?: unknown } } | null)?.disclosurePolicy;
       if (dp && Array.isArray(dp.kinds)) {
-        out ??= new Set();
-        for (const k of dp.kinds) if (typeof k === 'string') out.add(k);
+        out ??= { kinds: new Map() };
+        for (const k of dp.kinds) {
+          if (typeof k === 'string') out.kinds.set(k, null);
+          else if (k && typeof k === 'object' && typeof (k as { kind?: unknown }).kind === 'string') {
+            const to = (k as { to?: unknown }).to;
+            out.kinds.set((k as { kind: string }).kind, typeof to === 'string' ? to : null);
+          }
+        }
       }
     }
   }
   return out;
+}
+
+/** The kinds a client may disclose under the declared policies, or undefined when none is declared. */
+export function disclosableKinds(state: FoundationState): Set<string> | undefined {
+  const dp = disclosurePolicy(state);
+  return dp ? new Set(dp.kinds.keys()) : undefined;
+}
+
+/**
+ * A model's declared effects: in its `config.effects`, acts the fixture's
+ * client performs after an effective event of a kind. The one effect
+ * kind so far is a grant: `{ kind, grant: { roles, principalFrom } }`
+ * grants the roles to the actor of the event whose content id the
+ * effective event's payload names in `principalFrom`, by a participant
+ * holding the grant capability (the creator when they hold it). This is
+ * how a model whose rule admits someone gets them their role: the model
+ * cannot emit `dap.grant` itself.
+ */
+export interface GrantEffect {
+  kind: string;
+  grant: { roles: string[]; principalFrom: string };
+}
+
+export function effectsDeclared(state: FoundationState): GrantEffect[] {
+  const out: GrantEffect[] = [];
+  for (const pkg of state.env.packages) {
+    for (const m of Object.values(pkg.models)) {
+      const effects = (m.config as { effects?: unknown } | null)?.effects;
+      if (!Array.isArray(effects)) continue;
+      for (const e of effects) {
+        const g = e as GrantEffect;
+        if (g && typeof g.kind === 'string' && g.grant && Array.isArray(g.grant.roles) && typeof g.grant.principalFrom === 'string') out.push(g);
+      }
+    }
+  }
+  return out;
+}
+
+/** Perform the declared effects of the effective event at `position`, as the fixture's client would. */
+export function applyEffects(ctx: Context, position: number): void {
+  const entry = ctx.entries[position];
+  if (!entry || !ctx.state.verdicts[position]?.effective) return;
+  for (const effect of effectsDeclared(ctx.state)) {
+    if (effect.kind !== entry.event.kind) continue;
+    const named = (entry.event.payload as Record<string, unknown> | null)?.[effect.grant.principalFrom];
+    const target = ctx.entries.find((e) => e.id === named);
+    const grantor = ctx.state.participants.find((p) => holdsNow(ctx.state, p, CAP.grant));
+    if (!target || !grantor) continue;
+    ctx.act(grantor, K.grant, { principal: target.event.actor, roles: effect.grant.roles });
+  }
 }
 
 function joinDisclosuresDeclared(state: FoundationState): JoinDisclosure[] {
@@ -113,7 +176,10 @@ export function applyStep(ctx: Context, step: Step, pendingInvites: Pending, joi
     switch (step.type) {
       case 'act': {
         const r = ctx.act(step.actor, step.kind, step.payload);
-        if (!('refused' in r)) pos = r.header.position;
+        if (!('refused' in r)) {
+          pos = r.header.position;
+          if (joinDisclosure) applyEffects(ctx, pos);
+        }
         break;
       }
       case 'invite': {
