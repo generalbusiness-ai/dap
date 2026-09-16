@@ -280,10 +280,11 @@ test('V3-F3: null private payloads are recorded with a deterministic ineffective
 
 // ----- checker's second V3 review (report 796c6510), G1 -----
 
-for (const failed of [
+const failedStubAttempts: { actor: string; roles: string[]; payload: Record<string, string>; reason: string }[] = [
   { actor: CAROL, roles: ['Buyer'], payload: { offer_id: 'o1', replaces: 'zzz' }, reason: 'no_such_offer' },
   { actor: IVAN, roles: ['Inspector'], payload: { offer_id: 'o1' }, reason: 'unauthorized' },
-]) {
+];
+for (const failed of failedStubAttempts) {
   test(`V3-G1: an ineffective stub by ${failed.actor} does not make them a counter party`, () => {
     const { ctx } = replay({ base: saleBase(), steps: [
       { type: 'invite', inviter: ALICE, invitee: BOB, grants: { roles: ['Buyer'] } },
