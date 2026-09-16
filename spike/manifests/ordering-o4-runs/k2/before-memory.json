@@ -1,0 +1,15 @@
+{
+  "source": "edacc32db1495504d10ae7a92f02af272e49e9f2",
+  "probe_sha256": "e3a7b913f6e67fdf4abfd5205d3fee19f737aaf4f736b7ed77deeb3925040c25",
+  "command": [
+    "node",
+    "/private/tmp/claude-501/-Users-hughpyle-play-dap/55890269-4b7b-4cda-8c2b-ab7134ad403a/scratchpad/o4-life-repros/fault-sweep.mjs",
+    "memory",
+    "1"
+  ],
+  "environment": {
+    "WT": "/private/tmp/dap-o4-k2-repair"
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 11.353
+}

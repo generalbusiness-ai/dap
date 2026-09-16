@@ -1,0 +1,12 @@
+{
+  "source": "edacc32db1495504d10ae7a92f02af272e49e9f2",
+  "probe_sha256": "728ce383cc35f9555909867d899f7dd85ef32b155dca652685d159332fea665c",
+  "command": [
+    "node",
+    "/private/tmp/dap-o4-k2-repair/spike/manifests/ordering-o4-runs/k2/cold-open-probe.mjs"
+  ],
+  "environment": {
+    "WT": "/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/dap-o4-k2-before.l5eltnii"
+  },
+  "exit_code": 0
+}
