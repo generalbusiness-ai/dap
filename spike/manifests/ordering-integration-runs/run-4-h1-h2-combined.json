@@ -1,0 +1,26 @@
+{
+  "source": "773a38ec8367d0b563f7741d1ff902aceb72350c",
+  "profile": "dap.fixture.single-writer/3",
+  "scope": "One full noncampaign integration run, including O1/O2/O3/O5; no repeated focused formal run. Three historical 200-seed campaigns excluded.",
+  "commands": [
+    {
+      "command": [
+        "node",
+        "--test",
+        "--test-skip-pattern=case [57], the campaign:",
+        "test/**/*.test.ts"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 12.615
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "exit_code": 2,
+      "elapsed_seconds": 0.777
+    }
+  ]
+}

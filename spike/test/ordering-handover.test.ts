@@ -9,6 +9,7 @@ import { envelopeId, signEvent, signHeader, verifyWire } from '../src/codec.ts';
 import { K } from '../src/foundation.ts';
 import { Journal, verifyJournalView } from '../src/journal.ts';
 import { ASSIGN } from '../src/ordering.ts';
+import type { Json } from '../src/canon.ts';
 import { acceptance, act, invite } from './fixtures/o1-fixture.ts';
 import { create, sqlite, seal, assign, controlKey, control, successorKey, successor, competitor, keys, people, packages, envelopeBytes } from './fixtures/o3-fixture.ts';
 import type { Entry } from '../src/types.ts';
@@ -140,7 +141,7 @@ test('O3 rejects forged and wrong authority, stale or swapped predecessor head f
     { headerHash: j.context.entries.at(-1)!.headerHash },
     { position: j.context.head, headerHash: j.context.entries.at(-1)!.headerHash, commitment: j.context.entries.at(-1)!.header.commitment },
     { position: -1, headerHash: j.context.entries.at(-1)!.headerHash },
-  ]) refused(signEvent({ ...s.body, payload: { epoch: 0, predecessor } }, controlKey), 'malformed_control');
+  ] as Json[]) refused(signEvent({ ...s.body, payload: { epoch: 0, predecessor } }, controlKey), 'malformed_control');
   refused(signEvent({ ...s.body, payload: { epoch: 0, predecessor: { position: j.context.head + 1, headerHash: j.context.entries.at(-1)!.headerHash } } }, controlKey), 'wrong_control_predecessor');
   refused(signEvent({ ...s.body, payload: { epoch: 0, predecessor: { position: j.context.head, headerHash: j.context.entries.at(-1)!.header.commitment } } }, controlKey), 'wrong_control_predecessor');
   refused(assign(j), 'assignment_without_seal');
