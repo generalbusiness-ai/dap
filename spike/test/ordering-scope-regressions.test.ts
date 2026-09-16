@@ -73,6 +73,7 @@ test('O4 later attach, handover and transfer preserve actual pre-attach as-of re
 // Goal 1's complete matrix uses actual replay results, not the manifest's
 // literal projection maps. Historical client/full disagreements are preserved:
 // this checks that later events do not rewrite either earlier interpretation.
+import type { Audience } from '../src/types.ts';
 import type { Context } from '../src/context.ts';
 import { foldPrefix } from '../src/oracle.ts';
 import { observe, type Observation } from '../src/observe.ts';
@@ -98,6 +99,9 @@ function historicalSourceQuestion(context: Context, reader: string, frontier: nu
     clientOutcomes:client.outcomes,
     clientProjection:observe(client.state,reader,frontier,visible),
   };
+}
+function normalizedAudiences(audiences: Audience[]): Audience[] {
+  return normalize(audiences).map((audience: Audience) => audience.kind === 'named' ? { ...audience,principals:[...audience.principals].sort() } : audience);
 }
 function saleProjection(observation: Observation) {
   return { participants:observation.participants,closed:observation.closed,models:{ sale:observation.models.sale },outcomes:observation.outcomes };
@@ -152,7 +156,7 @@ for (const storage of ['memory','sqlite'] as const) test('O4 goal 1: all actual 
       const alias = normalize(reader);
       const old = historicalSourceQuestion(original,alias,frontier);
       assert.deepEqual(normalize(after.fullSource.verdicts),old.fullSource.verdicts,'original full-source outcomes: ' + key);
-      assert.deepEqual(normalize(after.fullSource.audiences),old.fullSource.audiences,'original audiences: ' + key);
+      assert.deepEqual(normalizedAudiences(after.fullSource.audiences),normalizedAudiences(old.fullSource.audiences),'original audiences: ' + key);
       assert.deepEqual(normalize(after.fullSource.sale),old.fullSource.sale,'original full Sale fold: ' + key);
       assert.deepEqual(normalize(saleProjection(after.fullProjection)),saleProjection(old.fullProjection),'original full Sale projection: ' + key);
       assert.deepEqual(normalize(after.clientOutcomes),old.clientOutcomes,'original client outcomes: ' + key);
