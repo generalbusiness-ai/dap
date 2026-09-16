@@ -1,4 +1,4 @@
-import { nonce } from '../src/canon.ts';
+import { nonce, type Json } from '../src/canon.ts';
 import { Context } from '../src/context.ts';
 import { descriptorId, type KindBinding, type PackageDescriptor } from '../src/descriptor.ts';
 import { CAP, K } from '../src/foundation.ts';
@@ -48,12 +48,12 @@ type KindOpts = Partial<Pick<KindBinding, 'audienceId' | 'audience' | 'capabilit
 export function pkg(
   name: string,
   kinds: Record<string, string[] | { handlers: string[] } & KindOpts>,
-  opts: { modelId?: string; fold?: PackageDescriptor['models'][string]['fold'] } = {},
+  opts: { modelId?: string; fold?: PackageDescriptor['models'][string]['fold']; config?: Json } = {},
 ): PackageDescriptor {
   const modelId = opts.modelId ?? name;
   const base: Omit<PackageDescriptor, 'id'> = {
     name,
-    models: { [modelId]: { id: modelId, init: () => ({ count: 0 }), fold: opts.fold ?? ((s) => ({ effective: true, state: s })) } },
+    models: { [modelId]: { id: modelId, config: opts.config ?? {}, init: () => ({ count: 0 }), fold: opts.fold ?? ((s) => ({ effective: true, state: s })) } },
     capabilities: [],
     kinds: Object.fromEntries(
       Object.entries(kinds).map(([k, v]) => {
@@ -64,4 +64,3 @@ export function pkg(
   };
   return { id: descriptorId(base), ...base };
 }
-

@@ -11,6 +11,7 @@ import {
   RUNTIME,
   foldEntry,
   initialFoundationState,
+  issuanceEvidence,
   verifyIssuance,
   visibleTo,
   type AcceptInvitePayload,
@@ -132,7 +133,7 @@ export class Context {
         // Admission and the members' verification use the same issuance object: the embedded envelope,
         // checked against the chain and the fold. Nothing is looked up by a caller-chosen label.
         issuedInvite: (ev) => {
-          const v = verifyIssuance(state, this.entries, ev.payload);
+          const v = verifyIssuance(issuanceEvidence(state, this.entries), ev.payload);
           return v.ok ? { tokenId: v.tokenId, invitee: v.invite.invitee } : undefined;
         },
         acceptKind: K.accept_invite,

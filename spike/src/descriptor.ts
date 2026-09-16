@@ -8,6 +8,8 @@
 // are refused for every package, because the foundation is pinned in the
 // genesis and upgrades are deferred.
 
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { contentId, type Json } from './canon.ts';
 import { SYSTEM_PREFIX, type Audience, type EventBody, type Kind, type Principal } from './types.ts';
 
@@ -25,11 +27,18 @@ export interface FoldResult<S = Json> {
   reason?: string;
 }
 
-export interface ModelSpec<S = Json> {
+export interface ModelSpec<S = Json, C extends Json = Json> {
   id: string;
-  init(): S;
+  /**
+   * Explicit immutable configuration, part of the model's identity. A
+   * model's functions may depend on their arguments, on this `config`,
+   * and on code in the package's pinned module, and on nothing else:
+   * a value captured from anywhere else is invisible to the identity.
+   */
+  config: C;
+  init(config: C): S;
   /** Fold one event of a kind this model handles. */
-  fold(state: S, event: EventBody, ctx: FoldCtx): FoldResult<S>;
+  fold(state: S, event: EventBody, ctx: FoldCtx, config: C): FoldResult<S>;
   /** Roles this model defines: role name to capability names. */
   roles?: Record<string, string[]>;
 }
@@ -56,6 +65,13 @@ export interface KindBinding {
 export interface PackageDescriptor {
   id: string;
   name: string;
+  /**
+   * The module that defines this package's functions, as a file URL. Its
+   * source text is hashed into the package identity, so helpers the
+   * functions call are pinned. Test packages built inline may omit it;
+   * their identity then rests on function text and config alone.
+   */
+  module?: string;
   models: Record<string, ModelSpec>;
   kinds: Record<Kind, KindBinding>;
   capabilities: string[];
@@ -88,7 +104,7 @@ export function emptyEnvironment(runtime: string): Environment {
   return { runtime, packages: [], kinds: {} };
 }
 
-export type AttachRefusal = 'namespace' | 'ambiguous_binding' | 'duplicate_package' | 'unknown_handler' | 'descriptor_id_mismatch' | 'conflicting_capability';
+export type AttachRefusal = 'namespace' | 'ambiguous_binding' | 'duplicate_package' | 'unknown_handler' | 'descriptor_id_mismatch' | 'conflicting_capability' | 'model_conflict';
 export type AttachOutcome = { ok: true; env: Environment } | { ok: false; reason: AttachRefusal };
 
 /** Identity of executable code: the content of its source. */
@@ -96,8 +112,29 @@ export function codeId(fn: (...args: never[]) => unknown): string {
   return contentId(fn.toString());
 }
 
-function modelId(m: ModelSpec): Json {
-  return { init: codeId(m.init), fold: codeId(m.fold), roles: (m.roles ?? {}) as Json };
+export function modelId(m: ModelSpec): Json {
+  return { init: codeId(m.init), fold: codeId(m.fold), config: m.config, roles: (m.roles ?? {}) as Json };
+}
+
+const moduleHashes = new Map<string, string>();
+
+/** Content id of a module's source text. */
+export function moduleHash(url: string): string {
+  let h = moduleHashes.get(url);
+  if (!h) {
+    h = contentId(readFileSync(fileURLToPath(url), 'utf8'));
+    moduleHashes.set(url, h);
+  }
+  return h;
+}
+
+/** Freeze a descriptor and everything reachable from it, functions included. */
+export function freezeDescriptor<T>(value: T): T {
+  if ((typeof value === 'object' || typeof value === 'function') && value !== null && !Object.isFrozen(value)) {
+    Object.freeze(value);
+    for (const v of Object.values(value as Record<string, unknown>)) freezeDescriptor(v);
+  }
+  return value;
 }
 
 function bindingSurface(b: KindBinding): Json {
@@ -114,6 +151,7 @@ function bindingSurface(b: KindBinding): Json {
 export function descriptorId(pkg: Omit<PackageDescriptor, 'id'>): string {
   return contentId({
     name: pkg.name,
+    module: pkg.module ? moduleHash(pkg.module) : null,
     models: Object.fromEntries(Object.keys(pkg.models).sort().map((m) => [m, modelId(pkg.models[m]!)])),
     kinds: Object.fromEntries(Object.keys(pkg.kinds).sort().map((k) => [k, bindingSurface(pkg.kinds[k]!)])),
     capabilities: [...pkg.capabilities].sort(),
@@ -142,6 +180,13 @@ export function attach(env: Environment, pkg: PackageDescriptor, opts: AttachOpt
   if (pkg.id !== descriptorId(surface)) return { ok: false, reason: 'descriptor_id_mismatch' };
   if (usesSystemPrefix(pkg)) return { ok: false, reason: 'namespace' };
   if (env.packages.some((p) => p.id === pkg.id)) return { ok: false, reason: 'duplicate_package' };
+  // A model name resolves to exactly one definition: a second definition under a name in use is refused.
+  for (const [name, m] of Object.entries(pkg.models)) {
+    const existing = findModel(env, name);
+    if (existing && contentId(modelId(existing)) !== contentId(modelId(m))) return { ok: false, reason: 'model_conflict' };
+  }
+  // Installed definitions are frozen: nothing changes after attach without another attach.
+  freezeDescriptor(pkg);
   const resolution = opts.resolution ?? {};
   const kinds: Record<Kind, ResolvedBinding> = { ...env.kinds };
   const allModels = new Set([...env.packages, pkg].flatMap((p) => Object.keys(p.models)));

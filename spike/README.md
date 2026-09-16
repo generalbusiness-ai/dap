@@ -22,9 +22,12 @@ What it contains:
 
 - `src/canon.ts`: RFC 8785 canonical JSON, `sha256:` content ids, nonces.
 - `src/descriptor.ts`: flat package descriptors identified by the content
-  of their code and schemas; attach with ambiguity, namespace and id
-  refusal, contracts retained on resolution so a handler never widens an
-  audience; the per-kind expected-binding identity.
+  of their module source, their functions' text, their explicit `config`
+  and their kinds' schemas; a model's functions may depend only on their
+  arguments, their config and the pinned module; attach with ambiguity,
+  namespace, id-mismatch and model-name-conflict refusal, installed
+  descriptors frozen, contracts retained on resolution so a handler never
+  widens an audience; the per-kind expected-binding identity.
 - `src/foundation.ts`: the fixed foundation F0: the system kinds with their
   audiences (`spine`, `members`, named sets) and required capabilities; the
   fold for genesis, attach, invite, accept_invite, grant, revoke, disclose,
@@ -62,9 +65,14 @@ What the tests show:
 - the sale trace, positions 0 to 5, with the audiences of the views note
   and the views of Alice, Bob and Carol from the narrative; a late joiner's
   bootstrap entitlement; disclosure and an as-of query;
-- regressions for checker's review of the first candidate (workroom
-  report `d74d2ac5`): admission and members verify the same issuance
-  object, so a duplicate or tampered envelope supplies nothing; attachment
+- regressions for checker's reviews (workroom reports `d74d2ac5` and
+  `d2417ad5`): the one-use token is the invite entry's content id, not the
+  inviter's `token_id` label; admission and members verify the same
+  embedded issuance object from headers and the spine grant history alone,
+  so a member who never saw the private invitation verifies it too, and a
+  tampered envelope supplies nothing; observe may narrow only to current
+  members; captured values must live in config; installed descriptors are
+  frozen; a second definition under a model name in use is refused; attachment
   ceilings and observe narrowing; identities follow executable content; a
   foreign-context intent or a system kind cannot be an origin; an
   application intent captures its binding by default and a missing one is

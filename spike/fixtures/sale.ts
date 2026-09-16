@@ -16,8 +16,9 @@ export interface SaleState {
   seller?: string;
 }
 
-export const saleModel: ModelSpec<SaleState> = {
+export const saleModel: ModelSpec<SaleState, Record<string, never>> = {
   id: 'sale',
+  config: {},
   init: () => ({ status: 'unopened' }),
   roles: {
     Seller: [NS + 'accept_offer', NS + 'counter', NS + 'close'],
@@ -47,6 +48,7 @@ const spineAudience = () => SPINE;
 
 const base: Omit<PackageDescriptor, 'id'> = {
   name: 'com.example.sale',
+  module: import.meta.url,
   models: { sale: saleModel as unknown as ModelSpec },
   capabilities: [NS + 'accept_offer', NS + 'counter', NS + 'close', NS + 'make_offer', NS + 'withdraw_own_offer'],
   kinds: {

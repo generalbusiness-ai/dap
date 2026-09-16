@@ -4,12 +4,14 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { nonce } from '../src/canon.ts';
 import { Context } from '../src/context.ts';
-import { CAP, K, holdsNow } from '../src/foundation.ts';
+import { CAP, K, holdsNow, issuanceEvidence, verifyIssuance } from '../src/foundation.ts';
+import { attach, bindingId, descriptorId, emptyEnvironment, findModel, type PackageDescriptor } from '../src/descriptor.ts';
+import { RUNTIME } from '../src/foundation.ts';
 import { MEMBERS } from '../src/types.ts';
 import { SALE, salePackage } from '../fixtures/sale.ts';
 import { ALICE, ALICE_CAPS, BOB, CAROL, accept, invite, listing, pkg, saleContext } from './helpers.ts';
 
-test('C1: an ineffective duplicate invitation cannot supply grants; admission and verification use the same issuance object', () => {
+test('C1: a second issuance with the same label is its own token; admission and verification use the same issuance object and a tampered envelope supplies nothing', () => {
   const ctx = saleContext();
   const first = ctx.act(ALICE, K.invite, { invitee: BOB, grants: { principal: BOB }, token_id: 'T' });
   assert.ok(!('refused' in first) && first.verdict?.effective);
@@ -153,4 +155,86 @@ test('a capped package cannot widen through a members policy either', () => {
   const x = ctx.act(ALICE, 'com.example.cap.x', {});
   assert.ok(!('refused' in x) && x.verdict?.effective);
   assert.deepEqual(ctx.state.audiences[x.header.position], { kind: 'named', principals: [ALICE, BOB] });
+});
+
+// ----- second review (workroom report d2417ad5), D1 to D3 -----
+
+test('D1: a member who never saw the private invitation verifies the acceptance from headers and the spine alone', () => {
+  const ctx = saleContext();
+  const iBob = invite(ctx, ALICE, BOB);
+  accept(ctx, BOB, iBob);
+  const iCarol = invite(ctx, ALICE, CAROL); // private to Alice and Carol; Bob holds only its header
+  assert.equal(ctx.view(BOB)[iCarol]!.event, undefined);
+  const carolAccept = ctx.intent(CAROL, K.accept_invite, ctx.inviteEnvelope(iCarol) as never);
+  // Bob's evidence: headers of the chain and the spine grant history. No verdicts, no invite records.
+  const bobsEvidence = { headers: ctx.entries.map((e) => ({ id: e.id, headerHash: e.headerHash })), grantHistory: ctx.state.grantHistory };
+  const v = verifyIssuance(bobsEvidence, carolAccept.payload);
+  assert.ok(v.ok);
+  assert.equal(v.tokenId, ctx.entries[iCarol]!.id);
+  // negatives from the same evidence: tampered payload, unauthorized issuer, malformed issuance
+  const env = ctx.inviteEnvelope(iCarol);
+  const tampered = { invite: { event: { ...env.invite.event, payload: { ...(env.invite.event.payload as object), grants: { principal: CAROL, capabilities: [CAP.grant] } } }, header: env.invite.header } };
+  assert.equal(verifyIssuance(bobsEvidence, tampered).ok, false);
+  const byBob = ctx.act(BOB, K.invite, { invitee: 'dave', grants: { principal: 'dave' }, token_id: 'x' });
+  assert.ok(!('refused' in byBob) && byBob.verdict?.reason === 'unauthorized');
+  const daveAccept = ctx.intent('dave', K.accept_invite, ctx.inviteEnvelope(byBob.header.position) as never);
+  const v2 = verifyIssuance(issuanceEvidence(ctx.state, ctx.entries), daveAccept.payload);
+  assert.deepEqual(v2, { ok: false, reason: 'issuer_unauthorized' });
+  const malformed = ctx.act(ALICE, K.invite, { invitee: 'erin', token_id: 'y' } as never);
+  assert.ok(!('refused' in malformed) && malformed.verdict?.reason === 'malformed');
+  const erinAccept = ctx.intent('erin', K.accept_invite, ctx.inviteEnvelope(malformed.header.position) as never);
+  assert.deepEqual(verifyIssuance(issuanceEvidence(ctx.state, ctx.entries), erinAccept.payload), { ok: false, reason: 'issuance_ineffective' });
+});
+
+test('D2: captured values are outside the identity, so they must live in config, which is inside it', () => {
+  const makeFold = (step: number) => (s: { count: number }) => ({ effective: true, state: { count: s.count + step } });
+  // Same text, different captures: the fixture rule is that such a value goes in config.
+  const a = pkg('m', { 'com.example.m.tick': ['m'] }, { fold: makeFold(1) as never, config: { step: 1 } });
+  const b = pkg('m', { 'com.example.m.tick': ['m'] }, { fold: makeFold(100) as never, config: { step: 100 } });
+  assert.notEqual(a.id, b.id);
+  const ea = attach(emptyEnvironment(RUNTIME), a);
+  const eb = attach(emptyEnvironment(RUNTIME), b);
+  assert.ok(ea.ok && eb.ok);
+  assert.notEqual(bindingId(ea.env, 'com.example.m.tick'), bindingId(eb.env, 'com.example.m.tick'));
+  // A fold that reads its step from config is pinned by config alone.
+  const c1 = pkg('n', { 'com.example.n.tick': ['n'] }, { fold: ((s: { count: number }, _e: unknown, _c: unknown, cfg: { step: number }) => ({ effective: true, state: { count: s.count + cfg.step } })) as never, config: { step: 1 } });
+  const c2 = pkg('n', { 'com.example.n.tick': ['n'] }, { fold: ((s: { count: number }, _e: unknown, _c: unknown, cfg: { step: number }) => ({ effective: true, state: { count: s.count + cfg.step } })) as never, config: { step: 100 } });
+  assert.notEqual(c1.id, c2.id);
+});
+
+test('D2: an installed descriptor is frozen; replacing a fold after attach throws and changes nothing', () => {
+  const p = pkg('frozen', { 'com.example.frozen.tick': ['frozen'] });
+  const out = attach(emptyEnvironment(RUNTIME), p);
+  assert.ok(out.ok);
+  assert.throws(() => {
+    (p.models['frozen'] as { fold: unknown }).fold = () => ({ effective: true, state: { count: 999 } });
+  }, TypeError);
+  assert.equal(findModel(out.env, 'frozen'), p.models['frozen']);
+});
+
+test('D2: a second definition under a model name in use is refused unless it is the same definition', () => {
+  const a = pkg('pa', { 'com.example.pa.tick': ['counter'] }, { modelId: 'counter', fold: ((s: { count: number }) => ({ effective: true, state: { count: s.count + 1 } })) as never });
+  const b = pkg('pb', { 'com.example.pb.tick': ['counter'] }, { modelId: 'counter', fold: ((s: { count: number }) => ({ effective: true, state: { count: s.count + 100 } })) as never });
+  const ea = attach(emptyEnvironment(RUNTIME), a);
+  assert.ok(ea.ok);
+  assert.deepEqual(attach(ea.env, b), { ok: false, reason: 'model_conflict' });
+  // the same definition under the same name is fine
+  const same = pkg('pc', { 'com.example.pc.tick': ['counter'] }, { modelId: 'counter', fold: a.models['counter']!.fold });
+  assert.ok(attach(ea.env, same).ok);
+});
+
+test('D3: observe may narrow only to current members; naming a future member is ineffective and read by the actor alone', () => {
+  const ctx = saleContext({ grants: [{ principal: ALICE, roles: ['Seller'], capabilities: [...ALICE_CAPS, CAP.observe] }] });
+  const iBob = invite(ctx, ALICE, BOB);
+  accept(ctx, BOB, iBob);
+  const o = ctx.act(ALICE, K.observe, { fact: { t: 7 }, audience: [CAROL] });
+  assert.ok(!('refused' in o));
+  assert.equal(o.verdict?.reason, 'audience_outside_members');
+  assert.deepEqual(ctx.state.audiences[o.header.position], { kind: 'named', principals: [ALICE] });
+  const iCarol = invite(ctx, ALICE, CAROL);
+  accept(ctx, CAROL, iCarol);
+  assert.equal(ctx.view(CAROL)[o.header.position]!.event, undefined);
+  const ok = ctx.act(ALICE, K.observe, { fact: { t: 8 }, audience: [BOB] });
+  assert.ok(!('refused' in ok) && ok.verdict?.effective);
+  assert.deepEqual(ctx.state.audiences[ok.header.position], { kind: 'named', principals: [ALICE, BOB] });
 });

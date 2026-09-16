@@ -252,7 +252,7 @@ function roleCapabilities(env: Environment, role: string): string[] {
 }
 
 /** Whether `principal` holds `capability` judging by grants strictly before `position`. */
-export function heldAt(state: FoundationState, principal: Principal, capability: string, position: number): boolean {
+export function heldAt(state: { grantHistory: readonly GrantRecord[] }, principal: Principal, capability: string, position: number): boolean {
   let held = false;
   for (const g of state.grantHistory) {
     if (g.position >= position) break;
@@ -371,7 +371,7 @@ export function foldEntry(state: FoundationState, input: FoldInput): Verdict {
       }
       if (ev.kind === K.observe) {
         const p = ev.payload as unknown as ObservePayload;
-        if (p.audience) audience = named(ev.actor, ...p.audience);
+        if (p.audience) audience = verdict.effective ? named(ev.actor, ...p.audience) : named(ev.actor);
       }
     } else {
       const binding = state.env.kinds[ev.kind];
@@ -404,7 +404,7 @@ function foldGenesis(state: FoundationState, ev: EventBody, packages: Record<str
     const out = attachPackage(state.env, pkg, { resolution: b.resolution });
     if (!out.ok) throw genesisError('foundation_mismatch', `genesis binding refused: ${out.reason}`);
     state.env = out.env;
-    for (const m of Object.values(pkg.models)) state.models[m.id] = m.init();
+    for (const m of Object.values(pkg.models)) state.models[m.id] = m.init(m.config);
   }
   for (const g of p.grants) applyGrant(state, 0, g, 'grant');
   return { known: true, authorized: true, effective: true };
@@ -435,7 +435,7 @@ function foldSystem(state: FoundationState, entry: Entry, packages: Record<strin
       const out = attachPackage(state.env, pkg, { resolution: p.resolution, ...(p.audience ? { ceiling: [ev.actor, ...p.audience] } : {}) });
       if (!out.ok) return { known: true, authorized: true, effective: false, reason: out.reason };
       state.env = out.env;
-      for (const m of Object.values(pkg.models)) if (!(m.id in state.models)) state.models[m.id] = m.init();
+      for (const m of Object.values(pkg.models)) if (!(m.id in state.models)) state.models[m.id] = m.init(m.config);
       return { known: true, authorized: true, effective: true };
     }
     case K.invite: {
@@ -458,8 +458,14 @@ function foldSystem(state: FoundationState, entry: Entry, packages: Record<strin
       state.disclosures.push({ position: pos, to: [...p.to], positions: [...p.positions] });
       return { known: true, authorized: true, effective: true };
     }
-    case K.observe:
+    case K.observe: {
+      const p = ev.payload as unknown as ObservePayload;
+      // A narrower audience may name only current members: members is not retroactive.
+      if (p.audience && p.audience.some((r) => !state.participants.includes(r))) {
+        return { known: true, authorized: true, effective: false, reason: 'audience_outside_members' };
+      }
       return { known: true, authorized: true, effective: true };
+    }
     case K.close:
       state.closed = true;
       return { known: true, authorized: true, effective: true };
@@ -469,34 +475,49 @@ function foldSystem(state: FoundationState, entry: Entry, packages: Record<strin
 
 export type Issuance = { ok: true; tokenId: string; invite: InvitePayload; issuer: Principal; position: number } | { ok: false; reason: string };
 
+/** The evidence a member needs to verify an issuance: headers of the chain and the spine's grant history. Nothing private. */
+export interface IssuanceEvidence {
+  headers: readonly { id: string; headerHash: string }[];
+  grantHistory: readonly GrantRecord[];
+}
+
 /**
- * Verification of the issuance object an acceptance embeds, from the
- * chain and the spine alone (spike plan §2, invitation authority). The
- * token's identity is the content id of the effective invite entry, so
- * an ineffective duplicate or a tampered envelope can never supply
- * evidence. This checks the issuance only; who may redeem it, and
- * whether it was already redeemed, are the redemption's questions.
+ * Verification of the issuance object an acceptance embeds, from public
+ * evidence alone (spike plan §2, invitation authority): the embedded
+ * committed payload, the chain's headers, and issuance-time authority
+ * from the spine grant history. A member who could not read the private
+ * invitation verifies exactly the same way. The token's identity is the
+ * content id of the invite entry, so a tampered envelope or a different
+ * issuance can never supply evidence. This checks the issuance only; who
+ * may redeem it, and whether it was already redeemed, are the
+ * redemption's questions.
  */
-export function verifyIssuance(state: FoundationState, entries: readonly Entry[], acceptPayload: unknown): Issuance {
+export function verifyIssuance(evidence: IssuanceEvidence, acceptPayload: unknown): Issuance {
   const v = validPayload(K.accept_invite, acceptPayload);
   if (v === undefined) return { ok: false, reason: 'malformed' };
   const emb = (v as AcceptInvitePayload).invite;
-  const at = entries[emb.header.position];
+  const at = evidence.headers[emb.header.position];
   if (!at) return { ok: false, reason: 'not_in_chain' };
   const commitment = contentId(emb.event as unknown as Json);
   if (at.id !== commitment || emb.header.commitment !== commitment) return { ok: false, reason: 'not_in_chain' };
   if (contentId(emb.header as unknown as Json) !== at.headerHash) return { ok: false, reason: 'not_in_chain' };
   if (emb.event.kind !== K.invite) return { ok: false, reason: 'not_an_invite' };
-  // The issuance must have been effective: an unauthorized or malformed invite issues nothing.
-  if (!state.verdicts[emb.header.position]?.effective) return { ok: false, reason: 'issuance_ineffective' };
-  // Authority is judged at issuance.
-  if (!heldAt(state, emb.event.actor, CAP.invite, emb.header.position)) return { ok: false, reason: 'issuer_unauthorized' };
+  if (emb.event.genesis !== emb.header.genesis) return { ok: false, reason: 'wrong_genesis' };
+  // The issuance must have been effective. Effectiveness of an invite is decided by public facts
+  // alone: a well-formed payload and issuance-time authority, so the verifier recomputes it.
+  if (validPayload(K.invite, emb.event.payload) === undefined) return { ok: false, reason: 'issuance_ineffective' };
+  if (!heldAt({ grantHistory: evidence.grantHistory }, emb.event.actor, CAP.invite, emb.header.position)) return { ok: false, reason: 'issuer_unauthorized' };
   return { ok: true, tokenId: at.id, invite: emb.event.payload as unknown as InvitePayload, issuer: emb.event.actor, position: emb.header.position };
+}
+
+/** The evidence a member holds, drawn from a state: headers and the spine grant history. */
+export function issuanceEvidence(state: Pick<FoundationState, 'grantHistory'>, entries: readonly Entry[]): IssuanceEvidence {
+  return { headers: entries.map((e) => ({ id: e.id, headerHash: e.headerHash })), grantHistory: state.grantHistory };
 }
 
 /** A member's verification of an acceptance: the issuance, then the redemption. */
 export function verifyEmbeddedInvite(state: FoundationState, entries: readonly Entry[], accept: EventBody): Issuance {
-  const v = verifyIssuance(state, entries, accept.payload);
+  const v = verifyIssuance(issuanceEvidence(state, entries), accept.payload);
   if (!v.ok) return v;
   if (v.invite.invitee !== accept.actor) return { ok: false, reason: 'wrong_invitee' };
   if (state.redeemed.includes(v.tokenId)) return { ok: false, reason: 'already_redeemed' };
@@ -541,10 +562,10 @@ function dispatch(state: FoundationState, entry: Entry, handlers: string[], orig
       perModel[modelId] = { effective: false, reason: 'model_unavailable' };
       continue;
     }
-    const before = state.models[modelId] ?? model.init();
+    const before = state.models[modelId] ?? model.init(model.config);
     let r;
     try {
-      r = model.fold(structuredClone(before), ev, ctx);
+      r = model.fold(structuredClone(before), ev, ctx, model.config);
     } catch (e) {
       perModel[modelId] = { effective: false, reason: 'fold_error:' + (e instanceof Error ? e.message : String(e)) };
       continue;
