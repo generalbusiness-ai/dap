@@ -4,7 +4,7 @@
 admission acceptance in V6. No revised Club experiment is commissioned.**
 
 Hugh selected this outcome on 2026-09-16: “Keep the negative result and
-report it in V6.” Builder recorded the direct instruction at
+report it in V6 (Recommended)”. Builder recorded the direct instruction at
 `git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:bdcfbdc00e9861fb9f8e9b3d21f3104796d8be93`.
 The alternative designs below explain the tradeoff; they are not adopted.
 
@@ -145,16 +145,22 @@ completion is promised.
   adversarial generator and constraint inventory before its baseline.
   Count the new obligations; do not presume the old fix budget covers them.
   Preserve the original runs. A3's passing-policy-failure test and A4's
-  historical wording/provenance corrections remain separate work.
+  historical wording/provenance corrections were completed in the V5
+  evidence at `772a514a08c2fac72fe534c8490c8d33a3e1c2d1`: A3 now executes
+  the correct acceptance assertion as a failing TODO, and A4 corrects the
+  reader and provenance descriptions. Those corrections do not resolve
+  the retained A1/A5 policy failures or commission a revised experiment.
 
 The chosen outcome adds no protocol machinery. This decision makes no
 model change, revised manifest or new checker claim.
 
 ## Examined evidence
 
-All file references are to exact commit
+References S1–S8 are to exact commit
 `70bd4064a7d41ba592ccceb54b95d0e895a02d57`; line numbers refer to that tree.
 The exact report #512 above was inspected; its reproductions were not rerun.
+The later [V5 correction record](https://github.com/generalbusiness-ai/dap/blob/772a514a08c2fac72fe534c8490c8d33a3e1c2d1/spike/manifests/club.ledger.md#L314-L361)
+records completion of A3/A4 and the still-failing original acceptance.
 
 | Ref | File and lines |
 |---|---|
