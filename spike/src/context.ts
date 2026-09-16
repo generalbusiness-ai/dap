@@ -109,12 +109,19 @@ export class Context {
     return bindingId(this.state.env, kind);
   }
 
+  /** The position of the attach that produced the current binding of `kind`. */
+  currentActivation(kind: string): number | undefined {
+    return this.state.env.kinds[kind]?.attachedAt;
+  }
+
   /**
    * Build a sequenced intent for this context. An application intent
    * captures the binding active when it is composed, unless one is given.
    */
-  intent(actor: Principal, kind: string, payload: Json, opts: { action_id?: string; expected_binding?: string } = {}): EventBody {
-    const expected = opts.expected_binding ?? (kind.startsWith(SYSTEM_PREFIX) ? undefined : this.currentBinding(kind));
+  intent(actor: Principal, kind: string, payload: Json, opts: { action_id?: string; expected_binding?: string; expected_activation?: number } = {}): EventBody {
+    const application = !kind.startsWith(SYSTEM_PREFIX);
+    const expected = opts.expected_binding ?? (application ? this.currentBinding(kind) : undefined);
+    const activation = opts.expected_activation ?? (application ? this.currentActivation(kind) : undefined);
     return {
       kind,
       payload,
@@ -123,6 +130,7 @@ export class Context {
       genesis: this.genesisId,
       action_id: opts.action_id ?? 'action:' + nonce(),
       ...(expected ? { expected_binding: expected } : {}),
+      ...(activation !== undefined ? { expected_activation: activation } : {}),
     };
   }
 
@@ -153,7 +161,7 @@ export class Context {
   }
 
   /** Convenience: submit as a current participant with the serving party's credential. */
-  act(actor: Principal, kind: string, payload: Json, opts: { action_id?: string; expected_binding?: string } = {}) {
+  act(actor: Principal, kind: string, payload: Json, opts: { action_id?: string; expected_binding?: string; expected_activation?: number } = {}) {
     return this.submit(this.intent(actor, kind, payload, opts), this.credentialFor(actor));
   }
 

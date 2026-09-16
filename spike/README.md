@@ -106,11 +106,16 @@ What it contains:
   from genesis over the principal's view under basis `n`; hidden positions
   enter as headers and leave a placeholder; `Paused{at, reason, last}` when
   a package is unavailable or a disclosed position depends on semantics the
-  principal cannot resolve (an unknown kind, or an expected binding the
-  principal's environment does not produce), with `last` the result
-  through the position before under the same basis; a cache keyed by
-  principal, context, view content, basis and available packages, which
-  never reuses a pause.
+  principal cannot resolve, with `last` the result through the position
+  before under the same basis; a cache keyed by principal, context, view
+  content, basis and available packages, which never reuses a pause.
+  Disclosure completeness is checked by the recipient, from evidence the
+  event carries: an application intent records `expected_activation`, the
+  position of the attach (or genesis) that produced the binding it
+  expects. A disclosed event whose activation position is hidden pauses
+  with `dependency_missing`; one whose activation is visible is judged
+  against the binding active at its position, so a mismatch is a genuine
+  `stale_binding` and never a pause.
 - `src/oracle.ts`: `fold(S[0..m])` over the complete series and
   `observe(p, state, n)` under basis `n`; never available to a model.
 - `src/checker.ts`: for every participant and frontier, equality of the
@@ -136,7 +141,9 @@ What the tests show:
 - the views note's pause example: a disclosure followed by an unavailable
   package pauses with `last` through the position before, under the
   disclosure's basis, and resumes to equality once the package is
-  supplied; a dependency-incomplete disclosure pauses;
+  supplied; a dependency-incomplete disclosure pauses, including one
+  whose binding was restored by an attach the recipient has not seen,
+  while a visible but superseded activation is stale, not paused;
 - the Discussion manifest's deterministic checks: normal replay over
   seeds 1 to 8 with zero violations, pause and resume, the planted close
   audience fault found, shrinking to a deletion-minimal script,

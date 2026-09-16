@@ -325,3 +325,48 @@ test('G3: affordances come from the visible binding, so a hidden attach with its
   assert.ok(!oracleObserve(ctx, BOB, 3, 3).affordances.includes('com.example.audit.note'));
   assert.ok(oracleObserve(ctx, ALICE, 3, 3).affordances.includes('com.example.audit.note'));
 });
+
+// ----- checker's third V2 review (workroom report 41d88194), H1 -----
+
+test('H1: a binding identity restored by an unseen attach is a missing dependency, not a stale intent: activation provenance decides', () => {
+  const base = noopBase();
+  const ctx = Context.create({ creator: ALICE, packages: { [base.id]: base }, bindings: [{ package: base.id }], grants: [{ principal: ALICE, capabilities: ALICE_CAPS }] });
+  accept(ctx, BOB, invite(ctx, ALICE, BOB, [])); // 1, 2
+  const audit = pkg('audit', { 'com.example.base.tick': ['audit'] });
+  const reorder = pkg('reorder', { 'com.example.base.tick': ['audit'] }, { modelId: 'reorder' });
+  const restore = pkg('restore', { 'com.example.base.tick': ['base'] }, { modelId: 'restore' });
+  for (const p of [audit, reorder, restore]) ctx.packages[p.id] = p;
+  const a = ctx.act(ALICE, K.attach, { package: audit.id, resolution: { 'com.example.base.tick': { handlers: ['base', 'audit'] } }, audience: [] }); // 3: binding A
+  const b = ctx.act(ALICE, K.attach, { package: reorder.id, resolution: { 'com.example.base.tick': { handlers: ['audit', 'base'] } }, audience: [] }); // 4: binding B
+  assert.ok(!('refused' in a) && a.verdict?.effective && !('refused' in b) && b.verdict?.effective);
+  const bindingA = ctx.entries.length && (() => { const s = ctx.state.env.kinds['com.example.base.tick']!; return s.previous!; })();
+  ctx.act(ALICE, K.disclose, { positions: [3, 4], to: [BOB] }); // 5: Bob knows A and B; B is active for him
+  const r6 = ctx.act(ALICE, K.attach, { package: restore.id, resolution: { 'com.example.base.tick': { handlers: ['base', 'audit'] } }, audience: [] }); // 6: A again, hidden from Bob
+  assert.ok(!('refused' in r6) && r6.verdict?.effective);
+  assert.equal(ctx.currentBinding('com.example.base.tick'), ctx.currentBinding('com.example.base.tick'));
+  assert.ok(bindingA);
+  const tick = ctx.act(ALICE, 'com.example.base.tick', {}); // 7, under A with activation 6
+  assert.ok(!('refused' in tick) && tick.verdict?.effective);
+  assert.equal(ctx.entries[7]!.event.expected_activation, 6);
+  const d8 = ctx.act(ALICE, K.disclose, { positions: [7], to: [BOB] }); // 8: the event, not the restoring attach
+  assert.ok(!('refused' in d8) && d8.verdict?.effective);
+  const view8 = ctx.view(BOB, 8);
+  const r = interpretView(BOB, view8, 8, ctx.packages);
+  assert.equal(r.kind, 'paused');
+  if (r.kind === 'paused') {
+    assert.equal(r.at, 7);
+    assert.equal(r.reason, 'dependency_missing');
+    assert.ok(isDeepStrictEqual(observeInterpreted(r.last, view8), oracleObserve(ctx, BOB, 6, 8)));
+  }
+  assert.deepEqual(checkContext(ctx, { participants: [BOB], frontiers: [8] }), []);
+  // disclosing the restoring attach completes the dependency
+  ctx.act(ALICE, K.disclose, { positions: [6], to: [BOB] }); // 9
+  const view9 = ctx.view(BOB, 9);
+  const r2 = interpretView(BOB, view9, 9, ctx.packages);
+  assert.equal(r2.kind, 'interpreted');
+  if (r2.kind === 'interpreted') {
+    assert.equal(r2.outcomes[7]?.effective, true);
+    assert.ok(isDeepStrictEqual(observeInterpreted(r2, view9), oracleObserve(ctx, BOB, 9, 9)));
+  }
+  assert.deepEqual(checkContext(ctx, { participants: [BOB], frontiers: [9] }), []);
+});

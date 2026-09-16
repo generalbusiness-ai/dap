@@ -115,12 +115,20 @@ export function interpretView(p: Principal, view: ViewEntry[], basis: number, av
     }
     if (v.via === 'disclosure' && !ev.kind.startsWith(SYSTEM_PREFIX)) {
       // Disclosed, but the semantics it needs were not: the disclosure was dependency-incomplete.
-      // The kind may be unknown here, or the event may expect a binding this principal has never
-      // seen produced. A binding this principal has seen produced at some earlier attach is a
-      // genuine stale_binding verdict, not a missing dependency: their history explains it.
+      // Completeness is checked here, by the recipient (design note §8 leaves the location open).
+      // The evidence is activation provenance: the intent names the position of the attach that
+      // produced the binding it expects. If that position is hidden in this view, the attach was
+      // not disclosed and the event cannot be judged. If it is visible, the fold judges the event
+      // against the binding active at its position, and a mismatch is a genuine stale_binding.
       const current = state.env.kinds[ev.kind];
       if (!current) return paused(i, 'dependency_missing');
-      if (ev.expected_binding !== undefined && !knownBindings(state, ev.kind).has(ev.expected_binding)) return paused(i, 'dependency_missing');
+      if (ev.expected_activation !== undefined) {
+        const activation = view[ev.expected_activation];
+        if (!activation || !activation.event) return paused(i, 'dependency_missing');
+      } else if (ev.expected_binding !== undefined && !knownBindings(state, ev.kind).has(ev.expected_binding)) {
+        // no provenance: fall back to what this principal's history has produced
+        return paused(i, 'dependency_missing');
+      }
     }
     const origin = i > 0 && i <= origins;
     const verdict = foldEntry(state, { entry: asEntry(v), origin, packages: available, entries: chain });

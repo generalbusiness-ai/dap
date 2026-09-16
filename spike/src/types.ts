@@ -18,6 +18,8 @@ export interface EventBody {
   genesis?: string;
   action_id?: string;
   expected_binding?: string;
+  /** the position of the attach (or genesis, 0) that produced the expected binding: activation provenance */
+  expected_activation?: number;
 }
 
 /** The authenticated header's preimage. The sequencer signature is O1's. */
