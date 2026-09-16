@@ -5,7 +5,7 @@
 
 import { assertBackendAccess, type BackendLease } from './ownership.ts';
 import { contentId, nonce, type Json } from './canon.ts';
-import { attachRequires, bindingId, packageIn, type PackageDescriptor } from './descriptor.ts';
+import { attachRequires, bindingId, packageIn, own, type PackageDescriptor } from './descriptor.ts';
 import {
   F0_ID,
   K,
@@ -140,7 +140,7 @@ export class Context {
 
   /** The position of the attach that produced the current binding of `kind`. */
   currentActivation(kind: string): number | undefined {
-    return this.state.env.kinds[kind]?.attachedAt;
+    return own(this.state.env.kinds, kind)?.attachedAt;
   }
 
   /**
@@ -190,7 +190,7 @@ export class Context {
             return v.ok ? { tokenId: v.tokenId, invitee: v.invite.invitee } : undefined;
           },
           acceptKind: K.accept_invite,
-          activationOf: (kind) => state.env.kinds[kind]?.attachedAt,
+          activationOf: (kind) => own(state.env.kinds, kind)?.attachedAt,
           requiresOf: (ev) => {
             // Evidence is extracted from runtime JSON before the fold validates it: never throw here.
             if (ev.kind !== K.attach) return undefined;

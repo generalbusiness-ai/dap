@@ -1,0 +1,9 @@
+{"label":"alice grant roles [constructor]","storage":"memory","submitThrew":"roleCapabilities is not a function or its return value is not iterable","cold":"threw: roleCapabilities is not a function or its return value is not iterable"}
+{"label":"alice grant roles [__proto__]","storage":"memory","submitThrew":"roleCapabilities is not a function or its return value is not iterable","cold":"threw: roleCapabilities is not a function or its return value is not iterable"}
+{"label":"alice revoke roles [toString]","storage":"memory","submitThrew":"roleCapabilities is not a function or its return value is not iterable","cold":"threw: roleCapabilities is not a function or its return value is not iterable"}
+{"label":"alice invite kim roles [constructor] then kim accepts","storage":"memory","submitThrew":"roleCapabilities is not a function or its return value is not iterable","cold":"threw: roleCapabilities is not a function or its return value is not iterable"}
+{"label":"alice grant roles [constructor] at F (no roles in scope pkg)","storage":"memory","submit":{"pos":2,"verdict":{"known":true,"authorized":false,"effective":false,"reason":"unauthorized"}},"cold":"ok head 2"}
+{"label":"alice attach inspection with resolution {kind:{handlers:5}}","storage":"memory","submit":{"pos":11,"verdict":{"known":true,"authorized":true,"effective":true}},"cold":"ok head 11"}
+{"label":"bob exercise right __proto__ at F","storage":"memory","submit":{"pos":2,"verdict":{"known":true,"authorized":false,"effective":false,"reason":"unauthorized"}},"cold":"ok head 2"}
+{"label":"kim exercise right constructor at F","storage":"memory","submit":{"pos":2,"verdict":{"known":true,"authorized":false,"effective":false,"reason":"unauthorized"}},"cold":"ok head 2"}
+{"label":"alice release right __proto__ with valid export","storage":"memory","submit":{"pos":24,"verdict":{"known":true,"authorized":true,"effective":false,"reason":"spent_right"}},"cold":"ok head 24"}

@@ -1,0 +1,14 @@
+{
+  "source": "28981dd1982e02b40fc154d43972c19d82ebc7bf",
+  "argv": [
+    "node",
+    "--test",
+    "--test-reporter=tap",
+    "spike/test/ordering-scope-property-names.test.ts",
+    "spike/test/descriptor.test.ts",
+    "spike/test/origin.test.ts",
+    "spike/test/ordering-scope-phase.test.ts"
+  ],
+  "exitCode": 0,
+  "seconds": 5.828846791002434
+}

@@ -25,6 +25,8 @@ import {
   type Environment,
   type PackageDescriptor,
   packageIn,
+  own,
+  setOwn,
 } from './descriptor.ts';
 import {
   MEMBERS,
@@ -252,7 +254,7 @@ function validPayload(kind: Kind, payload: unknown): unknown | undefined {
 function roleCapabilities(env: Environment, role: string): string[] {
   for (const pkg of env.packages) {
     for (const m of Object.values(pkg.models)) {
-      const caps = m.roles?.[role];
+      const caps = own(m.roles, role);
       if (caps) return caps;
     }
   }
@@ -283,7 +285,7 @@ function applyGrant(state: FoundationState, position: number, spec: GrantSpec, o
 // ----- audiences -----
 
 function systemAudience(kind: Kind, event: EventBody): Audience {
-  const row = SYSTEM_KINDS[kind];
+  const row = own(SYSTEM_KINDS, kind);
   if (!row) return MEMBERS;
   switch (row.audience) {
     case 'spine':
@@ -387,7 +389,7 @@ export function foldEntry(state: FoundationState, input: FoldInput): Verdict {
   // the actual grant separately: stale/closed can precede authorization
   // in the verdict, and authorized semantic refusals remain public.
   const publicationCapability = !origin && pos !== 0
-    ? ev.kind === K.observe ? CAP.observe : !ev.kind.startsWith(SYSTEM_PREFIX) ? state.env.kinds[ev.kind]?.capability : undefined
+    ? ev.kind === K.observe ? CAP.observe : !ev.kind.startsWith(SYSTEM_PREFIX) ? own(state.env.kinds, ev.kind)?.capability : undefined
     : undefined;
   if (publicationCapability && !heldAt(state, ev.actor, publicationCapability, pos)) audience = named(ev.actor);
 
@@ -405,7 +407,7 @@ export function foldEntry(state: FoundationState, input: FoldInput): Verdict {
         if (p.audience) audience = verdict.effective ? named(ev.actor, ...p.audience) : named(ev.actor);
       }
     } else {
-      const binding = state.env.kinds[ev.kind];
+      const binding = own(state.env.kinds, ev.kind);
       // A kind no binding resolves cannot be judged, and refusing an act must not disclose its
       // payload (design note §8): the actor alone reads it.
       if (!binding) audience = named(ev.actor);
@@ -414,14 +416,14 @@ export function foldEntry(state: FoundationState, input: FoldInput): Verdict {
         // ineffective and readable by its actor alone, so the series stays replayable.
         try {
           const declaring = state.env.packages.find((p) => p.id === binding.packageId);
-          const allowed = declaring?.kinds[ev.kind]?.handlers ?? [];
+          const allowed = own(declaring?.kinds, ev.kind)?.handlers ?? [];
           audience = capped(binding.audience({
             position: pos,
             members: membersBefore,
             holders: (cap) => membersBefore.filter((m) => heldAt(state, m, cap, pos)),
             modelState: (id) => {
               if (!allowed.includes(id)) throw new Error('undeclared audience model read: ' + id);
-              const before = modelsBefore?.[id];
+              const before = own(modelsBefore, id);
               return before === undefined ? undefined : snapshot(before);
             },
           }, ev), binding.ceiling, membersBefore);
@@ -462,7 +464,7 @@ function foldGenesis(state: FoundationState, ev: EventBody, packages: Record<str
     const out = attachPackage(state.env, pkg, { resolution: b.resolution, position: 0 });
     if (!out.ok) throw genesisError('foundation_mismatch', `genesis binding refused: ${out.reason}`);
     state.env = out.env;
-    for (const m of Object.values(pkg.models)) state.models[m.id] = m.init(m.config);
+    for (const m of Object.values(pkg.models)) setOwn(state.models, m.id, m.init(m.config));
   }
   for (const g of p.grants) applyGrant(state, 0, g, 'grant');
   return { known: true, authorized: true, effective: true };
@@ -471,7 +473,7 @@ function foldGenesis(state: FoundationState, ev: EventBody, packages: Record<str
 /** An adopted origin: an assertion by its original actor under the initial bindings' origin rules. */
 function foldOrigin(state: FoundationState, entry: Entry, entries: readonly Entry[], throwOnError = false): Verdict {
   const ev = entry.event;
-  const binding = state.env.kinds[ev.kind];
+  const binding = own(state.env.kinds, ev.kind);
   if (!binding) return { known: false, authorized: false, effective: false, reason: 'unhandled' };
   return dispatch(state, entry, binding.handlers, true, entries, throwOnError);
 }
@@ -479,7 +481,7 @@ function foldOrigin(state: FoundationState, entry: Entry, entries: readonly Entr
 function foldSystem(state: FoundationState, entry: Entry, packages: Record<string, PackageDescriptor>, entries: readonly Entry[]): Verdict {
   const ev = entry.event;
   const pos = entry.position;
-  const row = SYSTEM_KINDS[ev.kind];
+  const row = own(SYSTEM_KINDS, ev.kind);
   if (!row) return { known: false, authorized: false, effective: false, reason: 'unhandled' };
   if (NOT_IN_V1.has(ev.kind)) return { known: true, authorized: false, effective: false, reason: 'not_in_v1' };
   if (row.requires && !heldAt(state, ev.actor, row.requires, pos)) {
@@ -497,13 +499,13 @@ function foldSystem(state: FoundationState, entry: Entry, packages: Record<strin
       const out = attachPackage(state.env, pkg, { resolution: p.resolution, position: pos, ...(p.audience ? { ceiling: [ev.actor, ...p.audience] } : {}) });
       if (!out.ok) return { known: true, authorized: true, effective: false, reason: out.reason };
       state.env = out.env;
-      for (const m of Object.values(pkg.models)) if (!(m.id in state.models)) state.models[m.id] = m.init(m.config);
+      for (const m of Object.values(pkg.models)) if (!Object.hasOwn(state.models, m.id)) setOwn(state.models, m.id, m.init(m.config));
       return { known: true, authorized: true, effective: true };
     }
     case K.invite: {
       const p = ev.payload as unknown as InvitePayload;
       // token_id is the inviter's label; the token's identity is this entry's content id.
-      state.invites[entry.id] = { tokenId: entry.id, position: pos, issuer: ev.actor, invitee: p.invitee, grants: p.grants };
+      setOwn(state.invites, entry.id, { tokenId: entry.id, position: pos, issuer: ev.actor, invitee: p.invitee, grants: p.grants });
       return { known: true, authorized: true, effective: true };
     }
     case K.accept_invite:
@@ -604,7 +606,7 @@ function foldAccept(state: FoundationState, entry: Entry, entries: readonly Entr
 function foldApplication(state: FoundationState, entry: Entry, entries: readonly Entry[], throwOnError = false): Verdict {
   const ev = entry.event;
   const pos = entry.position;
-  const binding = state.env.kinds[ev.kind];
+  const binding = own(state.env.kinds, ev.kind);
   if (!binding) return { known: false, authorized: false, effective: false, reason: 'unhandled' };
   if (state.closed) return { known: true, authorized: false, effective: false, reason: 'closed' };
   // A sequenced application intent binds the semantics it expects (design note §3; spike plan §2).
@@ -635,23 +637,23 @@ function dispatch(state: FoundationState, entry: Entry, handlers: string[], orig
   for (const modelId of handlers) {
     const model = findModel(state.env, modelId);
     if (!model) {
-      perModel[modelId] = { effective: false, reason: 'model_unavailable' };
+      setOwn(perModel, modelId, { effective: false, reason: 'model_unavailable' });
       continue;
     }
-    const before = state.models[modelId] ?? model.init(model.config);
+    const before = own(state.models, modelId) ?? model.init(model.config);
     let r;
     try {
       r = model.fold(structuredClone(before), ev, ctx, model.config);
     } catch (e) {
       if (throwOnError) throw e;
-      perModel[modelId] = { effective: false, reason: 'fold_error:' + (e instanceof Error ? e.message : String(e)) };
+      setOwn(perModel, modelId, { effective: false, reason: 'fold_error:' + (e instanceof Error ? e.message : String(e)) });
       continue;
     }
     if (r.effective) {
-      state.models[modelId] = r.state;
+      setOwn(state.models, modelId, r.state);
       anyEffective = true;
     }
-    perModel[modelId] = { effective: r.effective, reason: r.reason };
+    setOwn(perModel, modelId, { effective: r.effective, reason: r.reason });
   }
   return { known: true, authorized: true, effective: anyEffective, reason: anyEffective ? undefined : 'ineffective', perModel };
 }

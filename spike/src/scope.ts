@@ -5,7 +5,7 @@ import { canonicalize, envelopeId, verifyEnvelope, type ActorEnvelope } from './
 import { Journal, type JournalOptions } from './journal.ts';
 import { F0_ID, RUNTIME, K, heldAt } from './foundation.ts';
 import { interpretView } from './interpret.ts';
-import type { PackageDescriptor } from './descriptor.ts';
+import { own, type PackageDescriptor } from './descriptor.ts';
 import type { Entry, EventBody, Receipt, Refusal, Verdict } from './types.ts';
 import type { TransportCredential } from './append.ts';
 import type { ViewEntry } from './context.ts';
@@ -150,7 +150,7 @@ function replayScopeView(view: ViewEntry[], genesis: string, packages: Record<st
         if (!held(event.actor, K.scope_release)) result = bad('unauthorized', false);
         else {
           const e = validateExport(p.export);
-          const right = state.rights[p.right as RightName];
+          const right = own(state.rights, p.right);
           if (!right) result = bad('unowned_right');
           else if (right.status === 'released') result = bad('already_released');
           else if (right.status !== 'live') result = bad('spent_right');
@@ -241,7 +241,7 @@ function replayScopeView(view: ViewEntry[], genesis: string, packages: Record<st
         else if (p.offer !== state.setup.mandate.offer || typeof p.result !== 'string') result = bad('wrong_mandate');
         else { state.inspection.result = p.result; result = good(); }
       } else if (event.kind === SCOPE_KINDS.exercise) {
-        const right = state.rights[p.right as RightName];
+        const right = own(state.rights, p.right);
         if (p.right === 'R_sell') result = bad('invalid_right_operation');
         else if (!right) result = bad('unowned_right');
         else if (right.status === 'released') result = bad('released_right');
@@ -266,7 +266,7 @@ function replayScopeView(view: ViewEntry[], genesis: string, packages: Record<st
 }
 function exportFrom(state: ScopeState, view: ViewEntry[], prefix: number, names: RightName[], packages: Record<string, PackageDescriptor>): SourceExport {
   const rightList = names.map(name => {
-    const right = state.rights[name];
+    const right = own(state.rights, name);
     if (!right || right.status !== 'live') throw new ScopeRefusal('unowned_right');
     return { name, owner: right.owner };
   });

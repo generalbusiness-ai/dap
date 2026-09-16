@@ -150,9 +150,19 @@ export interface AttachOptions {
   position?: number;
 }
 
+/** String-keyed protocol tables never resolve inherited JavaScript properties. */
+export function own<T>(table: Record<string, T> | undefined, key: unknown): T | undefined {
+  return table !== undefined && typeof key === 'string' && Object.hasOwn(table, key) ? table[key] : undefined;
+}
+
+/** Keep ordinary JSON object shapes while treating __proto__ as an own data key. */
+export function setOwn<T>(table: Record<string, T>, key: string, value: T): void {
+  Object.defineProperty(table, key, { value, enumerable: true, configurable: true, writable: true });
+}
+
 /** A package by id from a registry of runtime JSON keys: own entries only, so an inherited name is not a package. */
 export function packageIn(registry: Record<string, PackageDescriptor>, id: unknown): PackageDescriptor | undefined {
-  return typeof id === 'string' && Object.hasOwn(registry, id) ? registry[id] : undefined;
+  return own(registry, id);
 }
 
 export function emptyEnvironment(runtime: string): Environment {
@@ -264,11 +274,11 @@ export function attach(env: Environment, pkg: PackageDescriptor, opts: AttachOpt
   const kinds: Record<Kind, ResolvedBinding> = { ...env.kinds };
   const allModels = new Set([...env.packages, pkg].flatMap((p) => Object.keys(p.models)));
   for (const [kind, binding] of Object.entries(pkg.kinds)) {
-    const existing = kinds[kind];
-    const res = resolution[kind];
+    const existing = own(kinds, kind);
+    const res = own(resolution, kind);
     if (!existing) {
       for (const h of binding.handlers) if (!allModels.has(h)) return { ok: false, reason: 'unknown_handler' };
-      kinds[kind] = { ...binding, packageId: pkg.id, attachedAt: opts.position ?? 0, ...(opts.ceiling ? { ceiling: [...opts.ceiling].sort() } : {}) };
+      setOwn(kinds, kind, { ...binding, packageId: pkg.id, attachedAt: opts.position ?? 0, ...(opts.ceiling ? { ceiling: [...opts.ceiling].sort() } : {}) });
       continue;
     }
     // A kind already bound: a resolution must name exactly the union of handlers, in an order.
@@ -284,7 +294,7 @@ export function attach(env: Environment, pkg: PackageDescriptor, opts: AttachOpt
     if (existing.capability && binding.capability && existing.capability !== binding.capability) {
       return { ok: false, reason: 'conflicting_capability' };
     }
-    kinds[kind] = {
+    setOwn(kinds, kind, {
       ...existing,
       handlers: res.handlers,
       capability: existing.capability ?? binding.capability,
@@ -292,7 +302,7 @@ export function attach(env: Environment, pkg: PackageDescriptor, opts: AttachOpt
       ceiling: intersect(existing.ceiling, opts.ceiling),
       attachedAt: opts.position ?? 0,
       previous: existing,
-    };
+    });
   }
   return { ok: true, env: { ...env, packages: [...env.packages, pkg], kinds, attachedAt: { ...env.attachedAt, [pkg.id]: opts.position ?? 0 } } };
 }
@@ -313,7 +323,7 @@ export function attach(env: Environment, pkg: PackageDescriptor, opts: AttachOpt
 export function attachRequires(env: Environment, pkg: PackageDescriptor, resolution?: unknown): number[] {
   const out = new Set<number>();
   const installedAt = (pkgId: string) => {
-    const at = env.attachedAt[pkgId];
+    const at = own(env.attachedAt, pkgId);
     if (at !== undefined) out.add(at);
   };
   if (env.packages.some((p) => p.id === pkg.id)) installedAt(pkg.id);
@@ -323,14 +333,14 @@ export function attachRequires(env: Environment, pkg: PackageDescriptor, resolut
   }
   const res = resolution && typeof resolution === 'object' && !Array.isArray(resolution) ? (resolution as Record<string, unknown>) : {};
   for (const [kind, binding] of Object.entries(pkg.kinds)) {
-    const existing = env.kinds[kind];
+    const existing = own(env.kinds, kind);
     // The same branch attach takes: a new kind is bound by the package's own handlers and a
     // resolution is ignored; an existing kind consults its binding, the package's handlers and
     // the resolution's handlers.
     const handlers = new Set(binding.handlers);
     if (existing) {
       out.add(existing.attachedAt);
-      const r = res[kind];
+      const r = own(res, kind);
       const given = r && typeof r === 'object' && Array.isArray((r as { handlers?: unknown }).handlers) ? (r as { handlers: unknown[] }).handlers : [];
       for (const h of given) if (typeof h === 'string') handlers.add(h);
     }
@@ -343,7 +353,10 @@ export function attachRequires(env: Environment, pkg: PackageDescriptor, resolut
 }
 
 export function findModelWithPackage(env: Environment, id: string): { model: ModelSpec; pkg: PackageDescriptor } | undefined {
-  for (const pkg of env.packages) if (pkg.models[id]) return { model: pkg.models[id]!, pkg };
+  for (const pkg of env.packages) {
+    const model = own(pkg.models, id);
+    if (model) return { model, pkg };
+  }
   return undefined;
 }
 
@@ -360,7 +373,7 @@ export function findModel(env: Environment, id: string): ModelSpec | undefined {
  * does not change it.
  */
 export function bindingId(env: Environment, kind: Kind): string | undefined {
-  const b = env.kinds[kind];
+  const b = own(env.kinds, kind);
   if (!b) return undefined;
   return bindingIdOf(env, kind, b);
 }
@@ -379,7 +392,7 @@ export function bindingIdOf(env: Environment, kind: Kind, b: ResolvedBinding): s
       id: b.audienceId,
       code: codeId(b.audience),
       module: declaring?.module ? moduleHash(declaring.module) : null,
-      reads: [...(declaring?.kinds[kind]?.handlers ?? [])].sort(),
+      reads: [...(own(declaring?.kinds, kind)?.handlers ?? [])].sort(),
     },
     capability: b.capability ?? null,
     runtime: env.runtime,
@@ -395,7 +408,7 @@ export function bindingIdOf(env: Environment, kind: Kind, b: ResolvedBinding): s
  * shared outcome, the checker's outcome comparison catches it.
  */
 export function visibleBinding(env: Environment, kind: Kind, visible: (position: number) => boolean): ResolvedBinding | undefined {
-  let b: ResolvedBinding | undefined = env.kinds[kind];
+  let b: ResolvedBinding | undefined = own(env.kinds, kind);
   while (b && !visible(b.attachedAt)) b = b.previous;
   return b;
 }

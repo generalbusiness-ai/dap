@@ -1,0 +1,1 @@
+{"storage":"sqlite","kind":"constructor","point":"inspection-attached","context":"S","actor":"carol","headBefore":11,"submitThrew":"Cannot read properties of undefined (reading 'map')","backendHead1":12,"cold1":"threw: Cannot read properties of undefined (reading 'map')","backendHead2":12,"cold2":"threw: Cannot read properties of undefined (reading 'map')"}

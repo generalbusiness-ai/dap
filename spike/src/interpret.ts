@@ -11,7 +11,7 @@
 
 import { contentId } from './canon.ts';
 import type { PackageDescriptor } from './descriptor.ts';
-import { bindingId, packageIn } from './descriptor.ts';
+import { bindingId, own, setOwn, packageIn } from './descriptor.ts';
 import { K, foldEntry, initialFoundationState, originsCount, type AttachPayload, type FoundationState } from './foundation.ts';
 import type { ViewEntry } from './context.ts';
 import { SYSTEM_PREFIX, named, type Entry, type Principal, type Verdict } from './types.ts';
@@ -61,7 +61,7 @@ function chainOf(view: ViewEntry[]): Entry[] {
 
 function bindingsOf(state: FoundationState): Record<string, string> {
   const out: Record<string, string> = {};
-  for (const k of Object.keys(state.env.kinds).sort()) out[k] = bindingId(state.env, k)!;
+  for (const k of Object.keys(state.env.kinds).sort()) setOwn(out, k, bindingId(state.env, k)!);
   return out;
 }
 
@@ -128,7 +128,7 @@ export function interpretView(p: Principal, view: ViewEntry[], basis: number, av
       // effective or stale_binding, is the genuine one.
       const activation = v.header.activation;
       if (activation === undefined) {
-        if (!state.env.kinds[ev.kind]) return paused(i, 'dependency_missing');
+        if (!own(state.env.kinds, ev.kind)) return paused(i, 'dependency_missing');
       } else if (!view[activation]?.event) {
         return paused(i, 'dependency_missing');
       }
