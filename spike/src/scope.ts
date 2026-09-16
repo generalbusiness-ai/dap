@@ -1,3 +1,4 @@
+import type { KeyObject } from 'node:crypto';
 // Fixed O4 scope semantics. No expectation-manifest dependency.
 import { snapshot } from './append.ts';
 import { canonicalize, envelopeId, verifyEnvelope, type ActorEnvelope } from './codec.ts';
@@ -7,8 +8,9 @@ import { interpretView } from './interpret.ts';
 import type { PackageDescriptor } from './descriptor.ts';
 import type { Entry, EventBody, Receipt, Refusal, Verdict } from './types.ts';
 import type { TransportCredential } from './append.ts';
+import type { ViewEntry } from './context.ts';
 import { publicProof, verifyPublicProof, assertPublicData, type PublicProof } from './scope-proof.ts';
-import { SCOPE_KINDS, SCOPE_NS, TRANSFORM, scopeId, scopeSetup, scopeImplementationId, type ScopeSetup } from './scope-profile.ts';
+import { SCOPE_KINDS, SCOPE_NS, TRANSFORM, JOIN_POLICY_ID, scopeId, scopeSetup, scopeImplementationId, type ScopeSetup } from './scope-profile.ts';
 import type { SaleState } from '../fixtures/sale.ts';
 import type { InspectionState } from '../fixtures/inspection.ts';
 
@@ -76,7 +78,7 @@ function init(genesis: EventBody, id: string): ScopeState {
   if (setup.role === 'delivery') state.facts = { ...setup.facts! };
   if (setup.role === 'fulfilment') {
     const transition = object((genesis.payload as Record<string, unknown>).transition) as unknown as Transition;
-    if (transition.transformation !== TRANSFORM || !transition.identity || !transition.manifest || !Array.isArray(transition.sources) || transition.sources.length !== 2 || !Array.isArray(transition.retainedDependencies)) throw new Error('scope: invalid transition');
+    if (transition.transformation !== TRANSFORM || !transition.identity || transition.manifest !== JOIN_POLICY_ID || !Array.isArray(transition.sources) || transition.sources.length !== 2 || !Array.isArray(transition.retainedDependencies)) throw new Error('scope: invalid transition');
     const seen = new Set<string>();
     for (const raw of transition.sources) {
       const e = validateExport(raw);
@@ -87,6 +89,8 @@ function init(genesis: EventBody, id: string): ScopeState {
       state.imports.push(e.identity);
     }
     if ([...seen].sort().join(',') !== 'R_deliver,R_fulfil') throw new Error('scope: missing conditional right');
+    const retained = [...new Set(transition.sources.flatMap(e => [...e.dependencies.packages, e.dependencies.implementation]))].sort();
+    if (canonicalize(retained) !== canonicalize(transition.retainedDependencies)) throw new Error('scope: missing retained dependencies');
     state.transition = transition;
     state.facts = Object.assign({}, ...transition.sources.map(e => e.facts));
   }
@@ -98,11 +102,14 @@ function init(genesis: EventBody, id: string): ScopeState {
 export function replayScope(proof: PublicProof, packages: Record<string, PackageDescriptor>, depth = 0): ScopeState {
   if (depth > 4) throw new Error('scope: proof nesting bound');
   const { view } = verifyPublicProof(proof, { genesis: proof.genesis, initialWriter: proof.initialWriter }, packages);
-  const state = init(view[0]!.event!, proof.genesis);
-  for (let position = 0; position < view.length; position++) {
+  return replayScopeView(view, proof.genesis, packages, depth);
+}
+function replayScopeView(view: ViewEntry[], genesis: string, packages: Record<string, PackageDescriptor>, depth = 0, limit = view.length - 1): ScopeState {
+  const state = init(view[0]!.event!, genesis);
+  for (let position = 0; position <= limit; position++) {
     const v = view[position]!;
     if (!v.event) continue;
-    const base = interpretView('scope-evidence-reader', view, proof.frontier, packages, position);
+    const base = interpretView('scope-evidence-reader', view, view.length - 1, packages, position);
     if (base.kind !== 'interpreted') throw new Error('scope: unresolved source semantics');
     const current = base.state;
     const event = v.event;
@@ -138,7 +145,7 @@ export function replayScope(proof: PublicProof, packages: Record<string, Package
           else if (right.owner !== event.actor) result = bad('unauthorized', false);
           else if (e.prefix.position !== position - 1 || e.prefix.headerHash !== view[position - 1]!.headerHash || e.prefix.commitment !== view[position - 1]!.header.commitment) result = bad('stale_export');
           else {
-            const expected = exportFrom(state, proof, position - 1, [p.right], packages);
+            const expected = exportFrom(state, view, position - 1, [p.right], packages);
             if (canonicalize(e) !== canonicalize(expected)) result = bad('invalid_export');
             else if (typeof p.destination !== 'string' || !/^sha256:[0-9a-f]{64}$/.test(p.destination) || typeof p.transition !== 'string') result = bad('malformed');
             else {
@@ -152,6 +159,7 @@ export function replayScope(proof: PublicProof, packages: Record<string, Package
         if (!held(event.actor, K.scope_activate)) result = bad('unauthorized', false);
         else if (!state.transition) result = bad('not_a_destination');
         else if (state.active) result = bad('already_active');
+        else if (view.slice(((view[0]!.event!.payload as { origins: unknown[] }).origins.length) + 1, position).some(v => v.event?.kind !== K.scope_activate)) result = bad('activation_order');
         else {
           const proofs = Array.isArray(p.proofs) ? p.proofs as ReleaseProof[] : [];
           const claimedRights: string[] = [];
@@ -168,7 +176,13 @@ export function replayScope(proof: PublicProof, packages: Record<string, Package
             for (const item of proofs) {
               const source = state.transition.sources.find(s => s.genesis === item.source.genesis);
               if (!source) throw new Error('wrong_source');
-              const releaseState = replayScope(item.source, packages, depth + 1);
+              const r = source.prefix.position + 1;
+              if (item.release !== r || item.source.frontier < r) throw new Error('source_binding_mismatch');
+              const verifiedSource = verifyPublicProof(item.source, { genesis: source.genesis, initialWriter: source.initialWriter }, packages);
+              const prefix = verifiedSource.view[source.prefix.position];
+              if (!prefix || prefix.headerHash !== source.prefix.headerHash || prefix.header.commitment !== source.prefix.commitment) throw new Error('source_binding_mismatch');
+              if (depth >= 4) throw new Error('scope: proof nesting bound');
+              const releaseState = replayScopeView(verifiedSource.view, source.genesis, packages, depth + 1, r);
               const releaseVerdict = releaseState.verdicts[item.release];
               if (!releaseVerdict?.authorized) throw new Error('unauthorized_release');
               if (!releaseVerdict.effective) throw new Error('ineffective_release');
@@ -209,7 +223,8 @@ export function replayScope(proof: PublicProof, packages: Record<string, Package
         else { state.inspection.result = p.result; result = good(); }
       } else if (event.kind === SCOPE_KINDS.exercise) {
         const right = state.rights[p.right as RightName];
-        if (!right) result = bad('unowned_right');
+        if (p.right === 'R_sell') result = bad('invalid_right_operation');
+        else if (!right) result = bad('unowned_right');
         else if (right.status === 'released') result = bad('released_right');
         else if (right.status === 'dormant') result = bad('dormant_right');
         else if (right.status === 'spent') result = bad('spent_right');
@@ -227,7 +242,7 @@ export function replayScope(proof: PublicProof, packages: Record<string, Package
   }
   return snapshot(state);
 }
-function exportFrom(state: ScopeState, proof: PublicProof, prefix: number, names: RightName[], packages: Record<string, PackageDescriptor>): SourceExport {
+function exportFrom(state: ScopeState, view: ViewEntry[], prefix: number, names: RightName[], packages: Record<string, PackageDescriptor>): SourceExport {
   const rightList = names.map(name => {
     const right = state.rights[name];
     if (!right || right.status !== 'live') throw new Error('unowned_right');
@@ -237,32 +252,37 @@ function exportFrom(state: ScopeState, proof: PublicProof, prefix: number, names
   let factPositions: number[];
   if (state.setup.role === 'sale' && state.sale.accepted_offer && state.sale.winner) {
     facts = { accepted_offer: state.sale.accepted_offer, winner: state.sale.winner };
-    const { interpreted } = verifyPublicProof({ ...proof, frontier: prefix, positions: proof.positions.slice(0, prefix + 1) }, { genesis: proof.genesis, initialWriter: proof.initialWriter, frontier: prefix }, packages);
+    const interpreted = interpretView('scope-evidence-reader', view, view.length - 1, packages, prefix);
+    if (interpreted.kind !== 'interpreted') throw new Error('scope: source semantics unavailable');
     const sale = interpreted.state.models.sale as unknown as SaleState;
     factPositions = [sale.offers.find(o => o.id === sale.accepted!.id)!.position, sale.accepted!.position];
   } else if (state.setup.role === 'delivery') { facts = { ...state.facts }; factPositions = [0]; }
   else throw new Error('no_exportable_facts');
-  const entry = proof.positions[prefix]!;
-  const { interpreted } = verifyPublicProof({ ...proof, frontier: prefix, positions: proof.positions.slice(0, prefix + 1) }, { genesis: proof.genesis, initialWriter: proof.initialWriter, frontier: prefix }, packages);
-  return identity({ genesis: proof.genesis, initialWriter: proof.initialWriter, prefix: { position: prefix, headerHash: interpreted.state.verdicts.length ? viewHash(entry.header) : '', commitment: entry.header.commitment }, rights: rightList, facts, factPositions,
+  const entry = view[prefix]!;
+    const interpreted = interpretView('scope-evidence-reader', view, view.length - 1, packages, prefix);
+    if (interpreted.kind !== 'interpreted') throw new Error('scope: source semantics unavailable');
+  return identity({ genesis: state.genesis, initialWriter: ((view[0]!.event!.payload as { sequencing: { writer: string } }).sequencing.writer), prefix: { position: prefix, headerHash: viewHash(entry.header), commitment: entry.header.commitment }, rights: rightList, facts, factPositions,
     dependencies: { implementation: scopeImplementationId(), packages: interpreted.state.env.packages.map(p => p.id).sort() } });
 }
 import { headerHash as viewHash } from './codec.ts';
 export class ScopeJournal {
   readonly journal: Journal;
   readonly packages: Record<string, PackageDescriptor>;
-  constructor(journal: Journal, packages: Record<string, PackageDescriptor>) {
+  private readonly writerKey: KeyObject;
+  constructor(journal: Journal, packages: Record<string, PackageDescriptor>, writerKey: KeyObject) {
     if (!scopeSetup(journal.context.entries[0]!.event)) throw new Error('scope: profile required');
-    this.journal = journal; this.packages = packages;
+    this.journal = journal; this.packages = packages; this.writerKey = writerKey;
   }
-  static create(opts: JournalOptions, genesis: ActorEnvelope | string, origins: (ActorEnvelope | string)[] = []): ScopeJournal { return new ScopeJournal(Journal.create(opts, genesis, origins), opts.packages); }
-  static open(opts: JournalOptions): ScopeJournal { return new ScopeJournal(Journal.open(opts), opts.packages); }
+  static create(opts: JournalOptions, genesis: ActorEnvelope | string, origins: (ActorEnvelope | string)[] = []): ScopeJournal { return new ScopeJournal(Journal.create(opts, genesis, origins), opts.packages, opts.writerKey); }
+  static open(opts: JournalOptions): ScopeJournal { return new ScopeJournal(Journal.open(opts), opts.packages, opts.writerKey); }
   get state(): ScopeState {
-    const state = replayScope(publicProof(this.journal), this.packages);
+    const state = replayScopeView(this.fullView(), this.journal.context.genesisId, this.packages);
     const inspection = this.journal.context.state.models.inspection as unknown as InspectionState | undefined;
     return snapshot({ ...state, inspection: { ...state.inspection, requested: (inspection?.requests.length ?? 0) > 0 } });
   }
-  export(names: RightName[]): SourceExport { const proof = publicProof(this.journal); return exportFrom(replayScope(proof, this.packages), proof, proof.frontier, names, this.packages); }
+  proof(frontier = this.journal.context.head): PublicProof { return publicProof(this.journal, frontier, this.writerKey); }
+  private fullView(): ViewEntry[] { return this.journal.context.entries.map(entry => ({ position: entry.position, event: entry.event, header: entry.header, headerHash: entry.headerHash, committed: entry.committed, via: 'audience' })); }
+  export(names: RightName[], frontier = this.journal.context.head): SourceExport { const view = this.fullView().slice(0, frontier + 1); return exportFrom(replayScopeView(view, this.journal.context.genesisId, this.packages), view, frontier, names, this.packages); }
   submit(input: ActorEnvelope | string, credential?: TransportCredential): (Receipt & { verdict?: Verdict; controlVerdict?: Verdict }) | Refusal {
     const result = this.journal.submit(input, credential);
     if ('refused' in result || result.controlVerdict) return result;

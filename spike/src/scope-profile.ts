@@ -10,6 +10,7 @@ export const SCOPE_KINDS = {
   importExport: SCOPE_NS + 'import-export', recover: SCOPE_NS + 'recover',
 } as const;
 export const TRANSFORM = 'copy-union-reject-duplicates-and-buyer-mismatch';
+export const JOIN_POLICY_ID = scopeId({ profile: SCOPE_PROFILE, transformation: TRANSFORM, requiredRights: ['R_fulfil', 'R_deliver'], buyerMatchesWinner: true, dormantUntilAllReleases: true });
 export function scopeId(value: unknown): string { return 'sha256:' + createHash('sha256').update(canonicalize(value)).digest('hex'); }
 let implementation: string | undefined;
 export function scopeImplementationId(): string {

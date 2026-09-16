@@ -238,3 +238,90 @@ kind names; verification alone cannot prove that a server supplied every
 required spine opening. O5 separately tests an independent verifier against
 its declared complete-control-input contract. O3 does not count its own
 transition function as independent evidence of invariant 19.
+
+## O4: public-proof completeness
+
+O4 selects `dap.fixture.scope/1` in genesis. This explicitly adds founding
+participants for the Inspection, Delivery and Fulfilment fixture contexts.
+The founders are authenticated by genesis, validated by the scope profile,
+and used by live and cold foundation admission, member audiences and
+participant observations. Founding participation creates no transferred
+right: F's declared rights remain dormant until the first effective activation.
+S retains its original single founder and invitation trace. The profile and
+its implementation content identity are pinned in every scope genesis.
+
+A source serving party now performs one function beyond pure sequencing:
+it reads each body's kind and assigned audience and certifies a complete
+public projection. F's genesis pins each source genesis, initial writer,
+export prefix and the scope implementation, which pins the named opening
+rule. F trusts the source writer for this completeness claim, never for
+release authorization or effect. This is a trusted-writer fixture extension,
+not a production proof of completeness. Provenance: decisions
+`00c92c297bdfd16aa9d9f9d6bba1406c61dcb85b`,
+`ca04cc02027b9070bb60e3852ac19e21ae7931f4` and
+`42ffb3413ded6c33fb39d25296cd04ce0f005d6a` in the dap workroom.
+
+The rule is `dap.fixture.scope-public-openings/1`, whose canonical declaration
+and content id are exported as `PUBLIC_PROOF_RULE` and
+`PUBLIC_PROOF_RULE_ID` by `src/scope-proof.ts`. It opens exactly these kinds:
+
+- dap genesis, accept_invite, grant, revoke, attach, close, scope.release,
+  scope.activate, admit, seq.request, seq.seal and seq.assign;
+- Sale listing, offer, withdraw, accept and close;
+- the four Scope kinds result, exercise, import-export and recover.
+
+For every position through the frontier, a listed kind must be opened and
+its assigned audience must be spine or members. A narrower audience makes
+the producer refuse certification. This includes an attach ceiling and an
+unauthorized attempt assigned only to its actor. Every other position is
+hidden. `dap.disclose` is excluded because it can carry private bodies;
+`dap.observe` is excluded because observations are not release or grant
+inputs in this fixed scope policy. No wildcard kind admission applies.
+Opened bodies recursively reject `amount`, `acceptedAmount`, `counter`,
+`terms` and `offer_terms`, including nested signed-envelope payloads.
+
+A packet has exactly `genesis`, `initialWriter`, `frontier`, `positions` and
+`certificate`. Each dense position has `header` and optionally `committed`
+(the original signed envelope bytes). The certificate has exactly `body`,
+`signer` and `sig`. Its signed body is exactly:
+
+```
+{type:'dap.fixture.public-proof-completeness/1', rule, genesis, frontier, proof_hash}
+```
+
+`rule` is the rule's content id. `proof_hash` is SHA-256 of the exact canonical
+packet excluding only `certificate`; signing uses Ed25519 over canonical
+body bytes through `codec.ts`. Extra fields are refused, and private-field
+checks run before hashing. No certificate can recursively hash itself.
+The signer must be the key that verified the frontier header's `seq_sig` in
+the chain from the pinned genesis: W0 through the assignment at H+2, W1 from
+H+3. A later valid frontier produces genuinely different proof material.
+
+F takes source genesis and export prefix p from its own genesis transition.
+The release must be r=p+1 and the certified frontier must be at least r.
+Effect is independently replayed only through r; a later certificate is
+never used to answer a current-state question. Verification checks strict
+shapes, header/control chains, actor signatures, the certificate signature
+and rule id, dependency pauses, grants, actual source models and the release
+operation. A receipt alone cannot establish release. Scope's local state
+fold uses its full journal and remains inspectable when certification is
+refused. Scope verdicts supplement the legacy foundation's placeholder
+scope verdicts; O4 clients use `ScopeJournal` for these operations.
+
+Activation explicitly discloses the source spine and member authority
+bodies to every F reader. For the fixture that includes Alice, Bob and Kim;
+Carol's offer stub and source participation reach Kim, who was not an S
+member. These are disclosures under the Sale budget's existing
+subject-to-disclosure clause. Private amounts, counters, terms and the
+private Inspection request are never included. This is broader disclosure
+of public source membership data, not an unchanged source recipient set.
+
+A dishonest writer can omit an authority body and sign an incomplete
+projection, or tailor projections to recipients. The destination cannot
+detect that completeness lie from headers that deliberately reveal no
+kind. Source members can recompute the rule and retain both signed packets
+as transferable evidence. Retired writer keys can certify their historical
+prefixes; source forks and database copies remain possible. None of these
+limits permits the destination to skip independent authorization or effect
+verification. Explicit hostile fixtures may create such signed alternate
+branches, but the honest producer continues to refuse narrow audiences.
