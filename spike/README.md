@@ -125,7 +125,9 @@ What it contains:
     `dependency_missing`; an attach the sequencer resolved pauses with
     `package_unavailable` until the viewer's client has its package, and
     one the sequencer could not resolve (no `requires` in its header) is
-    judged; an event or attach whose evidence is all visible is judged,
+    an ineffective attempt for every judge, whatever their client can
+    fetch then or later, enforced by the common fold from the header; an
+    event or attach whose evidence is all visible is judged,
     and its verdict, effective, `stale_binding` or a refused attach, is
     the genuine one.
   The chain closes by induction: a visible requirement was judged when

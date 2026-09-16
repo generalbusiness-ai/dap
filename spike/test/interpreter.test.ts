@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import { checkContext, observeInterpreted } from '../src/checker.ts';
 import { K } from '../src/foundation.ts';
 import { interpretCached, interpretView } from '../src/interpret.ts';
-import { oracleObserve } from '../src/oracle.ts';
+import { foldPrefix, oracleObserve } from '../src/oracle.ts';
 import { SALE } from '../fixtures/sale.ts';
 import { DISCUSSION, discussionPackage } from '../fixtures/discussion.ts';
 import { ALICE, ALICE_CAPS, BOB, CAROL, accept, invite, pkg, saleContext } from './helpers.ts';
@@ -580,4 +580,39 @@ test('M2: a package name inherited from Object.prototype is not a package: recor
   const r = interpretView(BOB, ctx.view(ALICE, 5), 5, ctx.packages);
   assert.equal(r.kind, 'interpreted');
   assert.deepEqual(checkContext(ctx, { participants: [ALICE] }), []);
+});
+
+// ----- checker's eighth V2 review (workroom report 4a08a61a), N1 -----
+
+test('N1: an attach the sequencer could not resolve stays ineffective for every judge, whatever package a client has or fetches later; a new attach succeeds once the sequencer has it', () => {
+  const late = pkg('late', { 'com.example.late.tick': ['late'] });
+  const ctx = Context.create({ creator: ALICE, packages: {}, bindings: [], grants: [{ principal: ALICE, capabilities: ALICE_CAPS }] });
+  const ev = ctx.intent(ALICE, K.attach, { package: late.id });
+  const r1 = ctx.submit(ev, ctx.credentialFor(ALICE)); // 1: the sequencer has no such package
+  assert.ok(!('refused' in r1) && r1.verdict?.reason === 'package_unavailable');
+  assert.equal(r1.header.requires, undefined);
+  // a client that happens to have the package judges the same event the same way
+  const withLate = interpretView(ALICE, ctx.view(ALICE, 1), 1, { [late.id]: late });
+  assert.equal(withLate.kind, 'interpreted');
+  if (withLate.kind === 'interpreted') {
+    assert.equal(withLate.outcomes[1]?.reason, 'package_unavailable');
+    assert.equal(withLate.state.env.kinds['com.example.late.tick'], undefined);
+  }
+  assert.deepEqual(checkContext(ctx, { participants: [ALICE], available: () => ({ [late.id]: late }) }), []);
+  // the package arrives at the sequencer later: a cold replay of the same prefix agrees with the live verdict
+  ctx.packages[late.id] = late;
+  assert.equal(foldPrefix(ctx, 1).verdicts[1]?.reason, 'package_unavailable');
+  assert.deepEqual(checkContext(ctx, { participants: [ALICE] }), []);
+  // the exact retry keeps the original result; a new attach succeeds now
+  const again = ctx.submit(ev, ctx.credentialFor(ALICE));
+  assert.ok(!('refused' in again) && again.replay && again.verdict?.reason === 'package_unavailable');
+  const r2 = ctx.act(ALICE, K.attach, { package: late.id }); // 2
+  assert.ok(!('refused' in r2) && r2.verdict?.effective);
+  assert.deepEqual(r2.header.requires, []);
+  assert.ok(ctx.state.env.kinds['com.example.late.tick']);
+  // and a client without the package pauses on the resolved attach, then resumes to equality
+  const without = interpretView(ALICE, ctx.view(ALICE, 2), 2, {});
+  assert.equal(without.kind, 'paused');
+  if (without.kind === 'paused') assert.equal(without.reason, 'package_unavailable');
+  assert.deepEqual(checkContext(ctx, { participants: [ALICE], available: () => ({}) }), []);
 });

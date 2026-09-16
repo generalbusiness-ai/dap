@@ -435,6 +435,10 @@ function foldSystem(state: FoundationState, entry: Entry, packages: Record<strin
   switch (ev.kind) {
     case K.attach: {
       const p = ev.payload as unknown as AttachPayload;
+      // The header records whether the sequencer resolved the package: an attach it could not
+      // resolve is an ineffective attempt for every judge, whatever their own client can fetch
+      // now or later, so the same event never changes its verdict.
+      if (entry.header.requires === undefined) return { known: true, authorized: true, effective: false, reason: 'package_unavailable' };
       const pkg = packageIn(packages, p.package);
       if (!pkg) return { known: true, authorized: true, effective: false, reason: 'package_unavailable' };
       const out = attachPackage(state.env, pkg, { resolution: p.resolution, position: pos, ...(p.audience ? { ceiling: [ev.actor, ...p.audience] } : {}) });
