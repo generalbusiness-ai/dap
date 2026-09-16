@@ -326,3 +326,21 @@ run. Only evidence and report updates follow it. The source includes O4's
 frozen `e8ccb2e` inputs; O4's own concurrent run and upstream independent
 acceptance must be recorded separately. The four Club negatives are untouched
 but were not selected by this two-test O6 command.
+
+The final evidence wrapper
+`edacc32db1495504d10ae7a92f02af272e49e9f2` is now integrated. It contains
+O4 run 7 at `e8ccb2ef`: 124/124 focused checks and typecheck pass, with 80
+actual observation files. Each backend records 20 healthy boundaries,
+29 adverse branches and 209 materialized-genesis variants; the historical
+55/100/143 question matrices pass under the newly signed `/3` contexts.
+The duplicate-release-commitment fault is refused before a fresh honest
+proof succeeds. No full suite or campaign was repeated for this O4 run.
+
+The same wrapper retains final aggregate
+`936acce94e5cd024b0164fc6cd2af027f611545e`, its source-separated full/focused
+checks and the independent H2 benchmark. All 83 O4 runtime/test/fixture/
+manifest files are byte-identical to `e8ccb2ef`, and O6's own fixture/test
+files remain unchanged. The merge adds only evidence and prose, so no
+runtime change requires another O6 run. Source `8c5598ff` remains the exact
+O6 measurement boundary; upstream independent acceptance is not inferred
+from these component passes.
