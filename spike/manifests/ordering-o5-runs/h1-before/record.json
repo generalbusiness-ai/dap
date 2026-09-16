@@ -1,0 +1,33 @@
+{
+  "reviewedSource": "1ba67c39062ddf44508b14c0716817cfa9735964",
+  "originalProbe": "/tmp/claude-501/-Users-hughpyle-play-dap/55890269-4b7b-4cda-8c2b-ab7134ad403a/scratchpad/o5-repros/relocate.ts",
+  "command": [
+    "node",
+    "/tmp/claude-501/-Users-hughpyle-play-dap/55890269-4b7b-4cda-8c2b-ab7134ad403a/scratchpad/o5-repros/relocate.ts"
+  ],
+  "exitCode": 1,
+  "retained": {
+    "relocate-import-path.txt": "6bd0d6952b8970cf83aa3ab082ffe7cfae25ed593868ab6106b04b18833ea9e1",
+    "relocate.ts": "137f52eb8e0fa9813086c6651596c95bd954e43ca0c6b390d4e34155d08d6835",
+    "relocate-import-path.ts": "a7d05519a7b605ff929a876d4c2a11a8f42cb42127c7156b760050f8710e45e5",
+    "control-proofs.json": "1f769221d23d648d521caf9cc1dbb19e71b55e89fdf476abdb67c963b4d257e7",
+    "relocate.txt": "5c79e7bc8c26bc04608ee555f1b284b2543806fb7b10d5117619f8c88806bae2",
+    "make-control-proofs.ts": "60a6ee1997b16a6e352f1752c845d419c92ab35ea1112e076e2ea4f6e834f5ce",
+    "checker-relocate.out": "6bd0d6952b8970cf83aa3ab082ffe7cfae25ed593868ab6106b04b18833ea9e1"
+  },
+  "originalAttempt": "relocate.txt is a module-path setup failure; not reproduction evidence.",
+  "pathAdapted": {
+    "source": "1ba67c39062ddf44508b14c0716817cfa9735964",
+    "scratch": "/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/dap-o5-h1-before.yw9rirb4",
+    "change": "Only SRC import directory changed; four modules exported byte-for-byte with git show.",
+    "exitCode": 0,
+    "modules": {
+      "codec.ts": "39e2060dd76bf8f6ec2e6378be79e663a1b983671277d927257b8f7b2a10d96f",
+      "control-verifier.ts": "a342e6352a4e0ca35377dda196389be14c6438a264d6c220702e779d4e22043a",
+      "types.ts": "3539141c8f736192919960302ccdc36b48a34fb1b4043915fb5ff559ef998f36",
+      "canon.ts": "cbc7f68be9a6c49eb5b4fd6403d285ca634120ebde5c9592d91a516fa4956bdd"
+    },
+    "output": "ACCEPT seal intended after position 2 accepted at position 5 {\"epoch\":1,\"sealed\":false,\"head\":6,\"assignments\":[0,7],\"dupCommitmentPositions\":[2,4]}\n"
+  },
+  "originalCheckerOutput": "/tmp/claude-501/-Users-hughpyle-play-dap/55890269-4b7b-4cda-8c2b-ab7134ad403a/scratchpad/o5-repros/relocate.out"
+}

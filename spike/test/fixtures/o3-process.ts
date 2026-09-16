@@ -1,0 +1,10 @@
+import { readFileSync } from 'node:fs';
+import { Journal } from '../../src/journal.ts';
+import { sqlite, keys, packages } from './o3-fixture.ts';
+const [path, input, fault] = process.argv.slice(2);
+const backend = sqlite(path!, point => { if (point === fault) { process.stdout.write('kill:' + point); process.kill(process.pid, 'SIGKILL'); } });
+const journal = Journal.open({ backend, writerKey: keys.writer, packages });
+const result = journal.submit(readFileSync(input!, 'utf8'));
+if ('refused' in result) throw new Error(JSON.stringify(result));
+process.stdout.write('kill:after-receipt');
+process.kill(process.pid, 'SIGKILL');

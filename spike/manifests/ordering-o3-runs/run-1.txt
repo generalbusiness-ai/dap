@@ -1,0 +1,116 @@
+✔ test keys reproduce the independent RFC 8032 Ed25519 vector (1.345625ms)
+✔ fixed vectors pin each signed object, exact UTF-8 bytes, identity and signature (6.4035ms)
+✔ fixed rejection vector: tampered body (0.460208ms)
+✔ fixed rejection vector: actor signs noncanonical bytes (0.533292ms)
+✔ fixed rejection vector: wrong prev, correctly signed (0.106334ms)
+✔ fixed rejection vector: wrong commitment, correctly signed (0.251458ms)
+✔ fixed rejection vector: unassigned sequencer key (0.168708ms)
+✔ fixed rejection vector: sequencer signs full header bytes (0.177291ms)
+✔ canonical encoding supports RFC 8785 numbers, UTF-16 ordering and unnormalized strings (0.166333ms)
+✔ canonical encoding rejects lossy JS data, invalid Unicode and noncanonical byte inputs (1.09625ms)
+✔ principals and signatures have one exact encoding and must match their signing key (0.92925ms)
+✔ body profile validates required and forbidden fields without interpreting the payload (1.101208ms)
+✔ header-only verification authenticates disclosure evidence and exposes no private fields (1.379625ms)
+✔ wire verification enforces genesis identity, destinations, origin opt-in and evidence placement (4.782292ms)
+✔ wire framing is canonical and decoded entries are independent frozen snapshots (0.361ms)
+✔ V1 Sale visibility trace through verified bytes and memory (142.61425ms)
+✔ V1 Sale visibility trace through verified bytes and sqlite (171.204834ms)
+✔ signed stable facts precede retry and admission; raw Context cannot bypass proof (7.258167ms)
+✔ exclusive SQLite owner excludes a second OS process and releases on close (142.058083ms)
+✔ SIGKILL at before-write preserves one atomic append boundary (99.901333ms)
+✔ SIGKILL at after-entry preserves one atomic append boundary (88.750708ms)
+✔ SIGKILL at after-head preserves one atomic append boundary (85.6925ms)
+✔ SIGKILL at after-retry preserves one atomic append boundary (83.287666ms)
+✔ SIGKILL at after-consumption preserves one atomic append boundary (92.96625ms)
+✔ SIGKILL at after-outbox preserves one atomic append boundary (92.280208ms)
+✔ SIGKILL at before-commit preserves one atomic append boundary (84.22625ms)
+✔ SIGKILL at after-commit preserves one atomic append boundary (82.955584ms)
+✔ outbox resumes saved bytes after crash before notification and after delivery before ack (65.553791ms)
+✔ restart rejects tampered stored body despite unchanged signed wire bytes (5.834917ms)
+✔ signed invitations and origin duplicate checks accept finite fractional JCS numbers (9.684792ms)
+✔ outbox awaits asynchronous confirmation and retains failed publications (9.305333ms)
+✔ restart rejects SQL row positions that disagree with signed entry positions (4.674708ms)
+✔ journal pins the signed genesis profile and writer assignment to its backend (4.584667ms)
+✔ V1 signed invitation issued before revocation remains redeemable after SQLite restart (17.48025ms)
+✔ V1 signed unauthorized and unissued invitations cannot admit another participant (21.003541ms)
+✔ initialization SIGKILL at after-entry retains all or none of genesis and origins (71.700459ms)
+✔ initialization SIGKILL at after-commit retains all or none of genesis and origins (67.554542ms)
+✔ uncertain committed response requires reopen before another action (8.724542ms)
+✖ recipient view verification checks original actor proofs and rejects hidden envelope leakage (12.164ms)
+✔ one live Journal owns each backend: revoked authority cannot be admitted through a stale facade (19.336875ms)
+✔ O3 same-context handover preserves prefix, dense positions, retry results, control verdicts and publication on memory (56.44075ms)
+✔ O3 same-context handover preserves prefix, dense positions, retry results, control verdicts and publication on sqlite (61.825625ms)
+✔ O3 SIGKILL during seal at before-commit retains the committed control boundary (103.722667ms)
+✔ O3 SIGKILL during seal at after-commit retains the committed control boundary (90.35775ms)
+✔ O3 SIGKILL during seal at after-receipt retains the committed control boundary (92.363041ms)
+✔ O3 SIGKILL during assign at before-commit retains the committed control boundary (93.243542ms)
+✔ O3 SIGKILL during assign at after-commit retains the committed control boundary (101.734625ms)
+✔ O3 SIGKILL during assign at after-receipt retains the committed control boundary (91.501875ms)
+✔ O3 independent nominations and two signed assignments cannot install two successors (30.464459ms)
+✔ O3 rejects forged and wrong authority, stale or swapped predecessor hashes, skipped seals and malformed nominations without an append (34.41625ms)
+✔ O3 cold authentication rejects a correctly signed control with wrong payload predecessor or wrong header predecessor (21.8835ms)
+✔ manifest identity binds the prose and executable source, independently recomputed (0.941625ms)
+ℹ ORDERING_LIFECYCLE_MANIFEST_ID sha256:63be83e60036a5936569c478da7a8c7be6b8ab1c744d59ef3296b7d6182b5a9d
+✔ every healthy boundary states all heads, writers, right statuses and exact active owners (2.117167ms)
+✔ join boundaries have two releases, dormant initialization and one activation followed by progress (0.349875ms)
+✔ all adverse cases have resolvable branches, full safe observations and exact reason coverage (1.89275ms)
+✔ restarts, alternative valid proof material and timeouts cannot duplicate or revive authority (0.191458ms)
+✔ public exports are exact, source-linked and exclude the private accepted amount (0.167583ms)
+✔ changed-genesis enumeration covers every field, container, removal and added field (2.277792ms)
+✔ independent safety checks detect double ownership, premature activation and import duplication (0.2405ms)
+✔ future observation comparison rejects changed, missing and additional state, including unsafe mutations (0.233625ms)
+✔ replay obligations preserve pre-attach outcomes, local import timing and writer retry identity (0.15625ms)
+✔ O2 concurrent clients: barrier-six-forward (398.61175ms)
+✔ O2 concurrent clients: barrier-six-reverse (387.340708ms)
+✔ O2 concurrent clients: barrier-six-rotated (375.5825ms)
+✔ O2 invitation lost-reply schedule: before-append (81.366833ms)
+✔ O2 invitation lost-reply schedule: after-consumption (82.165834ms)
+✔ O2 invitation lost-reply schedule: after-commit (82.138125ms)
+✔ O2 invitation lost-reply schedule: after-reply-before-notification (83.115042ms)
+✔ O2 publication SIGKILL replays the exact saved wire entry without a new action (142.869708ms)
+✔ O2 removed-participant admission fixture recovers a lost reply after authenticated restart (78.91275ms)
+ℹ tests 70
+ℹ suites 0
+ℹ pass 69
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1791.260875
+
+✖ failing tests:
+
+test at test/journal.test.ts:268:1
+✖ recipient view verification checks original actor proofs and rejects hidden envelope leakage (12.164ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /wrong writer/. Input:
+  
+  'Error: Journal: wrong initial writer'
+  
+      at TestContext.<anonymous> (file:///private/tmp/dap-o3-handover/spike/test/journal.test.ts:286:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: Journal: wrong initial writer
+        at declared (file:///private/tmp/dap-o3-handover/spike/src/journal.ts:35:45)
+        at verifyJournalView (file:///private/tmp/dap-o3-handover/spike/src/journal.ts:140:19)
+        at file:///private/tmp/dap-o3-handover/spike/test/journal.test.ts:286:23
+        at getActual (node:assert:580:5)
+        at strict.throws (node:assert:728:24)
+        at TestContext.<anonymous> (file:///private/tmp/dap-o3-handover/spike/test/journal.test.ts:286:10)
+        at Test.runInAsyncScope (node:async_hooks:226:14)
+        at Test.run (node:internal/test_runner/test:1402:25)
+        at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+        at Test.postRun (node:internal/test_runner/test:1542:19),
+    expected: /wrong writer/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+> dap-spike@0.0.1 typecheck
+> tsc -p tsconfig.json
+

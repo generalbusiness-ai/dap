@@ -1,0 +1,94 @@
+✔ test keys reproduce the independent RFC 8032 Ed25519 vector (1.920542ms)
+✔ fixed vectors pin each signed object, exact UTF-8 bytes, identity and signature (7.269292ms)
+✔ fixed rejection vector: tampered body (0.833625ms)
+✔ fixed rejection vector: actor signs noncanonical bytes (0.760833ms)
+✔ fixed rejection vector: wrong prev, correctly signed (0.177583ms)
+✔ fixed rejection vector: wrong commitment, correctly signed (0.3835ms)
+✔ fixed rejection vector: unassigned sequencer key (0.333708ms)
+✔ fixed rejection vector: sequencer signs full header bytes (0.383083ms)
+✔ canonical encoding supports RFC 8785 numbers, UTF-16 ordering and unnormalized strings (0.264666ms)
+✔ canonical encoding rejects lossy JS data, invalid Unicode and noncanonical byte inputs (1.527708ms)
+✔ principals and signatures have one exact encoding and must match their signing key (0.778208ms)
+✔ body profile validates required and forbidden fields without interpreting the payload (0.891ms)
+✔ header-only verification authenticates disclosure evidence and exposes no private fields (1.541ms)
+✔ wire verification enforces genesis identity, destinations, origin opt-in and evidence placement (4.4175ms)
+✔ wire framing is canonical and decoded entries are independent frozen snapshots (0.531292ms)
+✔ V1 Sale visibility trace through verified bytes and memory (160.337333ms)
+✔ V1 Sale visibility trace through verified bytes and sqlite (182.896375ms)
+✔ signed stable facts precede retry and admission; raw Context cannot bypass proof (8.232958ms)
+✔ exclusive SQLite owner excludes a second OS process and releases on close (150.3935ms)
+✔ SIGKILL at before-write preserves one atomic append boundary (113.264709ms)
+✔ SIGKILL at after-entry preserves one atomic append boundary (106.098125ms)
+✔ SIGKILL at after-head preserves one atomic append boundary (96.562584ms)
+✔ SIGKILL at after-retry preserves one atomic append boundary (99.960125ms)
+✔ SIGKILL at after-consumption preserves one atomic append boundary (107.2095ms)
+✔ SIGKILL at after-outbox preserves one atomic append boundary (104.966917ms)
+✔ SIGKILL at before-commit preserves one atomic append boundary (97.580667ms)
+✔ SIGKILL at after-commit preserves one atomic append boundary (95.807833ms)
+✔ outbox resumes saved bytes after crash before notification and after delivery before ack (75.0085ms)
+✔ restart rejects tampered stored body despite unchanged signed wire bytes (6.546708ms)
+✔ signed invitations and origin duplicate checks accept finite fractional JCS numbers (10.795375ms)
+✔ outbox awaits asynchronous confirmation and retains failed publications (10.981917ms)
+✔ restart rejects SQL row positions that disagree with signed entry positions (6.054416ms)
+✔ journal pins the signed genesis profile and writer assignment to its backend (4.994334ms)
+✔ V1 signed invitation issued before revocation remains redeemable after SQLite restart (21.31225ms)
+✔ V1 signed unauthorized and unissued invitations cannot admit another participant (23.107208ms)
+✔ initialization SIGKILL at after-entry retains all or none of genesis and origins (79.007709ms)
+✔ initialization SIGKILL at after-commit retains all or none of genesis and origins (75.165042ms)
+✔ uncertain committed response requires reopen before another action (9.709708ms)
+✔ recipient view verification checks original actor proofs and rejects hidden envelope leakage (15.101917ms)
+✔ one live Journal owns each backend: revoked authority cannot be admitted through a stale facade (21.374042ms)
+✔ O3 same-context handover preserves prefix, dense positions, retry results, control verdicts and publication on memory (62.975584ms)
+✔ O3 same-context handover preserves prefix, dense positions, retry results, control verdicts and publication on sqlite (67.396167ms)
+✔ O3 SIGKILL during seal at before-commit retains the committed control boundary (120.858667ms)
+✔ O3 SIGKILL during seal at after-commit retains the committed control boundary (98.990542ms)
+✔ O3 SIGKILL during seal at after-receipt retains the committed control boundary (99.642709ms)
+✔ O3 SIGKILL during assign at before-commit retains the committed control boundary (105.161917ms)
+✔ O3 SIGKILL during assign at after-commit retains the committed control boundary (112.032417ms)
+✔ O3 SIGKILL during assign at after-receipt retains the committed control boundary (106.809333ms)
+✔ O3 independent nominations and two signed assignments cannot install two successors (36.328375ms)
+✔ O3 rejects forged and wrong authority, stale or swapped predecessor hashes, skipped seals and malformed nominations without an append (40.195958ms)
+✔ O3 cold authentication rejects a correctly signed control with wrong payload predecessor or wrong header predecessor (24.754459ms)
+✔ O3 v2 pins distinct writer/control keys and exact sequencing fields before any durable initialization (9.278292ms)
+✔ manifest identity binds the prose and executable source, independently recomputed (0.742792ms)
+ℹ ORDERING_LIFECYCLE_MANIFEST_ID sha256:63be83e60036a5936569c478da7a8c7be6b8ab1c744d59ef3296b7d6182b5a9d
+✔ every healthy boundary states all heads, writers, right statuses and exact active owners (4.81825ms)
+✔ join boundaries have two releases, dormant initialization and one activation followed by progress (0.255583ms)
+✔ all adverse cases have resolvable branches, full safe observations and exact reason coverage (1.772042ms)
+✔ restarts, alternative valid proof material and timeouts cannot duplicate or revive authority (0.163666ms)
+✔ public exports are exact, source-linked and exclude the private accepted amount (0.1405ms)
+✔ changed-genesis enumeration covers every field, container, removal and added field (2.496834ms)
+✔ independent safety checks detect double ownership, premature activation and import duplication (0.266042ms)
+✔ future observation comparison rejects changed, missing and additional state, including unsafe mutations (0.28ms)
+✔ replay obligations preserve pre-attach outcomes, local import timing and writer retry identity (0.153375ms)
+✔ O2 concurrent clients: barrier-six-forward (426.744167ms)
+✔ O2 concurrent clients: barrier-six-reverse (433.379042ms)
+✔ O2 concurrent clients: barrier-six-rotated (429.294875ms)
+✔ O2 invitation lost-reply schedule: before-append (96.360542ms)
+✔ O2 invitation lost-reply schedule: after-consumption (95.526541ms)
+✔ O2 invitation lost-reply schedule: after-commit (89.34775ms)
+✔ O2 invitation lost-reply schedule: after-reply-before-notification (90.89225ms)
+✔ O2 publication SIGKILL replays the exact saved wire entry without a new action (165.388584ms)
+✔ O2 removed-participant admission fixture recovers a lost reply after authenticated restart (93.005333ms)
+ℹ tests 71
+ℹ suites 0
+ℹ pass 71
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2007.492084
+
+> dap-spike@0.0.1 typecheck
+> tsc -p tsconfig.json
+
+test/ordering-handover.test.ts(186,97): error TS2345: Argument of type '{ payload: { sequencing: { readonly profile: "dap.fixture.single-writer/2"; readonly writer: string; readonly control: string; readonly epoch?: undefined; } | { readonly profile: "dap.fixture.single-writer/2"; readonly writer: string; readonly control: string; readonly epoch: 0; }; }; ... 6 more ...; expected_activa...' is not assignable to parameter of type 'EventBody'.
+  Types of property 'payload' are incompatible.
+    Type '{ sequencing: { readonly profile: "dap.fixture.single-writer/2"; readonly writer: string; readonly control: string; readonly epoch?: undefined; } | { readonly profile: "dap.fixture.single-writer/2"; readonly writer: string; readonly control: string; readonly epoch: 0; }; }' is not assignable to type 'Json'.
+      Type '{ sequencing: { readonly profile: "dap.fixture.single-writer/2"; readonly writer: string; readonly control: string; readonly epoch?: undefined; } | { readonly profile: "dap.fixture.single-writer/2"; readonly writer: string; readonly control: string; readonly epoch: 0; }; }' is not assignable to type '{ [key: string]: Json; }'.
+        Property 'sequencing' is incompatible with index signature.
+          Type '{ readonly profile: "dap.fixture.single-writer/2"; readonly writer: string; readonly control: string; readonly epoch?: undefined; } | { readonly profile: "dap.fixture.single-writer/2"; readonly writer: string; readonly control: string; readonly epoch: 0; }' is not assignable to type 'Json'.
+            Type '{ readonly profile: "dap.fixture.single-writer/2"; readonly writer: string; readonly control: string; readonly epoch?: undefined; }' is not assignable to type 'Json'.
+              Type '{ readonly profile: "dap.fixture.single-writer/2"; readonly writer: string; readonly control: string; readonly epoch?: undefined; }' is not assignable to type '{ [key: string]: Json; }'.
+                Property 'epoch' is incompatible with index signature.
+                  Type 'undefined' is not assignable to type 'Json'.

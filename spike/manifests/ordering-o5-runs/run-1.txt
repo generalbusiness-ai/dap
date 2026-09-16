@@ -1,0 +1,102 @@
+✔ O5 spec proof: genesis-only (2.16475ms)
+✔ O5 spec proof: ordinary-payload-unavailable (0.605708ms)
+✔ O5 spec proof: two-client-nominations-have-no-authority (1.354834ms)
+✔ O5 spec proof: interrupted-after-seal (1.0815ms)
+✔ O5 spec proof: valid-handover (1.603333ms)
+✔ O5 spec proof: two-handovers (2.001917ms)
+✔ O5 spec proof: v1-fixed-writer (0.424ms)
+✔ O5 spec proof: v1-request-does-not-assign (0.580125ms)
+✔ O5 spec proof: v1-seal-cannot-change-profile (0.792167ms)
+✔ O5 spec proof: genesis-control-is-writer (0.224167ms)
+✔ O5 spec proof: unsupported-profile (0.147666ms)
+✔ O5 spec proof: wrong-genesis-pin (0.143583ms)
+✔ O5 spec proof: assign-without-seal (0.715375ms)
+✔ O5 spec proof: request-does-not-authorize-successor (0.786917ms)
+✔ O5 spec proof: retired-writer-continuation (1.360667ms)
+✔ O5 spec proof: successor-cannot-sign-assignment (0.97575ms)
+✔ O5 spec proof: writer-is-not-seal-authority (0.719709ms)
+✔ O5 spec proof: stranger-is-not-seal-authority (0.654875ms)
+✔ O5 spec proof: writer-is-not-assign-authority (1.152625ms)
+✔ O5 spec proof: successor-is-not-assign-authority (1.342833ms)
+✔ O5 spec proof: seal-predecessor-is-not-header-hash (0.664584ms)
+✔ O5 spec proof: assign-predecessor-is-not-header-hash (1.205583ms)
+✔ O5 spec proof: stale-assign-head (1.1675ms)
+✔ O5 spec proof: skipped-seal-epoch (0.639583ms)
+✔ O5 spec proof: skipped-assign-epoch (1.207792ms)
+✔ O5 spec proof: negative-epoch (0.638ms)
+✔ O5 spec proof: fractional-epoch (1.250208ms)
+✔ O5 spec proof: ordinary-after-seal (0.958834ms)
+✔ O5 spec proof: request-after-seal (1.31075ms)
+✔ O5 spec proof: seal-after-seal (1.348333ms)
+✔ O5 spec proof: second-competing-assignment (1.483458ms)
+✔ O5 spec proof: retired-key-cannot-be-revived (1.785125ms)
+✔ O5 spec proof: control-cannot-become-writer (1.341375ms)
+✔ O5 spec proof: unknown-control-kind (0.676417ms)
+✔ O5 spec proof: extra-control-payload-field (0.653667ms)
+✔ O5 spec proof: missing-control-payload-field (0.707667ms)
+✔ O5 spec proof: application-opening-is-not-accepted (0.643916ms)
+✔ O5 spec proof: wrong-prev-header-hash (0.397208ms)
+✔ O5 spec proof: skipped-position (0.338917ms)
+✔ O5 spec proof: receipt-retry-is-not-a-second-position (0.398625ms)
+✔ O5 spec proof: wrong-body-destination (0.698125ms)
+✔ O5 spec proof: forged-actor-signature (0.630042ms)
+✔ O5 spec proof: forged-writer-signature (0.391583ms)
+✔ O5 spec proof: missing-assign-opening-detected-after-seal (1.018375ms)
+✔ O5 spec proof: missing-controls-detected-at-successor-signature (1.020625ms)
+✔ O5 spec proof: opening-exposes-same-sealed-suffix (0.755084ms)
+✔ O5 spec proof: LIMIT-hidden-seal-and-old-writer-suffix (0.584833ms)
+✔ O5 compare: ordinary-signed-head-fork (1.290375ms)
+✔ O5 compare: competing-signed-assignments (2.68575ms)
+✔ O5 compare: same-history (2.930625ms)
+✔ O5 compare: one-history-is-prefix (2.240292ms)
+✔ O5 omission limit uses identical headers and cannot be mistaken for completeness proof (1.415292ms)
+✔ O5 proof boundary rejects unrelated inputs and does not mutate callers (3.439708ms)
+✖ O5 executes with packages, application payloads and grant folds unavailable (37.949875ms)
+ℹ tests 54
+ℹ suites 0
+ℹ pass 53
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 159.892459
+
+✖ failing tests:
+
+test at test/control-verifier.test.ts:63:1
+✖ O5 executes with packages, application payloads and grant folds unavailable (37.949875ms)
+  AssertionError [ERR_ASSERTION]: node:fs:3437
+          const targetStats = binding.stat(base, false, undefined, true);
+                                      ^
+  
+  Error: Access to this API has been restricted. Use --allow-fs-read to manage permissions.
+      at Object.realpathSync (node:fs:3437:37)
+      at toRealPath (node:internal/modules/helpers:70:13)
+      at Module._findPath (node:internal/modules/cjs/loader:855:22)
+      at resolveMainPath (node:internal/modules/run_main:35:21)
+      at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:146:20)
+      at node:internal/main/run_main_module:33:47 {
+    code: 'ERR_ACCESS_DENIED',
+    permission: 'FileSystemRead',
+    resource: '/var'
+  }
+  
+  Node.js v26.8.2
+  
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (file:///private/tmp/dap-o5-control-verifier/spike/test/control-verifier.test.ts:76:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

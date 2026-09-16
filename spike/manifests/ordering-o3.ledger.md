@@ -1,0 +1,212 @@
+# O3 planned handover evidence
+
+Request: `git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:5ac2d896497117bc9cae0ca5c8e9d6375d092de3`.
+
+The O3 experiment retains the O1/O2 durability and retry contract and adds a
+separate v2 profile. The expected sequence is H, retiring-writer seal at H+1,
+control-key assignment at H+2, successor entry at H+3. Payload predecessor
+links name envelope commitments; authenticated header predecessor links name
+header hashes. Existing v1 vectors and visibility model IDs are preserved.
+
+Before the measured run, the test cases require:
+
+- The same genesis, dense positions, immutable old prefix, invitation retry,
+  control verdicts on submit/retry/cold replay, and saved outbox publications
+  through handover on both memory and SQLite.
+- Actual child-process SIGKILL during both seal and assign at before-commit,
+  after-commit and after-receipt. Uncommitted control attempts leave no partial
+  state; committed controls recover the original receipt. After a seal, only
+  assignment can resume work.
+- Two ordinary nominations do not authorize either candidate. Two signed
+  assignments against one seal can install only one successor.
+- Refusal of forged envelopes, wrong signing authority, old or swapped
+  predecessor hashes, skipped seals, wrong epochs and malformed or reused
+  successor keys, without append/retry/outbox mutation.
+- Cold authentication rejects a cryptographically signed control payload
+  carrying the wrong predecessor, and rejects the wrong header predecessor.
+
+Runtime code and tests will be committed before the first measured execution.
+Results below will preserve any failures and identify every later repair.
+Before execution, the parent reconciled the design system-kind table with
+ordering §6: both seal and assign actor envelopes require the control key;
+the retiring writer appends both and signs their headers. This corrected the
+first implementation before any measured test run.
+
+## Limits
+
+This is one host and one authoritative SQLite file. It does not establish
+Byzantine fencing, replicated durability, automatic failover, fairness or
+freshness. It tests one control key, an unchanged profile, and new successor
+keys; a key cannot be reinstated. The F0 application fold does not decide
+ordering authority. O4 transfer execution and O5 independent verification
+remain separate tasks.
+
+## Run 1
+
+Source: `3cdd1f3bbbf02289ea0d7dc394dcca4fa3e22801`, including O2
+`b6d156163285c8eaab3d05766dd9b0de35fef79b` and final O1. The exact command was
+`node --test test/ordering-handover.test.ts test/ordering-retry.test.ts test/journal.test.ts test/codec.test.ts test/ordering-lifecycle.test.ts`,
+followed by `npm run typecheck`. Raw output:
+[run-1.txt](ordering-o3-runs/run-1.txt).
+
+Seventy tests executed: 69 passed, one failed. All 11 O3 tests passed, including
+all six child-process crashes. The existing recipient-view test expected the
+error text `wrong writer`; O3 had changed it to `wrong initial writer`. The
+underlying wrong-key rejection still occurred. Typecheck passed. The repair
+restores the old message substring while retaining the initial-assignment
+explanation. This is one compatibility wording repair and no protocol repair.
+
+Before the second run, the nomination test also checks a successor's open
+against the actual nominated context and its journal, rather than against an
+empty backend. Ordinary nominations still must not authorize it.
+
+## Run 2
+
+Source: `aae4051eae9b977d9b25f1a8d5e1966ddfe3bf23`. Commands: `npm test`,
+then `npm run typecheck`. Raw output:
+[run-2.txt](ordering-o3-runs/run-2.txt).
+
+The full integration run executed 200 tests: 199 passed, zero ordinary
+failures, and one executing/failing Club TODO retained from V5. All three
+200-seed campaigns passed: Sale, Booking and Club under their frozen
+manifests. This does not make the original Club admission policy pass.
+All 11 O3 tests passed; typecheck passed.
+
+After this run, O3 and O5 made the declared independent-key profile exact:
+reject identical genesis writer/control keys, assigning the control key as a
+writer, and extra v2 sequencing fields. Existing v1 metadata remains ignored
+for assignment as before. Tests now explicitly assert that the control key is
+not an application participant and holds no grants, while its valid controls
+succeed. A granted member and the retiring writer without the control key are
+refused. The nomination case checks the actual journal. These changes will
+receive a focused ordering regression run; the unchanged visibility campaigns
+will not be rerun solely for this schema validation tightening.
+
+## Run 3
+
+Source: `8756c233463e2fdf1428902e072e525aed3b6604`. The same five-file
+focused command as run 1 executed 71 tests: all passed, including 12 O3 tests.
+Typecheck failed in the newly added negative-genesis test: TypeScript inferred
+an optional `epoch: undefined` on a test-case union, incompatible with JSON.
+The preserved [run-3.txt](ordering-o3-runs/run-3.txt) contains the exact error.
+The repair gives that test-case array an explicit JSON-compatible dictionary
+type. It changes no runtime or test data. Total repairs so far: one error-text
+compatibility repair and one test type annotation, with no failed protocol
+case or model change.
+
+## Run 4 and candidate
+
+Source: `acfe25223fb83f5925db601181aaf970a5d8ed71`. The same focused
+command as runs 1 and 3 passed all 71 tests, including all 12 O3 tests and
+all six O3 SIGKILL cases. Typecheck passed. Raw output:
+[run-4.txt](ordering-o3-runs/run-4.txt).
+
+The final record commit changes only this ledger and run-4 output. Runtime and
+test files therefore remain exactly those of the measured source above. O1
+`c9fe7d5f6f5624dd6407d57ff213038c8e955e0c` and O2
+`b6d156163285c8eaab3d05766dd9b0de35fef79b` are integrated ancestors.
+
+The full 600-seed result belongs to run 2's source, before the documented v2
+schema tightening. The final focused checks cover that tightening and the
+test annotation repair. The Sale/Booking/Club fixture code, manifests, codec
+and v1 fixed vectors remain unchanged since run 2. There is no claim that a
+second full 201-test suite was run at the final source.
+
+`git diff --check` passed for the O3 source, tests, profile and ledger against
+O2. Raw Node logs retain their original bytes, including whitespace in printed
+assertion diagnostics. No historical evidence files were normalized.
+
+The current implementation reauthenticates the saved chain when deriving the
+ordering state and admitting new signed events. Its work grows with the
+retained prefix; no throughput or incremental-verification claim is made.
+Independent checker approval remains pending.
+
+
+## First combined O2/O3/O5 candidate
+
+The first integration on `request/ordering-o2-o3-o5` incorporates corrected
+O1/V6 candidate `4cfc69376fbd513c4cacf5baa0d32c316797cf89`, retaining this
+O3 request, implementation and historical evidence. Its common source,
+merge resolution and focused verification are recorded in
+[the integration ledger](ordering-integration.ledger.md). This ledger remains
+the O3 reporting artifact at that same candidate head. Component review
+approvals and an additional 600-seed run are not claimed.
+
+
+The common frozen source `671400d8d44b661084918a2a70edb917662ec51e`
+passed all 138 focused integration checks and typecheck. The exact output and
+scope are in the linked integration record. The final common candidate adds
+only evidence after that run; no subsequent source or test repair occurred.
+
+
+## O1 G1/G2 integration
+
+The common branch now includes final O1 candidate
+`aaa447d9e5ac4d88f07f144d46f2f5e63752c399`, retaining this O3 request,
+implementation and original measurements. Frozen combined source
+`2a57bd2ab0b1e30912f1e2bc044951d71477c5cc` passed all **149 focused integration tests** and typecheck,
+including the new Context freshness cases and lifecycle manifest
+`sha256:d94090b21ce42f2eec4a046558b3a776895d82905c2096a19df1f5f02e011f86`.
+The exact commands, component scope and outputs are linked from
+[focused integration run 2](ordering-integration.ledger.md#focused-integration-run-2).
+Only evidence records follow that measurement. No additional 600-seed run or
+component review approval is claimed; this ledger remains the O3
+reporting artifact at the common candidate head.
+
+## Ratified O-H1/O-H2 correction: profile /3 and incremental verification
+
+The earlier /2 runs above remain historical measurements. Ratified checker
+report `5643a940fde2c3c372d48ae89ee34e8e35593cf3` found that their control
+signatures named an envelope commitment rather than an exact predecessor
+head, and that the admission hook repeated full-chain signature verification
+under the append lock. Builder decision
+`2d7edc9c76b3d657a2a9fbb3fa6ffa819cb25492` selects the new movable profile
+`dap.fixture.single-writer/3`; /2 is unsupported at the revised boundary.
+
+Seal and assign now carry an exact predecessor object `{position, headerHash}`
+with no extra fields. Seal binds the current head; assign binds the seal head.
+All authenticated journal and view chains reject repeated commitments, including
+genesis and origins. New live writes also check commitment uniqueness before
+commit. Exact retries retain their old position and receipt. Fixed /1 wire
+construction and codec vectors are unchanged.
+
+Full authentication at create/open builds a private cache of the verified
+head, ordering state, commitments and accepted control positions. A moving
+profile admission validates the proposed event against the same cached/backend
+head under serialization. Fixed /1 installs no ordering-admission hook. Header
+signing checks that the new header extends the verified head and has a new
+commitment. Only after the serialized transaction returns successfully does
+the authenticated encoding advance the cache using the verified actor envelope
+and newly signed header. Direct owned Context writes share this encoding.
+A transaction, lost-reply, cache-callback or fold exception triggers the existing
+Context/lease poisoning; fresh open verifies all durable entries again. An
+unexpected signed tail is refused until reopen. Cached state returned to a
+caller is a frozen snapshot.
+
+Regression-only source `a658326` preserves the reviewed runtime. Its four
+checks fail: both fixed/moving journal chains accept repeated commitments,
+and both profiles scan the full journal under the append lock. Exact failure
+evidence is retained in the integration run-3-before records. Repaired checks
+add exact-head relocation without duplicate commitments, full/hidden views,
+preflight origin duplication, /2 rejection, missing retry-row duplication,
+direct Context writes, committed lost replies and cache callback errors.
+
+The optimization bounds added ordering/authentication work per ordinary append;
+it does not remove the existing application fold's history reads. Benchmark
+and final measured-source details will be linked from the integration ledger.
+
+The repaired full noncampaign run at
+`773a38ec8367d0b563f7741d1ff902aceb72350c` passes 321 tests with no ordinary
+failures and four retained Club TODOs (325 selected). This includes 12 O3
+handover and 16 new O-H1/O-H2 journal/head/cache tests. Its typecheck failure
+was a malformed-test array annotation, preserved in integration run 4.
+At `713315d17030fbafae275dbde3e04c7c1e7dd2f4`, the annotation is corrected:
+12 handover tests and typecheck pass; all 19 runtime files remain identical.
+
+The [integration ledger](ordering-integration.ledger.md#o-h1o-h2-final-validation-and-benchmark-boundaries)
+records both source boundaries and the benchmark. At 100/400/1000 entries,
+both repaired profiles use exactly two Ed25519 verifications per ordinary
+append, matching accepted O1 instead of the reviewed aggregate's growing
+222/822/2022 average counts. This removes repeated full-prefix authentication;
+existing application fold costs remain. All changes after final validation
+are records only. No independent approval or 600-seed rerun is claimed.
