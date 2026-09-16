@@ -430,3 +430,26 @@ zero digest only for this deliberately unbound attempt, so it reaches the
 foundation's unknown verdict; no runtime or rule changes. Exact failed output
 and eight signed observations remain in `k3-final.*` and
 `k3-final-observations`. They are not relabelled as a passing run.
+
+
+Final test correction source `1bf535539c22045f2bf39a1dae4f1ddf28c51286`
+passes both placeholder tests (unknown plus six indeterminate-reason cases
+per backend) and whole-tree typecheck. The runtime is byte-identical to
+`82119b5`; the remaining 47 focused checks retain their passing measurement
+there. [Final follow-up](ordering-o4-runs/k3-placeholder-followup.json) and
+[raw output](ordering-o4-runs/k3-placeholder-followup.txt) preserve the
+separate command boundaries; no passing single 49-test rerun is claimed.
+[Component identities](ordering-o4-runs/k3-identities.json) give full source
+commits and hashes. The eight actual transfer observations retain signed
+attempts/proofs, source releases, activations and final states. The earlier
+failed runs and original checker output remain unchanged.
+
+Handoff changes only the proof producer/rule, its manifest/profile contract,
+focused tests and new records. It does not change actor authentication,
+certificate shape, required openings for effective authority, destination
+release-effect replay, audience assignments or K2 exception propagation.
+K2's strict interpretView option in verifyPublicProof must remain when this
+branch merges. K4 owns the separate disclosure additions. Both the manifest
+pin test and combined scope/package identities require recomputation after
+integration. No broad suite, full campaign, publication or independent
+approval is claimed by this component handoff.

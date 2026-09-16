@@ -1,0 +1,16 @@
+COMMAND ["node", "--test", "--test-name-pattern=actor-only unknown and placeholder", "test/scope-proof.test.ts"]
+✔ O4 actor-only unknown and placeholder outcomes cannot justify hiding on memory (164.555125ms)
+✔ O4 actor-only unknown and placeholder outcomes cannot justify hiding on sqlite (244.958708ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 483.972167
+COMMAND ["npm", "run", "typecheck"]
+
+> dap-spike@0.0.1 typecheck
+> tsc -p tsconfig.json
+

@@ -364,16 +364,17 @@ and content id are exported as `PUBLIC_PROOF_RULE` and
 - the four Scope kinds result, exercise, import-export and recover.
 
 For every position through the frontier, a listed kind is opened when its
-assigned audience is spine or members. There is one bounded exception:
+assigned audience is spine or members. There is one bounded exception.
 The rule's `ineffectiveActorOnly` object requires `known: true` and
 `effective: false`, and selects `body: 'hidden'` when the full source fold
 records that determinate ineffective verdict and its assigned audience is
-exactly `named: [event.actor]`. Missing or unknown verdicts do not qualify. The top-level and per-model
-reasons `not_in_v1`, `package_unavailable`, `scope_runtime_required` and
+exactly `named: [event.actor]`. Missing or unknown verdicts do not qualify.
+The top-level and per-model reasons `not_in_v1`, `package_unavailable`, `scope_runtime_required` and
 `unhandled`, or prefixes `audience_error:` and `fold_error:`, are indeterminate
-and cannot justify hiding. Every other narrower listed-kind audience makes the producer refuse
-certification, including an effective body capped to its actor. Every
-unlisted position is hidden. `dap.disclose` is excluded because it can carry private bodies;
+and cannot justify hiding. Every other narrower listed-kind audience makes
+the producer refuse certification, including an effective body capped to its actor. Every
+unlisted position is hidden. `dap.disclose` is excluded because it can carry
+private bodies;
 `dap.observe` is excluded because observations are not release or grant
 inputs in this fixed scope policy. No wildcard kind admission applies.
 The fixed system scope operations keep spine audiences (admit keeps members),
