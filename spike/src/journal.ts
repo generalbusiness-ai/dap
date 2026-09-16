@@ -11,6 +11,7 @@ import type { Entry, EventBody } from './types.ts';
 export const O1_PROFILE_VERSION = 'dap.fixture.single-writer/1';
 export const ORDERING_PROFILE = O1_PROFILE_VERSION;
 export const MAX_ENVELOPE_BYTES = 64 * 1024;
+const owners = new WeakMap<Backend, Journal>();
 export interface JournalOptions { backend: Backend; writerKey: KeyObject; packages: Record<string, PackageDescriptor> }
 function encoding(key: KeyObject): AppendEncoding {
   return {
@@ -48,7 +49,9 @@ function verifyEntries(entries: readonly Entry[], writer: string): void {
 export class Journal {
   readonly context: Context;
   private needsReopen = false;
+  private closed = false;
   private constructor(opts: JournalOptions) {
+    if (owners.has(opts.backend)) throw new Error('Journal: backend already has a live facade');
     if (opts.backend instanceof SQLiteBackend && (opts.backend.writer !== principalOf(opts.writerKey) || opts.backend.profile !== O1_PROFILE_VERSION)) throw new Error('Journal: backend assignment mismatch');
     verifyEntries(opts.backend.entries(), principalOf(opts.writerKey));
     this.context = Context.restore(opts.backend, opts.packages, MAX_ENVELOPE_BYTES, encoding(opts.writerKey));
@@ -56,6 +59,7 @@ export class Journal {
       const expected = this.context.entries.filter(e => e.event.kind === K.accept_invite).map(e => (e.event.payload as unknown as { invite: { header: { commitment: string } } }).invite.header.commitment).sort();
       if (canonicalize(expected) !== canonicalize(opts.backend.consumedTokens())) throw new Error('Journal: corrupt invitation consumption index');
     }
+    owners.set(opts.backend, this);
   }
   static create(opts: JournalOptions, signedGenesis: ActorEnvelope | string | Uint8Array, signedOrigins: (ActorEnvelope | string | Uint8Array)[] = []): Journal {
     if (opts.backend.entries().length) throw new Error('Journal: already initialized');
@@ -71,12 +75,20 @@ export class Journal {
     // Preflight the initial fold, then persist all initialization entries in one transaction.
     const preflight = new MemoryBackend();
     appendInitial(preflight, envelopeId(genesis), submissions, encoding(opts.writerKey));
-    new Journal({ ...opts, backend: preflight });
+    new Journal({ ...opts, backend: preflight }).close();
     appendInitial(opts.backend, envelopeId(genesis), submissions, encoding(opts.writerKey));
     return new Journal(opts);
   }
   static open(opts: JournalOptions): Journal { return new Journal(opts); }
+  /** Releases the sole serving fold. SQLite reopen needs a fresh backend handle. */
+  close(): void {
+    if (this.closed) return;
+    if (this.context.backend instanceof SQLiteBackend) this.context.backend.close();
+    this.closed = true;
+    owners.delete(this.context.backend);
+  }
   submit(input: ActorEnvelope | string | Uint8Array, credential?: TransportCredential) {
+    if (this.closed) throw new Error('Journal: facade is closed');
     if (this.needsReopen) throw new Error('Journal: reopen and reconcile after storage or fold error');
     let envelope: ActorEnvelope;
     try { envelope = verifyEnvelope(input); }

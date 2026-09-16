@@ -99,6 +99,30 @@ acceptance ineffective, so live and replay state disagreed. Run 2's existing
 checks did not cover this sequence. The source snapshot and output are kept;
 a single-facade ownership repair and exact regression follow in a new snapshot.
 
+## Ownership correction and final scoped validation
+
+The follow-up enforces one live `Journal` per backend with a private weak
+ownership map. A second facade is rejected before it can create another
+admission fold. `Journal.close()` invalidates the facade and closes SQLite;
+a fresh backend handle rebuilds state on reopen. Legacy direct backend close
+remains compatible with callers that discard the old facade and handle.
+The profile and regression specify this ownership rule explicitly.
+
+The exact QA sequence is retained as a prevention regression: reject facade B,
+revoke through A, record the unauthorized invitation, refuse its acceptance
+without consuming it, close/reopen, compare state, and recover an exact retry
+with the same ineffective verdict. Memory facade release/reopen is checked too.
+A test-only attempt to clone function-bearing foundation state was corrected
+to compare the retained closed facade's state; no runtime behavior was changed
+for that test issue.
+
+Development focused checks passed 50/50 and typecheck. The next record pins
+the final source and preserves a fresh focused run. This correction changes
+only Journal ownership, its tests and profile documentation; the legacy
+visibility campaign path is unchanged from run 2. Accordingly run 2 remains
+the measured 600-seed integration result, and the final scoped run does not
+pretend to be another campaign.
+
 ## Identities and scope
 
 - Profile: `dap.fixture.single-writer/1`.

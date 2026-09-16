@@ -21,7 +21,8 @@ function run(mode: string, path: string, point = '-', input = '-') { return spaw
 function open(backend: SQLiteBackend) { return Journal.open({ backend, writerKey: keys.writer, packages }); }
 
 for (const storage of ['memory', 'sqlite'] as const) test('V1 Sale visibility trace through verified bytes and ' + storage, () => {
-  const backend = storage === 'sqlite' ? sqlite(join(dir(), 'journal.db')) : new MemoryBackend();
+  const path = join(dir(), 'journal.db');
+  const backend = storage === 'sqlite' ? sqlite(path) : new MemoryBackend();
   const j = createJournal(backend);
   for (const who of ['bob', 'carol'] as const) {
     const pos = invite(j, who);
@@ -55,8 +56,10 @@ for (const storage of ['memory', 'sqlite'] as const) test('V1 Sale visibility tr
     prev = e.headerHash;
   }
   if (backend instanceof SQLiteBackend) {
-    assert.deepEqual(open(backend).context.state, j.context.state);
-    backend.close();
+    j.close();
+    const reopened = sqlite(path);
+    assert.deepEqual(open(reopened).context.state, j.context.state);
+    reopened.close();
   }
 });
 
@@ -281,4 +284,40 @@ test('recipient view verification checks original actor proofs and rejects hidde
   assert.throws(() => verifyJournalView(view.slice(1), expected), /genesis|non-dense|position/);
   assert.throws(() => verifyJournalView(view, { ...expected, genesis: 'sha256:' + 'f'.repeat(64) }), /genesis/);
   assert.throws(() => verifyJournalView(view, { ...expected, writer: people.carol }), /wrong writer/);
+});
+
+
+test('one live Journal owns each backend: revoked authority cannot be admitted through a stale facade', () => {
+  const path = join(dir(), 'journal.db');
+  const backend = sqlite(path); const a = createJournal(backend);
+  assert.throws(() => open(backend), /already has a live facade/); // the QA stale B
+  const revoke = act(a, 'alice', K.revoke, { principal: people.alice, capabilities: [CAP.invite] });
+  assert.ok(!('refused' in revoke) && revoke.verdict?.effective);
+  const intent = signEvent(a.context.intent(people.alice, K.invite, { invitee: people.bob, grants: { principal: people.bob, roles: ['Buyer'] }, token_id: 'revoked-issuer' }), keys.alice);
+  const refusedAuthority = a.submit(intent, a.context.credentialFor(people.alice));
+  assert.ok(!('refused' in refusedAuthority) && refusedAuthority.verdict?.reason === 'unauthorized');
+  const invitationId = a.context.entries[refusedAuthority.header.position]!.id;
+  const accept = acceptance(a, 'bob', refusedAuthority.header.position);
+  assert.deepEqual(a.submit(accept), { refused: true, reason: 'invitation_not_issued' });
+  assert.equal(backend.isConsumed(invitationId), false);
+  assert.deepEqual(a.context.state.participants, [people.alice]);
+  const state = a.context.state;
+  a.close();
+  assert.throws(() => a.submit(intent), /facade is closed/);
+  const fresh = sqlite(path); const reopened = open(fresh);
+  assert.deepEqual(reopened.context.state, state);
+  const retry = reopened.submit(intent);
+  assert.ok(!('refused' in retry) && retry.replay);
+  assert.equal(retry.headerHash, refusedAuthority.headerHash);
+  assert.deepEqual(retry.verdict, refusedAuthority.verdict);
+  assert.deepEqual(reopened.submit(accept), { refused: true, reason: 'invitation_not_issued' });
+  assert.equal(fresh.isConsumed(invitationId), false);
+  assert.deepEqual(checkContext(reopened.context), []);
+  reopened.close();
+  // Memory callers can explicitly release the facade without durable storage.
+  const memory = new MemoryBackend(); const first = createJournal(memory);
+  assert.throws(() => Journal.open({ backend: memory, writerKey: keys.writer, packages }), /live facade/);
+  first.close();
+  const second = Journal.open({ backend: memory, writerKey: keys.writer, packages });
+  assert.deepEqual(second.context.state, first.context.state); second.close();
 });

@@ -16,7 +16,11 @@ O4 test; they do not prove that the runtime performs those transitions.
 ## Trust, finality and progress
 
 There is one authoritative database file per context, one cooperating writer
-process, and one fixed writer key. Participants trust this writer not to
+process, one live `Journal` serving facade per backend, and one fixed writer
+key. Opening a second facade on the same backend is rejected: each facade
+has a folded admission state, so concurrent independent folds would be stale.
+`Journal.close()` invalidates the facade and closes its SQLite handle; reopen
+uses a fresh backend and rebuilds the state before admitting another action. Participants trust this writer not to
 censor, equivocate, substitute another database copy, or expose private
 payloads. The SQLite lock excludes a second process opening this same file.
 It does not fence a malicious writer using another copy, a network filesystem
