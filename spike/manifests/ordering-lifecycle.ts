@@ -359,7 +359,10 @@ export function genesisPaths(value: Json = destinationGenesisTemplate, path = ''
 // diagnostic at its codec/profile boundary; unrecognized errors fail the run.
 const changedGenesisExpectation = {
   activations: 0, activeDestinationRights: [] as string[],
-  validDifferentGenesis: { verdict: 'ineffective', reason: 'destination_mismatch' },
+  validDifferentGenesis: {
+    authorizedAttempt: { verdict: 'ineffective', reason: 'destination_mismatch', authorized: true },
+    unauthorizedAttempt: { verdict: 'ineffective', reason: 'unauthorized', authorized: false },
+  },
   invalidGenesis: {
     verdict: 'rejected_before_activation',
     recognizedRejections: [

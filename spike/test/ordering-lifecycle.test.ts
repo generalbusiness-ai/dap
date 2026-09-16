@@ -73,7 +73,7 @@ test('manifest identity binds the prose and executable source, independently rec
   const executable = readFileSync(new URL('../manifests/ordering-lifecycle.ts', import.meta.url), 'utf8');
   assert.equal(ORDERING_LIFECYCLE_PROSE, prose);
   assert.notEqual(ORDERING_LIFECYCLE_MANIFEST_ID, 'sha256:63be83e60036a5936569c478da7a8c7be6b8ab1c744d59ef3296b7d6182b5a9d', 'historical manifest is not relabelled');
-  assert.equal(ORDERING_LIFECYCLE_MANIFEST_ID, 'sha256:75de2a860b049b5d9dcad3dab234be14d7a965d53df2e0d0eae8de6f05a1b327');
+  assert.equal(ORDERING_LIFECYCLE_MANIFEST_ID, 'sha256:fc55bfa123891e750f7bbe3a0d9cb33b5f65c07750db08bc984544ed2dd6b378');
   assert.equal(ORDERING_LIFECYCLE_MANIFEST_ID, contentId({ prose: contentId(prose), executable: contentId(executable) }));
   assert.notEqual(ORDERING_LIFECYCLE_MANIFEST_ID, contentId({ prose: contentId(prose + '\nchanged'), executable: contentId(executable) }));
   assert.notEqual(ORDERING_LIFECYCLE_MANIFEST_ID, contentId({ prose: contentId(prose), executable: contentId(executable + '\n// changed') }));
@@ -259,7 +259,10 @@ test('changed-genesis enumeration covers every field, container, removal and add
       } else target[key] = { changed: true };
     }
     assert.notEqual(contentId(changed), original, item.id);
-    assert.deepEqual(item.expected.validDifferentGenesis, { verdict: 'ineffective', reason: 'destination_mismatch' });
+    assert.deepEqual(item.expected.validDifferentGenesis, {
+      authorizedAttempt: { verdict: 'ineffective', reason: 'destination_mismatch', authorized: true },
+      unauthorizedAttempt: { verdict: 'ineffective', reason: 'unauthorized', authorized: false },
+    });
     assert.equal(item.expected.invalidGenesis.verdict, 'rejected_before_activation');
     assert.deepEqual(item.expected.invalidGenesis.recognizedRejections, [
       { boundary: 'codec', reason: 'malformed_envelope' },

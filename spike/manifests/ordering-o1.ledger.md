@@ -285,3 +285,39 @@ The public-opening rule ID is unchanged. Ordering §7 now explicitly forbids
 origins or intervening events from exercising dormant transferred rights,
 without forbidding their unrelated effects. The earlier `d7419b5` manifest
 and run 8 remain their own measured boundary.
+
+At repaired combined source `747a0905dc80f15a108fd62bdc5399e9f31f4431`,
+the full run executed 188 tests: 187 passed, zero ordinary failures, and the
+one executing/failing Club TODO retained from the original visibility
+experiment. All three 200-seed campaigns passed. Typecheck passed. Exact
+source, commands and exit codes:
+[run-9-full.json](ordering-o1-runs/run-9-full.json); output:
+[run-9-full.txt](ordering-o1-runs/run-9-full.txt).
+
+Internal QA independently restored `747a090` and reran the byte-identical
+original direct-Context probe. It now exits 1 at the first attempted stale
+invitation with `Context: owning facade is closed or inactive`, before an
+invitation or redemption can append. That exit is the expected rejection in
+the original exploit script, not a failing current regression. The two current
+direct-error regression tests pass on memory and SQLite. Retained QA evidence:
+[summary](ordering-o1-runs/qa-summary.json),
+[original probe against the repair](ordering-o1-runs/qa-original-probe-fixed.txt),
+and [two current regressions](ordering-o1-runs/qa-direct-error-regressions.txt).
+This internal QA does not substitute for the requested independent checker
+review or grant merge approval.
+
+After run 9, decision `216ac47f05f375e1ccfab036452182063f0f1541` clarified
+one last specification case. A valid but different genesis may remove the
+actor's activation grant. An actually unauthorized attempt then remains
+`ineffective`, `unauthorized`, with foundation `authorized:false`, before
+destination checking. An authorized valid-different attempt still requires
+`destination_mismatch` and `authorized:true`. Both branches require zero
+activations and no live destination rights. Missing activation authority is
+not grounds for inventing a malformed-profile rejection. Recognized malformed
+candidate rejections and failure on unrecognized errors remain unchanged.
+
+This specification-only refinement changes the manifest ID to
+`sha256:fc55bfa123891e750f7bbe3a0d9cb33b5f65c07750db08bc984544ed2dd6b378`.
+The opening-rule ID and all runtime files remain unchanged. Its focused
+lifecycle/typecheck run is recorded separately below; run 9 remains the full
+runtime/campaign measurement at its actual `75de2a86` manifest boundary.

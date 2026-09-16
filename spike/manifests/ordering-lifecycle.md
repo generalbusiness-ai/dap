@@ -233,9 +233,17 @@ baseline.
   additional fields cannot escape the check. Malformed or badly signed
   candidates may fail earlier at a specifically recognized codec or profile
   validation boundary; no changed candidate may activate or hold an active
-  destination right. Valid different genesis envelopes fail with
-  `destination_mismatch`. The executable expectations distinguish those
-  conditional outcomes. A generic catch, unexpected TypeError, storage error
+  destination right. For a valid different genesis, an admitted authorized
+  attempt must fail with `destination_mismatch`. An unauthorized attempt may
+  instead fail earlier with actual reason `unauthorized`, backed by the
+  foundation verdict's `authorized:false`. Removing the creator's activation
+  grant and re-signing can produce such a valid genesis; a missing grant is
+  not itself a malformed-profile condition. Both branches require zero
+  activations and no active destination rights. This is a pre-baseline
+  expectation correction from the materialized-genesis development test;
+  its failed evidence is retained, and no profile restriction is added to
+  force a different refusal order. The executable expectations distinguish
+  these conditional outcomes. A generic catch, unexpected TypeError, storage error
   or other unrecognized exception is a test failure, never evidence of safe
   rejection. O4 must retain the exact diagnostic and its recognized class.
 
