@@ -1,0 +1,48 @@
+TAP version 13
+# Subtest: O4 K1 malformed participant requests preserve retries and the signed lifecycle: memory
+not ok 1 - O4 K1 malformed participant requests preserve retries and the signed lifecycle: memory
+  ---
+  duration_ms: 89.363666
+  type: 'test'
+  location: '/private/tmp/dap-o4-k1-repair/spike/test/ordering-scope-participant-input.test.ts:46:54'
+  failureType: 'testCodeFailure'
+  error: 'no_exportable_facts'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    exportFrom (file:///private/tmp/dap-o4-k1-repair/spike/src/scope.ts:284:14)
+    ScopeJournal.export (file:///private/tmp/dap-o4-k1-repair/spike/src/scope.ts:325:144)
+    TestContext.<anonymous> (file:///private/tmp/dap-o4-k1-repair/spike/test/ordering-scope-participant-input.test.ts:70:31)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1402:25)
+    Test.start (node:internal/test_runner/test:1262:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)
+  ...
+# Subtest: O4 K1 malformed participant requests preserve retries and the signed lifecycle: sqlite
+not ok 2 - O4 K1 malformed participant requests preserve retries and the signed lifecycle: sqlite
+  ---
+  duration_ms: 88.364291
+  type: 'test'
+  location: '/private/tmp/dap-o4-k1-repair/spike/test/ordering-scope-participant-input.test.ts:46:54'
+  failureType: 'testCodeFailure'
+  error: 'no_exportable_facts'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    exportFrom (file:///private/tmp/dap-o4-k1-repair/spike/src/scope.ts:284:14)
+    ScopeJournal.export (file:///private/tmp/dap-o4-k1-repair/spike/src/scope.ts:325:144)
+    TestContext.<anonymous> (file:///private/tmp/dap-o4-k1-repair/spike/test/ordering-scope-participant-input.test.ts:70:31)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1402:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+    Test.postRun (node:internal/test_runner/test:1542:19)
+    Test.run (node:internal/test_runner/test:1467:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 0
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 265.389625

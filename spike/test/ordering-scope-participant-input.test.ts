@@ -48,6 +48,7 @@ for (const storage of ['memory', 'sqlite'] as const) test('O4 K1 malformed parti
   const observations: { name: string; committed: string; receipt: ReturnType<typeof accepted>; coldRetry: ReturnType<typeof accepted> }[] = [];
   try {
     assert.ok(world.contexts.S!.journal.context.state.participants.includes(principals.carol));
+    assert.throws(() => world.contexts.S!.export(['R_sell']), { message: 'no_exportable_facts' });
     for (const { name, payload } of malformed) {
       const head = world.contexts.S!.journal.context.head;
       const receipt = accepted(world.emit('S', 'carol', INSPECTION + 'request', payload));
@@ -67,7 +68,9 @@ for (const storage of ['memory', 'sqlite'] as const) test('O4 K1 malformed parti
       assert.equal(cold.journal.context.view(principals.bob)[receipt.header.position]!.committed, undefined, name);
       assert.equal(cold.state.inspection.requested, false, name);
       assert.equal(cold.state.rights.R_sell!.status, 'live', name);
-      assert.equal(cold.export(['R_sell']).prefix.position, receipt.header.position, name);
+      // This narrow Sale exporter requires acceptance facts. A malformed
+      // Inspection request must not change its ordinary pre-acceptance refusal.
+      assert.throws(() => cold.export(['R_sell']), { message: 'no_exportable_facts' }, name);
       observations.push({ name, committed: envelopeBytes(envelope), receipt, coldRetry: retry(world, envelope, receipt) });
     }
 
