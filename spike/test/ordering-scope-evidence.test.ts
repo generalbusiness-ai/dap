@@ -4,6 +4,9 @@ import { LifecycleWorld, buildThrough, keys, packages, principals } from '../fix
 import { forkSource, laterProof } from '../fixtures/ordering-scope-faults.ts';
 import { ScopeJournal, replayScope } from '../src/scope.ts';
 import { publicProof, publicProofBytes, verifyPublicProof, assertPublicData } from '../src/scope-proof.ts';
+import { SQLiteBackend } from '../src/sqlite.ts';
+import { O1_PROFILE_VERSION } from '../src/journal.ts';
+import { join } from 'node:path';
 import { MemoryBackend } from '../src/append.ts';
 import { canonicalize, envelopeBytes, envelopeId, signEvent, verifyEnvelope, type ActorEnvelope } from '../src/codec.ts';
 import { ScopeProfileError, SCOPE_KINDS, scopeId } from '../src/scope-profile.ts';
@@ -23,8 +26,8 @@ function failed(result: ReturnType<LifecycleWorld['activate']>, reason: RegExp) 
   assert.ok(!('refused' in result)); assert.equal(result.verdict?.effective, false);
   assert.match(result.verdict!.reason!, reason);
 }
-test('O4 release proof pins come from F genesis: r=p+1, exact prefix and source writer', () => {
-  const world = buildThrough('destination-started');
+for (const storage of ['memory','sqlite'] as const) test('O4 release proof pins come from F genesis: r=p+1, exact prefix and source writer: ' + storage, () => {
+  const world = buildThrough('destination-started',{},storage);
   try {
     const proofs = [world.proof('S'), world.proof('D')];
     const beforeRelease = world.contexts.S!.proof(23);
@@ -38,8 +41,8 @@ test('O4 release proof pins come from F genesis: r=p+1, exact prefix and source 
     const activation = world.activate(later); assert.ok(!('refused' in activation)); assert.equal(activation.verdict?.effective, true);
   } finally { world.close(); }
 });
-test('O4 altered public proof bodies cannot activate a destination', () => {
-  const world = buildThrough('destination-started');
+for (const storage of ['memory','sqlite'] as const) test('O4 altered public proof bodies cannot activate a destination: ' + storage, () => {
+  const world = buildThrough('destination-started',{},storage);
   try {
     for (const position of [3, 11, 17]) {
       const proofs = [structuredClone(world.proof('S')), world.proof('D')];
@@ -48,8 +51,8 @@ test('O4 altered public proof bodies cannot activate a destination', () => {
     }
   } finally { world.close(); }
 });
-test('O4 actual revoked release source cannot be repaired by stripping its revocation', () => {
-  const world = buildThrough('writer-assigned');
+for (const storage of ['memory','sqlite'] as const) test('O4 actual revoked release source cannot be repaired by stripping its revocation: ' + storage, () => {
+  const world = buildThrough('writer-assigned',{},storage);
   try {
     world.emit('S', 'alice', K.revoke, { principal: principals.alice, capabilities: [K.scope_release] }); // S23
     world.startDelivery(); world.describeDestination();
@@ -61,8 +64,8 @@ test('O4 actual revoked release source cannot be repaired by stripping its revoc
     failed(world.activate([stripped, world.proof('D')]), /completeness/); dormant(world);
   } finally { world.close(); }
 });
-test('O4 public/full scope replay agrees at every opened release-prefix position', () => {
-  const world = buildThrough('destination-started');
+for (const storage of ['memory','sqlite'] as const) test('O4 public/full scope replay agrees at every opened release-prefix position: ' + storage, () => {
+  const world = buildThrough('destination-started',{},storage);
   try {
     for (const name of ['S', 'I', 'D'] as const) {
       const source = world.contexts[name]!; const proof = source.proof();
@@ -71,8 +74,8 @@ test('O4 public/full scope replay agrees at every opened release-prefix position
     }
   } finally { world.close(); }
 });
-test('O4 actual activation, exports and F views disclose public source bodies without private bytes', () => {
-  const world = buildThrough('destination-activated');
+for (const storage of ['memory','sqlite'] as const) test('O4 actual activation, exports and F views disclose public source bodies without private bytes: ' + storage, () => {
+  const world = buildThrough('destination-activated',{},storage);
   try {
     const activation = world.contexts.F!.journal.context.entries[1]!;
     const serialized = [activation.committed!, canonicalize(world.exports.S), canonicalize(world.exports.D), publicProofBytes(world.proof('S').source)];
@@ -119,8 +122,8 @@ function recognized(error: unknown): { category: string; diagnostic: string } {
   if (['Journal: unsupported profile','ordering: malformed control payload','ordering: v1 cannot install control authority'].includes(diagnostic)) return { category: 'profile unsupported_profile', diagnostic };
   assert.fail('unrecognized exception: ' + diagnostic);
 }
-test('O4 every materialized signed F genesis field/container is bound before either release', () => {
-  const world = buildThrough('destination-started');
+for (const storage of ['memory','sqlite'] as const) test('O4 every materialized signed F genesis field/container is bound before either release: ' + storage, () => {
+  const world = buildThrough('destination-started',{},storage);
   try {
     const original = world.destination!;
     const mutations = genesisPaths(original as never).flatMap(path => (['replace','remove'] as const).map(operation => ({ path, operation })));
@@ -128,6 +131,7 @@ test('O4 every materialized signed F genesis field/container is bound before eit
     const records: unknown[] = [];
     for (const mutation of mutations) {
       let candidate: ScopeJournal | undefined;
+      let backend: MemoryBackend | SQLiteBackend | undefined;
       const raw = mutate(original, mutation.path, mutation.operation);
       try {
         let signed: ActorEnvelope;
@@ -136,7 +140,8 @@ test('O4 every materialized signed F genesis field/container is bound before eit
         if (mutation.path.startsWith('/body')) signed = signEvent(raw.body, keys.alice);
         else signed = verifyEnvelope(canonicalize(raw));
         assert.notEqual(envelopeId(signed), envelopeId(original));
-        candidate = ScopeJournal.create({ backend: new MemoryBackend(), writerKey: keys.WF, packages }, signed);
+        backend = storage === 'sqlite' ? new SQLiteBackend(join(world.root,'mutant-' + records.length + '.sqlite'), { writer:principals.WF,profile:O1_PROFILE_VERSION }) : new MemoryBackend();
+        candidate = ScopeJournal.create({ backend, writerKey: keys.WF, packages }, signed);
         const envelope = signEvent(candidate.journal.context.intent(principals.alice, K.scope_activate, { proofs: [world.proof('S'),world.proof('D')] as never }, { action_id: 'mutant-activation', nonce: 'd'.repeat(32) }), keys.alice);
         const result = candidate.submit(envelope, candidate.journal.context.credentialFor(principals.alice));
         assert.ok(!('refused' in result)); assert.equal(result.verdict?.effective, false);
@@ -145,9 +150,9 @@ test('O4 every materialized signed F genesis field/container is bound before eit
         assert.equal(candidate.state.activations, 0); assert.ok(Object.values(candidate.state.rights).every(r => r!.status !== 'live'));
         records.push({ ...mutation, verdict: result.verdict });
       } catch (error) { try { records.push({ ...mutation, ...recognized(error) }); } catch (unexpected) { console.log('failed mutation', mutation, error); throw unexpected; } }
-      finally { candidate?.close(); }
+      finally { candidate?.close(); if (backend instanceof SQLiteBackend) backend.close(); }
     }
-    recordScope('materialized-genesis-mutations',{ genesis:original,records });
+    recordScope('materialized-genesis-mutations-' + storage,{ genesis:original,records });
     console.log('materialized genesis mutations:', records.length);
     assert.equal(records.length, genesisPaths(original as never).length * 2 + 1);
   } finally { world.close(); }
