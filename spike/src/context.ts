@@ -3,6 +3,7 @@
 // visibility. The serving party and the sequencer are one process here
 // (design note §2, first trusted profile).
 
+import { assertBackendAccess, type BackendLease } from './ownership.ts';
 import { contentId, nonce, type Json } from './canon.ts';
 import { attachRequires, bindingId, packageIn, type PackageDescriptor } from './descriptor.ts';
 import {
@@ -58,19 +59,22 @@ export class Context {
   readonly state: FoundationState;
   private readonly maxPayloadBytes: number;
   private readonly encoding?: AppendEncoding;
+  readonly #lease?: BackendLease;
 
-  private constructor(backend: Backend, genesisId: string, packages: Record<string, PackageDescriptor>, maxPayloadBytes: number, encoding?: AppendEncoding) {
+  private constructor(backend: Backend, genesisId: string, packages: Record<string, PackageDescriptor>, maxPayloadBytes: number, encoding?: AppendEncoding, lease?: BackendLease) {
     this.backend = backend;
     this.genesisId = genesisId;
     this.packages = packages;
     this.state = initialFoundationState(genesisId);
     this.maxPayloadBytes = maxPayloadBytes;
     this.encoding = encoding;
+    this.#lease = lease;
   }
 
   /** Sign a genesis adopting the origins, append it at 0 and the origins at 1..k, and fold them. */
   static create(opts: ContextOptions): Context {
     const backend = opts.backend ?? new MemoryBackend();
+    assertBackendAccess(backend);
     const payload: GenesisPayload = {
       foundation: F0_ID,
       runtime: RUNTIME,
@@ -94,10 +98,11 @@ export class Context {
   }
 
   /** Trusted replay boundary. O1 verifies every wire entry before calling this. */
-  static restore(backend: Backend, packages: Record<string, PackageDescriptor>, maxPayloadBytes = 64 * 1024, encoding?: AppendEncoding): Context {
+  static restore(backend: Backend, packages: Record<string, PackageDescriptor>, maxPayloadBytes = 64 * 1024, encoding?: AppendEncoding, lease?: BackendLease): Context {
+    assertBackendAccess(backend, lease);
     const entries = backend.entries();
     if (!entries[0]) throw new Error('Context: empty journal');
-    const ctx = new Context(backend, entries[0].id, packages, maxPayloadBytes, encoding);
+    const ctx = new Context(backend, entries[0].id, packages, maxPayloadBytes, encoding, lease);
     const origins = originsCount(entries[0].event);
     for (const entry of entries) ctx.fold(entry, entry.position > 0 && entry.position <= origins);
     return ctx;
@@ -152,6 +157,7 @@ export class Context {
 
   /** Submit through the append operation, then fold if newly sequenced. */
   submit(event: EventBody, credential?: TransportCredential, proof?: unknown): (Receipt & { verdict?: Verdict }) | Refusal {
+    assertBackendAccess(this.backend, this.#lease);
     const state = this.state;
     const r = append(
       this.backend,

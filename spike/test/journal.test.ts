@@ -258,6 +258,7 @@ test('uncertain committed response requires reopen before another action', () =>
   const envelope = signEvent(j.context.intent(people.alice, K.observe, { fact: {} }), keys.alice);
   assert.throws(() => j.submit(envelope, j.context.credentialFor(people.alice)), /lost response/);
   assert.throws(() => j.submit(envelope), /reopen and reconcile/);
+  assert.throws(() => j.context.submit(envelope.body, j.context.credentialFor(people.alice), envelope), /inactive/);
   backend.close();
   const reopened = sqlite(path);
   const result = open(reopened).submit(envelope);
@@ -366,5 +367,25 @@ for (const storage of ['memory', 'sqlite'] as const) test('O1-F1 raw Context res
   assert.deepEqual(journal.context.entries, entries);
   const result = act(journal, 'alice', K.observe, { fact: {} }, 'active-owner');
   assert.ok(!('refused' in result));
+  journal.close();
+});
+
+
+for (const storage of ['memory', 'sqlite'] as const) test('O1-F1 a previously acquired raw Context loses write access while Journal owns its backend on ' + storage, () => {
+  const path = join(dir(), 'journal.db');
+  let backend = storage === 'memory' ? new MemoryBackend() : sqlite(path);
+  createJournal(backend).close();
+  if (storage === 'sqlite') backend = sqlite(path);
+  const raw = Context.restore(backend, packages); // trusted replay before ownership is acquired
+  const journal = Journal.open({ backend, writerKey: keys.writer, packages });
+  const revoke = act(journal, 'alice', K.revoke, { principal: people.alice, capabilities: [CAP.invite] });
+  assert.ok(!('refused' in revoke) && revoke.verdict?.effective);
+  const before = journal.context.entries;
+  const event = raw.intent(people.alice, K.invite, { invitee: people.bob, grants: { principal: people.bob, roles: ['Buyer'] }, token_id: 'raw-stale' });
+  assert.throws(() => raw.submit(event, raw.credentialFor(people.alice)), /owned|live facade/);
+  assert.throws(() => raw.act(people.alice, K.observe, { fact: {} }), /owned|live facade/);
+  assert.deepEqual(journal.context.entries, before);
+  assert.equal(backend.retry(event.action_id!), undefined);
+  assert.deepEqual(journal.context.state.participants, [people.alice]);
   journal.close();
 });

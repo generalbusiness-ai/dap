@@ -159,3 +159,31 @@ The integrated campaign identities are unchanged from V6:
 | Sale | `sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9` | `sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85` |
 | Booking | `sha256:cb4514f4967891077ad78e1dd0fba4c17438fb32b98cd8bd790df8531b35dd16` | `sha256:0556de5c337344eaa15afcbbbf5d22aa82c384bd6841d4ffb0c07185d4b7ec27` |
 | Club | `sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde` | `sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e` |
+
+## Review correction O1-F1: closed Context and raw restoration
+
+Checker report `76eee32f4f976ffe9d2903547c630a38572e1413` found that the
+one-facade correction did not disable the public Context on MemoryBackend.
+The regression-only source `1351ad09df256e6714a1ef2b8ea8598dcbc24113`
+preserves the reviewed runtime from `c9fe7d5` and adds three focused cases.
+Command: `node --test --test-name-pattern=O1-F1 test/journal.test.ts`.
+All three failed as expected; exact output is retained in
+[run-4-f1-before.txt](ordering-o1-runs/run-4-f1-before.txt).
+
+The memory reproduction recorded Alice's invitation and Bob's acceptance as
+effective through A's closed Context after B revoked Alice's invite authority.
+A's stale fold included Bob, while B and cold replay did not. The two raw
+restoration tests also failed: Context.restore accepted a backend owned by a
+live Journal on both memory and SQLite. These are actual reproduced failures,
+not descriptions of hypothetical bypasses.
+
+The repair gives Journal and its Context one private ownership lease. Closing
+the Journal permanently invalidates writes through that Context before
+releasing backend ownership. A new Journal may reuse MemoryBackend. Raw
+Context.create/restore cannot use a live Journal-owned backend; a raw Context
+acquired before ownership cannot submit or act while the Journal owns it.
+Storage/fold errors also invalidate the owned Context until close/reopen.
+The shared append/admission/transaction algorithm is unchanged. Direct backend
+mutation and malicious in-process code remain outside this cooperative API
+boundary; Context.restore on an unowned backend is still a trusted semantic
+entry point.

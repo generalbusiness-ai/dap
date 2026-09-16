@@ -1,5 +1,6 @@
 // Authenticated facade over the existing Context and shared append operation.
 import type { KeyObject } from 'node:crypto';
+import { acquireBackend, type BackendLease } from './ownership.ts';
 import { appendInitial, MemoryBackend, snapshot, type AppendEncoding, type Backend, type TransportCredential } from './append.ts';
 import { canonicalize, envelopeBytes, envelopeId, principalOf, signHeader, verifyEnvelope, verifyHeader, headerHash, verifyWire, type ActorEnvelope } from './codec.ts';
 import { ZERO_HASH } from './canon.ts';
@@ -11,7 +12,6 @@ import type { Entry, EventBody } from './types.ts';
 export const O1_PROFILE_VERSION = 'dap.fixture.single-writer/1';
 export const ORDERING_PROFILE = O1_PROFILE_VERSION;
 export const MAX_ENVELOPE_BYTES = 64 * 1024;
-const owners = new WeakMap<Backend, Journal>();
 export interface JournalOptions { backend: Backend; writerKey: KeyObject; packages: Record<string, PackageDescriptor> }
 function encoding(key: KeyObject): AppendEncoding {
   return {
@@ -50,16 +50,18 @@ export class Journal {
   readonly context: Context;
   private needsReopen = false;
   private closed = false;
+  readonly #lease: BackendLease;
   private constructor(opts: JournalOptions) {
-    if (owners.has(opts.backend)) throw new Error('Journal: backend already has a live facade');
-    if (opts.backend instanceof SQLiteBackend && (opts.backend.writer !== principalOf(opts.writerKey) || opts.backend.profile !== O1_PROFILE_VERSION)) throw new Error('Journal: backend assignment mismatch');
-    verifyEntries(opts.backend.entries(), principalOf(opts.writerKey));
-    this.context = Context.restore(opts.backend, opts.packages, MAX_ENVELOPE_BYTES, encoding(opts.writerKey));
-    if (opts.backend instanceof SQLiteBackend) {
-      const expected = this.context.entries.filter(e => e.event.kind === K.accept_invite).map(e => (e.event.payload as unknown as { invite: { header: { commitment: string } } }).invite.header.commitment).sort();
-      if (canonicalize(expected) !== canonicalize(opts.backend.consumedTokens())) throw new Error('Journal: corrupt invitation consumption index');
-    }
-    owners.set(opts.backend, this);
+    this.#lease = acquireBackend(opts.backend);
+    try {
+      if (opts.backend instanceof SQLiteBackend && (opts.backend.writer !== principalOf(opts.writerKey) || opts.backend.profile !== O1_PROFILE_VERSION)) throw new Error('Journal: backend assignment mismatch');
+      verifyEntries(opts.backend.entries(), principalOf(opts.writerKey));
+      this.context = Context.restore(opts.backend, opts.packages, MAX_ENVELOPE_BYTES, encoding(opts.writerKey), this.#lease);
+      if (opts.backend instanceof SQLiteBackend) {
+        const expected = this.context.entries.filter(e => e.event.kind === K.accept_invite).map(e => (e.event.payload as unknown as { invite: { header: { commitment: string } } }).invite.header.commitment).sort();
+        if (canonicalize(expected) !== canonicalize(opts.backend.consumedTokens())) throw new Error('Journal: corrupt invitation consumption index');
+      }
+    } catch (error) { this.#lease.release(); throw error; }
   }
   static create(opts: JournalOptions, signedGenesis: ActorEnvelope | string | Uint8Array, signedOrigins: (ActorEnvelope | string | Uint8Array)[] = []): Journal {
     if (opts.backend.entries().length) throw new Error('Journal: already initialized');
@@ -83,9 +85,9 @@ export class Journal {
   /** Releases the sole serving fold. SQLite reopen needs a fresh backend handle. */
   close(): void {
     if (this.closed) return;
-    if (this.context.backend instanceof SQLiteBackend) this.context.backend.close();
     this.closed = true;
-    owners.delete(this.context.backend);
+    this.#lease.release();
+    if (this.context.backend instanceof SQLiteBackend) this.context.backend.close();
   }
   submit(input: ActorEnvelope | string | Uint8Array, credential?: TransportCredential) {
     if (this.closed) throw new Error('Journal: facade is closed');
@@ -94,7 +96,7 @@ export class Journal {
     try { envelope = verifyEnvelope(input); }
     catch { return { refused: true as const, reason: 'invalid_envelope' }; }
     try { return this.context.submit(envelope.body, credential, envelope); }
-    catch (error) { this.needsReopen = true; throw error; }
+    catch (error) { this.needsReopen = true; this.#lease.invalidate(); throw error; }
   }
 }
 
