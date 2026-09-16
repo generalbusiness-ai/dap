@@ -1,0 +1,51 @@
+TAP version 13
+# Subtest: O4 K1 malformed participant requests preserve retries and the signed lifecycle: memory
+not ok 1 - O4 K1 malformed participant requests preserve retries and the signed lifecycle: memory
+  ---
+  duration_ms: 55.813958
+  type: 'test'
+  location: '/private/tmp/dap-o4-k1-repair/spike/test/ordering-scope-participant-input.test.ts:46:54'
+  failureType: 'testCodeFailure'
+  error: "scope: handler failure at 12: audience_error:Cannot read properties of null (reading 'seller')"
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    replayScopeView (file:///private/tmp/dap-o4-k1-repair/spike/src/scope.ts:128:24)
+    get state (file:///private/tmp/dap-o4-k1-repair/spike/src/scope.ts:317:21)
+    ScopeJournal.submit (file:///private/tmp/dap-o4-k1-repair/spike/src/scope.ts:333:24)
+    LifecycleWorld.emit (file:///private/tmp/dap-o4-k1-repair/spike/fixtures/ordering-lifecycle-runner.ts:80:27)
+    TestContext.<anonymous> (file:///private/tmp/dap-o4-k1-repair/spike/test/ordering-scope-participant-input.test.ts:53:38)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1402:25)
+    Test.start (node:internal/test_runner/test:1262:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)
+  ...
+# Subtest: O4 K1 malformed participant requests preserve retries and the signed lifecycle: sqlite
+not ok 2 - O4 K1 malformed participant requests preserve retries and the signed lifecycle: sqlite
+  ---
+  duration_ms: 55.996
+  type: 'test'
+  location: '/private/tmp/dap-o4-k1-repair/spike/test/ordering-scope-participant-input.test.ts:46:54'
+  failureType: 'testCodeFailure'
+  error: "scope: handler failure at 12: audience_error:Cannot read properties of null (reading 'seller')"
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    replayScopeView (file:///private/tmp/dap-o4-k1-repair/spike/src/scope.ts:128:24)
+    get state (file:///private/tmp/dap-o4-k1-repair/spike/src/scope.ts:317:21)
+    ScopeJournal.submit (file:///private/tmp/dap-o4-k1-repair/spike/src/scope.ts:333:24)
+    LifecycleWorld.emit (file:///private/tmp/dap-o4-k1-repair/spike/fixtures/ordering-lifecycle-runner.ts:80:27)
+    TestContext.<anonymous> (file:///private/tmp/dap-o4-k1-repair/spike/test/ordering-scope-participant-input.test.ts:53:38)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1402:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+    Test.postRun (node:internal/test_runner/test:1542:19)
+    Test.run (node:internal/test_runner/test:1467:12)
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 0
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 194.329125
