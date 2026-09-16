@@ -1,0 +1,26 @@
+COMMAND ["node", "--test", "test/ordering-handover.test.ts"]
+✔ O3 same-context handover preserves prefix, dense positions, retry results, control verdicts and publication on memory (24.7735ms)
+✔ O3 same-context handover preserves prefix, dense positions, retry results, control verdicts and publication on sqlite (26.567125ms)
+✔ O3 SIGKILL during seal at before-commit retains the committed control boundary (83.4285ms)
+✔ O3 SIGKILL during seal at after-commit retains the committed control boundary (83.145709ms)
+✔ O3 SIGKILL during seal at after-receipt retains the committed control boundary (82.485583ms)
+✔ O3 SIGKILL during assign at before-commit retains the committed control boundary (82.426709ms)
+✔ O3 SIGKILL during assign at after-commit retains the committed control boundary (82.954667ms)
+✔ O3 SIGKILL during assign at after-receipt retains the committed control boundary (84.017667ms)
+✔ O3 independent nominations and two signed assignments cannot install two successors (15.822584ms)
+✔ O3 rejects forged and wrong authority, stale or swapped predecessor head fields, skipped seals and malformed nominations without an append (20.598834ms)
+✔ O3 cold authentication rejects a correctly signed control with wrong payload predecessor or wrong header predecessor (16.396209ms)
+✔ O3 v3 pins distinct writer/control keys and exact sequencing fields before any durable initialization (9.2285ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 685.509958
+COMMAND ["npm", "run", "typecheck"]
+
+> dap-spike@0.0.1 typecheck
+> tsc -p tsconfig.json
+
