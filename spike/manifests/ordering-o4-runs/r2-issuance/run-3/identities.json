@@ -1,0 +1,8 @@
+{
+  "runtime": "sha256:f48bcefeb3bd155ba9fe55c6edd1a9789db80c00e7f5afbb3342f31e870d78d3",
+  "scopePackage": "sha256:4ad4af44959145e1b5ad3960d80bbcd34ee5a6dcdea99f476719c12f4a14e59a",
+  "publicProofRule": "sha256:701403e9c51e6449ca797545818a8b63602a20a9b43c2ace064e9a38ab55b66c",
+  "joinPolicy": "sha256:ac852ebab4f55816e55cd0fd71b7280267bffaca097046d4880b24ac63b01455",
+  "foundation": "sha256:5a7be1514529bac249c683ada733e64273f94b2700abf8a55c47dcb7ebfb8d78",
+  "source": "8f48a39e7cf54678fd8c314bd57c4549dac7ba3d"
+}
