@@ -91,7 +91,12 @@ dap.accept_invite, dap.attach, Listing (origin), dap.genesis → spine
 `sale.accept{o}` is effective when the stub `o` exists, is not withdrawn,
 is not replaced, the sale is open, and the actor holds `sale.accept_offer`.
 Every one of those facts is public. A nonexistent, withdrawn or replaced
-target is ineffective for everyone for the same reason.
+target is ineffective for everyone for the same reason. A stub's
+`replaces` marks the named earlier stub replaced in any view where that
+stub is visible; a viewer who joined after the earlier stub, and so holds
+only its header, interprets the new stub as open and nothing else. That is
+consistent with the full fold on everything such a viewer can observe, and
+the spike checks it.
 
 **The privacy promise**, stated plainly: who participates is public inside
 the context, as context-scoped principals. That an offer exists, who made
@@ -145,10 +150,12 @@ measured fix of this kind, and the spike counts the rest.
 
 ## The property
 
-The view interpreter `I(p, V(p,n), n)` takes the principal, the view and the
-frontier and returns `Interpreted{state, outcomes, bindings, affordances(p)}`
-or `Paused{at k, reason}`. For every participant `p` and frontier `n` where
-the result is interpreted:
+The view interpreter `I(p, V(p,n), n)` takes the principal, the view under
+visibility basis `n`, and `n`, and returns
+`Interpreted{state, outcomes, bindings, affordances(p)}` or
+`Paused{at k, reason, last}`, where `last` is the result through `k-1`
+under the same basis. For every participant `p` and frontier `n` where the
+result is interpreted:
 
 ```text
 observe(p, I(p, V(p,n), n))  ≡  observe(p, fold(S[0..n]), n)
@@ -161,12 +168,18 @@ equation says so on both sides. It cannot hide a contradiction by excluding
 an outcome the application presents as shared. The full fold is a
 specification oracle, not something every participant may run.
 
-A paused result is not compared at `n`. It must equal the interpreted result
-at `k-1`, and once the missing dependency is supplied it must resume to
-equality at `n`. Hidden positions enter the interpreter as authenticated
-headers. The disclosure frontier is an input distinct from an event's
-original position: an as-of query before a disclosure keeps the earlier
-visibility basis.
+A paused result is not compared at `n`. Its `last` is compared at the
+processing frontier under the same basis,
+`observe(p, last) = observe(p, fold(S[0..k-1]), n)`, and once the missing
+dependency is supplied the result must resume to equality at `n`. The
+basis matters: Dana, rebuilding after a disclosure at 22 and pausing at 11
+because a package is missing, holds a projection through 10 that includes
+positions disclosed at 22. That is not her view as of 10, and the oracle it
+is compared with is the full fold through 10 observed under basis 22. An
+as-of query at 10 uses basis 10 and is a different question. Hidden
+positions enter the interpreter as authenticated headers. The pause is an
+interpreter diagnostic surfaced as `observe.paused`, never a verdict on an
+event.
 
 The rule this imposes on an author:
 
@@ -233,9 +246,11 @@ Beyond that count, hardness arrives at recognisable cliffs:
    position-18 contradiction, silent without the check.
 
 3. **Retroactive visibility.** A new committee member, a late joiner, a newly
-   assigned reviewer. Audience is set at the event's position, so by default
-   they see nothing earlier. The answer is an explicit `Disclose{positions,
-   to}` act — sequenced, visible, auditable, the only way an audience grows.
+   assigned reviewer. Audience is set at the event's position, so they
+   receive the spine and any earlier event addressed to them, and nothing
+   else from before they joined. The answer is an explicit
+   `Disclose{positions, to}` act — sequenced, visible, auditable, the only
+   way an audience grows.
    Revealed events keep their original positions; the recipient may need to
    replay from the earliest affected position with every prior decision, grant
    and attachment it depends on. An as-of query before the disclosure keeps
@@ -292,8 +307,11 @@ Named rather than hidden:
 
 - A participant sees *how many* positions they cannot read — a leak of shape,
   not content. A model that must hide the count needs a separate context.
-- A late joiner receives the whole spine (design note §2), so the count of
-  hidden positions is over application events only.
+- A late joiner receives the whole spine and any event addressed to them
+  (design note §2). The count of hidden positions is over every position
+  outside the viewer's audience, including private system events such as
+  invitations addressed to someone else. A header says nothing about the
+  kind of the event it hides.
 - The serving party can withhold an opening behind a valid commitment. A
   verified chain proves integrity of the prefix, not complete delivery of
   everything the reader was entitled to, nor freshness of the head.
@@ -327,7 +345,8 @@ no cryptographic hiding). A generator producing series from each
 participant's affordances, including `dap.attach` mid-stream and one with a
 narrow audience, plus signed ineffective attempts: stale or conflicting
 actions, unauthorized actors, nonexistent, withdrawn or replaced targets,
-late joiners missing earlier shared decisions, one unrelated private attach
+late joiners missing earlier shared decisions, a late joiner who receives a
+replacement stub whose predecessor is hidden, one unrelated private attach
 that must not stale a shared act, and one relevant binding change that must.
 
 A hidden revocation is not a compliant history: the foundation forbids
@@ -356,8 +375,9 @@ results, and the pause rule on paused ones. Declare `observe` and the
 application invariants independently of the interpreter implementation;
 compare outcomes and affordances as well as state; never weaken an invariant
 to make the checker pass. Include disclosure before and after activation,
-dependency-incomplete disclosure, unavailable source, a late joiner with
-only the spine, and replay from an invalidated cache. This spike tests
+dependency-incomplete disclosure, a disclosure followed by an unavailable
+package so that the rebuild pauses mid-way, unavailable source, a late
+joiner with only the spine, and replay from an invalidated cache. This spike tests
 new-model initialization only; migration of preceding state is untested.
 
 Report per model: violations in the first draft; fixes to reach zero; kinds

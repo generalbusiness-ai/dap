@@ -195,24 +195,32 @@ positions carry authenticated commitments and linkage sufficient to verify
 the chain without their payloads.
 
 Each participant interprets their own view with the same pinned programs for
-the models they share. The **view interpreter** `I(p, V(p,n), n)` takes the
-principal, the view and the frontier, and returns either
-`Interpreted{state, outcomes, bindings, affordances(p)}` or
-`Paused{at k, reason}`. Hidden positions enter as authenticated headers; the
-disclosure frontier is an input distinct from an event's original position.
-A seller's room and a buyer's thread are two renderings of one series;
-neither is stored. The required property, on the interpreted case, is
+the models they share. Two clocks are kept apart: the **visibility basis**
+`n`, the frontier as of which audiences and disclosures are evaluated, and
+the **processing frontier**, the last position the interpreter has
+installed. The **view interpreter** `I(p, V(p,n), n)` takes the principal,
+the view under basis `n`, and `n`, and returns either
+`Interpreted{state, outcomes, bindings, affordances(p)}` at processing
+frontier `n`, or `Paused{at k, reason, last}` where `last` is the
+interpreted result through `k-1` under the same basis `n`. Hidden positions
+enter as authenticated headers. A seller's room and a buyer's thread are
+two renderings of one series; neither is stored. The required property, on
+the interpreted case, is
 
 ```text
 observe(p, I(p, V(p,n), n))  =  observe(p, fold(S[0..n]), n)
 ```
 
-where `observe` is a model-declared projection of state, outcomes, bindings
-and affordances for one principal, and **presentation bindings may render
-only what `observe` exposes** — so nothing the application shows can escape
-the property. A paused result is compared separately: it equals the
-interpreted result at `k-1`, and once the missing dependency is supplied it
-resumes to equality at `n`. The complete-series fold is a specification
+where `observe(p, state, n)` is a model-declared projection of state,
+outcomes, bindings and affordances for one principal under basis `n`, and
+**presentation bindings may render only what `observe` exposes** — so
+nothing the application shows can escape the property. A paused result is
+compared at its processing frontier under the same basis:
+`observe(p, last) = observe(p, fold(S[0..k-1]), n)`; once the missing
+dependency is supplied it resumes to equality at `n`. This is not an as-of
+query: an as-of query at `k-1` uses basis `k-1`. The pause itself is an
+interpreter diagnostic that reaches presentation as `observe.paused`; it is
+never a verdict on any event. The complete-series fold is a specification
 oracle, not an access grant. The views note carries the trace, the use
 cases, the authoring cost and the spike.
 
@@ -305,7 +313,7 @@ are not per-application choices.
 | `dap.observe` | members, unless the event names a narrower set | `dap.observe` | an ambient fact — time, a draw, a measurement — asserted by a designated actor |
 | `dap.close` | spine | `dap.close` | the context stops admitting application events |
 | `dap.scope.release` | spine | `dap.scope.release` | freezes or releases named rights for a described transition |
-| `dap.scope.activate` | spine | — | first entry after genesis and any origins in a destination context; binds a release |
+| `dap.scope.activate` | spine | — | first entry after genesis and any origins in a destination context; carries the release proofs and binds the release |
 | `dap.seq.request` | spine | `dap.seq.request` | application authority *asks* for an ordering change |
 | `dap.seq.assign`, `dap.seq.seal` | spine | ordering-control keys | *enact* an assignment change or seal a head |
 
@@ -605,8 +613,11 @@ act must not disclose its private payload.
 
 ### Disclosure
 
-Role membership is evaluated when an event's initial audience is set; joining
-later reveals nothing earlier. `dap.disclose{positions, to}` extends the
+Role membership is evaluated when an event's initial audience is set. A
+late joiner receives the spine and any earlier event explicitly addressed
+to them, such as their own invitation, and nothing else from before they
+joined; a `members` audience is never widened by a later join.
+`dap.disclose{positions, to}` extends the
 audience of past events; it is visible to its recipients and its actor, and
 to nobody else unless further disclosed. The recipient may need to rebuild
 from the earliest newly visible position with original order and semantic
@@ -680,13 +691,14 @@ interleaves two logs and never establishes joint authority.
 
 What must hold: a release is verified effective — or attested by a principal
 the destination genesis names — before activation; a release names a
-**destination commitment** that admits exactly one destination genesis, so
-an exclusive right is never live in two places; transferred rights are
-dormant until activation; old proposals are not retargeted; a join orders
-the future only; and release-then-activate may *block*, because a timeout
-cannot restore source authority while delayed activation remains possible.
-The commitment, the protocols and the failure cases are in the ordering
-note.
+**destination commitment**, which is the destination genesis's own content
+id, so one release admits exactly one genesis by construction and an
+exclusive right is never live in two places; release proofs travel in the
+activate event, not the genesis; transferred rights are dormant until
+activation; old proposals are not retargeted; a join orders the future
+only; and release-then-activate may *block*, because a timeout cannot
+restore source authority while delayed activation remains possible. The
+commitment, the protocols and the failure cases are in the ordering note.
 
 ---
 
@@ -769,9 +781,9 @@ that pins it.
 |---|---|
 | H1 genesis and invitation circular | §2 Crystallization: envelope `{L, G, route}`; invitations issued through the join path, never carried by the origin |
 | H2 late joiners lack public history | §1 and §2: `spine` audience, bootstrap entitlement, grant evidence embedded in `accept_invite` |
-| H3 release not bound to one genesis | §9 and ordering note §7: destination commitment |
+| H3 release not bound to one genesis | §9 and ordering note §7: the commitment is the destination genesis's content id; proofs live in the activate event, so identity is unique by construction. A first draft stripped receipt slots from a template, which checker's second review (R1) showed is many-to-one |
 | H4 retry checked after credential | §2 Transport admission and ordering note §3: retry recovery precedes admission |
-| M1 view equation lacks principal | §1 Audience and view: interpreter `I(p, V, n)`, pause compared separately; invariant 19 qualified |
+| M1 view equation lacks principal | §1 Audience and view: interpreter `I(p, V, n)` with visibility basis and processing frontier kept apart; a pause carries `last` and is compared under the same basis (second review, R2); invariant 19 qualified |
 | M2 buyer identity vs public roster | §2, §8 and views note trace: privacy promise stated |
 | M3 one invitation, three responders | §2 Crystallization: one invitation per responder |
 | M4 namespace owner vs upgrades | §2: foundation lineage and `dap.foundation`; upgrades deferred, spikes fix one foundation |
@@ -783,6 +795,14 @@ that pins it.
 
 Also decided: the sale's eligibility semantics (views note, split offer) and
 the classification of hidden revocations (views note, What the spike tests).
+
+Checker's second review of the revision (workroom report `e7ea1e91`) made
+seven further findings, R1 to R7: the destination commitment (above), the
+pause comparison (above), three narrative corrections (unsupported labels on
+hidden positions, the timing of the mistaken accept, late-joiner wording),
+the handover's predecessor bindings (ordering note §6) and the missing
+attach in the ordering lifecycle (ordering note §9). All are applied in this
+revision.
 
 ---
 

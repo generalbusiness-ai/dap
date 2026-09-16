@@ -121,20 +121,26 @@ invites Ivan `[12, dap.invite]`; he accepts `[13, dap.accept_invite]`.
 `[16, sale.offer_terms]`. The stub says o3 replaces o1; the terms say 780.
 Alice's `observe.offers[]` shows o1 as replaced and o3 at 780.
 
-**Accepting.** Alice taps Accept on o3 `[17, sale.accept]`. The accept is
-visible to every member. The fold checks only public state: the stub o3
-exists, is not withdrawn, is not replaced, the sale is open, Alice holds
-`sale.accept_offer`. All true. `observe.sale` becomes `decided, winner o3`.
-`observe.offers[]` shows o3 accepted and o2 declined. Her affordances shrink
-to Close and Disclose; Accept and Counter are gone.
+**Accepting, twice.** Alice is on a slow connection. She taps Accept on o3,
+and while that intent is still in flight her screen has not changed: her
+view is still at 16, Accept is still an affordance on every open offer, and
+she taps Accept on o2 as well, meaning to accept the higher one and
+unsure which she tapped first. Her client signs both intents from the view
+she had. The writer orders them: o3 first `[17, sale.accept]`, o2 second
+`[18, sale.accept]`.
 
-**The mistaken accept.** Alice, scrolling, taps Accept on o2 as well. The
-client can already tell her this will not take effect, because Accept is no
-longer in `observe.affordances[]`. If she insists, the event is sequenced
-`[18, sale.accept]` and is ineffective: the sale is already decided. Her
-thread shows position 18 with "no effect: sale already decided". Every
-member sees the same entry with the same reason, because the decision at 17
-and the state it changed are public.
+Position 17 is visible to every member. The fold checks only public state:
+the stub o3 exists, is not withdrawn, is not replaced, the sale is open,
+Alice holds `sale.accept_offer`. All true. `observe.sale` becomes
+`decided, winner o3`. `observe.offers[]` shows o3 accepted and o2 declined.
+Her affordances shrink to Close and Disclose; Accept and Counter are gone.
+
+Position 18 is judged at its own position: the sale is already decided, so
+it is ineffective. Her thread shows position 18 with "no effect: sale
+already decided". Every member sees the same entry with the same reason,
+because the decision at 17 and the state it changed are public. Nothing
+was drawn that the model did not offer; the second tap was offered by a
+view that had not yet learned the first tap's result.
 
 Alice's screen answers the three questions here in the same way as
 everyone's. What is this about: the anchor. What can I do now: Close or
@@ -159,10 +165,10 @@ The acceptance embeds the signed invitation, so every other member can
 verify Bob's grants from the acceptance alone.
 
 **What he sees on entry.** Bob's client receives the spine from position 0:
-the genesis, the listing, and every spine event so far. It also receives an
+the genesis, the listing, and every spine event so far, plus position 2,
+his own invitation, which is addressed to him. It also receives an
 authenticated header for every position whose audience excludes him. At
-this moment that is position 2, his own invitation, which he can read, so
-`observe.hidden_count` is 0. `observe.anchor` shows the listing with "Sale,
+this moment there is none, so `observe.hidden_count` is 0. `observe.anchor` shows the listing with "Sale,
 you are Buyer". `observe.participants[]` shows Seller and Buyer.
 `observe.affordances[]` shows Offer.
 
@@ -206,9 +212,9 @@ with "no effect: sale already decided". It does not change his state.
 
 **Close.** `[19, sale.close]` closes the sale. Bob's affordances for the
 Sale model are empty. The anchor reads "Sold, to you", attributed to this
-context. `observe.hidden_count` is 4, and the client shows what those four
-positions are: two invitations not addressed to him, one offer's terms, one
-inspection request.
+context. `observe.hidden_count` is 4. The client shows four numbered gaps
+at positions 4, 9, 12 and 14. The headers say nothing about what kind of
+event each hides, and the screen does not guess.
 
 ## Carol makes an offer and loses
 
@@ -263,8 +269,8 @@ judges the event exactly as Alice does, because everything the judgement
 depends on is in her view.
 
 **Close.** `[19, sale.close]`. The anchor reads "Sold", attributed to this
-context. `observe.hidden_count` is 5, listed as: two invitations, one
-offer's terms, one counter, one offer's terms.
+context. `observe.hidden_count` is 5: numbered gaps at 2, 7, 10, 12 and 16,
+with no kind shown for any of them.
 
 ## Ivan inspects
 
@@ -286,10 +292,13 @@ empty too, until a request exists.
 **The one request.** Carol's request `[14, inspection.request]` names him.
 `observe.inspection` shows it from the request's own payload: offer o2,
 requested by Buyer Carol. He cannot read the stub at 8, so the screen says
-"offer o2, made before you joined". `observe.affordances[]` gains Record
-result. He records his finding (outside this trace). He never sees the
+"offer o2; details unavailable to you". It does not say when the offer was
+made, because nothing he can read establishes that.
+`observe.affordances[]` gains Record result. He records his finding (outside this trace). He never sees the
 amount of the offer he inspected. When Bob replaces his offer
-`[15, sale.offer]`, Ivan can read that stub: he is a member now. The terms
+`[15, sale.offer]`, Ivan can read that stub: he is a member now. It says
+o3 replaces o1, and Ivan holds only a header for o1, so his
+`observe.offers[]` shows o3 as open and nothing about o1. The terms
 `[16, sale.offer_terms]` are a header, and `observe.hidden_count` is 8. The
 accept `[17, sale.accept]` and the ineffective accept `[18, sale.accept]`
 are readable, and the close `[19, sale.close]` is spine.
@@ -315,13 +324,13 @@ Dana as a second Seller `[20, dap.invite]` and Dana accepts
 sale went.
 
 **Before disclosure.** Dana's client receives the spine from 0: genesis,
-listing, every acceptance, the attach, the close. It receives headers for
-every position whose audience excluded her, which is every invite, every
-terms event, the counter and the inspection request. It also receives the
-members-audience stubs and accepts from positions 6, 8, 15, 17 and 18,
+listing, every acceptance, the attach, the close, and her own invitation at
+20. It receives headers for every position whose audience excluded her:
+the three invitations addressed to others (2, 4, 12), every terms event,
+the counter and the inspection request. It also receives only headers for
+the members-audience stubs and accepts at positions 6, 8, 15, 17 and 18,
 because membership at join gives no retroactive access; the audience of an
-event is set at its position and Dana was not a member then. Those five are
-headers too.
+event is set at its position and Dana was not a member then.
 
 So Dana's `observe.thread[]` is the spine plus headers.
 `observe.hidden_count` is 13. `observe.sale` is `closed`; the close is
@@ -351,6 +360,12 @@ Dana's screen marks the disclosed positions as "disclosed to you at 22".
 Anyone who asks the client for the view as of position 21 gets the earlier
 one, with 13 hidden positions.
 
+Had the Inspection package been unavailable during that replay, Dana's
+client would have paused at 11 with the rebuilt projection through 10,
+including the newly disclosed offers, and `observe.paused` would say so.
+That projection is her view under the visibility basis of 22, processed
+through 10; it is not her view as of 10.
+
 ## What the model makes visible on the screen
 
 The paths above are written so the constraints show. A client may soften
@@ -363,8 +378,9 @@ them in presentation; it may not hide them.
   member who offered, whether an offer was withdrawn or replaced, and which
   offer won. Only the terms are private.
 - **The hidden count is shown.** Every screen states how many positions the
-  viewer cannot read. A client may list what kinds of thing they are when
-  the headers say so; it may not omit the count.
+  viewer cannot read, as numbered gaps. A header says nothing about the kind
+  of event it hides, so the client labels nothing it cannot establish from
+  what the viewer can read.
 - **Pauses are shown as pauses.** When a package or a disclosed dependency
   is missing, the screen stops at the last interpretable position and says
   why. A pause is never rendered as a refusal or a success.
@@ -372,8 +388,9 @@ them in presentation; it may not hide them.
   invitation, then an acceptance. The envelope alone joins nobody. A client
   may automate the invitation under a stated policy; it cannot skip it.
 - **The audience is set at the position.** A late joiner sees the spine and
-  nothing else from before they joined, until someone discloses. The
-  screen says that this is why the positions are hidden.
+  any earlier event addressed to them, such as their own invitation, and
+  nothing else from before they joined, until someone discloses. The screen
+  says that this is why the positions are hidden.
 - **The anchor is composed by the client.** The referent's title, photo and
   status come from `observe.anchor` of one or more contexts. When the
   status says "Sold", the client attributes it to the context that decided
@@ -381,5 +398,6 @@ them in presentation; it may not hide them.
   status is shown separately, not merged.
 - **Affordances are the model's, not the client's.** What a person can do is
   exactly `observe.affordances[]`. A control the model does not offer is not
-  drawn. An event the person insists on sending anyway is sequenced and
-  judged like any other, as Alice's position 18 shows.
+  drawn. An intent signed from a view that has since moved on is sequenced
+  and judged at its own position like any other, as Alice's position 18
+  shows.
