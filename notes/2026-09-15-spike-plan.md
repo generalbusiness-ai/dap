@@ -86,7 +86,7 @@ profile of design note §2, which remains open.
 
 | Decision | Choice | Why | Does not claim |
 |---|---|---|---|
-| Language and runtime | TypeScript on Node 24, one package under `spike/`, no framework, built-in test runner | Models as ordinary functions (views note); Atseq's folder is the nearest precedent and is TypeScript, so comparisons are direct; agents author TypeScript well (goal 2) | Portability, a declarative fold language, or the production runtime profile |
+| Language and runtime | TypeScript on Node 24 or later, one package under `spike/`, no framework, built-in test runner | Models as ordinary functions (views note); Atseq's folder is the nearest precedent and is TypeScript, so comparisons are direct; agents author TypeScript well (goal 2) | Portability, a declarative fold language, or the production runtime profile |
 | Content id | `sha256:<hex>` over RFC 8785 canonical JSON | One deterministic serialization; every artifact, package, kind and event has an id by content (design §7) | Any particular production hash or encoding |
 | Signatures and principals | Ed25519 through `node:crypto`; a principal is a public key; a context-scoped key per participant per context | Cheap, standard, no key infrastructure (design §8) | Identity resolution, recovery of lost keys, or anonymity beyond a fresh key |
 | Signed objects | Defined exactly in §2.1 below: event body, actor envelope, committed bytes, header preimage, header hash, sequencer signature, genesis identity, position-0 predecessor | Two implementers must produce identical bytes and identical verdicts | Any production encoding |
@@ -288,8 +288,9 @@ The author of each model is an agent. It is given: design note §§1 to 4 and
 interface types, the model's predeclarations above, and the Discussion model
 as a worked example. It may not run the checker or the invariant tests, or
 read any checker output, until the baseline is committed. Recorded: the
-baseline commit; each checker run's violations; each fix as its own commit
-naming the failure and its discovery source; the totals. Turn counts and
+baseline commit; each checker run's violations; each fix in the repair
+ledger with the failure and its discovery source, and one snapshot commit
+per checker run (§4.3); the totals. Turn counts and
 wall-clock are noted for interest and are not criteria.
 
 ### 4.6 Transfer lifecycle fixture
