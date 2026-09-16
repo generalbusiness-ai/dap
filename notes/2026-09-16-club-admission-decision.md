@@ -152,14 +152,14 @@ The exact report #512 above was inspected; its reproductions were not rerun.
 
 | Ref | File and lines |
 |---|---|
-| S1 | `notes/2026-09-15-spike-plan.md:240–276,278–300,365–374` |
-| S2 | `spike/fixtures/club.ts:177–194,215–266` |
-| S3 | `spike/test/club.test.ts:199–217`; `spike/manifests/club.ledger.md:202–206,229–246` |
-| S4 | `spike/src/script.ts:81–121`; `spike/src/foundation.ts:258–276,476–494` |
-| S5 | `spike/manifests/club.ts:107–159,225–250` |
-| S6 | `spike/src/types.ts:12–44` |
-| S7 | `notes/2026-09-14-evolving-spaces-design.md:208–224,711–717`; `notes/2026-09-14-one-series-many-views.md:186–205` |
-| S8 | `spike/manifests/club.md:17–88`; `spike/manifests/club.ts:170–197` |
+| S1 | [notes/2026-09-15-spike-plan.md:240–276,278–300,365–374](notes/2026-09-15-spike-plan.md@70bd4064a7d41ba592ccceb54b95d0e895a02d57:240) |
+| S2 | [spike/fixtures/club.ts:177–194,215–266](spike/fixtures/club.ts@70bd4064a7d41ba592ccceb54b95d0e895a02d57:177) |
+| S3 | [spike/test/club.test.ts:199–217](spike/test/club.test.ts@70bd4064a7d41ba592ccceb54b95d0e895a02d57:199); [spike/manifests/club.ledger.md:202–206,229–246](spike/manifests/club.ledger.md@70bd4064a7d41ba592ccceb54b95d0e895a02d57:202) |
+| S4 | [spike/src/script.ts:81–121](spike/src/script.ts@70bd4064a7d41ba592ccceb54b95d0e895a02d57:81); [spike/src/foundation.ts:258–276,476–494](spike/src/foundation.ts@70bd4064a7d41ba592ccceb54b95d0e895a02d57:258) |
+| S5 | [spike/manifests/club.ts:107–159,225–250](spike/manifests/club.ts@70bd4064a7d41ba592ccceb54b95d0e895a02d57:107) |
+| S6 | [spike/src/types.ts:12–44](spike/src/types.ts@70bd4064a7d41ba592ccceb54b95d0e895a02d57:12) |
+| S7 | [notes/2026-09-14-evolving-spaces-design.md:208–224,711–717](notes/2026-09-14-evolving-spaces-design.md@70bd4064a7d41ba592ccceb54b95d0e895a02d57:208); [notes/2026-09-14-one-series-many-views.md:186–205](notes/2026-09-14-one-series-many-views.md@70bd4064a7d41ba592ccceb54b95d0e895a02d57:186) |
+| S8 | [spike/manifests/club.md:17–88](spike/manifests/club.md@70bd4064a7d41ba592ccceb54b95d0e895a02d57:17); [spike/manifests/club.ts:170–197](spike/manifests/club.ts@70bd4064a7d41ba592ccceb54b95d0e895a02d57:170) |
 
 The retained manifest is
 `sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde`;
