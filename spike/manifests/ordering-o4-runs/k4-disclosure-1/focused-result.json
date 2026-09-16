@@ -1,0 +1,10 @@
+{
+  "command": [
+    "node",
+    "--test",
+    "spike/test/ordering-lifecycle.test.ts",
+    "spike/test/ordering-scope-disclosure.test.ts"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 1.6662418842315674
+}

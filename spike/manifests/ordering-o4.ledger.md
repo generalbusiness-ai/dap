@@ -375,3 +375,20 @@ revision; integration must compute final identities and generate fresh proofs.
 The bounded K4 source is frozen before its focused disclosure/specification
 checks. No full suite or campaign is repeated for this documentation and
 observation correction; results will be appended below at their exact source.
+
+
+K4 component measurement at frozen source `e90b64b2e2b1e3f31a92aa00ecc77126c036d0bf` passes all 15
+focused checks: 13 manifest checks and two actual disclosure checks, one per
+backend. Whole-tree typecheck passes. Both retained observations cover live
+and cold views: four S readers and three current F participants per phase.
+Bob cannot read S14 but receives the identical admitted I proof at S20; all
+three F participants receive that same signed mandate and result in F1.
+Kim cannot read S20 directly in S. The exact assigned audiences, request and
+activation bytes, actual genesis identities and extracted content are in
+`ordering-o4-runs/k4-disclosure-1/observations`; `run.json` pins their hashes
+and this source's changed blobs. All runtime and fixture blobs match edacc.
+
+These focused results establish the documented disclosure, not a privacy
+repair or a passing combined K1–K4 candidate. This appended result, raw
+outputs and observation files are the only additions after the measured
+source; earlier run files are unchanged. No full suite or campaign ran.
