@@ -595,14 +595,25 @@ transition and source prefixes pinned by F's genesis. Exact retries retain
 the original receipt and verdict, including a failed attempt retried after a
 later successful activation. A later activation has no further effect.
 
+Kinds, roles, models and related string-keyed tables resolve only their own
+entries. Inherited JavaScript property names do not supply bindings or grants.
+Unknown roles retain their existing empty-capability behavior, while an
+explicitly declared own name such as `constructor` or `__proto__` remains usable.
+
 Scope's policy refusals, profile validation errors and public-proof validation
-errors have explicit types. Legacy codec and Journal wire rejections are
-recognized only inside the pure wire-validation boundary, using the codec's
-TypeError prefix and an enumerated set of declared Journal/control reasons.
+errors have explicit types. The codec and legacy canonicalizer identify their
+declared input errors by private membership, preserving their TypeError types
+and messages. Invitation verification validates both commitment and header
+bytes through these boundaries, then hashes outside the catches. Malformed
+input remains an ordinary refusal; an unexpected hash/key fault or an unrelated
+TypeError with codec-looking text propagates during strict replay.
+
+The pure wire-validation boundary still recognizes an enumerated set of exact
+Journal/control Error messages. Deliberately throwing a Scope policy-error
+instance or one of those listed messages can therefore produce a refusal.
 Package lookup and semantic replay occur outside that translation boundary.
-An unexpected exception does not become an ordinary ineffective verdict.
 Foundation `fold_error` and `audience_error` diagnostics in the scope fold
-also surface as errors; ordinary attached-handler refusals remain verdicts.
+surface as errors; ordinary attached-handler refusals remain verdicts.
 
 Every accepted ScopeJournal append recomputes its scope state. If that fold
 cannot finish, ScopeJournal closes its Journal and disables further submission,
@@ -611,3 +622,12 @@ Already committed bytes remain committed. Recovery opens a fresh facade and
 replays those bytes; an exact retry adds no position. A transient registry
 failure can recover, while a deterministic throwing handler fails again on
 cold replay. No assumed prior scope state is used to admit another event.
+
+Supported ScopeJournal construction uses `create` or `open`, both of which
+enable strict foundation folding. Its constructor is private in the TypeScript
+API; this restriction is not a JavaScript sandbox. After a replay fault,
+submission, retained Context writes, interpretation and export are blocked.
+Memory-backed `proof()` and retained `context.view()` may still read history.
+A fault in the final verification after a successful replay can throw without
+disabling the facade; the replayed outcome remains unchanged. Existing envelope
+prechecks can refuse a submission after a fault before any bytes are stored.
