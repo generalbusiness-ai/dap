@@ -228,7 +228,7 @@ incorrect guard; it is not evidence of a clean campaign under run 6.
 
 ## Run 7
 
-Snapshot commit: see `git log`, "checker run 7 snapshot". Manifest
+Snapshot commit: `7e9bac1` ("checker run 7 snapshot: derive counter readers from effective stubs"). Manifest
 unchanged from run 6:
 `sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9`.
 Package after Fix 7:
@@ -247,7 +247,23 @@ The generator and the stricter privacy budget are unchanged. The kept
 run-6 model retains the failures, including both hostile G1 shapes; the
 current model must prevent their delivery. The run-6 corpus test also
 checks deletion minimality and requires every case to be clean under
-the current model. Results will be recorded after the snapshot run.
+the current model.
+
+Results: **88 tests pass**, including the predeclared cases and all
+**200 of 200 seeds with zero violations** of the property, pause rule,
+invariants and corrected privacy budget. Typecheck and `git diff --check`
+pass. The nine run-6 series still fail against the kept model, reproduce
+the exact recorded finding, and are deletion-minimal; all are clean under
+the current model. Both G1 guard regressions remain executable against
+the kept model, and the current model prevents those deliveries.
+
+Coverage is unchanged from run 6: 11171 entries, 946 joins, 199 side
+attaches, 1716 disclosures, 273 stubs (31 replacements), 175 withdrawals,
+159 counters, 111 accepts (18 effective) and 279 closes. The same limits
+remain: zero private disclosures, zero Inspection attaches, 120 unbound
+inspection requests. The literal trace still has five violations, first
+Ivan at 15, and the hidden-predecessor case has three; both counts and
+first positions are asserted. The declared-disclosure versions pass.
 
 ## Result
 
@@ -262,7 +278,8 @@ and one (fix 7) derives actual counter recipients from effective stub
 state so refusal cannot misdeliver the payload. The experiment's manifest has four post-baseline revisions, identified
 above. Run 6 corrects a false negative in the privacy guard and exposes
 counter misdeliveries; that snapshot does not meet the predeclared
-zero-violations campaign gate. Run 7 adds the counted audience repair. The views note's trace
+zero-violations campaign gate. Run 7 adds the counted audience repair
+and passes all 200 seeds under the corrected guard. The views note's trace
 as literally drawn is dependency-incomplete for Ivan under the fixed
 model and passes only with the declared join disclosure added; both
 results are kept visible in the tests.
@@ -402,7 +419,7 @@ disclosure on every join, including the joins in the predeclared cases.
   not a string, so both rules are total over runtime JSON; the fold then
   refuses the event as `malformed`.
 
-Verification after fixes 4 to 6 (package printed by the test run):
+Verification after fixes 4 to 6 (package recorded under Run 4):
 the trace and cases 2, 3 and 4 pass; the campaign fails 60 of 200
 seeds, every violation of one signature: a member who is not a party
 can read a `com.example.inspection.request` whose verdict is `unhandled`
