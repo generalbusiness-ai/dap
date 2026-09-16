@@ -64,7 +64,7 @@ not a new committed position.
 
 ## Measurements
 
-Focused run 1 source: `462d7de` (the source-freeze commit). Command from
+Focused run 1 source: `462d7dec3a40eb504bc45688cdecc89383820e8a`. Command from
 `spike`: `node --test test/control-verifier.test.ts`. Result: 53 passed,
 one failed, zero skips or TODOs. The isolated subprocess was denied access
 while Node resolved macOS's `/var` symlink; no verifier assertion failed.
@@ -80,8 +80,39 @@ failures, skips or TODOs; see [run-2.txt](ordering-o5-runs/run-2.txt).
 TypeScript then rejected one deliberate malformed-input test cast; the cast
 now explicitly passes through `unknown`, with no runtime or verifier change.
 
-The next frozen source adds an actual O3 SQLite-produced handover, with
-explicit expected seal/assign/successor positions 2/3/4. Its projected proof
-is checked in the restricted subprocess and emitted for retention. O3 is a
-producer of this input, not the source of the expected control result.
-Full integration measurement and independent checker review remain gates.
+Full integration run 3 source:
+`0a1daff7126ce63dd3aa258bfad25becb073f67a`.
+Commands from `spike`: `npm test` and `npm run typecheck`.
+Node 26.8.2. Result: **256 tests, 255 passed, zero ordinary failures,
+one executing/failing Club TODO**, zero skips; exit status 0; 107.4 seconds.
+All **55 O5 checks** passed: 47 declared proof cases, four history comparisons,
+the identical-header omission counterexample, input/mutation checks, and two
+permission-isolated subprocess checks. TypeScript passed. See the retained
+[run-3.txt](ordering-o5-runs/run-3.txt) and
+[typecheck-3.txt](ordering-o5-runs/typecheck-3.txt).
+
+One subprocess receives an actual O3 SQLite-produced handover, with explicit
+expected seal/assign/successor positions 2/3/4. The origin and successor entry
+are reduced to headers; only genesis, seal and assign openings are supplied.
+Its exact projected input and result are retained in
+[run-3-journal-proof.json](ordering-o5-runs/run-3-journal-proof.json), extracted
+unchanged from the test diagnostic. O3 produces this input; it does not provide
+the expected control result. The successor starts signing at position 4 in
+epoch 1. Genesis contains its public bootstrap metadata and declared origin;
+no package implementation or later application payload is provided.
+
+All three 200-seed visibility campaigns again had zero declared violations:
+Sale 11,047 entries (195 offers, 20 effective accepts); Booking 12,000 entries
+(652 effective occupancies, 471 linked occupancies, 324 effective cancels);
+Club 11,939 entries (1,001 effective votes, 126 effective admits). These are
+the existing visibility-path campaigns, not 600 signed journal/control traces.
+The chosen Club policy failure and Sale repair-budget overrun remain unchanged.
+
+No control verifier algorithm repair was needed after the first frozen source.
+The two corrections were to the isolated runner path and a test-only cast.
+Source, fixtures and edited prose pass the scoped whitespace check. Raw Node
+logs retain whitespace in stack traces, including the first isolation failure
+and existing Club TODO; no whole-tree whitespace claim is made.
+
+The final commit adds only measured outputs and this record after run 3.
+Independent checker review remains the completion gate.
