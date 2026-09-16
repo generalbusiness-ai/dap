@@ -1,0 +1,79 @@
+✖ O1-G1 raw Context cannot resume stale admission after Journal closes on memory (9.7645ms)
+ℹ {"storage":"memory","raw":{"error":null,"invitation":{"position":3,"verdict":{"known":true,"authorized":true,"effective":true}},"redemption":{"position":4,"verdict":{"known":true,"authorized":true,"effective":true}},"participants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w","ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q"]},"coldParticipants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"],"coldInviteVerdict":{"known":true,"authorized":false,"effective":false,"reason":"unauthorized"}}
+✔ O1-G1 raw Context cannot resume stale admission after Journal closes on sqlite (8.98775ms)
+ℹ {"storage":"sqlite","raw":{"error":"Error: SQLiteBackend: unavailable or re-entrant transaction","invitation":null,"redemption":null,"participants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"]},"coldParticipants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"],"coldInviteVerdict":null}
+✖ O1-G1 raw Context stays inactive after its own committed append loses its reply on memory (4.164333ms)
+ℹ {"storage":"memory","raw":{"error":null,"invitation":{"position":3,"verdict":{"known":true,"authorized":true,"effective":true}},"redemption":{"position":4,"verdict":{"known":true,"authorized":true,"effective":true}},"participants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w","ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q"]},"coldParticipants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"],"coldInviteVerdict":{"known":true,"authorized":false,"effective":false,"reason":"unauthorized"}}
+✖ O1-G1 raw Context stays inactive after its own committed append loses its reply on sqlite (6.864833ms)
+ℹ {"storage":"sqlite","raw":{"error":null,"invitation":{"position":3,"verdict":{"known":true,"authorized":true,"effective":true}},"redemption":{"position":4,"verdict":{"known":true,"authorized":true,"effective":true}},"participants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w","ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q"]},"coldParticipants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"],"coldInviteVerdict":{"known":true,"authorized":false,"effective":false,"reason":"unauthorized"}}
+ℹ tests 4
+ℹ suites 0
+ℹ pass 1
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 105.200042
+
+✖ failing tests:
+
+test at test/context-freshness.test.ts:42:54
+✖ O1-G1 raw Context cannot resume stale admission after Journal closes on memory (9.7645ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /stale|closed|inactive|unavailable|not open/. Input:
+  
+  'undefined'
+  
+      at TestContext.<anonymous> (file:///private/tmp/dap-o1-profile-codec-journal/spike/test/context-freshness.test.ts:59:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'undefined',
+    expected: /stale|closed|inactive|unavailable|not open/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test/context-freshness.test.ts:66:54
+✖ O1-G1 raw Context stays inactive after its own committed append loses its reply on memory (4.164333ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /inactive/. Input:
+  
+  'undefined'
+  
+      at TestContext.<anonymous> (file:///private/tmp/dap-o1-profile-codec-journal/spike/test/context-freshness.test.ts:90:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'undefined',
+    expected: /inactive/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test/context-freshness.test.ts:66:54
+✖ O1-G1 raw Context stays inactive after its own committed append loses its reply on sqlite (6.864833ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /inactive/. Input:
+  
+  'undefined'
+  
+      at TestContext.<anonymous> (file:///private/tmp/dap-o1-profile-codec-journal/spike/test/context-freshness.test.ts:90:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'undefined',
+    expected: /inactive/,
+    operator: 'match',
+    diff: 'simple'
+  }

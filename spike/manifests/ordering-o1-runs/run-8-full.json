@@ -1,0 +1,21 @@
+{
+  "source": "b92cc4ff4105332394439293d4930b7fc07ca5d9",
+  "node": "v26.8.2",
+  "commands": [
+    {
+      "command": [
+        "npm",
+        "test"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "exit_code": 0
+    }
+  ]
+}

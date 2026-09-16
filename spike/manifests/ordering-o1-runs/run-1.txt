@@ -1,0 +1,180 @@
+
+> dap-spike@0.0.1 test
+> node --test 'test/**/*.test.ts'
+
+✔ a submission without a credential is refused; a forged credential for a non-participant is refused (2.019958ms)
+✔ stable facts are checked first: wrong genesis, missing action id, envelope bounds (0.469125ms)
+✔ positions are dense and every header binds its predecessor (1.571708ms)
+✔ the memory backend refuses re-entrant appends (0.207125ms)
+✔ audience reads frozen preceding state without changing model state or earlier audiences (8.141209ms)
+✔ attaching a handler retains the original audience read scope and rolls back undeclared reads (2.91625ms)
+✔ binding identity includes the audience read scope even when resolved handlers match (0.28875ms)
+✔ an audience error discards all model effects, survives retry, and replays consistently (6.559708ms)
+✔ test keys reproduce the independent RFC 8032 Ed25519 vector (6.2315ms)
+✔ fixed vectors pin each signed object, exact UTF-8 bytes, identity and signature (9.756833ms)
+✔ fixed rejection vector: tampered body (0.605666ms)
+✔ fixed rejection vector: actor signs noncanonical bytes (0.370042ms)
+✔ fixed rejection vector: wrong prev, correctly signed (0.659833ms)
+✔ fixed rejection vector: wrong commitment, correctly signed (0.50875ms)
+✔ fixed rejection vector: unassigned sequencer key (0.364125ms)
+✔ fixed rejection vector: sequencer signs full header bytes (0.29ms)
+✔ canonical encoding supports RFC 8785 numbers, UTF-16 ordering and unnormalized strings (0.232709ms)
+✔ canonical encoding rejects lossy JS data, invalid Unicode and noncanonical byte inputs (19.299833ms)
+✔ principals and signatures have one exact encoding and must match their signing key (5.448708ms)
+✔ body profile validates required and forbidden fields without interpreting the payload (1.237125ms)
+✔ header-only verification authenticates disclosure evidence and exposes no private fields (1.308167ms)
+✔ wire verification enforces genesis identity, destinations, origin opt-in and evidence placement (9.5925ms)
+✔ wire framing is canonical and decoded entries are independent frozen snapshots (0.390709ms)
+✔ a package declaring a name under the system prefix is refused, whatever it claims about itself (2.143417ms)
+✔ a descriptor whose id does not match its content is refused (0.120791ms)
+✔ two handlers for one kind without a resolution is ambiguous; a resolution naming exactly both is accepted (0.347833ms)
+✔ resolution retains the capability and the active audience policy: attaching a handler never widens (0.827208ms)
+✔ identities follow executable content: a changed fold changes descriptor and binding ids (0.369042ms)
+✔ binding identity is per kind: an unrelated attach does not change it; a relevant change does (0.453583ms)
+✔ an application intent captures its binding by default; a relevant attach stales it, an unrelated private attach does not; a missing binding is refused (1.890208ms)
+✔ the manifest is one experiment identity over its prose, its executable part and the package, and the prose states the same bounds (0.733791ms)
+ℹ DISCUSSION_MANIFEST_ID sha256:d5f67ab9b25babd202cd5d1c0bbae80271f92df6aa421eb666eb2af777668c9f
+✔ normal replay: generated series over the manifest seeds have zero violations, and the corpus exercises joins, a side attach and disclosures (110.891708ms)
+✔ pause and resume: a client without the side package pauses at the attach and resumes to equality with it (6.6345ms)
+✔ planted fault: closing privately breaks the shared outcome for a late joiner, and the checker finds it (3.159ms)
+✔ shrinking: the failing series reduces to a minimal script that still fails (12.728208ms)
+✔ expected outcomes, independent of the fold: closure is seen by a late joiner; posts are seen exactly by members at the time and by disclosure; a post after closure and an unauthorized post are ineffective (12.310667ms)
+✔ F5: the generator never exceeds its entry bound, even when a compound step would (3.798292ms)
+✔ the sale trace 0 to 5 interprets to the oracle for every participant at every frontier (35.694208ms)
+✔ a late joiner, a members-audience event before they joined, a disclosure and an as-of query keep the property (31.409ms)
+✔ the views note's pause example: a disclosure followed by an unavailable package pauses with last through the position before, under the disclosure's basis, and resumes (2.751209ms)
+✔ a dependency-incomplete disclosure pauses: the event is disclosed but the attach it needs is not (0.638167ms)
+✔ a cached interpretation is reused only for the same principal, view content, basis and packages; a pause is never reused (4.152042ms)
+✔ F2: a disclosed event whose binding the principal cannot resolve pauses with dependency_missing, and resumes once the attach is disclosed (1.212459ms)
+✔ F1: a contradiction that changes no displayed state is caught through outcomes: a shared decision whose fold reads private votes (1.021125ms)
+✔ G1: an always-effective co-handler cannot mask a contradiction; per-handler outcomes are compared (0.727291ms)
+✔ G2: a disclosed intent that is genuinely stale is a stale_binding verdict, not a permanent pause (0.636125ms)
+✔ G3: affordances come from the visible binding, so a hidden attach with its own affordances causes no false mismatch (0.700916ms)
+✔ H1: a binding identity restored by an unseen attach is a missing dependency, not a stale intent: activation provenance decides (1.388417ms)
+✔ J1: a saved intent sequenced after a hidden attach is a missing dependency for a viewer who sees the intent but not the attach; the header carries the activation (0.861125ms)
+✔ K1: a disclosed attach that builds on a hidden attach is a missing dependency: the header names what it requires (1.082958ms)
+✔ L1: the facts an attach is refused on are among its requirements: a conflicting model definition and a repeated package (1.319959ms)
+✔ L2: a malformed attach payload is recorded with a malformed verdict, its exact retry replays, and a valid submission follows; evidence extraction never throws (0.375792ms)
+✔ M1: evidence handlers follow the branch attach takes: a resolution on a new kind is ignored, and the installer of the bound model is required (0.499708ms)
+✔ M2: a package name inherited from Object.prototype is not a package: recorded as package_unavailable, exact retry replays, and evidence extraction never throws (1.260084ms)
+✔ N1: an attach the sequencer could not resolve stays ineffective for every judge, whatever package a client has or fetches later; a new attach succeeds once the sequencer has it (0.640291ms)
+✔ authorized issue, issuer revoked, then redeemed: effective (authority judged at issuance) (2.836333ms)
+✔ unissued token: refused at admission, never sequenced (0.724208ms)
+✔ unauthorized issuer: the invite is sequenced but ineffective, and its token admits nobody (1.039667ms)
+✔ member-side verification refuses a header that is not in the chain (0.383375ms)
+✔ wrong invitee cannot redeem (0.554125ms)
+✔ exact retry of a committed acceptance after consumption returns the receipt; changed content and reuse are refused (0.583375ms)
+✔ V1 Sale visibility trace through verified bytes and memory (58.743291ms)
+✔ V1 Sale visibility trace through verified bytes and sqlite (71.152542ms)
+✔ signed stable facts precede retry and admission; raw Context cannot bypass proof (7.670667ms)
+✔ exclusive SQLite owner excludes a second OS process and releases on close (167.207959ms)
+✔ SIGKILL at before-write preserves one atomic append boundary (98.383625ms)
+✔ SIGKILL at after-entry preserves one atomic append boundary (99.089333ms)
+✔ SIGKILL at after-head preserves one atomic append boundary (93.225166ms)
+✔ SIGKILL at after-retry preserves one atomic append boundary (90.691833ms)
+✔ SIGKILL at after-consumption preserves one atomic append boundary (88.029208ms)
+✔ SIGKILL at after-outbox preserves one atomic append boundary (87.667334ms)
+✔ SIGKILL at before-commit preserves one atomic append boundary (89.5685ms)
+✔ SIGKILL at after-commit preserves one atomic append boundary (88.965667ms)
+✔ outbox resumes saved bytes after crash before notification and after delivery before ack (71.796833ms)
+✔ restart rejects tampered stored body despite unchanged signed wire bytes (7.486541ms)
+✔ signed invitations and origin duplicate checks accept finite fractional JCS numbers (9.080792ms)
+✔ outbox awaits asynchronous confirmation and retains failed publications (10.2535ms)
+✔ restart rejects SQL row positions that disagree with signed entry positions (5.119375ms)
+✔ journal pins the signed genesis profile and writer assignment to its backend (4.978083ms)
+✔ V1 signed invitation issued before revocation remains redeemable after SQLite restart (16.221791ms)
+✔ V1 signed unauthorized and unissued invitations cannot admit another participant (14.997458ms)
+✔ initialization SIGKILL at after-entry retains all or none of genesis and origins (77.496334ms)
+✔ initialization SIGKILL at after-commit retains all or none of genesis and origins (73.933292ms)
+✔ uncertain committed response requires reopen before another action (9.742375ms)
+✔ manifest identity binds the prose and executable source, independently recomputed (1.105375ms)
+ℹ ORDERING_LIFECYCLE_MANIFEST_ID sha256:63be83e60036a5936569c478da7a8c7be6b8ab1c744d59ef3296b7d6182b5a9d
+✔ every healthy boundary states all heads, writers, right statuses and exact active owners (2.3455ms)
+✔ join boundaries have two releases, dormant initialization and one activation followed by progress (0.273125ms)
+✔ all adverse cases have resolvable branches, full safe observations and exact reason coverage (13.148959ms)
+✔ restarts, alternative valid proof material and timeouts cannot duplicate or revive authority (0.187041ms)
+✔ public exports are exact, source-linked and exclude the private accepted amount (0.153042ms)
+✔ changed-genesis enumeration covers every field, container, removal and added field (10.873333ms)
+✔ independent safety checks detect double ownership, premature activation and import duplication (0.353459ms)
+✔ future observation comparison rejects changed, missing and additional state, including unsafe mutations (0.3735ms)
+✔ replay obligations preserve pre-attach outcomes, local import timing and writer retry identity (0.196625ms)
+✔ a listing origin opens the sale; the origin actor needs no grant (14.623333ms)
+✔ the same origin adopted twice is a genesis error (0.3915ms)
+✔ an origin whose kind does not resolve is an unhandled verdict and inert (0.87575ms)
+✔ an origin binds no expected binding: a foreign binding on an origin is ignored (0.406167ms)
+✔ a listing submitted later, not as an origin, is refused by the model (1.197958ms)
+✔ C1: a second issuance with the same label is its own token; admission and verification use the same issuance object and a tampered envelope supplies nothing (2.975541ms)
+✔ C1: an unauthorized issuance is never an issued token, at admission or in the fold (1.294125ms)
+✔ C3a: a narrow attach caps every kind it declares; a members-audience event of that package is not served beyond the cap (1.209208ms)
+✔ C3b: observe honours a declared narrower audience (0.501792ms)
+✔ C5: an intent bound to another context cannot be adopted as an origin; a system kind cannot be an origin (0.545041ms)
+✔ C8: committed entries and receipts are snapshots; a caller cannot rewrite them (0.780417ms)
+✔ C9: a malformed system payload is a deterministic ineffective verdict with the actor as its only reader; folding and retry continue (0.625833ms)
+✔ C10: close stops application events and leaves foundation administration open (0.682875ms)
+✔ a capped package cannot widen through a members policy either (0.680875ms)
+✔ D1: a member who never saw the private invitation verifies the acceptance from headers and the spine alone (0.763042ms)
+✔ D2: captured values are outside the identity, so they must live in config, which is inside it (0.380084ms)
+✔ D2: an installed descriptor is frozen; replacing a fold after attach throws and changes nothing (0.122292ms)
+✔ D2: a second definition under a model name in use is refused unless it is the same definition (0.190959ms)
+✔ D3: observe may narrow only to current members; naming a future member is ineffective and read by the actor alone (0.623875ms)
+✔ E1: a module-local helper is part of identity; same text and config in different modules bind differently and conflict on a shared model name (0.867541ms)
+✔ E2: a shallow-frozen input descriptor is frozen recursively on attach; a nested config cannot change (0.148ms)
+✔ run 1 corpus: every shrunk series still fails against the run-1 model with the recorded failure kind, and is reported against the current model (483.13475ms)
+ℹ seed-103: 3 steps; run-1 model invariant; current model clean
+ℹ seed-121: 3 steps; run-1 model invariant; current model clean
+ℹ seed-129: 3 steps; run-1 model invariant; current model clean
+ℹ seed-138: 3 steps; run-1 model invariant; current model clean
+ℹ seed-146: 6 steps; run-1 model mismatch; current model clean
+ℹ seed-158: 6 steps; run-1 model mismatch; current model clean
+ℹ seed-172: 3 steps; run-1 model invariant; current model clean
+ℹ seed-183: 3 steps; run-1 model invariant; current model clean
+ℹ seed-189: 3 steps; run-1 model invariant; current model clean
+ℹ seed-56: 3 steps; run-1 model invariant; current model clean
+ℹ seed-65: 8 steps; run-1 model mismatch; current model clean
+ℹ seed-72: 3 steps; run-1 model invariant; current model clean
+ℹ seed-74: 3 steps; run-1 model invariant; current model clean
+ℹ seed-79: 6 steps; run-1 model mismatch; current model clean
+ℹ seed-8: 6 steps; run-1 model mismatch; current model clean
+ℹ seed-86: 6 steps; run-1 model mismatch; current model clean
+ℹ seed-96: 3 steps; run-1 model invariant; current model clean
+✔ run 6 corpus: all nine privacy failures replay, are deletion-minimal, and are clean under the repaired audience (499.482792ms)
+ℹ seed-112: 5 steps; run-6 model budget violation; current model clean
+ℹ seed-141: 5 steps; run-6 model budget violation; current model clean
+ℹ seed-160: 5 steps; run-6 model budget violation; current model clean
+ℹ seed-172: 3 steps; run-6 model budget violation; current model clean
+ℹ seed-181: 3 steps; run-6 model budget violation; current model clean
+ℹ seed-193: 5 steps; run-6 model budget violation; current model clean
+ℹ seed-197: 5 steps; run-6 model budget violation; current model clean
+ℹ seed-200: 3 steps; run-6 model budget violation; current model clean
+ℹ seed-42: 5 steps; run-6 model budget violation; current model clean
+✔ positions 0 to 5 carry the kinds and audiences of the trace (12.354291ms)
+✔ Alice reads every position; hidden count 0 (2.89975ms)
+✔ Bob's view: spine plus his own invitation; Carol's invitation is a header (3.302541ms)
+✔ Carol's view: spine plus her own invitation; Bob's invitation is a header (0.729334ms)
+✔ a late joiner receives the whole spine and addressed events, and members audiences are not retroactive (1.184208ms)
+✔ case 1, the trace: positions 0 to 19 replay with the readability of the table, the literal projections and the outcomes at 17 and 18, under the model's declared join disclosure (205.079458ms)
+ℹ literal trace without the join disclosure: 5 violations; first: ivan@15 mismatch: observe differs at 15 [models.sale.offers.0: oracle {"id":"o3","author":"bob","position":15,"status":"open","rep, view undefined; outcomes.15.effective: oracle true, view false; outcomes.15.perModel.sale.effective: oracle true, view false; outcomes.15.perModel.sale.reason: oracle null, view no_such_offer; outcomes.15.reason: oracle null, view ineffective]
+✔ case 2, replacement with a hidden predecessor: Ivan sees o3 open replacing o1, and a later accept of o1 is ineffective for everyone (154.020625ms)
+ℹ literal case 2 without the join disclosure: 3 violations; first: ivan@15 mismatch: observe differs at 15 [models.sale.offers.0: oracle {"id":"o3","author":"bob","position":15,"status":"open","rep, view undefined; outcomes.15.effective: oracle true, view false; outcomes.15.perModel.sale.effective: oracle true, view false; outcomes.15.perModel.sale.reason: oracle null, view no_such_offer; outcomes.15.reason: oracle null, view ineffective]
+✔ case 3, late joiner after the decision: a second accept is ineffective in every view, equality holds at every frontier, and a disclosure of the decision keeps it (142.46775ms)
+✔ case 4, late joiner judging a public event on a hidden fact: a withdrawal of a stub recorded before Dana joined, then an accept of it, are judged the same way in every view (53.318167ms)
+✔ case 5, the campaign: every manifest seed replays with zero violations of the property, the pause rule, the invariants and the privacy budget (68133.261375ms)
+ℹ seeds 200, 68130 ms, coverage {"joins":946,"attaches":199,"disclosures":1716,"offers":273,"replacements":31,"withdrawals":175,"counters":159,"accepts":111,"effectiveAccepts":18,"closes":279,"entries":11171,"privateDisclosures":0,"inspectionAttaches":0,"inspectionRequests":120,"unboundInspectionRequests":120}
+✔ the repair ledger exists, its totals agree with its entries, and it states the budget outcome (3.101542ms)
+ℹ fixes 7, added kinds 0, budget exceeded
+✔ V3-F1: a private payload disclosed to a non-party is a budget violation on what they can read, whatever the projection hides (3.718709ms)
+✔ V3-F2: the kept run-6 model refuses a wrong-party counter, and the budget reports its misdelivery (5.847792ms)
+✔ V3-F3: null private payloads are recorded with a deterministic ineffective verdict, replay cold, retry exactly, and a valid action follows (43.89325ms)
+✔ V3-G1: an ineffective stub by carol does not make them a counter party (kept run-6 guard regression) (8.832625ms)
+✔ V3-G1: an ineffective stub by carol does not make them a counter party (current audience) (8.990834ms)
+✔ V3-G1: an ineffective stub by ivan does not make them a counter party (kept run-6 guard regression) (8.717291ms)
+✔ V3-G1: an ineffective stub by ivan does not make them a counter party (current audience) (8.151584ms)
+✔ Fix 7: wrong-author, malformed, unauthorized and stale counters never address a supplied non-party, and late members replay them consistently (53.500375ms)
+ℹ tests 136
+ℹ suites 0
+ℹ pass 136
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 69001.806292

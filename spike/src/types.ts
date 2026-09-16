@@ -1,6 +1,5 @@
-// Shared types for the fixture. Inputs are verified entries: the actor
-// field is trusted as given, and no signatures are checked here (spike
-// plan §1, staged checker). O1 adds the codec.
+// Shared semantic types. Legacy visibility inputs trust the actor field;
+// the O1 Journal boundary supplies codec-verified envelopes and headers.
 
 import type { Json } from './canon.ts';
 
@@ -22,7 +21,7 @@ export interface EventBody {
   expected_activation?: number;
 }
 
-/** The authenticated header's preimage. The sequencer signature is O1's. */
+/** Header fields, with an optional O1 sequencer signature. */
 export interface Header {
   genesis: string;
   position: number;
@@ -42,15 +41,20 @@ export interface Header {
    * attach, nor anything judged under the binding it produces.
    */
   requires?: number[];
+  /** O1 writer signature; excluded from the header hash preimage. */
+  seq_sig?: string;
 }
 
 export interface Entry {
   position: number;
   event: EventBody;
-  /** content id of the event body: the header's commitment */
+  /** Header commitment: legacy body id or O1 signed-envelope id. */
   id: string;
   header: Header;
   headerHash: string;
+  /** Present only at the verified O1 boundary; legacy fixture entries retain body ids. */
+  actorSig?: string;
+  committed?: string;
 }
 
 export type Audience =

@@ -1,0 +1,19 @@
+✔ O1-G1 raw Context cannot resume stale admission after Journal closes on memory (8.996083ms)
+ℹ {"storage":"memory","raw":{"error":"Error: Context: stale fold; restore before writing","invitation":null,"redemption":null,"participants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"]},"coldParticipants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"],"coldInviteVerdict":null}
+✔ O1-G1 raw Context cannot resume stale admission after Journal closes on sqlite (8.296709ms)
+ℹ {"storage":"sqlite","raw":{"error":"Error: SQLiteBackend: unavailable or re-entrant transaction","invitation":null,"redemption":null,"participants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"]},"coldParticipants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"],"coldInviteVerdict":null}
+✔ O1-G1 raw Context stays inactive after its own committed append loses its reply on memory (4.684458ms)
+ℹ {"storage":"memory","raw":{"error":"Error: Context: inactive after a write error; restore before writing","invitation":null,"redemption":null,"participants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"]},"coldParticipants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"],"coldInviteVerdict":null}
+✔ O1-G1 raw Context stays inactive after its own committed append loses its reply on sqlite (6.529958ms)
+ℹ {"storage":"sqlite","raw":{"error":"Error: Context: inactive after a write error; restore before writing","invitation":null,"redemption":null,"participants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"]},"coldParticipants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"],"coldInviteVerdict":null}
+✔ O1-G1 two unowned raw Contexts cannot write from different folded heads on memory (3.616333ms)
+✔ O1-G1 two unowned raw Contexts cannot write from different folded heads on sqlite (5.873708ms)
+✔ O1-G1 freshness is checked inside serialization without scanning history for refusal (3.326083ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 111.637042

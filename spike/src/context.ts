@@ -3,6 +3,7 @@
 // visibility. The serving party and the sequencer are one process here
 // (design note §2, first trusted profile).
 
+import { assertBackendAccess, type BackendLease } from './ownership.ts';
 import { contentId, nonce, type Json } from './canon.ts';
 import { attachRequires, bindingId, packageIn, type PackageDescriptor } from './descriptor.ts';
 import {
@@ -20,7 +21,7 @@ import {
   type FoundationState,
   type GenesisPayload,
 } from './foundation.ts';
-import { MemoryBackend, append, appendUnadmitted, type Backend, type TransportCredential } from './append.ts';
+import { MemoryBackend, append, appendUnadmitted, type Backend, type AppendEncoding, type TransportCredential } from './append.ts';
 import { SYSTEM_PREFIX, type Entry, type EventBody, type Header, type Principal, type Receipt, type Refusal, type Verdict } from './types.ts';
 
 export interface ContextOptions {
@@ -42,6 +43,8 @@ export interface ViewEntry {
   position: number;
   /** present when visible; absent when only the header is */
   event?: EventBody;
+  /** O1 original signed envelope bytes, supplied only when the event is readable. */
+  committed?: string;
   /** the authenticated header, always present (design note §1: hidden positions carry headers) */
   header: Header;
   headerHash: string;
@@ -55,18 +58,26 @@ export class Context {
   readonly packages: Record<string, PackageDescriptor>;
   readonly state: FoundationState;
   private readonly maxPayloadBytes: number;
+  private readonly encoding?: AppendEncoding;
+  readonly #lease?: BackendLease;
+  #inactive = false;
+  #foldedPosition = -1;
+  #foldedHeadHash: string | undefined;
 
-  private constructor(backend: Backend, genesisId: string, packages: Record<string, PackageDescriptor>, maxPayloadBytes: number) {
+  private constructor(backend: Backend, genesisId: string, packages: Record<string, PackageDescriptor>, maxPayloadBytes: number, encoding?: AppendEncoding, lease?: BackendLease) {
     this.backend = backend;
     this.genesisId = genesisId;
     this.packages = packages;
     this.state = initialFoundationState(genesisId);
     this.maxPayloadBytes = maxPayloadBytes;
+    this.encoding = encoding;
+    this.#lease = lease;
   }
 
   /** Sign a genesis adopting the origins, append it at 0 and the origins at 1..k, and fold them. */
   static create(opts: ContextOptions): Context {
     const backend = opts.backend ?? new MemoryBackend();
+    assertBackendAccess(backend);
     const payload: GenesisPayload = {
       foundation: F0_ID,
       runtime: RUNTIME,
@@ -89,6 +100,17 @@ export class Context {
     return ctx;
   }
 
+  /** Trusted replay boundary. O1 verifies every wire entry before calling this. */
+  static restore(backend: Backend, packages: Record<string, PackageDescriptor>, maxPayloadBytes = 64 * 1024, encoding?: AppendEncoding, lease?: BackendLease): Context {
+    assertBackendAccess(backend, lease);
+    const entries = backend.entries();
+    if (!entries[0]) throw new Error('Context: empty journal');
+    const ctx = new Context(backend, entries[0].id, packages, maxPayloadBytes, encoding, lease);
+    const origins = originsCount(entries[0].event);
+    for (const entry of entries) ctx.fold(entry, entry.position > 0 && entry.position <= origins);
+    return ctx;
+  }
+
   get entries(): readonly Entry[] {
     return this.backend.entries();
   }
@@ -98,7 +120,10 @@ export class Context {
   }
 
   private fold(entry: Entry, origin: boolean): Verdict {
-    return foldEntry(this.state, { entry, origin, packages: this.packages, entries: this.entries });
+    const verdict = foldEntry(this.state, { entry, origin, packages: this.packages, entries: this.entries });
+    this.#foldedPosition = entry.position;
+    this.#foldedHeadHash = entry.headerHash;
+    return verdict;
   }
 
   /** The serving party issues a credential to a current participant. */
@@ -137,39 +162,54 @@ export class Context {
   }
 
   /** Submit through the append operation, then fold if newly sequenced. */
-  submit(event: EventBody, credential?: TransportCredential): (Receipt & { verdict?: Verdict }) | Refusal {
-    const state = this.state;
-    const r = append(
-      this.backend,
-      { event, credential },
-      {
-        genesis: this.genesisId,
-        maxPayloadBytes: this.maxPayloadBytes,
-        isParticipant: (p) => state.participants.includes(p),
-        // Admission and the members' verification use the same issuance object: the embedded envelope,
-        // checked against the chain and the fold. Nothing is looked up by a caller-chosen label.
-        issuedInvite: (ev) => {
-          const v = verifyIssuance(issuanceEvidence(state, this.entries), ev.payload);
-          return v.ok ? { tokenId: v.tokenId, invitee: v.invite.invitee } : undefined;
+  submit(event: EventBody, credential?: TransportCredential, proof?: unknown): (Receipt & { verdict?: Verdict }) | Refusal {
+    assertBackendAccess(this.backend, this.#lease);
+    if (this.#inactive) throw new Error('Context: inactive after a write error; restore before writing');
+    try {
+      const state = this.state;
+      const r = append(
+        this.backend,
+        { event, credential, proof },
+        {
+          genesis: this.genesisId,
+          assertCurrent: () => {
+            const head = this.backend.head();
+            if ((head?.position ?? -1) !== this.#foldedPosition || head?.headerHash !== this.#foldedHeadHash) {
+              throw new Error('Context: stale fold; restore before writing');
+            }
+          },
+          encoding: this.encoding,
+          maxPayloadBytes: this.maxPayloadBytes,
+          isParticipant: (p) => state.participants.includes(p),
+          // Admission and the members' verification use the same issuance object: the embedded envelope,
+          // checked against the chain and the fold. Nothing is looked up by a caller-chosen label.
+          issuedInvite: (ev) => {
+            const v = verifyIssuance(issuanceEvidence(state, this.entries), ev.payload);
+            return v.ok ? { tokenId: v.tokenId, invitee: v.invite.invitee } : undefined;
+          },
+          acceptKind: K.accept_invite,
+          activationOf: (kind) => state.env.kinds[kind]?.attachedAt,
+          requiresOf: (ev) => {
+            // Evidence is extracted from runtime JSON before the fold validates it: never throw here.
+            if (ev.kind !== K.attach) return undefined;
+            const p = ev.payload;
+            if (!p || typeof p !== 'object' || Array.isArray(p)) return undefined;
+            const { package: pkgId, resolution } = p as { package?: unknown; resolution?: unknown };
+            const pkg = packageIn(this.packages, pkgId);
+            return pkg ? attachRequires(state.env, pkg, resolution) : undefined;
+          },
         },
-        acceptKind: K.accept_invite,
-        activationOf: (kind) => state.env.kinds[kind]?.attachedAt,
-        requiresOf: (ev) => {
-          // Evidence is extracted from runtime JSON before the fold validates it: never throw here.
-          if (ev.kind !== K.attach) return undefined;
-          const p = ev.payload;
-          if (!p || typeof p !== 'object' || Array.isArray(p)) return undefined;
-          const { package: pkgId, resolution } = p as { package?: unknown; resolution?: unknown };
-          const pkg = packageIn(this.packages, pkgId);
-          return pkg ? attachRequires(state.env, pkg, resolution) : undefined;
-        },
-      },
-    );
-    if ('refused' in r) return r;
-    if (r.replay) return { ...r, verdict: state.verdicts[r.header.position] };
-    const entry = this.entries[r.header.position]!;
-    const verdict = this.fold(entry, false);
-    return { ...r, verdict };
+      );
+      if ('refused' in r) return r;
+      if (r.replay) return { ...r, verdict: state.verdicts[r.header.position] };
+      const entry = this.entries[r.header.position]!;
+      const verdict = this.fold(entry, false);
+      return { ...r, verdict };
+    } catch (error) {
+      this.#inactive = true;
+      this.#lease?.invalidate();
+      throw error;
+    }
   }
 
   /** Convenience: submit as a current participant with the serving party's credential. */
@@ -186,7 +226,7 @@ export class Context {
   inviteEnvelope(position: number): AcceptInvitePayload {
     const e = this.entries[position];
     if (!e) throw new Error(`no entry at ${position}`);
-    return { invite: { event: e.event, header: e.header } };
+    return { invite: { event: e.event, header: e.header, ...(e.actorSig ? { actorSig: e.actorSig } : {}) } };
   }
 
   /** The number of adopted origins, from the genesis at position 0. */
@@ -200,7 +240,7 @@ export class Context {
     for (let i = 0; i <= n; i++) {
       const e = this.entries[i]!;
       const via = visibilityOf(this.state, p, i, n);
-      out.push(via === 'hidden' ? { position: i, header: e.header, headerHash: e.headerHash, via } : { position: i, event: e.event, header: e.header, headerHash: e.headerHash, via });
+      out.push(via === 'hidden' ? { position: i, header: e.header, headerHash: e.headerHash, via } : { position: i, event: e.event, ...(e.committed ? { committed: e.committed } : {}), header: e.header, headerHash: e.headerHash, via });
     }
     return out;
   }

@@ -1,0 +1,288 @@
+# O1: one trusted writer over a local SQLite journal
+
+This is the executable fixture profile `dap.fixture.single-writer/1`,
+pinned by `genesis.payload.sequencing.profile`. The same object names the
+initial writer's Ed25519 public key. `Journal.create` checks both against the
+SQLite metadata; `Journal.open` verifies every saved envelope and header
+before replaying the foundation. A URL is discovery information and cannot
+replace the expected genesis or writer assignment.
+
+This profile implements O1 in the spike plan. It does not implement writer
+handover, consensus, transfer activation, the isolated control verifier, or
+the O2 concurrency campaign. The executable transfer expectations in
+[the lifecycle manifest](manifests/ordering-lifecycle.md) specify the future
+O4 test; they do not prove that the runtime performs those transitions.
+The current O1 corrections precede O4's formal baseline, not its existing
+prototype implementation. Historical profile hashes and run records name
+their original bytes; this edited document has a different content hash.
+
+## Trust, finality and progress
+
+There is one authoritative database file per context, one cooperating writer
+process, one live `Journal` serving facade per exact backend object, and one
+fixed writer key. The cooperative lease is keyed by JavaScript backend
+object identity, not by an underlying store identity. Opening a second
+facade on the same backend object is rejected: each facade
+has a folded admission state, so concurrent independent folds would be stale.
+`Journal.close()` permanently disables writes through that facade's Context
+on every backend and closes its SQLite handle. `Context.create` and
+`Context.restore` refuse a backend owned by a live Journal; a raw Context
+acquired earlier also cannot submit or act while that Journal owns it.
+Every write also compares the Context's folded position and header hash with
+the backend's head inside the shared append serialization boundary. A stale
+Context refuses the write and becomes inactive. A raw Context acquired before
+a Journal therefore cannot resume stale writes after that Journal advances
+and closes: memory fails the head check; SQLite's shared handle is closed.
+A raw Context with an unchanged head may still write on an unowned memory
+backend. Any raw or owned Context becomes inactive after its own append or
+fold exception and must be replaced by a fresh restore or open. Reopen uses
+a fresh SQLite backend handle, or may reuse a released MemoryBackend; both
+rebuild state before admitting another action.
+Direct backend mutation, Proxy, Object.create and plain delegating wrappers
+or other aliases of a backend object, and malicious in-process code are
+outside this cooperative ownership boundary. Participants trust this writer not to
+censor, equivocate, substitute another database copy, or expose private
+payloads. The SQLite lock excludes a second process opening this same file.
+It does not fence a malicious writer using another copy, a network filesystem
+with incorrect locking, or an operator restoring an old backup. Use a local
+filesystem and one configured database path, without aliases or live copies.
+
+The sole append operation in `src/append.ts` checks stable signed bytes,
+destination and bounds; looks up an exact retry before current admission;
+checks credentials or invitation issuance; chooses the successor and signs
+its header; and calls the backend's atomic write. Signing is synchronous
+Ed25519 inside the serialization boundary. The adapter contains no separate
+admission or append algorithm. The serving `Context` folds only after commit.
+`Context.restore` on an unowned backend is an explicitly trusted semantic
+entry point. Its ordinary raw writes store unsigned entries; a later
+`Journal.open` rejects those entries for missing committed bytes.
+`Journal.open` is the authenticated boundary for saved wire bytes.
+
+A returned receipt is final under these trust assumptions. Later appends
+extend the same chain. A receipt says that an intent was recorded; the
+foundation or model may still find it unauthorized or ineffective. Ordering
+provides neither real-world arrival times nor fair admission. Progress needs
+the writer process, its private key, the serving fold/packages, and writable
+local storage. No automatic failover is claimed.
+
+## Exact encoding
+
+`src/codec.ts` implements RFC 8785 JCS over JSON data: finite ECMAScript
+doubles, UTF-16 object-key ordering, exact Unicode without normalization,
+and UTF-8 bytes. It rejects duplicate keys, noncanonical input encodings,
+invalid UTF-8, lone surrogates, nonfinite numbers, sparse arrays, accessors,
+and other non-JSON JavaScript values. The older visibility `canon.ts`
+retains its safe-integer convention and legacy identifiers.
+
+Principals are `ed25519:` followed by unpadded base64url of the raw 32-byte
+public key. Signatures are unpadded base64url of the 64-byte Ed25519
+signature. Nonces are exactly 16 bytes represented by 32 lowercase hex
+characters. Digests use `sha256:` and 64 lowercase hex digits. Each signed envelope is limited to 65,536 UTF-8 bytes, including genesis
+and each origin. Payload JSON
+is authenticated without adding domain schema admission rules.
+
+| Object | Canonical bytes and binding |
+|---|---|
+| Event body E | `kind`, `payload`, `actor`, `nonce`; sequenced intents also carry `genesis` and nonempty `action_id` |
+| Application intent | Requires `expected_binding`; retains optional `expected_activation` as the existing fixture's signed compatibility/provenance field |
+| Genesis and adopted origin | No `genesis`, `action_id`, `expected_binding`, or `expected_activation` in the body |
+| Actor envelope SE | `{body:E,sig}`; actor signs JCS(E); commitment is SHA-256 of JCS(SE) |
+| Genesis identity | Commitment of its signed envelope; header at 0 has this identity for `genesis` and `commitment`, with all-zero SHA-256 predecessor |
+| Header preimage HP | `{genesis,position,prev,commitment}` plus `activation` or `requires` when supplied |
+| Header | `{...HP,seq_sig}`; writer signs JCS(HP); header hash is SHA-256 of JCS(HP), excluding `seq_sig` |
+| Wire line | JCS of `{header,committed}` followed by LF; `committed` is a JSON string holding the exact JCS(SE) bytes |
+
+The plan §2.1 abbreviates HP to its four base fields; §2.2 requires
+authenticated dependency evidence. This profile reconciles them by including
+`activation` and `requires` in both the signed preimage and its hash.
+`activation` names an earlier position for an application event. `requires`
+is an ascending, unique list of earlier positions for an attach. They cannot
+coexist, appear on genesis/origins, or appear on unrelated system kinds.
+An unbound application kind or an unavailable attach can omit evidence and
+receive the existing semantic refusal. Evidence describes a dependency;
+cryptographic verification alone does not prove the writer supplied the
+correct dependency. The existing interpreter/foundation performs that work.
+These public pointers also disclose an event class when present:
+`activation` identifies a bound application event and `requires` an attach.
+The header omits the exact kind and actor, but it is not class-opaque.
+
+Readable signed `ViewEntry` values carry the original `committed` envelope
+bytes; the serving fixture's hidden values carry no envelope, actor, exact
+kind or audience. A recipient
+can call `verifyJournalView` using an independently pinned genesis and writer
+before interpreting the view. It checks every header, readable actor proof,
+body/byte agreement, and adoption of readable origins. It rejects an envelope
+placed in a hidden entry's `committed` field. It does not prove that an
+entitled opening was supplied, detect a signed but truncated prefix, or
+authenticate arbitrary extra `ViewEntry` properties outside the checked
+header and envelope fields. Completeness, expected terminal head, freshness
+and readable-position selection remain separate serving questions. Do not
+treat unchecked display metadata or other extras as signed facts.
+
+Genesis retains its declared origin bodies for V1 compatibility. Creation
+requires a separate, matching signed envelope for each origin. Their original
+signatures and committed bytes are retained at positions 1 through k.
+Opening verifies the complete adopted prefix; `verifyWire` accepts an origin
+only when the caller explicitly establishes adoption. Initialization commits
+genesis and all origins together after a separate validation preflight.
+
+The fixed-vector file contains genesis, application (including
+`expected_activation` and header `activation`), attach (`requires`), and
+origin vectors. Each includes exact bytes, hashes and signatures. Rejection
+vectors cover changed bodies, signatures over wrong bytes, a wrong predecessor,
+a wrong commitment, an unassigned writer, and signing the header rather than
+HP. Additional tests change each dependency field and verify that even a
+header-only reader rejects the signature. RFC 8032's independently published
+key/signature example anchors the Ed25519 test; vectors generated by this
+implementation alone are not treated as an independent implementation.
+
+## Storage, acknowledgment and restart
+
+The backend uses Node's synchronous SQLite interface, rollback journal
+`DELETE`, `synchronous=FULL`, and `locking_mode=EXCLUSIVE`. Initialization
+performs a write under `BEGIN EXCLUSIVE`, acquiring the retained OS file lock.
+Every append runs under `BEGIN IMMEDIATE`; asynchronous transaction callbacks
+are rejected. Entry, head, exact retry receipt, any invitation consumption,
+and pending outbox row are committed together. The receipt returns only
+after SQLite reports `COMMIT` success. No uncommitted candidate is published.
+
+**The durability promise is survival of an application-process crash or
+SIGKILL on the same host and intact local disk.** It excludes power loss,
+host or disk loss, filesystem corruption, and malicious rollback. In
+particular, rollback-mode `FULL` is not advertised here as a power-loss
+promise. There is no replicated acknowledgment or authoritative mirror.
+See [SQLite locking mode](https://www.sqlite.org/pragma.html#pragma_locking_mode),
+[SQLite synchronous modes](https://www.sqlite.org/pragma.html#pragma_synchronous),
+and [Node SQLite](https://nodejs.org/api/sqlite.html).
+
+On open, the adapter checks dense SQL keys and stored positions, head, retry
+rows and outbox correspondence. The authenticated facade checks exact saved
+body/signature/wire correspondence and the complete header chain, then
+rebuilds foundation state and checks the consumption index. Failed open
+never silently repairs or truncates the journal. Retry after an uncertain
+response uses the saved signed intent and existing action identity. After a storage or fold exception the Journal facade refuses further
+submissions until a fresh open reconciles the durable state.
+
+Outbox delivery is at least once. `await backend.drain(deliver)` waits for
+synchronous or asynchronous delivery confirmation before committing its
+acknowledgment. Failure leaves the saved entry pending. Consumers deduplicate
+by `headerHash`; a crash between delivery and acknowledgment can repeat the
+same saved bytes. Delivery never creates a new action or order. The writer
+key is supplied by the test/service, never written to the database.
+
+## Executed boundaries and compatibility
+
+`test/fixtures/o1-crash-child.ts` is a separate OS process. The crash tests
+actually terminate it with SIGKILL at `before-write`, `after-entry`,
+`after-head`, `after-retry`, `after-consumption`, `after-outbox`,
+`before-commit`, and `after-commit`. Every pre-commit interruption must leave
+all append records absent; the post-commit interruption must retain all of
+them, including the consumed invitation and recoverable receipt. Another
+process dies at `after-publish-before-ack`; replay permits one duplicate
+notification and preserves the original bytes. A separate process verifies
+writer exclusion and release of ownership after a normal close, followed
+by successful reopen. The named SIGKILL tests separately establish their
+recorded crash/reopen boundaries; the exclusion test itself is not a crash
+ownership experiment.
+
+The V1 Sale trace 0–5 runs with real keys, actor envelopes, signed headers and
+wire verification on memory and SQLite, with the narrative's exact visible
+and hidden positions. It extends through late joining, disclosure and an
+as-of query, and checks interpreter/oracle agreement at every frontier.
+Separate signed SQLite traces cover issuance-time authority after revocation,
+unissued and unauthorized invitations, and consumed-token exact retry.
+
+Legacy `Context.create`, memory append, snapshots, package IDs and seeded
+visibility scripts remain available with their old body identifiers. The
+signed path uses envelope commitments, so those signed traces have different
+identities. Embedded invitation evidence carries an optional actor signature;
+the signed path hashes full JCS, while legacy invitations keep body hashes.
+Origin duplicate detection compares canonical bodies and supports finite
+fractional JSON numbers without changing safe-integer fixture outcomes.
+The O1 validation record reports integration checks; it does not rewrite
+V3's historical campaign ledger or claim that its old byte streams had
+signatures. The final candidate integrates V4/V5 and the V6 report ancestry;
+the O1 layer adds no application model-policy repair. Those experiments keep
+their own historical source and run boundaries.
+
+## O4: public-proof completeness
+
+These O4 contract obligations come from the ratified checker design assessment
+`git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:ca04cc02027b9070bb60e3852ac19e21ae7931f4`
+and the builder's adoption, including the disclosure boundary,
+`git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:42ffb3413ded6c33fb39d25296cd04ce0f005d6a`.
+They specify an extension of the trusted-writer fixture. The O1 profile and
+manifest checks do not establish that O4 implements them; O4 must name its
+exact source, profile and manifest and satisfy the nine tests listed in
+[the lifecycle manifest](manifests/ordering-lifecycle.md#o4-completeness-contract-and-required-tests).
+
+1. **A1 — Serving-party trust.** F's own genesis names the source writer as
+   trusted to certify the completeness of public openings. The certificate
+   says nothing about release effectiveness. Its producer reads kinds and
+   assigned audiences as a serving-party function; pure ordering does not
+   establish completeness. F still reconstructs source semantics and grants
+   to verify each release independently.
+2. **A2 — Exact public-data rule.** For every position through the certified
+   frontier, open each authority-set kind only if its assigned audience is
+   `spine` or `members`. A narrower audience, including a binding ceiling,
+   makes the producer refuse certification; it must neither hide that body
+   nor widen its audience. Every other position retains only its header.
+   Opened bodies pass the recursive banned-field check for `amount`,
+   `acceptedAmount`, `counter`, `terms` and `offer_terms`. The named rule is
+   `dap.fixture.scope-public-openings/1`, content id
+   `sha256:475b415bbf8b16ccdb1bea078174712c57f2b2955ece9338d762abd60228bad8`,
+   defined by `publicOpeningRule` in `manifests/ordering-lifecycle.ts`.
+   Its 21 exact authority kinds are:
+
+   - `ai.generalbusiness.dap.genesis`, `ai.generalbusiness.dap.accept_invite`,
+     `ai.generalbusiness.dap.grant`, `ai.generalbusiness.dap.revoke`,
+     `ai.generalbusiness.dap.attach`, `ai.generalbusiness.dap.close`,
+     `ai.generalbusiness.dap.scope.release`, `ai.generalbusiness.dap.scope.activate`,
+     `ai.generalbusiness.dap.admit`, `ai.generalbusiness.dap.seq.request`,
+     `ai.generalbusiness.dap.seq.seal`, `ai.generalbusiness.dap.seq.assign`;
+   - `com.example.sale.listing`, `com.example.sale.offer`,
+     `com.example.sale.withdraw`, `com.example.sale.accept`, `com.example.sale.close`;
+   - `com.example.scope.result`, `com.example.scope.exercise`,
+     `com.example.scope.import-export`, `com.example.scope.recover`.
+
+   `ai.generalbusiness.dap.disclose` is excluded because the rule uses assigned
+   audiences, not source recipient disclosures. `ai.generalbusiness.dap.observe`
+   is excluded because ambient facts are outside this fixture's release
+   dependencies. A dependency needing either requires a revised rule.
+3. **A3 — Exact certificate format.** A public packet has exactly
+   `{genesis, initialWriter, frontier, positions, certificate}`; a position
+   has `header` and optional `committed` actor-envelope bytes. The certificate
+   has exactly `{body, signer, sig}`. Its body has exactly
+   `{type: "dap.fixture.public-proof-completeness/1", rule, genesis, frontier, proof_hash}`.
+   `rule` is the rule content id. Use `codec.ts` canonical JSON and SHA-256:
+   `proof_hash` binds the packet exactly as received with only `certificate`
+   omitted, including every header and included envelope. Refuse extra fields
+   in the packet, positions, certificate and certificate body; run the private
+   data check before hashing. The signer signs the canonical certificate body
+   with Ed25519; principal and signature encodings follow the codec above.
+4. **A4 — Frontier header signer.** Rebuild the writer assignment chain from
+   the independently pinned genesis. The certificate signer is the key that
+   verified `header[frontier].seq_sig`. At O3's assign boundary H+2 this is W0,
+   the retiring writer; from the successor's first header H+3 it is W1.
+   A successor cannot certify W0's earlier frontier as its writer.
+5. **A5 — Genesis-pinned release boundary.** Take source genesis, initial
+   writer and export prefix p from F's own genesis transition, not from the
+   incoming proof. The release must be at r = p+1, and the certificate
+   frontier must be at least r. Judge release effect on the source prefix
+   through r, irrespective of a later certified frontier. A certificate does
+   not answer current-state questions. A valid later-frontier certificate
+   supplies different valid proof material for the same release; repeating
+   deterministic Ed25519 signing does not.
+6. **A6 — Independent destination checks.** Verify exact shapes, the header
+   and ordering-control chains, certificate signature and rule identity,
+   every opened actor proof and the semantic dependency pause. Reconstruct
+   source packages, grants, authorization and release effect independently;
+   neither a receipt nor the completeness certificate establishes effect.
+   Unknown exceptions fail validation instead of becoming a refusal verdict.
+7. **A7 — Remaining trust limits.** An assigned writer can sign an incomplete
+   packet or tailor projections to different destinations. F cannot detect
+   that dishonesty from the certificate alone; source members can compare
+   against their source view and recompute the opening set, and a signed
+   incomplete certificate is transferable evidence. A retired key remains
+   trusted for the earlier prefixes whose headers it signed. Forks, database
+   copies and equivocation remain outside this fixture's protection.
