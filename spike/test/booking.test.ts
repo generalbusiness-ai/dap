@@ -12,9 +12,10 @@ import { Context } from '../src/context.ts';
 import { CAP, K } from '../src/foundation.ts';
 import { generate } from '../src/generate.ts';
 import { oracleObserve } from '../src/oracle.ts';
-import { applyStep, replay, type Pending } from '../src/script.ts';
+import { applyStep, disclosablePosition, joinBacklog, replay, type Pending } from '../src/script.ts';
 import { nonce, type Json } from '../src/canon.ts';
 import { BOOKING, bookingPackage } from '../fixtures/booking.ts';
+import { bookingPackage as run7Package } from '../corpus/booking/run7/model.ts';
 import {
   ADMIN,
   BOB,
@@ -253,13 +254,69 @@ for (const kind of [BOOKING + 'occupancy', BOOKING + 'free', K.observe]) {
   });
 }
 
-test('V4-F1: seed 1 position 50 exposes Carol and her own request id under the unrepaired audience', () => {
-  const { ctx } = replay(generate(bookingGeneratorSpec(bookingPackage), 1));
+test('V4-F1: seed 1 position 50 keeps Carol and her own request id private; hostile redisclosure is detected', () => {
+  // The preserved pre-repair model retains the original client choices;
+  // the repaired foundation alone protects the initial audience.
+  const { ctx } = replay(generate(bookingGeneratorSpec(run7Package), 1));
   const event = ctx.entries[50]!.event;
   assert.equal(event.kind, BOOKING + 'occupancy');
   assert.equal(event.actor, CAROL);
   const id = (event.payload as { booking_id: string }).booking_id;
   assert.ok(ctx.entries.slice(0, 50).some((e) => e.id === id && e.event.actor === CAROL && e.event.kind === BOOKING + 'request'));
-  const leaks = fullCheck(ctx, [50]);
-  assert.ok(leaks.some((v) => v.kind === 'budget' && v.participant === BOB && v.detail.includes('signed by booker carol')));
+  assert.equal(ctx.view(BOB, 50)[50]?.event, undefined);
+  assert.equal(ctx.view(CAROL, 50)[50]?.event?.actor, CAROL);
+  const leaked = ctx.act(ADMIN, K.disclose, { positions: [50], to: [BOB] });
+  assert.ok(!('refused' in leaked) && leaked.verdict?.effective);
+  const leaks = fullCheck(ctx, [ctx.head]);
+  assert.ok(leaks.some((v) => v.kind === 'budget' && v.participant === BOB && v.detail.includes('at 50 signed by booker carol')));
+});
+
+test('V4-F1: current authority controls publication; authorized refusals, stale and closed attempts retain their audience', () => {
+  const ctx = room([BOB, CAROL]);
+  const req = request(ctx, BOB, 10, 12);
+  const occupancy = { booking_id: req.id, room: ROOM, start: 10, end: 12 };
+  const positions: number[] = [];
+  for (const [kind, payload] of [[BOOKING + 'occupancy', occupancy], [BOOKING + 'free', { booking_id: req.id }], [K.observe, tick(1)]] as const) {
+    const attempt = ctx.act(BOB, kind, payload);
+    assert.ok(!('refused' in attempt) && attempt.verdict?.reason === 'unauthorized');
+    positions.push(attempt.header.position);
+    assert.equal(ctx.view(CAROL)[attempt.header.position]?.event, undefined);
+    assert.equal(disclosablePosition(ctx.state, ctx.entries[attempt.header.position]!), false);
+  }
+  assert.equal(publish(ctx, ADMIN, req.id, 10, 12).verdict.effective, true);
+  const duplicate = publish(ctx, ADMIN, req.id, 10, 12);
+  assert.equal(duplicate.verdict.perModel?.booking?.reason, 'duplicate_id');
+  assert.ok(ctx.view(CAROL)[duplicate.position]?.event);
+  assert.equal(disclosablePosition(ctx.state, ctx.entries[duplicate.position]!), true);
+  const overlap = publish(ctx, ADMIN, 'other', 11, 13);
+  assert.equal(overlap.verdict.perModel?.booking?.reason, 'overlap');
+  assert.ok(ctx.view(CAROL)[overlap.position]?.event);
+  assert.equal(disclosablePosition(ctx.state, ctx.entries[overlap.position]!), true);
+  for (const actor of [ADMIN, BOB]) {
+    const stale = ctx.act(actor, BOOKING + 'occupancy', occupancy, { expected_binding: 'wrong' });
+    assert.ok(!('refused' in stale) && stale.verdict?.reason === 'stale_binding');
+    assert.equal(ctx.view(CAROL)[stale.header.position]?.event !== undefined, actor === ADMIN);
+  }
+  ctx.act(ADMIN, K.revoke, { principal: ADMIN, capabilities: [BOOKING + 'publish'] });
+  const revoked = publish(ctx, ADMIN, 'revoked', 30, 32);
+  assert.equal(revoked.verdict.reason, 'unauthorized');
+  assert.equal(ctx.view(CAROL)[revoked.position]?.event, undefined);
+  ctx.act(ADMIN, K.grant, { principal: ADMIN, capabilities: [BOOKING + 'publish'] });
+  assert.equal(publish(ctx, ADMIN, 'restored', 30, 32).verdict.effective, true);
+  const forgedGrant = ctx.act(BOB, K.grant, { principal: BOB, capabilities: [BOOKING + 'publish'] });
+  assert.ok(!('refused' in forgedGrant) && forgedGrant.verdict?.reason === 'unauthorized');
+  assert.ok(ctx.view(CAROL)[forgedGrant.header.position]?.event, 'spine events retain their audience');
+  const pending: Pending = new Map();
+  applyStep(ctx, { type: 'invite', inviter: ADMIN, invitee: DANA, grants: { roles: ['Booker'] } }, pending);
+  applyStep(ctx, { type: 'accept', invitee: DANA }, pending);
+  for (const pos of positions) assert.equal(ctx.view(DANA)[pos]?.event, undefined);
+  assert.ok(joinBacklog(ctx.state, ctx.entries, ctx.head).positions.every((pos) => !positions.includes(pos)));
+  assert.equal(proj(ctx, DANA).occupancies.length, 2, 'required public occupancy history reaches the late joiner');
+  ctx.act(ADMIN, K.close, {});
+  for (const actor of [ADMIN, BOB]) {
+    const closed = ctx.act(actor, BOOKING + 'occupancy', occupancy);
+    assert.ok(!('refused' in closed) && closed.verdict?.reason === 'closed');
+    assert.equal(ctx.view(CAROL)[closed.header.position]?.event !== undefined, actor === ADMIN);
+  }
+  assert.deepEqual(fullCheck(ctx), []);
 });

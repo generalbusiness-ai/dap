@@ -35,3 +35,22 @@ test('run 2 corpus: all 139 recovered privacy failures replay and are deletion-m
   }
   t.diagnostic(`${entries.length} recovered failures, all deletion-minimal; explicit private disclosures remain budget violations under the repaired model`);
 });
+
+test('run 7 corpus pins the unrepaired foundation snapshot and preserves every failing full series', () => {
+  const dir = fileURLToPath(new URL('../corpus/booking/run7/', import.meta.url));
+  const boundary = JSON.parse(readFileSync(new URL('../corpus/booking/run7/boundary.txt', import.meta.url), 'utf8'));
+  assert.equal(boundary.snapshot, '7ffa50814ec558781feeeae09b36ff8f089c2fb4');
+  const entries = readCorpus(dir);
+  const full = readCorpus(dir + '/full');
+  const seeds = readFileSync(new URL('../corpus/booking/run7/seeds.txt', import.meta.url), 'utf8').trim().split('\n').map(Number);
+  assert.equal(entries.length, 99);
+  assert.deepEqual(entries.map(({ entry }) => entry.seed).sort((a, b) => Number(a) - Number(b)), seeds);
+  assert.deepEqual(full.map(({ name }) => name), entries.map(({ name }) => name));
+  for (const { name, entry } of [...entries, ...full]) {
+    assert.equal(entry.manifest, boundary.manifest, `${name}: amended pre-repair manifest`);
+    assert.equal(entry.package, boundary.package, `${name}: original package`);
+    assert.equal(entry.snapshot, 'spike V4: checker run 7 snapshot: preserve public actor and payload leaks');
+  }
+  assert.ok(boundary.git_blobs['spike/src/foundation.ts']);
+  assert.ok(boundary.git_blobs['spike/src/generate.ts']);
+});

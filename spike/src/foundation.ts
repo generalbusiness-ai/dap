@@ -375,6 +375,16 @@ export function foldEntry(state: FoundationState, input: FoldInput): Verdict {
     verdict = foldApplication(state, entry);
   }
 
+  // Possessing a credential permits recording an attempt, not publishing
+  // a private payload under a capability the actor lacks. Application
+  // kinds and ambient observations keep such attempts actor-only. Check
+  // the actual grant separately: stale/closed can precede authorization
+  // in the verdict, and authorized semantic refusals remain public.
+  const publicationCapability = !origin && pos !== 0
+    ? ev.kind === K.observe ? CAP.observe : !ev.kind.startsWith(SYSTEM_PREFIX) ? state.env.kinds[ev.kind]?.capability : undefined
+    : undefined;
+  if (publicationCapability && !heldAt(state, ev.actor, publicationCapability, pos)) audience = named(ev.actor);
+
   // Audience is set at the position under the rule active before it.
   if (!audience) {
     if (origin || pos === 0) audience = SPINE;

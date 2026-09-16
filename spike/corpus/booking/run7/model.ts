@@ -35,16 +35,14 @@
 //   (`config.disclosurePolicy`, fix 1): occupancies, frees, clock ticks
 //   and attaches. Requests and cancels carry the booker and the purpose,
 //   whose readers the privacy budget fixes at the booker and the admin.
-//   Fix 2 also requires an authorized verdict before client disclosure:
-//   an unauthorized public-kind attempt has an actor-only initial audience.
 //
 // The projection derives every row from the position of the event that
 // produced it and shows it only when that position is visible to the
 // principal. Requests go only to their booker and the admin they name;
 // occupancies never carry a booker or a purpose.
 
-import { descriptorId, type ModelSpec, type PackageDescriptor } from '../src/descriptor.ts';
-import { MEMBERS, named, type EventBody } from '../src/types.ts';
+import { descriptorId, type ModelSpec, type PackageDescriptor } from '../../../src/descriptor.ts';
+import { MEMBERS, named, type EventBody } from '../../../src/types.ts';
 
 const NS = 'com.example.booking.';
 /** The system kind of an ambient fact; the clock arrives as `{fact: {clock}}`. */
@@ -128,7 +126,6 @@ export type BookingConfig = {
    */
   disclosurePolicy: {
     kinds: string[];
-    authorizedOnly: true;
   };
 };
 
@@ -208,7 +205,7 @@ export const bookingModel: ModelSpec<BookingState, BookingConfig> = {
   config: {
     room: 'room-1',
     joinDisclosure: { by: 'admin', kinds: [NS + 'occupancy', NS + 'free', OBSERVE], effectiveOnly: true },
-    disclosurePolicy: { kinds: [NS + 'occupancy', NS + 'free', OBSERVE, ATTACH], authorizedOnly: true },
+    disclosurePolicy: { kinds: [NS + 'occupancy', NS + 'free', OBSERVE, ATTACH] },
   },
   ambient: true,
   init: () => ({ now: null, ticks: [], requests: [], cancels: [], occupancies: [], frees: [] }),

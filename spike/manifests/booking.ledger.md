@@ -213,6 +213,44 @@ The previous run-2 budget is kept in `corpus/booking/run2/budget.ts` so
 its historical corpus is not silently assigned the amended semantics.
 The fixes remain 1 and 0 added kinds at this pre-repair snapshot.
 
+## Run 8: foundation and client repair, integration check
+
+Snapshot commit: "spike V4: checker run 8 snapshot: authorization repair
+and integration findings". Manifest remains
+`sha256:3076d3854901ddeb6b0d5cc379646bb182f89bd61882d648fc9051dfae7d788f`;
+package after fix 2:
+`sha256:0556de5c337344eaa15afcbbbf5d22aa82c384bd6841d4ffb0c07185d4b7ec27`.
+
+`npm test` passes 102 of 104 tests. Booking's complete 200-seed campaign
+passes with zero violations, over 12000 entries: 955 joins, 198 narrow
+attaches, 1627 disclosures, 2555 requests, 1496 publications (652
+effective, 472 linked to earlier effective requests), 385 frees, 419
+cancels (325 effective), and 1630 clock ticks. All Booking cases,
+including the F1 repair and the three detected hostile F2 publications,
+pass. `npm run typecheck` and `git diff --check` pass.
+
+The Sale campaign also passes all 200 seeds with zero violations under
+the merged V3 fix-7 model: 11047 entries, 942 joins, 199 narrow attaches,
+1722 disclosures, 195 offers, 25 replacements, 147 withdrawals, 157
+counters, 114 accepts (20 effective), 295 closes, zero private
+disclosures, zero Inspection attaches, and 118 unbound Inspection
+requests. This is the current-generator coverage required by V4-F4;
+earlier Sale seed references still require their snapshot's generator.
+
+The two failures are expected-audience assumptions in Sale's tests,
+not campaign violations: the kept run-6 model's seed 112 no longer
+discloses an unauthorized counter under the repaired foundation, and
+the fix-7 test still expects Alice to read Bob's unauthorized counter.
+These tests need to distinguish the historical foundation from the
+current actor-only authorization rule. Their original historical
+failure remains reproducible at V3 snapshot `009b522`; this does not
+change V3's reviewed ledger.
+
+Inspection also found that the amended public-payload guard must not
+exempt a reader merely because a payload claims `booker` equals that
+reader. The next manifest revision removes that exemption and retains
+spoofed and nested payload cases before the final check.
+
 ## Fixes
 
 ### Fix 1: a disclosure policy naming the public kinds
@@ -258,4 +296,35 @@ change to the predeclared audience rule. The generator always names the
 real admin, so the campaign does not exercise it, and the model leaves
 the rule as written.
 
-Totals: 1 fix, 0 added kinds, budget within
+### Fix 2: disclose only authorized public-kind events
+
+- Discovery source: checker report `5014a7f1`, V4-F1, and the 99 failing
+  seeds retained in run 7 at `7ffa50814ec558781feeeae09b36ff8f089c2fb4`
+- Counterexample: seed 1 position 50 publicly exposes Carol and her
+  request id; an explicit disclosure can expose the same attempt even
+  after its initial audience is narrowed by the foundation repair
+- Constraint affected: none; the booker privacy budget
+- Added kind: no
+- Before/after: before, the fixture's disclosing client could widen any
+  occupancy, free or observation because it checked only the kind. After,
+  `config.disclosurePolicy.authorizedOnly` also requires the recorded
+  verdict's `authorized` flag. Authorized overlap and duplicate refusals
+  remain eligible. Stale and closed verdicts do not establish that flag
+  and are conservatively excluded from client disclosure. The existing
+  effective public-fact backlog is unchanged, so required occupancy,
+  free and clock history still reaches late joiners. The generator still
+  emits ineffective attempts and uses every declared seed. Its client
+  consults the model's policy; the checker independently judges all
+  readable events. This is a counted model-policy change.
+
+The accompanying foundation repair is recorded separately from model
+fixes. A bound application event or `dap.observe` is actor-only when its
+actor lacks the required capability at that position. This checks the
+spine grant history directly, including when `stale_binding` or `closed`
+is the earlier verdict reason. An actor who holds the capability keeps
+the declared audience for those refusals and for overlap/duplicate
+refusals. Origins and other system kinds, including spine events, keep
+their existing rules. No authorized private-field publication is made
+safe by this change; the F2 hostile cases remain detected violations.
+
+Totals: 2 fixes, 0 added kinds, budget within

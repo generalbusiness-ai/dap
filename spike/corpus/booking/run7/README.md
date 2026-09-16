@@ -7,12 +7,19 @@ is listed in `seeds.txt`, with its full original script, genesis nonce and
 violations under `full/`, and a deletion-minimal public-event leak in
 `seed-<n>.json`. Each record pins the manifest and original package.
 
-Reproduce with `node scripts/booking-public-campaign.ts` at the commit
-whose subject is "spike V4: checker run 7 snapshot: preserve public actor
-and payload leaks". That snapshot preserves the unrepaired foundation,
+Reproduce with `node scripts/booking-public-campaign.ts` at commit
+`7ffa50814ec558781feeeae09b36ff8f089c2fb4` ("spike V4: checker run 7
+snapshot: preserve public actor and payload leaks"). `boundary.txt`
+pins that snapshot, manifest, original package and the Git blob ids of
+the relevant foundation, replay, generator, model and manifest files.
+That snapshot preserves the unrepaired foundation,
 model and client. Later foundation or client repairs change the outcome;
 replaying a literal disclosure that ignores the repaired client policy
 can still expose a private attempt.
+
+The kept `model.ts` differs from that snapshot only in import paths. It
+lets the seed-1 regression recreate the old client's choices under the
+new foundation; it does not by itself recreate the old foundation.
 
 Shrinking preserves the readable public actor/payload failure. Removing
 steps can invalidate a request-id reference without removing that

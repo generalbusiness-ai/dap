@@ -12,7 +12,7 @@ import { Context } from './context.ts';
 import type { PackageDescriptor } from './descriptor.ts';
 import { K, type FoundationState } from './foundation.ts';
 import { observe } from './observe.ts';
-import { applyStep, disclosableKinds, joinBacklog, type Pending, type Script, type Step } from './script.ts';
+import { applyStep, disclosablePosition, joinBacklog, type Pending, type Script, type Step } from './script.ts';
 import type { Entry, Principal } from './types.ts';
 
 /** mulberry32: a small seeded generator, enough for a bounded corpus. */
@@ -112,8 +112,7 @@ export function generate(spec: GeneratorSpec, seed: number): Script {
         const to = pick(members.filter((m) => m !== discloser));
         // The fixture's disclosing client honours any disclosure policy the models declare: it
         // widens only kinds the policy allows. The checker's budget still judges what is readable.
-        const allowed = disclosableKinds(ctx.state);
-        const candidates = Array.from({ length: ctx.head }, (_, k) => k + 1).filter((i) => !allowed || allowed.has(ctx.entries[i]!.event.kind));
+        const candidates = Array.from({ length: ctx.head }, (_, k) => k + 1).filter((i) => disclosablePosition(ctx.state, ctx.entries[i]!));
         const position = pick(candidates);
         if (position !== undefined) push({ type: 'disclose', actor: discloser, positions: [position], to: [to] });
         continue;
