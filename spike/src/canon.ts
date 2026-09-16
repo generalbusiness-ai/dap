@@ -15,13 +15,21 @@ export type Json =
   | Json[]
   | { [key: string]: Json };
 
+const validationErrors = new WeakSet<object>();
+/** Only the fixture's explicit numeric-domain refusal, never an incidental TypeError. */
+export function isCanonicalValidationError(error: unknown): error is TypeError {
+  return typeof error === 'object' && error !== null && validationErrors.has(error);
+}
+
 export function canonicalize(value: Json): string {
   if (value === null || typeof value === 'boolean' || typeof value === 'string') {
     return JSON.stringify(value);
   }
   if (typeof value === 'number') {
     if (!Number.isSafeInteger(value)) {
-      throw new TypeError(`canonicalize: only safe integers are allowed, got ${value}`);
+      const error = new TypeError(`canonicalize: only safe integers are allowed, got ${value}`);
+      validationErrors.add(error);
+      throw error;
     }
     return JSON.stringify(value);
   }

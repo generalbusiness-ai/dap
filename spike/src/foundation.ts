@@ -13,8 +13,8 @@
 
 import { createHash } from 'node:crypto';
 import { scopeSetup } from './scope-profile.ts';
-import { canonicalize as canonicalWire, envelopeId } from './codec.ts';
-import { contentId, type Json } from './canon.ts';
+import { canonicalize as canonicalWire, envelopeBytes, isCodecValidationError } from './codec.ts';
+import { canonicalize, contentId, isCanonicalValidationError, type Json } from './canon.ts';
 import { snapshot } from './append.ts';
 import {
   attach as attachPackage,
@@ -560,9 +560,15 @@ export function verifyIssuance(evidence: IssuanceEvidence, acceptPayload: unknow
   const emb = (v as AcceptInvitePayload).invite;
   const at = evidence.headers[emb.header.position];
   if (!at) return { ok: false, reason: 'not_in_chain' };
-  let commitment: string;
-  try { commitment = emb.actorSig ? envelopeId({ body: emb.event, sig: emb.actorSig }) : contentId(emb.event as unknown as Json); }
-  catch { return { ok: false, reason: 'malformed' }; }
+  let bytes: string;
+  try { bytes = emb.actorSig ? envelopeBytes({ body: emb.event, sig: emb.actorSig }) : canonicalize(emb.event as unknown as Json); }
+  catch (error) {
+    if (isCodecValidationError(error) || isCanonicalValidationError(error)) return { ok: false, reason: 'malformed' };
+    throw error;
+  }
+  // Hashing failures are not malformed issuance data. Strict folds must
+  // abandon their partial state and preserve the original thrown value.
+  const commitment = 'sha256:' + createHash('sha256').update(bytes, 'utf8').digest('hex');
   if (at.id !== commitment || emb.header.commitment !== commitment) return { ok: false, reason: 'not_in_chain' };
   const { seq_sig: _signature, ...preimage } = emb.header;
   if (contentId(preimage as unknown as Json) !== at.headerHash) return { ok: false, reason: 'not_in_chain' };
