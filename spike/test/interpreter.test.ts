@@ -457,3 +457,68 @@ test('K1: a disclosed attach that builds on a hidden attach is a missing depende
   }
   assert.deepEqual(checkContext(ctx, { participants: [BOB], frontiers: [7] }), []);
 });
+
+// ----- checker's sixth V2 review (workroom report 0a4bf351), L1 and L2 -----
+
+test('L1: the facts an attach is refused on are among its requirements: a conflicting model definition and a repeated package', () => {
+  for (const variant of ['model_conflict', 'duplicate_package'] as const) {
+    const base = noopBase();
+    const ctx = Context.create({ creator: ALICE, packages: { [base.id]: base }, bindings: [{ package: base.id }], grants: [{ principal: ALICE, capabilities: ALICE_CAPS }] });
+    accept(ctx, BOB, invite(ctx, ALICE, BOB, [])); // 1, 2
+    let third: PackageDescriptor;
+    let fourth: PackageDescriptor;
+    if (variant === 'model_conflict') {
+      third = pkg('first', { 'com.example.private.tick': ['shared'] }, { modelId: 'shared', fold: (s: { count: number }) => ({ effective: true, state: { count: s.count + 1 } }) });
+      fourth = pkg('second', { 'com.example.later.tick': ['shared'] }, { modelId: 'shared', fold: (s: { count: number }) => ({ effective: true, state: { count: s.count + 100 } }) });
+    } else {
+      third = pkg('model_only', {});
+      fourth = third;
+    }
+    ctx.packages[third.id] = third;
+    ctx.packages[fourth.id] = fourth;
+    const a = ctx.act(ALICE, K.attach, { package: third.id, audience: [] }); // 3, hidden from Bob
+    assert.ok(!('refused' in a) && a.verdict?.effective, variant);
+    const b = ctx.act(ALICE, K.attach, { package: fourth.id, audience: [] }); // 4, refused on what 3 installed
+    assert.ok(!('refused' in b) && b.verdict?.effective === false && b.verdict.reason === variant, variant);
+    assert.deepEqual(ctx.entries[4]!.header.requires, [3], variant);
+    ctx.act(ALICE, K.disclose, { positions: [4], to: [BOB] }); // 5
+    const view5 = ctx.view(BOB, 5);
+    const r = interpretView(BOB, view5, 5, ctx.packages);
+    assert.equal(r.kind, 'paused', variant);
+    if (r.kind === 'paused') {
+      assert.equal(r.at, 4);
+      assert.equal(r.reason, 'dependency_missing');
+      assert.ok(isDeepStrictEqual(observeInterpreted(r.last, view5), oracleObserve(ctx, BOB, 3, 5)), variant);
+    }
+    assert.deepEqual(checkContext(ctx, { participants: [BOB], frontiers: [5] }), [], variant);
+    ctx.act(ALICE, K.disclose, { positions: [3], to: [BOB] }); // 6
+    const view6 = ctx.view(BOB, 6);
+    const r2 = interpretView(BOB, view6, 6, ctx.packages);
+    assert.equal(r2.kind, 'interpreted', variant);
+    if (r2.kind === 'interpreted') assert.equal(r2.outcomes[4]?.reason, variant);
+    assert.deepEqual(checkContext(ctx, { participants: [BOB], frontiers: [6] }), [], variant);
+  }
+});
+
+test('L2: a malformed attach payload is recorded with a malformed verdict, its exact retry replays, and a valid submission follows; evidence extraction never throws', () => {
+  const base = noopBase();
+  const ctx = Context.create({ creator: ALICE, packages: { [base.id]: base }, bindings: [{ package: base.id }], grants: [{ principal: ALICE, capabilities: ALICE_CAPS }] });
+  const audit = pkg('audit', { 'com.example.base.tick': ['audit'] });
+  ctx.packages[audit.id] = audit;
+  const bad = ctx.intent(ALICE, K.attach, { package: audit.id, resolution: null });
+  const r1 = ctx.submit(bad, ctx.credentialFor(ALICE)); // 1
+  assert.ok(!('refused' in r1));
+  assert.equal(r1.header.position, 1);
+  assert.deepEqual(r1.verdict, { known: true, authorized: false, effective: false, reason: 'malformed' });
+  assert.deepEqual(ctx.entries[1]!.header.requires, [0]); // evidence from the package named; the fold still refuses the resolution
+  const again = ctx.submit(bad, ctx.credentialFor(ALICE));
+  assert.ok(!('refused' in again) && again.replay && again.header.position === 1);
+  for (const payload of [null, [], 'x', { package: 7 }, { package: audit.id, resolution: [] }, { package: audit.id, resolution: { 'com.example.base.tick': { handlers: 'base' } } }]) {
+    const r = ctx.submit(ctx.intent(ALICE, K.attach, payload as never), ctx.credentialFor(ALICE));
+    assert.ok(!('refused' in r) && r.verdict?.effective === false, JSON.stringify(payload));
+  }
+  const good = ctx.act(ALICE, K.attach, { package: audit.id, resolution: { 'com.example.base.tick': { handlers: ['base', 'audit'] } } });
+  assert.ok(!('refused' in good) && good.verdict?.effective);
+  assert.deepEqual(good.header.requires, [0]);
+  assert.equal(ctx.head, 8);
+});

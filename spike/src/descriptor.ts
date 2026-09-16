@@ -268,25 +268,38 @@ export function attach(env: Environment, pkg: PackageDescriptor, opts: AttachOpt
 }
 
 /**
- * The positions an attach of `pkg` builds on in `env`: the attach that
- * installed each model its handlers name (when another package provides
- * it), and the attach that produced the current binding of each kind it
- * rebinds. Sorted, without duplicates. The sequencer records these in
- * the attach's header as its dependency evidence.
+ * The positions an attach of `pkg` builds on in `env`: every installed
+ * fact that `attach` consults, whether it then accepts or refuses. That
+ * is the earlier installation of the same package (duplicate_package),
+ * the installer of every model already defined under a name the package
+ * defines (model_conflict), the installer of every model its handlers
+ * name, and the attach that produced the current binding of each kind it
+ * rebinds (ambiguity, contracts). Sorted, without duplicates. The
+ * sequencer records these in the attach's header as its dependency
+ * evidence, so a viewer who sees them all judges the attach as the
+ * sequencer did. Safe on runtime JSON: a malformed resolution is ignored
+ * here and refused by the fold.
  */
-export function attachRequires(env: Environment, pkg: PackageDescriptor, resolution: AttachResolution = {}): number[] {
+export function attachRequires(env: Environment, pkg: PackageDescriptor, resolution?: unknown): number[] {
   const out = new Set<number>();
+  const installedAt = (pkgId: string) => {
+    const at = env.attachedAt[pkgId];
+    if (at !== undefined) out.add(at);
+  };
+  if (env.packages.some((p) => p.id === pkg.id)) installedAt(pkg.id);
+  for (const name of Object.keys(pkg.models)) {
+    const owner = findModelWithPackage(env, name);
+    if (owner) installedAt(owner.pkg.id);
+  }
+  const res = resolution && typeof resolution === 'object' && !Array.isArray(resolution) ? (resolution as Record<string, unknown>) : {};
   for (const [kind, binding] of Object.entries(pkg.kinds)) {
     const existing = env.kinds[kind];
     if (existing) out.add(existing.attachedAt);
-    const handlers = resolution[kind]?.handlers ?? binding.handlers;
-    for (const h of handlers) {
-      if (pkg.models[h]) continue;
+    const r = res[kind];
+    const given = r && typeof r === 'object' && Array.isArray((r as { handlers?: unknown }).handlers) ? ((r as { handlers: unknown[] }).handlers.filter((h) => typeof h === 'string') as string[]) : undefined;
+    for (const h of given ?? binding.handlers) {
       const found = findModelWithPackage(env, h);
-      if (found) {
-        const at = env.attachedAt[found.pkg.id];
-        if (at !== undefined) out.add(at);
-      }
+      if (found) installedAt(found.pkg.id);
     }
   }
   return [...out].sort((a, b) => a - b);

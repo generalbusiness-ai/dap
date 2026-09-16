@@ -4,7 +4,7 @@
 // (design note §2, first trusted profile).
 
 import { contentId, nonce, type Json } from './canon.ts';
-import { attachRequires, bindingId, type AttachResolution, type PackageDescriptor } from './descriptor.ts';
+import { attachRequires, bindingId, type PackageDescriptor } from './descriptor.ts';
 import {
   F0_ID,
   K,
@@ -153,10 +153,13 @@ export class Context {
         acceptKind: K.accept_invite,
         activationOf: (kind) => state.env.kinds[kind]?.attachedAt,
         requiresOf: (ev) => {
+          // Evidence is extracted from runtime JSON before the fold validates it: never throw here.
           if (ev.kind !== K.attach) return undefined;
-          const p = ev.payload as { package?: string; resolution?: AttachResolution } | null;
-          const pkg = p?.package ? this.packages[p.package] : undefined;
-          return pkg ? attachRequires(state.env, pkg, p?.resolution) : undefined;
+          const p = ev.payload;
+          if (!p || typeof p !== 'object' || Array.isArray(p)) return undefined;
+          const { package: pkgId, resolution } = p as { package?: unknown; resolution?: unknown };
+          const pkg = typeof pkgId === 'string' ? this.packages[pkgId] : undefined;
+          return pkg ? attachRequires(state.env, pkg, resolution) : undefined;
         },
       },
     );

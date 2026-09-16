@@ -110,21 +110,27 @@ What it contains:
   before under the same basis; a cache keyed by principal, context, view
   content, basis and available packages, which never reuses a pause.
   Disclosure completeness is checked by the recipient, from evidence the
-  sequencer puts in the header, which names positions and never
-  packages: for an application event, `activation`, the position of the
-  attach (or genesis) that produced the binding the event was judged
-  under at its own position; for an attach, `requires`, the positions of
-  the attaches whose installed models and bindings it builds on. A
-  disclosed event whose activation is hidden, or a disclosed attach one
-  of whose requirements is hidden, pauses with `dependency_missing`. A
-  visible requirement was itself judged when it was reached, with its
-  own requirements checked the same way, so the required chain closes
-  by induction and a visible activation means this view resolves the
-  binding the sequencer did; the verdict, effective or `stale_binding`,
-  is then the genuine one. The intent's own `expected_binding` and
-  `expected_activation` are preserved as what the author saw, and
-  cannot serve as the completeness evidence: a hidden attach between
-  composing and sequencing changes the verdict.
+  sequencer puts in the header. The header names positions, never
+  packages:
+  - `activation`, on an application event: the attach (or genesis) that
+    produced the binding the event was judged under at its own position;
+  - `requires`, on an attach: every installed fact the attach consulted,
+    whether it was then accepted or refused: an earlier installation of
+    the same package, the installers of models already defined under
+    names it defines, the installers of the models its handlers name,
+    and the attach that produced the current binding of each kind it
+    rebinds;
+  - the pause rule: a disclosed event whose activation is hidden, or a
+    disclosed attach with a hidden requirement, pauses with
+    `dependency_missing`; an event or attach whose evidence is all
+    visible is judged, and its verdict, effective, `stale_binding` or a
+    refused attach, is the genuine one.
+  The chain closes by induction: a visible requirement was judged when
+  it was reached with its own requirements checked the same way, so a
+  view that sees an event's evidence resolves the binding the sequencer
+  did. The intent's own `expected_binding` and `expected_activation`
+  are preserved as what the author saw and cannot serve as evidence: a
+  hidden attach between composing and sequencing changes the verdict.
 - `src/oracle.ts`: `fold(S[0..m])` over the complete series and
   `observe(p, state, n)` under basis `n`; never available to a model.
 - `src/checker.ts`: for every participant and frontier, equality of the
