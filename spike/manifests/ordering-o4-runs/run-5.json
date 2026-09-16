@@ -1,0 +1,112 @@
+{
+  "source": "91941fa55928668a7a25413bedd3b38f15677b4e",
+  "manifest": "sha256:d94090b21ce42f2eec4a046558b3a776895d82905c2096a19df1f5f02e011f86",
+  "scopeProfile": "dap.fixture.scope/1",
+  "scopeImplementation": "sha256:1090e6c785ebf4e8060be60672a9503ae4bcbb4220a31f2c117bf42b6532f8db",
+  "joinPolicy": "sha256:ac852ebab4f55816e55cd0fd71b7280267bffaca097046d4880b24ac63b01455",
+  "publicProofRule": "sha256:475b415bbf8b16ccdb1bea078174712c57f2b2955ece9338d762abd60228bad8",
+  "packages": [
+    "sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85",
+    "sha256:e2de918015c64401234c5df0291c8db399c7ce5997f6673662d7cc91a9c9c6e7",
+    "sha256:fd46665bc03857cadf6cec9e4964018780c93639482d42dccfb2b891195b2ed6"
+  ],
+  "integration": {
+    "o1FinalG1G2": "aaa447d9e5ac4d88f07f144d46f2f5e63752c399",
+    "o4Merge": "71f2c9922576a1584d0a45b7d01999b760088093"
+  },
+  "designDecision": "git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:c2982a6e6756f4fed08e5a82acc8b05a65127745",
+  "stage": "complete",
+  "fullNoncampaign": {
+    "command": "DAP_O4_RECORD_DIR=spike/manifests/ordering-o4-runs/run-5-observations node --test --test-skip-pattern='case [57], the campaign:' 'spike/test/**/*.test.ts'",
+    "exit_code": 0,
+    "tests": 345,
+    "pass": 341,
+    "fail": 0,
+    "skipped": 0,
+    "todo": 4,
+    "duration_ms": 52370.995458,
+    "excluded": "Three 200-seed campaigns, explicitly excluded by name; no reduced or zero-seed campaigns were substituted.",
+    "todo_policy": "Four executing user-retained Club negative cases; these are not new commissioned repairs."
+  },
+  "focusedSubset": {
+    "separateInvocation": false,
+    "measurement": "The O4 tests within the same full noncampaign invocation.",
+    "tests": 122,
+    "pass": 122,
+    "fail": 0,
+    "todo": 0,
+    "healthyBoundariesPerBackend": 20,
+    "adverseCasesPerBackend": 29,
+    "materializedGenesisMutationsPerBackend": 209,
+    "observationFiles": 78
+  },
+  "typecheck": {
+    "command": "npm run typecheck --prefix spike",
+    "exit_code": 0,
+    "result": "pass"
+  },
+  "matrix": {
+    "memory": {
+      "actualReaders": [
+        "alice",
+        "bob",
+        "carol",
+        "ivan",
+        "kim"
+      ],
+      "completedHeads": {
+        "F": 3,
+        "S": 24
+      },
+      "immediatelyAcrossAttachQuestions": 143,
+      "actualReaderPreAttachQuestions": 55,
+      "completedTransferHistoricalQuestions": 100
+    },
+    "sqlite": {
+      "actualReaders": [
+        "alice",
+        "bob",
+        "carol",
+        "ivan",
+        "kim"
+      ],
+      "completedHeads": {
+        "F": 3,
+        "S": 24
+      },
+      "immediatelyAcrossAttachQuestions": 143,
+      "actualReaderPreAttachQuestions": 55,
+      "completedTransferHistoricalQuestions": 100
+    }
+  },
+  "mutations": {
+    "memory": {
+      "cases": 209,
+      "categories": {
+        "codec malformed_envelope": 18,
+        "profile invalid_genesis": 154,
+        "unauthorized": 5,
+        "destination_mismatch": 30,
+        "profile unsupported_profile": 2
+      }
+    },
+    "sqlite": {
+      "cases": 209,
+      "categories": {
+        "codec malformed_envelope": 18,
+        "profile invalid_genesis": 154,
+        "unauthorized": 5,
+        "destination_mismatch": 30,
+        "profile unsupported_profile": 2
+      }
+    }
+  },
+  "full_campaign_boundary": "b35b267ea5392e5361905018ee350ec4df07aa55",
+  "full_campaign_repeated": false,
+  "campaign_boundary_relation": "Before G1/G2 runtime and manifest corrections; not evidence of running those campaigns on this source.",
+  "preservedDevelopment": {
+    "before": "a9aa702a46e374d003d1fed953468f8625e99c91",
+    "firstCorrection": "f8c774bd4b9c1fc00f13fc727c749b86c1063462",
+    "audienceFixtureCorrection": "281664af595408bd8bbc874f2d04d38ef136637e"
+  }
+}

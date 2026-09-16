@@ -65,8 +65,9 @@ This experiment claims only O4, not general context merging or O5 verification.
 
 ## Formal runs
 
-Run 1 source `ee86290f753cbfe3efcd9dcbb3128697d6b38016` used the revised
-manifest and opening rule above. Focused run: 100 tests, 98 passed, 2 failed,
+Run 1 source `ee86290f753cbfe3efcd9dcbb3128697d6b38016` used manifest
+`sha256:fc55bfa123891e750f7bbe3a0d9cb33b5f65c07750db08bc984544ed2dd6b378`
+and the unchanged opening rule `sha256:475b415bbf8b16ccdb1bea078174712c57f2b2955ece9338d762abd60228bad8`. Focused run: 100 tests, 98 passed, 2 failed,
 zero TODOs; typecheck passed. Both failures occurred while recording the
 move-preserves-retry observations, after actual state/verdict assertions
 passed: legacy successful verdicts contain optional undefined reason fields.
@@ -195,7 +196,26 @@ The combined scope implementation is
 and the Scope package is
 `sha256:fd46665bc03857cadf6cec9e4964018780c93639482d42dccfb2b891195b2ed6`.
 Sale and Inspection package ids, the fixed join policy and the opening rule
-are unchanged. Formal run 5 will use this source boundary and the new
-manifest. One complete noncampaign run will also record the O4 subset and
-actual observations; there is no second duplicate lifecycle run. The prior
-600-seed evidence remains run 2, explicitly before G1/G2.
+are unchanged. Formal run 5 uses source `91941fa55928668a7a25413bedd3b38f15677b4e` and
+this new manifest. The complete noncampaign run passes: 345 tests, 341 pass,
+zero ordinary failures, zero skipped and four executing retained Club TODOs.
+Typecheck passes. The 122 O4 tests all pass within that same invocation;
+there is no second duplicate lifecycle run. The three 200-seed campaigns
+were explicitly excluded by name. Their prior evidence remains run 2,
+explicitly before G1/G2, and is not attributed to the corrected runtime.
+
+The 78 actual observation files contain both backends' 20 healthy boundaries,
+29 adverse branches, 209 materialized genesis variants, all-reader historical
+matrices and new phase/error cases. Both backends preserve F1's failed receipt
+through retry, dormant exercise at F2, fresh success at F3, successful retry,
+and the original failed retry after success. Bob's admitted unauthorized F1
+observation is followed by effective Alice activation at F2. All earlier
+proof/privacy, revoked/withdrawn-source and historical Sale checks still pass.
+No unexpected exception was accepted as a mutation-policy rejection.
+
+Run-5 records and this result update are the only changes after the frozen
+source; no runtime, fixture, test or manifest changed during measurement.
+The candidate is ready for independent checking; this record is not a verdict.
+
+Raw run-5 text retains the whitespace emitted by Node, including the retained
+TODO assertion diagnostics and the typecheck command's final blank line.
