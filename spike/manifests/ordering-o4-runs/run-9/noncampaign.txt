@@ -1,0 +1,3510 @@
+TAP version 13
+# Subtest: a submission without a credential is refused; a forged credential for a non-participant is refused
+ok 1 - a submission without a credential is refused; a forged credential for a non-participant is refused
+  ---
+  duration_ms: 9.30425
+  type: 'test'
+  ...
+# Subtest: stable facts are checked first: wrong genesis, missing action id, envelope bounds
+ok 2 - stable facts are checked first: wrong genesis, missing action id, envelope bounds
+  ---
+  duration_ms: 6.566959
+  type: 'test'
+  ...
+# Subtest: positions are dense and every header binds its predecessor
+ok 3 - positions are dense and every header binds its predecessor
+  ---
+  duration_ms: 0.885
+  type: 'test'
+  ...
+# Subtest: the memory backend refuses re-entrant appends
+ok 4 - the memory backend refuses re-entrant appends
+  ---
+  duration_ms: 0.171833
+  type: 'test'
+  ...
+# Subtest: audience reads frozen preceding state without changing model state or earlier audiences
+ok 5 - audience reads frozen preceding state without changing model state or earlier audiences
+  ---
+  duration_ms: 6.308042
+  type: 'test'
+  ...
+# Subtest: attaching a handler retains the original audience read scope and rolls back undeclared reads
+ok 6 - attaching a handler retains the original audience read scope and rolls back undeclared reads
+  ---
+  duration_ms: 2.813958
+  type: 'test'
+  ...
+# Subtest: binding identity includes the audience read scope even when resolved handlers match
+ok 7 - binding identity includes the audience read scope even when resolved handlers match
+  ---
+  duration_ms: 0.319208
+  type: 'test'
+  ...
+# Subtest: an audience error discards all model effects, survives retry, and replays consistently
+ok 8 - an audience error discards all model effects, survives retry, and replays consistently
+  ---
+  duration_ms: 12.265167
+  type: 'test'
+  ...
+# Subtest: run 2 corpus: all 139 recovered privacy failures replay and are deletion-minimal
+ok 9 - run 2 corpus: all 139 recovered privacy failures replay and are deletion-minimal
+  ---
+  duration_ms: 15705.890709
+  type: 'test'
+  ...
+# 139 recovered failures, all deletion-minimal; explicit private disclosures remain budget violations under the repaired model
+# Subtest: run 7 corpus pins the unrepaired foundation snapshot and preserves every failing full series
+ok 10 - run 7 corpus pins the unrepaired foundation snapshot and preserves every failing full series
+  ---
+  duration_ms: 33.864167
+  type: 'test'
+  ...
+# Subtest: the manifest is one experiment identity over its prose and executable part, and the prose states the same bounds
+ok 11 - the manifest is one experiment identity over its prose and executable part, and the prose states the same bounds
+  ---
+  duration_ms: 0.795625
+  type: 'test'
+  ...
+# BOOKING_MANIFEST_ID sha256:cb4514f4967891077ad78e1dd0fba4c17438fb32b98cd8bd790df8531b35dd16
+# booking package sha256:0556de5c337344eaa15afcbbbf5d22aa82c384bd6841d4ffb0c07185d4b7ec27
+# Subtest: case 1, two requests for one slot: the admin publishes one, the other stays pending and its publication is overlap
+ok 12 - case 1, two requests for one slot: the admin publishes one, the other stays pending and its publication is overlap
+  ---
+  duration_ms: 48.549291
+  type: 'test'
+  ...
+# Subtest: case 2, free exactly one: two occupancies, one freed, the other active; a second free is already_free
+ok 13 - case 2, free exactly one: two occupancies, one freed, the other active; a second free is already_free
+  ---
+  duration_ms: 89.800833
+  type: 'test'
+  ...
+# Subtest: case 3, duplicate publication: a second occupancy with the same booking id is duplicate_id
+ok 14 - case 3, duplicate publication: a second occupancy with the same booking id is duplicate_id
+  ---
+  duration_ms: 13.626542
+  type: 'test'
+  ...
+# Subtest: case 4, only the admin publishes: a booker's occupancy is unauthorized before any model rule
+ok 15 - case 4, only the admin publishes: a booker's occupancy is unauthorized before any model rule
+  ---
+  duration_ms: 10.405875
+  type: 'test'
+  ...
+# Subtest: case 5, expiry: when the clock reaches an occupancy's end it is expired for every member, and an overlapping occupancy is then effective
+ok 16 - case 5, expiry: when the clock reaches an occupancy's end it is expired for every member, and an overlapping occupancy is then effective
+  ---
+  duration_ms: 50.269541
+  type: 'test'
+  ...
+# Subtest: case 6, cross-view: an occupancy before J joins, an overlapping publication after, and a free of the earlier one are judged the same way in every view
+ok 17 - case 6, cross-view: an occupancy before J joins, an overlapping publication after, and a free of the earlier one are judged the same way in every view
+  ---
+  duration_ms: 128.56125
+  type: 'test'
+  ...
+# Subtest: the repair ledger exists, its totals agree with its entries, and it states the budget outcome
+ok 18 - the repair ledger exists, its totals agree with its entries, and it states the budget outcome
+  ---
+  duration_ms: 0.740667
+  type: 'test'
+  ...
+# fixes 2, added kinds 0, budget within
+# Subtest: V4-F2: the budget detects private fields published through com.example.booking.occupancy
+ok 19 - V4-F2: the budget detects private fields published through com.example.booking.occupancy
+  ---
+  duration_ms: 16.970833
+  type: 'test'
+  ...
+# Subtest: V4-F2: the budget detects private fields published through com.example.booking.free
+ok 20 - V4-F2: the budget detects private fields published through com.example.booking.free
+  ---
+  duration_ms: 21.562458
+  type: 'test'
+  ...
+# Subtest: V4-F2: the budget detects private fields published through ai.generalbusiness.dap.observe
+ok 21 - V4-F2: the budget detects private fields published through ai.generalbusiness.dap.observe
+  ---
+  duration_ms: 21.060417
+  type: 'test'
+  ...
+# Subtest: V4-F2: the budget detects a spoofed booker claim naming the reader published through com.example.booking.occupancy
+ok 22 - V4-F2: the budget detects a spoofed booker claim naming the reader published through com.example.booking.occupancy
+  ---
+  duration_ms: 36.070542
+  type: 'test'
+  ...
+# Subtest: V4-F2: the budget detects a spoofed booker claim naming the reader published through com.example.booking.free
+ok 23 - V4-F2: the budget detects a spoofed booker claim naming the reader published through com.example.booking.free
+  ---
+  duration_ms: 16.267458
+  type: 'test'
+  ...
+# Subtest: V4-F2: the budget detects a spoofed booker claim naming the reader published through ai.generalbusiness.dap.observe
+ok 24 - V4-F2: the budget detects a spoofed booker claim naming the reader published through ai.generalbusiness.dap.observe
+  ---
+  duration_ms: 17.531583
+  type: 'test'
+  ...
+# Subtest: V4-F2: the budget detects nested private fields published through com.example.booking.occupancy
+ok 25 - V4-F2: the budget detects nested private fields published through com.example.booking.occupancy
+  ---
+  duration_ms: 19.270083
+  type: 'test'
+  ...
+# Subtest: V4-F2: the budget detects nested private fields published through com.example.booking.free
+ok 26 - V4-F2: the budget detects nested private fields published through com.example.booking.free
+  ---
+  duration_ms: 25.615291
+  type: 'test'
+  ...
+# Subtest: V4-F2: the budget detects nested private fields published through ai.generalbusiness.dap.observe
+ok 27 - V4-F2: the budget detects nested private fields published through ai.generalbusiness.dap.observe
+  ---
+  duration_ms: 18.830417
+  type: 'test'
+  ...
+# Subtest: V4-F1: seed 1 position 50 keeps Carol and her own request id private; hostile redisclosure is detected
+ok 28 - V4-F1: seed 1 position 50 keeps Carol and her own request id private; hostile redisclosure is detected
+  ---
+  duration_ms: 44.956458
+  type: 'test'
+  ...
+# Subtest: V4-F1: current authority controls publication; authorized refusals, stale and closed attempts retain their audience
+ok 29 - V4-F1: current authority controls publication; authorized refusals, stale and closed attempts retain their audience
+  ---
+  duration_ms: 190.119625
+  type: 'test'
+  ...
+# Subtest: post-baseline A5: invariants detect votes and admission naming invitation-acceptance
+    # Subtest: original policy requires rejection of invalid targets and no admission grant
+    not ok 1 - original policy requires rejection of invalid targets and no admission grant # TODO V5-A5 retained negative result; no policy repair commissioned
+      ---
+      duration_ms: 1.953292
+      type: 'test'
+      location: '/private/tmp/dap-o4-transfer-lifecycle/spike/test/club-a5.test.ts:76:11'
+      failureType: 'testCodeFailure'
+      error: |-
+        votes and admission must refer to an effective application; invalid targets must not grant Member
+        + actual - expected
+        
+          {
+        +   grants: 1,
+        -   grants: 0,
+            readers: [
+              {
+        +       admit: true,
+        -       admit: false,
+                reader: 'alice',
+                votes: [
+        +         true,
+        +         true
+        -         false,
+        -         false
+                ]
+              },
+              {
+        +       admit: true,
+        -       admit: false,
+                reader: 'bob',
+                votes: [
+        +         true,
+        +         true
+        -         false,
+        -         false
+                ]
+              },
+              {
+        +       admit: true,
+        -       admit: false,
+                reader: 'carol',
+                votes: [
+        +         true,
+        +         true
+        -         false,
+        -         false
+                ]
+              },
+              {
+        +       admit: true,
+        -       admit: false,
+                reader: 'dana',
+                votes: [
+        +         true,
+        +         true
+        -         false,
+        -         false
+                ]
+              },
+              {
+        +       admit: true,
+        -       admit: false,
+                reader: 'frank',
+                votes: [
+        +         true,
+        +         true
+        -         false,
+        -         false
+                ]
+              }
+            ]
+          }
+        
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected:
+        readers:
+          0:
+            reader: 'alice'
+            votes:
+              0: false
+              1: false
+            admit: false
+          1:
+            reader: 'bob'
+            votes:
+              0: false
+              1: false
+            admit: false
+          2:
+            reader: 'carol'
+            votes:
+              0: false
+              1: false
+            admit: false
+          3:
+            reader: 'dana'
+            votes:
+              0: false
+              1: false
+            admit: false
+          4:
+            reader: 'frank'
+            votes:
+              0: false
+              1: false
+            admit: false
+        grants: 0
+      actual:
+        readers:
+          0:
+            reader: 'alice'
+            votes:
+              0: true
+              1: true
+            admit: true
+          1:
+            reader: 'bob'
+            votes:
+              0: true
+              1: true
+            admit: true
+          2:
+            reader: 'carol'
+            votes:
+              0: true
+              1: true
+            admit: true
+          3:
+            reader: 'dana'
+            votes:
+              0: true
+              1: true
+            admit: true
+          4:
+            reader: 'frank'
+            votes:
+              0: true
+              1: true
+            admit: true
+        grants: 1
+      operator: 'deepStrictEqual'
+      stack: |-
+        TestContext.<anonymous> (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/club-a5.test.ts:77:12)
+        Test.runInAsyncScope (node:async_hooks:226:14)
+        Test.run (node:internal/test_runner/test:1402:25)
+        Test.start (node:internal/test_runner/test:1262:17)
+        TestContext.test (node:internal/test_runner/test:400:20)
+        TestContext.<anonymous> (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/club-a5.test.ts:76:11)
+        Test.runInAsyncScope (node:async_hooks:226:14)
+        Test.run (node:internal/test_runner/test:1402:25)
+        Test.start (node:internal/test_runner/test:1262:17)
+        startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)
+      ...
+    1..1
+ok 30 - post-baseline A5: invariants detect votes and admission naming invitation-acceptance
+  ---
+  duration_ms: 560.760375
+  type: 'test'
+  ...
+# {"clubA5":"invitation-acceptance","manifest":"sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde","package":"sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e","nonce":"v6-followup:a5:invitation-acceptance","target":{"position":6,"id":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","kind":"ai.generalbusiness.dap.accept_invite","effective":true},"votes":[9,10],"admit":11,"grants":[{"position":12,"payload":{"principal":"dana","roles":["Member"]}}],"readers":[{"reader":"alice","votes":[true,true],"admit":true},{"reader":"bob","votes":[true,true],"admit":true},{"reader":"carol","votes":[true,true],"admit":true},{"reader":"dana","votes":[true,true],"admit":true},{"reader":"frank","votes":[true,true],"admit":true}],"findings":["*@9 invariant: vote at 9 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","*@10 invariant: vote at 9 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","*@10 invariant: vote at 10 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","*@11 invariant: vote at 9 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","*@11 invariant: vote at 10 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","*@11 invariant: admit at 11 of unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","*@12 invariant: vote at 9 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","*@12 invariant: vote at 10 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","*@12 invariant: admit at 11 of unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402"],"steps":[{"step":{"type":"invite","inviter":"alice","invitee":"bob","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:f8e2b2760606029da0845a7d1a315291e617637c63b050ebb68630514b7b6367","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"bob"},"entries":[{"id":"sha256:efb8d15b0646f022fab90d7fa589e5c858af4582891d05da9f2faf860eb75974","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"carol","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:2c862f052244d244f6849a5f8550c6296624802360d2d5ffdf61af5be3c7aba5","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"carol"},"entries":[{"id":"sha256:0f0864ee38e0f0f414103426c0077d1f1e4def4c230d92a73a4186d6a6585445","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"dana","grants":{"roles":[]}},"entries":[{"id":"sha256:6ad4fb318d409b441764b707208069089d376825d667dd7564cc3e5af42e788b","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"dana"},"entries":[{"id":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"frank","grants":{"roles":["Member"]}},"entries":[{"id":"sha256:a17796beda7c55ae1c20e6f4932a7898d8d592fa7140165d1422f310a57a3a65","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"frank"},"entries":[{"id":"sha256:b8d9f7790068c1434997289287b529a5db9ceb85715fdc63409cdff2e61c153a","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"act","actor":"bob","kind":"com.example.club.vote","payload":{"application_id":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","choice":"yes"},"nonce":"a5:8"},"entries":[{"id":"sha256:632055e52d15f825f7a76c0a99f68d18f486456eb6c09c2f60112308e6531cd3","kind":"com.example.club.vote"}],"application":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402"},{"step":{"type":"act","actor":"carol","kind":"com.example.club.vote","payload":{"application_id":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","choice":"yes"},"nonce":"a5:9"},"entries":[{"id":"sha256:fda5a153a368c42c7ed414a49abd94a20f220d4b7a674e92987ddad8a594a9c1","kind":"com.example.club.vote"}],"application":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402"},{"step":{"type":"act","actor":"alice","kind":"com.example.club.admit","payload":{"application_id":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402"},"nonce":"a5:10"},"entries":[{"id":"sha256:f451b2ca7acf3076ef78633c5e8ac889fe58deff8dae5c8a7218a00d0fe28fa0","kind":"com.example.club.admit"},{"id":"sha256:a754806be4313ee8d4f36e37459779495610a4623c19fd82107ebe76e88e6ff9","kind":"ai.generalbusiness.dap.grant"}],"application":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402"}],"minimal":[{"step":{"type":"invite","inviter":"alice","invitee":"bob","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:f8e2b2760606029da0845a7d1a315291e617637c63b050ebb68630514b7b6367","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"bob"},"entries":[{"id":"sha256:efb8d15b0646f022fab90d7fa589e5c858af4582891d05da9f2faf860eb75974","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"dana","grants":{"roles":[]}},"entries":[{"id":"sha256:6ad4fb318d409b441764b707208069089d376825d667dd7564cc3e5af42e788b","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"dana"},"entries":[{"id":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"act","actor":"bob","kind":"com.example.club.vote","payload":{"application_id":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","choice":"yes"},"nonce":"a5:8"},"entries":[{"id":"sha256:632055e52d15f825f7a76c0a99f68d18f486456eb6c09c2f60112308e6531cd3","kind":"com.example.club.vote"}],"application":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402"}]}
+# Subtest: post-baseline A5: invariants detect votes and admission naming malformed-apply
+    # Subtest: original policy requires rejection of invalid targets and no admission grant
+    not ok 1 - original policy requires rejection of invalid targets and no admission grant # TODO V5-A5 retained negative result; no policy repair commissioned
+      ---
+      duration_ms: 0.326833
+      type: 'test'
+      location: '/private/tmp/dap-o4-transfer-lifecycle/spike/test/club-a5.test.ts:76:11'
+      failureType: 'testCodeFailure'
+      error: |-
+        votes and admission must refer to an effective application; invalid targets must not grant Member
+        + actual - expected
+        
+          {
+        +   grants: 1,
+        -   grants: 0,
+            readers: [
+              {
+        +       admit: true,
+        -       admit: false,
+                reader: 'alice',
+                votes: [
+        +         true,
+        +         true
+        -         false,
+        -         false
+                ]
+              },
+              {
+        +       admit: true,
+        -       admit: false,
+                reader: 'bob',
+                votes: [
+        +         true,
+        +         true
+        -         false,
+        -         false
+                ]
+              },
+              {
+        +       admit: true,
+        -       admit: false,
+                reader: 'carol',
+                votes: [
+        +         true,
+        +         true
+        -         false,
+        -         false
+                ]
+              },
+              {
+        +       admit: true,
+        -       admit: false,
+                reader: 'dana',
+                votes: [
+        +         true,
+        +         true
+        -         false,
+        -         false
+                ]
+              },
+              {
+        +       admit: true,
+        -       admit: false,
+                reader: 'frank',
+                votes: [
+        +         true,
+        +         true
+        -         false,
+        -         false
+                ]
+              }
+            ]
+          }
+        
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected:
+        readers:
+          0:
+            reader: 'alice'
+            votes:
+              0: false
+              1: false
+            admit: false
+          1:
+            reader: 'bob'
+            votes:
+              0: false
+              1: false
+            admit: false
+          2:
+            reader: 'carol'
+            votes:
+              0: false
+              1: false
+            admit: false
+          3:
+            reader: 'dana'
+            votes:
+              0: false
+              1: false
+            admit: false
+          4:
+            reader: 'frank'
+            votes:
+              0: false
+              1: false
+            admit: false
+        grants: 0
+      actual:
+        readers:
+          0:
+            reader: 'alice'
+            votes:
+              0: true
+              1: true
+            admit: true
+          1:
+            reader: 'bob'
+            votes:
+              0: true
+              1: true
+            admit: true
+          2:
+            reader: 'carol'
+            votes:
+              0: true
+              1: true
+            admit: true
+          3:
+            reader: 'dana'
+            votes:
+              0: true
+              1: true
+            admit: true
+          4:
+            reader: 'frank'
+            votes:
+              0: true
+              1: true
+            admit: true
+        grants: 1
+      operator: 'deepStrictEqual'
+      stack: |-
+        TestContext.<anonymous> (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/club-a5.test.ts:77:12)
+        Test.runInAsyncScope (node:async_hooks:226:14)
+        Test.run (node:internal/test_runner/test:1402:25)
+        Test.start (node:internal/test_runner/test:1262:17)
+        TestContext.test (node:internal/test_runner/test:400:20)
+        TestContext.<anonymous> (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/club-a5.test.ts:76:11)
+        Test.runInAsyncScope (node:async_hooks:226:14)
+        Test.run (node:internal/test_runner/test:1402:25)
+        Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+        Test.postRun (node:internal/test_runner/test:1542:19)
+      ...
+    1..1
+ok 31 - post-baseline A5: invariants detect votes and admission naming malformed-apply
+  ---
+  duration_ms: 623.324333
+  type: 'test'
+  ...
+# {"clubA5":"malformed-apply","manifest":"sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde","package":"sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e","nonce":"v6-followup:a5:malformed-apply","target":{"position":9,"id":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","kind":"com.example.club.apply","effective":false},"votes":[10,11],"admit":12,"grants":[{"position":13,"payload":{"principal":"dana","roles":["Member"]}}],"readers":[{"reader":"alice","votes":[true,true],"admit":true},{"reader":"bob","votes":[true,true],"admit":true},{"reader":"carol","votes":[true,true],"admit":true},{"reader":"dana","votes":[true,true],"admit":true},{"reader":"frank","votes":[true,true],"admit":true}],"findings":["*@10 invariant: vote at 10 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","*@11 invariant: vote at 10 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","*@11 invariant: vote at 11 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","*@12 invariant: vote at 10 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","*@12 invariant: vote at 11 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","*@12 invariant: admit at 12 of unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","*@13 invariant: vote at 10 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","*@13 invariant: vote at 11 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","*@13 invariant: admit at 12 of unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736"],"steps":[{"step":{"type":"invite","inviter":"alice","invitee":"bob","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:5efae4c957e9ffd536fb4792e17bd3859d4bf40bfd6112b2d7d5d0bf192b2c07","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"bob"},"entries":[{"id":"sha256:652cef6366598679e968e08a6a92073b4031f5b9ef6e668ab950ac7a16962ff7","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"carol","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:6dbefe6ff4ceb5da17f9f5efc1b14111d624f39029bea047b182bba7ae2dff92","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"carol"},"entries":[{"id":"sha256:a3effcce32797773f4e151ef320c41e9294ef145c8ec7ce955f1a55fcde3ace5","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"dana","grants":{"roles":[]}},"entries":[{"id":"sha256:cfb273dd78ce62e8b78692805e96e0778043c3e99521c32f205ce67b5070813a","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"dana"},"entries":[{"id":"sha256:52b396f21bd7075cdda314069da7237e0d440a6225b667cf0c4b8075209461d0","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"frank","grants":{"roles":["Member"]}},"entries":[{"id":"sha256:9c29a84f5149dc5aefb9e903b0055760b44ce5b4935c99f9c414dfe8ecfa44d5","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"frank"},"entries":[{"id":"sha256:727b5c7f0f81e145be8267dffbf05b031f50a5e76aa85f47c1e5e0a94dbfc6e1","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"act","actor":"dana","kind":"com.example.club.apply","payload":{"statement":17},"nonce":"a5:8"},"entries":[{"id":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","kind":"com.example.club.apply"}]},{"step":{"type":"act","actor":"bob","kind":"com.example.club.vote","payload":{"application_id":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","choice":"yes"},"nonce":"a5:9"},"entries":[{"id":"sha256:d3de847e94ade9127f25543fadba6a4ccfd0fff85ce31ab431ba4342f5438365","kind":"com.example.club.vote"}],"application":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736"},{"step":{"type":"act","actor":"carol","kind":"com.example.club.vote","payload":{"application_id":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","choice":"yes"},"nonce":"a5:10"},"entries":[{"id":"sha256:4be906ea88e31394bcd43a900c4433174599b9f22562cfa14d374e46c545f4b3","kind":"com.example.club.vote"}],"application":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736"},{"step":{"type":"act","actor":"alice","kind":"com.example.club.admit","payload":{"application_id":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736"},"nonce":"a5:11"},"entries":[{"id":"sha256:9e0bb3f36faee4bb5407d592e3acbe1adde72f9f69a3966061dbcdfe2d12e31c","kind":"com.example.club.admit"},{"id":"sha256:be683307f1918e59caab7323b3a10efc44c9f02a9c5f6b95db6ce8585d9b01f7","kind":"ai.generalbusiness.dap.grant"}],"application":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736"}],"minimal":[{"step":{"type":"invite","inviter":"alice","invitee":"bob","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:5efae4c957e9ffd536fb4792e17bd3859d4bf40bfd6112b2d7d5d0bf192b2c07","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"bob"},"entries":[{"id":"sha256:652cef6366598679e968e08a6a92073b4031f5b9ef6e668ab950ac7a16962ff7","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"dana","grants":{"roles":[]}},"entries":[{"id":"sha256:cfb273dd78ce62e8b78692805e96e0778043c3e99521c32f205ce67b5070813a","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"dana"},"entries":[{"id":"sha256:52b396f21bd7075cdda314069da7237e0d440a6225b667cf0c4b8075209461d0","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"act","actor":"dana","kind":"com.example.club.apply","payload":{"statement":17},"nonce":"a5:8"},"entries":[{"id":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","kind":"com.example.club.apply"}]},{"step":{"type":"act","actor":"bob","kind":"com.example.club.vote","payload":{"application_id":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","choice":"yes"},"nonce":"a5:9"},"entries":[{"id":"sha256:d3de847e94ade9127f25543fadba6a4ccfd0fff85ce31ab431ba4342f5438365","kind":"com.example.club.vote"}],"application":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736"}]}
+# Subtest: post-baseline A5: invariants detect votes and admission naming standing-reason
+    # Subtest: original policy requires rejection of invalid targets and no admission grant
+    not ok 1 - original policy requires rejection of invalid targets and no admission grant # TODO V5-A5 retained negative result; no policy repair commissioned
+      ---
+      duration_ms: 0.507791
+      type: 'test'
+      location: '/private/tmp/dap-o4-transfer-lifecycle/spike/test/club-a5.test.ts:76:11'
+      failureType: 'testCodeFailure'
+      error: |-
+        votes and admission must refer to an effective application; invalid targets must not grant Member
+        + actual - expected
+        
+          {
+        +   grants: 1,
+        -   grants: 0,
+            readers: [
+              {
+        +       admit: true,
+        -       admit: false,
+                reader: 'alice',
+                votes: [
+        +         true,
+        +         true
+        -         false,
+        -         false
+                ]
+              },
+              {
+        +       admit: true,
+        -       admit: false,
+                reader: 'bob',
+                votes: [
+        +         true,
+        +         true
+        -         false,
+        -         false
+                ]
+              },
+              {
+        +       admit: true,
+        -       admit: false,
+                reader: 'carol',
+                votes: [
+        +         true,
+        +         true
+        -         false,
+        -         false
+                ]
+              },
+              {
+        +       admit: true,
+        -       admit: false,
+                reader: 'dana',
+                votes: [
+        +         true,
+        +         true
+        -         false,
+        -         false
+                ]
+              },
+              {
+        +       admit: true,
+        -       admit: false,
+                reader: 'frank',
+                votes: [
+        +         true,
+        +         true
+        -         false,
+        -         false
+                ]
+              }
+            ]
+          }
+        
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected:
+        readers:
+          0:
+            reader: 'alice'
+            votes:
+              0: false
+              1: false
+            admit: false
+          1:
+            reader: 'bob'
+            votes:
+              0: false
+              1: false
+            admit: false
+          2:
+            reader: 'carol'
+            votes:
+              0: false
+              1: false
+            admit: false
+          3:
+            reader: 'dana'
+            votes:
+              0: false
+              1: false
+            admit: false
+          4:
+            reader: 'frank'
+            votes:
+              0: false
+              1: false
+            admit: false
+        grants: 0
+      actual:
+        readers:
+          0:
+            reader: 'alice'
+            votes:
+              0: true
+              1: true
+            admit: true
+          1:
+            reader: 'bob'
+            votes:
+              0: true
+              1: true
+            admit: true
+          2:
+            reader: 'carol'
+            votes:
+              0: true
+              1: true
+            admit: true
+          3:
+            reader: 'dana'
+            votes:
+              0: true
+              1: true
+            admit: true
+          4:
+            reader: 'frank'
+            votes:
+              0: true
+              1: true
+            admit: true
+        grants: 1
+      operator: 'deepStrictEqual'
+      stack: |-
+        TestContext.<anonymous> (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/club-a5.test.ts:77:12)
+        Test.runInAsyncScope (node:async_hooks:226:14)
+        Test.run (node:internal/test_runner/test:1402:25)
+        Test.start (node:internal/test_runner/test:1262:17)
+        TestContext.test (node:internal/test_runner/test:400:20)
+        TestContext.<anonymous> (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/club-a5.test.ts:76:11)
+        Test.runInAsyncScope (node:async_hooks:226:14)
+        Test.run (node:internal/test_runner/test:1402:25)
+        Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+        Test.postRun (node:internal/test_runner/test:1542:19)
+      ...
+    1..1
+ok 32 - post-baseline A5: invariants detect votes and admission naming standing-reason
+  ---
+  duration_ms: 359.550208
+  type: 'test'
+  ...
+# {"clubA5":"standing-reason","manifest":"sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde","package":"sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e","nonce":"v6-followup:a5:standing-reason","target":{"position":9,"id":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","kind":"com.example.club.standing_reason","effective":true},"votes":[10,11],"admit":12,"grants":[{"position":13,"payload":{"principal":"alice","roles":["Member"]}}],"readers":[{"reader":"alice","votes":[true,true],"admit":true},{"reader":"bob","votes":[true,true],"admit":true},{"reader":"carol","votes":[true,true],"admit":true},{"reader":"dana","votes":[true,true],"admit":true},{"reader":"frank","votes":[true,true],"admit":true}],"findings":["*@10 invariant: vote at 10 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","*@11 invariant: vote at 10 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","*@11 invariant: vote at 11 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","*@12 invariant: vote at 10 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","*@12 invariant: vote at 11 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","*@12 invariant: admit at 12 of unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","*@13 invariant: vote at 10 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","*@13 invariant: vote at 11 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","*@13 invariant: admit at 12 of unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"],"steps":[{"step":{"type":"invite","inviter":"alice","invitee":"bob","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:1cd4cd1c3b0ffc6884370cbb9d75deace66b85bf6c650c44f63400d306d7920e","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"bob"},"entries":[{"id":"sha256:39aa2439256a95b04087b2f285626a4b0bd8d24652c28753e00b322c4140baba","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"carol","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:da31de3a21d459bbde38aacc48766635fbddbad71cf4d772575e9e7de8d749b8","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"carol"},"entries":[{"id":"sha256:70e92440be9b93badac5ca1c684c57672ed3e83f0dc98a98f193c70fe1da2bd1","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"dana","grants":{"roles":[]}},"entries":[{"id":"sha256:82066a312c85860039f63e39fd97ed5abe3e2ba74e7684dc5296b7adb88f63a8","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"dana"},"entries":[{"id":"sha256:720923b61c08be8c6e196d688f3dba317614c519e80e0be1f193c86b6bc3e9a4","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"frank","grants":{"roles":["Member"]}},"entries":[{"id":"sha256:b2c53e1d54dc0ec05c0c6b67afe498df6d2b51eec4aec49c367359d8c0b60e2b","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"frank"},"entries":[{"id":"sha256:c624a58e82907beadbd925b6194f58599fbf88a2c3074979cd3ecf46f593cb47","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"act","actor":"alice","kind":"com.example.club.standing_reason","payload":{"member":"dana","text":"private reason, not an application"},"nonce":"a5:8"},"entries":[{"id":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","kind":"com.example.club.standing_reason"}]},{"step":{"type":"act","actor":"bob","kind":"com.example.club.vote","payload":{"application_id":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","choice":"yes"},"nonce":"a5:9"},"entries":[{"id":"sha256:28583cb1694a7351446b112cfbb524e5461c58e121c49b03c074a3d993715756","kind":"com.example.club.vote"}],"application":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"},{"step":{"type":"act","actor":"carol","kind":"com.example.club.vote","payload":{"application_id":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","choice":"yes"},"nonce":"a5:10"},"entries":[{"id":"sha256:64d93c1e0993f8529264dff3764d6fb6b43cff1bd0674921c8e595e32a71a422","kind":"com.example.club.vote"}],"application":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"},{"step":{"type":"act","actor":"alice","kind":"com.example.club.admit","payload":{"application_id":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"},"nonce":"a5:11"},"entries":[{"id":"sha256:f578658d5cf3fa76bcbfbb13eb4939f8fc90e495e11d4faa31b1920bf325eb55","kind":"com.example.club.admit"},{"id":"sha256:3423e61343784c1f9cb6fbc3b4ef9d4a13068c98c19f5da5e08388e62835ab72","kind":"ai.generalbusiness.dap.grant"}],"application":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"}],"minimal":[{"step":{"type":"invite","inviter":"alice","invitee":"bob","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:1cd4cd1c3b0ffc6884370cbb9d75deace66b85bf6c650c44f63400d306d7920e","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"bob"},"entries":[{"id":"sha256:39aa2439256a95b04087b2f285626a4b0bd8d24652c28753e00b322c4140baba","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"act","actor":"alice","kind":"com.example.club.standing_reason","payload":{"member":"dana","text":"private reason, not an application"},"nonce":"a5:8"},"entries":[{"id":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","kind":"com.example.club.standing_reason"}]},{"step":{"type":"act","actor":"bob","kind":"com.example.club.vote","payload":{"application_id":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","choice":"yes"},"nonce":"a5:9"},"entries":[{"id":"sha256:28583cb1694a7351446b112cfbb524e5461c58e121c49b03c074a3d993715756","kind":"com.example.club.vote"}],"application":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"}]}
+# Subtest: Club baseline corpus: all three recorded seeds reproduce, are deletion-minimal with links preserved, and pass under the repaired model
+ok 33 - Club baseline corpus: all three recorded seeds reproduce, are deletion-minimal with links preserved, and pass under the repaired model
+  ---
+  duration_ms: 527.487875
+  type: 'test'
+  ...
+# seed 81: 56 -> 7 steps; baseline mismatch, repaired clean; application sha256:89924c7ce0dc9ce04507ba8c5d0a87aabad44d546de84cb98f3254e5de7b0c2a -> sha256:e87e8afb059e1b5e803e8e3185e9aa8e73c4c556071a47011517c4d8fddae264
+# seed 107: 55 -> 7 steps; baseline mismatch, repaired clean; application sha256:4f0f3e78520528dcab968444b6a6cff82b228527073747195cd54bb3e3bc31a3 -> sha256:d65ff528f2c97768b9d4047ab5de6e70432c904d018c39066a129a8c8276bbb0
+# seed 182: 56 -> 7 steps; baseline mismatch, repaired clean; application sha256:68a19df79a2ff25c4314170bda712055b392130f69916d53da3186853d271781 -> sha256:ab2f75ce53c1a698561eabe21d46129607400de4a54d198b10f18a316c5c49e5
+# manifest sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde; baseline sha256:6aeac545386d59b2d4645bfa9d951b576ae66119484f723d1fb765ff1a02a08f; repaired sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e
+# Subtest: the manifest is one experiment identity over its prose and executable part, and the prose states the same bounds
+ok 34 - the manifest is one experiment identity over its prose and executable part, and the prose states the same bounds
+  ---
+  duration_ms: 0.979958
+  type: 'test'
+  ...
+# CLUB_MANIFEST_ID sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde
+# club package sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e
+# Subtest: case 1, quorum: three committee members, two yes votes, admit is effective and the applicant is granted Member
+ok 35 - case 1, quorum: three committee members, two yes votes, admit is effective and the applicant is granted Member
+  ---
+  duration_ms: 97.845708
+  type: 'test'
+  ...
+# Subtest: case 2, no quorum: one vote, admit is no_quorum; a no vote and a yes vote is no_majority
+ok 36 - case 2, no quorum: one vote, admit is no_quorum; a no vote and a yes vote is no_majority
+  ---
+  duration_ms: 61.484916
+  type: 'test'
+  ...
+# Subtest: case 3, lapsed: a lapsed committee member's vote is lapsed, the admit that relied on it is no_quorum, and a second vote by one member is already_voted
+ok 37 - case 3, lapsed: a lapsed committee member's vote is lapsed, the admit that relied on it is no_quorum, and a second vote by one member is already_voted
+  ---
+  duration_ms: 110.111917
+  type: 'test'
+  ...
+# Subtest: case 4, late committee member: a vote before any disclosure of the application is unknown_application, after a disclosure it is effective, and every member judges both the same way
+ok 38 - case 4, late committee member: a vote before any disclosure of the application is unknown_application, after a disclosure it is effective, and every member judges both the same way
+  ---
+  duration_ms: 131.499625
+  type: 'test'
+  ...
+# Subtest: Club disclosure across activation: payload before activation pauses until closure
+ok 39 - Club disclosure across activation: payload before activation pauses until closure
+  ---
+  duration_ms: 88.906625
+  type: 'test'
+  ...
+# Subtest: Club disclosure across activation: activation before payload
+ok 40 - Club disclosure across activation: activation before payload
+  ---
+  duration_ms: 110.203416
+  type: 'test'
+  ...
+# Subtest: post-baseline A2: an ordinary Member judges a late committee vote before and after private application disclosure
+ok 41 - post-baseline A2: an ordinary Member judges a late committee vote before and after private application disclosure
+  ---
+  duration_ms: 107.07825
+  type: 'test'
+  ...
+# Subtest: post-baseline A2: an ordinary Member verifies admission and the Member grant without reading the application
+ok 42 - post-baseline A2: an ordinary Member verifies admission and the Member grant without reading the application
+  ---
+  duration_ms: 70.839583
+  type: 'test'
+  ...
+# Subtest: plan §4.2: a second admission is ineffective once the applicant holds Member
+not ok 43 - plan §4.2: a second admission is ineffective once the applicant holds Member # TODO V5-A1: revised experiment and policy repair pending
+  ---
+  duration_ms: 174.879041
+  type: 'test'
+  location: '/private/tmp/dap-o4-transfer-lifecycle/spike/test/club.test.ts:265:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    the plan requires rejection of an existing Member
+    
+    true !== false
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: false
+  actual: true
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/club.test.ts:283:10)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1402:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+    Test.postRun (node:internal/test_runner/test:1542:19)
+    Test.run (node:internal/test_runner/test:1467:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+  ...
+# plan §4.2 violated: admit at 18 is effective after Dana already received Member at 15; frozen-manifest checks still pass
+# Subtest: the repair ledger exists, its totals agree with its entries, and it states the budget outcome
+ok 44 - the repair ledger exists, its totals agree with its entries, and it states the budget outcome
+  ---
+  duration_ms: 0.765916
+  type: 'test'
+  ...
+# fixes 1, added kinds 0, budget within
+# Subtest: test keys reproduce the independent RFC 8032 Ed25519 vector
+ok 45 - test keys reproduce the independent RFC 8032 Ed25519 vector
+  ---
+  duration_ms: 1.878875
+  type: 'test'
+  ...
+# Subtest: fixed vectors pin each signed object, exact UTF-8 bytes, identity and signature
+ok 46 - fixed vectors pin each signed object, exact UTF-8 bytes, identity and signature
+  ---
+  duration_ms: 19.579042
+  type: 'test'
+  ...
+# Subtest: fixed rejection vector: tampered body
+ok 47 - fixed rejection vector: tampered body
+  ---
+  duration_ms: 0.620458
+  type: 'test'
+  ...
+# Subtest: fixed rejection vector: actor signs noncanonical bytes
+ok 48 - fixed rejection vector: actor signs noncanonical bytes
+  ---
+  duration_ms: 3.567041
+  type: 'test'
+  ...
+# Subtest: fixed rejection vector: wrong prev, correctly signed
+ok 49 - fixed rejection vector: wrong prev, correctly signed
+  ---
+  duration_ms: 2.087459
+  type: 'test'
+  ...
+# Subtest: fixed rejection vector: wrong commitment, correctly signed
+ok 50 - fixed rejection vector: wrong commitment, correctly signed
+  ---
+  duration_ms: 0.745542
+  type: 'test'
+  ...
+# Subtest: fixed rejection vector: unassigned sequencer key
+ok 51 - fixed rejection vector: unassigned sequencer key
+  ---
+  duration_ms: 0.552459
+  type: 'test'
+  ...
+# Subtest: fixed rejection vector: sequencer signs full header bytes
+ok 52 - fixed rejection vector: sequencer signs full header bytes
+  ---
+  duration_ms: 0.290667
+  type: 'test'
+  ...
+# Subtest: canonical encoding supports RFC 8785 numbers, UTF-16 ordering and unnormalized strings
+ok 53 - canonical encoding supports RFC 8785 numbers, UTF-16 ordering and unnormalized strings
+  ---
+  duration_ms: 0.214625
+  type: 'test'
+  ...
+# Subtest: canonical encoding rejects lossy JS data, invalid Unicode and noncanonical byte inputs
+ok 54 - canonical encoding rejects lossy JS data, invalid Unicode and noncanonical byte inputs
+  ---
+  duration_ms: 1.480667
+  type: 'test'
+  ...
+# Subtest: principals and signatures have one exact encoding and must match their signing key
+ok 55 - principals and signatures have one exact encoding and must match their signing key
+  ---
+  duration_ms: 0.9915
+  type: 'test'
+  ...
+# Subtest: body profile validates required and forbidden fields without interpreting the payload
+ok 56 - body profile validates required and forbidden fields without interpreting the payload
+  ---
+  duration_ms: 1.140875
+  type: 'test'
+  ...
+# Subtest: header-only verification authenticates disclosure evidence and exposes no private fields
+ok 57 - header-only verification authenticates disclosure evidence and exposes no private fields
+  ---
+  duration_ms: 1.295417
+  type: 'test'
+  ...
+# Subtest: wire verification enforces genesis identity, destinations, origin opt-in and evidence placement
+ok 58 - wire verification enforces genesis identity, destinations, origin opt-in and evidence placement
+  ---
+  duration_ms: 5.776833
+  type: 'test'
+  ...
+# Subtest: wire framing is canonical and decoded entries are independent frozen snapshots
+ok 59 - wire framing is canonical and decoded entries are independent frozen snapshots
+  ---
+  duration_ms: 0.474833
+  type: 'test'
+  ...
+# Subtest: O1-G1 raw Context cannot resume stale admission after Journal closes on memory
+ok 60 - O1-G1 raw Context cannot resume stale admission after Journal closes on memory
+  ---
+  duration_ms: 23.088334
+  type: 'test'
+  ...
+# {"storage":"memory","raw":{"error":"Error: Context: stale fold; restore before writing","invitation":null,"redemption":null,"participants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"]},"coldParticipants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"],"coldInviteVerdict":null}
+# Subtest: O1-G1 raw Context cannot resume stale admission after Journal closes on sqlite
+ok 61 - O1-G1 raw Context cannot resume stale admission after Journal closes on sqlite
+  ---
+  duration_ms: 11.728625
+  type: 'test'
+  ...
+# {"storage":"sqlite","raw":{"error":"Error: SQLiteBackend: unavailable or re-entrant transaction","invitation":null,"redemption":null,"participants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"]},"coldParticipants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"],"coldInviteVerdict":null}
+# Subtest: O1-G1 raw Context stays inactive after its own committed append loses its reply on memory
+ok 62 - O1-G1 raw Context stays inactive after its own committed append loses its reply on memory
+  ---
+  duration_ms: 7.228792
+  type: 'test'
+  ...
+# {"storage":"memory","raw":{"error":"Error: Context: inactive after a write error; restore before writing","invitation":null,"redemption":null,"participants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"]},"coldParticipants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"],"coldInviteVerdict":null}
+# Subtest: O1-G1 raw Context stays inactive after its own committed append loses its reply on sqlite
+ok 63 - O1-G1 raw Context stays inactive after its own committed append loses its reply on sqlite
+  ---
+  duration_ms: 10.222583
+  type: 'test'
+  ...
+# {"storage":"sqlite","raw":{"error":"Error: Context: inactive after a write error; restore before writing","invitation":null,"redemption":null,"participants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"]},"coldParticipants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"],"coldInviteVerdict":null}
+# Subtest: O1-G1 two unowned raw Contexts cannot write from different folded heads on memory
+ok 64 - O1-G1 two unowned raw Contexts cannot write from different folded heads on memory
+  ---
+  duration_ms: 31.523417
+  type: 'test'
+  ...
+# Subtest: O1-G1 two unowned raw Contexts cannot write from different folded heads on sqlite
+ok 65 - O1-G1 two unowned raw Contexts cannot write from different folded heads on sqlite
+  ---
+  duration_ms: 9.746333
+  type: 'test'
+  ...
+# Subtest: O1-G1 freshness is checked inside serialization without scanning history for refusal
+ok 66 - O1-G1 freshness is checked inside serialization without scanning history for refusal
+  ---
+  duration_ms: 4.913875
+  type: 'test'
+  ...
+# Subtest: O1-G1 a current raw Context preserves successful writes and exact retries on memory
+ok 67 - O1-G1 a current raw Context preserves successful writes and exact retries on memory
+  ---
+  duration_ms: 5.101042
+  type: 'test'
+  ...
+# Subtest: O1-G1 a current raw Context preserves successful writes and exact retries on sqlite
+ok 68 - O1-G1 a current raw Context preserves successful writes and exact retries on sqlite
+  ---
+  duration_ms: 48.250458
+  type: 'test'
+  ...
+# Subtest: O5 isolated reader verifies an actual O3 SQLite handover and successor
+ok 69 - O5 isolated reader verifies an actual O3 SQLite handover and successor
+  ---
+  duration_ms: 113.196458
+  type: 'test'
+  ...
+# o5-journal-proof:{"proof":{"pinnedGenesis":"sha256:6c377b4ad1d1179e3a7178571fb06533a1346bdd98b7a07cb15b148f39bc50bd","genesis":{"header":{"commitment":"sha256:6c377b4ad1d1179e3a7178571fb06533a1346bdd98b7a07cb15b148f39bc50bd","genesis":"sha256:6c377b4ad1d1179e3a7178571fb06533a1346bdd98b7a07cb15b148f39bc50bd","position":0,"prev":"sha256:0000000000000000000000000000000000000000000000000000000000000000","seq_sig":"fQ1u595c3b5-k-BoeqOUq725A7VgJVygilEuW9CkZhKSOMWRRMrpUxu8leGEUhA2oAT412Q8x1tZ4ckjm_Z4Bw"},"committed":"{\\"body\\":{\\"actor\\":\\"ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w\\",\\"kind\\":\\"ai.generalbusiness.dap.genesis\\",\\"nonce\\":\\"02020202020202020202020202020202\\",\\"payload\\":{\\"bindings\\":[{\\"package\\":\\"sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85\\"}],\\"foundation\\":\\"sha256:5a7be1514529bac249c683ada733e64273f94b2700abf8a55c47dcb7ebfb8d78\\",\\"grants\\":[{\\"capabilities\\":[\\"ai.generalbusiness.dap.invite\\",\\"ai.generalbusiness.dap.attach\\",\\"ai.generalbusiness.dap.grant\\",\\"ai.generalbusiness.dap.disclose\\",\\"ai.generalbusiness.dap.close\\"],\\"principal\\":\\"ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w\\",\\"roles\\":[\\"Seller\\"]}],\\"origins\\":[{\\"actor\\":\\"ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w\\",\\"kind\\":\\"com.example.sale.listing\\",\\"nonce\\":\\"01010101010101010101010101010101\\",\\"payload\\":{\\"ask\\":800,\\"referent\\":\\"guitar-1\\"}}],\\"referents\\":[\\"guitar-1\\"],\\"route\\":\\"route:o1-test\\",\\"runtime\\":\\"dap.fixture.ts/1\\",\\"sequencing\\":{\\"control\\":\\"ed25519:iodf_x6zhFFXes1a_uQFRWVo3XyJ4JCGOgVXvHr0nxc\\",\\"profile\\":\\"dap.fixture.single-writer/3\\",\\"writer\\":\\"ed25519:bnoc3Smwt4_ROvTFWY_v9O8qlxZuPKby5Pv8zYBQW_E\\"}}},\\"sig\\":\\"REjZAelqk8PAnky2GhxMSRILmDxoMoRSyU4Su-MLA75deWR5JqqnsvuPNikyj5yeVQzncEoNY1zp4yYNpLBaCw\\"}"},"entries":[{"header":{"commitment":"sha256:2f34e40e1201e9915671e467eab3035014b78e0579275669844ba20780a696f3","genesis":"sha256:6c377b4ad1d1179e3a7178571fb06533a1346bdd98b7a07cb15b148f39bc50bd","position":1,"prev":"sha256:342673a307e5c4ba0a2073c143389151325d8f0e80e7780fd0f078ee8532d200","seq_sig":"ubM6Lycmtbso-2xq9W_NpP8QaDlUDxiLoPpzsxfnEazbZAWRBoCGUqUinA9rxeRe4PVPSvVL43lQAsEvRbcnAQ"}},{"header":{"commitment":"sha256:121676453b05f6c299d002066add279e5efe600cb009b465e691825be53c0de4","genesis":"sha256:6c377b4ad1d1179e3a7178571fb06533a1346bdd98b7a07cb15b148f39bc50bd","position":2,"prev":"sha256:2a70f1cc247d5ce5b86bb486b9165bad1793771509391b69384328316ad00969","seq_sig":"X0HJuFbMf0G9r2SVIpRho4KmHNs4fR-AfOdUTsRPhCTx93pJPNKTL3OHfAT4rGSbLAZdjPCfAqcm2UjVlWTYDw"},"committed":"{\\"body\\":{\\"action_id\\":\\"o5-real-seal\\",\\"actor\\":\\"ed25519:iodf_x6zhFFXes1a_uQFRWVo3XyJ4JCGOgVXvHr0nxc\\",\\"genesis\\":\\"sha256:6c377b4ad1d1179e3a7178571fb06533a1346bdd98b7a07cb15b148f39bc50bd\\",\\"kind\\":\\"ai.generalbusiness.dap.seq.seal\\",\\"nonce\\":\\"a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1\\",\\"payload\\":{\\"epoch\\":0,\\"predecessor\\":{\\"headerHash\\":\\"sha256:2a70f1cc247d5ce5b86bb486b9165bad1793771509391b69384328316ad00969\\",\\"position\\":1}}},\\"sig\\":\\"EtrUa2JPrXbQKhaI4sxiHuM5_6Yt7v87oc3u1vwnDm6rUA36Pux9sO5KUsovM2Tf3EIajjiCYKJCJNxdmVNYAw\\"}"},{"header":{"commitment":"sha256:594e115f7020d20ca3d5f06d4fd72fbb29aa92436375d8932ef230a2599f9cec","genesis":"sha256:6c377b4ad1d1179e3a7178571fb06533a1346bdd98b7a07cb15b148f39bc50bd","position":3,"prev":"sha256:5f4a665a58627338c0380689f190ad668ade41ae6edfe7ba7a6c30ecc7237b5e","seq_sig":"ocdEKwtBVg6sX0H6hVL0fEzuc4hN2TUkHWOBeAxLnZEAZxJMic5PPvBYY7s2MbkfJ1s1y6AytnKP6e3A0fDDAg"},"committed":"{\\"body\\":{\\"action_id\\":\\"o5-real-assign\\",\\"actor\\":\\"ed25519:iodf_x6zhFFXes1a_uQFRWVo3XyJ4JCGOgVXvHr0nxc\\",\\"genesis\\":\\"sha256:6c377b4ad1d1179e3a7178571fb06533a1346bdd98b7a07cb15b148f39bc50bd\\",\\"kind\\":\\"ai.generalbusiness.dap.seq.assign\\",\\"nonce\\":\\"a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2\\",\\"payload\\":{\\"epoch\\":1,\\"predecessor\\":{\\"headerHash\\":\\"sha256:5f4a665a58627338c0380689f190ad668ade41ae6edfe7ba7a6c30ecc7237b5e\\",\\"position\\":2},\\"writer\\":\\"ed25519:6kpsY-KcUgq-9VB7Ey7F-ZVHdq6-vnuSQh7qaRRG0iw\\"}},\\"sig\\":\\"o5gUdi9MgY0k5pMfLcDD276kdpevTpTfoQbOFLD2pteOjql3zWz50wubEXj7LcsimzWycbzB3Y39qvT8k5xlAQ\\"}"},{"header":{"commitment":"sha256:ab09d34b0fa2f0561cff72dad2810420c4566ab3f9dbec72b38c9d793cffd004","genesis":"sha256:6c377b4ad1d1179e3a7178571fb06533a1346bdd98b7a07cb15b148f39bc50bd","position":4,"prev":"sha256:fc0836fa43de474d8e7e25e9e269260f635de00fb5a764f8b23f259c2731ee85","seq_sig":"exfWxzTLIeoYVk3uY4wnVP2PbZASH1tWa-iMV5jiporAUkWbiXs6SYiEwfpFbvrmqBZOdtxKZiE7wYNR5AuGDA"}}]},"result":{"genesis":"sha256:6c377b4ad1d1179e3a7178571fb06533a1346bdd98b7a07cb15b148f39bc50bd","profile":"dap.fixture.single-writer/3","control":"ed25519:iodf_x6zhFFXes1a_uQFRWVo3XyJ4JCGOgVXvHr0nxc","epoch":1,"writer":"ed25519:6kpsY-KcUgq-9VB7Ey7F-ZVHdq6-vnuSQh7qaRRG0iw","sealed":false,"head":{"position":4,"headerHash":"sha256:e30ba8d3c9fd6ee56c0c85ed0e2d98ca1ae5347beef3e7dce91eaad231998ec6","commitment":"sha256:ab09d34b0fa2f0561cff72dad2810420c4566ab3f9dbec72b38c9d793cffd004"},"assignments":[{"epoch":0,"writer":"ed25519:bnoc3Smwt4_ROvTFWY_v9O8qlxZuPKby5Pv8zYBQW_E","firstPosition":0},{"epoch":1,"writer":"ed25519:6kpsY-KcUgq-9VB7Ey7F-ZVHdq6-vnuSQh7qaRRG0iw","firstPosition":4}],"controlEntries":2,"opaqueEntries":2}}
+# Subtest: O5 spec proof: genesis-only
+ok 70 - O5 spec proof: genesis-only
+  ---
+  duration_ms: 18.05575
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: ordinary-payload-unavailable
+ok 71 - O5 spec proof: ordinary-payload-unavailable
+  ---
+  duration_ms: 1.195709
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: two-client-nominations-have-no-authority
+ok 72 - O5 spec proof: two-client-nominations-have-no-authority
+  ---
+  duration_ms: 1.259709
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: interrupted-after-seal
+ok 73 - O5 spec proof: interrupted-after-seal
+  ---
+  duration_ms: 2.372167
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: valid-handover
+ok 74 - O5 spec proof: valid-handover
+  ---
+  duration_ms: 2.163792
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: two-handovers
+ok 75 - O5 spec proof: two-handovers
+  ---
+  duration_ms: 3.621125
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: v1-fixed-writer
+ok 76 - O5 spec proof: v1-fixed-writer
+  ---
+  duration_ms: 0.491666
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: v1-request-does-not-assign
+ok 77 - O5 spec proof: v1-request-does-not-assign
+  ---
+  duration_ms: 1.0395
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: v1-seal-cannot-change-profile
+ok 78 - O5 spec proof: v1-seal-cannot-change-profile
+  ---
+  duration_ms: 1.742959
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: genesis-control-is-writer
+ok 79 - O5 spec proof: genesis-control-is-writer
+  ---
+  duration_ms: 0.3765
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: unsupported-profile
+ok 80 - O5 spec proof: unsupported-profile
+  ---
+  duration_ms: 0.235375
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: wrong-genesis-pin
+ok 81 - O5 spec proof: wrong-genesis-pin
+  ---
+  duration_ms: 0.248667
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: assign-without-seal
+ok 82 - O5 spec proof: assign-without-seal
+  ---
+  duration_ms: 1.151875
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: request-does-not-authorize-successor
+ok 83 - O5 spec proof: request-does-not-authorize-successor
+  ---
+  duration_ms: 1.356667
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: retired-writer-continuation
+ok 84 - O5 spec proof: retired-writer-continuation
+  ---
+  duration_ms: 1.955084
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: successor-cannot-sign-assignment
+ok 85 - O5 spec proof: successor-cannot-sign-assignment
+  ---
+  duration_ms: 1.721792
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: writer-is-not-seal-authority
+ok 86 - O5 spec proof: writer-is-not-seal-authority
+  ---
+  duration_ms: 2.282042
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: stranger-is-not-seal-authority
+ok 87 - O5 spec proof: stranger-is-not-seal-authority
+  ---
+  duration_ms: 0.760542
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: writer-is-not-assign-authority
+ok 88 - O5 spec proof: writer-is-not-assign-authority
+  ---
+  duration_ms: 3.521875
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: successor-is-not-assign-authority
+ok 89 - O5 spec proof: successor-is-not-assign-authority
+  ---
+  duration_ms: 1.861209
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: seal-predecessor-is-not-bare-header-hash
+ok 90 - O5 spec proof: seal-predecessor-is-not-bare-header-hash
+  ---
+  duration_ms: 1.0245
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: assign-predecessor-is-not-bare-header-hash
+ok 91 - O5 spec proof: assign-predecessor-is-not-bare-header-hash
+  ---
+  duration_ms: 1.906708
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: stale-assign-head
+ok 92 - O5 spec proof: stale-assign-head
+  ---
+  duration_ms: 1.747208
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: skipped-seal-epoch
+ok 93 - O5 spec proof: skipped-seal-epoch
+  ---
+  duration_ms: 1.119667
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: skipped-assign-epoch
+ok 94 - O5 spec proof: skipped-assign-epoch
+  ---
+  duration_ms: 2.26
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: negative-epoch
+ok 95 - O5 spec proof: negative-epoch
+  ---
+  duration_ms: 2.155583
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: fractional-epoch
+ok 96 - O5 spec proof: fractional-epoch
+  ---
+  duration_ms: 2.160792
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: ordinary-after-seal
+ok 97 - O5 spec proof: ordinary-after-seal
+  ---
+  duration_ms: 1.564833
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: request-after-seal
+ok 98 - O5 spec proof: request-after-seal
+  ---
+  duration_ms: 1.971833
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: seal-after-seal
+ok 99 - O5 spec proof: seal-after-seal
+  ---
+  duration_ms: 2.022167
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: second-competing-assignment
+ok 100 - O5 spec proof: second-competing-assignment
+  ---
+  duration_ms: 2.522084
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: retired-key-cannot-be-revived
+ok 101 - O5 spec proof: retired-key-cannot-be-revived
+  ---
+  duration_ms: 2.7085
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: control-cannot-become-writer
+ok 102 - O5 spec proof: control-cannot-become-writer
+  ---
+  duration_ms: 2.045583
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: unknown-control-kind
+ok 103 - O5 spec proof: unknown-control-kind
+  ---
+  duration_ms: 1.036333
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: extra-control-payload-field
+ok 104 - O5 spec proof: extra-control-payload-field
+  ---
+  duration_ms: 1.207458
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: missing-control-payload-field
+ok 105 - O5 spec proof: missing-control-payload-field
+  ---
+  duration_ms: 0.990166
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: application-opening-is-not-accepted
+ok 106 - O5 spec proof: application-opening-is-not-accepted
+  ---
+  duration_ms: 1.010125
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: wrong-prev-header-hash
+ok 107 - O5 spec proof: wrong-prev-header-hash
+  ---
+  duration_ms: 0.654208
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: skipped-position
+ok 108 - O5 spec proof: skipped-position
+  ---
+  duration_ms: 0.529541
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: receipt-retry-is-not-a-second-position
+ok 109 - O5 spec proof: receipt-retry-is-not-a-second-position
+  ---
+  duration_ms: 0.62225
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: wrong-body-destination
+ok 110 - O5 spec proof: wrong-body-destination
+  ---
+  duration_ms: 0.942708
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: forged-actor-signature
+ok 111 - O5 spec proof: forged-actor-signature
+  ---
+  duration_ms: 0.953542
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: forged-writer-signature
+ok 112 - O5 spec proof: forged-writer-signature
+  ---
+  duration_ms: 0.596417
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: missing-assign-opening-detected-after-seal
+ok 113 - O5 spec proof: missing-assign-opening-detected-after-seal
+  ---
+  duration_ms: 1.6985
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: missing-controls-detected-at-successor-signature
+ok 114 - O5 spec proof: missing-controls-detected-at-successor-signature
+  ---
+  duration_ms: 1.297791
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: opening-exposes-same-sealed-suffix
+ok 115 - O5 spec proof: opening-exposes-same-sealed-suffix
+  ---
+  duration_ms: 1.112833
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: LIMIT-hidden-seal-and-old-writer-suffix
+ok 116 - O5 spec proof: LIMIT-hidden-seal-and-old-writer-suffix
+  ---
+  duration_ms: 0.924584
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: legacy-movable-v2-is-unsupported
+ok 117 - O5 spec proof: legacy-movable-v2-is-unsupported
+  ---
+  duration_ms: 0.19975
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: seal-predecessor-commitment-string
+ok 118 - O5 spec proof: seal-predecessor-commitment-string
+  ---
+  duration_ms: 0.9765
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: seal-predecessor-position-only
+ok 119 - O5 spec proof: seal-predecessor-position-only
+  ---
+  duration_ms: 0.973166
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: seal-predecessor-hash-only
+ok 120 - O5 spec proof: seal-predecessor-hash-only
+  ---
+  duration_ms: 0.96725
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: seal-predecessor-extra-commitment
+ok 121 - O5 spec proof: seal-predecessor-extra-commitment
+  ---
+  duration_ms: 9.81425
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: seal-predecessor-null
+ok 122 - O5 spec proof: seal-predecessor-null
+  ---
+  duration_ms: 2.336792
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: seal-predecessor-array
+ok 123 - O5 spec proof: seal-predecessor-array
+  ---
+  duration_ms: 0.835542
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: seal-predecessor-wrong-position
+ok 124 - O5 spec proof: seal-predecessor-wrong-position
+  ---
+  duration_ms: 0.760958
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: seal-predecessor-wrong-hash
+ok 125 - O5 spec proof: seal-predecessor-wrong-hash
+  ---
+  duration_ms: 0.739125
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: seal-predecessor-commitment-in-hash
+ok 126 - O5 spec proof: seal-predecessor-commitment-in-hash
+  ---
+  duration_ms: 0.733875
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: seal-predecessor-string-position
+ok 127 - O5 spec proof: seal-predecessor-string-position
+  ---
+  duration_ms: 0.762583
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: assign-predecessor-commitment-string
+ok 128 - O5 spec proof: assign-predecessor-commitment-string
+  ---
+  duration_ms: 5.613208
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: assign-predecessor-position-only
+ok 129 - O5 spec proof: assign-predecessor-position-only
+  ---
+  duration_ms: 1.771333
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: assign-predecessor-hash-only
+ok 130 - O5 spec proof: assign-predecessor-hash-only
+  ---
+  duration_ms: 1.769958
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: assign-predecessor-extra-commitment
+ok 131 - O5 spec proof: assign-predecessor-extra-commitment
+  ---
+  duration_ms: 1.692167
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: assign-predecessor-null
+ok 132 - O5 spec proof: assign-predecessor-null
+  ---
+  duration_ms: 1.849959
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: assign-predecessor-array
+ok 133 - O5 spec proof: assign-predecessor-array
+  ---
+  duration_ms: 1.723458
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: assign-predecessor-wrong-position
+ok 134 - O5 spec proof: assign-predecessor-wrong-position
+  ---
+  duration_ms: 1.722458
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: assign-predecessor-wrong-hash
+ok 135 - O5 spec proof: assign-predecessor-wrong-hash
+  ---
+  duration_ms: 1.707917
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: assign-predecessor-commitment-in-hash
+ok 136 - O5 spec proof: assign-predecessor-commitment-in-hash
+  ---
+  duration_ms: 1.865834
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: assign-predecessor-string-position
+ok 137 - O5 spec proof: assign-predecessor-string-position
+  ---
+  duration_ms: 1.725375
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: repeated-hidden-commitment
+ok 138 - O5 spec proof: repeated-hidden-commitment
+  ---
+  duration_ms: 0.719625
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: repeated-genesis-commitment
+ok 139 - O5 spec proof: repeated-genesis-commitment
+  ---
+  duration_ms: 0.603041
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: fixed-writer-repeated-commitment
+ok 140 - O5 spec proof: fixed-writer-repeated-commitment
+  ---
+  duration_ms: 0.67475
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: checker-seal-relocation-with-repeated-C
+ok 141 - O5 spec proof: checker-seal-relocation-with-repeated-C
+  ---
+  duration_ms: 0.912625
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: exact-head-authorized-seal
+ok 142 - O5 spec proof: exact-head-authorized-seal
+  ---
+  duration_ms: 1.150458
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: same-seal-envelope-at-different-position
+ok 143 - O5 spec proof: same-seal-envelope-at-different-position
+  ---
+  duration_ms: 1.370625
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: same-seal-position-different-header-hash
+ok 144 - O5 spec proof: same-seal-position-different-header-hash
+  ---
+  duration_ms: 1.084125
+  type: 'test'
+  ...
+# Subtest: O5 spec proof: same-assign-envelope-after-different-seal
+ok 145 - O5 spec proof: same-assign-envelope-after-different-seal
+  ---
+  duration_ms: 1.70725
+  type: 'test'
+  ...
+# Subtest: O5 compare: ordinary-signed-head-fork
+ok 146 - O5 compare: ordinary-signed-head-fork
+  ---
+  duration_ms: 1.798833
+  type: 'test'
+  ...
+# Subtest: O5 compare: competing-signed-assignments
+ok 147 - O5 compare: competing-signed-assignments
+  ---
+  duration_ms: 3.912709
+  type: 'test'
+  ...
+# Subtest: O5 compare: same-history
+ok 148 - O5 compare: same-history
+  ---
+  duration_ms: 4.1425
+  type: 'test'
+  ...
+# Subtest: O5 compare: one-history-is-prefix
+ok 149 - O5 compare: one-history-is-prefix
+  ---
+  duration_ms: 7.417708
+  type: 'test'
+  ...
+# Subtest: O5 omission limit uses identical headers and cannot be mistaken for completeness proof
+ok 150 - O5 omission limit uses identical headers and cannot be mistaken for completeness proof
+  ---
+  duration_ms: 2.11575
+  type: 'test'
+  ...
+# Subtest: O5 proof boundary rejects unrelated inputs and does not mutate callers
+ok 151 - O5 proof boundary rejects unrelated inputs and does not mutate callers
+  ---
+  duration_ms: 5.365458
+  type: 'test'
+  ...
+# Subtest: O5 H1 rejects relocated exact control bytes on individually unique histories
+ok 152 - O5 H1 rejects relocated exact control bytes on individually unique histories
+  ---
+  duration_ms: 24.166709
+  type: 'test'
+  ...
+# Subtest: O5 H1 retains historical v2 vectors and unchanged fixed-writer proof bytes
+ok 153 - O5 H1 retains historical v2 vectors and unchanged fixed-writer proof bytes
+  ---
+  duration_ms: 1.249916
+  type: 'test'
+  ...
+# Subtest: O5 executes with packages, application payloads and grant folds unavailable
+ok 154 - O5 executes with packages, application payloads and grant folds unavailable
+  ---
+  duration_ms: 219.440125
+  type: 'test'
+  ...
+# Subtest: a package declaring a name under the system prefix is refused, whatever it claims about itself
+ok 155 - a package declaring a name under the system prefix is refused, whatever it claims about itself
+  ---
+  duration_ms: 2.698416
+  type: 'test'
+  ...
+# Subtest: a descriptor whose id does not match its content is refused
+ok 156 - a descriptor whose id does not match its content is refused
+  ---
+  duration_ms: 0.184833
+  type: 'test'
+  ...
+# Subtest: two handlers for one kind without a resolution is ambiguous; a resolution naming exactly both is accepted
+ok 157 - two handlers for one kind without a resolution is ambiguous; a resolution naming exactly both is accepted
+  ---
+  duration_ms: 0.450292
+  type: 'test'
+  ...
+# Subtest: resolution retains the capability and the active audience policy: attaching a handler never widens
+ok 158 - resolution retains the capability and the active audience policy: attaching a handler never widens
+  ---
+  duration_ms: 0.614
+  type: 'test'
+  ...
+# Subtest: identities follow executable content: a changed fold changes descriptor and binding ids
+ok 159 - identities follow executable content: a changed fold changes descriptor and binding ids
+  ---
+  duration_ms: 0.246292
+  type: 'test'
+  ...
+# Subtest: binding identity is per kind: an unrelated attach does not change it; a relevant change does
+ok 160 - binding identity is per kind: an unrelated attach does not change it; a relevant change does
+  ---
+  duration_ms: 0.411375
+  type: 'test'
+  ...
+# Subtest: an application intent captures its binding by default; a relevant attach stales it, an unrelated private attach does not; a missing binding is refused
+ok 161 - an application intent captures its binding by default; a relevant attach stales it, an unrelated private attach does not; a missing binding is refused
+  ---
+  duration_ms: 1.914208
+  type: 'test'
+  ...
+# Subtest: the manifest is one experiment identity over its prose, its executable part and the package, and the prose states the same bounds
+ok 162 - the manifest is one experiment identity over its prose, its executable part and the package, and the prose states the same bounds
+  ---
+  duration_ms: 0.680375
+  type: 'test'
+  ...
+# DISCUSSION_MANIFEST_ID sha256:d5f67ab9b25babd202cd5d1c0bbae80271f92df6aa421eb666eb2af777668c9f
+# Subtest: normal replay: generated series over the manifest seeds have zero violations, and the corpus exercises joins, a side attach and disclosures
+ok 163 - normal replay: generated series over the manifest seeds have zero violations, and the corpus exercises joins, a side attach and disclosures
+  ---
+  duration_ms: 224.641167
+  type: 'test'
+  ...
+# Subtest: pause and resume: a client without the side package pauses at the attach and resumes to equality with it
+ok 164 - pause and resume: a client without the side package pauses at the attach and resumes to equality with it
+  ---
+  duration_ms: 11.307125
+  type: 'test'
+  ...
+# Subtest: planted fault: closing privately breaks the shared outcome for a late joiner, and the checker finds it
+ok 165 - planted fault: closing privately breaks the shared outcome for a late joiner, and the checker finds it
+  ---
+  duration_ms: 9.966792
+  type: 'test'
+  ...
+# Subtest: shrinking: the failing series reduces to a minimal script that still fails
+ok 166 - shrinking: the failing series reduces to a minimal script that still fails
+  ---
+  duration_ms: 12.129083
+  type: 'test'
+  ...
+# Subtest: expected outcomes, independent of the fold: closure is seen by a late joiner; posts are seen exactly by members at the time and by disclosure; a post after closure and an unauthorized post are ineffective
+ok 167 - expected outcomes, independent of the fold: closure is seen by a late joiner; posts are seen exactly by members at the time and by disclosure; a post after closure and an unauthorized post are ineffective
+  ---
+  duration_ms: 33.158
+  type: 'test'
+  ...
+# Subtest: F5: the generator never exceeds its entry bound, even when a compound step would
+ok 168 - F5: the generator never exceeds its entry bound, even when a compound step would
+  ---
+  duration_ms: 3.011334
+  type: 'test'
+  ...
+# Subtest: the sale trace 0 to 5 interprets to the oracle for every participant at every frontier
+ok 169 - the sale trace 0 to 5 interprets to the oracle for every participant at every frontier
+  ---
+  duration_ms: 60.53375
+  type: 'test'
+  ...
+# Subtest: a late joiner, a members-audience event before they joined, a disclosure and an as-of query keep the property
+ok 170 - a late joiner, a members-audience event before they joined, a disclosure and an as-of query keep the property
+  ---
+  duration_ms: 61.1495
+  type: 'test'
+  ...
+# Subtest: the views note's pause example: a disclosure followed by an unavailable package pauses with last through the position before, under the disclosure's basis, and resumes
+ok 171 - the views note's pause example: a disclosure followed by an unavailable package pauses with last through the position before, under the disclosure's basis, and resumes
+  ---
+  duration_ms: 2.683459
+  type: 'test'
+  ...
+# Subtest: a dependency-incomplete disclosure pauses: the event is disclosed but the attach it needs is not
+ok 172 - a dependency-incomplete disclosure pauses: the event is disclosed but the attach it needs is not
+  ---
+  duration_ms: 0.517083
+  type: 'test'
+  ...
+# Subtest: a cached interpretation is reused only for the same principal, view content, basis and packages; a pause is never reused
+ok 173 - a cached interpretation is reused only for the same principal, view content, basis and packages; a pause is never reused
+  ---
+  duration_ms: 10.985792
+  type: 'test'
+  ...
+# Subtest: F2: a disclosed event whose binding the principal cannot resolve pauses with dependency_missing, and resumes once the attach is disclosed
+ok 174 - F2: a disclosed event whose binding the principal cannot resolve pauses with dependency_missing, and resumes once the attach is disclosed
+  ---
+  duration_ms: 1.504167
+  type: 'test'
+  ...
+# Subtest: F1: a contradiction that changes no displayed state is caught through outcomes: a shared decision whose fold reads private votes
+ok 175 - F1: a contradiction that changes no displayed state is caught through outcomes: a shared decision whose fold reads private votes
+  ---
+  duration_ms: 1.412625
+  type: 'test'
+  ...
+# Subtest: G1: an always-effective co-handler cannot mask a contradiction; per-handler outcomes are compared
+ok 176 - G1: an always-effective co-handler cannot mask a contradiction; per-handler outcomes are compared
+  ---
+  duration_ms: 1.329875
+  type: 'test'
+  ...
+# Subtest: G2: a disclosed intent that is genuinely stale is a stale_binding verdict, not a permanent pause
+ok 177 - G2: a disclosed intent that is genuinely stale is a stale_binding verdict, not a permanent pause
+  ---
+  duration_ms: 0.773125
+  type: 'test'
+  ...
+# Subtest: G3: affordances come from the visible binding, so a hidden attach with its own affordances causes no false mismatch
+ok 178 - G3: affordances come from the visible binding, so a hidden attach with its own affordances causes no false mismatch
+  ---
+  duration_ms: 2.358959
+  type: 'test'
+  ...
+# Subtest: H1: a binding identity restored by an unseen attach is a missing dependency, not a stale intent: activation provenance decides
+ok 179 - H1: a binding identity restored by an unseen attach is a missing dependency, not a stale intent: activation provenance decides
+  ---
+  duration_ms: 2.083958
+  type: 'test'
+  ...
+# Subtest: J1: a saved intent sequenced after a hidden attach is a missing dependency for a viewer who sees the intent but not the attach; the header carries the activation
+ok 180 - J1: a saved intent sequenced after a hidden attach is a missing dependency for a viewer who sees the intent but not the attach; the header carries the activation
+  ---
+  duration_ms: 1.356125
+  type: 'test'
+  ...
+# Subtest: K1: a disclosed attach that builds on a hidden attach is a missing dependency: the header names what it requires
+ok 181 - K1: a disclosed attach that builds on a hidden attach is a missing dependency: the header names what it requires
+  ---
+  duration_ms: 1.485958
+  type: 'test'
+  ...
+# Subtest: L1: the facts an attach is refused on are among its requirements: a conflicting model definition and a repeated package
+ok 182 - L1: the facts an attach is refused on are among its requirements: a conflicting model definition and a repeated package
+  ---
+  duration_ms: 4.427625
+  type: 'test'
+  ...
+# Subtest: L2: a malformed attach payload is recorded with a malformed verdict, its exact retry replays, and a valid submission follows; evidence extraction never throws
+ok 183 - L2: a malformed attach payload is recorded with a malformed verdict, its exact retry replays, and a valid submission follows; evidence extraction never throws
+  ---
+  duration_ms: 0.837917
+  type: 'test'
+  ...
+# Subtest: M1: evidence handlers follow the branch attach takes: a resolution on a new kind is ignored, and the installer of the bound model is required
+ok 184 - M1: evidence handlers follow the branch attach takes: a resolution on a new kind is ignored, and the installer of the bound model is required
+  ---
+  duration_ms: 0.794583
+  type: 'test'
+  ...
+# Subtest: M2: a package name inherited from Object.prototype is not a package: recorded as package_unavailable, exact retry replays, and evidence extraction never throws
+ok 185 - M2: a package name inherited from Object.prototype is not a package: recorded as package_unavailable, exact retry replays, and evidence extraction never throws
+  ---
+  duration_ms: 0.929375
+  type: 'test'
+  ...
+# Subtest: N1: an attach the sequencer could not resolve stays ineffective for every judge, whatever package a client has or fetches later; a new attach succeeds once the sequencer has it
+ok 186 - N1: an attach the sequencer could not resolve stays ineffective for every judge, whatever package a client has or fetches later; a new attach succeeds once the sequencer has it
+  ---
+  duration_ms: 0.496958
+  type: 'test'
+  ...
+# Subtest: authorized issue, issuer revoked, then redeemed: effective (authority judged at issuance)
+ok 187 - authorized issue, issuer revoked, then redeemed: effective (authority judged at issuance)
+  ---
+  duration_ms: 3.865
+  type: 'test'
+  ...
+# Subtest: unissued token: refused at admission, never sequenced
+ok 188 - unissued token: refused at admission, never sequenced
+  ---
+  duration_ms: 0.416875
+  type: 'test'
+  ...
+# Subtest: unauthorized issuer: the invite is sequenced but ineffective, and its token admits nobody
+ok 189 - unauthorized issuer: the invite is sequenced but ineffective, and its token admits nobody
+  ---
+  duration_ms: 0.69675
+  type: 'test'
+  ...
+# Subtest: member-side verification refuses a header that is not in the chain
+ok 190 - member-side verification refuses a header that is not in the chain
+  ---
+  duration_ms: 0.3215
+  type: 'test'
+  ...
+# Subtest: wrong invitee cannot redeem
+ok 191 - wrong invitee cannot redeem
+  ---
+  duration_ms: 0.34825
+  type: 'test'
+  ...
+# Subtest: exact retry of a committed acceptance after consumption returns the receipt; changed content and reuse are refused
+ok 192 - exact retry of a committed acceptance after consumption returns the receipt; changed content and reuse are refused
+  ---
+  duration_ms: 0.408375
+  type: 'test'
+  ...
+# Subtest: V1 Sale visibility trace through verified bytes and memory
+ok 193 - V1 Sale visibility trace through verified bytes and memory
+  ---
+  duration_ms: 312.375167
+  type: 'test'
+  ...
+# Subtest: V1 Sale visibility trace through verified bytes and sqlite
+ok 194 - V1 Sale visibility trace through verified bytes and sqlite
+  ---
+  duration_ms: 354.068291
+  type: 'test'
+  ...
+# Subtest: signed stable facts precede retry and admission; raw Context cannot bypass proof
+ok 195 - signed stable facts precede retry and admission; raw Context cannot bypass proof
+  ---
+  duration_ms: 15.482833
+  type: 'test'
+  ...
+# Subtest: exclusive SQLite owner excludes a second OS process and releases on close
+ok 196 - exclusive SQLite owner excludes a second OS process and releases on close
+  ---
+  duration_ms: 177.036292
+  type: 'test'
+  ...
+# Subtest: SIGKILL at before-write preserves one atomic append boundary
+ok 197 - SIGKILL at before-write preserves one atomic append boundary
+  ---
+  duration_ms: 110.343
+  type: 'test'
+  ...
+# Subtest: SIGKILL at after-entry preserves one atomic append boundary
+ok 198 - SIGKILL at after-entry preserves one atomic append boundary
+  ---
+  duration_ms: 109.705459
+  type: 'test'
+  ...
+# Subtest: SIGKILL at after-head preserves one atomic append boundary
+ok 199 - SIGKILL at after-head preserves one atomic append boundary
+  ---
+  duration_ms: 123.456084
+  type: 'test'
+  ...
+# Subtest: SIGKILL at after-retry preserves one atomic append boundary
+ok 200 - SIGKILL at after-retry preserves one atomic append boundary
+  ---
+  duration_ms: 102.395917
+  type: 'test'
+  ...
+# Subtest: SIGKILL at after-consumption preserves one atomic append boundary
+ok 201 - SIGKILL at after-consumption preserves one atomic append boundary
+  ---
+  duration_ms: 98.587042
+  type: 'test'
+  ...
+# Subtest: SIGKILL at after-outbox preserves one atomic append boundary
+ok 202 - SIGKILL at after-outbox preserves one atomic append boundary
+  ---
+  duration_ms: 102.33925
+  type: 'test'
+  ...
+# Subtest: SIGKILL at before-commit preserves one atomic append boundary
+ok 203 - SIGKILL at before-commit preserves one atomic append boundary
+  ---
+  duration_ms: 111.264334
+  type: 'test'
+  ...
+# Subtest: SIGKILL at after-commit preserves one atomic append boundary
+ok 204 - SIGKILL at after-commit preserves one atomic append boundary
+  ---
+  duration_ms: 113.639334
+  type: 'test'
+  ...
+# Subtest: outbox resumes saved bytes after crash before notification and after delivery before ack
+ok 205 - outbox resumes saved bytes after crash before notification and after delivery before ack
+  ---
+  duration_ms: 85.384083
+  type: 'test'
+  ...
+# Subtest: restart rejects tampered stored body despite unchanged signed wire bytes
+ok 206 - restart rejects tampered stored body despite unchanged signed wire bytes
+  ---
+  duration_ms: 7.365583
+  type: 'test'
+  ...
+# Subtest: signed invitations and origin duplicate checks accept finite fractional JCS numbers
+ok 207 - signed invitations and origin duplicate checks accept finite fractional JCS numbers
+  ---
+  duration_ms: 10.782042
+  type: 'test'
+  ...
+# Subtest: outbox awaits asynchronous confirmation and retains failed publications
+ok 208 - outbox awaits asynchronous confirmation and retains failed publications
+  ---
+  duration_ms: 11.880667
+  type: 'test'
+  ...
+# Subtest: restart rejects SQL row positions that disagree with signed entry positions
+ok 209 - restart rejects SQL row positions that disagree with signed entry positions
+  ---
+  duration_ms: 6.021958
+  type: 'test'
+  ...
+# Subtest: journal pins the signed genesis profile and writer assignment to its backend
+ok 210 - journal pins the signed genesis profile and writer assignment to its backend
+  ---
+  duration_ms: 5.471291
+  type: 'test'
+  ...
+# Subtest: V1 signed invitation issued before revocation remains redeemable after SQLite restart
+ok 211 - V1 signed invitation issued before revocation remains redeemable after SQLite restart
+  ---
+  duration_ms: 17.6285
+  type: 'test'
+  ...
+# Subtest: V1 signed unauthorized and unissued invitations cannot admit another participant
+ok 212 - V1 signed unauthorized and unissued invitations cannot admit another participant
+  ---
+  duration_ms: 17.264
+  type: 'test'
+  ...
+# Subtest: initialization SIGKILL at after-entry retains all or none of genesis and origins
+ok 213 - initialization SIGKILL at after-entry retains all or none of genesis and origins
+  ---
+  duration_ms: 82.907916
+  type: 'test'
+  ...
+# Subtest: initialization SIGKILL at after-commit retains all or none of genesis and origins
+ok 214 - initialization SIGKILL at after-commit retains all or none of genesis and origins
+  ---
+  duration_ms: 89.283209
+  type: 'test'
+  ...
+# Subtest: uncertain committed response requires reopen before another action
+ok 215 - uncertain committed response requires reopen before another action
+  ---
+  duration_ms: 9.424459
+  type: 'test'
+  ...
+# Subtest: recipient view verification checks original actor proofs and rejects hidden envelope leakage
+ok 216 - recipient view verification checks original actor proofs and rejects hidden envelope leakage
+  ---
+  duration_ms: 10.003667
+  type: 'test'
+  ...
+# Subtest: one live Journal owns each backend: revoked authority cannot be admitted through a stale facade
+ok 217 - one live Journal owns each backend: revoked authority cannot be admitted through a stale facade
+  ---
+  duration_ms: 20.276
+  type: 'test'
+  ...
+# Subtest: O1-F1 closed memory Context cannot issue or accept from stale authority after a new facade revokes it
+ok 218 - O1-F1 closed memory Context cannot issue or accept from stale authority after a new facade revokes it
+  ---
+  duration_ms: 7.697042
+  type: 'test'
+  ...
+# {"staleParticipants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"],"liveParticipants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"],"coldParticipants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"],"coldInviteVerdict":null}
+# Subtest: O1-F1 raw Context restoration or creation cannot bypass a live Journal on memory
+ok 219 - O1-F1 raw Context restoration or creation cannot bypass a live Journal on memory
+  ---
+  duration_ms: 5.339209
+  type: 'test'
+  ...
+# Subtest: O1-F1 raw Context restoration or creation cannot bypass a live Journal on sqlite
+ok 220 - O1-F1 raw Context restoration or creation cannot bypass a live Journal on sqlite
+  ---
+  duration_ms: 6.752292
+  type: 'test'
+  ...
+# Subtest: O1-F1 a previously acquired raw Context loses write access while Journal owns its backend on memory
+ok 221 - O1-F1 a previously acquired raw Context loses write access while Journal owns its backend on memory
+  ---
+  duration_ms: 5.158916
+  type: 'test'
+  ...
+# Subtest: O1-F1 a previously acquired raw Context loses write access while Journal owns its backend on sqlite
+ok 222 - O1-F1 a previously acquired raw Context loses write access while Journal owns its backend on sqlite
+  ---
+  duration_ms: 8.306333
+  type: 'test'
+  ...
+# Subtest: O1-F1 a lost reply through direct Context.submit invalidates every owned write path on memory
+ok 223 - O1-F1 a lost reply through direct Context.submit invalidates every owned write path on memory
+  ---
+  duration_ms: 9.219625
+  type: 'test'
+  ...
+# Subtest: O1-F1 a lost reply through direct Context.submit invalidates every owned write path on sqlite
+ok 224 - O1-F1 a lost reply through direct Context.submit invalidates every owned write path on sqlite
+  ---
+  duration_ms: 12.267791
+  type: 'test'
+  ...
+# Subtest: O3 same-context handover preserves prefix, dense positions, retry results, control verdicts and publication on memory
+ok 225 - O3 same-context handover preserves prefix, dense positions, retry results, control verdicts and publication on memory
+  ---
+  duration_ms: 47.072125
+  type: 'test'
+  ...
+# Subtest: O3 same-context handover preserves prefix, dense positions, retry results, control verdicts and publication on sqlite
+ok 226 - O3 same-context handover preserves prefix, dense positions, retry results, control verdicts and publication on sqlite
+  ---
+  duration_ms: 45.250209
+  type: 'test'
+  ...
+# Subtest: O3 SIGKILL during seal at before-commit retains the committed control boundary
+ok 227 - O3 SIGKILL during seal at before-commit retains the committed control boundary
+  ---
+  duration_ms: 112.830291
+  type: 'test'
+  ...
+# Subtest: O3 SIGKILL during seal at after-commit retains the committed control boundary
+ok 228 - O3 SIGKILL during seal at after-commit retains the committed control boundary
+  ---
+  duration_ms: 125.584041
+  type: 'test'
+  ...
+# Subtest: O3 SIGKILL during seal at after-receipt retains the committed control boundary
+ok 229 - O3 SIGKILL during seal at after-receipt retains the committed control boundary
+  ---
+  duration_ms: 113.492833
+  type: 'test'
+  ...
+# Subtest: O3 SIGKILL during assign at before-commit retains the committed control boundary
+ok 230 - O3 SIGKILL during assign at before-commit retains the committed control boundary
+  ---
+  duration_ms: 112.24975
+  type: 'test'
+  ...
+# Subtest: O3 SIGKILL during assign at after-commit retains the committed control boundary
+ok 231 - O3 SIGKILL during assign at after-commit retains the committed control boundary
+  ---
+  duration_ms: 111.07725
+  type: 'test'
+  ...
+# Subtest: O3 SIGKILL during assign at after-receipt retains the committed control boundary
+ok 232 - O3 SIGKILL during assign at after-receipt retains the committed control boundary
+  ---
+  duration_ms: 107.088458
+  type: 'test'
+  ...
+# Subtest: O3 independent nominations and two signed assignments cannot install two successors
+ok 233 - O3 independent nominations and two signed assignments cannot install two successors
+  ---
+  duration_ms: 23.8855
+  type: 'test'
+  ...
+# Subtest: O3 rejects forged and wrong authority, stale or swapped predecessor head fields, skipped seals and malformed nominations without an append
+ok 234 - O3 rejects forged and wrong authority, stale or swapped predecessor head fields, skipped seals and malformed nominations without an append
+  ---
+  duration_ms: 22.9575
+  type: 'test'
+  ...
+# Subtest: O3 cold authentication rejects a correctly signed control with wrong payload predecessor or wrong header predecessor
+ok 235 - O3 cold authentication rejects a correctly signed control with wrong payload predecessor or wrong header predecessor
+  ---
+  duration_ms: 28.182917
+  type: 'test'
+  ...
+# Subtest: O3 v3 pins distinct writer/control keys and exact sequencing fields before any durable initialization
+ok 236 - O3 v3 pins distinct writer/control keys and exact sequencing fields before any durable initialization
+  ---
+  duration_ms: 14.013416
+  type: 'test'
+  ...
+# Subtest: O-H1 repeated entry commitments are rejected by journal and view, movable=false
+ok 237 - O-H1 repeated entry commitments are rejected by journal and view, movable=false
+  ---
+  duration_ms: 20.407666
+  type: 'test'
+  ...
+# Subtest: O-H1 repeated entry commitments are rejected by journal and view, movable=true
+ok 238 - O-H1 repeated entry commitments are rejected by journal and view, movable=true
+  ---
+  duration_ms: 36.676208
+  type: 'test'
+  ...
+# Subtest: O-H2 append never rereads the full journal under serialization, movable=false
+ok 239 - O-H2 append never rereads the full journal under serialization, movable=false
+  ---
+  duration_ms: 5.655084
+  type: 'test'
+  ...
+# Subtest: O-H2 append never rereads the full journal under serialization, movable=true
+ok 240 - O-H2 append never rereads the full journal under serialization, movable=true
+  ---
+  duration_ms: 13.9925
+  type: 'test'
+  ...
+# Subtest: O-H1 repeated adopted commitments fail before durable creation, movable=false
+ok 241 - O-H1 repeated adopted commitments fail before durable creation, movable=false
+  ---
+  duration_ms: 20.291375
+  type: 'test'
+  ...
+# Subtest: O-H1 repeated adopted commitments fail before durable creation, movable=true
+ok 242 - O-H1 repeated adopted commitments fail before durable creation, movable=true
+  ---
+  duration_ms: 14.127541
+  type: 'test'
+  ...
+# Subtest: O-H2 lost reply poisons the cache owner and cold retry reconciles the committed seal on memory, direct=false
+ok 243 - O-H2 lost reply poisons the cache owner and cold retry reconciles the committed seal on memory, direct=false
+  ---
+  duration_ms: 26.855208
+  type: 'test'
+  ...
+# Subtest: O-H2 lost reply poisons the cache owner and cold retry reconciles the committed seal on memory, direct=true
+ok 244 - O-H2 lost reply poisons the cache owner and cold retry reconciles the committed seal on memory, direct=true
+  ---
+  duration_ms: 41.098042
+  type: 'test'
+  ...
+# Subtest: O-H2 lost reply poisons the cache owner and cold retry reconciles the committed seal on sqlite, direct=false
+ok 245 - O-H2 lost reply poisons the cache owner and cold retry reconciles the committed seal on sqlite, direct=false
+  ---
+  duration_ms: 35.5985
+  type: 'test'
+  ...
+# Subtest: O-H2 lost reply poisons the cache owner and cold retry reconciles the committed seal on sqlite, direct=true
+ok 246 - O-H2 lost reply poisons the cache owner and cold retry reconciles the committed seal on sqlite, direct=true
+  ---
+  duration_ms: 16.371792
+  type: 'test'
+  ...
+# Subtest: O-H2 an unexpected signed tail is not silently trusted by the live cache
+ok 247 - O-H2 an unexpected signed tail is not silently trusted by the live cache
+  ---
+  duration_ms: 21.092584
+  type: 'test'
+  ...
+# Subtest: O-H1 a control signature cannot move to a different header at the same position, even with unique commitments
+ok 248 - O-H1 a control signature cannot move to a different header at the same position, even with unique commitments
+  ---
+  duration_ms: 39.871333
+  type: 'test'
+  ...
+# Subtest: O-H1 archived movable profile /2 is unsupported on journal open and view authentication
+ok 249 - O-H1 archived movable profile /2 is unsupported on journal open and view authentication
+  ---
+  duration_ms: 12.15975
+  type: 'test'
+  ...
+# Subtest: O-H2 a cache callback exception after durable write disables every owned write path
+ok 250 - O-H2 a cache callback exception after durable write disables every owned write path
+  ---
+  duration_ms: 18.513791
+  type: 'test'
+  ...
+# Subtest: O-H1 a missing retry row cannot append an already committed envelope, movable=false
+ok 251 - O-H1 a missing retry row cannot append an already committed envelope, movable=false
+  ---
+  duration_ms: 11.978666
+  type: 'test'
+  ...
+# Subtest: O-H1 a missing retry row cannot append an already committed envelope, movable=true
+ok 252 - O-H1 a missing retry row cannot append an already committed envelope, movable=true
+  ---
+  duration_ms: 10.263416
+  type: 'test'
+  ...
+# Subtest: manifest identity binds the prose and executable source, independently recomputed
+ok 253 - manifest identity binds the prose and executable source, independently recomputed
+  ---
+  duration_ms: 1.6285
+  type: 'test'
+  ...
+# ORDERING_LIFECYCLE_MANIFEST_ID sha256:92ad0023e387cd4a6305d074ab99f7a29cbcc1699cd88b8dcf439a446ef58828
+# Subtest: every healthy boundary states all heads, writers, right statuses and exact active owners
+ok 254 - every healthy boundary states all heads, writers, right statuses and exact active owners
+  ---
+  duration_ms: 5.728333
+  type: 'test'
+  ...
+# Subtest: join boundaries have two releases, dormant initialization and one activation followed by progress
+ok 255 - join boundaries have two releases, dormant initialization and one activation followed by progress
+  ---
+  duration_ms: 0.21175
+  type: 'test'
+  ...
+# Subtest: all adverse cases have resolvable branches, full safe observations and exact reason coverage
+ok 256 - all adverse cases have resolvable branches, full safe observations and exact reason coverage
+  ---
+  duration_ms: 3.07775
+  type: 'test'
+  ...
+# Subtest: restarts, alternative valid proof material and timeouts cannot duplicate or revive authority
+ok 257 - restarts, alternative valid proof material and timeouts cannot duplicate or revive authority
+  ---
+  duration_ms: 0.226666
+  type: 'test'
+  ...
+# Subtest: failed activation and an intervening dormant exercise permit fresh activation, preserving both retry receipts
+ok 258 - failed activation and an intervening dormant exercise permit fresh activation, preserving both retry receipts
+  ---
+  duration_ms: 0.79975
+  type: 'test'
+  ...
+# Subtest: another admitted participant event cannot occupy a permanent activation slot
+ok 259 - another admitted participant event cannot occupy a permanent activation slot
+  ---
+  duration_ms: 0.286542
+  type: 'test'
+  ...
+# Subtest: public proof disclosure has a finite named rule and keeps private source kinds excluded
+ok 260 - public proof disclosure has a finite named rule and keeps private source kinds excluded
+  ---
+  duration_ms: 0.13825
+  type: 'test'
+  ...
+# Subtest: public exports are exact, source-linked and exclude the private accepted amount
+ok 261 - public exports are exact, source-linked and exclude the private accepted amount
+  ---
+  duration_ms: 0.152417
+  type: 'test'
+  ...
+# Subtest: changed-genesis enumeration covers every field, container, removal and added field
+ok 262 - changed-genesis enumeration covers every field, container, removal and added field
+  ---
+  duration_ms: 3.056084
+  type: 'test'
+  ...
+# Subtest: independent safety checks detect double ownership, premature activation and import duplication
+ok 263 - independent safety checks detect double ownership, premature activation and import duplication
+  ---
+  duration_ms: 0.274
+  type: 'test'
+  ...
+# Subtest: future observation comparison rejects changed, missing and additional state, including unsafe mutations
+ok 264 - future observation comparison rejects changed, missing and additional state, including unsafe mutations
+  ---
+  duration_ms: 0.129916
+  type: 'test'
+  ...
+# Subtest: replay obligations preserve pre-attach outcomes, local import timing and writer retry identity
+ok 265 - replay obligations preserve pre-attach outcomes, local import timing and writer retry identity
+  ---
+  duration_ms: 0.096709
+  type: 'test'
+  ...
+# Subtest: O2 concurrent clients: barrier-six-forward
+ok 266 - O2 concurrent clients: barrier-six-forward
+  ---
+  duration_ms: 372.577
+  type: 'test'
+  ...
+# Subtest: O2 concurrent clients: barrier-six-reverse
+ok 267 - O2 concurrent clients: barrier-six-reverse
+  ---
+  duration_ms: 274.491208
+  type: 'test'
+  ...
+# Subtest: O2 concurrent clients: barrier-six-rotated
+ok 268 - O2 concurrent clients: barrier-six-rotated
+  ---
+  duration_ms: 316.067666
+  type: 'test'
+  ...
+# Subtest: O2 invitation lost-reply schedule: before-append
+ok 269 - O2 invitation lost-reply schedule: before-append
+  ---
+  duration_ms: 107.437875
+  type: 'test'
+  ...
+# Subtest: O2 invitation lost-reply schedule: after-consumption
+ok 270 - O2 invitation lost-reply schedule: after-consumption
+  ---
+  duration_ms: 108.079292
+  type: 'test'
+  ...
+# Subtest: O2 invitation lost-reply schedule: after-commit
+ok 271 - O2 invitation lost-reply schedule: after-commit
+  ---
+  duration_ms: 102.898125
+  type: 'test'
+  ...
+# Subtest: O2 invitation lost-reply schedule: after-reply-before-notification
+ok 272 - O2 invitation lost-reply schedule: after-reply-before-notification
+  ---
+  duration_ms: 103.791542
+  type: 'test'
+  ...
+# Subtest: O2 publication SIGKILL replays the exact saved wire entry without a new action
+ok 273 - O2 publication SIGKILL replays the exact saved wire entry without a new action
+  ---
+  duration_ms: 181.611708
+  type: 'test'
+  ...
+# Subtest: O2 removed-participant admission fixture recovers a lost reply after authenticated restart
+ok 274 - O2 removed-participant admission fixture recovers a lost reply after authenticated restart
+  ---
+  duration_ms: 101.855042
+  type: 'test'
+  ...
+# Subtest: O4 K3 ordinary member scope attempts cannot strand certification: memory
+ok 275 - O4 K3 ordinary member scope attempts cannot strand certification: memory
+  ---
+  duration_ms: 1055.0855
+  type: 'test'
+  ...
+# Subtest: O4 K3 ordinary member scope attempts cannot strand certification: sqlite
+ok 276 - O4 K3 ordinary member scope attempts cannot strand certification: sqlite
+  ---
+  duration_ms: 752.847166
+  type: 'test'
+  ...
+# Subtest: O4 K3 failed actor-only attempt permits certified transfer: bob-unauthorized-accept memory
+ok 277 - O4 K3 failed actor-only attempt permits certified transfer: bob-unauthorized-accept memory
+  ---
+  duration_ms: 609.9915
+  type: 'test'
+  ...
+# Subtest: O4 K3 failed actor-only attempt permits certified transfer: carol-malformed-grant memory
+ok 278 - O4 K3 failed actor-only attempt permits certified transfer: carol-malformed-grant memory
+  ---
+  duration_ms: 567.640292
+  type: 'test'
+  ...
+# Subtest: O4 K3 failed actor-only attempt permits certified transfer: bob-unauthorized-close memory
+ok 279 - O4 K3 failed actor-only attempt permits certified transfer: bob-unauthorized-close memory
+  ---
+  duration_ms: 580.649833
+  type: 'test'
+  ...
+# Subtest: O4 K3 failed actor-only attempt permits certified transfer: bob-unauthorized-accept sqlite
+ok 280 - O4 K3 failed actor-only attempt permits certified transfer: bob-unauthorized-accept sqlite
+  ---
+  duration_ms: 623.850417
+  type: 'test'
+  ...
+# Subtest: O4 K3 failed actor-only attempt permits certified transfer: carol-malformed-grant sqlite
+ok 281 - O4 K3 failed actor-only attempt permits certified transfer: carol-malformed-grant sqlite
+  ---
+  duration_ms: 610.6015
+  type: 'test'
+  ...
+# Subtest: O4 K3 failed actor-only attempt permits certified transfer: bob-unauthorized-close sqlite
+ok 282 - O4 K3 failed actor-only attempt permits certified transfer: bob-unauthorized-close sqlite
+  ---
+  duration_ms: 609.187958
+  type: 'test'
+  ...
+# Subtest: O4 K4 actual Inspection mandate and result reach Bob and F readers: memory
+ok 283 - O4 K4 actual Inspection mandate and result reach Bob and F readers: memory
+  ---
+  duration_ms: 1412.277542
+  type: 'test'
+  ...
+# Subtest: O4 K4 actual Inspection mandate and result reach Bob and F readers: sqlite
+ok 284 - O4 K4 actual Inspection mandate and result reach Bob and F readers: sqlite
+  ---
+  duration_ms: 1043.649834
+  type: 'test'
+  ...
+# materialized genesis mutations: 209
+# materialized genesis mutations: 209
+# Subtest: O4 release proof pins come from F genesis: r=p+1, exact prefix and source writer: memory
+ok 285 - O4 release proof pins come from F genesis: r=p+1, exact prefix and source writer: memory
+  ---
+  duration_ms: 981.444583
+  type: 'test'
+  ...
+# Subtest: O4 release proof pins come from F genesis: r=p+1, exact prefix and source writer: sqlite
+ok 286 - O4 release proof pins come from F genesis: r=p+1, exact prefix and source writer: sqlite
+  ---
+  duration_ms: 739.089583
+  type: 'test'
+  ...
+# Subtest: O4 altered public proof bodies cannot activate a destination: memory
+ok 287 - O4 altered public proof bodies cannot activate a destination: memory
+  ---
+  duration_ms: 624.182917
+  type: 'test'
+  ...
+# Subtest: O4 altered public proof bodies cannot activate a destination: sqlite
+ok 288 - O4 altered public proof bodies cannot activate a destination: sqlite
+  ---
+  duration_ms: 609.551541
+  type: 'test'
+  ...
+# Subtest: O4 actual revoked release source cannot be repaired by stripping its revocation: memory
+ok 289 - O4 actual revoked release source cannot be repaired by stripping its revocation: memory
+  ---
+  duration_ms: 465.175667
+  type: 'test'
+  ...
+# Subtest: O4 actual revoked release source cannot be repaired by stripping its revocation: sqlite
+ok 290 - O4 actual revoked release source cannot be repaired by stripping its revocation: sqlite
+  ---
+  duration_ms: 508.207375
+  type: 'test'
+  ...
+# Subtest: O4 public/full scope replay agrees at every opened release-prefix position: memory
+ok 291 - O4 public/full scope replay agrees at every opened release-prefix position: memory
+  ---
+  duration_ms: 719.00725
+  type: 'test'
+  ...
+# Subtest: O4 public/full scope replay agrees at every opened release-prefix position: sqlite
+ok 292 - O4 public/full scope replay agrees at every opened release-prefix position: sqlite
+  ---
+  duration_ms: 747.478417
+  type: 'test'
+  ...
+# Subtest: O4 actual activation, exports and F views exclude Sale private fields and the Inspection request body: memory
+ok 293 - O4 actual activation, exports and F views exclude Sale private fields and the Inspection request body: memory
+  ---
+  duration_ms: 671.226166
+  type: 'test'
+  ...
+# Subtest: O4 actual activation, exports and F views exclude Sale private fields and the Inspection request body: sqlite
+ok 294 - O4 actual activation, exports and F views exclude Sale private fields and the Inspection request body: sqlite
+  ---
+  duration_ms: 688.594542
+  type: 'test'
+  ...
+# Subtest: O4 every materialized signed F genesis field/container is bound before either release: memory
+ok 295 - O4 every materialized signed F genesis field/container is bound before either release: memory
+  ---
+  duration_ms: 2957.425875
+  type: 'test'
+  ...
+# Subtest: O4 every materialized signed F genesis field/container is bound before either release: sqlite
+ok 296 - O4 every materialized signed F genesis field/container is bound before either release: sqlite
+  ---
+  duration_ms: 3276.015625
+  type: 'test'
+  ...
+# Subtest: O4 withdrawn o3 cannot be restored by stripping the real withdrawal: memory
+ok 297 - O4 withdrawn o3 cannot be restored by stripping the real withdrawal: memory
+  ---
+  duration_ms: 652.857542
+  type: 'test'
+  ...
+# Subtest: O4 withdrawn o3 cannot be restored by stripping the real withdrawal: sqlite
+ok 298 - O4 withdrawn o3 cannot be restored by stripping the real withdrawal: sqlite
+  ---
+  duration_ms: 710.11225
+  type: 'test'
+  ...
+# Subtest: O4 H1 a signed duplicate-commitment fault proof refuses activation without poisoning the destination: memory
+ok 299 - O4 H1 a signed duplicate-commitment fault proof refuses activation without poisoning the destination: memory
+  ---
+  duration_ms: 551.318083
+  type: 'test'
+  ...
+# Subtest: O4 H1 a signed duplicate-commitment fault proof refuses activation without poisoning the destination: sqlite
+ok 300 - O4 H1 a signed duplicate-commitment fault proof refuses activation without poisoning the destination: sqlite
+  ---
+  duration_ms: 610.339209
+  type: 'test'
+  ...
+# Subtest: O4 R2 every issuance hash/key fault rejects cold open and preserves healthy replay: memory
+ok 301 - O4 R2 every issuance hash/key fault rejects cold open and preserves healthy replay: memory
+  ---
+  duration_ms: 991.564875
+  type: 'test'
+  ...
+# {"storage":"memory","phase":"cold-open","cryptoSites":["createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash"],"injectedCases":17,"originalExceptions":17,"coldExactRetries":17}
+# Subtest: O4 R2 every issuance hash/key fault rejects cold open and preserves healthy replay: sqlite
+ok 302 - O4 R2 every issuance hash/key fault rejects cold open and preserves healthy replay: sqlite
+  ---
+  duration_ms: 845.944667
+  type: 'test'
+  ...
+# {"storage":"sqlite","phase":"cold-open","cryptoSites":["createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash"],"injectedCases":17,"originalExceptions":17,"coldExactRetries":17}
+# Subtest: O4 R2 every nested issuance hash/key fault disables activation facade without changing durable bytes: memory
+ok 303 - O4 R2 every nested issuance hash/key fault disables activation facade without changing durable bytes: memory
+  ---
+  duration_ms: 19035.992666
+  type: 'test'
+  ...
+# {"storage":"memory","phase":"activation","cryptoSites":["createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash"],"injectedCases":151,"originalExceptions":151,"durableExactRetries":151,"returnedFaultVerdicts":0}
+# Subtest: O4 R2 every nested issuance hash/key fault disables activation facade without changing durable bytes: sqlite
+ok 304 - O4 R2 every nested issuance hash/key fault disables activation facade without changing durable bytes: sqlite
+  ---
+  duration_ms: 18598.24025
+  type: 'test'
+  ...
+# {"storage":"sqlite","phase":"activation","cryptoSites":["createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash"],"injectedCases":151,"originalExceptions":151,"durableExactRetries":151,"returnedFaultVerdicts":0}
+# Subtest: O4 R2 signed and legacy issuance preserve every hash-stage fault value
+ok 305 - O4 R2 signed and legacy issuance preserve every hash-stage fault value
+  ---
+  duration_ms: 107.687167
+  type: 'test'
+  ...
+# {"boundary":"legacy","sites":["createHash","update","digest","createHash","update","digest"],"thrownValuesPerSite":8}
+# {"boundary":"signed","sites":["createPublicKey","createHash","update","digest","createHash","update","digest"],"thrownValuesPerSite":8}
+# Subtest: O4 R2 malformed signed and legacy issuance stays an admission refusal and leaves Scope usable: memory
+ok 306 - O4 R2 malformed signed and legacy issuance stays an admission refusal and leaves Scope usable: memory
+  ---
+  duration_ms: 136.697458
+  type: 'test'
+  ...
+# {"storage":"memory","malformedCases":13,"newPositions":0,"healthyAppendAndColdRetry":true}
+# Subtest: O4 R2 malformed signed and legacy issuance stays an admission refusal and leaves Scope usable: sqlite
+ok 307 - O4 R2 malformed signed and legacy issuance stays an admission refusal and leaves Scope usable: sqlite
+  ---
+  duration_ms: 156.585708
+  type: 'test'
+  ...
+# {"storage":"sqlite","malformedCases":13,"newPositions":0,"healthyAppendAndColdRetry":true}
+# Subtest: O4 R2 codec-looking unexpected TypeError and opaque values remain exceptions in wireInput
+ok 308 - O4 R2 codec-looking unexpected TypeError and opaque values remain exceptions in wireInput
+  ---
+  duration_ms: 101.514208
+  type: 'test'
+  ...
+# Subtest: O4 L2 signature faults during cold open and representative activation stages preserve recovery: memory
+ok 309 - O4 L2 signature faults during cold open and representative activation stages preserve recovery: memory
+  ---
+  duration_ms: 817.333083
+  type: 'test'
+  ...
+# {"storage":"memory","phase":"signatures","coldVerificationCalls":51,"coldInjectedCases":51,"activationVerificationCalls":124,"activationSigningCalls":1,"selectedActivationCases":[{"at":1,"call":"verify","outcome":"precommit refusal","committedBeforeRetry":false,"retry":"fresh append"},{"at":64,"call":"verify","outcome":"original exception","committedBeforeRetry":true,"retry":"exact replay"},{"at":125,"call":"verify","outcome":"original exception","committedBeforeRetry":true,"retry":"exact replay"},{"at":3,"call":"sign","outcome":"original exception","committedBeforeRetry":false,"retry":"fresh append"}]}
+# Subtest: O4 L2 signature faults during cold open and representative activation stages preserve recovery: sqlite
+ok 310 - O4 L2 signature faults during cold open and representative activation stages preserve recovery: sqlite
+  ---
+  duration_ms: 904.3145
+  type: 'test'
+  ...
+# {"storage":"sqlite","phase":"signatures","coldVerificationCalls":51,"coldInjectedCases":51,"activationVerificationCalls":124,"activationSigningCalls":1,"selectedActivationCases":[{"at":1,"call":"verify","outcome":"precommit refusal","committedBeforeRetry":false,"retry":"fresh append"},{"at":64,"call":"verify","outcome":"original exception","committedBeforeRetry":true,"retry":"exact replay"},{"at":125,"call":"verify","outcome":"original exception","committedBeforeRetry":true,"retry":"exact replay"},{"at":3,"call":"sign","outcome":"original exception","committedBeforeRetry":false,"retry":"fresh append"}]}
+# Subtest: O4 L2 declared malformed proof bytes remain policy refusals and permit later activation: memory
+ok 311 - O4 L2 declared malformed proof bytes remain policy refusals and permit later activation: memory
+  ---
+  duration_ms: 391.147375
+  type: 'test'
+  ...
+# Subtest: O4 L2 declared malformed proof bytes remain policy refusals and permit later activation: sqlite
+ok 312 - O4 L2 declared malformed proof bytes remain policy refusals and permit later activation: sqlite
+  ---
+  duration_ms: 431.08825
+  type: 'test'
+  ...
+# Subtest: O4 actual signed lifecycle matches all 20 predeclared boundaries: memory
+ok 313 - O4 actual signed lifecycle matches all 20 predeclared boundaries: memory
+  ---
+  duration_ms: 1486.394958
+  type: 'test'
+  ...
+# Subtest: O4 actual signed lifecycle matches all 20 predeclared boundaries: sqlite
+ok 314 - O4 actual signed lifecycle matches all 20 predeclared boundaries: sqlite
+  ---
+  duration_ms: 1080.994041
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: one-source-release-missing:memory
+ok 315 - O4 actual adverse trace: one-source-release-missing:memory
+  ---
+  duration_ms: 532.581625
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: withheld-release-evidence:memory
+ok 316 - O4 actual adverse trace: withheld-release-evidence:memory
+  ---
+  duration_ms: 866.335916
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: intervening-dormant-exercise:memory
+ok 317 - O4 actual adverse trace: intervening-dormant-exercise:memory
+  ---
+  duration_ms: 1494.400792
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: intervening-participant-event:memory
+ok 318 - O4 actual adverse trace: intervening-participant-event:memory
+  ---
+  duration_ms: 556.866542
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: restart-before-activation:memory
+ok 319 - O4 actual adverse trace: restart-before-activation:memory
+  ---
+  duration_ms: 541.08
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: repeated-activation-after-restart:memory
+ok 320 - O4 actual adverse trace: repeated-activation-after-restart:memory
+  ---
+  duration_ms: 820.522625
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: exact-retry-activation:memory
+ok 321 - O4 actual adverse trace: exact-retry-activation:memory
+  ---
+  duration_ms: 574.064959
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: timeout-after-hidden-activation:memory
+ok 322 - O4 actual adverse trace: timeout-after-hidden-activation:memory
+  ---
+  duration_ms: 548.491875
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: duplicate-inspection-import:memory
+ok 323 - O4 actual adverse trace: duplicate-inspection-import:memory
+  ---
+  duration_ms: 205.940875
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: duplicate-state-import:memory
+ok 324 - O4 actual adverse trace: duplicate-state-import:memory
+  ---
+  duration_ms: 565.925958
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: stale-source-proposal-at-source:memory
+ok 325 - O4 actual adverse trace: stale-source-proposal-at-source:memory
+  ---
+  duration_ms: 392.103625
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: stale-source-proposal-at-destination:memory
+ok 326 - O4 actual adverse trace: stale-source-proposal-at-destination:memory
+  ---
+  duration_ms: 547.391125
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: unauthorized-release:memory
+ok 327 - O4 actual adverse trace: unauthorized-release:memory
+  ---
+  duration_ms: 352.916458
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: release-unowned-right:memory
+ok 328 - O4 actual adverse trace: release-unowned-right:memory
+  ---
+  duration_ms: 332.091292
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: release-already-released-right:memory
+ok 329 - O4 actual adverse trace: release-already-released-right:memory
+  ---
+  duration_ms: 390.963542
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: receipt-for-ineffective-release:memory
+ok 330 - O4 actual adverse trace: receipt-for-ineffective-release:memory
+  ---
+  duration_ms: 515.302208
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: receipt-for-unauthorized-release:memory
+ok 331 - O4 actual adverse trace: receipt-for-unauthorized-release:memory
+  ---
+  duration_ms: 515.550833
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: wrong-destination-release:memory
+ok 332 - O4 actual adverse trace: wrong-destination-release:memory
+  ---
+  duration_ms: 532.524542
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: two-sources-export-same-right:memory
+ok 333 - O4 actual adverse trace: two-sources-export-same-right:memory
+  ---
+  duration_ms: 427.892417
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: mismatched-buyer:memory
+ok 334 - O4 actual adverse trace: mismatched-buyer:memory
+  ---
+  duration_ms: 515.078375
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: stale-export-prefix:memory
+ok 335 - O4 actual adverse trace: stale-export-prefix:memory
+  ---
+  duration_ms: 368.431625
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: spend-before-activation-S:memory
+ok 336 - O4 actual adverse trace: spend-before-activation-S:memory
+  ---
+  duration_ms: 423.735334
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: spend-before-activation-D:memory
+ok 337 - O4 actual adverse trace: spend-before-activation-D:memory
+  ---
+  duration_ms: 413.527208
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: spend-before-activation-F:memory
+ok 338 - O4 actual adverse trace: spend-before-activation-F:memory
+  ---
+  duration_ms: 418.7015
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: spend-before-activation-F-deliver:memory
+ok 339 - O4 actual adverse trace: spend-before-activation-F-deliver:memory
+  ---
+  duration_ms: 378.936458
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: origin-spends-transferred-right:memory
+ok 340 - O4 actual adverse trace: origin-spends-transferred-right:memory
+  ---
+  duration_ms: 386.472375
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: move-preserves-retry:memory
+ok 341 - O4 actual adverse trace: move-preserves-retry:memory
+  ---
+  duration_ms: 279.527417
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: unassigned-writer-candidates:memory
+ok 342 - O4 actual adverse trace: unassigned-writer-candidates:memory
+  ---
+  duration_ms: 257.197417
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: retired-writer-continuation:memory
+ok 343 - O4 actual adverse trace: retired-writer-continuation:memory
+  ---
+  duration_ms: 274.517459
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: one-source-release-missing:sqlite
+ok 344 - O4 actual adverse trace: one-source-release-missing:sqlite
+  ---
+  duration_ms: 484.968542
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: withheld-release-evidence:sqlite
+ok 345 - O4 actual adverse trace: withheld-release-evidence:sqlite
+  ---
+  duration_ms: 748.791541
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: intervening-dormant-exercise:sqlite
+ok 346 - O4 actual adverse trace: intervening-dormant-exercise:sqlite
+  ---
+  duration_ms: 1284.112875
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: intervening-participant-event:sqlite
+ok 347 - O4 actual adverse trace: intervening-participant-event:sqlite
+  ---
+  duration_ms: 523.16575
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: restart-before-activation:sqlite
+ok 348 - O4 actual adverse trace: restart-before-activation:sqlite
+  ---
+  duration_ms: 521.606083
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: repeated-activation-after-restart:sqlite
+ok 349 - O4 actual adverse trace: repeated-activation-after-restart:sqlite
+  ---
+  duration_ms: 779.182792
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: exact-retry-activation:sqlite
+ok 350 - O4 actual adverse trace: exact-retry-activation:sqlite
+  ---
+  duration_ms: 562.782542
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: timeout-after-hidden-activation:sqlite
+ok 351 - O4 actual adverse trace: timeout-after-hidden-activation:sqlite
+  ---
+  duration_ms: 544.011708
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: duplicate-inspection-import:sqlite
+ok 352 - O4 actual adverse trace: duplicate-inspection-import:sqlite
+  ---
+  duration_ms: 212.453291
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: duplicate-state-import:sqlite
+ok 353 - O4 actual adverse trace: duplicate-state-import:sqlite
+  ---
+  duration_ms: 550.043333
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: stale-source-proposal-at-source:sqlite
+ok 354 - O4 actual adverse trace: stale-source-proposal-at-source:sqlite
+  ---
+  duration_ms: 391.571459
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: stale-source-proposal-at-destination:sqlite
+ok 355 - O4 actual adverse trace: stale-source-proposal-at-destination:sqlite
+  ---
+  duration_ms: 538.092417
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: unauthorized-release:sqlite
+ok 356 - O4 actual adverse trace: unauthorized-release:sqlite
+  ---
+  duration_ms: 349.798584
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: release-unowned-right:sqlite
+ok 357 - O4 actual adverse trace: release-unowned-right:sqlite
+  ---
+  duration_ms: 340.686
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: release-already-released-right:sqlite
+ok 358 - O4 actual adverse trace: release-already-released-right:sqlite
+  ---
+  duration_ms: 404.459833
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: receipt-for-ineffective-release:sqlite
+ok 359 - O4 actual adverse trace: receipt-for-ineffective-release:sqlite
+  ---
+  duration_ms: 518.211666
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: receipt-for-unauthorized-release:sqlite
+ok 360 - O4 actual adverse trace: receipt-for-unauthorized-release:sqlite
+  ---
+  duration_ms: 531.583833
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: wrong-destination-release:sqlite
+ok 361 - O4 actual adverse trace: wrong-destination-release:sqlite
+  ---
+  duration_ms: 555.244083
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: two-sources-export-same-right:sqlite
+ok 362 - O4 actual adverse trace: two-sources-export-same-right:sqlite
+  ---
+  duration_ms: 459.144542
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: mismatched-buyer:sqlite
+ok 363 - O4 actual adverse trace: mismatched-buyer:sqlite
+  ---
+  duration_ms: 558.155417
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: stale-export-prefix:sqlite
+ok 364 - O4 actual adverse trace: stale-export-prefix:sqlite
+  ---
+  duration_ms: 400.239208
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: spend-before-activation-S:sqlite
+ok 365 - O4 actual adverse trace: spend-before-activation-S:sqlite
+  ---
+  duration_ms: 476.444833
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: spend-before-activation-D:sqlite
+ok 366 - O4 actual adverse trace: spend-before-activation-D:sqlite
+  ---
+  duration_ms: 463.377125
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: spend-before-activation-F:sqlite
+ok 367 - O4 actual adverse trace: spend-before-activation-F:sqlite
+  ---
+  duration_ms: 444.10725
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: spend-before-activation-F-deliver:sqlite
+ok 368 - O4 actual adverse trace: spend-before-activation-F-deliver:sqlite
+  ---
+  duration_ms: 437.608375
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: origin-spends-transferred-right:sqlite
+ok 369 - O4 actual adverse trace: origin-spends-transferred-right:sqlite
+  ---
+  duration_ms: 428.243834
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: move-preserves-retry:sqlite
+ok 370 - O4 actual adverse trace: move-preserves-retry:sqlite
+  ---
+  duration_ms: 320.375791
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: unassigned-writer-candidates:sqlite
+ok 371 - O4 actual adverse trace: unassigned-writer-candidates:sqlite
+  ---
+  duration_ms: 298.353625
+  type: 'test'
+  ...
+# Subtest: O4 actual adverse trace: retired-writer-continuation:sqlite
+ok 372 - O4 actual adverse trace: retired-writer-continuation:sqlite
+  ---
+  duration_ms: 322.599083
+  type: 'test'
+  ...
+# Subtest: O4 K2 every activation registry fault propagates unchanged and cold exact retry agrees: memory
+ok 373 - O4 K2 every activation registry fault propagates unchanged and cold exact retry agrees: memory
+  ---
+  duration_ms: 14768.223333
+  type: 'test'
+  ...
+# {"storage":"memory","totalLookups":120,"originalExceptions":120,"exactRetryRecoveries":120,"returnedFaultVerdicts":0}
+# Subtest: O4 K2 every activation registry fault propagates unchanged and cold exact retry agrees: sqlite
+ok 374 - O4 K2 every activation registry fault propagates unchanged and cold exact retry agrees: sqlite
+  ---
+  duration_ms: 13515.981917
+  type: 'test'
+  ...
+# {"storage":"sqlite","totalLookups":120,"originalExceptions":120,"exactRetryRecoveries":120,"returnedFaultVerdicts":0}
+# Subtest: O4 K2 cold open throws the original nested registry error while ordinary Journal keeps legacy verdicts: memory
+ok 375 - O4 K2 cold open throws the original nested registry error while ordinary Journal keeps legacy verdicts: memory
+  ---
+  duration_ms: 158.069958
+  type: 'test'
+  ...
+# Subtest: O4 K2 cold open throws the original nested registry error while ordinary Journal keeps legacy verdicts: sqlite
+ok 376 - O4 K2 cold open throws the original nested registry error while ordinary Journal keeps legacy verdicts: sqlite
+  ---
+  duration_ms: 179.436416
+  type: 'test'
+  ...
+# Subtest: O4 K2 export and public-proof interpretations preserve original non-Error failures
+ok 377 - O4 K2 export and public-proof interpretations preserve original non-Error failures
+  ---
+  duration_ms: 590.640458
+  type: 'test'
+  ...
+# Subtest: O4 K2 an unlisted error inside wireInput retains its identity
+ok 378 - O4 K2 an unlisted error inside wireInput retains its identity
+  ---
+  duration_ms: 136.454292
+  type: 'test'
+  ...
+# Subtest: O4 K1 malformed participant requests preserve retries and the signed lifecycle: memory
+ok 379 - O4 K1 malformed participant requests preserve retries and the signed lifecycle: memory
+  ---
+  duration_ms: 4004.439
+  type: 'test'
+  ...
+# Subtest: O4 K1 malformed participant requests preserve retries and the signed lifecycle: sqlite
+ok 380 - O4 K1 malformed participant requests preserve retries and the signed lifecycle: sqlite
+  ---
+  duration_ms: 3581.344833
+  type: 'test'
+  ...
+# Subtest: O4 G2 failed activation, dormant exercise and exact retries permit later activation: memory
+ok 381 - O4 G2 failed activation, dormant exercise and exact retries permit later activation: memory
+  ---
+  duration_ms: 1329.718916
+  type: 'test'
+  ...
+# Subtest: O4 G2 failed activation, dormant exercise and exact retries permit later activation: sqlite
+ok 382 - O4 G2 failed activation, dormant exercise and exact retries permit later activation: sqlite
+  ---
+  duration_ms: 997.618292
+  type: 'test'
+  ...
+# Subtest: O4 G2 another participant admitted event cannot block activation: memory
+ok 383 - O4 G2 another participant admitted event cannot block activation: memory
+  ---
+  duration_ms: 495.557125
+  type: 'test'
+  ...
+# Subtest: O4 G2 another participant admitted event cannot block activation: sqlite
+ok 384 - O4 G2 another participant admitted event cannot block activation: sqlite
+  ---
+  duration_ms: 540.203458
+  type: 'test'
+  ...
+# Subtest: O4 G2 keeps current authorization gate: memory
+ok 385 - O4 G2 keeps current authorization gate: memory
+  ---
+  duration_ms: 387.573667
+  type: 'test'
+  ...
+# Subtest: O4 G2 keeps current closed gate: memory
+ok 386 - O4 G2 keeps current closed gate: memory
+  ---
+  duration_ms: 389.101375
+  type: 'test'
+  ...
+# Subtest: O4 G2 keeps current authorization gate: sqlite
+ok 387 - O4 G2 keeps current authorization gate: sqlite
+  ---
+  duration_ms: 423.216584
+  type: 'test'
+  ...
+# Subtest: O4 G2 keeps current closed gate: sqlite
+ok 388 - O4 G2 keeps current closed gate: sqlite
+  ---
+  duration_ms: 406.621875
+  type: 'test'
+  ...
+# Subtest: O4 unexpected post-commit replay error is thrown and disables facade: memory
+ok 389 - O4 unexpected post-commit replay error is thrown and disables facade: memory
+  ---
+  duration_ms: 533.089416
+  type: 'test'
+  ...
+# Subtest: O4 unexpected post-commit replay error is thrown and disables facade: sqlite
+ok 390 - O4 unexpected post-commit replay error is thrown and disables facade: sqlite
+  ---
+  duration_ms: 544.2755
+  type: 'test'
+  ...
+# Subtest: O4 malformed release-proof shape has an explicit policy refusal: memory
+ok 391 - O4 malformed release-proof shape has an explicit policy refusal: memory
+  ---
+  duration_ms: 382.882167
+  type: 'test'
+  ...
+# Subtest: O4 malformed release-proof shape has an explicit policy refusal: sqlite
+ok 392 - O4 malformed release-proof shape has an explicit policy refusal: sqlite
+  ---
+  duration_ms: 415.385417
+  type: 'test'
+  ...
+# Subtest: O4 thrown fold handler is a real failure with durable bytes: memory
+ok 393 - O4 thrown fold handler is a real failure with durable bytes: memory
+  ---
+  duration_ms: 155.902584
+  type: 'test'
+  ...
+# Subtest: O4 thrown audience handler is a real failure with durable bytes: memory
+ok 394 - O4 thrown audience handler is a real failure with durable bytes: memory
+  ---
+  duration_ms: 154.177292
+  type: 'test'
+  ...
+# Subtest: O4 thrown fold handler is a real failure with durable bytes: sqlite
+ok 395 - O4 thrown fold handler is a real failure with durable bytes: sqlite
+  ---
+  duration_ms: 179.718708
+  type: 'test'
+  ...
+# Subtest: O4 thrown audience handler is a real failure with durable bytes: sqlite
+ok 396 - O4 thrown audience handler is a real failure with durable bytes: sqlite
+  ---
+  duration_ms: 176.210667
+  type: 'test'
+  ...
+# Subtest: O4 L1 property-name attempts retain retries, cold state and completed transfer: memory
+ok 397 - O4 L1 property-name attempts retain retries, cold state and completed transfer: memory
+  ---
+  duration_ms: 2917.848417
+  type: 'test'
+  ...
+# Subtest: O4 L1 property-name attempts retain retries, cold state and completed transfer: sqlite
+ok 398 - O4 L1 property-name attempts retain retries, cold state and completed transfer: sqlite
+  ---
+  duration_ms: 2630.9795
+  type: 'test'
+  ...
+# Subtest: O4 L1 explicitly owned property-name kinds, models, roles and resolutions still work: memory
+ok 399 - O4 L1 explicitly owned property-name kinds, models, roles and resolutions still work: memory
+  ---
+  duration_ms: 8.349792
+  type: 'test'
+  ...
+# Subtest: O4 L1 explicitly owned property-name kinds, models, roles and resolutions still work: sqlite
+ok 400 - O4 L1 explicitly owned property-name kinds, models, roles and resolutions still work: sqlite
+  ---
+  duration_ms: 14.135041
+  type: 'test'
+  ...
+# Subtest: O4 L1 registry inheritance is absent while own data keys survive copying and serialization
+ok 401 - O4 L1 registry inheritance is absent while own data keys survive copying and serialization
+  ---
+  duration_ms: 0.38925
+  type: 'test'
+  ...
+# Subtest: O4 scope exercise honors attached refusing handler: memory
+ok 402 - O4 scope exercise honors attached refusing handler: memory
+  ---
+  duration_ms: 338.05425
+  type: 'test'
+  ...
+# Subtest: O4 scope exercise honors attached refusing handler: sqlite
+ok 403 - O4 scope exercise honors attached refusing handler: sqlite
+  ---
+  duration_ms: 341.839
+  type: 'test'
+  ...
+# Subtest: O4 preserves original Sale 0–19 outcomes, model and member readability
+ok 404 - O4 preserves original Sale 0–19 outcomes, model and member readability
+  ---
+  duration_ms: 206.490791
+  type: 'test'
+  ...
+# Subtest: O4 later attach, handover and transfer preserve actual pre-attach as-of replay
+ok 405 - O4 later attach, handover and transfer preserve actual pre-attach as-of replay
+  ---
+  duration_ms: 414.594125
+  type: 'test'
+  ...
+# Subtest: O4 goal 1: all actual readers and historical frontiers survive attach, handover and completed transfer: memory
+ok 406 - O4 goal 1: all actual readers and historical frontiers survive attach, handover and completed transfer: memory
+  ---
+  duration_ms: 1669.702792
+  type: 'test'
+  ...
+# Subtest: O4 goal 1: all actual readers and historical frontiers survive attach, handover and completed transfer: sqlite
+ok 407 - O4 goal 1: all actual readers and historical frontiers survive attach, handover and completed transfer: sqlite
+  ---
+  duration_ms: 2145.115
+  type: 'test'
+  ...
+# Subtest: O4 L3 unbound D member attempt permits certified completed transfer: memory
+ok 408 - O4 L3 unbound D member attempt permits certified completed transfer: memory
+  ---
+  duration_ms: 669.296667
+  type: 'test'
+  ...
+# Subtest: O4 L3 unbound I attempt preserves proof and later inspection result: memory
+ok 409 - O4 L3 unbound I attempt preserves proof and later inspection result: memory
+  ---
+  duration_ms: 116.406583
+  type: 'test'
+  ...
+# Subtest: O4 L3 unbound F member attempt preserves proof and both spends: memory
+ok 410 - O4 L3 unbound F member attempt preserves proof and both spends: memory
+  ---
+  duration_ms: 804.53225
+  type: 'test'
+  ...
+# Subtest: O4 L3 unbound D member attempt permits certified completed transfer: sqlite
+ok 411 - O4 L3 unbound D member attempt permits certified completed transfer: sqlite
+  ---
+  duration_ms: 540.516083
+  type: 'test'
+  ...
+# Subtest: O4 L3 unbound I attempt preserves proof and later inspection result: sqlite
+ok 412 - O4 L3 unbound I attempt preserves proof and later inspection result: sqlite
+  ---
+  duration_ms: 105.62675
+  type: 'test'
+  ...
+# Subtest: O4 L3 unbound F member attempt preserves proof and both spends: sqlite
+ok 413 - O4 L3 unbound F member attempt preserves proof and both spends: sqlite
+  ---
+  duration_ms: 742.051375
+  type: 'test'
+  ...
+# Subtest: a listing origin opens the sale; the origin actor needs no grant
+ok 414 - a listing origin opens the sale; the origin actor needs no grant
+  ---
+  duration_ms: 1.520333
+  type: 'test'
+  ...
+# Subtest: the same origin adopted twice is a genesis error
+ok 415 - the same origin adopted twice is a genesis error
+  ---
+  duration_ms: 0.29175
+  type: 'test'
+  ...
+# Subtest: an origin whose kind does not resolve is an unhandled verdict and inert
+ok 416 - an origin whose kind does not resolve is an unhandled verdict and inert
+  ---
+  duration_ms: 0.378041
+  type: 'test'
+  ...
+# Subtest: an origin binds no expected binding: a foreign binding on an origin is ignored
+ok 417 - an origin binds no expected binding: a foreign binding on an origin is ignored
+  ---
+  duration_ms: 0.676959
+  type: 'test'
+  ...
+# Subtest: a listing submitted later, not as an origin, is refused by the model
+ok 418 - a listing submitted later, not as an origin, is refused by the model
+  ---
+  duration_ms: 1.195542
+  type: 'test'
+  ...
+# Subtest: C1: a second issuance with the same label is its own token; admission and verification use the same issuance object and a tampered envelope supplies nothing
+ok 419 - C1: a second issuance with the same label is its own token; admission and verification use the same issuance object and a tampered envelope supplies nothing
+  ---
+  duration_ms: 2.6795
+  type: 'test'
+  ...
+# Subtest: C1: an unauthorized issuance is never an issued token, at admission or in the fold
+ok 420 - C1: an unauthorized issuance is never an issued token, at admission or in the fold
+  ---
+  duration_ms: 0.866333
+  type: 'test'
+  ...
+# Subtest: C3a: a narrow attach caps every kind it declares; a members-audience event of that package is not served beyond the cap
+ok 421 - C3a: a narrow attach caps every kind it declares; a members-audience event of that package is not served beyond the cap
+  ---
+  duration_ms: 1.633666
+  type: 'test'
+  ...
+# Subtest: C3b: observe honours a declared narrower audience
+ok 422 - C3b: observe honours a declared narrower audience
+  ---
+  duration_ms: 0.660167
+  type: 'test'
+  ...
+# Subtest: C5: an intent bound to another context cannot be adopted as an origin; a system kind cannot be an origin
+ok 423 - C5: an intent bound to another context cannot be adopted as an origin; a system kind cannot be an origin
+  ---
+  duration_ms: 0.938709
+  type: 'test'
+  ...
+# Subtest: C8: committed entries and receipts are snapshots; a caller cannot rewrite them
+ok 424 - C8: committed entries and receipts are snapshots; a caller cannot rewrite them
+  ---
+  duration_ms: 0.434916
+  type: 'test'
+  ...
+# Subtest: C9: a malformed system payload is a deterministic ineffective verdict with the actor as its only reader; folding and retry continue
+ok 425 - C9: a malformed system payload is a deterministic ineffective verdict with the actor as its only reader; folding and retry continue
+  ---
+  duration_ms: 0.503375
+  type: 'test'
+  ...
+# Subtest: C10: close stops application events and leaves foundation administration open
+ok 426 - C10: close stops application events and leaves foundation administration open
+  ---
+  duration_ms: 0.585792
+  type: 'test'
+  ...
+# Subtest: a capped package cannot widen through a members policy either
+ok 427 - a capped package cannot widen through a members policy either
+  ---
+  duration_ms: 0.718375
+  type: 'test'
+  ...
+# Subtest: D1: a member who never saw the private invitation verifies the acceptance from headers and the spine alone
+ok 428 - D1: a member who never saw the private invitation verifies the acceptance from headers and the spine alone
+  ---
+  duration_ms: 1.12
+  type: 'test'
+  ...
+# Subtest: D2: captured values are outside the identity, so they must live in config, which is inside it
+ok 429 - D2: captured values are outside the identity, so they must live in config, which is inside it
+  ---
+  duration_ms: 0.454
+  type: 'test'
+  ...
+# Subtest: D2: an installed descriptor is frozen; replacing a fold after attach throws and changes nothing
+ok 430 - D2: an installed descriptor is frozen; replacing a fold after attach throws and changes nothing
+  ---
+  duration_ms: 0.104791
+  type: 'test'
+  ...
+# Subtest: D2: a second definition under a model name in use is refused unless it is the same definition
+ok 431 - D2: a second definition under a model name in use is refused unless it is the same definition
+  ---
+  duration_ms: 0.166
+  type: 'test'
+  ...
+# Subtest: D3: observe may narrow only to current members; naming a future member is ineffective and read by the actor alone
+ok 432 - D3: observe may narrow only to current members; naming a future member is ineffective and read by the actor alone
+  ---
+  duration_ms: 0.450958
+  type: 'test'
+  ...
+# Subtest: E1: a module-local helper is part of identity; same text and config in different modules bind differently and conflict on a shared model name
+ok 433 - E1: a module-local helper is part of identity; same text and config in different modules bind differently and conflict on a shared model name
+  ---
+  duration_ms: 0.640416
+  type: 'test'
+  ...
+# Subtest: E2: a shallow-frozen input descriptor is frozen recursively on attach; a nested config cannot change
+ok 434 - E2: a shallow-frozen input descriptor is frozen recursively on attach; a nested config cannot change
+  ---
+  duration_ms: 0.106375
+  type: 'test'
+  ...
+# Subtest: run 1 corpus: every shrunk series still fails against the run-1 model with the recorded failure kind, and is reported against the current model
+ok 435 - run 1 corpus: every shrunk series still fails against the run-1 model with the recorded failure kind, and is reported against the current model
+  ---
+  duration_ms: 530.134
+  type: 'test'
+  ...
+# seed-103: 3 steps; run-1 model invariant; current model clean
+# seed-121: 3 steps; run-1 model invariant; current model clean
+# seed-129: 3 steps; run-1 model invariant; current model clean
+# seed-138: 3 steps; run-1 model invariant; current model clean
+# seed-146: 6 steps; run-1 model mismatch; current model clean
+# seed-158: 6 steps; run-1 model mismatch; current model clean
+# seed-172: 3 steps; run-1 model invariant; current model clean
+# seed-183: 3 steps; run-1 model invariant; current model clean
+# seed-189: 3 steps; run-1 model invariant; current model clean
+# seed-56: 3 steps; run-1 model invariant; current model clean
+# seed-65: 8 steps; run-1 model mismatch; current model clean
+# seed-72: 3 steps; run-1 model invariant; current model clean
+# seed-74: 3 steps; run-1 model invariant; current model clean
+# seed-79: 6 steps; run-1 model mismatch; current model clean
+# seed-8: 6 steps; run-1 model mismatch; current model clean
+# seed-86: 6 steps; run-1 model mismatch; current model clean
+# seed-96: 3 steps; run-1 model invariant; current model clean
+# Subtest: run 6 corpus: the current foundation fixes unauthorized leaks; the repaired audience fixes the remaining authorized leaks
+ok 436 - run 6 corpus: the current foundation fixes unauthorized leaks; the repaired audience fixes the remaining authorized leaks
+  ---
+  duration_ms: 642.030833
+  type: 'test'
+  ...
+# seed-112: 5 steps; kept model clean under current foundation; current model clean
+# seed-141: 5 steps; kept model clean under current foundation; current model clean
+# seed-160: 5 steps; kept model clean under current foundation; current model clean
+# seed-172: 3 steps; kept model budget violation; current model clean
+# seed-181: 3 steps; kept model budget violation; current model clean
+# seed-193: 5 steps; kept model clean under current foundation; current model clean
+# seed-197: 5 steps; kept model clean under current foundation; current model clean
+# seed-200: 3 steps; kept model budget violation; current model clean
+# seed-42: 5 steps; kept model clean under current foundation; current model clean
+# Subtest: positions 0 to 5 carry the kinds and audiences of the trace
+ok 437 - positions 0 to 5 carry the kinds and audiences of the trace
+  ---
+  duration_ms: 3.039958
+  type: 'test'
+  ...
+# Subtest: Alice reads every position; hidden count 0
+ok 438 - Alice reads every position; hidden count 0
+  ---
+  duration_ms: 1.80575
+  type: 'test'
+  ...
+# Subtest: Bob's view: spine plus his own invitation; Carol's invitation is a header
+ok 439 - Bob's view: spine plus his own invitation; Carol's invitation is a header
+  ---
+  duration_ms: 0.7115
+  type: 'test'
+  ...
+# Subtest: Carol's view: spine plus her own invitation; Bob's invitation is a header
+ok 440 - Carol's view: spine plus her own invitation; Bob's invitation is a header
+  ---
+  duration_ms: 0.656209
+  type: 'test'
+  ...
+# Subtest: a late joiner receives the whole spine and addressed events, and members audiences are not retroactive
+ok 441 - a late joiner receives the whole spine and addressed events, and members audiences are not retroactive
+  ---
+  duration_ms: 1.485875
+  type: 'test'
+  ...
+# Subtest: case 1, the trace: positions 0 to 19 replay with the readability of the table, the literal projections and the outcomes at 17 and 18, under the model's declared join disclosure
+ok 442 - case 1, the trace: positions 0 to 19 replay with the readability of the table, the literal projections and the outcomes at 17 and 18, under the model's declared join disclosure
+  ---
+  duration_ms: 247.507292
+  type: 'test'
+  ...
+# literal trace without the join disclosure: 5 violations; first: ivan@15 mismatch: observe differs at 15 [models.sale.offers.0: oracle {"id":"o3","author":"bob","position":15,"status":"open","rep, view undefined; outcomes.15.effective: oracle true, view false; outcomes.15.perModel.sale.effective: oracle true, view false; outcomes.15.perModel.sale.reason: oracle null, view no_such_offer; outcomes.15.reason: oracle null, view ineffective]
+# Subtest: case 2, replacement with a hidden predecessor: Ivan sees o3 open replacing o1, and a later accept of o1 is ineffective for everyone
+ok 443 - case 2, replacement with a hidden predecessor: Ivan sees o3 open replacing o1, and a later accept of o1 is ineffective for everyone
+  ---
+  duration_ms: 187.781416
+  type: 'test'
+  ...
+# literal case 2 without the join disclosure: 3 violations; first: ivan@15 mismatch: observe differs at 15 [models.sale.offers.0: oracle {"id":"o3","author":"bob","position":15,"status":"open","rep, view undefined; outcomes.15.effective: oracle true, view false; outcomes.15.perModel.sale.effective: oracle true, view false; outcomes.15.perModel.sale.reason: oracle null, view no_such_offer; outcomes.15.reason: oracle null, view ineffective]
+# Subtest: case 3, late joiner after the decision: a second accept is ineffective in every view, equality holds at every frontier, and a disclosure of the decision keeps it
+ok 444 - case 3, late joiner after the decision: a second accept is ineffective in every view, equality holds at every frontier, and a disclosure of the decision keeps it
+  ---
+  duration_ms: 188.174583
+  type: 'test'
+  ...
+# Subtest: case 4, late joiner judging a public event on a hidden fact: a withdrawal of a stub recorded before Dana joined, then an accept of it, are judged the same way in every view
+ok 445 - case 4, late joiner judging a public event on a hidden fact: a withdrawal of a stub recorded before Dana joined, then an accept of it, are judged the same way in every view
+  ---
+  duration_ms: 65.303166
+  type: 'test'
+  ...
+# Subtest: the repair ledger exists, its totals agree with its entries, and it states the budget outcome
+ok 446 - the repair ledger exists, its totals agree with its entries, and it states the budget outcome
+  ---
+  duration_ms: 0.6475
+  type: 'test'
+  ...
+# fixes 7, added kinds 0, budget exceeded
+# Subtest: V3-F1: a private payload disclosed to a non-party is a budget violation on what they can read, whatever the projection hides
+ok 447 - V3-F1: a private payload disclosed to a non-party is a budget violation on what they can read, whatever the projection hides
+  ---
+  duration_ms: 4.865625
+  type: 'test'
+  ...
+# Subtest: V3-F2: the kept run-6 model refuses a wrong-party counter, and the budget reports its misdelivery
+ok 448 - V3-F2: the kept run-6 model refuses a wrong-party counter, and the budget reports its misdelivery
+  ---
+  duration_ms: 8.052125
+  type: 'test'
+  ...
+# Subtest: V3-F3: null private payloads are recorded with a deterministic ineffective verdict, replay cold, retry exactly, and a valid action follows
+ok 449 - V3-F3: null private payloads are recorded with a deterministic ineffective verdict, replay cold, retry exactly, and a valid action follows
+  ---
+  duration_ms: 68.892834
+  type: 'test'
+  ...
+# Subtest: V3-G1: an ineffective stub by carol does not make them a counter party (kept run-6 guard regression)
+ok 450 - V3-G1: an ineffective stub by carol does not make them a counter party (kept run-6 guard regression)
+  ---
+  duration_ms: 12.143
+  type: 'test'
+  ...
+# Subtest: V3-G1: an ineffective stub by carol does not make them a counter party (current audience)
+ok 451 - V3-G1: an ineffective stub by carol does not make them a counter party (current audience)
+  ---
+  duration_ms: 12.009292
+  type: 'test'
+  ...
+# Subtest: V3-G1: an ineffective stub by ivan does not make them a counter party (kept run-6 guard regression)
+ok 452 - V3-G1: an ineffective stub by ivan does not make them a counter party (kept run-6 guard regression)
+  ---
+  duration_ms: 10.303416
+  type: 'test'
+  ...
+# Subtest: V3-G1: an ineffective stub by ivan does not make them a counter party (current audience)
+ok 453 - V3-G1: an ineffective stub by ivan does not make them a counter party (current audience)
+  ---
+  duration_ms: 12.551417
+  type: 'test'
+  ...
+# Subtest: Fix 7: wrong-author, malformed, unauthorized and stale counters never address a supplied non-party, and late members replay them consistently
+ok 454 - Fix 7: wrong-author, malformed, unauthorized and stale counters never address a supplied non-party, and late members replay them consistently
+  ---
+  duration_ms: 64.575
+  type: 'test'
+  ...
+# Subtest: O4 public proof reconstructs signed Sale facts and grants across handover on memory
+ok 455 - O4 public proof reconstructs signed Sale facts and grants across handover on memory
+  ---
+  duration_ms: 63.043042
+  type: 'test'
+  ...
+# Subtest: O4 public proof reconstructs signed Sale facts and grants across handover on sqlite
+ok 456 - O4 public proof reconstructs signed Sale facts and grants across handover on sqlite
+  ---
+  duration_ms: 71.522209
+  type: 'test'
+  ...
+# Subtest: O4 source pins distinguish genesis, initial writer and requested frontier
+ok 457 - O4 source pins distinguish genesis, initial writer and requested frontier
+  ---
+  duration_ms: 43.261417
+  type: 'test'
+  ...
+# Subtest: O4 public proof rejects malformed, tampered and incomplete authenticated prefixes
+ok 458 - O4 public proof rejects malformed, tampered and incomplete authenticated prefixes
+  ---
+  duration_ms: 45.494208
+  type: 'test'
+  ...
+# Subtest: O4 public proof rejects missing, changed and forged handover evidence
+ok 459 - O4 public proof rejects missing, changed and forged handover evidence
+  ---
+  duration_ms: 56.064167
+  type: 'test'
+  ...
+# Subtest: O4 public proof rejects private bodies supplied at their genuine signed positions
+ok 460 - O4 public proof rejects private bodies supplied at their genuine signed positions
+  ---
+  duration_ms: 41.646334
+  type: 'test'
+  ...
+# Subtest: O4 public proof rejects a public kind carrying nested private extras despite valid signatures
+ok 461 - O4 public proof rejects a public kind carrying nested private extras despite valid signatures
+  ---
+  duration_ms: 32.619292
+  type: 'test'
+  ...
+# Subtest: O4 public proof rejects private data attached outside its declared shape
+ok 462 - O4 public proof rejects private data attached outside its declared shape
+  ---
+  duration_ms: 38.334583
+  type: 'test'
+  ...
+# Subtest: O4 public proof requires semantic packages and disclosed attachment bodies
+ok 463 - O4 public proof requires semantic packages and disclosed attachment bodies
+  ---
+  duration_ms: 56.953583
+  type: 'test'
+  ...
+# Subtest: O4 public proof cannot hide an authenticated grant body as a private position
+ok 464 - O4 public proof cannot hide an authenticated grant body as a private position
+  ---
+  duration_ms: 44.686292
+  type: 'test'
+  ...
+# Subtest: O4 public proof cannot hide an authenticated revoke body as a private position
+ok 465 - O4 public proof cannot hide an authenticated revoke body as a private position
+  ---
+  duration_ms: 38.016625
+  type: 'test'
+  ...
+# Subtest: O4 public proof cannot omit a withdrawal to turn a refused acceptance into a decision
+ok 466 - O4 public proof cannot omit a withdrawal to turn a refused acceptance into a decision
+  ---
+  duration_ms: 53.683041
+  type: 'test'
+  ...
+# Subtest: O4 certificate binds every authority opening on memory
+ok 467 - O4 certificate binds every authority opening on memory
+  ---
+  duration_ms: 74.227542
+  type: 'test'
+  ...
+# Subtest: O4 certificate signer follows the frontier header across assignment on memory
+ok 468 - O4 certificate signer follows the frontier header across assignment on memory
+  ---
+  duration_ms: 101.224917
+  type: 'test'
+  ...
+# Subtest: O4 certificate strictly pins type, rule, genesis, frontier and shape on memory
+ok 469 - O4 certificate strictly pins type, rule, genesis, frontier and shape on memory
+  ---
+  duration_ms: 96.144666
+  type: 'test'
+  ...
+# Subtest: O4 producer refuses a capped authority audience on memory
+ok 470 - O4 producer refuses a capped authority audience on memory
+  ---
+  duration_ms: 31.123458
+  type: 'test'
+  ...
+# Subtest: O4 malicious writer omissions exceed destination trust but member recomputation detects them on memory
+ok 471 - O4 malicious writer omissions exceed destination trust but member recomputation detects them on memory
+  ---
+  duration_ms: 70.092708
+  type: 'test'
+  ...
+# Subtest: O4 L3 later binding preserves earlier unbound proof but bound indeterminate outcomes cannot hide on memory
+ok 472 - O4 L3 later binding preserves earlier unbound proof but bound indeterminate outcomes cannot hide on memory
+  ---
+  duration_ms: 301.641875
+  type: 'test'
+  ...
+# Subtest: O4 public and full semantic verdicts agree at every opening of every certified prefix on memory
+ok 473 - O4 public and full semantic verdicts agree at every opening of every certified prefix on memory
+  ---
+  duration_ms: 114.133167
+  type: 'test'
+  ...
+# Subtest: O4 disclosure and observation remain hidden under the named public rule on memory
+ok 474 - O4 disclosure and observation remain hidden under the named public rule on memory
+  ---
+  duration_ms: 40.26975
+  type: 'test'
+  ...
+# Subtest: O4 certificate binds every authority opening on sqlite
+ok 475 - O4 certificate binds every authority opening on sqlite
+  ---
+  duration_ms: 88.626834
+  type: 'test'
+  ...
+# Subtest: O4 certificate signer follows the frontier header across assignment on sqlite
+ok 476 - O4 certificate signer follows the frontier header across assignment on sqlite
+  ---
+  duration_ms: 111.695958
+  type: 'test'
+  ...
+# Subtest: O4 certificate strictly pins type, rule, genesis, frontier and shape on sqlite
+ok 477 - O4 certificate strictly pins type, rule, genesis, frontier and shape on sqlite
+  ---
+  duration_ms: 107.66
+  type: 'test'
+  ...
+# Subtest: O4 producer refuses a capped authority audience on sqlite
+ok 478 - O4 producer refuses a capped authority audience on sqlite
+  ---
+  duration_ms: 44.781834
+  type: 'test'
+  ...
+# Subtest: O4 malicious writer omissions exceed destination trust but member recomputation detects them on sqlite
+ok 479 - O4 malicious writer omissions exceed destination trust but member recomputation detects them on sqlite
+  ---
+  duration_ms: 76.833125
+  type: 'test'
+  ...
+# Subtest: O4 L3 later binding preserves earlier unbound proof but bound indeterminate outcomes cannot hide on sqlite
+ok 480 - O4 L3 later binding preserves earlier unbound proof but bound indeterminate outcomes cannot hide on sqlite
+  ---
+  duration_ms: 408.283541
+  type: 'test'
+  ...
+# Subtest: O4 public and full semantic verdicts agree at every opening of every certified prefix on sqlite
+ok 481 - O4 public and full semantic verdicts agree at every opening of every certified prefix on sqlite
+  ---
+  duration_ms: 131.76175
+  type: 'test'
+  ...
+# Subtest: O4 disclosure and observation remain hidden under the named public rule on sqlite
+ok 482 - O4 disclosure and observation remain hidden under the named public rule on sqlite
+  ---
+  duration_ms: 53.913292
+  type: 'test'
+  ...
+# Subtest: V6 sale: the checker detects one narrowed audience rule
+ok 483 - V6 sale: the checker detects one narrowed audience rule
+  ---
+  duration_ms: 155.498583
+  type: 'test'
+  ...
+# {"model":"sale","manifest":"sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9","package":"sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85","mutant":"sha256:cfbe9b57a0d03196eefb2e3df18f1ecfa0817758853fbba2b6c6789bce23fce8","kind":"com.example.sale.offer","entries":6,"violations":1,"first":"alice@5 mismatch: observe differs at 5 [models.sale.accepted: oracle o1, view null; models.sale.status: oracle decided, view open; outcomes.5.effective: oracle true, view false; outcomes.5.perModel.sale.effective: oracle true, view false; outcomes.5.perModel.sale.reason: oracle null, view no_such_offer; outcomes.5.reason: oracle null, view ineffective]"}
+# {"corpus":"v6-sale","manifest":"sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9","package":"sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85","mutant":"sha256:cfbe9b57a0d03196eefb2e3df18f1ecfa0817758853fbba2b6c6789bce23fce8","nonce":"v6:sale","originalSteps":4,"steps":[{"step":{"type":"invite","inviter":"alice","invitee":"bob","grants":{"roles":["Buyer"]}},"entries":[{"id":"sha256:259c64ab91c0a4c5f3173ea3c5ecd1dae31aad3ef0e38755a2e7367c6447f98c","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"bob"},"entries":[{"id":"sha256:77a3b1ced99c3f404c8bb40c85057b56bc453d593419e97f92b83c59559166cb","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"act","actor":"bob","kind":"com.example.sale.offer","payload":{"offer_id":"o1"},"nonce":"v6:4"},"entries":[{"id":"sha256:586281868199913bc072a9dad01e8e9bc2b55193dbe2d1880bd0e0e79a7a4067","kind":"com.example.sale.offer"}]},{"step":{"type":"act","actor":"alice","kind":"com.example.sale.accept","payload":{"offer_id":"o1"},"nonce":"v6:5"},"entries":[{"id":"sha256:beb1444a0c93de85bcecbb333105df27860c50dcaf3140a8ad7fa1ef1eecc8f6","kind":"com.example.sale.accept"}]}]}
+# {"committedCorpus":"v6-sale","recordSnapshot":"742e64a06d06226b456f489eb53deacc1bc9f5db","violations":1,"finding":"alice@5 mismatch: observe differs at 5 [models.sale.accepted: oracle o1, view null; models.sale.status: oracle decided, view open; outcomes.5.effective: oracle true, view false; outcomes.5.perModel.sale.effective: oracle true, view false; outcomes.5.perModel.sale.reason: oracle null, view no_such_offer; outcomes.5.reason: oracle null, view ineffective]","deletions":4,"control":"clean"}
+# Subtest: V6 sale: an unrelated private attach preserves a shared intent; a relevant binding change stales it
+ok 484 - V6 sale: an unrelated private attach preserves a shared intent; a relevant binding change stales it
+  ---
+  duration_ms: 22.670292
+  type: 'test'
+  ...
+# {"model":"sale","manifest":"sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9","package":"sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85","unrelated":4,"shared":5,"relevant":6,"stale":7,"fresh":8,"violations":0}
+# Subtest: V6 booking: the checker detects one narrowed audience rule
+ok 485 - V6 booking: the checker detects one narrowed audience rule
+  ---
+  duration_ms: 68.053167
+  type: 'test'
+  ...
+# {"model":"booking","manifest":"sha256:cb4514f4967891077ad78e1dd0fba4c17438fb32b98cd8bd790df8531b35dd16","package":"sha256:0556de5c337344eaa15afcbbbf5d22aa82c384bd6841d4ffb0c07185d4b7ec27","mutant":"sha256:cad57243b94ef8b451168fc4265cc7fe0463af104d43faced5f8712da2ec9983","kind":"com.example.booking.occupancy","entries":5,"violations":1,"first":"bob@4 mismatch: observe differs at 4 [outcomes.4.effective: oracle true, view false; outcomes.4.perModel.booking.effective: oracle true, view false; outcomes.4.perModel.booking.reason: oracle null, view no_such_occupancy; outcomes.4.reason: oracle null, view ineffective]"}
+# {"corpus":"v6-booking","manifest":"sha256:cb4514f4967891077ad78e1dd0fba4c17438fb32b98cd8bd790df8531b35dd16","package":"sha256:0556de5c337344eaa15afcbbbf5d22aa82c384bd6841d4ffb0c07185d4b7ec27","mutant":"sha256:cad57243b94ef8b451168fc4265cc7fe0463af104d43faced5f8712da2ec9983","nonce":"v6:booking","originalSteps":4,"steps":[{"step":{"type":"invite","inviter":"alice","invitee":"bob","grants":{"roles":["Booker"]}},"entries":[{"id":"sha256:42d07670362f88fe8988e267a1536926ba8165f29be51dbfd980371a047c2930","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"bob"},"entries":[{"id":"sha256:8a5603ece26d4a971c03c9a4d9be8bbab7ee515faf8e214867e0ad79d9a46b0c","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"act","actor":"alice","kind":"com.example.booking.occupancy","payload":{"booking_id":"b1","room":"room-1","start":1,"end":3},"nonce":"v6:3"},"entries":[{"id":"sha256:31588b6760af1ccb145acf78489915373aca9a9614dac855977ae2f24c1c9174","kind":"com.example.booking.occupancy"}]},{"step":{"type":"act","actor":"alice","kind":"com.example.booking.free","payload":{"booking_id":"b1"},"nonce":"v6:4"},"entries":[{"id":"sha256:cfd639cbd2ad61d9d1072479a17e906843e4dc09f68c06c4217e4a5e40f8b2c1","kind":"com.example.booking.free"}]}]}
+# {"committedCorpus":"v6-booking","recordSnapshot":"742e64a06d06226b456f489eb53deacc1bc9f5db","violations":1,"finding":"bob@4 mismatch: observe differs at 4 [outcomes.4.effective: oracle true, view false; outcomes.4.perModel.booking.effective: oracle true, view false; outcomes.4.perModel.booking.reason: oracle null, view no_such_occupancy; outcomes.4.reason: oracle null, view ineffective]","deletions":4,"control":"clean"}
+# Subtest: V6 booking: an unrelated private attach preserves a shared intent; a relevant binding change stales it
+ok 486 - V6 booking: an unrelated private attach preserves a shared intent; a relevant binding change stales it
+  ---
+  duration_ms: 9.331625
+  type: 'test'
+  ...
+# {"model":"booking","manifest":"sha256:cb4514f4967891077ad78e1dd0fba4c17438fb32b98cd8bd790df8531b35dd16","package":"sha256:0556de5c337344eaa15afcbbbf5d22aa82c384bd6841d4ffb0c07185d4b7ec27","unrelated":3,"shared":4,"relevant":5,"stale":6,"fresh":7,"violations":0}
+# Subtest: V6 club: the checker detects one narrowed audience rule
+ok 487 - V6 club: the checker detects one narrowed audience rule
+  ---
+  duration_ms: 284.106416
+  type: 'test'
+  ...
+# {"model":"club","manifest":"sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde","package":"sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e","mutant":"sha256:276d0f9610eba50cff5a922b06117b5300a918d0c538a629befa1292228e3b1e","kind":"com.example.club.standing","entries":8,"violations":2,"first":"bob@7 mismatch: observe differs at 7 [affordances.0: oracle com.example.club.vote, view undefined; models.club.applications.0.votes.yes: oracle 0, view 1; outcomes.7.effective: oracle false, view true; outcomes.7.perModel.club.effective: oracle false, view true; outcomes.7.perModel.club.reason: oracle lapsed, view null; outcomes.7.reason: oracle ineffective, view null]"}
+# {"corpus":"v6-club","manifest":"sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde","package":"sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e","mutant":"sha256:276d0f9610eba50cff5a922b06117b5300a918d0c538a629befa1292228e3b1e","nonce":"v6:club","originalSteps":7,"steps":[{"step":{"type":"invite","inviter":"alice","invitee":"bob","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:3e73b2a8ed8b85302925611134a8c459631fa3edc5a6d0b47c75bcde127631be","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"bob"},"entries":[{"id":"sha256:00d2be5cbdf574555cc260b937e4c130852c6c46a54d709e4e33579cba880b22","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"dana","grants":{"roles":[]}},"entries":[{"id":"sha256:cb431f70546e211a6216d513b1d3b6c666f23e505c84f894f614629e1250d622","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"dana"},"entries":[{"id":"sha256:98ed4464fecc47636bebee69ac6295900bfa6c8f8a64779e205bedbeb0407450","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"act","actor":"dana","kind":"com.example.club.apply","payload":{"statement":"please"},"nonce":"v6:5"},"entries":[{"id":"sha256:971e9bd20f74b23e89cb265bd0f5318778652c22b88dfbdf91bbd51b9ca2ae05","kind":"com.example.club.apply"}]},{"step":{"type":"act","actor":"alice","kind":"com.example.club.standing","payload":{"member":"bob","standing":"lapsed"},"nonce":"v6:6"},"entries":[{"id":"sha256:5fac89a5616249aa497becd44bf51aa1a009bde5e80b0cb2a4fbe4c974edc86b","kind":"com.example.club.standing"}]},{"step":{"type":"act","actor":"bob","kind":"com.example.club.vote","payload":{"application_id":"sha256:971e9bd20f74b23e89cb265bd0f5318778652c22b88dfbdf91bbd51b9ca2ae05","choice":"yes"},"nonce":"v6:7"},"entries":[{"id":"sha256:bba005ee18a5807674fba081bffdff6cc4df8fee6069cc4efeb976e4d00a03f5","kind":"com.example.club.vote"}],"application":"sha256:971e9bd20f74b23e89cb265bd0f5318778652c22b88dfbdf91bbd51b9ca2ae05"}]}
+# {"committedCorpus":"v6-club","recordSnapshot":"742e64a06d06226b456f489eb53deacc1bc9f5db","violations":2,"finding":"bob@7 mismatch: observe differs at 7 [affordances.0: oracle com.example.club.vote, view undefined; models.club.applications.0.votes.yes: oracle 0, view 1; outcomes.7.effective: oracle false, view true; outcomes.7.perModel.club.effective: oracle false, view true; outcomes.7.perModel.club.reason: oracle lapsed, view null; outcomes.7.reason: oracle ineffective, view null]","deletions":7,"control":"clean"}
+# Subtest: V6 club: an unrelated private attach preserves a shared intent; a relevant binding change stales it
+ok 488 - V6 club: an unrelated private attach preserves a shared intent; a relevant binding change stales it
+  ---
+  duration_ms: 13.819458
+  type: 'test'
+  ...
+# {"model":"club","manifest":"sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde","package":"sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e","unrelated":3,"shared":4,"relevant":5,"stale":6,"fresh":7,"violations":0}
+# Subtest: V6 serving mutation: hiding a spine revocation is detected without changing the recorded history
+ok 489 - V6 serving mutation: hiding a spine revocation is detected without changing the recorded history
+  ---
+  duration_ms: 67.636208
+  type: 'test'
+  ...
+# {"mutation":"hidden-spine-revocation","manifest":"sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9","package":"sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85","at":4,"violations":2,"first":"bob@4 mismatch: observe differs at 4 [affordances.0: oracle undefined, view com.example.sale.offer]","dependent":"bob@5 mismatch: observe differs at 5 [affordances.0: oracle undefined, view com.example.sale.offer; affordances.1: oracle undefined, view com.example.sale.offer_terms; affordances.2: oracle undefined, view com.example.sale.withdraw; models.sale.offers.0: oracle undefined, view {\\"id\\":\\"after-revocation\\",\\"author\\":\\"bob\\",\\"position\\":5,\\"status; outcomes.5.effective: oracle false, view true; outcomes.5.perModel: oracle undefined, view {\\"sale\\":{\\"effective\\":true,\\"reason\\":null}}; outcomes.5.reason: oracle unauthorized, view null]"}
+# {"corpus":"v6-hidden-revocation","manifest":"sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9","package":"sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85","nonce":"v6:hidden-revocation","originalSteps":4,"steps":[{"step":{"type":"invite","inviter":"alice","invitee":"bob","grants":{"roles":["Buyer"]}},"entries":[{"id":"sha256:5c9e71807414f9c4c05adee9e28c369cb4ae7f4a0db9b9e70d885cf7dc0610de","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"bob"},"entries":[{"id":"sha256:06d6fbf8d7a3cf5d1e681dae6c07c72763af2c8104ed23f9c78f13d1d45a927c","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"act","actor":"alice","kind":"ai.generalbusiness.dap.revoke","payload":{"principal":"bob","roles":["Buyer"]},"nonce":"v6:4"},"entries":[{"id":"sha256:38fbbe9950ebbf57179ba60bd4b6ab6f6e4625d5c187483fe73a2faf15e0df30","kind":"ai.generalbusiness.dap.revoke"}]}]}
+# {"committedCorpus":"v6-hidden-revocation","recordSnapshot":"742e64a06d06226b456f489eb53deacc1bc9f5db","violations":1,"finding":"bob@4 mismatch: observe differs at 4 [affordances.0: oracle undefined, view com.example.sale.offer]","deletions":3,"control":"clean"}
+1..489
+# tests 492
+# suites 0
+# pass 488
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 4
+# duration_ms 42880.439375

@@ -1,0 +1,6 @@
+The Python wrapper exited 1 after the noncampaign test process completed.
+At runner-failed.py line 51, json.loads on a TAP-escaped diagnostic raised:
+json.decoder.JSONDecodeError: Expecting comma delimiter: line 1 column 635 (char 634)
+Raw diagnostic is noncampaign.txt line 3499. Terminal TAP summary: 492 tests, 488 pass, 0 fail, 4 TODO.
+The wrapper had not persisted the test child exit code or run typecheck. The test child exit code is not independently retained.
+resume.py parses the existing TAP output, retains undecodable diagnostics verbatim and runs typecheck only. The noncampaign command is not repeated.

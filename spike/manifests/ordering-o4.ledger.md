@@ -696,3 +696,130 @@ These are isolated L3 identities before L1/L2 integration. Only records and
 this handoff follow the measured source; no runtime, test or manifest change
 follows. Earlier evidence remains unchanged. No broad suite, campaign,
 independent approval or publication is claimed.
+
+
+## Combined L1–L3 validation: run 9
+
+The second O4 candidate at `e0467ae9` received changes requested in report
+`git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:869821dee977b1697050fb09ba8f80f8112425f3`.
+Root ratified it in `04ea60627a747adfa56f518bfde5fbc7096a262e` and adopted
+the bounded corrections in `794a913979b8e34c5b32d9e1d401f6300730ee34`, under
+the same workroom prefix. Frozen combined source
+`f8987d22890e7cf2471d7124544c539d69c0a835` includes L1's own-property registry
+reads/writes, L2's declared-validation exception boundary and header follow-up,
+and L3's exact unbound-kind classification. The final profile clarification
+was committed before measurement. Earlier K1–K4 fixes and evidence remain.
+
+**The terminal TAP reports 492 tests: 488 pass, zero ordinary failures and
+four executing Club TODOs retained by the user. All 167 O4 checks pass within
+that same invocation.** The noncampaign suite was run once; the three named
+200-seed campaigns were excluded. Its terminal duration is 42,880.439375 ms.
+Typecheck ran once afterward and exited 0 (0.862 seconds).
+
+**The original Python wrapper exited 1 after the test process completed.**
+Its new all-JSON diagnostic parser rejected a TAP-escaped V6 diagnostic at
+line 3499, before persisting the child's exit status or starting typecheck.
+The raw TAP is complete, but the child's process exit status is not retained;
+`exitCode` therefore remains null. These records do not infer or claim a zero
+Node exit. `runner-failed.py` and `wrapper-error.txt` preserve the failure.
+`resume.py` read the existing output, parsed 34 JSON diagnostics, retained the
+one undecodable diagnostic verbatim, and ran **typecheck only**. It did not
+rerun the noncampaign tests. The wrapper failure is a measurement-recording
+failure, separate from the test results established by the complete TAP.
+
+`ordering-o4-runs/run-9.json` summarizes results and actual identities.
+The `run-9/` directory retains the original raw `result.json`, TAP, typecheck,
+source/identity snapshots, both wrapper scripts and error record unchanged.
+It also contains 100 fresh observations, the exact 475-file preservation
+index from e046, a read-only observation-summary script and file hashes.
+All 94 frozen runtime/test/fixture/contract/configuration blobs, including
+package.json, package-lock.json and tsconfig.json, remain unchanged. The
+475 preexisting evidence files are byte-identical to the e046 index.
+
+The combined identities are:
+
+| Item | Content id |
+|---|---|
+| Scope implementation | `sha256:cbc58a25deebafd4bcb6318c8eace26027ffa09ed796061efdf27770feee67fe` |
+| Scope package | `sha256:21195fc775e76dd7bcc0e0dc57488527c01260de4cb17b7f0de021d00161bed5` |
+| Inspection, unchanged | `sha256:18a886c149b383b8630836307195c1a89b90c463e7e32df6e0663b5d4ecc3030` |
+| Sale, unchanged | `sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85` |
+| Opening rule `/3` | `sha256:9e9bcbdd74fe244fb63c5e339256ab508b2b3251d2e8fa642b3309cd1f1049e6` |
+| Lifecycle manifest | `sha256:92ad0023e387cd4a6305d074ab99f7a29cbcc1699cd88b8dcf439a446ef58828` |
+
+The opening rule is `dap.fixture.scope-public-openings/3`; the distinct
+movable-writer profile remains `dap.fixture.single-writer/3`. The join policy
+remains `ac852eba`. Historical `/1` and both provisional/final `/2` rule
+packets retain their content ids and original source boundaries. They are
+not migrated or relabelled as evidence for this rule.
+
+Each backend still records 20 healthy boundaries, 29 adverse cases with 43
+steps, and 209 materialized genesis variants. Outcomes remain 30 destination
+mismatches, five authorization failures, 154 invalid-genesis, 18 malformed-
+envelope and two unsupported-profile rejections. Historical-view coverage
+remains 55 pre-attach, 100 completed-transfer and 143 across-attachment
+questions per backend. The healthy S/I/D/F genesis, header and full-packet
+proof identities match across stores and are retained in the run-9 summary.
+All 92 run-8 observation names remain, with two new L1 and six new L3 records;
+the original files themselves are not overwritten.
+
+L1 verifies 33 signed property-name inputs and 99 exact retries per backend,
+including cold and post-completion retries. Transfer completes at
+S42/I5/D5/F11 with one activation and both spends. Positive cases preserve
+explicit own property-name kinds, models, roles, resolutions and projections;
+unknown roles retain their empty-capability behavior. Its component result
+is 33/33 plus typecheck at `28981dd1982e02b40fc154d43972c19d82ebc7bf`.
+Those results remain distinct from this combined TAP invocation.
+
+L2 preserves unexpected issuance hashing/key faults rather than converting
+them into malformed/release verdicts. The original component at
+`086fb8a8e97f6045bd4518246838842f1d7d631a` passed 49 selected tests, a separate
+one-test D1 check and typecheck. Root's subsequent malformed embedded-header
+reproduction still disabled the facade before append; that failure and the
+diagnostic cleanup failures remain recorded. The follow-up validated header
+preimage bytes within the declared malformed-data boundary while leaving
+hashing outside its catch. Final component source
+`8f48a39e7cf54678fd8c314bd57c4549dac7ba3d` passed 12 dedicated checks and
+typecheck; the earlier 50 broader checks were not relabelled as measured there.
+
+In combined run 9, each backend injects 17 cold-open cases over nine issuance
+crypto/key sites and 151 activation cases over 135 such sites, all preserving
+original exceptions and healthy cold recovery. All 51 cold signature
+verifications are injected; activation signature coverage samples three of
+124 verification calls and its one signing call. The other 121 activation
+verifications are not injected. The 13 malformed issuance variants per
+backend, including six malformed header-number cases, add no position and
+permit a healthy append/cold retry. Existing 120-lookup K2 sweeps also pass
+per backend. These are bounded sweeps, not every cryptographic call.
+
+L3 permits an actor-only listed application attempt to remain hidden only
+when actual binding history proves absence before that position and the
+foundation outcome is exactly unknown/unhandled, unauthorized, ineffective
+and without per-model diagnostics. Bound unavailable/placeholder/error
+outcomes, system kinds and effective narrow authority do not qualify.
+The known-ineffective rule also excludes model_unavailable. Component source
+`d987cd149c0fa0eda85235f0f8f10a56012d3bf2` passed 55/55 plus typecheck.
+Combined D cases preserve cold proof equality and retry, release at D2,
+one activation and both spends. I/F cases preserve certification plus the
+later Inspection result or spends; no additional I/F transfer protocol is
+claimed. Earlier component failures retain their exact sources and outputs.
+
+The serving writer is still trusted for completeness and failure/absence
+classification. A dishonest certificate can hide relevant authority and
+create duplicate live rights; detection by source readers requires all
+relevant openings. Destination replay does not remove that trust. The
+profile also retains copied-genesis, source-close, shared-foundation scope
+setup, live-cache tamper and explicit Inspection-derived disclosure limits.
+Supported Scope construction selects strict folding; the private constructor
+is a TypeScript API restriction, not a JavaScript security boundary. After
+faults, submit/Context writes/interpret/export are blocked as specified;
+proof() and retained context.view() can remain readable in memory. Deliberate
+policy-error instances, the exact wire-message allowlist and documented
+precommit refusal behavior remain classified limits, not blanket guarantees
+for arbitrary thrown values. The original late-Ivan Sale limitation and
+user-retained Club negatives are unchanged.
+
+This records task executes no tests. Only fresh run-9 records and these
+ledger/reproduction notes follow the frozen source. Independent O4 approval,
+publication and landing are still pending; a completed TAP report is not
+an independent checker verdict.

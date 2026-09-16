@@ -1,0 +1,2224 @@
+{
+  "source": "f8987d22890e7cf2471d7124544c539d69c0a835",
+  "identities": {
+    "scopeImplementation": "sha256:cbc58a25deebafd4bcb6318c8eace26027ffa09ed796061efdf27770feee67fe",
+    "scopeProfile": "dap.fixture.scope/1",
+    "scopePackage": "sha256:21195fc775e76dd7bcc0e0dc57488527c01260de4cb17b7f0de021d00161bed5",
+    "inspectionPackage": "sha256:18a886c149b383b8630836307195c1a89b90c463e7e32df6e0663b5d4ecc3030",
+    "salePackage": "sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85",
+    "publicProofRule": "sha256:9e9bcbdd74fe244fb63c5e339256ab508b2b3251d2e8fa642b3309cd1f1049e6",
+    "manifestPublicRule": "sha256:9e9bcbdd74fe244fb63c5e339256ab508b2b3251d2e8fa642b3309cd1f1049e6",
+    "manifest": "sha256:92ad0023e387cd4a6305d074ab99f7a29cbcc1699cd88b8dcf439a446ef58828",
+    "joinPolicy": "sha256:ac852ebab4f55816e55cd0fd71b7280267bffaca097046d4880b24ac63b01455",
+    "movableWriterProfile": "dap.fixture.single-writer/3"
+  },
+  "commands": [
+    {
+      "name": "noncampaign",
+      "argv": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "--test-skip-pattern=case [57], the campaign:",
+        "spike/test/**/*.test.ts"
+      ],
+      "cwd": "/private/tmp/dap-o4-transfer-lifecycle",
+      "environment": {
+        "DAP_O4_RECORD_DIR": "/private/tmp/dap-o4-l1-l3-run9/observations"
+      },
+      "exitCode": null,
+      "exitCodeNote": "The original wrapper failed during diagnostic parsing after this child completed, before persisting its exit status. Outcomes are established by the complete terminal TAP summary; no child exit code is claimed.",
+      "totals": {
+        "tests": 492,
+        "suites": 0,
+        "pass": 488,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 4,
+        "duration_ms": 42880.439375
+      },
+      "o4Subset": {
+        "tests": 167,
+        "pass": 167,
+        "fail": 0,
+        "separateInvocation": false
+      },
+      "lookupDiagnostics": [
+        {
+          "storage": "memory",
+          "totalLookups": 120,
+          "originalExceptions": 120,
+          "exactRetryRecoveries": 120,
+          "returnedFaultVerdicts": 0
+        },
+        {
+          "storage": "sqlite",
+          "totalLookups": 120,
+          "originalExceptions": 120,
+          "exactRetryRecoveries": 120,
+          "returnedFaultVerdicts": 0
+        }
+      ],
+      "diagnostics": [
+        {
+          "clubA5": "invitation-acceptance",
+          "manifest": "sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde",
+          "package": "sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e",
+          "nonce": "v6-followup:a5:invitation-acceptance",
+          "target": {
+            "position": 6,
+            "id": "sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402",
+            "kind": "ai.generalbusiness.dap.accept_invite",
+            "effective": true
+          },
+          "votes": [
+            9,
+            10
+          ],
+          "admit": 11,
+          "grants": [
+            {
+              "position": 12,
+              "payload": {
+                "principal": "dana",
+                "roles": [
+                  "Member"
+                ]
+              }
+            }
+          ],
+          "readers": [
+            {
+              "reader": "alice",
+              "votes": [
+                true,
+                true
+              ],
+              "admit": true
+            },
+            {
+              "reader": "bob",
+              "votes": [
+                true,
+                true
+              ],
+              "admit": true
+            },
+            {
+              "reader": "carol",
+              "votes": [
+                true,
+                true
+              ],
+              "admit": true
+            },
+            {
+              "reader": "dana",
+              "votes": [
+                true,
+                true
+              ],
+              "admit": true
+            },
+            {
+              "reader": "frank",
+              "votes": [
+                true,
+                true
+              ],
+              "admit": true
+            }
+          ],
+          "findings": [
+            "*@9 invariant: vote at 9 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402",
+            "*@10 invariant: vote at 9 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402",
+            "*@10 invariant: vote at 10 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402",
+            "*@11 invariant: vote at 9 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402",
+            "*@11 invariant: vote at 10 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402",
+            "*@11 invariant: admit at 11 of unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402",
+            "*@12 invariant: vote at 9 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402",
+            "*@12 invariant: vote at 10 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402",
+            "*@12 invariant: admit at 11 of unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402"
+          ],
+          "steps": [
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "bob",
+                "grants": {
+                  "roles": [
+                    "Committee",
+                    "Member"
+                  ]
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:f8e2b2760606029da0845a7d1a315291e617637c63b050ebb68630514b7b6367",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "bob"
+              },
+              "entries": [
+                {
+                  "id": "sha256:efb8d15b0646f022fab90d7fa589e5c858af4582891d05da9f2faf860eb75974",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "carol",
+                "grants": {
+                  "roles": [
+                    "Committee",
+                    "Member"
+                  ]
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:2c862f052244d244f6849a5f8550c6296624802360d2d5ffdf61af5be3c7aba5",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "carol"
+              },
+              "entries": [
+                {
+                  "id": "sha256:0f0864ee38e0f0f414103426c0077d1f1e4def4c230d92a73a4186d6a6585445",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "dana",
+                "grants": {
+                  "roles": []
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:6ad4fb318d409b441764b707208069089d376825d667dd7564cc3e5af42e788b",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "dana"
+              },
+              "entries": [
+                {
+                  "id": "sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "frank",
+                "grants": {
+                  "roles": [
+                    "Member"
+                  ]
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:a17796beda7c55ae1c20e6f4932a7898d8d592fa7140165d1422f310a57a3a65",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "frank"
+              },
+              "entries": [
+                {
+                  "id": "sha256:b8d9f7790068c1434997289287b529a5db9ceb85715fdc63409cdff2e61c153a",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "bob",
+                "kind": "com.example.club.vote",
+                "payload": {
+                  "application_id": "sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402",
+                  "choice": "yes"
+                },
+                "nonce": "a5:8"
+              },
+              "entries": [
+                {
+                  "id": "sha256:632055e52d15f825f7a76c0a99f68d18f486456eb6c09c2f60112308e6531cd3",
+                  "kind": "com.example.club.vote"
+                }
+              ],
+              "application": "sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402"
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "carol",
+                "kind": "com.example.club.vote",
+                "payload": {
+                  "application_id": "sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402",
+                  "choice": "yes"
+                },
+                "nonce": "a5:9"
+              },
+              "entries": [
+                {
+                  "id": "sha256:fda5a153a368c42c7ed414a49abd94a20f220d4b7a674e92987ddad8a594a9c1",
+                  "kind": "com.example.club.vote"
+                }
+              ],
+              "application": "sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402"
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "alice",
+                "kind": "com.example.club.admit",
+                "payload": {
+                  "application_id": "sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402"
+                },
+                "nonce": "a5:10"
+              },
+              "entries": [
+                {
+                  "id": "sha256:f451b2ca7acf3076ef78633c5e8ac889fe58deff8dae5c8a7218a00d0fe28fa0",
+                  "kind": "com.example.club.admit"
+                },
+                {
+                  "id": "sha256:a754806be4313ee8d4f36e37459779495610a4623c19fd82107ebe76e88e6ff9",
+                  "kind": "ai.generalbusiness.dap.grant"
+                }
+              ],
+              "application": "sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402"
+            }
+          ],
+          "minimal": [
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "bob",
+                "grants": {
+                  "roles": [
+                    "Committee",
+                    "Member"
+                  ]
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:f8e2b2760606029da0845a7d1a315291e617637c63b050ebb68630514b7b6367",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "bob"
+              },
+              "entries": [
+                {
+                  "id": "sha256:efb8d15b0646f022fab90d7fa589e5c858af4582891d05da9f2faf860eb75974",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "dana",
+                "grants": {
+                  "roles": []
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:6ad4fb318d409b441764b707208069089d376825d667dd7564cc3e5af42e788b",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "dana"
+              },
+              "entries": [
+                {
+                  "id": "sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "bob",
+                "kind": "com.example.club.vote",
+                "payload": {
+                  "application_id": "sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402",
+                  "choice": "yes"
+                },
+                "nonce": "a5:8"
+              },
+              "entries": [
+                {
+                  "id": "sha256:632055e52d15f825f7a76c0a99f68d18f486456eb6c09c2f60112308e6531cd3",
+                  "kind": "com.example.club.vote"
+                }
+              ],
+              "application": "sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402"
+            }
+          ]
+        },
+        {
+          "clubA5": "malformed-apply",
+          "manifest": "sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde",
+          "package": "sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e",
+          "nonce": "v6-followup:a5:malformed-apply",
+          "target": {
+            "position": 9,
+            "id": "sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736",
+            "kind": "com.example.club.apply",
+            "effective": false
+          },
+          "votes": [
+            10,
+            11
+          ],
+          "admit": 12,
+          "grants": [
+            {
+              "position": 13,
+              "payload": {
+                "principal": "dana",
+                "roles": [
+                  "Member"
+                ]
+              }
+            }
+          ],
+          "readers": [
+            {
+              "reader": "alice",
+              "votes": [
+                true,
+                true
+              ],
+              "admit": true
+            },
+            {
+              "reader": "bob",
+              "votes": [
+                true,
+                true
+              ],
+              "admit": true
+            },
+            {
+              "reader": "carol",
+              "votes": [
+                true,
+                true
+              ],
+              "admit": true
+            },
+            {
+              "reader": "dana",
+              "votes": [
+                true,
+                true
+              ],
+              "admit": true
+            },
+            {
+              "reader": "frank",
+              "votes": [
+                true,
+                true
+              ],
+              "admit": true
+            }
+          ],
+          "findings": [
+            "*@10 invariant: vote at 10 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736",
+            "*@11 invariant: vote at 10 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736",
+            "*@11 invariant: vote at 11 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736",
+            "*@12 invariant: vote at 10 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736",
+            "*@12 invariant: vote at 11 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736",
+            "*@12 invariant: admit at 12 of unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736",
+            "*@13 invariant: vote at 10 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736",
+            "*@13 invariant: vote at 11 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736",
+            "*@13 invariant: admit at 12 of unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736"
+          ],
+          "steps": [
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "bob",
+                "grants": {
+                  "roles": [
+                    "Committee",
+                    "Member"
+                  ]
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:5efae4c957e9ffd536fb4792e17bd3859d4bf40bfd6112b2d7d5d0bf192b2c07",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "bob"
+              },
+              "entries": [
+                {
+                  "id": "sha256:652cef6366598679e968e08a6a92073b4031f5b9ef6e668ab950ac7a16962ff7",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "carol",
+                "grants": {
+                  "roles": [
+                    "Committee",
+                    "Member"
+                  ]
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:6dbefe6ff4ceb5da17f9f5efc1b14111d624f39029bea047b182bba7ae2dff92",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "carol"
+              },
+              "entries": [
+                {
+                  "id": "sha256:a3effcce32797773f4e151ef320c41e9294ef145c8ec7ce955f1a55fcde3ace5",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "dana",
+                "grants": {
+                  "roles": []
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:cfb273dd78ce62e8b78692805e96e0778043c3e99521c32f205ce67b5070813a",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "dana"
+              },
+              "entries": [
+                {
+                  "id": "sha256:52b396f21bd7075cdda314069da7237e0d440a6225b667cf0c4b8075209461d0",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "frank",
+                "grants": {
+                  "roles": [
+                    "Member"
+                  ]
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:9c29a84f5149dc5aefb9e903b0055760b44ce5b4935c99f9c414dfe8ecfa44d5",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "frank"
+              },
+              "entries": [
+                {
+                  "id": "sha256:727b5c7f0f81e145be8267dffbf05b031f50a5e76aa85f47c1e5e0a94dbfc6e1",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "dana",
+                "kind": "com.example.club.apply",
+                "payload": {
+                  "statement": 17
+                },
+                "nonce": "a5:8"
+              },
+              "entries": [
+                {
+                  "id": "sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736",
+                  "kind": "com.example.club.apply"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "bob",
+                "kind": "com.example.club.vote",
+                "payload": {
+                  "application_id": "sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736",
+                  "choice": "yes"
+                },
+                "nonce": "a5:9"
+              },
+              "entries": [
+                {
+                  "id": "sha256:d3de847e94ade9127f25543fadba6a4ccfd0fff85ce31ab431ba4342f5438365",
+                  "kind": "com.example.club.vote"
+                }
+              ],
+              "application": "sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736"
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "carol",
+                "kind": "com.example.club.vote",
+                "payload": {
+                  "application_id": "sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736",
+                  "choice": "yes"
+                },
+                "nonce": "a5:10"
+              },
+              "entries": [
+                {
+                  "id": "sha256:4be906ea88e31394bcd43a900c4433174599b9f22562cfa14d374e46c545f4b3",
+                  "kind": "com.example.club.vote"
+                }
+              ],
+              "application": "sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736"
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "alice",
+                "kind": "com.example.club.admit",
+                "payload": {
+                  "application_id": "sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736"
+                },
+                "nonce": "a5:11"
+              },
+              "entries": [
+                {
+                  "id": "sha256:9e0bb3f36faee4bb5407d592e3acbe1adde72f9f69a3966061dbcdfe2d12e31c",
+                  "kind": "com.example.club.admit"
+                },
+                {
+                  "id": "sha256:be683307f1918e59caab7323b3a10efc44c9f02a9c5f6b95db6ce8585d9b01f7",
+                  "kind": "ai.generalbusiness.dap.grant"
+                }
+              ],
+              "application": "sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736"
+            }
+          ],
+          "minimal": [
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "bob",
+                "grants": {
+                  "roles": [
+                    "Committee",
+                    "Member"
+                  ]
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:5efae4c957e9ffd536fb4792e17bd3859d4bf40bfd6112b2d7d5d0bf192b2c07",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "bob"
+              },
+              "entries": [
+                {
+                  "id": "sha256:652cef6366598679e968e08a6a92073b4031f5b9ef6e668ab950ac7a16962ff7",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "dana",
+                "grants": {
+                  "roles": []
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:cfb273dd78ce62e8b78692805e96e0778043c3e99521c32f205ce67b5070813a",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "dana"
+              },
+              "entries": [
+                {
+                  "id": "sha256:52b396f21bd7075cdda314069da7237e0d440a6225b667cf0c4b8075209461d0",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "dana",
+                "kind": "com.example.club.apply",
+                "payload": {
+                  "statement": 17
+                },
+                "nonce": "a5:8"
+              },
+              "entries": [
+                {
+                  "id": "sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736",
+                  "kind": "com.example.club.apply"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "bob",
+                "kind": "com.example.club.vote",
+                "payload": {
+                  "application_id": "sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736",
+                  "choice": "yes"
+                },
+                "nonce": "a5:9"
+              },
+              "entries": [
+                {
+                  "id": "sha256:d3de847e94ade9127f25543fadba6a4ccfd0fff85ce31ab431ba4342f5438365",
+                  "kind": "com.example.club.vote"
+                }
+              ],
+              "application": "sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736"
+            }
+          ]
+        },
+        {
+          "clubA5": "standing-reason",
+          "manifest": "sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde",
+          "package": "sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e",
+          "nonce": "v6-followup:a5:standing-reason",
+          "target": {
+            "position": 9,
+            "id": "sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+            "kind": "com.example.club.standing_reason",
+            "effective": true
+          },
+          "votes": [
+            10,
+            11
+          ],
+          "admit": 12,
+          "grants": [
+            {
+              "position": 13,
+              "payload": {
+                "principal": "alice",
+                "roles": [
+                  "Member"
+                ]
+              }
+            }
+          ],
+          "readers": [
+            {
+              "reader": "alice",
+              "votes": [
+                true,
+                true
+              ],
+              "admit": true
+            },
+            {
+              "reader": "bob",
+              "votes": [
+                true,
+                true
+              ],
+              "admit": true
+            },
+            {
+              "reader": "carol",
+              "votes": [
+                true,
+                true
+              ],
+              "admit": true
+            },
+            {
+              "reader": "dana",
+              "votes": [
+                true,
+                true
+              ],
+              "admit": true
+            },
+            {
+              "reader": "frank",
+              "votes": [
+                true,
+                true
+              ],
+              "admit": true
+            }
+          ],
+          "findings": [
+            "*@10 invariant: vote at 10 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+            "*@11 invariant: vote at 10 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+            "*@11 invariant: vote at 11 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+            "*@12 invariant: vote at 10 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+            "*@12 invariant: vote at 11 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+            "*@12 invariant: admit at 12 of unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+            "*@13 invariant: vote at 10 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+            "*@13 invariant: vote at 11 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+            "*@13 invariant: admit at 12 of unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"
+          ],
+          "steps": [
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "bob",
+                "grants": {
+                  "roles": [
+                    "Committee",
+                    "Member"
+                  ]
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:1cd4cd1c3b0ffc6884370cbb9d75deace66b85bf6c650c44f63400d306d7920e",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "bob"
+              },
+              "entries": [
+                {
+                  "id": "sha256:39aa2439256a95b04087b2f285626a4b0bd8d24652c28753e00b322c4140baba",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "carol",
+                "grants": {
+                  "roles": [
+                    "Committee",
+                    "Member"
+                  ]
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:da31de3a21d459bbde38aacc48766635fbddbad71cf4d772575e9e7de8d749b8",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "carol"
+              },
+              "entries": [
+                {
+                  "id": "sha256:70e92440be9b93badac5ca1c684c57672ed3e83f0dc98a98f193c70fe1da2bd1",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "dana",
+                "grants": {
+                  "roles": []
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:82066a312c85860039f63e39fd97ed5abe3e2ba74e7684dc5296b7adb88f63a8",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "dana"
+              },
+              "entries": [
+                {
+                  "id": "sha256:720923b61c08be8c6e196d688f3dba317614c519e80e0be1f193c86b6bc3e9a4",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "frank",
+                "grants": {
+                  "roles": [
+                    "Member"
+                  ]
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:b2c53e1d54dc0ec05c0c6b67afe498df6d2b51eec4aec49c367359d8c0b60e2b",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "frank"
+              },
+              "entries": [
+                {
+                  "id": "sha256:c624a58e82907beadbd925b6194f58599fbf88a2c3074979cd3ecf46f593cb47",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "alice",
+                "kind": "com.example.club.standing_reason",
+                "payload": {
+                  "member": "dana",
+                  "text": "private reason, not an application"
+                },
+                "nonce": "a5:8"
+              },
+              "entries": [
+                {
+                  "id": "sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+                  "kind": "com.example.club.standing_reason"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "bob",
+                "kind": "com.example.club.vote",
+                "payload": {
+                  "application_id": "sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+                  "choice": "yes"
+                },
+                "nonce": "a5:9"
+              },
+              "entries": [
+                {
+                  "id": "sha256:28583cb1694a7351446b112cfbb524e5461c58e121c49b03c074a3d993715756",
+                  "kind": "com.example.club.vote"
+                }
+              ],
+              "application": "sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "carol",
+                "kind": "com.example.club.vote",
+                "payload": {
+                  "application_id": "sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+                  "choice": "yes"
+                },
+                "nonce": "a5:10"
+              },
+              "entries": [
+                {
+                  "id": "sha256:64d93c1e0993f8529264dff3764d6fb6b43cff1bd0674921c8e595e32a71a422",
+                  "kind": "com.example.club.vote"
+                }
+              ],
+              "application": "sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "alice",
+                "kind": "com.example.club.admit",
+                "payload": {
+                  "application_id": "sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"
+                },
+                "nonce": "a5:11"
+              },
+              "entries": [
+                {
+                  "id": "sha256:f578658d5cf3fa76bcbfbb13eb4939f8fc90e495e11d4faa31b1920bf325eb55",
+                  "kind": "com.example.club.admit"
+                },
+                {
+                  "id": "sha256:3423e61343784c1f9cb6fbc3b4ef9d4a13068c98c19f5da5e08388e62835ab72",
+                  "kind": "ai.generalbusiness.dap.grant"
+                }
+              ],
+              "application": "sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"
+            }
+          ],
+          "minimal": [
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "bob",
+                "grants": {
+                  "roles": [
+                    "Committee",
+                    "Member"
+                  ]
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:1cd4cd1c3b0ffc6884370cbb9d75deace66b85bf6c650c44f63400d306d7920e",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "bob"
+              },
+              "entries": [
+                {
+                  "id": "sha256:39aa2439256a95b04087b2f285626a4b0bd8d24652c28753e00b322c4140baba",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "alice",
+                "kind": "com.example.club.standing_reason",
+                "payload": {
+                  "member": "dana",
+                  "text": "private reason, not an application"
+                },
+                "nonce": "a5:8"
+              },
+              "entries": [
+                {
+                  "id": "sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+                  "kind": "com.example.club.standing_reason"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "bob",
+                "kind": "com.example.club.vote",
+                "payload": {
+                  "application_id": "sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+                  "choice": "yes"
+                },
+                "nonce": "a5:9"
+              },
+              "entries": [
+                {
+                  "id": "sha256:28583cb1694a7351446b112cfbb524e5461c58e121c49b03c074a3d993715756",
+                  "kind": "com.example.club.vote"
+                }
+              ],
+              "application": "sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"
+            }
+          ]
+        },
+        {
+          "storage": "memory",
+          "raw": {
+            "error": "Error: Context: stale fold; restore before writing",
+            "invitation": null,
+            "redemption": null,
+            "participants": [
+              "ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"
+            ]
+          },
+          "coldParticipants": [
+            "ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"
+          ],
+          "coldInviteVerdict": null
+        },
+        {
+          "storage": "sqlite",
+          "raw": {
+            "error": "Error: SQLiteBackend: unavailable or re-entrant transaction",
+            "invitation": null,
+            "redemption": null,
+            "participants": [
+              "ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"
+            ]
+          },
+          "coldParticipants": [
+            "ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"
+          ],
+          "coldInviteVerdict": null
+        },
+        {
+          "storage": "memory",
+          "raw": {
+            "error": "Error: Context: inactive after a write error; restore before writing",
+            "invitation": null,
+            "redemption": null,
+            "participants": [
+              "ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"
+            ]
+          },
+          "coldParticipants": [
+            "ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"
+          ],
+          "coldInviteVerdict": null
+        },
+        {
+          "storage": "sqlite",
+          "raw": {
+            "error": "Error: Context: inactive after a write error; restore before writing",
+            "invitation": null,
+            "redemption": null,
+            "participants": [
+              "ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"
+            ]
+          },
+          "coldParticipants": [
+            "ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"
+          ],
+          "coldInviteVerdict": null
+        },
+        {
+          "staleParticipants": [
+            "ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"
+          ],
+          "liveParticipants": [
+            "ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"
+          ],
+          "coldParticipants": [
+            "ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"
+          ],
+          "coldInviteVerdict": null
+        },
+        {
+          "storage": "memory",
+          "phase": "cold-open",
+          "cryptoSites": [
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash"
+          ],
+          "injectedCases": 17,
+          "originalExceptions": 17,
+          "coldExactRetries": 17
+        },
+        {
+          "storage": "sqlite",
+          "phase": "cold-open",
+          "cryptoSites": [
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash"
+          ],
+          "injectedCases": 17,
+          "originalExceptions": 17,
+          "coldExactRetries": 17
+        },
+        {
+          "storage": "memory",
+          "phase": "activation",
+          "cryptoSites": [
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash"
+          ],
+          "injectedCases": 151,
+          "originalExceptions": 151,
+          "durableExactRetries": 151,
+          "returnedFaultVerdicts": 0
+        },
+        {
+          "storage": "sqlite",
+          "phase": "activation",
+          "cryptoSites": [
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash"
+          ],
+          "injectedCases": 151,
+          "originalExceptions": 151,
+          "durableExactRetries": 151,
+          "returnedFaultVerdicts": 0
+        },
+        {
+          "boundary": "legacy",
+          "sites": [
+            "createHash",
+            "update",
+            "digest",
+            "createHash",
+            "update",
+            "digest"
+          ],
+          "thrownValuesPerSite": 8
+        },
+        {
+          "boundary": "signed",
+          "sites": [
+            "createPublicKey",
+            "createHash",
+            "update",
+            "digest",
+            "createHash",
+            "update",
+            "digest"
+          ],
+          "thrownValuesPerSite": 8
+        },
+        {
+          "storage": "memory",
+          "malformedCases": 13,
+          "newPositions": 0,
+          "healthyAppendAndColdRetry": true
+        },
+        {
+          "storage": "sqlite",
+          "malformedCases": 13,
+          "newPositions": 0,
+          "healthyAppendAndColdRetry": true
+        },
+        {
+          "storage": "memory",
+          "phase": "signatures",
+          "coldVerificationCalls": 51,
+          "coldInjectedCases": 51,
+          "activationVerificationCalls": 124,
+          "activationSigningCalls": 1,
+          "selectedActivationCases": [
+            {
+              "at": 1,
+              "call": "verify",
+              "outcome": "precommit refusal",
+              "committedBeforeRetry": false,
+              "retry": "fresh append"
+            },
+            {
+              "at": 64,
+              "call": "verify",
+              "outcome": "original exception",
+              "committedBeforeRetry": true,
+              "retry": "exact replay"
+            },
+            {
+              "at": 125,
+              "call": "verify",
+              "outcome": "original exception",
+              "committedBeforeRetry": true,
+              "retry": "exact replay"
+            },
+            {
+              "at": 3,
+              "call": "sign",
+              "outcome": "original exception",
+              "committedBeforeRetry": false,
+              "retry": "fresh append"
+            }
+          ]
+        },
+        {
+          "storage": "sqlite",
+          "phase": "signatures",
+          "coldVerificationCalls": 51,
+          "coldInjectedCases": 51,
+          "activationVerificationCalls": 124,
+          "activationSigningCalls": 1,
+          "selectedActivationCases": [
+            {
+              "at": 1,
+              "call": "verify",
+              "outcome": "precommit refusal",
+              "committedBeforeRetry": false,
+              "retry": "fresh append"
+            },
+            {
+              "at": 64,
+              "call": "verify",
+              "outcome": "original exception",
+              "committedBeforeRetry": true,
+              "retry": "exact replay"
+            },
+            {
+              "at": 125,
+              "call": "verify",
+              "outcome": "original exception",
+              "committedBeforeRetry": true,
+              "retry": "exact replay"
+            },
+            {
+              "at": 3,
+              "call": "sign",
+              "outcome": "original exception",
+              "committedBeforeRetry": false,
+              "retry": "fresh append"
+            }
+          ]
+        },
+        {
+          "storage": "memory",
+          "totalLookups": 120,
+          "originalExceptions": 120,
+          "exactRetryRecoveries": 120,
+          "returnedFaultVerdicts": 0
+        },
+        {
+          "storage": "sqlite",
+          "totalLookups": 120,
+          "originalExceptions": 120,
+          "exactRetryRecoveries": 120,
+          "returnedFaultVerdicts": 0
+        },
+        {
+          "model": "sale",
+          "manifest": "sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9",
+          "package": "sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85",
+          "mutant": "sha256:cfbe9b57a0d03196eefb2e3df18f1ecfa0817758853fbba2b6c6789bce23fce8",
+          "kind": "com.example.sale.offer",
+          "entries": 6,
+          "violations": 1,
+          "first": "alice@5 mismatch: observe differs at 5 [models.sale.accepted: oracle o1, view null; models.sale.status: oracle decided, view open; outcomes.5.effective: oracle true, view false; outcomes.5.perModel.sale.effective: oracle true, view false; outcomes.5.perModel.sale.reason: oracle null, view no_such_offer; outcomes.5.reason: oracle null, view ineffective]"
+        },
+        {
+          "corpus": "v6-sale",
+          "manifest": "sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9",
+          "package": "sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85",
+          "mutant": "sha256:cfbe9b57a0d03196eefb2e3df18f1ecfa0817758853fbba2b6c6789bce23fce8",
+          "nonce": "v6:sale",
+          "originalSteps": 4,
+          "steps": [
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "bob",
+                "grants": {
+                  "roles": [
+                    "Buyer"
+                  ]
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:259c64ab91c0a4c5f3173ea3c5ecd1dae31aad3ef0e38755a2e7367c6447f98c",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "bob"
+              },
+              "entries": [
+                {
+                  "id": "sha256:77a3b1ced99c3f404c8bb40c85057b56bc453d593419e97f92b83c59559166cb",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "bob",
+                "kind": "com.example.sale.offer",
+                "payload": {
+                  "offer_id": "o1"
+                },
+                "nonce": "v6:4"
+              },
+              "entries": [
+                {
+                  "id": "sha256:586281868199913bc072a9dad01e8e9bc2b55193dbe2d1880bd0e0e79a7a4067",
+                  "kind": "com.example.sale.offer"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "alice",
+                "kind": "com.example.sale.accept",
+                "payload": {
+                  "offer_id": "o1"
+                },
+                "nonce": "v6:5"
+              },
+              "entries": [
+                {
+                  "id": "sha256:beb1444a0c93de85bcecbb333105df27860c50dcaf3140a8ad7fa1ef1eecc8f6",
+                  "kind": "com.example.sale.accept"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "committedCorpus": "v6-sale",
+          "recordSnapshot": "742e64a06d06226b456f489eb53deacc1bc9f5db",
+          "violations": 1,
+          "finding": "alice@5 mismatch: observe differs at 5 [models.sale.accepted: oracle o1, view null; models.sale.status: oracle decided, view open; outcomes.5.effective: oracle true, view false; outcomes.5.perModel.sale.effective: oracle true, view false; outcomes.5.perModel.sale.reason: oracle null, view no_such_offer; outcomes.5.reason: oracle null, view ineffective]",
+          "deletions": 4,
+          "control": "clean"
+        },
+        {
+          "model": "sale",
+          "manifest": "sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9",
+          "package": "sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85",
+          "unrelated": 4,
+          "shared": 5,
+          "relevant": 6,
+          "stale": 7,
+          "fresh": 8,
+          "violations": 0
+        },
+        {
+          "model": "booking",
+          "manifest": "sha256:cb4514f4967891077ad78e1dd0fba4c17438fb32b98cd8bd790df8531b35dd16",
+          "package": "sha256:0556de5c337344eaa15afcbbbf5d22aa82c384bd6841d4ffb0c07185d4b7ec27",
+          "mutant": "sha256:cad57243b94ef8b451168fc4265cc7fe0463af104d43faced5f8712da2ec9983",
+          "kind": "com.example.booking.occupancy",
+          "entries": 5,
+          "violations": 1,
+          "first": "bob@4 mismatch: observe differs at 4 [outcomes.4.effective: oracle true, view false; outcomes.4.perModel.booking.effective: oracle true, view false; outcomes.4.perModel.booking.reason: oracle null, view no_such_occupancy; outcomes.4.reason: oracle null, view ineffective]"
+        },
+        {
+          "corpus": "v6-booking",
+          "manifest": "sha256:cb4514f4967891077ad78e1dd0fba4c17438fb32b98cd8bd790df8531b35dd16",
+          "package": "sha256:0556de5c337344eaa15afcbbbf5d22aa82c384bd6841d4ffb0c07185d4b7ec27",
+          "mutant": "sha256:cad57243b94ef8b451168fc4265cc7fe0463af104d43faced5f8712da2ec9983",
+          "nonce": "v6:booking",
+          "originalSteps": 4,
+          "steps": [
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "bob",
+                "grants": {
+                  "roles": [
+                    "Booker"
+                  ]
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:42d07670362f88fe8988e267a1536926ba8165f29be51dbfd980371a047c2930",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "bob"
+              },
+              "entries": [
+                {
+                  "id": "sha256:8a5603ece26d4a971c03c9a4d9be8bbab7ee515faf8e214867e0ad79d9a46b0c",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "alice",
+                "kind": "com.example.booking.occupancy",
+                "payload": {
+                  "booking_id": "b1",
+                  "room": "room-1",
+                  "start": 1,
+                  "end": 3
+                },
+                "nonce": "v6:3"
+              },
+              "entries": [
+                {
+                  "id": "sha256:31588b6760af1ccb145acf78489915373aca9a9614dac855977ae2f24c1c9174",
+                  "kind": "com.example.booking.occupancy"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "alice",
+                "kind": "com.example.booking.free",
+                "payload": {
+                  "booking_id": "b1"
+                },
+                "nonce": "v6:4"
+              },
+              "entries": [
+                {
+                  "id": "sha256:cfd639cbd2ad61d9d1072479a17e906843e4dc09f68c06c4217e4a5e40f8b2c1",
+                  "kind": "com.example.booking.free"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "committedCorpus": "v6-booking",
+          "recordSnapshot": "742e64a06d06226b456f489eb53deacc1bc9f5db",
+          "violations": 1,
+          "finding": "bob@4 mismatch: observe differs at 4 [outcomes.4.effective: oracle true, view false; outcomes.4.perModel.booking.effective: oracle true, view false; outcomes.4.perModel.booking.reason: oracle null, view no_such_occupancy; outcomes.4.reason: oracle null, view ineffective]",
+          "deletions": 4,
+          "control": "clean"
+        },
+        {
+          "model": "booking",
+          "manifest": "sha256:cb4514f4967891077ad78e1dd0fba4c17438fb32b98cd8bd790df8531b35dd16",
+          "package": "sha256:0556de5c337344eaa15afcbbbf5d22aa82c384bd6841d4ffb0c07185d4b7ec27",
+          "unrelated": 3,
+          "shared": 4,
+          "relevant": 5,
+          "stale": 6,
+          "fresh": 7,
+          "violations": 0
+        },
+        {
+          "model": "club",
+          "manifest": "sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde",
+          "package": "sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e",
+          "mutant": "sha256:276d0f9610eba50cff5a922b06117b5300a918d0c538a629befa1292228e3b1e",
+          "kind": "com.example.club.standing",
+          "entries": 8,
+          "violations": 2,
+          "first": "bob@7 mismatch: observe differs at 7 [affordances.0: oracle com.example.club.vote, view undefined; models.club.applications.0.votes.yes: oracle 0, view 1; outcomes.7.effective: oracle false, view true; outcomes.7.perModel.club.effective: oracle false, view true; outcomes.7.perModel.club.reason: oracle lapsed, view null; outcomes.7.reason: oracle ineffective, view null]"
+        },
+        {
+          "corpus": "v6-club",
+          "manifest": "sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde",
+          "package": "sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e",
+          "mutant": "sha256:276d0f9610eba50cff5a922b06117b5300a918d0c538a629befa1292228e3b1e",
+          "nonce": "v6:club",
+          "originalSteps": 7,
+          "steps": [
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "bob",
+                "grants": {
+                  "roles": [
+                    "Committee",
+                    "Member"
+                  ]
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:3e73b2a8ed8b85302925611134a8c459631fa3edc5a6d0b47c75bcde127631be",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "bob"
+              },
+              "entries": [
+                {
+                  "id": "sha256:00d2be5cbdf574555cc260b937e4c130852c6c46a54d709e4e33579cba880b22",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "dana",
+                "grants": {
+                  "roles": []
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:cb431f70546e211a6216d513b1d3b6c666f23e505c84f894f614629e1250d622",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "dana"
+              },
+              "entries": [
+                {
+                  "id": "sha256:98ed4464fecc47636bebee69ac6295900bfa6c8f8a64779e205bedbeb0407450",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "dana",
+                "kind": "com.example.club.apply",
+                "payload": {
+                  "statement": "please"
+                },
+                "nonce": "v6:5"
+              },
+              "entries": [
+                {
+                  "id": "sha256:971e9bd20f74b23e89cb265bd0f5318778652c22b88dfbdf91bbd51b9ca2ae05",
+                  "kind": "com.example.club.apply"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "alice",
+                "kind": "com.example.club.standing",
+                "payload": {
+                  "member": "bob",
+                  "standing": "lapsed"
+                },
+                "nonce": "v6:6"
+              },
+              "entries": [
+                {
+                  "id": "sha256:5fac89a5616249aa497becd44bf51aa1a009bde5e80b0cb2a4fbe4c974edc86b",
+                  "kind": "com.example.club.standing"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "bob",
+                "kind": "com.example.club.vote",
+                "payload": {
+                  "application_id": "sha256:971e9bd20f74b23e89cb265bd0f5318778652c22b88dfbdf91bbd51b9ca2ae05",
+                  "choice": "yes"
+                },
+                "nonce": "v6:7"
+              },
+              "entries": [
+                {
+                  "id": "sha256:bba005ee18a5807674fba081bffdff6cc4df8fee6069cc4efeb976e4d00a03f5",
+                  "kind": "com.example.club.vote"
+                }
+              ],
+              "application": "sha256:971e9bd20f74b23e89cb265bd0f5318778652c22b88dfbdf91bbd51b9ca2ae05"
+            }
+          ]
+        },
+        {
+          "committedCorpus": "v6-club",
+          "recordSnapshot": "742e64a06d06226b456f489eb53deacc1bc9f5db",
+          "violations": 2,
+          "finding": "bob@7 mismatch: observe differs at 7 [affordances.0: oracle com.example.club.vote, view undefined; models.club.applications.0.votes.yes: oracle 0, view 1; outcomes.7.effective: oracle false, view true; outcomes.7.perModel.club.effective: oracle false, view true; outcomes.7.perModel.club.reason: oracle lapsed, view null; outcomes.7.reason: oracle ineffective, view null]",
+          "deletions": 7,
+          "control": "clean"
+        },
+        {
+          "model": "club",
+          "manifest": "sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde",
+          "package": "sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e",
+          "unrelated": 3,
+          "shared": 4,
+          "relevant": 5,
+          "stale": 6,
+          "fresh": 7,
+          "violations": 0
+        },
+        {
+          "corpus": "v6-hidden-revocation",
+          "manifest": "sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9",
+          "package": "sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85",
+          "nonce": "v6:hidden-revocation",
+          "originalSteps": 4,
+          "steps": [
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "bob",
+                "grants": {
+                  "roles": [
+                    "Buyer"
+                  ]
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:5c9e71807414f9c4c05adee9e28c369cb4ae7f4a0db9b9e70d885cf7dc0610de",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "bob"
+              },
+              "entries": [
+                {
+                  "id": "sha256:06d6fbf8d7a3cf5d1e681dae6c07c72763af2c8104ed23f9c78f13d1d45a927c",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "alice",
+                "kind": "ai.generalbusiness.dap.revoke",
+                "payload": {
+                  "principal": "bob",
+                  "roles": [
+                    "Buyer"
+                  ]
+                },
+                "nonce": "v6:4"
+              },
+              "entries": [
+                {
+                  "id": "sha256:38fbbe9950ebbf57179ba60bd4b6ab6f6e4625d5c187483fe73a2faf15e0df30",
+                  "kind": "ai.generalbusiness.dap.revoke"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "committedCorpus": "v6-hidden-revocation",
+          "recordSnapshot": "742e64a06d06226b456f489eb53deacc1bc9f5db",
+          "violations": 1,
+          "finding": "bob@4 mismatch: observe differs at 4 [affordances.0: oracle undefined, view com.example.sale.offer]",
+          "deletions": 3,
+          "control": "clean"
+        }
+      ],
+      "unparsedDiagnostics": [
+        {
+          "line": 3499,
+          "raw": "{\"mutation\":\"hidden-spine-revocation\",\"manifest\":\"sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9\",\"package\":\"sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85\",\"at\":4,\"violations\":2,\"first\":\"bob@4 mismatch: observe differs at 4 [affordances.0: oracle undefined, view com.example.sale.offer]\",\"dependent\":\"bob@5 mismatch: observe differs at 5 [affordances.0: oracle undefined, view com.example.sale.offer; affordances.1: oracle undefined, view com.example.sale.offer_terms; affordances.2: oracle undefined, view com.example.sale.withdraw; models.sale.offers.0: oracle undefined, view {\\\\\"id\\\\\":\\\\\"after-revocation\\\\\",\\\\\"author\\\\\":\\\\\"bob\\\\\",\\\\\"position\\\\\":5,\\\\\"status; outcomes.5.effective: oracle false, view true; outcomes.5.perModel: oracle undefined, view {\\\\\"sale\\\\\":{\\\\\"effective\\\\\":true,\\\\\"reason\\\\\":null}}; outcomes.5.reason: oracle unauthorized, view null]\"}",
+          "parseError": "Expecting ',' delimiter: line 1 column 635 (char 634)"
+        }
+      ]
+    },
+    {
+      "name": "typecheck",
+      "argv": [
+        "npm",
+        "run",
+        "typecheck",
+        "--prefix",
+        "spike"
+      ],
+      "cwd": "/private/tmp/dap-o4-transfer-lifecycle",
+      "exitCode": 0,
+      "seconds": 0.8620611670048675,
+      "recoveryInvocation": true
+    }
+  ],
+  "wrapper": {
+    "exitCode": 1,
+    "failedScript": "runner-failed.py",
+    "errorRecord": "wrapper-error.txt",
+    "failedAfter": "noncampaign completed",
+    "recoveryScript": "resume.py",
+    "noncampaignRepeated": false
+  },
+  "campaignsRepeated": false,
+  "observations": {
+    "duplicate-inspection-import-memory.json": "sha256:902c6fab495dd25c8803f1e54796f462aa04f8e9c4e5d49607a481c8983a780c",
+    "duplicate-inspection-import-sqlite.json": "sha256:902c6fab495dd25c8803f1e54796f462aa04f8e9c4e5d49607a481c8983a780c",
+    "duplicate-state-import-memory.json": "sha256:dc738040b65675d72564c39db2b1b1e685cb93390d0dee592b3731e9b695188b",
+    "duplicate-state-import-sqlite.json": "sha256:dc738040b65675d72564c39db2b1b1e685cb93390d0dee592b3731e9b695188b",
+    "exact-retry-activation-memory.json": "sha256:13f2be86aa575755d957f14c3989c085baa283a09c45a67c13bfba2289d8af84",
+    "exact-retry-activation-sqlite.json": "sha256:13f2be86aa575755d957f14c3989c085baa283a09c45a67c13bfba2289d8af84",
+    "g2-current-authorization-memory.json": "sha256:76c5c58fdbce9f8d10014309aa42055315ec8a875a66f0c9ee641345060c4ee7",
+    "g2-current-authorization-sqlite.json": "sha256:76c5c58fdbce9f8d10014309aa42055315ec8a875a66f0c9ee641345060c4ee7",
+    "g2-current-closed-memory.json": "sha256:68dc652d3db18c5918b5ea00b98adfaec0249d088126c63bad77300ca2017645",
+    "g2-current-closed-sqlite.json": "sha256:68dc652d3db18c5918b5ea00b98adfaec0249d088126c63bad77300ca2017645",
+    "g2-intervening-exercise-memory.json": "sha256:cab26c563ee407585b1d84c5aa922f8732ce23993f76b3c87d0bf45663b9adf6",
+    "g2-intervening-exercise-sqlite.json": "sha256:cab26c563ee407585b1d84c5aa922f8732ce23993f76b3c87d0bf45663b9adf6",
+    "g2-participant-event-memory.json": "sha256:78e662ff0d628041356446eaa7513e611ed18dab5674020d5797cf8c8b551cde",
+    "g2-participant-event-sqlite.json": "sha256:78e662ff0d628041356446eaa7513e611ed18dab5674020d5797cf8c8b551cde",
+    "goal-1-history-matrix-memory.json": "sha256:05e0d7ba572ea08d672b918187a777f5e7486648d7ac782783c89e59c1b821ed",
+    "goal-1-history-matrix-sqlite.json": "sha256:05e0d7ba572ea08d672b918187a777f5e7486648d7ac782783c89e59c1b821ed",
+    "h1-duplicate-commitment-memory.json": "sha256:e4745f5616ef64355238a60ad225e85d5790207c18b298f85446924dd81ad6ae",
+    "h1-duplicate-commitment-sqlite.json": "sha256:e4745f5616ef64355238a60ad225e85d5790207c18b298f85446924dd81ad6ae",
+    "healthy-memory.json": "sha256:6759810f66e38705d7e2646104e91e9ac6f9c06418f5e50bf0b71ba166ddb552",
+    "healthy-sqlite.json": "sha256:6759810f66e38705d7e2646104e91e9ac6f9c06418f5e50bf0b71ba166ddb552",
+    "intervening-dormant-exercise-memory.json": "sha256:ba4ea11d93b7dfb38e133a61b7f3188f046ded51a53010034134d210b825357b",
+    "intervening-dormant-exercise-sqlite.json": "sha256:ba4ea11d93b7dfb38e133a61b7f3188f046ded51a53010034134d210b825357b",
+    "intervening-participant-event-memory.json": "sha256:f9e60c3f1cd04dce00f4959812a5fc033292f9c6140ad370afd0c20cc840a8cb",
+    "intervening-participant-event-sqlite.json": "sha256:f9e60c3f1cd04dce00f4959812a5fc033292f9c6140ad370afd0c20cc840a8cb",
+    "k1-participant-input-memory.json": "sha256:53d6b5ddfa41336c5bfc409c3e2b8d181fe4fbb97cd9f051b39e0b703c94f2b5",
+    "k1-participant-input-sqlite.json": "sha256:53d6b5ddfa41336c5bfc409c3e2b8d181fe4fbb97cd9f051b39e0b703c94f2b5",
+    "k3-bob-unauthorized-accept-memory.json": "sha256:8c6451f8ff9870b99ee24c2c870f8c92d77dc038ca4ba125576209ad64a64743",
+    "k3-bob-unauthorized-accept-sqlite.json": "sha256:8c6451f8ff9870b99ee24c2c870f8c92d77dc038ca4ba125576209ad64a64743",
+    "k3-bob-unauthorized-close-memory.json": "sha256:b6b0adeb9e38013ec463a467ff365501f48b25f6c619c7e779ea52579d8637eb",
+    "k3-bob-unauthorized-close-sqlite.json": "sha256:b6b0adeb9e38013ec463a467ff365501f48b25f6c619c7e779ea52579d8637eb",
+    "k3-carol-malformed-grant-memory.json": "sha256:22f3a906298a883fc4ae82d90dbc0d424efd826c5c0cb18b8f56facb4099e77f",
+    "k3-carol-malformed-grant-sqlite.json": "sha256:22f3a906298a883fc4ae82d90dbc0d424efd826c5c0cb18b8f56facb4099e77f",
+    "k3-member-scope-attempts-memory.json": "sha256:5293828ca6a1dca0fcf63524963c00a06b8c7612e5add77095dedfc768f1285c",
+    "k3-member-scope-attempts-sqlite.json": "sha256:5293828ca6a1dca0fcf63524963c00a06b8c7612e5add77095dedfc768f1285c",
+    "k4-inspection-disclosure-memory.json": "sha256:f188a7d2bd39978ee178cb6dc5e0eeef3fbe19bc9982e32bcec096a5f184ba34",
+    "k4-inspection-disclosure-sqlite.json": "sha256:f188a7d2bd39978ee178cb6dc5e0eeef3fbe19bc9982e32bcec096a5f184ba34",
+    "l1-property-inputs-memory.json": "sha256:14541d0d7429addbebb2dde52f184046daae89b63e7ee65ad0eea579a789a3b2",
+    "l1-property-inputs-sqlite.json": "sha256:14541d0d7429addbebb2dde52f184046daae89b63e7ee65ad0eea579a789a3b2",
+    "l3-unbound-D-memory.json": "sha256:a4470c97ee9f935df7ce00f1265c4075fdb9a15c7ad08b40ffb99f6392e2f47f",
+    "l3-unbound-D-sqlite.json": "sha256:a4470c97ee9f935df7ce00f1265c4075fdb9a15c7ad08b40ffb99f6392e2f47f",
+    "l3-unbound-F-memory.json": "sha256:766ac70e33328cdd03716ee21d9b06833f14af695a82fbc487cb4a2eec8cdd98",
+    "l3-unbound-F-sqlite.json": "sha256:766ac70e33328cdd03716ee21d9b06833f14af695a82fbc487cb4a2eec8cdd98",
+    "l3-unbound-I-memory.json": "sha256:009bfe7f56eab609eb193d292161538fa016aca52f3fde053aa896a6342026fa",
+    "l3-unbound-I-sqlite.json": "sha256:009bfe7f56eab609eb193d292161538fa016aca52f3fde053aa896a6342026fa",
+    "materialized-genesis-mutations-memory.json": "sha256:b52bfbef813817a0d0bac8eff0703246bc9d931a8d9ef494e2a608174ad095f3",
+    "materialized-genesis-mutations-sqlite.json": "sha256:b52bfbef813817a0d0bac8eff0703246bc9d931a8d9ef494e2a608174ad095f3",
+    "mismatched-buyer-memory.json": "sha256:56882c4dec36f77524bda74ade9bcb3545143b98bcbe335a2b01a322e765a64c",
+    "mismatched-buyer-sqlite.json": "sha256:56882c4dec36f77524bda74ade9bcb3545143b98bcbe335a2b01a322e765a64c",
+    "move-preserves-retry-memory.json": "sha256:3d4d4ffb41f7f9af4030c11d81b2e133e2f5bd83cb2cad981758a301b477b297",
+    "move-preserves-retry-sqlite.json": "sha256:3d4d4ffb41f7f9af4030c11d81b2e133e2f5bd83cb2cad981758a301b477b297",
+    "one-source-release-missing-memory.json": "sha256:94813adcaca3f9441fc26f90ca75320af2250d79a38e19683b006272b01f0908",
+    "one-source-release-missing-sqlite.json": "sha256:94813adcaca3f9441fc26f90ca75320af2250d79a38e19683b006272b01f0908",
+    "origin-spends-transferred-right-memory.json": "sha256:b9a08df232d3368b1ae9820dc851511e20abd8c07a7d8d46c95a611cf896cddb",
+    "origin-spends-transferred-right-sqlite.json": "sha256:b9a08df232d3368b1ae9820dc851511e20abd8c07a7d8d46c95a611cf896cddb",
+    "receipt-for-ineffective-release-memory.json": "sha256:d9cb2b895cff8750d92bc015a315ddeb3f1545e2019a16ccb8e62df1d39f1448",
+    "receipt-for-ineffective-release-sqlite.json": "sha256:d9cb2b895cff8750d92bc015a315ddeb3f1545e2019a16ccb8e62df1d39f1448",
+    "receipt-for-unauthorized-release-memory.json": "sha256:1110641ec2535951915f734c1070aaef036366e3eb802f0ee5e142bb4c66c2b4",
+    "receipt-for-unauthorized-release-sqlite.json": "sha256:1110641ec2535951915f734c1070aaef036366e3eb802f0ee5e142bb4c66c2b4",
+    "release-already-released-right-memory.json": "sha256:cf49830938f8735ba943246a36da1050ac6a7768fd0f92f49253dabc7a283a42",
+    "release-already-released-right-sqlite.json": "sha256:cf49830938f8735ba943246a36da1050ac6a7768fd0f92f49253dabc7a283a42",
+    "release-unowned-right-memory.json": "sha256:97834d7b4bfb3a47590ff7f553cba3e480473aa15a70a42ed081e8202cd1fcdf",
+    "release-unowned-right-sqlite.json": "sha256:97834d7b4bfb3a47590ff7f553cba3e480473aa15a70a42ed081e8202cd1fcdf",
+    "repeated-activation-after-restart-memory.json": "sha256:5eda028a9b3b975959f4b17144688616930496597e8828b98fb202a5eb44cb15",
+    "repeated-activation-after-restart-sqlite.json": "sha256:5eda028a9b3b975959f4b17144688616930496597e8828b98fb202a5eb44cb15",
+    "restart-before-activation-memory.json": "sha256:f22a8ab0606cea2cd99caab016876aa9a88f2045a6ed24b678fd3415c3e2156b",
+    "restart-before-activation-sqlite.json": "sha256:f22a8ab0606cea2cd99caab016876aa9a88f2045a6ed24b678fd3415c3e2156b",
+    "retired-writer-continuation-memory.json": "sha256:bb75928448f2ebe9b0dad868adaab7a568cc8b0bd08111f4f776f0c5d8515fdc",
+    "retired-writer-continuation-sqlite.json": "sha256:bb75928448f2ebe9b0dad868adaab7a568cc8b0bd08111f4f776f0c5d8515fdc",
+    "spend-before-activation-D-memory.json": "sha256:c7b78ff79f51e6a7d70b9c8294b8ca9488e97397d3bcd8928ab795dd371d19f7",
+    "spend-before-activation-D-sqlite.json": "sha256:c7b78ff79f51e6a7d70b9c8294b8ca9488e97397d3bcd8928ab795dd371d19f7",
+    "spend-before-activation-F-deliver-memory.json": "sha256:8117a4ffa5868934e0422e216ce0c5739926de6824fd7824604760240f0809f2",
+    "spend-before-activation-F-deliver-sqlite.json": "sha256:8117a4ffa5868934e0422e216ce0c5739926de6824fd7824604760240f0809f2",
+    "spend-before-activation-F-memory.json": "sha256:06916bc95d54a9c0210acb11ad8dfbf03ca32aa80d2c3a351468f2f9364c78c4",
+    "spend-before-activation-F-sqlite.json": "sha256:06916bc95d54a9c0210acb11ad8dfbf03ca32aa80d2c3a351468f2f9364c78c4",
+    "spend-before-activation-S-memory.json": "sha256:3d91ee26d073b431c0612d7275fc0fa38f27a395fbbe2b9ad528b048fbca9d5e",
+    "spend-before-activation-S-sqlite.json": "sha256:3d91ee26d073b431c0612d7275fc0fa38f27a395fbbe2b9ad528b048fbca9d5e",
+    "stale-export-prefix-memory.json": "sha256:1619893bf9d0fc205dfe1f9deec0012ac9742e9463fe6cc3e7de7842a09371cf",
+    "stale-export-prefix-sqlite.json": "sha256:1619893bf9d0fc205dfe1f9deec0012ac9742e9463fe6cc3e7de7842a09371cf",
+    "stale-source-proposal-at-destination-memory.json": "sha256:7d3fa84509f186e5cd00d9fbd38a16a752ddf0fdf506aaeace18178d0dffe15b",
+    "stale-source-proposal-at-destination-sqlite.json": "sha256:7d3fa84509f186e5cd00d9fbd38a16a752ddf0fdf506aaeace18178d0dffe15b",
+    "stale-source-proposal-at-source-memory.json": "sha256:605f810cea7c7cd363444b6005a58fc91ca8d846127336ccbcdd3bf494953cff",
+    "stale-source-proposal-at-source-sqlite.json": "sha256:605f810cea7c7cd363444b6005a58fc91ca8d846127336ccbcdd3bf494953cff",
+    "timeout-after-hidden-activation-memory.json": "sha256:230b448130b0911ae0f334fcd72a6e9052e982ba2eef52c64afd3c5774236ff2",
+    "timeout-after-hidden-activation-sqlite.json": "sha256:230b448130b0911ae0f334fcd72a6e9052e982ba2eef52c64afd3c5774236ff2",
+    "two-sources-export-same-right-memory.json": "sha256:358b87d7f5f77c21d36faeaaf52c6e51129c735165175264d0f116c24ee9d1ae",
+    "two-sources-export-same-right-sqlite.json": "sha256:358b87d7f5f77c21d36faeaaf52c6e51129c735165175264d0f116c24ee9d1ae",
+    "unassigned-writer-candidates-memory.json": "sha256:10065d99ec505a1882e084523b349c50c42de72938a5d07955935d1e23df3f20",
+    "unassigned-writer-candidates-sqlite.json": "sha256:10065d99ec505a1882e084523b349c50c42de72938a5d07955935d1e23df3f20",
+    "unauthorized-release-memory.json": "sha256:bb36c5884f2a5e2a86be86506af9fc65c294c6e8e8f5500550c0403f3902a197",
+    "unauthorized-release-sqlite.json": "sha256:bb36c5884f2a5e2a86be86506af9fc65c294c6e8e8f5500550c0403f3902a197",
+    "unexpected-audience-handler-memory.json": "sha256:bf0966dc2e89e98fcef844f3344f9b57941d555d4de63fe89efc0397bb60e423",
+    "unexpected-audience-handler-sqlite.json": "sha256:bf0966dc2e89e98fcef844f3344f9b57941d555d4de63fe89efc0397bb60e423",
+    "unexpected-fold-handler-memory.json": "sha256:9ddb2160269daad131c37ff3f71f33ff3e80797723226400d7036258ac4d9cfd",
+    "unexpected-fold-handler-sqlite.json": "sha256:9ddb2160269daad131c37ff3f71f33ff3e80797723226400d7036258ac4d9cfd",
+    "unexpected-replay-error-memory.json": "sha256:3166c8cd6d7ac6b4593092b0fdfc541e53e6b7b0f52e2974ff0279777b91ebf7",
+    "unexpected-replay-error-sqlite.json": "sha256:3166c8cd6d7ac6b4593092b0fdfc541e53e6b7b0f52e2974ff0279777b91ebf7",
+    "withheld-release-evidence-memory.json": "sha256:01843e630a8d218d712d48276bdd52b8a554f396ece3c7c984c58663d7136539",
+    "withheld-release-evidence-sqlite.json": "sha256:01843e630a8d218d712d48276bdd52b8a554f396ece3c7c984c58663d7136539",
+    "wrong-destination-release-memory.json": "sha256:240764e201c10b853f0c872abf9150f2ded19d350ee09a9adf588fac5bae557d",
+    "wrong-destination-release-sqlite.json": "sha256:240764e201c10b853f0c872abf9150f2ded19d350ee09a9adf588fac5bae557d"
+  },
+  "completedUtc": "2026-09-16T22:40:23.639152+00:00"
+}

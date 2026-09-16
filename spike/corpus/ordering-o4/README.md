@@ -169,3 +169,28 @@ npm run typecheck --prefix spike
 `l3-focused.json` pins source/runtime/test/manifest plus dependency and compiler
 configuration hashes. It records the unchanged checker probe's fresh passing
 output as a separate command, not extra tests in the 55-check count.
+
+
+Run 9 is the combined L1–L3 repair at frozen source
+`f8987d22890e7cf2471d7124544c539d69c0a835`, with opening rule `/3` (`9e9bcbdd`),
+manifest `92ad0023`, scope implementation `cbc58a25` and Scope package
+`21195fc7`. Full identities and actual backend/proof hashes are in
+`manifests/ordering-o4-runs/run-9.json`; all 100 fresh observations and the
+original process records are under `ordering-o4-runs/run-9/`.
+
+The one noncampaign invocation produced a complete TAP report: 492 tests,
+488 pass, zero ordinary failures, four retained Club TODOs, including all
+167 O4 checks. **The wrapper then exited 1 while parsing a TAP-escaped V6
+diagnostic. The Node child exit status was not persisted and remains unknown.**
+The saved `runner-failed.py` and `wrapper-error.txt` retain that boundary.
+`resume.py` re-parsed existing output, retained the problematic line verbatim
+and ran typecheck only (exit 0); no tests were repeated. The raw result remains
+unchanged, including `exitCode: null` for the noncampaign child.
+
+The same noncampaign command shown for run 8 applies at this exact source
+with a fresh `DAP_O4_RECORD_DIR`; the three named campaigns stay excluded.
+The retained failed/recovery scripts document the actual measurement, not a
+recommended reusable runner. `summary.mjs` only derives IDs and counts from
+the completed observations. Package/lock/tsconfig hashes are now included in
+the frozen source index. All 475 evidence files indexed from e046 remain
+byte-identical; original component failures and rule versions are historical.
