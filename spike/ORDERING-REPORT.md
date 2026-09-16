@@ -1,10 +1,10 @@
 # Ordering spike report
 
-**Measured candidate; independent acceptance and landing are separate.**
+**Measured O6 candidate; the O2/O3/O5 aggregate has independent approval.**
 The measured bootstrap meets goal 4's local fixture criterion. O4 executes
 the transfer lifecycle under an explicit trusted-writer completeness rule
 and its replay follow-up supports goal 1 for that fixture. These are measured candidate
-results, not independent acceptance or landing. The current movable profile
+results; O4/O6 acceptance and landing remain separate. The current movable profile
 is `/3`; the G1/G2 and H1/H2 corrections below retain the failures found by
 review and their separate measured sources.
 
@@ -42,6 +42,16 @@ requirement even when Node exits zero.
 | O4 transfer lifecycle | Run 1 `ee86290f`: 98/100, two recorder failures. Run 2 `b35b267e`: 100/100 focused; full 315 tests, 311 pass, four Club TODOs; 600 seeds pass. Replay `faf26c07`: 6/6. G1/G2 `91941fa5`: 345 selected, 341 pass, four TODOs, including 122/122 O4 checks. Current `/3` `e8ccb2ef`: 124/124 O4 checks. Typecheck passes at each boundary. | G2 changes runtime and manifest; H1/H2 changes wire/runtime identities. Current run 7 repeats 20 healthy boundaries, 29 adverse branches, 209 signed-genesis mutations and the wider replay/privacy/error checks per backend, plus two duplicate-commitment faults. No full suite or campaign repeated in run 7. [Ledger][o4] |
 | O5 isolated control verifier | Original `462d7dec`: 53 pass, one runner failure; `ac563035`: 54/54, then test-cast typecheck failure. Full `/2` source `0a1daff7`: 256 tests, 255 pass, one Club TODO, 55 O5 checks and 600 seeds pass. Revised `/3` source `773a38ec`: all 86 O5 checks pass within its 325-test invocation. | Original repairs address permission-runner paths and typing. H1 additionally repairs exact-head verification and duplicate detection, expands 47 vectors to 76 and retains the accepted old `/2` attack. Real-journal and isolated-reader evidence remain separate from application semantics. [Ledger][o5] |
 | O6 envelope and route | `/2` sources: `c75894b8` 2/2; `f9995e87` 371 selected/367 pass/four TODOs; `19b6d434` 402 selected/398 pass/four TODOs. Current `/3` source `8c5598ff`: 2/2 bootstrap tests, typecheck and real SQLite CLI pass. | The two combined `/2` runs exclude three campaigns. The current run checks only O6 and typecheck; no aggregate/O4/campaign repeat. Fixture source is unchanged, but its imported profile generates new signed identities and receipts. [Ledger][o6] |
+
+Ratified checker report `7f5bacc3` approves exact aggregate
+`936acce94e5cd024b0164fc6cd2af027f611545e`. Its independent `npm test`
+reports 328 tests, 324 pass, zero ordinary failures and four Club TODOs;
+typecheck passes. These are reviewer results, separate from the builder runs
+above. An independent Python implementation of JCS and Ed25519 agrees with
+all 76 vectors, the journal proof and 21 new attacks. The checker also tests
+cache faults, live/cold equivalence and deliberate implementation mutations,
+and reproduces the baseline/performance counters. Approval and its exact
+workroom provenance are recorded with the [review limits][aggregate-review].
 
 O5 candidate `598170fa5907655bc48c346a2dd4dd98853314a8` contains
 O3 `c527584d5399f20dff33625e20cb97d237bdad98`, O2
@@ -270,7 +280,10 @@ cannot install a successor. Between seal and assign, application work is
 blocked. The same genesis, positions, prefix and saved retries survive the
 planned move. These bounded checks do not fence a malicious old writer
 using a copied database, select a winner after equivocation, or implement
-automatic failover.
+automatic failover. Concretely, the control key can sign two assignments for
+the same sealed head, each valid on a separate copy. Identical controls also
+remain valid on byte-identical copies. Assignment uniqueness is per journal,
+not fork prevention; racing SQLite processes may both lose access to the lock.
 
 O5's control logic is independent of O3's transition algorithm and runs in
 a permission-isolated subprocess without application code. Accepted inputs
@@ -300,7 +313,12 @@ H2 fully authenticates create/open, then retains a verified head, ordering
 state, commitments and control positions. Live append checks the current
 head, next header and commitment uniqueness; the cache advances only after
 the serialized transaction commits. Unexpected tails and uncertain/error
-states require reopen. Fixed `/1` omits the ordering-admission hook. The
+states require reopen. It does not reauthenticate older rows on each append:
+rewriting an older stored row under an unchanged head can go undetected live,
+while cold open rejects it. This retains O1's trusted-storage boundary.
+The live duplicate-commitment guard throws and disables the facade without
+appending; it does not return an ordinary refusal. Fixed `/1` omits the
+ordering-admission hook. The
 retained sets use O(n) memory with expected constant-time membership checks;
 existing Context row copying/folding still grows with history. Scope's full
 semantic proof replay is also unchanged. This is bounded added authentication
@@ -314,6 +332,15 @@ reads returning `2n + 2` logical rows for an append starting with n entries.
 Timings are single sequential samples on a shared host with unequal load,
 not a statistical speedup or latency guarantee. The benchmark measures
 ordinary offers, not control operations or reopen. [H2 evidence][h2]
+
+The checker separately measured two verifications for a seal or assign at
+1,020 entries. Cold SQLite reopen remained slow and grew faster than linearly
+in that review's samples, at roughly three seconds for 1,020 entries. A raw
+restore reusing a closed Journal's encoding after another append is now
+refused, strengthening the earlier baseline. Known follow-ups remain: qualify
+the cache getter's authentication comment, update the foundation profile type
+union from `/2` to `/3`, and document the benchmark's required `SOURCE` file.
+These notes change no runtime or type identities. [Independent findings][aggregate-review]
 
 SQLite commits entry, head, exact retry, invitation consumption and outbox
 record in one transaction. Named O1–O3 SIGKILL schedules exercise process
@@ -400,8 +427,8 @@ O6 source `19b6d4346fcb13d33e71ee3d2fbdbb780c44ee67` passed 398 of
 Typecheck and SQLite CLI passed; signed output equalled run 1 except for PID
 and database path. [Historical combined measurements][o6-run3]
 Only records/report changes followed before candidate `4214fa36`. H1/H2 then
-changed the runtime and wire contract in a new experiment boundary. The last
-full 600-seed measurement remains O4 `b35b267e`, before G1/G2 and H1/H2;
+changed the runtime and wire contract in a new experiment boundary. The
+builder's last full 600-seed measurement remains O4 `b35b267e`, before G1/G2 and H1/H2;
 it is not a campaign result for the current source.
 
 Current `/3` O6 source `8c5598ff79c017067ae5eed117ad6d0c05f46400`
@@ -412,8 +439,8 @@ their exact-source records remain separate. The O4 run-7 results
 are now retained in O4 candidate `edacc32db1495504d10ae7a92f02af272e49e9f2`,
 including the aggregate's final evidence. That final merge changes only
 records; all 83 O4 runtime/test/fixture/manifest blobs still equal `e8ccb2ef`.
-It adds no basis for repeating O4 or the O6 bootstrap. No acceptance or
-landing is claimed.
+It adds no basis for repeating O4 or the O6 bootstrap. The separate aggregate
+approval above does not establish O4/O6 acceptance or landing.
 
 [goals]: https://github.com/generalbusiness-ai/dap/blob/598170fa5907655bc48c346a2dd4dd98853314a8/notes/2026-09-14-evolving-spaces-design.md#L80-L107
 [bootstrap]: https://github.com/generalbusiness-ai/dap/blob/598170fa5907655bc48c346a2dd4dd98853314a8/notes/2026-09-14-evolving-spaces-design.md#L537-L573
@@ -423,7 +450,7 @@ landing is claimed.
 [o3]: https://github.com/generalbusiness-ai/dap/blob/c527584d5399f20dff33625e20cb97d237bdad98/spike/manifests/ordering-o3.ledger.md
 [o5]: https://github.com/generalbusiness-ai/dap/blob/936acce94e5cd024b0164fc6cd2af027f611545e/spike/manifests/ordering-o5.ledger.md
 [profile]: https://github.com/generalbusiness-ai/dap/blob/e8ccb2ef2c21510b84d0466193c2b3381f89316b/spike/ordering-profile.md
-[o6]: https://github.com/generalbusiness-ai/dap/blob/c87ef963372195d3eca8fb2eeee0e172abf4557c/spike/manifests/ordering-o6.ledger.md
+[o6]: https://github.com/generalbusiness-ai/dap/blob/edfd881308ffd961b6cbaf7d7f6a7090aa91150f/spike/manifests/ordering-o6.ledger.md
 [o6-source]: https://github.com/generalbusiness-ai/dap/blob/8c5598ff79c017067ae5eed117ad6d0c05f46400/spike/test/fixtures/o6-bootstrap.ts
 [o6-tests]: https://github.com/generalbusiness-ai/dap/blob/8c5598ff79c017067ae5eed117ad6d0c05f46400/spike/test/ordering-bootstrap.test.ts
 [o6-demo]: https://github.com/generalbusiness-ai/dap/blob/da4f9dcb529eb21a21b629fc0deb3497aaccb4e6/spike/manifests/ordering-o6-runs/run-4-demo.json
@@ -440,3 +467,4 @@ landing is claimed.
 [o6-run4]: https://github.com/generalbusiness-ai/dap/blob/da4f9dcb529eb21a21b629fc0deb3497aaccb4e6/spike/manifests/ordering-o6-runs/run-4.json
 [o4-run7]: https://github.com/generalbusiness-ai/dap/blob/edacc32db1495504d10ae7a92f02af272e49e9f2/spike/manifests/ordering-o4-runs/run-7.json
 [h2]: https://github.com/generalbusiness-ai/dap/blob/edacc32db1495504d10ae7a92f02af272e49e9f2/spike/manifests/ordering-integration-runs/h2-benchmark/comparison-summary.md
+[aggregate-review]: https://github.com/generalbusiness-ai/dap/blob/edfd881308ffd961b6cbaf7d7f6a7090aa91150f/spike/manifests/ordering-o6.ledger.md#independent-aggregate-approval
