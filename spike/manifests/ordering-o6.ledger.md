@@ -183,3 +183,44 @@ those entries. Exact retry of a failed attempt retains its failed receipt;
 a fresh complete attempt may first activate. This decision is not yet a
 measured repair in run 2. Final O6 integration and acceptance await the
 revised O1 and O4 inputs and their separately recorded checks.
+
+## G1/G2 integration input for run 3
+
+O6 now merges O4 candidate `2b48c4c4484ecd722aa891cd6efa5362121c0f6e`
+and O2/O3/O5 candidate `1ba67c39062ddf44508b14c0716817cfa9735964`.
+Both include O1 candidate `aaa447d9e5ac4d88f07f144d46f2f5e63752c399`.
+O4's measured source `91941fa55928668a7a25413bedd3b38f15677b4e`
+passes 341 of 345 selected tests, with zero ordinary failures and four
+executing Club TODOs; its 122 O4 tests pass within that same invocation.
+The aggregate's source `2a57bd2ab0b1e30912f1e2bc044951d71477c5cc`
+passes 149 focused tests. Both typechecks pass. These inputs exclude the
+campaigns and do not claim independent acceptance.
+
+The O4 merge is clean. The aggregate conflicts only on appended profile
+prose; the resolution retains O4's complete document with O3 handover,
+completeness obligations and G2 activation/error semantics. All runtime
+files equal O4's measured input except for the already measured O5 control
+verifier addition. The O6 bootstrap source and tests are unchanged.
+
+The lifecycle manifest is
+`sha256:d94090b21ce42f2eec4a046558b3a776895d82905c2096a19df1f5f02e011f86`;
+the scope implementation is
+`sha256:1090e6c785ebf4e8060be60672a9503ae4bcbb4220a31f2c117bf42b6532f8db`;
+the Scope package is
+`sha256:fd46665bc03857cadf6cec9e4964018780c93639482d42dccfb2b891195b2ed6`.
+The opening rule, Sale and Inspection packages and fixed join policy remain
+unchanged. Old proof packets still require their old source snapshots.
+
+One new source freeze will precede the complete noncampaign suite, typecheck
+and real SQLite bootstrap CLI. It retains all four executing Club TODOs and
+excludes only the three named campaigns; the prior 600 seeds remain measured
+at O4 `b35b267` before G1/G2. No performance patch, policy repair or extra
+O6 runtime change is included. Run 2's source and outputs remain intact.
+
+Before freezing, O6 also incorporates O4's final aggregate wrapper
+`d4decf8f6e1d67f02c711bfb67ff772ecbf069bf`. Its source `ca2d105d`
+preserves all 76 existing O4 runtime/test/fixture/manifest blobs and adds
+the unchanged O5 verifier and its tests. The separate narrow check passes
+55 O5 tests and typecheck. In O6 those O5 files were already present, so this
+last merge adds only the O4 integration ledger and run-6 evidence. Runtime,
+profile and manifest bytes equal that final O4 wrapper exactly.
