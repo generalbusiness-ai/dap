@@ -10,7 +10,7 @@ const base: Omit<PackageDescriptor,'id'> = {
   capabilities:[],
   kinds:{ [SCOPE_KINDS.exercise]:{
     kind:SCOPE_KINDS.exercise,schema:{},handlers:['qaFault'],audienceId:'qa-fault',
-    audience:event=>{ if ((event.payload as { failure?:string }).failure === 'audience') throw new Error('qa_audience_exception'); return SPINE; },
+    audience:(_ctx,event)=>{ if ((event.payload as { failure?:string }).failure === 'audience') throw new Error('qa_audience_exception'); return SPINE; },
     capability:SCOPE_KINDS.exercise,
   } },
 };

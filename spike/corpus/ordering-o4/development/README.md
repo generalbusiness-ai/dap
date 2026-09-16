@@ -94,3 +94,7 @@ null release proof becomes a JavaScript TypeError string in a policy verdict.
 The two current-authorization checks pass. This is a preserved development
 failure boundary under review `3d76d2b9` and design decision `c2982a6e`, not the
 formal G2 baseline. Formal measurement awaits integrated G1 and manifest fixes.
+
+Development source `b9eaeec` initially failed typecheck: the new throwing-audience
+fixture used the context argument as the event. No runtime check was run at
+that source. Its next commit corrects the callback's second argument.
