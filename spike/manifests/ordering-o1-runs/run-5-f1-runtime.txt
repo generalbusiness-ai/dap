@@ -1,0 +1,72 @@
+✔ test keys reproduce the independent RFC 8032 Ed25519 vector (1.367666ms)
+✔ fixed vectors pin each signed object, exact UTF-8 bytes, identity and signature (4.992208ms)
+✔ fixed rejection vector: tampered body (0.4275ms)
+✔ fixed rejection vector: actor signs noncanonical bytes (0.417833ms)
+✔ fixed rejection vector: wrong prev, correctly signed (0.11225ms)
+✔ fixed rejection vector: wrong commitment, correctly signed (0.24125ms)
+✔ fixed rejection vector: unassigned sequencer key (0.160667ms)
+✔ fixed rejection vector: sequencer signs full header bytes (0.168083ms)
+✔ canonical encoding supports RFC 8785 numbers, UTF-16 ordering and unnormalized strings (0.147542ms)
+✔ canonical encoding rejects lossy JS data, invalid Unicode and noncanonical byte inputs (0.828834ms)
+✔ principals and signatures have one exact encoding and must match their signing key (0.62025ms)
+✔ body profile validates required and forbidden fields without interpreting the payload (0.791417ms)
+✔ header-only verification authenticates disclosure evidence and exposes no private fields (0.889ms)
+✔ wire verification enforces genesis identity, destinations, origin opt-in and evidence placement (3.650208ms)
+✔ wire framing is canonical and decoded entries are independent frozen snapshots (0.32675ms)
+✔ V1 Sale visibility trace through verified bytes and memory (116.904583ms)
+✔ V1 Sale visibility trace through verified bytes and sqlite (135.999958ms)
+✔ signed stable facts precede retry and admission; raw Context cannot bypass proof (6.025916ms)
+✔ exclusive SQLite owner excludes a second OS process and releases on close (129.542292ms)
+✔ SIGKILL at before-write preserves one atomic append boundary (74.405958ms)
+✔ SIGKILL at after-entry preserves one atomic append boundary (74.627709ms)
+✔ SIGKILL at after-head preserves one atomic append boundary (74.63875ms)
+✔ SIGKILL at after-retry preserves one atomic append boundary (74.849667ms)
+✔ SIGKILL at after-consumption preserves one atomic append boundary (73.582333ms)
+✔ SIGKILL at after-outbox preserves one atomic append boundary (75.169333ms)
+✔ SIGKILL at before-commit preserves one atomic append boundary (72.479459ms)
+✔ SIGKILL at after-commit preserves one atomic append boundary (73.270166ms)
+✔ outbox resumes saved bytes after crash before notification and after delivery before ack (62.039041ms)
+✔ restart rejects tampered stored body despite unchanged signed wire bytes (5.841833ms)
+✔ signed invitations and origin duplicate checks accept finite fractional JCS numbers (8.089542ms)
+✔ outbox awaits asynchronous confirmation and retains failed publications (8.423625ms)
+✔ restart rejects SQL row positions that disagree with signed entry positions (4.426417ms)
+✔ journal pins the signed genesis profile and writer assignment to its backend (4.278458ms)
+✔ V1 signed invitation issued before revocation remains redeemable after SQLite restart (14.660875ms)
+✔ V1 signed unauthorized and unissued invitations cannot admit another participant (13.11075ms)
+✔ initialization SIGKILL at after-entry retains all or none of genesis and origins (65.073083ms)
+✔ initialization SIGKILL at after-commit retains all or none of genesis and origins (64.041458ms)
+✔ uncertain committed response requires reopen before another action (7.4545ms)
+✔ recipient view verification checks original actor proofs and rejects hidden envelope leakage (8.534542ms)
+✔ one live Journal owns each backend: revoked authority cannot be admitted through a stale facade (14.152708ms)
+✖ O1-F1 closed memory Context cannot issue or accept from stale authority after a new facade revokes it (3.082583ms)
+✔ O1-F1 raw Context restoration or creation cannot bypass a live Journal on memory (3.1435ms)
+✔ O1-F1 raw Context restoration or creation cannot bypass a live Journal on sqlite (4.731875ms)
+✔ O1-F1 a previously acquired raw Context loses write access while Journal owns its backend on memory (4.056958ms)
+✔ O1-F1 a previously acquired raw Context loses write access while Journal owns its backend on sqlite (5.714292ms)
+ℹ tests 45
+ℹ suites 0
+ℹ pass 44
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1356.3755
+
+✖ failing tests:
+
+test at test/journal.test.ts:328:1
+✖ O1-F1 closed memory Context cannot issue or accept from stale authority after a new facade revokes it (3.082583ms)
+  DataCloneError: () => ({ status: 'unopened', offers: [], terms: [], counters: [], withdrawals: [], accepted: null, closedAt: nu...<omitted>...}) could not be cloned.
+      at new DOMException (node:internal/per_context/domexception:79:18)
+      at structuredClone (node:internal/worker/js_transferable:127:26)
+      at TestContext.<anonymous> (file:///private/tmp/dap-o1-profile-codec-journal/spike/test/journal.test.ts:331:25)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+
+> dap-spike@0.0.1 typecheck
+> tsc -p tsconfig.json
+

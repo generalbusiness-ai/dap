@@ -10,6 +10,7 @@ import { canonicalize, encodeWire, envelopeBytes, signEvent, verifyHeader, verif
 import { ZERO_HASH } from '../src/canon.ts';
 import { checkContext } from '../src/checker.ts';
 import { CAP, K } from '../src/foundation.ts';
+import { Context } from '../src/context.ts';
 import { Journal, O1_PROFILE_VERSION, verifyJournalView } from '../src/journal.ts';
 import { SQLiteBackend, CRASH_POINTS } from '../src/sqlite.ts';
 import { SALE } from '../fixtures/sale.ts';
@@ -257,6 +258,7 @@ test('uncertain committed response requires reopen before another action', () =>
   const envelope = signEvent(j.context.intent(people.alice, K.observe, { fact: {} }), keys.alice);
   assert.throws(() => j.submit(envelope, j.context.credentialFor(people.alice)), /lost response/);
   assert.throws(() => j.submit(envelope), /reopen and reconcile/);
+  assert.throws(() => j.context.submit(envelope.body, j.context.credentialFor(people.alice), envelope), /inactive/);
   backend.close();
   const reopened = sqlite(path);
   const result = open(reopened).submit(envelope);
@@ -320,4 +322,112 @@ test('one live Journal owns each backend: revoked authority cannot be admitted t
   first.close();
   const second = Journal.open({ backend: memory, writerKey: keys.writer, packages });
   assert.deepEqual(second.context.state, first.context.state); second.close();
+});
+
+
+test('O1-F1 closed memory Context cannot issue or accept from stale authority after a new facade revokes it', t => {
+  const backend = new MemoryBackend();
+  const a = createJournal(backend);
+  const originalState = { participants: [...a.context.state.participants], grantHistory: structuredClone(a.context.state.grantHistory) };
+  a.close();
+  const b = Journal.open({ backend, writerKey: keys.writer, packages });
+  const revoke = act(b, 'alice', K.revoke, { principal: people.alice, capabilities: [CAP.invite] });
+  assert.ok(!('refused' in revoke) && revoke.verdict?.effective);
+  const before = b.context.entries;
+  const envelope = signEvent(a.context.intent(people.alice, K.invite, {
+    invitee: people.bob, grants: { principal: people.bob, roles: ['Buyer'] }, token_id: 'closed-context-token',
+  }, { action_id: 'closed-context-invite', nonce: 'ab'.repeat(16) }), keys.alice);
+  let error: unknown, issued: ReturnType<Context['submit']> | undefined, redeemed: ReturnType<Context['submit']> | undefined;
+  try {
+    issued = a.context.submit(envelope.body, a.context.credentialFor(people.alice), envelope);
+    if (!('refused' in issued)) {
+      const accept = acceptance(a, 'bob', issued.header.position, 'closed-context-accept');
+      redeemed = a.context.submit(accept.body, undefined, accept);
+    }
+  } catch (e) { error = e; }
+  const staleParticipants = [...a.context.state.participants];
+  const liveParticipants = [...b.context.state.participants];
+  b.close();
+  const cold = Journal.open({ backend, writerKey: keys.writer, packages });
+  t.diagnostic(JSON.stringify({ issued, redeemed, staleParticipants, liveParticipants, coldParticipants: cold.context.state.participants, coldInviteVerdict: issued && !('refused' in issued) ? cold.context.verdictAt(issued.header.position) : null }));
+  assert.match(String(error), /closed|inactive/);
+  assert.deepEqual(cold.context.entries, before);
+  assert.equal(backend.retry(envelope.body.action_id!), undefined);
+  assert.deepEqual({ participants: a.context.state.participants, grantHistory: a.context.state.grantHistory }, originalState); // historical fold inspection is still possible
+  assert.deepEqual(cold.context.state.participants, [people.alice]);
+  assert.deepEqual(checkContext(cold.context), []);
+  cold.close();
+});
+
+for (const storage of ['memory', 'sqlite'] as const) test('O1-F1 raw Context restoration or creation cannot bypass a live Journal on ' + storage, () => {
+  const backend = storage === 'memory' ? new MemoryBackend() : sqlite(join(dir(), 'journal.db'));
+  const journal = createJournal(backend), entries = journal.context.entries;
+  assert.throws(() => Context.restore(backend, packages), /owned|live facade/);
+  assert.throws(() => Context.create({ creator: people.alice, packages, backend }), /owned|live facade/);
+  assert.deepEqual(journal.context.entries, entries);
+  const result = act(journal, 'alice', K.observe, { fact: {} }, 'active-owner');
+  assert.ok(!('refused' in result));
+  journal.close();
+});
+
+
+for (const storage of ['memory', 'sqlite'] as const) test('O1-F1 a previously acquired raw Context loses write access while Journal owns its backend on ' + storage, () => {
+  const path = join(dir(), 'journal.db');
+  let backend = storage === 'memory' ? new MemoryBackend() : sqlite(path);
+  createJournal(backend).close();
+  if (storage === 'sqlite') backend = sqlite(path);
+  const raw = Context.restore(backend, packages); // trusted replay before ownership is acquired
+  const journal = Journal.open({ backend, writerKey: keys.writer, packages });
+  const revoke = act(journal, 'alice', K.revoke, { principal: people.alice, capabilities: [CAP.invite] });
+  assert.ok(!('refused' in revoke) && revoke.verdict?.effective);
+  const before = journal.context.entries;
+  const event = raw.intent(people.alice, K.invite, { invitee: people.bob, grants: { principal: people.bob, roles: ['Buyer'] }, token_id: 'raw-stale' });
+  assert.throws(() => raw.submit(event, raw.credentialFor(people.alice)), /owned|live facade/);
+  assert.throws(() => raw.act(people.alice, K.observe, { fact: {} }), /owned|live facade/);
+  assert.deepEqual(journal.context.entries, before);
+  assert.equal(backend.retry(event.action_id!), undefined);
+  assert.deepEqual(journal.context.state.participants, [people.alice]);
+  journal.close();
+});
+
+
+for (const storage of ['memory', 'sqlite'] as const) test('O1-F1 a lost reply through direct Context.submit invalidates every owned write path on ' + storage, () => {
+  let armed = false;
+  class LostReply extends MemoryBackend {
+    override commit(...args: Parameters<MemoryBackend['commit']>): void {
+      super.commit(...args);
+      if (armed) { armed = false; throw new Error('lost response after commit'); }
+    }
+  }
+  const path = join(dir(), 'journal.db');
+  let backend = storage === 'memory' ? new LostReply() : new SQLiteBackend(path, {
+    writer: people.writer, profile: O1_PROFILE_VERSION,
+    fault(point) { if (armed && point === 'after-commit') { armed = false; throw new Error('lost response after commit'); } },
+  });
+  const j = createJournal(backend);
+  const revoke = signEvent(j.context.intent(people.alice, K.revoke, {
+    principal: people.alice, capabilities: [CAP.invite],
+  }, { action_id: 'direct-lost-revocation', nonce: 'a1'.repeat(16) }), keys.alice);
+  armed = true;
+  assert.throws(() => j.context.submit(revoke.body, j.context.credentialFor(people.alice), revoke), /lost response/);
+  assert.equal(backend.head()!.position, 2); // the revocation is already committed
+  const before = backend.entries();
+  const payload = { invitee: people.bob, grants: { principal: people.bob, roles: ['Buyer'] }, token_id: 'direct-stale-invite' };
+  assert.throws(() => act(j, 'alice', K.invite, payload, 'direct-stale-invite'), /inactive/);
+  assert.throws(() => j.context.submit(revoke.body, undefined, revoke), /inactive/);
+  assert.throws(() => j.context.act(people.alice, K.invite, payload), /inactive/);
+  assert.deepEqual(backend.entries(), before);
+  assert.equal(backend.retry('direct-stale-invite'), undefined);
+  j.close();
+  if (storage === 'sqlite') backend = sqlite(path);
+  const cold = Journal.open({ backend, writerKey: keys.writer, packages });
+  const retried = cold.submit(revoke);
+  assert.ok(!('refused' in retried) && retried.replay && retried.verdict?.effective);
+  assert.equal(retried.headerHash, before[2]!.headerHash);
+  const invitation = act(cold, 'alice', K.invite, payload, 'direct-stale-invite');
+  assert.ok(!('refused' in invitation) && invitation.verdict?.reason === 'unauthorized');
+  assert.deepEqual(cold.submit(acceptance(cold, 'bob', invitation.header.position)), { refused: true, reason: 'invitation_not_issued' });
+  assert.deepEqual(cold.context.state.participants, [people.alice]);
+  assert.deepEqual(checkContext(cold.context), []);
+  cold.close();
 });

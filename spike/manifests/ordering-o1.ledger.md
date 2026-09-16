@@ -159,3 +159,200 @@ The integrated campaign identities are unchanged from V6:
 | Sale | `sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9` | `sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85` |
 | Booking | `sha256:cb4514f4967891077ad78e1dd0fba4c17438fb32b98cd8bd790df8531b35dd16` | `sha256:0556de5c337344eaa15afcbbbf5d22aa82c384bd6841d4ffb0c07185d4b7ec27` |
 | Club | `sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde` | `sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e` |
+
+## Review correction O1-F1: closed Context and raw restoration
+
+Checker report `76eee32f4f976ffe9d2903547c630a38572e1413` found that the
+one-facade correction did not disable the public Context on MemoryBackend.
+The regression-only source `1351ad09df256e6714a1ef2b8ea8598dcbc24113`
+preserves the reviewed runtime from `c9fe7d5` and adds three focused cases.
+Command: `node --test --test-name-pattern=O1-F1 test/journal.test.ts`.
+All three tests failed; exact output is retained in
+[run-4-f1-before.txt](ordering-o1-runs/run-4-f1-before.txt).
+
+The memory test stopped in setup: FoundationState includes package functions,
+so structuredClone of the complete state threw DataCloneError. This run did
+not reproduce the stale-invitation sequence. The two raw restoration tests
+did reproduce their bypass: Context.restore accepted a backend owned by a live
+Journal on both memory and SQLite. The earlier progress note claiming the
+memory sequence had run was incorrect and has been corrected. A later
+isolated pre-repair run below uses the corrected test harness.
+
+The repair gives Journal and its Context one private ownership lease. Closing
+the Journal permanently invalidates writes through that Context before
+releasing backend ownership. A new Journal may reuse MemoryBackend. Raw
+Context.create/restore cannot use a live Journal-owned backend; a raw Context
+acquired before ownership cannot submit or act while the Journal owns it.
+Storage/fold errors also invalidate the owned Context until close/reopen.
+The shared append/admission/transaction algorithm is unchanged. Direct backend
+mutation and malicious in-process code remain outside this cooperative API
+boundary; Context.restore on an unowned backend is still a trusted semantic
+entry point.
+
+
+The first runtime check at `35f103ebac92a1d1025b6b68022c0e219374694d`
+ran `node --test test/journal.test.ts test/codec.test.ts`: 44 passed and one
+failed with that same test-setup DataCloneError. Typecheck passed. Output:
+[run-5-f1-runtime.txt](ordering-o1-runs/run-5-f1-runtime.txt). The harness now
+copies only the plain participant/grant history used for its historical-state
+assertion. No runtime change was needed for this failure.
+
+The corrected regression was then committed over the original reviewed runtime
+in isolated source `b8fe4965efdd9b06371e950535837dfc6e1ccdac`, based on
+`c9fe7d5f6f5624dd6407d57ff213038c8e955e0c`. Its `journal.test.ts` bytes
+are exactly those of repaired-harness source
+`940506b473abc808666560d5e757811f985fcdaa`, Git blob
+`0e9fa5376b8496ea731d05a0ab80aa76457d6f31`. The old runtime is unchanged.
+Command: `node --test --test-name-pattern=O1-F1 spike/test/journal.test.ts`
+from that isolated checkout. All five regression cases fail there.
+[run-6-f1-before-corrected.txt](ordering-o1-runs/run-6-f1-before-corrected.txt)
+records the actual stale memory invitation at 3 and acceptance at 4 as
+effective, Bob present only in A's stale fold, and cold replay judging the
+invitation unauthorized. It also records both backends' raw restoration and
+previously acquired raw-Context bypasses. This is the product-failure evidence;
+it supersedes no historical log and does not turn the earlier setup failure
+into a product observation.
+
+At repaired source `940506b473abc808666560d5e757811f985fcdaa`, the same
+corrected harness ran with `node --test test/journal.test.ts test/codec.test.ts`:
+45 passed, zero failures, including all five F1 regressions. Output:
+[run-7-f1-repaired.txt](ordering-o1-runs/run-7-f1-repaired.txt). Its appended
+typecheck passed while the independently owned F2 documentation/lifecycle
+files were being prepared; the later combined-source check below is the
+whole-tree typecheck boundary. Runtime and journal/codec test inputs during
+this focused run were exactly those of `940506b`.
+
+## Review correction O1-F2 and combined validation boundary
+
+The lifecycle specification now distinguishes a different valid genesis
+(`ineffective`, `destination_mismatch`) from a malformed or wrongly signed
+candidate rejected at a recognized codec/profile boundary before activation.
+All 115 changed-genesis cases require zero activations and no live destination
+rights. An unrecognized exception is a test failure. Ordering §7 and the
+withheld-evidence expectations now permit an admitted unsuccessful activation
+attempt followed by the first effective activation at a later position;
+transferred rights remain dormant until then, and exact retry adds no position.
+
+The revised lifecycle manifest ID is
+`sha256:d7419b5d85d9acd4767b8733b47729c29f49088a0495ee246c60c2da658a7613`.
+It retains the historical manifest identity and source references rather than
+relabelling the old runs. This revision precedes O4's formal baseline, not its
+existing prototype. The separately agreed public-opening rule has ID
+`sha256:475b415bbf8b16ccdb1bea078174712c57f2b2955ece9338d762abd60228bad8`;
+it pins 21 kinds and no wildcard. The profile also names the verified header
+class leakage, view completeness/truncation/extra-field limits, and the exact
+normal-close versus crash ownership checks. The documentation agent prepared
+these five paths and computed their identities; it did not run their tests.
+
+At combined source `b92cc4ff4105332394439293d4930b7fc07ca5d9`, `npm test`
+executed 186 tests: 185 passed, zero ordinary failures, and the one retained
+Club TODO. All 600 visibility campaign seeds passed. Typecheck passed. Exact
+commands, source and exit codes are in
+[run-8-full.json](ordering-o1-runs/run-8-full.json), with output in
+[run-8-full.txt](ordering-o1-runs/run-8-full.txt).
+
+That run was already frozen and executing when internal QA found a further
+F1 path: direct public `Journal.context.submit` could commit a revocation and
+lose its reply without passing through Journal.submit's error handler. A
+later Journal invitation and acceptance then used the Context's stale state.
+This is a real remaining defect at `940506b`/`b92cc4f`; the successful run did
+not cover it and is not evidence that F1 was complete.
+
+QA's original probe and output are retained byte for byte as
+[f1-direct-context-940506b.mjs](ordering-o1-runs/f1-direct-context-940506b.mjs)
+and [f1-direct-context-940506b.json](ordering-o1-runs/f1-direct-context-940506b.json).
+To reproduce, restore source `940506b473abc808666560d5e757811f985fcdaa`,
+copy the probe to that checkout's `spike/qa-context-error.mjs`, and run
+`node qa-context-error.mjs` there. The relative imports are deliberately those
+of the original probe. Its SHA-256 is
+`4af1c74a2882755ed34fbfc5a68a505a0f5571e8688aeb5bd5422f18b365cea2`;
+the output SHA-256 is
+`3832b31416945fa16f95f76eec142a1076ab6de1ae761327bed04b8eb69ef376`.
+
+The correction now also invalidates the lease inside Context.submit's own
+append/fold exception handler. Journal.submit keeps its handler for failures
+after Context returns. Two regressions cover committed revocation/lost reply
+through direct Context.submit on memory and SQLite, refusal through every
+owned write entry point afterward, and correct receipt recovery after reopen.
+No append, retry, admission, or storage transaction rule changes.
+
+Before the final source freeze, the specification owner corrected the
+stale-source-proposal expectation from `closed` to the existing Sale model's
+actual per-model reason `not_open`; the observed Sale status remains closed.
+The revised manifest ID is
+`sha256:75de2a860b049b5d9dcad3dab234be14d7a965d53df2e0d0eae8de6f05a1b327`.
+The public-opening rule ID is unchanged. Ordering §7 now explicitly forbids
+origins or intervening events from exercising dormant transferred rights,
+without forbidding their unrelated effects. The earlier `d7419b5` manifest
+and run 8 remain their own measured boundary.
+
+At repaired combined source `747a0905dc80f15a108fd62bdc5399e9f31f4431`,
+the full run executed 188 tests: 187 passed, zero ordinary failures, and the
+one executing/failing Club TODO retained from the original visibility
+experiment. All three 200-seed campaigns passed. Typecheck passed. Exact
+source, commands and exit codes:
+[run-9-full.json](ordering-o1-runs/run-9-full.json); output:
+[run-9-full.txt](ordering-o1-runs/run-9-full.txt).
+
+Internal QA independently restored `747a090` and reran the byte-identical
+original direct-Context probe. It now exits 1 at the first attempted stale
+invitation with `Context: owning facade is closed or inactive`, before an
+invitation or redemption can append. That exit is the expected rejection in
+the original exploit script, not a failing current regression. The two current
+direct-error regression tests pass on memory and SQLite. Retained QA evidence:
+[summary](ordering-o1-runs/qa-summary.json),
+[original probe against the repair](ordering-o1-runs/qa-original-probe-fixed.txt),
+and [two current regressions](ordering-o1-runs/qa-direct-error-regressions.txt).
+This internal QA does not substitute for the requested independent checker
+review or grant merge approval.
+
+After run 9, decision `216ac47f05f375e1ccfab036452182063f0f1541` clarified
+one last specification case. A valid but different genesis may remove the
+actor's activation grant. An actually unauthorized attempt then remains
+`ineffective`, `unauthorized`, with foundation `authorized:false`, before
+destination checking. An authorized valid-different attempt still requires
+`destination_mismatch` and `authorized:true`. Both branches require zero
+activations and no live destination rights. Missing activation authority is
+not grounds for inventing a malformed-profile rejection. Recognized malformed
+candidate rejections and failure on unrecognized errors remain unchanged.
+
+This specification-only refinement changes the manifest ID to
+`sha256:fc55bfa123891e750f7bbe3a0d9cb33b5f65c07750db08bc984544ed2dd6b378`.
+The opening-rule ID and all runtime files remain unchanged. Its focused
+lifecycle/typecheck run is recorded separately below; run 9 remains the full
+runtime/campaign measurement at its actual `75de2a86` manifest boundary.
+
+
+## Corrected candidate: final measured boundaries
+
+At `4329569392c7696e0857539eae6947903c8a5ba8`, the final 11 lifecycle
+checks and whole-tree typecheck pass. Exact source/commands/exit codes:
+[run-10-lifecycle.json](ordering-o1-runs/run-10-lifecycle.json); output:
+[run-10-lifecycle.txt](ordering-o1-runs/run-10-lifecycle.txt). No runtime or
+visibility campaign inputs changed after the full run at `747a090`. The final
+commit adds only this evidence text and run-10 records. Independent checker
+re-review remains pending.
+
+The final scoped diff check covers changed source, tests, specification and
+this ledger against the reviewed `c9fe7d5` candidate. Raw diagnostic logs are
+retained unchanged; historical claims of a clean working-tree diff do not
+mean those recorded log files have no trailing whitespace against main.
+No historical source snapshot, fixed vector or failure log was normalized.
+
+Current input-file SHA-256 hashes (raw bytes):
+
+| File | SHA-256 |
+|---|---|
+| `spike/src/context.ts` | `d5bbdca7ca033d1791ace678972fd997831c32e424dab7478933ea314c4a6fb2` |
+| `spike/src/journal.ts` | `d57bdcaa63d52960e96f13de01b9bdd511df8a8bb67774772efe4531b152adf1` |
+| `spike/src/ownership.ts` | `c826cfb34e8784347cf26d6d157a2c27ca2db47e26ce85ec9ef5ef2cd40281f1` |
+| `spike/src/codec.ts` | `39e2060dd76bf8f6ec2e6378be79e663a1b983671277d927257b8f7b2a10d96f` |
+| `spike/src/append.ts` | `7b7c7be30c5feee150d33a498bcf1ef43de7defbe2774fd477d0eef311b6f1e5` |
+| `spike/src/sqlite.ts` | `5dfdc9734f7ca8f823ab343b005b0a8575d303d404f1686c4b3d72e6278a3ad0` |
+| `spike/test/journal.test.ts` | `7c9c0988676a43aeebcf7873344b458ec55a98cf3c8f82bee92f22c418c39bcb` |
+| `spike/test/fixtures/codec-vectors.json` | `255fa95a57bcd5ccd136512e1b6f2429f8e05750a6648284d2e03db3eb421969` |
+| `spike/ordering-profile.md` | `489534f39d3efa779626d327f56c1769968c3744176a3461bfe359c32c727ad1` |
+| `spike/manifests/ordering-lifecycle.md` | `f68d9d52b118d26129ea4a543894f09ba187ce53ace6d1e2ac1fc68c106e331c` |
+| `spike/manifests/ordering-lifecycle.ts` | `c3c4cb71aefbeafad163a8a4d04e309de96ca0bf920fc321675ac6da0b186e70` |
+| `spike/test/ordering-lifecycle.test.ts` | `03f121dd9f867ae25ec68de9135910e84dd13bfc1d93e34e75e619414a06374e` |
+| `notes/2026-09-14-ordering.md` | `5ccd3c59c01a428a8c43e5adfd3fe2e7ba06108df3bd6ae2fee6923488700bfe` |
