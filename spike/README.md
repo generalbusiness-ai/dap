@@ -273,6 +273,170 @@ client can still disclose private events outside that policy; the budget
 reports those violations. Booking and Club are V4 and V5; the mutation
 runner across models and the report are V6.
 
+## V4: Booking by agent
+
+The Booking campaign requires **2 model-policy fixes, 0 added kinds,
+within the budget**, and a separate foundation authorization repair.
+The one-room fixture uses integer clock ticks and clients that honour
+its disclosure policy. Authorized hostile clients can still publish
+private fields or disclose private events; the budget detects these
+violations, and the tests preserve them as limits of the result.
+
+The baseline's projection-only guard passed 200 seeds. A readable-event
+guard then exposed 139 failing seeds, repaired by declaring the public
+kinds clients may disclose (fix 1). Checker's V4-F1/F2 review found that
+public event actors, request-id links and extra private fields were
+still unchecked. The revised guard exposed 99 failing seeds before
+repair. The foundation now keeps application and clock attempts
+actor-only when the actor lacks the required capability, while
+preserving authorized overlap and duplicate refusals. Booking's client
+also requires an authorized verdict before disclosure (fix 2).
+
+What it contains:
+
+- `manifests/booking.md` and `manifests/booking.ts`: the experiment
+  manifest, based on the plan's split schema with explicit `admin`
+  payload fields added at freeze; promises, privacy budget, bounds,
+  invariants and generator payloads. Each later guard amendment is a
+  new manifest identity recorded in the ledger.
+- `fixtures/booking.ts`: the agent-authored model and its declared
+  public-history and disclosure policies.
+- `manifests/booking.ledger.md`: all runs, fixes, evidence corrections,
+  identities, and the effect of the seeded-nonce change on Sale's seeds.
+- `corpus/booking/run2/`: all 139 recovered privacy failures, minimized
+  and kept with the old guard and model; the reconstruction limit is
+  explicit.
+- `corpus/booking/run7/`: all 99 new failing series, complete and
+  minimized, with the exact pre-repair foundation snapshot pinned.
+- The six predeclared cases, seed-1 actor/link regression, public-payload
+  regressions, authority and replay checks, and the 200-seed campaign.
+  Coverage requires effective cancels and occupancies linked to earlier
+  effective requests.
+
+The baseline already declared disclosure of occupancies, frees and
+clock ticks to new members, so the cross-view case passed without a
+model repair. That required history remains available. Authorized
+stale/closed attempts retain their declared audience; the fixture's
+client conservatively excludes their non-authorized verdicts from
+additional disclosure. Other system and spine event audiences are
+unchanged.
+
+The result does not cover multi-room routing, a real clock source,
+closed-schema admission, arbitrary hostile data encodings, or a cancel
+naming a different admin than its request. The latter remains a known
+schema limitation. Club is V5; the combined measurement and falsification
+verdict are V6.
+
+## V5: Club by agent
+
+V5 is **incomplete against spike plan §4.2**. The frozen manifest omitted
+its condition that an admitted applicant must not already hold Member.
+Validation run 3 records two applications by Dana, first admission and
+Member grant, then a second effective admission. Every view agrees, so
+the narrower manifest's consistency checks pass while the plan's policy
+fails. Enforcing the omitted condition needs additional public evidence
+or a changed trust/schema contract, hence a revised experiment; the
+existing result below does not establish the full plan's promise. A5 also
+allows votes and admissions naming events that are not effective
+applications; both predicates need the revised experiment. A2's dedicated
+ordinary-member cases were missing from the frozen manifest and original
+tests. They are now post-baseline tests; their manifest predeclaration
+remains pending that revision. The two-application policy test asserts
+rejection and is a failing TODO, not a passing test for broken behavior.
+
+Measured result first: the agent-authored Club model needed **1 fix, 0
+added kinds, within the budget** of 4 fixes and 2 kinds over its two
+constraints (quorum and standing). The baseline passed three of the four
+frozen-manifest cases and 197 of 200 seeds after the replay-nonce
+repair. The baseline header predicted disagreement about a committee
+member granted after an application and voting before disclosure. Some
+readers judged the vote effective while the oracle said
+`unknown_application`, because they could not tie the application id to
+a position. In case 4 the late voter's own view diverged; the failing
+campaign also included Dana's and Erin's views of Frank's vote and Dana's
+view of Erin's vote. The fix
+reads the chain's public commitments: the fold context now offers
+`commitmentAt(position)` (the header's commitment at any earlier
+position, hidden or not) and `holdersAt(capability, position)`, and the
+vote rule judges every late member's vote the same way for every
+reader. The author chose that over a stub kind because the commitment
+already is the public fact the design relies on to verify hidden
+positions; the ledger records the reasoning.
+
+Assumptions the result rests on: disclosure acts are visible to every
+member (positions and recipients, never payloads), so a vote's
+precondition is judgeable by everyone; the fixture's client honours the
+model's declared join disclosure, disclosure policy (applications only
+to holders of `vote`) and the grant effect that gives an admitted
+applicant Member; the committee is whoever holds `vote`, asked of the
+audience and fold contexts (role-derived audiences).
+
+What it contains: `manifests/club.md` and `manifests/club.ts` (the
+frozen manifest: the narrower policy and promises, the privacy budget on
+readable events and observations with the committee derived from grants,
+projection shape, reason vocabulary, budget, bounds, the committee joined
+by a prelude, invariants including the disclosure-before-vote rule and
+the Member grant after an admit, the generator's builders with late
+committee grants); `fixtures/club.ts` (the model, authored under spike
+plan §4.5); `manifests/club.ledger.md`. Harness additions for V5:
+role-derived audiences, members-visible disclosure acts, ambient
+disclosures, declared grant effects, disclosure policies bound to
+capability holders, the fold's public chain facts, and reproducible
+content ids in generated series (a generator defect found by this
+campaign; Booking was revalidated under it).
+
+What the tests show: the four frozen-manifest cases derived from §4.2
+(quorum with the Member grant, no quorum and no majority, lapsed and
+already voted, the late committee member before and after disclosure) and the 200-seed
+campaign pass; the ledger's totals agree with its entries. Validation run
+3 also exercises Club payload disclosure before and after activation
+disclosure, the dependency-incomplete pause and resumption, and confirms
+that a later activation preserves an earlier application. The three
+recorded baseline failures are reconstructed and shrunk to seven linked
+steps each under `corpus/club/run1/`, fail on the preserved baseline and
+pass on the repaired model. The ledger identifies the missing historical
+run-1 snapshot; later reconstruction does not cure that protocol gap.
+Validation run 4 adds explicit ordinary-member checks for the private
+application disclosure and the admission's public Member grant. It also
+corrects the baseline prediction provenance and records the shared
+`dap.disclose` audience change at `57aad39`.
+
+The scope is one application type, a three-member initial committee and
+one quorum rule. The ledger records further limitations: incomplete
+model-level disclosure dependencies can cause mismatches instead of a
+pause; extra payload fields are not refused; revocation can produce a
+privacy-budget false positive; votes after admission are allowed. The
+fixture requires its full join-disclosure and grant-effect policy. The
+mutation runner across models and the final report are V6.
+
+## V6: integrated mutations and binding checks
+
+The integrated harness retains V3's audience reads and rollback, V4's
+unauthorized audience and disclosure guard, and V5's role-derived
+audiences, public chain facts and grant effects. Its full run at
+`1db4d6f` passes all three 200-seed campaigns. A historical Club corpus
+assertion initially failed because V3's binding contract changes event
+ids; the recorded failure still reproduces. The original corpus passes
+literally at `772a514`, and the integrated test now checks the correctly
+linked id and the same semantic finding. The follow-up at `742e64a`
+passes 126 noncampaign tests with zero ordinary failures and retains one
+executing, failing Club acceptance TODO.
+
+`test/v6.test.ts` detects one deliberately narrowed audience in each
+model: Sale `offer`, Booking `occupancy` and Club `standing`. It also
+detects a hidden spine revocation without changing the recorded history.
+Every fault has a clean control and a committed deletion-minimal trace
+under `corpus/v6/run2/`. For each model, an unrelated private attach
+preserves a saved shared intent; a relevant visible binding change makes
+an earlier intent `stale_binding` for every reader, and a fresh intent
+succeeds. These checks introduce no model repair or new kind.
+
+`manifests/v6.ledger.md` and `evidence/v6/` retain exact snapshots, commands,
+logs, machine-readable cases and measured campaign coverage. The final
+report must assess these bounded results alongside the existing repair
+budgets, protocol gaps and negative Club result; passing consistency does
+not establish the omitted admission predicate.
+
 ## O1: signed codec and durable journal
 
 [The sequencing profile](ordering-profile.md) pins exact wire encoding,

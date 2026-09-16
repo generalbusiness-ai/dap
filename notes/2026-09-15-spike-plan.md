@@ -107,6 +107,9 @@ profile of design note §2, which remains open.
 | Serving party | The same process as the sequencer, running the foundation fold to evaluate audiences and issue transport credentials | The first trusted profile (design §2) | Any separation of sequencer and serving party |
 | Disclosure completeness | Checked by the recipient's interpreter from evidence the sequencer puts in the header; see §2.2 | Design §8 leaves the checking party open; the recipient needs nothing from the discloser and only public metadata from the serving party | That the discloser or the serving party never checks; the production choice stays open |
 | Clock and randomness | A designated `clock` actor holding `dap.observe`, driven by the generator; no wall-clock reads inside any fold | Views note cliff 4 | A real time source |
+| Disclosure acts | `dap.disclose` is readable by every member: positions and recipients, never payloads | The views note calls disclosure "sequenced, visible, auditable"; a rule that depends on who was shown what (the Club's late committee member) is judgeable by everyone only if the act is visible | That the act's visibility is the production choice |
+| Public chain facts in the fold | A model's fold may ask the content id committed at any earlier position, hidden or not, and who held a capability there | The commitment is the public fact that verifies hidden positions (design §1); the Club author used it to tie an application id to its position without a second kind | A general query interface over the chain |
+| Fixture clients | The creator's client honours a model's declared join disclosure, disclosure policy and grant effects with ordinary `dap.disclose` and `dap.grant` events | Models cannot emit system acts; the declarations are counted as fixes when added after a baseline | Who performs them in production |
 
 ### 2.1 Signed objects and preimages
 

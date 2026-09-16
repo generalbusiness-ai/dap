@@ -1,0 +1,634 @@
+{
+  "seed": 52,
+  "manifest": "sha256:3076d3854901ddeb6b0d5cc379646bb182f89bd61882d648fc9051dfae7d788f",
+  "package": "sha256:622a120962da35c370b093161848677fe086a5d1fa729655fc3ce2ced855bc9b",
+  "snapshot": "spike V4: checker run 7 snapshot: preserve public actor and payload leaks",
+  "genesisNonce": "genesis:52",
+  "steps": [
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "clock",
+      "grants": {
+        "capabilities": [
+          "ai.generalbusiness.dap.observe"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "clock"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.cancel_request",
+      "payload": {
+        "booking_id": "none",
+        "admin": "alice"
+      },
+      "nonce": "n:d41b6ef38c5a12e4"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "none",
+        "room": "room-1",
+        "start": 0,
+        "end": 1
+      },
+      "nonce": "n:ce7235a8a69a64c8"
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "ai.generalbusiness.dap.observe",
+      "payload": {
+        "fact": {
+          "clock": 2
+        }
+      },
+      "nonce": "n:01ee817ac53694e2"
+    },
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "bob",
+      "grants": {
+        "roles": [
+          "Booker"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "bob"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "none",
+        "room": "room-1",
+        "start": 0,
+        "end": 1
+      },
+      "nonce": "n:f72ce3cea7f11fc9"
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        9
+      ],
+      "to": [
+        "clock"
+      ]
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 11,
+        "end": 15,
+        "purpose": "purpose 6",
+        "admin": "alice"
+      },
+      "nonce": "n:704545e6b69e418f"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "sha256:84bcc8713e0013a8996e862a33476a61862a7b7076813a01fbd7280966b484b9",
+        "room": "room-1",
+        "start": 11,
+        "end": 15
+      },
+      "nonce": "n:0b5c49c64fde5832"
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.cancel_request",
+      "payload": {
+        "booking_id": "sha256:84bcc8713e0013a8996e862a33476a61862a7b7076813a01fbd7280966b484b9",
+        "admin": "alice"
+      },
+      "nonce": "n:1f12b8f044b72c17"
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 0,
+        "end": 1,
+        "purpose": "purpose 9",
+        "admin": "alice"
+      },
+      "nonce": "n:a2ca0b641e742b18"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.free",
+      "payload": {
+        "booking_id": "sha256:84bcc8713e0013a8996e862a33476a61862a7b7076813a01fbd7280966b484b9"
+      },
+      "nonce": "n:475533e9b315719e"
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.cancel_request",
+      "payload": {
+        "booking_id": "sha256:84bcc8713e0013a8996e862a33476a61862a7b7076813a01fbd7280966b484b9",
+        "admin": "alice"
+      },
+      "nonce": "n:3ec9589ad66aca4e"
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "ai.generalbusiness.dap.observe",
+      "payload": {
+        "fact": {
+          "clock": 4
+        }
+      },
+      "nonce": "n:91f098e545270ae6"
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 14,
+        "end": 18,
+        "purpose": "purpose 13",
+        "admin": "alice"
+      },
+      "nonce": "n:639ff6ea17866df5"
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 27,
+        "end": 29,
+        "purpose": "purpose 14",
+        "admin": "alice"
+      },
+      "nonce": "n:d702afe2dc3c6894"
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.cancel_request",
+      "payload": {
+        "booking_id": "sha256:8d28c1dc76ac09e083426f2e6f2314774e4f40d0b11c2f1059f4efb84a09849f",
+        "admin": "alice"
+      },
+      "nonce": "n:c1959631176ea01b"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "sha256:8d28c1dc76ac09e083426f2e6f2314774e4f40d0b11c2f1059f4efb84a09849f",
+        "room": "room-1",
+        "start": 14,
+        "end": 18
+      },
+      "nonce": "n:b94bc2eac46d6af3"
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.cancel_request",
+      "payload": {
+        "booking_id": "sha256:84bcc8713e0013a8996e862a33476a61862a7b7076813a01fbd7280966b484b9",
+        "admin": "alice"
+      },
+      "nonce": "n:d9d0b59dc183f070"
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "ai.generalbusiness.dap.observe",
+      "payload": {
+        "fact": {
+          "clock": 4
+        }
+      },
+      "nonce": "n:0617ed9203198f16"
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        5
+      ],
+      "to": [
+        "clock"
+      ]
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.free",
+      "payload": {
+        "booking_id": "sha256:8d28c1dc76ac09e083426f2e6f2314774e4f40d0b11c2f1059f4efb84a09849f"
+      },
+      "nonce": "n:570515eda60d7c01"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "sha256:27fd1d7a9f1d5706ba4a6cb4e56960ba2213b6c32b0701005a178d8ce13c66e7",
+        "room": "room-1",
+        "start": 0,
+        "end": 1
+      },
+      "nonce": "n:9380ff1dac383b4b"
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "ai.generalbusiness.dap.observe",
+      "payload": {
+        "fact": {
+          "clock": 5
+        }
+      },
+      "nonce": "n:17e1019e64e0207f"
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "ai.generalbusiness.dap.observe",
+      "payload": {
+        "fact": {
+          "clock": 8
+        }
+      },
+      "nonce": "n:115449d7a85190e8"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.free",
+      "payload": {
+        "booking_id": "sha256:8d28c1dc76ac09e083426f2e6f2314774e4f40d0b11c2f1059f4efb84a09849f"
+      },
+      "nonce": "n:2f3dcc2812d2ee2a"
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.cancel_request",
+      "payload": {
+        "booking_id": "sha256:8d28c1dc76ac09e083426f2e6f2314774e4f40d0b11c2f1059f4efb84a09849f",
+        "admin": "alice"
+      },
+      "nonce": "n:2d23f6407237d823"
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 26,
+        "end": 28,
+        "purpose": "purpose 26",
+        "admin": "alice"
+      },
+      "nonce": "n:fb070f420f78ef28"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "sha256:94f75b8a9cd598b89e55dc4cef917b396baa5ca60ea9d340882dbd2a5300effd",
+        "room": "room-1",
+        "start": 27,
+        "end": 29
+      },
+      "nonce": "n:785dbaa8660abd4e"
+    },
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "carol",
+      "grants": {
+        "roles": [
+          "Booker"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "carol"
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 3,
+        "end": 7,
+        "purpose": "purpose 29",
+        "admin": "alice"
+      },
+      "nonce": "n:91102ee655e1fcb3"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "sha256:94f75b8a9cd598b89e55dc4cef917b396baa5ca60ea9d340882dbd2a5300effd",
+        "room": "room-1",
+        "start": 27,
+        "end": 29
+      },
+      "nonce": "n:7b557c1300e4bcc2"
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.cancel_request",
+      "payload": {
+        "booking_id": "sha256:84bcc8713e0013a8996e862a33476a61862a7b7076813a01fbd7280966b484b9",
+        "admin": "alice"
+      },
+      "nonce": "n:7e77a5b101a77239"
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        26
+      ],
+      "to": [
+        "bob"
+      ]
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "sha256:77940267462b46598c8424dcc2b72ed45fd99698c023a905c1158fe5435f5f14",
+        "room": "room-1",
+        "start": 26,
+        "end": 28
+      },
+      "nonce": "n:defc5deed122b1f9"
+    },
+    {
+      "type": "act",
+      "actor": "carol",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 15,
+        "end": 19,
+        "purpose": "purpose 34",
+        "admin": "alice"
+      },
+      "nonce": "n:b85faacf0b3ee67e"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "sha256:8d28c1dc76ac09e083426f2e6f2314774e4f40d0b11c2f1059f4efb84a09849f",
+        "room": "room-1",
+        "start": 14,
+        "end": 18
+      },
+      "nonce": "n:6a600ba821e430c7"
+    },
+    {
+      "type": "act",
+      "actor": "carol",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 25,
+        "end": 26,
+        "purpose": "purpose 36",
+        "admin": "alice"
+      },
+      "nonce": "n:50543a528caebe8c"
+    },
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "dana",
+      "grants": {
+        "roles": [
+          "Booker"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "dana"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "sha256:84bcc8713e0013a8996e862a33476a61862a7b7076813a01fbd7280966b484b9",
+        "room": "room-1",
+        "start": 11,
+        "end": 15
+      },
+      "nonce": "n:62669c16e0725432"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.free",
+      "payload": {
+        "booking_id": "sha256:8d28c1dc76ac09e083426f2e6f2314774e4f40d0b11c2f1059f4efb84a09849f"
+      },
+      "nonce": "n:615798c0088cadb7"
+    },
+    {
+      "type": "act",
+      "actor": "dana",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 21,
+        "end": 23,
+        "purpose": "purpose 40",
+        "admin": "alice"
+      },
+      "nonce": "n:2ea4cdf9ebbefd67"
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "ai.generalbusiness.dap.observe",
+      "payload": {
+        "fact": {
+          "clock": 10
+        }
+      },
+      "nonce": "n:285f3052798df42d"
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 14,
+        "end": 17,
+        "purpose": "purpose 42",
+        "admin": "alice"
+      },
+      "nonce": "n:f4e274a03f292e27"
+    },
+    {
+      "type": "act",
+      "actor": "dana",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 18,
+        "end": 24,
+        "purpose": "purpose 43",
+        "admin": "alice"
+      },
+      "nonce": "n:90cffb25d8a2f3b8"
+    },
+    {
+      "type": "act",
+      "actor": "dana",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 16,
+        "end": 21,
+        "purpose": "purpose 44",
+        "admin": "alice"
+      },
+      "nonce": "n:aa9884387d3c4c18"
+    },
+    {
+      "type": "act",
+      "actor": "dana",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 2,
+        "end": 8,
+        "purpose": "purpose 45",
+        "admin": "alice"
+      },
+      "nonce": "n:a2781f093cbc1e0b"
+    },
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "erin",
+      "grants": {
+        "roles": [
+          "Booker"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "erin"
+    },
+    {
+      "type": "act",
+      "actor": "dana",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 38,
+        "end": 41,
+        "purpose": "purpose 47",
+        "admin": "alice"
+      },
+      "nonce": "n:4de0e9545c4088d1"
+    },
+    {
+      "type": "attach",
+      "actor": "alice",
+      "pkg": "com.example.side",
+      "audience": []
+    }
+  ],
+  "violations": [
+    "clock@17 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@18 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@19 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@20 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@21 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@22 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@23 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@24 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@25 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@26 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@27 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@28 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@29 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@30 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@31 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@32 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@33 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@34 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@35 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@36 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@37 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@38 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@39 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@40 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@41 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@42 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@43 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@44 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@45 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@46 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@47 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@48 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@49 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@50 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@51 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@52 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@53 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@54 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@55 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@56 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@57 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@58 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob",
+    "clock@59 budget: clock can read public ai.generalbusiness.dap.observe at 17 signed by booker bob"
+  ]
+}
