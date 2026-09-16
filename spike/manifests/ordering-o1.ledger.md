@@ -49,6 +49,23 @@ verifies views independently, including every participant/frontier of the
 signed V1 traces. Focused journal checks now pass 24/24; typecheck passes. Run 1 establishes its recorded checks, not that
 missing recipient-facing proof path.
 
+## Final integration boundary
+
+Merge `3c88770` incorporates exact V6 candidate
+`05c98e2d778124648834b9b00e772a6ad270a870`, including V4 main
+`5eff67d81fbbb025f91951571a9f029c0481812a` and the V5/V6 evidence.
+Only README required conflict resolution: the V4, V5, V6 and O1 sections
+are all retained. Context's deterministic nonce option and foundation's
+reviewed authorization behavior merged without a source conflict.
+Earlier O1 and V6 ledgers and raw results remain intact.
+
+The O1 view follow-up delivers original actor proof bytes to authorized
+readers and independently verifies the complete header prefix, visible
+signatures and origin adoption. Outbox callback records are frozen so a
+callback cannot alter which saved identity is acknowledged. These source
+changes precede the final full run; its exact source and result will be
+recorded separately after completion.
+
 ## Identities and scope
 
 - Profile: `dap.fixture.single-writer/1`.

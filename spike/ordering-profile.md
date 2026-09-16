@@ -164,4 +164,6 @@ Origin duplicate detection compares canonical bodies and supports finite
 fractional JSON numbers without changing safe-integer fixture outcomes.
 The O1 validation record reports integration checks; it does not rewrite
 V3's historical campaign ledger or claim that its old byte streams had
-signatures. No V4/V5 source changes are included.
+signatures. The final candidate integrates V4/V5 and the V6 report ancestry;
+the O1 layer adds no application model-policy repair. Those experiments keep
+their own historical source and run boundaries.
