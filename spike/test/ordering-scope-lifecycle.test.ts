@@ -6,6 +6,7 @@ import { healthyLifecycle, lifecycleCases, type LifecycleAction } from '../manif
 import { envelopeBytes } from '../src/codec.ts';
 import { ScopeJournal } from '../src/scope.ts';
 import { SCOPE_KINDS } from '../src/scope-profile.ts';
+import { recordScope, recordedIdentities } from '../fixtures/ordering-scope-records.ts';
 import { K } from '../src/foundation.ts';
 import { SQLiteBackend } from '../src/sqlite.ts';
 
@@ -64,11 +65,14 @@ for (const storage of ['memory','sqlite'] as const) test('O4 actual signed lifec
   const world = new LifecycleWorld({}, storage);
   try {
     assert.equal(healthyOperations.length, healthyLifecycle.length);
+    const observations: unknown[] = [];
     for (const [index, [id, operation]] of healthyOperations.entries()) {
       assert.equal(id, healthyLifecycle[index]!.id);
       operation(world);
       assert.deepEqual(world.snapshot(), healthyLifecycle[index]!.expected, id);
+      observations.push({ id,actual:world.snapshot(),identities:recordedIdentities(world) });
     }
+    recordScope('healthy-' + storage, { observations,destinationGenesis:world.destination,proofs:{ S:world.proof('S').source,D:world.proof('D').source,I:world.contexts.I!.proof(),F:world.contexts.F!.proof() } });
   } finally { world.close(); }
 });
 for (const storage of ['memory','sqlite'] as const) for (const scenario of lifecycleCases) test('O4 actual adverse trace: ' + scenario.id + ':' + storage, () => {
@@ -76,10 +80,13 @@ for (const storage of ['memory','sqlite'] as const) for (const scenario of lifec
   const world = buildThrough(scenario.from, { deliveryBuyer: variant?.deliveryBuyer, originExercise: !!variant?.destinationOrigins }, storage);
   try {
     if (scenario.initial) assert.deepEqual(world.snapshot(), scenario.initial);
+    const observations: unknown[] = [];
     for (const step of scenario.steps) {
       const actual = perform(world, step.action);
       assert.deepEqual(outcome(actual), { verdict: step.verdict, reason: step.reason }, JSON.stringify(actual));
       assert.deepEqual(world.snapshot(), step.expected, scenario.id + ':' + step.action.operation);
+      observations.push({ operation:step.action,actualResult:actual,actual:world.snapshot(),identities:recordedIdentities(world) });
     }
+    recordScope(scenario.id + '-' + storage,observations);
   } finally { world.close(); }
 });

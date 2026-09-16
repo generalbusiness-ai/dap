@@ -76,3 +76,9 @@ probe attempt stopped on a non-file module URL before creating a world; the
 kept script is the successful reproduction. The correction requires every
 other handler to be effective before replacing Scope's own placeholder
 verdict and has a live/cold regression on both backends.
+
+`regressions-dev1.txt` records source `9567950` after integrating O3 `c527584d`
+and O1 repair `03a943dd`: 4/4 pass, including attached-handler live/cold refusals
+on memory and SQLite, original Sale 0–19 outcomes/readability and exact
+pre-attach view replay. The merge keeps O3's control admission and verdicts
+while adding O1's private backend lease and both error invalidation paths.

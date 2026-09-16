@@ -124,6 +124,7 @@ function replayScopeView(view: ViewEntry[], genesis: string, packages: Record<st
     const original = current.verdicts[position]!;
     if (state.setup.role === 'sale') {
       const sale = current.models.sale as unknown as SaleState | undefined;
+      if (sale && !sale.accepted) state.sale = { status: sale.status === 'closed' ? 'closed' : 'open', accepted_offer: null, winner: null };
       if (sale?.accepted) {
         const offer = sale.offers.find(o => o.id === sale.accepted!.id);
         if (!offer || !sale.seller) throw new Error('scope: incomplete public decision');

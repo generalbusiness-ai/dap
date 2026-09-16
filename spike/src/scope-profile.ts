@@ -15,7 +15,7 @@ export function scopeId(value: unknown): string { return 'sha256:' + createHash(
 let implementation: string | undefined;
 export function scopeImplementationId(): string {
   if (implementation) return implementation;
-  const files = ['scope-profile.ts', 'scope.ts', 'scope-proof.ts', 'scope-package.ts', 'foundation.ts', 'interpret.ts', 'journal.ts', 'ordering.ts', 'codec.ts'];
+  const files = ['scope-profile.ts', 'scope.ts', 'scope-proof.ts', 'scope-package.ts', 'foundation.ts', 'interpret.ts', 'journal.ts', 'ordering.ts', 'codec.ts', 'append.ts', 'context.ts', 'ownership.ts', 'descriptor.ts', 'types.ts', 'canon.ts', 'sqlite.ts'];
   return implementation = scopeId({ profile: SCOPE_PROFILE, sources: files.map(file => ({ file, id: scopeId(readFileSync(new URL(file, import.meta.url), 'utf8')) })) });
 }
 export interface ScopeSetup {

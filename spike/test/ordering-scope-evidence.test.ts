@@ -10,6 +10,7 @@ import { ScopeProfileError, SCOPE_KINDS, scopeId } from '../src/scope-profile.ts
 import { K, holdsNow } from '../src/foundation.ts';
 import { SALE } from '../fixtures/sale.ts';
 import { INSPECTION } from '../fixtures/inspection.ts';
+import { recordScope } from '../fixtures/ordering-scope-records.ts';
 import { genesisPaths } from '../manifests/ordering-lifecycle.ts';
 
 function dormant(world: LifecycleWorld) {
@@ -146,7 +147,8 @@ test('O4 every materialized signed F genesis field/container is bound before eit
       } catch (error) { try { records.push({ ...mutation, ...recognized(error) }); } catch (unexpected) { console.log('failed mutation', mutation, error); throw unexpected; } }
       finally { candidate?.close(); }
     }
-    console.log('materialized genesis mutation records', JSON.stringify(records));
+    recordScope('materialized-genesis-mutations',{ genesis:original,records });
+    console.log('materialized genesis mutations:', records.length);
     assert.equal(records.length, genesisPaths(original as never).length * 2 + 1);
   } finally { world.close(); }
 });
