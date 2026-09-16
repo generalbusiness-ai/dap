@@ -138,7 +138,7 @@ function replayScopeView(view: ViewEntry[], genesis: string, packages: Record<st
       state.inspection.requested = (inspection?.requests.length ?? 0) > 0;
     }
     if (!scopeKinds.has(event.kind)) { state.verdicts[position] = original; continue; }
-    if (event.kind.startsWith(SCOPE_NS) && !(original.known && original.authorized && original.perModel?.scope?.reason === 'scope_runtime_required')) { state.verdicts[position] = original; continue; }
+    if (event.kind.startsWith(SCOPE_NS) && !(original.known && original.authorized && original.perModel?.scope?.reason === 'scope_runtime_required' && Object.entries(original.perModel).every(([id, verdict]) => id === 'scope' || verdict.effective))) { state.verdicts[position] = original; continue; }
     const held = (principal: string, cap: string) => heldAt(current, principal, cap, position);
     let result: Verdict;
     try {

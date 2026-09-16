@@ -62,3 +62,17 @@ origin array reached Journal's missing-origin-proof guard, which the test
 did not recognize. The next source adds a strict origin-body shape check in
 the selected scope profile before any journal is created; unexpected errors
 still fail the mutation campaign.
+
+`evidence-dev4.txt` records source `09ca8ea`: 8/8 pass, including all materialized
+genesis mutations, both real withdrawn-source branches and the revised
+changed-grant authorization precedence. This remains development evidence.
+
+`attached-handler-repro.sh/.txt` preserve independent helper QA at exact clean
+source `df68429b44d168444b7013ab77ae8f697f9f639b`. A signed SQLite branch attached
+an additional refusing handler at S18; the base composite verdict refused at
+S19, but ScopeJournal incorrectly spent R_fulfil. The probe uses the retained
+scope-proof test module as the synthetic descriptor's hash anchor. The first
+probe attempt stopped on a non-file module URL before creating a world; the
+kept script is the successful reproduction. The correction requires every
+other handler to be effective before replacing Scope's own placeholder
+verdict and has a live/cold regression on both backends.
