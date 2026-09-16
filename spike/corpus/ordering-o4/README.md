@@ -73,3 +73,22 @@ histories and independently executed original Sale projections/outcomes.
 The two matrix files are source-history audit records, containing each
 reader's legitimate source view and full synthetic source folds; they are
 separate from the public transfer proof and destination-view packets.
+
+
+For the G1/G2 revision, use the exact run-5 source in its JSON record. The
+manifest is `d94090b2`, with 29 adverse branches. Include
+`spike/test/ordering-scope-phase.test.ts` alongside the four earlier O4 test
+files to exercise admitted intervening events, failed and successful exact
+retries, closed/authorization gates, malformed packets and post-commit error
+recovery. Run 5 measures that focused subset within one full noncampaign run:
+
+```
+DAP_O4_RECORD_DIR=/tmp/o4-g2-observations node --test \
+  --test-skip-pattern='case [57], the campaign:' 'spike/test/**/*.test.ts'
+npm run typecheck --prefix spike
+```
+
+The three 200-seed campaigns are explicitly excluded from this run. Their
+last O4 full measurement remains source `b35b267`, before G1/G2. New observation
+files include the committed failure envelopes and real cold-retry result;
+deterministic handler exceptions remain failures, never policy verdicts.

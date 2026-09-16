@@ -441,3 +441,32 @@ exact source, profile and manifest and satisfy the nine tests listed in
    incomplete certificate is transferable evidence. A retired key remains
    trusted for the earlier prefixes whose headers it signed. Forks, database
    copies and equivocation remain outside this fixture's protection.
+
+
+## O4: activation phase and unexpected failures
+
+Decision `c2982a6e6756f4fed08e5a82acc8b05a65127745` removes the earlier
+uninterrupted-activation restriction. An admitted destination event can
+precede the first effective activation. Failed activation and dormant exercise
+consume positions without making transferred rights live. A fresh complete
+activation still checks the current grant and closed-context gates, then the
+transition and source prefixes pinned by F's genesis. Exact retries retain
+the original receipt and verdict, including a failed attempt retried after a
+later successful activation. A later activation has no further effect.
+
+Scope's policy refusals, profile validation errors and public-proof validation
+errors have explicit types. Legacy codec and Journal wire rejections are
+recognized only inside the pure wire-validation boundary, using the codec's
+TypeError prefix and an enumerated set of declared Journal/control reasons.
+Package lookup and semantic replay occur outside that translation boundary.
+An unexpected exception does not become an ordinary ineffective verdict.
+Foundation `fold_error` and `audience_error` diagnostics in the scope fold
+also surface as errors; ordinary attached-handler refusals remain verdicts.
+
+Every accepted ScopeJournal append recomputes its scope state. If that fold
+cannot finish, ScopeJournal closes its Journal and disables further submission,
+including through the held raw Context. The original exception is preserved.
+Already committed bytes remain committed. Recovery opens a fresh facade and
+replays those bytes; an exact retry adds no position. A transient registry
+failure can recover, while a deterministic throwing handler fails again on
+cold replay. No assumed prior scope state is used to admit another event.
