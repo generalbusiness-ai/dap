@@ -260,3 +260,42 @@ Bounded internal factual QA of the report at `19b6d43` found no contradiction
 in component counts, corrected identities, failures or trust boundaries.
 It made no edits and ran no tests. This QA and the measurements are not
 independent workroom approval or landing; those remain separate actions.
+
+## H1/H2 integration and declared run 4
+
+O6 now integrates frozen O4 source
+`e8ccb2ef2c21510b84d0466193c2b3381f89316b`, including aggregate source
+`773a38ec8367d0b563f7741d1ff902aceb72350c` and the test-only type correction
+`713315d17030fbafae275dbde3e04c7c1e7dd2f4`. The merge is clean and all
+runtime, profile and lifecycle-manifest bytes equal O4's frozen source.
+O4's owner is measuring its five lifecycle/proof suites separately.
+
+H1 selects movable profile `dap.fixture.single-writer/3`, with exact control
+predecessors `{position, headerHash}` and repeated-commitment rejection.
+Historical `/2` inputs require their original source and are not migrated.
+H2 replaces repeated full-chain append authentication with a verified-prefix
+cache; retained identifier memory is O(n), while membership checks are
+expected constant-time. Existing history materialization and fold work still
+grow with the prefix. Those repairs belong to the aggregate, not O6.
+
+The O6 bootstrap source and tests are unchanged. Their imported
+`HANDOVER_PROFILE` now selects `/3`, so a new measured run must regenerate G,
+its context identity and every genesis-bound invitation, receipt and view.
+The standalone L, route and existing Sale package are unchanged. The old
+CLI outputs and their exact `/2` signed bytes remain historical evidence;
+the new transcript is not required or expected to equal those bytes.
+
+The scope implementation is
+`sha256:f17f15a85088f645191959d8b1c21b0f415aa7b74449d7b13ee82e2e48dc8bea`,
+and Scope package is
+`sha256:edea788ed6dab13a1a5ae255909dfa607f9d67a4c38571a35e04c7c9bb8eb623`.
+Manifest `d94090b2`, opening rule `475b415b`, join policy `ac852eba`, and
+Sale/Inspection package identities are unchanged. Actual new O4 results and
+proof identities will be cited from the owner's measured source and records.
+
+After freezing this input, O6 will run its two bootstrap tests, whole-tree
+typecheck and the direct SQLite CLI with a new database. This validates
+creation, invitation, view authentication, retry/reopen and the malformed
+publication/route boundary under `/3`. It does not repeat O4's concurrent
+suite, the aggregate's tests or the 600-seed campaigns. No final aggregate
+acceptance, O4 acceptance, publication or landing is implied.
