@@ -1,0 +1,434 @@
+{
+  "seed": 27,
+  "manifest": "sha256:771a9cb82aff7b03bf50b55b490e35710da3e3072bd8877a7b79a13100bfc3f7",
+  "package": "sha256:549a096cc173ba654ee18150789c2a68ae1401ea12fd5d8a2f8571a52b9ef877",
+  "snapshot": "spike V4: checker run 5 snapshot: recover the run-2 privacy corpus",
+  "expected": "dana@50 budget: dana can read the booking.request at 49, whose parties are bob+alice",
+  "steps": [
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "clock",
+      "grants": {
+        "capabilities": [
+          "ai.generalbusiness.dap.observe"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "clock"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "none",
+        "room": "room-1",
+        "start": 0,
+        "end": 1
+      }
+    },
+    {
+      "type": "attach",
+      "actor": "alice",
+      "pkg": "com.example.side",
+      "audience": []
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "none",
+        "room": "room-1",
+        "start": 0,
+        "end": 1
+      }
+    },
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "bob",
+      "grants": {
+        "roles": [
+          "Booker"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "bob"
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "ai.generalbusiness.dap.observe",
+      "payload": {
+        "fact": {
+          "clock": 2
+        }
+      }
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "ai.generalbusiness.dap.observe",
+      "payload": {
+        "fact": {
+          "clock": 3
+        }
+      }
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "com.example.side.note",
+      "payload": {
+        "text": "note 6"
+      }
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "ai.generalbusiness.dap.observe",
+      "payload": {
+        "fact": {
+          "clock": 6
+        }
+      }
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        3
+      ],
+      "to": [
+        "bob"
+      ]
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.free",
+      "payload": {
+        "booking_id": "none"
+      }
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "ai.generalbusiness.dap.observe",
+      "payload": {
+        "fact": {
+          "clock": 9
+        }
+      }
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        10
+      ],
+      "to": [
+        "bob"
+      ]
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "com.example.booking.free",
+      "payload": {
+        "booking_id": "none"
+      }
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        13
+      ],
+      "to": [
+        "clock"
+      ]
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "none",
+        "room": "room-1",
+        "start": 0,
+        "end": 1
+      }
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "none",
+        "room": "room-1",
+        "start": 0,
+        "end": 1
+      }
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        15
+      ],
+      "to": [
+        "clock"
+      ]
+    },
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "carol",
+      "grants": {
+        "roles": [
+          "Booker"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "carol"
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "ai.generalbusiness.dap.observe",
+      "payload": {
+        "fact": {
+          "clock": 11
+        }
+      }
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        7
+      ],
+      "to": [
+        "clock"
+      ]
+    },
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "dana",
+      "grants": {
+        "roles": [
+          "Booker"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "dana"
+    },
+    {
+      "type": "act",
+      "actor": "dana",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 15,
+        "end": 16,
+        "purpose": "purpose 21",
+        "admin": "alice"
+      }
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        3
+      ],
+      "to": [
+        "bob"
+      ]
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 15,
+        "end": 19,
+        "purpose": "purpose 23",
+        "admin": "alice"
+      }
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        10
+      ],
+      "to": [
+        "bob"
+      ]
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 2,
+        "end": 6,
+        "purpose": "purpose 25",
+        "admin": "alice"
+      }
+    },
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "erin",
+      "grants": {
+        "roles": [
+          "Booker"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "erin"
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "ai.generalbusiness.dap.observe",
+      "payload": {
+        "fact": {
+          "clock": 12
+        }
+      }
+    },
+    {
+      "type": "act",
+      "actor": "dana",
+      "kind": "com.example.side.note",
+      "payload": {
+        "text": "note 28"
+      }
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.cancel_request",
+      "payload": {
+        "booking_id": "sha256:b3ad7d222c2a0278a27136e16ad456dae2976eb5937ae19d5b36ebda0549e59e",
+        "admin": "alice"
+      }
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "com.example.side.note",
+      "payload": {
+        "text": "note 30"
+      }
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        16
+      ],
+      "to": [
+        "carol"
+      ]
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "sha256:a7098d0f01bf7d45b8746c8e77cded0adc5712b273b591693aae41c5492dab75",
+        "room": "room-1",
+        "start": 15,
+        "end": 16
+      }
+    },
+    {
+      "type": "act",
+      "actor": "erin",
+      "kind": "com.example.side.note",
+      "payload": {
+        "text": "note 33"
+      }
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.side.note",
+      "payload": {
+        "text": "note 34"
+      }
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "ai.generalbusiness.dap.observe",
+      "payload": {
+        "fact": {
+          "clock": 13
+        }
+      }
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.cancel_request",
+      "payload": {
+        "booking_id": "sha256:09550c3f24e371860eac6deaa50c24a0146155224088b93fbee57f5de46424aa",
+        "admin": "alice"
+      }
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 5,
+        "end": 6,
+        "purpose": "purpose 37",
+        "admin": "alice"
+      }
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 11,
+        "end": 17,
+        "purpose": "purpose 38",
+        "admin": "alice"
+      }
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        49
+      ],
+      "to": [
+        "dana"
+      ]
+    }
+  ]
+}

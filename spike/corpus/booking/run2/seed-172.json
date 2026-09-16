@@ -1,0 +1,166 @@
+{
+  "seed": 172,
+  "manifest": "sha256:771a9cb82aff7b03bf50b55b490e35710da3e3072bd8877a7b79a13100bfc3f7",
+  "package": "sha256:549a096cc173ba654ee18150789c2a68ae1401ea12fd5d8a2f8571a52b9ef877",
+  "snapshot": "spike V4: checker run 5 snapshot: recover the run-2 privacy corpus",
+  "expected": "clock@19 budget: clock can read the booking.request at 18, whose parties are erin+alice",
+  "steps": [
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "clock",
+      "grants": {
+        "capabilities": [
+          "ai.generalbusiness.dap.observe"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "clock"
+    },
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "bob",
+      "grants": {
+        "roles": [
+          "Booker"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "bob"
+    },
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "carol",
+      "grants": {
+        "roles": [
+          "Booker"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "carol"
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "ai.generalbusiness.dap.observe",
+      "payload": {
+        "fact": {
+          "clock": 2
+        }
+      }
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "none",
+        "room": "room-1",
+        "start": 0,
+        "end": 1
+      }
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "none",
+        "room": "room-1",
+        "start": 0,
+        "end": 1
+      }
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 20,
+        "end": 22,
+        "purpose": "purpose 5",
+        "admin": "alice"
+      }
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 27,
+        "end": 31,
+        "purpose": "purpose 6",
+        "admin": "alice"
+      }
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.cancel_request",
+      "payload": {
+        "booking_id": "sha256:94f60d396106043fea27ab50b6e5f2d91a0389c7d330dde8e8385be0752ec76f",
+        "admin": "alice"
+      }
+    },
+    {
+      "type": "attach",
+      "actor": "alice",
+      "pkg": "com.example.side",
+      "audience": []
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "com.example.side.note",
+      "payload": {
+        "text": "note 11"
+      }
+    },
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "erin",
+      "grants": {
+        "roles": [
+          "Booker"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "erin"
+    },
+    {
+      "type": "act",
+      "actor": "erin",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 36,
+        "end": 38,
+        "purpose": "purpose 13",
+        "admin": "alice"
+      }
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        18
+      ],
+      "to": [
+        "clock"
+      ]
+    }
+  ]
+}

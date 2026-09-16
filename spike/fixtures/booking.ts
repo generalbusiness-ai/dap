@@ -35,6 +35,8 @@
 //   (`config.disclosurePolicy`, fix 1): occupancies, frees, clock ticks
 //   and attaches. Requests and cancels carry the booker and the purpose,
 //   whose readers the privacy budget fixes at the booker and the admin.
+//   Fix 2 also requires an authorized verdict before client disclosure:
+//   an unauthorized public-kind attempt has an actor-only initial audience.
 //
 // The projection derives every row from the position of the event that
 // produced it and shows it only when that position is visible to the
@@ -126,6 +128,7 @@ export type BookingConfig = {
    */
   disclosurePolicy: {
     kinds: string[];
+    authorizedOnly: true;
   };
 };
 
@@ -205,7 +208,7 @@ export const bookingModel: ModelSpec<BookingState, BookingConfig> = {
   config: {
     room: 'room-1',
     joinDisclosure: { by: 'admin', kinds: [NS + 'occupancy', NS + 'free', OBSERVE], effectiveOnly: true },
-    disclosurePolicy: { kinds: [NS + 'occupancy', NS + 'free', OBSERVE, ATTACH] },
+    disclosurePolicy: { kinds: [NS + 'occupancy', NS + 'free', OBSERVE, ATTACH], authorizedOnly: true },
   },
   ambient: true,
   init: () => ({ now: null, ticks: [], requests: [], cancels: [], occupancies: [], frees: [] }),

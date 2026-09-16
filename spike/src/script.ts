@@ -122,6 +122,21 @@ export function applyEffects(ctx: Context, position: number): void {
   }
 }
 
+/** An event-level client policy: kinds alone cannot make an unauthorized
+ * attempt public. Authorized semantic refusals may still be disclosed. */
+export function disclosablePosition(state: FoundationState, entry: Entry): boolean {
+  let declared = false;
+  let allowed = false;
+  for (const pkg of state.env.packages) for (const model of Object.values(pkg.models)) {
+    const policy = (model.config as { disclosurePolicy?: { kinds?: unknown; authorizedOnly?: boolean } } | null)?.disclosurePolicy;
+    if (!Array.isArray(policy?.kinds)) continue;
+    declared = true;
+    const namesKind = policy.kinds.some((k: unknown) => k === entry.event.kind || (k !== null && typeof k === 'object' && (k as { kind?: unknown }).kind === entry.event.kind));
+    if (namesKind && (!policy.authorizedOnly || state.verdicts[entry.position]?.authorized === true)) allowed = true;
+  }
+  return !declared || allowed;
+}
+
 function joinDisclosuresDeclared(state: FoundationState): JoinDisclosure[] {
   const out: JoinDisclosure[] = [];
   for (const pkg of state.env.packages) {

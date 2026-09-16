@@ -85,6 +85,9 @@ export interface AudienceCtx {
   members: Principal[];
   /** the participants holding a capability by grants before this position: a role-derived audience */
   holders(capability: string): Principal[];
+  /** Frozen copy of a handler's preceding state. Reads outside the active
+   * audience policy's original handler declaration throw. */
+  modelState(modelId: string): Json | undefined;
 }
 
 export interface KindBinding {
@@ -372,7 +375,12 @@ export function bindingIdOf(env: Environment, kind: Kind, b: ResolvedBinding): s
       const m = findModelWithPackage(env, h);
       return { id: h, identity: m ? modelId(m.model, m.pkg.module) : null };
     }),
-    audience: { id: b.audienceId, code: codeId(b.audience), module: declaring?.module ? moduleHash(declaring.module) : null },
+    audience: {
+      id: b.audienceId,
+      code: codeId(b.audience),
+      module: declaring?.module ? moduleHash(declaring.module) : null,
+      reads: [...(declaring?.kinds[kind]?.handlers ?? [])].sort(),
+    },
     capability: b.capability ?? null,
     runtime: env.runtime,
     crossReads: b.crossReads ?? [],

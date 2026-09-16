@@ -1,0 +1,48 @@
+{
+  "seed": 59,
+  "manifest": "sha256:3076d3854901ddeb6b0d5cc379646bb182f89bd61882d648fc9051dfae7d788f",
+  "package": "sha256:622a120962da35c370b093161848677fe086a5d1fa729655fc3ce2ced855bc9b",
+  "snapshot": "spike V4: checker run 7 snapshot: preserve public actor and payload leaks",
+  "expected": "clock@5 budget: clock can read public ai.generalbusiness.dap.observe at 5 signed by booker bob",
+  "steps": [
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "clock",
+      "grants": {
+        "capabilities": [
+          "ai.generalbusiness.dap.observe"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "clock"
+    },
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "bob",
+      "grants": {
+        "roles": [
+          "Booker"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "bob"
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "ai.generalbusiness.dap.observe",
+      "payload": {
+        "fact": {
+          "clock": 12
+        }
+      },
+      "nonce": "n:b966b8b4a51bf2cf"
+    }
+  ]
+}

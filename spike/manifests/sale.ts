@@ -1,7 +1,7 @@
 // The machine-readable part of the Sale manifest (sale.md): bounds, seeds,
 // the trace as a script with its predeclared readability and projections,
 // the invariants over recorded events and verdicts, the privacy budget over
-// observations, and the generator's payload builders. Nothing here reads
+// readable events and observations, and the generator's payload builders. Nothing here reads
 // the candidate model's state shape: the manifest is written independently
 // of the fold and frozen before the baseline. The manifest identity binds
 // the prose and this module; a run cites it together with the id of the
@@ -225,15 +225,24 @@ export function saleInvariants(state: FoundationState, frontier: number, entries
 
 // ----- the privacy budget over observations -----
 
-/** The parties who may read a private Sale event, from recorded facts: the listing's seller, the event's actor, and for a counter the stub's author. */
-export function privateParties(view: readonly { position: number; event?: EventBody }[], i: number): Principal[] | undefined {
+/**
+ * Parties from recorded facts and visible outcomes. A counter's offerer
+ * authored an effective stub before the counter; a refused stub attempt
+ * neither owns the id nor makes its recorder a party to later counters.
+ */
+export function privateParties(view: readonly { position: number; event?: EventBody }[], i: number, outcomes: Observation['outcomes']): Principal[] | undefined {
   const ev = view[i]?.event;
   if (!ev) return undefined;
   const seller = view[1]?.event?.actor ?? ALICE;
   const p = ev.payload as { offer_id?: string; inspector?: string } | null;
   if (ev.kind === SALE + 'offer_terms') return [ev.actor, seller];
   if (ev.kind === SALE + 'counter') {
-    const stub = view.find((v) => v.event?.kind === SALE + 'offer' && (v.event.payload as { offer_id?: string })?.offer_id === p?.offer_id);
+    const stub = view.find((v) =>
+      v.position < i && v.event?.kind === SALE + 'offer' &&
+      (v.event.payload as { offer_id?: string } | null)?.offer_id === p?.offer_id &&
+      outcomes[String(v.position)]?.effective === true &&
+      outcomes[String(v.position)]?.perModel?.['sale']?.effective === true,
+    );
     return [ev.actor, seller, ...(stub?.event ? [stub.event.actor] : [])];
   }
   if (ev.kind === INSPECTION + 'request') return [ev.actor, seller, ...(typeof p?.inspector === 'string' ? [p.inspector] : [])];
@@ -250,7 +259,7 @@ export function saleBudgetViolations(obs: Observation, p: Principal, seller: Pri
   const out: string[] = [];
   for (const v of view) {
     if (!v.event) continue;
-    const parties = privateParties(view, v.position);
+    const parties = privateParties(view, v.position, obs.outcomes);
     if (parties && !parties.includes(p)) out.push(`${p} can read the ${v.event.kind.replace(/^com\.example\./, '')} at ${v.position}, whose parties are ${parties.join('+')}`);
   }
   const sale = obs.models['sale'] as { offers?: { id: string; author: string; amount: unknown; counter: unknown }[]; acceptedAmount?: unknown } | undefined;

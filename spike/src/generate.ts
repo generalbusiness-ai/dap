@@ -12,7 +12,7 @@ import { Context } from './context.ts';
 import type { PackageDescriptor } from './descriptor.ts';
 import { K, holdsNow, type FoundationState } from './foundation.ts';
 import { observe } from './observe.ts';
-import { applyStep, disclosurePolicy, joinBacklog, type Pending, type Script, type Step } from './script.ts';
+import { applyStep, disclosurePolicy, disclosablePosition, joinBacklog, type Pending, type Script, type Step } from './script.ts';
 import type { Entry, Principal } from './types.ts';
 
 /** mulberry32: a small seeded generator, enough for a bounded corpus. */
@@ -113,7 +113,7 @@ export function generate(spec: GeneratorSpec, seed: number): Script {
         // widens only kinds the policy allows, and a kind restricted to holders of a capability
         // only to such a holder. The checker's budget still judges what is readable.
         const policy = disclosurePolicy(ctx.state);
-        const candidates = Array.from({ length: ctx.head }, (_, k) => k + 1).filter((i) => !policy || policy.kinds.has(ctx.entries[i]!.event.kind));
+        const candidates = Array.from({ length: ctx.head }, (_, k) => k + 1).filter((i) => disclosablePosition(ctx.state, ctx.entries[i]!));
         const position = pick(candidates);
         if (position !== undefined) {
           const need = policy?.kinds.get(ctx.entries[position]!.event.kind) ?? null;

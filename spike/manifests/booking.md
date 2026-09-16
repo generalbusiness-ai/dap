@@ -53,6 +53,24 @@ request in their observation is their own; and no occupancy carries a
 `purpose` or a `booker`. (Amended after run 1 per checker's V3-F1; the
 run-1 check was projection-only.)
 
+Revised after checker report `5014a7f1`, V4-F1 and V4-F2: the readable
+guard also checks every occupancy, free and `dap.observe`, including
+ineffective attempts. A public-kind event signed by a Booker must not be
+readable outside that actor and the admin; a booking id linked to a
+booker by such an event must not expose that link to another reader.
+Booker grants are derived from effective spine events. The guard checks
+public payloads, including nested observation facts, for `booker` and
+`purpose` fields. This is a new manifest revision, not evidence that the
+earlier guard covered those cases. Deliberate publication of private
+fields by an authorized admin or clock is a hostile-client limitation:
+the guard must detect it; the fixture does not enforce closed payload
+schemas at admission.
+
+The revision after run 8 also rejects claimed-party exemptions: a public
+payload's own `booker` value cannot authorize a reader to see private
+fields. Every non-admin reader is checked, including when that field
+names the reader. Nested fields are checked by the same rule.
+
 ## Projection shape
 
 `observe` for the `booking` model returns, for a principal `p`:
