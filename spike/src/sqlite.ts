@@ -4,7 +4,7 @@ import { deepFreeze, type Backend, type RetryRecord } from './append.ts';
 import type { Entry } from './types.ts';
 export const CRASH_POINTS = ['before-write', 'after-entry', 'after-head', 'after-retry', 'after-consumption', 'after-outbox', 'before-commit', 'after-commit'] as const;
 export type CrashPoint = typeof CRASH_POINTS[number];
-export interface OutboxRecord { position: number; headerHash: string; entry: Entry }
+export interface OutboxRecord { readonly position: number; readonly headerHash: string; readonly entry: Entry }
 export interface SQLiteOptions { writer: string; profile: string; fault?: (point: CrashPoint) => void }
 export class SQLiteBackend implements Backend {
   readonly writer: string;
@@ -102,7 +102,7 @@ export class SQLiteBackend implements Backend {
     this.db.prepare('INSERT INTO outbox(position,header_hash) VALUES(?,?)').run(entry.position, entry.headerHash);
     this.fault?.('after-outbox');
   }
-  pending(): OutboxRecord[] { return this.db.prepare('SELECT position,header_hash FROM outbox WHERE delivered=0 ORDER BY position').all().map(r => ({ position: Number(r.position), headerHash: String(r.header_hash), entry: this.get(Number(r.position))! })); }
+  pending(): OutboxRecord[] { return this.db.prepare('SELECT position,header_hash FROM outbox WHERE delivered=0 ORDER BY position').all().map(r => deepFreeze({ position: Number(r.position), headerHash: String(r.header_hash), entry: this.get(Number(r.position))! })); }
   /** At-least-once: acknowledge only after callback success. Consumers dedupe by headerHash. */
   async drain(deliver: (record: OutboxRecord) => void | Promise<void>): Promise<void> {
     for (const record of this.pending()) {
