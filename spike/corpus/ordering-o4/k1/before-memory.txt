@@ -1,0 +1,15 @@
+memory {
+ "submitThrew": "scope: handler failure at 12: audience_error:Cannot read properties of null (reading 'seller')",
+ "rawVerdict": {
+  "known": true,
+  "authorized": true,
+  "effective": false,
+  "reason": "audience_error:Cannot read properties of null (reading 'seller')"
+ },
+ "head": 12,
+ "coldState": "threw: scope: handler failure at 12: audience_error:Cannot read properties of null (reading 'seller')",
+ "export": "threw: scope: handler failure at 12: audience_error:Cannot read properties of null (reading 'seller')",
+ "proof": "ok frontier 12",
+ "nextSubmit": "threw: scope: handler failure at 12: audience_error:Cannot read properties of null (reading 'seller')",
+ "headAfter": 13
+}

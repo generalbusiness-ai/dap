@@ -1,0 +1,22 @@
+TAP version 13
+# Subtest: O4 K1 malformed participant requests preserve retries and the signed lifecycle: memory
+ok 1 - O4 K1 malformed participant requests preserve retries and the signed lifecycle: memory
+  ---
+  duration_ms: 2607.282875
+  type: 'test'
+  ...
+# Subtest: O4 K1 malformed participant requests preserve retries and the signed lifecycle: sqlite
+ok 2 - O4 K1 malformed participant requests preserve retries and the signed lifecycle: sqlite
+  ---
+  duration_ms: 2757.6845
+  type: 'test'
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 2
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 5447.398375
