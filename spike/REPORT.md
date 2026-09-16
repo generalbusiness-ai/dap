@@ -4,7 +4,8 @@
 `05c98e2d778124648834b9b00e772a6ad270a870` and landed as main
 `19af1c8fb46cc91c61a2027647f04a6f305b5cdc`.** Club's original admission
 policy remains a negative result. This follow-up corrects the report's
-scope; its additional executable results await a new immutable snapshot.
+scope and adds measured evidence; independent review of this follow-up
+is still required.
 
 The small-repair claim did not hold: **Sale required six semantic repairs
 against a budget of two. Club does not meet the original admission policy.**
@@ -312,7 +313,42 @@ not arbitrary histories. Raw test output is retained, including Node's
 whitespace-only diagnostic lines. The historical Booking budget file also
 retains its EOF blank line; a clean working diff is not a clean diff from
 the earlier main tree. Historical V6 review and landing are recorded above;
-the nonblocking follow-up requires its own validation and review.
+the measured follow-up below still requires its own independent review.
+
+## Follow-up to the six nonblocking review items
+
+Source snapshot `e627460daf788d6dbf6d3f8cbaa28f8f0fc0368b` adds
+retrospective evidence without changing production code, generator, model
+fixtures or frozen manifests. The noncampaign suite reports **129 passed,
+zero ordinary failures and four executing, failing TODOs**, exit 0.
+Typecheck exits 0 with committed output. The three unchanged campaigns
+were excluded; their earlier 600-seed results are not claimed as a new run.
+Commands and findings are in the [follow-up result](evidence/v6/followup1.json)
+and [ledger](manifests/v6.ledger.md#follow-up-1-result).
+
+Three new A5 traces name Dana's invitation acceptance, a malformed
+ineffective apply, and a standing reason. In each, all five readers accept
+two votes and admission, and the effect executor emits a Member grant,
+although no application is recorded. The existing independent invariant
+rejects each trace. A child TODO keeps the original expectation: reject
+the votes and admission and emit no grant. Complete traces and minimized
+invariant failures are [retained separately](corpus/club/a5-followup1/).
+These are policy failures, not successful acceptance tests.
+
+The mutation test now reads all four unchanged historical corpus JSON
+files, verifies their control-entry ids and exact mutation identities,
+checks the retrospective expected findings, and repeats deletion and clean
+control checks. The original tests only regenerated these traces. The
+[corpus guide](corpus/v6/README.md) explains the exact rule text/module
+boundary; equivalent rule behavior alone does not reproduce an identity.
+
+Historical outputs are unchanged. The ledger now records that
+`e0d83bf` renamed `reason` to `model_reason` in three run-1 JSON cases
+without changing values. Earlier typecheck claims had no committed output;
+checker #1805 reproduced them, and this follow-up keeps its own output.
+Only the new follow-up test log has trailing spaces/tabs removed; its raw
+and normalized digests are recorded. This does not alter the historical
+whitespace boundaries described above.
 
 The visibility harness uses authenticated entries as an assumption,
 ordinary TypeScript functions, cold replay and an in-memory sequencer.
