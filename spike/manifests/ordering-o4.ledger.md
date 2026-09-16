@@ -669,3 +669,30 @@ refuse subsequent bound indeterminate cases and missing reader-side code.
 Existing tests retain effective narrow refusals and hostile certificate,
 privacy and full/public differential checks. No broad suite or campaign is
 part of this component measurement; the next record states exact results.
+
+
+Frozen L3 source `d987cd149c0fa0eda85235f0f8f10a56012d3bf2` passes
+**55/55 focused checks and whole-tree typecheck**. The unchanged checker
+probe now certifies D frontiers 0–2 and activates F with D released and F
+live, on both memory and SQLite. The dedicated tests continue through both
+spends and reopen. [Exact commands, identities and hashes](ordering-o4-runs/l3-focused.json),
+[raw tests](ordering-o4-runs/l3-tests.txt),
+[typecheck](ordering-o4-runs/l3-typecheck.txt) and
+[checker memory](ordering-o4-runs/l3-checker-memory.txt)/
+[SQLite](ordering-o4-runs/l3-checker-sqlite.txt) outputs are retained.
+Fourteen fresh signed observations comprise six L3 D/I/F records and eight
+unchanged K3 transfer cases under the new rule. The seven bound diagnostic
+cases per store include model/package unavailable, unhandled, Scope/base
+placeholders and fold/audience errors; missing reader-side package code also
+refuses verification. Effective narrow authority continues to refuse.
+
+The measured component scope implementation is
+`sha256:3e0142a4c86598cfe30462f4cfe12a70e2730e55e6e2ea43570432c4dc113db6`;
+Scope package is
+`sha256:ddcaa3117eaac8b95c718452edec9b2e2d28fb36cc619f52fc4b7277d0b48e26`.
+The fixed join policy remains
+`sha256:ac852ebab4f55816e55cd0fd71b7280267bffaca097046d4880b24ac63b01455`.
+These are isolated L3 identities before L1/L2 integration. Only records and
+this handoff follow the measured source; no runtime, test or manifest change
+follows. Earlier evidence remains unchanged. No broad suite, campaign,
+independent approval or publication is claimed.

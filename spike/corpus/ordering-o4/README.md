@@ -152,3 +152,20 @@ an effective D release stranded by proof refusal. New rule /3 and focused
 signed observations are a separate component boundary, not new run-8 data.
 Old /1 and both /2 rule declarations and their packets remain unchanged.
 See the L3 ledger subsection for exact measured sources and commands.
+
+
+The L3 focused run is `d987cd149c0fa0eda85235f0f8f10a56012d3bf2`:
+55/55 and typecheck pass, with 14 signed observations under `l3-observations`.
+From that source, run only the four focused files:
+
+```sh
+DAP_O4_RECORD_DIR=/tmp/o4-l3-observations node --test \
+  spike/test/ordering-scope-unbound.test.ts \
+  spike/test/ordering-scope-completeness.test.ts \
+  spike/test/scope-proof.test.ts spike/test/ordering-lifecycle.test.ts
+npm run typecheck --prefix spike
+```
+
+`l3-focused.json` pins source/runtime/test/manifest plus dependency and compiler
+configuration hashes. It records the unchanged checker probe's fresh passing
+output as a separate command, not extra tests in the 55-check count.
