@@ -46,7 +46,7 @@ audience or fold rules, whoever finds or implements it. So:
 ## Experiment revisions
 
 Spike plan §4.7 calls a manifest changed after the baseline a new
-experiment. The manifest changed twice; each revision is identified here
+experiment. The manifest has four post-baseline revisions; each is identified here
 and every run cites the identity it ran under.
 
 | Revision | Manifest id | Change |
@@ -54,7 +54,8 @@ and every run cites the identity it ran under.
 | Frozen, before the baseline | `sha256:4123f7b5f8610fd09ca5042a169b57fff8756dc6d0089ac2196ecdf7c42ac52b` | as frozen |
 | Run 1 corrections | `sha256:7e0f89716d6d5d9c40c1a5d0e4692bb605d1ad1504d0ad1a3be0bb59d34116b5` | the counter kind's payload names the offer's author (prose table and trace step 10); the side package projects visible notes; affordance weights so a series is not closed at once |
 | Run 3 | `sha256:9ac768d2eedc48f0802d468eac9234d0bfd3b98d58113f850bb3bf70dd132d4a` | the privacy budget is checked on what a participant can read, with the parties of each private event derived from recorded facts (checker's V3-F1) |
-| Run 5 | `sha256:847db513a904db2e0de933224d9c4bbabee2a24249e3e81a4030a2f256baabbf` | the budget check's readable-view argument became required, so no caller can fall back to the projection-only check; no semantic change |
+| Run 5 | `sha256:847db513a904db2e0de933224d9c4bbabee2a24249e3e81a4030a2f256baabbf` | the budget check's readable-view argument became required; callers may still deliberately pass an empty view for the historical projection-only check; no semantic change |
+| Run 6 | `sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9` | counters derive their offerer from a prior effective stub, using visible outcomes; refused attempts do not make their recorder a party (V3-G1); prose now states the readable-events check |
 
 ## Run 1
 
@@ -162,9 +163,9 @@ are gone: the declared policy is honoured.
 Snapshot commit: see `git log`, "checker run 5". Foundation corrected,
 not a model fix: an application event whose kind has no binding at its
 position is recorded with an actor-only audience (design note §8). The
-budget checks now require the readable view as an argument, so a caller
-cannot silently fall back to the projection-only check (the author's
-caution). Manifest revision "Run 5" (the signature change only); package
+budget checks now require the readable view as an argument, so callers must supply a view explicitly. An empty view still selects
+the projection-only check: the run-1 corpus test and shrink script use
+`[]` deliberately to reproduce that historical semantics. Manifest revision "Run 5" (the signature change only); package
 as at run 4, `sha256:0b252fc3b30ddf7d3b7a57ac2630b8cc1ac682b253da1118f8d3706f8953dde7`.
 
 The trace, cases 2 to 4, the three reproduced counterexamples, the run-1
@@ -175,6 +176,34 @@ attaches, 1716 disclosures (of public kinds only), 273 stubs (31
 replacements), 175 withdrawals, 159 counters, 111 accepts (18 effective)
 and 279 closes.
 
+## Run 6
+
+Snapshot commit: see `git log`, "checker run 6 snapshot". Review report
+796c6510 (V3-G1) found that the privacy guard treated the first recorded
+stub with an id as effective. The executable manifest now checks the
+visible outcome and requires an effective Sale stub recorded before the
+counter. A refused stub's recorder is not a party unless independently
+the seller or counter's actor; a later stub cannot authorize an earlier
+counter. Both the failed-replacement and unauthorized-stub reproductions
+are kept in `test/sale.test.ts`.
+
+This is a new experiment revision under §4.7, not a model repair. The
+fixture's comment corrections change its pinned module identity but no
+audience, dependency, fold, schema or kind. The same snapshot includes
+foundation correction `cae54b5`: when an audience rule throws, discard
+model effects before recording the actor-only refusal. That is a harness
+repair, not a Sale fix.
+
+Manifest `sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9`;
+package `sha256:5ec9a10356ed47b1bc13ca4242631eefc69c9898f5c507e22639325eaeb6b48f`.
+Results will be recorded after the snapshot run.
+The campaign's zero-violations assertion is retained.
+
+Run 1's 17 shrunk failures are kept in [the run-1 corpus](../corpus/sale/run1/).
+Newly exposed run-6 failures are kept separately with their run identity.
+The historical run-5 passing result remains a result under its older,
+incorrect guard; it is not evidence of a clean campaign under run 6.
+
 ## Result
 
 Sale, the partition-plus-decision shape: **6 fixes recorded, 5 of them
@@ -184,8 +213,10 @@ predeclared counter kind, two (fixes 2 and 3) made newcomers complete by
 a declared join disclosure and dropped the tombstone rule, one (fix 4)
 declared a disclosure policy once the privacy budget was checked on
 readable events, and one (fix 5) closed a misdirected-counter hole the
-reviewer found. The experiment's manifest was revised twice after the
-baseline; both revisions are identified above. The views note's trace
+reviewer found. The experiment's manifest has four post-baseline revisions, identified
+above. Run 6 corrects a false negative in the privacy guard and exposes
+counter misdeliveries; the predeclared zero-violations campaign gate is
+not met. No model fix is made in that run. The views note's trace
 as literally drawn is dependency-incomplete for Ivan under the fixed
 model and passes only with the declared join disclosure added; both
 results are kept visible in the tests.

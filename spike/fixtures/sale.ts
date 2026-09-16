@@ -14,11 +14,11 @@
 // - Stubs, withdrawals and accepts are members events. A member who joins
 //   later holds only their headers, yet must judge every later withdrawal,
 //   replacement and accept of those stubs exactly as the oracle does. The
-//   model therefore declares a dependency (`config.joinDisclosure`, fix 1):
+//   model therefore declares a dependency (`config.joinDisclosure`, fix 2):
 //   when a participant joins, the seller discloses to them every effective
 //   offer, withdraw and accept recorded before their join. With that, a
 //   stub unknown to a view is a stub that does not exist, and `no_such_offer`
-//   reads the same everywhere (fix 2: no withdrawal or replacement of an
+//   reads the same everywhere (fix 3: no withdrawal or replacement of an
 //   unknown stub is effective). The disclosure adds no reader beyond the
 //   privacy budget: those kinds are members when recorded, subject to
 //   disclosure; terms and counters are never part of it.
@@ -88,7 +88,7 @@ export interface SaleState {
 }
 
 /**
- * The model's declared dependency (fix 1). A member who joins after a stub,
+ * The model's declared dependency (fix 2). A member who joins after a stub,
  * withdrawal or accept was recorded must still judge later events about
  * that stub as the oracle does, and nothing visible to them says the stub
  * exists. So on every join, the seller discloses to the newcomer every
