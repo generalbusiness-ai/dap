@@ -13,7 +13,7 @@ the baseline. About ten tool turns to the baseline, one write.
 
 ## Baseline
 
-Commit `cbdaf2b`. Manifest `sha256:4123f7b5f8610fd09ca5042a169b57fff8756dc6d0089ac2196ecdf7c42ac52b`,
+Commit "spike V3: Sale baseline, authored by an agent from the manifest (§4.5)", `fd1e23b` on the branch as rebased onto main after V2 landed; the branch was rebased four times while V2 was under review, so hashes cited here are the final ones. Manifest `sha256:4123f7b5f8610fd09ca5042a169b57fff8756dc6d0089ac2196ecdf7c42ac52b`,
 package `sha256:3559afefecb923a6e08c2febde25ae4559d1e1b9e6953bc743231d81702c7842`.
 
 The author's own predictions, recorded before any run: (1) a late joiner
