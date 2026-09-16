@@ -359,6 +359,12 @@ export function foldEntry(state: FoundationState, input: FoldInput): Verdict {
         verdict = { known: true, authorized: false, effective: false, reason: 'fold_error:' + (e instanceof Error ? e.message : String(e)) };
         audience = named(ev.actor);
       }
+      // An effective ambient fact is folded by every model that opted in; the system verdict
+      // stands, and each model's own outcome is recorded beside it.
+      if (ev.kind === K.observe && verdict.effective) {
+        const ambient = state.env.packages.flatMap((p) => Object.values(p.models).filter((m) => m.ambient).map((m) => m.id));
+        if (ambient.length) verdict = { ...verdict, perModel: dispatch(state, entry, ambient, false).perModel };
+      }
     }
   } else {
     verdict = foldApplication(state, entry);
@@ -576,7 +582,7 @@ function dispatch(state: FoundationState, entry: Entry, handlers: string[], orig
   const ev = entry.event;
   const perModel: Verdict['perModel'] = {};
   let anyEffective = false;
-  const ctx = { position: entry.position, members: [...state.participants], origin };
+  const ctx = { position: entry.position, id: entry.id, members: [...state.participants], origin };
   for (const modelId of handlers) {
     const model = findModel(state.env, modelId);
     if (!model) {

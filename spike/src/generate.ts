@@ -39,6 +39,8 @@ export interface GeneratorSpec {
   ineffectiveRate?: number;
   /** relative weight of each application kind when choosing among a participant's affordances, default 1 */
   weights?: Record<string, number>;
+  /** fixed steps applied before generation, for participants every series needs (a clock actor) */
+  prelude?: Step[];
   /** an unrelated package that a narrow attach may install mid-stream */
   sidePackage?: PackageDescriptor;
   /**
@@ -74,6 +76,7 @@ export function generate(spec: GeneratorSpec, seed: number): Script {
     applyStep(ctx, s, pending);
   };
   const ineffectiveRate = spec.ineffectiveRate ?? 0.06;
+  for (const s of spec.prelude ?? []) push(s);
   for (let step = 0; step < spec.bounds.maxPositions; step++) {
     const entries = ctx.head + 1;
     const room = spec.bounds.maxPositions - entries;
