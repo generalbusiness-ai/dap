@@ -394,3 +394,32 @@ remain intact. The V6 main wrapper
 `d95e097`; the O1 branch has integrated the approved candidate directly.
 No additional campaign or identical-tree wrapper merge was needed. O1's
 independent re-review remains pending.
+
+## Second review correction O1-G1: every Context must be current
+
+Review `3d76d2b9d7f1fce8c577243ba330e15208b975c4` found that a raw
+Context could resume stale admission after Journal released ownership, and
+that a raw Context did not disable itself after its own lost reply.
+Regression-only source `c49e1c87abb88f3db887d6380a99011ae8a2c9af`
+retains the `4cfc693` runtime. Four regressions ran: one passed and three
+failed. The memory after-close case and both raw lost-reply cases recorded
+invitation 3 and redemption 4 as effective with Bob in the stale fold, while
+cold replay kept only Alice and judged the invitation unauthorized. The
+SQLite after-close case already refused through its closed handle. Exact
+source, command and output are retained in
+[run-12-g1-before.json](ordering-o1-runs/run-12-g1-before.json) and
+[run-12-g1-before.txt](ordering-o1-runs/run-12-g1-before.txt).
+
+The correction caches a Context's position and header hash only after a fold
+succeeds. The shared append serialization boundary calls a supplied freshness
+check before retry/admission; it compares one backend.head() with that cache.
+A stale write is refused and disables the Context. Every Context, including
+raw instances without a lease, also disables itself after its own append or
+fold error. A fresh restore/open is required before another write. Retry
+still precedes current admission after this serving-state consistency check.
+The new guard does not obtain or scan backend.entries().
+
+Additional checks cover two unowned raw Contexts competing over one backend
+and a scheduled head advance immediately before serialization. The scheduled
+case makes full-history reads unavailable during stale refusal, ensuring the
+freshness guard uses the current head rather than a history scan.

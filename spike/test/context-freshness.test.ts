@@ -99,3 +99,48 @@ for (const storage of ['memory', 'sqlite'] as const) test('O1-G1 raw Context sta
   assert.deepEqual(cold.state.participants, [people.alice]);
   if (backend instanceof SQLiteBackend) backend.close();
 });
+
+for (const storage of ['memory', 'sqlite'] as const) test('O1-G1 two unowned raw Contexts cannot write from different folded heads on ' + storage, () => {
+  const file = path();
+  let backend: Backend = storage === 'memory' ? new MemoryBackend() : sqlite(file);
+  createJournal(backend).close();
+  if (storage === 'sqlite') backend = sqlite(file);
+  const a = Context.restore(backend, packages), b = Context.restore(backend, packages);
+  const revoke = a.act(people.alice, K.revoke, { principal: people.alice, capabilities: [CAP.invite] });
+  assert.ok(!('refused' in revoke) && revoke.verdict?.effective);
+  const before = backend.entries();
+  assert.throws(() => b.submit(invitation(b), b.credentialFor(people.alice)), /stale fold/);
+  assert.throws(() => b.act(people.alice, K.observe, { fact: {} }), /inactive/);
+  assert.deepEqual(backend.entries(), before);
+  const fresh = Context.restore(backend, packages);
+  const refused = fresh.submit(invitation(fresh), fresh.credentialFor(people.alice));
+  assert.ok(!('refused' in refused) && refused.verdict?.reason === 'unauthorized');
+  if (backend instanceof SQLiteBackend) backend.close();
+});
+
+test('O1-G1 freshness is checked inside serialization without scanning history for refusal', () => {
+  let beforeNextTransaction: (() => void) | undefined;
+  let blockEntries = false;
+  class ScheduledBackend extends MemoryBackend {
+    override serialized<T>(fn: () => T): T {
+      const scheduled = beforeNextTransaction; beforeNextTransaction = undefined;
+      scheduled?.();
+      return super.serialized(fn);
+    }
+    override entries() {
+      if (blockEntries) throw new Error('unexpected full-history scan');
+      return super.entries();
+    }
+  }
+  const backend = new ScheduledBackend(); createJournal(backend).close();
+  const first = Context.restore(backend, packages), late = Context.restore(backend, packages);
+  beforeNextTransaction = () => {
+    const revoke = first.act(people.alice, K.revoke, { principal: people.alice, capabilities: [CAP.invite] });
+    assert.ok(!('refused' in revoke) && revoke.verdict?.effective);
+    blockEntries = true;
+  };
+  assert.throws(() => late.submit(invitation(late), late.credentialFor(people.alice)), /stale fold/);
+  blockEntries = false;
+  assert.equal(backend.head()!.position, 2);
+  assert.equal(backend.retry('g1-invite'), undefined);
+});
