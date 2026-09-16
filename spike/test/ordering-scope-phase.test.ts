@@ -86,7 +86,7 @@ for (const storage of ['memory','sqlite'] as const) test('O4 malformed release-p
   } finally {world.close();}
 });
 
-import { scopeThrowPackage } from './fixtures/scope-throw.ts';
+import { scopeThrowPackage, scopeThrowKind } from './fixtures/scope-throw.ts';
 for (const storage of ['memory','sqlite'] as const) for (const failure of ['fold','audience'] as const) test('O4 thrown '+failure+' handler is a real failure with durable bytes: '+storage,()=>{
   const world=buildThrough('sale-accepted',{},storage);
   const registry={...packages,[scopeThrowPackage.id]:scopeThrowPackage};
@@ -95,7 +95,7 @@ for (const storage of ['memory','sqlite'] as const) for (const failure of ['fold
     const active=storage==='sqlite'?new SQLiteBackend(world.paths.S!,{writer:ordering.initialWriter,profile:ordering.profile}):backend;
     const scope=ScopeJournal.open({backend:active,writerKey:keys.W0,packages:registry});world.contexts.S=scope;world.backends.S=active;
     assert.equal(accepted(world.emit('S','alice',K.attach,{package:scopeThrowPackage.id,resolution:{[SCOPE_KINDS.exercise]:{handlers:['scope','qaFault']}}})).verdict?.effective,true);
-    const envelope=signEvent(scope.journal.context.intent(principals.alice,SCOPE_KINDS.exercise,{right:'R_fulfil',failure},{action_id:'handler-failure',nonce:'d'.repeat(32)}),keys.alice);
+    const envelope=signEvent(scope.journal.context.intent(principals.alice,failure==='audience'?scopeThrowKind:SCOPE_KINDS.exercise,{right:'R_fulfil',failure},{action_id:'handler-failure',nonce:'d'.repeat(32)}),keys.alice);
     const bytes=envelopeBytes(envelope);const credential=scope.journal.context.credentialFor(principals.alice);
     const expected=failure==='fold'?/handler failure at 19: fold_error:qa_handler_exception/:/handler failure at 19: audience_error:qa_audience_exception/;
     assert.throws(()=>scope.submit(bytes,credential),expected);
