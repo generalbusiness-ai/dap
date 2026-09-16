@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { cpSync, mkdtempSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
+import { cpSync, mkdtempSync, mkdirSync, readFileSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
@@ -61,7 +61,7 @@ test('O5 proof boundary rejects unrelated inputs and does not mutate callers', (
   assert.throws(() => compareControlSpines(proof, fixture.proofs.find(p => p.name === 'v1-fixed-writer')!.proof), /different_genesis/);
 });
 test('O5 executes with packages, application payloads and grant folds unavailable', t => {
-  const directory = mkdtempSync(join(tmpdir(), 'dap-o5-isolated-'));
+  const directory = realpathSync(mkdtempSync(join(tmpdir(), 'dap-o5-isolated-')));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   mkdirSync(join(directory, 'src')); mkdirSync(join(directory, 'test', 'fixtures'), { recursive: true });
   for (const file of ['control-verifier.ts', 'codec.ts', 'canon.ts', 'types.ts']) cpSync(new URL('../src/' + file, import.meta.url), join(directory, 'src', file));

@@ -64,5 +64,14 @@ not a new committed position.
 
 ## Measurements
 
-Pending source freeze and focused validation. Final O3 integration and an
-independent checker review remain completion gates.
+Focused run 1 source: `462d7de` (full commit recorded by Git). Command from
+`spike`: `node --test test/control-verifier.test.ts`. Result: 53 passed,
+one failed, zero skips or TODOs. The isolated subprocess was denied access
+while Node resolved macOS's `/var` symlink; no verifier assertion failed.
+The retained [run-1.txt](ordering-o5-runs/run-1.txt) records that failure.
+The test now resolves the temporary directory before starting permission mode.
+The first typecheck could not find the newly created worktree's dependencies;
+`npm ci --ignore-scripts --no-audit --no-fund` installed the committed lockfile.
+
+Final O3 integration, repeated measurement and independent checker review
+remain completion gates.
