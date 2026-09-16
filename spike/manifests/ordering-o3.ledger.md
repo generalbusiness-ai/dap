@@ -81,3 +81,15 @@ succeed. A granted member and the retiring writer without the control key are
 refused. The nomination case checks the actual journal. These changes will
 receive a focused ordering regression run; the unchanged visibility campaigns
 will not be rerun solely for this schema validation tightening.
+
+## Run 3
+
+Source: `8756c233463e2fdf1428902e072e525aed3b6604`. The same five-file
+focused command as run 1 executed 71 tests: all passed, including 12 O3 tests.
+Typecheck failed in the newly added negative-genesis test: TypeScript inferred
+an optional `epoch: undefined` on a test-case union, incompatible with JSON.
+The preserved [run-3.txt](ordering-o3-runs/run-3.txt) contains the exact error.
+The repair gives that test-case array an explicit JSON-compatible dictionary
+type. It changes no runtime or test data. Total repairs so far: one error-text
+compatibility repair and one test type annotation, with no failed protocol
+case or model change.

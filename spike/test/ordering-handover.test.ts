@@ -180,7 +180,7 @@ test('O3 v2 pins distinct writer/control keys and exact sequencing fields before
   for (const [sequencing, reason] of [
     [{ profile: 'dap.fixture.single-writer/2', writer: people.writer, control: people.writer }, /control key must differ/],
     [{ profile: 'dap.fixture.single-writer/2', writer: people.writer, control, epoch: 0 }, /invalid v2 sequencing fields/],
-  ] as const) {
+  ] as [Record<string, string | number>, RegExp][]) {
     const backend = sqlite(join(dir(), 'journal.db'));
     const body = { ...genesis, payload: { ...genesis.payload as object, sequencing } };
     assert.throws(() => Journal.create({ backend, writerKey: keys.writer, packages }, signEvent(body, keys.alice), [origin]), reason);
