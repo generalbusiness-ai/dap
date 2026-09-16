@@ -567,3 +567,29 @@ Sale-only fixture selects no Scope or Inspection package. O4 owns the one
 combined noncampaign run and fresh lifecycle evidence. Final report counts
 will come from that actual result; no campaign or duplicate full suite runs
 here, and independent O4/O6 acceptance remains pending.
+
+
+## L1–L3 run 6
+
+Frozen O6 source: `1ea700b15ded453fdeed52dbae25c2d4dd8057db`.
+Node `v26.8.2`, Darwin. Both bootstrap tests pass with zero failures, skips
+or TODOs. Whole-tree typecheck and the actual fresh-database SQLite CLI exit
+0; CLI stderr is empty. Exact commands, exits and combined identities are
+in [run-6.json](ordering-o6-runs/run-6.json); raw outputs are
+[tests](ordering-o6-runs/run-6-tests.txt), [typecheck](ordering-o6-runs/typecheck-6.txt)
+and the [actual transcript](ordering-o6-runs/run-6-demo.json).
+
+The complete generated transcript matches run 5 except for process id and
+new database path. The Sale-only bootstrap selects neither Scope nor
+Inspection, so its signed G remains
+`sha256:080afaa386822dba15e5f694e16c554cf305ff06f031df9709b8a01935b1503c`,
+L remains `sha256:1a2a4d30944bc14b399a54f9c19419201730d6874aed4c4fcb5c697fccca1fd6`,
+and append, immediate retry and reopened retry retain receipt
+`sha256:c6e06aeedc59bac6120eaba9d463ea2ffe3d3d76a520e08a15167a8c4daf91e6`.
+The verified reopened view still has four entries and four pending outbox
+records. This is a fresh execution at the new source, not reused old output.
+
+No source changed during measurement. O4's combined run 9 is a separate
+invocation and will be incorporated at its actual result boundary. No
+O4/full suite or campaign was repeated here. Historical O6 candidates and
+measurements remain intact; independent O4/O6 approval remains pending.
