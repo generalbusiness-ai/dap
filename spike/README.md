@@ -250,3 +250,43 @@ lets a seller misdirect a counter's delivery (the fold refuses it and
 the budget reports it; the fixture's clients never do it); Booking and
 Club are V4 and V5; the mutation runner across models and the report
 are V6.
+
+## V4: Booking by agent
+
+Measured result first: the agent-authored Booking model passed every
+predeclared case and 200 of 200 seeds on its untouched baseline, and
+needed **1 fix, 0 added kinds, within the budget** of 2 and 1: a
+disclosure policy naming the public kinds for the fixture's disclosing
+client to honour, once the privacy budget was checked on what a
+participant can read (checker's V3-F1). The baseline itself declared a
+join disclosure of occupancies, frees and clock ticks as a design
+choice, citing the Sale ledger's late-joiner finding, so the
+cross-view case of spike plan §4.1 passed without repair.
+
+What it contains:
+
+- `manifests/booking.md` and `manifests/booking.ts`: the Booking
+  experiment manifest, frozen before the baseline: the split schema of
+  spike plan §4.1 with a booker-and-admin audience, promises, privacy
+  budget, projection shape, reason vocabulary, budget, bounds, the clock
+  actor joined by a prelude, invariants over recorded events and
+  verdicts including expiry by the clock, the privacy budget over
+  readable events and observations (amended after run 1; the revision
+  is identified in the ledger), and the generator's payload builders
+  with clock ticks.
+- `fixtures/booking.ts`: the Booking model, authored by an agent under
+  spike plan §4.5 with no test or checker access before the baseline.
+- `manifests/booking.ledger.md`: the repair ledger.
+- Harness additions: the fold context carries the event's content id (a
+  booking id); a model may opt in to ambient `dap.observe` facts with
+  `ambient: true`; the generator takes a prelude of fixed steps.
+
+What the tests show: the six predeclared cases (two requests for one
+slot, free exactly one, duplicate publication, only the admin publishes,
+expiry, the cross-view case) and the 200-seed campaign pass; the ledger's
+totals agree with its entries.
+
+What V4 does not claim: one room and integer ticks only; the clock is a
+fixture actor driven by the generator; a cancel naming a different admin
+than its request is a known limit of the predeclared schema, recorded in
+the ledger and not exercised by the corpus; Club is V5 and the report V6.
