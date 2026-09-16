@@ -1,0 +1,24 @@
+✔ manifest identity binds the prose and executable source, independently recomputed (1.174917ms)
+ℹ ORDERING_LIFECYCLE_MANIFEST_ID sha256:b2501d040c87c31fee574549254902cc00b3a86d98a94098d7b8296bef2c59e6
+✔ every healthy boundary states all heads, writers, right statuses and exact active owners (1.401334ms)
+✔ join boundaries have two releases, dormant initialization and one activation followed by progress (0.213875ms)
+✔ all adverse cases have resolvable branches, full safe observations and exact reason coverage (1.666667ms)
+✔ restarts, alternative valid proof material and timeouts cannot duplicate or revive authority (0.126ms)
+✔ failed activation and an intervening dormant exercise permit fresh activation, preserving both retry receipts (0.278333ms)
+✔ another admitted participant event cannot occupy a permanent activation slot (0.08175ms)
+✔ public proof disclosure has a finite named rule and keeps private source kinds excluded (0.081666ms)
+✔ public exports are exact, source-linked and exclude the private accepted amount (0.118083ms)
+✔ changed-genesis enumeration covers every field, container, removal and added field (2.741958ms)
+✔ independent safety checks detect double ownership, premature activation and import duplication (0.395792ms)
+✔ future observation comparison rejects changed, missing and additional state, including unsafe mutations (0.142958ms)
+✔ replay obligations preserve pre-attach outcomes, local import timing and writer retry identity (0.102541ms)
+✔ O4 K4 actual Inspection mandate and result reach Bob and F readers: memory (753.923375ms)
+✔ O4 K4 actual Inspection mandate and result reach Bob and F readers: sqlite (784.96975ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1633.659542

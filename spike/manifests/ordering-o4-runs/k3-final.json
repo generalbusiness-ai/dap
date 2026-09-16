@@ -1,0 +1,26 @@
+{
+  "source": "82119b54b4e6aba6f4c8ba036dde009450aa7553",
+  "scope": "K3 member-attempt and placeholder regressions, public-proof checks and manifest specification; no broad suite or campaign.",
+  "commands": [
+    {
+      "command": [
+        "node",
+        "--test",
+        "test/ordering-scope-completeness.test.ts",
+        "test/scope-proof.test.ts",
+        "test/ordering-lifecycle.test.ts"
+      ],
+      "exitCode": 1,
+      "elapsedSeconds": 3.7425285420031287
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 0.8294093750009779
+    }
+  ]
+}

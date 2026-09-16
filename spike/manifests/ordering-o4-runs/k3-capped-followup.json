@@ -1,0 +1,26 @@
+{
+  "source": "813c84cb5f39651477f1b89d54d3f34bee6ea3c3",
+  "runtimeSource": "0aa8687",
+  "scope": "Two corrected capped-audience assertions and whole-tree typecheck; no broad repeat.",
+  "commands": [
+    {
+      "command": [
+        "node",
+        "--test",
+        "--test-name-pattern=producer refuses a capped authority audience",
+        "test/scope-proof.test.ts"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 0.18267483399540652
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 0.8605463749991031
+    }
+  ]
+}

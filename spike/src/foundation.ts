@@ -113,7 +113,7 @@ export interface GrantSpec {
 export interface GenesisPayload {
   foundation: string;
   runtime: string;
-  sequencing: { profile: 'single-writer' | 'dap.fixture.single-writer/1' | 'dap.fixture.single-writer/2'; writer: Principal; control?: Principal };
+  sequencing: { profile: 'single-writer' | 'dap.fixture.single-writer/1' | 'dap.fixture.single-writer/3'; writer: Principal; control?: Principal };
   grants: GrantSpec[];
   /** descriptor ids of packages attached at genesis, with resolutions */
   bindings: { package: string; resolution?: AttachResolution }[];
@@ -320,6 +320,8 @@ export interface FoldInput {
   packages: Record<string, PackageDescriptor>;
   /** the chain so far, for verifying embedded headers */
   entries: readonly Entry[];
+  /** Strict semantic verification propagates exceptions; discard the partial state on failure. */
+  throwOnError?: boolean;
 }
 
 export type GenesisErrorCode = 'duplicate_origin' | 'no_writer' | 'foundation_mismatch' | 'origin_bound' | 'system_origin';
@@ -351,7 +353,7 @@ export function foldEntry(state: FoundationState, input: FoldInput): Verdict {
   if (pos === 0) {
     verdict = foldGenesis(state, ev, packages);
   } else if (origin) {
-    verdict = foldOrigin(state, entry, entries);
+    verdict = foldOrigin(state, entry, entries, input.throwOnError);
   } else if (ev.kind.startsWith(SYSTEM_PREFIX)) {
     const v = validPayload(ev.kind, ev.payload);
     if (v === undefined) {
@@ -361,6 +363,7 @@ export function foldEntry(state: FoundationState, input: FoldInput): Verdict {
       try {
         verdict = foldSystem(state, entry, packages, entries);
       } catch (e) {
+        if (input.throwOnError) throw e;
         verdict = { known: true, authorized: false, effective: false, reason: 'fold_error:' + (e instanceof Error ? e.message : String(e)) };
         audience = named(ev.actor);
       }
@@ -368,14 +371,14 @@ export function foldEntry(state: FoundationState, input: FoldInput): Verdict {
       // stands, and each model's own outcome is recorded beside it.
       if ((ev.kind === K.observe || ev.kind === K.disclose) && verdict.effective) {
         const ambient = state.env.packages.flatMap((p) => Object.values(p.models).filter((m) => m.ambient).map((m) => m.id));
-        if (ambient.length) verdict = { ...verdict, perModel: dispatch(state, entry, ambient, false, entries).perModel };
+        if (ambient.length) verdict = { ...verdict, perModel: dispatch(state, entry, ambient, false, entries, input.throwOnError).perModel };
       }
     }
   } else {
     // Handlers receive cloned inputs. Keep the original values until the
     // audience succeeds, so a refused event cannot leave a model effect.
     modelsBefore = { ...state.models };
-    verdict = foldApplication(state, entry, entries);
+    verdict = foldApplication(state, entry, entries, input.throwOnError);
   }
 
   // Possessing a credential permits recording an attempt, not publishing
@@ -423,6 +426,7 @@ export function foldEntry(state: FoundationState, input: FoldInput): Verdict {
             },
           }, ev), binding.ceiling, membersBefore);
         } catch (e) {
+          if (input.throwOnError) throw e;
           if (modelsBefore) state.models = modelsBefore;
           verdict = { known: true, authorized: verdict.authorized, effective: false, reason: 'audience_error:' + (e instanceof Error ? e.message : String(e)) };
           audience = named(ev.actor);
@@ -465,11 +469,11 @@ function foldGenesis(state: FoundationState, ev: EventBody, packages: Record<str
 }
 
 /** An adopted origin: an assertion by its original actor under the initial bindings' origin rules. */
-function foldOrigin(state: FoundationState, entry: Entry, entries: readonly Entry[]): Verdict {
+function foldOrigin(state: FoundationState, entry: Entry, entries: readonly Entry[], throwOnError = false): Verdict {
   const ev = entry.event;
   const binding = state.env.kinds[ev.kind];
   if (!binding) return { known: false, authorized: false, effective: false, reason: 'unhandled' };
-  return dispatch(state, entry, binding.handlers, true, entries);
+  return dispatch(state, entry, binding.handlers, true, entries, throwOnError);
 }
 
 function foldSystem(state: FoundationState, entry: Entry, packages: Record<string, PackageDescriptor>, entries: readonly Entry[]): Verdict {
@@ -597,7 +601,7 @@ function foldAccept(state: FoundationState, entry: Entry, entries: readonly Entr
   return { known: true, authorized: true, effective: true };
 }
 
-function foldApplication(state: FoundationState, entry: Entry, entries: readonly Entry[]): Verdict {
+function foldApplication(state: FoundationState, entry: Entry, entries: readonly Entry[], throwOnError = false): Verdict {
   const ev = entry.event;
   const pos = entry.position;
   const binding = state.env.kinds[ev.kind];
@@ -609,10 +613,10 @@ function foldApplication(state: FoundationState, entry: Entry, entries: readonly
   if (binding.capability && !heldAt(state, ev.actor, binding.capability, pos)) {
     return { known: true, authorized: false, effective: false, reason: 'unauthorized' };
   }
-  return dispatch(state, entry, binding.handlers, false, entries);
+  return dispatch(state, entry, binding.handlers, false, entries, throwOnError);
 }
 
-function dispatch(state: FoundationState, entry: Entry, handlers: string[], origin: boolean, entries: readonly Entry[]): Verdict {
+function dispatch(state: FoundationState, entry: Entry, handlers: string[], origin: boolean, entries: readonly Entry[], throwOnError = false): Verdict {
   const ev = entry.event;
   const perModel: Verdict['perModel'] = {};
   let anyEffective = false;
@@ -639,6 +643,7 @@ function dispatch(state: FoundationState, entry: Entry, handlers: string[], orig
     try {
       r = model.fold(structuredClone(before), ev, ctx, model.config);
     } catch (e) {
+      if (throwOnError) throw e;
       perModel[modelId] = { effective: false, reason: 'fold_error:' + (e instanceof Error ? e.message : String(e)) };
       continue;
     }

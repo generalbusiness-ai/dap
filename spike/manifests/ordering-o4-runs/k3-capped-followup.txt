@@ -1,0 +1,16 @@
+COMMAND ["node", "--test", "--test-name-pattern=producer refuses a capped authority audience", "test/scope-proof.test.ts"]
+✔ O4 producer refuses a capped authority audience on memory (29.808708ms)
+✔ O4 producer refuses a capped authority audience on sqlite (37.348416ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 151.127666
+COMMAND ["npm", "run", "typecheck"]
+
+> dap-spike@0.0.1 typecheck
+> tsc -p tsconfig.json
+

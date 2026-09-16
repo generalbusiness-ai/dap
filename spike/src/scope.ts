@@ -119,13 +119,11 @@ function replayScopeView(view: ViewEntry[], genesis: string, packages: Record<st
   for (let position = 0; position <= limit; position++) {
     const v = view[position]!;
     if (!v.event) continue;
-    const base = interpretView('scope-evidence-reader', view, view.length - 1, packages, position);
+    const base = interpretView('scope-evidence-reader', view, view.length - 1, packages, position, { throwOnError: true });
     if (base.kind !== 'interpreted') throw new Error('scope: unresolved source semantics');
     const current = base.state;
     const event = v.event;
     const original = current.verdicts[position]!;
-    const failure = [original.reason, ...Object.values(original.perModel ?? {}).map(v => v.reason)].find(reason => reason?.startsWith('fold_error:') || reason?.startsWith('audience_error:'));
-    if (failure) throw new Error('scope: handler failure at ' + position + ': ' + failure);
     if (state.setup.role === 'sale') {
       const sale = current.models.sale as unknown as SaleState | undefined;
       if (sale && !sale.accepted) state.sale = { status: sale.status === 'closed' ? 'closed' : 'open', accepted_offer: null, winner: null };
@@ -276,14 +274,14 @@ function exportFrom(state: ScopeState, view: ViewEntry[], prefix: number, names:
   let factPositions: number[];
   if (state.setup.role === 'sale' && state.sale.accepted_offer && state.sale.winner) {
     facts = { accepted_offer: state.sale.accepted_offer, winner: state.sale.winner };
-    const interpreted = interpretView('scope-evidence-reader', view, view.length - 1, packages, prefix);
+    const interpreted = interpretView('scope-evidence-reader', view, view.length - 1, packages, prefix, { throwOnError: true });
     if (interpreted.kind !== 'interpreted') throw new Error('scope: source semantics unavailable');
     const sale = interpreted.state.models.sale as unknown as SaleState;
     factPositions = [sale.offers.find(o => o.id === sale.accepted!.id)!.position, sale.accepted!.position];
   } else if (state.setup.role === 'delivery') { facts = { ...state.facts }; factPositions = [0]; }
   else throw new ScopeRefusal('no_exportable_facts');
   const entry = view[prefix]!;
-    const interpreted = interpretView('scope-evidence-reader', view, view.length - 1, packages, prefix);
+    const interpreted = interpretView('scope-evidence-reader', view, view.length - 1, packages, prefix, { throwOnError: true });
     if (interpreted.kind !== 'interpreted') throw new Error('scope: source semantics unavailable');
   return identity({ genesis: state.genesis, initialWriter: ((view[0]!.event!.payload as { sequencing: { writer: string } }).sequencing.writer), prefix: { position: prefix, headerHash: viewHash(entry.header), commitment: entry.header.commitment }, rights: rightList, facts, factPositions,
     dependencies: { implementation: scopeImplementationId(), packages: interpreted.state.env.packages.map(p => p.id).sort() } });
@@ -302,9 +300,9 @@ export class ScopeJournal {
     const envelope = verifyEnvelope(genesis);
     validateScopeGenesis(envelope.body, opts.packages);
     init(envelope.body, envelopeId(envelope));
-    return new ScopeJournal(Journal.create(opts, envelope, origins), opts.packages, opts.writerKey);
+    return new ScopeJournal(Journal.create({ ...opts, throwOnFoldError: true }, envelope, origins), opts.packages, opts.writerKey);
   }
-  static open(opts: JournalOptions): ScopeJournal { return new ScopeJournal(Journal.open(opts), opts.packages, opts.writerKey); }
+  static open(opts: JournalOptions): ScopeJournal { return new ScopeJournal(Journal.open({ ...opts, throwOnFoldError: true }), opts.packages, opts.writerKey); }
   private assertAvailable(): void { if (this.unavailable) throw new Error('scope: facade unavailable; reopen after replay failure'); }
   private replayFailed(error: unknown): never {
     this.unavailable = true;
@@ -319,13 +317,24 @@ export class ScopeJournal {
       return snapshot({ ...state, inspection: { ...state.inspection, requested: (inspection?.requests.length ?? 0) > 0 } });
     } catch (error) { return this.replayFailed(error); }
   }
-  interpret(principal: string, basis = this.journal.context.head): ScopeState { return replayScopeView(this.journal.context.view(principal, basis), this.journal.context.genesisId, this.packages, 0, basis); }
+  interpret(principal: string, basis?: number): ScopeState {
+    this.assertAvailable();
+    const frontier = basis ?? this.journal.context.head;
+    return replayScopeView(this.journal.context.view(principal, frontier), this.journal.context.genesisId, this.packages, 0, frontier);
+  }
   proof(frontier = this.journal.context.head): PublicProof { return publicProof(this.journal, frontier, this.writerKey); }
   private fullView(): ViewEntry[] { return this.journal.context.entries.map(entry => ({ position: entry.position, event: entry.event, header: entry.header, headerHash: entry.headerHash, committed: entry.committed, via: 'audience' })); }
-  export(names: RightName[], frontier = this.journal.context.head): SourceExport { const view = this.fullView().slice(0, frontier + 1); return exportFrom(replayScopeView(view, this.journal.context.genesisId, this.packages), view, frontier, names, this.packages); }
+  export(names: RightName[], frontier?: number): SourceExport {
+    this.assertAvailable();
+    const limit = frontier ?? this.journal.context.head;
+    const view = this.fullView().slice(0, limit + 1);
+    return exportFrom(replayScopeView(view, this.journal.context.genesisId, this.packages), view, limit, names, this.packages);
+  }
   submit(input: ActorEnvelope | string, credential?: TransportCredential): (Receipt & { verdict?: Verdict; controlVerdict?: Verdict }) | Refusal {
     this.assertAvailable();
-    const result = this.journal.submit(input, credential);
+    let result: ReturnType<Journal['submit']>;
+    try { result = this.journal.submit(input, credential); }
+    catch (error) { return this.replayFailed(error); }
     if ('refused' in result) return result;
     // Every accepted append must leave a determinate scope fold, including
     // ordinary application events whose handlers can fail. Known policy

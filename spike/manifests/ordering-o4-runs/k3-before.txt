@@ -1,0 +1,99 @@
+✖ O4 K3 failed actor-only attempt permits certified transfer: bob-unauthorized-accept memory (244.347958ms)
+✖ O4 K3 failed actor-only attempt permits certified transfer: carol-malformed-grant memory (226.525958ms)
+✖ O4 K3 failed actor-only attempt permits certified transfer: bob-unauthorized-close memory (222.137291ms)
+✖ O4 K3 failed actor-only attempt permits certified transfer: bob-unauthorized-accept sqlite (250.908459ms)
+✖ O4 K3 failed actor-only attempt permits certified transfer: carol-malformed-grant sqlite (246.093584ms)
+✖ O4 K3 failed actor-only attempt permits certified transfer: bob-unauthorized-close sqlite (247.346459ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 0
+ℹ fail 6
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1515.059208
+
+✖ failing tests:
+
+test at test/ordering-scope-completeness.test.ts:21:3
+✖ O4 K3 failed actor-only attempt permits certified transfer: bob-unauthorized-accept memory (244.347958ms)
+  Error: scope proof: authority body has narrower audience
+      at file:///private/tmp/dap-o4-k3-completeness/spike/src/scope-proof.ts:63:75
+      at Array.map (<anonymous>)
+      at publicProof (file:///private/tmp/dap-o4-k3-completeness/spike/src/scope-proof.ts:60:29)
+      at ScopeJournal.proof (file:///private/tmp/dap-o4-k3-completeness/spike/src/scope.ts:323:69)
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-k3-completeness/spike/test/ordering-scope-completeness.test.ts:30:43)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)
+
+test at test/ordering-scope-completeness.test.ts:21:3
+✖ O4 K3 failed actor-only attempt permits certified transfer: carol-malformed-grant memory (226.525958ms)
+  Error: scope proof: authority body has narrower audience
+      at file:///private/tmp/dap-o4-k3-completeness/spike/src/scope-proof.ts:63:75
+      at Array.map (<anonymous>)
+      at publicProof (file:///private/tmp/dap-o4-k3-completeness/spike/src/scope-proof.ts:60:29)
+      at ScopeJournal.proof (file:///private/tmp/dap-o4-k3-completeness/spike/src/scope.ts:323:69)
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-k3-completeness/spike/test/ordering-scope-completeness.test.ts:30:43)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+
+test at test/ordering-scope-completeness.test.ts:21:3
+✖ O4 K3 failed actor-only attempt permits certified transfer: bob-unauthorized-close memory (222.137291ms)
+  Error: scope proof: authority body has narrower audience
+      at file:///private/tmp/dap-o4-k3-completeness/spike/src/scope-proof.ts:63:75
+      at Array.map (<anonymous>)
+      at publicProof (file:///private/tmp/dap-o4-k3-completeness/spike/src/scope-proof.ts:60:29)
+      at ScopeJournal.proof (file:///private/tmp/dap-o4-k3-completeness/spike/src/scope.ts:323:69)
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-k3-completeness/spike/test/ordering-scope-completeness.test.ts:30:43)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+
+test at test/ordering-scope-completeness.test.ts:21:3
+✖ O4 K3 failed actor-only attempt permits certified transfer: bob-unauthorized-accept sqlite (250.908459ms)
+  Error: scope proof: authority body has narrower audience
+      at file:///private/tmp/dap-o4-k3-completeness/spike/src/scope-proof.ts:63:75
+      at Array.map (<anonymous>)
+      at publicProof (file:///private/tmp/dap-o4-k3-completeness/spike/src/scope-proof.ts:60:29)
+      at ScopeJournal.proof (file:///private/tmp/dap-o4-k3-completeness/spike/src/scope.ts:323:69)
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-k3-completeness/spike/test/ordering-scope-completeness.test.ts:30:43)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+
+test at test/ordering-scope-completeness.test.ts:21:3
+✖ O4 K3 failed actor-only attempt permits certified transfer: carol-malformed-grant sqlite (246.093584ms)
+  Error: scope proof: authority body has narrower audience
+      at file:///private/tmp/dap-o4-k3-completeness/spike/src/scope-proof.ts:63:75
+      at Array.map (<anonymous>)
+      at publicProof (file:///private/tmp/dap-o4-k3-completeness/spike/src/scope-proof.ts:60:29)
+      at ScopeJournal.proof (file:///private/tmp/dap-o4-k3-completeness/spike/src/scope.ts:323:69)
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-k3-completeness/spike/test/ordering-scope-completeness.test.ts:30:43)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+
+test at test/ordering-scope-completeness.test.ts:21:3
+✖ O4 K3 failed actor-only attempt permits certified transfer: bob-unauthorized-close sqlite (247.346459ms)
+  Error: scope proof: authority body has narrower audience
+      at file:///private/tmp/dap-o4-k3-completeness/spike/src/scope-proof.ts:63:75
+      at Array.map (<anonymous>)
+      at publicProof (file:///private/tmp/dap-o4-k3-completeness/spike/src/scope-proof.ts:60:29)
+      at ScopeJournal.proof (file:///private/tmp/dap-o4-k3-completeness/spike/src/scope.ts:323:69)
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-k3-completeness/spike/test/ordering-scope-completeness.test.ts:30:43)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)

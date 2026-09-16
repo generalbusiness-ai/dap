@@ -4,6 +4,8 @@ Independent evidence for ratified review `5643a940fde2c3c372d48ae89ee34e8e35593c
 
 ## Method
 
+Before running, write the archive's full source commit ID on one line in `<archive>/SOURCE`. The harness reads this file beside the `spike` directory; `git archive` does not create it. Use the commit recorded for that run in `sources.json`.
+
 Run the identical command for each source archive, substituting only source/output paths:
 
 ```sh

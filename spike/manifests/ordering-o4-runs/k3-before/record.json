@@ -1,0 +1,9 @@
+{
+  "reviewedSource": "edacc32db1495504d10ae7a92f02af272e49e9f2",
+  "review": "10521cbe",
+  "evidence": "Original checker source/output retained byte-for-byte. New regression-only source and results recorded separately.",
+  "sha256": {
+    "a3-member-blocks-certification.out": "898abab9024610d691796f765119f04fd9bfac912f2fc04096424357a1123b41",
+    "a3-member-blocks-certification.ts": "2c64f8f1cdf31d823620aee46f0d23e379a67373be2314227a61854a484280d1"
+  }
+}

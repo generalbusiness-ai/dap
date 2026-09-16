@@ -7,6 +7,7 @@ import { CAP, K } from '../src/foundation.ts';
 import { SCOPE_KINDS } from '../src/scope-profile.ts';
 import { envelopeBytes, signEvent, type ActorEnvelope } from '../src/codec.ts';
 import { SQLiteBackend } from '../src/sqlite.ts';
+import { Journal } from '../src/journal.ts';
 import { salePackage } from '../fixtures/sale.ts';
 
 function accepted(result: ReturnType<ScopeJournal['submit']>) { assert.ok(!('refused' in result),JSON.stringify(result)); return result; }
@@ -97,15 +98,19 @@ for (const storage of ['memory','sqlite'] as const) for (const failure of ['fold
     assert.equal(accepted(world.emit('S','alice',K.attach,{package:scopeThrowPackage.id,resolution:{[SCOPE_KINDS.exercise]:{handlers:['scope','qaFault']}}})).verdict?.effective,true);
     const envelope=signEvent(scope.journal.context.intent(principals.alice,failure==='audience'?scopeThrowKind:SCOPE_KINDS.exercise,{right:'R_fulfil',failure},{action_id:'handler-failure',nonce:'d'.repeat(32)}),keys.alice);
     const bytes=envelopeBytes(envelope);const credential=scope.journal.context.credentialFor(principals.alice);
-    const expected=failure==='fold'?/handler failure at 19: fold_error:qa_handler_exception/:/handler failure at 19: audience_error:qa_audience_exception/;
+    const expected=failure==='fold'?/qa_handler_exception/:/qa_audience_exception/;
     assert.throws(()=>scope.submit(bytes,credential),expected);
     assert.throws(()=>scope.submit(bytes,credential),/unavailable/);
     assert.throws(()=>scope.journal.context.submit(envelope.body,credential,envelope),/closed|inactive/);
     const reopened=storage==='sqlite'?new SQLiteBackend(world.paths.S!,{writer:ordering.initialWriter,profile:ordering.profile}):active;
-    const cold=ScopeJournal.open({backend:reopened,writerKey:keys.W0,packages:registry});world.contexts.S=cold;world.backends.S=reopened;
-    assert.equal(cold.journal.context.head,19);assert.equal(cold.journal.context.entries[19]!.committed,bytes);
-    const baseVerdict=cold.journal.context.state.verdicts[19];
-    assert.throws(()=>cold.submit(bytes,credential),expected);
+    // Ordinary Journal retains the legacy error-verdict behavior. The selected
+    // scope profile instead fails at cold open with the original exception.
+    const base=Journal.open({backend:reopened,writerKey:keys.W0,packages:registry});
+    assert.equal(base.context.head,19);assert.equal(base.context.entries[19]!.committed,bytes);
+    const baseVerdict=base.context.state.verdicts[19];base.close();
+    const strict=storage==='sqlite'?new SQLiteBackend(world.paths.S!,{writer:ordering.initialWriter,profile:ordering.profile}):reopened;
+    assert.throws(()=>ScopeJournal.open({backend:strict,writerKey:keys.W0,packages:registry}),expected);
+    if(strict instanceof SQLiteBackend)strict.close();
     recordScope('unexpected-'+failure+'-handler-'+storage,{committed:bytes,baseVerdict,reopenedHead:19,error:String(expected)});
   } finally {world.close();}
 });

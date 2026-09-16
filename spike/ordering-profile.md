@@ -286,7 +286,12 @@ from the authenticated envelope and new signed header only after the
 backend's serialization call returns with the transaction committed. An
 unexpected head requires reopen. Owned direct Context writes share this
 encoding; cached ordering and control verdict queries use the authenticated
-prefix rather than re-verifying the full chain.
+prefix rather than re-verifying the full chain. This live cache trusts older
+stored rows while the head is unchanged: a rewrite of an older row is not
+detected by live cached authentication. A cold open verifies the full stored
+history and rejects that tampering. Direct backend mutation and hostile
+in-process code remain outside the cooperative Journal ownership boundary;
+the cache is not an integrity monitor for a writable database.
 
 Fixed-writer journals must omit the ordering-admission hook entirely.
 The O1 folded-frontier check and permanent error invalidation remain: cached
@@ -336,10 +341,15 @@ independent evidence of invariant 19.
 
 O4 selects `dap.fixture.scope/1` in genesis. This explicitly adds founding
 participants for the Inspection, Delivery and Fulfilment fixture contexts.
-The founders are authenticated by genesis, validated by the scope profile,
-and used by live and cold foundation admission, member audiences and
-participant observations. Founding participation creates no transferred
-right: F's declared rights remain dormant until the first effective activation.
+A genesis carrying `scope` explicitly opts into the shared foundation's
+scope setup validation and founding-participant semantics, even when opened
+through plain `Journal`. Its valid founders become participants for live and
+cold admission, member audiences and participant observations; a malformed
+setup throws `ScopeProfileError`. A genesis without `scope` keeps the ordinary
+single founder. This is an intentional shared-fold extension. It does not
+make plain `Journal` enforce the full ScopeJournal contract: scope transition,
+release, activation and proof validation still require that facade.
+Founding participation creates no transferred right: F's declared rights remain dormant until the first effective activation.
 S retains its original single founder and invitation trace. The profile and
 its implementation content identity are pinned in every scope genesis.
 
@@ -354,7 +364,7 @@ not a production proof of completeness. Provenance: decisions
 `ca04cc02027b9070bb60e3852ac19e21ae7931f4` and
 `42ffb3413ded6c33fb39d25296cd04ce0f005d6a` in the dap workroom.
 
-The rule is `dap.fixture.scope-public-openings/1`, whose canonical declaration
+The rule is `dap.fixture.scope-public-openings/2`, whose canonical declaration
 and content id are exported as `PUBLIC_PROOF_RULE` and
 `PUBLIC_PROOF_RULE_ID` by `src/scope-proof.ts`. It opens exactly these kinds:
 
@@ -363,13 +373,30 @@ and content id are exported as `PUBLIC_PROOF_RULE` and
 - Sale listing, offer, withdraw, accept and close;
 - the four Scope kinds result, exercise, import-export and recover.
 
-For every position through the frontier, a listed kind must be opened and
-its assigned audience must be spine or members. A narrower audience makes
-the producer refuse certification. This includes an attach ceiling and an
-unauthorized attempt assigned only to its actor. Every other position is
-hidden. `dap.disclose` is excluded because it can carry private bodies;
+For every position through the frontier, a listed kind is opened when its
+assigned audience is spine or members. There is one bounded exception.
+The rule's `ineffectiveActorOnly` object requires `known: true` and
+`effective: false`, and selects `body: 'hidden'` when the full source fold
+records that determinate ineffective verdict and its assigned audience is
+exactly `named: [event.actor]`. Missing or unknown verdicts do not qualify.
+The top-level and per-model reasons `not_in_v1`, `package_unavailable`, `scope_runtime_required` and
+`unhandled`, or prefixes `audience_error:` and `fold_error:`, are indeterminate
+and cannot justify hiding. Every other narrower listed-kind audience makes
+the producer refuse certification, including an effective body capped to its actor. Every
+unlisted position is hidden. `dap.disclose` is excluded because it can carry
+private bodies;
 `dap.observe` is excluded because observations are not release or grant
 inputs in this fixed scope policy. No wildcard kind admission applies.
+The fixed system scope operations keep spine audiences (admit keeps members),
+including malformed member attempts, so their base-fold `not_in_v1` placeholder
+never needs the hiding exception. For the four application Scope kinds, an
+ordinary member lacking the kind capability receives an actor-only known
+`unauthorized` refusal; Scope preserves that refusal and adds no effect.
+Authorized Scope placeholders retain the fixed spine audience and remain
+opened. A binding ceiling requires an attachment; an effective narrow
+attachment itself still prevents certification. The producer does not treat
+base-fold placeholders as authoritative Scope outcomes or add recursive replay.
+
 Opened bodies recursively reject `amount`, `acceptedAmount`, `counter`,
 `terms` and `offer_terms`, including nested signed-envelope payloads.
 
@@ -405,19 +432,39 @@ Activation explicitly discloses the source spine and member authority
 bodies to every F reader. For the fixture that includes Alice, Bob and Kim;
 Carol's offer stub and source participation reach Kim, who was not an S
 member. These are disclosures under the Sale budget's existing
-subject-to-disclosure clause. Private amounts, counters, terms and the
-private Inspection request are never included. This is broader disclosure
-of public source membership data, not an unchanged source recipient set.
+subject-to-disclosure clause. The admitted Inspection proof at S20 also
+contains I's signed genesis mandate: source S's genesis, request position 14,
+offer `o2` and inspector Ivan, plus I1's result `pass:o2`. S14's request body
+was readable only by Alice, Carol and Ivan. Bob already receives these
+request-derived facts through S20's members audience; Kim receives them
+through F1, whose spine audience exposes them to every F reader. The proof
+also exposes I's founding participant Ivan. This is an explicit disclosure
+of request-derived content, not just public source membership data.
+
+The S14 request body and its explicit requester attribution are absent from
+the carried proof. The mandate has no requester field. That narrow statement
+does not promise secrecy of the request's subject, inspector, source position
+or result, nor prevent inference about its requester; Carol's identity and
+offer stub are separately disclosed. Sale amounts, counters and terms remain
+excluded. The focused disclosure observation checks the actual signed S14,
+S20 and F1 openings and their recipient views; delivered proof content is not
+silently narrowed to preserve the former privacy claim.
 
 A dishonest writer can omit an authority body and sign an incomplete
 projection, or tailor projections to recipients. The destination cannot
 detect that completeness lie from headers that deliberately reveal no
-kind. Source members can recompute the rule and retain both signed packets
+kind. This includes falsely classifying effective authority as an ineffective
+actor-only attempt. Classifying the exception is part of the existing
+serving-writer trust; a hidden failed attempt supplies no authority during
+destination replay. Source members with the complete openings can recompute
+both effect and audience and then the rule and retain both signed packets
 as transferable evidence. Retired writer keys can certify their historical
 prefixes; source forks and database copies remain possible. None of these
 limits permits the destination to skip independent authorization or effect
 verification. Explicit hostile fixtures may create such signed alternate
-branches, but the honest producer continues to refuse narrow audiences.
+branches, but the honest producer continues to refuse effective narrow
+authority audiences. The `/1` rule and its older packets remain historical;
+certificates under that rule are not silently reinterpreted as `/2`.
 
 ## O4: checker contract obligations
 
@@ -432,19 +479,25 @@ exact source, profile and manifest and satisfy the nine tests listed in
 
 1. **A1 — Serving-party trust.** F's own genesis names the source writer as
    trusted to certify the completeness of public openings. The certificate
-   says nothing about release effectiveness. Its producer reads kinds and
-   assigned audiences as a serving-party function; pure ordering does not
+   says nothing about release effectiveness. Its producer reads kinds,
+   assigned audiences and source verdicts as a serving-party function; pure ordering does not
    establish completeness. F still reconstructs source semantics and grants
    to verify each release independently.
 2. **A2 — Exact public-data rule.** For every position through the certified
    frontier, open each authority-set kind only if its assigned audience is
-   `spine` or `members`. A narrower audience, including a binding ceiling,
-   makes the producer refuse certification; it must neither hide that body
-   nor widen its audience. Every other position retains only its header.
+   `spine` or `members`. An actor-only position with source verdict
+   known, determinate `effective === false` is the sole exception and retains
+   only its header;
+   this classification is explicitly trusted. Every other narrower audience,
+   including an effective body with a binding ceiling, makes the producer
+   refuse certification; it must neither hide that body nor widen its audience.
+   The named rule excludes unknown outcomes, the four placeholder reasons
+   and two error prefixes above, including per-model reasons. Unlisted positions
+   retain only their headers.
    Opened bodies pass the recursive banned-field check for `amount`,
    `acceptedAmount`, `counter`, `terms` and `offer_terms`. The named rule is
-   `dap.fixture.scope-public-openings/1`, content id
-   `sha256:475b415bbf8b16ccdb1bea078174712c57f2b2955ece9338d762abd60228bad8`,
+   `dap.fixture.scope-public-openings/2`, content id
+   `sha256:701403e9c51e6449ca797545818a8b63602a20a9b43c2ace064e9a38ab55b66c`,
    defined by `publicOpeningRule` in `manifests/ordering-lifecycle.ts`.
    Its 21 exact authority kinds are:
 
@@ -499,10 +552,19 @@ exact source, profile and manifest and satisfy the nine tests listed in
    against their source view and recompute the opening set, and a signed
    incomplete certificate is transferable evidence. A retired key remains
    trusted for the earlier prefixes whose headers it signed. Forks, database
-   copies and equivocation remain outside this fixture's protection.
+   copies and equivocation remain outside this fixture's protection. The same
+   signed destination genesis can also be instantiated on separate journal
+   copies, each activating independently with live rights. The release binds
+   one genesis identity, not one globally unique destination instance.
 
 
 ## O4: activation phase and unexpected failures
+
+An authorized owner can release a live source right after ordinary `dap.close`
+on that source. The current scope release semantics do not treat source
+closure as a release prohibition; destination activation still checks its own
+closed-context gate. This documents the existing behavior rather than adding
+a new close policy.
 
 Decision `c2982a6e6756f4fed08e5a82acc8b05a65127745` removes the earlier
 uninterrupted-activation restriction. An admitted destination event can

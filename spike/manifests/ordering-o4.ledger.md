@@ -318,3 +318,212 @@ hashes are in `run-7-integration.json`. The scope runtime remains `f17f15a8`
 and Scope package `edea788e`. No tests or campaigns were repeated for this
 evidence merge. Aggregate acceptance is still an upstream review condition,
 not a claim made by this O4 validation record.
+
+
+## K4 review correction: Inspection-derived disclosure
+
+The independent review of exact candidate `edacc32db1495504d10ae7a92f02af272e49e9f2`
+requested changes in four areas; it did not approve O4:
+`git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:10521cbe232b5d7eb00b6dd2d79436e208ec4f1a`.
+Root ratified that report in
+`git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:a47f5058a80b89b7bfc7cd45ea4496a6e5e9f8e2`
+and adopted repair choices in
+`git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:b70fbd1f1ee8ed3d6a7008456d0292330d92c263`.
+The checker independently measured 449 noncampaign tests: 445 pass, zero
+ordinary failures and four retained executing Club TODOs; typecheck passed.
+Its separate reproduction of run 7 passed 124/124 and regenerated all 80
+observations. Those are independent review measurements, distinct from the
+builder's original 124-test run at `e8ccb2ef` above, and coexist with K1–K4.
+
+The earlier run-7 paragraphs and `run-7-integration.json` retain the pending
+aggregate status recorded then. The later aggregate acceptance is now known:
+checker report
+`git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:7f5bacc35253bb774945606e5bc76bf7e75dc9b2`
+approved `936acce94e5cd024b0164fc6cd2af027f611545e`, subsequently landed and
+pushed as `6881b6a5a22584d534f2729002da0c582c97876a` with an identical tree.
+That aggregate approval is not approval of the later O4 scope implementation.
+Historical records are not rewritten to carry this later status.
+
+K4 adopts explicit disclosure accounting, preserving the existing delivered
+bytes. S20's admitted Inspection proof includes I's signed genesis mandate
+(source S, request position 14, offer o2, inspector Ivan and founding Ivan)
+and I1's result `pass:o2`. Bob receives those facts through S20 despite not
+reading S14. Kim and all other F spine readers receive them in F1. S14's
+request body and explicit requester attribution are absent from the proof;
+its derived content is not secret. Carol's public identity and offer stub
+remain disclosed, so requester anonymity or unlinkability is not claimed.
+The profile, prose manifest and executable `inspectionDisclosure` now state
+that distinction. The disclosure test authenticates the actual participant
+views and nested signed proofs on memory and SQLite, live and after reopen.
+
+The same documentation also names three existing limits from the review:
+an authorized source owner can release after ordinary source close; copies
+of the same signed F genesis can activate independently; and a scope-bearing
+genesis opts into shared-foundation setup/founder semantics even through
+plain Journal, while full ScopeJournal validation remains a separate facade
+contract. Live cached authentication does not detect rewritten older rows
+under an unchanged head; cold open verifies the full history and rejects
+that tampering. Direct backend mutation remains outside cooperative ownership.
+
+This isolated K4 revision changes no application runtime or delivered proof.
+Its component manifest is
+`sha256:b2501d040c87c31fee574549254902cc00b3a86d98a94098d7b8296bef2c59e6`;
+it preserves rule `475b415b`, scope runtime `f17f15a8` and Scope package
+`edea788e` while adding explicit observations. It is not the combined K1–K4
+manifest or a repaired-runtime result. K3 owns the separate opening-rule
+revision; integration must compute final identities and generate fresh proofs.
+The bounded K4 source is frozen before its focused disclosure/specification
+checks. No full suite or campaign is repeated for this documentation and
+observation correction; results will be appended below at their exact source.
+
+
+K4 component measurement at frozen source `e90b64b2e2b1e3f31a92aa00ecc77126c036d0bf` passes all 15
+focused checks: 13 manifest checks and two actual disclosure checks, one per
+backend. Whole-tree typecheck passes. Both retained observations cover live
+and cold views: four S readers and three current F participants per phase.
+Bob cannot read S14 but receives the identical admitted I proof at S20; all
+three F participants receive that same signed mandate and result in F1.
+Kim cannot read S20 directly in S. The exact assigned audiences, request and
+activation bytes, actual genesis identities and extracted content are in
+`ordering-o4-runs/k4-disclosure-1/observations`; `run.json` pins their hashes
+and this source's changed blobs. All runtime and fixture blobs match edacc.
+
+These focused results establish the documented disclosure, not a privacy
+repair or a passing combined K1–K4 candidate. This appended result, raw
+outputs and observation files are the only additions after the measured
+source; earlier run files are unchanged. No full suite or campaign ran.
+
+
+## O4-K3: failed actor-only attempts and completeness
+
+Review `10521cbe` found that one ineffective member attempt permanently
+prevented source certification although a later authorized release remained
+effective. The checker's original probe and output are retained byte-for-byte
+under [k3-before](ordering-o4-runs/k3-before/record.json). Regression-only
+source `b4cb584` retains `edacc32` runtime: all six new memory/SQLite checks
+fail at certification with `authority body has narrower audience`.
+The exact source, command and raw output are in
+[k3-before.json](ordering-o4-runs/k3-before.json) and
+[k3-before.txt](ordering-o4-runs/k3-before.txt).
+
+Builder adoption `b70fbd1f1ee8ed3d6a7008456d0292330d92c263` chooses the
+bounded hidden-failure rule. `dap.fixture.scope-public-openings/2` adds
+`ineffectiveActorOnly: 'hidden'` to its canonical declaration. A listed-kind
+entry may stay header-only only when the full source verdict is exactly
+`effective === false` and its assigned audience is exactly the actor alone.
+No missing/indeterminate verdict qualifies. Other listed-kind narrow
+audiences still refuse, including effective actor-only bodies. The
+certificate envelope remains `dap.fixture.public-proof-completeness/1`
+and binds the new rule content id:
+`sha256:614f837e0f4f795625bc69d690a13c3d2a38c28e1a349bc49ed6db35cc972a71`.
+
+The six regressions cover Bob's unauthorized accept, Carol's malformed grant
+and Bob's unauthorized close on both backends. They check actor-only refusal,
+header-only certification, exact retry, cold-reopened identical proof, effective
+source release, and one effective destination activation with Alice still the
+fulfilment owner. Public replay gives the hidden attempt no authority. The
+existing capped-audience test now explicitly checks an effective actor-only
+body still refuses certification. Existing malicious-writer and source-member
+recomputation cases remain in the focused proof suite.
+
+Classification is part of the existing trusted serving-writer completeness
+assumption. A dishonest writer may classify effective authority as hidden;
+the destination cannot detect that lie from opaque headers. Source members
+with complete openings can recompute source effect and audience and retain
+conflicting signed packets. This change does not weaken authentication,
+release authorization or effect through the genesis-pinned release position.
+Old opening-rule packets are historical and are not migrated automatically.
+
+This K3 component changes the rule, scope implementation, Scope package,
+manifest and generated genesis/proof identities. Its component-only manifest
+is `sha256:e97568583079211cb99cdd572fa5e23b749e8a95c621324e1fec56858d387e53`;
+source and focused validation will be recorded separately. The fixed join
+policy is unchanged. K1/K2/K4 integration must recompute final combined
+identities; no component measurement establishes that future combined source.
+
+
+At frozen K3 source `0aa8687`, the focused 45-check invocation passed 43
+and failed two strengthened capped-audience assertions. All six new K3
+transfer regressions passed, as did existing signature/completeness,
+malicious-writer and public/full differential checks. Typecheck passed.
+The failed assertions expected the capped Bob offer's audience to contain
+only Bob; it also contained attaching Alice. This was a test expectation
+error, not a failure of the exception's effect guard. Exact commands and
+output remain [k3-focused.json](ordering-o4-runs/k3-focused.json) and
+[k3-focused.txt](ordering-o4-runs/k3-focused.txt); six signed transfer
+observations are in `ordering-o4-runs/k3-observations`.
+The corrected test first certifies the healthy prefix, then asserts an
+effective attachment with exact actor-only Alice audience refuses immediately.
+It also retains the subsequent capped-offer refusal. Runtime, rule and
+component identities are unchanged by that test correction.
+
+
+The two corrected capped-audience checks and typecheck pass at
+`813c84cb5f39651477f1b89d54d3f34bee6ea3c3`; their separate results are
+[k3-capped-followup.json](ordering-o4-runs/k3-capped-followup.json).
+A subsequent source audit identified a necessary refinement before handoff:
+base-fold `not_in_v1` and `scope_runtime_required` are placeholders, not
+Scope effect decisions. The final K3 rule therefore requires a known,
+determinate ineffective verdict. Its structured `ineffectiveActorOnly`
+object pins `body: 'hidden'`, `known: true`, `effective: false`, the exact
+indeterminate reasons (`not_in_v1`, `package_unavailable`,
+`scope_runtime_required`, `unhandled`) and error prefixes (`audience_error:`,
+`fold_error:`), checked on both top-level and per-model outcomes. The final
+rule id is `sha256:701403e9c51e6449ca797545818a8b63602a20a9b43c2ace064e9a38ab55b66c`.
+The provisional `614f837e` rule remains confined to its earlier source.
+
+Both system scope operations retain spine audiences even for null member
+attempts; admit retains members. The four application Scope kinds retain
+spine unless the publication-capability gate makes a known unauthorized
+attempt actor-only. Scope preserves that authorization failure. Authorized
+placeholders therefore remain open, and ordinary failed member attempts
+can still be certified. Narrowing a binding requires an attachment, whose
+own effective narrow authority body still prevents certification. No extra
+semantic or recursive replay is introduced.
+
+The refined tests add both system scope operations and all four application
+Scope kinds by an ordinary member, followed by release/certification and
+activation, on both backends. A separate producer test refuses unknown and
+placeholder/error-reason actor-only cases. The final component manifest is
+`sha256:bdb831b32915c0b209afcbcdfc8c24e671dcd60eb4dd1ffca17a2b6300ae5746`;
+its scope implementation is
+`sha256:c1bdb2acda60062a57dd2942ecc5824a9d7f63ee1f5205736065989965f8978d`
+and Scope package is
+`sha256:b5eb69362b0e6de96e9dda2997a5399cc061f6f9e184b82145218afb5e2227a0`.
+These remain K3 component identities, not identities for merged K1/K2/K4.
+
+
+At refined frozen source `82119b5`, 47 of 49 focused checks passed and
+typecheck passed. All eight actual transfer checks passed, including the
+six scope-kind member attempts on each backend, effective actor-only refusal,
+and all existing proof/mutation/privacy checks. Two new placeholder tests
+stopped at their first setup case: the helper tried to sign an unbound kind
+without a valid `expected_binding` identity. The codec correctly refused it,
+before the intended unknown-kind fold. The correction supplies a canonical
+zero digest only for this deliberately unbound attempt, so it reaches the
+foundation's unknown verdict; no runtime or rule changes. Exact failed output
+and eight signed observations remain in `k3-final.*` and
+`k3-final-observations`. They are not relabelled as a passing run.
+
+
+Final test correction source `1bf535539c22045f2bf39a1dae4f1ddf28c51286`
+passes both placeholder tests (unknown plus six indeterminate-reason cases
+per backend) and whole-tree typecheck. The runtime is byte-identical to
+`82119b5`; the remaining 47 focused checks retain their passing measurement
+there. [Final follow-up](ordering-o4-runs/k3-placeholder-followup.json) and
+[raw output](ordering-o4-runs/k3-placeholder-followup.txt) preserve the
+separate command boundaries; no passing single 49-test rerun is claimed.
+[Component identities](ordering-o4-runs/k3-identities.json) give full source
+commits and hashes. The eight actual transfer observations retain signed
+attempts/proofs, source releases, activations and final states. The earlier
+failed runs and original checker output remain unchanged.
+
+Handoff changes only the proof producer/rule, its manifest/profile contract,
+focused tests and new records. It does not change actor authentication,
+certificate shape, required openings for effective authority, destination
+release-effect replay, audience assignments or K2 exception propagation.
+K2's strict interpretView option in verifyPublicProof must remain when this
+branch merges. K4 owns the separate disclosure additions. Both the manifest
+pin test and combined scope/package identities require recomputation after
+integration. No broad suite, full campaign, publication or independent
+approval is claimed by this component handoff.

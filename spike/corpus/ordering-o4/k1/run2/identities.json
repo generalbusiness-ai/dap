@@ -1,0 +1,14 @@
+{
+  "source": "9250db72f6003aeb92a8481a09b6b248d09d03f0",
+  "inspection": "sha256:18a886c149b383b8630836307195c1a89b90c463e7e32df6e0663b5d4ecc3030",
+  "priorInspection": "sha256:e2de918015c64401234c5df0291c8db399c7ce5997f6673662d7cc91a9c9c6e7",
+  "sale": "sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85",
+  "scope": "sha256:edea788ed6dab13a1a5ae255909dfa607f9d67a4c38571a35e04c7c9bb8eb623",
+  "implementation": "sha256:f17f15a85088f645191959d8b1c21b0f415aa7b74449d7b13ee82e2e48dc8bea",
+  "publicRule": "sha256:475b415bbf8b16ccdb1bea078174712c57f2b2955ece9338d762abd60228bad8",
+  "manifest": "sha256:d94090b21ce42f2eec4a046558b3a776895d82905c2096a19df1f5f02e011f86",
+  "files": {
+    "spike/fixtures/inspection.ts": "sha256:9bab92aacac2a1dca2802d9cae7cc6c797484800ceeb03aa5fd7962f82f6e8c7",
+    "spike/test/ordering-scope-participant-input.test.ts": "sha256:9ef92c47b6904b0aa5be61ac4a93b0504b5ce52623212c928b2ea4a7d309aef2"
+  }
+}

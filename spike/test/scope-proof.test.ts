@@ -283,8 +283,11 @@ for (const storage of ['memory', 'sqlite'] as const) {
     const cap = { id: descriptorId(base), ...base };
     const registry = { ...available, [cap.id]: cap };
     const { journal } = source(storage, false, registry); t.after(() => journal.close());
-    effective(act(journal, 'alice', K.attach, { package: cap.id, audience: [people.alice], resolution: { [SALE + 'offer']: { handlers: ['sale'] } } }));
-    const at = accepted(act(journal, 'bob', SALE + 'offer', { offer_id: 'capped-offer' })).header.position;
+    certified(journal); // no earlier narrow position explains the refusal
+    const attached = effective(act(journal, 'alice', K.attach, { package: cap.id, audience: [people.alice], resolution: { [SALE + 'offer']: { handlers: ['sale'] } } }));
+    assert.deepEqual(journal.context.state.audiences[attached], { kind: 'named', principals: [people.alice] });
+    assert.throws(() => certified(journal), /authority body has narrower audience/);
+    const at = effective(act(journal, 'bob', SALE + 'offer', { offer_id: 'capped-offer' }));
     assert.equal(journal.context.state.audiences[at]!.kind, 'named');
     assert.throws(() => certified(journal), /authority body has narrower audience/);
   });
@@ -308,6 +311,35 @@ for (const storage of ['memory', 'sqlite'] as const) {
       assert.notEqual(malicious.certificate.body.proof_hash, recomputed.certificate.body.proof_hash);
       assert.deepEqual(recomputed.positions.flatMap((position, i) => position.committed !== undefined && malicious.positions[i]!.committed === undefined ? [i] : []), [positions[name]]);
       assert.notEqual(publicProofBytes(malicious), publicProofBytes(recomputed));
+    }
+  });
+
+  test('O4 actor-only unknown and placeholder outcomes cannot justify hiding on ' + storage, () => {
+    const kind = 'com.example.scope.result';
+    for (const reason of ['unknown', 'not_in_v1', 'scope_runtime_required', 'package_unavailable', 'unhandled', 'fold_error:qa', 'audience_error:qa']) {
+      const base: Omit<PackageDescriptor, 'id'> = {
+        name: 'com.example.indeterminate-proof', module: import.meta.url,
+        models: { pending: { id: 'pending', config: { reason }, init: () => ({}), fold: (state, _event, _ctx, config) => ({ state, effective: false, reason: (config as { reason: string }).reason }) } },
+        capabilities: [kind],
+        kinds: { [kind]: { kind, schema: {}, handlers: ['pending'], capability: kind, audienceId: 'actor-only', audience: (_ctx, event) => ({ kind: 'named', principals: [event.actor] }) } },
+      };
+      const descriptor = { id: descriptorId(base), ...base };
+      const { journal } = source(storage, false, { ...available, [descriptor.id]: descriptor });
+      try {
+        if (reason !== 'unknown') {
+          effective(act(journal, 'alice', K.attach, { package: descriptor.id }));
+          effective(act(journal, 'alice', K.grant, { principal: people.alice, capabilities: [kind] }));
+        }
+        certified(journal);
+        const intent = journal.context.intent(people.alice, kind, {});
+        // An unbound intent has no binding id; provide a valid wire identity
+        // so the signed attempt reaches the foundation's unknown-kind verdict.
+        if (reason === 'unknown') intent.expected_binding = 'sha256:' + '0'.repeat(64);
+        const result = accepted(journal.submit(envelopeBytes(signEvent(intent, keys.alice)), journal.context.credentialFor(people.alice)));
+        assert.equal(result.verdict?.effective, false);
+        assert.deepEqual(journal.context.state.audiences[result.header.position], { kind: 'named', principals: [people.alice] });
+        assert.throws(() => certified(journal), /authority body has narrower audience/, reason);
+      } finally { journal.close(); }
     }
   });
 

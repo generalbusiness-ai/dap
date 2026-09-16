@@ -52,8 +52,11 @@ const base: Omit<PackageDescriptor, 'id'> = {
       handlers: ['inspection'],
       audienceId: 'requester+seller+inspector',
       audience: (_ctx, ev) => {
-        const p = ev.payload as { seller?: string; inspector?: string };
-        return named(ev.actor, p.seller ?? ev.actor, p.inspector ?? ev.actor);
+        const p = ev.payload as { seller?: unknown; inspector?: unknown } | null;
+        // Audience selection also runs for malformed requests refused by fold.
+        return named(ev.actor,
+          typeof p?.seller === 'string' ? p.seller : ev.actor,
+          typeof p?.inspector === 'string' ? p.inspector : ev.actor);
       },
     },
   },
