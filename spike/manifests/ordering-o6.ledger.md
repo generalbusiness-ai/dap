@@ -513,3 +513,57 @@ to `b6c7ab7a`. This final O4 merge adds only evidence and documentation after
 those measured sources, so no additional test run is required. The final
 report cites these exact records and preserves the independent-review
 boundary: repaired O4 and O6 are still candidates awaiting their own approval.
+
+
+## L1–L3 integration and declared run 6
+
+O6 integrates frozen O4 source
+`f8987d22890e7cf2471d7124544c539d69c0a835` cleanly. Runtime, shared fixtures,
+profile and lifecycle manifest match that source exactly; the O6 bootstrap
+and tests are unchanged. Candidate `864fc8b` and all five prior O6 runs remain
+historical evidence, with no reuse of their exact-head artifact identities.
+
+Independent review
+`git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:869821dee977b1697050fb09ba8f80f8112425f3`
+requested changes at O4 `e0467ae9`, despite reproducing its 469 selected tests,
+465 pass, four retained Club TODOs, passing typecheck and all 92 observations.
+Root ratification `04ea60627a747adfa56f518bfde5fbc7096a262e` and adoption
+`794a913979b8e34c5b32d9e1d401f6300730ee34` are in that same workroom. This
+review confirmed the original K1–K4 cases, then found further routes in the
+same classes. It did not approve O4 or O6.
+
+L1 resolves string-keyed registries through own properties. Unbound inherited
+names stay unhandled; unknown roles retain empty-capability behavior; declared
+own property-name kinds/models/roles still work. L2 preserves unexpected
+issuance hash/key faults and recognizes declared codec/canonical input errors
+by private identity, including the later malformed-header repair. Its strict
+construction API is private at the TypeScript boundary, not a JavaScript
+sandbox. L3's opening rule `/3` adds a separate exact actor-only unbound
+application classification using the effective binding history before the
+event; a missing registry or caller-supplied binding does not prove absence.
+It also excludes `model_unavailable` from the known-ineffective exception.
+Both omission classifications remain serving-writer trust. A dishonest
+certificate can create duplicate live rights; source-reader detection needs
+all relevant openings. Postfault proof/view read access and precommit refusal
+boundaries remain documented in the profile, not claimed universally blocked.
+
+Current identities:
+
+- lifecycle manifest `sha256:92ad0023e387cd4a6305d074ab99f7a29cbcc1699cd88b8dcf439a446ef58828`;
+- scope runtime `sha256:cbc58a25deebafd4bcb6318c8eace26027ffa09ed796061efdf27770feee67fe`;
+- Scope package `sha256:21195fc775e76dd7bcc0e0dc57488527c01260de4cb17b7f0de021d00161bed5`;
+- opening rule `sha256:9e9bcbdd74fe244fb63c5e339256ab508b2b3251d2e8fa642b3309cd1f1049e6`.
+
+Inspection remains `18a886c1`, Sale `cd32a3f5` and the fixed join policy
+`ac852eba`. Movable writer profile stays `/3`; this is distinct from the
+new public-opening rule `/3`. The certificate envelope stays completeness/1.
+Both historical rule-/2 ids (`614f837e` and `701403e9`) and their component
+sources remain separate; neither is silently reinterpreted under rule /3.
+
+A clean source freeze precedes only the two bootstrap checks, whole-tree
+typecheck and a fresh SQLite CLI demonstration. Fresh signed output is
+compared with run 5 without requiring a changed genesis: this ordinary
+Sale-only fixture selects no Scope or Inspection package. O4 owns the one
+combined noncampaign run and fresh lifecycle evidence. Final report counts
+will come from that actual result; no campaign or duplicate full suite runs
+here, and independent O4/O6 acceptance remains pending.
