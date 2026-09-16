@@ -1,0 +1,24 @@
+Source: ea2b65e669c6e5e65970f3b0b6a53dc640779555
+Command: node --test test/ordering-retry.test.ts
+Working directory: /tmp/dap-o2-retry-admission/spike
+Node: v26.8.2
+Exit status: 0
+Console output, joined from the tool's two sequential output chunks:
+
+✔ O2 concurrent clients: barrier-six-forward (220.326834ms)
+✔ O2 concurrent clients: barrier-six-reverse (212.797667ms)
+✔ O2 concurrent clients: barrier-six-rotated (208.320917ms)
+✔ O2 invitation lost-reply schedule: before-append (73.447041ms)
+✔ O2 invitation lost-reply schedule: after-consumption (73.163041ms)
+✔ O2 invitation lost-reply schedule: after-commit (74.086458ms)
+✔ O2 invitation lost-reply schedule: after-reply-before-notification (73.85525ms)
+✔ O2 publication SIGKILL replays the exact saved wire entry without a new action (137.079667ms)
+✔ O2 removed-participant admission fixture recovers a lost reply after authenticated restart (77.296583ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1217.39775

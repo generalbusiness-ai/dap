@@ -8,7 +8,8 @@ Branch: `request/o2-retry-admission`.
 
 The fixture uses the existing authenticated `Journal` and SQLite backend.
 It adds no append, admission, retry, signature, or model implementation.
-Every submitted intent is signed and saved before its client is released.
+Each concurrent client input and crash target is signed and saved before
+its process starts.
 
 | Named schedule | Expected result |
 |---|---|
@@ -40,5 +41,18 @@ the more granular eight-point append atomicity checks.
 
 ## Runs
 
-Source will be committed before the first O2 run. Results are recorded in a
-separate commit. Final integration waits for the accepted O1/V6 source.
+Focused run 1 source: `ea2b65e669c6e5e65970f3b0b6a53dc640779555`.
+Command from `spike`: `node --test test/ordering-retry.test.ts`.
+Node 26.8.2. Result: **9/9 passed**, zero failures, skips, or TODOs;
+1,217.4 ms. The console output is retained in
+[run-1.txt](ordering-o2-runs/run-1.txt). Across the three concurrent
+schedules, 126 submitted requests produced 78 new entries, 39 exact
+replays and nine changed-content refusals. These are deterministic bounded
+schedules, not a seeded campaign.
+
+TypeScript and `git diff --check` also passed. Dependencies were installed
+from the committed lockfile with `npm ci --ignore-scripts --no-audit --no-fund`.
+
+No append or model change was needed for these checks. Final integration
+waits for O1's single-facade ownership correction and the accepted O1/V6
+source. This focused run does not validate those subsequent changes.
