@@ -34,3 +34,16 @@ source blob is `cfb16f09b4e6adc9a3a5222515bf2e1cf35380db`. Other O4 fixture file
 were being edited concurrently; this is a file-boundary record, not a
 whole-tree snapshot claim. It turns the original five omissions/extras
 failures into verified rejections and records the dishonest-writer limit.
+
+The earlier assumption that unauthorized `dap.scope.release` becomes actor-only
+is withdrawn: the existing foundation keeps this system kind on the spine.
+The real hostile release is therefore honestly certifiable, and independent
+scope replay returns `unauthorized_release`. The producer's narrow-audience
+refusal remains tested for application kinds with attach ceilings.
+
+`evidence-dev1.txt` records source `df68429`: 4 passes and 2 failures. A wrong
+release pointer to a hidden observe position failed earlier at
+`ineffective_release` than the test expected. The materialized-genesis driver
+omitted its participant transport credential and therefore received an
+admission refusal before it could test destination binding. Both are driver
+issues; neither was converted into a false no-activation success.
