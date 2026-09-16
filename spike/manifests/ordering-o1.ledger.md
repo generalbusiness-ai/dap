@@ -66,6 +66,39 @@ callback cannot alter which saved identity is acknowledged. These source
 changes precede the final full run; its exact source and result will be
 recorded separately after completion.
 
+## Integrated run 2 and QA finding
+
+Source: `6bd263f029df0ea2c49a9e04dcf1fba4bf7f6962`.
+Commands: `npm test`, `npm run typecheck`, `git diff --check` from `spike`.
+Result: exit 0; **179 tests, 178 passed, 0 ordinary failures, 1 TODO**.
+Focused O1 checks: 49/49. Typecheck and whitespace check passed.
+Full run: 110.9 seconds. Exact output: [run-2.txt](ordering-o1-runs/run-2.txt).
+The TODO is the incoming Club second-admission counterexample, retained by
+user choice. Its inherited test annotation says repair pending; this O1
+record does not commission or claim that repair. The frozen Club manifest
+still passes while that stronger plan expectation fails.
+
+All 600 current manifest seeds had zero violations. Coverage:
+
+| Campaign | Measured coverage |
+|---|---|
+| Sale 200 | 942 joins; 199 attaches; 1,722 disclosures; 195 offers; 25 replacements; 147 withdrawals; 157 counters; 114 accepts, 20 effective; 295 closes; 11,047 entries; zero private disclosures and effective Inspection attaches; 118 unbound Inspection requests |
+| Booking 200 | 955 joins; 198 attaches; 1,629 disclosures; 2,553 requests; 1,497 occupancies, 652 effective and 471 linked; 383 frees; 419 cancels, 324 effective; 1,630 ticks; 12,000 entries |
+| Club 200 | 991 joins; 200 attaches; 1,939 disclosures; 629 applications; 1,575 votes, 1,001 effective; 343 admits, 126 effective; 514 standings; 246 grants; 11,939 entries |
+
+Incoming V4/V6 generator changes mean run 2's Sale seed numbers are not the
+same event streams as run 1. These measurements do not relabel old snapshots.
+The model manifests and packages remain those of the supplied V6 candidate.
+
+After this run, independent internal QA demonstrated a missing ownership
+boundary at this exact source. Two `Journal` facades over one backend held
+separate folds. Facade A revoked Alice's invite authority; stale facade B
+then issued an invitation and accepted it as effective, joining Bob and
+consuming the token. Reopen correctly found the invitation unauthorized and
+acceptance ineffective, so live and replay state disagreed. Run 2's existing
+checks did not cover this sequence. The source snapshot and output are kept;
+a single-facade ownership repair and exact regression follow in a new snapshot.
+
 ## Identities and scope
 
 - Profile: `dap.fixture.single-writer/1`.
