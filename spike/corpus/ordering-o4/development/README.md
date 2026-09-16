@@ -19,3 +19,18 @@ A certificate prototype is permitted, but a formal O4 baseline awaits the
 checker decision about the frozen manifest. The source writer would attest
 the public opening set's completeness, not release effectiveness; the
 recipient must still authenticate and replay source semantics and grants.
+
+`lifecycle-dev1.txt` is the first development lifecycle comparison at source
+`051472e` and historical manifest `63be83e6`: 25 passes, 3 failures across the
+healthy test (all 20 boundaries) and 27 adverse tests. Failures were a missing
+fixture recovery grant, an incorrect fixture assertion that unauthorized
+system scope releases have narrow audiences, and the historical `closed`
+expectation versus the unchanged Sale model's `not_open` reason. This is a
+recorded development run, not the revised formal O4 baseline.
+
+`public-proof-cert-tests.txt` records the helper's 26-pass development run.
+Its exact test blob is `55c2120b9ad746564c5455dc38b955e2956eea08` and scope-proof
+source blob is `cfb16f09b4e6adc9a3a5222515bf2e1cf35380db`. Other O4 fixture files
+were being edited concurrently; this is a file-boundary record, not a
+whole-tree snapshot claim. It turns the original five omissions/extras
+failures into verified rejections and records the dishonest-writer limit.
