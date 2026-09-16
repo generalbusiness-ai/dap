@@ -1,0 +1,208 @@
+{
+  "source": "8f48a39e7cf54678fd8c314bd57c4549dac7ba3d",
+  "testResults": {
+    "passed": 12,
+    "failed": 0,
+    "skipped": 0,
+    "todo": 0,
+    "typecheckExit": 0
+  },
+  "observations": [
+    {
+      "storage": "memory",
+      "phase": "cold-open",
+      "injectedCases": 17,
+      "originalExceptions": 17,
+      "coldExactRetries": 17,
+      "siteCount": 9,
+      "callsByKind": {
+        "createHash": 6,
+        "createPublicKey": 3
+      }
+    },
+    {
+      "storage": "sqlite",
+      "phase": "cold-open",
+      "injectedCases": 17,
+      "originalExceptions": 17,
+      "coldExactRetries": 17,
+      "siteCount": 9,
+      "callsByKind": {
+        "createHash": 6,
+        "createPublicKey": 3
+      }
+    },
+    {
+      "storage": "memory",
+      "phase": "activation",
+      "injectedCases": 151,
+      "originalExceptions": 151,
+      "durableExactRetries": 151,
+      "returnedFaultVerdicts": 0,
+      "siteCount": 135,
+      "callsByKind": {
+        "createHash": 90,
+        "createPublicKey": 45
+      }
+    },
+    {
+      "storage": "sqlite",
+      "phase": "activation",
+      "injectedCases": 151,
+      "originalExceptions": 151,
+      "durableExactRetries": 151,
+      "returnedFaultVerdicts": 0,
+      "siteCount": 135,
+      "callsByKind": {
+        "createHash": 90,
+        "createPublicKey": 45
+      }
+    },
+    {
+      "boundary": "legacy",
+      "sites": [
+        "createHash",
+        "update",
+        "digest",
+        "createHash",
+        "update",
+        "digest"
+      ],
+      "thrownValuesPerSite": 8
+    },
+    {
+      "boundary": "signed",
+      "sites": [
+        "createPublicKey",
+        "createHash",
+        "update",
+        "digest",
+        "createHash",
+        "update",
+        "digest"
+      ],
+      "thrownValuesPerSite": 8
+    },
+    {
+      "storage": "memory",
+      "malformedCases": 13,
+      "newPositions": 0,
+      "healthyAppendAndColdRetry": true
+    },
+    {
+      "storage": "sqlite",
+      "malformedCases": 13,
+      "newPositions": 0,
+      "healthyAppendAndColdRetry": true
+    },
+    {
+      "storage": "memory",
+      "phase": "signatures",
+      "coldVerificationCalls": 51,
+      "coldInjectedCases": 51,
+      "activationVerificationCalls": 124,
+      "activationSigningCalls": 1,
+      "selectedActivationCases": [
+        {
+          "at": 1,
+          "call": "verify",
+          "outcome": "precommit refusal",
+          "committedBeforeRetry": false,
+          "retry": "fresh append"
+        },
+        {
+          "at": 64,
+          "call": "verify",
+          "outcome": "original exception",
+          "committedBeforeRetry": true,
+          "retry": "exact replay"
+        },
+        {
+          "at": 125,
+          "call": "verify",
+          "outcome": "original exception",
+          "committedBeforeRetry": true,
+          "retry": "exact replay"
+        },
+        {
+          "at": 3,
+          "call": "sign",
+          "outcome": "original exception",
+          "committedBeforeRetry": false,
+          "retry": "fresh append"
+        }
+      ]
+    },
+    {
+      "storage": "sqlite",
+      "phase": "signatures",
+      "coldVerificationCalls": 51,
+      "coldInjectedCases": 51,
+      "activationVerificationCalls": 124,
+      "activationSigningCalls": 1,
+      "selectedActivationCases": [
+        {
+          "at": 1,
+          "call": "verify",
+          "outcome": "precommit refusal",
+          "committedBeforeRetry": false,
+          "retry": "fresh append"
+        },
+        {
+          "at": 64,
+          "call": "verify",
+          "outcome": "original exception",
+          "committedBeforeRetry": true,
+          "retry": "exact replay"
+        },
+        {
+          "at": 125,
+          "call": "verify",
+          "outcome": "original exception",
+          "committedBeforeRetry": true,
+          "retry": "exact replay"
+        },
+        {
+          "at": 3,
+          "call": "sign",
+          "outcome": "original exception",
+          "committedBeforeRetry": false,
+          "retry": "fresh append"
+        }
+      ]
+    }
+  ],
+  "rootHeaderReproduction": [
+    {
+      "storage": "memory",
+      "headBefore": 17,
+      "verify": {
+        "ok": false,
+        "reason": "malformed"
+      },
+      "submit": {
+        "refused": true,
+        "reason": "invitation_not_issued"
+      },
+      "coldHead": 18,
+      "coldParticipants": 4,
+      "healthyNextEffective": true
+    },
+    {
+      "storage": "sqlite",
+      "headBefore": 17,
+      "verify": {
+        "ok": false,
+        "reason": "malformed"
+      },
+      "submit": {
+        "refused": true,
+        "reason": "invitation_not_issued"
+      },
+      "coldHead": 18,
+      "coldParticipants": 4,
+      "healthyNextEffective": true
+    }
+  ],
+  "coverageLimit": "All issuance createHash/createPublicKey calls during the measured cold open and activation; every hash update/digest only in direct signed/legacy verifier checks; all cold signature verifications; activation signatures sampled first/middle/last of124 verification calls plus sole signing call. Not all2870 crypto calls swept."
+}

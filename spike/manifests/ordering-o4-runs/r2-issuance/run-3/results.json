@@ -1,0 +1,43 @@
+{
+  "source": "8f48a39e7cf54678fd8c314bd57c4549dac7ba3d",
+  "sourceUnchanged": true,
+  "results": [
+    {
+      "command": [
+        "node",
+        "--test",
+        "test/ordering-scope-issuance-faults.test.ts"
+      ],
+      "env": {},
+      "exit": 0,
+      "seconds": 35.855820084005245,
+      "output": "issuance-focused.txt",
+      "sha256": "dd54fd62e56c491c2396997176fad55403cb29068a775cd826719ed71ab18478"
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "env": {},
+      "exit": 0,
+      "seconds": 0.8170122089941287,
+      "output": "typecheck.txt",
+      "sha256": "c13cdfb986ee40a7a2614e780678b6307a8b1368291811d1a2cae9e00dfd60cd"
+    },
+    {
+      "command": [
+        "node",
+        "manifests/ordering-o4-runs/r2-issuance/header-before/malformed-header.mjs"
+      ],
+      "env": {
+        "WT": "/tmp/dap-o4-r2-issuance"
+      },
+      "exit": 0,
+      "seconds": 0.3339255829923786,
+      "output": "malformed-header.txt",
+      "sha256": "7fb76559b2ed98eecab961b6ea36997929dff84e36be4c0bd1f843bc48dff91b"
+    }
+  ]
+}

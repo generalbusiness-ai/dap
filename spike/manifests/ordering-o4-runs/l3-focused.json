@@ -1,0 +1,93 @@
+{
+  "source": "d987cd149c0fa0eda85235f0f8f10a56012d3bf2",
+  "commands": [
+    {
+      "command": [
+        "node",
+        "--test",
+        "test/ordering-scope-unbound.test.ts",
+        "test/ordering-scope-completeness.test.ts",
+        "test/scope-proof.test.ts",
+        "test/ordering-lifecycle.test.ts"
+      ],
+      "exitCode": 0,
+      "seconds": 3.7136458750028396
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "exitCode": 0,
+      "seconds": 0.8140536249993602
+    },
+    {
+      "command": [
+        "node",
+        "spike/manifests/ordering-o4-runs/l3-before/k3-d-strand.mjs",
+        "memory"
+      ],
+      "environment": {
+        "WT": "/tmp/dap-o4-l3-unbound"
+      },
+      "exitCode": 0,
+      "seconds": 0.42495795799186453
+    },
+    {
+      "command": [
+        "node",
+        "spike/manifests/ordering-o4-runs/l3-before/k3-d-strand.mjs",
+        "sqlite"
+      ],
+      "environment": {
+        "WT": "/tmp/dap-o4-l3-unbound"
+      },
+      "exitCode": 0,
+      "seconds": 0.45942104200366884
+    }
+  ],
+  "scope": "L3 focused checks plus typecheck only; no broad suite or campaigns",
+  "sha256": {
+    "spike/src/scope-proof.ts": "fb28286d2b43114fcfc7ae5157c64c37fb00c46533c8716626494ea53a2f43bd",
+    "spike/test/ordering-scope-unbound.test.ts": "5568f4177a8a2d03d2b5e8a393da5160bc921d8dab94b53f0a2fbb3b44f8a38d",
+    "spike/test/ordering-scope-completeness.test.ts": "16205655fac43ee53af1321b320566d07be98c525bb9abe87ca3fcb6b5cf50ba",
+    "spike/test/scope-proof.test.ts": "81a5eb08146a22e0cf65330a2567ce78e3270e26c453031351a0b65c4fd92fc2",
+    "spike/test/ordering-lifecycle.test.ts": "449486f11166e0d0f2f870ba920943873a9835880a9a9327cb171c1d5a18900f",
+    "spike/manifests/ordering-lifecycle.ts": "fde4057e501a4bc133318f8f33a6687ad7a521a3f02dc0989c52bfe486207d5c",
+    "spike/manifests/ordering-lifecycle.md": "0dab7c10a8d013f9108057726f141aeb23ffb76c562b9a2d0bb3954cba7978ad",
+    "spike/package.json": "6450b0d2a11935f0d195c8e540c8f5d9c81bbcb8c7e6fb35be5d8992ceb6e6f7",
+    "spike/package-lock.json": "5b4cf7d79eaa656b5175d7791158376a6c38ea446eb5c1b610be2e56bf359150",
+    "spike/tsconfig.json": "a8d6fd45c7174f95d19d7cb970bd3e35d75cbc73bd948b63389ad96a87bae3c9"
+  },
+  "observations": {
+    "k3-bob-unauthorized-accept-memory.json": "56f17ce2056b4ed56879f67bf6030cb77b6f5a6f238492ceffd34b8eb640f9b1",
+    "k3-bob-unauthorized-accept-sqlite.json": "56f17ce2056b4ed56879f67bf6030cb77b6f5a6f238492ceffd34b8eb640f9b1",
+    "k3-bob-unauthorized-close-memory.json": "417780d18c6bce65381908b1fea134a10bf888ebfb2640bca08b665fa79ab07a",
+    "k3-bob-unauthorized-close-sqlite.json": "417780d18c6bce65381908b1fea134a10bf888ebfb2640bca08b665fa79ab07a",
+    "k3-carol-malformed-grant-memory.json": "643c61523996b365573a4523d7ba4f38627bad886ce80d4126e66ba95f40756c",
+    "k3-carol-malformed-grant-sqlite.json": "643c61523996b365573a4523d7ba4f38627bad886ce80d4126e66ba95f40756c",
+    "k3-member-scope-attempts-memory.json": "acd05962d0330df7b03848e7e751c0f866dbe08d5e7ef87c00a8f6bee16e4c62",
+    "k3-member-scope-attempts-sqlite.json": "acd05962d0330df7b03848e7e751c0f866dbe08d5e7ef87c00a8f6bee16e4c62",
+    "l3-unbound-D-memory.json": "e47b9853fc685029a041f66825a279d9a4d6456cc59b76302765b4e7d4f2a735",
+    "l3-unbound-D-sqlite.json": "e47b9853fc685029a041f66825a279d9a4d6456cc59b76302765b4e7d4f2a735",
+    "l3-unbound-F-memory.json": "1941262ea1d832ae033223185142ac4237263d150d4e04ae70f81bfae4e45817",
+    "l3-unbound-F-sqlite.json": "1941262ea1d832ae033223185142ac4237263d150d4e04ae70f81bfae4e45817",
+    "l3-unbound-I-memory.json": "a9db7f97ce541d1286168e03edd5ce453d8b15e9ed40580802d9c3a73a5aec4e",
+    "l3-unbound-I-sqlite.json": "a9db7f97ce541d1286168e03edd5ce453d8b15e9ed40580802d9c3a73a5aec4e"
+  },
+  "identities": {
+    "rule": "sha256:9e9bcbdd74fe244fb63c5e339256ab508b2b3251d2e8fa642b3309cd1f1049e6",
+    "manifest": "sha256:92ad0023e387cd4a6305d074ab99f7a29cbcc1699cd88b8dcf439a446ef58828",
+    "scope": "sha256:3e0142a4c86598cfe30462f4cfe12a70e2730e55e6e2ea43570432c4dc113db6",
+    "scopePackage": "sha256:ddcaa3117eaac8b95c718452edec9b2e2d28fb36cc619f52fc4b7277d0b48e26",
+    "joinPolicy": "sha256:ac852ebab4f55816e55cd0fd71b7280267bffaca097046d4880b24ac63b01455"
+  },
+  "summary": {
+    "tests": 55,
+    "pass": 55,
+    "fail": 0,
+    "typecheck": 0,
+    "observations": 14
+  }
+}

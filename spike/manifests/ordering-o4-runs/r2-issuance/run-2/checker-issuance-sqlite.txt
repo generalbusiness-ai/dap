@@ -1,0 +1,18 @@
+A: faulty open threw original fault
+A: clean cold open participants include bob: true  verdict at 2: {"known":true,"authorized":true,"effective":true}
+B: skip 0 fired true returned threw original | cold verdict {"known":true,"authorized":true,"effective":true} activations 1
+B: skip 1 fired true returned threw original | cold verdict {"known":true,"authorized":true,"effective":true} activations 1
+B: skip 2 fired true returned threw original | cold verdict {"known":true,"authorized":true,"effective":true} activations 1
+B: skip 3 fired true returned threw original | cold verdict {"known":true,"authorized":true,"effective":true} activations 1
+B: skip 4 fired true returned threw original | cold verdict {"known":true,"authorized":true,"effective":true} activations 1
+B: skip 5 fired true returned threw original | cold verdict {"known":true,"authorized":true,"effective":true} activations 1
+B: skip 6 fired true returned threw original | cold verdict {"known":true,"authorized":true,"effective":true} activations 1
+B: skip 7 fired true returned threw original | cold verdict {"known":true,"authorized":true,"effective":true} activations 1
+B: skip 8 fired true returned threw original | cold verdict {"known":true,"authorized":true,"effective":true} activations 1
+B: skip 9 fired true returned threw original | cold verdict {"known":true,"authorized":true,"effective":true} activations 1
+B: skip 10 fired true returned threw original | cold verdict {"known":true,"authorized":true,"effective":true} activations 1
+B: skip 11 fired true returned threw original | cold verdict {"known":true,"authorized":true,"effective":true} activations 1
+B: skip 12 fired true returned threw original | cold verdict {"known":true,"authorized":true,"effective":true} activations 1
+B: skip 13 fired true returned threw original | cold verdict {"known":true,"authorized":true,"effective":true} activations 1
+B: skip 14 fired true returned threw original | cold verdict {"known":true,"authorized":true,"effective":true} activations 1
+B: skip 15 fired true returned threw original | cold verdict {"known":true,"authorized":true,"effective":true} activations 1

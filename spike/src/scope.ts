@@ -1,11 +1,11 @@
 import type { KeyObject } from 'node:crypto';
 // Fixed O4 scope semantics. No expectation-manifest dependency.
 import { snapshot } from './append.ts';
-import { canonicalize, envelopeId, verifyEnvelope, type ActorEnvelope } from './codec.ts';
+import { canonicalize, envelopeId, verifyEnvelope, isCodecValidationError, type ActorEnvelope } from './codec.ts';
 import { Journal, type JournalOptions } from './journal.ts';
 import { F0_ID, RUNTIME, K, heldAt } from './foundation.ts';
 import { interpretView } from './interpret.ts';
-import type { PackageDescriptor } from './descriptor.ts';
+import { own, type PackageDescriptor } from './descriptor.ts';
 import type { Entry, EventBody, Receipt, Refusal, Verdict } from './types.ts';
 import type { TransportCredential } from './append.ts';
 import type { ViewEntry } from './context.ts';
@@ -150,7 +150,7 @@ function replayScopeView(view: ViewEntry[], genesis: string, packages: Record<st
         if (!held(event.actor, K.scope_release)) result = bad('unauthorized', false);
         else {
           const e = validateExport(p.export);
-          const right = state.rights[p.right as RightName];
+          const right = own(state.rights, p.right);
           if (!right) result = bad('unowned_right');
           else if (right.status === 'released') result = bad('already_released');
           else if (right.status !== 'live') result = bad('spent_right');
@@ -183,7 +183,7 @@ function replayScopeView(view: ViewEntry[], genesis: string, packages: Record<st
             let body: EventBody;
             try { body = verifyEnvelope(release.committed).body; }
             catch (error) {
-              if (error instanceof TypeError && error.message.startsWith('codec: ')) throw new ScopeRefusal('malformed_release_proof: ' + error.message);
+              if (isCodecValidationError(error)) throw new ScopeRefusal('malformed_release_proof: ' + error.message);
               throw error;
             }
             const exported = validateExport(object(body.payload).export);
@@ -241,7 +241,7 @@ function replayScopeView(view: ViewEntry[], genesis: string, packages: Record<st
         else if (p.offer !== state.setup.mandate.offer || typeof p.result !== 'string') result = bad('wrong_mandate');
         else { state.inspection.result = p.result; result = good(); }
       } else if (event.kind === SCOPE_KINDS.exercise) {
-        const right = state.rights[p.right as RightName];
+        const right = own(state.rights, p.right);
         if (p.right === 'R_sell') result = bad('invalid_right_operation');
         else if (!right) result = bad('unowned_right');
         else if (right.status === 'released') result = bad('released_right');
@@ -257,8 +257,12 @@ function replayScopeView(view: ViewEntry[], genesis: string, packages: Record<st
       } else if (event.kind === SCOPE_KINDS.importExport) result = bad(state.imports.includes(p.identity) ? 'duplicate_import' : 'unapproved_import');
       else result = bad('no_safe_recovery_evidence');
     } catch (error) {
-      if (!(error instanceof ScopeRefusal || error instanceof ScopeProfileError || error instanceof ScopeProofError)) throw error;
-      result = bad(error.message);
+      let reason: string | undefined;
+      try {
+        if (error instanceof ScopeRefusal || error instanceof ScopeProfileError || error instanceof ScopeProofError) reason = error.message;
+      } catch { /* exception inspection must not replace the original value */ }
+      if (reason === undefined) throw error;
+      result = bad(reason);
     }
     state.verdicts[position] = result;
   }
@@ -266,7 +270,7 @@ function replayScopeView(view: ViewEntry[], genesis: string, packages: Record<st
 }
 function exportFrom(state: ScopeState, view: ViewEntry[], prefix: number, names: RightName[], packages: Record<string, PackageDescriptor>): SourceExport {
   const rightList = names.map(name => {
-    const right = state.rights[name];
+    const right = own(state.rights, name);
     if (!right || right.status !== 'live') throw new ScopeRefusal('unowned_right');
     return { name, owner: right.owner };
   });
@@ -292,7 +296,7 @@ export class ScopeJournal {
   readonly packages: Record<string, PackageDescriptor>;
   private readonly writerKey: KeyObject;
   private unavailable = false;
-  constructor(journal: Journal, packages: Record<string, PackageDescriptor>, writerKey: KeyObject) {
+  private constructor(journal: Journal, packages: Record<string, PackageDescriptor>, writerKey: KeyObject) {
     if (!scopeSetup(journal.context.entries[0]!.event)) throw new Error('scope: profile required');
     this.journal = journal; this.packages = packages; this.writerKey = writerKey;
   }

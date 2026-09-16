@@ -7,11 +7,15 @@ note §7 and §9. The executable companion is `ordering-lifecycle.ts`.
 content ids of this prose and that module. A change to either is a new
 manifest; O4 must cite the identity it executes.
 
-This revision names the Inspection mandate and result disclosed by the
-existing S20 admission and F1 activation (review finding O4-K4). It preserves
-the delivered proof bytes and corrects the earlier privacy claim. This is a
-post-review specification correction; the measured `d94090b2` runs remain
-historical. The earlier revision defined intervening destination events and
+This revision covers participant-input resilience, strict unexpected-error
+propagation, availability of certified transfer after ineffective member
+attempts, and explicit Inspection disclosure accounting (K1–K4 and L1–L3).
+Opening rule `/3` additionally distinguishes an application kind proved
+unbound at the event position from a bound but unavailable or indeterminate
+kind. The mandate and result disclosed by S20/F1 remain explicitly public;
+that disclosure repair does not remove delivered content. These are
+post-review corrections. Component and combined measurements remain at
+their own sources and are not implementation approval. The earlier revision defined intervening destination events and
 retry of failed activation, retaining the malformed-genesis outcomes and
 adopted public-proof completeness boundary. The activation phase is
 a **builder design decision for Hugh**, made under his instruction to make
@@ -26,7 +30,16 @@ The following manifest identities and their runs remain historical evidence, not
 - `sha256:d7419b5d85d9acd4767b8733b47729c29f49088a0495ee246c60c2da658a7613`;
 - `sha256:75de2a860b049b5d9dcad3dab234be14d7a965d53df2e0d0eae8de6f05a1b327`;
 - `sha256:fc55bfa123891e750f7bbe3a0d9cb33b5f65c07750db08bc984544ed2dd6b378`;
-- `sha256:d94090b21ce42f2eec4a046558b3a776895d82905c2096a19df1f5f02e011f86`.
+- `sha256:d94090b21ce42f2eec4a046558b3a776895d82905c2096a19df1f5f02e011f86`;
+- `sha256:a766fe56564b026a96c37630d261512c0f608adf5ec7c5ee2d11aca23eaf45fe` (combined K1–K4, source `2ee1b43a`).
+
+Component-only manifests also remain historical: K4
+`sha256:b2501d040c87c31fee574549254902cc00b3a86d98a94098d7b8296bef2c59e6`
+at `e90b64b`; initial K3
+`sha256:e97568583079211cb99cdd572fa5e23b749e8a95c621324e1fec56858d387e53`
+at `0aa8687`/`813c84c`; refined K3
+`sha256:bdb831b32915c0b209afcbcdfc8c24e671dcd60eb4dd1ffca17a2b6300ae5746`
+at `82119b5`/`1bf5355`. Those component results are not combined validation.
 
 Their source and run boundaries remain in the [O1 ledger](ordering-o1.ledger.md)
 and [O4 ledger](ordering-o4.ledger.md).
@@ -185,15 +198,23 @@ embedded issuance proofs. Kim is not a member of S. The disclosure therefore
 extends original members-at-recording visibility; the report must count it
 and must not claim that the original reader set remained unchanged.
 `publicOpeningRule` in the executable manifest names the exact kind list,
-required audiences and banned fields for `dap.fixture.scope-public-openings/2`.
+required audiences and banned fields for `dap.fixture.scope-public-openings/3`.
 Its `ineffectiveActorOnly` exception requires a known, determinate source
 verdict with `effective === false` and an audience of exactly the actor alone.
-The rule explicitly excludes `not_in_v1`, `package_unavailable`,
+The rule explicitly excludes `model_unavailable`, `not_in_v1`, `package_unavailable`,
 `scope_runtime_required`, `unhandled`, and `audience_error:` / `fold_error:`
-reason prefixes, including per-model reasons. That position stays header-only. Every other narrower
+reason prefixes, including per-model reasons. The separate `unboundActorOnly`
+exception requires a listed application kind absent from the effective binding
+history before its event position and the exact foundation outcome
+`known:false`, `authorized:false`, `effective:false`, `reason:unhandled`,
+without per-model diagnostics. It requires the same exact actor-only audience.
+A later attachment does not alter that earlier classification. A caller's
+expected binding or an unavailable registry entry cannot establish absence;
+bound placeholders/errors and system kinds cannot use this second exception.
+Both qualifying positions stay header-only. Every other narrower
 listed-kind audience still makes the producer refuse certification, including
-an effective actor-only body; it may not hide or widen that body. An absent
-or indeterminate verdict cannot qualify. Every unlisted position stays
+an effective actor-only body; it may not hide or widen that body. An absent verdict or other
+indeterminate outcome cannot qualify. Every unlisted position stays
 header-only. `dap.disclose` is excluded because this proof
 uses the fixed assigned-audience rule, not source recipient disclosures;
 `dap.observe` is excluded because ambient facts are outside this fixture's
@@ -268,10 +289,13 @@ journals on **memory and SQLite**, retaining observed outcomes:
    malformed grant remain hidden, confer no authority, and do not block a
    later authorized release, certification and activation on memory or SQLite.
    Ordinary member attempts at both system scope operations and all four
-   application Scope kinds must likewise preserve later certification. Unknown
-   and placeholder actor-only outcomes must refuse, not masquerade as failures.
+   application Scope kinds must likewise preserve later certification. A listed
+   application kind proved unbound before the event qualifies only under the
+   exact `unboundActorOnly` rule. Other unknown and all bound placeholder/error
+   actor-only outcomes must refuse, not masquerade as determinate failures.
 7. **Malicious valid signature.** Record a writer's signed omission as
-   outside destination protection; source-member recomputation detects it.
+   outside destination protection, potentially creating duplicate live rights;
+   a source member with all relevant openings can recompute and detect it.
 8. **Full/public differential.** For every certified packet, compare public
    replay with full-journal verdicts at every opened position and at release r.
 9. **Activation bytes and derived disclosures.** Check actual serialized
@@ -421,6 +445,30 @@ K3 revises the named public-opening rule under builder decision
 The former manifest `sha256:d94090b21ce42f2eec4a046558b3a776895d82905c2096a19df1f5f02e011f86`
 and `/1` opening-rule packets remain evidence at their original sources.
 The new exception does not prove its own classification: a dishonest writer
-can misclassify effective authority. Source members with complete openings
+can misclassify effective authority, including unbound status. Hiding a
+revocation can make an unauthorized release appear effective and create live
+copies of one right at both source and destination. Source members with complete openings
 can recompute the effect and audience and retain the conflicting signed
 packets; the destination cannot discover the lie from an opaque header.
+
+
+L3 extends this rule under adoption `794a913979b8e34c5b32d9e1d401f6300730ee34`
+following review `869821de`. The new content id is `sha256:9e9bcbdd74fe244fb63c5e339256ab508b2b3251d2e8fa642b3309cd1f1049e6`.
+The certificate envelope remains `dap.fixture.public-proof-completeness/1`.
+Two historical declarations shared the `/2` type name: provisional
+`sha256:614f837e0f4f795625bc69d690a13c3d2a38c28e1a349bc49ed6db35cc972a71`
+at `0aa8687`/`813c84c`, and refined
+`sha256:701403e9c51e6449ca797545818a8b63602a20a9b43c2ace064e9a38ab55b66c`
+at `82119b5` and combined `2ee1b43a`. The certificate pins the exact content
+id; neither declaration nor any historical packet is migrated to `/3`.
+
+Required L3 regressions submit Bob's unbound Sale offer in D on both stores,
+then certify, release, activate once and spend both destination rights, with
+exact retry and cold-reopened proof equality. I and F separately check unbound
+member attempts followed by a successful result or spends and certification;
+these are source-proof parity checks, not a new transfer protocol for I or F.
+A later attachment must preserve an earlier unbound proof while a later
+bound unavailable/placeholder attempt still prevents certification. Effective
+narrow authority and existing authentication/completeness checks stay enforced.
+The writer remains trusted for classification; a recipient cannot prove it
+from an opaque header, and source detection requires all relevant openings.

@@ -3,15 +3,15 @@
 // It never decides whether a release was effective or imports expected outcomes.
 import { createHash, sign, verify, type KeyObject } from 'node:crypto';
 import { snapshot } from './append.ts';
-import { canonicalize, headerHash, verifyEnvelope, publicKeyOf, principalOf } from './codec.ts';
+import { canonicalize, headerHash, verifyEnvelope, publicKeyOf, principalOf, isCodecValidationError } from './codec.ts';
 import { Journal, verifyJournalView } from './journal.ts';
 import { K } from './foundation.ts';
 import { SCOPE_KINDS } from './scope-profile.ts';
 import { initialOrdering, advanceOrdering } from './ordering.ts';
 import { interpretView, type Interpreted } from './interpret.ts';
 import type { ViewEntry } from './context.ts';
-import type { PackageDescriptor } from './descriptor.ts';
-import type { EventBody, Header } from './types.ts';
+import { visibleBinding, type PackageDescriptor } from './descriptor.ts';
+import { SYSTEM_PREFIX, type EventBody, type Header } from './types.ts';
 
 export class ScopeProofError extends Error {}
 
@@ -35,11 +35,15 @@ const PUBLIC = new Set<string>([
 ]);
 const PRIVATE_FIELDS = new Set(['amount', 'acceptedAmount', 'counter', 'terms', 'offer_terms']);
 export const PUBLIC_PROOF_RULE = {
-  type: 'dap.fixture.scope-public-openings/2', kinds: [...PUBLIC].sort(), requiredAudience: ['members', 'spine'],
+  type: 'dap.fixture.scope-public-openings/3', kinds: [...PUBLIC].sort(), requiredAudience: ['members', 'spine'],
   ineffectiveActorOnly: {
     body: 'hidden', known: true, effective: false,
-    indeterminateReasons: ['not_in_v1', 'package_unavailable', 'scope_runtime_required', 'unhandled'],
+    indeterminateReasons: ['model_unavailable', 'not_in_v1', 'package_unavailable', 'scope_runtime_required', 'unhandled'],
     indeterminateReasonPrefixes: ['audience_error:', 'fold_error:'],
+  },
+  unboundActorOnly: {
+    body: 'hidden', application: true, binding: 'absent-before-entry',
+    known: false, authorized: false, effective: false, reason: 'unhandled', perModel: 'absent',
   },
   otherPositions: 'hidden', bannedFields: [...PRIVATE_FIELDS].sort(), excludedKinds: [K.disclose, K.observe].sort(),
 } as const;
@@ -74,6 +78,16 @@ export function publicProof(journal: Journal, frontier = journal.context.head, w
     // establish this. Missing/indeterminate verdicts do not permit omission.
     if (audience?.kind === 'named' && audience.principals.length === 1 && audience.principals[0] === entry.event.actor) {
       const verdict = state.verdicts[entry.position];
+      // Effective attachment history, not the caller's expected_binding or
+      // registry availability, establishes absence at this event's position.
+      // A later attachment cannot retroactively bind an earlier attempt.
+      if (!entry.event.kind.startsWith(SYSTEM_PREFIX) &&
+          verdict?.known === false && verdict.authorized === false && verdict.effective === false &&
+          verdict.reason === 'unhandled' && verdict.perModel === undefined &&
+          (!Object.hasOwn(state.env.kinds, entry.event.kind) ||
+            !visibleBinding(state.env, entry.event.kind, position => position < entry.position))) {
+        return { header: entry.header };
+      }
       const reasons = [verdict?.reason, ...Object.values(verdict?.perModel ?? {}).map(v => v.reason)];
       const rule = PUBLIC_PROOF_RULE.ineffectiveActorOnly;
       const indeterminate = reasons.some(reason => reason !== undefined && (
@@ -146,10 +160,13 @@ const WIRE_REJECTIONS = new Set([
 function wireInput<T>(validate: () => T): T {
   try { return validate(); }
   catch (error) {
-    if (error instanceof TypeError && error.message.startsWith('codec: ') ||
-        error instanceof Error && WIRE_REJECTIONS.has(error.message)) {
-      throw new ScopeProofError(error.message);
-    }
+    let reason: string | undefined;
+    // Exception inspection can itself throw (for example, a revoked Proxy).
+    // Such a value is not a declared wire refusal; preserve it unchanged.
+    try {
+      if (isCodecValidationError(error) || error instanceof Error && WIRE_REJECTIONS.has(error.message)) reason = error.message;
+    } catch { /* retain the original unexpected value */ }
+    if (reason !== undefined) throw new ScopeProofError(reason);
     throw error;
   }
 }

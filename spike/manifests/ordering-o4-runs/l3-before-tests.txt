@@ -1,0 +1,100 @@
+✖ O4 L3 unbound D member attempt permits certified completed transfer: memory (241.052792ms)
+✖ O4 L3 unbound I attempt preserves proof and later inspection result: memory (63.715708ms)
+✖ O4 L3 unbound F member attempt preserves proof and both spends: memory (380.000709ms)
+✖ O4 L3 unbound D member attempt permits certified completed transfer: sqlite (269.138708ms)
+✖ O4 L3 unbound I attempt preserves proof and later inspection result: sqlite (72.851167ms)
+✖ O4 L3 unbound F member attempt preserves proof and both spends: sqlite (406.916042ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 0
+ℹ fail 6
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1510.293458
+
+✖ failing tests:
+
+test at test/ordering-scope-unbound.test.ts:38:3
+✖ O4 L3 unbound D member attempt permits certified completed transfer: memory (241.052792ms)
+  Error: scope proof: authority body has narrower audience
+      at file:///private/tmp/dap-o4-l3-unbound/spike/src/scope-proof.ts:84:75
+      at Array.map (<anonymous>)
+      at publicProof (file:///private/tmp/dap-o4-l3-unbound/spike/src/scope-proof.ts:69:29)
+      at ScopeJournal.proof (file:///private/tmp/dap-o4-l3-unbound/spike/src/scope.ts:325:69)
+      at unbound (file:///private/tmp/dap-o4-l3-unbound/spike/test/ordering-scope-unbound.test.ts:24:39)
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-l3-unbound/spike/test/ordering-scope-unbound.test.ts:41:23)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17)
+
+test at test/ordering-scope-unbound.test.ts:60:3
+✖ O4 L3 unbound I attempt preserves proof and later inspection result: memory (63.715708ms)
+  Error: scope proof: authority body has narrower audience
+      at file:///private/tmp/dap-o4-l3-unbound/spike/src/scope-proof.ts:84:75
+      at Array.map (<anonymous>)
+      at publicProof (file:///private/tmp/dap-o4-l3-unbound/spike/src/scope-proof.ts:69:29)
+      at ScopeJournal.proof (file:///private/tmp/dap-o4-l3-unbound/spike/src/scope.ts:325:69)
+      at unbound (file:///private/tmp/dap-o4-l3-unbound/spike/test/ordering-scope-unbound.test.ts:24:39)
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-l3-unbound/spike/test/ordering-scope-unbound.test.ts:63:23)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+
+test at test/ordering-scope-unbound.test.ts:72:3
+✖ O4 L3 unbound F member attempt preserves proof and both spends: memory (380.000709ms)
+  Error: scope proof: authority body has narrower audience
+      at file:///private/tmp/dap-o4-l3-unbound/spike/src/scope-proof.ts:84:75
+      at Array.map (<anonymous>)
+      at publicProof (file:///private/tmp/dap-o4-l3-unbound/spike/src/scope-proof.ts:69:29)
+      at ScopeJournal.proof (file:///private/tmp/dap-o4-l3-unbound/spike/src/scope.ts:325:69)
+      at unbound (file:///private/tmp/dap-o4-l3-unbound/spike/test/ordering-scope-unbound.test.ts:24:39)
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-l3-unbound/spike/test/ordering-scope-unbound.test.ts:75:23)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+
+test at test/ordering-scope-unbound.test.ts:38:3
+✖ O4 L3 unbound D member attempt permits certified completed transfer: sqlite (269.138708ms)
+  Error: scope proof: authority body has narrower audience
+      at file:///private/tmp/dap-o4-l3-unbound/spike/src/scope-proof.ts:84:75
+      at Array.map (<anonymous>)
+      at publicProof (file:///private/tmp/dap-o4-l3-unbound/spike/src/scope-proof.ts:69:29)
+      at ScopeJournal.proof (file:///private/tmp/dap-o4-l3-unbound/spike/src/scope.ts:325:69)
+      at unbound (file:///private/tmp/dap-o4-l3-unbound/spike/test/ordering-scope-unbound.test.ts:24:39)
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-l3-unbound/spike/test/ordering-scope-unbound.test.ts:41:23)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+
+test at test/ordering-scope-unbound.test.ts:60:3
+✖ O4 L3 unbound I attempt preserves proof and later inspection result: sqlite (72.851167ms)
+  Error: scope proof: authority body has narrower audience
+      at file:///private/tmp/dap-o4-l3-unbound/spike/src/scope-proof.ts:84:75
+      at Array.map (<anonymous>)
+      at publicProof (file:///private/tmp/dap-o4-l3-unbound/spike/src/scope-proof.ts:69:29)
+      at ScopeJournal.proof (file:///private/tmp/dap-o4-l3-unbound/spike/src/scope.ts:325:69)
+      at unbound (file:///private/tmp/dap-o4-l3-unbound/spike/test/ordering-scope-unbound.test.ts:24:39)
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-l3-unbound/spike/test/ordering-scope-unbound.test.ts:63:23)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+
+test at test/ordering-scope-unbound.test.ts:72:3
+✖ O4 L3 unbound F member attempt preserves proof and both spends: sqlite (406.916042ms)
+  Error: scope proof: authority body has narrower audience
+      at file:///private/tmp/dap-o4-l3-unbound/spike/src/scope-proof.ts:84:75
+      at Array.map (<anonymous>)
+      at publicProof (file:///private/tmp/dap-o4-l3-unbound/spike/src/scope-proof.ts:69:29)
+      at ScopeJournal.proof (file:///private/tmp/dap-o4-l3-unbound/spike/src/scope.ts:325:69)
+      at unbound (file:///private/tmp/dap-o4-l3-unbound/spike/test/ordering-scope-unbound.test.ts:24:39)
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-l3-unbound/spike/test/ordering-scope-unbound.test.ts:75:23)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)

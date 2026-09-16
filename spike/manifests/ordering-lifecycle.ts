@@ -88,7 +88,7 @@ export const inspectionDisclosure = {
 // K3 revises the trusted-writer disclosure/completeness rule. O4 must pin
 // this identity in its implemented certificate and destination profile.
 export const publicOpeningRule = {
-  type: 'dap.fixture.scope-public-openings/2',
+  type: 'dap.fixture.scope-public-openings/3',
   kinds: [
     'ai.generalbusiness.dap.genesis', 'ai.generalbusiness.dap.accept_invite',
     'ai.generalbusiness.dap.grant', 'ai.generalbusiness.dap.revoke',
@@ -104,8 +104,12 @@ export const publicOpeningRule = {
   requiredAudience: ['members', 'spine'],
   ineffectiveActorOnly: {
     body: 'hidden', known: true, effective: false,
-    indeterminateReasons: ['not_in_v1', 'package_unavailable', 'scope_runtime_required', 'unhandled'],
+    indeterminateReasons: ['model_unavailable', 'not_in_v1', 'package_unavailable', 'scope_runtime_required', 'unhandled'],
     indeterminateReasonPrefixes: ['audience_error:', 'fold_error:'],
+  },
+  unboundActorOnly: {
+    body: 'hidden', application: true, binding: 'absent-before-entry',
+    known: false, authorized: false, effective: false, reason: 'unhandled', perModel: 'absent',
   },
   otherPositions: 'hidden',
   bannedFields: ['amount', 'acceptedAmount', 'counter', 'terms', 'offer_terms'].sort(),

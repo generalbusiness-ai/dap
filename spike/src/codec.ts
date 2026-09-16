@@ -20,7 +20,17 @@ const HASH = /^sha256:[0-9a-f]{64}$/;
 const SPKI_PREFIX = Buffer.from('302a300506032b6570032100', 'hex');
 const utf8 = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
 
-function fail(message: string): never { throw new TypeError('codec: ' + message); }
+// Identity, rather than an exception's type/message, distinguishes declared
+// input rejections from unexpected faults in crypto or object inspection.
+const validationErrors = new WeakSet<object>();
+export function isCodecValidationError(error: unknown): error is TypeError {
+  return typeof error === 'object' && error !== null && validationErrors.has(error);
+}
+function fail(message: string): never {
+  const error = new TypeError('codec: ' + message);
+  validationErrors.add(error);
+  throw error;
+}
 
 function unicode(value: string): void {
   for (let i = 0; i < value.length; i++) {
