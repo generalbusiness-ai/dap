@@ -13,6 +13,7 @@ import { generate } from '../src/generate.ts';
 import { foldPrefix, oracleObserve } from '../src/oracle.ts';
 import { replay, type Step } from '../src/script.ts';
 import { SALE, salePackage } from '../fixtures/sale.ts';
+import { salePackage as run6Package } from '../corpus/sale/run6/model.ts';
 import { INSPECTION, inspectionPackage } from '../fixtures/inspection.ts';
 import {
   ALICE,
@@ -243,8 +244,8 @@ test('V3-F1: a private payload disclosed to a non-party is a budget violation on
   assert.match(violations[0]!.detail, /carol can read the sale\.offer_terms at 7/);
 });
 
-test('V3-F2: a counter naming someone other than the stub\'s author is ineffective, and its delivery to that person is reported by the budget', () => {
-  const { ctx } = replay({ base: saleBase(), steps: saleTraceSteps().slice(0, 5) }); // through 6: Bob's stub o1
+test('V3-F2: the kept run-6 model refuses a wrong-party counter, and the budget reports its misdelivery', () => {
+  const { ctx } = replay({ base: saleBase(run6Package), steps: saleTraceSteps().slice(0, 5) }); // through 6: Bob's stub o1
   const wrong = ctx.act(ALICE, SALE + 'counter', { offer_id: 'o1', amount: 780, author: CAROL });
   assert.ok(!('refused' in wrong));
   assert.equal(wrong.verdict?.effective, false);
@@ -285,8 +286,10 @@ const failedStubAttempts: { actor: string; roles: string[]; payload: Record<stri
   { actor: IVAN, roles: ['Inspector'], payload: { offer_id: 'o1' }, reason: 'unauthorized' },
 ];
 for (const failed of failedStubAttempts) {
-  test(`V3-G1: an ineffective stub by ${failed.actor} does not make them a counter party`, () => {
-    const { ctx } = replay({ base: saleBase(), steps: [
+  for (const pkg of [run6Package, salePackage]) {
+  const kept = pkg === run6Package;
+  test(`V3-G1: an ineffective stub by ${failed.actor} does not make them a counter party (${kept ? 'kept run-6 guard regression' : 'current audience'})`, () => {
+    const { ctx } = replay({ base: saleBase(pkg), steps: [
       { type: 'invite', inviter: ALICE, invitee: BOB, grants: { roles: ['Buyer'] } },
       { type: 'accept', invitee: BOB },
       { type: 'invite', inviter: ALICE, invitee: failed.actor, grants: { roles: failed.roles } },
@@ -299,24 +302,26 @@ for (const failed of failedStubAttempts) {
       const r = ctx.act(ALICE, SALE + 'counter', { offer_id: 'o1', amount: 777, author: failed.actor });
       assert.ok(!('refused' in r));
       assert.equal(r.verdict?.effective, false);
-      assert.equal((ctx.view(failed.actor)[r.header.position]!.event?.payload as { amount: number }).amount, 777);
+      assert.equal(ctx.view(failed.actor)[r.header.position]!.event !== undefined, kept);
       return r;
     };
     // With no effective stub, its refused recorder still is not a party.
     const missing = sendCounter();
     assert.equal(missing.verdict?.perModel?.['sale']?.reason, 'no_such_offer');
     let violations = fullCheck(ctx, [ctx.head]).filter((v) => v.kind === 'budget' && v.participant === failed.actor);
-    assert.equal(violations.length, 1);
-    assert.match(violations[0]!.detail, /whose parties are alice\+alice$/);
+    assert.equal(violations.length, kept ? 1 : 0);
+    if (kept) assert.match(violations[0]!.detail, /whose parties are alice\+alice$/);
     // A later effective stub owns the id, even though the failed one came first.
     const stub = ctx.act(BOB, SALE + 'offer', { offer_id: 'o1' });
     assert.ok(!('refused' in stub) && stub.verdict?.effective);
     const wrong = sendCounter();
     assert.equal(wrong.verdict?.perModel?.['sale']?.reason, 'not_author');
     violations = fullCheck(ctx, [ctx.head]).filter((v) => v.kind === 'budget' && v.participant === failed.actor);
-    assert.equal(violations.length, 2);
-    assert.match(violations[0]!.detail, /whose parties are alice\+alice$/);
-    assert.match(violations[1]!.detail, /whose parties are alice\+alice\+bob$/);
+    assert.equal(violations.length, kept ? 2 : 0);
+    if (kept) {
+      assert.match(violations[0]!.detail, /whose parties are alice\+alice$/);
+      assert.match(violations[1]!.detail, /whose parties are alice\+alice\+bob$/);
+    }
     const right = ctx.act(ALICE, SALE + 'counter', { offer_id: 'o1', amount: 780, author: BOB });
     assert.ok(!('refused' in right) && right.verdict?.effective);
     assert.ok(ctx.view(BOB)[right.header.position]!.event);
@@ -324,3 +329,43 @@ for (const failed of failedStubAttempts) {
     assert.deepEqual(fullCheck(ctx, [ctx.head]).filter((v) => v.participant !== failed.actor), []);
   });
 }
+}
+
+
+test('Fix 7: wrong-author, malformed, unauthorized and stale counters never address a supplied non-party, and late members replay them consistently', () => {
+  const { ctx } = replay({ base: saleBase(), steps: saleTraceSteps().slice(0, 5) });
+  const attempts = [
+    { actor: ALICE, payload: { offer_id: 'o1', amount: 777, author: CAROL }, reason: 'not_author' },
+    { actor: ALICE, payload: { offer_id: 'o1', amount: 'bad', author: CAROL }, reason: 'malformed' },
+    { actor: BOB, payload: { offer_id: 'o1', amount: 777, author: CAROL }, reason: 'unauthorized' },
+  ];
+  for (const attempt of attempts) {
+    const r = ctx.act(attempt.actor, SALE + 'counter', attempt.payload);
+    assert.ok(!('refused' in r));
+    assert.equal(r.verdict?.effective, false);
+    assert.equal(r.verdict?.perModel?.['sale']?.reason ?? r.verdict?.reason, attempt.reason);
+    assert.equal(ctx.view(CAROL)[r.header.position]!.event, undefined);
+    assert.ok(ctx.view(ALICE)[r.header.position]!.event);
+    assert.ok(ctx.view(BOB)[r.header.position]!.event);
+  }
+  const stale = ctx.act(ALICE, SALE + 'counter', { offer_id: 'o1', amount: 777, author: CAROL }, { expected_binding: 'sha256:' + 'f'.repeat(64) });
+  assert.ok(!('refused' in stale));
+  assert.equal(stale.verdict?.reason, 'stale_binding');
+  assert.equal(ctx.view(CAROL)[stale.header.position]!.event, undefined);
+  assert.deepEqual(fullCheck(ctx), []);
+
+  // Dana's declared backlog gives her the effective stub before she authors
+  // an unauthorized counter. Cold replay uses her own preceding state.
+  const late = replay({ base: saleBase(), steps: [
+    ...saleTraceSteps().slice(0, 5),
+    { type: 'invite', inviter: ALICE, invitee: DANA, grants: { roles: ['Buyer'] } },
+    { type: 'accept', invitee: DANA },
+    { type: 'act', actor: DANA, kind: SALE + 'counter', payload: { offer_id: 'o1', amount: 778, author: CAROL } },
+  ] }).ctx;
+  assert.equal(late.state.verdicts[late.head]?.reason, 'unauthorized');
+  assert.ok(late.view(DANA)[late.head]!.event);
+  assert.ok(late.view(BOB)[late.head]!.event);
+  assert.equal(late.view(CAROL)[late.head]!.event, undefined);
+  assert.deepEqual(foldPrefix(late, late.head).models, late.state.models);
+  assert.deepEqual(fullCheck(late), []);
+});

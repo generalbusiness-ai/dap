@@ -88,7 +88,8 @@ Snapshot commit: see `git log`, "checker run 2". The author's two fixes
 applied; the harness gained the join-disclosure hook the model declares
 (`config.joinDisclosure`, honoured by `applyStep` after every effective
 join as one `dap.disclose` by a holder of the disclose capability, the
-creator here). Package id after the fixes is printed by the test run.
+creator here). Package after the fixes:
+`sha256:48da26fcab894a9158d1671a77488b248597d4b7309fa10955b09019d6c062a4`.
 
 Results: the trace, cases 2, 3 and 4, and the campaign pass: 200 of 200
 seeds with zero violations of the property, the pause rule, the
@@ -141,7 +142,8 @@ replay).
 ## Run 4
 
 Snapshot commit: see `git log`, "checker run 4". Manifest revision "Run
-3"; package after fixes 4 to 6 is printed by the test run.
+3"; package after fixes 4 to 6:
+`sha256:0b252fc3b30ddf7d3b7a57ac2630b8cc1ac682b253da1118f8d3706f8953dde7`.
 
 The author's fixes 4 to 6 applied (a disclosure policy for the fixture's
 client; a counter must name the stub's author; total audience rules).
@@ -224,19 +226,43 @@ while keeping a violation.
 The historical run-5 passing result remains a result under its older,
 incorrect guard; it is not evidence of a clean campaign under run 6.
 
+## Run 7
+
+Snapshot commit: see `git log`, "checker run 7 snapshot". Manifest
+unchanged from run 6:
+`sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9`.
+Package after Fix 7:
+`sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85`.
+
+Foundation snapshot `65d8e63` supplies the already specified
+`audience(state, event)` contract through `AudienceCtx.modelState(id)`:
+a frozen clone of the preceding state in the local fold, restricted to
+the active audience declaration's original handlers. A later handler
+attachment does not broaden those reads; their scope is part of the
+binding identity. Client replay receives its own preceding state, not
+oracle state. This runtime repair is not counted as a Sale fix. The
+Sale counter's actual audience change is counted below as Fix 7.
+
+The generator and the stricter privacy budget are unchanged. The kept
+run-6 model retains the failures, including both hostile G1 shapes; the
+current model must prevent their delivery. The run-6 corpus test also
+checks deletion minimality and requires every case to be clean under
+the current model. Results will be recorded after the snapshot run.
+
 ## Result
 
-Sale, the partition-plus-decision shape: **6 fixes recorded, 5 of them
+Sale, the partition-plus-decision shape: **7 fixes recorded, 6 of them
 semantic, 0 added kinds, against a budget of 2 fixes and 1 kind: budget
-exceeded.** Of the five semantic fixes, one (fix 1) corrected the
+exceeded.** Of the six semantic fixes, one (fix 1) corrected the
 predeclared counter kind, two (fixes 2 and 3) made newcomers complete by
 a declared join disclosure and dropped the tombstone rule, one (fix 4)
 declared a disclosure policy once the privacy budget was checked on
-readable events, and one (fix 5) closed a misdirected-counter hole the
-reviewer found. The experiment's manifest has four post-baseline revisions, identified
+readable events, one (fix 5) refuses a counter naming the wrong author,
+and one (fix 7) derives actual counter recipients from effective stub
+state so refusal cannot misdeliver the payload. The experiment's manifest has four post-baseline revisions, identified
 above. Run 6 corrects a false negative in the privacy guard and exposes
-counter misdeliveries; the predeclared zero-violations campaign gate is
-not met. No model fix is made in that run. The views note's trace
+counter misdeliveries; that snapshot does not meet the predeclared
+zero-violations campaign gate. Run 7 adds the counted audience repair. The views note's trace
 as literally drawn is dependency-incomplete for Ivan under the fixed
 model and passes only with the declared join disclosure added; both
 results are kept visible in the tests.
@@ -391,4 +417,26 @@ payload"), or the generator should not emit a kind that no visible
 binding resolves except as a deliberately unhandled attempt with a
 public payload.
 
-Totals: 6 fixes, 0 added kinds, budget exceeded (fixes 1 to 5 are semantic; fix 6 is recorded here and not counted as semantic, see its entry)
+### Fix 7: a counter's audience comes from the preceding effective stub
+
+- Discovery source: checker review 796c6510, V3-G1; corrected guard in run 6
+- Counterexample: both kept hostile G1 cases (a failed replacement or an
+  unauthorized stub followed by a valid same-id stub), and 11 counter
+  misdeliveries across the nine failing seeds in [the run-6 corpus](../corpus/sale/run6/).
+- Constraint affected: none
+- Added kind: no
+- Before/after: before, the audience trusted `payload.author` even when
+  no effective stub existed, or when the effective stub belonged to
+  somebody else. The fold's refusal happened too late to protect the
+  payload. After, the counter's readers are its actor, the listing's
+  seller and the matching effective stub's author from the preceding
+  Sale state. If there is no effective stub, only actor and seller read
+  it. The payload cannot name an additional reader. The schema and
+  `not_author` refusal remain unchanged. Malformed, unauthorized and
+  stale attempts use the same audience rule. The declared public-stub
+  backlog supplies the state on which a late member's audience depends.
+- Counted: yes; this changes the measured model's audience after the
+  baseline. It is a sixth semantic fix, the seventh recorded fix. It
+  adds no kind and does not change or filter the generator.
+
+Totals: 7 fixes, 0 added kinds, budget exceeded (fixes 1 to 5 and 7 are semantic; fix 6 is recorded but not counted as semantic, see its entry)

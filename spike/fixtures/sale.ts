@@ -35,7 +35,7 @@
 // produced it and shows it only when that position is visible to the
 // principal; amounts and counters go only to their author and the seller.
 
-import { descriptorId, type ModelSpec, type PackageDescriptor } from '../src/descriptor.ts';
+import { descriptorId, type AudienceCtx, type ModelSpec, type PackageDescriptor } from '../src/descriptor.ts';
 import { MEMBERS, SPINE, named, type EventBody } from '../src/types.ts';
 
 const NS = 'com.example.sale.';
@@ -259,9 +259,9 @@ export const saleModel: ModelSpec<SaleState, SaleConfig> = {
         if (replacementOf(state, id, everything)) return refuse(state, 'replaced');
         const stub = stubOf(state, id);
         if (!stub) return refuse(state, 'no_such_offer');
-        // The audience delivers the counter to whoever `author` names, before this fold runs. A
-        // counter that names anyone but the offerer is refused, so no effective counter is
-        // ever addressed to a non-party (fix 5); the misdelivery itself is the schema's cost.
+        // A counter must name the actual offerer (fix 5). The audience independently derives
+        // recipients from the preceding effective stub, so a mismatched payload cannot
+        // deliver this private amount to a non-party, even when the fold refuses it (fix 7).
         if (p.author !== stub.author) return refuse(state, 'not_author');
         if (state.accepted !== null && state.accepted.id === id) return refuse(state, 'already_decided');
         const counter: OfferCounter = { id, position: ctx.position, amount: p.amount as number };
@@ -348,9 +348,9 @@ export const saleModel: ModelSpec<SaleState, SaleConfig> = {
   },
 };
 
-// The private audience rules are total over runtime JSON (fix 6): a payload
-// that is not an object, or whose party field is not a string, addresses
-// the event to its actor alone, and the fold then refuses it as malformed.
+// Private audience rules are total over runtime JSON (fix 6). Invalid
+// terms name only their actor. Counters derive their other parties from
+// preceding public state (fix 7), never from a supplied recipient.
 function namedParty(ev: EventBody, field: string): string {
   const p = ev.payload;
   const v = typeof p === 'object' && p !== null && !Array.isArray(p) ? (p as Record<string, unknown>)[field] : undefined;
@@ -359,9 +359,12 @@ function namedParty(ev: EventBody, field: string): string {
 function sellerAndAuthor(_: unknown, ev: EventBody) {
   return named(ev.actor, namedParty(ev, 'seller'));
 }
-/** A counter is by the seller; the payload names the offer's author so the audience can. */
-function counterParties(_: unknown, ev: EventBody) {
-  return named(ev.actor, namedParty(ev, 'author'));
+/** A refused attempt cannot make a non-party a reader (fix 7). */
+function counterParties(ctx: AudienceCtx, ev: EventBody) {
+  const state = ctx.modelState('sale') as SaleState | undefined;
+  const p = ev.payload;
+  const stub = isRecord(p) && isId(p.offer_id) ? state?.offers.find((o) => o.id === p.offer_id) : undefined;
+  return named(ev.actor, ...(state?.seller ? [state.seller] : []), ...(stub ? [stub.author] : []));
 }
 const membersAudience = () => MEMBERS;
 const spineAudience = () => SPINE;
