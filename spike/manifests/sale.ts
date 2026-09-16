@@ -76,7 +76,7 @@ export function saleTraceSteps(): Step[] {
     { type: 'act', actor: BOB, kind: SALE + 'offer_terms', payload: { offer_id: 'o1', amount: 700, seller: ALICE } }, // 7
     { type: 'act', actor: CAROL, kind: SALE + 'offer', payload: { offer_id: 'o2' } }, // 8
     { type: 'act', actor: CAROL, kind: SALE + 'offer_terms', payload: { offer_id: 'o2', amount: 750, seller: ALICE } }, // 9
-    { type: 'act', actor: ALICE, kind: SALE + 'counter', payload: { offer_id: 'o1', amount: 780, seller: ALICE } }, // 10
+    { type: 'act', actor: ALICE, kind: SALE + 'counter', payload: { offer_id: 'o1', amount: 780, author: BOB } }, // 10
     { type: 'attach', actor: ALICE, pkg: inspectionPackage }, // 11
     { type: 'invite', inviter: ALICE, invitee: IVAN, grants: { roles: ['Inspector'] } }, // 12
     { type: 'accept', invitee: IVAN }, // 13
@@ -258,6 +258,11 @@ function stubsBy(entries: readonly Entry[], author?: Principal): string[] {
   return ids;
 }
 
+function stubAuthor(entries: readonly Entry[], id: string): Principal | undefined {
+  for (const e of entries) if (e.event.kind === SALE + 'offer' && (e.event.payload as { offer_id?: string }).offer_id === id) return e.event.actor;
+  return undefined;
+}
+
 function pick<T>(r: () => number, xs: T[]): T | undefined {
   return xs.length ? xs[Math.floor(r() * xs.length)] : undefined;
 }
@@ -265,7 +270,15 @@ function pick<T>(r: () => number, xs: T[]): T | undefined {
 /** An unrelated package for the generator's narrow attach: a private note that must not stale any shared act. */
 const sideBase: Omit<PackageDescriptor, 'id'> = {
   name: 'com.example.side',
-  models: { side: { id: 'side', config: {}, init: () => ({ notes: 0 }), fold: (s: { notes: number }) => ({ effective: true, state: { notes: s.notes + 1 } }) } as never },
+  models: {
+    side: {
+      id: 'side',
+      config: {},
+      init: () => ({ notes: [] }),
+      fold: (s: { notes: number[] }, _ev: EventBody, ctx: { position: number }) => ({ effective: true, state: { notes: [...s.notes, ctx.position] } }),
+      observe: (_p: Principal, s: { notes: number[] }, ctx: { visible(i: number): boolean }) => ({ notes: s.notes.filter((i) => ctx.visible(i)).length }),
+    } as never,
+  },
   capabilities: [],
   kinds: { 'com.example.side.note': { kind: 'com.example.side.note', schema: { text: 'string' }, handlers: ['side'], audienceId: 'members', audience: () => MEMBERS } },
 };
@@ -285,7 +298,10 @@ export function saleGeneratorSpec(pkg: PackageDescriptor): GeneratorSpec {
       },
       [SALE + 'offer_terms']: (r, { actor, entries }) => ({ offer_id: pick(r, r() < 0.85 ? stubsBy(entries, actor) : stubsBy(entries)) ?? 'none', amount: 500 + Math.floor(r() * 500), seller: ALICE }),
       [SALE + 'withdraw']: (r, { actor, entries }) => ({ offer_id: pick(r, r() < 0.8 ? stubsBy(entries, actor) : stubsBy(entries)) ?? 'none' }),
-      [SALE + 'counter']: (r, { entries }) => ({ offer_id: pick(r, stubsBy(entries)) ?? 'none', amount: 600 + Math.floor(r() * 400), seller: ALICE }),
+      [SALE + 'counter']: (r, { entries }) => {
+        const id = pick(r, stubsBy(entries)) ?? 'none';
+        return { offer_id: id, amount: 600 + Math.floor(r() * 400), author: stubAuthor(entries, id) ?? ALICE };
+      },
       [SALE + 'accept']: (r, { entries }) => ({ offer_id: pick(r, stubsBy(entries)) ?? 'none' }),
       [SALE + 'close']: () => ({ outcome: 'sold' }),
       [INSPECTION + 'request']: (r, { members, entries }) => ({ offer_id: pick(r, stubsBy(entries)) ?? 'none', seller: ALICE, inspector: pick(r, members) ?? ALICE }),
@@ -293,6 +309,7 @@ export function saleGeneratorSpec(pkg: PackageDescriptor): GeneratorSpec {
     },
     sidePackage,
     ineffectiveRate: 0.06,
+    weights: { [SALE + 'close']: 0.05, [SALE + 'offer']: 2, [SALE + 'offer_terms']: 1.5, [SALE + 'accept']: 0.5, [INSPECTION + 'request']: 0.3, 'com.example.side.note': 0.3 },
     bounds: { maxPositions: saleBounds.maxPositions, maxParticipants: saleBounds.maxParticipants },
   };
 }

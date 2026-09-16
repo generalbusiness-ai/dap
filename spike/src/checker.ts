@@ -90,6 +90,26 @@ export function checkContext(ctx: Context, opts: CheckOptions = {}): Violation[]
   return out;
 }
 
+/** The paths at which two JSON values differ, with both leaves, for a compact report. */
+export function diffPaths(expected: unknown, actual: unknown, path = '', out: string[] = [], limit = 8): string[] {
+  if (out.length >= limit) return out;
+  if (isDeepStrictEqual(expected, actual)) return out;
+  const leaf = (x: unknown) => (x !== null && typeof x === 'object' ? JSON.stringify(x).slice(0, 60) : String(x));
+  if (expected !== null && actual !== null && typeof expected === 'object' && typeof actual === 'object' && Array.isArray(expected) === Array.isArray(actual)) {
+    const keys = new Set([...Object.keys(expected as object), ...Object.keys(actual as object)]);
+    for (const k of [...keys].sort()) diffPaths((expected as Record<string, unknown>)[k], (actual as Record<string, unknown>)[k], path ? path + '.' + k : k, out, limit);
+    return out;
+  }
+  out.push(`${path}: oracle ${leaf(expected)}, view ${leaf(actual)}`);
+  return out;
+}
+
+/** One line per violation: who, where, what, and the differing paths if any. */
+export function describeViolation(v: Violation): string {
+  const diff = v.expected !== undefined && v.actual !== undefined ? ' [' + diffPaths(v.expected, v.actual).join('; ') + ']' : '';
+  return `${v.participant}@${v.frontier} ${v.kind}: ${v.detail}${diff}`;
+}
+
 /** A package with one kind's audience policy replaced: the mutation runner's planted bug. It is a new package with its own identity and no pinned module. */
 export function withAudience(pkg: PackageDescriptor, kind: string, audienceId: string, audience: PackageDescriptor['kinds'][string]['audience']): PackageDescriptor {
   const { id: _id, module: _module, ...surface } = pkg;

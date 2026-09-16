@@ -18,7 +18,7 @@ note (*The trace*) and are predeclared here, not fixes:
 | `com.example.sale.offer` | members | `make_offer` | `offer_id`, optional `replaces` |
 | `com.example.sale.offer_terms` | author and seller | `make_offer` | `offer_id`, `amount`, `seller` |
 | `com.example.sale.withdraw` | members | `withdraw_own_offer` | `offer_id` |
-| `com.example.sale.counter` | seller and author | `counter` | `offer_id`, `amount`, `seller` |
+| `com.example.sale.counter` | seller and author | `counter` | `offer_id`, `amount`, `author` |
 | `com.example.sale.accept` | members | `accept_offer` | `offer_id` |
 | `com.example.sale.close` | spine | `close` | `outcome` |
 

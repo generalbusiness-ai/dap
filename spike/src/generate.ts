@@ -37,6 +37,8 @@ export interface GeneratorSpec {
   payloads: Record<string, (r: () => number, ctx: { members: Principal[]; step: number; actor: Principal; state: FoundationState; entries: readonly Entry[] }) => Json>;
   /** how likely a step is an ineffective attempt by a random member, default 0.06 */
   ineffectiveRate?: number;
+  /** relative weight of each application kind when choosing among a participant's affordances, default 1 */
+  weights?: Record<string, number>;
   /** an unrelated package that a narrow attach may install mid-stream */
   sidePackage?: PackageDescriptor;
   /**
@@ -44,6 +46,16 @@ export interface GeneratorSpec {
    * origins included; maxParticipants counts every participant.
    */
   bounds: { maxPositions: number; maxParticipants: number };
+}
+
+function weighted(r: () => number, kinds: string[], weights: Record<string, number>): string {
+  const total = kinds.reduce((sum, k) => sum + (weights[k] ?? 1), 0);
+  let x = r() * total;
+  for (const k of kinds) {
+    x -= weights[k] ?? 1;
+    if (x < 0) return k;
+  }
+  return kinds[kinds.length - 1]!;
 }
 
 export function generate(spec: GeneratorSpec, seed: number): Script {
@@ -109,7 +121,7 @@ export function generate(spec: GeneratorSpec, seed: number): Script {
     const actor = pick(members);
     const aff = observe(ctx.state, actor, ctx.head, () => true).affordances.filter((k) => k in spec.payloads);
     if (aff.length === 0) continue;
-    const kind = pick(aff);
+    const kind = weighted(r, aff, spec.weights ?? {});
     push({ type: 'act', actor, kind, payload: spec.payloads[kind]!(r, { members, step, actor, state: ctx.state, entries: ctx.entries }) });
   }
   return script;

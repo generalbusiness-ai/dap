@@ -214,8 +214,8 @@ export const saleModel: ModelSpec<SaleState, Record<string, never>> = {
         return { effective: true, state: { ...state, terms: [...state.terms, terms] } };
       }
       case NS + 'counter': {
-        // The payload's `seller` field is read by the audience rule; its value carries no meaning for the fold.
-        if (!Number.isInteger(p.amount) || typeof p.seller !== 'string') return refuse(state, 'malformed');
+        // The payload's `author` field is read by the audience rule; its value carries no meaning for the fold.
+        if (!Number.isInteger(p.amount) || typeof p.author !== 'string') return refuse(state, 'malformed');
         if (withdrawalOf(state, id, everything)) return refuse(state, 'withdrawn');
         if (replacementOf(state, id, everything)) return refuse(state, 'replaced');
         if (!stubOf(state, id)) return refuse(state, 'no_such_offer');
@@ -306,6 +306,10 @@ export const saleModel: ModelSpec<SaleState, Record<string, never>> = {
 function sellerAndAuthor(_: unknown, ev: EventBody) {
   return named(ev.actor, (ev.payload as { seller?: string }).seller ?? ev.actor);
 }
+/** A counter is by the seller; the payload names the offer's author so the audience can. */
+function counterParties(_: unknown, ev: EventBody) {
+  return named(ev.actor, (ev.payload as { author?: string }).author ?? ev.actor);
+}
 const membersAudience = () => MEMBERS;
 const spineAudience = () => SPINE;
 
@@ -319,7 +323,7 @@ const base: Omit<PackageDescriptor, 'id'> = {
     [NS + 'offer']: { kind: NS + 'offer', schema: { offer_id: 'string', replaces: 'string?' }, handlers: ['sale'], audienceId: 'members', audience: membersAudience, capability: NS + 'make_offer' },
     [NS + 'offer_terms']: { kind: NS + 'offer_terms', schema: { offer_id: 'string', amount: 'integer', seller: 'string' }, handlers: ['sale'], audienceId: 'seller+author', audience: sellerAndAuthor, capability: NS + 'make_offer' },
     [NS + 'withdraw']: { kind: NS + 'withdraw', schema: { offer_id: 'string' }, handlers: ['sale'], audienceId: 'members', audience: membersAudience, capability: NS + 'withdraw_own_offer' },
-    [NS + 'counter']: { kind: NS + 'counter', schema: { offer_id: 'string', amount: 'integer', seller: 'string' }, handlers: ['sale'], audienceId: 'seller+author', audience: sellerAndAuthor, capability: NS + 'counter' },
+    [NS + 'counter']: { kind: NS + 'counter', schema: { offer_id: 'string', amount: 'integer', author: 'string' }, handlers: ['sale'], audienceId: 'seller+author', audience: counterParties, capability: NS + 'counter' },
     [NS + 'accept']: { kind: NS + 'accept', schema: { offer_id: 'string' }, handlers: ['sale'], audienceId: 'members', audience: membersAudience, capability: NS + 'accept_offer' },
     [NS + 'close']: { kind: NS + 'close', schema: { outcome: 'string' }, handlers: ['sale'], audienceId: 'spine', audience: spineAudience, capability: NS + 'close' },
   },

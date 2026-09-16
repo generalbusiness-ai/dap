@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
-import { checkContext, type Violation } from '../src/checker.ts';
+import { checkContext, describeViolation, type Violation } from '../src/checker.ts';
 import { K } from '../src/foundation.ts';
 import { generate } from '../src/generate.ts';
 import { oracleObserve } from '../src/oracle.ts';
@@ -34,7 +34,7 @@ import {
 
 const budget = (obs: Parameters<typeof saleBudgetViolations>[0], p: string) => saleBudgetViolations(obs, p, ALICE);
 const fullCheck = (ctx: ReturnType<typeof replay>['ctx'], frontiers?: number[]) => checkContext(ctx, { invariants: saleInvariants, budget, ...(frontiers ? { frontiers } : {}) });
-const brief = (vs: Violation[]) => JSON.stringify(vs.slice(0, 5).map((v) => [v.participant, v.frontier, v.kind, v.detail]));
+const brief = (vs: Violation[]) => vs.slice(0, 6).map(describeViolation).join('\n') + (vs.length > 6 ? `\n... ${vs.length} violations` : '');
 
 function traceThrough(n: number): Script {
   return { base: saleBase(), steps: saleTraceSteps().slice(0, n - 1) };
