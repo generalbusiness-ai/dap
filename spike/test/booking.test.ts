@@ -178,7 +178,7 @@ test('case 6, cross-view: an occupancy before J joins, an overlapping publicatio
 test('case 7, the campaign: every manifest seed replays with zero violations of the property, the pause rule, the invariants and the privacy budget', (t) => {
   const limit = process.env['BOOKING_SEEDS'] ? Number(process.env['BOOKING_SEEDS']) : bookingBounds.seeds.length;
   const seeds = bookingBounds.seeds.slice(0, limit);
-  const counts = { joins: 0, attaches: 0, disclosures: 0, requests: 0, occupancies: 0, effectiveOccupancies: 0, frees: 0, cancels: 0, ticks: 0, entries: 0 };
+  const counts = { joins: 0, attaches: 0, disclosures: 0, requests: 0, occupancies: 0, effectiveOccupancies: 0, linkedOccupancies: 0, frees: 0, cancels: 0, effectiveCancels: 0, ticks: 0, entries: 0 };
   const failures: { seed: number; violations: Violation[] }[] = [];
   const started = Date.now();
   for (const seed of seeds) {
@@ -197,12 +197,23 @@ test('case 7, the campaign: every manifest seed replays with zero violations of 
       if (s.type === 'act' && s.kind === BOOKING + 'cancel_request') counts.cancels++;
       if (s.type === 'act' && s.kind === K.observe) counts.ticks++;
     }
-    for (let i = 0; i <= ctx.head; i++) if (ctx.entries[i]!.event.kind === BOOKING + 'occupancy' && ctx.state.verdicts[i]?.effective) counts.effectiveOccupancies++;
+    const requests = new Set<string>();
+    for (let i = 0; i <= ctx.head; i++) {
+      const entry = ctx.entries[i]!;
+      if (!ctx.state.verdicts[i]?.effective) continue;
+      if (entry.event.kind === BOOKING + 'request') requests.add(entry.id);
+      if (entry.event.kind === BOOKING + 'occupancy') {
+        counts.effectiveOccupancies++;
+        if (requests.has((entry.event.payload as { booking_id: string }).booking_id)) counts.linkedOccupancies++;
+      }
+      if (entry.event.kind === BOOKING + 'cancel_request') counts.effectiveCancels++;
+    }
     const violations = fullCheck(ctx);
     if (violations.length) failures.push({ seed, violations });
   }
   t.diagnostic(`seeds ${seeds.length}, ${Date.now() - started} ms, coverage ${JSON.stringify(counts)}`);
   assert.ok(counts.joins > 0 && counts.attaches > 0 && counts.disclosures > 0 && counts.effectiveOccupancies > 0 && counts.frees > 0 && counts.ticks > 0, 'coverage');
+  assert.ok(counts.linkedOccupancies > 0 && counts.effectiveCancels > 0, 'generated request ids survive replay for occupancy and cancellation coverage');
   assert.deepEqual(
     failures.map((f) => f.seed),
     [],

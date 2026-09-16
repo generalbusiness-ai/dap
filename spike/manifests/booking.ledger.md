@@ -100,6 +100,39 @@ occupancies naming a real request. The run-3 result stands; its coverage
 claim for cancels and published requests was vacuous and is corrected
 here.
 
+## Run 5: recover the missing run-2 counterexamples
+
+Snapshot commit: "spike V4: checker run 5 snapshot: recover the run-2
+privacy corpus". Manifest as at run 2; the current model's package remains
+`sha256:622a120962da35c370b093161848677fe086a5d1fa729655fc3ce2ced855bc9b`.
+No model change or new fix.
+
+Completion inspection found that run 2's 139 failing series had not been
+shrunk and committed as spike plan §4.4 requires. The recovery command,
+`node scripts/booking-shrink.ts`, uses the model and generator from
+`7b24e86`, with their import paths adjusted, and the current replay
+boundary. It checks all 200 historical seeds and again finds exactly
+139 failures, all in the readable-events privacy budget. Every failing
+seed now has a committed deletion-minimal counterexample, between 6 and
+48 steps, under `corpus/booking/run2/`; `seeds.txt` lists them. The kept
+model's package id is
+`sha256:549a096cc173ba654ee18150789c2a68ae1401ea12fd5d8a2f8571a52b9ef877`.
+
+These are recovered traces, not the original event bytes: the original
+random nonces were not retained, and run 2 predates the replay-id repair
+recorded in run 4. The retained violation is independent of request ids:
+a participant can read another booker's private request or cancel. The
+preserved generator keeps run 2's seeded choices instead of using the
+later generator, which consumes extra random values for nonces. The
+corpus README records this limit and how to reproduce the recovery.
+
+Fix 1 constrains the fixture's disclosing client. Replaying a literal
+private disclosure still violates the privacy budget under the current
+model; that is expected and is checked separately from the repaired
+generator's campaign. The existing campaign now also counts and requires
+effective cancels and occupancies linked to real requests, to prevent the
+coverage gap recorded in run 4 from returning unnoticed.
+
 ## Fixes
 
 ### Fix 1: a disclosure policy naming the public kinds

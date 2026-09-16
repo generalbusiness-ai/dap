@@ -277,6 +277,9 @@ What it contains:
 - `fixtures/booking.ts`: the Booking model, authored by an agent under
   spike plan §4.5 with no test or checker access before the baseline.
 - `manifests/booking.ledger.md`: the repair ledger.
+- `corpus/booking/run2/`: all 139 privacy failures recovered from the
+  run-2 model and generator, shrunk and committed in run 5. The corpus
+  README distinguishes recovered traces from the original event bytes.
 - Harness additions: the fold context carries the event's content id (a
   booking id); a model may opt in to ambient `dap.observe` facts with
   `ambient: true`; the generator takes a prelude of fixed steps.
@@ -284,7 +287,11 @@ What it contains:
 What the tests show: the six predeclared cases (two requests for one
 slot, free exactly one, duplicate publication, only the admin publishes,
 expiry, the cross-view case) and the 200-seed campaign pass; the ledger's
-totals agree with its entries.
+totals agree with its entries. Campaign coverage requires effective
+cancels and occupancies linked to real requests. The recovered corpus
+test checks every privacy failure and its deletion-minimality; literal
+private disclosures remain budget violations under the repaired model,
+whose disclosure policy constrains the fixture's client.
 
 What V4 does not claim: one room and integer ticks only; the clock is a
 fixture actor driven by the generator; a cancel naming a different admin
