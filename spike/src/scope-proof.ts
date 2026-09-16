@@ -13,6 +13,8 @@ import type { ViewEntry } from './context.ts';
 import type { PackageDescriptor } from './descriptor.ts';
 import type { EventBody, Header } from './types.ts';
 
+export class ScopeProofError extends Error {}
+
 export interface CompletenessCertificate {
   body: { type: 'dap.fixture.public-proof-completeness/1'; rule: string; genesis: string; frontier: number; proof_hash: string };
   signer: string;
@@ -37,65 +39,96 @@ export const PUBLIC_PROOF_RULE_ID = digest(PUBLIC_PROOF_RULE);
 export function assertPublicData(value: unknown): void {
   if (!value || typeof value !== 'object') return;
   for (const [key, child] of Object.entries(value)) {
-    if (PRIVATE_FIELDS.has(key)) throw new Error('scope proof: private field ' + key);
+    if (PRIVATE_FIELDS.has(key)) throw new ScopeProofError('scope proof: private field ' + key);
     if (key === 'committed' && typeof child === 'string') {
-      const envelope = verifyEnvelope(child);
+      const envelope = wireInput(() => verifyEnvelope(child));
       assertPublicBody(envelope.body);
     } else assertPublicData(child);
   }
 }
 function isPublic(kind: string): boolean { return PUBLIC.has(kind); }
 function assertPublicBody(event: EventBody): void {
-  if (!isPublic(event.kind)) throw new Error('scope proof: private or undeclared body kind');
+  if (!isPublic(event.kind)) throw new ScopeProofError('scope proof: private or undeclared body kind');
   // An accepted invitation deliberately publishes its issuance proof on the spine.
   // Recursion rejects private extra fields even inside that embedded body.
   assertPublicData(event.payload);
 }
 export function publicProof(journal: Journal, frontier = journal.context.head, writerKey?: KeyObject): PublicProof {
-  if (!writerKey) throw new Error('scope proof: completeness signer required');
-  if (!Number.isSafeInteger(frontier) || frontier < 0 || frontier > journal.context.head) throw new Error('scope proof: invalid frontier');
+  if (!writerKey) throw new ScopeProofError('scope proof: completeness signer required');
+  if (!Number.isSafeInteger(frontier) || frontier < 0 || frontier > journal.context.head) throw new ScopeProofError('scope proof: invalid frontier');
   const entries = journal.context.entries.slice(0, frontier + 1);
   const positions = entries.map(entry => {
     if (!isPublic(entry.event.kind)) return { header: entry.header };
     const audience = journal.context.state.audiences[entry.position];
-    if (!audience || !['spine', 'members'].includes(audience.kind)) throw new Error('scope proof: authority body has narrower audience');
+    if (!audience || !['spine', 'members'].includes(audience.kind)) throw new ScopeProofError('scope proof: authority body has narrower audience');
     assertPublicBody(entry.event);
-    if (!entry.committed) throw new Error('scope proof: unsigned entry');
+    if (!entry.committed) throw new ScopeProofError('scope proof: unsigned entry');
     return { header: entry.header, committed: entry.committed };
   });
   const unsigned = { genesis: journal.context.genesisId, initialWriter: journal.ordering.initialWriter, frontier, positions };
   let ordering = initialOrdering(entries[0]!.event);
   for (const entry of entries.slice(1, -1)) ordering = advanceOrdering(ordering, entry);
-  if (principalOf(writerKey) !== ordering.writer) throw new Error('scope proof: wrong completeness signer');
+  if (principalOf(writerKey) !== ordering.writer) throw new ScopeProofError('scope proof: wrong completeness signer');
   const body: CompletenessCertificate['body'] = { type: 'dap.fixture.public-proof-completeness/1', rule: PUBLIC_PROOF_RULE_ID, genesis: unsigned.genesis, frontier, proof_hash: digest(unsigned) };
   const certificate = { body, signer: ordering.writer, sig: sign(null, Buffer.from(canonicalize(body)), writerKey).toString('base64url') };
   return snapshot({ ...unsigned, certificate });
 }
 export function verifyPublicProof(proof: PublicProof, expected: { genesis: string; initialWriter: string; frontier?: number }, packages: Record<string, PackageDescriptor>): { view: ViewEntry[]; interpreted: Interpreted } {
-  if (!proof || Object.keys(proof).sort().join(',') !== 'certificate,frontier,genesis,initialWriter,positions') throw new Error('scope proof: unexpected packet fields');
-  if (proof.genesis !== expected.genesis || proof.initialWriter !== expected.initialWriter || (expected.frontier !== undefined && proof.frontier !== expected.frontier)) throw new Error('scope proof: wrong source or prefix');
-  if (!Number.isSafeInteger(proof.frontier) || proof.frontier < 0 || !Array.isArray(proof.positions) || proof.positions.length !== proof.frontier + 1) throw new Error('scope proof: incomplete prefix');
-  assertPublicData(proof);
-  const view: ViewEntry[] = proof.positions.map((position, i) => {
-    if (!position || Object.keys(position).some(k => k !== 'header' && k !== 'committed')) throw new Error('scope proof: unexpected position field');
-    const base = { position: i, header: position.header, headerHash: headerHash(position.header) };
-    if (position.committed === undefined) return { ...base, via: 'hidden' };
-    const envelope = verifyEnvelope(position.committed);
-    assertPublicBody(envelope.body);
-    return { ...base, event: envelope.body, committed: position.committed, via: 'disclosure' };
+  const view = wireInput(() => {
+    if (!proof || Object.keys(proof).sort().join(',') !== 'certificate,frontier,genesis,initialWriter,positions') throw new ScopeProofError('scope proof: unexpected packet fields');
+    if (proof.genesis !== expected.genesis || proof.initialWriter !== expected.initialWriter || (expected.frontier !== undefined && proof.frontier !== expected.frontier)) throw new ScopeProofError('scope proof: wrong source or prefix');
+    if (!Number.isSafeInteger(proof.frontier) || proof.frontier < 0 || !Array.isArray(proof.positions) || proof.positions.length !== proof.frontier + 1) throw new ScopeProofError('scope proof: incomplete prefix');
+    assertPublicData(proof);
+    const view: ViewEntry[] = proof.positions.map((position, i) => {
+      if (!position || Object.keys(position).some(k => k !== 'header' && k !== 'committed')) throw new ScopeProofError('scope proof: unexpected position field');
+      const base = { position: i, header: position.header, headerHash: headerHash(position.header) };
+      if (position.committed === undefined) return { ...base, via: 'hidden' };
+      const envelope = verifyEnvelope(position.committed);
+      assertPublicBody(envelope.body);
+      return { ...base, event: envelope.body, committed: position.committed, via: 'disclosure' };
+    });
+    verifyJournalView(view, { genesis: expected.genesis, writer: expected.initialWriter });
+    let ordering = initialOrdering(view[0]!.event!);
+    for (const entry of view.slice(1, -1)) if (entry.event) ordering = advanceOrdering(ordering, { position: entry.position, header: entry.header, event: entry.event } as never);
+    const { certificate, ...unsigned } = proof;
+    const body: CompletenessCertificate['body'] = { type: 'dap.fixture.public-proof-completeness/1', rule: PUBLIC_PROOF_RULE_ID, genesis: proof.genesis, frontier: proof.frontier, proof_hash: digest(unsigned) };
+    if (!certificate || Object.keys(certificate).sort().join(',') !== 'body,sig,signer' || certificate.signer !== ordering.writer || canonicalize(certificate.body) !== canonicalize(body) || typeof certificate.sig !== 'string') throw new ScopeProofError('scope proof: completeness certificate mismatch');
+    const signature = Buffer.from(certificate.sig, 'base64url');
+    if (signature.length !== 64 || signature.toString('base64url') !== certificate.sig || !verify(null, Buffer.from(canonicalize(body)), publicKeyOf(ordering.writer), signature)) throw new ScopeProofError('scope proof: invalid completeness signature');
+    return view;
   });
-  verifyJournalView(view, { genesis: expected.genesis, writer: expected.initialWriter });
-  let ordering = initialOrdering(view[0]!.event!);
-  for (const entry of view.slice(1, -1)) if (entry.event) ordering = advanceOrdering(ordering, { position: entry.position, header: entry.header, event: entry.event } as never);
-  const { certificate, ...unsigned } = proof;
-  const body: CompletenessCertificate['body'] = { type: 'dap.fixture.public-proof-completeness/1', rule: PUBLIC_PROOF_RULE_ID, genesis: proof.genesis, frontier: proof.frontier, proof_hash: digest(unsigned) };
-  if (!certificate || Object.keys(certificate).sort().join(',') !== 'body,sig,signer' || certificate.signer !== ordering.writer || canonicalize(certificate.body) !== canonicalize(body) || typeof certificate.sig !== 'string') throw new Error('scope proof: completeness certificate mismatch');
-  const signature = Buffer.from(certificate.sig, 'base64url');
-  if (signature.length !== 64 || signature.toString('base64url') !== certificate.sig || !verify(null, Buffer.from(canonicalize(body)), publicKeyOf(ordering.writer), signature)) throw new Error('scope proof: invalid completeness signature');
   const interpreted = interpretView('scope-evidence-reader', view, proof.frontier, packages);
-  if (interpreted.kind !== 'interpreted') throw new Error('scope proof: missing semantic or binding evidence at ' + interpreted.at);
+  if (interpreted.kind !== 'interpreted') throw new ScopeProofError('scope proof: missing semantic or binding evidence at ' + interpreted.at);
   return { view, interpreted };
 }
 export function publicProofBytes(proof: PublicProof): string { assertPublicData(proof); return canonicalize(proof); }
 
 function digest(value: unknown): string { return 'sha256:' + createHash('sha256').update(canonicalize(value)).digest('hex'); }
+
+// These are declared rejections from the side-effect-free wire routines above.
+// No package handler, registry lookup, storage call or semantic replay occurs
+// within this boundary. Unexpected errors retain their identity and are thrown.
+const WIRE_REJECTIONS = new Set([
+  'Journal: expected genesis', 'Journal: wrong writer (initial assignment)',
+  'Journal: invalid origins', 'Journal: unsupported profile',
+  'ordering: malformed control payload', 'ordering: invalid v2 sequencing fields',
+  'ordering: control key must differ from writer',
+  ...['genesis must be readable','non-dense positions','wrong header hash',
+    'missing actor proof','envelope bounds','body disagrees with signed bytes',
+    'unadopted origin','hidden position contains an envelope',
+    'missing assignment opening after seal','retired_writer','handover_not_enabled',
+    'writer_sealed','wrong_control_predecessor','wrong_ordering_epoch',
+    'wrong_seal_authority','assignment_without_seal','wrong_control_authority',
+    'control_key_is_writer','writer_already_used','malformed_control',
+  ].map(reason => 'Journal view: ' + reason),
+]);
+function wireInput<T>(validate: () => T): T {
+  try { return validate(); }
+  catch (error) {
+    if (error instanceof TypeError && error.message.startsWith('codec: ') ||
+        error instanceof Error && WIRE_REJECTIONS.has(error.message)) {
+      throw new ScopeProofError(error.message);
+    }
+    throw error;
+  }
+}

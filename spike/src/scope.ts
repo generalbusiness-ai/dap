@@ -9,7 +9,7 @@ import type { PackageDescriptor } from './descriptor.ts';
 import type { Entry, EventBody, Receipt, Refusal, Verdict } from './types.ts';
 import type { TransportCredential } from './append.ts';
 import type { ViewEntry } from './context.ts';
-import { publicProof, verifyPublicProof, assertPublicData, type PublicProof } from './scope-proof.ts';
+import { publicProof, verifyPublicProof, assertPublicData, ScopeProofError, type PublicProof } from './scope-proof.ts';
 import { SCOPE_KINDS, SCOPE_NS, TRANSFORM, JOIN_POLICY_ID, scopeId, scopeSetup, scopeImplementationId, ScopeProfileError, type ScopeSetup } from './scope-profile.ts';
 import type { SaleState } from '../fixtures/sale.ts';
 import type { InspectionState } from '../fixtures/inspection.ts';
@@ -54,8 +54,9 @@ export interface ScopeState {
 const good = (): Verdict => ({ known: true, authorized: true, effective: true });
 const bad = (reason: string, authorized = true): Verdict => ({ known: true, authorized, effective: false, reason });
 const scopeKinds = new Set<string>([K.scope_release, K.scope_activate, K.admit, ...Object.values(SCOPE_KINDS)]);
+class ScopeRefusal extends Error {}
 function object(value: unknown): Record<string, any> {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('malformed');
+  if (!value || typeof value !== 'object' || Array.isArray(value)) throw new ScopeRefusal('malformed');
   return value as Record<string, any>;
 }
 function identity(exported: Omit<SourceExport, 'identity'>): SourceExport { return { ...exported, identity: scopeId(exported) }; }
@@ -108,7 +109,8 @@ function init(genesis: EventBody, id: string): ScopeState {
 /** Replays the actual authenticated public prefix, then recomputes scope
  * effects from the source models and grants at each position. */
 export function replayScope(proof: PublicProof, packages: Record<string, PackageDescriptor>, depth = 0): ScopeState {
-  if (depth > 4) throw new Error('scope: proof nesting bound');
+  object(proof);
+  if (depth > 4) throw new ScopeRefusal('scope: proof nesting bound');
   const { view } = verifyPublicProof(proof, { genesis: proof.genesis, initialWriter: proof.initialWriter }, packages);
   return replayScopeView(view, proof.genesis, packages, depth);
 }
@@ -122,6 +124,8 @@ function replayScopeView(view: ViewEntry[], genesis: string, packages: Record<st
     const current = base.state;
     const event = v.event;
     const original = current.verdicts[position]!;
+    const failure = [original.reason, ...Object.values(original.perModel ?? {}).map(v => v.reason)].find(reason => reason?.startsWith('fold_error:') || reason?.startsWith('audience_error:'));
+    if (failure) throw new Error('scope: handler failure at ' + position + ': ' + failure);
     if (state.setup.role === 'sale') {
       const sale = current.models.sale as unknown as SaleState | undefined;
       if (sale && !sale.accepted) state.sale = { status: sale.status === 'closed' ? 'closed' : 'open', accepted_offer: null, winner: null };
@@ -169,15 +173,22 @@ function replayScopeView(view: ViewEntry[], genesis: string, packages: Record<st
         if (!held(event.actor, K.scope_activate)) result = bad('unauthorized', false);
         else if (!state.transition) result = bad('not_a_destination');
         else if (state.active) result = bad('already_active');
-        else if (view.slice(((view[0]!.event!.payload as { origins: unknown[] }).origins.length) + 1, position).some(v => v.event?.kind !== K.scope_activate)) result = bad('activation_order');
+        else if (current.closed) result = bad('closed');
         else {
-          const proofs = Array.isArray(p.proofs) ? p.proofs as ReleaseProof[] : [];
+          if (!Array.isArray(p.proofs)) throw new ScopeRefusal('malformed_release_proofs');
+          const proofs = p.proofs as ReleaseProof[];
           const claimedRights: string[] = [];
           for (const item of proofs) {
+            if (!item || typeof item !== 'object' || Object.keys(item).sort().join(',') !== 'release,source' || !Number.isSafeInteger(item.release) || item.release < 0 || !item.source || typeof item.source !== 'object' || !Array.isArray(item.source.positions)) throw new ScopeRefusal('malformed_release_proof');
             const release = item.source.positions[item.release];
-            if (!release?.committed) throw new Error('ineffective_release');
-            const body = verifyEnvelope(release.committed).body;
-            const exported = object(body.payload).export as SourceExport;
+            if (!release?.committed) throw new ScopeRefusal('ineffective_release');
+            let body: EventBody;
+            try { body = verifyEnvelope(release.committed).body; }
+            catch (error) {
+              if (error instanceof TypeError && error.message.startsWith('codec: ')) throw new ScopeRefusal('malformed_release_proof: ' + error.message);
+              throw error;
+            }
+            const exported = validateExport(object(body.payload).export);
             for (const r of exported?.rights ?? []) claimedRights.push(r.name);
           }
           if (new Set(claimedRights).size !== claimedRights.length) result = bad('duplicate_right');
@@ -185,21 +196,21 @@ function replayScopeView(view: ViewEntry[], genesis: string, packages: Record<st
             const verified: string[] = [];
             for (const item of proofs) {
               const source = state.transition.sources.find(s => s.genesis === item.source.genesis);
-              if (!source) throw new Error('wrong_source');
+              if (!source) throw new ScopeRefusal('wrong_source');
               const r = source.prefix.position + 1;
-              if (item.release !== r || item.source.frontier < r) throw new Error('source_binding_mismatch');
+              if (item.release !== r || item.source.frontier < r) throw new ScopeRefusal('source_binding_mismatch');
               const verifiedSource = verifyPublicProof(item.source, { genesis: source.genesis, initialWriter: source.initialWriter }, packages);
               const prefix = verifiedSource.view[source.prefix.position];
-              if (!prefix || prefix.headerHash !== source.prefix.headerHash || prefix.header.commitment !== source.prefix.commitment) throw new Error('source_binding_mismatch');
-              if (depth >= 4) throw new Error('scope: proof nesting bound');
+              if (!prefix || prefix.headerHash !== source.prefix.headerHash || prefix.header.commitment !== source.prefix.commitment) throw new ScopeRefusal('source_binding_mismatch');
+              if (depth >= 4) throw new ScopeRefusal('scope: proof nesting bound');
               const releaseState = replayScopeView(verifiedSource.view, source.genesis, packages, depth + 1, r);
               const releaseVerdict = releaseState.verdicts[item.release];
-              if (!releaseVerdict?.authorized) throw new Error('unauthorized_release');
-              if (!releaseVerdict.effective) throw new Error('ineffective_release');
+              if (!releaseVerdict?.authorized) throw new ScopeRefusal('unauthorized_release');
+              if (!releaseVerdict.effective) throw new ScopeRefusal('ineffective_release');
               const release = releaseState.releases.find(r => r.position === item.release);
-              if (!release) throw new Error('ineffective_release');
-              if (release.destination !== state.genesis || release.transition !== state.transition.identity) throw new Error('destination_mismatch');
-              if (canonicalize(release.exported) !== canonicalize(source)) throw new Error('source_binding_mismatch');
+              if (!release) throw new ScopeRefusal('ineffective_release');
+              if (release.destination !== state.genesis || release.transition !== state.transition.identity) throw new ScopeRefusal('destination_mismatch');
+              if (canonicalize(release.exported) !== canonicalize(source)) throw new ScopeRefusal('source_binding_mismatch');
               verified.push(source.genesis);
             }
             if (new Set(verified).size !== state.transition.sources.length) {
@@ -247,7 +258,10 @@ function replayScopeView(view: ViewEntry[], genesis: string, packages: Record<st
         }
       } else if (event.kind === SCOPE_KINDS.importExport) result = bad(state.imports.includes(p.identity) ? 'duplicate_import' : 'unapproved_import');
       else result = bad('no_safe_recovery_evidence');
-    } catch (error) { result = bad(error instanceof Error ? error.message : 'malformed'); }
+    } catch (error) {
+      if (!(error instanceof ScopeRefusal || error instanceof ScopeProfileError || error instanceof ScopeProofError)) throw error;
+      result = bad(error.message);
+    }
     state.verdicts[position] = result;
   }
   return snapshot(state);
@@ -255,7 +269,7 @@ function replayScopeView(view: ViewEntry[], genesis: string, packages: Record<st
 function exportFrom(state: ScopeState, view: ViewEntry[], prefix: number, names: RightName[], packages: Record<string, PackageDescriptor>): SourceExport {
   const rightList = names.map(name => {
     const right = state.rights[name];
-    if (!right || right.status !== 'live') throw new Error('unowned_right');
+    if (!right || right.status !== 'live') throw new ScopeRefusal('unowned_right');
     return { name, owner: right.owner };
   });
   let facts: SourceExport['facts'];
@@ -267,7 +281,7 @@ function exportFrom(state: ScopeState, view: ViewEntry[], prefix: number, names:
     const sale = interpreted.state.models.sale as unknown as SaleState;
     factPositions = [sale.offers.find(o => o.id === sale.accepted!.id)!.position, sale.accepted!.position];
   } else if (state.setup.role === 'delivery') { facts = { ...state.facts }; factPositions = [0]; }
-  else throw new Error('no_exportable_facts');
+  else throw new ScopeRefusal('no_exportable_facts');
   const entry = view[prefix]!;
     const interpreted = interpretView('scope-evidence-reader', view, view.length - 1, packages, prefix);
     if (interpreted.kind !== 'interpreted') throw new Error('scope: source semantics unavailable');
@@ -279,6 +293,7 @@ export class ScopeJournal {
   readonly journal: Journal;
   readonly packages: Record<string, PackageDescriptor>;
   private readonly writerKey: KeyObject;
+  private unavailable = false;
   constructor(journal: Journal, packages: Record<string, PackageDescriptor>, writerKey: KeyObject) {
     if (!scopeSetup(journal.context.entries[0]!.event)) throw new Error('scope: profile required');
     this.journal = journal; this.packages = packages; this.writerKey = writerKey;
@@ -290,21 +305,35 @@ export class ScopeJournal {
     return new ScopeJournal(Journal.create(opts, envelope, origins), opts.packages, opts.writerKey);
   }
   static open(opts: JournalOptions): ScopeJournal { return new ScopeJournal(Journal.open(opts), opts.packages, opts.writerKey); }
+  private assertAvailable(): void { if (this.unavailable) throw new Error('scope: facade unavailable; reopen after replay failure'); }
+  private replayFailed(error: unknown): never {
+    this.unavailable = true;
+    // Keep the original replay failure even if closing storage also fails.
+    try { this.journal.close(); } finally { throw error; }
+  }
   get state(): ScopeState {
-    const state = replayScopeView(this.fullView(), this.journal.context.genesisId, this.packages);
-    const inspection = this.journal.context.state.models.inspection as unknown as InspectionState | undefined;
-    return snapshot({ ...state, inspection: { ...state.inspection, requested: (inspection?.requests.length ?? 0) > 0 } });
+    this.assertAvailable();
+    try {
+      const state = replayScopeView(this.fullView(), this.journal.context.genesisId, this.packages);
+      const inspection = this.journal.context.state.models.inspection as unknown as InspectionState | undefined;
+      return snapshot({ ...state, inspection: { ...state.inspection, requested: (inspection?.requests.length ?? 0) > 0 } });
+    } catch (error) { return this.replayFailed(error); }
   }
   interpret(principal: string, basis = this.journal.context.head): ScopeState { return replayScopeView(this.journal.context.view(principal, basis), this.journal.context.genesisId, this.packages, 0, basis); }
   proof(frontier = this.journal.context.head): PublicProof { return publicProof(this.journal, frontier, this.writerKey); }
   private fullView(): ViewEntry[] { return this.journal.context.entries.map(entry => ({ position: entry.position, event: entry.event, header: entry.header, headerHash: entry.headerHash, committed: entry.committed, via: 'audience' })); }
   export(names: RightName[], frontier = this.journal.context.head): SourceExport { const view = this.fullView().slice(0, frontier + 1); return exportFrom(replayScopeView(view, this.journal.context.genesisId, this.packages), view, frontier, names, this.packages); }
   submit(input: ActorEnvelope | string, credential?: TransportCredential): (Receipt & { verdict?: Verdict; controlVerdict?: Verdict }) | Refusal {
+    this.assertAvailable();
     const result = this.journal.submit(input, credential);
-    if ('refused' in result || result.controlVerdict) return result;
+    if ('refused' in result) return result;
+    // Every accepted append must leave a determinate scope fold, including
+    // ordinary application events whose handlers can fail. Known policy
+    // refusals are verdicts; an unexpected replay error closes this facade.
+    const state = this.state;
     const event = verifyEnvelope(input).body;
-    if (!scopeKinds.has(event.kind)) return result;
-    return { ...result, verdict: this.state.verdicts[result.header.position] };
+    if (result.controlVerdict || !scopeKinds.has(event.kind)) return result;
+    return { ...result, verdict: state.verdicts[result.header.position] };
   }
   close(): void { this.journal.close(); }
 }

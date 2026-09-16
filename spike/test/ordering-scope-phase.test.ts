@@ -85,3 +85,27 @@ for (const storage of ['memory','sqlite'] as const) test('O4 malformed release-p
     assert.equal(result.verdict?.effective,false);assert.match(result.verdict!.reason!,/^malformed/);dormant(world);
   } finally {world.close();}
 });
+
+import { scopeThrowPackage } from './fixtures/scope-throw.ts';
+for (const storage of ['memory','sqlite'] as const) for (const failure of ['fold','audience'] as const) test('O4 thrown '+failure+' handler is a real failure with durable bytes: '+storage,()=>{
+  const world=buildThrough('sale-accepted',{},storage);
+  const registry={...packages,[scopeThrowPackage.id]:scopeThrowPackage};
+  try {
+    const original=world.contexts.S!;const backend=original.journal.context.backend;const ordering=original.journal.ordering;original.close();
+    const active=storage==='sqlite'?new SQLiteBackend(world.paths.S!,{writer:ordering.initialWriter,profile:ordering.profile}):backend;
+    const scope=ScopeJournal.open({backend:active,writerKey:keys.W0,packages:registry});world.contexts.S=scope;world.backends.S=active;
+    assert.equal(accepted(world.emit('S','alice',K.attach,{package:scopeThrowPackage.id,resolution:{[SCOPE_KINDS.exercise]:{handlers:['scope','qaFault']}}})).verdict?.effective,true);
+    const envelope=signEvent(scope.journal.context.intent(principals.alice,SCOPE_KINDS.exercise,{right:'R_fulfil',failure},{action_id:'handler-failure',nonce:'d'.repeat(32)}),keys.alice);
+    const bytes=envelopeBytes(envelope);const credential=scope.journal.context.credentialFor(principals.alice);
+    const expected=failure==='fold'?/handler failure at 19: fold_error:qa_handler_exception/:/handler failure at 19: audience_error:qa_audience_exception/;
+    assert.throws(()=>scope.submit(bytes,credential),expected);
+    assert.throws(()=>scope.submit(bytes,credential),/unavailable/);
+    assert.throws(()=>scope.journal.context.submit(envelope.body,credential,envelope),/closed|inactive/);
+    const reopened=storage==='sqlite'?new SQLiteBackend(world.paths.S!,{writer:ordering.initialWriter,profile:ordering.profile}):active;
+    const cold=ScopeJournal.open({backend:reopened,writerKey:keys.W0,packages:registry});world.contexts.S=cold;world.backends.S=reopened;
+    assert.equal(cold.journal.context.head,19);assert.equal(cold.journal.context.entries[19]!.committed,bytes);
+    const baseVerdict=cold.journal.context.state.verdicts[19];
+    assert.throws(()=>cold.submit(bytes,credential),expected);
+    recordScope('unexpected-'+failure+'-handler-'+storage,{committed:bytes,baseVerdict,reopenedHead:19,error:String(expected)});
+  } finally {world.close();}
+});
