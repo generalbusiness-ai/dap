@@ -347,7 +347,9 @@ Historical outputs are unchanged. The ledger now records that
 without changing values. Earlier typecheck claims had no committed output;
 checker #1805 reproduced them, and this follow-up keeps its own output.
 Only the new follow-up test log has trailing spaces/tabs removed; its raw
-and normalized digests are recorded. This does not alter the historical
+and normalized digests are recorded. The new typecheck log omits npm's
+final empty line, with its raw output preserved at `b0c9042` and both
+digests recorded. This does not alter the historical
 whitespace boundaries described above.
 
 The visibility harness uses authenticated entries as an assumption,

@@ -334,5 +334,11 @@
     ],
     "excluded_path": "spike/manifests/v6.ledger.md",
     "comparison": "exact file bytes"
+  },
+  "typecheck_log_normalization": {
+    "description": "One final empty line removed from npm output; all nonempty output preserved.",
+    "raw_output_commit": "b0c9042289c7ae5022540fab3b628bf032255205",
+    "raw_stdout_sha256": "c13cdfb986ee40a7a2614e780678b6307a8b1368291811d1a2cae9e00dfd60cd",
+    "normalized_stdout_sha256": "7fd480dd7dd091c141c00281796ec8a8af5020ae92c3c0dcc5ba7cd02ff401d5"
   }
 }
