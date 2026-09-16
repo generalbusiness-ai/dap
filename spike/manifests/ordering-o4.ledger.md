@@ -64,4 +64,12 @@ This experiment claims only O4, not general context merging or O5 verification.
 
 ## Formal runs
 
-Pending source freeze and run snapshot.
+Run 1 source `ee86290f753cbfe3efcd9dcbb3128697d6b38016` used the revised
+manifest and opening rule above. Focused run: 100 tests, 98 passed, 2 failed,
+zero TODOs; typecheck passed. Both failures occurred while recording the
+move-preserves-retry observations, after actual state/verdict assertions
+passed: legacy successful verdicts contain optional undefined reason fields.
+The strict codec correctly refused non-JSON data. The observation sink must
+encode that JavaScript value explicitly; runtime/wire behavior is unchanged.
+The run, identities and 56 completed observation files are retained in
+`ordering-o4-runs/run-1*`. No full campaign was run at this failed boundary.
