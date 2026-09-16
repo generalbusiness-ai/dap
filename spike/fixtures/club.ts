@@ -24,24 +24,20 @@
 //   join the founder discloses to the newcomer every effective vote, admit,
 //   standing event and disclosure recorded before the join. None of those
 //   carries an applicant, a statement or a reason.
-// - `unknown_application` reads the application's position and the
-//   committee at that position, which the apply's readers have, and the
-//   disclosures since, which every member has. A reader who cannot see the
-//   apply (a member with no role, the applicant of another application, or
-//   the late committee member before their disclosure) knows the
-//   application only by id from the votes and admits naming it. Such a
-//   reader cannot map an id to a hidden position, so it estimates: the
-//   voter is taken to have been on the committee when the application was
-//   recorded unless an earlier effective vote or admit on it shows the
-//   voter was not on the committee then; a voter shown to be late needs an
-//   effective disclosure to them, before the vote, of a position the
-//   reader cannot account for. The estimate never runs in the oracle, and
-//   it is wrong in two shapes, recorded here before any checker run:
-//   a late voter whose vote is the first effective mention of an
-//   application recorded before their grant, and a late voter disclosed one
-//   application who votes on another. Closing those needs the application's
-//   position to be a members' fact (a stub kind, or the hidden header's
-//   commitment, which is the id), neither of which this file may add.
+// - `unknown_application` reads the application's position, the committee
+//   at that position and the disclosures since. A reader who cannot see
+//   the apply (a member with no role, the applicant of another
+//   application, the late committee member before their disclosure) knows
+//   the application only by id from the votes and admits naming it. The id
+//   is the content id of the apply event, and that is exactly the
+//   commitment carried in the authenticated header of every position,
+//   hidden or not (design note §1; views note, Serving a view), so the fold
+//   asks the context for it (`ctx.commitmentAt`, fix 1) and finds the
+//   position without reading the payload. The committee at that position
+//   comes from the spine's grant history (`ctx.holdersAt`), which every
+//   reader has. One rule then serves every reader: the voter held `vote`
+//   at that position, or an effective disclosure before the vote named
+//   that position with the voter as recipient.
 // - A malformed application id (anything that is not a content id) is
 //   `malformed` for every reader; the only ids in play are content ids, so
 //   an unknown id never has to be judged from a payload alone.
@@ -61,7 +57,7 @@
 // principal; the applicant and the statement go only to readers of the
 // apply, the reason only to readers of the standing_reason.
 
-import { descriptorId, type ModelSpec, type PackageDescriptor } from '../src/descriptor.ts';
+import { descriptorId, type FoldCtx, type ModelSpec, type PackageDescriptor } from '../src/descriptor.ts';
 import { MEMBERS, named, type EventBody } from '../src/types.ts';
 
 const NS = 'com.example.club.';
@@ -87,15 +83,12 @@ export interface Vote {
   voter: string;
   choice: 'yes' | 'no';
   position: number;
-  /** whoever held `vote` at the vote's position */
-  committee: string[];
 }
 
 export interface Admit {
   id: string;
   actor: string;
   position: number;
-  committee: string[];
 }
 
 export interface StandingEvent {
@@ -181,39 +174,23 @@ function disclosedTo(state: ClubState, position: number, to: string, before: num
   return state.disclosures.some((d) => d.position < before && visible(d.position) && d.to.includes(to) && d.positions.includes(position));
 }
 
-/** The earliest effective vote or admit naming the id before `before`, with the committee at that position. */
-function firstMention(state: ClubState, id: string, before: number): { position: number; committee: string[] } | undefined {
-  let found: { position: number; committee: string[] } | undefined;
-  for (const v of state.votes) if (v.id === id && v.position < before && (!found || v.position < found.position)) found = v;
-  for (const a of state.admits) if (a.id === id && a.position < before && (!found || a.position < found.position)) found = a;
-  return found;
-}
-
-/** The positions this view folded into the state: none of them can be an application it cannot see. */
-function knownPositions(state: ClubState): Set<number> {
-  const out = new Set<number>();
-  for (const a of state.applications) out.add(a.position);
-  for (const v of state.votes) out.add(v.position);
-  for (const a of state.admits) out.add(a.position);
-  for (const s of state.standing) out.add(s.position);
-  for (const r of state.reasons) out.add(r.position);
-  for (const d of state.disclosures) out.add(d.position);
-  return out;
+/** The position whose header commits to the id, before the position being folded: public in every view, hidden or not. */
+function positionOf(ctx: FoldCtx, id: string): number | undefined {
+  for (let i = 0; i < ctx.position; i++) if (ctx.commitmentAt(i) === id) return i;
+  return undefined;
 }
 
 /**
- * Whether the voter had been shown the application before position
- * `before`: on the committee when it was recorded, or a recipient of an
- * effective disclosure of its position since. A view that cannot see the
- * apply estimates, as the header comment says; the oracle never estimates.
+ * Whether the voter had been shown the application before the position
+ * being folded: on the committee when it was recorded, or a recipient of
+ * an effective disclosure of its position since. Every reader judges this
+ * the same way: the position comes from the chain's commitments, the
+ * committee from the spine's grants, the disclosures from members' events.
  */
-function shown(state: ClubState, voter: string, id: string, before: number): boolean {
-  const app = applicationOf(state, id);
-  if (app) return app.committee.includes(voter) || disclosedTo(state, app.position, voter, before, everything);
-  const first = firstMention(state, id, before);
-  if (!first || first.committee.includes(voter)) return true;
-  const known = knownPositions(state);
-  return state.disclosures.some((d) => d.position < before && d.to.includes(voter) && d.positions.some((p) => p < first.position && !known.has(p)));
+function shown(state: ClubState, ctx: FoldCtx, voter: string, id: string): boolean {
+  const k = positionOf(ctx, id);
+  if (k === undefined) return false;
+  return ctx.holdersAt(NS + 'vote', k).includes(voter) || disclosedTo(state, k, voter, ctx.position, everything);
 }
 
 /** Whether the principal may vote on a visible application: shown to them, not admitted, not yet voted on by them. */
@@ -273,8 +250,8 @@ export const clubModel: ModelSpec<ClubState, ClubConfig> = {
         // Members' facts first, so a refusal every reader can check is never replaced by an estimate.
         if (standingAt(state, event.actor, ctx.position, everything) === 'lapsed') return refuse(state, 'lapsed');
         if (votesOn(state, id, ctx.position, everything).some((v) => v.voter === event.actor)) return refuse(state, 'already_voted');
-        if (!shown(state, event.actor, id, ctx.position)) return refuse(state, 'unknown_application');
-        const vote: Vote = { id, voter: event.actor, choice: p.choice, position: ctx.position, committee: [...ctx.holders(NS + 'vote')].sort() };
+        if (!shown(state, ctx, event.actor, id)) return refuse(state, 'unknown_application');
+        const vote: Vote = { id, voter: event.actor, choice: p.choice, position: ctx.position };
         return ok({ ...state, votes: [...state.votes, vote] });
       }
       case NS + 'admit': {
@@ -285,7 +262,7 @@ export const clubModel: ModelSpec<ClubState, ClubConfig> = {
         if (votes.length < config.quorum) return refuse(state, 'no_quorum');
         const { yes, no } = tally(votes);
         if (yes <= no) return refuse(state, 'no_majority');
-        const admit: Admit = { id, actor: event.actor, position: ctx.position, committee: [...ctx.holders(NS + 'vote')].sort() };
+        const admit: Admit = { id, actor: event.actor, position: ctx.position };
         return ok({ ...state, admits: [...state.admits, admit] });
       }
       case NS + 'standing': {
