@@ -110,12 +110,15 @@ What it contains:
   before under the same basis; a cache keyed by principal, context, view
   content, basis and available packages, which never reuses a pause.
   Disclosure completeness is checked by the recipient, from evidence the
-  event carries: an application intent records `expected_activation`, the
-  position of the attach (or genesis) that produced the binding it
-  expects. A disclosed event whose activation position is hidden pauses
-  with `dependency_missing`; one whose activation is visible is judged
-  against the binding active at its position, so a mismatch is a genuine
-  `stale_binding` and never a pause.
+  sequencer puts in the header: `activation`, the position of the attach
+  (or genesis) that produced the binding the event was judged under at
+  its own position. A disclosed event whose header activation is hidden
+  pauses with `dependency_missing`; one whose activation is visible is
+  judged by the same binding the sequencer used, so its verdict,
+  effective or `stale_binding`, is the genuine one. The intent's own
+  `expected_binding` and `expected_activation` are preserved as what the
+  author saw, and cannot serve as the completeness evidence: a hidden
+  attach between composing and sequencing changes the verdict.
 - `src/oracle.ts`: `fold(S[0..m])` over the complete series and
   `observe(p, state, n)` under basis `n`; never available to a model.
 - `src/checker.ts`: for every participant and frontier, equality of the

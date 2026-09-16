@@ -151,6 +151,7 @@ export class Context {
           return v.ok ? { tokenId: v.tokenId, invitee: v.invite.invitee } : undefined;
         },
         acceptKind: K.accept_invite,
+        activationOf: (kind) => state.env.kinds[kind]?.attachedAt,
       },
     );
     if ('refused' in r) return r;

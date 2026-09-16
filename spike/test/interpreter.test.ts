@@ -337,17 +337,20 @@ test('H1: a binding identity restored by an unseen attach is a missing dependenc
   const restore = pkg('restore', { 'com.example.base.tick': ['base'] }, { modelId: 'restore' });
   for (const p of [audit, reorder, restore]) ctx.packages[p.id] = p;
   const a = ctx.act(ALICE, K.attach, { package: audit.id, resolution: { 'com.example.base.tick': { handlers: ['base', 'audit'] } }, audience: [] }); // 3: binding A
+  assert.ok(!('refused' in a) && a.verdict?.effective);
+  const bindingA = ctx.currentBinding('com.example.base.tick')!;
   const b = ctx.act(ALICE, K.attach, { package: reorder.id, resolution: { 'com.example.base.tick': { handlers: ['audit', 'base'] } }, audience: [] }); // 4: binding B
-  assert.ok(!('refused' in a) && a.verdict?.effective && !('refused' in b) && b.verdict?.effective);
-  const bindingA = ctx.entries.length && (() => { const s = ctx.state.env.kinds['com.example.base.tick']!; return s.previous!; })();
+  assert.ok(!('refused' in b) && b.verdict?.effective);
+  const bindingB = ctx.currentBinding('com.example.base.tick')!;
+  assert.notEqual(bindingA, bindingB);
   ctx.act(ALICE, K.disclose, { positions: [3, 4], to: [BOB] }); // 5: Bob knows A and B; B is active for him
   const r6 = ctx.act(ALICE, K.attach, { package: restore.id, resolution: { 'com.example.base.tick': { handlers: ['base', 'audit'] } }, audience: [] }); // 6: A again, hidden from Bob
   assert.ok(!('refused' in r6) && r6.verdict?.effective);
-  assert.equal(ctx.currentBinding('com.example.base.tick'), ctx.currentBinding('com.example.base.tick'));
-  assert.ok(bindingA);
+  assert.equal(ctx.currentBinding('com.example.base.tick'), bindingA); // the restored binding is A's identity
   const tick = ctx.act(ALICE, 'com.example.base.tick', {}); // 7, under A with activation 6
   assert.ok(!('refused' in tick) && tick.verdict?.effective);
   assert.equal(ctx.entries[7]!.event.expected_activation, 6);
+  assert.equal(ctx.entries[7]!.header.activation, 6);
   const d8 = ctx.act(ALICE, K.disclose, { positions: [7], to: [BOB] }); // 8: the event, not the restoring attach
   assert.ok(!('refused' in d8) && d8.verdict?.effective);
   const view8 = ctx.view(BOB, 8);
@@ -369,4 +372,41 @@ test('H1: a binding identity restored by an unseen attach is a missing dependenc
     assert.ok(isDeepStrictEqual(observeInterpreted(r2, view9), oracleObserve(ctx, BOB, 9, 9)));
   }
   assert.deepEqual(checkContext(ctx, { participants: [BOB], frontiers: [9] }), []);
+});
+
+// ----- checker's fourth V2 review (workroom report a15b2ff8), J1 -----
+
+test('J1: a saved intent sequenced after a hidden attach is a missing dependency for a viewer who sees the intent but not the attach; the header carries the activation', () => {
+  const base = noopBase();
+  const ctx = Context.create({ creator: ALICE, packages: { [base.id]: base }, bindings: [{ package: base.id }], grants: [{ principal: ALICE, capabilities: ALICE_CAPS }] });
+  accept(ctx, BOB, invite(ctx, ALICE, BOB, [])); // 1, 2
+  const saved = ctx.intent(ALICE, 'com.example.base.tick', {}); // composed under the genesis binding
+  assert.equal(saved.expected_activation, 0);
+  const audit = pkg('audit', { 'com.example.base.tick': ['audit'] });
+  ctx.packages[audit.id] = audit;
+  const a = ctx.act(ALICE, K.attach, { package: audit.id, resolution: { 'com.example.base.tick': { handlers: ['base', 'audit'] } }, audience: [] }); // 3: hidden from Bob
+  assert.ok(!('refused' in a) && a.verdict?.effective);
+  const r4 = ctx.submit(saved, ctx.credentialFor(ALICE)); // 4: the saved intent, now stale
+  assert.ok(!('refused' in r4) && r4.verdict?.reason === 'stale_binding');
+  assert.equal(ctx.entries[4]!.header.activation, 3); // the sequencer judged it under the attach at 3
+  assert.equal(ctx.entries[4]!.event.expected_activation, 0); // the intent's own provenance is preserved
+  ctx.act(ALICE, K.disclose, { positions: [4], to: [BOB] }); // 5: the intent, not the attach
+  const view5 = ctx.view(BOB, 5);
+  const r = interpretView(BOB, view5, 5, ctx.packages);
+  assert.equal(r.kind, 'paused');
+  if (r.kind === 'paused') {
+    assert.equal(r.at, 4);
+    assert.equal(r.reason, 'dependency_missing');
+    assert.ok(isDeepStrictEqual(observeInterpreted(r.last, view5), oracleObserve(ctx, BOB, 3, 5)));
+  }
+  assert.deepEqual(checkContext(ctx, { participants: [BOB], frontiers: [5] }), []);
+  ctx.act(ALICE, K.disclose, { positions: [3], to: [BOB] }); // 6: the attach arrives
+  const view6 = ctx.view(BOB, 6);
+  const r2 = interpretView(BOB, view6, 6, ctx.packages);
+  assert.equal(r2.kind, 'interpreted');
+  if (r2.kind === 'interpreted') {
+    assert.equal(r2.outcomes[4]?.reason, 'stale_binding');
+    assert.ok(isDeepStrictEqual(observeInterpreted(r2, view6), oracleObserve(ctx, BOB, 6, 6)));
+  }
+  assert.deepEqual(checkContext(ctx, { participants: [BOB], frontiers: [6] }), []);
 });

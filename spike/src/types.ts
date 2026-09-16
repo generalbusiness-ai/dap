@@ -28,6 +28,13 @@ export interface Header {
   position: number;
   prev: string;
   commitment: string;
+  /**
+   * For an application event: the position of the attach (or genesis, 0)
+   * that produced the binding the sequencer judged the event under. Public
+   * metadata like the position itself; it names a position, never a
+   * package. A viewer who cannot see that position cannot judge the event.
+   */
+  activation?: number;
 }
 
 export interface Entry {

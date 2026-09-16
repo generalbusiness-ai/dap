@@ -10,8 +10,8 @@
 // verdict on any event.
 
 import { contentId } from './canon.ts';
-import type { PackageDescriptor, ResolvedBinding } from './descriptor.ts';
-import { bindingId, bindingIdOf } from './descriptor.ts';
+import type { PackageDescriptor } from './descriptor.ts';
+import { bindingId } from './descriptor.ts';
 import { K, foldEntry, initialFoundationState, originsCount, type AttachPayload, type FoundationState } from './foundation.ts';
 import type { ViewEntry } from './context.ts';
 import { SYSTEM_PREFIX, named, type Entry, type Principal, type Verdict } from './types.ts';
@@ -57,13 +57,6 @@ function chainOf(view: ViewEntry[]): Entry[] {
     header: v.header,
     headerHash: v.headerHash,
   }));
-}
-
-/** Every binding identity this principal's environment has produced for a kind, current and superseded. */
-function knownBindings(state: FoundationState, kind: string): Set<string> {
-  const out = new Set<string>();
-  for (let b: ResolvedBinding | undefined = state.env.kinds[kind]; b; b = b.previous) out.add(bindingIdOf(state.env, kind, b));
-  return out;
 }
 
 function bindingsOf(state: FoundationState): Record<string, string> {
@@ -115,18 +108,17 @@ export function interpretView(p: Principal, view: ViewEntry[], basis: number, av
     }
     if (v.via === 'disclosure' && !ev.kind.startsWith(SYSTEM_PREFIX)) {
       // Disclosed, but the semantics it needs were not: the disclosure was dependency-incomplete.
-      // Completeness is checked here, by the recipient (design note §8 leaves the location open).
-      // The evidence is activation provenance: the intent names the position of the attach that
-      // produced the binding it expects. If that position is hidden in this view, the attach was
-      // not disclosed and the event cannot be judged. If it is visible, the fold judges the event
-      // against the binding active at its position, and a mismatch is a genuine stale_binding.
-      const current = state.env.kinds[ev.kind];
-      if (!current) return paused(i, 'dependency_missing');
-      if (ev.expected_activation !== undefined) {
-        const activation = view[ev.expected_activation];
-        if (!activation || !activation.event) return paused(i, 'dependency_missing');
-      } else if (ev.expected_binding !== undefined && !knownBindings(state, ev.kind).has(ev.expected_binding)) {
-        // no provenance: fall back to what this principal's history has produced
+      // Completeness is checked here, by the recipient (design note §8 leaves the location open),
+      // from evidence the sequencer put in the header: the activation position of the binding the
+      // event was judged under at its own position. The intent's own provenance cannot serve, since
+      // a hidden attach between the intent's activation and its sequencing changes the verdict.
+      // If the header's activation is hidden in this view, the event cannot be judged. If it is
+      // visible, this view resolves the same binding the sequencer did, so the fold's verdict,
+      // effective or stale_binding, is the genuine one.
+      const activation = v.header.activation;
+      if (activation === undefined) {
+        if (!state.env.kinds[ev.kind]) return paused(i, 'dependency_missing');
+      } else if (!view[activation]?.event) {
         return paused(i, 'dependency_missing');
       }
     }
