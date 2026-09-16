@@ -1,0 +1,11 @@
+{
+  "source": "b4cb584e7d3d60b7f4fffadfb21be8b82828ed3a",
+  "runtimeBase": "edacc32db1495504d10ae7a92f02af272e49e9f2",
+  "command": [
+    "node",
+    "--test",
+    "test/ordering-scope-completeness.test.ts"
+  ],
+  "exitCode": 1,
+  "elapsedSeconds": 1.5472390000068117
+}

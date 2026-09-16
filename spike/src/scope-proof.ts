@@ -34,7 +34,15 @@ const PUBLIC = new Set<string>([
   'com.example.sale.accept', 'com.example.sale.close', ...Object.values(SCOPE_KINDS),
 ]);
 const PRIVATE_FIELDS = new Set(['amount', 'acceptedAmount', 'counter', 'terms', 'offer_terms']);
-export const PUBLIC_PROOF_RULE = { type: 'dap.fixture.scope-public-openings/1', kinds: [...PUBLIC].sort(), requiredAudience: ['members', 'spine'], otherPositions: 'hidden', bannedFields: [...PRIVATE_FIELDS].sort(), excludedKinds: [K.disclose, K.observe].sort() } as const;
+export const PUBLIC_PROOF_RULE = {
+  type: 'dap.fixture.scope-public-openings/2', kinds: [...PUBLIC].sort(), requiredAudience: ['members', 'spine'],
+  ineffectiveActorOnly: {
+    body: 'hidden', known: true, effective: false,
+    indeterminateReasons: ['not_in_v1', 'package_unavailable', 'scope_runtime_required', 'unhandled'],
+    indeterminateReasonPrefixes: ['audience_error:', 'fold_error:'],
+  },
+  otherPositions: 'hidden', bannedFields: [...PRIVATE_FIELDS].sort(), excludedKinds: [K.disclose, K.observe].sort(),
+} as const;
 export const PUBLIC_PROOF_RULE_ID = digest(PUBLIC_PROOF_RULE);
 export function assertPublicData(value: unknown): void {
   if (!value || typeof value !== 'object') return;
@@ -57,9 +65,22 @@ export function publicProof(journal: Journal, frontier = journal.context.head, w
   if (!writerKey) throw new ScopeProofError('scope proof: completeness signer required');
   if (!Number.isSafeInteger(frontier) || frontier < 0 || frontier > journal.context.head) throw new ScopeProofError('scope proof: invalid frontier');
   const entries = journal.context.entries.slice(0, frontier + 1);
+  const state = journal.context.state;
   const positions = entries.map(entry => {
     if (!isPublic(entry.event.kind)) return { header: entry.header };
-    const audience = journal.context.state.audiences[entry.position];
+    const audience = state.audiences[entry.position];
+    // The serving writer already attests completeness. Its classification of
+    // a failed actor-only attempt is trusted too; an opaque header cannot
+    // establish this. Missing/indeterminate verdicts do not permit omission.
+    if (audience?.kind === 'named' && audience.principals.length === 1 && audience.principals[0] === entry.event.actor) {
+      const verdict = state.verdicts[entry.position];
+      const reasons = [verdict?.reason, ...Object.values(verdict?.perModel ?? {}).map(v => v.reason)];
+      const rule = PUBLIC_PROOF_RULE.ineffectiveActorOnly;
+      const indeterminate = reasons.some(reason => reason !== undefined && (
+        rule.indeterminateReasons.some(value => value === reason) || rule.indeterminateReasonPrefixes.some(prefix => reason.startsWith(prefix))
+      ));
+      if (verdict?.known === true && verdict.effective === false && !indeterminate) return { header: entry.header };
+    }
     if (!audience || !['spine', 'members'].includes(audience.kind)) throw new ScopeProofError('scope proof: authority body has narrower audience');
     assertPublicBody(entry.event);
     if (!entry.committed) throw new ScopeProofError('scope proof: unsigned entry');

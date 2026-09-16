@@ -1,0 +1,26 @@
+{
+  "source": "0aa8687368d77b6a3f53cedce2f54216d83bfabb",
+  "scope": "K3 regression, existing public-proof checks and manifest specification only; no broad suite or campaign.",
+  "commands": [
+    {
+      "command": [
+        "node",
+        "--test",
+        "test/ordering-scope-completeness.test.ts",
+        "test/scope-proof.test.ts",
+        "test/ordering-lifecycle.test.ts"
+      ],
+      "exitCode": 1,
+      "elapsedSeconds": 2.819998791994294
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 1.0355847089958843
+    }
+  ]
+}

@@ -82,7 +82,7 @@ test('manifest identity binds the prose and executable source, independently rec
     assert.notEqual(ORDERING_LIFECYCLE_MANIFEST_ID, historicalId, 'historical manifest is not relabelled');
     assert.ok(prose.includes(historicalId), 'retain historical manifest identity');
   }
-  assert.equal(ORDERING_LIFECYCLE_MANIFEST_ID, 'sha256:b2501d040c87c31fee574549254902cc00b3a86d98a94098d7b8296bef2c59e6');
+  assert.equal(ORDERING_LIFECYCLE_MANIFEST_ID, 'sha256:a766fe56564b026a96c37630d261512c0f608adf5ec7c5ee2d11aca23eaf45fe');
   assert.equal(ORDERING_LIFECYCLE_MANIFEST_ID, contentId({ prose: contentId(prose), executable: contentId(executable) }));
   assert.notEqual(ORDERING_LIFECYCLE_MANIFEST_ID, contentId({ prose: contentId(prose + '\nchanged'), executable: contentId(executable) }));
   assert.notEqual(ORDERING_LIFECYCLE_MANIFEST_ID, contentId({ prose: contentId(prose), executable: contentId(executable + '\n// changed') }));
@@ -270,7 +270,13 @@ test('another admitted participant event cannot occupy a permanent activation sl
 
 test('public proof disclosure has a finite named rule and keeps private source kinds excluded', () => {
   assert.equal(PUBLIC_OPENING_RULE_ID, contentId(publicOpeningRule));
-  assert.equal(publicOpeningRule.type, 'dap.fixture.scope-public-openings/1');
+  assert.equal(publicOpeningRule.type, 'dap.fixture.scope-public-openings/2');
+  assert.equal(publicOpeningRule.ineffectiveActorOnly.body, 'hidden');
+  assert.equal(publicOpeningRule.ineffectiveActorOnly.known, true);
+  assert.equal(publicOpeningRule.ineffectiveActorOnly.effective, false);
+  assert.deepEqual(publicOpeningRule.ineffectiveActorOnly.indeterminateReasons, ['not_in_v1', 'package_unavailable', 'scope_runtime_required', 'unhandled']);
+  assert.deepEqual(publicOpeningRule.ineffectiveActorOnly.indeterminateReasonPrefixes, ['audience_error:', 'fold_error:']);
+  assert.equal(PUBLIC_OPENING_RULE_ID, 'sha256:701403e9c51e6449ca797545818a8b63602a20a9b43c2ace064e9a38ab55b66c');
   assert.equal(publicOpeningRule.kinds.length, 21);
   assert.equal(new Set(publicOpeningRule.kinds).size, 21);
   assert.deepEqual(publicOpeningRule.requiredAudience, ['members', 'spine']);
