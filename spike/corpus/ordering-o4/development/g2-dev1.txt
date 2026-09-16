@@ -1,0 +1,88 @@
+✔ O4 G2 failed activation, dormant exercise and exact retries permit later activation: memory (1000.756667ms)
+✔ O4 G2 failed activation, dormant exercise and exact retries permit later activation: sqlite (1006.119708ms)
+✔ O4 G2 another participant admitted event cannot block activation: memory (620.062583ms)
+✔ O4 G2 another participant admitted event cannot block activation: sqlite (655.213875ms)
+✔ O4 G2 keeps current authorization gate: memory (511.085042ms)
+✔ O4 G2 keeps current closed gate: memory (502.301417ms)
+✔ O4 G2 keeps current authorization gate: sqlite (544.89675ms)
+✔ O4 G2 keeps current closed gate: sqlite (538.278ms)
+✔ O4 unexpected post-commit replay error is thrown and disables facade: memory (647.649917ms)
+✔ O4 unexpected post-commit replay error is thrown and disables facade: sqlite (680.27675ms)
+✔ O4 malformed release-proof shape has an explicit policy refusal: memory (528.1215ms)
+✔ O4 malformed release-proof shape has an explicit policy refusal: sqlite (564.439667ms)
+✔ O4 thrown fold handler is a real failure with durable bytes: memory (224.18675ms)
+✖ O4 thrown audience handler is a real failure with durable bytes: memory (208.770917ms)
+✔ O4 thrown fold handler is a real failure with durable bytes: sqlite (239.506792ms)
+✖ O4 thrown audience handler is a real failure with durable bytes: sqlite (223.534416ms)
+✔ O4 public proof reconstructs signed Sale facts and grants across handover on memory (106.053083ms)
+✔ O4 public proof reconstructs signed Sale facts and grants across handover on sqlite (124.926667ms)
+✔ O4 source pins distinguish genesis, initial writer and requested frontier (98.255333ms)
+✔ O4 public proof rejects malformed, tampered and incomplete authenticated prefixes (94.838959ms)
+✔ O4 public proof rejects missing, changed and forged handover evidence (105.012417ms)
+✔ O4 public proof rejects private bodies supplied at their genuine signed positions (90.46075ms)
+✔ O4 public proof rejects a public kind carrying nested private extras despite valid signatures (87.363208ms)
+✔ O4 public proof rejects private data attached outside its declared shape (88.419583ms)
+✔ O4 public proof requires semantic packages and disclosed attachment bodies (107.466208ms)
+✔ O4 public proof cannot hide an authenticated grant body as a private position (93.715375ms)
+✔ O4 public proof cannot hide an authenticated revoke body as a private position (94.073666ms)
+✔ O4 public proof cannot omit a withdrawal to turn a refused acceptance into a decision (108.352375ms)
+✔ O4 certificate binds every authority opening on memory (127.314125ms)
+✔ O4 certificate signer follows the frontier header across assignment on memory (181.084958ms)
+✔ O4 certificate strictly pins type, rule, genesis, frontier and shape on memory (138.065709ms)
+✔ O4 producer refuses a capped authority audience on memory (94.049084ms)
+✔ O4 malicious writer omissions exceed destination trust but member recomputation detects them on memory (132.631709ms)
+✔ O4 public and full semantic verdicts agree at every opening of every certified prefix on memory (231.4435ms)
+✔ O4 disclosure and observation remain hidden under the named public rule on memory (107.210083ms)
+✔ O4 certificate binds every authority opening on sqlite (140.77725ms)
+✔ O4 certificate signer follows the frontier header across assignment on sqlite (197.04775ms)
+✔ O4 certificate strictly pins type, rule, genesis, frontier and shape on sqlite (158.102708ms)
+✔ O4 producer refuses a capped authority audience on sqlite (105.1045ms)
+✔ O4 malicious writer omissions exceed destination trust but member recomputation detects them on sqlite (143.445292ms)
+✔ O4 public and full semantic verdicts agree at every opening of every certified prefix on sqlite (244.042917ms)
+✔ O4 disclosure and observation remain hidden under the named public rule on sqlite (118.574666ms)
+ℹ tests 42
+ℹ suites 0
+ℹ pass 40
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 8780.325166
+
+✖ failing tests:
+
+test at spike/test/ordering-scope-phase.test.ts:90:105
+✖ O4 thrown audience handler is a real failure with durable bytes: memory (208.770917ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/ordering-scope-phase.test.ts:101:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /handler failure at 19: audience_error:qa_audience_exception/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at spike/test/ordering-scope-phase.test.ts:90:105
+✖ O4 thrown audience handler is a real failure with durable bytes: sqlite (223.534416ms)
+  AssertionError [ERR_ASSERTION]: Missing expected exception.
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/ordering-scope-phase.test.ts:101:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /handler failure at 19: audience_error:qa_audience_exception/,
+    operator: 'throws',
+    diff: 'simple'
+  }

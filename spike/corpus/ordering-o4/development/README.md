@@ -98,3 +98,11 @@ formal G2 baseline. Formal measurement awaits integrated G1 and manifest fixes.
 Development source `b9eaeec` initially failed typecheck: the new throwing-audience
 fixture used the context argument as the event. No runtime check was run at
 that source. Its next commit corrects the callback's second argument.
+
+`g2-dev1.txt` records source `f8c774bd4b9c1fc00f13fc727c749b86c1063462`:
+42 tests, 40 passed and 2 failed, zero TODOs; typecheck passed. The original
+12 G2/error checks and all 26 public-proof checks pass. Both thrown-fold
+checks pass. The two thrown-audience fixtures fail because attaching another
+handler preserves the existing kind's audience policy, so the new throwing
+policy never runs. The correction gives that fixture its own bound kind and
+uses its actual audience; no production binding policy changes.
