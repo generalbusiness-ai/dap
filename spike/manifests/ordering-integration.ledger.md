@@ -147,3 +147,26 @@ and the public opening rule remains
 These symbolic lifecycle expectations do not pin the retired /2 wire payload.
 The earlier 600-seed runs retain their original source boundaries. No new
 campaign run is planned solely for this authenticated ordering correction.
+
+## O-H1/O-H2 full-suite boundary and type-only correction
+
+At frozen source `773a38ec8367d0b563f7741d1ff902aceb72350c`, the full
+noncampaign suite selected 325 tests: 321 passed, zero ordinary failures,
+four executing/failing retained Club TODOs, zero skips among selected tests.
+The command took 12.615 seconds. The same run's typecheck failed with TS2322
+in the malformed-predecessor test array: TypeScript inferred optional
+undefined fields instead of JSON objects. No product assertion failed.
+Preserve both results and their source:
+[run-4-h1-h2-combined.json](ordering-integration-runs/run-4-h1-h2-combined.json),
+[run-4-h1-h2-combined.txt](ordering-integration-runs/run-4-h1-h2-combined.txt).
+
+The correction adds an explicit `Json[]` annotation to that test. It changes
+no runtime, fixture bytes or test behavior. All `spike/src/*.ts` hashes still
+match source `773a38e`, which is also the repaired benchmark source. The
+corrected-source measurement is limited to handover tests and typecheck;
+this ledger does not relabel run 4 as a later full-suite run.
+
+The cache retains a commitment set and control-position set, using O(n)
+identifiers for an n-entry journal. It removes repeated historical signature
+verification on live append. Existing Context history reads and application
+fold costs remain unchanged; no globally constant append-cost claim is made.

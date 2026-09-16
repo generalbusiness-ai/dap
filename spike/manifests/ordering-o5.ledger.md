@@ -200,7 +200,9 @@ as evidence. The fixed-writer compatibility check compares exact old/new
 proof bytes. A real-journal projection check repeats its signed origin
 commitment at a newly signed position and expects rejection without changing
 the journal. Permission isolation now evaluates every declared vector in
-one process, in addition to the separate actual-journal proof.
+one process, in addition to the separate actual-journal proof. One boundary
+vector deliberately supplies an ordinary opening and must be rejected; valid
+accepted inputs contain only genesis, control openings and ordinary headers.
 
 **Acceptance still assumes every control opening is supplied.** Exact-head
 binding and duplicate detection do not identify hidden control kinds. The
@@ -208,5 +210,27 @@ same-header visible/hidden seal counterexample remains an explicit accepted
 limitation; neither this correction nor conflicting-history evidence proves
 completeness, freshness, availability, fork choice or rollback protection.
 
-Source freeze and focused validation are pending in the common integration.
+Frozen common source `773a38ec8367d0b563f7741d1ff902aceb72350c` passed
+all **86 O5 checks** inside one full noncampaign invocation: 76 declared
+proof cases, four history comparisons, the omission counterexample, input
+boundary, exact-control-byte relocation, historical/fixed-writer compatibility,
+all-vector isolation, and actual-journal isolation/projection checks. These
+are the O5 subset, not another run added to the suite total. The combined
+suite selected 325 tests: 321 passed, zero ordinary failures and four executing
+retained Club TODOs. Three 200-seed campaigns were excluded.
+
+[O5 result and hashes](ordering-o5-runs/h1-result.json) identify the frozen
+verifier/vector bytes and shared raw output. The generator reproduced the
+new proof file byte-for-byte before freezing, with SHA-256
+`03bea9188036158a14da96a4168907675928375abf65cb45a0179238b929b36b`.
+The new [journal proof](ordering-o5-runs/h1-journal-proof.json) is extracted
+from the shared diagnostic; it retains the actual `/3` seal/assign/successor
+positions 2/3/4. No O5 algorithm or fixture repair followed this measurement.
+
+Whole-tree typecheck at this exact source failed with TS2322 in the O3
+malformed-payload test (`ordering-handover.test.ts:143`): inferred optional
+`undefined` properties were not assignable to Json. The runtime owner is
+correcting that test annotation only and will retain the next focused/typecheck
+boundary separately. The failed output remains in
+[the combined run](ordering-integration-runs/run-4-h1-h2-combined.txt).
 No new 600-seed campaign or independent approval is claimed.
