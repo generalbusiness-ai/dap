@@ -344,3 +344,70 @@ files remain unchanged. The merge adds only evidence and prose, so no
 runtime change requires another O6 run. Source `8c5598ff` remains the exact
 O6 measurement boundary; upstream independent acceptance is not inferred
 from these component passes.
+
+## Independent aggregate approval
+
+Checker report
+`git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:7f5bacc35253bb774945606e5bc76bf7e75dc9b2`
+approves exact O2/O3/O5 candidate
+`936acce94e5cd024b0164fc6cd2af027f611545e`. Ratification:
+`git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:bcb1e3ccd81d0be362d619cafd8b89e37fa15a6d`.
+The review explicitly addresses its stale provenance basis and the 68 live
+exact-head artifacts. It verifies H1/H2 and finds no new blocking defect.
+This approval covers that aggregate, not O4 or O6, whose separate reviews
+and landing actions are not supplied by this record.
+
+The checker's own `npm test` at `936acce` reports 328 tests, 324 pass,
+zero ordinary failures and four retained Club TODOs; typecheck passes.
+Its separate reproduction of the builder's noncampaign command selects
+325 tests, with 321 pass and four TODOs, at `773a38e`, `713315d` and `936acce`.
+It confirms the recorded typecheck failure at `773a38e`, the correction at
+`713315d`, matching hashes for all 19 runtime modules and unchanged old logs.
+These are independent reviewer measurements, not new builder runs or a
+relabelled O4/O6 measurement.
+
+An independently implemented Python verifier, including its own JCS and
+RFC 8032 Ed25519, agrees with all 76 vectors, the real-journal proof and
+21 new attack proofs, and reproduces the recorded valid signatures. The
+review also checks cache faults before/after commit, live/cold equivalence
+through repeated handovers, and suite failures when retry order, cache commit
+timing or head comparison is deliberately broken. Its O2 concurrency/retry,
+O3 control races/crashes and O5 isolation checks retain their own scope.
+It reproduces H2's deterministic counters: two verifications per ordinary
+append for `/1` and `/3` at each measured length versus the reviewed
+aggregate's 222/822/2022 window averages. A separate reviewer control test
+also counts two verifications for a seal or assign at 1,020 entries. This
+does not convert the builder's ordinary-offer benchmark into a control test.
+
+Material nonblocking boundaries and known follow-ups from the review:
+
+- The cache authenticates the stored prefix at open. It does not notice an
+  older row rewritten underneath a live Journal when the head is unchanged;
+  live offer/seal may proceed, while cold open rejects the tampered row.
+  This is the accepted O1 trust boundary, not continuous storage integrity
+  monitoring. In-place replacement with an older file or fork is also outside
+  the guarantee. The ordering getter's authentication comment needs that
+  precise qualification in a future source revision.
+- A control key can sign two assignments for one sealed head, each valid on
+  a separate copy. Identical control envelopes remain valid on byte-identical
+  copies. Assignment uniqueness is within one journal; it does not prevent
+  forks or control-key equivocation. Both racing processes may also fail on
+  SQLite locking, an availability limitation rather than double assignment.
+- The live duplicate-commitment guard throws and disables the facade instead
+  of returning a refusal; it appends nothing. A committed-callback exception
+  can occur after a durable commit and still requires cold recovery. Reusing
+  a closed Journal's encoding after another append is now refused, a stricter
+  result than the accepted O1 baseline's leftover-encoding path.
+- Cold SQLite reopen remains slow: the reviewer observed roughly three
+  seconds at 1,020 entries and faster-than-linear growth. Neither this review
+  nor the builder benchmark establishes bounded reopen cost. A move between
+  two distinct stores remains unexercised.
+- Two small documentation/type follow-ups remain: the foundation sequencing
+  type union still lists `/2` and omits `/3`; the benchmark README omits the
+  `SOURCE` file required above `spike/` by the harness. Codec failures remain
+  `TypeError`, and fixed `/1` genesis still accepts an extra control field.
+
+Only report/ledger notes record these findings here. Runtime, types, fixture
+bytes, O4 `edacc32` identities and O6 measured source `8c5598ff` are unchanged.
+No tests or campaigns were run for this documentation update. The Sale
+repair-budget failure and Club's original A1/A5 negatives remain intact.
