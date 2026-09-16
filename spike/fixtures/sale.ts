@@ -11,14 +11,21 @@
 // refused event necessarily saw that fact. Concretely:
 //
 // - The listing and the close are spine, so `not_open` is safe everywhere.
-// - A withdrawal or a replacement of a stub the viewer never saw is still
-//   effective and is recorded against the stub's id, because a member who
-//   joined after the stub reads the withdrawal but not the stub (manifest
-//   case 4). A later accept of that id is then `withdrawn` in every view.
+// - Stubs, withdrawals and accepts are members events. A member who joins
+//   later holds only their headers, yet must judge every later withdrawal,
+//   replacement and accept of those stubs exactly as the oracle does. The
+//   model therefore declares a dependency (`config.joinDisclosure`, fix 1):
+//   when a participant joins, the seller discloses to them every effective
+//   offer, withdraw and accept recorded before their join. With that, a
+//   stub unknown to a view is a stub that does not exist, and `no_such_offer`
+//   reads the same everywhere (fix 2: no withdrawal or replacement of an
+//   unknown stub is effective). The disclosure adds no reader beyond the
+//   privacy budget: those kinds are members when recorded, subject to
+//   disclosure; terms and counters are never part of it.
 // - An accept checks stub-specific facts (withdrawn, replaced) before the
-//   decision, and the decision before the stub's existence, so a viewer who
-//   holds only the header of the stub but sees the decision (Ivan at 18)
-//   agrees with everyone else: `already_decided`.
+//   decision, and the decision before the stub's existence, so a viewer
+//   agrees with everyone else on `already_decided` whenever they can see
+//   the decision.
 // - Terms and counters refuse on the decision only for the accepted stub
 //   itself, because their readers (author and seller) were members at the
 //   decision; a withdrawal never consults the decision, because a member
@@ -71,7 +78,7 @@ export interface SaleState {
   terms: OfferTerms[];
   /** effective counters, in position order; the latest visible one is the counter */
   counters: OfferCounter[];
-  /** effective withdrawals, by stub id, including withdrawals of stubs this view never saw */
+  /** effective withdrawals, by stub id */
   withdrawals: Withdrawal[];
   /** the decision: the accepted stub and the position of the accept */
   accepted: { id: string; position: number } | null;
@@ -79,6 +86,24 @@ export interface SaleState {
   closedAt: number | null;
   outcome: string | null;
 }
+
+/**
+ * The model's declared dependency (fix 1). A member who joins after a stub,
+ * withdrawal or accept was recorded must still judge later events about
+ * that stub as the oracle does, and nothing visible to them says the stub
+ * exists. So on every join, the seller discloses to the newcomer every
+ * effective event of these kinds recorded before the join. The harness
+ * honours this on each join; the model cannot emit `dap.disclose` itself.
+ */
+export type SaleConfig = {
+  joinDisclosure: {
+    /** who discloses: the listing's seller */
+    by: 'seller';
+    /** the kinds whose effective positions are disclosed to the newcomer */
+    kinds: string[];
+    effectiveOnly: true;
+  };
+};
 
 type StubStatus = 'open' | 'withdrawn' | 'replaced' | 'accepted' | 'declined';
 type Visible = (position: number) => boolean;
@@ -113,9 +138,9 @@ function decisionVisible(state: SaleState, visible: Visible): boolean {
   return state.accepted !== null && visible(state.accepted.position);
 }
 
-/** An id is taken once any stub, replacement or withdrawal has named it. */
+/** An id is taken once an effective stub carries it. */
 function idTaken(state: SaleState, id: string): boolean {
-  return state.offers.some((o) => o.id === id || o.replaces === id) || state.withdrawals.some((w) => w.id === id);
+  return state.offers.some((o) => o.id === id);
 }
 
 function latestTerms(state: SaleState, id: string, visible: Visible): OfferTerms | undefined {
@@ -144,9 +169,9 @@ function refuse(state: SaleState, reason: string) {
   return { effective: false, state, reason };
 }
 
-export const saleModel: ModelSpec<SaleState, Record<string, never>> = {
+export const saleModel: ModelSpec<SaleState, SaleConfig> = {
   id: 'sale',
-  config: {},
+  config: { joinDisclosure: { by: 'seller', kinds: [NS + 'offer', NS + 'withdraw', NS + 'accept'], effectiveOnly: true } },
   init: () => ({ status: 'unopened', offers: [], terms: [], counters: [], withdrawals: [], accepted: null, closedAt: null, outcome: null }),
   roles: {
     Seller: [NS + 'accept_offer', NS + 'counter', NS + 'close'],
@@ -191,11 +216,12 @@ export const saleModel: ModelSpec<SaleState, Record<string, never>> = {
         if (replaces !== null && (!isId(replaces) || replaces === id)) return refuse(state, 'malformed');
         if (idTaken(state, id)) return refuse(state, 'duplicate_offer');
         if (replaces !== null) {
-          // Facts that later members can read come first; the stub itself may be hidden from them.
           if (withdrawalOf(state, replaces, everything)) return refuse(state, 'withdrawn');
           if (replacementOf(state, replaces, everything)) return refuse(state, 'replaced');
+          // Every reader knows every effective stub (join disclosure), so an unknown stub does not exist.
           const old = stubOf(state, replaces);
-          if (old && old.author !== event.actor) return refuse(state, 'not_author');
+          if (!old) return refuse(state, 'no_such_offer');
+          if (old.author !== event.actor) return refuse(state, 'not_author');
         }
         const stub: OfferStub = { id, author: event.actor, position: ctx.position, replaces };
         return { effective: true, state: { ...state, offers: [...state.offers, stub] } };
@@ -226,10 +252,11 @@ export const saleModel: ModelSpec<SaleState, Record<string, never>> = {
       case NS + 'withdraw': {
         if (withdrawalOf(state, id, everything)) return refuse(state, 'withdrawn');
         if (replacementOf(state, id, everything)) return refuse(state, 'replaced');
-        // A stub this view never read is withdrawn on its author's word; the oracle, which read
-        // it, checks authorship. The decision is not consulted: a later member may not see it.
+        // Every reader knows every effective stub (join disclosure), so an unknown stub does not
+        // exist. The decision is not consulted: a member who joined after it may not see it.
         const stub = stubOf(state, id);
-        if (stub && stub.author !== event.actor) return refuse(state, 'not_author');
+        if (!stub) return refuse(state, 'no_such_offer');
+        if (stub.author !== event.actor) return refuse(state, 'not_author');
         const withdrawal: Withdrawal = { id, actor: event.actor, position: ctx.position };
         return { effective: true, state: { ...state, withdrawals: [...state.withdrawals, withdrawal] } };
       }

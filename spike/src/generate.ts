@@ -12,7 +12,7 @@ import { Context } from './context.ts';
 import type { PackageDescriptor } from './descriptor.ts';
 import { K, type FoundationState } from './foundation.ts';
 import { observe } from './observe.ts';
-import { applyStep, type Pending, type Script, type Step } from './script.ts';
+import { applyStep, joinBacklog, type Pending, type Script, type Step } from './script.ts';
 import type { Entry, Principal } from './types.ts';
 
 /** mulberry32: a small seeded generator, enough for a bounded corpus. */
@@ -81,7 +81,8 @@ export function generate(spec: GeneratorSpec, seed: number): Script {
     const members = [...ctx.state.participants];
     const roll = r();
     // late joiner: an invite and an accept, two entries, only when both fit
-    if (roll < 0.12 && room >= 2 && joinedCount < spec.newcomers.length && members.length < spec.bounds.maxParticipants) {
+    const joinEntries = 2 + (joinBacklog(ctx.state, ctx.entries, ctx.head + 3).positions.length ? 1 : 0);
+    if (roll < 0.12 && room >= joinEntries && joinedCount < spec.newcomers.length && members.length < spec.bounds.maxParticipants) {
       const invitee = spec.newcomers[joinedCount++]!;
       const inviter = members.find((m) => observe(ctx.state, m, ctx.head, () => true).affordances.includes(K.invite));
       if (inviter) {

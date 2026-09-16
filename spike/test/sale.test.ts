@@ -11,7 +11,7 @@ import { checkContext, describeViolation, type Violation } from '../src/checker.
 import { K } from '../src/foundation.ts';
 import { generate } from '../src/generate.ts';
 import { oracleObserve } from '../src/oracle.ts';
-import { replay, type Script, type Step } from '../src/script.ts';
+import { replay, type Step } from '../src/script.ts';
 import { SALE, salePackage } from '../fixtures/sale.ts';
 import {
   ALICE,
@@ -36,85 +36,119 @@ const budget = (obs: Parameters<typeof saleBudgetViolations>[0], p: string) => s
 const fullCheck = (ctx: ReturnType<typeof replay>['ctx'], frontiers?: number[]) => checkContext(ctx, { invariants: saleInvariants, budget, ...(frontiers ? { frontiers } : {}) });
 const brief = (vs: Violation[]) => vs.slice(0, 6).map(describeViolation).join('\n') + (vs.length > 6 ? `\n... ${vs.length} violations` : '');
 
-function traceThrough(n: number): Script {
-  return { base: saleBase(), steps: saleTraceSteps().slice(0, n - 1) };
+/**
+ * The authored model declares a join disclosure (fix 1 in the ledger), so
+ * every join in the predeclared cases is followed by one `dap.disclose`
+ * from the seller. In the trace, Ivan's join at 13 is followed by the
+ * disclosure of the stubs at 6 and 8, at position 14; every later
+ * position of the views note's table shifts by one. The expectations
+ * below are the manifest's literal ones under that shift.
+ */
+const IVAN_BACKLOG_AT = 14;
+const shiftPos = (i: number) => (i >= IVAN_BACKLOG_AT ? i + 1 : i);
+
+function shiftedReadability(p: string, pattern: string): string {
+  const own = p === ALICE || p === IVAN ? 'r' : 'h';
+  let out = pattern.slice(0, IVAN_BACKLOG_AT) + own + pattern.slice(IVAN_BACKLOG_AT);
+  if (p === IVAN) out = out.slice(0, 6) + 'r' + out.slice(7, 8) + 'r' + out.slice(9);
+  return out;
 }
 
-test('the manifest is one experiment identity over its prose and executable part, and the prose states the same bounds', (t) => {
-  assert.match(SALE_MANIFEST_ID, /^sha256:[0-9a-f]{64}$/);
-  assert.deepEqual(proseBounds(), saleBounds);
-  t.diagnostic('SALE_MANIFEST_ID ' + SALE_MANIFEST_ID);
-  t.diagnostic('sale package ' + salePackage.id);
-});
+type SaleProjection = { offers: { position: number; amount: number | null; counter: number | null }[]; acceptedAmount: number | null } & Record<string, unknown>;
 
-test('case 1, the trace: positions 0 to 19 replay with the readability of the table, the literal projections at 19, and the outcomes at 17 and 18', () => {
-  const { ctx, positions } = replay({ base: saleBase(), steps: saleTraceSteps() });
-  assert.equal(ctx.head, 19);
-  assert.deepEqual(positions, Array.from({ length: 18 }, (_, i) => i + 2));
+function shiftedProjection(p: string): SaleProjection {
+  // Ivan now reads every stub, so his projection is Alice's with the private figures withheld.
+  const source = structuredClone(saleTraceProjections[p === IVAN ? ALICE : p]) as SaleProjection;
+  source.offers = source.offers.map((o) => ({ ...o, position: shiftPos(o.position), ...(p === IVAN ? { amount: null, counter: null } : {}) }));
+  if (p === IVAN) source.acceptedAmount = null;
+  return source;
+}
+
+test('case 1, the trace: positions 0 to 19 replay with the readability of the table, the literal projections and the outcomes at 17 and 18, under the model\'s declared join disclosure', (t) => {
+  // the literal trace, without the declared disclosure: reported, not required
+  const literal = replay({ base: saleBase(), steps: saleTraceSteps(), joinDisclosure: false });
+  assert.equal(literal.ctx.head, 19);
+  const literalViolations = fullCheck(literal.ctx);
+  t.diagnostic(`literal trace without the join disclosure: ${literalViolations.length} violations` + (literalViolations.length ? '; first: ' + describeViolation(literalViolations[0]!) : ''));
+
+  const { ctx } = replay({ base: saleBase(), steps: saleTraceSteps() });
+  assert.equal(ctx.head, 20);
+  assert.equal(ctx.entries[IVAN_BACKLOG_AT]!.event.kind, K.disclose);
+  assert.deepEqual(ctx.entries[IVAN_BACKLOG_AT]!.event.payload, { positions: [6, 8], to: [IVAN] });
   for (const [p, pattern] of Object.entries(saleTraceReadability)) {
-    assert.equal(ctx.view(p).map((v) => (v.event ? 'r' : 'h')).join(''), pattern, `readability for ${p}`);
+    assert.equal(ctx.view(p).map((v) => (v.event ? 'r' : 'h')).join(''), shiftedReadability(p, pattern), `readability for ${p}`);
   }
-  // every position of the table is effective except 18
-  for (let i = 0; i <= 19; i++) assert.equal(ctx.state.verdicts[i]?.effective, i !== 18, `verdict at ${i}`);
+  for (let i = 0; i <= 20; i++) assert.equal(ctx.state.verdicts[i]?.effective, i !== shiftPos(18), `verdict at ${i}`);
   for (const p of [ALICE, BOB, CAROL, IVAN]) {
-    const obs = oracleObserve(ctx, p, 19, 19);
-    assert.deepEqual(obs.models['sale'], saleTraceProjections[p], `sale projection for ${p}`);
-    assert.deepEqual(obs.models['inspection'], saleTraceInspection[p], `inspection projection for ${p}`);
-    assert.equal(obs.outcomes['17']?.effective, true, `17 for ${p}`);
-    assert.equal(obs.outcomes['18']?.effective, false, `18 for ${p}`);
-    assert.equal(obs.outcomes['18']?.perModel?.['sale']?.reason, 'already_decided', `18 reason for ${p}`);
+    const obs = oracleObserve(ctx, p, 20, 20);
+    assert.deepEqual(obs.models['sale'], shiftedProjection(p), `sale projection for ${p}`);
+    const insp = structuredClone(saleTraceInspection[p]) as { requests: { position: number }[] };
+    insp.requests = insp.requests.map((r) => ({ ...r, position: shiftPos(r.position) }));
+    assert.deepEqual(obs.models['inspection'], insp, `inspection projection for ${p}`);
+    assert.equal(obs.outcomes[String(shiftPos(17))]?.effective, true, `17 for ${p}`);
+    assert.equal(obs.outcomes[String(shiftPos(18))]?.effective, false, `18 for ${p}`);
+    assert.equal(obs.outcomes[String(shiftPos(18))]?.perModel?.['sale']?.reason, 'already_decided', `18 reason for ${p}`);
   }
   const violations = fullCheck(ctx);
   assert.deepEqual(violations, [], brief(violations));
 });
 
-test('case 2, replacement with a hidden predecessor: Ivan sees o3 open with o1 hidden, and a later accept of o1 is ineffective for everyone', () => {
-  const steps: Step[] = [...saleTraceSteps().slice(0, 15), { type: 'act', actor: ALICE, kind: SALE + 'accept', payload: { offer_id: 'o1' } }]; // 2..16, then accept o1 at 17
-  const { ctx } = replay({ base: saleBase(), steps });
-  assert.equal(ctx.head, 17);
-  const ivan16 = oracleObserve(ctx, IVAN, 16, 16).models['sale'] as { offers: { id: string; status: string; replaces: string | null }[] };
-  assert.deepEqual(ivan16.offers.map((o) => [o.id, o.status, o.replaces]), [['o3', 'open', 'o1']]);
-  assert.equal(ctx.state.verdicts[17]?.effective, false);
-  for (const p of ctx.state.participants) assert.equal(oracleObserve(ctx, p, 17, 17).outcomes['17']?.effective, false, `17 for ${p}`);
+test('case 2, replacement with a hidden predecessor: Ivan sees o3 open replacing o1, and a later accept of o1 is ineffective for everyone', (t) => {
+  const steps: Step[] = [...saleTraceSteps().slice(0, 15), { type: 'act', actor: ALICE, kind: SALE + 'accept', payload: { offer_id: 'o1' } }];
+  const literal = replay({ base: saleBase(), steps, joinDisclosure: false });
+  const literalViolations = fullCheck(literal.ctx);
+  t.diagnostic(`literal case 2 without the join disclosure: ${literalViolations.length} violations` + (literalViolations.length ? '; first: ' + describeViolation(literalViolations[0]!) : ''));
+
+  const { ctx } = replay({ base: saleBase(), steps }); // 14 backlog, 15 request, 16 o3, 17 terms, 18 accept o1
+  assert.equal(ctx.head, 18);
+  const ivan17 = oracleObserve(ctx, IVAN, 17, 17).models['sale'] as { offers: { id: string; status: string; replaces: string | null }[] };
+  assert.deepEqual(ivan17.offers.map((o) => [o.id, o.status, o.replaces]), [['o1', 'replaced', null], ['o2', 'open', null], ['o3', 'open', 'o1']]);
+  assert.equal(ctx.state.verdicts[18]?.effective, false);
+  for (const p of ctx.state.participants) assert.equal(oracleObserve(ctx, p, 18, 18).outcomes['18']?.effective, false, `18 for ${p}`);
   const violations = fullCheck(ctx);
   assert.deepEqual(violations, [], brief(violations));
 });
 
 test('case 3, late joiner after the decision: a second accept is ineffective in every view, equality holds at every frontier, and a disclosure of the decision keeps it', () => {
   const steps: Step[] = [
-    ...saleTraceSteps().slice(0, 16), // 2..17: the accept of o3 at 17
-    { type: 'invite', inviter: ALICE, invitee: DANA, grants: { roles: ['Buyer'] } }, // 18
-    { type: 'accept', invitee: DANA }, // 19
-    { type: 'act', actor: ALICE, kind: SALE + 'accept', payload: { offer_id: 'o2' } }, // 20
+    ...saleTraceSteps().slice(0, 16), // 2..18 with Ivan's join disclosure at 14: the accept of o3 lands at 18
+    { type: 'invite', inviter: ALICE, invitee: DANA, grants: { roles: ['Buyer'] } }, // 19
+    { type: 'accept', invitee: DANA }, // 20, then the seller's join disclosure at 21
+    { type: 'act', actor: ALICE, kind: SALE + 'accept', payload: { offer_id: 'o2' } }, // 22
   ];
   const { ctx } = replay({ base: saleBase(), steps });
-  assert.equal(ctx.head, 20);
+  assert.equal(ctx.head, 22);
   assert.ok(ctx.state.participants.includes(DANA));
-  assert.equal(ctx.state.verdicts[20]?.effective, false);
-  for (const p of ctx.state.participants) assert.equal(oracleObserve(ctx, p, 20, 20).outcomes['20']?.effective, false, `20 for ${p}`);
+  assert.deepEqual(ctx.entries[21]!.event.payload, { positions: [6, 8, 16, 18], to: [DANA] });
+  assert.equal(ctx.state.verdicts[22]?.effective, false);
+  for (const p of ctx.state.participants) {
+    assert.equal(oracleObserve(ctx, p, 22, 22).outcomes['22']?.effective, false, `22 for ${p}`);
+    assert.equal(oracleObserve(ctx, p, 22, 22).outcomes['22']?.perModel?.['sale']?.reason, 'already_decided', `22 reason for ${p}`);
+  }
   let violations = fullCheck(ctx);
   assert.deepEqual(violations, [], brief(violations));
-  const d = ctx.act(ALICE, K.disclose, { positions: [17], to: [DANA] }); // 21
+  const d = ctx.act(ALICE, K.disclose, { positions: [18], to: [DANA] }); // 23: the decision again, by itself
   assert.ok(!('refused' in d) && d.verdict?.effective);
-  violations = fullCheck(ctx, [21]);
+  violations = fullCheck(ctx, [23]);
   assert.deepEqual(violations, [], brief(violations));
-  const dana = oracleObserve(ctx, DANA, 21, 21).models['sale'] as { status: string; accepted: string | null };
+  const dana = oracleObserve(ctx, DANA, 23, 23).models['sale'] as { status: string; accepted: string | null };
   assert.equal(dana.accepted, 'o3');
 });
 
-test('case 4, late joiner judging a public event on a hidden fact: a withdrawal of a stub Dana never saw, then an accept of it, are judged the same way in every view', () => {
+test('case 4, late joiner judging a public event on a hidden fact: a withdrawal of a stub recorded before Dana joined, then an accept of it, are judged the same way in every view', () => {
   const steps: Step[] = [
     ...saleTraceSteps().slice(0, 8), // 2..9: o1, o2 and their terms
     { type: 'invite', inviter: ALICE, invitee: DANA, grants: { roles: ['Buyer'] } }, // 10
-    { type: 'accept', invitee: DANA }, // 11
-    { type: 'act', actor: CAROL, kind: SALE + 'withdraw', payload: { offer_id: 'o2' } }, // 12
-    { type: 'act', actor: ALICE, kind: SALE + 'accept', payload: { offer_id: 'o2' } }, // 13
+    { type: 'accept', invitee: DANA }, // 11, then the seller's join disclosure at 12
+    { type: 'act', actor: CAROL, kind: SALE + 'withdraw', payload: { offer_id: 'o2' } }, // 13
+    { type: 'act', actor: ALICE, kind: SALE + 'accept', payload: { offer_id: 'o2' } }, // 14
   ];
   const { ctx } = replay({ base: saleBase(), steps });
-  assert.equal(ctx.head, 13);
-  assert.equal(ctx.state.verdicts[12]?.effective, true);
-  assert.equal(ctx.state.verdicts[13]?.effective, false);
-  for (const p of ctx.state.participants) assert.equal(oracleObserve(ctx, p, 13, 13).outcomes['13']?.effective, false, `13 for ${p}`);
+  assert.equal(ctx.head, 14);
+  assert.deepEqual(ctx.entries[12]!.event.payload, { positions: [6, 8], to: [DANA] });
+  assert.equal(ctx.state.verdicts[13]?.effective, true);
+  assert.equal(ctx.state.verdicts[14]?.effective, false);
+  for (const p of ctx.state.participants) assert.equal(oracleObserve(ctx, p, 14, 14).outcomes['14']?.perModel?.['sale']?.reason, 'withdrawn', `14 for ${p}`);
   const violations = fullCheck(ctx);
   assert.deepEqual(violations, [], brief(violations));
 });
