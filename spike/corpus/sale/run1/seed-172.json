@@ -1,0 +1,32 @@
+{
+  "seed": 172,
+  "manifest": "sha256:7e0f89716d6d5d9c40c1a5d0e4692bb605d1ad1504d0ad1a3be0bb59d34116b5",
+  "package": "sha256:1d7e17d8eca7c9fcf0f0b6f0d0e0fa92ab5acaa8a6da3300b29b6173ec7b9729",
+  "snapshot": "run1",
+  "expected": "*@4 invariant: replacement at 4 of unknown stub o10",
+  "steps": [
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "carol",
+      "grants": {
+        "roles": [
+          "Buyer"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "carol"
+    },
+    {
+      "type": "act",
+      "actor": "carol",
+      "kind": "com.example.sale.offer",
+      "payload": {
+        "offer_id": "o13",
+        "replaces": "o10"
+      }
+    }
+  ]
+}

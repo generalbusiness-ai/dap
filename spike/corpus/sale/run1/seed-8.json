@@ -1,0 +1,55 @@
+{
+  "seed": 8,
+  "manifest": "sha256:7e0f89716d6d5d9c40c1a5d0e4692bb605d1ad1504d0ad1a3be0bb59d34116b5",
+  "package": "sha256:1d7e17d8eca7c9fcf0f0b6f0d0e0fa92ab5acaa8a6da3300b29b6173ec7b9729",
+  "snapshot": "run1",
+  "expected": "dana@7 mismatch: observe differs at 7 [outcomes.7.perModel.sale.reason: oracle not_author, view no_such_offer]",
+  "steps": [
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "carol",
+      "grants": {
+        "roles": [
+          "Buyer"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "carol"
+    },
+    {
+      "type": "act",
+      "actor": "carol",
+      "kind": "com.example.sale.offer",
+      "payload": {
+        "offer_id": "o12"
+      }
+    },
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "dana",
+      "grants": {
+        "roles": [
+          "Buyer"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "dana"
+    },
+    {
+      "type": "act",
+      "actor": "dana",
+      "kind": "com.example.sale.offer_terms",
+      "payload": {
+        "offer_id": "o12",
+        "amount": 547,
+        "seller": "alice"
+      }
+    }
+  ]
+}

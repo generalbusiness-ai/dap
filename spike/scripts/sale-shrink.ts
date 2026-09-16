@@ -1,10 +1,11 @@
 // Shrink the failing series of a Sale checker run to deletion-minimal
 // scripts and save them to the corpus (spike plan §4.4: every failing
 // series is shrunk and committed).
-//   node scripts/sale-shrink.ts <run-name> <model-module> [seeds...]
+//   MANIFEST=<manifest id of the run> node scripts/sale-shrink.ts <run-name> <model-module> [seeds...]
 // The model module exports `salePackage`; the run's manifest semantics
 // are the current manifest's invariants and, for run 1, the projection
-// budget only (the readable-events budget did not exist then).
+// budget only (the readable-events budget did not exist then). MANIFEST
+// records the manifest revision the run used (default: the current one).
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 import { checkContext, describeViolation, type Violation } from '../src/checker.ts';
@@ -33,7 +34,7 @@ for (const seed of seeds) {
   const after = violations(minimal);
   writeCorpus(dir, `seed-${seed}`, {
     seed,
-    manifest: SALE_MANIFEST_ID,
+    manifest: process.env['MANIFEST'] ?? SALE_MANIFEST_ID,
     package: salePackage.id,
     snapshot: runName,
     expected: describeViolation(after[0]!),
