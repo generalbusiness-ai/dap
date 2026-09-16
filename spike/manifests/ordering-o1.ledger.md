@@ -129,7 +129,10 @@ visibility campaign path is unchanged from run 2. Accordingly run 2 remains
 the measured 600-seed integration result, and the final scoped run does not
 pretend to be another campaign.
 
-## Identities and scope
+## Historical identities and scope at the original O1 candidate
+
+This section records the original `c9fe7d5` boundary. Later profile and
+manifest identities are recorded under their own measured sources below.
 
 - Profile: `dap.fixture.single-writer/1`; document SHA-256:
   `sha256:fbc4d00e3f3eca6401541359642cdcf013c2c9ff821c2300d7afe8774b77e8fc`.
@@ -423,3 +426,38 @@ Additional checks cover two unowned raw Contexts competing over one backend
 and a scheduled head advance immediately before serialization. The scheduled
 case makes full-history reads unavailable during stale refusal, ensuring the
 freshness guard uses the current head rather than a history scan.
+
+## Second review correction O1-G2: activation phase and declared obligations
+
+Builder design decision for Hugh
+`c2982a6e6756f4fed08e5a82acc8b05a65127745` permits ordinary destination
+events before activation while transferred rights remain dormant. It preserves
+the genesis-pinned inputs, current authorization, closed-context gates and
+exact retry receipts. The specification adds failed-activation, dormant-exercise,
+fresh-activation and intervening-participant traces. The profile and manifest
+also state all A1–A7 public-proof requirements and the nine O4 evidence groups.
+These are O4 obligations, not evidence that O1 implements scope transfer.
+
+The new lifecycle manifest is
+`sha256:d94090b21ce42f2eec4a046558b3a776895d82905c2096a19df1f5f02e011f86`.
+The public-opening rule remains
+`sha256:475b415bbf8b16ccdb1bea078174712c57f2b2955ece9338d762abd60228bad8`.
+Historical manifest identities and raw run outputs are retained. A source
+index now crosslinks runs 4–7 without changing their output bytes:
+[run-4-7-source-index.json](ordering-o1-runs/run-4-7-source-index.json).
+
+At runtime source `81a95d09c0ffb8cf2e65565b05d451b939371290`, 60 focused
+checks pass: 9 Context freshness/current-retry, 4 append, 15 codec and 32
+Journal checks. The six G2 specification paths were uncommitted during that
+runtime-only run and were not imported by the selected tests. Exact source,
+command and exit code are in
+[run-13-g1-repaired.json](ordering-o1-runs/run-13-g1-repaired.json); output is
+in [run-13-g1-repaired.txt](ordering-o1-runs/run-13-g1-repaired.txt). A current
+raw Context retains a successful write's exact receipt and verdict on retry
+without a credential; it can then continue under its current state. A raw
+MemoryBackend Context also remains usable after a Journal takes and releases
+ownership without advancing the head.
+
+The combined source will receive one full noncampaign suite and typecheck.
+No new 600-seed run is claimed: the earlier campaign remains measured at
+`747a0905dc80f15a108fd62bdc5399e9f31f4431`, before this G1 runtime correction.

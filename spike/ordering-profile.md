@@ -19,18 +19,28 @@ their original bytes; this edited document has a different content hash.
 ## Trust, finality and progress
 
 There is one authoritative database file per context, one cooperating writer
-process, one live `Journal` serving facade per backend, and one fixed writer
-key. Opening a second facade on the same backend is rejected: each facade
+process, one live `Journal` serving facade per exact backend object, and one
+fixed writer key. The cooperative lease is keyed by JavaScript backend
+object identity, not by an underlying store identity. Opening a second
+facade on the same backend object is rejected: each facade
 has a folded admission state, so concurrent independent folds would be stale.
 `Journal.close()` permanently disables writes through that facade's Context
 on every backend and closes its SQLite handle. `Context.create` and
 `Context.restore` refuse a backend owned by a live Journal; a raw Context
 acquired earlier also cannot submit or act while that Journal owns it.
-After a storage or fold error, the owned Context is inactive until
-close/reopen. Reopen uses a fresh SQLite backend handle, or may reuse a
-released MemoryBackend; both rebuild state before admitting another action.
-Direct Backend mutation and malicious in-process
-code are outside this cooperative ownership boundary. Participants trust this writer not to
+Every write also compares the Context's folded position and header hash with
+the backend's head inside the shared append serialization boundary. A stale
+Context refuses the write and becomes inactive. A raw Context acquired before
+a Journal therefore cannot resume stale writes after that Journal advances
+and closes: memory fails the head check; SQLite's shared handle is closed.
+A raw Context with an unchanged head may still write on an unowned memory
+backend. Any raw or owned Context becomes inactive after its own append or
+fold exception and must be replaced by a fresh restore or open. Reopen uses
+a fresh SQLite backend handle, or may reuse a released MemoryBackend; both
+rebuild state before admitting another action.
+Direct backend mutation, Proxy, Object.create and plain delegating wrappers
+or other aliases of a backend object, and malicious in-process code are
+outside this cooperative ownership boundary. Participants trust this writer not to
 censor, equivocate, substitute another database copy, or expose private
 payloads. The SQLite lock excludes a second process opening this same file.
 It does not fence a malicious writer using another copy, a network filesystem
@@ -43,7 +53,9 @@ checks credentials or invitation issuance; chooses the successor and signs
 its header; and calls the backend's atomic write. Signing is synchronous
 Ed25519 inside the serialization boundary. The adapter contains no separate
 admission or append algorithm. The serving `Context` folds only after commit.
-`Context.restore` on an unowned backend is an explicitly trusted semantic entry point;
+`Context.restore` on an unowned backend is an explicitly trusted semantic
+entry point. Its ordinary raw writes store unsigned entries; a later
+`Journal.open` rejects those entries for missing committed bytes.
 `Journal.open` is the authenticated boundary for saved wire bytes.
 
 A returned receipt is final under these trust assumptions. Later appends
@@ -192,3 +204,85 @@ V3's historical campaign ledger or claim that its old byte streams had
 signatures. The final candidate integrates V4/V5 and the V6 report ancestry;
 the O1 layer adds no application model-policy repair. Those experiments keep
 their own historical source and run boundaries.
+
+## O4: public-proof completeness
+
+These O4 contract obligations come from the ratified checker design assessment
+`git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:ca04cc02027b9070bb60e3852ac19e21ae7931f4`
+and the builder's adoption, including the disclosure boundary,
+`git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:42ffb3413ded6c33fb39d25296cd04ce0f005d6a`.
+They specify an extension of the trusted-writer fixture. The O1 profile and
+manifest checks do not establish that O4 implements them; O4 must name its
+exact source, profile and manifest and satisfy the nine tests listed in
+[the lifecycle manifest](manifests/ordering-lifecycle.md#o4-completeness-contract-and-required-tests).
+
+1. **A1 — Serving-party trust.** F's own genesis names the source writer as
+   trusted to certify the completeness of public openings. The certificate
+   says nothing about release effectiveness. Its producer reads kinds and
+   assigned audiences as a serving-party function; pure ordering does not
+   establish completeness. F still reconstructs source semantics and grants
+   to verify each release independently.
+2. **A2 — Exact public-data rule.** For every position through the certified
+   frontier, open each authority-set kind only if its assigned audience is
+   `spine` or `members`. A narrower audience, including a binding ceiling,
+   makes the producer refuse certification; it must neither hide that body
+   nor widen its audience. Every other position retains only its header.
+   Opened bodies pass the recursive banned-field check for `amount`,
+   `acceptedAmount`, `counter`, `terms` and `offer_terms`. The named rule is
+   `dap.fixture.scope-public-openings/1`, content id
+   `sha256:475b415bbf8b16ccdb1bea078174712c57f2b2955ece9338d762abd60228bad8`,
+   defined by `publicOpeningRule` in `manifests/ordering-lifecycle.ts`.
+   Its 21 exact authority kinds are:
+
+   - `ai.generalbusiness.dap.genesis`, `ai.generalbusiness.dap.accept_invite`,
+     `ai.generalbusiness.dap.grant`, `ai.generalbusiness.dap.revoke`,
+     `ai.generalbusiness.dap.attach`, `ai.generalbusiness.dap.close`,
+     `ai.generalbusiness.dap.scope.release`, `ai.generalbusiness.dap.scope.activate`,
+     `ai.generalbusiness.dap.admit`, `ai.generalbusiness.dap.seq.request`,
+     `ai.generalbusiness.dap.seq.seal`, `ai.generalbusiness.dap.seq.assign`;
+   - `com.example.sale.listing`, `com.example.sale.offer`,
+     `com.example.sale.withdraw`, `com.example.sale.accept`, `com.example.sale.close`;
+   - `com.example.scope.result`, `com.example.scope.exercise`,
+     `com.example.scope.import-export`, `com.example.scope.recover`.
+
+   `ai.generalbusiness.dap.disclose` is excluded because the rule uses assigned
+   audiences, not source recipient disclosures. `ai.generalbusiness.dap.observe`
+   is excluded because ambient facts are outside this fixture's release
+   dependencies. A dependency needing either requires a revised rule.
+3. **A3 — Exact certificate format.** A public packet has exactly
+   `{genesis, initialWriter, frontier, positions, certificate}`; a position
+   has `header` and optional `committed` actor-envelope bytes. The certificate
+   has exactly `{body, signer, sig}`. Its body has exactly
+   `{type: "dap.fixture.public-proof-completeness/1", rule, genesis, frontier, proof_hash}`.
+   `rule` is the rule content id. Use `codec.ts` canonical JSON and SHA-256:
+   `proof_hash` binds the packet exactly as received with only `certificate`
+   omitted, including every header and included envelope. Refuse extra fields
+   in the packet, positions, certificate and certificate body; run the private
+   data check before hashing. The signer signs the canonical certificate body
+   with Ed25519; principal and signature encodings follow the codec above.
+4. **A4 — Frontier header signer.** Rebuild the writer assignment chain from
+   the independently pinned genesis. The certificate signer is the key that
+   verified `header[frontier].seq_sig`. At O3's assign boundary H+2 this is W0,
+   the retiring writer; from the successor's first header H+3 it is W1.
+   A successor cannot certify W0's earlier frontier as its writer.
+5. **A5 — Genesis-pinned release boundary.** Take source genesis, initial
+   writer and export prefix p from F's own genesis transition, not from the
+   incoming proof. The release must be at r = p+1, and the certificate
+   frontier must be at least r. Judge release effect on the source prefix
+   through r, irrespective of a later certified frontier. A certificate does
+   not answer current-state questions. A valid later-frontier certificate
+   supplies different valid proof material for the same release; repeating
+   deterministic Ed25519 signing does not.
+6. **A6 — Independent destination checks.** Verify exact shapes, the header
+   and ordering-control chains, certificate signature and rule identity,
+   every opened actor proof and the semantic dependency pause. Reconstruct
+   source packages, grants, authorization and release effect independently;
+   neither a receipt nor the completeness certificate establishes effect.
+   Unknown exceptions fail validation instead of becoming a refusal verdict.
+7. **A7 — Remaining trust limits.** An assigned writer can sign an incomplete
+   packet or tailor projections to different destinations. F cannot detect
+   that dishonesty from the certificate alone; source members can compare
+   against their source view and recompute the opening set, and a signed
+   incomplete certificate is transferable evidence. A retired key remains
+   trusted for the earlier prefixes whose headers it signed. Forks, database
+   copies and equivocation remain outside this fixture's protection.

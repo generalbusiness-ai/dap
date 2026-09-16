@@ -260,6 +260,8 @@ const partialDestination = changed(destinationStarted, {
   rights: { ...destinationStarted.rights, R_deliver: { ...absent, D: 'live', F: 'dormant' } },
 });
 const oneProof = changed(appended(destinationStarted, 'F'), { verifiedProofs: ['S'] });
+const dormantExercise = appended(oneProof, 'F');
+const activatedAfterExercise = changed(activated, { heads: { ...activated.heads, F: 3 } });
 const retryAfterRestart = appended(activated, 'F');
 
 export const lifecycleCases: LifecycleCase[] = [
@@ -274,6 +276,23 @@ export const lifecycleCases: LifecycleCase[] = [
       caseStep(action('scope.activate', 'F', 'alice', { proofs: ['S-valid-A'], withheld: 'D-valid-A' }), 'ineffective', 'missing_release', oneProof),
       caseStep(action('timeout-recovery-at-source', 'S', 'alice', { elapsed: 100 }), 'ineffective', 'no_safe_recovery_evidence', appended(oneProof, 'S')),
       caseStep(action('scope.activate', 'F', 'alice', { proofs: ['S-valid-A', 'D-valid-A'] }), 'effective', null, changed(activated, { heads: { ...activated.heads, S: 25, F: 2 } })),
+    ],
+  },
+  {
+    id: 'intervening-dormant-exercise', from: 'destination-started', steps: [
+      caseStep(action('scope.activate', 'F', 'alice', { proofs: ['S-valid-A'], withheld: 'D-valid-A' }), 'ineffective', 'missing_release', oneProof),
+      caseStep(action('exact-retry', 'F', 'alice', { original: 'F@1' }), 'unchanged', 'original_receipt', oneProof),
+      caseStep(action('exercise-right', 'F', 'alice', { right: 'R_fulfil' }), 'ineffective', 'dormant_right', dormantExercise),
+      caseStep(action('exact-retry', 'F', 'alice', { original: 'F@1' }), 'unchanged', 'original_receipt', dormantExercise),
+      caseStep(action('scope.activate', 'F', 'alice', { proofs: ['S-valid-A', 'D-valid-A'], freshAction: true }), 'effective', null, activatedAfterExercise),
+      caseStep(action('exact-retry', 'F', 'alice', { original: 'F@3' }), 'unchanged', 'original_receipt', activatedAfterExercise),
+      caseStep(action('exact-retry', 'F', 'alice', { original: 'F@1' }), 'unchanged', 'original_receipt', activatedAfterExercise),
+    ],
+  },
+  {
+    id: 'intervening-participant-event', from: 'destination-started', steps: [
+      caseStep(action('participant-observation', 'F', 'bob', { fact: { note: 'waiting' } }), 'ineffective', 'unauthorized', appended(destinationStarted, 'F')),
+      caseStep(action('scope.activate', 'F', 'alice', { proofs: ['S-valid-A', 'D-valid-A'], freshAction: true }), 'effective', null, changed(activated, { heads: { ...activated.heads, F: 2 } })),
     ],
   },
   {
