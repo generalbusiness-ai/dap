@@ -91,3 +91,54 @@ What V1 does not claim:
 - no scope transfer or sequencing control: `dap.admit`, `dap.scope.*` and
   `dap.seq.*` are known kinds that fold to `not_in_v1`;
 - no foundation upgrade.
+
+## V2: interpreter, oracle, checker, Discussion
+
+What it contains:
+
+- `src/observe.ts`: `observe(p, state, n)`, the projection the property
+  compares: the foundation's public facts, each model's own `observe` for
+  the principal, and the affordances the principal holds.
+- `src/interpret.ts`: the view interpreter `I(p, V(p,n), n)`: cold replay
+  from genesis over the principal's view under basis `n`; hidden positions
+  enter as headers and leave a placeholder; `Paused{at, reason, last}` when
+  a package is unavailable or a disclosed position depends on semantics the
+  principal cannot resolve, with `last` the result through the position
+  before under the same basis; a cache valid only for the basis it was
+  built under.
+- `src/oracle.ts`: `fold(S[0..m])` over the complete series and
+  `observe(p, state, n)` under basis `n`; never available to a model.
+- `src/checker.ts`: for every participant and frontier, equality of the
+  interpreted observation with the oracle's; the pause rule and resume;
+  invariants evaluated on the oracle's state; the mutation runner's
+  audience replacement.
+- `src/script.ts`: a series as replayable steps; greedy shrinking to a
+  minimal failing script.
+- `src/generate.ts`: a seeded, bounded, affordance-driven generator that
+  injects late joiners, a narrow side attach, disclosures and ineffective
+  attempts.
+- `fixtures/discussion.ts` and `manifests/discussion.md`: the worked
+  example and its frozen manifest, with the machine-readable bounds, seeds
+  and invariants in `manifests/discussion.ts`.
+
+What the tests show:
+
+- the sale trace 0 to 5 through the interpreter equals the oracle for
+  Alice, Bob and Carol at every frontier; a late joiner and a disclosure
+  keep the property;
+- the views note's pause example: a disclosure followed by an unavailable
+  package pauses with `last` through the position before, under the
+  disclosure's basis, and resumes to equality once the package is
+  supplied; a dependency-incomplete disclosure pauses;
+- the Discussion manifest's deterministic checks: normal replay over
+  seeds 1 to 8 with zero violations, pause and resume, the planted close
+  audience fault found, shrinking to a minimal script, invalid-cache
+  discard and rebuild.
+
+What V2 does not claim:
+
+- no models beyond Discussion and the Sale listing: Sale, Booking and Club
+  are V3 to V5, and their fix counts are not measured here;
+- no codec, no signatures, no durability (O1);
+- the Discussion runs are harness checks, not a falsification campaign:
+  the manifest says so.

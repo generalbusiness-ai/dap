@@ -401,7 +401,7 @@ function foldGenesis(state: FoundationState, ev: EventBody, packages: Record<str
   for (const b of p.bindings) {
     const pkg = packages[b.package];
     if (!pkg) throw genesisError('foundation_mismatch', `genesis binds unknown package ${b.package}`);
-    const out = attachPackage(state.env, pkg, { resolution: b.resolution });
+    const out = attachPackage(state.env, pkg, { resolution: b.resolution, position: 0 });
     if (!out.ok) throw genesisError('foundation_mismatch', `genesis binding refused: ${out.reason}`);
     state.env = out.env;
     for (const m of Object.values(pkg.models)) state.models[m.id] = m.init(m.config);
@@ -432,7 +432,7 @@ function foldSystem(state: FoundationState, entry: Entry, packages: Record<strin
       const p = ev.payload as unknown as AttachPayload;
       const pkg = packages[p.package];
       if (!pkg) return { known: true, authorized: true, effective: false, reason: 'package_unavailable' };
-      const out = attachPackage(state.env, pkg, { resolution: p.resolution, ...(p.audience ? { ceiling: [ev.actor, ...p.audience] } : {}) });
+      const out = attachPackage(state.env, pkg, { resolution: p.resolution, position: pos, ...(p.audience ? { ceiling: [ev.actor, ...p.audience] } : {}) });
       if (!out.ok) return { known: true, authorized: true, effective: false, reason: out.reason };
       state.env = out.env;
       for (const m of Object.values(pkg.models)) if (!(m.id in state.models)) state.models[m.id] = m.init(m.config);
@@ -579,12 +579,25 @@ function dispatch(state: FoundationState, entry: Entry, handlers: string[], orig
   return { known: true, authorized: true, effective: anyEffective, reason: anyEffective ? undefined : 'ineffective', perModel };
 }
 
-/** Visibility of position `i` to `p` under basis `n` (design note §1, §2 bootstrap entitlement). */
-export function visibleTo(state: FoundationState, p: Principal, i: number, n: number): boolean {
+export type Visibility = 'audience' | 'disclosure' | 'hidden';
+
+/** How position `i` is visible to `p` under basis `n`: by its audience, by a later disclosure, or not at all. */
+export function visibilityOf(state: Pick<FoundationState, 'audiences' | 'membersAt' | 'disclosures'>, p: Principal, i: number, n: number): Visibility {
   const aud = state.audiences[i];
-  if (!aud) return false;
-  if (aud.kind === 'spine') return true;
-  if (aud.kind === 'named' && aud.principals.includes(p)) return true;
-  if (aud.kind === 'members' && (state.membersAt[i] ?? []).includes(p)) return true;
-  return state.disclosures.some((d) => d.position <= n && d.to.includes(p) && d.positions.includes(i));
+  if (!aud) return 'hidden';
+  if (aud.kind === 'spine') return 'audience';
+  if (aud.kind === 'named' && aud.principals.includes(p)) return 'audience';
+  if (aud.kind === 'members' && (state.membersAt[i] ?? []).includes(p)) return 'audience';
+  return state.disclosures.some((d) => d.position <= n && d.to.includes(p) && d.positions.includes(i)) ? 'disclosure' : 'hidden';
+}
+
+/** Visibility of position `i` to `p` under basis `n` (design note §1, §2 bootstrap entitlement). */
+export function visibleTo(state: Pick<FoundationState, 'audiences' | 'membersAt' | 'disclosures'>, p: Principal, i: number, n: number): boolean {
+  return visibilityOf(state, p, i, n) !== 'hidden';
+}
+
+/** How many adopted origins a genesis event declares. */
+export function originsCount(genesis: EventBody): number {
+  const p = genesis.payload as unknown as GenesisPayload;
+  return Array.isArray(p?.origins) ? p.origins.length : 0;
 }

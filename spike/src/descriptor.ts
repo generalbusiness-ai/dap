@@ -27,6 +27,16 @@ export interface FoldResult<S = Json> {
   reason?: string;
 }
 
+/** What a model's observe and affordances may consult: the principal's visibility and authority under a basis. */
+export interface ObserveCtx {
+  principal: Principal;
+  basis: number;
+  members: Principal[];
+  /** whether the principal can read the event at this position under the basis */
+  visible(position: number): boolean;
+  holds(capability: string): boolean;
+}
+
 export interface ModelSpec<S = Json, C extends Json = Json> {
   id: string;
   /**
@@ -39,6 +49,14 @@ export interface ModelSpec<S = Json, C extends Json = Json> {
   init(config: C): S;
   /** Fold one event of a kind this model handles. */
   fold(state: S, event: EventBody, ctx: FoldCtx, config: C): FoldResult<S>;
+  /**
+   * The projection the property compares (design note §1): what this
+   * principal may see of the state, outcomes and bindings. Absent means
+   * the whole model state, which is right only for a uniform model.
+   */
+  observe?(p: Principal, state: S, ctx: ObserveCtx, config: C): Json;
+  /** The kinds this principal may emit now. Absent means every bound kind whose capability the principal holds. */
+  affordances?(p: Principal, state: S, ctx: ObserveCtx, config: C): string[];
   /** Roles this model defines: role name to capability names. */
   roles?: Record<string, string[]>;
 }
@@ -87,6 +105,8 @@ export interface Environment {
   runtime: string;
   packages: PackageDescriptor[];
   kinds: Record<Kind, ResolvedBinding>;
+  /** the position of the attach (or genesis, 0) that installed each package; observe filters by its visibility */
+  attachedAt: Record<string, number>;
 }
 
 /** Resolution an attach may carry for kinds that would otherwise be ambiguous: the handler order only. */
@@ -98,10 +118,12 @@ export interface AttachOptions {
   resolution?: AttachResolution;
   /** principals the attach was addressed to; every kind it declares is capped to them */
   ceiling?: Principal[];
+  /** the position of the installing event; 0 for a genesis binding */
+  position?: number;
 }
 
 export function emptyEnvironment(runtime: string): Environment {
-  return { runtime, packages: [], kinds: {} };
+  return { runtime, packages: [], kinds: {}, attachedAt: {} };
 }
 
 export type AttachRefusal = 'namespace' | 'ambiguous_binding' | 'duplicate_package' | 'unknown_handler' | 'descriptor_id_mismatch' | 'conflicting_capability' | 'model_conflict';
@@ -114,7 +136,15 @@ export function codeId(fn: (...args: never[]) => unknown): string {
 
 /** A model's identity: its functions' text, its config, its roles, and the fingerprint of the module that defines it. */
 export function modelId(m: ModelSpec, module: string | undefined): Json {
-  return { init: codeId(m.init), fold: codeId(m.fold), config: m.config, roles: (m.roles ?? {}) as Json, module: module ? moduleHash(module) : null };
+  return {
+    init: codeId(m.init),
+    fold: codeId(m.fold),
+    observe: m.observe ? codeId(m.observe) : null,
+    affordances: m.affordances ? codeId(m.affordances) : null,
+    config: m.config,
+    roles: (m.roles ?? {}) as Json,
+    module: module ? moduleHash(module) : null,
+  };
 }
 
 const moduleHashes = new Map<string, string>();
@@ -228,7 +258,7 @@ export function attach(env: Environment, pkg: PackageDescriptor, opts: AttachOpt
       ceiling: intersect(existing.ceiling, opts.ceiling),
     };
   }
-  return { ok: true, env: { ...env, packages: [...env.packages, pkg], kinds } };
+  return { ok: true, env: { ...env, packages: [...env.packages, pkg], kinds, attachedAt: { ...env.attachedAt, [pkg.id]: opts.position ?? 0 } } };
 }
 
 export function findModelWithPackage(env: Environment, id: string): { model: ModelSpec; pkg: PackageDescriptor } | undefined {

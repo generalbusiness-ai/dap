@@ -12,14 +12,16 @@ import {
   foldEntry,
   initialFoundationState,
   issuanceEvidence,
+  originsCount,
   verifyIssuance,
-  visibleTo,
+  visibilityOf,
+  type Visibility,
   type AcceptInvitePayload,
   type FoundationState,
   type GenesisPayload,
 } from './foundation.ts';
 import { MemoryBackend, append, appendUnadmitted, type Backend, type TransportCredential } from './append.ts';
-import { SYSTEM_PREFIX, type Entry, type EventBody, type Principal, type Receipt, type Refusal, type Verdict } from './types.ts';
+import { SYSTEM_PREFIX, type Entry, type EventBody, type Header, type Principal, type Receipt, type Refusal, type Verdict } from './types.ts';
 
 export interface ContextOptions {
   creator: Principal;
@@ -38,7 +40,11 @@ export interface ViewEntry {
   position: number;
   /** present when visible; absent when only the header is */
   event?: EventBody;
+  /** the authenticated header, always present (design note §1: hidden positions carry headers) */
+  header: Header;
   headerHash: string;
+  /** how the position is visible: by its audience, by a later disclosure, or hidden */
+  via: Visibility;
 }
 
 export class Context {
@@ -163,12 +169,18 @@ export class Context {
     return { invite: { event: e.event, header: e.header } };
   }
 
+  /** The number of adopted origins, from the genesis at position 0. */
+  get origins(): number {
+    return originsCount(this.entries[0]!.event);
+  }
+
   /** V(p, n): the view of `p` under basis `n`, positions preserved, headers for hidden positions. */
   view(p: Principal, n: number = this.head): ViewEntry[] {
     const out: ViewEntry[] = [];
     for (let i = 0; i <= n; i++) {
       const e = this.entries[i]!;
-      out.push(visibleTo(this.state, p, i, n) ? { position: i, event: e.event, headerHash: e.headerHash } : { position: i, headerHash: e.headerHash });
+      const via = visibilityOf(this.state, p, i, n);
+      out.push(via === 'hidden' ? { position: i, header: e.header, headerHash: e.headerHash, via } : { position: i, event: e.event, header: e.header, headerHash: e.headerHash, via });
     }
     return out;
   }

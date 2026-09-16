@@ -251,6 +251,11 @@ test('E1: a module-local helper is part of identity; same text and config in dif
   const eb = attach(emptyEnvironment(RUNTIME), b);
   assert.ok(ea.ok && eb.ok);
   assert.notEqual(bindingId(ea.env, 'com.example.counter.a'), bindingId(eb.env, 'com.example.counter.b'));
+  // the same kind name in two environments differs only by the defining module
+  const sameKindA = attach(emptyEnvironment(RUNTIME), counterAdd1('com.example.counter.x'));
+  const sameKindB = attach(emptyEnvironment(RUNTIME), counterAdd100('com.example.counter.x'));
+  assert.ok(sameKindA.ok && sameKindB.ok);
+  assert.notEqual(bindingId(sameKindA.env, 'com.example.counter.x'), bindingId(sameKindB.env, 'com.example.counter.x'));
   // the +100 module under the same model name, for a new kind, into the +1 environment
   assert.deepEqual(attach(ea.env, b), { ok: false, reason: 'model_conflict' });
   // and the same module for a second kind is fine: identical definition
