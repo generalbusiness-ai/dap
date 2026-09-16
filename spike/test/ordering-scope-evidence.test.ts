@@ -75,7 +75,7 @@ for (const storage of ['memory','sqlite'] as const) test('O4 public/full scope r
     }
   } finally { world.close(); }
 });
-for (const storage of ['memory','sqlite'] as const) test('O4 actual activation, exports and F views disclose public source bodies without private bytes: ' + storage, () => {
+for (const storage of ['memory','sqlite'] as const) test('O4 actual activation, exports and F views exclude Sale private fields and the Inspection request body: ' + storage, () => {
   const world = buildThrough('destination-activated',{},storage);
   try {
     const activation = world.contexts.F!.journal.context.entries[1]!;

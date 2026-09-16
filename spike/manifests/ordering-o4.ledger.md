@@ -318,3 +318,60 @@ hashes are in `run-7-integration.json`. The scope runtime remains `f17f15a8`
 and Scope package `edea788e`. No tests or campaigns were repeated for this
 evidence merge. Aggregate acceptance is still an upstream review condition,
 not a claim made by this O4 validation record.
+
+
+## K4 review correction: Inspection-derived disclosure
+
+The independent review of exact candidate `edacc32db1495504d10ae7a92f02af272e49e9f2`
+requested changes in four areas; it did not approve O4:
+`git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:10521cbe232b5d7eb00b6dd2d79436e208ec4f1a`.
+Root ratified that report in
+`git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:a47f5058a80b89b7bfc7cd45ea4496a6e5e9f8e2`
+and adopted repair choices in
+`git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:b70fbd1f1ee8ed3d6a7008456d0292330d92c263`.
+The checker independently measured 449 noncampaign tests: 445 pass, zero
+ordinary failures and four retained executing Club TODOs; typecheck passed.
+Its separate reproduction of run 7 passed 124/124 and regenerated all 80
+observations. Those are independent review measurements, distinct from the
+builder's original 124-test run at `e8ccb2ef` above, and coexist with K1–K4.
+
+The earlier run-7 paragraphs and `run-7-integration.json` retain the pending
+aggregate status recorded then. The later aggregate acceptance is now known:
+checker report
+`git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:7f5bacc35253bb774945606e5bc76bf7e75dc9b2`
+approved `936acce94e5cd024b0164fc6cd2af027f611545e`, subsequently landed and
+pushed as `6881b6a5a22584d534f2729002da0c582c97876a` with an identical tree.
+That aggregate approval is not approval of the later O4 scope implementation.
+Historical records are not rewritten to carry this later status.
+
+K4 adopts explicit disclosure accounting, preserving the existing delivered
+bytes. S20's admitted Inspection proof includes I's signed genesis mandate
+(source S, request position 14, offer o2, inspector Ivan and founding Ivan)
+and I1's result `pass:o2`. Bob receives those facts through S20 despite not
+reading S14. Kim and all other F spine readers receive them in F1. S14's
+request body and explicit requester attribution are absent from the proof;
+its derived content is not secret. Carol's public identity and offer stub
+remain disclosed, so requester anonymity or unlinkability is not claimed.
+The profile, prose manifest and executable `inspectionDisclosure` now state
+that distinction. The disclosure test authenticates the actual participant
+views and nested signed proofs on memory and SQLite, live and after reopen.
+
+The same documentation also names three existing limits from the review:
+an authorized source owner can release after ordinary source close; copies
+of the same signed F genesis can activate independently; and a scope-bearing
+genesis opts into shared-foundation setup/founder semantics even through
+plain Journal, while full ScopeJournal validation remains a separate facade
+contract. Live cached authentication does not detect rewritten older rows
+under an unchanged head; cold open verifies the full history and rejects
+that tampering. Direct backend mutation remains outside cooperative ownership.
+
+This isolated K4 revision changes no application runtime or delivered proof.
+Its component manifest is
+`sha256:b2501d040c87c31fee574549254902cc00b3a86d98a94098d7b8296bef2c59e6`;
+it preserves rule `475b415b`, scope runtime `f17f15a8` and Scope package
+`edea788e` while adding explicit observations. It is not the combined K1–K4
+manifest or a repaired-runtime result. K3 owns the separate opening-rule
+revision; integration must compute final identities and generate fresh proofs.
+The bounded K4 source is frozen before its focused disclosure/specification
+checks. No full suite or campaign is repeated for this documentation and
+observation correction; results will be appended below at their exact source.
