@@ -66,3 +66,13 @@ turning a valid application reference into an unrelated missing id.
 complete series before shrinking. `test/club-corpus.test.ts` verifies
 single-deletion minimality, the recorded baseline failure and a clean
 repaired replay, including privacy and manifest invariants.
+
+The three literal Club descriptions, including their event-id previews,
+reproduce at V5 evidence snapshot `772a514a08c2fac72fe534c8490c8d33a3e1c2d1`:
+run `node --test spike/test/club-corpus.test.ts` from that checkout's root.
+V6 incorporates V3's audience-read binding contract, changing bindings
+and event ids without changing the Club package. The integrated test
+checks the same recorded description with only the linked application's
+id remapped, verifies its full id in both the vote and projection, and
+rechecks minimality and the repaired outcome. The JSON records remain
+unchanged.

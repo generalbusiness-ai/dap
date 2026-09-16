@@ -1,0 +1,13 @@
+✔ Club baseline corpus: all three recorded seeds reproduce, are deletion-minimal with links preserved, and pass under the repaired model (223.495334ms)
+ℹ seed 81: 56 -> 7 steps; baseline mismatch, repaired clean
+ℹ seed 107: 55 -> 7 steps; baseline mismatch, repaired clean
+ℹ seed 182: 56 -> 7 steps; baseline mismatch, repaired clean
+ℹ manifest sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde; baseline sha256:6aeac545386d59b2d4645bfa9d951b576ae66119484f723d1fb765ff1a02a08f; repaired sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 300.58775

@@ -9,8 +9,9 @@ import type { PackageDescriptor } from '../src/descriptor.ts';
 import { K } from '../src/foundation.ts';
 import { interpretView } from '../src/interpret.ts';
 import { foldPrefix } from '../src/oracle.ts';
-import { applyStep, type Pending, type Script } from '../src/script.ts';
+import { applyStep, type Pending, type Script, type Step } from '../src/script.ts';
 import { named } from '../src/types.ts';
+import { linkSteps, replayLinked, shrinkLinked } from '../corpus/club/replay.ts';
 import { SALE, salePackage } from '../fixtures/sale.ts';
 import { BOOKING, bookingPackage } from '../fixtures/booking.ts';
 import { CLUB, clubPackage } from '../fixtures/club.ts';
@@ -20,14 +21,19 @@ import { CLUB_MANIFEST_ID, clubBase, clubBudgetViolations, clubInvariants } from
 import { pkg } from './helpers.ts';
 
 const ALICE = 'alice', BOB = 'bob', DANA = 'dana';
-function join(ctx: Context, principal: string, roles: string[]) {
+function join(ctx: Context, principal: string, roles: string[], steps?: Step[]) {
   const pending: Pending = new Map();
-  applyStep(ctx, { type: 'invite', inviter: ALICE, invitee: principal, grants: { roles } }, pending);
-  applyStep(ctx, { type: 'accept', invitee: principal }, pending);
+  const invite: Step = { type: 'invite', inviter: ALICE, invitee: principal, grants: { roles } };
+  const accept: Step = { type: 'accept', invitee: principal };
+  steps?.push(invite, accept);
+  applyStep(ctx, invite, pending);
+  applyStep(ctx, accept, pending);
   assert.ok(ctx.state.participants.includes(principal));
 }
-function act(ctx: Context, actor: string, kind: string, payload: Json) {
-  const position = applyStep(ctx, { type: 'act', actor, kind, payload, nonce: 'v6:' + (ctx.head + 1) }, new Map());
+function act(ctx: Context, actor: string, kind: string, payload: Json, steps?: Step[]) {
+  const step: Step = { type: 'act', actor, kind, payload, nonce: 'v6:' + (ctx.head + 1) };
+  steps?.push(step);
+  const position = applyStep(ctx, step, new Map());
   assert.ok(position >= 0, kind + ' is recorded');
   return { position, id: ctx.entries[position]!.id, verdict: ctx.state.verdicts[position]! };
 }
@@ -40,7 +46,7 @@ interface ModelCase {
   mutation: {
     kind: string; reader: string; expectedEffective: boolean;
     actualReason: string | null; expectedReason: string | null;
-    build: (ctx: Context) => { hidden: number; dependent: number };
+    build: (ctx: Context, steps?: Step[]) => { hidden: number; dependent: number };
   };
   binding: { kind: string; actor: string; roles: string[]; first: Json; next: Json };
 }
@@ -50,10 +56,10 @@ const cases: ModelCase[] = [
     checks: () => ({ invariants: saleInvariants, budget: (o, p, _n, view) => saleBudgetViolations(o, p, ALICE, view) }),
     mutation: {
       kind: SALE + 'offer', reader: ALICE, expectedEffective: true, expectedReason: null, actualReason: 'no_such_offer',
-      build(ctx) {
-        join(ctx, BOB, ['Buyer']);
-        const offer = act(ctx, BOB, SALE + 'offer', { offer_id: 'o1' });
-        const accept = act(ctx, ALICE, SALE + 'accept', { offer_id: 'o1' });
+      build(ctx, steps) {
+        join(ctx, BOB, ['Buyer'], steps);
+        const offer = act(ctx, BOB, SALE + 'offer', { offer_id: 'o1' }, steps);
+        const accept = act(ctx, ALICE, SALE + 'accept', { offer_id: 'o1' }, steps);
         return { hidden: offer.position, dependent: accept.position };
       },
     },
@@ -64,11 +70,11 @@ const cases: ModelCase[] = [
     checks: () => ({ invariants: bookingInvariants, budget: (o, p, _n, view) => bookingBudgetViolations(o, p, ALICE, view) }),
     mutation: {
       kind: BOOKING + 'occupancy', reader: BOB, expectedEffective: true, expectedReason: null, actualReason: 'no_such_occupancy',
-      build(ctx) {
-        join(ctx, BOB, ['Booker']);
+      build(ctx, steps) {
+        join(ctx, BOB, ['Booker'], steps);
         // The frozen fixture permits an opaque occupancy id with no request.
-        const occupancy = act(ctx, ALICE, BOOKING + 'occupancy', { booking_id: 'b1', room: 'room-1', start: 1, end: 3 });
-        const free = act(ctx, ALICE, BOOKING + 'free', { booking_id: 'b1' });
+        const occupancy = act(ctx, ALICE, BOOKING + 'occupancy', { booking_id: 'b1', room: 'room-1', start: 1, end: 3 }, steps);
+        const free = act(ctx, ALICE, BOOKING + 'free', { booking_id: 'b1' }, steps);
         return { hidden: occupancy.position, dependent: free.position };
       },
     },
@@ -79,12 +85,12 @@ const cases: ModelCase[] = [
     checks: (ctx) => ({ invariants: clubInvariants, budget: (o, p, n, view) => clubBudgetViolations(o, p, foldPrefix(ctx, n), n, view) }),
     mutation: {
       kind: CLUB + 'standing', reader: BOB, expectedEffective: false, expectedReason: 'lapsed', actualReason: null,
-      build(ctx) {
-        join(ctx, BOB, ['Committee', 'Member']);
-        join(ctx, DANA, []);
-        const application = act(ctx, DANA, CLUB + 'apply', { statement: 'please' });
-        const standing = act(ctx, ALICE, CLUB + 'standing', { member: BOB, standing: 'lapsed' });
-        const vote = act(ctx, BOB, CLUB + 'vote', { application_id: application.id, choice: 'yes' });
+      build(ctx, steps) {
+        join(ctx, BOB, ['Committee', 'Member'], steps);
+        join(ctx, DANA, [], steps);
+        const application = act(ctx, DANA, CLUB + 'apply', { statement: 'please' }, steps);
+        const standing = act(ctx, ALICE, CLUB + 'standing', { member: BOB, standing: 'lapsed' }, steps);
+        const vote = act(ctx, BOB, CLUB + 'vote', { application_id: application.id, choice: 'yes' }, steps);
         return { hidden: standing.position, dependent: vote.position };
       },
     },
@@ -104,8 +110,10 @@ for (const c of cases) {
         assert.deepEqual(changed, original, 'only this audience rule differs');
       }
     }
-    const control = Context.create({ ...c.base(c.package), nonce: 'v6:' + c.name });
-    const controlPositions = c.mutation.build(control);
+    const base = { ...c.base(c.package), nonce: 'v6:' + c.name };
+    const control = Context.create(base);
+    const steps: Step[] = [];
+    const controlPositions = c.mutation.build(control, steps);
     assert.deepEqual(checkContext(control, c.checks(control)), [], 'unmodified control');
     assert.ok(control.view(c.mutation.reader)[controlPositions.hidden]?.event);
     const broken = Context.create({ ...c.base(mutant), nonce: 'v6:' + c.name });
@@ -122,6 +130,19 @@ for (const c of cases) {
     assert.equal(oracle.perModel?.[c.name]?.reason, c.mutation.expectedReason);
     assert.equal(view.perModel?.[c.name]?.reason, c.mutation.actualReason);
     t.diagnostic(JSON.stringify({ model: c.name, manifest: c.manifest, package: c.package.id, mutant: mutant.id, kind: c.mutation.kind, entries: broken.head + 1, violations: violations.length, first: describeViolation(finding) }));
+    const linked = linkSteps({ base, steps });
+    const mutantBase = { ...c.base(mutant), nonce: base.nonce };
+    assert.deepEqual(replayLinked(linked, mutantBase, {}).entries, broken.entries, 'linked trace reproduces the original mutant history');
+    const fails = (candidate: typeof linked) => {
+      const replayed = replayLinked(candidate, mutantBase, {});
+      return checkContext(replayed, c.checks(replayed)).some((v) => v.kind === 'mismatch');
+    };
+    const minimal = shrinkLinked(linked, fails);
+    assert.ok(fails(minimal));
+    for (let i = 0; i < minimal.length; i++) assert.equal(fails(minimal.filter((_, j) => i !== j)), false, `minimal without step ${i}`);
+    const repaired = replayLinked(minimal, base, {});
+    assert.deepEqual(checkContext(repaired, c.checks(repaired)), [], 'minimal trace has a clean unmutated control');
+    t.diagnostic(JSON.stringify({ corpus: 'v6-' + c.name, manifest: c.manifest, package: c.package.id, mutant: mutant.id, nonce: base.nonce, originalSteps: linked.length, steps: minimal }));
   });
 
   test(`V6 ${c.name}: an unrelated private attach preserves a shared intent; a relevant binding change stales it`, (t) => {
@@ -172,10 +193,12 @@ for (const c of cases) {
 }
 
 test('V6 serving mutation: hiding a spine revocation is detected without changing the recorded history', (t) => {
-  const ctx = Context.create({ ...saleBase(), nonce: 'v6:hidden-revocation' });
-  join(ctx, BOB, ['Buyer']);
-  const revocation = act(ctx, ALICE, K.revoke, { principal: BOB, roles: ['Buyer'] });
-  const attempt = act(ctx, BOB, SALE + 'offer', { offer_id: 'after-revocation' });
+  const base = { ...saleBase(), nonce: 'v6:hidden-revocation' };
+  const ctx = Context.create(base);
+  const steps: Step[] = [];
+  join(ctx, BOB, ['Buyer'], steps);
+  const revocation = act(ctx, ALICE, K.revoke, { principal: BOB, roles: ['Buyer'] }, steps);
+  const attempt = act(ctx, BOB, SALE + 'offer', { offer_id: 'after-revocation' }, steps);
   assert.equal(revocation.verdict.effective, true);
   assert.equal(attempt.verdict.reason, 'unauthorized');
   assert.equal(ctx.state.audiences[revocation.position]?.kind, 'spine');
@@ -196,4 +219,18 @@ test('V6 serving mutation: hiding a spine revocation is detected without changin
     ctx.state.audiences[revocation.position] = originalAudience;
   }
   assert.deepEqual(checkContext(ctx), [], 'restoring compliant serving restores consistency');
+  const linked = linkSteps({ base, steps });
+  assert.deepEqual(replayLinked(linked, base, {}).entries, ctx.entries);
+  const fails = (candidate: typeof linked) => {
+    const replayed = replayLinked(candidate, base, {});
+    const revoked = replayed.entries.find((e) => e.event.kind === K.revoke);
+    if (!revoked || !replayed.state.verdicts[revoked.header.position]?.effective) return false;
+    replayed.state.audiences[revoked.header.position] = named(ALICE);
+    return checkContext(replayed).some((v) => v.kind === 'mismatch');
+  };
+  const minimal = shrinkLinked(linked, fails);
+  assert.ok(fails(minimal));
+  for (let i = 0; i < minimal.length; i++) assert.equal(fails(minimal.filter((_, j) => i !== j)), false, `minimal without step ${i}`);
+  assert.deepEqual(checkContext(replayLinked(minimal, base, {})), []);
+  t.diagnostic(JSON.stringify({ corpus: 'v6-hidden-revocation', manifest: SALE_MANIFEST_ID, package: salePackage.id, nonce: base.nonce, originalSteps: linked.length, steps: minimal }));
 });

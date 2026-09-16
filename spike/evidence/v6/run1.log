@@ -1,0 +1,234 @@
+
+> dap-spike@0.0.1 test
+> node --test 'test/**/*.test.ts'
+
+✔ a submission without a credential is refused; a forged credential for a non-participant is refused (2.072458ms)
+✔ stable facts are checked first: wrong genesis, missing action id, envelope bounds (0.615542ms)
+✔ positions are dense and every header binds its predecessor (1.262042ms)
+✔ the memory backend refuses re-entrant appends (0.197084ms)
+✔ audience reads frozen preceding state without changing model state or earlier audiences (23.950542ms)
+✔ attaching a handler retains the original audience read scope and rolls back undeclared reads (3.308375ms)
+✔ binding identity includes the audience read scope even when resolved handlers match (0.375542ms)
+✔ an audience error discards all model effects, survives retry, and replays consistently (43.525791ms)
+✔ run 2 corpus: all 139 recovered privacy failures replay and are deletion-minimal (18482.06525ms)
+ℹ 139 recovered failures, all deletion-minimal; explicit private disclosures remain budget violations under the repaired model
+✔ run 7 corpus pins the unrepaired foundation snapshot and preserves every failing full series (44.014542ms)
+✔ the manifest is one experiment identity over its prose and executable part, and the prose states the same bounds (1.519ms)
+ℹ BOOKING_MANIFEST_ID sha256:cb4514f4967891077ad78e1dd0fba4c17438fb32b98cd8bd790df8531b35dd16
+ℹ booking package sha256:0556de5c337344eaa15afcbbbf5d22aa82c384bd6841d4ffb0c07185d4b7ec27
+✔ case 1, two requests for one slot: the admin publishes one, the other stays pending and its publication is overlap (42.570792ms)
+✔ case 2, free exactly one: two occupancies, one freed, the other active; a second free is already_free (64.015917ms)
+✔ case 3, duplicate publication: a second occupancy with the same booking id is duplicate_id (24.364334ms)
+✔ case 4, only the admin publishes: a booker's occupancy is unauthorized before any model rule (24.231ms)
+✔ case 5, expiry: when the clock reaches an occupancy's end it is expired for every member, and an overlapping occupancy is then effective (57.567667ms)
+✔ case 6, cross-view: an occupancy before J joins, an overlapping publication after, and a free of the earlier one are judged the same way in every view (47.070583ms)
+✔ case 7, the campaign: every manifest seed replays with zero violations of the property, the pause rule, the invariants and the privacy budget (85179.613584ms)
+ℹ seeds 200, 85180 ms, coverage {"joins":955,"attaches":198,"disclosures":1629,"requests":2553,"occupancies":1497,"effectiveOccupancies":652,"linkedOccupancies":471,"frees":383,"cancels":419,"effectiveCancels":324,"ticks":1630,"entries":12000}
+✔ the repair ledger exists, its totals agree with its entries, and it states the budget outcome (3.064459ms)
+ℹ fixes 2, added kinds 0, budget within
+✔ V4-F2: the budget detects private fields published through com.example.booking.occupancy (12.30325ms)
+✔ V4-F2: the budget detects private fields published through com.example.booking.free (13.652167ms)
+✔ V4-F2: the budget detects private fields published through ai.generalbusiness.dap.observe (11.642167ms)
+✔ V4-F2: the budget detects a spoofed booker claim naming the reader published through com.example.booking.occupancy (12.767208ms)
+✔ V4-F2: the budget detects a spoofed booker claim naming the reader published through com.example.booking.free (14.523958ms)
+✔ V4-F2: the budget detects a spoofed booker claim naming the reader published through ai.generalbusiness.dap.observe (11.823084ms)
+✔ V4-F2: the budget detects nested private fields published through com.example.booking.occupancy (12.331291ms)
+✔ V4-F2: the budget detects nested private fields published through com.example.booking.free (13.669958ms)
+✔ V4-F2: the budget detects nested private fields published through ai.generalbusiness.dap.observe (11.338708ms)
+✔ V4-F1: seed 1 position 50 keeps Carol and her own request id private; hostile redisclosure is detected (17.752375ms)
+✔ V4-F1: current authority controls publication; authorized refusals, stale and closed attempts retain their audience (71.295583ms)
+✖ Club baseline corpus: all three recorded seeds reproduce, are deletion-minimal with links preserved, and pass under the repaired model (38.990583ms)
+✔ the manifest is one experiment identity over its prose and executable part, and the prose states the same bounds (1.008917ms)
+ℹ CLUB_MANIFEST_ID sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde
+ℹ club package sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e
+✔ case 1, quorum: three committee members, two yes votes, admit is effective and the applicant is granted Member (108.872ms)
+✔ case 2, no quorum: one vote, admit is no_quorum; a no vote and a yes vote is no_majority (55.828542ms)
+✔ case 3, lapsed: a lapsed committee member's vote is lapsed, the admit that relied on it is no_quorum, and a second vote by one member is already_voted (66.199458ms)
+✔ case 4, late committee member: a vote before any disclosure of the application is unknown_application, after a disclosure it is effective, and every member judges both the same way (93.670625ms)
+✔ Club disclosure across activation: payload before activation pauses until closure (73.522417ms)
+✔ Club disclosure across activation: activation before payload (66.689125ms)
+✔ post-baseline A2: an ordinary Member judges a late committee vote before and after private application disclosure (77.64975ms)
+✔ post-baseline A2: an ordinary Member verifies admission and the Member grant without reading the application (58.890583ms)
+⚠ plan §4.2: a second admission is ineffective once the applicant holds Member (98.092375ms) # V5-A1: revised experiment and policy repair pending
+ℹ plan §4.2 violated: admit at 18 is effective after Dana already received Member at 15; frozen-manifest checks still pass
+✔ case 5, the campaign: every manifest seed replays with zero violations of the property, the pause rule, the invariants and the privacy budget (122325.102875ms)
+ℹ seeds 200, 122326 ms, coverage {"joins":991,"attaches":200,"disclosures":1939,"applications":629,"votes":1575,"effectiveVotes":1001,"admits":343,"effectiveAdmits":126,"standings":514,"grants":246,"entries":11939}
+✔ the repair ledger exists, its totals agree with its entries, and it states the budget outcome (0.754125ms)
+ℹ fixes 1, added kinds 0, budget within
+✔ a package declaring a name under the system prefix is refused, whatever it claims about itself (4.93075ms)
+✔ a descriptor whose id does not match its content is refused (0.655875ms)
+✔ two handlers for one kind without a resolution is ambiguous; a resolution naming exactly both is accepted (1.803708ms)
+✔ resolution retains the capability and the active audience policy: attaching a handler never widens (0.533375ms)
+✔ identities follow executable content: a changed fold changes descriptor and binding ids (0.457834ms)
+✔ binding identity is per kind: an unrelated attach does not change it; a relevant change does (1.130167ms)
+✔ an application intent captures its binding by default; a relevant attach stales it, an unrelated private attach does not; a missing binding is refused (2.408541ms)
+✔ the manifest is one experiment identity over its prose, its executable part and the package, and the prose states the same bounds (0.8845ms)
+ℹ DISCUSSION_MANIFEST_ID sha256:d5f67ab9b25babd202cd5d1c0bbae80271f92df6aa421eb666eb2af777668c9f
+✔ normal replay: generated series over the manifest seeds have zero violations, and the corpus exercises joins, a side attach and disclosures (156.34975ms)
+✔ pause and resume: a client without the side package pauses at the attach and resumes to equality with it (37.033541ms)
+✔ planted fault: closing privately breaks the shared outcome for a late joiner, and the checker finds it (5.150917ms)
+✔ shrinking: the failing series reduces to a minimal script that still fails (19.5615ms)
+✔ expected outcomes, independent of the fold: closure is seen by a late joiner; posts are seen exactly by members at the time and by disclosure; a post after closure and an unauthorized post are ineffective (18.859583ms)
+✔ F5: the generator never exceeds its entry bound, even when a compound step would (4.671666ms)
+✔ the sale trace 0 to 5 interprets to the oracle for every participant at every frontier (39.349625ms)
+✔ a late joiner, a members-audience event before they joined, a disclosure and an as-of query keep the property (35.002917ms)
+✔ the views note's pause example: a disclosure followed by an unavailable package pauses with last through the position before, under the disclosure's basis, and resumes (3.39725ms)
+✔ a dependency-incomplete disclosure pauses: the event is disclosed but the attach it needs is not (0.623209ms)
+✔ a cached interpretation is reused only for the same principal, view content, basis and packages; a pause is never reused (4.887542ms)
+✔ F2: a disclosed event whose binding the principal cannot resolve pauses with dependency_missing, and resumes once the attach is disclosed (1.433958ms)
+✔ F1: a contradiction that changes no displayed state is caught through outcomes: a shared decision whose fold reads private votes (1.62325ms)
+✔ G1: an always-effective co-handler cannot mask a contradiction; per-handler outcomes are compared (2.385458ms)
+✔ G2: a disclosed intent that is genuinely stale is a stale_binding verdict, not a permanent pause (0.885ms)
+✔ G3: affordances come from the visible binding, so a hidden attach with its own affordances causes no false mismatch (1.111083ms)
+✔ H1: a binding identity restored by an unseen attach is a missing dependency, not a stale intent: activation provenance decides (2.191833ms)
+✔ J1: a saved intent sequenced after a hidden attach is a missing dependency for a viewer who sees the intent but not the attach; the header carries the activation (1.807417ms)
+✔ K1: a disclosed attach that builds on a hidden attach is a missing dependency: the header names what it requires (1.1165ms)
+✔ L1: the facts an attach is refused on are among its requirements: a conflicting model definition and a repeated package (1.552459ms)
+✔ L2: a malformed attach payload is recorded with a malformed verdict, its exact retry replays, and a valid submission follows; evidence extraction never throws (0.357708ms)
+✔ M1: evidence handlers follow the branch attach takes: a resolution on a new kind is ignored, and the installer of the bound model is required (0.554417ms)
+✔ M2: a package name inherited from Object.prototype is not a package: recorded as package_unavailable, exact retry replays, and evidence extraction never throws (1.598958ms)
+✔ N1: an attach the sequencer could not resolve stays ineffective for every judge, whatever package a client has or fetches later; a new attach succeeds once the sequencer has it (0.551959ms)
+✔ authorized issue, issuer revoked, then redeemed: effective (authority judged at issuance) (2.838708ms)
+✔ unissued token: refused at admission, never sequenced (0.629833ms)
+✔ unauthorized issuer: the invite is sequenced but ineffective, and its token admits nobody (1.723334ms)
+✔ member-side verification refuses a header that is not in the chain (0.506125ms)
+✔ wrong invitee cannot redeem (0.465583ms)
+✔ exact retry of a committed acceptance after consumption returns the receipt; changed content and reuse are refused (1.195083ms)
+✔ a listing origin opens the sale; the origin actor needs no grant (1.496416ms)
+✔ the same origin adopted twice is a genesis error (4.006792ms)
+✔ an origin whose kind does not resolve is an unhandled verdict and inert (0.4635ms)
+✔ an origin binds no expected binding: a foreign binding on an origin is ignored (0.290584ms)
+✔ a listing submitted later, not as an origin, is refused by the model (2.561667ms)
+✔ C1: a second issuance with the same label is its own token; admission and verification use the same issuance object and a tampered envelope supplies nothing (2.682667ms)
+✔ C1: an unauthorized issuance is never an issued token, at admission or in the fold (1.037333ms)
+✔ C3a: a narrow attach caps every kind it declares; a members-audience event of that package is not served beyond the cap (4.877792ms)
+✔ C3b: observe honours a declared narrower audience (0.715666ms)
+✔ C5: an intent bound to another context cannot be adopted as an origin; a system kind cannot be an origin (0.606708ms)
+✔ C8: committed entries and receipts are snapshots; a caller cannot rewrite them (0.41475ms)
+✔ C9: a malformed system payload is a deterministic ineffective verdict with the actor as its only reader; folding and retry continue (0.814917ms)
+✔ C10: close stops application events and leaves foundation administration open (0.472083ms)
+✔ a capped package cannot widen through a members policy either (0.572459ms)
+✔ D1: a member who never saw the private invitation verifies the acceptance from headers and the spine alone (0.507958ms)
+✔ D2: captured values are outside the identity, so they must live in config, which is inside it (0.274458ms)
+✔ D2: an installed descriptor is frozen; replacing a fold after attach throws and changes nothing (0.101084ms)
+✔ D2: a second definition under a model name in use is refused unless it is the same definition (0.462334ms)
+✔ D3: observe may narrow only to current members; naming a future member is ineffective and read by the actor alone (0.680959ms)
+✔ E1: a module-local helper is part of identity; same text and config in different modules bind differently and conflict on a shared model name (0.954959ms)
+✔ E2: a shallow-frozen input descriptor is frozen recursively on attach; a nested config cannot change (0.3105ms)
+✔ run 1 corpus: every shrunk series still fails against the run-1 model with the recorded failure kind, and is reported against the current model (515.177ms)
+ℹ seed-103: 3 steps; run-1 model invariant; current model clean
+ℹ seed-121: 3 steps; run-1 model invariant; current model clean
+ℹ seed-129: 3 steps; run-1 model invariant; current model clean
+ℹ seed-138: 3 steps; run-1 model invariant; current model clean
+ℹ seed-146: 6 steps; run-1 model mismatch; current model clean
+ℹ seed-158: 6 steps; run-1 model mismatch; current model clean
+ℹ seed-172: 3 steps; run-1 model invariant; current model clean
+ℹ seed-183: 3 steps; run-1 model invariant; current model clean
+ℹ seed-189: 3 steps; run-1 model invariant; current model clean
+ℹ seed-56: 3 steps; run-1 model invariant; current model clean
+ℹ seed-65: 8 steps; run-1 model mismatch; current model clean
+ℹ seed-72: 3 steps; run-1 model invariant; current model clean
+ℹ seed-74: 3 steps; run-1 model invariant; current model clean
+ℹ seed-79: 6 steps; run-1 model mismatch; current model clean
+ℹ seed-8: 6 steps; run-1 model mismatch; current model clean
+ℹ seed-86: 6 steps; run-1 model mismatch; current model clean
+ℹ seed-96: 3 steps; run-1 model invariant; current model clean
+✔ run 6 corpus: the current foundation fixes unauthorized leaks; the repaired audience fixes the remaining authorized leaks (660.957459ms)
+ℹ seed-112: 5 steps; kept model clean under current foundation; current model clean
+ℹ seed-141: 5 steps; kept model clean under current foundation; current model clean
+ℹ seed-160: 5 steps; kept model clean under current foundation; current model clean
+ℹ seed-172: 3 steps; kept model budget violation; current model clean
+ℹ seed-181: 3 steps; kept model budget violation; current model clean
+ℹ seed-193: 5 steps; kept model clean under current foundation; current model clean
+ℹ seed-197: 5 steps; kept model clean under current foundation; current model clean
+ℹ seed-200: 3 steps; kept model budget violation; current model clean
+ℹ seed-42: 5 steps; kept model clean under current foundation; current model clean
+✔ positions 0 to 5 carry the kinds and audiences of the trace (5.079334ms)
+✔ Alice reads every position; hidden count 0 (0.858375ms)
+✔ Bob's view: spine plus his own invitation; Carol's invitation is a header (0.852708ms)
+✔ Carol's view: spine plus her own invitation; Bob's invitation is a header (0.509042ms)
+✔ a late joiner receives the whole spine and addressed events, and members audiences are not retroactive (1.011375ms)
+✔ case 1, the trace: positions 0 to 19 replay with the readability of the table, the literal projections and the outcomes at 17 and 18, under the model's declared join disclosure (245.642833ms)
+ℹ literal trace without the join disclosure: 5 violations; first: ivan@15 mismatch: observe differs at 15 [models.sale.offers.0: oracle {"id":"o3","author":"bob","position":15,"status":"open","rep, view undefined; outcomes.15.effective: oracle true, view false; outcomes.15.perModel.sale.effective: oracle true, view false; outcomes.15.perModel.sale.reason: oracle null, view no_such_offer; outcomes.15.reason: oracle null, view ineffective]
+✔ case 2, replacement with a hidden predecessor: Ivan sees o3 open replacing o1, and a later accept of o1 is ineffective for everyone (187.537291ms)
+ℹ literal case 2 without the join disclosure: 3 violations; first: ivan@15 mismatch: observe differs at 15 [models.sale.offers.0: oracle {"id":"o3","author":"bob","position":15,"status":"open","rep, view undefined; outcomes.15.effective: oracle true, view false; outcomes.15.perModel.sale.effective: oracle true, view false; outcomes.15.perModel.sale.reason: oracle null, view no_such_offer; outcomes.15.reason: oracle null, view ineffective]
+✔ case 3, late joiner after the decision: a second accept is ineffective in every view, equality holds at every frontier, and a disclosure of the decision keeps it (165.9745ms)
+✔ case 4, late joiner judging a public event on a hidden fact: a withdrawal of a stub recorded before Dana joined, then an accept of it, are judged the same way in every view (65.492417ms)
+✔ case 5, the campaign: every manifest seed replays with zero violations of the property, the pause rule, the invariants and the privacy budget (79621.412709ms)
+ℹ seeds 200, 79622 ms, coverage {"joins":942,"attaches":199,"disclosures":1722,"offers":195,"replacements":25,"withdrawals":147,"counters":157,"accepts":114,"effectiveAccepts":20,"closes":295,"entries":11047,"privateDisclosures":0,"inspectionAttaches":0,"inspectionRequests":118,"unboundInspectionRequests":118}
+✔ the repair ledger exists, its totals agree with its entries, and it states the budget outcome (0.842708ms)
+ℹ fixes 7, added kinds 0, budget exceeded
+✔ V3-F1: a private payload disclosed to a non-party is a budget violation on what they can read, whatever the projection hides (4.07925ms)
+✔ V3-F2: the kept run-6 model refuses a wrong-party counter, and the budget reports its misdelivery (6.300292ms)
+✔ V3-F3: null private payloads are recorded with a deterministic ineffective verdict, replay cold, retry exactly, and a valid action follows (45.314292ms)
+✔ V3-G1: an ineffective stub by carol does not make them a counter party (kept run-6 guard regression) (9.734167ms)
+✔ V3-G1: an ineffective stub by carol does not make them a counter party (current audience) (8.798166ms)
+✔ V3-G1: an ineffective stub by ivan does not make them a counter party (kept run-6 guard regression) (9.153166ms)
+✔ V3-G1: an ineffective stub by ivan does not make them a counter party (current audience) (8.531625ms)
+✔ Fix 7: wrong-author, malformed, unauthorized and stale counters never address a supplied non-party, and late members replay them consistently (56.455042ms)
+✔ V6 sale: the checker detects one narrowed audience rule (38.902625ms)
+ℹ {"model":"sale","manifest":"sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9","package":"sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85","mutant":"sha256:cfbe9b57a0d03196eefb2e3df18f1ecfa0817758853fbba2b6c6789bce23fce8","kind":"com.example.sale.offer","entries":6,"violations":1,"first":"alice@5 mismatch: observe differs at 5 [models.sale.accepted: oracle o1, view null; models.sale.status: oracle decided, view open; outcomes.5.effective: oracle true, view false; outcomes.5.perModel.sale.effective: oracle true, view false; outcomes.5.perModel.sale.reason: oracle null, view no_such_offer; outcomes.5.reason: oracle null, view ineffective]"}
+✔ V6 sale: an unrelated private attach preserves a shared intent; a relevant binding change stales it (23.947291ms)
+ℹ {"model":"sale","manifest":"sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9","package":"sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85","unrelated":4,"shared":5,"relevant":6,"stale":7,"fresh":8,"violations":0}
+✔ V6 booking: the checker detects one narrowed audience rule (13.796125ms)
+ℹ {"model":"booking","manifest":"sha256:cb4514f4967891077ad78e1dd0fba4c17438fb32b98cd8bd790df8531b35dd16","package":"sha256:0556de5c337344eaa15afcbbbf5d22aa82c384bd6841d4ffb0c07185d4b7ec27","mutant":"sha256:cad57243b94ef8b451168fc4265cc7fe0463af104d43faced5f8712da2ec9983","kind":"com.example.booking.occupancy","entries":5,"violations":1,"first":"bob@4 mismatch: observe differs at 4 [outcomes.4.effective: oracle true, view false; outcomes.4.perModel.booking.effective: oracle true, view false; outcomes.4.perModel.booking.reason: oracle null, view no_such_occupancy; outcomes.4.reason: oracle null, view ineffective]"}
+✔ V6 booking: an unrelated private attach preserves a shared intent; a relevant binding change stales it (11.1325ms)
+ℹ {"model":"booking","manifest":"sha256:cb4514f4967891077ad78e1dd0fba4c17438fb32b98cd8bd790df8531b35dd16","package":"sha256:0556de5c337344eaa15afcbbbf5d22aa82c384bd6841d4ffb0c07185d4b7ec27","unrelated":3,"shared":4,"relevant":5,"stale":6,"fresh":7,"violations":0}
+✔ V6 club: the checker detects one narrowed audience rule (40.916958ms)
+ℹ {"model":"club","manifest":"sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde","package":"sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e","mutant":"sha256:276d0f9610eba50cff5a922b06117b5300a918d0c538a629befa1292228e3b1e","kind":"com.example.club.standing","entries":8,"violations":2,"first":"bob@7 mismatch: observe differs at 7 [affordances.0: oracle com.example.club.vote, view undefined; models.club.applications.0.votes.yes: oracle 0, view 1; outcomes.7.effective: oracle false, view true; outcomes.7.perModel.club.effective: oracle false, view true; outcomes.7.perModel.club.reason: oracle lapsed, view null; outcomes.7.reason: oracle ineffective, view null]"}
+✔ V6 club: an unrelated private attach preserves a shared intent; a relevant binding change stales it (14.777417ms)
+ℹ {"model":"club","manifest":"sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde","package":"sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e","unrelated":3,"shared":4,"relevant":5,"stale":6,"fresh":7,"violations":0}
+✔ V6 serving mutation: hiding a spine revocation is detected without changing the recorded history (23.256792ms)
+ℹ {"mutation":"hidden-spine-revocation","manifest":"sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9","package":"sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85","at":4,"violations":2,"first":"bob@4 mismatch: observe differs at 4 [affordances.0: oracle undefined, view com.example.sale.offer]","dependent":"bob@5 mismatch: observe differs at 5 [affordances.0: oracle undefined, view com.example.sale.offer; affordances.1: oracle undefined, view com.example.sale.offer_terms; affordances.2: oracle undefined, view com.example.sale.withdraw; models.sale.offers.0: oracle undefined, view {\"id\":\"after-revocation\",\"author\":\"bob\",\"position\":5,\"status; outcomes.5.effective: oracle false, view true; outcomes.5.perModel: oracle undefined, view {\"sale\":{\"effective\":true,\"reason\":null}}; outcomes.5.reason: oracle unauthorized, view null]"}
+ℹ tests 130
+ℹ suites 0
+ℹ pass 128
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 1
+ℹ duration_ms 123158.7285
+
+✖ failing tests:
+
+test at test/club-corpus.test.ts:18:1
+✖ Club baseline corpus: all three recorded seeds reproduce, are deletion-minimal with links preserved, and pass under the repaired model (38.990583ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'dana@7 mismatch: observe differs at 7 [models.club.applications.0: oracle undefined, view {"id":"sha256:e87e8afb059e1b5e803e8e3185e9aa8e73c4c556071a47; outcomes.7.effective: oracle false, view true; outcomes.7.perModel.club.effective: oracle false, view true; outcomes.7.perModel.club.reason: oracle unknown_application, view null; outcomes.7.reason: oracle ineffective, view null]'
+  - 'dana@7 mismatch: observe differs at 7 [models.club.applications.0: oracle undefined, view {"id":"sha256:89924c7ce0dc9ce04507ba8c5d0a87aabad44d546de84c; outcomes.7.effective: oracle false, view true; outcomes.7.perModel.club.effective: oracle false, view true; outcomes.7.perModel.club.reason: oracle unknown_application, view null; outcomes.7.reason: oracle ineffective, view null]'
+  
+      at TestContext.<anonymous> (file:///private/tmp/dap-v6-mutations-report/spike/test/club-corpus.test.ts:28:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'dana@7 mismatch: observe differs at 7 [models.club.applications.0: oracle undefined, view {"id":"sha256:e87e8afb059e1b5e803e8e3185e9aa8e73c4c556071a47; outcomes.7.effective: oracle false, view true; outcomes.7.perModel.club.effective: oracle false, view true; outcomes.7.perModel.club.reason: oracle unknown_application, view null; outcomes.7.reason: oracle ineffective, view null]',
+    expected: 'dana@7 mismatch: observe differs at 7 [models.club.applications.0: oracle undefined, view {"id":"sha256:89924c7ce0dc9ce04507ba8c5d0a87aabad44d546de84c; outcomes.7.effective: oracle false, view true; outcomes.7.perModel.club.effective: oracle false, view true; outcomes.7.perModel.club.reason: oracle unknown_application, view null; outcomes.7.reason: oracle ineffective, view null]',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test/club.test.ts:265:1
+⚠ plan §4.2: a second admission is ineffective once the applicant holds Member (98.092375ms) # V5-A1: revised experiment and policy repair pending
+  AssertionError [ERR_ASSERTION]: the plan requires rejection of an existing Member
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///private/tmp/dap-v6-mutations-report/spike/test/club.test.ts:283:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
