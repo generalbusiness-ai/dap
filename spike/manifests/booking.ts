@@ -177,7 +177,9 @@ export function publicBookingLeaks(obs: Pick<Observation, 'outcomes'>, p: Princi
       }
       const booker = id ? linked.get(id) : undefined;
       if (booker && booker !== p && p !== admin) out.push(`${p} can link public ${ev.kind} at ${v.position} to booker ${booker} through booking id ${id}`);
-      if (p !== admin && p !== payload?.booker) {
+      // A payload cannot authorize its own claimed reader. Public facts
+      // have no private fields, even when `booker` names this recipient.
+      if (p !== admin) {
         for (const field of privatePublicFields(ev.payload)) out.push(`${p} can read private field ${field} on public ${ev.kind} at ${v.position}`);
       }
     }

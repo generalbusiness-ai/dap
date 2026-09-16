@@ -66,6 +66,11 @@ fields by an authorized admin or clock is a hostile-client limitation:
 the guard must detect it; the fixture does not enforce closed payload
 schemas at admission.
 
+The revision after run 8 also rejects claimed-party exemptions: a public
+payload's own `booker` value cannot authorize a reader to see private
+fields. Every non-admin reader is checked, including when that field
+names the reader. Nested fields are checked by the same rule.
+
 ## Projection shape
 
 `observe` for the `booking` model returns, for a principal `p`:

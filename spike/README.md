@@ -275,47 +275,54 @@ runner across models and the report are V6.
 
 ## V4: Booking by agent
 
-Measured result first: the agent-authored Booking model passed every
-predeclared case and 200 of 200 seeds on its untouched baseline, and
-needed **1 fix, 0 added kinds, within the budget** of 2 and 1: a
-disclosure policy naming the public kinds for the fixture's disclosing
-client to honour, once the privacy budget was checked on what a
-participant can read (checker's V3-F1). The baseline itself declared a
-join disclosure of occupancies, frees and clock ticks as a design
-choice, citing the Sale ledger's late-joiner finding, so the
-cross-view case of spike plan §4.1 passed without repair.
+The Booking campaign requires **2 model-policy fixes, 0 added kinds,
+within the budget**, and a separate foundation authorization repair.
+The one-room fixture uses integer clock ticks and clients that honour
+its disclosure policy. Authorized hostile clients can still publish
+private fields or disclose private events; the budget detects these
+violations, and the tests preserve them as limits of the result.
+
+The baseline's projection-only guard passed 200 seeds. A readable-event
+guard then exposed 139 failing seeds, repaired by declaring the public
+kinds clients may disclose (fix 1). Checker's V4-F1/F2 review found that
+public event actors, request-id links and extra private fields were
+still unchecked. The revised guard exposed 99 failing seeds before
+repair. The foundation now keeps application and clock attempts
+actor-only when the actor lacks the required capability, while
+preserving authorized overlap and duplicate refusals. Booking's client
+also requires an authorized verdict before disclosure (fix 2).
 
 What it contains:
 
-- `manifests/booking.md` and `manifests/booking.ts`: the Booking
-  experiment manifest, frozen before the baseline: the split schema of
-  spike plan §4.1 with a booker-and-admin audience, promises, privacy
-  budget, projection shape, reason vocabulary, budget, bounds, the clock
-  actor joined by a prelude, invariants over recorded events and
-  verdicts including expiry by the clock, the privacy budget over
-  readable events and observations (amended after run 1; the revision
-  is identified in the ledger), and the generator's payload builders
-  with clock ticks.
-- `fixtures/booking.ts`: the Booking model, authored by an agent under
-  spike plan §4.5 with no test or checker access before the baseline.
-- `manifests/booking.ledger.md`: the repair ledger.
-- `corpus/booking/run2/`: all 139 privacy failures recovered from the
-  run-2 model and generator, shrunk and committed in run 5. The corpus
-  README distinguishes recovered traces from the original event bytes.
-- Harness additions: the fold context carries the event's content id (a
-  booking id); a model may opt in to ambient `dap.observe` facts with
-  `ambient: true`; the generator takes a prelude of fixed steps.
+- `manifests/booking.md` and `manifests/booking.ts`: the experiment
+  manifest, based on the plan's split schema with explicit `admin`
+  payload fields added at freeze; promises, privacy budget, bounds,
+  invariants and generator payloads. Each later guard amendment is a
+  new manifest identity recorded in the ledger.
+- `fixtures/booking.ts`: the agent-authored model and its declared
+  public-history and disclosure policies.
+- `manifests/booking.ledger.md`: all runs, fixes, evidence corrections,
+  identities, and the effect of the seeded-nonce change on Sale's seeds.
+- `corpus/booking/run2/`: all 139 recovered privacy failures, minimized
+  and kept with the old guard and model; the reconstruction limit is
+  explicit.
+- `corpus/booking/run7/`: all 99 new failing series, complete and
+  minimized, with the exact pre-repair foundation snapshot pinned.
+- The six predeclared cases, seed-1 actor/link regression, public-payload
+  regressions, authority and replay checks, and the 200-seed campaign.
+  Coverage requires effective cancels and occupancies linked to earlier
+  effective requests.
 
-What the tests show: the six predeclared cases (two requests for one
-slot, free exactly one, duplicate publication, only the admin publishes,
-expiry, the cross-view case) and the 200-seed campaign pass; the ledger's
-totals agree with its entries. Campaign coverage requires effective
-cancels and occupancies linked to real requests. The recovered corpus
-test checks every privacy failure and its deletion-minimality; literal
-private disclosures remain budget violations under the repaired model,
-whose disclosure policy constrains the fixture's client.
+The baseline already declared disclosure of occupancies, frees and
+clock ticks to new members, so the cross-view case passed without a
+model repair. That required history remains available. Authorized
+stale/closed attempts retain their declared audience; the fixture's
+client conservatively excludes their non-authorized verdicts from
+additional disclosure. Other system and spine event audiences are
+unchanged.
 
-What V4 does not claim: one room and integer ticks only; the clock is a
-fixture actor driven by the generator; a cancel naming a different admin
-than its request is a known limit of the predeclared schema, recorded in
-the ledger and not exercised by the corpus; Club is V5 and the report V6.
+The result does not cover multi-room routing, a real clock source,
+closed-schema admission, arbitrary hostile data encodings, or a cancel
+naming a different admin than its request. The latter remains a known
+schema limitation. Club is V5; the combined measurement and falsification
+verdict are V6.

@@ -38,7 +38,7 @@ test('run 1 corpus: every shrunk series still fails against the run-1 model with
 });
 
 
-test('run 6 corpus: all nine privacy failures replay, are deletion-minimal, and are clean under the repaired audience', (t) => {
+test('run 6 corpus: the current foundation fixes unauthorized leaks; the repaired audience fixes the remaining authorized leaks', (t) => {
   const entries = readCorpus(fileURLToPath(new URL('../corpus/sale/run6/', import.meta.url)));
   assert.deepEqual(entries.map(({ entry }) => entry.seed).sort((a, b) => Number(a) - Number(b)), [42, 112, 141, 160, 172, 181, 193, 197, 200]);
   for (const { name, entry } of entries) {
@@ -48,14 +48,21 @@ test('run 6 corpus: all nine privacy failures replay, are deletion-minimal, and 
       invariants: saleInvariants,
       budget: (o, p, _n, view) => saleBudgetViolations(o, p, ALICE, view),
     });
+    // All nine historical failures reproduce at 009b5226 with its old
+    // foundation. V4 makes the six unauthorized counters actor-only.
     const then = check(script);
-    assert.ok(then.some((v) => v.kind === 'budget'), name + ' still violates privacy');
-    assert.equal(describeViolation(then[0]!), entry.expected, name + ' reproduces the recorded finding');
+    const authorizedCounter = [172, 181, 200].includes(Number(entry.seed));
+    if (authorizedCounter) {
+      assert.ok(then.some((v) => v.kind === 'budget'), name + ' still violates privacy under the kept audience');
+      assert.equal(describeViolation(then[0]!), entry.expected, name + ' reproduces the recorded finding');
+    } else {
+      assert.deepEqual(then, [], name + ' is already clean under the repaired foundation');
+    }
     for (let i = 0; i < script.steps.length; i++) {
       assert.deepEqual(check({ ...script, steps: script.steps.filter((_, j) => i !== j) }), [], `${name}: deleting step ${i} removes the failure`);
     }
     const now = toScript(entry, saleBase(salePackage), byName);
     assert.deepEqual(check(now), [], name + ' is clean under the repaired audience');
-    t.diagnostic(`${name}: ${entry.steps.length} steps; run-6 model budget violation; current model clean`);
+    t.diagnostic(`${name}: ${entry.steps.length} steps; kept model ${authorizedCounter ? 'budget violation' : 'clean under current foundation'}; current model clean`);
   }
 });

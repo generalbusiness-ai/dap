@@ -236,12 +236,16 @@ test('the repair ledger exists, its totals agree with its entries, and it states
   assert.equal(typeof CAP.observe, 'string');
 });
 
+for (const [shape, secret] of [
+  ['private fields', { booker: BOB, purpose: 'secret plan' }],
+  ['a spoofed booker claim naming the reader', { booker: CAROL, purpose: 'secret plan' }],
+  ['nested private fields', { details: { booker: BOB, purpose: 'secret plan' } }],
+] as const) {
 for (const kind of [BOOKING + 'occupancy', BOOKING + 'free', K.observe]) {
-  test(`V4-F2: the budget detects private fields published through ${kind}`, () => {
+  test(`V4-F2: the budget detects ${shape} published through ${kind}`, () => {
     const ctx = room([BOB, CAROL]);
     const req = request(ctx, BOB, 10, 12);
     if (kind === BOOKING + 'free') assert.equal(publish(ctx, ADMIN, req.id, 10, 12).verdict.effective, true);
-    const secret = { booker: BOB, purpose: 'secret plan' };
     const payload: Json = kind === K.observe ? { fact: { clock: 1, ...secret } }
       : kind === BOOKING + 'free' ? { booking_id: req.id, ...secret }
       : { booking_id: req.id, room: ROOM, start: 10, end: 12, ...secret };
@@ -252,6 +256,7 @@ for (const kind of [BOOKING + 'occupancy', BOOKING + 'free', K.observe]) {
     assert.ok(leaks.some((v) => v.includes('private field') && v.includes('purpose')), leaks.join('\n'));
     assert.ok(fullCheck(ctx).some((v) => v.kind === 'budget' && v.participant === CAROL));
   });
+}
 }
 
 test('V4-F1: seed 1 position 50 keeps Carol and her own request id private; hostile redisclosure is detected', () => {

@@ -251,6 +251,47 @@ exempt a reader merely because a payload claims `booker` equals that
 reader. The next manifest revision removes that exemption and retains
 spoofed and nested payload cases before the final check.
 
+## Run 9: corrected guard and passing integration validation
+
+Snapshot commit: "spike V4: checker run 9 snapshot: validate privacy
+repairs and cross-model effects". The public-payload guard no longer
+trusts a payload's claimed `booker` as an exemption, so the manifest is
+revised again:
+`sha256:cb4514f4967891077ad78e1dd0fba4c17438fb32b98cd8bd790df8531b35dd16`.
+The package is unchanged from run 8:
+`sha256:0556de5c337344eaa15afcbbbf5d22aa82c384bd6841d4ffb0c07185d4b7ec27`.
+There is no further model fix.
+
+`npm test` passes all **110 tests**. Both 200-seed campaigns again have
+zero violations and reproduce every coverage count listed in run 8.
+Booking covers 12000 entries, 325 effective cancels and 472 effective
+occupancies linked to earlier effective requests. The nine F2 tests
+cover ordinary, spoofed-party and nested private fields through each of
+occupancy, free and observation. They assert detected violations, not
+safe publication by hostile clients. The seed-1 regression verifies
+actor-only initial delivery and detects an explicit hostile
+redisclosure. The authority regression covers grants, revocation,
+authorized overlap/duplicate refusal, stale binding, closure, unchanged
+spine audiences and required public history for a late joiner.
+
+Sale is checked with manifest
+`sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9`
+and package
+`sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85`.
+Its 11047-entry campaign and corpus pass. The corpus test now explicitly
+distinguishes six unauthorized historical counter leaks, already
+prevented by the current foundation, from three authorized historical
+leaks still found under the kept model. All nine are clean with the
+current Sale model. Complete historical reproduction remains at
+`009b5226bd77b9f9d5e7ccad70b39867ef3d1a41`, as the corpus README explains;
+the V3 ledger and original records are unchanged.
+
+`npm run typecheck` and `git diff --check` pass. The two model fixes and
+the separate foundation correction are the complete repair record.
+F2's hostile-client publication limit and the different-admin cancel
+limit remain explicit; passing the generated campaigns is not a claim
+that every possible client preserves privacy.
+
 ## Fixes
 
 ### Fix 1: a disclosure policy naming the public kinds
