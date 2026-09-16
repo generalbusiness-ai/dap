@@ -2,7 +2,7 @@
 
 The unchanged checker reproduction and its output are retained before repair.
 Both runs used clean source `edacc32db1495504d10ae7a92f02af272e49e9f2`,
-Node 24, and the real signed lifecycle fixture at `inspection-attached`.
+Node v26.8.2, and the real signed lifecycle fixture at `inspection-attached`.
 The storage arguments were `memory` and `sqlite`. Both commands exited 0;
 the script catches the failures and prints them, so that exit status is not a
 passing lifecycle result.
