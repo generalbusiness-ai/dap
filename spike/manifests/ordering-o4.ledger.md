@@ -219,3 +219,28 @@ The candidate is ready for independent checking; this record is not a verdict.
 
 Raw run-5 text retains the whitespace emitted by Node, including the retained
 TODO assertion diagnostics and the typecheck command's final blank line.
+
+
+## Aggregate integration after run 5
+
+Run 6 source `ca2d105d01dea2e1f69d09ed4e707bfea64e62d0` merges final aggregate
+`1ba67c39062ddf44508b14c0716817cfa9735964` into O4 candidate
+`2b48c4c4484ecd722aa891cd6efa5362121c0f6e`. It retains the aggregate's
+integration run-2 evidence and updated O2/O3/O5 ledgers. That aggregate's
+149 passing focused checks were measured at
+`2a57bd2ab0b1e30912f1e2bc044951d71477c5cc`, not at the O4 source.
+
+This merge also adds O5's independently measured verifier and five test/fixture
+files, each byte-identical to the aggregate. It is therefore an additive O5
+integration, not an entirely records-only merge. All 76 existing O4 runtime,
+fixture, test and lifecycle-manifest files are byte-identical to run 5's
+candidate. Journal's conflict comprised two blank lines; the O4 bytes are
+retained so its implementation identity remains `1090e6c7`. The full hashes
+are in `run-6.json`. The O3/O4 profile and G2/A1–7 obligations are retained.
+
+The narrow run-6 validation passes all 55 O5 verifier and actual-Journal
+integration checks, with no failures, skips or TODOs. Whole-tree typecheck
+passes at the same frozen source. No full O4 or campaign run was repeated.
+O4's 122 passing checks remain the run-5 measurement at `91941fa`; the
+600-seed evidence remains run 2 before G1/G2. Only this integration record,
+raw outputs and ledger text are added after the run-6 frozen source.
