@@ -1,6 +1,7 @@
 // V6: one audience fault per model, binding locality, and hidden revocation.
 // Every mutation has a clean control and a specific expected mismatch.
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import type { Json } from '../src/canon.ts';
 import { checkContext, describeViolation, observeInterpreted, withAudience, type CheckOptions } from '../src/checker.ts';
@@ -11,7 +12,7 @@ import { interpretView } from '../src/interpret.ts';
 import { foldPrefix } from '../src/oracle.ts';
 import { applyStep, type Pending, type Script, type Step } from '../src/script.ts';
 import { named } from '../src/types.ts';
-import { linkSteps, replayLinked, shrinkLinked } from '../corpus/club/replay.ts';
+import { linkSteps, replayLinked, shrinkLinked, type LinkedStep } from '../corpus/club/replay.ts';
 import { SALE, salePackage } from '../fixtures/sale.ts';
 import { BOOKING, bookingPackage } from '../fixtures/booking.ts';
 import { CLUB, clubPackage } from '../fixtures/club.ts';
@@ -21,6 +22,28 @@ import { CLUB_MANIFEST_ID, clubBase, clubBudgetViolations, clubInvariants } from
 import { pkg } from './helpers.ts';
 
 const ALICE = 'alice', BOB = 'bob', DANA = 'dana';
+interface RetainedCorpus {
+  snapshot: string; corpus: string; manifest: string; package: string;
+  mutant?: string; nonce: string; originalSteps: number; steps: LinkedStep[];
+}
+interface RetainedExpectation {
+  violations: number; reader: string; frontier: number;
+  oracleEffective?: boolean; viewEffective?: boolean;
+  oracleModelReason?: string | null; viewModelReason?: string | null;
+}
+// Added after checker #1805. These are retrospective expectations for the
+// retained records, not additions to the original frozen model manifests.
+const retainedExpectations = JSON.parse(readFileSync(new URL('../corpus/v6/expected.json', import.meta.url), 'utf8')) as { cases: Record<string, RetainedExpectation> };
+function retained(name: string): RetainedCorpus {
+  const record = JSON.parse(readFileSync(new URL(`../corpus/v6/run2/${name}.json`, import.meta.url), 'utf8')) as RetainedCorpus;
+  assert.equal(record.snapshot, '742e64a06d06226b456f489eb53deacc1bc9f5db');
+  assert.equal(record.corpus, name);
+  return record;
+}
+function checkControlIds(record: RetainedCorpus, ctx: Context) {
+  const entries = new Map(ctx.entries.map((e) => [e.id, e.event.kind]));
+  for (const step of record.steps) for (const e of step.entries) assert.equal(entries.get(e.id), e.kind, 'stored entry ids belong to the unmutated control');
+}
 function join(ctx: Context, principal: string, roles: string[], steps?: Step[]) {
   const pending: Pending = new Map();
   const invite: Step = { type: 'invite', inviter: ALICE, invitee: principal, grants: { roles } };
@@ -101,6 +124,9 @@ const cases: ModelCase[] = [
 for (const c of cases) {
   test(`V6 ${c.name}: the checker detects one narrowed audience rule`, (t) => {
     const mutant = withAudience(c.package, c.mutation.kind, 'v6-actor-only', (_ctx, event) => named(event.actor));
+    // Keep the exact arrow text in this defining module. withAudience drops
+    // the pinned package module; changing rule text or reattaching a module
+    // changes the retained mutant identity, even for equivalent behavior.
     assert.equal(mutant.models, c.package.models, 'model code and configuration are unchanged');
     for (const kind of Object.keys(c.package.kinds)) {
       if (kind !== c.mutation.kind) assert.equal(mutant.kinds[kind], c.package.kinds[kind]);
@@ -143,6 +169,29 @@ for (const c of cases) {
     const repaired = replayLinked(minimal, base, {});
     assert.deepEqual(checkContext(repaired, c.checks(repaired)), [], 'minimal trace has a clean unmutated control');
     t.diagnostic(JSON.stringify({ corpus: 'v6-' + c.name, manifest: c.manifest, package: c.package.id, mutant: mutant.id, nonce: base.nonce, originalSteps: linked.length, steps: minimal }));
+    const record = retained('v6-' + c.name);
+    const expected = retainedExpectations.cases[record.corpus]!;
+    assert.equal(record.manifest, c.manifest);
+    assert.equal(record.package, c.package.id);
+    assert.equal(record.mutant, mutant.id, 'reuse the exact retained mutation');
+    assert.equal(record.nonce, base.nonce);
+    assert.deepEqual(record.steps, minimal, 'regenerated minimum matches the committed input');
+    const savedControl = replayLinked(record.steps, { ...c.base(c.package), nonce: record.nonce }, {});
+    checkControlIds(record, savedControl);
+    assert.deepEqual(checkContext(savedControl, c.checks(savedControl)), []);
+    const saved = replayLinked(record.steps, { ...c.base(mutant), nonce: record.nonce }, {});
+    const savedViolations = checkContext(saved, c.checks(saved));
+    assert.equal(savedViolations.length, expected.violations);
+    const savedFinding = savedViolations.find((v) => v.kind === 'mismatch' && v.participant === expected.reader && v.frontier === expected.frontier);
+    assert.ok(savedFinding);
+    const savedOracle = savedFinding.expected!.outcomes[String(expected.frontier)]!;
+    const savedView = savedFinding.actual!.outcomes[String(expected.frontier)]!;
+    assert.equal(savedOracle.effective, expected.oracleEffective);
+    assert.equal(savedView.effective, expected.viewEffective);
+    assert.equal(savedOracle.perModel?.[c.name]?.reason, expected.oracleModelReason);
+    assert.equal(savedView.perModel?.[c.name]?.reason, expected.viewModelReason);
+    for (let i = 0; i < record.steps.length; i++) assert.equal(fails(record.steps.filter((_, j) => i !== j)), false);
+    t.diagnostic(JSON.stringify({ committedCorpus: record.corpus, recordSnapshot: record.snapshot, violations: savedViolations.length, finding: describeViolation(savedFinding), deletions: record.steps.length, control: 'clean' }));
   });
 
   test(`V6 ${c.name}: an unrelated private attach preserves a shared intent; a relevant binding change stales it`, (t) => {
@@ -233,4 +282,24 @@ test('V6 serving mutation: hiding a spine revocation is detected without changin
   for (let i = 0; i < minimal.length; i++) assert.equal(fails(minimal.filter((_, j) => i !== j)), false, `minimal without step ${i}`);
   assert.deepEqual(checkContext(replayLinked(minimal, base, {})), []);
   t.diagnostic(JSON.stringify({ corpus: 'v6-hidden-revocation', manifest: SALE_MANIFEST_ID, package: salePackage.id, nonce: base.nonce, originalSteps: linked.length, steps: minimal }));
+  const record = retained('v6-hidden-revocation');
+  const expected = retainedExpectations.cases[record.corpus]!;
+  assert.equal(record.manifest, SALE_MANIFEST_ID);
+  assert.equal(record.package, salePackage.id);
+  assert.equal(record.mutant, undefined);
+  assert.equal(record.nonce, base.nonce);
+  assert.deepEqual(record.steps, minimal);
+  const saved = replayLinked(record.steps, { ...saleBase(), nonce: record.nonce }, {});
+  checkControlIds(record, saved);
+  assert.deepEqual(checkContext(saved), []);
+  const savedRevocation = saved.entries.find((e) => e.event.kind === K.revoke)!;
+  saved.state.audiences[savedRevocation.position] = named(ALICE);
+  const violations = checkContext(saved);
+  assert.equal(violations.length, expected.violations);
+  const finding = violations.find((v) => v.kind === 'mismatch' && v.participant === expected.reader && v.frontier === expected.frontier);
+  assert.ok(finding);
+  assert.equal(finding.expected!.affordances.includes(SALE + 'offer'), false);
+  assert.equal(finding.actual!.affordances.includes(SALE + 'offer'), true);
+  for (let i = 0; i < record.steps.length; i++) assert.equal(fails(record.steps.filter((_, j) => i !== j)), false);
+  t.diagnostic(JSON.stringify({ committedCorpus: record.corpus, recordSnapshot: record.snapshot, violations: violations.length, finding: describeViolation(finding), deletions: record.steps.length, control: 'clean' }));
 });
