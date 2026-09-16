@@ -200,7 +200,8 @@ Manifest `sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec
 package `sha256:5ec9a10356ed47b1bc13ca4242631eefc69c9898f5c507e22639325eaeb6b48f`.
 Results: **9 of 200 seeds fail**, all privacy-budget violations from
 counters delivered to someone without an effective stub: 42, 112, 141,
-160, 172, 181, 193, 197 and 200. The predeclared cases, F1 to F3, both G1
+160, 172, 181, 193, 197 and 200. These contain 11 distinct counter
+misdeliveries (seeds 172 and 181 each contain two). The predeclared cases, F1 to F3, both G1
 reproductions and the asserted literal-trace failures pass (10 tests
 pass; the campaign test fails). Typecheck passes. The campaign's
 zero-violations assertion is retained, and this snapshot does not meet
@@ -215,7 +216,11 @@ private delivery but not the Inspection model; the hand-written trace
 and F3 regression exercise the attached Inspection package.
 
 Run 1's 17 shrunk failures are kept in [the run-1 corpus](../corpus/sale/run1/).
-Newly exposed run-6 failures are kept separately with their run identity.
+The nine newly exposed failing series were shrunk at snapshot `736ce30`
+and are kept in [the run-6 corpus](../corpus/sale/run6/) with that run
+identity and the kept model. Six reduce to five steps, three to three
+steps; each fails under the kept model and no single step can be deleted
+while keeping a violation.
 The historical run-5 passing result remains a result under its older,
 incorrect guard; it is not evidence of a clean campaign under run 6.
 

@@ -1,0 +1,33 @@
+{
+  "seed": 181,
+  "manifest": "sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9",
+  "package": "sha256:d3bac233d70f222915de3ebebb555257b44b10348f299ec0190e409a921bf433",
+  "snapshot": "run6",
+  "expected": "bob@4 budget: bob can read the sale.counter at 4, whose parties are alice+alice",
+  "steps": [
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "bob",
+      "grants": {
+        "roles": [
+          "Buyer"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "bob"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.sale.counter",
+      "payload": {
+        "offer_id": "o16",
+        "amount": 610,
+        "author": "bob"
+      }
+    }
+  ]
+}
