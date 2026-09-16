@@ -40,6 +40,8 @@ export interface ViewEntry {
   position: number;
   /** present when visible; absent when only the header is */
   event?: EventBody;
+  /** O1 original signed envelope bytes, supplied only when the event is readable. */
+  committed?: string;
   /** the authenticated header, always present (design note §1: hidden positions carry headers) */
   header: Header;
   headerHash: string;
@@ -211,7 +213,7 @@ export class Context {
     for (let i = 0; i <= n; i++) {
       const e = this.entries[i]!;
       const via = visibilityOf(this.state, p, i, n);
-      out.push(via === 'hidden' ? { position: i, header: e.header, headerHash: e.headerHash, via } : { position: i, event: e.event, header: e.header, headerHash: e.headerHash, via });
+      out.push(via === 'hidden' ? { position: i, header: e.header, headerHash: e.headerHash, via } : { position: i, event: e.event, ...(e.committed ? { committed: e.committed } : {}), header: e.header, headerHash: e.headerHash, via });
     }
     return out;
   }

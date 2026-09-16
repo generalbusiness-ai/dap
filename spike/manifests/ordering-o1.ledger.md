@@ -44,8 +44,9 @@ legacy visibility path, not a signed replay of all 200 seeds.
 
 After run 1, audit identified a wire presentation omission: signed readable
 views did not carry original envelope bytes, although full-journal verification
-worked. A follow-up will add bytes only to readable signed view entries and
-verify views independently. Run 1 establishes its recorded checks, not that
+worked. The follow-up adds bytes only to readable signed view entries and
+verifies views independently, including every participant/frontier of the
+signed V1 traces. Focused journal checks now pass 24/24; typecheck passes. Run 1 establishes its recorded checks, not that
 missing recipient-facing proof path.
 
 ## Identities and scope

@@ -10,7 +10,7 @@ import { canonicalize, encodeWire, envelopeBytes, signEvent, verifyHeader, verif
 import { ZERO_HASH } from '../src/canon.ts';
 import { checkContext } from '../src/checker.ts';
 import { CAP, K } from '../src/foundation.ts';
-import { Journal, O1_PROFILE_VERSION } from '../src/journal.ts';
+import { Journal, O1_PROFILE_VERSION, verifyJournalView } from '../src/journal.ts';
 import { SQLiteBackend, CRASH_POINTS } from '../src/sqlite.ts';
 import { SALE } from '../fixtures/sale.ts';
 import { acceptance, act, createJournal, invite, keys, packages, people } from './fixtures/o1-fixture.ts';
@@ -40,6 +40,13 @@ for (const storage of ['memory', 'sqlite'] as const) test('V1 Sale visibility tr
   assert.equal(j.context.hiddenCount(people.ivan), 2);
   assert.equal(j.context.hiddenCount(people.ivan, before), 3);
   assert.deepEqual(checkContext(j.context), []);
+  for (const person of Object.values(people)) {
+    for (let frontier = 0; frontier <= j.context.head; frontier++) {
+      const view = j.context.view(person, frontier);
+      assert.deepEqual(verifyJournalView(view, { genesis: j.context.genesisId, writer: people.writer }), view);
+      for (const v of view) assert.equal(v.committed !== undefined, v.event !== undefined);
+    }
+  }
   let prev = ZERO_HASH;
   for (const e of j.context.entries) {
     const expected = { genesis: j.context.genesisId, position: e.position, prev };
@@ -252,4 +259,26 @@ test('uncertain committed response requires reopen before another action', () =>
   const result = open(reopened).submit(envelope);
   assert.ok(!('refused' in result) && result.replay);
   reopened.close();
+});
+
+
+test('recipient view verification checks original actor proofs and rejects hidden envelope leakage', () => {
+  const j = createJournal(new MemoryBackend());
+  const bob = invite(j, 'bob'); j.submit(envelopeBytes(acceptance(j, 'bob', bob)));
+  invite(j, 'carol');
+  const view = j.context.view(people.bob);
+  const expected = { genesis: j.context.genesisId, writer: people.writer };
+  assert.equal(view[4]!.event, undefined);
+  assert.equal(view[4]!.committed, undefined);
+  const missing = structuredClone(view); delete missing[1]!.committed;
+  assert.throws(() => verifyJournalView(missing, expected), /missing actor proof/);
+  const tampered = structuredClone(view); (tampered[1]!.event!.payload as { ask: number }).ask = 1;
+  assert.throws(() => verifyJournalView(tampered, expected), /body disagrees/);
+  const leaked = structuredClone(view); leaked[4]!.committed = j.context.entries[4]!.committed!;
+  assert.throws(() => verifyJournalView(leaked, expected), /hidden position contains/);
+  const hiddenHeader = structuredClone(view); hiddenHeader[4]!.header.commitment = ZERO_HASH;
+  assert.throws(() => verifyJournalView(hiddenHeader, expected), /sequencer signature/);
+  assert.throws(() => verifyJournalView(view.slice(1), expected), /genesis|non-dense|position/);
+  assert.throws(() => verifyJournalView(view, { ...expected, genesis: 'sha256:' + 'f'.repeat(64) }), /genesis/);
+  assert.throws(() => verifyJournalView(view, { ...expected, writer: people.carol }), /wrong writer/);
 });

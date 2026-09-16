@@ -1,9 +1,9 @@
 // Authenticated facade over the existing Context and shared append operation.
 import type { KeyObject } from 'node:crypto';
-import { appendInitial, MemoryBackend, type AppendEncoding, type Backend, type TransportCredential } from './append.ts';
-import { canonicalize, envelopeBytes, envelopeId, principalOf, signHeader, verifyEnvelope, verifyWire, type ActorEnvelope } from './codec.ts';
+import { appendInitial, MemoryBackend, snapshot, type AppendEncoding, type Backend, type TransportCredential } from './append.ts';
+import { canonicalize, envelopeBytes, envelopeId, principalOf, signHeader, verifyEnvelope, verifyHeader, headerHash, verifyWire, type ActorEnvelope } from './codec.ts';
 import { ZERO_HASH } from './canon.ts';
-import { Context } from './context.ts';
+import { Context, type ViewEntry } from './context.ts';
 import type { PackageDescriptor } from './descriptor.ts';
 import { K, type GenesisPayload } from './foundation.ts';
 import { SQLiteBackend } from './sqlite.ts';
@@ -84,4 +84,30 @@ export class Journal {
     try { return this.context.submit(envelope.body, credential, envelope); }
     catch (error) { this.needsReopen = true; throw error; }
   }
+}
+
+/** Recipient-side authentication of a complete header prefix. The caller pins
+ * genesis and writer independently; visibility policy and freshness remain
+ * separate questions for the serving party and semantic interpreter. */
+export function verifyJournalView(view: readonly ViewEntry[], expected: { genesis: string; writer: string }): readonly ViewEntry[] {
+  if (!view[0]?.event || !view[0].committed) throw new Error('Journal view: genesis must be readable');
+  const genesis = verifyEnvelope(view[0].committed);
+  const origins = declared(genesis, expected.writer);
+  let prev = ZERO_HASH;
+  for (let position = 0; position < view.length; position++) {
+    const v = view[position]!;
+    if (v.position !== position) throw new Error('Journal view: non-dense positions');
+    const chain = { genesis: expected.genesis, position, prev };
+    verifyHeader(v.header, expected.writer, chain);
+    if (v.headerHash !== headerHash(v.header)) throw new Error('Journal view: wrong header hash');
+    if (v.event !== undefined) {
+      if (!v.committed) throw new Error('Journal view: missing actor proof');
+      if (Buffer.byteLength(v.committed) > MAX_ENVELOPE_BYTES) throw new Error('Journal view: envelope bounds');
+      const entry = verifyWire({ header: v.header, committed: v.committed }, expected.writer, chain, { allowOrigin: position > 0 && position <= origins.length });
+      if (canonicalize(entry.event) !== canonicalize(v.event)) throw new Error('Journal view: body disagrees with signed bytes');
+      if (position > 0 && position <= origins.length && canonicalize(entry.event) !== canonicalize(origins[position - 1])) throw new Error('Journal view: unadopted origin');
+    } else if (v.committed !== undefined) throw new Error('Journal view: hidden position contains an envelope');
+    prev = v.headerHash;
+  }
+  return snapshot(view);
 }

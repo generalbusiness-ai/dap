@@ -77,6 +77,14 @@ receive the existing semantic refusal. Evidence describes a dependency;
 cryptographic verification alone does not prove the writer supplied the
 correct dependency. The existing interpreter/foundation performs that work.
 
+Readable signed `ViewEntry` values carry the original `committed` envelope
+bytes; hidden values carry no envelope, actor, kind, or audience. A recipient
+can call `verifyJournalView` using an independently pinned genesis and writer
+before interpreting the view. It checks every header, readable actor proof,
+body/byte agreement, and origin adoption. It rejects hidden envelope leakage.
+It does not establish freshness or prove that the server chose the correct
+readable positions; those remain distinct serving and semantic questions.
+
 Genesis retains its declared origin bodies for V1 compatibility. Creation
 requires a separate, matching signed envelope for each origin. Their original
 signatures and committed bytes are retained at positions 1 through k.
