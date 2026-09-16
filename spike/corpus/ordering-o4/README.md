@@ -143,3 +143,12 @@ are a subset of the one 469-test noncampaign command, not an additional run.
 The 92 new observations include K1 malformed-input continuations, K3 failed
 member transfers and K4 derived disclosure. The K2 lookup-sweep counts are
 in the raw TAP and run-8 JSON. Three 200-seed campaigns remain excluded.
+
+
+L3 retains the unbound-member denial of certification at `e0467ae9` and
+regression-only `cfeb3599` in `manifests/ordering-o4-runs/l3-before*`.
+The original checker source is copied unchanged; fresh before outputs show
+an effective D release stranded by proof refusal. New rule /3 and focused
+signed observations are a separate component boundary, not new run-8 data.
+Old /1 and both /2 rule declarations and their packets remain unchanged.
+See the L3 ledger subsection for exact measured sources and commands.

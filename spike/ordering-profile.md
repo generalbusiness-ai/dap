@@ -364,7 +364,7 @@ not a production proof of completeness. Provenance: decisions
 `ca04cc02027b9070bb60e3852ac19e21ae7931f4` and
 `42ffb3413ded6c33fb39d25296cd04ce0f005d6a` in the dap workroom.
 
-The rule is `dap.fixture.scope-public-openings/2`, whose canonical declaration
+The rule is `dap.fixture.scope-public-openings/3`, whose canonical declaration
 and content id are exported as `PUBLIC_PROOF_RULE` and
 `PUBLIC_PROOF_RULE_ID` by `src/scope-proof.ts`. It opens exactly these kinds:
 
@@ -374,15 +374,26 @@ and content id are exported as `PUBLIC_PROOF_RULE` and
 - the four Scope kinds result, exercise, import-export and recover.
 
 For every position through the frontier, a listed kind is opened when its
-assigned audience is spine or members. There is one bounded exception.
-The rule's `ineffectiveActorOnly` object requires `known: true` and
-`effective: false`, and selects `body: 'hidden'` when the full source fold
-records that determinate ineffective verdict and its assigned audience is
-exactly `named: [event.actor]`. Missing or unknown verdicts do not qualify.
-The top-level and per-model reasons `not_in_v1`, `package_unavailable`, `scope_runtime_required` and
-`unhandled`, or prefixes `audience_error:` and `fold_error:`, are indeterminate
-and cannot justify hiding. Every other narrower listed-kind audience makes
-the producer refuse certification, including an effective body capped to its actor. Every
+assigned audience is spine or members. Two bounded exceptions retain only
+the header, both requiring exactly `named: [event.actor]`:
+
+- `ineffectiveActorOnly` requires `known: true` and `effective: false` from
+  the full source fold. Top-level or per-model `model_unavailable`,
+  `not_in_v1`, `package_unavailable`, `scope_runtime_required` and `unhandled`,
+  or the prefixes `audience_error:` and `fold_error:`, exclude this exception.
+- `unboundActorOnly` requires a listed application kind with no effective
+  binding before that event's position, together with the exact foundation
+  flags `known: false`, `authorized: false`, `effective: false`, reason
+  `unhandled`, and no per-model diagnostics. The producer resolves the
+  effective binding's `attachedAt`/`previous` history at the event position;
+  neither the caller's `expected_binding` nor a missing registry entry proves
+  absence. Later attachment cannot change the earlier outcome. A bound kind
+  with an unavailable package/model, a placeholder, or any other indeterminate
+  outcome cannot use this exception. System kinds cannot use it either.
+
+Missing verdicts and other unknown outcomes do not qualify. Every other
+narrower listed-kind audience makes the producer refuse certification,
+including an effective body capped to its actor. Every
 unlisted position is hidden. `dap.disclose` is excluded because it can carry
 private bodies;
 `dap.observe` is excluded because observations are not release or grant
@@ -454,8 +465,10 @@ A dishonest writer can omit an authority body and sign an incomplete
 projection, or tailor projections to recipients. The destination cannot
 detect that completeness lie from headers that deliberately reveal no
 kind. This includes falsely classifying effective authority as an ineffective
-actor-only attempt. Classifying the exception is part of the existing
-serving-writer trust; a hidden failed attempt supplies no authority during
+actor-only or unbound attempt. Such a lie can create duplicate live rights:
+for example, hiding a revocation can make an unauthorized source release
+appear effective at F while the source right remains live. Classifying the
+exceptions is part of the existing serving-writer trust; a hidden failed attempt supplies no authority during
 destination replay. Source members with the complete openings can recompute
 both effect and audience and then the rule and retain both signed packets
 as transferable evidence. Retired writer keys can certify their historical
@@ -463,8 +476,13 @@ prefixes; source forks and database copies remain possible. None of these
 limits permits the destination to skip independent authorization or effect
 verification. Explicit hostile fixtures may create such signed alternate
 branches, but the honest producer continues to refuse effective narrow
-authority audiences. The `/1` rule and its older packets remain historical;
-certificates under that rule are not silently reinterpreted as `/2`.
+authority audiences. The `/1` and both historical `/2` declarations remain
+at their original sources. Provisional `/2` content id
+`sha256:614f837e0f4f795625bc69d690a13c3d2a38c28e1a349bc49ed6db35cc972a71`
+was measured at `0aa8687`/`813c84c`; refined `/2`
+`sha256:701403e9c51e6449ca797545818a8b63602a20a9b43c2ace064e9a38ab55b66c`
+was measured at `82119b5` and combined `2ee1b43a`. Certificates pin the
+content id, not just the type name. Neither version is reinterpreted as `/3`.
 
 ## O4: checker contract obligations
 
@@ -486,18 +504,19 @@ exact source, profile and manifest and satisfy the nine tests listed in
 2. **A2 — Exact public-data rule.** For every position through the certified
    frontier, open each authority-set kind only if its assigned audience is
    `spine` or `members`. An actor-only position with source verdict
-   known, determinate `effective === false` is the sole exception and retains
-   only its header;
-   this classification is explicitly trusted. Every other narrower audience,
+   known, determinate `effective === false` retains only its header. A listed
+   application kind proved unbound before the event also qualifies only with
+   the exact unbound verdict and actor-only audience defined above.
+   Both classifications are explicitly trusted. Every other narrower audience,
    including an effective body with a binding ceiling, makes the producer
    refuse certification; it must neither hide that body nor widen its audience.
-   The named rule excludes unknown outcomes, the four placeholder reasons
+   The known-ineffective exception excludes unknown outcomes, the five indeterminate reasons
    and two error prefixes above, including per-model reasons. Unlisted positions
    retain only their headers.
    Opened bodies pass the recursive banned-field check for `amount`,
    `acceptedAmount`, `counter`, `terms` and `offer_terms`. The named rule is
-   `dap.fixture.scope-public-openings/2`, content id
-   `sha256:701403e9c51e6449ca797545818a8b63602a20a9b43c2ace064e9a38ab55b66c`,
+   `dap.fixture.scope-public-openings/3`, content id
+   `sha256:9e9bcbdd74fe244fb63c5e339256ab508b2b3251d2e8fa642b3309cd1f1049e6`,
    defined by `publicOpeningRule` in `manifests/ordering-lifecycle.ts`.
    Its 21 exact authority kinds are:
 
@@ -548,9 +567,10 @@ exact source, profile and manifest and satisfy the nine tests listed in
    Unknown exceptions fail validation instead of becoming a refusal verdict.
 7. **A7 — Remaining trust limits.** An assigned writer can sign an incomplete
    packet or tailor projections to different destinations. F cannot detect
-   that dishonesty from the certificate alone; source members can compare
-   against their source view and recompute the opening set, and a signed
-   incomplete certificate is transferable evidence. A retired key remains
+   that dishonesty from the certificate alone; it can produce duplicate live
+   rights. Source members with all relevant openings can recompute effect,
+   binding and audience and compare signed packets. An ordinary member may
+   lack another actor's hidden attempt; detection is not universal. A retired key remains
    trusted for the earlier prefixes whose headers it signed. Forks, database
    copies and equivocation remain outside this fixture's protection. The same
    signed destination genesis can also be instantiated on separate journal

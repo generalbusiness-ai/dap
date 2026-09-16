@@ -3,14 +3,14 @@
 Request: `git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:1b6384e27d6dbfd5a22da3330378776d32ad23ab`.
 Promise: `18ba74b01cbbea27e2d8c18b063ff482428c95aa` in that workroom.
 
-The current combined K1–K4 contract is lifecycle manifest
+The historical combined K1–K4 run-8 contract is lifecycle manifest
 `sha256:a766fe56564b026a96c37630d261512c0f608adf5ec7c5ee2d11aca23eaf45fe`.
 Runs 5–7 used historical manifest
 `sha256:d94090b21ce42f2eec4a046558b3a776895d82905c2096a19df1f5f02e011f86`.
 Runs 1–4 used `sha256:fc55bfa123891e750f7bbe3a0d9cb33b5f65c07750db08bc984544ed2dd6b378`,
 which superseded historical `63be83e6` before the O4 baseline. Every earlier
 manifest and result remains available at its recorded source boundary.
-The current explicit opening rule is
+Its opening rule was
 `sha256:701403e9c51e6449ca797545818a8b63602a20a9b43c2ace064e9a38ab55b66c`.
 Runs 1–7 retain their historical `475b415b` rule and exact source boundaries.
 
@@ -617,3 +617,55 @@ Only fresh run-8 observations/results and these documentation updates follow
 the measured source. Runtime, tests, fixtures, manifest and all prior evidence
 remain byte-identical. This is builder validation ready for independent
 review, not an independent checker verdict or permission to land O4.
+
+
+## O4-L3: unbound listed application attempts
+
+Review `869821dee977b1697050fb09ba8f80f8112425f3`, ratified as
+`04ea60627a747adfa56f518bfde5fbc7096a262e`, found another K3 route at exact
+candidate `e0467ae9c44d99e10f38916b74f047b4e9183c5c`: Bob's listed but
+unbound Sale offer in D permanently prevented certification while Kim's
+release stayed effective. Adoption `794a913979b8e34c5b32d9e1d401f6300730ee34`
+chooses a determinate unbound exception under the existing writer trust.
+
+The original checker probe is retained byte-for-byte in
+[the before record](ordering-o4-runs/l3-before/record.json), with fresh exact
+`e0467ae9` memory/SQLite output: D releases at position 2, later proof creation
+refuses, and F remains dormant. Regression-only source
+`cfeb3599bfd043ec26b768bd30633d23dd015dc0` changes no runtime. All six new
+D/I/F tests fail at the same certification refusal; source, command and raw
+output are [retained separately](ordering-o4-runs/l3-before-tests.json).
+
+Rule `dap.fixture.scope-public-openings/3` now permits a header-only listed
+application entry only with exact actor-only audience, no effective binding
+before its event position, and the exact foundation outcome `known:false`,
+`authorized:false`, `effective:false`, `reason:unhandled`, without per-model
+diagnostics. Effective `attachedAt`/`previous` binding history proves absence;
+the producer performs no semantic replay and does not infer absence from
+`expected_binding` or missing registry code. The known-ineffective exception
+also excludes `model_unavailable`. Bound unavailable, placeholder and error
+outcomes, all system kinds, and effective narrow authority remain excluded
+from the unbound exception. Certificate format stays completeness/1.
+
+The new rule identity is
+`sha256:9e9bcbdd74fe244fb63c5e339256ab508b2b3251d2e8fa642b3309cd1f1049e6`.
+This isolated L3 manifest is
+`sha256:92ad0023e387cd4a6305d074ab99f7a29cbcc1699cd88b8dcf439a446ef58828`.
+The manifest/profile now identify both historical /2 content ids and the
+K3/K4 component manifests, cover all repair classes in the introduction,
+and explicitly name duplicate live rights as a possible malicious-writer
+consequence. Detection by source readers requires all relevant openings.
+Neither this classification nor its certificate proves completeness to F.
+L1/L2 integration must regenerate final runtime/package/genesis/proof ids;
+this component is not their combined candidate or an approval.
+
+Planned focused measurement freezes runtime, tests and identity-bearing
+manifest before running the unbound, original completeness, proof and
+manifest checks plus typecheck. Dedicated D tests cover signed attempts,
+exact retry, cold proof equality, effective releases, one activation and
+both spends. I/F cover source-proof parity and later result/spends, not a
+new I/F transfer protocol. Later-attachment tests retain the old proof and
+refuse subsequent bound indeterminate cases and missing reader-side code.
+Existing tests retain effective narrow refusals and hostile certificate,
+privacy and full/public differential checks. No broad suite or campaign is
+part of this component measurement; the next record states exact results.
