@@ -1,6 +1,6 @@
 # Ordering spike report
 
-**Candidate report; final verification of the G1/G2 integration is pending.**
+**Measured candidate; independent acceptance and landing are separate.**
 The measured bootstrap meets goal 4's local fixture criterion. O4 executes
 the transfer lifecycle under an explicit trusted-writer completeness rule
 and its replay follow-up supports goal 1 for that fixture. These are measured candidate
@@ -40,7 +40,7 @@ requirement even when Node exits zero.
 | O3 handover | Focused `3cdd1f3b`: 69/70; all 11 O3 checks pass. Full `aae4051e`: 200 tests, 199 pass, one failing Club TODO; 600 seeds clean. Focused `8756c233`: 71/71 but typecheck fails. Final focused `acfe2522`: 71/71 and typecheck passes. | First failure was changed error wording, corrected for compatibility. The later v2 schema tightening requires distinct control/writer keys and exact sequencing fields. Its negative test needed a type annotation. No failed protocol case was repaired after measurement; the tightening is still a later source boundary. [Ledger][o3] |
 | O4 transfer lifecycle | Formal run 1 `ee86290f`: 98/100 focused, two recorder failures. Run 2 `b35b267e`: 100/100 focused; full 315 tests, 311 pass, four executing Club TODOs; 600 seeds pass. Replay follow-up `faf26c07`: 6/6. G1/G2 `91941fa5`: 345 selected, 341 pass, four TODOs; its O4 subset is 122/122 in the same invocation. Typecheck passes at each boundary. | The original recorder repair changed no signed runtime inputs. G2 changes runtime and manifest: 20 healthy boundaries, 29 adverse branches and 209 signed-genesis mutations per backend. Run 5 repeats the wider replay matrix, proof and privacy checks; it excludes the campaigns. [Ledger][o4] |
 | O5 isolated control verifier | Focused `462d7dec`: 53 pass, one isolation-runner failure. Focused `ac563035`: 54/54, then a test-only cast fails typecheck. Full `0a1daff7`: 256 tests, 255 pass, one failing Club TODO; all 55 O5 checks and 600 visibility seeds pass; typecheck passes. | Repairs resolve the macOS temporary-directory symlink for permission mode and annotate the malformed-input cast. No verifier algorithm repair followed the first frozen source. One isolated input comes from a real O3 SQLite handover. [Ledger][o5] |
-| O6 envelope and route | Focused `c75894b8`: 2/2 plus typecheck and CLI. Combined `f9995e87`: 371 selected tests, 367 pass, zero ordinary failures, four executing Club TODOs; typecheck and CLI exit zero. | Three campaign tests excluded by name, not counted as skips. No bootstrap implementation repair followed. This input predates G1/G2 repairs; its measured success does not close those findings. [Ledger][o6] |
+| O6 envelope and route | Focused `c75894b8`: 2/2 plus typecheck and CLI. Before G1/G2, `f9995e87`: 371 selected, 367 pass, four Club TODOs. Final `19b6d434`: 402 selected, 398 pass, zero ordinary failures, four executing Club TODOs; typecheck and CLI exit zero. | Both combined runs exclude three campaigns by name, not counted as skips. No bootstrap implementation repair followed. Final measurement includes all 122 O4 checks, 55 O5 checks and both O6 checks in one invocation. [Ledger][o6] |
 
 O5 candidate `598170fa5907655bc48c346a2dd4dd98853314a8` contains
 O3 `c527584d5399f20dff33625e20cb97d237bdad98`, O2
@@ -71,7 +71,7 @@ and cold regressions. Initial harness `DataCloneError` failures remain
 identified as setup failures, not successful reproductions. [O1 correction record][o1]
 
 The ratified second review `3d76d2b9` requested two further corrections.
-**G1:** a raw Context can resume stale writes after a Journal closes on memory,
+**G1:** a raw Context could resume stale writes after a Journal closed on memory,
 or remain active after its own lost reply. Wrappers bypass the backend-object
 lease identity. **G2:** O4's former `activation_order` guard permanently
 blocked activation after an intervening non-activate entry. That violated the
@@ -220,7 +220,7 @@ retains every signature, exact envelope byte string, receipt and verified
 view. It was produced in one process with a local SQLite file, without
 external services.
 
-From the measured source's `spike/` directory, reproduce with:
+From final measured source `19b6d434` in its `spike/` directory, reproduce with:
 
 ```sh
 npm ci --ignore-scripts --no-audit --no-fund
@@ -336,7 +336,7 @@ negative results or commissions a new Club privacy experiment.
 O6's earlier integration retained O4's exact Journal bytes when resolving
 a two-blank-line conflict. Its combined source
 `f9995e8761f23bbf0e71f004b29199c05ee35663`
-produces the selected-suite counts above. The CLI's signed output is identical
+produced 371 selected tests, 367 passes and four executing Club TODOs. The CLI's signed output is identical
 to run 1 except for process id and database path. [Combined measurements][o6-run2]
 That source remains evidence before the G1/G2 repairs.
 
@@ -350,9 +350,13 @@ O4's final wrapper `d4decf8f6e1d67f02c711bfb67ff772ecbf069bf` is also
 integrated. Its source `ca2d105d` retains all 76 existing O4 input files and
 passes 55 O5 checks plus typecheck; it repeats neither O4 nor the campaigns.
 No performance patch or additional runtime repair is introduced by O6.
-The final noncampaign suite, typecheck and SQLite CLI are pending at a new
-frozen source. The historical full 600-seed boundary remains O4 `b35b267e`,
-explicitly before G1/G2; it is not a campaign result for the corrected source.
+Final frozen source `19b6d4346fcb13d33e71ee3d2fbdbb780c44ee67`
+passes 398 of 402 selected tests with zero ordinary failures and four retained
+Club TODOs. Typecheck and the real SQLite CLI pass. Signed bootstrap output
+equals run 1 except for PID and database path. [Final measurements][o6-run3]
+Only evidence and this report change afterward. The historical full 600-seed
+boundary remains O4 `b35b267e`, explicitly before G1/G2; it is not a campaign
+result for the corrected source.
 
 [goals]: https://github.com/generalbusiness-ai/dap/blob/598170fa5907655bc48c346a2dd4dd98853314a8/notes/2026-09-14-evolving-spaces-design.md#L80-L107
 [bootstrap]: https://github.com/generalbusiness-ai/dap/blob/598170fa5907655bc48c346a2dd4dd98853314a8/notes/2026-09-14-evolving-spaces-design.md#L537-L573
@@ -362,10 +366,10 @@ explicitly before G1/G2; it is not a campaign result for the corrected source.
 [o3]: https://github.com/generalbusiness-ai/dap/blob/c527584d5399f20dff33625e20cb97d237bdad98/spike/manifests/ordering-o3.ledger.md
 [o5]: https://github.com/generalbusiness-ai/dap/blob/598170fa5907655bc48c346a2dd4dd98853314a8/spike/manifests/ordering-o5.ledger.md
 [profile]: https://github.com/generalbusiness-ai/dap/blob/2b48c4c4484ecd722aa891cd6efa5362121c0f6e/spike/ordering-profile.md
-[o6]: https://github.com/generalbusiness-ai/dap/blob/eca816033530c04379bde487bd3b2b016b1f2045/spike/manifests/ordering-o6.ledger.md
+[o6]: https://github.com/generalbusiness-ai/dap/blob/6aced80b5525d6ba22f2cc42ead0c41795428324/spike/manifests/ordering-o6.ledger.md
 [o6-source]: https://github.com/generalbusiness-ai/dap/blob/c75894b8312b9046ac5975b4cda1c67149ed850d/spike/test/fixtures/o6-bootstrap.ts
 [o6-tests]: https://github.com/generalbusiness-ai/dap/blob/c75894b8312b9046ac5975b4cda1c67149ed850d/spike/test/ordering-bootstrap.test.ts
-[o6-demo]: https://github.com/generalbusiness-ai/dap/blob/eca816033530c04379bde487bd3b2b016b1f2045/spike/manifests/ordering-o6-runs/run-2-demo.json
+[o6-demo]: https://github.com/generalbusiness-ai/dap/blob/6aced80b5525d6ba22f2cc42ead0c41795428324/spike/manifests/ordering-o6-runs/run-3-demo.json
 [visibility]: https://github.com/generalbusiness-ai/dap/blob/d95e097b1d38a5242754922fe4c8b977462f5555/spike/REPORT.md
 [o4]: https://github.com/generalbusiness-ai/dap/blob/d4decf8f6e1d67f02c711bfb67ff772ecbf069bf/spike/manifests/ordering-o4.ledger.md
 [o4-results]: https://github.com/generalbusiness-ai/dap/tree/2b48c4c4484ecd722aa891cd6efa5362121c0f6e/spike/manifests/ordering-o4-runs/run-5-observations
@@ -375,3 +379,4 @@ explicitly before G1/G2; it is not a campaign result for the corrected source.
 [o4-replay]: https://github.com/generalbusiness-ai/dap/blob/4ea7d966cc44fc2641e4f99516403bb46d50ba7f/spike/manifests/ordering-o4-runs/run-4.json
 [o6-run2]: https://github.com/generalbusiness-ai/dap/blob/eca816033530c04379bde487bd3b2b016b1f2045/spike/manifests/ordering-o6-runs/run-2.json
 [o4-run5]: https://github.com/generalbusiness-ai/dap/blob/2b48c4c4484ecd722aa891cd6efa5362121c0f6e/spike/manifests/ordering-o4-runs/run-5.json
+[o6-run3]: https://github.com/generalbusiness-ai/dap/blob/6aced80b5525d6ba22f2cc42ead0c41795428324/spike/manifests/ordering-o6-runs/run-3.json
