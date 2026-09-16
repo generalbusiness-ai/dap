@@ -85,3 +85,35 @@ Whitespace checks pass for O2's source and edited prose. Raw Node output is
 preserved, including whitespace-only lines in the retained Club TODO stack
 trace; no claim is made that historical corpora or raw logs pass a whole-tree
 whitespace check. Independent review remains the completion gate.
+
+
+## First combined O2/O3/O5 candidate
+
+The first integration on `request/ordering-o2-o3-o5` incorporates corrected
+O1/V6 candidate `4cfc69376fbd513c4cacf5baa0d32c316797cf89`, retaining this
+O2 request, implementation and historical evidence. Its common source,
+merge resolution and focused verification are recorded in
+[the integration ledger](ordering-integration.ledger.md). This ledger remains
+the O2 reporting artifact at that same candidate head. Component review
+approvals and an additional 600-seed run are not claimed.
+
+
+The common frozen source `671400d8d44b661084918a2a70edb917662ec51e`
+passed all 138 focused integration checks and typecheck. The exact output and
+scope are in the linked integration record. The final common candidate adds
+only evidence after that run; no subsequent source or test repair occurred.
+
+
+## O1 G1/G2 integration
+
+The common branch now includes final O1 candidate
+`aaa447d9e5ac4d88f07f144d46f2f5e63752c399`, retaining this O2 request,
+implementation and original measurements. Frozen combined source
+`2a57bd2ab0b1e30912f1e2bc044951d71477c5cc` passed all **149 focused integration tests** and typecheck,
+including the new Context freshness cases and lifecycle manifest
+`sha256:d94090b21ce42f2eec4a046558b3a776895d82905c2096a19df1f5f02e011f86`.
+The exact commands, component scope and outputs are linked from
+[focused integration run 2](ordering-integration.ledger.md#focused-integration-run-2).
+Only evidence records follow that measurement. No additional 600-seed run or
+component review approval is claimed; this ledger remains the O2
+reporting artifact at the common candidate head.
