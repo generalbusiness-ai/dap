@@ -361,6 +361,12 @@ export function foldEntry(state: FoundationState, input: FoldInput): Verdict {
         verdict = { known: true, authorized: false, effective: false, reason: 'fold_error:' + (e instanceof Error ? e.message : String(e)) };
         audience = named(ev.actor);
       }
+      // An effective ambient fact is folded by every model that opted in; the system verdict
+      // stands, and each model's own outcome is recorded beside it.
+      if (ev.kind === K.observe && verdict.effective) {
+        const ambient = state.env.packages.flatMap((p) => Object.values(p.models).filter((m) => m.ambient).map((m) => m.id));
+        if (ambient.length) verdict = { ...verdict, perModel: dispatch(state, entry, ambient, false).perModel };
+      }
     }
   } else {
     // Handlers receive cloned inputs. Keep the original values until the
@@ -368,6 +374,16 @@ export function foldEntry(state: FoundationState, input: FoldInput): Verdict {
     modelsBefore = { ...state.models };
     verdict = foldApplication(state, entry);
   }
+
+  // Possessing a credential permits recording an attempt, not publishing
+  // a private payload under a capability the actor lacks. Application
+  // kinds and ambient observations keep such attempts actor-only. Check
+  // the actual grant separately: stale/closed can precede authorization
+  // in the verdict, and authorized semantic refusals remain public.
+  const publicationCapability = !origin && pos !== 0
+    ? ev.kind === K.observe ? CAP.observe : !ev.kind.startsWith(SYSTEM_PREFIX) ? state.env.kinds[ev.kind]?.capability : undefined
+    : undefined;
+  if (publicationCapability && !heldAt(state, ev.actor, publicationCapability, pos)) audience = named(ev.actor);
 
   // Audience is set at the position under the rule active before it.
   if (!audience) {
@@ -592,7 +608,7 @@ function dispatch(state: FoundationState, entry: Entry, handlers: string[], orig
   const ev = entry.event;
   const perModel: Verdict['perModel'] = {};
   let anyEffective = false;
-  const ctx = { position: entry.position, members: [...state.participants], origin };
+  const ctx = { position: entry.position, id: entry.id, members: [...state.participants], origin };
   for (const modelId of handlers) {
     const model = findModel(state.env, modelId);
     if (!model) {

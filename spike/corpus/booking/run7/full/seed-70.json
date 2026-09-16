@@ -1,0 +1,612 @@
+{
+  "seed": 70,
+  "manifest": "sha256:3076d3854901ddeb6b0d5cc379646bb182f89bd61882d648fc9051dfae7d788f",
+  "package": "sha256:622a120962da35c370b093161848677fe086a5d1fa729655fc3ce2ced855bc9b",
+  "snapshot": "spike V4: checker run 7 snapshot: preserve public actor and payload leaks",
+  "genesisNonce": "genesis:70",
+  "steps": [
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "clock",
+      "grants": {
+        "capabilities": [
+          "ai.generalbusiness.dap.observe"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "clock"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "none",
+        "room": "room-1",
+        "start": 0,
+        "end": 1
+      },
+      "nonce": "n:7c78372efbf741d8"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "none",
+        "room": "room-1",
+        "start": 0,
+        "end": 1
+      },
+      "nonce": "n:9de01ec7f9fda3df"
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "ai.generalbusiness.dap.observe",
+      "payload": {
+        "fact": {
+          "clock": 1
+        }
+      },
+      "nonce": "n:529d560cca4b5e20"
+    },
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "bob",
+      "grants": {
+        "roles": [
+          "Booker"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "bob"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "none",
+        "room": "room-1",
+        "start": 0,
+        "end": 1
+      },
+      "nonce": "n:b24f65aa263dab28"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "none",
+        "room": "room-1",
+        "start": 0,
+        "end": 1
+      },
+      "nonce": "n:0fefcc2c3fbae519"
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 37,
+        "end": 40,
+        "purpose": "purpose 6",
+        "admin": "alice"
+      },
+      "nonce": "n:ebd5fcc7357318da"
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "ai.generalbusiness.dap.observe",
+      "payload": {
+        "fact": {
+          "clock": 3
+        }
+      },
+      "nonce": "n:1880030213639672"
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "ai.generalbusiness.dap.observe",
+      "payload": {
+        "fact": {
+          "clock": 6
+        }
+      },
+      "nonce": "n:5d47c9b78b1a3062"
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "ai.generalbusiness.dap.observe",
+      "payload": {
+        "fact": {
+          "clock": 9
+        }
+      },
+      "nonce": "n:d7ca8d64c3e5ee2f"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.free",
+      "payload": {
+        "booking_id": "none"
+      },
+      "nonce": "n:1389d369b3e3df93"
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "ai.generalbusiness.dap.observe",
+      "payload": {
+        "fact": {
+          "clock": 10
+        }
+      },
+      "nonce": "n:7c5e68a7d85bfd3a"
+    },
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "carol",
+      "grants": {
+        "roles": [
+          "Booker"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "carol"
+    },
+    {
+      "type": "act",
+      "actor": "carol",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 7,
+        "end": 8,
+        "purpose": "purpose 13",
+        "admin": "alice"
+      },
+      "nonce": "n:38e6779b83585105"
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "ai.generalbusiness.dap.observe",
+      "payload": {
+        "fact": {
+          "clock": 13
+        }
+      },
+      "nonce": "n:2b03d823b09cf667"
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 5,
+        "end": 7,
+        "purpose": "purpose 15",
+        "admin": "alice"
+      },
+      "nonce": "n:71150c4dbeb1875d"
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 2,
+        "end": 7,
+        "purpose": "purpose 16",
+        "admin": "alice"
+      },
+      "nonce": "n:32d4ae0a322f1de7"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "sha256:b95243ba9dfc89fb144c1a9655904de92c8fff5d2777ec256f4a0eb089fd1299",
+        "room": "room-1",
+        "start": 5,
+        "end": 7
+      },
+      "nonce": "n:11f78130792a05f2"
+    },
+    {
+      "type": "act",
+      "actor": "carol",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 12,
+        "end": 15,
+        "purpose": "purpose 18",
+        "admin": "alice"
+      },
+      "nonce": "n:705dad78ae7840f8"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.free",
+      "payload": {
+        "booking_id": "sha256:b95243ba9dfc89fb144c1a9655904de92c8fff5d2777ec256f4a0eb089fd1299"
+      },
+      "nonce": "n:848b2ce8a75771fe"
+    },
+    {
+      "type": "act",
+      "actor": "carol",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 24,
+        "end": 27,
+        "purpose": "purpose 20",
+        "admin": "alice"
+      },
+      "nonce": "n:7cff734c0f3fb4e0"
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.cancel_request",
+      "payload": {
+        "booking_id": "sha256:b95243ba9dfc89fb144c1a9655904de92c8fff5d2777ec256f4a0eb089fd1299",
+        "admin": "alice"
+      },
+      "nonce": "n:9efa64f98a68f626"
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "ai.generalbusiness.dap.observe",
+      "payload": {
+        "fact": {
+          "clock": 15
+        }
+      },
+      "nonce": "n:d9d85024b1535270"
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 2,
+        "end": 3,
+        "purpose": "purpose 23",
+        "admin": "alice"
+      },
+      "nonce": "n:69b82f6a6da4cc10"
+    },
+    {
+      "type": "act",
+      "actor": "carol",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 19,
+        "end": 25,
+        "purpose": "purpose 24",
+        "admin": "alice"
+      },
+      "nonce": "n:bf704d92702eb4b0"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "sha256:b1888dd99117f6bcfd648c5a07e07c5a8ffb85b6e1c98ecf99a2e0748b4cead4",
+        "room": "room-1",
+        "start": 24,
+        "end": 27
+      },
+      "nonce": "n:a1560e75a568fe4f"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "sha256:580f27174f525c18bd36d20c7586dfc5fa2298a250d7733a5e99fd80d40fcaf0",
+        "room": "room-1",
+        "start": 19,
+        "end": 25
+      },
+      "nonce": "n:0432c69cc363ca40"
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "ai.generalbusiness.dap.observe",
+      "payload": {
+        "fact": {
+          "clock": 17
+        }
+      },
+      "nonce": "n:4f34c35fc8cd9e21"
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 24,
+        "end": 27,
+        "purpose": "purpose 28",
+        "admin": "alice"
+      },
+      "nonce": "n:380b888954ba32ca"
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 34,
+        "end": 35,
+        "purpose": "purpose 29",
+        "admin": "alice"
+      },
+      "nonce": "n:4dd730fa8fab0a87"
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        4
+      ],
+      "to": [
+        "carol"
+      ]
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "ai.generalbusiness.dap.observe",
+      "payload": {
+        "fact": {
+          "clock": 20
+        }
+      },
+      "nonce": "n:ab6cbc1a6e7d6709"
+    },
+    {
+      "type": "attach",
+      "actor": "alice",
+      "pkg": "com.example.side",
+      "audience": []
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 6,
+        "end": 7,
+        "purpose": "purpose 33",
+        "admin": "alice"
+      },
+      "nonce": "n:8e00f65a8f5775f1"
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        38
+      ],
+      "to": [
+        "carol"
+      ]
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.side.note",
+      "payload": {
+        "text": "note 35"
+      },
+      "nonce": "n:d3ae6f069f4529d4"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "sha256:1f34859eafd70c6aab436a88102c2e12cea823a10648fabb3a61369061a0af9b",
+        "room": "room-1",
+        "start": 34,
+        "end": 35
+      },
+      "nonce": "n:12eec5237c438736"
+    },
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "dana",
+      "grants": {
+        "roles": [
+          "Booker"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "dana"
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 0,
+        "end": 1,
+        "purpose": "purpose 38",
+        "admin": "alice"
+      },
+      "nonce": "n:b44658a272f19cfc"
+    },
+    {
+      "type": "act",
+      "actor": "dana",
+      "kind": "com.example.booking.cancel_request",
+      "payload": {
+        "booking_id": "none",
+        "admin": "alice"
+      },
+      "nonce": "n:d826d3bb7a764d34"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "sha256:a46451cfc6eb5317845b76215bb5ca9ebdf50a3abaed1b596dd109a01db3ad76",
+        "room": "room-1",
+        "start": 2,
+        "end": 7
+      },
+      "nonce": "n:f2db7e077041fd94"
+    },
+    {
+      "type": "act",
+      "actor": "carol",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 16,
+        "end": 18,
+        "purpose": "purpose 41",
+        "admin": "alice"
+      },
+      "nonce": "n:b0416290c4968557"
+    },
+    {
+      "type": "act",
+      "actor": "clock",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 35,
+        "end": 38,
+        "purpose": "purpose 42",
+        "admin": "alice"
+      },
+      "nonce": "n:8a134cb6d12893d3"
+    },
+    {
+      "type": "act",
+      "actor": "dana",
+      "kind": "com.example.booking.request",
+      "payload": {
+        "room": "room-1",
+        "start": 14,
+        "end": 18,
+        "purpose": "purpose 43",
+        "admin": "alice"
+      },
+      "nonce": "n:06153d03138f52e7"
+    },
+    {
+      "type": "act",
+      "actor": "carol",
+      "kind": "com.example.side.note",
+      "payload": {
+        "text": "note 44"
+      },
+      "nonce": "n:528e8770e3b3678a"
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.booking.cancel_request",
+      "payload": {
+        "booking_id": "sha256:2101d7c442717f62329e37e3969ba72558971b41aa9b8803c22979225435e547",
+        "admin": "alice"
+      },
+      "nonce": "n:94a82d1b71369f60"
+    },
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "erin",
+      "grants": {
+        "roles": [
+          "Booker"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "erin"
+    },
+    {
+      "type": "act",
+      "actor": "dana",
+      "kind": "com.example.booking.occupancy",
+      "payload": {
+        "booking_id": "sha256:0ac75b781c155ed078c14d36506cd1987b213bbce759499c2132772a9a18a16f",
+        "room": "room-1",
+        "start": 37,
+        "end": 40
+      },
+      "nonce": "n:f2eed7f80cd4034b"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.side.note",
+      "payload": {
+        "text": "note 48"
+      },
+      "nonce": "n:ee2ba57bb1861b78"
+    }
+  ],
+  "violations": [
+    "clock@58 budget: clock can read public com.example.booking.occupancy at 58 signed by booker dana, linking booking id sha256:0ac75b781c155ed078c14d36506cd1987b213bbce759499c2132772a9a18a16f",
+    "clock@58 budget: clock can link public com.example.booking.occupancy at 58 to booker dana through booking id sha256:0ac75b781c155ed078c14d36506cd1987b213bbce759499c2132772a9a18a16f",
+    "bob@58 budget: bob can read public com.example.booking.occupancy at 58 signed by booker dana, linking booking id sha256:0ac75b781c155ed078c14d36506cd1987b213bbce759499c2132772a9a18a16f",
+    "bob@58 budget: bob can link public com.example.booking.occupancy at 58 to booker dana through booking id sha256:0ac75b781c155ed078c14d36506cd1987b213bbce759499c2132772a9a18a16f",
+    "carol@58 budget: carol can read public com.example.booking.occupancy at 58 signed by booker dana, linking booking id sha256:0ac75b781c155ed078c14d36506cd1987b213bbce759499c2132772a9a18a16f",
+    "carol@58 budget: carol can link public com.example.booking.occupancy at 58 to booker dana through booking id sha256:0ac75b781c155ed078c14d36506cd1987b213bbce759499c2132772a9a18a16f",
+    "erin@58 budget: erin can read public com.example.booking.occupancy at 58 signed by booker dana, linking booking id sha256:0ac75b781c155ed078c14d36506cd1987b213bbce759499c2132772a9a18a16f",
+    "erin@58 budget: erin can link public com.example.booking.occupancy at 58 to booker dana through booking id sha256:0ac75b781c155ed078c14d36506cd1987b213bbce759499c2132772a9a18a16f",
+    "clock@59 budget: clock can read public com.example.booking.occupancy at 58 signed by booker dana, linking booking id sha256:0ac75b781c155ed078c14d36506cd1987b213bbce759499c2132772a9a18a16f",
+    "clock@59 budget: clock can link public com.example.booking.occupancy at 58 to booker dana through booking id sha256:0ac75b781c155ed078c14d36506cd1987b213bbce759499c2132772a9a18a16f",
+    "bob@59 budget: bob can read public com.example.booking.occupancy at 58 signed by booker dana, linking booking id sha256:0ac75b781c155ed078c14d36506cd1987b213bbce759499c2132772a9a18a16f",
+    "bob@59 budget: bob can link public com.example.booking.occupancy at 58 to booker dana through booking id sha256:0ac75b781c155ed078c14d36506cd1987b213bbce759499c2132772a9a18a16f",
+    "carol@59 budget: carol can read public com.example.booking.occupancy at 58 signed by booker dana, linking booking id sha256:0ac75b781c155ed078c14d36506cd1987b213bbce759499c2132772a9a18a16f",
+    "carol@59 budget: carol can link public com.example.booking.occupancy at 58 to booker dana through booking id sha256:0ac75b781c155ed078c14d36506cd1987b213bbce759499c2132772a9a18a16f",
+    "erin@59 budget: erin can read public com.example.booking.occupancy at 58 signed by booker dana, linking booking id sha256:0ac75b781c155ed078c14d36506cd1987b213bbce759499c2132772a9a18a16f",
+    "erin@59 budget: erin can link public com.example.booking.occupancy at 58 to booker dana through booking id sha256:0ac75b781c155ed078c14d36506cd1987b213bbce759499c2132772a9a18a16f"
+  ]
+}

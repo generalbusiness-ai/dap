@@ -1,0 +1,371 @@
+# Repair ledger: Booking
+
+Spike plan §4.3. The baseline is the agent's first draft, committed before
+any checker run. A fix is one semantic change after the baseline to the
+model's audience rule, kind set, dependency declaration or fold rule,
+whoever found the need. One snapshot commit per checker run. The manifest
+and the package are cited by content id at each run.
+
+Author: a fresh general-purpose agent (Claude), given design note §§1 to 4
+and §8, the views note, spike plan §4.1, the harness README and types,
+the Discussion and Sale examples with Sale's ledger, and the frozen
+manifest; no test, checker or oracle access before the baseline. About
+ten tool turns to the baseline, one write and one edit.
+
+## Baseline
+
+Commit "spike V4: Booking baseline, authored by an agent from the manifest
+(§4.5)". Manifest
+`sha256:8dc4524c99d2e7c17d1bdd7c12fa2679db83596a3176e580cc298a0f10b82bf3`,
+package `sha256:2377b1c0dff725e4cd599cf8680729fb066d81d395d1fb6b608b1ff397964790`.
+
+Design choices the author recorded before any run: a join disclosure of
+occupancies, frees and clock ticks declared in the baseline
+(`config.joinDisclosure`), with the Sale ledger's late-joiner finding as
+the stated reason; the clock included so a disclosed occupancy does not
+look unexpired to a newcomer; `now` as the maximum tick folded; an
+unknown request id on a cancel read as `not_booker` because a reader who
+cannot see a request is not its booker; `freed` over `expired` over
+`active`; requests projected only to their booker and the admin they
+name. The author's own predictions of failure: a cancel naming a
+different admin than its request; a second cancel whose first the
+reader cannot see; requests addressed to a non-admin; join disclosure
+widening a narrowed observation. The explicit `admin` payload fields on
+request and cancel are additions in the frozen Booking manifest, not
+fields prescribed by the plan's §4.1 schema.
+
+## Run 1
+
+Snapshot commit: see `git log`, "checker run 1". Manifest and package as
+at the baseline.
+
+All six predeclared cases pass (two requests for one slot, free exactly
+one, duplicate publication, only the admin publishes, expiry, the
+cross-view case from checker's review 05048fbb). The campaign passes:
+200 of 200 seeds with zero violations of the property, the pause rule,
+the invariants and the privacy budget, exactly 12000 entries with 974
+joins, 197 narrow side attaches, 1646 disclosures, 2564 requests, 1425
+publications (653 effective), 401 frees, 439 cancels and 1581 clock
+ticks.
+
+The privacy budget of this run is the frozen manifest's: it checks the
+projection only. Checker's V3 review (report 8c0d324b, V3-F1) showed
+that a projection-only check misses private payloads a participant can
+read after a disclosure. The harness already supplied the participant's
+readable view before Booking's freeze (V3 run 3, `498f258`); Booking's
+manifest guard did not use it until the next run. That amendment changes the manifest
+identity and is recorded there as a revised experiment.
+
+## Run 2
+
+Snapshot commit: see `git log`, "checker run 2". Manifest revised: the
+budget is now checked on what a participant can read (checker's V3-F1,
+report 8c0d324b), manifest id
+`sha256:771a9cb82aff7b03bf50b55b490e35710da3e3072bd8877a7b79a13100bfc3f7`
+(run 1 ran under `sha256:8dc4524c99d2e7c17d1bdd7c12fa2679db83596a3176e580cc298a0f10b82bf3`);
+package unchanged from the baseline.
+
+All six predeclared cases still pass. The campaign fails **139 of 200
+seeds**, every violation a budget one: a request (3413 occurrences) or a
+cancel (443) readable by a member who is neither its booker nor the
+admin, because the fixture's disclosing client (the generator, acting as
+the admin's client) discloses random earlier positions to members. The
+model cannot stop a client from disclosing; whether to declare a
+disclosure policy for the fixture's client to honour is the author's
+decision and is counted if made.
+
+## Run 3
+
+Snapshot commit: see `git log`, "checker run 3". Manifest as at run 2;
+package after fix 1:
+`sha256:622a120962da35c370b093161848677fe086a5d1fa729655fc3ce2ced855bc9b`.
+
+All six predeclared cases pass. The campaign passes: 200 of 200 seeds
+with zero violations of the property, the pause rule, the invariants and
+the privacy budget, exactly 12000 entries with 974 joins, 197 narrow side
+attaches, 1638 disclosures, 2569 requests, 1426 publications (654
+effective), 401 frees, 439 cancels and 1582 clock ticks.
+
+## Run 4
+
+Snapshot commit: see `git log`, "checker run 4". Harness corrected, not a
+model fix: a generated series now replays to identical content ids (the
+generator's captured request ids had not survived replay, so generated
+cancels and occupancies named requests that never existed in the
+replayed series; found by the Club run 1 campaign). Manifest and package
+as at run 3.
+
+The seeded per-act nonces in `3b4f727` consume two extra values from
+the generator's random stream per act. This changes the choices in all
+200 Sale seeds as well as fixing replay ids (checker V4-F4); seed 1 first
+diverges at step 6. Earlier ledgers' seed references, including Sale's
+7, 72, 96 and the run-1 list, reproduce only with their snapshot's
+generator. The committed literal corpora are unaffected. Sale must be
+revalidated with the current generator; its coverage is recorded in the
+V4 correction run below.
+
+All six predeclared cases pass. The campaign passes: 200 of 200 seeds
+with zero violations under that guard, with 325 effective cancels of
+real requests (run 3 had none) and 472 effective occupancies naming an
+earlier effective request. The earlier figures 323 and 489 were
+unsupported and are corrected here: checker reproduced 325 and 472 at
+`d9dee03` itself (V4-F3), matching run 6. No cause for the incorrect
+figures is established. The run-3 result stands; its coverage
+claim for cancels and published requests was vacuous and is corrected
+here.
+
+## Run 5: recover the missing run-2 counterexamples
+
+Snapshot commit: "spike V4: checker run 5 snapshot: recover the run-2
+privacy corpus". Manifest as at run 2; the current model's package remains
+`sha256:622a120962da35c370b093161848677fe086a5d1fa729655fc3ce2ced855bc9b`.
+No model change or new fix.
+
+Completion inspection found that run 2's 139 failing series had not been
+shrunk and committed as spike plan §4.4 requires. The recovery command,
+`node scripts/booking-shrink.ts`, uses the model and generator from
+`7b24e86`, with their import paths adjusted, and the current replay
+boundary. It checks all 200 historical seeds and again finds exactly
+139 failures, all in the readable-events privacy budget. Every failing
+seed now has a committed deletion-minimal counterexample, between 6 and
+48 steps, under `corpus/booking/run2/`; `seeds.txt` lists them. The kept
+model's package id is
+`sha256:549a096cc173ba654ee18150789c2a68ae1401ea12fd5d8a2f8571a52b9ef877`.
+
+These are recovered traces, not the original event bytes: the original
+random nonces were not retained, and run 2 predates the replay-id repair
+recorded in run 4. The retained violation is independent of request ids:
+a participant can read another booker's private request or cancel. The
+preserved generator keeps run 2's seeded choices instead of using the
+later generator, which consumes extra random values for nonces. The
+corpus README records this limit and how to reproduce the recovery.
+
+Fix 1 constrains the fixture's disclosing client. Replaying a literal
+private disclosure still violates the privacy budget under the current
+model; that is expected and is checked separately from the repaired
+generator's campaign. The existing campaign now also counts and requires
+effective cancels and occupancies linked to real requests, to prevent the
+coverage gap recorded in run 4 from returning unnoticed.
+
+## Run 6: final V4 validation
+
+Snapshot commit: "spike V4: checker run 6 snapshot: validate the recovered
+corpus and current campaign". Manifest
+`sha256:771a9cb82aff7b03bf50b55b490e35710da3e3072bd8877a7b79a13100bfc3f7`,
+current package
+`sha256:622a120962da35c370b093161848677fe086a5d1fa729655fc3ce2ced855bc9b`.
+No model change or new fix.
+
+`node --test test/booking.test.ts test/booking-corpus.test.ts` passes all
+10 tests: the six predeclared cases, the 200-seed campaign, manifest and
+ledger checks, and the recovered corpus. All 139 recovered failures
+still produce a privacy-budget violation under the kept run-2 model,
+and no one-step deletion preserves their readable-events privacy
+failure. Literal private disclosures still violate the current model's
+budget, as expected for the client policy in fix 1.
+
+The current campaign has zero violations exactly 12000 entries: 955 joins,
+198 narrow attaches, 1629 disclosures, 2554 requests, 1496 publications
+(652 effective), 384 frees, 419 cancels (325 effective) and 1630 ticks.
+Of the effective occupancies, 472 name an earlier effective request.
+These two linkage measures are now produced and required by the
+committed campaign test. Checker subsequently reproduced the same counts
+at run 4's exact snapshot; run 4's unsupported figures have been
+corrected above. The earlier description of them as historical
+measurements was incorrect.
+
+`npm run typecheck` and `git diff --check` pass. A separate generation
+and replay check over all 200 seeds confirms that two independent
+generations produce identical event ids at every position. The preserved
+run-2 model and generator were also compared with `7b24e86`: only their
+import paths differ.
+
+## Run 7: the corrected public-event guard, before repair
+
+Snapshot commit: "spike V4: checker run 7 snapshot: preserve public actor
+and payload leaks". Checker report `5014a7f1` (V4-F1/F2) exposed a gap in
+the readable-events guard. It checked private requests and cancels, but
+not the actors, linked booking ids or extra private fields of readable
+occupancies, frees and observations. Earlier zero-violation claims are
+limited to the earlier guard; they did not establish the stated booker
+budget. The amended manifest is a new experiment identity:
+`sha256:3076d3854901ddeb6b0d5cc379646bb182f89bd61882d648fc9051dfae7d788f`.
+The model remains unchanged:
+`sha256:622a120962da35c370b093161848677fe086a5d1fa729655fc3ce2ced855bc9b`.
+
+`node scripts/booking-public-campaign.ts` checks all 200 seeds before
+repair and finds **99 failing seeds**, all privacy-budget failures.
+Every failing series is retained in full and shrunk under
+`corpus/booking/run7/`; `seeds.txt` gives the exact list. This includes
+unauthorized Booker-signed observations as well as occupancy/free
+attempts. Seed 1 position 50 exposes Carol's actor and the content id of
+her own earlier effective request to other bookers. The full record
+preserves that linkage even when shrinking removes the private request.
+
+The four focused F1/F2 tests pass as detection tests: the seed-1 leak,
+and an authorized occupancy, free and clock observation each carrying
+extra `booker` and `purpose` fields. All three hostile publications remain
+effective and readable to Carol, and the corrected guard reports them.
+No schema enforcement or admission repair is claimed for such hostile
+clients. `npm run typecheck` passes.
+
+The previous run-2 budget is kept in `corpus/booking/run2/budget.ts` so
+its historical corpus is not silently assigned the amended semantics.
+The fixes remain 1 and 0 added kinds at this pre-repair snapshot.
+
+## Run 8: foundation and client repair, integration check
+
+Snapshot commit: "spike V4: checker run 8 snapshot: authorization repair
+and integration findings". Manifest remains
+`sha256:3076d3854901ddeb6b0d5cc379646bb182f89bd61882d648fc9051dfae7d788f`;
+package after fix 2:
+`sha256:0556de5c337344eaa15afcbbbf5d22aa82c384bd6841d4ffb0c07185d4b7ec27`.
+
+`npm test` passes 102 of 104 tests. Booking's complete 200-seed campaign
+passes with zero violations, over 12000 entries: 955 joins, 198 narrow
+attaches, 1627 disclosures, 2555 requests, 1496 publications (652
+effective, 472 linked to earlier effective requests), 385 frees, 419
+cancels (325 effective), and 1630 clock ticks. All Booking cases,
+including the F1 repair and the three detected hostile F2 publications,
+pass. `npm run typecheck` and `git diff --check` pass.
+
+The Sale campaign also passes all 200 seeds with zero violations under
+the merged V3 fix-7 model: 11047 entries, 942 joins, 199 narrow attaches,
+1722 disclosures, 195 offers, 25 replacements, 147 withdrawals, 157
+counters, 114 accepts (20 effective), 295 closes, zero private
+disclosures, zero Inspection attaches, and 118 unbound Inspection
+requests. This is the current-generator coverage required by V4-F4;
+earlier Sale seed references still require their snapshot's generator.
+
+The two failures are expected-audience assumptions in Sale's tests,
+not campaign violations: the kept run-6 model's seed 112 no longer
+discloses an unauthorized counter under the repaired foundation, and
+the fix-7 test still expects Alice to read Bob's unauthorized counter.
+These tests need to distinguish the historical foundation from the
+current actor-only authorization rule. Their original historical
+failure remains reproducible at V3 snapshot `009b522`; this does not
+change V3's reviewed ledger.
+
+Inspection also found that the amended public-payload guard must not
+exempt a reader merely because a payload claims `booker` equals that
+reader. The next manifest revision removes that exemption and retains
+spoofed and nested payload cases before the final check.
+
+## Run 9: corrected guard and passing integration validation
+
+Snapshot commit: "spike V4: checker run 9 snapshot: validate privacy
+repairs and cross-model effects". The public-payload guard no longer
+trusts a payload's claimed `booker` as an exemption, so the manifest is
+revised again:
+`sha256:cb4514f4967891077ad78e1dd0fba4c17438fb32b98cd8bd790df8531b35dd16`.
+The package is unchanged from run 8:
+`sha256:0556de5c337344eaa15afcbbbf5d22aa82c384bd6841d4ffb0c07185d4b7ec27`.
+There is no further model fix.
+
+`npm test` passes all **110 tests**. Both 200-seed campaigns again have
+zero violations and reproduce every coverage count listed in run 8.
+Booking covers 12000 entries, 325 effective cancels and 472 effective
+occupancies linked to earlier effective requests. The nine F2 tests
+cover ordinary, spoofed-party and nested private fields through each of
+occupancy, free and observation. They assert detected violations, not
+safe publication by hostile clients. The seed-1 regression verifies
+actor-only initial delivery and detects an explicit hostile
+redisclosure. The authority regression covers grants, revocation,
+authorized overlap/duplicate refusal, stale binding, closure, unchanged
+spine audiences and required public history for a late joiner.
+
+Sale is checked with manifest
+`sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9`
+and package
+`sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85`.
+Its 11047-entry campaign and corpus pass. The corpus test now explicitly
+distinguishes six unauthorized historical counter leaks, already
+prevented by the current foundation, from three authorized historical
+leaks still found under the kept model. All nine are clean with the
+current Sale model. Complete historical reproduction remains at
+`009b5226bd77b9f9d5e7ccad70b39867ef3d1a41`, as the corpus README explains;
+the V3 ledger and original records are unchanged.
+
+`npm run typecheck` and `git diff --check` pass. The two model fixes and
+the separate foundation correction are the complete repair record.
+F2's hostile-client publication limit and the different-admin cancel
+limit remain explicit; passing the generated campaigns is not a claim
+that every possible client preserves privacy.
+
+## Fixes
+
+### Fix 1: a disclosure policy naming the public kinds
+
+- Discovery source: checker run 2, readable-events budget, after
+  checker's V3-F1
+- Counterexample: seed 1, erin, position 31: Erin can read Dana's
+  request (parties dana+alice) from frontier 57 on, after the fixture's
+  disclosing client, acting as the admin's client, disclosed that
+  position to her. Also seed 3, bob, position 40: Bob can read Erin's
+  cancel. Every run-2 failure has this shape; the property, the pause
+  rule and the invariants held throughout.
+- Constraint affected: none (no overlap is untouched); the privacy
+  budget for purpose and booker
+- Added kind: no
+- Before/after: before, the model declared nothing about disclosure, so
+  the fixture's client could widen any earlier position to any member,
+  including a request or a cancel, whose payloads carry the booker and
+  the purpose. After, the model declares `config.disclosurePolicy`: a
+  client may disclose `booking.occupancy`, `booking.free`, the clock
+  observation `dap.observe` and `dap.attach` beyond their audience, and
+  nothing else. Occupancies, frees and ticks are the public facts the
+  join disclosure already relies on; an attach is part of any
+  disclosure's dependency closure (design note §8). Requests and
+  cancels are forbidden: their readers are fixed at the booker and the
+  admin by the budget. The fixture's disclosing client honours the
+  declaration (`disclosableKinds` in `src/script.ts`); the checker still
+  judges what is readable, so a client that ignored the policy would
+  still be caught. The fold and the projection are unchanged. Discloses
+  nothing more; it narrows what a client may widen.
+
+Known limit of the predeclared schema, not counted: a cancel's readers
+are its actor and the admin the cancel names; the request it cancels is
+readable by its booker and the admin the request names. If a booker
+named different admins in the two events, the cancel's admin would read
+the cancel without the request and judge `not_booker` where the oracle
+judges effective (and likewise `already_cancelled` for a second cancel
+whose first that admin cannot read). No fold rule closes this at no
+cost, because that reader holds no evidence of the request; the only
+repairs are a rule the reader cannot check (refuse a cancel whose admin
+differs from the request's, which the same reader cannot see) or a
+change to the predeclared audience rule. The generator always names the
+real admin, so the campaign does not exercise it, and the model leaves
+the rule as written.
+
+### Fix 2: disclose only authorized public-kind events
+
+- Discovery source: checker report `5014a7f1`, V4-F1, and the 99 failing
+  seeds retained in run 7 at `7ffa50814ec558781feeeae09b36ff8f089c2fb4`
+- Counterexample: seed 1 position 50 publicly exposes Carol and her
+  request id; an explicit disclosure can expose the same attempt even
+  after its initial audience is narrowed by the foundation repair
+- Constraint affected: none; the booker privacy budget
+- Added kind: no
+- Before/after: before, the fixture's disclosing client could widen any
+  occupancy, free or observation because it checked only the kind. After,
+  `config.disclosurePolicy.authorizedOnly` also requires the recorded
+  verdict's `authorized` flag. Authorized overlap and duplicate refusals
+  remain eligible. Stale and closed verdicts do not establish that flag
+  and are conservatively excluded from client disclosure. The existing
+  effective public-fact backlog is unchanged, so required occupancy,
+  free and clock history still reaches late joiners. The generator still
+  emits ineffective attempts and uses every declared seed. Its client
+  consults the model's policy; the checker independently judges all
+  readable events. This is a counted model-policy change.
+
+The accompanying foundation repair is recorded separately from model
+fixes. A bound application event or `dap.observe` is actor-only when its
+actor lacks the required capability at that position. This checks the
+spine grant history directly, including when `stale_binding` or `closed`
+is the earlier verdict reason. An actor who holds the capability keeps
+the declared audience for those refusals and for overlap/duplicate
+refusals. Origins and other system kinds, including spine events, keep
+their existing rules. No authorized private-field publication is made
+safe by this change; the F2 hostile cases remain detected violations.
+
+Totals: 2 fixes, 0 added kinds, budget within

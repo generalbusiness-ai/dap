@@ -34,6 +34,8 @@ export interface ContextOptions {
   route?: string;
   backend?: Backend;
   maxPayloadBytes?: number;
+  /** the genesis event's nonce; a script sets it so the context, and every id within it, replays identically */
+  nonce?: string;
 }
 
 export interface ViewEntry {
@@ -75,7 +77,7 @@ export class Context {
       referents: opts.referents ?? [],
       route: opts.route ?? 'route:' + nonce(),
     };
-    const genesisEvent: EventBody = { kind: K.genesis, payload: payload as unknown as Json, actor: opts.creator, nonce: nonce() };
+    const genesisEvent: EventBody = { kind: K.genesis, payload: payload as unknown as Json, actor: opts.creator, nonce: opts.nonce ?? nonce() };
     const genesisId = contentId(genesisEvent as unknown as Json);
     const ctx = new Context(backend, genesisId, opts.packages, opts.maxPayloadBytes ?? 64 * 1024);
     const g = appendUnadmitted(backend, genesisId, genesisEvent);
@@ -118,7 +120,7 @@ export class Context {
    * Build a sequenced intent for this context. An application intent
    * captures the binding active when it is composed, unless one is given.
    */
-  intent(actor: Principal, kind: string, payload: Json, opts: { action_id?: string; expected_binding?: string; expected_activation?: number } = {}): EventBody {
+  intent(actor: Principal, kind: string, payload: Json, opts: { action_id?: string; expected_binding?: string; expected_activation?: number; nonce?: string } = {}): EventBody {
     const application = !kind.startsWith(SYSTEM_PREFIX);
     const expected = opts.expected_binding ?? (application ? this.currentBinding(kind) : undefined);
     const activation = opts.expected_activation ?? (application ? this.currentActivation(kind) : undefined);
@@ -126,9 +128,9 @@ export class Context {
       kind,
       payload,
       actor,
-      nonce: nonce(),
+      nonce: opts.nonce ?? nonce(),
       genesis: this.genesisId,
-      action_id: opts.action_id ?? 'action:' + nonce(),
+      action_id: opts.action_id ?? 'action:' + (opts.nonce ?? nonce()),
       ...(expected ? { expected_binding: expected } : {}),
       ...(activation !== undefined ? { expected_activation: activation } : {}),
     };
@@ -171,7 +173,7 @@ export class Context {
   }
 
   /** Convenience: submit as a current participant with the serving party's credential. */
-  act(actor: Principal, kind: string, payload: Json, opts: { action_id?: string; expected_binding?: string; expected_activation?: number } = {}) {
+  act(actor: Principal, kind: string, payload: Json, opts: { action_id?: string; expected_binding?: string; expected_activation?: number; nonce?: string } = {}) {
     return this.submit(this.intent(actor, kind, payload, opts), this.credentialFor(actor));
   }
 

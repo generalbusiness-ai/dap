@@ -272,3 +272,57 @@ fixture policies of the creator's client, and an authorized hostile
 client can still disclose private events outside that policy; the budget
 reports those violations. Booking and Club are V4 and V5; the mutation
 runner across models and the report are V6.
+
+## V4: Booking by agent
+
+The Booking campaign requires **2 model-policy fixes, 0 added kinds,
+within the budget**, and a separate foundation authorization repair.
+The one-room fixture uses integer clock ticks and clients that honour
+its disclosure policy. Authorized hostile clients can still publish
+private fields or disclose private events; the budget detects these
+violations, and the tests preserve them as limits of the result.
+
+The baseline's projection-only guard passed 200 seeds. A readable-event
+guard then exposed 139 failing seeds, repaired by declaring the public
+kinds clients may disclose (fix 1). Checker's V4-F1/F2 review found that
+public event actors, request-id links and extra private fields were
+still unchecked. The revised guard exposed 99 failing seeds before
+repair. The foundation now keeps application and clock attempts
+actor-only when the actor lacks the required capability, while
+preserving authorized overlap and duplicate refusals. Booking's client
+also requires an authorized verdict before disclosure (fix 2).
+
+What it contains:
+
+- `manifests/booking.md` and `manifests/booking.ts`: the experiment
+  manifest, based on the plan's split schema with explicit `admin`
+  payload fields added at freeze; promises, privacy budget, bounds,
+  invariants and generator payloads. Each later guard amendment is a
+  new manifest identity recorded in the ledger.
+- `fixtures/booking.ts`: the agent-authored model and its declared
+  public-history and disclosure policies.
+- `manifests/booking.ledger.md`: all runs, fixes, evidence corrections,
+  identities, and the effect of the seeded-nonce change on Sale's seeds.
+- `corpus/booking/run2/`: all 139 recovered privacy failures, minimized
+  and kept with the old guard and model; the reconstruction limit is
+  explicit.
+- `corpus/booking/run7/`: all 99 new failing series, complete and
+  minimized, with the exact pre-repair foundation snapshot pinned.
+- The six predeclared cases, seed-1 actor/link regression, public-payload
+  regressions, authority and replay checks, and the 200-seed campaign.
+  Coverage requires effective cancels and occupancies linked to earlier
+  effective requests.
+
+The baseline already declared disclosure of occupancies, frees and
+clock ticks to new members, so the cross-view case passed without a
+model repair. That required history remains available. Authorized
+stale/closed attempts retain their declared audience; the fixture's
+client conservatively excludes their non-authorized verdicts from
+additional disclosure. Other system and spine event audiences are
+unchanged.
+
+The result does not cover multi-room routing, a real clock source,
+closed-schema admission, arbitrary hostile data encodings, or a cancel
+naming a different admin than its request. The latter remains a known
+schema limitation. Club is V5; the combined measurement and falsification
+verdict are V6.

@@ -220,7 +220,7 @@ test('the repair ledger exists, its totals agree with its entries, and it states
   const ledger = readFileSync(fileURLToPath(new URL('../manifests/sale.ledger.md', import.meta.url)), 'utf8');
   const fixes = (ledger.match(/^### Fix \d+/gm) ?? []).length;
   const addedKinds = (ledger.match(/^- Added kind: yes/gm) ?? []).length;
-  const totals = /^Totals: (\d+) fixes?, (\d+) added kinds?, budget (within|exceeded)/m.exec(ledger);
+  const totals = /^Totals: (\d+) fix(?:es)?, (\d+) added kinds?, budget (within|exceeded)/m.exec(ledger);
   assert.ok(totals, 'the ledger states its totals');
   assert.equal(Number(totals[1]), fixes, 'fix total matches the entries');
   assert.equal(Number(totals[2]), addedKinds, 'added-kind total matches the entries');
@@ -345,7 +345,7 @@ test('Fix 7: wrong-author, malformed, unauthorized and stale counters never addr
     assert.equal(r.verdict?.effective, false);
     assert.equal(r.verdict?.perModel?.['sale']?.reason ?? r.verdict?.reason, attempt.reason);
     assert.equal(ctx.view(CAROL)[r.header.position]!.event, undefined);
-    assert.ok(ctx.view(ALICE)[r.header.position]!.event);
+    assert.equal(ctx.view(ALICE)[r.header.position]!.event !== undefined, attempt.actor === ALICE);
     assert.ok(ctx.view(BOB)[r.header.position]!.event);
   }
   const stale = ctx.act(ALICE, SALE + 'counter', { offer_id: 'o1', amount: 777, author: CAROL }, { expected_binding: 'sha256:' + 'f'.repeat(64) });
@@ -364,7 +364,7 @@ test('Fix 7: wrong-author, malformed, unauthorized and stale counters never addr
   ] }).ctx;
   assert.equal(late.state.verdicts[late.head]?.reason, 'unauthorized');
   assert.ok(late.view(DANA)[late.head]!.event);
-  assert.ok(late.view(BOB)[late.head]!.event);
+  assert.equal(late.view(BOB)[late.head]!.event, undefined);
   assert.equal(late.view(CAROL)[late.head]!.event, undefined);
   assert.deepEqual(foldPrefix(late, late.head).models, late.state.models);
   assert.deepEqual(fullCheck(late), []);

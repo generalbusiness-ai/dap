@@ -15,6 +15,8 @@ import { SYSTEM_PREFIX, type Audience, type EventBody, type Kind, type Principal
 
 export interface FoldCtx {
   position: number;
+  /** the content id of the event being folded: a stable, opaque name for what it records */
+  id: string;
   /** participants after folding the preceding position */
   members: Principal[];
   /** whether the event is an adopted origin (no grant, no expected binding) */
@@ -59,6 +61,12 @@ export interface ModelSpec<S = Json, C extends Json = Json> {
   affordances?(p: Principal, state: S, ctx: ObserveCtx, config: C): string[];
   /** Roles this model defines: role name to capability names. */
   roles?: Record<string, string[]>;
+  /**
+   * Whether effective `dap.observe` events (ambient facts asserted by a
+   * designated actor: time, a draw) are folded by this model too. Part of
+   * the model's identity when set.
+   */
+  ambient?: boolean;
 }
 
 export interface AudienceCtx {
@@ -156,6 +164,7 @@ export function modelId(m: ModelSpec, module: string | undefined): Json {
     config: m.config,
     roles: (m.roles ?? {}) as Json,
     module: module ? moduleHash(module) : null,
+    ...(m.ambient ? { ambient: true } : {}),
   };
 }
 
