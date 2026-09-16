@@ -1,0 +1,32 @@
+{
+  "input_snapshot": "c75894b8312b9046ac5975b4cda1c67149ed850d",
+  "runs": [
+    {
+      "name": "run-1-tests",
+      "command": [
+        "node",
+        "--test",
+        "test/ordering-bootstrap.test.ts"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "typecheck-1",
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "run-1-demo",
+      "command": [
+        "node",
+        "test/fixtures/o6-bootstrap.ts",
+        "/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/dap-o6-demo-6iw3nrpm/journal.db"
+      ],
+      "exit_code": 0
+    }
+  ]
+}
