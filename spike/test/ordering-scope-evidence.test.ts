@@ -6,8 +6,8 @@ import { ScopeJournal, replayScope } from '../src/scope.ts';
 import { publicProof, publicProofBytes, verifyPublicProof, assertPublicData } from '../src/scope-proof.ts';
 import { MemoryBackend } from '../src/append.ts';
 import { canonicalize, envelopeBytes, envelopeId, signEvent, verifyEnvelope, type ActorEnvelope } from '../src/codec.ts';
-import { ScopeProfileError, SCOPE_KINDS } from '../src/scope-profile.ts';
-import { K } from '../src/foundation.ts';
+import { ScopeProfileError, SCOPE_KINDS, scopeId } from '../src/scope-profile.ts';
+import { K, holdsNow } from '../src/foundation.ts';
 import { SALE } from '../fixtures/sale.ts';
 import { INSPECTION } from '../fixtures/inspection.ts';
 import { genesisPaths } from '../manifests/ordering-lifecycle.ts';
@@ -28,7 +28,7 @@ test('O4 release proof pins come from F genesis: r=p+1, exact prefix and source 
     const proofs = [world.proof('S'), world.proof('D')];
     const beforeRelease = world.contexts.S!.proof(23);
     failed(world.activate([{ source: beforeRelease, release: 24 }, proofs[1]!]), /ineffective_release|source_binding_mismatch/); dormant(world);
-    failed(world.activate([{ ...proofs[0]!, release: 23 }, proofs[1]!]), /source_binding_mismatch/); dormant(world);
+    failed(world.activate([{ ...proofs[0]!, release: 23 }, proofs[1]!]), /ineffective_release/); dormant(world);
     const wrongWriter = structuredClone(proofs[0]!); wrongWriter.source.initialWriter = principals.WD;
     failed(world.activate([wrongWriter, proofs[1]!]), /wrong source or prefix/); dormant(world);
     const later = [laterProof(world, 'S'), laterProof(world, 'D')];
@@ -137,15 +137,42 @@ test('O4 every materialized signed F genesis field/container is bound before eit
         assert.notEqual(envelopeId(signed), envelopeId(original));
         candidate = ScopeJournal.create({ backend: new MemoryBackend(), writerKey: keys.WF, packages }, signed);
         const envelope = signEvent(candidate.journal.context.intent(principals.alice, K.scope_activate, { proofs: [world.proof('S'),world.proof('D')] as never }, { action_id: 'mutant-activation', nonce: 'd'.repeat(32) }), keys.alice);
-        const result = candidate.submit(envelope);
+        const result = candidate.submit(envelope, candidate.journal.context.credentialFor(principals.alice));
         assert.ok(!('refused' in result)); assert.equal(result.verdict?.effective, false);
-        assert.equal(result.verdict?.reason, 'destination_mismatch');
+        if (holdsNow(candidate.journal.context.state, principals.alice, K.scope_activate)) assert.equal(result.verdict?.reason, 'destination_mismatch');
+        else { assert.equal(result.verdict?.authorized, false); assert.equal(result.verdict?.reason, 'unauthorized'); }
         assert.equal(candidate.state.activations, 0); assert.ok(Object.values(candidate.state.rights).every(r => r!.status !== 'live'));
         records.push({ ...mutation, verdict: result.verdict });
-      } catch (error) { records.push({ ...mutation, ...recognized(error) }); }
+      } catch (error) { try { records.push({ ...mutation, ...recognized(error) }); } catch (unexpected) { console.log('failed mutation', mutation, error); throw unexpected; } }
       finally { candidate?.close(); }
     }
     console.log('materialized genesis mutation records', JSON.stringify(records));
     assert.equal(records.length, genesisPaths(original as never).length * 2 + 1);
   } finally { world.close(); }
+});
+
+for (const storage of ['memory','sqlite'] as const) test('O4 withdrawn o3 cannot be restored by stripping the real withdrawal: ' + storage, () => {
+  const healthy = buildThrough('destination-described', {}, storage);
+  const world = buildThrough('inspection-result-recorded', {}, storage);
+  try {
+    world.emit('S','bob',SALE + 'offer',{ offer_id:'o3', replaces:'o1' });
+    const withdraw = world.emit('S','bob',SALE + 'withdraw',{ offer_id:'o3' });
+    assert.ok(!('refused' in withdraw)); assert.equal(withdraw.verdict?.effective, true);
+    for (let i = 0; i < 2; i++) {
+      const acceptance = world.emit('S','alice',SALE + 'accept',{ offer_id:'o3' });
+      assert.ok(!('refused' in acceptance)); assert.equal(acceptance.verdict?.perModel?.sale?.reason,'withdrawn');
+    }
+    world.emit('S','alice',SALE + 'close',{ outcome:'sold' });
+    world.importInspection(); world.seal(); world.assign(); world.continueWriter(); world.startDelivery();
+    const { identity, ...claim } = healthy.exports.S!;
+    const head = world.contexts.S!.journal.context.entries[23]!;
+    const changed = { ...claim, prefix: { position:23, headerHash:head.headerHash, commitment:head.header.commitment } };
+    world.describeDestination({ S:{...changed,identity:scopeId(changed)}, D:world.contexts.D!.export(['R_deliver']) });
+    const release = world.release('S'); assert.ok(!('refused' in release)); assert.equal(release.verdict?.reason,'unowned_right');
+    world.release('D'); world.startDestination();
+    const proof = world.proof('S');
+    failed(world.activate([proof,world.proof('D')]),/ineffective_release/); dormant(world);
+    const stripped = structuredClone(proof); delete stripped.source.positions[16]!.committed;
+    failed(world.activate([stripped,world.proof('D')]),/completeness/); dormant(world);
+  } finally { world.close(); healthy.close(); }
 });

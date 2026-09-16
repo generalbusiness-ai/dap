@@ -47,3 +47,11 @@ release pointer to a hidden observe position failed earlier at
 omitted its participant transport credential and therefore received an
 admission refusal before it could test destination binding. Both are driver
 issues; neither was converted into a false no-activation success.
+
+`evidence-dev2.txt` records the next development check: 5 passes and 1 failure.
+Relative to `df68429`, the test corrected the transport credential and allowed
+the observed earlier hidden-position refusal; runtime source was unchanged.
+The changed-genesis driver then correctly failed on removing Alice's grant:
+the valid changed genesis made activation `unauthorized`, preceding destination
+comparison. Root chose to preserve authorization ordering and amend the
+pre-baseline expectation, not invent a new profile validity constraint.

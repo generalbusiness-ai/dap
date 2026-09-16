@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createPrivateKey, type KeyObject } from 'node:crypto';
 import { canonicalize, envelopeBytes, envelopeId, principalOf, signEvent, verifyEnvelope, type ActorEnvelope } from '../src/codec.ts';
-import { snapshot } from '../src/append.ts';
+import { snapshot, MemoryBackend, type Backend } from '../src/append.ts';
 import { SQLiteBackend } from '../src/sqlite.ts';
 import { Journal, O1_PROFILE_VERSION } from '../src/journal.ts';
 import { HANDOVER_PROFILE, SEAL, ASSIGN } from '../src/ordering.ts';
@@ -35,6 +35,8 @@ export function normalize(value: any): any {
 }
 export class LifecycleWorld {
   readonly root = mkdtempSync(join(tmpdir(), 'dap-o4-'));
+  readonly storage: 'memory' | 'sqlite';
+  readonly backends: Partial<Record<Name, Backend>> = {};
   readonly contexts: Partial<Record<Name, ScopeJournal>> = {};
   readonly paths: Partial<Record<Name, string>> = {};
   readonly writerNames: Partial<Record<Name, Person>> = {};
@@ -46,7 +48,7 @@ export class LifecycleWorld {
   pendingSourceProposal?: ActorEnvelope;
   readonly variant: { deliveryBuyer?: Person; originExercise?: boolean };
   private serial = 0;
-  constructor(variant: { deliveryBuyer?: Person; originExercise?: boolean } = {}) { this.variant = variant; }
+  constructor(variant: { deliveryBuyer?: Person; originExercise?: boolean } = {}, storage: 'memory' | 'sqlite' = 'sqlite') { this.variant = variant; this.storage = storage; }
   private nonce(): string { return (++this.serial).toString(16).padStart(32, '0'); }
   private setup(role: ScopeSetup['role'], founderNames: Person[], owners: ScopeSetup['owners'], extra: Partial<ScopeSetup> = {}): ScopeSetup {
     return { profile: SCOPE_PROFILE, implementation: scopeImplementationId(), role, founders: founderNames.map(n => principals[n]), owners, ...extra };
@@ -66,7 +68,8 @@ export class LifecycleWorld {
     const path = join(this.root, name + '.sqlite');
     const profile = (genesis.body.payload as { sequencing: { profile: string } }).sequencing.profile;
     const initialWriter = (genesis.body.payload as { sequencing: { writer: string } }).sequencing.writer;
-    const backend = new SQLiteBackend(path, { writer: initialWriter, profile });
+    const backend = this.storage === 'sqlite' ? new SQLiteBackend(path, { writer: initialWriter, profile }) : new MemoryBackend();
+    this.backends[name] = backend;
     this.paths[name] = path; this.writerNames[name] = writer;
     this.contexts[name] = ScopeJournal.create({ backend, writerKey: keys[writer], packages }, envelopeBytes(genesis), origins.map(envelopeBytes));
     for (const entry of this.contexts[name]!.journal.context.entries) this.envelopes.set(name + '@' + entry.position, verifyEnvelope(entry.committed!));
@@ -131,8 +134,8 @@ export class LifecycleWorld {
   continueWriter() { return this.emit('S', 'alice', K.observe, { fact: { continued: true } }); }
   startDelivery() { this.create('D', 'kim', 'WD', this.setup('delivery', ['kim', 'alice', 'bob'], { R_deliver: principals.kim }, { facts: { buyer: principals[this.variant.deliveryBuyer ?? 'bob'], delivery_slot: 25 } }),
     [{ principal: principals.kim, capabilities: [K.scope_release, SCOPE_KINDS.exercise, SCOPE_KINDS.recover] }], [scopePackage.id]); }
-  describeDestination() {
-    this.exports.S = this.contexts.S!.export(['R_fulfil']); this.exports.D = this.contexts.D!.export(['R_deliver']);
+  describeDestination(proposed?: { S: SourceExport; D: SourceExport }) {
+    this.exports.S = proposed?.S ?? this.contexts.S!.export(['R_fulfil']); this.exports.D = proposed?.D ?? this.contexts.D!.export(['R_deliver']);
     const sources = [this.exports.S, this.exports.D];
     const transition: Transition = { identity: scopeId({ manifest: JOIN_POLICY_ID, sources: sources.map(s => s.identity) }), manifest: JOIN_POLICY_ID, sources, transformation: TRANSFORM,
       retainedDependencies: [...new Set(sources.flatMap(s => [...s.dependencies.packages, s.dependencies.implementation]))].sort() };
@@ -157,7 +160,8 @@ export class LifecycleWorld {
     const old = this.contexts[name]!; const genesis = old.journal.context.entries[0]!.event;
     const sequencing = (genesis.payload as { sequencing: { writer: string; profile: string } }).sequencing;
     old.close();
-    const backend = new SQLiteBackend(this.paths[name]!, sequencing);
+    const backend = this.storage === 'sqlite' ? new SQLiteBackend(this.paths[name]!, sequencing) : this.backends[name]!;
+    this.backends[name] = backend;
     this.contexts[name] = ScopeJournal.open({ backend, writerKey: keys[writer], packages }); this.writerNames[name] = writer;
   }
   snapshot(): any {
@@ -189,8 +193,8 @@ export const healthyOperations: [string, (world: LifecycleWorld) => unknown][] =
   ['delivery-started', w => w.startDelivery()], ['destination-described', w => w.describeDestination()], ['sale-released', w => w.release('S')], ['delivery-released', w => w.release('D')],
   ['destination-started', w => w.startDestination()], ['destination-activated', w => w.activate()], ['delivery-confirmed', w => w.exercise('F', 'kim', 'R_deliver')], ['sale-fulfilled', w => w.exercise('F', 'alice', 'R_fulfil')],
 ];
-export function buildThrough(id: string, variant: LifecycleWorld['variant'] = {}): LifecycleWorld {
-  const world = new LifecycleWorld(variant);
+export function buildThrough(id: string, variant: LifecycleWorld['variant'] = {}, storage: 'memory' | 'sqlite' = 'sqlite'): LifecycleWorld {
+  const world = new LifecycleWorld(variant, storage);
   for (const [name, operation] of healthyOperations) { operation(world); world.checkpoints.set(name, world.snapshot()); if (name === id) return world; }
   throw new Error('unknown fixture prefix');
 }
