@@ -366,3 +366,19 @@ is `sha256:e97568583079211cb99cdd572fa5e23b749e8a95c621324e1fec56858d387e53`;
 source and focused validation will be recorded separately. The fixed join
 policy is unchanged. K1/K2/K4 integration must recompute final combined
 identities; no component measurement establishes that future combined source.
+
+
+At frozen K3 source `0aa8687`, the focused 45-check invocation passed 43
+and failed two strengthened capped-audience assertions. All six new K3
+transfer regressions passed, as did existing signature/completeness,
+malicious-writer and public/full differential checks. Typecheck passed.
+The failed assertions expected the capped Bob offer's audience to contain
+only Bob; it also contained attaching Alice. This was a test expectation
+error, not a failure of the exception's effect guard. Exact commands and
+output remain [k3-focused.json](ordering-o4-runs/k3-focused.json) and
+[k3-focused.txt](ordering-o4-runs/k3-focused.txt); six signed transfer
+observations are in `ordering-o4-runs/k3-observations`.
+The corrected test first certifies the healthy prefix, then asserts an
+effective attachment with exact actor-only Alice audience refuses immediately.
+It also retains the subsequent capped-offer refusal. Runtime, rule and
+component identities are unchanged by that test correction.

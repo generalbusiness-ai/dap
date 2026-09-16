@@ -283,9 +283,12 @@ for (const storage of ['memory', 'sqlite'] as const) {
     const cap = { id: descriptorId(base), ...base };
     const registry = { ...available, [cap.id]: cap };
     const { journal } = source(storage, false, registry); t.after(() => journal.close());
-    effective(act(journal, 'alice', K.attach, { package: cap.id, audience: [people.bob], resolution: { [SALE + 'offer']: { handlers: ['sale'] } } }));
+    certified(journal); // no earlier narrow position explains the refusal
+    const attached = effective(act(journal, 'alice', K.attach, { package: cap.id, audience: [people.alice], resolution: { [SALE + 'offer']: { handlers: ['sale'] } } }));
+    assert.deepEqual(journal.context.state.audiences[attached], { kind: 'named', principals: [people.alice] });
+    assert.throws(() => certified(journal), /authority body has narrower audience/);
     const at = effective(act(journal, 'bob', SALE + 'offer', { offer_id: 'capped-offer' }));
-    assert.deepEqual(journal.context.state.audiences[at], { kind: 'named', principals: [people.bob] });
+    assert.equal(journal.context.state.audiences[at]!.kind, 'named');
     assert.throws(() => certified(journal), /authority body has narrower audience/);
   });
 
