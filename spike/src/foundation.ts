@@ -11,6 +11,8 @@
 // deterministic ineffective verdict with the narrowest audience, the
 // actor alone, so bad data is never served to anyone else.
 
+import { createHash } from 'node:crypto';
+import { canonicalize as canonicalWire, envelopeId } from './codec.ts';
 import { contentId, type Json } from './canon.ts';
 import { snapshot } from './append.ts';
 import {
@@ -110,7 +112,7 @@ export interface GrantSpec {
 export interface GenesisPayload {
   foundation: string;
   runtime: string;
-  sequencing: { profile: 'single-writer'; writer: Principal };
+  sequencing: { profile: 'single-writer' | 'dap.fixture.single-writer/1'; writer: Principal };
   grants: GrantSpec[];
   /** descriptor ids of packages attached at genesis, with resolutions */
   bindings: { package: string; resolution?: AttachResolution }[];
@@ -128,7 +130,7 @@ export interface InvitePayload {
 
 export interface AcceptInvitePayload {
   /** the invite event's own committed body and its header (spike plan §2) */
-  invite: { event: EventBody; header: Header };
+  invite: { event: EventBody; header: Header; actorSig?: string };
 }
 
 export interface AttachPayload {
@@ -426,7 +428,7 @@ function foldGenesis(state: FoundationState, ev: EventBody, packages: Record<str
     // An origin is a standalone assertion: it binds no genesis and no action, and it is never a system command.
     if (o.genesis !== undefined || o.action_id !== undefined) throw genesisError('origin_bound', 'an origin may not carry a genesis or an action id');
     if (o.kind.startsWith(SYSTEM_PREFIX)) throw genesisError('system_origin', 'a system kind cannot be adopted as an origin');
-    const id = contentId(o as unknown as Json);
+    const id = 'sha256:' + createHash('sha256').update(canonicalWire(o)).digest('hex');
     if (seen.has(id)) throw genesisError('duplicate_origin', `origin ${id} adopted twice`);
     seen.add(id);
   }
@@ -535,9 +537,12 @@ export function verifyIssuance(evidence: IssuanceEvidence, acceptPayload: unknow
   const emb = (v as AcceptInvitePayload).invite;
   const at = evidence.headers[emb.header.position];
   if (!at) return { ok: false, reason: 'not_in_chain' };
-  const commitment = contentId(emb.event as unknown as Json);
+  let commitment: string;
+  try { commitment = emb.actorSig ? envelopeId({ body: emb.event, sig: emb.actorSig }) : contentId(emb.event as unknown as Json); }
+  catch { return { ok: false, reason: 'malformed' }; }
   if (at.id !== commitment || emb.header.commitment !== commitment) return { ok: false, reason: 'not_in_chain' };
-  if (contentId(emb.header as unknown as Json) !== at.headerHash) return { ok: false, reason: 'not_in_chain' };
+  const { seq_sig: _signature, ...preimage } = emb.header;
+  if (contentId(preimage as unknown as Json) !== at.headerHash) return { ok: false, reason: 'not_in_chain' };
   if (emb.event.kind !== K.invite) return { ok: false, reason: 'not_an_invite' };
   if (emb.event.genesis !== emb.header.genesis) return { ok: false, reason: 'wrong_genesis' };
   // The issuance must have been effective. Effectiveness of an invite is decided by public facts

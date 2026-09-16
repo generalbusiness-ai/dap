@@ -20,7 +20,7 @@ import {
   type FoundationState,
   type GenesisPayload,
 } from './foundation.ts';
-import { MemoryBackend, append, appendUnadmitted, type Backend, type TransportCredential } from './append.ts';
+import { MemoryBackend, append, appendUnadmitted, type Backend, type AppendEncoding, type TransportCredential } from './append.ts';
 import { SYSTEM_PREFIX, type Entry, type EventBody, type Header, type Principal, type Receipt, type Refusal, type Verdict } from './types.ts';
 
 export interface ContextOptions {
@@ -53,13 +53,15 @@ export class Context {
   readonly packages: Record<string, PackageDescriptor>;
   readonly state: FoundationState;
   private readonly maxPayloadBytes: number;
+  private readonly encoding?: AppendEncoding;
 
-  private constructor(backend: Backend, genesisId: string, packages: Record<string, PackageDescriptor>, maxPayloadBytes: number) {
+  private constructor(backend: Backend, genesisId: string, packages: Record<string, PackageDescriptor>, maxPayloadBytes: number, encoding?: AppendEncoding) {
     this.backend = backend;
     this.genesisId = genesisId;
     this.packages = packages;
     this.state = initialFoundationState(genesisId);
     this.maxPayloadBytes = maxPayloadBytes;
+    this.encoding = encoding;
   }
 
   /** Sign a genesis adopting the origins, append it at 0 and the origins at 1..k, and fold them. */
@@ -84,6 +86,16 @@ export class Context {
       const e = appendUnadmitted(backend, genesisId, o);
       ctx.fold(e, true);
     }
+    return ctx;
+  }
+
+  /** Trusted replay boundary. O1 verifies every wire entry before calling this. */
+  static restore(backend: Backend, packages: Record<string, PackageDescriptor>, maxPayloadBytes = 64 * 1024, encoding?: AppendEncoding): Context {
+    const entries = backend.entries();
+    if (!entries[0]) throw new Error('Context: empty journal');
+    const ctx = new Context(backend, entries[0].id, packages, maxPayloadBytes, encoding);
+    const origins = originsCount(entries[0].event);
+    for (const entry of entries) ctx.fold(entry, entry.position > 0 && entry.position <= origins);
     return ctx;
   }
 
@@ -135,13 +147,14 @@ export class Context {
   }
 
   /** Submit through the append operation, then fold if newly sequenced. */
-  submit(event: EventBody, credential?: TransportCredential): (Receipt & { verdict?: Verdict }) | Refusal {
+  submit(event: EventBody, credential?: TransportCredential, proof?: unknown): (Receipt & { verdict?: Verdict }) | Refusal {
     const state = this.state;
     const r = append(
       this.backend,
-      { event, credential },
+      { event, credential, proof },
       {
         genesis: this.genesisId,
+        encoding: this.encoding,
         maxPayloadBytes: this.maxPayloadBytes,
         isParticipant: (p) => state.participants.includes(p),
         // Admission and the members' verification use the same issuance object: the embedded envelope,
@@ -184,7 +197,7 @@ export class Context {
   inviteEnvelope(position: number): AcceptInvitePayload {
     const e = this.entries[position];
     if (!e) throw new Error(`no entry at ${position}`);
-    return { invite: { event: e.event, header: e.header } };
+    return { invite: { event: e.event, header: e.header, ...(e.actorSig ? { actorSig: e.actorSig } : {}) } };
   }
 
   /** The number of adopted origins, from the genesis at position 0. */

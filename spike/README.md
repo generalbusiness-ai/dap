@@ -272,3 +272,34 @@ fixture policies of the creator's client, and an authorized hostile
 client can still disclose private events outside that policy; the budget
 reports those violations. Booking and Club are V4 and V5; the mutation
 runner across models and the report are V6.
+
+## O1: signed codec and durable journal
+
+[The sequencing profile](ordering-profile.md) pins exact wire encoding,
+writer trust, a 65,536-byte envelope limit, and process-crash durability on
+intact local storage. `src/journal.ts` verifies signed envelopes before the
+existing append operation; `src/sqlite.ts` supplies the exclusive writer
+lock and atomic entry/head/retry/consumption/outbox write. Publication waits
+for delivery confirmation and resumes with saved bytes after a crash.
+
+The codec has fixed positive/rejection vectors, including signed dependency
+evidence. Real V1 Sale and invitation traces run through verified bytes and
+SQLite. The crash harness kills separate Node processes at named transaction
+and publication boundaries. Legacy visibility fixtures retain their existing
+API and body identifiers; the signed journal uses envelope commitments.
+
+[The lifecycle manifest](manifests/ordering-lifecycle.md) fixes the expected
+owners and outcomes for later O4 execution. Its tests validate the
+specification, not transfer runtime behavior. O1 does not claim O2–O6,
+replication, power-loss durability, or automatic failover.
+
+Focused validation:
+
+```sh
+node --test test/codec.test.ts test/journal.test.ts test/ordering-lifecycle.test.ts
+npm run typecheck
+```
+
+The committed [O1 validation record](manifests/ordering-o1.ledger.md) records
+its source snapshot and full integration run separately from the historical
+visibility ledgers.

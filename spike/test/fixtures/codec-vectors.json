@@ -1,0 +1,267 @@
+{
+  "description": "O1 fixed canonical UTF-8 bytes, SHA-256 identities and unpadded base64url Ed25519 signatures. Public test keys from RFC 8032; regenerate explicitly with make-codec-vectors.ts.",
+  "keys": {
+    "actor": {
+      "seed": "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60",
+      "principal": "ed25519:11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo"
+    },
+    "writer": {
+      "seed": "4ccd089b28ff96da9db6c346ec114e0f5b8a319f35aba624da8cf6ed4fb8a6fb",
+      "principal": "ed25519:PUAXw-hDiVqStwqnTRt-vJyYLM8uxJaMwM1V8Sr0Zgw"
+    },
+    "other": {
+      "seed": "c5aa8df43f9f837bedb7442f31dcb7b166d38535076f094b85ce3a2e0b4458f7",
+      "principal": "ed25519:_FHNjmIYoaONpH7QAjDwWAgW7RO6MwOsXeuRFUiQgCU"
+    }
+  },
+  "positive": [
+    {
+      "name": "genesis",
+      "body": {
+        "kind": "ai.generalbusiness.dap.genesis",
+        "payload": {
+          "label": "codec vector",
+          "profile": "dap.fixture.ts/1",
+          "origins": [
+            {
+              "kind": "example.origin",
+              "payload": {
+                "title": "signed before genesis"
+              },
+              "actor": "ed25519:11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+              "nonce": "303132333435363738393a3b3c3d3e3f"
+            }
+          ]
+        },
+        "actor": "ed25519:11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+        "nonce": "000102030405060708090a0b0c0d0e0f"
+      },
+      "bodyBytes": "{\"actor\":\"ed25519:11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo\",\"kind\":\"ai.generalbusiness.dap.genesis\",\"nonce\":\"000102030405060708090a0b0c0d0e0f\",\"payload\":{\"label\":\"codec vector\",\"origins\":[{\"actor\":\"ed25519:11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo\",\"kind\":\"example.origin\",\"nonce\":\"303132333435363738393a3b3c3d3e3f\",\"payload\":{\"title\":\"signed before genesis\"}}],\"profile\":\"dap.fixture.ts/1\"}}",
+      "bodyHash": "sha256:1e1a9d927fbc1da1e401a59fbbf6490699b3b0b33b62767eb4f65f0e61ae46c3",
+      "envelope": {
+        "body": {
+          "kind": "ai.generalbusiness.dap.genesis",
+          "payload": {
+            "label": "codec vector",
+            "profile": "dap.fixture.ts/1",
+            "origins": [
+              {
+                "kind": "example.origin",
+                "payload": {
+                  "title": "signed before genesis"
+                },
+                "actor": "ed25519:11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+                "nonce": "303132333435363738393a3b3c3d3e3f"
+              }
+            ]
+          },
+          "actor": "ed25519:11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+          "nonce": "000102030405060708090a0b0c0d0e0f"
+        },
+        "sig": "c2hhN-V2YwBkHWZzR3S671YN4700jfNWJupYEzbZ4T0Ezi6c1YbyM_Z6nNdvR5V8JOnTcTSE-uXpU-K4q4p-CQ"
+      },
+      "committed": "{\"body\":{\"actor\":\"ed25519:11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo\",\"kind\":\"ai.generalbusiness.dap.genesis\",\"nonce\":\"000102030405060708090a0b0c0d0e0f\",\"payload\":{\"label\":\"codec vector\",\"origins\":[{\"actor\":\"ed25519:11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo\",\"kind\":\"example.origin\",\"nonce\":\"303132333435363738393a3b3c3d3e3f\",\"payload\":{\"title\":\"signed before genesis\"}}],\"profile\":\"dap.fixture.ts/1\"}},\"sig\":\"c2hhN-V2YwBkHWZzR3S671YN4700jfNWJupYEzbZ4T0Ezi6c1YbyM_Z6nNdvR5V8JOnTcTSE-uXpU-K4q4p-CQ\"}",
+      "commitment": "sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788",
+      "headerPreimage": {
+        "genesis": "sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788",
+        "position": 0,
+        "prev": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "commitment": "sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788"
+      },
+      "headerPreimageBytes": "{\"commitment\":\"sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788\",\"genesis\":\"sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788\",\"position\":0,\"prev\":\"sha256:0000000000000000000000000000000000000000000000000000000000000000\"}",
+      "headerHash": "sha256:6a269333f67f8336f33ec94c336c63bab001e95a72aa3ce78c584113fb21e393",
+      "header": {
+        "genesis": "sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788",
+        "position": 0,
+        "prev": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "commitment": "sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788",
+        "seq_sig": "ITuGhUxRQcFXE_preSHvczqO44y0gpKrAeQA05eBFxaM1vzc6Fmt8RJMC1nbYeLAbtfsj9cZRL-91nCNcVjXCA"
+      },
+      "headerBytes": "{\"commitment\":\"sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788\",\"genesis\":\"sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788\",\"position\":0,\"prev\":\"sha256:0000000000000000000000000000000000000000000000000000000000000000\",\"seq_sig\":\"ITuGhUxRQcFXE_preSHvczqO44y0gpKrAeQA05eBFxaM1vzc6Fmt8RJMC1nbYeLAbtfsj9cZRL-91nCNcVjXCA\"}",
+      "wireLine": "{\"committed\":\"{\\\"body\\\":{\\\"actor\\\":\\\"ed25519:11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo\\\",\\\"kind\\\":\\\"ai.generalbusiness.dap.genesis\\\",\\\"nonce\\\":\\\"000102030405060708090a0b0c0d0e0f\\\",\\\"payload\\\":{\\\"label\\\":\\\"codec vector\\\",\\\"origins\\\":[{\\\"actor\\\":\\\"ed25519:11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo\\\",\\\"kind\\\":\\\"example.origin\\\",\\\"nonce\\\":\\\"303132333435363738393a3b3c3d3e3f\\\",\\\"payload\\\":{\\\"title\\\":\\\"signed before genesis\\\"}}],\\\"profile\\\":\\\"dap.fixture.ts/1\\\"}},\\\"sig\\\":\\\"c2hhN-V2YwBkHWZzR3S671YN4700jfNWJupYEzbZ4T0Ezi6c1YbyM_Z6nNdvR5V8JOnTcTSE-uXpU-K4q4p-CQ\\\"}\",\"header\":{\"commitment\":\"sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788\",\"genesis\":\"sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788\",\"position\":0,\"prev\":\"sha256:0000000000000000000000000000000000000000000000000000000000000000\",\"seq_sig\":\"ITuGhUxRQcFXE_preSHvczqO44y0gpKrAeQA05eBFxaM1vzc6Fmt8RJMC1nbYeLAbtfsj9cZRL-91nCNcVjXCA\"}}\n"
+    },
+    {
+      "name": "adopted-origin",
+      "body": {
+        "kind": "example.origin",
+        "payload": {
+          "title": "signed before genesis"
+        },
+        "actor": "ed25519:11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+        "nonce": "303132333435363738393a3b3c3d3e3f"
+      },
+      "bodyBytes": "{\"actor\":\"ed25519:11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo\",\"kind\":\"example.origin\",\"nonce\":\"303132333435363738393a3b3c3d3e3f\",\"payload\":{\"title\":\"signed before genesis\"}}",
+      "bodyHash": "sha256:a7fed479fc00d04f605438b036fb307fec0341bc24d74427f259d0c2b802a1dd",
+      "envelope": {
+        "body": {
+          "kind": "example.origin",
+          "payload": {
+            "title": "signed before genesis"
+          },
+          "actor": "ed25519:11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+          "nonce": "303132333435363738393a3b3c3d3e3f"
+        },
+        "sig": "raZkX712RA4jucLChp6MdSie72upplvnyn4z_6CqF0Emx9Dg-b2eMQGNhoBlLHTgggKHpv_Q-xOx2ZwEKoJiAQ"
+      },
+      "committed": "{\"body\":{\"actor\":\"ed25519:11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo\",\"kind\":\"example.origin\",\"nonce\":\"303132333435363738393a3b3c3d3e3f\",\"payload\":{\"title\":\"signed before genesis\"}},\"sig\":\"raZkX712RA4jucLChp6MdSie72upplvnyn4z_6CqF0Emx9Dg-b2eMQGNhoBlLHTgggKHpv_Q-xOx2ZwEKoJiAQ\"}",
+      "commitment": "sha256:8130abab6b981f06a6fed7cb90e3ed012ba3686c8fa7f36b6e291f5d10df266a",
+      "headerPreimage": {
+        "genesis": "sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788",
+        "position": 1,
+        "prev": "sha256:6a269333f67f8336f33ec94c336c63bab001e95a72aa3ce78c584113fb21e393",
+        "commitment": "sha256:8130abab6b981f06a6fed7cb90e3ed012ba3686c8fa7f36b6e291f5d10df266a"
+      },
+      "headerPreimageBytes": "{\"commitment\":\"sha256:8130abab6b981f06a6fed7cb90e3ed012ba3686c8fa7f36b6e291f5d10df266a\",\"genesis\":\"sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788\",\"position\":1,\"prev\":\"sha256:6a269333f67f8336f33ec94c336c63bab001e95a72aa3ce78c584113fb21e393\"}",
+      "headerHash": "sha256:ff1c2e024adf9448cdffd74def336ffa45053799b76ad0bfe9fd7715869a4435",
+      "header": {
+        "genesis": "sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788",
+        "position": 1,
+        "prev": "sha256:6a269333f67f8336f33ec94c336c63bab001e95a72aa3ce78c584113fb21e393",
+        "commitment": "sha256:8130abab6b981f06a6fed7cb90e3ed012ba3686c8fa7f36b6e291f5d10df266a",
+        "seq_sig": "15-C3_Box84_Wyfowk0lxbIj74mvmvqD92SXhy71NGxh_GXECcaj3nlLVNQHU4NN9cl_W81745IdID0pOv0QCQ"
+      },
+      "headerBytes": "{\"commitment\":\"sha256:8130abab6b981f06a6fed7cb90e3ed012ba3686c8fa7f36b6e291f5d10df266a\",\"genesis\":\"sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788\",\"position\":1,\"prev\":\"sha256:6a269333f67f8336f33ec94c336c63bab001e95a72aa3ce78c584113fb21e393\",\"seq_sig\":\"15-C3_Box84_Wyfowk0lxbIj74mvmvqD92SXhy71NGxh_GXECcaj3nlLVNQHU4NN9cl_W81745IdID0pOv0QCQ\"}",
+      "wireLine": "{\"committed\":\"{\\\"body\\\":{\\\"actor\\\":\\\"ed25519:11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo\\\",\\\"kind\\\":\\\"example.origin\\\",\\\"nonce\\\":\\\"303132333435363738393a3b3c3d3e3f\\\",\\\"payload\\\":{\\\"title\\\":\\\"signed before genesis\\\"}},\\\"sig\\\":\\\"raZkX712RA4jucLChp6MdSie72upplvnyn4z_6CqF0Emx9Dg-b2eMQGNhoBlLHTgggKHpv_Q-xOx2ZwEKoJiAQ\\\"}\",\"header\":{\"commitment\":\"sha256:8130abab6b981f06a6fed7cb90e3ed012ba3686c8fa7f36b6e291f5d10df266a\",\"genesis\":\"sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788\",\"position\":1,\"prev\":\"sha256:6a269333f67f8336f33ec94c336c63bab001e95a72aa3ce78c584113fb21e393\",\"seq_sig\":\"15-C3_Box84_Wyfowk0lxbIj74mvmvqD92SXhy71NGxh_GXECcaj3nlLVNQHU4NN9cl_W81745IdID0pOv0QCQ\"}}\n"
+    },
+    {
+      "name": "application",
+      "body": {
+        "kind": "example.bid",
+        "payload": {
+          "amount": 12.5,
+          "note": "café\n😀"
+        },
+        "actor": "ed25519:11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+        "nonce": "101112131415161718191a1b1c1d1e1f",
+        "genesis": "sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788",
+        "action_id": "bid:1",
+        "expected_binding": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expected_activation": 0
+      },
+      "bodyBytes": "{\"action_id\":\"bid:1\",\"actor\":\"ed25519:11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo\",\"expected_activation\":0,\"expected_binding\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"genesis\":\"sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788\",\"kind\":\"example.bid\",\"nonce\":\"101112131415161718191a1b1c1d1e1f\",\"payload\":{\"amount\":12.5,\"note\":\"café\\n😀\"}}",
+      "bodyHash": "sha256:f589706e29466144936a8a0e155d95b94bf4184d349af1a60b0f8985b22a3362",
+      "envelope": {
+        "body": {
+          "kind": "example.bid",
+          "payload": {
+            "amount": 12.5,
+            "note": "café\n😀"
+          },
+          "actor": "ed25519:11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+          "nonce": "101112131415161718191a1b1c1d1e1f",
+          "genesis": "sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788",
+          "action_id": "bid:1",
+          "expected_binding": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "expected_activation": 0
+        },
+        "sig": "ec0h3pwqrBsV6gQh16_iR5UKIpg2M2LW_AbgeCLQmNhc8tF0HIMjPzQ0I5SsxFALQYR-jWgyKDy_bSfejM5HBw"
+      },
+      "committed": "{\"body\":{\"action_id\":\"bid:1\",\"actor\":\"ed25519:11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo\",\"expected_activation\":0,\"expected_binding\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"genesis\":\"sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788\",\"kind\":\"example.bid\",\"nonce\":\"101112131415161718191a1b1c1d1e1f\",\"payload\":{\"amount\":12.5,\"note\":\"café\\n😀\"}},\"sig\":\"ec0h3pwqrBsV6gQh16_iR5UKIpg2M2LW_AbgeCLQmNhc8tF0HIMjPzQ0I5SsxFALQYR-jWgyKDy_bSfejM5HBw\"}",
+      "commitment": "sha256:1f73f44c2a690e67758bf9016f24d65bc1676248ae44053ac77e8f083469868c",
+      "headerPreimage": {
+        "genesis": "sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788",
+        "position": 2,
+        "prev": "sha256:ff1c2e024adf9448cdffd74def336ffa45053799b76ad0bfe9fd7715869a4435",
+        "commitment": "sha256:1f73f44c2a690e67758bf9016f24d65bc1676248ae44053ac77e8f083469868c",
+        "activation": 0
+      },
+      "headerPreimageBytes": "{\"activation\":0,\"commitment\":\"sha256:1f73f44c2a690e67758bf9016f24d65bc1676248ae44053ac77e8f083469868c\",\"genesis\":\"sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788\",\"position\":2,\"prev\":\"sha256:ff1c2e024adf9448cdffd74def336ffa45053799b76ad0bfe9fd7715869a4435\"}",
+      "headerHash": "sha256:4e639dd5a8be0d5aadf2123697dfd06b70c3eff2c4347f8d37b998132e7110ad",
+      "header": {
+        "genesis": "sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788",
+        "position": 2,
+        "prev": "sha256:ff1c2e024adf9448cdffd74def336ffa45053799b76ad0bfe9fd7715869a4435",
+        "commitment": "sha256:1f73f44c2a690e67758bf9016f24d65bc1676248ae44053ac77e8f083469868c",
+        "activation": 0,
+        "seq_sig": "gPnv1KVIzp8sfMXN2bHW6b4n25D3Tf6eryScHsSsAEzCvTQWat7KfI21BZR2TTHE9oG-hnL0K1FZfPHuwkl1BQ"
+      },
+      "headerBytes": "{\"activation\":0,\"commitment\":\"sha256:1f73f44c2a690e67758bf9016f24d65bc1676248ae44053ac77e8f083469868c\",\"genesis\":\"sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788\",\"position\":2,\"prev\":\"sha256:ff1c2e024adf9448cdffd74def336ffa45053799b76ad0bfe9fd7715869a4435\",\"seq_sig\":\"gPnv1KVIzp8sfMXN2bHW6b4n25D3Tf6eryScHsSsAEzCvTQWat7KfI21BZR2TTHE9oG-hnL0K1FZfPHuwkl1BQ\"}",
+      "wireLine": "{\"committed\":\"{\\\"body\\\":{\\\"action_id\\\":\\\"bid:1\\\",\\\"actor\\\":\\\"ed25519:11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo\\\",\\\"expected_activation\\\":0,\\\"expected_binding\\\":\\\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\",\\\"genesis\\\":\\\"sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788\\\",\\\"kind\\\":\\\"example.bid\\\",\\\"nonce\\\":\\\"101112131415161718191a1b1c1d1e1f\\\",\\\"payload\\\":{\\\"amount\\\":12.5,\\\"note\\\":\\\"café\\\\n😀\\\"}},\\\"sig\\\":\\\"ec0h3pwqrBsV6gQh16_iR5UKIpg2M2LW_AbgeCLQmNhc8tF0HIMjPzQ0I5SsxFALQYR-jWgyKDy_bSfejM5HBw\\\"}\",\"header\":{\"activation\":0,\"commitment\":\"sha256:1f73f44c2a690e67758bf9016f24d65bc1676248ae44053ac77e8f083469868c\",\"genesis\":\"sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788\",\"position\":2,\"prev\":\"sha256:ff1c2e024adf9448cdffd74def336ffa45053799b76ad0bfe9fd7715869a4435\",\"seq_sig\":\"gPnv1KVIzp8sfMXN2bHW6b4n25D3Tf6eryScHsSsAEzCvTQWat7KfI21BZR2TTHE9oG-hnL0K1FZfPHuwkl1BQ\"}}\n"
+    },
+    {
+      "name": "attach",
+      "body": {
+        "kind": "ai.generalbusiness.dap.attach",
+        "payload": {
+          "package": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "actor": "ed25519:11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+        "nonce": "202122232425262728292a2b2c2d2e2f",
+        "genesis": "sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788",
+        "action_id": "attach:1"
+      },
+      "bodyBytes": "{\"action_id\":\"attach:1\",\"actor\":\"ed25519:11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo\",\"genesis\":\"sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788\",\"kind\":\"ai.generalbusiness.dap.attach\",\"nonce\":\"202122232425262728292a2b2c2d2e2f\",\"payload\":{\"package\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"}}",
+      "bodyHash": "sha256:d4073d03411dc7fee2748ea32475ee33db88e537fd97cc9127a77507eaa25548",
+      "envelope": {
+        "body": {
+          "kind": "ai.generalbusiness.dap.attach",
+          "payload": {
+            "package": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          },
+          "actor": "ed25519:11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+          "nonce": "202122232425262728292a2b2c2d2e2f",
+          "genesis": "sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788",
+          "action_id": "attach:1"
+        },
+        "sig": "q8jbHPbR2toJ5yS2O9bzvpWJURYIP7xnWXPnNBUl28WCJWnHpW1WuiN3o5z51JAg1-Riva80pz19bnBu1dXTDQ"
+      },
+      "committed": "{\"body\":{\"action_id\":\"attach:1\",\"actor\":\"ed25519:11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo\",\"genesis\":\"sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788\",\"kind\":\"ai.generalbusiness.dap.attach\",\"nonce\":\"202122232425262728292a2b2c2d2e2f\",\"payload\":{\"package\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"}},\"sig\":\"q8jbHPbR2toJ5yS2O9bzvpWJURYIP7xnWXPnNBUl28WCJWnHpW1WuiN3o5z51JAg1-Riva80pz19bnBu1dXTDQ\"}",
+      "commitment": "sha256:df8c8f3bdbb86c15839d22adff5bba246a868155fee6f63792101720c99fe9bc",
+      "headerPreimage": {
+        "genesis": "sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788",
+        "position": 3,
+        "prev": "sha256:4e639dd5a8be0d5aadf2123697dfd06b70c3eff2c4347f8d37b998132e7110ad",
+        "commitment": "sha256:df8c8f3bdbb86c15839d22adff5bba246a868155fee6f63792101720c99fe9bc",
+        "requires": [
+          0
+        ]
+      },
+      "headerPreimageBytes": "{\"commitment\":\"sha256:df8c8f3bdbb86c15839d22adff5bba246a868155fee6f63792101720c99fe9bc\",\"genesis\":\"sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788\",\"position\":3,\"prev\":\"sha256:4e639dd5a8be0d5aadf2123697dfd06b70c3eff2c4347f8d37b998132e7110ad\",\"requires\":[0]}",
+      "headerHash": "sha256:73c93350cd9a5afe75934134dc050284961c1f6951fd751ca0bee2fd36ae8bd8",
+      "header": {
+        "genesis": "sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788",
+        "position": 3,
+        "prev": "sha256:4e639dd5a8be0d5aadf2123697dfd06b70c3eff2c4347f8d37b998132e7110ad",
+        "commitment": "sha256:df8c8f3bdbb86c15839d22adff5bba246a868155fee6f63792101720c99fe9bc",
+        "requires": [
+          0
+        ],
+        "seq_sig": "GpEyOHaa5ZWlkcQPC8HE8xrqYUP4OfdD5Hierhx1uWgq9V1_pok-FoTfAsrCC9THX_DwKgFt4wR49TfNdrU0Dw"
+      },
+      "headerBytes": "{\"commitment\":\"sha256:df8c8f3bdbb86c15839d22adff5bba246a868155fee6f63792101720c99fe9bc\",\"genesis\":\"sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788\",\"position\":3,\"prev\":\"sha256:4e639dd5a8be0d5aadf2123697dfd06b70c3eff2c4347f8d37b998132e7110ad\",\"requires\":[0],\"seq_sig\":\"GpEyOHaa5ZWlkcQPC8HE8xrqYUP4OfdD5Hierhx1uWgq9V1_pok-FoTfAsrCC9THX_DwKgFt4wR49TfNdrU0Dw\"}",
+      "wireLine": "{\"committed\":\"{\\\"body\\\":{\\\"action_id\\\":\\\"attach:1\\\",\\\"actor\\\":\\\"ed25519:11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo\\\",\\\"genesis\\\":\\\"sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788\\\",\\\"kind\\\":\\\"ai.generalbusiness.dap.attach\\\",\\\"nonce\\\":\\\"202122232425262728292a2b2c2d2e2f\\\",\\\"payload\\\":{\\\"package\\\":\\\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\\\"}},\\\"sig\\\":\\\"q8jbHPbR2toJ5yS2O9bzvpWJURYIP7xnWXPnNBUl28WCJWnHpW1WuiN3o5z51JAg1-Riva80pz19bnBu1dXTDQ\\\"}\",\"header\":{\"commitment\":\"sha256:df8c8f3bdbb86c15839d22adff5bba246a868155fee6f63792101720c99fe9bc\",\"genesis\":\"sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788\",\"position\":3,\"prev\":\"sha256:4e639dd5a8be0d5aadf2123697dfd06b70c3eff2c4347f8d37b998132e7110ad\",\"requires\":[0],\"seq_sig\":\"GpEyOHaa5ZWlkcQPC8HE8xrqYUP4OfdD5Hierhx1uWgq9V1_pok-FoTfAsrCC9THX_DwKgFt4wR49TfNdrU0Dw\"}}\n"
+    }
+  ],
+  "negative": [
+    {
+      "name": "tampered body",
+      "wireLine": "{\"committed\":\"{\\\"body\\\":{\\\"action_id\\\":\\\"bid:1\\\",\\\"actor\\\":\\\"ed25519:11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo\\\",\\\"expected_activation\\\":0,\\\"expected_binding\\\":\\\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\",\\\"genesis\\\":\\\"sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788\\\",\\\"kind\\\":\\\"example.bid\\\",\\\"nonce\\\":\\\"101112131415161718191a1b1c1d1e1f\\\",\\\"payload\\\":{\\\"amount\\\":13,\\\"note\\\":\\\"café\\\\n😀\\\"}},\\\"sig\\\":\\\"ec0h3pwqrBsV6gQh16_iR5UKIpg2M2LW_AbgeCLQmNhc8tF0HIMjPzQ0I5SsxFALQYR-jWgyKDy_bSfejM5HBw\\\"}\",\"header\":{\"activation\":0,\"commitment\":\"sha256:1f73f44c2a690e67758bf9016f24d65bc1676248ae44053ac77e8f083469868c\",\"genesis\":\"sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788\",\"position\":2,\"prev\":\"sha256:ff1c2e024adf9448cdffd74def336ffa45053799b76ad0bfe9fd7715869a4435\",\"seq_sig\":\"gPnv1KVIzp8sfMXN2bHW6b4n25D3Tf6eryScHsSsAEzCvTQWat7KfI21BZR2TTHE9oG-hnL0K1FZfPHuwkl1BQ\"}}\n",
+      "error": "invalid actor signature"
+    },
+    {
+      "name": "actor signs noncanonical bytes",
+      "wireLine": "{\"committed\":\"{\\\"body\\\":{\\\"action_id\\\":\\\"bid:1\\\",\\\"actor\\\":\\\"ed25519:11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo\\\",\\\"expected_activation\\\":0,\\\"expected_binding\\\":\\\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\",\\\"genesis\\\":\\\"sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788\\\",\\\"kind\\\":\\\"example.bid\\\",\\\"nonce\\\":\\\"101112131415161718191a1b1c1d1e1f\\\",\\\"payload\\\":{\\\"amount\\\":12.5,\\\"note\\\":\\\"café\\\\n😀\\\"}},\\\"sig\\\":\\\"DU_Ejif99RceV9zoMrZIXlZPyfICf-dcyavx2OVuMSUlC2nCiHNu2UadJs0xldSUaSudhYeeCdr1uiigAcdNAw\\\"}\",\"header\":{\"activation\":0,\"commitment\":\"sha256:1f73f44c2a690e67758bf9016f24d65bc1676248ae44053ac77e8f083469868c\",\"genesis\":\"sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788\",\"position\":2,\"prev\":\"sha256:ff1c2e024adf9448cdffd74def336ffa45053799b76ad0bfe9fd7715869a4435\",\"seq_sig\":\"gPnv1KVIzp8sfMXN2bHW6b4n25D3Tf6eryScHsSsAEzCvTQWat7KfI21BZR2TTHE9oG-hnL0K1FZfPHuwkl1BQ\"}}\n",
+      "error": "invalid actor signature"
+    },
+    {
+      "name": "wrong prev, correctly signed",
+      "wireLine": "{\"committed\":\"{\\\"body\\\":{\\\"action_id\\\":\\\"bid:1\\\",\\\"actor\\\":\\\"ed25519:11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo\\\",\\\"expected_activation\\\":0,\\\"expected_binding\\\":\\\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\",\\\"genesis\\\":\\\"sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788\\\",\\\"kind\\\":\\\"example.bid\\\",\\\"nonce\\\":\\\"101112131415161718191a1b1c1d1e1f\\\",\\\"payload\\\":{\\\"amount\\\":12.5,\\\"note\\\":\\\"café\\\\n😀\\\"}},\\\"sig\\\":\\\"ec0h3pwqrBsV6gQh16_iR5UKIpg2M2LW_AbgeCLQmNhc8tF0HIMjPzQ0I5SsxFALQYR-jWgyKDy_bSfejM5HBw\\\"}\",\"header\":{\"activation\":0,\"commitment\":\"sha256:1f73f44c2a690e67758bf9016f24d65bc1676248ae44053ac77e8f083469868c\",\"genesis\":\"sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788\",\"position\":2,\"prev\":\"sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"seq_sig\":\"QBOaiiil2MizDBBtiCqE-5mT0-lw78z8FBcSuQgGtPFDOPav6RRYzf-GJjxVnMAIaA28H0Szz8qPY0hhUFlNCg\"}}\n",
+      "error": "wrong prev"
+    },
+    {
+      "name": "wrong commitment, correctly signed",
+      "wireLine": "{\"committed\":\"{\\\"body\\\":{\\\"action_id\\\":\\\"bid:1\\\",\\\"actor\\\":\\\"ed25519:11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo\\\",\\\"expected_activation\\\":0,\\\"expected_binding\\\":\\\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\",\\\"genesis\\\":\\\"sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788\\\",\\\"kind\\\":\\\"example.bid\\\",\\\"nonce\\\":\\\"101112131415161718191a1b1c1d1e1f\\\",\\\"payload\\\":{\\\"amount\\\":12.5,\\\"note\\\":\\\"café\\\\n😀\\\"}},\\\"sig\\\":\\\"ec0h3pwqrBsV6gQh16_iR5UKIpg2M2LW_AbgeCLQmNhc8tF0HIMjPzQ0I5SsxFALQYR-jWgyKDy_bSfejM5HBw\\\"}\",\"header\":{\"activation\":0,\"commitment\":\"sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"genesis\":\"sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788\",\"position\":2,\"prev\":\"sha256:ff1c2e024adf9448cdffd74def336ffa45053799b76ad0bfe9fd7715869a4435\",\"seq_sig\":\"dfA5eBRBTC8bx09BtRRNqzR3BTGXtN4vGtU-eUOR9S1fHG9alhQyk-eqLKeQ8JJlFWpbdNtGqE87_7oORa-aAA\"}}\n",
+      "error": "wrong commitment"
+    },
+    {
+      "name": "unassigned sequencer key",
+      "wireLine": "{\"committed\":\"{\\\"body\\\":{\\\"action_id\\\":\\\"bid:1\\\",\\\"actor\\\":\\\"ed25519:11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo\\\",\\\"expected_activation\\\":0,\\\"expected_binding\\\":\\\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\",\\\"genesis\\\":\\\"sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788\\\",\\\"kind\\\":\\\"example.bid\\\",\\\"nonce\\\":\\\"101112131415161718191a1b1c1d1e1f\\\",\\\"payload\\\":{\\\"amount\\\":12.5,\\\"note\\\":\\\"café\\\\n😀\\\"}},\\\"sig\\\":\\\"ec0h3pwqrBsV6gQh16_iR5UKIpg2M2LW_AbgeCLQmNhc8tF0HIMjPzQ0I5SsxFALQYR-jWgyKDy_bSfejM5HBw\\\"}\",\"header\":{\"activation\":0,\"commitment\":\"sha256:1f73f44c2a690e67758bf9016f24d65bc1676248ae44053ac77e8f083469868c\",\"genesis\":\"sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788\",\"position\":2,\"prev\":\"sha256:ff1c2e024adf9448cdffd74def336ffa45053799b76ad0bfe9fd7715869a4435\",\"seq_sig\":\"9ZDQeFa_YJZiyJ_Ls_0Mq3AjifjZcz99fnGx3DxUN3wyxSwWGUoKaqOx0yUja7K2oVVX_hiIHJfChbZawSoEDw\"}}\n",
+      "error": "invalid sequencer signature"
+    },
+    {
+      "name": "sequencer signs full header bytes",
+      "wireLine": "{\"committed\":\"{\\\"body\\\":{\\\"action_id\\\":\\\"bid:1\\\",\\\"actor\\\":\\\"ed25519:11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo\\\",\\\"expected_activation\\\":0,\\\"expected_binding\\\":\\\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\",\\\"genesis\\\":\\\"sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788\\\",\\\"kind\\\":\\\"example.bid\\\",\\\"nonce\\\":\\\"101112131415161718191a1b1c1d1e1f\\\",\\\"payload\\\":{\\\"amount\\\":12.5,\\\"note\\\":\\\"café\\\\n😀\\\"}},\\\"sig\\\":\\\"ec0h3pwqrBsV6gQh16_iR5UKIpg2M2LW_AbgeCLQmNhc8tF0HIMjPzQ0I5SsxFALQYR-jWgyKDy_bSfejM5HBw\\\"}\",\"header\":{\"activation\":0,\"commitment\":\"sha256:1f73f44c2a690e67758bf9016f24d65bc1676248ae44053ac77e8f083469868c\",\"genesis\":\"sha256:ee232e87b538ce09b17c6e0eae0a59a51a601744cca21f8c9944906720f54788\",\"position\":2,\"prev\":\"sha256:ff1c2e024adf9448cdffd74def336ffa45053799b76ad0bfe9fd7715869a4435\",\"seq_sig\":\"WXCFMllCebp5RifLFHXrWwee4DVDtvlOmdz1wOCQYBaDPZzjw-nBPkJVV4ROzBygZXPFHJ1fTLU8E9Ybenq5AQ\"}}\n",
+      "error": "invalid sequencer signature"
+    }
+  ]
+}

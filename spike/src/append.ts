@@ -39,11 +39,25 @@ export interface TransportCredential {
 export interface Submission {
   event: EventBody;
   credential?: TransportCredential;
+  proof?: unknown;
+}
+
+export interface PreparedEvent {
+  id: string;
+  actorSig?: string;
+  committed?: string;
+}
+
+/** Optional authenticated encoding. Storage never constructs or signs entries. */
+export interface AppendEncoding {
+  prepare(event: EventBody, proof: unknown): PreparedEvent;
+  sign(header: Header): Header;
 }
 
 /** What admission needs from the serving party, which runs the fold. */
 export interface AdmissionContext {
   genesis: string;
+  encoding?: AppendEncoding;
   maxPayloadBytes: number;
   isParticipant(p: Principal): boolean;
   /**
@@ -88,14 +102,16 @@ export function makeHeader(genesis: string, position: number, prev: string, comm
   return { header, headerHash: contentId(header as unknown as Json) };
 }
 
-function construct(backend: Backend, genesis: string, ev: EventBody, evidence: HeaderEvidence = {}): { entry: Entry; receipt: Receipt } {
+function construct(backend: Backend, genesis: string, ev: EventBody, evidence: HeaderEvidence = {}, prepared?: PreparedEvent, encoding?: AppendEncoding): { entry: Entry; receipt: Receipt } {
   const frozen = snapshot(ev);
-  const id = contentId(frozen as unknown as Json);
+  const id = prepared?.id ?? contentId(frozen as unknown as Json);
   const head = backend.head();
   const position = head ? head.position + 1 : 0;
   const prev = head ? head.headerHash : ZERO_HASH;
-  const { header, headerHash } = makeHeader(genesis, position, prev, id, evidence);
-  const entry: Entry = deepFreeze({ position, event: frozen, id, header, headerHash });
+  const made = makeHeader(genesis, position, prev, id, evidence);
+  const header = encoding ? encoding.sign(made.header) : made.header;
+  const headerHash = made.headerHash;
+  const entry: Entry = deepFreeze({ position, event: frozen, id, header, headerHash, ...(prepared?.actorSig ? { actorSig: prepared.actorSig, committed: prepared.committed } : {}) });
   const receipt: Receipt = deepFreeze({ header, headerHash, replay: false });
   return { entry, receipt };
 }
@@ -104,11 +120,14 @@ function construct(backend: Backend, genesis: string, ev: EventBody, evidence: H
 export function append(backend: Backend, sub: Submission, ctx: AdmissionContext): Receipt | Refusal {
   // The submission is snapshotted first, so nothing below can be changed by the caller.
   const ev = snapshot(sub.event);
+  let prepared: PreparedEvent | undefined;
+  try { prepared = ctx.encoding?.prepare(ev, sub.proof); }
+  catch { return { refused: true, reason: 'invalid_envelope' }; }
   // 1. Stable facts. Nothing here depends on current membership.
   if (ev.genesis !== ctx.genesis) return { refused: true, reason: 'wrong_genesis' };
   if (!ev.action_id) return { refused: true, reason: 'no_action_id' };
-  if (Buffer.byteLength(JSON.stringify(ev.payload)) > ctx.maxPayloadBytes) return { refused: true, reason: 'envelope_bounds' };
-  const id = contentId(ev as unknown as Json);
+  if (Buffer.byteLength(prepared?.committed ?? JSON.stringify(ev.payload)) > ctx.maxPayloadBytes) return { refused: true, reason: 'envelope_bounds' };
+  const id = prepared?.id ?? contentId(ev as unknown as Json);
 
   return backend.serialized((): Receipt | Refusal => {
     // 2. Exact retry, before admission.
@@ -132,7 +151,7 @@ export function append(backend: Backend, sub: Submission, ctx: AdmissionContext)
     // 4. Position and header, stating the evidence a viewer needs to judge the event: the activation an
     // application event is judged under, or the positions an attach builds on. 5. One write.
     const evidence: HeaderEvidence = ev.kind.startsWith(SYSTEM_PREFIX) ? { requires: ctx.requiresOf(ev) } : { activation: ctx.activationOf(ev.kind) };
-    const { entry, receipt } = construct(backend, ctx.genesis, ev, evidence);
+    const { entry, receipt } = construct(backend, ctx.genesis, ev, evidence, prepared, ctx.encoding);
     backend.commit(entry, deepFreeze({ actionId: ev.action_id!, contentId: id, receipt }), consume);
     return receipt;
   });
@@ -140,11 +159,17 @@ export function append(backend: Backend, sub: Submission, ctx: AdmissionContext)
 
 /** Append without admission: genesis and adopted origins at context creation. */
 export function appendUnadmitted(backend: Backend, genesis: string, ev: EventBody): Entry {
-  return backend.serialized(() => {
-    const { entry } = construct(backend, genesis, ev);
+  return appendInitial(backend, genesis, [{ event: ev }])[0]!;
+}
+
+/** Genesis and all adopted origins share one initialization transaction. */
+export function appendInitial(backend: Backend, genesis: string, submissions: Submission[], encoding?: AppendEncoding): Entry[] {
+  const prepared = submissions.map(s => ({ event: snapshot(s.event), prepared: encoding?.prepare(s.event, s.proof) }));
+  return backend.serialized(() => prepared.map(s => {
+    const { entry } = construct(backend, genesis, s.event, {}, s.prepared, encoding);
     backend.commit(entry, undefined, undefined);
     return entry;
-  });
+  }));
 }
 
 export class MemoryBackend implements Backend {
