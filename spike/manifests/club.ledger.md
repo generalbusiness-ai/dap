@@ -312,7 +312,7 @@ No model fix or experiment revision is included in validation run 3.
 
 ## Validation run 4: assessment #512 record and test corrections
 
-Input snapshot: commit named "spike V5: freeze assessment 512 verification".
+Input snapshot: `8101afb`, "spike V5: freeze assessment 512 verification".
 The model, harness, frozen manifest and corpus remain unchanged. No
 campaign or corpus regeneration is needed for these test and record
 corrections. The last 200-seed campaign remains validation run 3.
@@ -340,6 +340,22 @@ corrections. The last 200-seed campaign remains validation run 3.
   The historical missing run-1 snapshot remains disclosed. The README
   ends with one newline.
 
-Results will be recorded after the input snapshot. V5 remains incomplete
-against §4.2, with A1, A5 and the revised A2 predeclarations unresolved.
-Totals remain 1 fix and 0 added kinds; this run makes no model repair.
+Results under Node 26.8.2:
+
+- `node --test --test-skip-pattern='the campaign' 'test/**/*.test.ts'`:
+  97 selected tests, 96 passed and 1 TODO. The TODO runs and fails the
+  plan's assertion because the second admission is still effective. Both
+  A2 tests, all original deterministic cases, activation/disclosure tests,
+  and baseline corpus replay/minimality checks passed. No campaign ran.
+- `npm run typecheck`: passed.
+- `git diff --check d9dee03 HEAD`: passed, including the README EOF.
+- The candidate, baseline source, frozen manifest, shared harness and
+  corpus are byte-for-byte unchanged from `70bd4064`. The test diagnostics
+  report the same identities as run 3: manifest
+  `sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde`
+  and candidate package
+  `sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e`.
+
+V5 remains incomplete against §4.2, with A1, A5 and the revised A2
+predeclarations unresolved. Totals remain 1 fix and 0 added kinds; this
+run makes no model repair.
