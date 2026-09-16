@@ -319,7 +319,7 @@ function validateScopeGenesis(event: EventBody, packages: Record<string, Package
   if (!p.sequencing || typeof p.sequencing !== 'object' || Array.isArray(p.sequencing)) fail('sequencing object');
   if (!Array.isArray(p.grants) || !p.grants.every((g: any) => g && typeof g === 'object' && !Array.isArray(g) && typeof g.principal === 'string' && Object.keys(g).every(k => ['principal','roles','rights','capabilities'].includes(k)) && ['roles','rights','capabilities'].every(k => g[k] === undefined || Array.isArray(g[k]) && g[k].every((v: unknown) => typeof v === 'string')))) fail('grant shape');
   if (!Array.isArray(p.bindings) || !p.bindings.length || !p.bindings.every((b: any) => b && typeof b === 'object' && Object.keys(b).every(k => ['package','resolution'].includes(k)) && typeof b.package === 'string' && !!packages[b.package])) fail('binding shape or missing package');
-  if (!Array.isArray(p.origins) || !Array.isArray(p.referents) || !p.referents.every((r: unknown) => typeof r === 'string') || typeof p.route !== 'string' || !p.route) fail('origins, referents or route shape');
+  if (!Array.isArray(p.origins) || !p.origins.every((o: any) => o && typeof o === 'object' && !Array.isArray(o) && Object.keys(o).sort().join(',') === 'actor,kind,nonce,payload' && typeof o.kind === 'string' && typeof o.actor === 'string' && typeof o.nonce === 'string') || !Array.isArray(p.referents) || !p.referents.every((r: unknown) => typeof r === 'string') || typeof p.route !== 'string' || !p.route) fail('origins, referents or route shape');
   const setup = scopeSetup(event); if (!setup) fail('missing setup');
   if (setup!.role !== 'fulfilment' && p.transition !== undefined) fail('unexpected transition');
 }

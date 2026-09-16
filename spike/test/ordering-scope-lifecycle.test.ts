@@ -35,13 +35,15 @@ function perform(world: LifecycleWorld, action: LifecycleAction): any {
       const source = world.contexts.S!; const profile = source.journal.ordering.profile;
       source.close();
       let reason: string | undefined;
-      const candidateBackend = new SQLiteBackend(world.paths.S!, { profile, writer: principals.W0 });
+      const candidateBackend = world.storage === 'sqlite' ? new SQLiteBackend(world.paths.S!, { profile, writer: principals.W0 }) : world.backends.S!;
       try { ScopeJournal.open({ backend: candidateBackend, writerKey: keys[actor], packages }); }
       catch (error) { reason = (error as Error).message; }
-      finally { candidateBackend.close(); }
+      finally { if (candidateBackend instanceof SQLiteBackend) candidateBackend.close(); }
       // Named error translation only: no decision is inferred from test id.
       assert.match(reason!, /unassigned writer key/);
-      world.contexts.S = ScopeJournal.open({ backend: new SQLiteBackend(world.paths.S!, { profile, writer: principals.W0 }), writerKey: keys.W0, packages });
+      const restored = world.storage === 'sqlite' ? new SQLiteBackend(world.paths.S!, { profile, writer: principals.W0 }) : world.backends.S!;
+      world.backends.S = restored;
+      world.contexts.S = ScopeJournal.open({ backend: restored, writerKey: keys.W0, packages });
       return { refused: true, reason: 'no_assignment', diagnostic: reason };
     }
     case 'continue-retired-writer': {
@@ -58,8 +60,8 @@ function outcome(result: any): { verdict: string; reason: string | null } {
   if (result.unchanged) return { verdict: 'unchanged', reason: null };
   return { verdict: result.verdict?.effective ? 'effective' : 'ineffective', reason: result.verdict?.perModel?.sale?.reason ?? result.verdict?.reason ?? null };
 }
-test('O4 actual signed lifecycle matches all 20 predeclared boundaries', () => {
-  const world = new LifecycleWorld();
+for (const storage of ['memory','sqlite'] as const) test('O4 actual signed lifecycle matches all 20 predeclared boundaries: ' + storage, () => {
+  const world = new LifecycleWorld({}, storage);
   try {
     assert.equal(healthyOperations.length, healthyLifecycle.length);
     for (const [index, [id, operation]] of healthyOperations.entries()) {
@@ -69,9 +71,9 @@ test('O4 actual signed lifecycle matches all 20 predeclared boundaries', () => {
     }
   } finally { world.close(); }
 });
-for (const scenario of lifecycleCases) test('O4 actual adverse trace: ' + scenario.id, () => {
+for (const storage of ['memory','sqlite'] as const) for (const scenario of lifecycleCases) test('O4 actual adverse trace: ' + scenario.id + ':' + storage, () => {
   const variant = scenario.variant as Record<string, any> | undefined;
-  const world = buildThrough(scenario.from, { deliveryBuyer: variant?.deliveryBuyer, originExercise: !!variant?.destinationOrigins });
+  const world = buildThrough(scenario.from, { deliveryBuyer: variant?.deliveryBuyer, originExercise: !!variant?.destinationOrigins }, storage);
   try {
     if (scenario.initial) assert.deepEqual(world.snapshot(), scenario.initial);
     for (const step of scenario.steps) {

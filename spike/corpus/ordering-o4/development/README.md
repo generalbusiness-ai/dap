@@ -55,3 +55,10 @@ The changed-genesis driver then correctly failed on removing Alice's grant:
 the valid changed genesis made activation `unauthorized`, preceding destination
 comparison. Root chose to preserve authorization ordering and amend the
 pre-baseline expectation, not invent a new profile validity constraint.
+
+`evidence-dev3.txt` records source `1a337d0`: 7 passes and 1 failure. Both
+actual withdrawal branches passed. A malformed replacement of the genesis
+origin array reached Journal's missing-origin-proof guard, which the test
+did not recognize. The next source adds a strict origin-body shape check in
+the selected scope profile before any journal is created; unexpected errors
+still fail the mutation campaign.
