@@ -775,13 +775,15 @@ The approved O4 tree landed as main
 `4bef258270261dc59eefebb9c979b4bbabd5e0a6` and was pushed to `origin/main`.
 Its tree equals approved `805a38f3`. Effective merge receipt `26e8d2e1`
 (sequence 5087) records that landing after ratification `c8290c9c`; full handles
-are in the [O6 ledger][o6]. The CLI is still appending sealed per-file
-successor/retirement metadata, so this report does not claim that suffix
-complete. O6 now includes the actual main ancestry. This report/ledger-only
+are in the [O6 ledger][o6]. At O6 finalization boundary
+`a1b37977d45c0a15f622d5ee4763afe09f6451f6`, root reported that the CLI was
+still appending sealed per-file successor/retirement metadata. This is a
+historical snapshot, not a claim about its later completion. O6 includes
+the actual main ancestry. This report/ledger-only
 clarification preserves all 922 accepted O4 paths and all 36 O6 evidence files,
 including both run-9 and run-7 recording caveats; no test is repeated.
-O6's own publication and independent review wait for the current artifact
-bases after the O4 metadata suffix settles.
+Publication and independent review use the current workroom artifact bases;
+later delivery progress does not require rewriting this snapshot.
 
 [goals]: https://github.com/generalbusiness-ai/dap/blob/598170fa5907655bc48c346a2dd4dd98853314a8/notes/2026-09-14-evolving-spaces-design.md#L80-L107
 [bootstrap]: https://github.com/generalbusiness-ai/dap/blob/598170fa5907655bc48c346a2dd4dd98853314a8/notes/2026-09-14-evolving-spaces-design.md#L537-L573
@@ -791,7 +793,7 @@ bases after the O4 metadata suffix settles.
 [o3]: https://github.com/generalbusiness-ai/dap/blob/c527584d5399f20dff33625e20cb97d237bdad98/spike/manifests/ordering-o3.ledger.md
 [o5]: https://github.com/generalbusiness-ai/dap/blob/936acce94e5cd024b0164fc6cd2af027f611545e/spike/manifests/ordering-o5.ledger.md
 [profile]: https://github.com/generalbusiness-ai/dap/blob/79cd00029504deb92c121dbf12859680dfe78358/spike/ordering-profile.md
-[o6]: https://github.com/generalbusiness-ai/dap/blob/c1f7123e45f3dc423dc4a8eaec6ac5a9d36a67be/spike/manifests/ordering-o6.ledger.md
+[o6]: https://github.com/generalbusiness-ai/dap/blob/ee50b12ef3b744f126498346f151030d77885ed7/spike/manifests/ordering-o6.ledger.md
 [o6-source]: https://github.com/generalbusiness-ai/dap/blob/dec72c4065b6e814d9e117b77df161c71bfd1011/spike/test/fixtures/o6-bootstrap.ts
 [o6-tests]: https://github.com/generalbusiness-ai/dap/blob/dec72c4065b6e814d9e117b77df161c71bfd1011/spike/test/ordering-bootstrap.test.ts
 [o6-demo]: https://github.com/generalbusiness-ai/dap/blob/6b4a6f53b2c10331706519923b95c95a70ec14e6/spike/manifests/ordering-o6-runs/run-7-demo.json
