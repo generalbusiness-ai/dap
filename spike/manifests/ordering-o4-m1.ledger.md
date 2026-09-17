@@ -53,4 +53,35 @@ Positive controls preserve real malformed JSON, malformed control shapes/keys fo
 
 The static Scope create/open methods select strict folding. Its TypeScript-private constructor is not a JavaScript security boundary. Source open authenticates/restores; destination tests that force nested semantics explicitly read state after open. No blanket claim covers standalone interpret/export poisoning, proof()/retained context.view() after memory-backed failure, or the final verifyEnvelope after successful Scope state replay. The exact WIRE_REJECTIONS message list and these limits are preserved in the baseline audit. Arbitrary external package code is outside the repository catch inventory.
 
-Measured-source results, identities, source/config blobs and output hashes will be appended after this source is frozen. Root will integrate the separate own-entry/doc components and run the combined noncampaign suite once; no campaign is requested here.
+## Frozen measurements
+
+Runtime source `57745b99b7908ee499426ce4553484dfde572b9d` passed 41 focused tests, with zero failures, skips or TODOs, and typecheck. [Run 1](ordering-o4-runs/m1/run-1/results.json) retains exact commands, durations, output hashes and the unchanged-source check. Its [source record](ordering-o4-runs/m1/run-1/source.json) pins all 91 source, fixture, test and configuration files. The original checker ordering/open-and-lease scripts and the parser/SQLite cleanup reproductions were run against this frozen repair; all six commands exited zero and their outputs remain separate from the original failure logs.
+
+Test-only successor `37a3e12178923b8198950a332b76c7503fc13c15` filters fault-hook operation kinds before constructing a stack, and captures direct callback stacks only at the actual hit. Runtime, fixtures and configuration are byte-identical to `57745b`. It passed the same 41 checks and typecheck in [run 2](ordering-o4-runs/m1/run-2/results.json), using these commands from `spike`:
+
+```
+node --test test/ordering-scope-catch-boundaries.test.ts test/ordering-scope-cleanup.test.ts test/codec.test.ts test/ordering-handover.test.ts
+npm run typecheck
+```
+
+The 41 tests comprise 14 new catch/cleanup tests, 15 existing codec tests and 12 existing handover tests. The [comparison](ordering-o4-runs/m1/run-2/comparison.json) establishes that all 11 emitted diagnostic objects are exactly equal across the two runs, including 144 converting-body rows, 24 sampled runtime stacks, 72 cold-open cases, 48 constructor cases, 24 SQLite cleanup cases and 12 committed lost-reply cases. Each converting-body row asserts exactly one injection hit. The original-value, durability, unavailable-state and exact-retry assertions are unchanged. Both stores also retain the four intentional nominal/message/class policy controls, exception-inspection controls, and malformed-control recovery cases. SQL catch clauses are structurally absent from MemoryBackend; no memory case is counted as a hit on them.
+
+Focused wall time was 56.72 seconds at `57745b` and 18.32 seconds at `37a3e12`. This single sequential pair measures the test-helper change, not an isolated benchmark or a production-runtime speedup. No full suite or campaign was run for this component. Root will integrate the separate own-entry/doc components and run the combined noncampaign suite once.
+
+The independent audit inventories 23 repaired runtime catches at `57745b`; the runtime source is unchanged at `37a3e12`. Its separate reconciliation confirmed each intended try-body stack and all output hashes, then confirmed exact diagnostic equality after the helper change. Root retains its final externally pinned audit after the component records commit, avoiding a circular evidence-head reference here.
+
+The constructor secondary-close mocks call the real close before throwing. They establish preservation of the original setup failure after successful cleanup followed by a secondary error; they do not establish resource release when native close itself refuses. Failed SQLite rollback coverage explicitly checks the residual transaction and then cleans it up before reopening. These limits apply to both recorded runs.
+
+## Component identities
+
+Both [run 1](ordering-o4-runs/m1/run-1/identities.json) and [run 2](ordering-o4-runs/m1/run-2/identities.json) compute identical component identities:
+
+| Component | Identity |
+|---|---|
+| Scope runtime | `sha256:3dd5aa628ab6c7318fce24fdccb599edb3ec3ee3e2aad951ec430cf7ac0e27b1` |
+| Scope package | `sha256:96dea7ead5f5185c75471ce5618311dd8020f3320623acc22823ab0492ae68bb` |
+| Public proof rule | `sha256:9e9bcbdd74fe244fb63c5e339256ab508b2b3251d2e8fa642b3309cd1f1049e6` |
+| Join policy | `sha256:ac852ebab4f55816e55cd0fd71b7280267bffaca097046d4880b24ac63b01455` |
+| Foundation | `sha256:5a7be1514529bac249c683ada733e64273f94b2700abf8a55c47dcb7ebfb8d78` |
+
+These are isolated component identities. The separate own-entry repair changes scope source bytes, so root must recompute combined runtime, package, genesis and proof identities before publication. Historical source and failure records have not been rewritten. The final commit after `37a3e12` contains only this ledger and run/audit records.

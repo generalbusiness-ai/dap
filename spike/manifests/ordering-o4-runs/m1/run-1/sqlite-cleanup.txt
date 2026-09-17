@@ -1,0 +1,3 @@
+{"scenario":"constructor-rollback","originalPreserved":true,"cleanupReplacedOriginal":false,"cleanupCalls":1,"handleStillOpen":false,"transactionStillOpen":false}
+{"scenario":"constructor-close","originalPreserved":true,"cleanupReplacedOriginal":false,"cleanupCalls":1,"handleStillOpen":false,"transactionStillOpen":false}
+{"scenario":"serialized-rollback","originalPreserved":true,"cleanupReplacedOriginal":false,"cleanupCalls":1,"handleStillOpen":true,"transactionStillOpen":true}

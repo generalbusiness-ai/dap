@@ -1,0 +1,4 @@
+memory open original consumed true
+memory proof original consumed true
+sqlite open original consumed true
+sqlite proof original consumed true

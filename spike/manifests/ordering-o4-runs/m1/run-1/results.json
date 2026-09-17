@@ -1,0 +1,115 @@
+{
+  "source": "57745b99b7908ee499426ce4553484dfde572b9d",
+  "sourceUnchanged": true,
+  "results": [
+    {
+      "command": [
+        "node",
+        "--test",
+        "test/ordering-scope-catch-boundaries.test.ts",
+        "test/ordering-scope-cleanup.test.ts",
+        "test/codec.test.ts",
+        "test/ordering-handover.test.ts"
+      ],
+      "env": {},
+      "exit": 0,
+      "seconds": 56.7204088330036,
+      "output": "focused.txt",
+      "sha256": "fd43de2838d123d6cee8c9c3f7d43057c7712cc8ea5a525982bd8e672e77ffc4"
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "env": {},
+      "exit": 0,
+      "seconds": 0.9462112089968286,
+      "output": "typecheck.txt",
+      "sha256": "c13cdfb986ee40a7a2614e780678b6307a8b1368291811d1a2cae9e00dfd60cd"
+    },
+    {
+      "command": [
+        "node",
+        "manifests/ordering-o4-runs/m1/before/l2-ordering.mjs",
+        "memory"
+      ],
+      "env": {
+        "WT": "/tmp/dap-o4-m1-faults"
+      },
+      "exit": 0,
+      "seconds": 0.787936875000014,
+      "output": "l2-ordering-memory.txt",
+      "sha256": "0eb75aebb83efd39eeefef1ac4dd7c3d2a6d4726a67d7de9e3675c66e7e3e76e"
+    },
+    {
+      "command": [
+        "node",
+        "manifests/ordering-o4-runs/m1/before/l2-ordering.mjs",
+        "sqlite"
+      ],
+      "env": {
+        "WT": "/tmp/dap-o4-m1-faults"
+      },
+      "exit": 0,
+      "seconds": 0.8208742080023512,
+      "output": "l2-ordering-sqlite.txt",
+      "sha256": "0eb75aebb83efd39eeefef1ac4dd7c3d2a6d4726a67d7de9e3675c66e7e3e76e"
+    },
+    {
+      "command": [
+        "node",
+        "manifests/ordering-o4-runs/m1/before/l2-open-and-lease.mjs",
+        "memory"
+      ],
+      "env": {
+        "WT": "/tmp/dap-o4-m1-faults"
+      },
+      "exit": 0,
+      "seconds": 0.5790129579982022,
+      "output": "l2-open-and-lease-memory.txt",
+      "sha256": "db6a360353d5e0e7a4a65a510389bf43aa867470e9ef694c4b2ab05ebcda10ed"
+    },
+    {
+      "command": [
+        "node",
+        "manifests/ordering-o4-runs/m1/before/l2-open-and-lease.mjs",
+        "sqlite"
+      ],
+      "env": {
+        "WT": "/tmp/dap-o4-m1-faults"
+      },
+      "exit": 0,
+      "seconds": 0.5946399579988793,
+      "output": "l2-open-and-lease-sqlite.txt",
+      "sha256": "db6a360353d5e0e7a4a65a510389bf43aa867470e9ef694c4b2ab05ebcda10ed"
+    },
+    {
+      "command": [
+        "node",
+        "manifests/ordering-o4-runs/m1/before/parse-fault.mjs"
+      ],
+      "env": {
+        "WT": "/tmp/dap-o4-m1-faults"
+      },
+      "exit": 0,
+      "seconds": 0.6487300000007963,
+      "output": "parse-fault.txt",
+      "sha256": "5271b017a1f4cd477ae52262f193b2513914f3d82fd8e60e58766e91fd4f0b2c"
+    },
+    {
+      "command": [
+        "node",
+        "manifests/ordering-o4-runs/m1/before/sqlite-cleanup.mjs"
+      ],
+      "env": {
+        "WT": "/tmp/dap-o4-m1-faults"
+      },
+      "exit": 0,
+      "seconds": 0.059184459008974954,
+      "output": "sqlite-cleanup.txt",
+      "sha256": "8db6d4de136f4459c8633f4ab2a79711e47b0cc1eae7328f58d90fa5acf42886"
+    }
+  ]
+}
