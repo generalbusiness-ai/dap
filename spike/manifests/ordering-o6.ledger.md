@@ -706,3 +706,18 @@ failure does not change the recorded child results or product behavior.
 No runtime or test changed during or after measurement. Final O4 records will
 be merged separately; all historical O6 evidence stays at its original source.
 O4/O6 independent approval remains pending.
+
+
+Final O4 records candidate `805a38f3b8ba55e77b9d81847ea5a04b7e1a8fb2`
+is incorporated after run 7 without runtime/test changes. Local verification
+matches all 98 measured source/configuration/documentation blobs and all 106
+run-10 observation hashes. The O4 result and its 53 byte-identical backend
+pairs remain O4's separate measurement, not an O6 rerun. All 30 historical O6
+run-1 through run-6 files and both bootstrap files remain byte-identical to
+`9fc72be9627e7e7855cb08b812aee2db472da933`.
+
+The final report cites both actual source boundaries and preserves the distinct
+O6 summary-wrapper failure, original run-9 provenance correction and unchanged
+Club/Sale research results. Earlier exact-head artifacts cannot describe this
+successor. Updated report links and path/hash delivery records will accompany
+the final candidate; O4/O6 independent approval and landing remain pending.

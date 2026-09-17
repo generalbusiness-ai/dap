@@ -210,3 +210,16 @@ later reran source `f8987d22` and head `15b660ca` with Node exit 0, but those
 separate observations do not recover the earlier builder exit status.
 The runtime id covers 16 named sources; the 94-blob run-9 index separately
 pins broader source and configuration, including `observe.ts` and `corpus.ts`.
+
+
+## M1 combined run 10
+
+The combined source `79cd00029504deb92c121dbf12859680dfe78358` is recorded in
+[run 10](../../manifests/ordering-o4-runs/run-10.json): 512 tests, 508 passes,
+four retained Club TODOs, zero failures; all 187 O4 checks are included. Actual
+Node, typecheck and wrapper exits are zero. Its 106 observations and 98 source
+blobs belong to the new runtime/Scope and manifest identities in that record.
+The robust runner retained the TAP-escaped diagnostic without losing child
+status. Run 9's original failure/recovery history remains unchanged. The M1
+component records retain both the 56.7204- and 18.3150-second focused runs and
+their exactly equal diagnostics; this is one observed test-hook comparison.

@@ -1,0 +1,12 @@
+{
+  "scopeImplementation": "sha256:96619acc4777bd2f95859901d7f993d75ab1db485f7a49af2da89040c81f1af1",
+  "scopeProfile": "dap.fixture.scope/1",
+  "scopePackage": "sha256:2f32c21e7336da17596fd86af75a863d2de79651cd050100e19b3958042bba61",
+  "inspectionPackage": "sha256:18a886c149b383b8630836307195c1a89b90c463e7e32df6e0663b5d4ecc3030",
+  "salePackage": "sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85",
+  "publicProofRule": "sha256:9e9bcbdd74fe244fb63c5e339256ab508b2b3251d2e8fa642b3309cd1f1049e6",
+  "manifestPublicRule": "sha256:9e9bcbdd74fe244fb63c5e339256ab508b2b3251d2e8fa642b3309cd1f1049e6",
+  "manifest": "sha256:00bdb77671000310c01a1761364285c6e0b1a643b1dc300ab9f419dc82b4988a",
+  "joinPolicy": "sha256:ac852ebab4f55816e55cd0fd71b7280267bffaca097046d4880b24ac63b01455",
+  "movableWriterProfile": "dap.fixture.single-writer/3"
+}

@@ -3,13 +3,14 @@
 Request: `git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:1b6384e27d6dbfd5a22da3330378776d32ad23ab`.
 Promise: `18ba74b01cbbea27e2d8c18b063ff482428c95aa` in that workroom.
 
-The latest combined measured contract at this documentation branch's base
-is run 9 (`f8987d22`, final candidate `15b660ca`): lifecycle manifest
-`sha256:92ad0023e387cd4a6305d074ab99f7a29cbcc1699cd88b8dcf439a446ef58828`
+The current combined measured contract is run 10 at source
+`79cd00029504deb92c121dbf12859680dfe78358`: lifecycle manifest
+`sha256:00bdb77671000310c01a1761364285c6e0b1a643b1dc300ab9f419dc82b4988a`
 and opening rule `/3`
 `sha256:9e9bcbdd74fe244fb63c5e339256ab508b2b3251d2e8fa642b3309cd1f1049e6`.
-M1's documentation/count-assertion component below is a new manifest boundary;
-its final combined runtime and validation remain separate from run 9.
+Run 9 (`f8987d22`, candidate `15b660ca`) remains historical evidence with
+manifest `sha256:92ad0023e387cd4a6305d074ab99f7a29cbcc1699cd88b8dcf439a446ef58828`.
+Independent approval of the repaired candidate remains pending.
 
 The historical combined K1–K4 run-8 contract is lifecycle manifest
 `sha256:a766fe56564b026a96c37630d261512c0f608adf5ec7c5ee2d11aca23eaf45fe`.
@@ -919,3 +920,77 @@ constructor cleanup may add catches), and per-site reached injection/results
 on each applicable backend. Root must bind these to the frozen runtime source
 and combined measurement before independent review. The catalogue and this
 component do not substitute static inspection for those results.
+
+
+## M1 combined run 10: repaired catches, own entries and measured limits
+
+Review `66effd75`, ratification `919baa74` and adoption `739b7bf7` retain the
+original request and promise. Source `79cd00029504deb92c121dbf12859680dfe78358`
+integrates the own-entry component `4710d3e6`, documentation/count component
+`c14e671a` and runtime/test component `32b69bc8`, then pins the measured catch
+catalogue before the combined run. These are implementation repairs and
+evidence, not an independent approval or a main merge.
+
+[Run 10](ordering-o4-runs/run-10.json) records **512 tests, 508 passes, zero
+failures and four retained Club TODOs**, with all **187 O4 checks** in that same
+invocation. The actual Node exit is 0, typecheck exit is 0 and wrapper exit is
+0. The noncampaign child took 46.517 seconds; no campaign or second combined
+invocation ran. Its runner saves child exits before JSON interpretation, keeps
+the full raw TAP, parses 45 diagnostics and retains one TAP-escaped diagnostic
+verbatim. Run 9's lost child status stays unknown; the earlier recovery files
+are not rewritten or retrospectively repaired.
+
+The run pins 98 source/configuration/contract blobs and captures 106 actual
+observations. The saved-data summary reproduces the exact backend-agreeing
+context/proof identities. Per backend it retains 20 healthy boundaries,
+29 adverse cases with 43 steps, and the asserted 209 mutations: 30 destination
+mismatches, five unauthorized, 154 invalid genesis, 18 malformed envelopes and
+two unsupported profiles. The 55/100/143 historical question counts overlap;
+they are not additive scenarios. The new own-entry cases preserve legitimate
+property-name facts/packages and still reject altered source bindings.
+
+| Current identity | Value |
+| --- | --- |
+| Scope implementation | `sha256:96619acc4777bd2f95859901d7f993d75ab1db485f7a49af2da89040c81f1af1` |
+| Scope package | `sha256:2f32c21e7336da17596fd86af75a863d2de79651cd050100e19b3958042bba61` |
+| Public-opening rule /3 | `sha256:9e9bcbdd74fe244fb63c5e339256ab508b2b3251d2e8fa642b3309cd1f1049e6` |
+| Lifecycle manifest | `sha256:00bdb77671000310c01a1761364285c6e0b1a643b1dc300ab9f419dc82b4988a` |
+| Inspection package | `sha256:18a886c149b383b8630836307195c1a89b90c463e7e32df6e0663b5d4ecc3030` |
+| Sale package | `sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85` |
+| Join policy | `sha256:ac852ebab4f55816e55cd0fd71b7280267bffaca097046d4880b24ac63b01455` |
+
+The [catch catalogue](../ordering-catch-boundary.md) accounts for 23 runtime
+catches and all 12 converting try bodies, with six unexpected values per body
+per store. The combined output retains all 144 converter outcomes and 24
+sampled stacks, plus the cold, constructor, policy, inspection, SQL cleanup and
+saved-retry controls. Every catch body is sampled; not every operation within
+it. The independent component audit is a source-and-record check, not another
+test execution or the required workroom review.
+
+The test-only hook refinement was recorded by workroom assertion `a4e55ca2`.
+It discards irrelevant operation kinds before constructing a stack. The same
+41-check component command took 56.7204 seconds before and 18.3150 seconds
+after, with all 11 diagnostic objects exactly equal and runtime bytes unchanged.
+This one observed pair supports the bounded test-harness improvement; it is
+not a controlled benchmark, general runtime optimization or full-suite speedup.
+Both original runs remain retained at their actual source commits.
+
+Nominal parser SyntaxError, exported Scope policy types, exact wire-message
+allowlisting and the two precommit verification refusals remain explicit
+classification limits. Failed native cleanup is not guaranteed to recover a
+resource: the double-fault close mocks perform the real close before throwing,
+and failed transaction rollback requires caller disposal. Postfault proof/view
+reads, standalone interpretation/export errors and final verification retain
+their documented boundaries. Proof-size stranding, deep-input stack exhaustion,
+privileged Club standing behavior, refused Inspection audience disclosure,
+unexercised real model-unavailability and overlapping guards remain limitations.
+The negative Club outcome and Sale repair-budget result are unchanged.
+
+All earlier raw evidence is preserved. The run directory carries the 680-file
+15b baseline (674 immutable raw files) and a complete pre-run evidence index.
+The only prior corpus correction at this stage is an explicit append to its
+README; current ledger headings distinguish current and historical identities.
+Root verified all 751 pre-run evidence files, including 741 immutable raw
+files; only the corpus README has an append-only correction. The records-only
+tail retains every one of the 98 measured blobs and all 106 observation hashes. Independent exact-head approval and landing remain
+pending under the standing authorization.

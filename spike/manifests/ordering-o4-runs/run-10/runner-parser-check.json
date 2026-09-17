@@ -1,0 +1,10 @@
+{
+  "runner": "/tmp/dap-o4-m1-validation.py",
+  "historicalRawTAP": "/tmp/dap-o4-l1-l3-run9/noncampaign.txt",
+  "historicalFieldsMatch": true,
+  "validDiagnostics": 34,
+  "unparsedDiagnostics": 1,
+  "syntheticFailureRetained": true,
+  "childProcessesInvoked": 0,
+  "note": "Parser-only check; no repository tests rerun. Child exit is persisted before parse_tap in runner main."
+}
