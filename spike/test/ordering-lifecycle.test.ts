@@ -82,7 +82,7 @@ test('manifest identity binds the prose and executable source, independently rec
     assert.notEqual(ORDERING_LIFECYCLE_MANIFEST_ID, historicalId, 'historical manifest is not relabelled');
     assert.ok(prose.includes(historicalId), 'retain historical manifest identity');
   }
-  assert.equal(ORDERING_LIFECYCLE_MANIFEST_ID, 'sha256:92ad0023e387cd4a6305d074ab99f7a29cbcc1699cd88b8dcf439a446ef58828');
+  assert.equal(ORDERING_LIFECYCLE_MANIFEST_ID, 'sha256:00bdb77671000310c01a1761364285c6e0b1a643b1dc300ab9f419dc82b4988a');
   assert.equal(ORDERING_LIFECYCLE_MANIFEST_ID, contentId({ prose: contentId(prose), executable: contentId(executable) }));
   assert.notEqual(ORDERING_LIFECYCLE_MANIFEST_ID, contentId({ prose: contentId(prose + '\nchanged'), executable: contentId(executable) }));
   assert.notEqual(ORDERING_LIFECYCLE_MANIFEST_ID, contentId({ prose: contentId(prose), executable: contentId(executable + '\n// changed') }));
