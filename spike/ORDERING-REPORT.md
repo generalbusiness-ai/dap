@@ -1,6 +1,6 @@
 # Ordering spike report
 
-**Measured M1 O4/O6 candidates; independent approval remains pending.**
+**O4 approved and landed; O6 independent review remains pending.**
 The bootstrap meets goal 4's local fixture criterion. O4's executed transfer
 and replay checks support goal 1 within its trusted-writer fixture. Independent
 reviews found further blockers despite passing tests. K1–K4 and then L1–L3
@@ -10,8 +10,8 @@ exception-conversion route and constructor cleanup gap. The M1 components
 address those paths and document remaining resource and classification limits;
 O4 has measured the combined repair and O6 has re-executed the local bootstrap. The movable writer profile is `/3`, and
 the distinct public-opening rule is now `/3`. Earlier failures and measurements remain at
-their original sources. O2/O3/O5 was separately approved and landed; that
-acceptance does not approve these O4/O6 changes.
+their original sources. O2/O3/O5 was separately approved and landed. O4 now
+has its own exact-candidate approval and landing; neither approval covers O6.
 
 The implemented profile uses one trusted writer and a local SQLite journal.
 The evidence covers authenticated append, exact retry, named process-crash
@@ -44,7 +44,7 @@ requirement even when Node exits zero.
 | O1 codec and journal | Full `747a0905`: 188 tests, 187 pass, one failing Club TODO; 600 seeds clean. Specification `43295693`: 11/11. V6 integration `9575c7c4`: 191 selected, 187 pass, four failing TODOs. G1/G2 `2c727b7d`: 202 selected, 198 pass, four failing TODOs. Typecheck passes at each boundary. | Earlier passing snapshots missed ownership bypasses. G1's head check now refuses stale raw and owned Context writes inside serialization; their own append/fold errors disable them. The final two runs exclude three campaigns and do not relabel the older full run. [Ledger][o1] |
 | O2 concurrency, retry and admission | Focused `ea2b65e6`: 9/9. Integrated `d3ff5f1b`: 189 tests, 188 pass, one failing Club TODO; 600 visibility seeds clean; typecheck passes. | Three schedules submit 126 requests through six concurrent client processes per schedule: 78 new entries, 39 exact replays, nine changed-content refusals. No append or model change was needed. Participant removal is controlled at the admission interface because F0 has no removal event. [Ledger][o2] |
 | O3 handover | Original `/2`: `3cdd1f3b` 69/70; `aae4051e` full 200 tests, 199 pass, one Club TODO, 600 seeds clean. `8756c233` 71/71 but typecheck fails; `acfe2522` 71/71 and typecheck passes. H1/H2 `/3`: aggregate `773a38ec` selects 325 tests, 321 pass, four Club TODOs, zero ordinary failures, but typecheck fails. | Original corrections were error wording and test typing. The later review exposes a real wrong-head proof and repeated full-prefix authentication. `/3` changes the protocol and caches verification. `713315d` changes only the malformed-test `Json[]` annotation; 12 handover tests and typecheck pass there, separately from the full run. [Ledger][ordering-integration] |
-| O4 transfer lifecycle | Run 1 `ee86290f`: 98/100, two recorder failures. Run 2 `b35b267e`: 100/100 focused; full 315 tests, 311 pass, four Club TODOs; 600 seeds pass. Replay `faf26c07`: 6/6. G1/G2 `91941fa5`: 345 selected, 341 pass, four TODOs, including 122 O4 checks. `/3` `e8ccb2ef`: 124/124. K1–K4 `2ee1b43a`: 469 selected, 465 pass, four TODOs, including all 144 O4 checks. L1–L3 `f8987d22`: completed TAP reports 492 selected, 488 pass, four TODOs, including 167 O4 checks; typecheck passes. M1 `79cd0002`: 512 selected/508 pass/four TODOs, including 187 O4 checks; Node/typecheck/wrapper exit 0. | Run 8 retains 92 fresh observation files and regenerates scope identities under the revised rule and packages. The prior 600-seed result remains historical; no campaign repeated in run 8. Run 9 retains 100 observations. Its reporting wrapper failed after the test child completed; the child exit code is unavailable. Complete TAP outcomes and successful typecheck are retained. M1 run 10 has 106 observations and 98 source/config/doc blobs; it does not recover run 9's missing exit. Component failures remain separate. [Ledger][o4] |
+| O4 transfer lifecycle | Run 1 `ee86290f`: 98/100, two recorder failures. Run 2 `b35b267e`: 100/100 focused; full 315 tests, 311 pass, four Club TODOs; 600 seeds pass. Replay `faf26c07`: 6/6. G1/G2 `91941fa5`: 345 selected, 341 pass, four TODOs, including 122 O4 checks. `/3` `e8ccb2ef`: 124/124. K1–K4 `2ee1b43a`: 469 selected, 465 pass, four TODOs, including all 144 O4 checks. L1–L3 `f8987d22`: completed TAP reports 492 selected, 488 pass, four TODOs, including 167 O4 checks; typecheck passes. M1 `79cd0002`: 512 selected/508 pass/four TODOs, including 187 checks selected by the recorded O4 title regex; Node/typecheck/wrapper exit 0. | Run 8 retains 92 fresh observation files and regenerates scope identities under the revised rule and packages. The prior 600-seed result remains historical; no campaign repeated in run 8. Run 9 retains 100 observations. Its reporting wrapper failed after the test child completed; the child exit code is unavailable. Complete TAP outcomes and successful typecheck are retained. M1 run 10 has 106 observations and 98 source/config/doc blobs; it does not recover run 9's missing exit. Component failures remain separate. [Ledger][o4] |
 | O5 isolated control verifier | Original `462d7dec`: 53 pass, one runner failure; `ac563035`: 54/54, then test-cast typecheck failure. Full `/2` source `0a1daff7`: 256 tests, 255 pass, one Club TODO, 55 O5 checks and 600 seeds pass. Revised `/3` source `773a38ec`: all 86 O5 checks pass within its 325-test invocation. | Original repairs address permission-runner paths and typing. H1 additionally repairs exact-head verification and duplicate detection, expands 47 vectors to 76 and retains the accepted old `/2` attack. Real-journal and isolated-reader evidence remain separate from application semantics. [Ledger][o5] |
 | O6 envelope and route | `/2` sources: `c75894b8` 2/2; `f9995e87` 371 selected/367 pass/four TODOs; `19b6d434` 402 selected/398 pass/four TODOs. `/3` `8c5598ff`: 2/2. K1–K4 `b6c7ab7a`, L1–L3 `1ea700b1` and M1 `dec72c40`: each 2/2 bootstrap checks, typecheck and actual SQLite CLI pass. | The two combined `/2` runs exclude three campaigns. Runs 4–7 check only O6 and typecheck. The Sale-only bootstrap is unchanged and its fresh run-7 transcript matches run 6 except PID and database path. A post-run summary assertion failed on the intentional replay-flag difference; record-only recovery used saved output, with no command rerun. The changed Scope/Inspection identities are separate. [Ledger][o6] |
 
@@ -300,8 +300,9 @@ L2 sweeps every issuance hash/key construction call in one cold open and
 activation, all 51 cold-open signature verifications per backend, selected
 first/middle/final activation verifications and its signing call. It does
 not inject every activation signature verification or all 2,870 crypto calls
-in the checker workload. The remaining boundary is stated below. Repaired
-O4 and O6 still require their own independent approval.
+in the checker workload. Those measurements alone did not establish
+acceptance; O4's subsequent independent approval is recorded below, and O6
+still requires its own review.
 
 ## M1: catch classification, cleanup and remaining limits
 
@@ -353,15 +354,19 @@ diagnostic objects agree exactly, including 144 converting-body outcomes,
 cases and 12 committed lost-reply recoveries. The helper filters operation
 kinds before collecting stacks. Its observed 56.7204-to-18.3150-second pair
 is neither a controlled benchmark nor a production/full-suite speed claim.
-Only one of the 29 allowed wire-error messages is dynamically sampled.
+Only one of the 29 allowed wire-error messages is tested, using a literal
+string rather than dynamically selecting from the private allowlist.
 Close-fault mocks perform real close first: they establish error preservation,
-not resource release when native close itself fails. The own-entry component
+not resource release when native close itself fails. Deleting the constructor's
+Journal close is detected only by the memory variant; the SQLite variant opens
+a fresh handle and cannot demonstrate that missing lease release. The own-entry component
 passes 11 checks/typecheck at `8e854c26`, with eight observations; the docs/count
 component passes three checks/typecheck at `a9d27c3d`.
 
 Combined source `79cd00029504deb92c121dbf12859680dfe78358` then passes
 **512 selected tests, 508 pass, zero ordinary failures and four retained Club
-TODOs**, including all 187 O4 checks in that same invocation. Node, typecheck
+TODOs**, including all 187 checks selected by the recorded O4 title regex
+in that same invocation. This count is not a scope-file test count. Node, typecheck
 and the reporting wrapper each exit 0. Run 10 retains 106 fresh observations
 and pins 98 source/configuration/documentation blobs. No campaign is repeated;
 these combined results are separate from the component runs and O6's checks.
@@ -386,7 +391,9 @@ visibility. This supplements, without narrowing, the S20/F1 mandate/result
 disclosure below. The fixed registry cannot exercise an actually missing
 bound model: `model_unavailable` has synthetic classification coverage only.
 The existing genesis sweep now asserts 209 outcomes and their 30/5/154/18/2
-distribution. Overlapping frontier/prefix/release/replay guards remain defence
+distribution. Those unchanged mutations do not establish the own-entry repair;
+the dedicated own-entry tests and retained residual probe do. Overlapping
+frontier/prefix/release/replay guards remain defence
 in depth, not four independently isolated negative scenarios; S23 still
 returns `ineffective_release` for the missing S24 release.
 
@@ -611,8 +618,10 @@ JavaScript sandbox. Unexpected strict replay faults preserve their original
 thrown value. Declared codec/canonical input errors remain ordinary refusals.
 The parser's nominal `SyntaxError`, deliberately thrown Scope policy-error
 instances and listed exact Journal/control Error messages may still be
-classified as policy failures; these conversions can differ from healthy
-replay under deliberate policy-class injection. Precommit envelope
+classified as policy failures. Under such injected declared policy values,
+the returned verdict can disagree with both the same facade's recomputed
+state and a cold reopen. Genuine input-derived refusals remain deterministic
+in committed bytes and agree with cold replay. Precommit envelope
 checks can refuse after a fault without storing bytes. After a postcommit
 replay fault, submission, retained Context writes, interpretation and export
 are blocked; memory-backed `proof()` and retained `context.view()` may still
@@ -734,10 +743,45 @@ bookkeeping failure, separate from the three recorded child results.
 
 O4 records candidate `805a38f3b8ba55e77b9d81847ea5a04b7e1a8fb2` then enters
 without runtime/test changes. All 98 measured blobs and 106 observation hashes
-match locally; O4's 53 backend pairs are byte-identical. All 30 historical O6
+match locally; all 53 memory/SQLite pairs are byte-identical, exhaustively
+covering the 106 observations. All 30 historical O6
 run files and both bootstrap files remain unchanged from `9fc72be96`. No
 O4/full suite or campaign is repeated here. All earlier exact-head artifacts
-remain historical; O4/O6 independent approval and landing remain pending.
+remain historical. O4's exact-candidate approval and landing are recorded
+below; O6 independent review remains pending.
+
+
+## Independent O4 acceptance
+
+Checker report `ed8485cd97647d82b44f69ea1d8ca5f5934a0beb` approves exact
+O4 candidate `805a38f3b8ba55e77b9d81847ea5a04b7e1a8fb2` within the declared
+fixture, trust, disclosure, availability and conversion limits. The independent
+review reran both that candidate and measured source `79cd0002`: 512 tests,
+508 pass, zero ordinary failures and four Club TODOs; Node and typecheck exit 0.
+Its parser reproduces the recorded 187-check title-regex subset. All 106
+observations regenerate byte-for-byte and all 53 backend pairs agree. These
+are reviewer measurements, separate from the builder's run 10.
+
+The checker independently rebuilt the 23-catch inventory, proved that all 144
+converter injections entered the intended catch, checked key-import faults
+and malformed controls, and made each of the six M1 repairs fail by reverting
+it in a copy. The constructor-close mutation is detected only on memory, as
+qualified above. Earlier K/L cases, codec, control and visibility regressions
+remain accepted within their scope. This does not revise Club's negative
+result or Sale's repair budget, establish progress for arbitrary histories,
+or approve the O6 bootstrap/report.
+
+The approved O4 tree landed as main
+`4bef258270261dc59eefebb9c979b4bbabd5e0a6` and was pushed to `origin/main`.
+Its tree equals approved `805a38f3`. Effective merge receipt `26e8d2e1`
+(sequence 5087) records that landing after ratification `c8290c9c`; full handles
+are in the [O6 ledger][o6]. The CLI is still appending sealed per-file
+successor/retirement metadata, so this report does not claim that suffix
+complete. O6 now includes the actual main ancestry. This report/ledger-only
+clarification preserves all 922 accepted O4 paths and all 36 O6 evidence files,
+including both run-9 and run-7 recording caveats; no test is repeated.
+O6's own publication and independent review wait for the current artifact
+bases after the O4 metadata suffix settles.
 
 [goals]: https://github.com/generalbusiness-ai/dap/blob/598170fa5907655bc48c346a2dd4dd98853314a8/notes/2026-09-14-evolving-spaces-design.md#L80-L107
 [bootstrap]: https://github.com/generalbusiness-ai/dap/blob/598170fa5907655bc48c346a2dd4dd98853314a8/notes/2026-09-14-evolving-spaces-design.md#L537-L573
@@ -747,7 +791,7 @@ remain historical; O4/O6 independent approval and landing remain pending.
 [o3]: https://github.com/generalbusiness-ai/dap/blob/c527584d5399f20dff33625e20cb97d237bdad98/spike/manifests/ordering-o3.ledger.md
 [o5]: https://github.com/generalbusiness-ai/dap/blob/936acce94e5cd024b0164fc6cd2af027f611545e/spike/manifests/ordering-o5.ledger.md
 [profile]: https://github.com/generalbusiness-ai/dap/blob/79cd00029504deb92c121dbf12859680dfe78358/spike/ordering-profile.md
-[o6]: https://github.com/generalbusiness-ai/dap/blob/136c8df42e98d3f66dedab8f5df41bb32cf35cf5/spike/manifests/ordering-o6.ledger.md
+[o6]: https://github.com/generalbusiness-ai/dap/blob/c1f7123e45f3dc423dc4a8eaec6ac5a9d36a67be/spike/manifests/ordering-o6.ledger.md
 [o6-source]: https://github.com/generalbusiness-ai/dap/blob/dec72c4065b6e814d9e117b77df161c71bfd1011/spike/test/fixtures/o6-bootstrap.ts
 [o6-tests]: https://github.com/generalbusiness-ai/dap/blob/dec72c4065b6e814d9e117b77df161c71bfd1011/spike/test/ordering-bootstrap.test.ts
 [o6-demo]: https://github.com/generalbusiness-ai/dap/blob/6b4a6f53b2c10331706519923b95c95a70ec14e6/spike/manifests/ordering-o6-runs/run-7-demo.json
