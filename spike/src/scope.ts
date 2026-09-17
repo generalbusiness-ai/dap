@@ -297,7 +297,13 @@ export class ScopeJournal {
   private readonly writerKey: KeyObject;
   private unavailable = false;
   private constructor(journal: Journal, packages: Record<string, PackageDescriptor>, writerKey: KeyObject) {
-    if (!scopeSetup(journal.context.entries[0]!.event)) throw new Error('scope: profile required');
+    try {
+      if (!scopeSetup(journal.context.entries[0]!.event)) throw new Error('scope: profile required');
+    } catch (error) {
+      // Both factories have already acquired a Journal lease. A failed Scope
+      // wrapper must release it, preserving the original validation failure.
+      try { journal.close(); } finally { throw error; }
+    }
     this.journal = journal; this.packages = packages; this.writerKey = writerKey;
   }
   static create(opts: JournalOptions, genesis: ActorEnvelope | string, origins: (ActorEnvelope | string)[] = []): ScopeJournal {

@@ -1,0 +1,5 @@
+C: healthy open  {"active":true,"activations":1,"verdict1":{"known":true,"authorized":true,"effective":true},"rights":{"R_deliver":{"owner":"ed25519:oJql9HpnWYAv-VX43C0qFKXJnSO-l_hkEn_5ODRVpPA","status":"live"},"R_fulfil":{"owner":"ed25519:rNsOKXQ_DMuGhtChBMuW4Fq-_sFTh2XnWVhp99yMSao","status":"live"}}}
+C: faulty open   {"active":false,"activations":0,"verdict1":{"known":true,"authorized":true,"effective":false,"reason":"Journal view: malformed_control"},"rights":{"R_deliver":{"owner":"ed25519:oJql9HpnWYAv-VX43C0qFKXJnSO-l_hkEn_5ODRVpPA","status":"dormant"},"R_fulfil":{"owner":"ed25519:rNsOKXQ_DMuGhtChBMuW4Fq-_sFTh2XnWVhp99yMSao","status":"dormant"}}} | fault consumed true
+C: cold reopen   {"active":true,"activations":1,"verdict1":{"known":true,"authorized":true,"effective":true},"rights":{"R_deliver":{"owner":"ed25519:oJql9HpnWYAv-VX43C0qFKXJnSO-l_hkEn_5ODRVpPA","status":"live"},"R_fulfil":{"owner":"ed25519:rNsOKXQ_DMuGhtChBMuW4Fq-_sFTh2XnWVhp99yMSao","status":"live"}}}
+D: faulty open threw original fault
+D: reopen ok, head 1

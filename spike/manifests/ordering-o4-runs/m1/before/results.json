@@ -1,0 +1,62 @@
+[
+  {
+    "source": "15b660caaf06e1ea4698e83a94e3717cfd48572b",
+    "command": [
+      "node",
+      "/tmp/dap-o4-m1-faults/spike/manifests/ordering-o4-runs/m1/before/l2-ordering.mjs",
+      "memory"
+    ],
+    "env": {
+      "WT": "/tmp/dap-o4-m1-faults"
+    },
+    "exit": 0,
+    "seconds": 0.7246638330107089,
+    "output": "l2-ordering-memory.txt",
+    "harnessSHA256": "b35c22c34df1f2247feb6e4aeab0675e35d33f14b14feab1dd0f87e2445d2b72"
+  },
+  {
+    "source": "15b660caaf06e1ea4698e83a94e3717cfd48572b",
+    "command": [
+      "node",
+      "/tmp/dap-o4-m1-faults/spike/manifests/ordering-o4-runs/m1/before/l2-ordering.mjs",
+      "sqlite"
+    ],
+    "env": {
+      "WT": "/tmp/dap-o4-m1-faults"
+    },
+    "exit": 0,
+    "seconds": 0.79395991700585,
+    "output": "l2-ordering-sqlite.txt",
+    "harnessSHA256": "b35c22c34df1f2247feb6e4aeab0675e35d33f14b14feab1dd0f87e2445d2b72"
+  },
+  {
+    "source": "15b660caaf06e1ea4698e83a94e3717cfd48572b",
+    "command": [
+      "node",
+      "/tmp/dap-o4-m1-faults/spike/manifests/ordering-o4-runs/m1/before/l2-open-and-lease.mjs",
+      "memory"
+    ],
+    "env": {
+      "WT": "/tmp/dap-o4-m1-faults"
+    },
+    "exit": 0,
+    "seconds": 0.5187645419937326,
+    "output": "l2-open-and-lease-memory.txt",
+    "harnessSHA256": "63fe5ab9d1fb8c6dd556d0f8c8256ed47a7413087cfb25b92aa45fc4f233f3b0"
+  },
+  {
+    "source": "15b660caaf06e1ea4698e83a94e3717cfd48572b",
+    "command": [
+      "node",
+      "/tmp/dap-o4-m1-faults/spike/manifests/ordering-o4-runs/m1/before/l2-open-and-lease.mjs",
+      "sqlite"
+    ],
+    "env": {
+      "WT": "/tmp/dap-o4-m1-faults"
+    },
+    "exit": 0,
+    "seconds": 0.5491825000062818,
+    "output": "l2-open-and-lease-sqlite.txt",
+    "harnessSHA256": "63fe5ab9d1fb8c6dd556d0f8c8256ed47a7413087cfb25b92aa45fc4f233f3b0"
+  }
+]
