@@ -1,0 +1,19 @@
+✔ O4 M1 source fact union preserves own property names and source binding: memory (908.430459ms)
+✔ O4 M1 Scope genesis rejects inherited packages and accepts declared own property-name bindings: memory (37.143125ms)
+✔ O4 M1 unchanged facts complete transfer with cold state and exact activation retry: memory (798.146417ms)
+✔ O4 M1 source fact union preserves own property names and source binding: sqlite (954.67325ms)
+✔ O4 M1 Scope genesis rejects inherited packages and accepts declared own property-name bindings: sqlite (46.866625ms)
+✔ O4 M1 unchanged facts complete transfer with cold state and exact activation retry: sqlite (907.206916ms)
+✔ O4 L1 property-name attempts retain retries, cold state and completed transfer: memory (2146.996917ms)
+✔ O4 L1 property-name attempts retain retries, cold state and completed transfer: sqlite (2318.023709ms)
+✔ O4 L1 explicitly owned property-name kinds, models, roles and resolutions still work: memory (7.839209ms)
+✔ O4 L1 explicitly owned property-name kinds, models, roles and resolutions still work: sqlite (11.126125ms)
+✔ O4 L1 registry inheritance is absent while own data keys survive copying and serialization (0.336333ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4576.121458
