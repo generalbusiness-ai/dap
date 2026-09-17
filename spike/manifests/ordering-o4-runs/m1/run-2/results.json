@@ -1,0 +1,34 @@
+{
+  "source": "37a3e12178923b8198950a332b76c7503fc13c15",
+  "sourceUnchanged": true,
+  "runtimeUnchangedFromPrior": true,
+  "results": [
+    {
+      "command": [
+        "node",
+        "--test",
+        "test/ordering-scope-catch-boundaries.test.ts",
+        "test/ordering-scope-cleanup.test.ts",
+        "test/codec.test.ts",
+        "test/ordering-handover.test.ts"
+      ],
+      "env": {},
+      "exit": 0,
+      "seconds": 18.31503258300654,
+      "output": "focused.txt",
+      "sha256": "bbee945ffa5b5332a62ed77fda5804242d5dddee47b840419e35863526adf353"
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "env": {},
+      "exit": 0,
+      "seconds": 0.910097333995509,
+      "output": "typecheck.txt",
+      "sha256": "c13cdfb986ee40a7a2614e780678b6307a8b1368291811d1a2cae9e00dfd60cd"
+    }
+  ]
+}

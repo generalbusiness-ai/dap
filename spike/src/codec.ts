@@ -91,7 +91,15 @@ function text(input: string | Uint8Array): string {
 export function parseCanonical(input: string | Uint8Array): Json {
   const source = text(input);
   let value: Json;
-  try { value = JSON.parse(source) as Json; } catch { return fail('invalid JSON'); }
+  try { value = JSON.parse(source) as Json; }
+  catch (error) {
+    // JSON.parse declares SyntaxError for invalid JSON. Other failures are
+    // not bad input; exception inspection must preserve opaque thrown values.
+    let syntax = false;
+    try { syntax = error instanceof SyntaxError; } catch { /* preserve the original value */ }
+    if (syntax) return fail('invalid JSON');
+    throw error;
+  }
   if (canonicalize(value) !== source) fail('noncanonical JSON');
   return value;
 }

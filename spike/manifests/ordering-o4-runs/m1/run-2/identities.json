@@ -1,0 +1,8 @@
+{
+  "source": "37a3e12178923b8198950a332b76c7503fc13c15",
+  "runtime": "sha256:3dd5aa628ab6c7318fce24fdccb599edb3ec3ee3e2aad951ec430cf7ac0e27b1",
+  "scopePackage": "sha256:96dea7ead5f5185c75471ce5618311dd8020f3320623acc22823ab0492ae68bb",
+  "publicProofRule": "sha256:9e9bcbdd74fe244fb63c5e339256ab508b2b3251d2e8fa642b3309cd1f1049e6",
+  "joinPolicy": "sha256:ac852ebab4f55816e55cd0fd71b7280267bffaca097046d4880b24ac63b01455",
+  "foundation": "sha256:5a7be1514529bac249c683ada733e64273f94b2700abf8a55c47dcb7ebfb8d78"
+}
