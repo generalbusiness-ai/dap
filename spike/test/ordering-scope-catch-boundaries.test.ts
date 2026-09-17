@@ -15,13 +15,20 @@ import { envelopeBytes, parseCanonical, isCodecValidationError, signEvent } from
 import type { PackageDescriptor } from '../src/descriptor.ts';
 
 type Seam = 'journal-precheck' | 'append-prepare' | 'parse-proof' | 'cold-parse' | 'system-fold' | 'audience' | 'issuance-envelope' | 'issuance-header' | 'model-fold' | 'ordering-key' | 'wire-key' | 'release-opening' | 'scope-object' | 'constructor-key' | 'open-key';
+const seamKind: Record<Seam, string> = {
+  'journal-precheck': 'verify', 'append-prepare': 'verify', 'parse-proof': 'parse', 'cold-parse': 'parse',
+  'system-fold': 'package', audience: 'audience', 'issuance-envelope': 'key', 'issuance-header': 'keys',
+  'model-fold': 'fold', 'ordering-key': 'key', 'wire-key': 'key', 'release-opening': 'key',
+  'scope-object': 'array', 'constructor-key': 'key', 'open-key': 'key',
+};
 function inject(seam: Seam) {
   const state = { armed: false, hits: 0, value: undefined as unknown, stack: '' };
+  const eligibleKind = seamKind[seam], direct = seam === 'audience' || seam === 'model-fold';
   const originals = { parse: JSON.parse, keys: Object.keys, isArray: Array.isArray, createPublicKey: crypto.createPublicKey, verify: crypto.verify };
   const stackLimit = Error.stackTraceLimit; Error.stackTraceLimit = 60;
   function hit(kind: string, value?: unknown) {
-    if (!state.armed) return;
-    const stack = new Error().stack ?? '';
+    if (!state.armed || kind !== eligibleKind) return;
+    const stack = direct ? '' : new Error().stack ?? '';
     const matches =
       seam === 'journal-precheck' && kind === 'verify' && !stack.includes('prepare (') ||
       seam === 'append-prepare' && kind === 'verify' && /prepare \(/.test(stack) ||
@@ -37,7 +44,7 @@ function inject(seam: Seam) {
       seam === 'constructor-key' && kind === 'key' && /new ScopeJournal/.test(stack) ||
       seam === 'open-key' && kind === 'key' && /verifyEntries/.test(stack) ||
       seam === 'audience' && kind === 'audience' || seam === 'model-fold' && kind === 'fold';
-    if (matches) { state.armed = false; state.hits++; state.stack = stack; throw state.value; }
+    if (matches) { state.armed = false; state.hits++; state.stack = direct ? new Error().stack ?? '' : stack; throw state.value; }
   }
   JSON.parse = ((...args: Parameters<typeof JSON.parse>) => { hit('parse'); return Reflect.apply(originals.parse, JSON, args); }) as typeof JSON.parse;
   Object.keys = ((value: object) => { hit('keys', value); return originals.keys(value); }) as typeof Object.keys;
