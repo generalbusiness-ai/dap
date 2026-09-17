@@ -673,3 +673,36 @@ will use actual generated output, not assumed equality. All earlier O6 run
 files and bootstrap source are preserved. No full suite/campaign, main edit,
 push or publication is part of this run. O4/O6 independent acceptance remains
 pending.
+
+
+## M1 run 7
+
+Frozen O6 source: `dec72c4065b6e814d9e117b77df161c71bfd1011`.
+Node `v26.8.2`, Darwin. Both bootstrap checks pass; test, typecheck and actual
+fresh-database SQLite CLI each exit 0. CLI stderr is empty. Before execution,
+all 98 blobs from O4's run-10 source index matched locally. Exact commands,
+child exits, durations, identities and output hashes are retained in
+[run-7.json](ordering-o6-runs/run-7.json), with adjacent raw outputs.
+
+The actual generated transcript equals run 6 except process id and database
+path. G remains `sha256:080afaa386822dba15e5f694e16c554cf305ff06f031df9709b8a01935b1503c`,
+L `sha256:1a2a4d30944bc14b399a54f9c19419201730d6874aed4c4fcb5c697fccca1fd6`
+and receipt `sha256:c6e06aeedc59bac6120eaba9d463ea2ffe3d3d76a520e08a15167a8c4daf91e6`.
+Headers, receipt hashes and verdicts match across append, immediate retry and
+reopened retry; the replay flag is false for append and true for both retries.
+The verified reopened view retains four entries and four pending outbox records.
+The ordinary Sale-only bootstrap selects neither Scope nor Inspection, so
+changed Scope runtime/package ids do not alter those signed bytes.
+
+After persisting all three exit-zero child results, the summary wrapper used
+an incorrect whole-object append/retry equality assertion and exited 1. Their
+replay flags intentionally differ. The record-only recovery checked the actual
+header/hash/verdict equality and replay flags separately, then completed the
+run-6 transcript comparison from saved output. No command was rerun. The
+[recording note](ordering-o6-runs/run-7-recording-note.txt) is explicitly a later
+explanation/transcription, not captured original stderr. This bookkeeping
+failure does not change the recorded child results or product behavior.
+
+No runtime or test changed during or after measurement. Final O4 records will
+be merged separately; all historical O6 evidence stays at its original source.
+O4/O6 independent approval remains pending.

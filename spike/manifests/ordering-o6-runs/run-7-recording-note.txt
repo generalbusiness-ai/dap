@@ -1,0 +1,22 @@
+Post-run summary bookkeeping failure; no product failure or command rerun.
+
+The initial measurement wrapper ran and persisted:
+- bootstrap: exit 0, two tests pass;
+- typecheck: exit 0;
+- actual fresh SQLite CLI: exit 0.
+
+Its next assertion was incorrectly:
+assert fresh['joined'] == fresh['retry'] == fresh['reopenedRetry']
+
+Tool-returned error:
+Traceback (most recent call last):
+  File "<stdin>", line 28, in <module>
+AssertionError
+
+Wrapper exit: 1. This note is a later explanation/transcription of the tool
+result, not captured original stderr. The raw child outputs are unchanged.
+The objects correctly differ only in replay: original append false, immediate
+and reopened retries true. A record-only recovery compared header, headerHash
+and verdict and separately asserted those replay flags, then compared the
+whole generated transcript with run 6 after removing only PID and database.
+All comparisons passed. No child command was rerun.
