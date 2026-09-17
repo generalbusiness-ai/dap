@@ -1,6 +1,6 @@
 # Ordering spike report
 
-**M1 O4 measurement incorporated; O6 refresh and independent approval pending.**
+**Measured M1 O4/O6 candidates; independent approval remains pending.**
 The bootstrap meets goal 4's local fixture criterion. O4's executed transfer
 and replay checks support goal 1 within its trusted-writer fixture. Independent
 reviews found further blockers despite passing tests. K1–K4 and then L1–L3
@@ -8,7 +8,7 @@ correct participant-input handling, exception propagation, proof availability
 and disclosure accounting. Review `66effd75` subsequently found another
 exception-conversion route and constructor cleanup gap. The M1 components
 address those paths and document remaining resource and classification limits;
-O4 has measured the combined repair; the bounded O6 refresh is declared below. The movable writer profile is `/3`, and
+O4 has measured the combined repair and O6 has re-executed the local bootstrap. The movable writer profile is `/3`, and
 the distinct public-opening rule is now `/3`. Earlier failures and measurements remain at
 their original sources. O2/O3/O5 was separately approved and landed; that
 acceptance does not approve these O4/O6 changes.
@@ -46,7 +46,7 @@ requirement even when Node exits zero.
 | O3 handover | Original `/2`: `3cdd1f3b` 69/70; `aae4051e` full 200 tests, 199 pass, one Club TODO, 600 seeds clean. `8756c233` 71/71 but typecheck fails; `acfe2522` 71/71 and typecheck passes. H1/H2 `/3`: aggregate `773a38ec` selects 325 tests, 321 pass, four Club TODOs, zero ordinary failures, but typecheck fails. | Original corrections were error wording and test typing. The later review exposes a real wrong-head proof and repeated full-prefix authentication. `/3` changes the protocol and caches verification. `713315d` changes only the malformed-test `Json[]` annotation; 12 handover tests and typecheck pass there, separately from the full run. [Ledger][ordering-integration] |
 | O4 transfer lifecycle | Run 1 `ee86290f`: 98/100, two recorder failures. Run 2 `b35b267e`: 100/100 focused; full 315 tests, 311 pass, four Club TODOs; 600 seeds pass. Replay `faf26c07`: 6/6. G1/G2 `91941fa5`: 345 selected, 341 pass, four TODOs, including 122 O4 checks. `/3` `e8ccb2ef`: 124/124. K1–K4 `2ee1b43a`: 469 selected, 465 pass, four TODOs, including all 144 O4 checks. L1–L3 `f8987d22`: completed TAP reports 492 selected, 488 pass, four TODOs, including 167 O4 checks; typecheck passes. M1 `79cd0002`: 512 selected/508 pass/four TODOs, including 187 O4 checks; Node/typecheck/wrapper exit 0. | Run 8 retains 92 fresh observation files and regenerates scope identities under the revised rule and packages. The prior 600-seed result remains historical; no campaign repeated in run 8. Run 9 retains 100 observations. Its reporting wrapper failed after the test child completed; the child exit code is unavailable. Complete TAP outcomes and successful typecheck are retained. M1 run 10 has 106 observations and 98 source/config/doc blobs; it does not recover run 9's missing exit. Component failures remain separate. [Ledger][o4] |
 | O5 isolated control verifier | Original `462d7dec`: 53 pass, one runner failure; `ac563035`: 54/54, then test-cast typecheck failure. Full `/2` source `0a1daff7`: 256 tests, 255 pass, one Club TODO, 55 O5 checks and 600 seeds pass. Revised `/3` source `773a38ec`: all 86 O5 checks pass within its 325-test invocation. | Original repairs address permission-runner paths and typing. H1 additionally repairs exact-head verification and duplicate detection, expands 47 vectors to 76 and retains the accepted old `/2` attack. Real-journal and isolated-reader evidence remain separate from application semantics. [Ledger][o5] |
-| O6 envelope and route | `/2` sources: `c75894b8` 2/2; `f9995e87` 371 selected/367 pass/four TODOs; `19b6d434` 402 selected/398 pass/four TODOs. `/3` `8c5598ff`: 2/2. K1–K4 `b6c7ab7a` and L1–L3 `1ea700b1`: each 2/2 bootstrap checks, typecheck and actual SQLite CLI pass. | The two combined `/2` runs exclude three campaigns. Runs 4–6 check only O6 and typecheck. The Sale-only bootstrap is unchanged and its fresh run-6 signed bytes match runs 4–5, apart from PID and database path. The changed Scope/Inspection identities are separate. [Ledger][o6] |
+| O6 envelope and route | `/2` sources: `c75894b8` 2/2; `f9995e87` 371 selected/367 pass/four TODOs; `19b6d434` 402 selected/398 pass/four TODOs. `/3` `8c5598ff`: 2/2. K1–K4 `b6c7ab7a`, L1–L3 `1ea700b1` and M1 `dec72c40`: each 2/2 bootstrap checks, typecheck and actual SQLite CLI pass. | The two combined `/2` runs exclude three campaigns. Runs 4–7 check only O6 and typecheck. The Sale-only bootstrap is unchanged and its fresh run-7 transcript matches run 6 except PID and database path. A post-run summary assertion failed on the intentional replay-flag difference; record-only recovery used saved output, with no command rerun. The changed Scope/Inspection identities are separate. [Ledger][o6] |
 
 Ratified checker report `7f5bacc3` approves exact aggregate
 `936acce94e5cd024b0164fc6cd2af027f611545e`. Its independent `npm test`
@@ -161,12 +161,12 @@ records are not the public proof packets delivered to F. Run 5 repeats the
 same matrix at the G1/G2 source; run 7 repeats it under `/3`. Each retains
 its own signed observations; run 8 regenerates the matrix under K1–K4.
 
-The combined L1–L3 lifecycle manifest is
-`sha256:92ad0023e387cd4a6305d074ab99f7a29cbcc1699cd88b8dcf439a446ef58828`;
+The combined M1 lifecycle manifest is
+`sha256:00bdb77671000310c01a1761364285c6e0b1a643b1dc300ab9f419dc82b4988a`;
 the scope implementation is
-`sha256:cbc58a25deebafd4bcb6318c8eace26027ffa09ed796061efdf27770feee67fe`.
+`sha256:96619acc4777bd2f95859901d7f993d75ab1db485f7a49af2da89040c81f1af1`.
 The Scope package is
-`sha256:21195fc775e76dd7bcc0e0dc57488527c01260de4cb17b7f0de021d00161bed5`;
+`sha256:2f32c21e7336da17596fd86af75a863d2de79651cd050100e19b3958042bba61`;
 the revised Inspection package is
 `sha256:18a886c149b383b8630836307195c1a89b90c463e7e32df6e0663b5d4ecc3030`.
 The fixed join policy is
@@ -181,9 +181,10 @@ The later `/2` G1/G2 boundary used implementation `1090e6c7` and Scope
 package `fd46665b`; none of those old packets is migrated to `/3`.
 Run 7's `d94090b2` manifest, `f17f15a8` runtime and `edea788e` Scope package
 also remain historical. K1–K4 run 8 used manifest `a766fe56`, runtime
-`942f4d20` and Scope package `0a3201ea`. L1–L3 regenerates the scope genesis
-and proof identities again. Sale, Inspection and the fixed join policy are
-unchanged from run 8.
+`942f4d20` and Scope package `0a3201ea`. L1–L3 run 9 used manifest `92ad0023`,
+runtime `cbc58a25` and Scope package `21195fc7`. M1 regenerates the scope genesis
+and proof identities again. Sale, Inspection and the fixed join policy remain
+unchanged from run 8. None of these later measurements rewrites old packets.
 
 Run 7's 209 materialized-genesis variants per backend produce no activation or
 live F right: 30 `destination_mismatch`, five actual `unauthorized`, 154
@@ -364,6 +365,7 @@ TODOs**, including all 187 O4 checks in that same invocation. Node, typecheck
 and the reporting wrapper each exit 0. Run 10 retains 106 fresh observations
 and pins 98 source/configuration/documentation blobs. No campaign is repeated;
 these combined results are separate from the component runs and O6's checks.
+[Combined M1 records][o4-run10]
 
 Activation still puts whole source packets in one signed envelope, bounded
 at 65,536 bytes, with no chunking or pre-release size reservation. Review at
@@ -432,11 +434,12 @@ external services. Runs 1–3 retain the old `/2` context and receipt; run 4
 generates `/3` G and descendants anew. Run 5 freshly executes the unchanged
 Sale-only bootstrap on the K1–K4 runtime, reproducing run 4's signed bytes;
 only process id and database path differ. Run 6 repeats this actual execution
-under L1–L3 with the same result. It selects neither Scope nor Inspection,
-so their changed identities do not alter this ordinary Sale-only G.
+under L1–L3 with the same result. M1 run 7 freshly repeats it, again matching
+run 6 except PID and database path. The fixture selects neither Scope nor
+Inspection, so their changed identities do not alter this ordinary Sale-only G.
 The signed standalone L and route are unchanged.
 
-From measured source `1ea700b1` in its `spike/` directory, reproduce with:
+From measured source `dec72c40` in its `spike/` directory, reproduce with:
 
 ```sh
 npm ci --ignore-scripts --no-audit --no-fund
@@ -715,12 +718,26 @@ repeated for that records-only integration. M1 later changes the runtime;
 those historical comparisons are not equality claims for its successor.
 
 M1 O4 measured source `79cd00029504deb92c121dbf12859680dfe78358` enters
-this O6 integration cleanly, with no O6 runtime or test edit. A source freeze
-will precede run 7's two bootstrap checks, typecheck and fresh-database SQLite
-CLI. Final O4 run-10 records and actual O6 outputs will be incorporated before
-handoff; no O4/full suite or campaign is repeated here. All earlier exact-head
-artifacts remain historical. O4/O6 independent approval and landing remain
-pending.
+O6 measured source `dec72c4065b6e814d9e117b77df161c71bfd1011` cleanly, with no
+O6 runtime or test edit. [Run 7][o6-run7] records both bootstrap checks passing,
+whole-tree typecheck and a fresh-database SQLite CLI, each child exiting 0.
+The generated transcript equals run 6 except PID/database. Before execution,
+all 98 O4 source/configuration/documentation blobs matched locally.
+
+After saving those exits, the summary wrapper incorrectly compared complete
+append/retry objects and exited 1: their `replay` flags intentionally differ.
+Record-only recovery compared headers, receipt hashes and verdicts, then
+separately asserted false/true/true replay flags and completed the transcript
+comparison from saved output. No child command was rerun. Its later explanatory
+note is labelled as a transcription, not captured original stderr. This is a
+bookkeeping failure, separate from the three recorded child results.
+
+O4 records candidate `805a38f3b8ba55e77b9d81847ea5a04b7e1a8fb2` then enters
+without runtime/test changes. All 98 measured blobs and 106 observation hashes
+match locally; O4's 53 backend pairs are byte-identical. All 30 historical O6
+run files and both bootstrap files remain unchanged from `9fc72be96`. No
+O4/full suite or campaign is repeated here. All earlier exact-head artifacts
+remain historical; O4/O6 independent approval and landing remain pending.
 
 [goals]: https://github.com/generalbusiness-ai/dap/blob/598170fa5907655bc48c346a2dd4dd98853314a8/notes/2026-09-14-evolving-spaces-design.md#L80-L107
 [bootstrap]: https://github.com/generalbusiness-ai/dap/blob/598170fa5907655bc48c346a2dd4dd98853314a8/notes/2026-09-14-evolving-spaces-design.md#L537-L573
@@ -730,12 +747,12 @@ pending.
 [o3]: https://github.com/generalbusiness-ai/dap/blob/c527584d5399f20dff33625e20cb97d237bdad98/spike/manifests/ordering-o3.ledger.md
 [o5]: https://github.com/generalbusiness-ai/dap/blob/936acce94e5cd024b0164fc6cd2af027f611545e/spike/manifests/ordering-o5.ledger.md
 [profile]: https://github.com/generalbusiness-ai/dap/blob/79cd00029504deb92c121dbf12859680dfe78358/spike/ordering-profile.md
-[o6]: https://github.com/generalbusiness-ai/dap/blob/6fa5ae314e327b38512f4f8e500a45c3626fb779/spike/manifests/ordering-o6.ledger.md
-[o6-source]: https://github.com/generalbusiness-ai/dap/blob/1ea700b15ded453fdeed52dbae25c2d4dd8057db/spike/test/fixtures/o6-bootstrap.ts
-[o6-tests]: https://github.com/generalbusiness-ai/dap/blob/1ea700b15ded453fdeed52dbae25c2d4dd8057db/spike/test/ordering-bootstrap.test.ts
-[o6-demo]: https://github.com/generalbusiness-ai/dap/blob/6d87172506e6883447a6d773bb4a38eb9f421729/spike/manifests/ordering-o6-runs/run-6-demo.json
+[o6]: https://github.com/generalbusiness-ai/dap/blob/136c8df42e98d3f66dedab8f5df41bb32cf35cf5/spike/manifests/ordering-o6.ledger.md
+[o6-source]: https://github.com/generalbusiness-ai/dap/blob/dec72c4065b6e814d9e117b77df161c71bfd1011/spike/test/fixtures/o6-bootstrap.ts
+[o6-tests]: https://github.com/generalbusiness-ai/dap/blob/dec72c4065b6e814d9e117b77df161c71bfd1011/spike/test/ordering-bootstrap.test.ts
+[o6-demo]: https://github.com/generalbusiness-ai/dap/blob/6b4a6f53b2c10331706519923b95c95a70ec14e6/spike/manifests/ordering-o6-runs/run-7-demo.json
 [visibility]: https://github.com/generalbusiness-ai/dap/blob/d95e097b1d38a5242754922fe4c8b977462f5555/spike/REPORT.md
-[o4]: https://github.com/generalbusiness-ai/dap/blob/15b660caaf06e1ea4698e83a94e3717cfd48572b/spike/manifests/ordering-o4.ledger.md
+[o4]: https://github.com/generalbusiness-ai/dap/blob/805a38f3b8ba55e77b9d81847ea5a04b7e1a8fb2/spike/manifests/ordering-o4.ledger.md
 [o4-results]: https://github.com/generalbusiness-ai/dap/tree/edacc32db1495504d10ae7a92f02af272e49e9f2/spike/manifests/ordering-o4-runs/run-7-observations
 [o4-development]: https://github.com/generalbusiness-ai/dap/blob/2b48c4c4484ecd722aa891cd6efa5362121c0f6e/spike/corpus/ordering-o4/development/README.md
 [lifecycle]: https://github.com/generalbusiness-ai/dap/blob/79cd00029504deb92c121dbf12859680dfe78358/spike/manifests/ordering-lifecycle.md
@@ -758,3 +775,7 @@ pending.
 [m1-catches]: https://github.com/generalbusiness-ai/dap/blob/79cd00029504deb92c121dbf12859680dfe78358/spike/ordering-catch-boundary.md
 [m1-runtime]: https://github.com/generalbusiness-ai/dap/blob/79cd00029504deb92c121dbf12859680dfe78358/spike/manifests/ordering-o4-m1.ledger.md
 [m1-own]: https://github.com/generalbusiness-ai/dap/blob/79cd00029504deb92c121dbf12859680dfe78358/spike/manifests/ordering-o4-m1-own-entries.ledger.md
+
+[o6-run7]: https://github.com/generalbusiness-ai/dap/blob/6b4a6f53b2c10331706519923b95c95a70ec14e6/spike/manifests/ordering-o6-runs/run-7.json
+
+[o4-run10]: https://github.com/generalbusiness-ai/dap/blob/805a38f3b8ba55e77b9d81847ea5a04b7e1a8fb2/spike/manifests/ordering-o4-runs/run-10.json
