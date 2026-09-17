@@ -762,13 +762,18 @@ Root reports a successful normal main-only push and exact `origin/main`
 verification at that commit. Effective durable merge receipt
 `git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:26e8d2e1fcccc2300833b0acc80153b495c64b36`
 at sequence 5087 names the approval, candidate, main commit and target ref.
-The CLI is still appending sealed per-file successor/retirement metadata;
-this receipt does not claim that remaining workroom suffix has completed.
+At O6 finalization boundary
+`a1b37977d45c0a15f622d5ee4763afe09f6451f6`, root reported that the CLI was
+still appending sealed per-file successor/retirement metadata. Completion
+of that suffix had not been observed in this snapshot; the effective merge
+receipt and pushed main above were already established.
 
 O6 incorporates that actual main ancestry without changing accepted O4 bytes.
 Only this ledger and the report are clarified after `3c94f983`; all 36 O6
 run files, both bootstrap files, all 922 accepted O4 paths and the 98 measured
 blobs remain unchanged. The 106 O4 observation hashes still match. Fresh
 exact-head delivery refs are required for the resulting O6 candidate. Root
-will publish/request its independent review after the O4 metadata suffix
-settles and current artifact bases are available. O6 is not yet approved.
+checks the current workroom state and artifact bases before publication and
+review. Later completion of the metadata suffix does not rewrite this historical
+snapshot or require a source change merely to update delivery progress. This
+record establishes no O6 approval.
