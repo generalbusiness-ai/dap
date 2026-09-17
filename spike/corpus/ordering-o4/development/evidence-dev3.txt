@@ -1,0 +1,47 @@
+failed mutation { path: '/body/payload/origins', operation: 'replace' } Error: Journal: origin proofs do not match genesis
+    at Journal.create (file:///private/tmp/dap-o4-transfer-lifecycle/spike/src/journal.ts:87:81)
+    at ScopeJournal.create (file:///private/tmp/dap-o4-transfer-lifecycle/spike/src/scope.ts:289:37)
+    at TestContext.<anonymous> (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/ordering-scope-evidence.test.ts:138:34)
+    at Test.runInAsyncScope (node:async_hooks:226:14)
+    at Test.run (node:internal/test_runner/test:1402:25)
+    at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+    at Test.postRun (node:internal/test_runner/test:1542:19)
+    at Test.run (node:internal/test_runner/test:1467:12)
+    at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+✔ O4 release proof pins come from F genesis: r=p+1, exact prefix and source writer (641.853208ms)
+✔ O4 altered public proof bodies cannot activate a destination (628.569083ms)
+✔ O4 actual revoked release source cannot be repaired by stripping its revocation (447.011208ms)
+✔ O4 public/full scope replay agrees at every opened release-prefix position (694.5365ms)
+✔ O4 actual activation, exports and F views disclose public source bodies without private bytes (708.391334ms)
+✖ O4 every materialized signed F genesis field/container is bound before either release (2382.886792ms)
+✔ O4 withdrawn o3 cannot be restored by stripping the real withdrawal: memory (664.462708ms)
+✔ O4 withdrawn o3 cannot be restored by stripping the real withdrawal: sqlite (710.06725ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 7
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6959.396709
+
+✖ failing tests:
+
+test at spike/test/ordering-scope-evidence.test.ts:121:1
+✖ O4 every materialized signed F genesis field/container is bound before either release (2382.886792ms)
+  AssertionError [ERR_ASSERTION]: unrecognized exception: Journal: origin proofs do not match genesis
+      at recognized (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/ordering-scope-evidence.test.ts:119:10)
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/ordering-scope-evidence.test.ts:146:62)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: undefined,
+    operator: 'fail',
+    diff: 'simple'
+  }

@@ -1,0 +1,26 @@
+{
+  "source": "1bf535539c22045f2bf39a1dae4f1ddf28c51286",
+  "runtimeSource": "82119b5",
+  "scope": "Only corrected placeholder tests on both backends and typecheck; no broad repeat.",
+  "commands": [
+    {
+      "command": [
+        "node",
+        "--test",
+        "--test-name-pattern=actor-only unknown and placeholder",
+        "test/scope-proof.test.ts"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 0.5138447920035105
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 0.8584973750112113
+    }
+  ]
+}

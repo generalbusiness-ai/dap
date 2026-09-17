@@ -73,10 +73,22 @@ export const amountPrivacy = {
   forbiddenExportFields: ['amount', 'acceptedAmount', 'counter', 'terms', 'offer_terms'],
 };
 
-// Ratified pre-formal-O4-baseline disclosure/completeness rule. O4 must pin
+// K4 explicitly accounts for the request-derived data already carried by the
+// admitted Inspection proof. Source is a symbolic context name, not a fake id.
+export const inspectionDisclosure = {
+  request: { context: 'S', position: 14, readers: ['alice', 'carol', 'ivan'], bodyInPublicProof: false },
+  admit: { context: 'S', position: 20, audience: 'members', readers: ['alice', 'bob', 'carol', 'ivan'] },
+  activation: { context: 'F', position: 1, audience: 'spine', currentParticipants: ['alice', 'bob', 'kim'] },
+  mandate: { source: 'S', prefix: 14, offer: 'o2', inspector: 'ivan' },
+  inspectionFounders: ['ivan'],
+  result: { offer: 'o2', result: 'pass:o2' },
+  requesterFieldInMandate: false,
+};
+
+// K3 revises the trusted-writer disclosure/completeness rule. O4 must pin
 // this identity in its implemented certificate and destination profile.
 export const publicOpeningRule = {
-  type: 'dap.fixture.scope-public-openings/1',
+  type: 'dap.fixture.scope-public-openings/3',
   kinds: [
     'ai.generalbusiness.dap.genesis', 'ai.generalbusiness.dap.accept_invite',
     'ai.generalbusiness.dap.grant', 'ai.generalbusiness.dap.revoke',
@@ -90,6 +102,15 @@ export const publicOpeningRule = {
     'com.example.scope.import-export', 'com.example.scope.recover',
   ].sort(),
   requiredAudience: ['members', 'spine'],
+  ineffectiveActorOnly: {
+    body: 'hidden', known: true, effective: false,
+    indeterminateReasons: ['model_unavailable', 'not_in_v1', 'package_unavailable', 'scope_runtime_required', 'unhandled'],
+    indeterminateReasonPrefixes: ['audience_error:', 'fold_error:'],
+  },
+  unboundActorOnly: {
+    body: 'hidden', application: true, binding: 'absent-before-entry',
+    known: false, authorized: false, effective: false, reason: 'unhandled', perModel: 'absent',
+  },
   otherPositions: 'hidden',
   bannedFields: ['amount', 'acceptedAmount', 'counter', 'terms', 'offer_terms'].sort(),
   excludedKinds: ['ai.generalbusiness.dap.disclose', 'ai.generalbusiness.dap.observe'].sort(),

@@ -1,0 +1,16 @@
+{
+  "base": "7e737ce",
+  "sourceState": "Uncommitted implementation/test draft before formal source freeze. This is a compiler-only development check, not measured lifecycle validation.",
+  "command": "node /tmp/dap-o4-transfer-lifecycle/spike/node_modules/typescript/bin/tsc -p spike/tsconfig.json",
+  "exitCode": 0,
+  "files": {
+    "spike/src/context.ts": "7342644d363cc487c2c3449828403f427d2f1abdbdc1fca1b60dd5c6b7f7f841",
+    "spike/src/corpus.ts": "ddcb26b53ace25e00f3c959b361ab462a647f1ca0df4145f4bd066b3a3c9f8fc",
+    "spike/src/descriptor.ts": "b4ed2cdd489d8c94d1720594a730c0186e6e468081c570d0a40293cbeef55e82",
+    "spike/src/foundation.ts": "3c1571e6b02f159e953369ffc42f1c7601f7a2d7fd2a8412cfaea580b9ef6b93",
+    "spike/src/interpret.ts": "1b9ecaeb1b912669d60c6f9385fd8f1103798575b9d6a35f3043e5c314e22353",
+    "spike/src/observe.ts": "17d1d8788ace100a1ee8b0e1a89ee2e4027586994deaceb4f7f0d769264a8661",
+    "spike/src/scope.ts": "5b2fc6a028669a63735c28048296c5b9aff81b2fb1fad3c53fdee251b64b4c06",
+    "spike/test/ordering-scope-property-names.test.ts": "746b55d516974f92bcd543593c49153d45372f2ebe2c63105b04b9c564b1316d"
+  }
+}

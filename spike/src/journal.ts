@@ -13,7 +13,11 @@ import { advanceOrdering, initialOrdering, orderingAdmission, HANDOVER_PROFILE, 
 export const O1_PROFILE_VERSION = 'dap.fixture.single-writer/1';
 export const ORDERING_PROFILE = O1_PROFILE_VERSION;
 export const MAX_ENVELOPE_BYTES = 64 * 1024;
-export interface JournalOptions { backend: Backend; writerKey: KeyObject; packages: Record<string, PackageDescriptor> }
+export interface JournalOptions {
+  backend: Backend; writerKey: KeyObject; packages: Record<string, PackageDescriptor>;
+  /** Selected semantic profiles may require original fold exceptions instead of legacy error verdicts. */
+  throwOnFoldError?: boolean;
+}
 interface VerifiedPrefix {
   state: OrderingState;
   head: Entry;
@@ -117,12 +121,13 @@ export class Journal {
     try {
       this.#prefix = verifyEntries(opts.backend.entries());
       backendAssignment(opts, this.#prefix.state);
-      this.context = Context.restore(opts.backend, opts.packages, MAX_ENVELOPE_BYTES, encoding(opts.writerKey, this.#prefix, opts.backend), this.#lease);
+      this.context = Context.restore(opts.backend, opts.packages, MAX_ENVELOPE_BYTES, encoding(opts.writerKey, this.#prefix, opts.backend), this.#lease, opts.throwOnFoldError);
       if (opts.backend instanceof SQLiteBackend) {
         const expected = this.context.entries.filter(e => e.event.kind === K.accept_invite).map(e => (e.event.payload as unknown as { invite: { header: { commitment: string } } }).invite.header.commitment).sort();
         if (canonicalize(expected) !== canonicalize(opts.backend.consumedTokens())) throw new Error('Journal: corrupt invitation consumption index');
       }
     } catch (error) { this.#lease.release(); throw error; }
+
   }
   static create(opts: JournalOptions, signedGenesis: ActorEnvelope | string | Uint8Array, signedOrigins: (ActorEnvelope | string | Uint8Array)[] = []): Journal {
     if (opts.backend.entries().length) throw new Error('Journal: already initialized');
@@ -175,6 +180,7 @@ export class Journal {
       return { ...receipt, controlVerdict };
     }
     catch (error) { this.needsReopen = true; this.#lease.invalidate(); throw error; }
+
   }
 }
 

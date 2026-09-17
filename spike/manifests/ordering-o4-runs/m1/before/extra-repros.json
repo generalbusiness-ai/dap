@@ -1,0 +1,21 @@
+{
+  "source": "15b660caaf06e1ea4698e83a94e3717cfd48572b",
+  "cleanupArchive": "/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/dap-o4-m1-cleanup-before.1y7d5466",
+  "command": [
+    "node",
+    "/tmp/dap-o4-m1-faults/spike/manifests/ordering-o4-runs/m1/before/sqlite-cleanup.mjs"
+  ],
+  "env": {
+    "WT": "/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/dap-o4-m1-cleanup-before.1y7d5466"
+  },
+  "exit": 0,
+  "scriptSHA256": "8a343367c2eab2b8571f888660fc8047190188df88d24094a5d0b85772428102",
+  "outputSHA256": "bdf0aec7adfca4bd49eff4cf269f0222d4a60def0869928f028084bd35c94250",
+  "parseRepro": "parse-fault.mjs ran before any source edit on15b660c; unexpected Error converted on both stores in open and proof.",
+  "firstHarnessFailure": {
+    "exit": 1,
+    "scriptSHA256": "034ae6f3b2088afbcc469dc4deed6a30825e11b0d20cd3dfa00ff63823094af1",
+    "outputSHA256": "fe117449bc9d01c8653746ffe8783397e11aa15d1688356166d5a68de4ad2fa4",
+    "reason": "Diagnostic inspected isTransaction after constructor cleanup closed the handle."
+  }
+}

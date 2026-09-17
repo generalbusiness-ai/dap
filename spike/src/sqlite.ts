@@ -35,7 +35,12 @@ export class SQLiteBackend implements Backend {
       }
       this.db.exec('COMMIT');
       this.checkIndexes();
-    } catch (e) { if (this.db.isTransaction) this.db.exec('ROLLBACK'); this.db.close(); throw e; }
+    } catch (error) {
+      // A secondary rollback/close failure must not replace the operation's
+      // original exception. Closing is attempted even when rollback fails.
+      try { if (this.db.isTransaction) this.db.exec('ROLLBACK'); }
+      finally { try { this.db.close(); } finally { throw error; } }
+    }
   }
   private checkIndexes(): void {
     const rows = this.db.prepare('SELECT position,body FROM entries ORDER BY position').all();
@@ -67,7 +72,10 @@ export class SQLiteBackend implements Backend {
       this.db.exec('COMMIT');
       this.fault?.('after-commit');
       return result;
-    } catch (e) { if (this.db.isTransaction) this.db.exec('ROLLBACK'); throw e; }
+    } catch (error) {
+      try { if (this.db.isTransaction) this.db.exec('ROLLBACK'); }
+      finally { throw error; }
+    }
     finally { this.busy = false; }
   }
   get(position: number): Entry | undefined {

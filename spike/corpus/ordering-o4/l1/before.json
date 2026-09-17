@@ -1,0 +1,49 @@
+{
+  "source": "e0467ae9c44d99e10f38916b74f047b4e9183c5c",
+  "worktree": "/tmp/dap-o4-l1-properties",
+  "node": "v26.8.2",
+  "commands": [
+    {
+      "script": "k1-proto-kind2.mjs",
+      "args": [
+        "memory",
+        "__proto__",
+        "destination-activated",
+        "F",
+        "kim"
+      ]
+    },
+    {
+      "script": "k1-proto-kind2.mjs",
+      "args": [
+        "sqlite",
+        "constructor",
+        "inspection-attached",
+        "S",
+        "carol"
+      ]
+    },
+    {
+      "script": "k1-targeted.mjs",
+      "args": [
+        "memory"
+      ]
+    },
+    {
+      "script": "k1-targeted.mjs",
+      "args": [
+        "sqlite"
+      ]
+    }
+  ],
+  "environment": {
+    "WT": "/tmp/dap-o4-l1-properties"
+  },
+  "exitCodes": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "interpretation": "Original checker scripts catch and print failures. Exit zero is not a passing lifecycle test. The first sqlite targeted command used an incorrect script path and exited 1 before testing; its diagnostic is retained separately."
+}

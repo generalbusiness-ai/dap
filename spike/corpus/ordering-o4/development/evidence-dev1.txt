@@ -1,0 +1,58 @@
+✖ O4 release proof pins come from F genesis: r=p+1, exact prefix and source writer (552.384208ms)
+✔ O4 altered public proof bodies cannot activate a destination (680.254709ms)
+✔ O4 actual revoked release source cannot be repaired by stripping its revocation (496.662167ms)
+✔ O4 public/full scope replay agrees at every opened release-prefix position (754.044625ms)
+✔ O4 actual activation, exports and F views disclose public source bodies without private bytes (777.256958ms)
+✖ O4 every materialized signed F genesis field/container is bound before either release (535.948459ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 4
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3886.452625
+
+✖ failing tests:
+
+test at spike/test/ordering-scope-evidence.test.ts:25:1
+✖ O4 release proof pins come from F genesis: r=p+1, exact prefix and source writer (552.384208ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /source_binding_mismatch/. Input:
+  
+  'ineffective_release'
+  
+      at failed (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/ordering-scope-evidence.test.ts:23:10)
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/ordering-scope-evidence.test.ts:31:5)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'ineffective_release',
+    expected: /source_binding_mismatch/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at spike/test/ordering-scope-evidence.test.ts:121:1
+✖ O4 every materialized signed F genesis field/container is bound before either release (535.948459ms)
+  AssertionError [ERR_ASSERTION]: unrecognized exception: The expression evaluated to a falsy value:
+  
+    assert.ok(!('refused' in result))
+  
+      at recognized (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/ordering-scope-evidence.test.ts:119:10)
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-transfer-lifecycle/spike/test/ordering-scope-evidence.test.ts:145:56)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: undefined,
+    operator: 'fail',
+    diff: 'simple'
+  }

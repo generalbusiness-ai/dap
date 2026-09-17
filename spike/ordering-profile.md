@@ -286,7 +286,12 @@ from the authenticated envelope and new signed header only after the
 backend's serialization call returns with the transaction committed. An
 unexpected head requires reopen. Owned direct Context writes share this
 encoding; cached ordering and control verdict queries use the authenticated
-prefix rather than re-verifying the full chain.
+prefix rather than re-verifying the full chain. This live cache trusts older
+stored rows while the head is unchanged: a rewrite of an older row is not
+detected by live cached authentication. A cold open verifies the full stored
+history and rejects that tampering. Direct backend mutation and hostile
+in-process code remain outside the cooperative Journal ownership boundary;
+the cache is not an integrity monitor for a writable database.
 
 Fixed-writer journals must omit the ordering-admission hook entirely.
 The O1 folded-frontier check and permanent error invalidation remain: cached
@@ -334,6 +339,153 @@ independent evidence of invariant 19.
 
 ## O4: public-proof completeness
 
+O4 selects `dap.fixture.scope/1` in genesis. This explicitly adds founding
+participants for the Inspection, Delivery and Fulfilment fixture contexts.
+A genesis carrying `scope` explicitly opts into the shared foundation's
+scope setup validation and founding-participant semantics, even when opened
+through plain `Journal`. Its valid founders become participants for live and
+cold admission, member audiences and participant observations; a malformed
+setup throws `ScopeProfileError`. A genesis without `scope` keeps the ordinary
+single founder. This is an intentional shared-fold extension. It does not
+make plain `Journal` enforce the full ScopeJournal contract: scope transition,
+release, activation and proof validation still require that facade.
+Founding participation creates no transferred right: F's declared rights remain dormant until the first effective activation.
+S retains its original single founder and invitation trace. The profile and
+its implementation content identity are pinned in every scope genesis.
+
+A source serving party now performs one function beyond pure sequencing:
+it reads each body's kind and assigned audience and certifies a complete
+public projection. F's genesis pins each source genesis, initial writer,
+export prefix and the scope implementation, which pins the named opening
+rule. F trusts the source writer for this completeness claim, never for
+release authorization or effect. This is a trusted-writer fixture extension,
+not a production proof of completeness. Provenance: decisions
+`00c92c297bdfd16aa9d9f9d6bba1406c61dcb85b`,
+`ca04cc02027b9070bb60e3852ac19e21ae7931f4` and
+`42ffb3413ded6c33fb39d25296cd04ce0f005d6a` in the dap workroom.
+
+The rule is `dap.fixture.scope-public-openings/3`, whose canonical declaration
+and content id are exported as `PUBLIC_PROOF_RULE` and
+`PUBLIC_PROOF_RULE_ID` by `src/scope-proof.ts`. It opens exactly these kinds:
+
+- dap genesis, accept_invite, grant, revoke, attach, close, scope.release,
+  scope.activate, admit, seq.request, seq.seal and seq.assign;
+- Sale listing, offer, withdraw, accept and close;
+- the four Scope kinds result, exercise, import-export and recover.
+
+For every position through the frontier, a listed kind is opened when its
+assigned audience is spine or members. Two bounded exceptions retain only
+the header, both requiring exactly `named: [event.actor]`:
+
+- `ineffectiveActorOnly` requires `known: true` and `effective: false` from
+  the full source fold. Top-level or per-model `model_unavailable`,
+  `not_in_v1`, `package_unavailable`, `scope_runtime_required` and `unhandled`,
+  or the prefixes `audience_error:` and `fold_error:`, exclude this exception.
+- `unboundActorOnly` requires a listed application kind with no effective
+  binding before that event's position, together with the exact foundation
+  flags `known: false`, `authorized: false`, `effective: false`, reason
+  `unhandled`, and no per-model diagnostics. The producer resolves the
+  effective binding's `attachedAt`/`previous` history at the event position;
+  neither the caller's `expected_binding` nor a missing registry entry proves
+  absence. Later attachment cannot change the earlier outcome. A bound kind
+  with an unavailable package/model, a placeholder, or any other indeterminate
+  outcome cannot use this exception. System kinds cannot use it either.
+
+Missing verdicts and other unknown outcomes do not qualify. Every other
+narrower listed-kind audience makes the producer refuse certification,
+including an effective body capped to its actor. Every
+unlisted position is hidden. `dap.disclose` is excluded because it can carry
+private bodies;
+`dap.observe` is excluded because observations are not release or grant
+inputs in this fixed scope policy. No wildcard kind admission applies.
+The fixed system scope operations keep spine audiences (admit keeps members),
+including malformed member attempts, so their base-fold `not_in_v1` placeholder
+never needs the hiding exception. For the four application Scope kinds, an
+ordinary member lacking the kind capability receives an actor-only known
+`unauthorized` refusal; Scope preserves that refusal and adds no effect.
+Authorized Scope placeholders retain the fixed spine audience and remain
+opened. A binding ceiling requires an attachment; an effective narrow
+attachment itself still prevents certification. The producer does not treat
+base-fold placeholders as authoritative Scope outcomes or add recursive replay.
+
+Opened bodies recursively reject `amount`, `acceptedAmount`, `counter`,
+`terms` and `offer_terms`, including nested signed-envelope payloads.
+
+A packet has exactly `genesis`, `initialWriter`, `frontier`, `positions` and
+`certificate`. Each dense position has `header` and optionally `committed`
+(the original signed envelope bytes). The certificate has exactly `body`,
+`signer` and `sig`. Its signed body is exactly:
+
+```
+{type:'dap.fixture.public-proof-completeness/1', rule, genesis, frontier, proof_hash}
+```
+
+`rule` is the rule's content id. `proof_hash` is SHA-256 of the exact canonical
+packet excluding only `certificate`; signing uses Ed25519 over canonical
+body bytes through `codec.ts`. Extra fields are refused, and private-field
+checks run before hashing. No certificate can recursively hash itself.
+The signer must be the key that verified the frontier header's `seq_sig` in
+the chain from the pinned genesis: W0 through the assignment at H+2, W1 from
+H+3. A later valid frontier produces genuinely different proof material.
+
+F takes source genesis and export prefix p from its own genesis transition.
+The release must be r=p+1 and the certified frontier must be at least r.
+Effect is independently replayed only through r; a later certificate is
+never used to answer a current-state question. Verification checks strict
+shapes, header/control chains, actor signatures, the certificate signature
+and rule id, dependency pauses, grants, actual source models and the release
+operation. A receipt alone cannot establish release. Scope's local state
+fold uses its full journal and remains inspectable when certification is
+refused. Scope verdicts supplement the legacy foundation's placeholder
+scope verdicts; O4 clients use `ScopeJournal` for these operations.
+
+Activation explicitly discloses the source spine and member authority
+bodies to every F reader. For the fixture that includes Alice, Bob and Kim;
+Carol's offer stub and source participation reach Kim, who was not an S
+member. These are disclosures under the Sale budget's existing
+subject-to-disclosure clause. The admitted Inspection proof at S20 also
+contains I's signed genesis mandate: source S's genesis, request position 14,
+offer `o2` and inspector Ivan, plus I1's result `pass:o2`. S14's request body
+was readable only by Alice, Carol and Ivan. Bob already receives these
+request-derived facts through S20's members audience; Kim receives them
+through F1, whose spine audience exposes them to every F reader. The proof
+also exposes I's founding participant Ivan. This is an explicit disclosure
+of request-derived content, not just public source membership data.
+
+The S14 request body and its explicit requester attribution are absent from
+the carried proof. The mandate has no requester field. That narrow statement
+does not promise secrecy of the request's subject, inspector, source position
+or result, nor prevent inference about its requester; Carol's identity and
+offer stub are separately disclosed. Sale amounts, counters and terms remain
+excluded. The focused disclosure observation checks the actual signed S14,
+S20 and F1 openings and their recipient views; delivered proof content is not
+silently narrowed to preserve the former privacy claim.
+
+A dishonest writer can omit an authority body and sign an incomplete
+projection, or tailor projections to recipients. The destination cannot
+detect that completeness lie from headers that deliberately reveal no
+kind. This includes falsely classifying effective authority as an ineffective
+actor-only or unbound attempt. Such a lie can create duplicate live rights:
+for example, hiding a revocation can make an unauthorized source release
+appear effective at F while the source right remains live. Classifying the
+exceptions is part of the existing serving-writer trust; a hidden failed attempt supplies no authority during
+destination replay. Source members with the complete openings can recompute
+both effect and audience and then the rule and retain both signed packets
+as transferable evidence. Retired writer keys can certify their historical
+prefixes; source forks and database copies remain possible. None of these
+limits permits the destination to skip independent authorization or effect
+verification. Explicit hostile fixtures may create such signed alternate
+branches, but the honest producer continues to refuse effective narrow
+authority audiences. The `/1` and both historical `/2` declarations remain
+at their original sources. Provisional `/2` content id
+`sha256:614f837e0f4f795625bc69d690a13c3d2a38c28e1a349bc49ed6db35cc972a71`
+was measured at `0aa8687`/`813c84c`; refined `/2`
+`sha256:701403e9c51e6449ca797545818a8b63602a20a9b43c2ace064e9a38ab55b66c`
+was measured at `82119b5` and combined `2ee1b43a`. Certificates pin the
+content id, not just the type name. Neither version is reinterpreted as `/3`.
+
+## O4: checker contract obligations
+
 These O4 contract obligations come from the ratified checker design assessment
 `git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:ca04cc02027b9070bb60e3852ac19e21ae7931f4`
 and the builder's adoption, including the disclosure boundary,
@@ -345,19 +497,26 @@ exact source, profile and manifest and satisfy the nine tests listed in
 
 1. **A1 — Serving-party trust.** F's own genesis names the source writer as
    trusted to certify the completeness of public openings. The certificate
-   says nothing about release effectiveness. Its producer reads kinds and
-   assigned audiences as a serving-party function; pure ordering does not
+   says nothing about release effectiveness. Its producer reads kinds,
+   assigned audiences and source verdicts as a serving-party function; pure ordering does not
    establish completeness. F still reconstructs source semantics and grants
    to verify each release independently.
 2. **A2 — Exact public-data rule.** For every position through the certified
    frontier, open each authority-set kind only if its assigned audience is
-   `spine` or `members`. A narrower audience, including a binding ceiling,
-   makes the producer refuse certification; it must neither hide that body
-   nor widen its audience. Every other position retains only its header.
+   `spine` or `members`. An actor-only position with source verdict
+   known, determinate `effective === false` retains only its header. A listed
+   application kind proved unbound before the event also qualifies only with
+   the exact unbound verdict and actor-only audience defined above.
+   Both classifications are explicitly trusted. Every other narrower audience,
+   including an effective body with a binding ceiling, makes the producer
+   refuse certification; it must neither hide that body nor widen its audience.
+   The known-ineffective exception excludes unknown outcomes, the five indeterminate reasons
+   and two error prefixes above, including per-model reasons. Unlisted positions
+   retain only their headers.
    Opened bodies pass the recursive banned-field check for `amount`,
    `acceptedAmount`, `counter`, `terms` and `offer_terms`. The named rule is
-   `dap.fixture.scope-public-openings/1`, content id
-   `sha256:475b415bbf8b16ccdb1bea078174712c57f2b2955ece9338d762abd60228bad8`,
+   `dap.fixture.scope-public-openings/3`, content id
+   `sha256:9e9bcbdd74fe244fb63c5e339256ab508b2b3251d2e8fa642b3309cd1f1049e6`,
    defined by `publicOpeningRule` in `manifests/ordering-lifecycle.ts`.
    Its 21 exact authority kinds are:
 
@@ -408,8 +567,143 @@ exact source, profile and manifest and satisfy the nine tests listed in
    Unknown exceptions fail validation instead of becoming a refusal verdict.
 7. **A7 — Remaining trust limits.** An assigned writer can sign an incomplete
    packet or tailor projections to different destinations. F cannot detect
-   that dishonesty from the certificate alone; source members can compare
-   against their source view and recompute the opening set, and a signed
-   incomplete certificate is transferable evidence. A retired key remains
+   that dishonesty from the certificate alone; it can produce duplicate live
+   rights. Source members with all relevant openings can recompute effect,
+   binding and audience and compare signed packets. An ordinary member may
+   lack another actor's hidden attempt; detection is not universal. A retired key remains
    trusted for the earlier prefixes whose headers it signed. Forks, database
-   copies and equivocation remain outside this fixture's protection.
+   copies and equivocation remain outside this fixture's protection. The same
+   signed destination genesis can also be instantiated on separate journal
+   copies, each activating independently with live rights. The release binds
+   one genesis identity, not one globally unique destination instance.
+
+
+## O4: activation phase and unexpected failures
+
+An authorized owner can release a live source right after ordinary `dap.close`
+on that source. The current scope release semantics do not treat source
+closure as a release prohibition; destination activation still checks its own
+closed-context gate. This documents the existing behavior rather than adding
+a new close policy.
+
+Decision `c2982a6e6756f4fed08e5a82acc8b05a65127745` removes the earlier
+uninterrupted-activation restriction. An admitted destination event can
+precede the first effective activation. Failed activation and dormant exercise
+consume positions without making transferred rights live. A fresh complete
+activation still checks the current grant and closed-context gates, then the
+transition and source prefixes pinned by F's genesis. Exact retries retain
+the original receipt and verdict, including a failed attempt retried after a
+later successful activation. A later activation has no further effect.
+
+The core kind, role and model registries use own-property lookup and safe
+own-data writes. Inherited JavaScript names do not supply bindings or grants;
+unknown roles keep their empty-capability behavior, while explicitly declared
+own names such as `constructor` or `__proto__` remain usable. This is a bounded
+runtime statement, not a claim about every string-keyed table in every fixture.
+The M1 scope-facts/package correction separately covers destination-author
+facts copying and package availability. The frozen Club projection still drops
+a standing keyed by `__proto__`; creating that standing needs the privileged
+`set-standing` capability. Club's code, identities and positive/negative
+experiment are unchanged, and this is not claimed fixed by O4.
+
+Scope's policy refusals, profile validation errors and public-proof validation
+errors have explicit types. The codec and legacy canonicalizer identify their
+declared input errors by private membership, preserving their TypeError types
+and messages. Invitation verification validates both commitment and header
+bytes through these boundaries, then hashes outside the catches. Malformed
+input remains an ordinary refusal; an unexpected hash/key fault or an unrelated
+TypeError with codec-looking text propagates during strict replay.
+
+The pure wire-validation boundary still recognizes an enumerated set of exact
+Journal/control Error messages. Deliberately throwing a Scope policy-error
+instance or one of those listed messages can therefore produce a refusal.
+Package lookup and semantic replay occur outside that translation boundary.
+Foundation `fold_error` and `audience_error` diagnostics in the scope fold
+surface as errors; ordinary attached-handler refusals remain verdicts.
+
+Every accepted ScopeJournal append recomputes its scope state. If that fold
+cannot finish, ScopeJournal closes its Journal and disables further submission,
+including through the held raw Context. The original exception is preserved.
+Already committed bytes remain committed. Recovery opens a fresh facade and
+replays those bytes; an exact retry adds no position. A transient registry
+failure can recover, while a deterministic throwing handler fails again on
+cold replay. No assumed prior scope state is used to admit another event.
+
+Supported ScopeJournal construction uses `create` or `open`, both of which
+enable strict foundation folding. Its constructor is private in the TypeScript
+API; this restriction is not a JavaScript sandbox. After a replay fault,
+submission, retained Context writes, interpretation and export are blocked.
+Memory-backed `proof()` and retained `context.view()` may still read history.
+A fault in the final verification after a successful replay can throw without
+disabling the facade; the replayed outcome remains unchanged. Existing envelope
+prechecks can refuse a submission after a fault before any bytes are stored.
+
+
+## O4: progress and input-resource limits
+
+The 65,536-byte signed-envelope bound also applies to an activation carrying
+whole source proofs. There is no proof chunking or pre-release proof-size
+reservation. An ordinary member can add enough ineffective attempts to grow
+headers beyond an activatable packet even when every attempt is safely hidden.
+Independent review `66effd75` at `15b660ca` reports that about 100 unknown-kind
+attempts produced a 65,408-byte S proof and an `envelope_bounds` activation
+refusal after both releases had become effective; F's rights remained dormant.
+With 80 attempts the 57,828-byte S proof still activated. These are measured
+fixture examples, not a fixed event-count threshold: the activation contains
+more than the S proof, and sizes depend on the bodies. The same limit existed
+at `e0467ae9` and can be reached by a long honest history. A timeout does not
+restore either source right. The fixture provides safety under its declared
+trust, not progress for every finite source history.
+
+The envelope byte limit is not a nesting-depth bound. The same review reports
+that an ordinary member's offer or embedded invitation nested around 2,076
+array levels passed envelope validation but overflowed `structuredClone`
+before append. No bytes were stored; the facade became unavailable and needed
+a healthy reopen. The exact threshold depends on the runtime and input shape.
+No new depth protocol bound or recursive-resource guarantee is introduced by
+M1; deep input remains a documented availability limit.
+
+`model_unavailable` remains excluded by the opening rule. The L3 synthetic
+handler diagnostic tests exercise classification of that reason, but the fixed
+fixture registry cannot reach an actually missing bound model. They are not a
+measurement of a live missing-model recovery path. A refused Inspection request
+with string `seller` or `inspector` fields still includes those named principals
+in its audience alongside the actor; non-string fields fall back to the actor.
+Ineffectiveness alone therefore does not make every Inspection attempt
+actor-only or keep its body secret from the named seller/inspector.
+
+Four overlapping guards remain as defence in depth: frontier at least r,
+source-prefix pin, r = p+1 and the replay limit. Later checks duplicate their
+protection, so the existing tests do not independently demonstrate that each
+first guard is necessary. They are not four isolated negative scenarios.
+A certificate ending
+at S23 still cannot establish the S24 release and returns `ineffective_release`.
+This revision retains that diagnostic rather than inventing an earlier rejection.
+
+## O4: identity and catch-audit boundaries
+
+`scopeImplementationId()` hashes the explicit 16-file source list in
+`scope-profile.ts`: `scope-profile.ts`, `scope.ts`, `scope-proof.ts`,
+`scope-package.ts`, `foundation.ts`, `interpret.ts`, `journal.ts`, `ordering.ts`,
+`codec.ts`, `append.ts`, `context.ts`, `ownership.ts`, `descriptor.ts`,
+`types.ts`, `canon.ts` and `sqlite.ts`. It is not a hash of the entire repository
+or every transitive import. In particular, `observe.ts` and `corpus.ts` are not
+covered. Run 9's independent 94-blob measurement index covers a broader named
+set of runtime, tests, fixtures, contract and package/compiler configuration.
+The runtime identity and measurement index make different claims; each later
+run must state its own source list, ids and hashes.
+
+The [strict-path catch catalogue](ordering-catch-boundary.md) separates declared
+input conversion, intentional typed/message policy conversion, rethrow and
+precommit admission refusal. Its source and measurement columns constrain the
+claims above; an inventory is not evidence that every possible exception or
+resource-exhaustion path was injected. Constructor cleanup, ordering key import
+and parser-boundary changes have their own frozen M1 component measurement,
+linked from that catalogue; combined results remain a separate source boundary.
+The original M1 constructor fault happened after Journal had acquired its
+lease: memory could not reopen the identical backend, and SQLite needed the
+caller to close its handle. Construction now closes the acquired Journal when
+later Scope setup fails, while managed state/submit replay retains its existing
+cleanup path. The catch catalogue records original-error preservation and the
+limits of fallible native cleanup; it does not treat every failed open as
+automatically recoverable.

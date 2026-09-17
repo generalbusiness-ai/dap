@@ -1,0 +1,118 @@
+COMMAND ["node", "--test", "test/ordering-scope-completeness.test.ts", "test/scope-proof.test.ts", "test/ordering-lifecycle.test.ts"]
+✔ manifest identity binds the prose and executable source, independently recomputed (1.586917ms)
+ℹ ORDERING_LIFECYCLE_MANIFEST_ID sha256:e97568583079211cb99cdd572fa5e23b749e8a95c621324e1fec56858d387e53
+✔ every healthy boundary states all heads, writers, right statuses and exact active owners (1.714958ms)
+✔ join boundaries have two releases, dormant initialization and one activation followed by progress (0.322583ms)
+✔ all adverse cases have resolvable branches, full safe observations and exact reason coverage (1.711875ms)
+✔ restarts, alternative valid proof material and timeouts cannot duplicate or revive authority (0.153417ms)
+✔ failed activation and an intervening dormant exercise permit fresh activation, preserving both retry receipts (0.303125ms)
+✔ another admitted participant event cannot occupy a permanent activation slot (0.091583ms)
+✔ public proof disclosure has a finite named rule and keeps private source kinds excluded (0.088583ms)
+✔ public exports are exact, source-linked and exclude the private accepted amount (0.124834ms)
+✔ changed-genesis enumeration covers every field, container, removal and added field (2.274375ms)
+✔ independent safety checks detect double ownership, premature activation and import duplication (0.254459ms)
+✔ future observation comparison rejects changed, missing and additional state, including unsafe mutations (0.127792ms)
+✔ replay obligations preserve pre-attach outcomes, local import timing and writer retry identity (0.092875ms)
+✔ O4 K3 failed actor-only attempt permits certified transfer: bob-unauthorized-accept memory (465.756709ms)
+✔ O4 K3 failed actor-only attempt permits certified transfer: carol-malformed-grant memory (437.08375ms)
+✔ O4 K3 failed actor-only attempt permits certified transfer: bob-unauthorized-close memory (435.1655ms)
+✔ O4 K3 failed actor-only attempt permits certified transfer: bob-unauthorized-accept sqlite (461.957459ms)
+✔ O4 K3 failed actor-only attempt permits certified transfer: carol-malformed-grant sqlite (453.040625ms)
+✔ O4 K3 failed actor-only attempt permits certified transfer: bob-unauthorized-close sqlite (450.968042ms)
+✔ O4 public proof reconstructs signed Sale facts and grants across handover on memory (37.984709ms)
+✔ O4 public proof reconstructs signed Sale facts and grants across handover on sqlite (50.462125ms)
+✔ O4 source pins distinguish genesis, initial writer and requested frontier (29.137167ms)
+✔ O4 public proof rejects malformed, tampered and incomplete authenticated prefixes (29.19825ms)
+✔ O4 public proof rejects missing, changed and forged handover evidence (40.319709ms)
+✔ O4 public proof rejects private bodies supplied at their genuine signed positions (25.734708ms)
+✔ O4 public proof rejects a public kind carrying nested private extras despite valid signatures (21.931375ms)
+✔ O4 public proof rejects private data attached outside its declared shape (22.010042ms)
+✔ O4 public proof requires semantic packages and disclosed attachment bodies (41.102792ms)
+✔ O4 public proof cannot hide an authenticated grant body as a private position (28.46975ms)
+✔ O4 public proof cannot hide an authenticated revoke body as a private position (28.042041ms)
+✔ O4 public proof cannot omit a withdrawal to turn a refused acceptance into a decision (36.746333ms)
+✔ O4 certificate binds every authority opening on memory (54.59775ms)
+✔ O4 certificate signer follows the frontier header across assignment on memory (76.763459ms)
+✔ O4 certificate strictly pins type, rule, genesis, frontier and shape on memory (73.204667ms)
+✖ O4 producer refuses a capped authority audience on memory (23.018209ms)
+✔ O4 malicious writer omissions exceed destination trust but member recomputation detects them on memory (48.99425ms)
+✔ O4 public and full semantic verdicts agree at every opening of every certified prefix on memory (87.586416ms)
+✔ O4 disclosure and observation remain hidden under the named public rule on memory (31.062125ms)
+✔ O4 certificate binds every authority opening on sqlite (67.042375ms)
+✔ O4 certificate signer follows the frontier header across assignment on sqlite (89.325917ms)
+✔ O4 certificate strictly pins type, rule, genesis, frontier and shape on sqlite (82.507542ms)
+✖ O4 producer refuses a capped authority audience on sqlite (32.696959ms)
+✔ O4 malicious writer omissions exceed destination trust but member recomputation detects them on sqlite (58.172417ms)
+✔ O4 public and full semantic verdicts agree at every opening of every certified prefix on sqlite (99.199167ms)
+✔ O4 disclosure and observation remain hidden under the named public rule on sqlite (41.1505ms)
+ℹ tests 45
+ℹ suites 0
+ℹ pass 43
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2788.203875
+
+✖ failing tests:
+
+test at test/scope-proof.test.ts:278:3
+✖ O4 producer refuses a capped authority audience on memory (23.018209ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    {
+      kind: 'named',
+      principals: [
+        'ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q',
+  +     'ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w'
+      ]
+    }
+  
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-k3-completeness/spike/test/scope-proof.test.ts:288:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { kind: 'named', principals: [ 'ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q', 'ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w' ] },
+    expected: { kind: 'named', principals: [ 'ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q' ] },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at test/scope-proof.test.ts:278:3
+✖ O4 producer refuses a capped authority audience on sqlite (32.696959ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    {
+      kind: 'named',
+      principals: [
+        'ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q',
+  +     'ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w'
+      ]
+    }
+  
+      at TestContext.<anonymous> (file:///private/tmp/dap-o4-k3-completeness/spike/test/scope-proof.test.ts:288:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { kind: 'named', principals: [ 'ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q', 'ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w' ] },
+    expected: { kind: 'named', principals: [ 'ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q' ] },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+COMMAND ["npm", "run", "typecheck"]
+
+> dap-spike@0.0.1 typecheck
+> tsc -p tsconfig.json
+

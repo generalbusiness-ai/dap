@@ -11,7 +11,7 @@
 
 import { contentId } from './canon.ts';
 import type { PackageDescriptor } from './descriptor.ts';
-import { bindingId, packageIn } from './descriptor.ts';
+import { bindingId, own, setOwn, packageIn } from './descriptor.ts';
 import { K, foldEntry, initialFoundationState, originsCount, type AttachPayload, type FoundationState } from './foundation.ts';
 import type { ViewEntry } from './context.ts';
 import { SYSTEM_PREFIX, named, type Entry, type Principal, type Verdict } from './types.ts';
@@ -61,15 +61,16 @@ function chainOf(view: ViewEntry[]): Entry[] {
 
 function bindingsOf(state: FoundationState): Record<string, string> {
   const out: Record<string, string> = {};
-  for (const k of Object.keys(state.env.kinds).sort()) out[k] = bindingId(state.env, k)!;
+  for (const k of Object.keys(state.env.kinds).sort()) setOwn(out, k, bindingId(state.env, k)!);
   return out;
 }
 
 /**
  * Interpret a view. `available` is what the principal's client can fetch;
- * `limit` interprets a prefix (used for `last`).
+ * `limit` interprets a prefix (used for `last`). Strict semantic verification
+ * opts into original exception propagation instead of legacy error verdicts.
  */
-export function interpretView(p: Principal, view: ViewEntry[], basis: number, available: Record<string, PackageDescriptor>, limit: number = view.length - 1): Interpretation {
+export function interpretView(p: Principal, view: ViewEntry[], basis: number, available: Record<string, PackageDescriptor>, limit: number = view.length - 1, options: { throwOnError?: boolean } = {}): Interpretation {
   const genesis = view[0];
   if (!genesis?.event) throw new Error('the genesis is always visible');
   const state = initialFoundationState(genesis.header.commitment);
@@ -83,7 +84,7 @@ export function interpretView(p: Principal, view: ViewEntry[], basis: number, av
     basis,
     at,
     reason,
-    last: interpretView(p, view, basis, available, at - 1) as Interpreted,
+    last: interpretView(p, view, basis, available, at - 1, options) as Interpreted,
   });
 
   for (let i = 0; i <= limit && i < view.length; i++) {
@@ -127,13 +128,13 @@ export function interpretView(p: Principal, view: ViewEntry[], basis: number, av
       // effective or stale_binding, is the genuine one.
       const activation = v.header.activation;
       if (activation === undefined) {
-        if (!state.env.kinds[ev.kind]) return paused(i, 'dependency_missing');
+        if (!own(state.env.kinds, ev.kind)) return paused(i, 'dependency_missing');
       } else if (!view[activation]?.event) {
         return paused(i, 'dependency_missing');
       }
     }
     const origin = i > 0 && i <= origins;
-    const verdict = foldEntry(state, { entry: asEntry(v), origin, packages: available, entries: chain });
+    const verdict = foldEntry(state, { entry: asEntry(v), origin, packages: available, entries: chain, throwOnError: options.throwOnError });
     outcomes[i] = verdict;
   }
   return { kind: 'interpreted', principal: p, basis, frontier: Math.min(limit, view.length - 1), state, outcomes, bindings: bindingsOf(state) };

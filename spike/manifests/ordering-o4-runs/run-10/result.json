@@ -1,0 +1,4302 @@
+{
+  "source": "79cd00029504deb92c121dbf12859680dfe78358",
+  "commands": [
+    {
+      "name": "noncampaign",
+      "argv": [
+        "node",
+        "--test",
+        "--test-reporter=tap",
+        "--test-skip-pattern=case [57], the campaign:",
+        "spike/test/**/*.test.ts"
+      ],
+      "cwd": "/private/tmp/dap-o4-transfer-lifecycle",
+      "environment": {
+        "DAP_O4_RECORD_DIR": "/private/tmp/dap-o4-m1-run10/observations"
+      },
+      "status": "completed",
+      "exitCode": 0,
+      "seconds": 46.51681250000547,
+      "outputSha256": "sha256:989d2cfb9f13dda436419000d73420671f31febbc1b3d790842311f38c59024e",
+      "totals": {
+        "tests": 512,
+        "suites": 0,
+        "pass": 508,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 4,
+        "duration_ms": 46477.634333
+      },
+      "o4Subset": {
+        "tests": 187,
+        "pass": 187,
+        "fail": 0,
+        "separateInvocation": false
+      },
+      "lookupDiagnostics": [
+        {
+          "storage": "memory",
+          "totalLookups": 120,
+          "originalExceptions": 120,
+          "exactRetryRecoveries": 120,
+          "returnedFaultVerdicts": 0
+        },
+        {
+          "storage": "sqlite",
+          "totalLookups": 120,
+          "originalExceptions": 120,
+          "exactRetryRecoveries": 120,
+          "returnedFaultVerdicts": 0
+        }
+      ],
+      "diagnostics": [
+        {
+          "clubA5": "invitation-acceptance",
+          "manifest": "sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde",
+          "package": "sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e",
+          "nonce": "v6-followup:a5:invitation-acceptance",
+          "target": {
+            "position": 6,
+            "id": "sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402",
+            "kind": "ai.generalbusiness.dap.accept_invite",
+            "effective": true
+          },
+          "votes": [
+            9,
+            10
+          ],
+          "admit": 11,
+          "grants": [
+            {
+              "position": 12,
+              "payload": {
+                "principal": "dana",
+                "roles": [
+                  "Member"
+                ]
+              }
+            }
+          ],
+          "readers": [
+            {
+              "reader": "alice",
+              "votes": [
+                true,
+                true
+              ],
+              "admit": true
+            },
+            {
+              "reader": "bob",
+              "votes": [
+                true,
+                true
+              ],
+              "admit": true
+            },
+            {
+              "reader": "carol",
+              "votes": [
+                true,
+                true
+              ],
+              "admit": true
+            },
+            {
+              "reader": "dana",
+              "votes": [
+                true,
+                true
+              ],
+              "admit": true
+            },
+            {
+              "reader": "frank",
+              "votes": [
+                true,
+                true
+              ],
+              "admit": true
+            }
+          ],
+          "findings": [
+            "*@9 invariant: vote at 9 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402",
+            "*@10 invariant: vote at 9 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402",
+            "*@10 invariant: vote at 10 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402",
+            "*@11 invariant: vote at 9 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402",
+            "*@11 invariant: vote at 10 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402",
+            "*@11 invariant: admit at 11 of unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402",
+            "*@12 invariant: vote at 9 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402",
+            "*@12 invariant: vote at 10 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402",
+            "*@12 invariant: admit at 11 of unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402"
+          ],
+          "steps": [
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "bob",
+                "grants": {
+                  "roles": [
+                    "Committee",
+                    "Member"
+                  ]
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:f8e2b2760606029da0845a7d1a315291e617637c63b050ebb68630514b7b6367",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "bob"
+              },
+              "entries": [
+                {
+                  "id": "sha256:efb8d15b0646f022fab90d7fa589e5c858af4582891d05da9f2faf860eb75974",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "carol",
+                "grants": {
+                  "roles": [
+                    "Committee",
+                    "Member"
+                  ]
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:2c862f052244d244f6849a5f8550c6296624802360d2d5ffdf61af5be3c7aba5",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "carol"
+              },
+              "entries": [
+                {
+                  "id": "sha256:0f0864ee38e0f0f414103426c0077d1f1e4def4c230d92a73a4186d6a6585445",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "dana",
+                "grants": {
+                  "roles": []
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:6ad4fb318d409b441764b707208069089d376825d667dd7564cc3e5af42e788b",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "dana"
+              },
+              "entries": [
+                {
+                  "id": "sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "frank",
+                "grants": {
+                  "roles": [
+                    "Member"
+                  ]
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:a17796beda7c55ae1c20e6f4932a7898d8d592fa7140165d1422f310a57a3a65",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "frank"
+              },
+              "entries": [
+                {
+                  "id": "sha256:b8d9f7790068c1434997289287b529a5db9ceb85715fdc63409cdff2e61c153a",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "bob",
+                "kind": "com.example.club.vote",
+                "payload": {
+                  "application_id": "sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402",
+                  "choice": "yes"
+                },
+                "nonce": "a5:8"
+              },
+              "entries": [
+                {
+                  "id": "sha256:632055e52d15f825f7a76c0a99f68d18f486456eb6c09c2f60112308e6531cd3",
+                  "kind": "com.example.club.vote"
+                }
+              ],
+              "application": "sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402"
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "carol",
+                "kind": "com.example.club.vote",
+                "payload": {
+                  "application_id": "sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402",
+                  "choice": "yes"
+                },
+                "nonce": "a5:9"
+              },
+              "entries": [
+                {
+                  "id": "sha256:fda5a153a368c42c7ed414a49abd94a20f220d4b7a674e92987ddad8a594a9c1",
+                  "kind": "com.example.club.vote"
+                }
+              ],
+              "application": "sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402"
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "alice",
+                "kind": "com.example.club.admit",
+                "payload": {
+                  "application_id": "sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402"
+                },
+                "nonce": "a5:10"
+              },
+              "entries": [
+                {
+                  "id": "sha256:f451b2ca7acf3076ef78633c5e8ac889fe58deff8dae5c8a7218a00d0fe28fa0",
+                  "kind": "com.example.club.admit"
+                },
+                {
+                  "id": "sha256:a754806be4313ee8d4f36e37459779495610a4623c19fd82107ebe76e88e6ff9",
+                  "kind": "ai.generalbusiness.dap.grant"
+                }
+              ],
+              "application": "sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402"
+            }
+          ],
+          "minimal": [
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "bob",
+                "grants": {
+                  "roles": [
+                    "Committee",
+                    "Member"
+                  ]
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:f8e2b2760606029da0845a7d1a315291e617637c63b050ebb68630514b7b6367",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "bob"
+              },
+              "entries": [
+                {
+                  "id": "sha256:efb8d15b0646f022fab90d7fa589e5c858af4582891d05da9f2faf860eb75974",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "dana",
+                "grants": {
+                  "roles": []
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:6ad4fb318d409b441764b707208069089d376825d667dd7564cc3e5af42e788b",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "dana"
+              },
+              "entries": [
+                {
+                  "id": "sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "bob",
+                "kind": "com.example.club.vote",
+                "payload": {
+                  "application_id": "sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402",
+                  "choice": "yes"
+                },
+                "nonce": "a5:8"
+              },
+              "entries": [
+                {
+                  "id": "sha256:632055e52d15f825f7a76c0a99f68d18f486456eb6c09c2f60112308e6531cd3",
+                  "kind": "com.example.club.vote"
+                }
+              ],
+              "application": "sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402"
+            }
+          ]
+        },
+        {
+          "clubA5": "malformed-apply",
+          "manifest": "sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde",
+          "package": "sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e",
+          "nonce": "v6-followup:a5:malformed-apply",
+          "target": {
+            "position": 9,
+            "id": "sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736",
+            "kind": "com.example.club.apply",
+            "effective": false
+          },
+          "votes": [
+            10,
+            11
+          ],
+          "admit": 12,
+          "grants": [
+            {
+              "position": 13,
+              "payload": {
+                "principal": "dana",
+                "roles": [
+                  "Member"
+                ]
+              }
+            }
+          ],
+          "readers": [
+            {
+              "reader": "alice",
+              "votes": [
+                true,
+                true
+              ],
+              "admit": true
+            },
+            {
+              "reader": "bob",
+              "votes": [
+                true,
+                true
+              ],
+              "admit": true
+            },
+            {
+              "reader": "carol",
+              "votes": [
+                true,
+                true
+              ],
+              "admit": true
+            },
+            {
+              "reader": "dana",
+              "votes": [
+                true,
+                true
+              ],
+              "admit": true
+            },
+            {
+              "reader": "frank",
+              "votes": [
+                true,
+                true
+              ],
+              "admit": true
+            }
+          ],
+          "findings": [
+            "*@10 invariant: vote at 10 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736",
+            "*@11 invariant: vote at 10 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736",
+            "*@11 invariant: vote at 11 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736",
+            "*@12 invariant: vote at 10 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736",
+            "*@12 invariant: vote at 11 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736",
+            "*@12 invariant: admit at 12 of unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736",
+            "*@13 invariant: vote at 10 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736",
+            "*@13 invariant: vote at 11 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736",
+            "*@13 invariant: admit at 12 of unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736"
+          ],
+          "steps": [
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "bob",
+                "grants": {
+                  "roles": [
+                    "Committee",
+                    "Member"
+                  ]
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:5efae4c957e9ffd536fb4792e17bd3859d4bf40bfd6112b2d7d5d0bf192b2c07",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "bob"
+              },
+              "entries": [
+                {
+                  "id": "sha256:652cef6366598679e968e08a6a92073b4031f5b9ef6e668ab950ac7a16962ff7",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "carol",
+                "grants": {
+                  "roles": [
+                    "Committee",
+                    "Member"
+                  ]
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:6dbefe6ff4ceb5da17f9f5efc1b14111d624f39029bea047b182bba7ae2dff92",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "carol"
+              },
+              "entries": [
+                {
+                  "id": "sha256:a3effcce32797773f4e151ef320c41e9294ef145c8ec7ce955f1a55fcde3ace5",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "dana",
+                "grants": {
+                  "roles": []
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:cfb273dd78ce62e8b78692805e96e0778043c3e99521c32f205ce67b5070813a",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "dana"
+              },
+              "entries": [
+                {
+                  "id": "sha256:52b396f21bd7075cdda314069da7237e0d440a6225b667cf0c4b8075209461d0",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "frank",
+                "grants": {
+                  "roles": [
+                    "Member"
+                  ]
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:9c29a84f5149dc5aefb9e903b0055760b44ce5b4935c99f9c414dfe8ecfa44d5",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "frank"
+              },
+              "entries": [
+                {
+                  "id": "sha256:727b5c7f0f81e145be8267dffbf05b031f50a5e76aa85f47c1e5e0a94dbfc6e1",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "dana",
+                "kind": "com.example.club.apply",
+                "payload": {
+                  "statement": 17
+                },
+                "nonce": "a5:8"
+              },
+              "entries": [
+                {
+                  "id": "sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736",
+                  "kind": "com.example.club.apply"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "bob",
+                "kind": "com.example.club.vote",
+                "payload": {
+                  "application_id": "sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736",
+                  "choice": "yes"
+                },
+                "nonce": "a5:9"
+              },
+              "entries": [
+                {
+                  "id": "sha256:d3de847e94ade9127f25543fadba6a4ccfd0fff85ce31ab431ba4342f5438365",
+                  "kind": "com.example.club.vote"
+                }
+              ],
+              "application": "sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736"
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "carol",
+                "kind": "com.example.club.vote",
+                "payload": {
+                  "application_id": "sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736",
+                  "choice": "yes"
+                },
+                "nonce": "a5:10"
+              },
+              "entries": [
+                {
+                  "id": "sha256:4be906ea88e31394bcd43a900c4433174599b9f22562cfa14d374e46c545f4b3",
+                  "kind": "com.example.club.vote"
+                }
+              ],
+              "application": "sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736"
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "alice",
+                "kind": "com.example.club.admit",
+                "payload": {
+                  "application_id": "sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736"
+                },
+                "nonce": "a5:11"
+              },
+              "entries": [
+                {
+                  "id": "sha256:9e0bb3f36faee4bb5407d592e3acbe1adde72f9f69a3966061dbcdfe2d12e31c",
+                  "kind": "com.example.club.admit"
+                },
+                {
+                  "id": "sha256:be683307f1918e59caab7323b3a10efc44c9f02a9c5f6b95db6ce8585d9b01f7",
+                  "kind": "ai.generalbusiness.dap.grant"
+                }
+              ],
+              "application": "sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736"
+            }
+          ],
+          "minimal": [
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "bob",
+                "grants": {
+                  "roles": [
+                    "Committee",
+                    "Member"
+                  ]
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:5efae4c957e9ffd536fb4792e17bd3859d4bf40bfd6112b2d7d5d0bf192b2c07",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "bob"
+              },
+              "entries": [
+                {
+                  "id": "sha256:652cef6366598679e968e08a6a92073b4031f5b9ef6e668ab950ac7a16962ff7",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "dana",
+                "grants": {
+                  "roles": []
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:cfb273dd78ce62e8b78692805e96e0778043c3e99521c32f205ce67b5070813a",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "dana"
+              },
+              "entries": [
+                {
+                  "id": "sha256:52b396f21bd7075cdda314069da7237e0d440a6225b667cf0c4b8075209461d0",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "dana",
+                "kind": "com.example.club.apply",
+                "payload": {
+                  "statement": 17
+                },
+                "nonce": "a5:8"
+              },
+              "entries": [
+                {
+                  "id": "sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736",
+                  "kind": "com.example.club.apply"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "bob",
+                "kind": "com.example.club.vote",
+                "payload": {
+                  "application_id": "sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736",
+                  "choice": "yes"
+                },
+                "nonce": "a5:9"
+              },
+              "entries": [
+                {
+                  "id": "sha256:d3de847e94ade9127f25543fadba6a4ccfd0fff85ce31ab431ba4342f5438365",
+                  "kind": "com.example.club.vote"
+                }
+              ],
+              "application": "sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736"
+            }
+          ]
+        },
+        {
+          "clubA5": "standing-reason",
+          "manifest": "sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde",
+          "package": "sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e",
+          "nonce": "v6-followup:a5:standing-reason",
+          "target": {
+            "position": 9,
+            "id": "sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+            "kind": "com.example.club.standing_reason",
+            "effective": true
+          },
+          "votes": [
+            10,
+            11
+          ],
+          "admit": 12,
+          "grants": [
+            {
+              "position": 13,
+              "payload": {
+                "principal": "alice",
+                "roles": [
+                  "Member"
+                ]
+              }
+            }
+          ],
+          "readers": [
+            {
+              "reader": "alice",
+              "votes": [
+                true,
+                true
+              ],
+              "admit": true
+            },
+            {
+              "reader": "bob",
+              "votes": [
+                true,
+                true
+              ],
+              "admit": true
+            },
+            {
+              "reader": "carol",
+              "votes": [
+                true,
+                true
+              ],
+              "admit": true
+            },
+            {
+              "reader": "dana",
+              "votes": [
+                true,
+                true
+              ],
+              "admit": true
+            },
+            {
+              "reader": "frank",
+              "votes": [
+                true,
+                true
+              ],
+              "admit": true
+            }
+          ],
+          "findings": [
+            "*@10 invariant: vote at 10 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+            "*@11 invariant: vote at 10 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+            "*@11 invariant: vote at 11 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+            "*@12 invariant: vote at 10 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+            "*@12 invariant: vote at 11 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+            "*@12 invariant: admit at 12 of unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+            "*@13 invariant: vote at 10 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+            "*@13 invariant: vote at 11 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+            "*@13 invariant: admit at 12 of unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"
+          ],
+          "steps": [
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "bob",
+                "grants": {
+                  "roles": [
+                    "Committee",
+                    "Member"
+                  ]
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:1cd4cd1c3b0ffc6884370cbb9d75deace66b85bf6c650c44f63400d306d7920e",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "bob"
+              },
+              "entries": [
+                {
+                  "id": "sha256:39aa2439256a95b04087b2f285626a4b0bd8d24652c28753e00b322c4140baba",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "carol",
+                "grants": {
+                  "roles": [
+                    "Committee",
+                    "Member"
+                  ]
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:da31de3a21d459bbde38aacc48766635fbddbad71cf4d772575e9e7de8d749b8",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "carol"
+              },
+              "entries": [
+                {
+                  "id": "sha256:70e92440be9b93badac5ca1c684c57672ed3e83f0dc98a98f193c70fe1da2bd1",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "dana",
+                "grants": {
+                  "roles": []
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:82066a312c85860039f63e39fd97ed5abe3e2ba74e7684dc5296b7adb88f63a8",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "dana"
+              },
+              "entries": [
+                {
+                  "id": "sha256:720923b61c08be8c6e196d688f3dba317614c519e80e0be1f193c86b6bc3e9a4",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "frank",
+                "grants": {
+                  "roles": [
+                    "Member"
+                  ]
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:b2c53e1d54dc0ec05c0c6b67afe498df6d2b51eec4aec49c367359d8c0b60e2b",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "frank"
+              },
+              "entries": [
+                {
+                  "id": "sha256:c624a58e82907beadbd925b6194f58599fbf88a2c3074979cd3ecf46f593cb47",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "alice",
+                "kind": "com.example.club.standing_reason",
+                "payload": {
+                  "member": "dana",
+                  "text": "private reason, not an application"
+                },
+                "nonce": "a5:8"
+              },
+              "entries": [
+                {
+                  "id": "sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+                  "kind": "com.example.club.standing_reason"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "bob",
+                "kind": "com.example.club.vote",
+                "payload": {
+                  "application_id": "sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+                  "choice": "yes"
+                },
+                "nonce": "a5:9"
+              },
+              "entries": [
+                {
+                  "id": "sha256:28583cb1694a7351446b112cfbb524e5461c58e121c49b03c074a3d993715756",
+                  "kind": "com.example.club.vote"
+                }
+              ],
+              "application": "sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "carol",
+                "kind": "com.example.club.vote",
+                "payload": {
+                  "application_id": "sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+                  "choice": "yes"
+                },
+                "nonce": "a5:10"
+              },
+              "entries": [
+                {
+                  "id": "sha256:64d93c1e0993f8529264dff3764d6fb6b43cff1bd0674921c8e595e32a71a422",
+                  "kind": "com.example.club.vote"
+                }
+              ],
+              "application": "sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "alice",
+                "kind": "com.example.club.admit",
+                "payload": {
+                  "application_id": "sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"
+                },
+                "nonce": "a5:11"
+              },
+              "entries": [
+                {
+                  "id": "sha256:f578658d5cf3fa76bcbfbb13eb4939f8fc90e495e11d4faa31b1920bf325eb55",
+                  "kind": "com.example.club.admit"
+                },
+                {
+                  "id": "sha256:3423e61343784c1f9cb6fbc3b4ef9d4a13068c98c19f5da5e08388e62835ab72",
+                  "kind": "ai.generalbusiness.dap.grant"
+                }
+              ],
+              "application": "sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"
+            }
+          ],
+          "minimal": [
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "bob",
+                "grants": {
+                  "roles": [
+                    "Committee",
+                    "Member"
+                  ]
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:1cd4cd1c3b0ffc6884370cbb9d75deace66b85bf6c650c44f63400d306d7920e",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "bob"
+              },
+              "entries": [
+                {
+                  "id": "sha256:39aa2439256a95b04087b2f285626a4b0bd8d24652c28753e00b322c4140baba",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "alice",
+                "kind": "com.example.club.standing_reason",
+                "payload": {
+                  "member": "dana",
+                  "text": "private reason, not an application"
+                },
+                "nonce": "a5:8"
+              },
+              "entries": [
+                {
+                  "id": "sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+                  "kind": "com.example.club.standing_reason"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "bob",
+                "kind": "com.example.club.vote",
+                "payload": {
+                  "application_id": "sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b",
+                  "choice": "yes"
+                },
+                "nonce": "a5:9"
+              },
+              "entries": [
+                {
+                  "id": "sha256:28583cb1694a7351446b112cfbb524e5461c58e121c49b03c074a3d993715756",
+                  "kind": "com.example.club.vote"
+                }
+              ],
+              "application": "sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"
+            }
+          ]
+        },
+        {
+          "storage": "memory",
+          "raw": {
+            "error": "Error: Context: stale fold; restore before writing",
+            "invitation": null,
+            "redemption": null,
+            "participants": [
+              "ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"
+            ]
+          },
+          "coldParticipants": [
+            "ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"
+          ],
+          "coldInviteVerdict": null
+        },
+        {
+          "storage": "sqlite",
+          "raw": {
+            "error": "Error: SQLiteBackend: unavailable or re-entrant transaction",
+            "invitation": null,
+            "redemption": null,
+            "participants": [
+              "ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"
+            ]
+          },
+          "coldParticipants": [
+            "ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"
+          ],
+          "coldInviteVerdict": null
+        },
+        {
+          "storage": "memory",
+          "raw": {
+            "error": "Error: Context: inactive after a write error; restore before writing",
+            "invitation": null,
+            "redemption": null,
+            "participants": [
+              "ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"
+            ]
+          },
+          "coldParticipants": [
+            "ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"
+          ],
+          "coldInviteVerdict": null
+        },
+        {
+          "storage": "sqlite",
+          "raw": {
+            "error": "Error: Context: inactive after a write error; restore before writing",
+            "invitation": null,
+            "redemption": null,
+            "participants": [
+              "ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"
+            ]
+          },
+          "coldParticipants": [
+            "ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"
+          ],
+          "coldInviteVerdict": null
+        },
+        {
+          "staleParticipants": [
+            "ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"
+          ],
+          "liveParticipants": [
+            "ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"
+          ],
+          "coldParticipants": [
+            "ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"
+          ],
+          "coldInviteVerdict": null
+        },
+        {
+          "storage": "memory",
+          "catalogue": "21 original catches; 12 converting try bodies",
+          "rows": [
+            {
+              "catch": "append.prepare",
+              "sentinel": "Error",
+              "outcome": "precommit refusal; same-facade recovery",
+              "coldExactRetry": true,
+              "reachedStack": [
+                "at verifyEnvelope (spike/src/codec.ts:200:8)",
+                "at Object.prepare (spike/src/journal.ts:38:24)",
+                "at append (spike/src/append.ts:130:34)",
+                "at Context.submit (spike/src/context.ts:172:17)",
+                "at Journal.submit (spike/src/journal.ts:175:35)",
+                "at ScopeJournal.submit (spike/src/scope.ts:346:33)"
+              ]
+            },
+            {
+              "catch": "append.prepare",
+              "sentinel": "codec-looking TypeError",
+              "outcome": "precommit refusal; same-facade recovery",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "append.prepare",
+              "sentinel": "undefined",
+              "outcome": "precommit refusal; same-facade recovery",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "append.prepare",
+              "sentinel": "object",
+              "outcome": "precommit refusal; same-facade recovery",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "append.prepare",
+              "sentinel": "string",
+              "outcome": "precommit refusal; same-facade recovery",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "append.prepare",
+              "sentinel": "revoked Proxy",
+              "outcome": "precommit refusal; same-facade recovery",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "codec.parseCanonical",
+              "sentinel": "Error",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true,
+              "reachedStack": [
+                "at parseCanonical (spike/src/codec.ts:94:22)",
+                "at verifyEnvelope (spike/src/codec.ts:198:72)",
+                "at spike/src/scope-proof.ts:56:40",
+                "at wireInput (spike/src/scope-proof.ts:161:16)",
+                "at assertPublicData (spike/src/scope-proof.ts:56:24)",
+                "at assertPublicData (spike/src/scope-proof.ts:58:12)",
+                "at assertPublicData (spike/src/scope-proof.ts:58:12)",
+                "at spike/src/scope-proof.ts:116:5",
+                "at wireInput (spike/src/scope-proof.ts:161:16)",
+                "at verifyPublicProof (spike/src/scope-proof.ts:112:16)",
+                "at replayScopeView (spike/src/scope.ts:200:38)",
+                "at get state (spike/src/scope.ts:325:21)",
+                "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+              ]
+            },
+            {
+              "catch": "codec.parseCanonical",
+              "sentinel": "codec-looking TypeError",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "codec.parseCanonical",
+              "sentinel": "undefined",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "codec.parseCanonical",
+              "sentinel": "object",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "codec.parseCanonical",
+              "sentinel": "string",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "codec.parseCanonical",
+              "sentinel": "revoked Proxy",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.foldSystem",
+              "sentinel": "Error",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true,
+              "reachedStack": [
+                "at own (spike/src/descriptor.ts:155:93)",
+                "at packageIn (spike/src/descriptor.ts:165:10)",
+                "at foldSystem (spike/src/foundation.ts:497:19)",
+                "at foldEntry (spike/src/foundation.ts:366:19)",
+                "at interpretView (spike/src/interpret.ts:137:21)",
+                "at verifyPublicProof (spike/src/scope-proof.ts:135:23)",
+                "at replayScopeView (spike/src/scope.ts:200:38)",
+                "at get state (spike/src/scope.ts:325:21)",
+                "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+              ]
+            },
+            {
+              "catch": "foundation.foldSystem",
+              "sentinel": "codec-looking TypeError",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.foldSystem",
+              "sentinel": "undefined",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.foldSystem",
+              "sentinel": "object",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.foldSystem",
+              "sentinel": "string",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.foldSystem",
+              "sentinel": "revoked Proxy",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.audience",
+              "sentinel": "Error",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true,
+              "reachedStack": [
+                "at foldEntry (spike/src/foundation.ts:420:37)",
+                "at interpretView (spike/src/interpret.ts:137:21)",
+                "at verifyPublicProof (spike/src/scope-proof.ts:135:23)",
+                "at replayScopeView (spike/src/scope.ts:200:38)",
+                "at get state (spike/src/scope.ts:325:21)",
+                "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+              ]
+            },
+            {
+              "catch": "foundation.audience",
+              "sentinel": "codec-looking TypeError",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.audience",
+              "sentinel": "undefined",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.audience",
+              "sentinel": "object",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.audience",
+              "sentinel": "string",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.audience",
+              "sentinel": "revoked Proxy",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.issuanceEnvelope",
+              "sentinel": "Error",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true,
+              "reachedStack": [
+                "at publicKeyOf (spike/src/codec.ts:151:10)",
+                "at bodyShape (spike/src/codec.ts:158:3)",
+                "at envelopeShape (spike/src/codec.ts:178:3)",
+                "at envelopeBytes (spike/src/codec.ts:191:3)",
+                "at verifyIssuance (spike/src/foundation.ts:566:32)",
+                "at verifyEmbeddedInvite (spike/src/foundation.ts:599:13)",
+                "at foldAccept (spike/src/foundation.ts:607:13)",
+                "at foldSystem (spike/src/foundation.ts:512:14)",
+                "at foldEntry (spike/src/foundation.ts:366:19)",
+                "at interpretView (spike/src/interpret.ts:137:21)",
+                "at verifyPublicProof (spike/src/scope-proof.ts:135:23)",
+                "at replayScopeView (spike/src/scope.ts:200:38)",
+                "at get state (spike/src/scope.ts:325:21)",
+                "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+              ]
+            },
+            {
+              "catch": "foundation.issuanceEnvelope",
+              "sentinel": "codec-looking TypeError",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.issuanceEnvelope",
+              "sentinel": "undefined",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.issuanceEnvelope",
+              "sentinel": "object",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.issuanceEnvelope",
+              "sentinel": "string",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.issuanceEnvelope",
+              "sentinel": "revoked Proxy",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.issuanceHeader",
+              "sentinel": "Error",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true,
+              "reachedStack": [
+                "at canonicalize (spike/src/canon.ts:39:23)",
+                "at verifyIssuance (spike/src/foundation.ts:577:23)",
+                "at verifyEmbeddedInvite (spike/src/foundation.ts:599:13)",
+                "at foldAccept (spike/src/foundation.ts:607:13)",
+                "at foldSystem (spike/src/foundation.ts:512:14)",
+                "at foldEntry (spike/src/foundation.ts:366:19)",
+                "at interpretView (spike/src/interpret.ts:137:21)",
+                "at verifyPublicProof (spike/src/scope-proof.ts:135:23)",
+                "at replayScopeView (spike/src/scope.ts:200:38)",
+                "at get state (spike/src/scope.ts:325:21)",
+                "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+              ]
+            },
+            {
+              "catch": "foundation.issuanceHeader",
+              "sentinel": "codec-looking TypeError",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.issuanceHeader",
+              "sentinel": "undefined",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.issuanceHeader",
+              "sentinel": "object",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.issuanceHeader",
+              "sentinel": "string",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.issuanceHeader",
+              "sentinel": "revoked Proxy",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.dispatch",
+              "sentinel": "Error",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true,
+              "reachedStack": [
+                "at dispatch (spike/src/foundation.ts:658:17)",
+                "at foldOrigin (spike/src/foundation.ts:478:10)",
+                "at foldEntry (spike/src/foundation.ts:358:15)",
+                "at interpretView (spike/src/interpret.ts:137:21)",
+                "at verifyPublicProof (spike/src/scope-proof.ts:135:23)",
+                "at replayScopeView (spike/src/scope.ts:200:38)",
+                "at get state (spike/src/scope.ts:325:21)",
+                "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+              ]
+            },
+            {
+              "catch": "foundation.dispatch",
+              "sentinel": "codec-looking TypeError",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.dispatch",
+              "sentinel": "undefined",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.dispatch",
+              "sentinel": "object",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.dispatch",
+              "sentinel": "string",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.dispatch",
+              "sentinel": "revoked Proxy",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "journal.precheck",
+              "sentinel": "Error",
+              "outcome": "precommit refusal; same-facade recovery",
+              "coldExactRetry": true,
+              "reachedStack": [
+                "at verifyEnvelope (spike/src/codec.ts:200:8)",
+                "at Journal.submit (spike/src/journal.ts:172:22)",
+                "at ScopeJournal.submit (spike/src/scope.ts:346:33)"
+              ]
+            },
+            {
+              "catch": "journal.precheck",
+              "sentinel": "codec-looking TypeError",
+              "outcome": "precommit refusal; same-facade recovery",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "journal.precheck",
+              "sentinel": "undefined",
+              "outcome": "precommit refusal; same-facade recovery",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "journal.precheck",
+              "sentinel": "object",
+              "outcome": "precommit refusal; same-facade recovery",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "journal.precheck",
+              "sentinel": "string",
+              "outcome": "precommit refusal; same-facade recovery",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "journal.precheck",
+              "sentinel": "revoked Proxy",
+              "outcome": "precommit refusal; same-facade recovery",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "ordering.admission",
+              "sentinel": "Error",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true,
+              "reachedStack": [
+                "at publicKeyOf (spike/src/codec.ts:151:10)",
+                "at orderingAdmission (spike/src/ordering.ts:65:11)",
+                "at verifyJournalView (spike/src/journal.ts:213:27)",
+                "at spike/src/scope-proof.ts:125:5",
+                "at wireInput (spike/src/scope-proof.ts:161:16)",
+                "at verifyPublicProof (spike/src/scope-proof.ts:112:16)",
+                "at replayScopeView (spike/src/scope.ts:200:38)",
+                "at get state (spike/src/scope.ts:325:21)",
+                "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+              ]
+            },
+            {
+              "catch": "ordering.admission",
+              "sentinel": "codec-looking TypeError",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "ordering.admission",
+              "sentinel": "undefined",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "ordering.admission",
+              "sentinel": "object",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "ordering.admission",
+              "sentinel": "string",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "ordering.admission",
+              "sentinel": "revoked Proxy",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "scopeProof.wireInput",
+              "sentinel": "Error",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true,
+              "reachedStack": [
+                "at publicKeyOf (spike/src/codec.ts:151:10)",
+                "at bodyShape (spike/src/codec.ts:158:3)",
+                "at envelopeShape (spike/src/codec.ts:178:3)",
+                "at verifyEnvelope (spike/src/codec.ts:199:3)",
+                "at spike/src/scope-proof.ts:56:40",
+                "at wireInput (spike/src/scope-proof.ts:161:16)",
+                "at assertPublicData (spike/src/scope-proof.ts:56:24)",
+                "at assertPublicData (spike/src/scope-proof.ts:58:12)",
+                "at assertPublicData (spike/src/scope-proof.ts:58:12)",
+                "at spike/src/scope-proof.ts:116:5",
+                "at wireInput (spike/src/scope-proof.ts:161:16)",
+                "at verifyPublicProof (spike/src/scope-proof.ts:112:16)",
+                "at replayScopeView (spike/src/scope.ts:200:38)",
+                "at get state (spike/src/scope.ts:325:21)",
+                "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+              ]
+            },
+            {
+              "catch": "scopeProof.wireInput",
+              "sentinel": "codec-looking TypeError",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "scopeProof.wireInput",
+              "sentinel": "undefined",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "scopeProof.wireInput",
+              "sentinel": "object",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "scopeProof.wireInput",
+              "sentinel": "string",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "scopeProof.wireInput",
+              "sentinel": "revoked Proxy",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "scope.releaseOpening",
+              "sentinel": "Error",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true,
+              "reachedStack": [
+                "at publicKeyOf (spike/src/codec.ts:151:10)",
+                "at bodyShape (spike/src/codec.ts:158:3)",
+                "at envelopeShape (spike/src/codec.ts:178:3)",
+                "at verifyEnvelope (spike/src/codec.ts:199:3)",
+                "at replayScopeView (spike/src/scope.ts:184:26)",
+                "at get state (spike/src/scope.ts:325:21)",
+                "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+              ]
+            },
+            {
+              "catch": "scope.releaseOpening",
+              "sentinel": "codec-looking TypeError",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "scope.releaseOpening",
+              "sentinel": "undefined",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "scope.releaseOpening",
+              "sentinel": "object",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "scope.releaseOpening",
+              "sentinel": "string",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "scope.releaseOpening",
+              "sentinel": "revoked Proxy",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "scope.semantic",
+              "sentinel": "Error",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true,
+              "reachedStack": [
+                "at object (spike/src/scope.ts:59:52)",
+                "at replayScopeView (spike/src/scope.ts:148:17)",
+                "at get state (spike/src/scope.ts:325:21)",
+                "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+              ]
+            },
+            {
+              "catch": "scope.semantic",
+              "sentinel": "codec-looking TypeError",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "scope.semantic",
+              "sentinel": "undefined",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "scope.semantic",
+              "sentinel": "object",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "scope.semantic",
+              "sentinel": "string",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "scope.semantic",
+              "sentinel": "revoked Proxy",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            }
+          ]
+        },
+        {
+          "storage": "sqlite",
+          "catalogue": "21 original catches; 12 converting try bodies",
+          "rows": [
+            {
+              "catch": "append.prepare",
+              "sentinel": "Error",
+              "outcome": "precommit refusal; same-facade recovery",
+              "coldExactRetry": true,
+              "reachedStack": [
+                "at verifyEnvelope (spike/src/codec.ts:200:8)",
+                "at Object.prepare (spike/src/journal.ts:38:24)",
+                "at append (spike/src/append.ts:130:34)",
+                "at Context.submit (spike/src/context.ts:172:17)",
+                "at Journal.submit (spike/src/journal.ts:175:35)",
+                "at ScopeJournal.submit (spike/src/scope.ts:346:33)"
+              ]
+            },
+            {
+              "catch": "append.prepare",
+              "sentinel": "codec-looking TypeError",
+              "outcome": "precommit refusal; same-facade recovery",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "append.prepare",
+              "sentinel": "undefined",
+              "outcome": "precommit refusal; same-facade recovery",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "append.prepare",
+              "sentinel": "object",
+              "outcome": "precommit refusal; same-facade recovery",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "append.prepare",
+              "sentinel": "string",
+              "outcome": "precommit refusal; same-facade recovery",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "append.prepare",
+              "sentinel": "revoked Proxy",
+              "outcome": "precommit refusal; same-facade recovery",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "codec.parseCanonical",
+              "sentinel": "Error",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true,
+              "reachedStack": [
+                "at parseCanonical (spike/src/codec.ts:94:22)",
+                "at verifyEnvelope (spike/src/codec.ts:198:72)",
+                "at spike/src/scope-proof.ts:56:40",
+                "at wireInput (spike/src/scope-proof.ts:161:16)",
+                "at assertPublicData (spike/src/scope-proof.ts:56:24)",
+                "at assertPublicData (spike/src/scope-proof.ts:58:12)",
+                "at assertPublicData (spike/src/scope-proof.ts:58:12)",
+                "at spike/src/scope-proof.ts:116:5",
+                "at wireInput (spike/src/scope-proof.ts:161:16)",
+                "at verifyPublicProof (spike/src/scope-proof.ts:112:16)",
+                "at replayScopeView (spike/src/scope.ts:200:38)",
+                "at get state (spike/src/scope.ts:325:21)",
+                "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+              ]
+            },
+            {
+              "catch": "codec.parseCanonical",
+              "sentinel": "codec-looking TypeError",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "codec.parseCanonical",
+              "sentinel": "undefined",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "codec.parseCanonical",
+              "sentinel": "object",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "codec.parseCanonical",
+              "sentinel": "string",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "codec.parseCanonical",
+              "sentinel": "revoked Proxy",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.foldSystem",
+              "sentinel": "Error",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true,
+              "reachedStack": [
+                "at own (spike/src/descriptor.ts:155:93)",
+                "at packageIn (spike/src/descriptor.ts:165:10)",
+                "at foldSystem (spike/src/foundation.ts:497:19)",
+                "at foldEntry (spike/src/foundation.ts:366:19)",
+                "at interpretView (spike/src/interpret.ts:137:21)",
+                "at verifyPublicProof (spike/src/scope-proof.ts:135:23)",
+                "at replayScopeView (spike/src/scope.ts:200:38)",
+                "at get state (spike/src/scope.ts:325:21)",
+                "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+              ]
+            },
+            {
+              "catch": "foundation.foldSystem",
+              "sentinel": "codec-looking TypeError",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.foldSystem",
+              "sentinel": "undefined",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.foldSystem",
+              "sentinel": "object",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.foldSystem",
+              "sentinel": "string",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.foldSystem",
+              "sentinel": "revoked Proxy",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.audience",
+              "sentinel": "Error",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true,
+              "reachedStack": [
+                "at foldEntry (spike/src/foundation.ts:420:37)",
+                "at interpretView (spike/src/interpret.ts:137:21)",
+                "at verifyPublicProof (spike/src/scope-proof.ts:135:23)",
+                "at replayScopeView (spike/src/scope.ts:200:38)",
+                "at get state (spike/src/scope.ts:325:21)",
+                "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+              ]
+            },
+            {
+              "catch": "foundation.audience",
+              "sentinel": "codec-looking TypeError",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.audience",
+              "sentinel": "undefined",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.audience",
+              "sentinel": "object",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.audience",
+              "sentinel": "string",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.audience",
+              "sentinel": "revoked Proxy",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.issuanceEnvelope",
+              "sentinel": "Error",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true,
+              "reachedStack": [
+                "at publicKeyOf (spike/src/codec.ts:151:10)",
+                "at bodyShape (spike/src/codec.ts:158:3)",
+                "at envelopeShape (spike/src/codec.ts:178:3)",
+                "at envelopeBytes (spike/src/codec.ts:191:3)",
+                "at verifyIssuance (spike/src/foundation.ts:566:32)",
+                "at verifyEmbeddedInvite (spike/src/foundation.ts:599:13)",
+                "at foldAccept (spike/src/foundation.ts:607:13)",
+                "at foldSystem (spike/src/foundation.ts:512:14)",
+                "at foldEntry (spike/src/foundation.ts:366:19)",
+                "at interpretView (spike/src/interpret.ts:137:21)",
+                "at verifyPublicProof (spike/src/scope-proof.ts:135:23)",
+                "at replayScopeView (spike/src/scope.ts:200:38)",
+                "at get state (spike/src/scope.ts:325:21)",
+                "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+              ]
+            },
+            {
+              "catch": "foundation.issuanceEnvelope",
+              "sentinel": "codec-looking TypeError",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.issuanceEnvelope",
+              "sentinel": "undefined",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.issuanceEnvelope",
+              "sentinel": "object",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.issuanceEnvelope",
+              "sentinel": "string",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.issuanceEnvelope",
+              "sentinel": "revoked Proxy",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.issuanceHeader",
+              "sentinel": "Error",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true,
+              "reachedStack": [
+                "at canonicalize (spike/src/canon.ts:39:23)",
+                "at verifyIssuance (spike/src/foundation.ts:577:23)",
+                "at verifyEmbeddedInvite (spike/src/foundation.ts:599:13)",
+                "at foldAccept (spike/src/foundation.ts:607:13)",
+                "at foldSystem (spike/src/foundation.ts:512:14)",
+                "at foldEntry (spike/src/foundation.ts:366:19)",
+                "at interpretView (spike/src/interpret.ts:137:21)",
+                "at verifyPublicProof (spike/src/scope-proof.ts:135:23)",
+                "at replayScopeView (spike/src/scope.ts:200:38)",
+                "at get state (spike/src/scope.ts:325:21)",
+                "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+              ]
+            },
+            {
+              "catch": "foundation.issuanceHeader",
+              "sentinel": "codec-looking TypeError",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.issuanceHeader",
+              "sentinel": "undefined",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.issuanceHeader",
+              "sentinel": "object",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.issuanceHeader",
+              "sentinel": "string",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.issuanceHeader",
+              "sentinel": "revoked Proxy",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.dispatch",
+              "sentinel": "Error",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true,
+              "reachedStack": [
+                "at dispatch (spike/src/foundation.ts:658:17)",
+                "at foldOrigin (spike/src/foundation.ts:478:10)",
+                "at foldEntry (spike/src/foundation.ts:358:15)",
+                "at interpretView (spike/src/interpret.ts:137:21)",
+                "at verifyPublicProof (spike/src/scope-proof.ts:135:23)",
+                "at replayScopeView (spike/src/scope.ts:200:38)",
+                "at get state (spike/src/scope.ts:325:21)",
+                "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+              ]
+            },
+            {
+              "catch": "foundation.dispatch",
+              "sentinel": "codec-looking TypeError",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.dispatch",
+              "sentinel": "undefined",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.dispatch",
+              "sentinel": "object",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.dispatch",
+              "sentinel": "string",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "foundation.dispatch",
+              "sentinel": "revoked Proxy",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "journal.precheck",
+              "sentinel": "Error",
+              "outcome": "precommit refusal; same-facade recovery",
+              "coldExactRetry": true,
+              "reachedStack": [
+                "at verifyEnvelope (spike/src/codec.ts:200:8)",
+                "at Journal.submit (spike/src/journal.ts:172:22)",
+                "at ScopeJournal.submit (spike/src/scope.ts:346:33)"
+              ]
+            },
+            {
+              "catch": "journal.precheck",
+              "sentinel": "codec-looking TypeError",
+              "outcome": "precommit refusal; same-facade recovery",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "journal.precheck",
+              "sentinel": "undefined",
+              "outcome": "precommit refusal; same-facade recovery",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "journal.precheck",
+              "sentinel": "object",
+              "outcome": "precommit refusal; same-facade recovery",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "journal.precheck",
+              "sentinel": "string",
+              "outcome": "precommit refusal; same-facade recovery",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "journal.precheck",
+              "sentinel": "revoked Proxy",
+              "outcome": "precommit refusal; same-facade recovery",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "ordering.admission",
+              "sentinel": "Error",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true,
+              "reachedStack": [
+                "at publicKeyOf (spike/src/codec.ts:151:10)",
+                "at orderingAdmission (spike/src/ordering.ts:65:11)",
+                "at verifyJournalView (spike/src/journal.ts:213:27)",
+                "at spike/src/scope-proof.ts:125:5",
+                "at wireInput (spike/src/scope-proof.ts:161:16)",
+                "at verifyPublicProof (spike/src/scope-proof.ts:112:16)",
+                "at replayScopeView (spike/src/scope.ts:200:38)",
+                "at get state (spike/src/scope.ts:325:21)",
+                "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+              ]
+            },
+            {
+              "catch": "ordering.admission",
+              "sentinel": "codec-looking TypeError",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "ordering.admission",
+              "sentinel": "undefined",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "ordering.admission",
+              "sentinel": "object",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "ordering.admission",
+              "sentinel": "string",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "ordering.admission",
+              "sentinel": "revoked Proxy",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "scopeProof.wireInput",
+              "sentinel": "Error",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true,
+              "reachedStack": [
+                "at publicKeyOf (spike/src/codec.ts:151:10)",
+                "at bodyShape (spike/src/codec.ts:158:3)",
+                "at envelopeShape (spike/src/codec.ts:178:3)",
+                "at verifyEnvelope (spike/src/codec.ts:199:3)",
+                "at spike/src/scope-proof.ts:56:40",
+                "at wireInput (spike/src/scope-proof.ts:161:16)",
+                "at assertPublicData (spike/src/scope-proof.ts:56:24)",
+                "at assertPublicData (spike/src/scope-proof.ts:58:12)",
+                "at assertPublicData (spike/src/scope-proof.ts:58:12)",
+                "at spike/src/scope-proof.ts:116:5",
+                "at wireInput (spike/src/scope-proof.ts:161:16)",
+                "at verifyPublicProof (spike/src/scope-proof.ts:112:16)",
+                "at replayScopeView (spike/src/scope.ts:200:38)",
+                "at get state (spike/src/scope.ts:325:21)",
+                "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+              ]
+            },
+            {
+              "catch": "scopeProof.wireInput",
+              "sentinel": "codec-looking TypeError",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "scopeProof.wireInput",
+              "sentinel": "undefined",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "scopeProof.wireInput",
+              "sentinel": "object",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "scopeProof.wireInput",
+              "sentinel": "string",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "scopeProof.wireInput",
+              "sentinel": "revoked Proxy",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "scope.releaseOpening",
+              "sentinel": "Error",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true,
+              "reachedStack": [
+                "at publicKeyOf (spike/src/codec.ts:151:10)",
+                "at bodyShape (spike/src/codec.ts:158:3)",
+                "at envelopeShape (spike/src/codec.ts:178:3)",
+                "at verifyEnvelope (spike/src/codec.ts:199:3)",
+                "at replayScopeView (spike/src/scope.ts:184:26)",
+                "at get state (spike/src/scope.ts:325:21)",
+                "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+              ]
+            },
+            {
+              "catch": "scope.releaseOpening",
+              "sentinel": "codec-looking TypeError",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "scope.releaseOpening",
+              "sentinel": "undefined",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "scope.releaseOpening",
+              "sentinel": "object",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "scope.releaseOpening",
+              "sentinel": "string",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "scope.releaseOpening",
+              "sentinel": "revoked Proxy",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "scope.semantic",
+              "sentinel": "Error",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true,
+              "reachedStack": [
+                "at object (spike/src/scope.ts:59:52)",
+                "at replayScopeView (spike/src/scope.ts:148:17)",
+                "at get state (spike/src/scope.ts:325:21)",
+                "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+              ]
+            },
+            {
+              "catch": "scope.semantic",
+              "sentinel": "codec-looking TypeError",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "scope.semantic",
+              "sentinel": "undefined",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "scope.semantic",
+              "sentinel": "object",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "scope.semantic",
+              "sentinel": "string",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            },
+            {
+              "catch": "scope.semantic",
+              "sentinel": "revoked Proxy",
+              "outcome": "original value; unavailable facade",
+              "coldExactRetry": true
+            }
+          ]
+        },
+        {
+          "storage": "memory",
+          "coldOpenCases": [
+            {
+              "context": "S",
+              "seam": "ordering-key",
+              "sentinel": "Error",
+              "recovered": true
+            },
+            {
+              "context": "S",
+              "seam": "ordering-key",
+              "sentinel": "codec-looking TypeError",
+              "recovered": true
+            },
+            {
+              "context": "S",
+              "seam": "ordering-key",
+              "sentinel": "undefined",
+              "recovered": true
+            },
+            {
+              "context": "S",
+              "seam": "ordering-key",
+              "sentinel": "object",
+              "recovered": true
+            },
+            {
+              "context": "S",
+              "seam": "ordering-key",
+              "sentinel": "string",
+              "recovered": true
+            },
+            {
+              "context": "S",
+              "seam": "ordering-key",
+              "sentinel": "revoked Proxy",
+              "recovered": true
+            },
+            {
+              "context": "S",
+              "seam": "open-key",
+              "sentinel": "Error",
+              "recovered": true
+            },
+            {
+              "context": "S",
+              "seam": "open-key",
+              "sentinel": "codec-looking TypeError",
+              "recovered": true
+            },
+            {
+              "context": "S",
+              "seam": "open-key",
+              "sentinel": "undefined",
+              "recovered": true
+            },
+            {
+              "context": "S",
+              "seam": "open-key",
+              "sentinel": "object",
+              "recovered": true
+            },
+            {
+              "context": "S",
+              "seam": "open-key",
+              "sentinel": "string",
+              "recovered": true
+            },
+            {
+              "context": "S",
+              "seam": "open-key",
+              "sentinel": "revoked Proxy",
+              "recovered": true
+            },
+            {
+              "context": "S",
+              "seam": "cold-parse",
+              "sentinel": "Error",
+              "recovered": true
+            },
+            {
+              "context": "S",
+              "seam": "cold-parse",
+              "sentinel": "codec-looking TypeError",
+              "recovered": true
+            },
+            {
+              "context": "S",
+              "seam": "cold-parse",
+              "sentinel": "undefined",
+              "recovered": true
+            },
+            {
+              "context": "S",
+              "seam": "cold-parse",
+              "sentinel": "object",
+              "recovered": true
+            },
+            {
+              "context": "S",
+              "seam": "cold-parse",
+              "sentinel": "string",
+              "recovered": true
+            },
+            {
+              "context": "S",
+              "seam": "cold-parse",
+              "sentinel": "revoked Proxy",
+              "recovered": true
+            },
+            {
+              "context": "F",
+              "seam": "ordering-key",
+              "sentinel": "Error",
+              "recovered": true
+            },
+            {
+              "context": "F",
+              "seam": "ordering-key",
+              "sentinel": "codec-looking TypeError",
+              "recovered": true
+            },
+            {
+              "context": "F",
+              "seam": "ordering-key",
+              "sentinel": "undefined",
+              "recovered": true
+            },
+            {
+              "context": "F",
+              "seam": "ordering-key",
+              "sentinel": "object",
+              "recovered": true
+            },
+            {
+              "context": "F",
+              "seam": "ordering-key",
+              "sentinel": "string",
+              "recovered": true
+            },
+            {
+              "context": "F",
+              "seam": "ordering-key",
+              "sentinel": "revoked Proxy",
+              "recovered": true
+            },
+            {
+              "context": "F",
+              "seam": "open-key",
+              "sentinel": "Error",
+              "recovered": true
+            },
+            {
+              "context": "F",
+              "seam": "open-key",
+              "sentinel": "codec-looking TypeError",
+              "recovered": true
+            },
+            {
+              "context": "F",
+              "seam": "open-key",
+              "sentinel": "undefined",
+              "recovered": true
+            },
+            {
+              "context": "F",
+              "seam": "open-key",
+              "sentinel": "object",
+              "recovered": true
+            },
+            {
+              "context": "F",
+              "seam": "open-key",
+              "sentinel": "string",
+              "recovered": true
+            },
+            {
+              "context": "F",
+              "seam": "open-key",
+              "sentinel": "revoked Proxy",
+              "recovered": true
+            },
+            {
+              "context": "F",
+              "seam": "cold-parse",
+              "sentinel": "Error",
+              "recovered": true
+            },
+            {
+              "context": "F",
+              "seam": "cold-parse",
+              "sentinel": "codec-looking TypeError",
+              "recovered": true
+            },
+            {
+              "context": "F",
+              "seam": "cold-parse",
+              "sentinel": "undefined",
+              "recovered": true
+            },
+            {
+              "context": "F",
+              "seam": "cold-parse",
+              "sentinel": "object",
+              "recovered": true
+            },
+            {
+              "context": "F",
+              "seam": "cold-parse",
+              "sentinel": "string",
+              "recovered": true
+            },
+            {
+              "context": "F",
+              "seam": "cold-parse",
+              "sentinel": "revoked Proxy",
+              "recovered": true
+            }
+          ]
+        },
+        {
+          "storage": "sqlite",
+          "coldOpenCases": [
+            {
+              "context": "S",
+              "seam": "ordering-key",
+              "sentinel": "Error",
+              "recovered": true
+            },
+            {
+              "context": "S",
+              "seam": "ordering-key",
+              "sentinel": "codec-looking TypeError",
+              "recovered": true
+            },
+            {
+              "context": "S",
+              "seam": "ordering-key",
+              "sentinel": "undefined",
+              "recovered": true
+            },
+            {
+              "context": "S",
+              "seam": "ordering-key",
+              "sentinel": "object",
+              "recovered": true
+            },
+            {
+              "context": "S",
+              "seam": "ordering-key",
+              "sentinel": "string",
+              "recovered": true
+            },
+            {
+              "context": "S",
+              "seam": "ordering-key",
+              "sentinel": "revoked Proxy",
+              "recovered": true
+            },
+            {
+              "context": "S",
+              "seam": "open-key",
+              "sentinel": "Error",
+              "recovered": true
+            },
+            {
+              "context": "S",
+              "seam": "open-key",
+              "sentinel": "codec-looking TypeError",
+              "recovered": true
+            },
+            {
+              "context": "S",
+              "seam": "open-key",
+              "sentinel": "undefined",
+              "recovered": true
+            },
+            {
+              "context": "S",
+              "seam": "open-key",
+              "sentinel": "object",
+              "recovered": true
+            },
+            {
+              "context": "S",
+              "seam": "open-key",
+              "sentinel": "string",
+              "recovered": true
+            },
+            {
+              "context": "S",
+              "seam": "open-key",
+              "sentinel": "revoked Proxy",
+              "recovered": true
+            },
+            {
+              "context": "S",
+              "seam": "cold-parse",
+              "sentinel": "Error",
+              "recovered": true
+            },
+            {
+              "context": "S",
+              "seam": "cold-parse",
+              "sentinel": "codec-looking TypeError",
+              "recovered": true
+            },
+            {
+              "context": "S",
+              "seam": "cold-parse",
+              "sentinel": "undefined",
+              "recovered": true
+            },
+            {
+              "context": "S",
+              "seam": "cold-parse",
+              "sentinel": "object",
+              "recovered": true
+            },
+            {
+              "context": "S",
+              "seam": "cold-parse",
+              "sentinel": "string",
+              "recovered": true
+            },
+            {
+              "context": "S",
+              "seam": "cold-parse",
+              "sentinel": "revoked Proxy",
+              "recovered": true
+            },
+            {
+              "context": "F",
+              "seam": "ordering-key",
+              "sentinel": "Error",
+              "recovered": true
+            },
+            {
+              "context": "F",
+              "seam": "ordering-key",
+              "sentinel": "codec-looking TypeError",
+              "recovered": true
+            },
+            {
+              "context": "F",
+              "seam": "ordering-key",
+              "sentinel": "undefined",
+              "recovered": true
+            },
+            {
+              "context": "F",
+              "seam": "ordering-key",
+              "sentinel": "object",
+              "recovered": true
+            },
+            {
+              "context": "F",
+              "seam": "ordering-key",
+              "sentinel": "string",
+              "recovered": true
+            },
+            {
+              "context": "F",
+              "seam": "ordering-key",
+              "sentinel": "revoked Proxy",
+              "recovered": true
+            },
+            {
+              "context": "F",
+              "seam": "open-key",
+              "sentinel": "Error",
+              "recovered": true
+            },
+            {
+              "context": "F",
+              "seam": "open-key",
+              "sentinel": "codec-looking TypeError",
+              "recovered": true
+            },
+            {
+              "context": "F",
+              "seam": "open-key",
+              "sentinel": "undefined",
+              "recovered": true
+            },
+            {
+              "context": "F",
+              "seam": "open-key",
+              "sentinel": "object",
+              "recovered": true
+            },
+            {
+              "context": "F",
+              "seam": "open-key",
+              "sentinel": "string",
+              "recovered": true
+            },
+            {
+              "context": "F",
+              "seam": "open-key",
+              "sentinel": "revoked Proxy",
+              "recovered": true
+            },
+            {
+              "context": "F",
+              "seam": "cold-parse",
+              "sentinel": "Error",
+              "recovered": true
+            },
+            {
+              "context": "F",
+              "seam": "cold-parse",
+              "sentinel": "codec-looking TypeError",
+              "recovered": true
+            },
+            {
+              "context": "F",
+              "seam": "cold-parse",
+              "sentinel": "undefined",
+              "recovered": true
+            },
+            {
+              "context": "F",
+              "seam": "cold-parse",
+              "sentinel": "object",
+              "recovered": true
+            },
+            {
+              "context": "F",
+              "seam": "cold-parse",
+              "sentinel": "string",
+              "recovered": true
+            },
+            {
+              "context": "F",
+              "seam": "cold-parse",
+              "sentinel": "revoked Proxy",
+              "recovered": true
+            }
+          ]
+        },
+        {
+          "storage": "memory",
+          "constructorCases": [
+            {
+              "factory": "create",
+              "sentinel": "Error",
+              "closeFailureInjected": false,
+              "recovered": true
+            },
+            {
+              "factory": "create",
+              "sentinel": "Error",
+              "closeFailureInjected": true,
+              "recovered": true
+            },
+            {
+              "factory": "create",
+              "sentinel": "codec-looking TypeError",
+              "closeFailureInjected": false,
+              "recovered": true
+            },
+            {
+              "factory": "create",
+              "sentinel": "codec-looking TypeError",
+              "closeFailureInjected": true,
+              "recovered": true
+            },
+            {
+              "factory": "create",
+              "sentinel": "undefined",
+              "closeFailureInjected": false,
+              "recovered": true
+            },
+            {
+              "factory": "create",
+              "sentinel": "undefined",
+              "closeFailureInjected": true,
+              "recovered": true
+            },
+            {
+              "factory": "create",
+              "sentinel": "object",
+              "closeFailureInjected": false,
+              "recovered": true
+            },
+            {
+              "factory": "create",
+              "sentinel": "object",
+              "closeFailureInjected": true,
+              "recovered": true
+            },
+            {
+              "factory": "create",
+              "sentinel": "string",
+              "closeFailureInjected": false,
+              "recovered": true
+            },
+            {
+              "factory": "create",
+              "sentinel": "string",
+              "closeFailureInjected": true,
+              "recovered": true
+            },
+            {
+              "factory": "create",
+              "sentinel": "revoked Proxy",
+              "closeFailureInjected": false,
+              "recovered": true
+            },
+            {
+              "factory": "create",
+              "sentinel": "revoked Proxy",
+              "closeFailureInjected": true,
+              "recovered": true
+            },
+            {
+              "factory": "open",
+              "sentinel": "Error",
+              "closeFailureInjected": false,
+              "recovered": true
+            },
+            {
+              "factory": "open",
+              "sentinel": "Error",
+              "closeFailureInjected": true,
+              "recovered": true
+            },
+            {
+              "factory": "open",
+              "sentinel": "codec-looking TypeError",
+              "closeFailureInjected": false,
+              "recovered": true
+            },
+            {
+              "factory": "open",
+              "sentinel": "codec-looking TypeError",
+              "closeFailureInjected": true,
+              "recovered": true
+            },
+            {
+              "factory": "open",
+              "sentinel": "undefined",
+              "closeFailureInjected": false,
+              "recovered": true
+            },
+            {
+              "factory": "open",
+              "sentinel": "undefined",
+              "closeFailureInjected": true,
+              "recovered": true
+            },
+            {
+              "factory": "open",
+              "sentinel": "object",
+              "closeFailureInjected": false,
+              "recovered": true
+            },
+            {
+              "factory": "open",
+              "sentinel": "object",
+              "closeFailureInjected": true,
+              "recovered": true
+            },
+            {
+              "factory": "open",
+              "sentinel": "string",
+              "closeFailureInjected": false,
+              "recovered": true
+            },
+            {
+              "factory": "open",
+              "sentinel": "string",
+              "closeFailureInjected": true,
+              "recovered": true
+            },
+            {
+              "factory": "open",
+              "sentinel": "revoked Proxy",
+              "closeFailureInjected": false,
+              "recovered": true
+            },
+            {
+              "factory": "open",
+              "sentinel": "revoked Proxy",
+              "closeFailureInjected": true,
+              "recovered": true
+            }
+          ]
+        },
+        {
+          "storage": "sqlite",
+          "constructorCases": [
+            {
+              "factory": "create",
+              "sentinel": "Error",
+              "closeFailureInjected": false,
+              "recovered": true
+            },
+            {
+              "factory": "create",
+              "sentinel": "Error",
+              "closeFailureInjected": true,
+              "recovered": true
+            },
+            {
+              "factory": "create",
+              "sentinel": "codec-looking TypeError",
+              "closeFailureInjected": false,
+              "recovered": true
+            },
+            {
+              "factory": "create",
+              "sentinel": "codec-looking TypeError",
+              "closeFailureInjected": true,
+              "recovered": true
+            },
+            {
+              "factory": "create",
+              "sentinel": "undefined",
+              "closeFailureInjected": false,
+              "recovered": true
+            },
+            {
+              "factory": "create",
+              "sentinel": "undefined",
+              "closeFailureInjected": true,
+              "recovered": true
+            },
+            {
+              "factory": "create",
+              "sentinel": "object",
+              "closeFailureInjected": false,
+              "recovered": true
+            },
+            {
+              "factory": "create",
+              "sentinel": "object",
+              "closeFailureInjected": true,
+              "recovered": true
+            },
+            {
+              "factory": "create",
+              "sentinel": "string",
+              "closeFailureInjected": false,
+              "recovered": true
+            },
+            {
+              "factory": "create",
+              "sentinel": "string",
+              "closeFailureInjected": true,
+              "recovered": true
+            },
+            {
+              "factory": "create",
+              "sentinel": "revoked Proxy",
+              "closeFailureInjected": false,
+              "recovered": true
+            },
+            {
+              "factory": "create",
+              "sentinel": "revoked Proxy",
+              "closeFailureInjected": true,
+              "recovered": true
+            },
+            {
+              "factory": "open",
+              "sentinel": "Error",
+              "closeFailureInjected": false,
+              "recovered": true
+            },
+            {
+              "factory": "open",
+              "sentinel": "Error",
+              "closeFailureInjected": true,
+              "recovered": true
+            },
+            {
+              "factory": "open",
+              "sentinel": "codec-looking TypeError",
+              "closeFailureInjected": false,
+              "recovered": true
+            },
+            {
+              "factory": "open",
+              "sentinel": "codec-looking TypeError",
+              "closeFailureInjected": true,
+              "recovered": true
+            },
+            {
+              "factory": "open",
+              "sentinel": "undefined",
+              "closeFailureInjected": false,
+              "recovered": true
+            },
+            {
+              "factory": "open",
+              "sentinel": "undefined",
+              "closeFailureInjected": true,
+              "recovered": true
+            },
+            {
+              "factory": "open",
+              "sentinel": "object",
+              "closeFailureInjected": false,
+              "recovered": true
+            },
+            {
+              "factory": "open",
+              "sentinel": "object",
+              "closeFailureInjected": true,
+              "recovered": true
+            },
+            {
+              "factory": "open",
+              "sentinel": "string",
+              "closeFailureInjected": false,
+              "recovered": true
+            },
+            {
+              "factory": "open",
+              "sentinel": "string",
+              "closeFailureInjected": true,
+              "recovered": true
+            },
+            {
+              "factory": "open",
+              "sentinel": "revoked Proxy",
+              "closeFailureInjected": false,
+              "recovered": true
+            },
+            {
+              "factory": "open",
+              "sentinel": "revoked Proxy",
+              "closeFailureInjected": true,
+              "recovered": true
+            }
+          ]
+        },
+        {
+          "storage": "memory",
+          "policyLimits": [
+            "parser nominal SyntaxError",
+            "wire exact message allowlist",
+            "ScopeProofError class",
+            "ScopeProfileError class"
+          ],
+          "inspectionCatches": {
+            "wire": 2,
+            "scope": 1
+          }
+        },
+        {
+          "storage": "sqlite",
+          "policyLimits": [
+            "parser nominal SyntaxError",
+            "wire exact message allowlist",
+            "ScopeProofError class",
+            "ScopeProfileError class"
+          ],
+          "inspectionCatches": {
+            "wire": 2,
+            "scope": 1
+          }
+        },
+        {
+          "backend": "sqlite only",
+          "cleanupCases": [
+            {
+              "scenario": "constructor-rollback",
+              "originalIdentity": true,
+              "cleanupCalls": 1,
+              "residualOpenTransaction": false
+            },
+            {
+              "scenario": "constructor-rollback",
+              "originalIdentity": true,
+              "cleanupCalls": 1,
+              "residualOpenTransaction": false
+            },
+            {
+              "scenario": "constructor-rollback",
+              "originalIdentity": true,
+              "cleanupCalls": 1,
+              "residualOpenTransaction": false
+            },
+            {
+              "scenario": "constructor-rollback",
+              "originalIdentity": true,
+              "cleanupCalls": 1,
+              "residualOpenTransaction": false
+            },
+            {
+              "scenario": "constructor-rollback",
+              "originalIdentity": true,
+              "cleanupCalls": 1,
+              "residualOpenTransaction": false
+            },
+            {
+              "scenario": "constructor-rollback",
+              "originalIdentity": true,
+              "cleanupCalls": 1,
+              "residualOpenTransaction": false
+            },
+            {
+              "scenario": "constructor-close",
+              "originalIdentity": true,
+              "cleanupCalls": 1,
+              "residualOpenTransaction": false
+            },
+            {
+              "scenario": "constructor-close",
+              "originalIdentity": true,
+              "cleanupCalls": 1,
+              "residualOpenTransaction": false
+            },
+            {
+              "scenario": "constructor-close",
+              "originalIdentity": true,
+              "cleanupCalls": 1,
+              "residualOpenTransaction": false
+            },
+            {
+              "scenario": "constructor-close",
+              "originalIdentity": true,
+              "cleanupCalls": 1,
+              "residualOpenTransaction": false
+            },
+            {
+              "scenario": "constructor-close",
+              "originalIdentity": true,
+              "cleanupCalls": 1,
+              "residualOpenTransaction": false
+            },
+            {
+              "scenario": "constructor-close",
+              "originalIdentity": true,
+              "cleanupCalls": 1,
+              "residualOpenTransaction": false
+            },
+            {
+              "scenario": "constructor-both",
+              "originalIdentity": true,
+              "cleanupCalls": 2,
+              "residualOpenTransaction": false
+            },
+            {
+              "scenario": "constructor-both",
+              "originalIdentity": true,
+              "cleanupCalls": 2,
+              "residualOpenTransaction": false
+            },
+            {
+              "scenario": "constructor-both",
+              "originalIdentity": true,
+              "cleanupCalls": 2,
+              "residualOpenTransaction": false
+            },
+            {
+              "scenario": "constructor-both",
+              "originalIdentity": true,
+              "cleanupCalls": 2,
+              "residualOpenTransaction": false
+            },
+            {
+              "scenario": "constructor-both",
+              "originalIdentity": true,
+              "cleanupCalls": 2,
+              "residualOpenTransaction": false
+            },
+            {
+              "scenario": "constructor-both",
+              "originalIdentity": true,
+              "cleanupCalls": 2,
+              "residualOpenTransaction": false
+            },
+            {
+              "scenario": "serialized-rollback",
+              "originalIdentity": true,
+              "cleanupCalls": 1,
+              "residualOpenTransaction": true
+            },
+            {
+              "scenario": "serialized-rollback",
+              "originalIdentity": true,
+              "cleanupCalls": 1,
+              "residualOpenTransaction": true
+            },
+            {
+              "scenario": "serialized-rollback",
+              "originalIdentity": true,
+              "cleanupCalls": 1,
+              "residualOpenTransaction": true
+            },
+            {
+              "scenario": "serialized-rollback",
+              "originalIdentity": true,
+              "cleanupCalls": 1,
+              "residualOpenTransaction": true
+            },
+            {
+              "scenario": "serialized-rollback",
+              "originalIdentity": true,
+              "cleanupCalls": 1,
+              "residualOpenTransaction": true
+            },
+            {
+              "scenario": "serialized-rollback",
+              "originalIdentity": true,
+              "cleanupCalls": 1,
+              "residualOpenTransaction": true
+            }
+          ]
+        },
+        {
+          "storage": "memory",
+          "catches": [
+            "context.submit",
+            "journal.submit",
+            "scope.submit"
+          ],
+          "injectedValues": 6,
+          "exactRetryRecoveries": 6
+        },
+        {
+          "storage": "sqlite",
+          "catches": [
+            "context.submit",
+            "journal.submit",
+            "scope.submit"
+          ],
+          "injectedValues": 6,
+          "exactRetryRecoveries": 6
+        },
+        {
+          "storage": "memory",
+          "phase": "cold-open",
+          "cryptoSites": [
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash"
+          ],
+          "injectedCases": 17,
+          "originalExceptions": 17,
+          "coldExactRetries": 17
+        },
+        {
+          "storage": "sqlite",
+          "phase": "cold-open",
+          "cryptoSites": [
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash"
+          ],
+          "injectedCases": 17,
+          "originalExceptions": 17,
+          "coldExactRetries": 17
+        },
+        {
+          "storage": "memory",
+          "phase": "activation",
+          "cryptoSites": [
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash"
+          ],
+          "injectedCases": 151,
+          "originalExceptions": 151,
+          "durableExactRetries": 151,
+          "returnedFaultVerdicts": 0
+        },
+        {
+          "storage": "sqlite",
+          "phase": "activation",
+          "cryptoSites": [
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash",
+            "createPublicKey",
+            "createHash",
+            "createHash"
+          ],
+          "injectedCases": 151,
+          "originalExceptions": 151,
+          "durableExactRetries": 151,
+          "returnedFaultVerdicts": 0
+        },
+        {
+          "boundary": "legacy",
+          "sites": [
+            "createHash",
+            "update",
+            "digest",
+            "createHash",
+            "update",
+            "digest"
+          ],
+          "thrownValuesPerSite": 8
+        },
+        {
+          "boundary": "signed",
+          "sites": [
+            "createPublicKey",
+            "createHash",
+            "update",
+            "digest",
+            "createHash",
+            "update",
+            "digest"
+          ],
+          "thrownValuesPerSite": 8
+        },
+        {
+          "storage": "memory",
+          "malformedCases": 13,
+          "newPositions": 0,
+          "healthyAppendAndColdRetry": true
+        },
+        {
+          "storage": "sqlite",
+          "malformedCases": 13,
+          "newPositions": 0,
+          "healthyAppendAndColdRetry": true
+        },
+        {
+          "storage": "memory",
+          "phase": "signatures",
+          "coldVerificationCalls": 51,
+          "coldInjectedCases": 51,
+          "activationVerificationCalls": 124,
+          "activationSigningCalls": 1,
+          "selectedActivationCases": [
+            {
+              "at": 1,
+              "call": "verify",
+              "outcome": "precommit refusal",
+              "committedBeforeRetry": false,
+              "retry": "fresh append"
+            },
+            {
+              "at": 64,
+              "call": "verify",
+              "outcome": "original exception",
+              "committedBeforeRetry": true,
+              "retry": "exact replay"
+            },
+            {
+              "at": 125,
+              "call": "verify",
+              "outcome": "original exception",
+              "committedBeforeRetry": true,
+              "retry": "exact replay"
+            },
+            {
+              "at": 3,
+              "call": "sign",
+              "outcome": "original exception",
+              "committedBeforeRetry": false,
+              "retry": "fresh append"
+            }
+          ]
+        },
+        {
+          "storage": "sqlite",
+          "phase": "signatures",
+          "coldVerificationCalls": 51,
+          "coldInjectedCases": 51,
+          "activationVerificationCalls": 124,
+          "activationSigningCalls": 1,
+          "selectedActivationCases": [
+            {
+              "at": 1,
+              "call": "verify",
+              "outcome": "precommit refusal",
+              "committedBeforeRetry": false,
+              "retry": "fresh append"
+            },
+            {
+              "at": 64,
+              "call": "verify",
+              "outcome": "original exception",
+              "committedBeforeRetry": true,
+              "retry": "exact replay"
+            },
+            {
+              "at": 125,
+              "call": "verify",
+              "outcome": "original exception",
+              "committedBeforeRetry": true,
+              "retry": "exact replay"
+            },
+            {
+              "at": 3,
+              "call": "sign",
+              "outcome": "original exception",
+              "committedBeforeRetry": false,
+              "retry": "fresh append"
+            }
+          ]
+        },
+        {
+          "storage": "memory",
+          "totalLookups": 120,
+          "originalExceptions": 120,
+          "exactRetryRecoveries": 120,
+          "returnedFaultVerdicts": 0
+        },
+        {
+          "storage": "sqlite",
+          "totalLookups": 120,
+          "originalExceptions": 120,
+          "exactRetryRecoveries": 120,
+          "returnedFaultVerdicts": 0
+        },
+        {
+          "model": "sale",
+          "manifest": "sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9",
+          "package": "sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85",
+          "mutant": "sha256:cfbe9b57a0d03196eefb2e3df18f1ecfa0817758853fbba2b6c6789bce23fce8",
+          "kind": "com.example.sale.offer",
+          "entries": 6,
+          "violations": 1,
+          "first": "alice@5 mismatch: observe differs at 5 [models.sale.accepted: oracle o1, view null; models.sale.status: oracle decided, view open; outcomes.5.effective: oracle true, view false; outcomes.5.perModel.sale.effective: oracle true, view false; outcomes.5.perModel.sale.reason: oracle null, view no_such_offer; outcomes.5.reason: oracle null, view ineffective]"
+        },
+        {
+          "corpus": "v6-sale",
+          "manifest": "sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9",
+          "package": "sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85",
+          "mutant": "sha256:cfbe9b57a0d03196eefb2e3df18f1ecfa0817758853fbba2b6c6789bce23fce8",
+          "nonce": "v6:sale",
+          "originalSteps": 4,
+          "steps": [
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "bob",
+                "grants": {
+                  "roles": [
+                    "Buyer"
+                  ]
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:259c64ab91c0a4c5f3173ea3c5ecd1dae31aad3ef0e38755a2e7367c6447f98c",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "bob"
+              },
+              "entries": [
+                {
+                  "id": "sha256:77a3b1ced99c3f404c8bb40c85057b56bc453d593419e97f92b83c59559166cb",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "bob",
+                "kind": "com.example.sale.offer",
+                "payload": {
+                  "offer_id": "o1"
+                },
+                "nonce": "v6:4"
+              },
+              "entries": [
+                {
+                  "id": "sha256:586281868199913bc072a9dad01e8e9bc2b55193dbe2d1880bd0e0e79a7a4067",
+                  "kind": "com.example.sale.offer"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "alice",
+                "kind": "com.example.sale.accept",
+                "payload": {
+                  "offer_id": "o1"
+                },
+                "nonce": "v6:5"
+              },
+              "entries": [
+                {
+                  "id": "sha256:beb1444a0c93de85bcecbb333105df27860c50dcaf3140a8ad7fa1ef1eecc8f6",
+                  "kind": "com.example.sale.accept"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "committedCorpus": "v6-sale",
+          "recordSnapshot": "742e64a06d06226b456f489eb53deacc1bc9f5db",
+          "violations": 1,
+          "finding": "alice@5 mismatch: observe differs at 5 [models.sale.accepted: oracle o1, view null; models.sale.status: oracle decided, view open; outcomes.5.effective: oracle true, view false; outcomes.5.perModel.sale.effective: oracle true, view false; outcomes.5.perModel.sale.reason: oracle null, view no_such_offer; outcomes.5.reason: oracle null, view ineffective]",
+          "deletions": 4,
+          "control": "clean"
+        },
+        {
+          "model": "sale",
+          "manifest": "sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9",
+          "package": "sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85",
+          "unrelated": 4,
+          "shared": 5,
+          "relevant": 6,
+          "stale": 7,
+          "fresh": 8,
+          "violations": 0
+        },
+        {
+          "model": "booking",
+          "manifest": "sha256:cb4514f4967891077ad78e1dd0fba4c17438fb32b98cd8bd790df8531b35dd16",
+          "package": "sha256:0556de5c337344eaa15afcbbbf5d22aa82c384bd6841d4ffb0c07185d4b7ec27",
+          "mutant": "sha256:cad57243b94ef8b451168fc4265cc7fe0463af104d43faced5f8712da2ec9983",
+          "kind": "com.example.booking.occupancy",
+          "entries": 5,
+          "violations": 1,
+          "first": "bob@4 mismatch: observe differs at 4 [outcomes.4.effective: oracle true, view false; outcomes.4.perModel.booking.effective: oracle true, view false; outcomes.4.perModel.booking.reason: oracle null, view no_such_occupancy; outcomes.4.reason: oracle null, view ineffective]"
+        },
+        {
+          "corpus": "v6-booking",
+          "manifest": "sha256:cb4514f4967891077ad78e1dd0fba4c17438fb32b98cd8bd790df8531b35dd16",
+          "package": "sha256:0556de5c337344eaa15afcbbbf5d22aa82c384bd6841d4ffb0c07185d4b7ec27",
+          "mutant": "sha256:cad57243b94ef8b451168fc4265cc7fe0463af104d43faced5f8712da2ec9983",
+          "nonce": "v6:booking",
+          "originalSteps": 4,
+          "steps": [
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "bob",
+                "grants": {
+                  "roles": [
+                    "Booker"
+                  ]
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:42d07670362f88fe8988e267a1536926ba8165f29be51dbfd980371a047c2930",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "bob"
+              },
+              "entries": [
+                {
+                  "id": "sha256:8a5603ece26d4a971c03c9a4d9be8bbab7ee515faf8e214867e0ad79d9a46b0c",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "alice",
+                "kind": "com.example.booking.occupancy",
+                "payload": {
+                  "booking_id": "b1",
+                  "room": "room-1",
+                  "start": 1,
+                  "end": 3
+                },
+                "nonce": "v6:3"
+              },
+              "entries": [
+                {
+                  "id": "sha256:31588b6760af1ccb145acf78489915373aca9a9614dac855977ae2f24c1c9174",
+                  "kind": "com.example.booking.occupancy"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "alice",
+                "kind": "com.example.booking.free",
+                "payload": {
+                  "booking_id": "b1"
+                },
+                "nonce": "v6:4"
+              },
+              "entries": [
+                {
+                  "id": "sha256:cfd639cbd2ad61d9d1072479a17e906843e4dc09f68c06c4217e4a5e40f8b2c1",
+                  "kind": "com.example.booking.free"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "committedCorpus": "v6-booking",
+          "recordSnapshot": "742e64a06d06226b456f489eb53deacc1bc9f5db",
+          "violations": 1,
+          "finding": "bob@4 mismatch: observe differs at 4 [outcomes.4.effective: oracle true, view false; outcomes.4.perModel.booking.effective: oracle true, view false; outcomes.4.perModel.booking.reason: oracle null, view no_such_occupancy; outcomes.4.reason: oracle null, view ineffective]",
+          "deletions": 4,
+          "control": "clean"
+        },
+        {
+          "model": "booking",
+          "manifest": "sha256:cb4514f4967891077ad78e1dd0fba4c17438fb32b98cd8bd790df8531b35dd16",
+          "package": "sha256:0556de5c337344eaa15afcbbbf5d22aa82c384bd6841d4ffb0c07185d4b7ec27",
+          "unrelated": 3,
+          "shared": 4,
+          "relevant": 5,
+          "stale": 6,
+          "fresh": 7,
+          "violations": 0
+        },
+        {
+          "model": "club",
+          "manifest": "sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde",
+          "package": "sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e",
+          "mutant": "sha256:276d0f9610eba50cff5a922b06117b5300a918d0c538a629befa1292228e3b1e",
+          "kind": "com.example.club.standing",
+          "entries": 8,
+          "violations": 2,
+          "first": "bob@7 mismatch: observe differs at 7 [affordances.0: oracle com.example.club.vote, view undefined; models.club.applications.0.votes.yes: oracle 0, view 1; outcomes.7.effective: oracle false, view true; outcomes.7.perModel.club.effective: oracle false, view true; outcomes.7.perModel.club.reason: oracle lapsed, view null; outcomes.7.reason: oracle ineffective, view null]"
+        },
+        {
+          "corpus": "v6-club",
+          "manifest": "sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde",
+          "package": "sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e",
+          "mutant": "sha256:276d0f9610eba50cff5a922b06117b5300a918d0c538a629befa1292228e3b1e",
+          "nonce": "v6:club",
+          "originalSteps": 7,
+          "steps": [
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "bob",
+                "grants": {
+                  "roles": [
+                    "Committee",
+                    "Member"
+                  ]
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:3e73b2a8ed8b85302925611134a8c459631fa3edc5a6d0b47c75bcde127631be",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "bob"
+              },
+              "entries": [
+                {
+                  "id": "sha256:00d2be5cbdf574555cc260b937e4c130852c6c46a54d709e4e33579cba880b22",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "dana",
+                "grants": {
+                  "roles": []
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:cb431f70546e211a6216d513b1d3b6c666f23e505c84f894f614629e1250d622",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "dana"
+              },
+              "entries": [
+                {
+                  "id": "sha256:98ed4464fecc47636bebee69ac6295900bfa6c8f8a64779e205bedbeb0407450",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "dana",
+                "kind": "com.example.club.apply",
+                "payload": {
+                  "statement": "please"
+                },
+                "nonce": "v6:5"
+              },
+              "entries": [
+                {
+                  "id": "sha256:971e9bd20f74b23e89cb265bd0f5318778652c22b88dfbdf91bbd51b9ca2ae05",
+                  "kind": "com.example.club.apply"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "alice",
+                "kind": "com.example.club.standing",
+                "payload": {
+                  "member": "bob",
+                  "standing": "lapsed"
+                },
+                "nonce": "v6:6"
+              },
+              "entries": [
+                {
+                  "id": "sha256:5fac89a5616249aa497becd44bf51aa1a009bde5e80b0cb2a4fbe4c974edc86b",
+                  "kind": "com.example.club.standing"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "bob",
+                "kind": "com.example.club.vote",
+                "payload": {
+                  "application_id": "sha256:971e9bd20f74b23e89cb265bd0f5318778652c22b88dfbdf91bbd51b9ca2ae05",
+                  "choice": "yes"
+                },
+                "nonce": "v6:7"
+              },
+              "entries": [
+                {
+                  "id": "sha256:bba005ee18a5807674fba081bffdff6cc4df8fee6069cc4efeb976e4d00a03f5",
+                  "kind": "com.example.club.vote"
+                }
+              ],
+              "application": "sha256:971e9bd20f74b23e89cb265bd0f5318778652c22b88dfbdf91bbd51b9ca2ae05"
+            }
+          ]
+        },
+        {
+          "committedCorpus": "v6-club",
+          "recordSnapshot": "742e64a06d06226b456f489eb53deacc1bc9f5db",
+          "violations": 2,
+          "finding": "bob@7 mismatch: observe differs at 7 [affordances.0: oracle com.example.club.vote, view undefined; models.club.applications.0.votes.yes: oracle 0, view 1; outcomes.7.effective: oracle false, view true; outcomes.7.perModel.club.effective: oracle false, view true; outcomes.7.perModel.club.reason: oracle lapsed, view null; outcomes.7.reason: oracle ineffective, view null]",
+          "deletions": 7,
+          "control": "clean"
+        },
+        {
+          "model": "club",
+          "manifest": "sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde",
+          "package": "sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e",
+          "unrelated": 3,
+          "shared": 4,
+          "relevant": 5,
+          "stale": 6,
+          "fresh": 7,
+          "violations": 0
+        },
+        {
+          "corpus": "v6-hidden-revocation",
+          "manifest": "sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9",
+          "package": "sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85",
+          "nonce": "v6:hidden-revocation",
+          "originalSteps": 4,
+          "steps": [
+            {
+              "step": {
+                "type": "invite",
+                "inviter": "alice",
+                "invitee": "bob",
+                "grants": {
+                  "roles": [
+                    "Buyer"
+                  ]
+                }
+              },
+              "entries": [
+                {
+                  "id": "sha256:5c9e71807414f9c4c05adee9e28c369cb4ae7f4a0db9b9e70d885cf7dc0610de",
+                  "kind": "ai.generalbusiness.dap.invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "accept",
+                "invitee": "bob"
+              },
+              "entries": [
+                {
+                  "id": "sha256:06d6fbf8d7a3cf5d1e681dae6c07c72763af2c8104ed23f9c78f13d1d45a927c",
+                  "kind": "ai.generalbusiness.dap.accept_invite"
+                }
+              ]
+            },
+            {
+              "step": {
+                "type": "act",
+                "actor": "alice",
+                "kind": "ai.generalbusiness.dap.revoke",
+                "payload": {
+                  "principal": "bob",
+                  "roles": [
+                    "Buyer"
+                  ]
+                },
+                "nonce": "v6:4"
+              },
+              "entries": [
+                {
+                  "id": "sha256:38fbbe9950ebbf57179ba60bd4b6ab6f6e4625d5c187483fe73a2faf15e0df30",
+                  "kind": "ai.generalbusiness.dap.revoke"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "committedCorpus": "v6-hidden-revocation",
+          "recordSnapshot": "742e64a06d06226b456f489eb53deacc1bc9f5db",
+          "violations": 1,
+          "finding": "bob@4 mismatch: observe differs at 4 [affordances.0: oracle undefined, view com.example.sale.offer]",
+          "deletions": 3,
+          "control": "clean"
+        }
+      ],
+      "unparsedDiagnostics": [
+        {
+          "line": 3630,
+          "raw": "{\"mutation\":\"hidden-spine-revocation\",\"manifest\":\"sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9\",\"package\":\"sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85\",\"at\":4,\"violations\":2,\"first\":\"bob@4 mismatch: observe differs at 4 [affordances.0: oracle undefined, view com.example.sale.offer]\",\"dependent\":\"bob@5 mismatch: observe differs at 5 [affordances.0: oracle undefined, view com.example.sale.offer; affordances.1: oracle undefined, view com.example.sale.offer_terms; affordances.2: oracle undefined, view com.example.sale.withdraw; models.sale.offers.0: oracle undefined, view {\\\\\"id\\\\\":\\\\\"after-revocation\\\\\",\\\\\"author\\\\\":\\\\\"bob\\\\\",\\\\\"position\\\\\":5,\\\\\"status; outcomes.5.effective: oracle false, view true; outcomes.5.perModel: oracle undefined, view {\\\\\"sale\\\\\":{\\\\\"effective\\\\\":true,\\\\\"reason\\\\\":null}}; outcomes.5.reason: oracle unauthorized, view null]\"}",
+          "parseError": "Expecting ',' delimiter: line 1 column 635 (char 634)"
+        }
+      ],
+      "diagnosticNote": "Only valid JSON diagnostics are parsed. TAP-escaped or other invalid JSON remains verbatim here and in the complete raw TAP; diagnostic parsing never substitutes for the child exit status."
+    },
+    {
+      "name": "typecheck",
+      "argv": [
+        "npm",
+        "run",
+        "typecheck",
+        "--prefix",
+        "spike"
+      ],
+      "cwd": "/private/tmp/dap-o4-transfer-lifecycle",
+      "environment": {
+        "DAP_O4_RECORD_DIR": "/private/tmp/dap-o4-m1-run10/observations"
+      },
+      "status": "completed",
+      "exitCode": 0,
+      "seconds": 0.9922839589999057,
+      "outputSha256": "sha256:c13cdfb986ee40a7a2614e780678b6307a8b1368291811d1a2cae9e00dfd60cd"
+    }
+  ],
+  "campaignsRepeated": false,
+  "wrapper": {
+    "status": "completed",
+    "exitCode": 0
+  },
+  "identities": {
+    "scopeImplementation": "sha256:96619acc4777bd2f95859901d7f993d75ab1db485f7a49af2da89040c81f1af1",
+    "scopeProfile": "dap.fixture.scope/1",
+    "scopePackage": "sha256:2f32c21e7336da17596fd86af75a863d2de79651cd050100e19b3958042bba61",
+    "inspectionPackage": "sha256:18a886c149b383b8630836307195c1a89b90c463e7e32df6e0663b5d4ecc3030",
+    "salePackage": "sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85",
+    "publicProofRule": "sha256:9e9bcbdd74fe244fb63c5e339256ab508b2b3251d2e8fa642b3309cd1f1049e6",
+    "manifestPublicRule": "sha256:9e9bcbdd74fe244fb63c5e339256ab508b2b3251d2e8fa642b3309cd1f1049e6",
+    "manifest": "sha256:00bdb77671000310c01a1761364285c6e0b1a643b1dc300ab9f419dc82b4988a",
+    "joinPolicy": "sha256:ac852ebab4f55816e55cd0fd71b7280267bffaca097046d4880b24ac63b01455",
+    "movableWriterProfile": "dap.fixture.single-writer/3"
+  },
+  "observations": {
+    "duplicate-inspection-import-memory.json": "sha256:ab330ba9cb340cd99630a0459387e4563ebed063db594fb232296fb94e970b75",
+    "duplicate-inspection-import-sqlite.json": "sha256:ab330ba9cb340cd99630a0459387e4563ebed063db594fb232296fb94e970b75",
+    "duplicate-state-import-memory.json": "sha256:6653d743641392876d271fb04a27d7b1f63702f8874ea08ae94e27bb04910acf",
+    "duplicate-state-import-sqlite.json": "sha256:6653d743641392876d271fb04a27d7b1f63702f8874ea08ae94e27bb04910acf",
+    "exact-retry-activation-memory.json": "sha256:a71cbb4d9dea4459557ed05399e30e1976388b99dbd4a9576583714210e488ed",
+    "exact-retry-activation-sqlite.json": "sha256:a71cbb4d9dea4459557ed05399e30e1976388b99dbd4a9576583714210e488ed",
+    "g2-current-authorization-memory.json": "sha256:6a6616a63ae6deedb10e97b2e83d9d4ef104fc4bde062e9d1757bfb5180c2393",
+    "g2-current-authorization-sqlite.json": "sha256:6a6616a63ae6deedb10e97b2e83d9d4ef104fc4bde062e9d1757bfb5180c2393",
+    "g2-current-closed-memory.json": "sha256:a8f0175f98fe3e75265c7059d97e1b92201f3c9f3da53eccf7201329fcf242e5",
+    "g2-current-closed-sqlite.json": "sha256:a8f0175f98fe3e75265c7059d97e1b92201f3c9f3da53eccf7201329fcf242e5",
+    "g2-intervening-exercise-memory.json": "sha256:099702d3194052b33c0d1da576fb7d4090d96c6a8942fcbe4988bfcc6de463ab",
+    "g2-intervening-exercise-sqlite.json": "sha256:099702d3194052b33c0d1da576fb7d4090d96c6a8942fcbe4988bfcc6de463ab",
+    "g2-participant-event-memory.json": "sha256:fd728e29212cd3572f53c7011f138cb187f5a7c1595b8a19d259ba29180935f9",
+    "g2-participant-event-sqlite.json": "sha256:fd728e29212cd3572f53c7011f138cb187f5a7c1595b8a19d259ba29180935f9",
+    "goal-1-history-matrix-memory.json": "sha256:26a4266cfe41b41a1d50dc427aa802278bf8ba97b165a981526812d567da22ee",
+    "goal-1-history-matrix-sqlite.json": "sha256:26a4266cfe41b41a1d50dc427aa802278bf8ba97b165a981526812d567da22ee",
+    "h1-duplicate-commitment-memory.json": "sha256:734e7232c3204b7415979ad015e44dc512b4d2939405eb542bffab08031f6592",
+    "h1-duplicate-commitment-sqlite.json": "sha256:734e7232c3204b7415979ad015e44dc512b4d2939405eb542bffab08031f6592",
+    "healthy-memory.json": "sha256:0bfe2466e6c84da7915090c830f2602fafebf6b8c851a000118003f18ea9d1c1",
+    "healthy-sqlite.json": "sha256:0bfe2466e6c84da7915090c830f2602fafebf6b8c851a000118003f18ea9d1c1",
+    "intervening-dormant-exercise-memory.json": "sha256:b75e619567e364bded168209b08f179736e79f71d38fb9019a0eb7dd2fe9b256",
+    "intervening-dormant-exercise-sqlite.json": "sha256:b75e619567e364bded168209b08f179736e79f71d38fb9019a0eb7dd2fe9b256",
+    "intervening-participant-event-memory.json": "sha256:48b952ad344178541209228388e2250de4c76ca196ff52df45eb0cdcb884fce5",
+    "intervening-participant-event-sqlite.json": "sha256:48b952ad344178541209228388e2250de4c76ca196ff52df45eb0cdcb884fce5",
+    "k1-participant-input-memory.json": "sha256:7a2bc1f689bae674e26d78c153db2823cbc6daf599bb098b00104b5b68bfdf7c",
+    "k1-participant-input-sqlite.json": "sha256:7a2bc1f689bae674e26d78c153db2823cbc6daf599bb098b00104b5b68bfdf7c",
+    "k3-bob-unauthorized-accept-memory.json": "sha256:dc597b694ad61d6eb708204604ec71f4dd5ab57fcd64c87ad2c7b942ea494c85",
+    "k3-bob-unauthorized-accept-sqlite.json": "sha256:dc597b694ad61d6eb708204604ec71f4dd5ab57fcd64c87ad2c7b942ea494c85",
+    "k3-bob-unauthorized-close-memory.json": "sha256:5a16678e88b87cd45e4e2adb1021fd19422261f72c980c5f876c331578da43c8",
+    "k3-bob-unauthorized-close-sqlite.json": "sha256:5a16678e88b87cd45e4e2adb1021fd19422261f72c980c5f876c331578da43c8",
+    "k3-carol-malformed-grant-memory.json": "sha256:12ed3d5c59b6cd91869e5a58cedb6868c9af5d6c621aaef3010ef4d58de9b67f",
+    "k3-carol-malformed-grant-sqlite.json": "sha256:12ed3d5c59b6cd91869e5a58cedb6868c9af5d6c621aaef3010ef4d58de9b67f",
+    "k3-member-scope-attempts-memory.json": "sha256:c70c1081d447c39b568c35d5fd66f57b1a13e337538357de18d36bc62393063c",
+    "k3-member-scope-attempts-sqlite.json": "sha256:c70c1081d447c39b568c35d5fd66f57b1a13e337538357de18d36bc62393063c",
+    "k4-inspection-disclosure-memory.json": "sha256:9a71ea9fcea640b286930c0cd8ad4ae2c23416ea3328f09ccc0c5c79da867f54",
+    "k4-inspection-disclosure-sqlite.json": "sha256:9a71ea9fcea640b286930c0cd8ad4ae2c23416ea3328f09ccc0c5c79da867f54",
+    "l1-property-inputs-memory.json": "sha256:1ef633cfed7f6d9bee8c19ae2584f2964ac3f7cd72b45c0028e189b8cde76b3a",
+    "l1-property-inputs-sqlite.json": "sha256:1ef633cfed7f6d9bee8c19ae2584f2964ac3f7cd72b45c0028e189b8cde76b3a",
+    "l3-unbound-D-memory.json": "sha256:2086cd633cef02a7ff583dbd31aa512536ce41dca2039dc40a42445a4654ca7f",
+    "l3-unbound-D-sqlite.json": "sha256:2086cd633cef02a7ff583dbd31aa512536ce41dca2039dc40a42445a4654ca7f",
+    "l3-unbound-F-memory.json": "sha256:3469d5ddce4d1155c30b4f9d47656bc706f61d5e56bf8ff6050c1d6470f60c26",
+    "l3-unbound-F-sqlite.json": "sha256:3469d5ddce4d1155c30b4f9d47656bc706f61d5e56bf8ff6050c1d6470f60c26",
+    "l3-unbound-I-memory.json": "sha256:4c92a94caa657431781adf62f6d20e8ffe729a9c67c965b4f75d2e1fa7073e1e",
+    "l3-unbound-I-sqlite.json": "sha256:4c92a94caa657431781adf62f6d20e8ffe729a9c67c965b4f75d2e1fa7073e1e",
+    "m1-own-facts-memory.json": "sha256:19f8805b4f6a11a27d659eeff7f5f5f704426ffdfd75ed9a79fb7031d611041e",
+    "m1-own-facts-sqlite.json": "sha256:19f8805b4f6a11a27d659eeff7f5f5f704426ffdfd75ed9a79fb7031d611041e",
+    "m1-own-healthy-memory.json": "sha256:76baa0d924e90423d760cf981cca46ef90be826d9b1a167288062c91ab238bb9",
+    "m1-own-healthy-sqlite.json": "sha256:76baa0d924e90423d760cf981cca46ef90be826d9b1a167288062c91ab238bb9",
+    "m1-own-packages-memory.json": "sha256:9b8b8814268fae5dc48fcc26193d1fb27bf7d8ba7b81baee6d4345f3f6a14770",
+    "m1-own-packages-sqlite.json": "sha256:9b8b8814268fae5dc48fcc26193d1fb27bf7d8ba7b81baee6d4345f3f6a14770",
+    "materialized-genesis-mutations-memory.json": "sha256:185338442d4c894583d9bbd91739b172ec5c552e7fc5538f4a66fbad9ac638d2",
+    "materialized-genesis-mutations-sqlite.json": "sha256:185338442d4c894583d9bbd91739b172ec5c552e7fc5538f4a66fbad9ac638d2",
+    "mismatched-buyer-memory.json": "sha256:90445fcd72333963cdfbab586974dd97e9e6b63c070565852a8ea6ad5fb76e4f",
+    "mismatched-buyer-sqlite.json": "sha256:90445fcd72333963cdfbab586974dd97e9e6b63c070565852a8ea6ad5fb76e4f",
+    "move-preserves-retry-memory.json": "sha256:dd86178d1ae2fe1eed5eb6568052e9ac5238750b02883d83f142ab7361daecc9",
+    "move-preserves-retry-sqlite.json": "sha256:dd86178d1ae2fe1eed5eb6568052e9ac5238750b02883d83f142ab7361daecc9",
+    "one-source-release-missing-memory.json": "sha256:13df63e9884aec79ed64a20ad617dbc34decfd7d6791c5603b2c375d3e5505f9",
+    "one-source-release-missing-sqlite.json": "sha256:13df63e9884aec79ed64a20ad617dbc34decfd7d6791c5603b2c375d3e5505f9",
+    "origin-spends-transferred-right-memory.json": "sha256:e8c5a952dbf8bdb20aa864573b3bf0a949a848d1c9377996de4753634295bbc7",
+    "origin-spends-transferred-right-sqlite.json": "sha256:e8c5a952dbf8bdb20aa864573b3bf0a949a848d1c9377996de4753634295bbc7",
+    "receipt-for-ineffective-release-memory.json": "sha256:60f68b68b6fe22ed5639bb60e401821de8b3c4ee522ae8963d7fb431f552aa80",
+    "receipt-for-ineffective-release-sqlite.json": "sha256:60f68b68b6fe22ed5639bb60e401821de8b3c4ee522ae8963d7fb431f552aa80",
+    "receipt-for-unauthorized-release-memory.json": "sha256:125f2f90991124ce7b0c6a39e31e9f50a9544436c87b3351b6c91384988cdc84",
+    "receipt-for-unauthorized-release-sqlite.json": "sha256:125f2f90991124ce7b0c6a39e31e9f50a9544436c87b3351b6c91384988cdc84",
+    "release-already-released-right-memory.json": "sha256:dbb4111daae1475338648537aed5df7ecfd223f81a6acef945787b60ac49dbc7",
+    "release-already-released-right-sqlite.json": "sha256:dbb4111daae1475338648537aed5df7ecfd223f81a6acef945787b60ac49dbc7",
+    "release-unowned-right-memory.json": "sha256:8cdffaf958bc716e98a184c0c0d6911f80e6dd64c3d955d696a2ce15b7ba64bc",
+    "release-unowned-right-sqlite.json": "sha256:8cdffaf958bc716e98a184c0c0d6911f80e6dd64c3d955d696a2ce15b7ba64bc",
+    "repeated-activation-after-restart-memory.json": "sha256:5b312cd241fbd5d5254410d549f027bea19deb203d933a7790838be35fcc0599",
+    "repeated-activation-after-restart-sqlite.json": "sha256:5b312cd241fbd5d5254410d549f027bea19deb203d933a7790838be35fcc0599",
+    "restart-before-activation-memory.json": "sha256:b365de9d7ad3baa5fc1a1ea9b2ffa5c60b8c7414b829d328deee8893eaff6e0d",
+    "restart-before-activation-sqlite.json": "sha256:b365de9d7ad3baa5fc1a1ea9b2ffa5c60b8c7414b829d328deee8893eaff6e0d",
+    "retired-writer-continuation-memory.json": "sha256:448b859699b965cf4f81731c1db25f9494a3b71dcf999161342039d7e739566d",
+    "retired-writer-continuation-sqlite.json": "sha256:448b859699b965cf4f81731c1db25f9494a3b71dcf999161342039d7e739566d",
+    "spend-before-activation-D-memory.json": "sha256:f2a083d6512c5671ef5ef0b627f89d1579bac6078d6e381856dd94529bd2d45c",
+    "spend-before-activation-D-sqlite.json": "sha256:f2a083d6512c5671ef5ef0b627f89d1579bac6078d6e381856dd94529bd2d45c",
+    "spend-before-activation-F-deliver-memory.json": "sha256:65f0f9b9893d4de99998455893e1d3bbfd76e45ac4ea41f18fe01b65a4a68430",
+    "spend-before-activation-F-deliver-sqlite.json": "sha256:65f0f9b9893d4de99998455893e1d3bbfd76e45ac4ea41f18fe01b65a4a68430",
+    "spend-before-activation-F-memory.json": "sha256:522dadff4654455cf9fe02b3b6ed4d7d0708c5df8e7015bf18eec12636ad242c",
+    "spend-before-activation-F-sqlite.json": "sha256:522dadff4654455cf9fe02b3b6ed4d7d0708c5df8e7015bf18eec12636ad242c",
+    "spend-before-activation-S-memory.json": "sha256:49273d70dfe4d745efe858e0d48e2819c9e0a0389780800d4f582b51a89603dd",
+    "spend-before-activation-S-sqlite.json": "sha256:49273d70dfe4d745efe858e0d48e2819c9e0a0389780800d4f582b51a89603dd",
+    "stale-export-prefix-memory.json": "sha256:25d6a0a6c646bc02a4d9907feba7ac6424888817aa4f7f7f6fd5a87bae38aeae",
+    "stale-export-prefix-sqlite.json": "sha256:25d6a0a6c646bc02a4d9907feba7ac6424888817aa4f7f7f6fd5a87bae38aeae",
+    "stale-source-proposal-at-destination-memory.json": "sha256:4eca64a2cdbad17cf7cda9d6074586c02dfc0a24f41216b92ce892231320139b",
+    "stale-source-proposal-at-destination-sqlite.json": "sha256:4eca64a2cdbad17cf7cda9d6074586c02dfc0a24f41216b92ce892231320139b",
+    "stale-source-proposal-at-source-memory.json": "sha256:45878bab1fd9104db86386db1a95f8bc9cf76403a590d7215f9fa0befe7681e5",
+    "stale-source-proposal-at-source-sqlite.json": "sha256:45878bab1fd9104db86386db1a95f8bc9cf76403a590d7215f9fa0befe7681e5",
+    "timeout-after-hidden-activation-memory.json": "sha256:90402c040038e01b4c3edeb1a6190f358701f9e923b0b383f373e8f791847dd5",
+    "timeout-after-hidden-activation-sqlite.json": "sha256:90402c040038e01b4c3edeb1a6190f358701f9e923b0b383f373e8f791847dd5",
+    "two-sources-export-same-right-memory.json": "sha256:698be4d835e02ed41ccae1afc946fda9ca15f67edc049dff454dc42780bcf32d",
+    "two-sources-export-same-right-sqlite.json": "sha256:698be4d835e02ed41ccae1afc946fda9ca15f67edc049dff454dc42780bcf32d",
+    "unassigned-writer-candidates-memory.json": "sha256:2bd9a7b00371d9ad3664b365648099c08504fc17571506c8613e9c0b3c50e0bb",
+    "unassigned-writer-candidates-sqlite.json": "sha256:2bd9a7b00371d9ad3664b365648099c08504fc17571506c8613e9c0b3c50e0bb",
+    "unauthorized-release-memory.json": "sha256:235067d50af5faaf632badec2afbd48aa8343a252624004b45e4abe3a92df0e9",
+    "unauthorized-release-sqlite.json": "sha256:235067d50af5faaf632badec2afbd48aa8343a252624004b45e4abe3a92df0e9",
+    "unexpected-audience-handler-memory.json": "sha256:088a48188f819d3d76bd63e469fed124e4b7ecfb0e5dd1b36b360aed0860fb03",
+    "unexpected-audience-handler-sqlite.json": "sha256:088a48188f819d3d76bd63e469fed124e4b7ecfb0e5dd1b36b360aed0860fb03",
+    "unexpected-fold-handler-memory.json": "sha256:a7152ceab31345692ac7c2b462a48d09ce186bed915fc78cb5a6efc9e68e91a9",
+    "unexpected-fold-handler-sqlite.json": "sha256:a7152ceab31345692ac7c2b462a48d09ce186bed915fc78cb5a6efc9e68e91a9",
+    "unexpected-replay-error-memory.json": "sha256:9369f638b702ca1c8a790d7ecd80d74ad9a8622bad3227262128b6920fed4ed7",
+    "unexpected-replay-error-sqlite.json": "sha256:9369f638b702ca1c8a790d7ecd80d74ad9a8622bad3227262128b6920fed4ed7",
+    "withheld-release-evidence-memory.json": "sha256:ca92710a8da117da9d5f32e071e1cccf6cd5b0ef2c93e3e6f7a0b073b0f14afe",
+    "withheld-release-evidence-sqlite.json": "sha256:ca92710a8da117da9d5f32e071e1cccf6cd5b0ef2c93e3e6f7a0b073b0f14afe",
+    "wrong-destination-release-memory.json": "sha256:9456b8268b31c7485879d11995d2d024ada78c1355f205389960a28cbbebe52e",
+    "wrong-destination-release-sqlite.json": "sha256:9456b8268b31c7485879d11995d2d024ada78c1355f205389960a28cbbebe52e"
+  },
+  "completedUtc": "2026-09-17T01:32:07.490466+00:00"
+}

@@ -1,6 +1,6 @@
 // Ordering authority is derived from authenticated control entries, without
 // packages, participation, capabilities, or application payloads.
-import { publicKeyOf } from './codec.ts';
+import { publicKeyOf, isCodecValidationError } from './codec.ts';
 import { SYSTEM_PREFIX, type Entry, type EventBody, type Refusal } from './types.ts';
 export const FIXED_WRITER_PROFILE = 'dap.fixture.single-writer/1';
 export const HANDOVER_PROFILE = 'dap.fixture.single-writer/3';
@@ -42,28 +42,35 @@ export function orderingAdmission(state: OrderingState, head: Entry, event: Even
   }
   if (state.sealed && event.kind !== ASSIGN) return { refused: true, reason: 'writer_sealed' };
   if (!control) return undefined;
-  try {
-    const p = object(event.payload);
-    const fields = event.kind === SEAL ? ['epoch', 'predecessor'] : ['epoch', 'predecessor', 'writer'];
-    if (Object.keys(p).sort().join(',') !== fields.sort().join(',')) throw new Error();
-    const predecessor = object(p.predecessor);
-    if (Object.keys(predecessor).sort().join(',') !== 'headerHash,position'
-      || !Number.isSafeInteger(predecessor.position) || (predecessor.position as number) < 0
-      || typeof predecessor.headerHash !== 'string' || !/^sha256:[a-f0-9]{64}$/.test(predecessor.headerHash)) throw new Error();
-    if (predecessor.position !== head.position || predecessor.headerHash !== head.headerHash) return { refused: true, reason: 'wrong_control_predecessor' };
-    if (event.kind === SEAL) {
-      if (p.epoch !== state.epoch) return { refused: true, reason: 'wrong_ordering_epoch' };
-      if (event.actor !== state.control) return { refused: true, reason: 'wrong_seal_authority' };
-    } else {
-      if (!state.sealed || state.sealed.position !== head.position || state.sealed.headerHash !== head.headerHash) return { refused: true, reason: 'assignment_without_seal' };
-      if (p.epoch !== state.epoch + 1) return { refused: true, reason: 'wrong_ordering_epoch' };
-      if (event.actor !== state.control) return { refused: true, reason: 'wrong_control_authority' };
-      publicKeyOf(p.writer as string);
-      if (p.writer === state.control) return { refused: true, reason: 'control_key_is_writer' };
-      if (state.writers.includes(p.writer as string)) return { refused: true, reason: 'writer_already_used' };
+  // Shape refusals are explicit. An exception while inspecting an object or
+  // importing a valid key is an implementation fault, not malformed control.
+  const malformed: Refusal = { refused: true, reason: 'malformed_control' };
+  if (!event.payload || typeof event.payload !== 'object' || Array.isArray(event.payload)) return malformed;
+  const p = event.payload;
+  const fields = event.kind === SEAL ? ['epoch', 'predecessor'] : ['epoch', 'predecessor', 'writer'];
+  if (Object.keys(p).sort().join(',') !== fields.sort().join(',')) return malformed;
+  if (!p.predecessor || typeof p.predecessor !== 'object' || Array.isArray(p.predecessor)) return malformed;
+  const predecessor = p.predecessor;
+  if (Object.keys(predecessor).sort().join(',') !== 'headerHash,position'
+    || !Number.isSafeInteger(predecessor.position) || (predecessor.position as number) < 0
+    || typeof predecessor.headerHash !== 'string' || !/^sha256:[a-f0-9]{64}$/.test(predecessor.headerHash)) return malformed;
+  if (predecessor.position !== head.position || predecessor.headerHash !== head.headerHash) return { refused: true, reason: 'wrong_control_predecessor' };
+  if (event.kind === SEAL) {
+    if (p.epoch !== state.epoch) return { refused: true, reason: 'wrong_ordering_epoch' };
+    if (event.actor !== state.control) return { refused: true, reason: 'wrong_seal_authority' };
+  } else {
+    if (!state.sealed || state.sealed.position !== head.position || state.sealed.headerHash !== head.headerHash) return { refused: true, reason: 'assignment_without_seal' };
+    if (p.epoch !== state.epoch + 1) return { refused: true, reason: 'wrong_ordering_epoch' };
+    if (event.actor !== state.control) return { refused: true, reason: 'wrong_control_authority' };
+    try { publicKeyOf(p.writer as string); }
+    catch (error) {
+      if (isCodecValidationError(error)) return malformed;
+      throw error;
     }
-    return 'control';
-  } catch { return { refused: true, reason: 'malformed_control' }; }
+    if (p.writer === state.control) return { refused: true, reason: 'control_key_is_writer' };
+    if (state.writers.includes(p.writer as string)) return { refused: true, reason: 'writer_already_used' };
+  }
+  return 'control';
 }
 /** Advance only after the authenticated entry passed orderingAdmission. */
 export function advanceOrdering(state: OrderingState, entry: Entry): OrderingState {

@@ -1,0 +1,57 @@
+{
+ "positive": {
+  "aliceHolds": true,
+  "aliceEmit": {
+   "known": true,
+   "authorized": true,
+   "effective": true,
+   "perModel": {
+    "valueOf": {
+     "effective": true
+    }
+   }
+  },
+  "grantUnknownRoleToBob": {
+   "known": true,
+   "authorized": true,
+   "effective": true
+  },
+  "bobHoldsAfterUnknownRole": false,
+  "grantKnownRoleToBob": {
+   "known": true,
+   "authorized": true,
+   "effective": true
+  },
+  "bobHolds": true,
+  "models": {
+   "valueOf": {
+    "n": 1
+   }
+  },
+  "modelsOwn": true,
+  "interpreted": "interpreted",
+  "observedModel": {
+   "n": 1
+  },
+  "observedBinding": true
+ },
+ "originPropertyKind": {
+  "verdict": {
+   "known": false,
+   "authorized": false,
+   "effective": false,
+   "reason": "unhandled"
+  },
+  "head": 1
+ },
+ "scopeGenesisPackage_constructor": "threw Error: genesis binds unknown package constructor backendEntries=0",
+ "scopeGenesisPackage___proto__": "threw Error: genesis binds unknown package __proto__ backendEntries=0",
+ "scopeGenesisPackage_toString": "threw Error: genesis binds unknown package toString backendEntries=0",
+ "clubStanding": {
+  "json": "{\"constructor\":\"good\"}",
+  "ownProto": false,
+  "keys": [
+   "constructor"
+  ]
+ }
+}

@@ -1,0 +1,40 @@
+{
+  "source": "086fb8a8e97f6045bd4518246838842f1d7d631a",
+  "harnessChange": "Only retain and close the caller-owned SQLite handle after the expected failed ScopeJournal.open; all assertions/diagnostics unchanged. Original failing harness output retained in run-1.",
+  "originalHarnessSHA256": "42449cecdd9a768f9f4ff25165b1f8fb1a562b562c2b93a79fcf090229a919de",
+  "adaptedHarnessSHA256": "1990ab9419605eabf674da2bd7918f888123215694755e37c35d867b06e10123",
+  "results": [
+    {
+      "command": [
+        "node",
+        "manifests/ordering-o4-runs/r2-issuance/run-2/checker-issuance-close-handle.mjs",
+        "sqlite"
+      ],
+      "env": {
+        "WT": "/tmp/dap-o4-r2-issuance"
+      },
+      "exit": 0,
+      "seconds": 1.6661819580040174,
+      "output": "checker-issuance-sqlite.txt",
+      "sha256": "48fc830aafc5fa6910d72bf619cf20e073add08bf8409032928d1f3734c89fe1"
+    },
+    {
+      "command": [
+        "node",
+        "manifests/ordering-o4-runs/r2-issuance/before/deep-diag.mjs",
+        "sqlite",
+        "crypto",
+        "error",
+        "1"
+      ],
+      "env": {
+        "WT": "/tmp/dap-o4-r2-issuance",
+        "ONLY": "2307,2450"
+      },
+      "exit": 0,
+      "seconds": 0.6512067500007106,
+      "output": "checker-targets-sqlite.txt",
+      "sha256": "adb43770eedcd5c34ab98638cbc0fb621bc56e36dce75d4523e59d4271dd7b48"
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "source": "15b660caaf06e1ea4698e83a94e3717cfd48572b",
+  "scopeBlob": "584e8345fa5b4e96cf6c5b1434169c9343240296",
+  "note": "Checker scripts copied unchanged; l1-residual also observes the retained Club issue and legacy positives without altering them. Before measurements use exact committed runtime at source; only corpus evidence is untracked.",
+  "runs": [
+    {
+      "command": [
+        "node",
+        "/tmp/dap-o4-m1-own-entries/spike/corpus/ordering-o4/m1-own-entries/l1-facts-proto2.mjs",
+        "memory"
+      ],
+      "env": {
+        "WT": "/tmp/dap-o4-m1-own-entries"
+      },
+      "exitCode": 0,
+      "output": "before-l1-facts-proto2-memory.txt",
+      "sha256": "bbbab7e580b10aafd93d4ed7d85bd9a0e3c842236dc6529b462a74c2864a0cdb"
+    },
+    {
+      "command": [
+        "node",
+        "/tmp/dap-o4-m1-own-entries/spike/corpus/ordering-o4/m1-own-entries/l1-facts-proto2.mjs",
+        "sqlite"
+      ],
+      "env": {
+        "WT": "/tmp/dap-o4-m1-own-entries"
+      },
+      "exitCode": 0,
+      "output": "before-l1-facts-proto2-sqlite.txt",
+      "sha256": "bbbab7e580b10aafd93d4ed7d85bd9a0e3c842236dc6529b462a74c2864a0cdb"
+    },
+    {
+      "command": [
+        "node",
+        "/tmp/dap-o4-m1-own-entries/spike/corpus/ordering-o4/m1-own-entries/l1-residual.mjs",
+        "memory"
+      ],
+      "env": {
+        "WT": "/tmp/dap-o4-m1-own-entries"
+      },
+      "exitCode": 0,
+      "output": "before-l1-residual-memory.txt",
+      "sha256": "aba3337f1d613522c743be285be3a77c554da5d05aac8b918c783b8f7c290183"
+    },
+    {
+      "command": [
+        "node",
+        "/tmp/dap-o4-m1-own-entries/spike/corpus/ordering-o4/m1-own-entries/l1-residual.mjs",
+        "sqlite"
+      ],
+      "env": {
+        "WT": "/tmp/dap-o4-m1-own-entries"
+      },
+      "exitCode": 0,
+      "output": "before-l1-residual-sqlite.txt",
+      "sha256": "aba3337f1d613522c743be285be3a77c554da5d05aac8b918c783b8f7c290183"
+    }
+  ]
+}

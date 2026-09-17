@@ -1,0 +1,209 @@
+{
+  "source": "37a3e12178923b8198950a332b76c7503fc13c15",
+  "status": "?? spike/manifests/ordering-o4-runs/m1/audit/repaired-catch-inventory.json\n?? spike/manifests/ordering-o4-runs/m1/run-1/\n?? spike/manifests/ordering-o4-runs/m1/run-2/",
+  "method": "TypeScript AST; src and fixtures scanned; runtime import graph from scope.ts/scope-proof.ts excluding type-only imports",
+  "runtimeCatchCount": 23,
+  "runtimeModules": [
+    "spike/src/append.ts",
+    "spike/src/canon.ts",
+    "spike/src/codec.ts",
+    "spike/src/context.ts",
+    "spike/src/descriptor.ts",
+    "spike/src/foundation.ts",
+    "spike/src/interpret.ts",
+    "spike/src/journal.ts",
+    "spike/src/ordering.ts",
+    "spike/src/ownership.ts",
+    "spike/src/scope-profile.ts",
+    "spike/src/scope-proof.ts",
+    "spike/src/scope.ts",
+    "spike/src/sqlite.ts",
+    "spike/src/types.ts"
+  ],
+  "catches": [
+    {
+      "file": "spike/src/append.ts",
+      "line": 131,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/codec.ts",
+      "line": 95,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/codec.ts",
+      "line": 99,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/context.ts",
+      "line": 210,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/foundation.ts",
+      "line": 367,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/foundation.ts",
+      "line": 430,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/foundation.ts",
+      "line": 567,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/foundation.ts",
+      "line": 578,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/foundation.ts",
+      "line": 659,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/journal.ts",
+      "line": 129,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/journal.ts",
+      "line": 173,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/journal.ts",
+      "line": 182,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/ordering.ts",
+      "line": 66,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/scope-proof.ts",
+      "line": 162,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/scope-proof.ts",
+      "line": 168,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/scope.ts",
+      "line": 185,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/scope.ts",
+      "line": 259,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/scope.ts",
+      "line": 263,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/scope.ts",
+      "line": 302,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/scope.ts",
+      "line": 328,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/scope.ts",
+      "line": 347,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/sqlite.ts",
+      "line": 38,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/sqlite.ts",
+      "line": 75,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/fixtures/ordering-scope-faults.ts",
+      "line": 54,
+      "inStaticRuntimeGraph": false
+    }
+  ],
+  "finalizers": [
+    {
+      "file": "spike/src/append.ts",
+      "line": 203,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/scope.ts",
+      "line": 305,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/scope.ts",
+      "line": 320,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/sqlite.ts",
+      "line": 42,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/sqlite.ts",
+      "line": 42,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/sqlite.ts",
+      "line": 79,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/sqlite.ts",
+      "line": 77,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/fixtures/ordering-scope-faults.ts",
+      "line": 56,
+      "inStaticRuntimeGraph": false
+    },
+    {
+      "file": "spike/fixtures/ordering-scope-faults.ts",
+      "line": 71,
+      "inStaticRuntimeGraph": false
+    }
+  ],
+  "sourceFileHashes": {
+    "spike/src/append.ts": "bda403bbf5a7f735032de356e4f37367606a658516edbdf134421954ea2eb5f8",
+    "spike/src/canon.ts": "a96803612114d2584fbe90110a16984300357dcc446936ff39ecfd5475fc9afe",
+    "spike/src/codec.ts": "5fae9ab966be0a11c87d516e20aec8a5d2cc88f0ab9841e8acf7d3c798d4a264",
+    "spike/src/context.ts": "7342644d363cc487c2c3449828403f427d2f1abdbdc1fca1b60dd5c6b7f7f841",
+    "spike/src/descriptor.ts": "b4ed2cdd489d8c94d1720594a730c0186e6e468081c570d0a40293cbeef55e82",
+    "spike/src/foundation.ts": "86700a4174c85f46a1395ab3283a1ae64ccb6d9e3c5afdd9455a60db72eee3cc",
+    "spike/src/interpret.ts": "1b9ecaeb1b912669d60c6f9385fd8f1103798575b9d6a35f3043e5c314e22353",
+    "spike/src/journal.ts": "3991aaf70a54c82d787c3f480d8a4ed26126e75ed5d2ac44af139e98ace68bb8",
+    "spike/src/ordering.ts": "34c254b66d98a3391ea918b7bce7f526a11d2c457be0e61b8da78924522ed657",
+    "spike/src/ownership.ts": "c826cfb34e8784347cf26d6d157a2c27ca2db47e26ce85ec9ef5ef2cd40281f1",
+    "spike/src/scope-profile.ts": "05c821aae7c52440c21d860708b8d40f7ed66744c5a4e63d4192dd4474e1361c",
+    "spike/src/scope-proof.ts": "a01282aff49601faed3275a8f39c5237fc57bc3eb407aa76045dea76d1e48e29",
+    "spike/src/scope.ts": "fcad0c621560eb301877686e5caf79e7ecb2a610d0419ea204318c16dace6cea",
+    "spike/src/sqlite.ts": "df344ce4b89f5772422ca05a404ce4650e93fd168cb1b4d067ac4647dcbdfc86",
+    "spike/src/types.ts": "3539141c8f736192919960302ccdc36b48a34fb1b4043915fb5ff559ef998f36"
+  }
+}

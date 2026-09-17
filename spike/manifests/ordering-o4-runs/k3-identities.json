@@ -1,0 +1,36 @@
+{
+  "runtimeSource": "82119b54b4e6aba6f4c8ba036dde009450aa7553",
+  "finalTestSource": "1bf535539c22045f2bf39a1dae4f1ddf28c51286",
+  "reviewedBase": "edacc32db1495504d10ae7a92f02af272e49e9f2",
+  "ruleType": "dap.fixture.scope-public-openings/2",
+  "rule": "sha256:701403e9c51e6449ca797545818a8b63602a20a9b43c2ace064e9a38ab55b66c",
+  "certificateType": "dap.fixture.public-proof-completeness/1",
+  "componentManifest": "sha256:bdb831b32915c0b209afcbcdfc8c24e671dcd60eb4dd1ffca17a2b6300ae5746",
+  "componentScope": "sha256:c1bdb2acda60062a57dd2942ecc5824a9d7f63ee1f5205736065989965f8978d",
+  "componentScopePackage": "sha256:b5eb69362b0e6de96e9dda2997a5399cc061f6f9e184b82145218afb5e2227a0",
+  "unchangedJoinPolicy": "sha256:ac852ebab4f55816e55cd0fd71b7280267bffaca097046d4880b24ac63b01455",
+  "validation": {
+    "refined": {
+      "record": "k3-final.json",
+      "tests": 49,
+      "pass": 47,
+      "fail": 2,
+      "typecheck": 0,
+      "failure": "Unknown-kind test setup omitted expected_binding; codec rejected before classification."
+    },
+    "corrected": {
+      "record": "k3-placeholder-followup.json",
+      "tests": 2,
+      "pass": 2,
+      "fail": 0,
+      "typecheck": 0,
+      "change": "Only test setup supplies a canonical expected_binding for the deliberately unbound kind; runtime unchanged."
+    }
+  },
+  "sha256": {
+    "spike/src/scope-proof.ts": "a9d0ddeba81ffb6f337f5860c5e81350dde3a19faa347b0c1f567c4be70d9126",
+    "spike/manifests/ordering-lifecycle.ts": "2d19bc1018eea57fda29614fd023855daff3b9ad74525ec7f97902d0cdfed735",
+    "spike/manifests/ordering-lifecycle.md": "ad2439632190388d62bf356e90ac35c7d0058287fea12979031714fd8c834dc2"
+  },
+  "scope": "K3 component only. Recompute manifest/scope/package/genesis/proof identities after K1/K2/K4 merge. No broad suite/campaign or approval."
+}

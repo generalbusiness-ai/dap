@@ -1,0 +1,38 @@
+COMMAND ["node", "--test", "test/ordering-scope-nested-faults.test.ts", "test/ordering-scope-phase.test.ts"]
+✔ O4 K2 every activation registry fault propagates unchanged and cold exact retry agrees: memory (11474.390333ms)
+ℹ {"storage":"memory","totalLookups":120,"originalExceptions":120,"exactRetryRecoveries":120,"returnedFaultVerdicts":0}
+✔ O4 K2 every activation registry fault propagates unchanged and cold exact retry agrees: sqlite (12433.399375ms)
+ℹ {"storage":"sqlite","totalLookups":120,"originalExceptions":120,"exactRetryRecoveries":120,"returnedFaultVerdicts":0}
+✔ O4 K2 cold open throws the original nested registry error while ordinary Journal keeps legacy verdicts: memory (142.793625ms)
+✔ O4 K2 cold open throws the original nested registry error while ordinary Journal keeps legacy verdicts: sqlite (169.200958ms)
+✔ O4 K2 export and public-proof interpretations preserve original non-Error failures (524.510958ms)
+✔ O4 K2 an unlisted error inside wireInput retains its identity (114.858417ms)
+✔ O4 G2 failed activation, dormant exercise and exact retries permit later activation: memory (739.431125ms)
+✔ O4 G2 failed activation, dormant exercise and exact retries permit later activation: sqlite (765.713125ms)
+✔ O4 G2 another participant admitted event cannot block activation: memory (374.524167ms)
+✔ O4 G2 another participant admitted event cannot block activation: sqlite (402.920792ms)
+✔ O4 G2 keeps current authorization gate: memory (289.849875ms)
+✔ O4 G2 keeps current closed gate: memory (294.357125ms)
+✔ O4 G2 keeps current authorization gate: sqlite (323.912709ms)
+✔ O4 G2 keeps current closed gate: sqlite (318.199625ms)
+✔ O4 unexpected post-commit replay error is thrown and disables facade: memory (410.253791ms)
+✔ O4 unexpected post-commit replay error is thrown and disables facade: sqlite (438.378459ms)
+✔ O4 malformed release-proof shape has an explicit policy refusal: memory (326.271791ms)
+✔ O4 malformed release-proof shape has an explicit policy refusal: sqlite (359.91625ms)
+✔ O4 thrown fold handler is a real failure with durable bytes: memory (124.618125ms)
+✔ O4 thrown audience handler is a real failure with durable bytes: memory (126.217958ms)
+✔ O4 thrown fold handler is a real failure with durable bytes: sqlite (146.079041ms)
+✔ O4 thrown audience handler is a real failure with durable bytes: sqlite (142.793625ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 24941.3245
+COMMAND ["npm", "run", "typecheck"]
+
+> dap-spike@0.0.1 typecheck
+> tsc -p tsconfig.json
+

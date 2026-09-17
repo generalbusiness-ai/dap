@@ -1,0 +1,19 @@
+{
+  "runtimeSource": "57745b99b7908ee499426ce4553484dfde572b9d",
+  "testSource": "37a3e12178923b8198950a332b76c7503fc13c15",
+  "changedPinnedFiles": [
+    "spike/test/ordering-scope-catch-boundaries.test.ts"
+  ],
+  "runtimeByteIdentical": true,
+  "diagnosticObjects": 11,
+  "diagnosticObjectsExactlyEqual": true,
+  "convertingTryBodyRows": 144,
+  "sampledRuntimeStacks": 24,
+  "coldOpenCases": 72,
+  "constructorCases": 48,
+  "sqliteCleanupCases": 24,
+  "serializedLostReplyCases": 12,
+  "priorFocusedSeconds": 56.7204088330036,
+  "focusedSeconds": 18.31503258300654,
+  "limit": "Observed single sequential pair, not an isolated benchmark. The helper avoids needless stack capture; production runtime is unchanged."
+}

@@ -1,0 +1,183 @@
+{
+  "source": "15b660caaf06e1ea4698e83a94e3717cfd48572b",
+  "method": "TypeScript AST CatchClause inventory; runtime import graph from scope.ts and scope-proof.ts excluding type-only imports; all src and fixture TS files searched",
+  "runtimeModules": [
+    "spike/src/append.ts",
+    "spike/src/canon.ts",
+    "spike/src/codec.ts",
+    "spike/src/context.ts",
+    "spike/src/descriptor.ts",
+    "spike/src/foundation.ts",
+    "spike/src/interpret.ts",
+    "spike/src/journal.ts",
+    "spike/src/ordering.ts",
+    "spike/src/ownership.ts",
+    "spike/src/scope-profile.ts",
+    "spike/src/scope-proof.ts",
+    "spike/src/scope.ts",
+    "spike/src/sqlite.ts",
+    "spike/src/types.ts"
+  ],
+  "runtimeCatchCount": 21,
+  "catches": [
+    {
+      "file": "spike/fixtures/ordering-scope-faults.ts",
+      "line": 54,
+      "column": 5,
+      "inStaticRuntimeGraph": false
+    },
+    {
+      "file": "spike/src/append.ts",
+      "line": 131,
+      "column": 3,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/codec.ts",
+      "line": 94,
+      "column": 47,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/context.ts",
+      "line": 210,
+      "column": 7,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/foundation.ts",
+      "line": 367,
+      "column": 9,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/foundation.ts",
+      "line": 430,
+      "column": 11,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/foundation.ts",
+      "line": 567,
+      "column": 3,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/foundation.ts",
+      "line": 578,
+      "column": 3,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/foundation.ts",
+      "line": 659,
+      "column": 7,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/journal.ts",
+      "line": 129,
+      "column": 7,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/journal.ts",
+      "line": 173,
+      "column": 5,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/journal.ts",
+      "line": 182,
+      "column": 5,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/ordering.ts",
+      "line": 66,
+      "column": 5,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/scope-proof.ts",
+      "line": 162,
+      "column": 3,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/scope-proof.ts",
+      "line": 168,
+      "column": 7,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/scope.ts",
+      "line": 185,
+      "column": 13,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/scope.ts",
+      "line": 259,
+      "column": 7,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/scope.ts",
+      "line": 263,
+      "column": 9,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/scope.ts",
+      "line": 322,
+      "column": 7,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/scope.ts",
+      "line": 341,
+      "column": 5,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/sqlite.ts",
+      "line": 38,
+      "column": 7,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/sqlite.ts",
+      "line": 70,
+      "column": 7,
+      "inStaticRuntimeGraph": true
+    }
+  ],
+  "finalizers": [
+    {
+      "file": "spike/fixtures/ordering-scope-faults.ts",
+      "line": 56,
+      "inStaticRuntimeGraph": false
+    },
+    {
+      "file": "spike/fixtures/ordering-scope-faults.ts",
+      "line": 71,
+      "inStaticRuntimeGraph": false
+    },
+    {
+      "file": "spike/src/sqlite.ts",
+      "line": 71,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/append.ts",
+      "line": 203,
+      "inStaticRuntimeGraph": true
+    },
+    {
+      "file": "spike/src/scope.ts",
+      "line": 314,
+      "inStaticRuntimeGraph": true
+    }
+  ]
+}

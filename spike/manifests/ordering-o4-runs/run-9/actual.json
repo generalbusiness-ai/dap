@@ -1,0 +1,1255 @@
+{
+  "source": "f8987d22890e7cf2471d7124544c539d69c0a835",
+  "proofIdentityDefinition": "sha256 of codec canonicalize(full PublicProof packet including its certificate)",
+  "actual": {
+    "memory": {
+      "contexts": {
+        "D": {
+          "genesis": "sha256:e03adde9cc8c12fc934657f139228de7b1de4bcdb8468c0e582edc9ea03a7b50",
+          "head": 1,
+          "headHash": "sha256:d269982c5fd428e2fe1922ae450ca4ca41cbbe4f665aee5751b1df1d8fcc1aaf",
+          "initialWriter": "ed25519:kQnbVfeXl6OWRi-4lcKtzqfoaDwvMFbAelR1FVU3tz4"
+        },
+        "F": {
+          "genesis": "sha256:af7e6be2a3dbe24df46e734fcb9d88a24ed592f2964c6e2a652081fb35923622",
+          "head": 3,
+          "headHash": "sha256:2a9959a5c3845b1fef4a8ad6982d023687b81adea6aa7b025d2b98a4cf5a6199",
+          "initialWriter": "ed25519:7kXsuaygGgq9g-9W3ZhcjIdObn9K687fIL2NiMKgrdc"
+        },
+        "I": {
+          "genesis": "sha256:aeda4e1162109a9bea5cbceb4c170fe2d4b7a014e2732be3da31c69bdf925d95",
+          "head": 1,
+          "headHash": "sha256:0d403713e88d2e71c7b308527815eec9b1f4b88a3f825582afe0ac005ab6852e",
+          "initialWriter": "ed25519:vtfSq2aNo--tYTmY8G96v3h186a3Z3qfPOlH1313YKY"
+        },
+        "S": {
+          "genesis": "sha256:b6edff8b971452f441085ddde8d4fd9103dab1cfb4edeb432edc5da94fafa856",
+          "head": 24,
+          "headHash": "sha256:d8a06e497c84804a8f4e473e6bca6938a32eed5cd9ac713552d40880f5bcb518",
+          "initialWriter": "ed25519:dPhc2jTRwnxGIUhHMekVecPZxs_A2UsoGqEekWIFiqk"
+        }
+      },
+      "proofs": {
+        "D": {
+          "identity": "sha256:afc814a30da3f7f03a4a0f5157f7473da1bde2a93c4ac3132f51276ff3141a30",
+          "frontier": 1,
+          "genesis": "sha256:e03adde9cc8c12fc934657f139228de7b1de4bcdb8468c0e582edc9ea03a7b50"
+        },
+        "F": {
+          "identity": "sha256:cefabde32558279ea5d17ef3736173fb6729ed4f0c9c2cb9d05f2d7c8b4cb174",
+          "frontier": 3,
+          "genesis": "sha256:af7e6be2a3dbe24df46e734fcb9d88a24ed592f2964c6e2a652081fb35923622"
+        },
+        "I": {
+          "identity": "sha256:88f091941c8d592fe04367db1c6350bf0b1c351c7aa5fd4845e7bc7a3dc957b0",
+          "frontier": 1,
+          "genesis": "sha256:aeda4e1162109a9bea5cbceb4c170fe2d4b7a014e2732be3da31c69bdf925d95"
+        },
+        "S": {
+          "identity": "sha256:6ab92a891f8814cd7d004d301e36873a32f42f243cd77abc3bfb0545d11841d4",
+          "frontier": 24,
+          "genesis": "sha256:b6edff8b971452f441085ddde8d4fd9103dab1cfb4edeb432edc5da94fafa856"
+        }
+      },
+      "healthyBoundaries": 20,
+      "adverseCases": 29,
+      "adverseSteps": 43,
+      "mutations": {
+        "cases": 209,
+        "categories": {
+          "codec malformed_envelope": 18,
+          "profile invalid_genesis": 154,
+          "unauthorized": 5,
+          "destination_mismatch": 30,
+          "profile unsupported_profile": 2
+        }
+      },
+      "matrix": {
+        "actualReaders": [
+          "alice",
+          "bob",
+          "carol",
+          "ivan",
+          "kim"
+        ],
+        "completedHeads": {
+          "F": 3,
+          "S": 24
+        },
+        "immediatelyAcrossAttachQuestions": 143,
+        "actualReaderPreAttachQuestions": 55,
+        "completedTransferHistoricalQuestions": 100
+      },
+      "k1": {
+        "malformedInputs": 21,
+        "exactRetryChecks": 63,
+        "recordedColdRetries": 21,
+        "recordedCompletedRetries": 21,
+        "immediateRetryEvidence": "executed assertions in ordering-scope-participant-input.test.ts; not duplicated in JSON",
+        "releases": {
+          "S": 45,
+          "D": 1
+        },
+        "activationEffective": true,
+        "final": {
+          "activations": 1,
+          "deliveryConfirmed": true,
+          "destination": "active",
+          "exports": {
+            "D": {
+              "buyer": "bob",
+              "delivery_slot": 25
+            },
+            "S": {
+              "accepted_offer": "o3",
+              "winner": "bob"
+            }
+          },
+          "fulfilled": true,
+          "heads": {
+            "D": 1,
+            "F": 3,
+            "I": 1,
+            "S": 45
+          },
+          "imports": [
+            "S-export",
+            "D-export"
+          ],
+          "inspection": {
+            "attached": true,
+            "imports": 1,
+            "requested": true,
+            "resultInI": "pass:o2",
+            "resultInS": "pass:o2"
+          },
+          "owners": {
+            "R_deliver": [],
+            "R_fulfil": [],
+            "R_sell": []
+          },
+          "releases": [
+            "S",
+            "D"
+          ],
+          "rights": {
+            "R_deliver": {
+              "D": "released",
+              "F": "spent",
+              "I": "absent",
+              "S": "absent"
+            },
+            "R_fulfil": {
+              "D": "absent",
+              "F": "spent",
+              "I": "absent",
+              "S": "released"
+            },
+            "R_sell": {
+              "D": "absent",
+              "F": "absent",
+              "I": "absent",
+              "S": "spent"
+            }
+          },
+          "sale": {
+            "accepted_offer": "o3",
+            "status": "closed",
+            "winner": "bob"
+          },
+          "verifiedProofs": [
+            "S",
+            "D"
+          ],
+          "writers": {
+            "D": "WD",
+            "F": "WF",
+            "I": "WI",
+            "S": "W1"
+          }
+        }
+      },
+      "k3": [
+        {
+          "file": "k3-bob-unauthorized-accept-memory.json",
+          "memberAttempts": 1,
+          "releaseEffective": true,
+          "activationEffective": true,
+          "activations": 1
+        },
+        {
+          "file": "k3-bob-unauthorized-close-memory.json",
+          "memberAttempts": 1,
+          "releaseEffective": true,
+          "activationEffective": true,
+          "activations": 1
+        },
+        {
+          "file": "k3-carol-malformed-grant-memory.json",
+          "memberAttempts": 1,
+          "releaseEffective": true,
+          "activationEffective": true,
+          "activations": 1
+        },
+        {
+          "file": "k3-member-scope-attempts-memory.json",
+          "memberAttempts": 6,
+          "releaseEffective": true,
+          "activationEffective": true,
+          "activations": 1
+        }
+      ],
+      "l1": {
+        "savedInputs": 33,
+        "exactRetryChecks": 99,
+        "final": {
+          "activations": 1,
+          "deliveryConfirmed": true,
+          "destination": "active",
+          "exports": {
+            "D": {
+              "buyer": "bob",
+              "delivery_slot": 25
+            },
+            "S": {
+              "accepted_offer": "o3",
+              "winner": "bob"
+            }
+          },
+          "fulfilled": true,
+          "heads": {
+            "D": 5,
+            "F": 11,
+            "I": 5,
+            "S": 42
+          },
+          "imports": [
+            "S-export",
+            "D-export"
+          ],
+          "inspection": {
+            "attached": true,
+            "imports": 1,
+            "requested": true,
+            "resultInI": "pass:o2",
+            "resultInS": "pass:o2"
+          },
+          "owners": {
+            "R_deliver": [],
+            "R_fulfil": [],
+            "R_sell": []
+          },
+          "releases": [
+            "S",
+            "D"
+          ],
+          "rights": {
+            "R_deliver": {
+              "D": "released",
+              "F": "spent",
+              "I": "absent",
+              "S": "absent"
+            },
+            "R_fulfil": {
+              "D": "absent",
+              "F": "spent",
+              "I": "absent",
+              "S": "released"
+            },
+            "R_sell": {
+              "D": "absent",
+              "F": "absent",
+              "I": "absent",
+              "S": "spent"
+            }
+          },
+          "sale": {
+            "accepted_offer": "o3",
+            "status": "closed",
+            "winner": "bob"
+          },
+          "verifiedProofs": [
+            "S",
+            "D"
+          ],
+          "writers": {
+            "D": "WD",
+            "F": "WF",
+            "I": "WI",
+            "S": "W1"
+          }
+        }
+      },
+      "l2": [
+        {
+          "storage": "memory",
+          "phase": "cold-open",
+          "cryptoSites": 9,
+          "injectedCases": 17,
+          "originalExceptions": 17,
+          "coldExactRetries": 17
+        },
+        {
+          "storage": "memory",
+          "phase": "activation",
+          "cryptoSites": 135,
+          "injectedCases": 151,
+          "originalExceptions": 151,
+          "durableExactRetries": 151,
+          "returnedFaultVerdicts": 0
+        },
+        {
+          "storage": "memory",
+          "malformedCases": 13,
+          "newPositions": 0,
+          "healthyAppendAndColdRetry": true
+        },
+        {
+          "storage": "memory",
+          "phase": "signatures",
+          "coldVerificationCalls": 51,
+          "coldInjectedCases": 51,
+          "activationVerificationCalls": 124,
+          "activationSigningCalls": 1,
+          "selectedActivationCases": [
+            {
+              "at": 1,
+              "call": "verify",
+              "outcome": "precommit refusal",
+              "committedBeforeRetry": false,
+              "retry": "fresh append"
+            },
+            {
+              "at": 64,
+              "call": "verify",
+              "outcome": "original exception",
+              "committedBeforeRetry": true,
+              "retry": "exact replay"
+            },
+            {
+              "at": 125,
+              "call": "verify",
+              "outcome": "original exception",
+              "committedBeforeRetry": true,
+              "retry": "exact replay"
+            },
+            {
+              "at": 3,
+              "call": "sign",
+              "outcome": "original exception",
+              "committedBeforeRetry": false,
+              "retry": "fresh append"
+            }
+          ]
+        }
+      ],
+      "l3": {
+        "D": {
+          "attemptVerdict": {
+            "authorized": false,
+            "effective": false,
+            "known": false,
+            "reason": "unhandled"
+          },
+          "attemptPosition": 1,
+          "proofIdentity": "sha256:82ec36cb3ba577134aaa08b33892cc65fc6403b95c8f13e3672a67b44934d5b2",
+          "proofFrontier": 2,
+          "releaseEffective": true,
+          "activationEffective": true,
+          "resultEffective": null,
+          "final": {
+            "activations": 1,
+            "deliveryConfirmed": true,
+            "destination": "active",
+            "exports": {
+              "D": {
+                "buyer": "bob",
+                "delivery_slot": 25
+              },
+              "S": {
+                "accepted_offer": "o3",
+                "winner": "bob"
+              }
+            },
+            "fulfilled": true,
+            "heads": {
+              "D": 2,
+              "F": 3,
+              "I": 1,
+              "S": 24
+            },
+            "imports": [
+              "S-export",
+              "D-export"
+            ],
+            "inspection": {
+              "attached": true,
+              "imports": 1,
+              "requested": true,
+              "resultInI": "pass:o2",
+              "resultInS": "pass:o2"
+            },
+            "owners": {
+              "R_deliver": [],
+              "R_fulfil": [],
+              "R_sell": []
+            },
+            "releases": [
+              "S",
+              "D"
+            ],
+            "rights": {
+              "R_deliver": {
+                "D": "released",
+                "F": "spent",
+                "I": "absent",
+                "S": "absent"
+              },
+              "R_fulfil": {
+                "D": "absent",
+                "F": "spent",
+                "I": "absent",
+                "S": "released"
+              },
+              "R_sell": {
+                "D": "absent",
+                "F": "absent",
+                "I": "absent",
+                "S": "spent"
+              }
+            },
+            "sale": {
+              "accepted_offer": "o3",
+              "status": "closed",
+              "winner": "bob"
+            },
+            "verifiedProofs": [
+              "S",
+              "D"
+            ],
+            "writers": {
+              "D": "WD",
+              "F": "WF",
+              "I": "WI",
+              "S": "W1"
+            }
+          }
+        },
+        "I": {
+          "attemptVerdict": {
+            "authorized": false,
+            "effective": false,
+            "known": false,
+            "reason": "unhandled"
+          },
+          "attemptPosition": 1,
+          "proofIdentity": "sha256:3737140260b5afc8e388e93a1ab69c80c2eabe6c770bcc0ed73cd6510e76c989",
+          "proofFrontier": 2,
+          "releaseEffective": null,
+          "activationEffective": null,
+          "resultEffective": true,
+          "final": null
+        },
+        "F": {
+          "attemptVerdict": {
+            "authorized": false,
+            "effective": false,
+            "known": false,
+            "reason": "unhandled"
+          },
+          "attemptPosition": 2,
+          "proofIdentity": "sha256:d442ed7ada82e7544b00ab6eb967804ecf75d372e790aea7c52ebb31f80c6741",
+          "proofFrontier": 4,
+          "releaseEffective": null,
+          "activationEffective": null,
+          "resultEffective": null,
+          "final": {
+            "activations": 1,
+            "deliveryConfirmed": true,
+            "destination": "active",
+            "exports": {
+              "D": {
+                "buyer": "bob",
+                "delivery_slot": 25
+              },
+              "S": {
+                "accepted_offer": "o3",
+                "winner": "bob"
+              }
+            },
+            "fulfilled": true,
+            "heads": {
+              "D": 1,
+              "F": 4,
+              "I": 1,
+              "S": 24
+            },
+            "imports": [
+              "S-export",
+              "D-export"
+            ],
+            "inspection": {
+              "attached": true,
+              "imports": 1,
+              "requested": true,
+              "resultInI": "pass:o2",
+              "resultInS": "pass:o2"
+            },
+            "owners": {
+              "R_deliver": [],
+              "R_fulfil": [],
+              "R_sell": []
+            },
+            "releases": [
+              "S",
+              "D"
+            ],
+            "rights": {
+              "R_deliver": {
+                "D": "released",
+                "F": "spent",
+                "I": "absent",
+                "S": "absent"
+              },
+              "R_fulfil": {
+                "D": "absent",
+                "F": "spent",
+                "I": "absent",
+                "S": "released"
+              },
+              "R_sell": {
+                "D": "absent",
+                "F": "absent",
+                "I": "absent",
+                "S": "spent"
+              }
+            },
+            "sale": {
+              "accepted_offer": "o3",
+              "status": "closed",
+              "winner": "bob"
+            },
+            "verifiedProofs": [
+              "S",
+              "D"
+            ],
+            "writers": {
+              "D": "WD",
+              "F": "WF",
+              "I": "WI",
+              "S": "W1"
+            }
+          }
+        }
+      },
+      "k4": {
+        "phases": [
+          {
+            "phase": "live",
+            "sourceReaders": [
+              "alice",
+              "bob",
+              "carol",
+              "ivan"
+            ],
+            "destinationReaders": [
+              "alice",
+              "bob",
+              "kim"
+            ],
+            "bobReadsRequest": false,
+            "bobGetsDerivedProof": true
+          },
+          {
+            "phase": "cold",
+            "sourceReaders": [
+              "alice",
+              "bob",
+              "carol",
+              "ivan"
+            ],
+            "destinationReaders": [
+              "alice",
+              "bob",
+              "kim"
+            ],
+            "bobReadsRequest": false,
+            "bobGetsDerivedProof": true
+          }
+        ],
+        "expectation": {
+          "activation": {
+            "audience": "spine",
+            "context": "F",
+            "currentParticipants": [
+              "alice",
+              "bob",
+              "kim"
+            ],
+            "position": 1
+          },
+          "admit": {
+            "audience": "members",
+            "context": "S",
+            "position": 20,
+            "readers": [
+              "alice",
+              "bob",
+              "carol",
+              "ivan"
+            ]
+          },
+          "inspectionFounders": [
+            "ivan"
+          ],
+          "mandate": {
+            "inspector": "ivan",
+            "offer": "o2",
+            "prefix": 14,
+            "source": "S"
+          },
+          "request": {
+            "bodyInPublicProof": false,
+            "context": "S",
+            "position": 14,
+            "readers": [
+              "alice",
+              "carol",
+              "ivan"
+            ]
+          },
+          "requesterFieldInMandate": false,
+          "result": {
+            "offer": "o2",
+            "result": "pass:o2"
+          }
+        }
+      }
+    },
+    "sqlite": {
+      "contexts": {
+        "D": {
+          "genesis": "sha256:e03adde9cc8c12fc934657f139228de7b1de4bcdb8468c0e582edc9ea03a7b50",
+          "head": 1,
+          "headHash": "sha256:d269982c5fd428e2fe1922ae450ca4ca41cbbe4f665aee5751b1df1d8fcc1aaf",
+          "initialWriter": "ed25519:kQnbVfeXl6OWRi-4lcKtzqfoaDwvMFbAelR1FVU3tz4"
+        },
+        "F": {
+          "genesis": "sha256:af7e6be2a3dbe24df46e734fcb9d88a24ed592f2964c6e2a652081fb35923622",
+          "head": 3,
+          "headHash": "sha256:2a9959a5c3845b1fef4a8ad6982d023687b81adea6aa7b025d2b98a4cf5a6199",
+          "initialWriter": "ed25519:7kXsuaygGgq9g-9W3ZhcjIdObn9K687fIL2NiMKgrdc"
+        },
+        "I": {
+          "genesis": "sha256:aeda4e1162109a9bea5cbceb4c170fe2d4b7a014e2732be3da31c69bdf925d95",
+          "head": 1,
+          "headHash": "sha256:0d403713e88d2e71c7b308527815eec9b1f4b88a3f825582afe0ac005ab6852e",
+          "initialWriter": "ed25519:vtfSq2aNo--tYTmY8G96v3h186a3Z3qfPOlH1313YKY"
+        },
+        "S": {
+          "genesis": "sha256:b6edff8b971452f441085ddde8d4fd9103dab1cfb4edeb432edc5da94fafa856",
+          "head": 24,
+          "headHash": "sha256:d8a06e497c84804a8f4e473e6bca6938a32eed5cd9ac713552d40880f5bcb518",
+          "initialWriter": "ed25519:dPhc2jTRwnxGIUhHMekVecPZxs_A2UsoGqEekWIFiqk"
+        }
+      },
+      "proofs": {
+        "D": {
+          "identity": "sha256:afc814a30da3f7f03a4a0f5157f7473da1bde2a93c4ac3132f51276ff3141a30",
+          "frontier": 1,
+          "genesis": "sha256:e03adde9cc8c12fc934657f139228de7b1de4bcdb8468c0e582edc9ea03a7b50"
+        },
+        "F": {
+          "identity": "sha256:cefabde32558279ea5d17ef3736173fb6729ed4f0c9c2cb9d05f2d7c8b4cb174",
+          "frontier": 3,
+          "genesis": "sha256:af7e6be2a3dbe24df46e734fcb9d88a24ed592f2964c6e2a652081fb35923622"
+        },
+        "I": {
+          "identity": "sha256:88f091941c8d592fe04367db1c6350bf0b1c351c7aa5fd4845e7bc7a3dc957b0",
+          "frontier": 1,
+          "genesis": "sha256:aeda4e1162109a9bea5cbceb4c170fe2d4b7a014e2732be3da31c69bdf925d95"
+        },
+        "S": {
+          "identity": "sha256:6ab92a891f8814cd7d004d301e36873a32f42f243cd77abc3bfb0545d11841d4",
+          "frontier": 24,
+          "genesis": "sha256:b6edff8b971452f441085ddde8d4fd9103dab1cfb4edeb432edc5da94fafa856"
+        }
+      },
+      "healthyBoundaries": 20,
+      "adverseCases": 29,
+      "adverseSteps": 43,
+      "mutations": {
+        "cases": 209,
+        "categories": {
+          "codec malformed_envelope": 18,
+          "profile invalid_genesis": 154,
+          "unauthorized": 5,
+          "destination_mismatch": 30,
+          "profile unsupported_profile": 2
+        }
+      },
+      "matrix": {
+        "actualReaders": [
+          "alice",
+          "bob",
+          "carol",
+          "ivan",
+          "kim"
+        ],
+        "completedHeads": {
+          "F": 3,
+          "S": 24
+        },
+        "immediatelyAcrossAttachQuestions": 143,
+        "actualReaderPreAttachQuestions": 55,
+        "completedTransferHistoricalQuestions": 100
+      },
+      "k1": {
+        "malformedInputs": 21,
+        "exactRetryChecks": 63,
+        "recordedColdRetries": 21,
+        "recordedCompletedRetries": 21,
+        "immediateRetryEvidence": "executed assertions in ordering-scope-participant-input.test.ts; not duplicated in JSON",
+        "releases": {
+          "S": 45,
+          "D": 1
+        },
+        "activationEffective": true,
+        "final": {
+          "activations": 1,
+          "deliveryConfirmed": true,
+          "destination": "active",
+          "exports": {
+            "D": {
+              "buyer": "bob",
+              "delivery_slot": 25
+            },
+            "S": {
+              "accepted_offer": "o3",
+              "winner": "bob"
+            }
+          },
+          "fulfilled": true,
+          "heads": {
+            "D": 1,
+            "F": 3,
+            "I": 1,
+            "S": 45
+          },
+          "imports": [
+            "S-export",
+            "D-export"
+          ],
+          "inspection": {
+            "attached": true,
+            "imports": 1,
+            "requested": true,
+            "resultInI": "pass:o2",
+            "resultInS": "pass:o2"
+          },
+          "owners": {
+            "R_deliver": [],
+            "R_fulfil": [],
+            "R_sell": []
+          },
+          "releases": [
+            "S",
+            "D"
+          ],
+          "rights": {
+            "R_deliver": {
+              "D": "released",
+              "F": "spent",
+              "I": "absent",
+              "S": "absent"
+            },
+            "R_fulfil": {
+              "D": "absent",
+              "F": "spent",
+              "I": "absent",
+              "S": "released"
+            },
+            "R_sell": {
+              "D": "absent",
+              "F": "absent",
+              "I": "absent",
+              "S": "spent"
+            }
+          },
+          "sale": {
+            "accepted_offer": "o3",
+            "status": "closed",
+            "winner": "bob"
+          },
+          "verifiedProofs": [
+            "S",
+            "D"
+          ],
+          "writers": {
+            "D": "WD",
+            "F": "WF",
+            "I": "WI",
+            "S": "W1"
+          }
+        }
+      },
+      "k3": [
+        {
+          "file": "k3-bob-unauthorized-accept-sqlite.json",
+          "memberAttempts": 1,
+          "releaseEffective": true,
+          "activationEffective": true,
+          "activations": 1
+        },
+        {
+          "file": "k3-bob-unauthorized-close-sqlite.json",
+          "memberAttempts": 1,
+          "releaseEffective": true,
+          "activationEffective": true,
+          "activations": 1
+        },
+        {
+          "file": "k3-carol-malformed-grant-sqlite.json",
+          "memberAttempts": 1,
+          "releaseEffective": true,
+          "activationEffective": true,
+          "activations": 1
+        },
+        {
+          "file": "k3-member-scope-attempts-sqlite.json",
+          "memberAttempts": 6,
+          "releaseEffective": true,
+          "activationEffective": true,
+          "activations": 1
+        }
+      ],
+      "l1": {
+        "savedInputs": 33,
+        "exactRetryChecks": 99,
+        "final": {
+          "activations": 1,
+          "deliveryConfirmed": true,
+          "destination": "active",
+          "exports": {
+            "D": {
+              "buyer": "bob",
+              "delivery_slot": 25
+            },
+            "S": {
+              "accepted_offer": "o3",
+              "winner": "bob"
+            }
+          },
+          "fulfilled": true,
+          "heads": {
+            "D": 5,
+            "F": 11,
+            "I": 5,
+            "S": 42
+          },
+          "imports": [
+            "S-export",
+            "D-export"
+          ],
+          "inspection": {
+            "attached": true,
+            "imports": 1,
+            "requested": true,
+            "resultInI": "pass:o2",
+            "resultInS": "pass:o2"
+          },
+          "owners": {
+            "R_deliver": [],
+            "R_fulfil": [],
+            "R_sell": []
+          },
+          "releases": [
+            "S",
+            "D"
+          ],
+          "rights": {
+            "R_deliver": {
+              "D": "released",
+              "F": "spent",
+              "I": "absent",
+              "S": "absent"
+            },
+            "R_fulfil": {
+              "D": "absent",
+              "F": "spent",
+              "I": "absent",
+              "S": "released"
+            },
+            "R_sell": {
+              "D": "absent",
+              "F": "absent",
+              "I": "absent",
+              "S": "spent"
+            }
+          },
+          "sale": {
+            "accepted_offer": "o3",
+            "status": "closed",
+            "winner": "bob"
+          },
+          "verifiedProofs": [
+            "S",
+            "D"
+          ],
+          "writers": {
+            "D": "WD",
+            "F": "WF",
+            "I": "WI",
+            "S": "W1"
+          }
+        }
+      },
+      "l2": [
+        {
+          "storage": "sqlite",
+          "phase": "cold-open",
+          "cryptoSites": 9,
+          "injectedCases": 17,
+          "originalExceptions": 17,
+          "coldExactRetries": 17
+        },
+        {
+          "storage": "sqlite",
+          "phase": "activation",
+          "cryptoSites": 135,
+          "injectedCases": 151,
+          "originalExceptions": 151,
+          "durableExactRetries": 151,
+          "returnedFaultVerdicts": 0
+        },
+        {
+          "storage": "sqlite",
+          "malformedCases": 13,
+          "newPositions": 0,
+          "healthyAppendAndColdRetry": true
+        },
+        {
+          "storage": "sqlite",
+          "phase": "signatures",
+          "coldVerificationCalls": 51,
+          "coldInjectedCases": 51,
+          "activationVerificationCalls": 124,
+          "activationSigningCalls": 1,
+          "selectedActivationCases": [
+            {
+              "at": 1,
+              "call": "verify",
+              "outcome": "precommit refusal",
+              "committedBeforeRetry": false,
+              "retry": "fresh append"
+            },
+            {
+              "at": 64,
+              "call": "verify",
+              "outcome": "original exception",
+              "committedBeforeRetry": true,
+              "retry": "exact replay"
+            },
+            {
+              "at": 125,
+              "call": "verify",
+              "outcome": "original exception",
+              "committedBeforeRetry": true,
+              "retry": "exact replay"
+            },
+            {
+              "at": 3,
+              "call": "sign",
+              "outcome": "original exception",
+              "committedBeforeRetry": false,
+              "retry": "fresh append"
+            }
+          ]
+        }
+      ],
+      "l3": {
+        "D": {
+          "attemptVerdict": {
+            "authorized": false,
+            "effective": false,
+            "known": false,
+            "reason": "unhandled"
+          },
+          "attemptPosition": 1,
+          "proofIdentity": "sha256:82ec36cb3ba577134aaa08b33892cc65fc6403b95c8f13e3672a67b44934d5b2",
+          "proofFrontier": 2,
+          "releaseEffective": true,
+          "activationEffective": true,
+          "resultEffective": null,
+          "final": {
+            "activations": 1,
+            "deliveryConfirmed": true,
+            "destination": "active",
+            "exports": {
+              "D": {
+                "buyer": "bob",
+                "delivery_slot": 25
+              },
+              "S": {
+                "accepted_offer": "o3",
+                "winner": "bob"
+              }
+            },
+            "fulfilled": true,
+            "heads": {
+              "D": 2,
+              "F": 3,
+              "I": 1,
+              "S": 24
+            },
+            "imports": [
+              "S-export",
+              "D-export"
+            ],
+            "inspection": {
+              "attached": true,
+              "imports": 1,
+              "requested": true,
+              "resultInI": "pass:o2",
+              "resultInS": "pass:o2"
+            },
+            "owners": {
+              "R_deliver": [],
+              "R_fulfil": [],
+              "R_sell": []
+            },
+            "releases": [
+              "S",
+              "D"
+            ],
+            "rights": {
+              "R_deliver": {
+                "D": "released",
+                "F": "spent",
+                "I": "absent",
+                "S": "absent"
+              },
+              "R_fulfil": {
+                "D": "absent",
+                "F": "spent",
+                "I": "absent",
+                "S": "released"
+              },
+              "R_sell": {
+                "D": "absent",
+                "F": "absent",
+                "I": "absent",
+                "S": "spent"
+              }
+            },
+            "sale": {
+              "accepted_offer": "o3",
+              "status": "closed",
+              "winner": "bob"
+            },
+            "verifiedProofs": [
+              "S",
+              "D"
+            ],
+            "writers": {
+              "D": "WD",
+              "F": "WF",
+              "I": "WI",
+              "S": "W1"
+            }
+          }
+        },
+        "I": {
+          "attemptVerdict": {
+            "authorized": false,
+            "effective": false,
+            "known": false,
+            "reason": "unhandled"
+          },
+          "attemptPosition": 1,
+          "proofIdentity": "sha256:3737140260b5afc8e388e93a1ab69c80c2eabe6c770bcc0ed73cd6510e76c989",
+          "proofFrontier": 2,
+          "releaseEffective": null,
+          "activationEffective": null,
+          "resultEffective": true,
+          "final": null
+        },
+        "F": {
+          "attemptVerdict": {
+            "authorized": false,
+            "effective": false,
+            "known": false,
+            "reason": "unhandled"
+          },
+          "attemptPosition": 2,
+          "proofIdentity": "sha256:d442ed7ada82e7544b00ab6eb967804ecf75d372e790aea7c52ebb31f80c6741",
+          "proofFrontier": 4,
+          "releaseEffective": null,
+          "activationEffective": null,
+          "resultEffective": null,
+          "final": {
+            "activations": 1,
+            "deliveryConfirmed": true,
+            "destination": "active",
+            "exports": {
+              "D": {
+                "buyer": "bob",
+                "delivery_slot": 25
+              },
+              "S": {
+                "accepted_offer": "o3",
+                "winner": "bob"
+              }
+            },
+            "fulfilled": true,
+            "heads": {
+              "D": 1,
+              "F": 4,
+              "I": 1,
+              "S": 24
+            },
+            "imports": [
+              "S-export",
+              "D-export"
+            ],
+            "inspection": {
+              "attached": true,
+              "imports": 1,
+              "requested": true,
+              "resultInI": "pass:o2",
+              "resultInS": "pass:o2"
+            },
+            "owners": {
+              "R_deliver": [],
+              "R_fulfil": [],
+              "R_sell": []
+            },
+            "releases": [
+              "S",
+              "D"
+            ],
+            "rights": {
+              "R_deliver": {
+                "D": "released",
+                "F": "spent",
+                "I": "absent",
+                "S": "absent"
+              },
+              "R_fulfil": {
+                "D": "absent",
+                "F": "spent",
+                "I": "absent",
+                "S": "released"
+              },
+              "R_sell": {
+                "D": "absent",
+                "F": "absent",
+                "I": "absent",
+                "S": "spent"
+              }
+            },
+            "sale": {
+              "accepted_offer": "o3",
+              "status": "closed",
+              "winner": "bob"
+            },
+            "verifiedProofs": [
+              "S",
+              "D"
+            ],
+            "writers": {
+              "D": "WD",
+              "F": "WF",
+              "I": "WI",
+              "S": "W1"
+            }
+          }
+        }
+      },
+      "k4": {
+        "phases": [
+          {
+            "phase": "live",
+            "sourceReaders": [
+              "alice",
+              "bob",
+              "carol",
+              "ivan"
+            ],
+            "destinationReaders": [
+              "alice",
+              "bob",
+              "kim"
+            ],
+            "bobReadsRequest": false,
+            "bobGetsDerivedProof": true
+          },
+          {
+            "phase": "cold",
+            "sourceReaders": [
+              "alice",
+              "bob",
+              "carol",
+              "ivan"
+            ],
+            "destinationReaders": [
+              "alice",
+              "bob",
+              "kim"
+            ],
+            "bobReadsRequest": false,
+            "bobGetsDerivedProof": true
+          }
+        ],
+        "expectation": {
+          "activation": {
+            "audience": "spine",
+            "context": "F",
+            "currentParticipants": [
+              "alice",
+              "bob",
+              "kim"
+            ],
+            "position": 1
+          },
+          "admit": {
+            "audience": "members",
+            "context": "S",
+            "position": 20,
+            "readers": [
+              "alice",
+              "bob",
+              "carol",
+              "ivan"
+            ]
+          },
+          "inspectionFounders": [
+            "ivan"
+          ],
+          "mandate": {
+            "inspector": "ivan",
+            "offer": "o2",
+            "prefix": 14,
+            "source": "S"
+          },
+          "request": {
+            "bodyInPublicProof": false,
+            "context": "S",
+            "position": 14,
+            "readers": [
+              "alice",
+              "carol",
+              "ivan"
+            ]
+          },
+          "requesterFieldInMandate": false,
+          "result": {
+            "offer": "o2",
+            "result": "pass:o2"
+          }
+        }
+      }
+    }
+  },
+  "backendIdentityAgreement": true
+}

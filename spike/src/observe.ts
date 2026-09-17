@@ -5,7 +5,7 @@
 // principal, and the affordances the principal holds.
 
 import type { Json } from './canon.ts';
-import { bindingIdOf, findModel, visibleBinding, type ObserveCtx } from './descriptor.ts';
+import { own, setOwn, bindingIdOf, findModel, visibleBinding, type ObserveCtx } from './descriptor.ts';
 import { K, SYSTEM_KINDS, holdsNow, type FoundationState } from './foundation.ts';
 import type { Principal } from './types.ts';
 
@@ -57,7 +57,7 @@ function kindAt(state: FoundationState, i: number): string | undefined {
 
 /** Whether the principal can see the attach that installed a package, so the package is part of their environment. */
 function packageVisible(state: FoundationState, pkgId: string, visible: VisibilityFn): boolean {
-  const at = state.env.attachedAt[pkgId];
+  const at = own(state.env.attachedAt, pkgId);
   return at !== undefined && visible(at);
 }
 
@@ -76,7 +76,7 @@ export function modelAffordances(state: FoundationState, p: Principal, ctx: Obse
   for (const [modelId, kinds] of byModel) {
     const model = findModel(state.env, modelId);
     if (!model) continue;
-    const mstate = state.models[modelId] ?? model.init(model.config);
+    const mstate = own(state.models, modelId) ?? model.init(model.config);
     if (model.affordances) {
       for (const k of model.affordances(p, mstate, ctx, model.config)) out.add(k);
     } else {
@@ -94,15 +94,15 @@ export function observe(state: FoundationState, p: Principal, basis: number, vis
     // A package whose attach the principal cannot see is not in their environment.
     if (!packageVisible(state, pkg.id, visible)) continue;
     for (const m of Object.values(pkg.models)) {
-      const mstate = state.models[m.id] ?? m.init(m.config);
-      models[m.id] = m.observe ? m.observe(p, mstate, ctx, m.config) : mstate;
+      const mstate = own(state.models, m.id) ?? m.init(m.config);
+      setOwn(models, m.id, m.observe ? m.observe(p, mstate, ctx, m.config) : mstate);
     }
   }
   const kinds = Object.keys(state.env.kinds).filter((k) => packageVisible(state, state.env.kinds[k]!.packageId, visible)).sort();
   const bindings: Record<string, string> = {};
   for (const k of kinds) {
     const b = visibleBinding(state.env, k, visible);
-    if (b) bindings[k] = bindingIdOf(state.env, k, b);
+    if (b) setOwn(bindings, k, bindingIdOf(state.env, k, b));
   }
   const outcomes: Observation['outcomes'] = {};
   for (let i = 0; i < state.verdicts.length; i++) {
@@ -115,7 +115,7 @@ export function observe(state: FoundationState, p: Principal, basis: number, vis
       const b = kind ? visibleBinding(state.env, kind, visible) : undefined;
       const handlers = new Set(b?.handlers ?? Object.keys(v.perModel));
       entry.perModel = {};
-      for (const [h, r] of Object.entries(v.perModel)) if (handlers.has(h)) entry.perModel[h] = { effective: r.effective, reason: r.reason ?? null };
+      for (const [h, r] of Object.entries(v.perModel)) if (handlers.has(h)) setOwn(entry.perModel, h, { effective: r.effective, reason: r.reason ?? null });
     }
     outcomes[String(i)] = entry;
   }

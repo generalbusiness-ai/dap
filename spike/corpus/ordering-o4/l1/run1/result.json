@@ -1,0 +1,96 @@
+{
+  "source": "28981dd1982e02b40fc154d43972c19d82ebc7bf",
+  "argv": [
+    "node",
+    "--test",
+    "--test-reporter=tap",
+    "spike/test/ordering-scope-property-names.test.ts",
+    "spike/test/descriptor.test.ts",
+    "spike/test/origin.test.ts",
+    "spike/test/ordering-scope-phase.test.ts"
+  ],
+  "exitCode": 0,
+  "seconds": 5.828846791002434,
+  "totals": {
+    "tests": 33,
+    "suites": 0,
+    "pass": 33,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "duration_ms": 5794.997375
+  },
+  "environment": {
+    "DAP_O4_RECORD_DIR": "/tmp/dap-o4-l1-run1/observations"
+  },
+  "typecheck": {
+    "argv": [
+      "node",
+      "/tmp/dap-o4-transfer-lifecycle/spike/node_modules/typescript/bin/tsc",
+      "-p",
+      "spike/tsconfig.json",
+      "--typeRoots",
+      "/tmp/dap-o4-transfer-lifecycle/spike/node_modules/@types"
+    ],
+    "exitCode": 0,
+    "dependencies": "Existing unchanged O4 TypeScript installation. No dependency installation or project configuration edit."
+  },
+  "identities": {
+    "foundation": "sha256:5a7be1514529bac249c683ada733e64273f94b2700abf8a55c47dcb7ebfb8d78",
+    "implementation": "sha256:f891ce00e1f6578863eb5424b7410c625d031914bfd58ae336f36350142d2111",
+    "scopePackage": "sha256:a948ef9a269688c1bd40b01f78dab2749c96b15283450956fea36ef414a6452e",
+    "salePackage": "sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85",
+    "inspectionPackage": "sha256:18a886c149b383b8630836307195c1a89b90c463e7e32df6e0663b5d4ecc3030",
+    "rule": "sha256:701403e9c51e6449ca797545818a8b63602a20a9b43c2ace064e9a38ab55b66c",
+    "manifest": "sha256:a766fe56564b026a96c37630d261512c0f608adf5ec7c5ee2d11aca23eaf45fe"
+  },
+  "observations": {
+    "g2-current-authorization-memory.json": "sha256:b95c7795ea706247beba309a983eb49799d9e3531d9643d0b715f89a1911ce4c",
+    "g2-current-authorization-sqlite.json": "sha256:b95c7795ea706247beba309a983eb49799d9e3531d9643d0b715f89a1911ce4c",
+    "g2-current-closed-memory.json": "sha256:c91e71a07c69b9119c3d365787f78276f4621b964eb69e9fe4edd31264245af3",
+    "g2-current-closed-sqlite.json": "sha256:c91e71a07c69b9119c3d365787f78276f4621b964eb69e9fe4edd31264245af3",
+    "g2-intervening-exercise-memory.json": "sha256:42afbfac533158aff73c03afb556c58e4d785bdf7dc585b566b3e560fa9dd1a9",
+    "g2-intervening-exercise-sqlite.json": "sha256:42afbfac533158aff73c03afb556c58e4d785bdf7dc585b566b3e560fa9dd1a9",
+    "g2-participant-event-memory.json": "sha256:f5daa1b29975982c93fbc4d4aae3fc981d45fb91b3c2c1723f083b316acb7cb9",
+    "g2-participant-event-sqlite.json": "sha256:f5daa1b29975982c93fbc4d4aae3fc981d45fb91b3c2c1723f083b316acb7cb9",
+    "l1-property-inputs-memory.json": "sha256:0dfadc52f870f376422778cba930b6f829e4e0800857a8de90f117b7761bd074",
+    "l1-property-inputs-sqlite.json": "sha256:0dfadc52f870f376422778cba930b6f829e4e0800857a8de90f117b7761bd074",
+    "unexpected-audience-handler-memory.json": "sha256:ace469777dfabfc283a33f91191f21141ddb896459c0b244d610c15d74d02548",
+    "unexpected-audience-handler-sqlite.json": "sha256:ace469777dfabfc283a33f91191f21141ddb896459c0b244d610c15d74d02548",
+    "unexpected-fold-handler-memory.json": "sha256:c642a36474f1328dae5199fa30b07ab6dc12b4c53dfa23e3bbb5d9e3df0d7a3a",
+    "unexpected-fold-handler-sqlite.json": "sha256:c642a36474f1328dae5199fa30b07ab6dc12b4c53dfa23e3bbb5d9e3df0d7a3a",
+    "unexpected-replay-error-memory.json": "sha256:41f6ac4a9ae17f00f1dfc5347f4dc09a0b0a237ec7cdeb0be90fab45aeddaae2",
+    "unexpected-replay-error-sqlite.json": "sha256:41f6ac4a9ae17f00f1dfc5347f4dc09a0b0a237ec7cdeb0be90fab45aeddaae2"
+  },
+  "actual": {
+    "memory": {
+      "savedInputs": 33,
+      "exactRetryChecks": 99,
+      "finalHeads": {
+        "D": 5,
+        "F": 11,
+        "I": 5,
+        "S": 42
+      },
+      "activations": 1,
+      "fulfilled": true,
+      "deliveryConfirmed": true
+    },
+    "sqlite": {
+      "savedInputs": 33,
+      "exactRetryChecks": 99,
+      "finalHeads": {
+        "D": 5,
+        "F": 11,
+        "I": 5,
+        "S": 42
+      },
+      "activations": 1,
+      "fulfilled": true,
+      "deliveryConfirmed": true
+    }
+  },
+  "sourceFilesUnchanged": 89,
+  "scope": "Focused component run only; L2/L3 repairs and combined noncampaign validation are not included."
+}

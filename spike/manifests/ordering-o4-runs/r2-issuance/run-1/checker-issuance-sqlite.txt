@@ -1,0 +1,15 @@
+A: faulty open threw original fault
+file:///private/tmp/dap-o4-r2-issuance/spike/src/sqlite.ts:22
+      this.db.exec('PRAGMA busy_timeout=0; PRAGMA journal_mode=DELETE; PRAGMA synchronous=FULL; PRAGMA locking_mode=EXCLUSIVE; BEGIN EXCLUSIVE;');
+              ^
+
+Error: database is locked
+    at new SQLiteBackend (file:///private/tmp/dap-o4-r2-issuance/spike/src/sqlite.ts:22:15)
+    at reopen (file:///private/tmp/dap-o4-r2-issuance/spike/manifests/ordering-o4-runs/r2-issuance/before/k2-issuance.mjs:32:47)
+    at file:///private/tmp/dap-o4-r2-issuance/spike/manifests/ordering-o4-runs/r2-issuance/before/k2-issuance.mjs:48:46 {
+  code: 'ERR_SQLITE_ERROR',
+  errcode: 5,
+  errstr: 'database is locked'
+}
+
+Node.js v26.8.2

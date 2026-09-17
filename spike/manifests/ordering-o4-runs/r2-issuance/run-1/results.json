@@ -1,0 +1,92 @@
+{
+  "source": "086fb8a8e97f6045bd4518246838842f1d7d631a",
+  "results": [
+    {
+      "command": [
+        "node",
+        "--test",
+        "test/ordering-scope-issuance-faults.test.ts",
+        "test/codec.test.ts",
+        "test/invitation.test.ts",
+        "test/ordering-scope-phase.test.ts"
+      ],
+      "env": {},
+      "exit": 0,
+      "seconds": 35.85313262499403,
+      "output": "focused.txt",
+      "sha256": "d82c666fea194e7dc6ca8215e6f3cc82ca05f27bbce4d2558bedf99a4f380b7c"
+    },
+    {
+      "command": [
+        "node",
+        "--test",
+        "--test-name-pattern=D1:",
+        "test/regressions.test.ts"
+      ],
+      "env": {},
+      "exit": 0,
+      "seconds": 0.09974974999204278,
+      "output": "member-verification.txt",
+      "sha256": "b70a27125276a319263ddbb81bc9f21a3b7479b422e8844f5141fb1cb75f11be"
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "env": {},
+      "exit": 0,
+      "seconds": 0.8222644580091583,
+      "output": "typecheck.txt",
+      "sha256": "c13cdfb986ee40a7a2614e780678b6307a8b1368291811d1a2cae9e00dfd60cd"
+    },
+    {
+      "command": [
+        "node",
+        "manifests/ordering-o4-runs/r2-issuance/before/k2-issuance.mjs",
+        "memory"
+      ],
+      "env": {
+        "WT": "/tmp/dap-o4-r2-issuance"
+      },
+      "exit": 0,
+      "seconds": 1.5584371660079341,
+      "output": "checker-issuance-memory.txt",
+      "sha256": "48fc830aafc5fa6910d72bf619cf20e073add08bf8409032928d1f3734c89fe1"
+    },
+    {
+      "command": [
+        "node",
+        "manifests/ordering-o4-runs/r2-issuance/before/deep-diag.mjs",
+        "memory",
+        "crypto",
+        "error",
+        "1"
+      ],
+      "env": {
+        "WT": "/tmp/dap-o4-r2-issuance",
+        "ONLY": "2307,2450"
+      },
+      "exit": 0,
+      "seconds": 0.6146759160037618,
+      "output": "checker-targets-memory.txt",
+      "sha256": "38e02cd1ebe0f8104899ec565607a5c918ea780f65a0a75f019187bc85646ae8"
+    },
+    {
+      "command": [
+        "node",
+        "manifests/ordering-o4-runs/r2-issuance/before/k2-issuance.mjs",
+        "sqlite"
+      ],
+      "env": {
+        "WT": "/tmp/dap-o4-r2-issuance"
+      },
+      "exit": 1,
+      "seconds": 0.19763712500571273,
+      "output": "checker-issuance-sqlite.txt",
+      "sha256": "3b02c63084b8ecd51254ee9da78cf821bb07607a499e4748be4d0c9b560bf41e"
+    }
+  ],
+  "sourceUnchanged": true
+}

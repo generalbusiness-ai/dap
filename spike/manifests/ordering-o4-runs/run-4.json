@@ -1,0 +1,63 @@
+{
+  "manifest": "sha256:fc55bfa123891e750f7bbe3a0d9cb33b5f65c07750db08bc984544ed2dd6b378",
+  "scopeProfile": "dap.fixture.scope/1",
+  "scopeImplementation": "sha256:96f811a0a50ec77a81f14768d01565ce3d38dd2ae1472c722c6ae96422bdae03",
+  "joinPolicy": "sha256:ac852ebab4f55816e55cd0fd71b7280267bffaca097046d4880b24ac63b01455",
+  "publicProofRule": "sha256:475b415bbf8b16ccdb1bea078174712c57f2b2955ece9338d762abd60228bad8",
+  "packages": [
+    "sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85",
+    "sha256:e2de918015c64401234c5df0291c8db399c7ce5997f6673662d7cc91a9c9c6e7",
+    "sha256:cd4037a57efd089fba49b5db78c3bda02a89403ef4300006ee9604033e120e05"
+  ],
+  "source": "faf26c07d1cadf073a92bac0bb7b01ed3d6333ec",
+  "stage": "complete",
+  "focused": {
+    "command": "DAP_O4_RECORD_DIR=spike/manifests/ordering-o4-runs/run-4-observations node --test spike/test/ordering-scope-regressions.test.ts",
+    "tests": 6,
+    "pass": 6,
+    "fail": 0,
+    "todo": 0,
+    "exit_code": 0
+  },
+  "typecheck": {
+    "command": "npm run typecheck --prefix spike",
+    "result": "pass"
+  },
+  "matrix": {
+    "memory": {
+      "actualReaders": [
+        "alice",
+        "bob",
+        "carol",
+        "ivan",
+        "kim"
+      ],
+      "completedHeads": {
+        "F": 3,
+        "S": 24
+      },
+      "immediatelyAcrossAttachQuestions": 143,
+      "actualReaderPreAttachQuestions": 55,
+      "completedTransferHistoricalQuestions": 100
+    },
+    "sqlite": {
+      "actualReaders": [
+        "alice",
+        "bob",
+        "carol",
+        "ivan",
+        "kim"
+      ],
+      "completedHeads": {
+        "F": 3,
+        "S": 24
+      },
+      "immediatelyAcrossAttachQuestions": 143,
+      "actualReaderPreAttachQuestions": 55,
+      "completedTransferHistoricalQuestions": 100
+    }
+  },
+  "full_campaign_boundary": "b35b267ea5392e5361905018ee350ec4df07aa55",
+  "full_campaign_repeated": false,
+  "runtime_changes": 0
+}

@@ -1,0 +1,11 @@
+{
+  "source": "cfeb3599bfd043ec26b768bd30633d23dd015dc0",
+  "runtime": "e0467ae9c44d99e10f38916b74f047b4e9183c5c",
+  "command": [
+    "node",
+    "--test",
+    "test/ordering-scope-unbound.test.ts"
+  ],
+  "exitCode": 1,
+  "seconds": 1.5449802910006838
+}
