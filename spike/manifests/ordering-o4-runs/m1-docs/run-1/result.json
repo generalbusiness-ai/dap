@@ -1,0 +1,42 @@
+{
+  "source": "a9d27c3d0dc15c924bbcc5865ca07e7201d06b4f",
+  "runtimeBase": "15b660caaf06e1ea4698e83a94e3717cfd48572b",
+  "scope": "documentation, specification identity and existing matrix count assertions only; no M1 runtime repairs or broad/campaign run",
+  "commands": [
+    {
+      "command": [
+        "node",
+        "--test",
+        "--test-name-pattern=materialized signed F genesis|manifest identity",
+        "test/ordering-scope-evidence.test.ts",
+        "test/ordering-lifecycle.test.ts"
+      ],
+      "exitCode": 0,
+      "seconds": 5.271665124993888
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "exitCode": 0,
+      "seconds": 0.8632730410026852
+    }
+  ],
+  "sha256": {
+    "spike/test/ordering-scope-evidence.test.ts": "98eb981c674182f44b8bfda4a64e0522a3bf87c83b52cbfecac66b37d7a7beb1",
+    "spike/test/ordering-lifecycle.test.ts": "4ece20f18f6da2003ce05e73670182569ea5f85d7c607ba26440b3207b30d4ac",
+    "spike/manifests/ordering-lifecycle.md": "44f8dfcac4fb4062d0c8f4fe297fff46b0e2bf2a1df6e385f85b9f2b8977a3ce",
+    "spike/manifests/ordering-lifecycle.ts": "fde4057e501a4bc133318f8f33a6687ad7a521a3f02dc0989c52bfe486207d5c",
+    "spike/ordering-profile.md": "5b646f8f18ba9ca983b637a4420e1b68f006d8fc966971312b3f6bef58d01064",
+    "spike/ordering-catch-boundary.md": "7692e44d0d27d0f84979c80ea1d1504dceae3f9d88fc9c8787f8fc633c50256c",
+    "spike/package.json": "6450b0d2a11935f0d195c8e540c8f5d9c81bbcb8c7e6fb35be5d8992ceb6e6f7",
+    "spike/package-lock.json": "5b4cf7d79eaa656b5175d7791158376a6c38ea446eb5c1b610be2e56bf359150",
+    "spike/tsconfig.json": "a8d6fd45c7174f95d19d7cb970bd3e35d75cbc73bd948b63389ad96a87bae3c9"
+  },
+  "observations": {
+    "materialized-genesis-mutations-memory.json": "b52bfbef813817a0d0bac8eff0703246bc9d931a8d9ef494e2a608174ad095f3",
+    "materialized-genesis-mutations-sqlite.json": "b52bfbef813817a0d0bac8eff0703246bc9d931a8d9ef494e2a608174ad095f3"
+  }
+}

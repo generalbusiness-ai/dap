@@ -884,3 +884,38 @@ only its prose identity and the test's expected manifest id change. This
 component contains no runtime source edit. Its measured matrix/specification
 checks and typecheck will be recorded separately below; the pending integrated
 M1 runtime and Scope package ids must not be inferred from this docs-only tree.
+
+
+Documentation/count-assertion source
+`a9d27c3d0dc15c924bbcc5865ca07e7201d06b4f` passes **3/3 selected checks**:
+the manifest identity check and the existing materialized-genesis matrix on
+memory and SQLite. Both matrices retain exactly 209 cases and the declared
+30/5/154/18/2 distribution. Whole-tree typecheck exits 0. No additional matrix
+or broad suite ran. [Exact source, commands and hashes](ordering-o4-runs/m1-docs/run-1/result.json),
+[raw checks](ordering-o4-runs/m1-docs/run-1/focused.txt),
+[typecheck](ordering-o4-runs/m1-docs/run-1/typecheck.txt) and two fresh matrix
+observations are retained. Runtime remains exactly `15b660ca` in this isolated
+component; these passing checks do not validate the separate M1 fault repairs.
+The catch catalogue was reconciled with the independent baseline audit and
+retains its 21-site AST inventory and machine-readable classification.
+
+Root separately verified Scope own-facts/package component
+`4710d3e65b1dbeba16af7b358998c546e967747d`, measured at
+`8e854c26b30de7a376dc71f5e0e8bf24160aaefa`: 11/11 focused checks,
+typecheck exit 0, eight observations in identical backend pairs and 24 path
+hashes. It entered the integration branch as
+`9c0aaf0adab7d6e0070d15fda2e558eac823b183`. This documents that
+component linkage without claiming it ran in this documentation checkout or
+assigning the future combined Scope identity. Club remains unchanged.
+
+The root's revised measurement runner now persists the child exit before
+parsing diagnostics. Its parser was checked against all run-9 diagnostics
+and a synthetic failure; that is a runner check, not a repeated noncampaign
+suite and not recovery of run 9's unknown builder exit status.
+
+Pending final-source fields are the integrated M1 runtime/Scope package ids,
+updated catch locations/count (the baseline is 21; parser-inspection and
+constructor cleanup may add catches), and per-site reached injection/results
+on each applicable backend. Root must bind these to the frozen runtime source
+and combined measurement before independent review. The catalogue and this
+component do not substitute static inspection for those results.
