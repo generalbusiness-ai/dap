@@ -721,3 +721,54 @@ O6 summary-wrapper failure, original run-9 provenance correction and unchanged
 Club/Sale research results. Earlier exact-head artifacts cannot describe this
 successor. Updated report links and path/hash delivery records will accompany
 the final candidate; O4/O6 independent approval and landing remain pending.
+
+
+## Independent O4 approval and O6 report clarification
+
+Checker report
+`git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:ed8485cd97647d82b44f69ea1d8ca5f5934a0beb`
+approves exact O4 `805a38f3b8ba55e77b9d81847ea5a04b7e1a8fb2`, all 922
+artifacts, within its fixed-fixture trust, disclosure, availability and
+conversion limits. Root ratification
+`git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:c8290c9c2ea154a9498432b3ce62ec4529374b71`
+is effective. Independent runs at that head and source `79cd0002` each
+report 512 tests, 508 pass, zero ordinary failures, four Club TODOs, Node 0
+and typecheck 0. All 106 observations regenerate exactly. These are independent
+review measurements, not new builder tests or retroactive run-9 exit metadata.
+
+The report now makes the nonblocking qualifications explicit:
+
+- Injected nominal SyntaxError, allowlisted Error or declared Scope policy
+  errors can return a converted verdict that differs from the same facade's
+  recomputed state and cold replay. Genuine deterministic refusals agree.
+- The one-of-29 allowlist control uses a literal message, not dynamic sampling.
+- Removing constructor Journal close is detected only by the memory variant;
+  SQLite reopens a fresh handle and cannot detect that missing release.
+- The unchanged 209-genesis matrix is not own-entry evidence; the dedicated
+  own-entry tests and retained residual probe establish that repair.
+- The 187 figure is the recorded title-regex count, not a scope-file count.
+- All 53 memory/SQLite pairs exhaust the 106 observation files.
+
+This records-only clarification changes no accepted O4 bytes, O6 bootstrap,
+tests or earlier evidence. Run 9's recovery-created result and unknown builder
+child exit remain explicit. Run 7's three recorded child exit-zero results
+remain distinct from its post-run summary assertion failure and saved-output
+recovery. No suite, campaign or bootstrap command is repeated.
+
+O4 landed on `refs/heads/main` as
+`4bef258270261dc59eefebb9c979b4bbabd5e0a6`, tree
+`2f1464f6b16f97bf6ff09e33710789c6cd01829e`, identical to approved `805a38f3`.
+Root reports a successful normal main-only push and exact `origin/main`
+verification at that commit. Effective durable merge receipt
+`git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:26e8d2e1fcccc2300833b0acc80153b495c64b36`
+at sequence 5087 names the approval, candidate, main commit and target ref.
+The CLI is still appending sealed per-file successor/retirement metadata;
+this receipt does not claim that remaining workroom suffix has completed.
+
+O6 incorporates that actual main ancestry without changing accepted O4 bytes.
+Only this ledger and the report are clarified after `3c94f983`; all 36 O6
+run files, both bootstrap files, all 922 accepted O4 paths and the 98 measured
+blobs remain unchanged. The 106 O4 observation hashes still match. Fresh
+exact-head delivery refs are required for the resulting O6 candidate. Root
+will publish/request its independent review after the O4 metadata suffix
+settles and current artifact bases are available. O6 is not yet approved.
