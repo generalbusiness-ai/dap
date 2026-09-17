@@ -1,0 +1,129 @@
+{
+  "memory": {
+    "healthyBoundaries": 20,
+    "adverseCases": 29,
+    "adverseSteps": 43,
+    "mutations": {
+      "cases": 209,
+      "categories": {
+        "codec malformed_envelope": 18,
+        "profile invalid_genesis": 154,
+        "unauthorized": 5,
+        "destination_mismatch": 30,
+        "profile unsupported_profile": 2
+      }
+    },
+    "matrix": {
+      "actualReaders": [
+        "alice",
+        "bob",
+        "carol",
+        "ivan",
+        "kim"
+      ],
+      "completedHeads": {
+        "F": 3,
+        "S": 24
+      },
+      "immediatelyAcrossAttachQuestions": 143,
+      "actualReaderPreAttachQuestions": 55,
+      "completedTransferHistoricalQuestions": 100
+    },
+    "k1Inputs": 21,
+    "k1Retries": 63,
+    "k3": [
+      {
+        "file": "k3-bob-unauthorized-accept-memory.json",
+        "memberAttempts": 1,
+        "releaseEffective": true,
+        "activationEffective": true,
+        "activations": 1
+      },
+      {
+        "file": "k3-bob-unauthorized-close-memory.json",
+        "memberAttempts": 1,
+        "releaseEffective": true,
+        "activationEffective": true,
+        "activations": 1
+      },
+      {
+        "file": "k3-carol-malformed-grant-memory.json",
+        "memberAttempts": 1,
+        "releaseEffective": true,
+        "activationEffective": true,
+        "activations": 1
+      },
+      {
+        "file": "k3-member-scope-attempts-memory.json",
+        "memberAttempts": 6,
+        "releaseEffective": true,
+        "activationEffective": true,
+        "activations": 1
+      }
+    ]
+  },
+  "sqlite": {
+    "healthyBoundaries": 20,
+    "adverseCases": 29,
+    "adverseSteps": 43,
+    "mutations": {
+      "cases": 209,
+      "categories": {
+        "codec malformed_envelope": 18,
+        "profile invalid_genesis": 154,
+        "unauthorized": 5,
+        "destination_mismatch": 30,
+        "profile unsupported_profile": 2
+      }
+    },
+    "matrix": {
+      "actualReaders": [
+        "alice",
+        "bob",
+        "carol",
+        "ivan",
+        "kim"
+      ],
+      "completedHeads": {
+        "F": 3,
+        "S": 24
+      },
+      "immediatelyAcrossAttachQuestions": 143,
+      "actualReaderPreAttachQuestions": 55,
+      "completedTransferHistoricalQuestions": 100
+    },
+    "k1Inputs": 21,
+    "k1Retries": 63,
+    "k3": [
+      {
+        "file": "k3-bob-unauthorized-accept-sqlite.json",
+        "memberAttempts": 1,
+        "releaseEffective": true,
+        "activationEffective": true,
+        "activations": 1
+      },
+      {
+        "file": "k3-bob-unauthorized-close-sqlite.json",
+        "memberAttempts": 1,
+        "releaseEffective": true,
+        "activationEffective": true,
+        "activations": 1
+      },
+      {
+        "file": "k3-carol-malformed-grant-sqlite.json",
+        "memberAttempts": 1,
+        "releaseEffective": true,
+        "activationEffective": true,
+        "activations": 1
+      },
+      {
+        "file": "k3-member-scope-attempts-sqlite.json",
+        "memberAttempts": 6,
+        "releaseEffective": true,
+        "activationEffective": true,
+        "activations": 1
+      }
+    ]
+  }
+}
+backendIdentityAgreement true

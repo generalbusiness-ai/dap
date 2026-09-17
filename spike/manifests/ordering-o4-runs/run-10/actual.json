@@ -1,0 +1,3541 @@
+{
+  "source": "79cd00029504deb92c121dbf12859680dfe78358",
+  "proofIdentityDefinition": "sha256 of codec canonicalize(full PublicProof packet including its certificate)",
+  "actual": {
+    "memory": {
+      "contexts": {
+        "D": {
+          "genesis": "sha256:cc2b36ec9d970303ea0f792db573aba1ab65a976a8b6afc7c436062c12eefeea",
+          "head": 1,
+          "headHash": "sha256:2ef6b5a0b899fbe81d8a142718c9a8cc16dab5bc08893047c7ebd43acbcc2f79",
+          "initialWriter": "ed25519:kQnbVfeXl6OWRi-4lcKtzqfoaDwvMFbAelR1FVU3tz4"
+        },
+        "F": {
+          "genesis": "sha256:c688bc0dd64519d02a007cc5649b93b29fb4ee102e1cb157cd1b676c098b22bc",
+          "head": 3,
+          "headHash": "sha256:64a0591e1fa8a780515e3caf4a5a5a56babbb532ef819a2fcac2b8cff3c00e8c",
+          "initialWriter": "ed25519:7kXsuaygGgq9g-9W3ZhcjIdObn9K687fIL2NiMKgrdc"
+        },
+        "I": {
+          "genesis": "sha256:95dd3b18f8c50cc8c84e0e33ea085d936bbea7b511dd3dcd43449898ae994d8c",
+          "head": 1,
+          "headHash": "sha256:40202849b77b9b7fe77741a9ae3be453cca948f44c90aebc7fadc13cd984af23",
+          "initialWriter": "ed25519:vtfSq2aNo--tYTmY8G96v3h186a3Z3qfPOlH1313YKY"
+        },
+        "S": {
+          "genesis": "sha256:46378b74aa6b5cf737e61b1638025f5aa27537a630a8ccd0a7d6c81014e042d5",
+          "head": 24,
+          "headHash": "sha256:432335f779db57d32498f4f0e218d99c6deaff6cf5c507b973727849e93a7c7c",
+          "initialWriter": "ed25519:dPhc2jTRwnxGIUhHMekVecPZxs_A2UsoGqEekWIFiqk"
+        }
+      },
+      "proofs": {
+        "D": {
+          "identity": "sha256:d93128d3fbe056c702a56c7fe7bea7d13eeb9c12843b5d3c55d26edb87bdc977",
+          "frontier": 1,
+          "genesis": "sha256:cc2b36ec9d970303ea0f792db573aba1ab65a976a8b6afc7c436062c12eefeea"
+        },
+        "F": {
+          "identity": "sha256:3b108a60c3d7605255ab88c3d199146ad0a2845bcebccc3617282276ec2a2c75",
+          "frontier": 3,
+          "genesis": "sha256:c688bc0dd64519d02a007cc5649b93b29fb4ee102e1cb157cd1b676c098b22bc"
+        },
+        "I": {
+          "identity": "sha256:8544450dd8083e6818e156e73214bfc5deb2bcef5312b0f321d227a2fa429464",
+          "frontier": 1,
+          "genesis": "sha256:95dd3b18f8c50cc8c84e0e33ea085d936bbea7b511dd3dcd43449898ae994d8c"
+        },
+        "S": {
+          "identity": "sha256:5881a19b5dfecaee1cb4fd0014d817a867f32cb510d4f812f57cf5c03dd50387",
+          "frontier": 24,
+          "genesis": "sha256:46378b74aa6b5cf737e61b1638025f5aa27537a630a8ccd0a7d6c81014e042d5"
+        }
+      },
+      "healthyBoundaries": 20,
+      "adverseCases": 29,
+      "adverseSteps": 43,
+      "mutations": {
+        "cases": 209,
+        "categories": {
+          "codec malformed_envelope": 18,
+          "profile invalid_genesis": 154,
+          "unauthorized": 5,
+          "destination_mismatch": 30,
+          "profile unsupported_profile": 2
+        }
+      },
+      "matrix": {
+        "actualReaders": [
+          "alice",
+          "bob",
+          "carol",
+          "ivan",
+          "kim"
+        ],
+        "completedHeads": {
+          "F": 3,
+          "S": 24
+        },
+        "immediatelyAcrossAttachQuestions": 143,
+        "actualReaderPreAttachQuestions": 55,
+        "completedTransferHistoricalQuestions": 100
+      },
+      "k1": {
+        "malformedInputs": 21,
+        "exactRetryChecks": 63,
+        "recordedColdRetries": 21,
+        "recordedCompletedRetries": 21,
+        "immediateRetryEvidence": "executed assertions in ordering-scope-participant-input.test.ts; not duplicated in JSON",
+        "releases": {
+          "S": 45,
+          "D": 1
+        },
+        "activationEffective": true,
+        "final": {
+          "activations": 1,
+          "deliveryConfirmed": true,
+          "destination": "active",
+          "exports": {
+            "D": {
+              "buyer": "bob",
+              "delivery_slot": 25
+            },
+            "S": {
+              "accepted_offer": "o3",
+              "winner": "bob"
+            }
+          },
+          "fulfilled": true,
+          "heads": {
+            "D": 1,
+            "F": 3,
+            "I": 1,
+            "S": 45
+          },
+          "imports": [
+            "S-export",
+            "D-export"
+          ],
+          "inspection": {
+            "attached": true,
+            "imports": 1,
+            "requested": true,
+            "resultInI": "pass:o2",
+            "resultInS": "pass:o2"
+          },
+          "owners": {
+            "R_deliver": [],
+            "R_fulfil": [],
+            "R_sell": []
+          },
+          "releases": [
+            "S",
+            "D"
+          ],
+          "rights": {
+            "R_deliver": {
+              "D": "released",
+              "F": "spent",
+              "I": "absent",
+              "S": "absent"
+            },
+            "R_fulfil": {
+              "D": "absent",
+              "F": "spent",
+              "I": "absent",
+              "S": "released"
+            },
+            "R_sell": {
+              "D": "absent",
+              "F": "absent",
+              "I": "absent",
+              "S": "spent"
+            }
+          },
+          "sale": {
+            "accepted_offer": "o3",
+            "status": "closed",
+            "winner": "bob"
+          },
+          "verifiedProofs": [
+            "S",
+            "D"
+          ],
+          "writers": {
+            "D": "WD",
+            "F": "WF",
+            "I": "WI",
+            "S": "W1"
+          }
+        }
+      },
+      "k3": [
+        {
+          "file": "k3-bob-unauthorized-accept-memory.json",
+          "memberAttempts": 1,
+          "releaseEffective": true,
+          "activationEffective": true,
+          "activations": 1
+        },
+        {
+          "file": "k3-bob-unauthorized-close-memory.json",
+          "memberAttempts": 1,
+          "releaseEffective": true,
+          "activationEffective": true,
+          "activations": 1
+        },
+        {
+          "file": "k3-carol-malformed-grant-memory.json",
+          "memberAttempts": 1,
+          "releaseEffective": true,
+          "activationEffective": true,
+          "activations": 1
+        },
+        {
+          "file": "k3-member-scope-attempts-memory.json",
+          "memberAttempts": 6,
+          "releaseEffective": true,
+          "activationEffective": true,
+          "activations": 1
+        }
+      ],
+      "l1": {
+        "savedInputs": 33,
+        "exactRetryChecks": 99,
+        "final": {
+          "activations": 1,
+          "deliveryConfirmed": true,
+          "destination": "active",
+          "exports": {
+            "D": {
+              "buyer": "bob",
+              "delivery_slot": 25
+            },
+            "S": {
+              "accepted_offer": "o3",
+              "winner": "bob"
+            }
+          },
+          "fulfilled": true,
+          "heads": {
+            "D": 5,
+            "F": 11,
+            "I": 5,
+            "S": 42
+          },
+          "imports": [
+            "S-export",
+            "D-export"
+          ],
+          "inspection": {
+            "attached": true,
+            "imports": 1,
+            "requested": true,
+            "resultInI": "pass:o2",
+            "resultInS": "pass:o2"
+          },
+          "owners": {
+            "R_deliver": [],
+            "R_fulfil": [],
+            "R_sell": []
+          },
+          "releases": [
+            "S",
+            "D"
+          ],
+          "rights": {
+            "R_deliver": {
+              "D": "released",
+              "F": "spent",
+              "I": "absent",
+              "S": "absent"
+            },
+            "R_fulfil": {
+              "D": "absent",
+              "F": "spent",
+              "I": "absent",
+              "S": "released"
+            },
+            "R_sell": {
+              "D": "absent",
+              "F": "absent",
+              "I": "absent",
+              "S": "spent"
+            }
+          },
+          "sale": {
+            "accepted_offer": "o3",
+            "status": "closed",
+            "winner": "bob"
+          },
+          "verifiedProofs": [
+            "S",
+            "D"
+          ],
+          "writers": {
+            "D": "WD",
+            "F": "WF",
+            "I": "WI",
+            "S": "W1"
+          }
+        }
+      },
+      "l2": [
+        {
+          "storage": "memory",
+          "phase": "cold-open",
+          "cryptoSites": 9,
+          "injectedCases": 17,
+          "originalExceptions": 17,
+          "coldExactRetries": 17
+        },
+        {
+          "storage": "memory",
+          "phase": "activation",
+          "cryptoSites": 135,
+          "injectedCases": 151,
+          "originalExceptions": 151,
+          "durableExactRetries": 151,
+          "returnedFaultVerdicts": 0
+        },
+        {
+          "storage": "memory",
+          "malformedCases": 13,
+          "newPositions": 0,
+          "healthyAppendAndColdRetry": true
+        },
+        {
+          "storage": "memory",
+          "phase": "signatures",
+          "coldVerificationCalls": 51,
+          "coldInjectedCases": 51,
+          "activationVerificationCalls": 124,
+          "activationSigningCalls": 1,
+          "selectedActivationCases": [
+            {
+              "at": 1,
+              "call": "verify",
+              "outcome": "precommit refusal",
+              "committedBeforeRetry": false,
+              "retry": "fresh append"
+            },
+            {
+              "at": 64,
+              "call": "verify",
+              "outcome": "original exception",
+              "committedBeforeRetry": true,
+              "retry": "exact replay"
+            },
+            {
+              "at": 125,
+              "call": "verify",
+              "outcome": "original exception",
+              "committedBeforeRetry": true,
+              "retry": "exact replay"
+            },
+            {
+              "at": 3,
+              "call": "sign",
+              "outcome": "original exception",
+              "committedBeforeRetry": false,
+              "retry": "fresh append"
+            }
+          ]
+        }
+      ],
+      "l3": {
+        "D": {
+          "attemptVerdict": {
+            "authorized": false,
+            "effective": false,
+            "known": false,
+            "reason": "unhandled"
+          },
+          "attemptPosition": 1,
+          "proofIdentity": "sha256:8bd144626b5187c3646c84ab3ab311f8a717c80b32c00bbcd00455902d28913e",
+          "proofFrontier": 2,
+          "releaseEffective": true,
+          "activationEffective": true,
+          "resultEffective": null,
+          "final": {
+            "activations": 1,
+            "deliveryConfirmed": true,
+            "destination": "active",
+            "exports": {
+              "D": {
+                "buyer": "bob",
+                "delivery_slot": 25
+              },
+              "S": {
+                "accepted_offer": "o3",
+                "winner": "bob"
+              }
+            },
+            "fulfilled": true,
+            "heads": {
+              "D": 2,
+              "F": 3,
+              "I": 1,
+              "S": 24
+            },
+            "imports": [
+              "S-export",
+              "D-export"
+            ],
+            "inspection": {
+              "attached": true,
+              "imports": 1,
+              "requested": true,
+              "resultInI": "pass:o2",
+              "resultInS": "pass:o2"
+            },
+            "owners": {
+              "R_deliver": [],
+              "R_fulfil": [],
+              "R_sell": []
+            },
+            "releases": [
+              "S",
+              "D"
+            ],
+            "rights": {
+              "R_deliver": {
+                "D": "released",
+                "F": "spent",
+                "I": "absent",
+                "S": "absent"
+              },
+              "R_fulfil": {
+                "D": "absent",
+                "F": "spent",
+                "I": "absent",
+                "S": "released"
+              },
+              "R_sell": {
+                "D": "absent",
+                "F": "absent",
+                "I": "absent",
+                "S": "spent"
+              }
+            },
+            "sale": {
+              "accepted_offer": "o3",
+              "status": "closed",
+              "winner": "bob"
+            },
+            "verifiedProofs": [
+              "S",
+              "D"
+            ],
+            "writers": {
+              "D": "WD",
+              "F": "WF",
+              "I": "WI",
+              "S": "W1"
+            }
+          }
+        },
+        "I": {
+          "attemptVerdict": {
+            "authorized": false,
+            "effective": false,
+            "known": false,
+            "reason": "unhandled"
+          },
+          "attemptPosition": 1,
+          "proofIdentity": "sha256:1c48328467667c62e07b3642e0c59574b68b6069ebcd1ec9b0d003b0965d0762",
+          "proofFrontier": 2,
+          "releaseEffective": null,
+          "activationEffective": null,
+          "resultEffective": true,
+          "final": null
+        },
+        "F": {
+          "attemptVerdict": {
+            "authorized": false,
+            "effective": false,
+            "known": false,
+            "reason": "unhandled"
+          },
+          "attemptPosition": 2,
+          "proofIdentity": "sha256:32a4b1cd491eb56e2927ae7173b7ebe0ef0e7eead356d6a27b6d504b02d497fd",
+          "proofFrontier": 4,
+          "releaseEffective": null,
+          "activationEffective": null,
+          "resultEffective": null,
+          "final": {
+            "activations": 1,
+            "deliveryConfirmed": true,
+            "destination": "active",
+            "exports": {
+              "D": {
+                "buyer": "bob",
+                "delivery_slot": 25
+              },
+              "S": {
+                "accepted_offer": "o3",
+                "winner": "bob"
+              }
+            },
+            "fulfilled": true,
+            "heads": {
+              "D": 1,
+              "F": 4,
+              "I": 1,
+              "S": 24
+            },
+            "imports": [
+              "S-export",
+              "D-export"
+            ],
+            "inspection": {
+              "attached": true,
+              "imports": 1,
+              "requested": true,
+              "resultInI": "pass:o2",
+              "resultInS": "pass:o2"
+            },
+            "owners": {
+              "R_deliver": [],
+              "R_fulfil": [],
+              "R_sell": []
+            },
+            "releases": [
+              "S",
+              "D"
+            ],
+            "rights": {
+              "R_deliver": {
+                "D": "released",
+                "F": "spent",
+                "I": "absent",
+                "S": "absent"
+              },
+              "R_fulfil": {
+                "D": "absent",
+                "F": "spent",
+                "I": "absent",
+                "S": "released"
+              },
+              "R_sell": {
+                "D": "absent",
+                "F": "absent",
+                "I": "absent",
+                "S": "spent"
+              }
+            },
+            "sale": {
+              "accepted_offer": "o3",
+              "status": "closed",
+              "winner": "bob"
+            },
+            "verifiedProofs": [
+              "S",
+              "D"
+            ],
+            "writers": {
+              "D": "WD",
+              "F": "WF",
+              "I": "WI",
+              "S": "W1"
+            }
+          }
+        }
+      },
+      "m1": {
+        "recordedDiagnostics": [
+          {
+            "storage": "memory",
+            "catalogue": "21 original catches; 12 converting try bodies",
+            "rows": [
+              {
+                "catch": "append.prepare",
+                "sentinel": "Error",
+                "outcome": "precommit refusal; same-facade recovery",
+                "coldExactRetry": true,
+                "reachedStack": [
+                  "at verifyEnvelope (spike/src/codec.ts:200:8)",
+                  "at Object.prepare (spike/src/journal.ts:38:24)",
+                  "at append (spike/src/append.ts:130:34)",
+                  "at Context.submit (spike/src/context.ts:172:17)",
+                  "at Journal.submit (spike/src/journal.ts:175:35)",
+                  "at ScopeJournal.submit (spike/src/scope.ts:346:33)"
+                ]
+              },
+              {
+                "catch": "append.prepare",
+                "sentinel": "codec-looking TypeError",
+                "outcome": "precommit refusal; same-facade recovery",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "append.prepare",
+                "sentinel": "undefined",
+                "outcome": "precommit refusal; same-facade recovery",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "append.prepare",
+                "sentinel": "object",
+                "outcome": "precommit refusal; same-facade recovery",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "append.prepare",
+                "sentinel": "string",
+                "outcome": "precommit refusal; same-facade recovery",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "append.prepare",
+                "sentinel": "revoked Proxy",
+                "outcome": "precommit refusal; same-facade recovery",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "codec.parseCanonical",
+                "sentinel": "Error",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true,
+                "reachedStack": [
+                  "at parseCanonical (spike/src/codec.ts:94:22)",
+                  "at verifyEnvelope (spike/src/codec.ts:198:72)",
+                  "at spike/src/scope-proof.ts:56:40",
+                  "at wireInput (spike/src/scope-proof.ts:161:16)",
+                  "at assertPublicData (spike/src/scope-proof.ts:56:24)",
+                  "at assertPublicData (spike/src/scope-proof.ts:58:12)",
+                  "at assertPublicData (spike/src/scope-proof.ts:58:12)",
+                  "at spike/src/scope-proof.ts:116:5",
+                  "at wireInput (spike/src/scope-proof.ts:161:16)",
+                  "at verifyPublicProof (spike/src/scope-proof.ts:112:16)",
+                  "at replayScopeView (spike/src/scope.ts:200:38)",
+                  "at get state (spike/src/scope.ts:325:21)",
+                  "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+                ]
+              },
+              {
+                "catch": "codec.parseCanonical",
+                "sentinel": "codec-looking TypeError",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "codec.parseCanonical",
+                "sentinel": "undefined",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "codec.parseCanonical",
+                "sentinel": "object",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "codec.parseCanonical",
+                "sentinel": "string",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "codec.parseCanonical",
+                "sentinel": "revoked Proxy",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.foldSystem",
+                "sentinel": "Error",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true,
+                "reachedStack": [
+                  "at own (spike/src/descriptor.ts:155:93)",
+                  "at packageIn (spike/src/descriptor.ts:165:10)",
+                  "at foldSystem (spike/src/foundation.ts:497:19)",
+                  "at foldEntry (spike/src/foundation.ts:366:19)",
+                  "at interpretView (spike/src/interpret.ts:137:21)",
+                  "at verifyPublicProof (spike/src/scope-proof.ts:135:23)",
+                  "at replayScopeView (spike/src/scope.ts:200:38)",
+                  "at get state (spike/src/scope.ts:325:21)",
+                  "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+                ]
+              },
+              {
+                "catch": "foundation.foldSystem",
+                "sentinel": "codec-looking TypeError",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.foldSystem",
+                "sentinel": "undefined",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.foldSystem",
+                "sentinel": "object",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.foldSystem",
+                "sentinel": "string",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.foldSystem",
+                "sentinel": "revoked Proxy",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.audience",
+                "sentinel": "Error",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true,
+                "reachedStack": [
+                  "at foldEntry (spike/src/foundation.ts:420:37)",
+                  "at interpretView (spike/src/interpret.ts:137:21)",
+                  "at verifyPublicProof (spike/src/scope-proof.ts:135:23)",
+                  "at replayScopeView (spike/src/scope.ts:200:38)",
+                  "at get state (spike/src/scope.ts:325:21)",
+                  "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+                ]
+              },
+              {
+                "catch": "foundation.audience",
+                "sentinel": "codec-looking TypeError",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.audience",
+                "sentinel": "undefined",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.audience",
+                "sentinel": "object",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.audience",
+                "sentinel": "string",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.audience",
+                "sentinel": "revoked Proxy",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.issuanceEnvelope",
+                "sentinel": "Error",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true,
+                "reachedStack": [
+                  "at publicKeyOf (spike/src/codec.ts:151:10)",
+                  "at bodyShape (spike/src/codec.ts:158:3)",
+                  "at envelopeShape (spike/src/codec.ts:178:3)",
+                  "at envelopeBytes (spike/src/codec.ts:191:3)",
+                  "at verifyIssuance (spike/src/foundation.ts:566:32)",
+                  "at verifyEmbeddedInvite (spike/src/foundation.ts:599:13)",
+                  "at foldAccept (spike/src/foundation.ts:607:13)",
+                  "at foldSystem (spike/src/foundation.ts:512:14)",
+                  "at foldEntry (spike/src/foundation.ts:366:19)",
+                  "at interpretView (spike/src/interpret.ts:137:21)",
+                  "at verifyPublicProof (spike/src/scope-proof.ts:135:23)",
+                  "at replayScopeView (spike/src/scope.ts:200:38)",
+                  "at get state (spike/src/scope.ts:325:21)",
+                  "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+                ]
+              },
+              {
+                "catch": "foundation.issuanceEnvelope",
+                "sentinel": "codec-looking TypeError",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.issuanceEnvelope",
+                "sentinel": "undefined",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.issuanceEnvelope",
+                "sentinel": "object",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.issuanceEnvelope",
+                "sentinel": "string",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.issuanceEnvelope",
+                "sentinel": "revoked Proxy",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.issuanceHeader",
+                "sentinel": "Error",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true,
+                "reachedStack": [
+                  "at canonicalize (spike/src/canon.ts:39:23)",
+                  "at verifyIssuance (spike/src/foundation.ts:577:23)",
+                  "at verifyEmbeddedInvite (spike/src/foundation.ts:599:13)",
+                  "at foldAccept (spike/src/foundation.ts:607:13)",
+                  "at foldSystem (spike/src/foundation.ts:512:14)",
+                  "at foldEntry (spike/src/foundation.ts:366:19)",
+                  "at interpretView (spike/src/interpret.ts:137:21)",
+                  "at verifyPublicProof (spike/src/scope-proof.ts:135:23)",
+                  "at replayScopeView (spike/src/scope.ts:200:38)",
+                  "at get state (spike/src/scope.ts:325:21)",
+                  "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+                ]
+              },
+              {
+                "catch": "foundation.issuanceHeader",
+                "sentinel": "codec-looking TypeError",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.issuanceHeader",
+                "sentinel": "undefined",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.issuanceHeader",
+                "sentinel": "object",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.issuanceHeader",
+                "sentinel": "string",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.issuanceHeader",
+                "sentinel": "revoked Proxy",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.dispatch",
+                "sentinel": "Error",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true,
+                "reachedStack": [
+                  "at dispatch (spike/src/foundation.ts:658:17)",
+                  "at foldOrigin (spike/src/foundation.ts:478:10)",
+                  "at foldEntry (spike/src/foundation.ts:358:15)",
+                  "at interpretView (spike/src/interpret.ts:137:21)",
+                  "at verifyPublicProof (spike/src/scope-proof.ts:135:23)",
+                  "at replayScopeView (spike/src/scope.ts:200:38)",
+                  "at get state (spike/src/scope.ts:325:21)",
+                  "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+                ]
+              },
+              {
+                "catch": "foundation.dispatch",
+                "sentinel": "codec-looking TypeError",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.dispatch",
+                "sentinel": "undefined",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.dispatch",
+                "sentinel": "object",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.dispatch",
+                "sentinel": "string",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.dispatch",
+                "sentinel": "revoked Proxy",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "journal.precheck",
+                "sentinel": "Error",
+                "outcome": "precommit refusal; same-facade recovery",
+                "coldExactRetry": true,
+                "reachedStack": [
+                  "at verifyEnvelope (spike/src/codec.ts:200:8)",
+                  "at Journal.submit (spike/src/journal.ts:172:22)",
+                  "at ScopeJournal.submit (spike/src/scope.ts:346:33)"
+                ]
+              },
+              {
+                "catch": "journal.precheck",
+                "sentinel": "codec-looking TypeError",
+                "outcome": "precommit refusal; same-facade recovery",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "journal.precheck",
+                "sentinel": "undefined",
+                "outcome": "precommit refusal; same-facade recovery",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "journal.precheck",
+                "sentinel": "object",
+                "outcome": "precommit refusal; same-facade recovery",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "journal.precheck",
+                "sentinel": "string",
+                "outcome": "precommit refusal; same-facade recovery",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "journal.precheck",
+                "sentinel": "revoked Proxy",
+                "outcome": "precommit refusal; same-facade recovery",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "ordering.admission",
+                "sentinel": "Error",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true,
+                "reachedStack": [
+                  "at publicKeyOf (spike/src/codec.ts:151:10)",
+                  "at orderingAdmission (spike/src/ordering.ts:65:11)",
+                  "at verifyJournalView (spike/src/journal.ts:213:27)",
+                  "at spike/src/scope-proof.ts:125:5",
+                  "at wireInput (spike/src/scope-proof.ts:161:16)",
+                  "at verifyPublicProof (spike/src/scope-proof.ts:112:16)",
+                  "at replayScopeView (spike/src/scope.ts:200:38)",
+                  "at get state (spike/src/scope.ts:325:21)",
+                  "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+                ]
+              },
+              {
+                "catch": "ordering.admission",
+                "sentinel": "codec-looking TypeError",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "ordering.admission",
+                "sentinel": "undefined",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "ordering.admission",
+                "sentinel": "object",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "ordering.admission",
+                "sentinel": "string",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "ordering.admission",
+                "sentinel": "revoked Proxy",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "scopeProof.wireInput",
+                "sentinel": "Error",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true,
+                "reachedStack": [
+                  "at publicKeyOf (spike/src/codec.ts:151:10)",
+                  "at bodyShape (spike/src/codec.ts:158:3)",
+                  "at envelopeShape (spike/src/codec.ts:178:3)",
+                  "at verifyEnvelope (spike/src/codec.ts:199:3)",
+                  "at spike/src/scope-proof.ts:56:40",
+                  "at wireInput (spike/src/scope-proof.ts:161:16)",
+                  "at assertPublicData (spike/src/scope-proof.ts:56:24)",
+                  "at assertPublicData (spike/src/scope-proof.ts:58:12)",
+                  "at assertPublicData (spike/src/scope-proof.ts:58:12)",
+                  "at spike/src/scope-proof.ts:116:5",
+                  "at wireInput (spike/src/scope-proof.ts:161:16)",
+                  "at verifyPublicProof (spike/src/scope-proof.ts:112:16)",
+                  "at replayScopeView (spike/src/scope.ts:200:38)",
+                  "at get state (spike/src/scope.ts:325:21)",
+                  "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+                ]
+              },
+              {
+                "catch": "scopeProof.wireInput",
+                "sentinel": "codec-looking TypeError",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "scopeProof.wireInput",
+                "sentinel": "undefined",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "scopeProof.wireInput",
+                "sentinel": "object",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "scopeProof.wireInput",
+                "sentinel": "string",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "scopeProof.wireInput",
+                "sentinel": "revoked Proxy",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "scope.releaseOpening",
+                "sentinel": "Error",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true,
+                "reachedStack": [
+                  "at publicKeyOf (spike/src/codec.ts:151:10)",
+                  "at bodyShape (spike/src/codec.ts:158:3)",
+                  "at envelopeShape (spike/src/codec.ts:178:3)",
+                  "at verifyEnvelope (spike/src/codec.ts:199:3)",
+                  "at replayScopeView (spike/src/scope.ts:184:26)",
+                  "at get state (spike/src/scope.ts:325:21)",
+                  "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+                ]
+              },
+              {
+                "catch": "scope.releaseOpening",
+                "sentinel": "codec-looking TypeError",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "scope.releaseOpening",
+                "sentinel": "undefined",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "scope.releaseOpening",
+                "sentinel": "object",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "scope.releaseOpening",
+                "sentinel": "string",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "scope.releaseOpening",
+                "sentinel": "revoked Proxy",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "scope.semantic",
+                "sentinel": "Error",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true,
+                "reachedStack": [
+                  "at object (spike/src/scope.ts:59:52)",
+                  "at replayScopeView (spike/src/scope.ts:148:17)",
+                  "at get state (spike/src/scope.ts:325:21)",
+                  "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+                ]
+              },
+              {
+                "catch": "scope.semantic",
+                "sentinel": "codec-looking TypeError",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "scope.semantic",
+                "sentinel": "undefined",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "scope.semantic",
+                "sentinel": "object",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "scope.semantic",
+                "sentinel": "string",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "scope.semantic",
+                "sentinel": "revoked Proxy",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              }
+            ]
+          },
+          {
+            "storage": "memory",
+            "coldOpenCases": [
+              {
+                "context": "S",
+                "seam": "ordering-key",
+                "sentinel": "Error",
+                "recovered": true
+              },
+              {
+                "context": "S",
+                "seam": "ordering-key",
+                "sentinel": "codec-looking TypeError",
+                "recovered": true
+              },
+              {
+                "context": "S",
+                "seam": "ordering-key",
+                "sentinel": "undefined",
+                "recovered": true
+              },
+              {
+                "context": "S",
+                "seam": "ordering-key",
+                "sentinel": "object",
+                "recovered": true
+              },
+              {
+                "context": "S",
+                "seam": "ordering-key",
+                "sentinel": "string",
+                "recovered": true
+              },
+              {
+                "context": "S",
+                "seam": "ordering-key",
+                "sentinel": "revoked Proxy",
+                "recovered": true
+              },
+              {
+                "context": "S",
+                "seam": "open-key",
+                "sentinel": "Error",
+                "recovered": true
+              },
+              {
+                "context": "S",
+                "seam": "open-key",
+                "sentinel": "codec-looking TypeError",
+                "recovered": true
+              },
+              {
+                "context": "S",
+                "seam": "open-key",
+                "sentinel": "undefined",
+                "recovered": true
+              },
+              {
+                "context": "S",
+                "seam": "open-key",
+                "sentinel": "object",
+                "recovered": true
+              },
+              {
+                "context": "S",
+                "seam": "open-key",
+                "sentinel": "string",
+                "recovered": true
+              },
+              {
+                "context": "S",
+                "seam": "open-key",
+                "sentinel": "revoked Proxy",
+                "recovered": true
+              },
+              {
+                "context": "S",
+                "seam": "cold-parse",
+                "sentinel": "Error",
+                "recovered": true
+              },
+              {
+                "context": "S",
+                "seam": "cold-parse",
+                "sentinel": "codec-looking TypeError",
+                "recovered": true
+              },
+              {
+                "context": "S",
+                "seam": "cold-parse",
+                "sentinel": "undefined",
+                "recovered": true
+              },
+              {
+                "context": "S",
+                "seam": "cold-parse",
+                "sentinel": "object",
+                "recovered": true
+              },
+              {
+                "context": "S",
+                "seam": "cold-parse",
+                "sentinel": "string",
+                "recovered": true
+              },
+              {
+                "context": "S",
+                "seam": "cold-parse",
+                "sentinel": "revoked Proxy",
+                "recovered": true
+              },
+              {
+                "context": "F",
+                "seam": "ordering-key",
+                "sentinel": "Error",
+                "recovered": true
+              },
+              {
+                "context": "F",
+                "seam": "ordering-key",
+                "sentinel": "codec-looking TypeError",
+                "recovered": true
+              },
+              {
+                "context": "F",
+                "seam": "ordering-key",
+                "sentinel": "undefined",
+                "recovered": true
+              },
+              {
+                "context": "F",
+                "seam": "ordering-key",
+                "sentinel": "object",
+                "recovered": true
+              },
+              {
+                "context": "F",
+                "seam": "ordering-key",
+                "sentinel": "string",
+                "recovered": true
+              },
+              {
+                "context": "F",
+                "seam": "ordering-key",
+                "sentinel": "revoked Proxy",
+                "recovered": true
+              },
+              {
+                "context": "F",
+                "seam": "open-key",
+                "sentinel": "Error",
+                "recovered": true
+              },
+              {
+                "context": "F",
+                "seam": "open-key",
+                "sentinel": "codec-looking TypeError",
+                "recovered": true
+              },
+              {
+                "context": "F",
+                "seam": "open-key",
+                "sentinel": "undefined",
+                "recovered": true
+              },
+              {
+                "context": "F",
+                "seam": "open-key",
+                "sentinel": "object",
+                "recovered": true
+              },
+              {
+                "context": "F",
+                "seam": "open-key",
+                "sentinel": "string",
+                "recovered": true
+              },
+              {
+                "context": "F",
+                "seam": "open-key",
+                "sentinel": "revoked Proxy",
+                "recovered": true
+              },
+              {
+                "context": "F",
+                "seam": "cold-parse",
+                "sentinel": "Error",
+                "recovered": true
+              },
+              {
+                "context": "F",
+                "seam": "cold-parse",
+                "sentinel": "codec-looking TypeError",
+                "recovered": true
+              },
+              {
+                "context": "F",
+                "seam": "cold-parse",
+                "sentinel": "undefined",
+                "recovered": true
+              },
+              {
+                "context": "F",
+                "seam": "cold-parse",
+                "sentinel": "object",
+                "recovered": true
+              },
+              {
+                "context": "F",
+                "seam": "cold-parse",
+                "sentinel": "string",
+                "recovered": true
+              },
+              {
+                "context": "F",
+                "seam": "cold-parse",
+                "sentinel": "revoked Proxy",
+                "recovered": true
+              }
+            ]
+          },
+          {
+            "storage": "memory",
+            "constructorCases": [
+              {
+                "factory": "create",
+                "sentinel": "Error",
+                "closeFailureInjected": false,
+                "recovered": true
+              },
+              {
+                "factory": "create",
+                "sentinel": "Error",
+                "closeFailureInjected": true,
+                "recovered": true
+              },
+              {
+                "factory": "create",
+                "sentinel": "codec-looking TypeError",
+                "closeFailureInjected": false,
+                "recovered": true
+              },
+              {
+                "factory": "create",
+                "sentinel": "codec-looking TypeError",
+                "closeFailureInjected": true,
+                "recovered": true
+              },
+              {
+                "factory": "create",
+                "sentinel": "undefined",
+                "closeFailureInjected": false,
+                "recovered": true
+              },
+              {
+                "factory": "create",
+                "sentinel": "undefined",
+                "closeFailureInjected": true,
+                "recovered": true
+              },
+              {
+                "factory": "create",
+                "sentinel": "object",
+                "closeFailureInjected": false,
+                "recovered": true
+              },
+              {
+                "factory": "create",
+                "sentinel": "object",
+                "closeFailureInjected": true,
+                "recovered": true
+              },
+              {
+                "factory": "create",
+                "sentinel": "string",
+                "closeFailureInjected": false,
+                "recovered": true
+              },
+              {
+                "factory": "create",
+                "sentinel": "string",
+                "closeFailureInjected": true,
+                "recovered": true
+              },
+              {
+                "factory": "create",
+                "sentinel": "revoked Proxy",
+                "closeFailureInjected": false,
+                "recovered": true
+              },
+              {
+                "factory": "create",
+                "sentinel": "revoked Proxy",
+                "closeFailureInjected": true,
+                "recovered": true
+              },
+              {
+                "factory": "open",
+                "sentinel": "Error",
+                "closeFailureInjected": false,
+                "recovered": true
+              },
+              {
+                "factory": "open",
+                "sentinel": "Error",
+                "closeFailureInjected": true,
+                "recovered": true
+              },
+              {
+                "factory": "open",
+                "sentinel": "codec-looking TypeError",
+                "closeFailureInjected": false,
+                "recovered": true
+              },
+              {
+                "factory": "open",
+                "sentinel": "codec-looking TypeError",
+                "closeFailureInjected": true,
+                "recovered": true
+              },
+              {
+                "factory": "open",
+                "sentinel": "undefined",
+                "closeFailureInjected": false,
+                "recovered": true
+              },
+              {
+                "factory": "open",
+                "sentinel": "undefined",
+                "closeFailureInjected": true,
+                "recovered": true
+              },
+              {
+                "factory": "open",
+                "sentinel": "object",
+                "closeFailureInjected": false,
+                "recovered": true
+              },
+              {
+                "factory": "open",
+                "sentinel": "object",
+                "closeFailureInjected": true,
+                "recovered": true
+              },
+              {
+                "factory": "open",
+                "sentinel": "string",
+                "closeFailureInjected": false,
+                "recovered": true
+              },
+              {
+                "factory": "open",
+                "sentinel": "string",
+                "closeFailureInjected": true,
+                "recovered": true
+              },
+              {
+                "factory": "open",
+                "sentinel": "revoked Proxy",
+                "closeFailureInjected": false,
+                "recovered": true
+              },
+              {
+                "factory": "open",
+                "sentinel": "revoked Proxy",
+                "closeFailureInjected": true,
+                "recovered": true
+              }
+            ]
+          },
+          {
+            "storage": "memory",
+            "policyLimits": [
+              "parser nominal SyntaxError",
+              "wire exact message allowlist",
+              "ScopeProofError class",
+              "ScopeProfileError class"
+            ],
+            "inspectionCatches": {
+              "wire": 2,
+              "scope": 1
+            }
+          },
+          {
+            "storage": "memory",
+            "catches": [
+              "context.submit",
+              "journal.submit",
+              "scope.submit"
+            ],
+            "injectedValues": 6,
+            "exactRetryRecoveries": 6
+          }
+        ],
+        "sqliteCleanupDiagnostics": [],
+        "ownFactVariants": 2,
+        "ownPackageCases": 5,
+        "ownHealthy": {
+          "facts": {
+            "accepted_offer": "o3",
+            "buyer": "ed25519:QwRr_kCSs-lJlOraFdzCDYqqB7ZY_TlU644O-4vcpd4",
+            "delivery_slot": 25,
+            "winner": "ed25519:QwRr_kCSs-lJlOraFdzCDYqqB7ZY_TlU644O-4vcpd4"
+          },
+          "final": {
+            "activations": 1,
+            "deliveryConfirmed": true,
+            "destination": "active",
+            "exports": {
+              "D": {
+                "buyer": "bob",
+                "delivery_slot": 25
+              },
+              "S": {
+                "accepted_offer": "o3",
+                "winner": "bob"
+              }
+            },
+            "fulfilled": true,
+            "heads": {
+              "D": 1,
+              "F": 3,
+              "I": 1,
+              "S": 24
+            },
+            "imports": [
+              "S-export",
+              "D-export"
+            ],
+            "inspection": {
+              "attached": true,
+              "imports": 1,
+              "requested": true,
+              "resultInI": "pass:o2",
+              "resultInS": "pass:o2"
+            },
+            "owners": {
+              "R_deliver": [],
+              "R_fulfil": [],
+              "R_sell": []
+            },
+            "releases": [
+              "S",
+              "D"
+            ],
+            "rights": {
+              "R_deliver": {
+                "D": "released",
+                "F": "spent",
+                "I": "absent",
+                "S": "absent"
+              },
+              "R_fulfil": {
+                "D": "absent",
+                "F": "spent",
+                "I": "absent",
+                "S": "released"
+              },
+              "R_sell": {
+                "D": "absent",
+                "F": "absent",
+                "I": "absent",
+                "S": "spent"
+              }
+            },
+            "sale": {
+              "accepted_offer": "o3",
+              "status": "closed",
+              "winner": "bob"
+            },
+            "verifiedProofs": [
+              "S",
+              "D"
+            ],
+            "writers": {
+              "D": "WD",
+              "F": "WF",
+              "I": "WI",
+              "S": "W1"
+            }
+          },
+          "retry": {
+            "header": {
+              "commitment": "sha256:666cc6ff701326a9d4cc68b1fcc484f5578fe76d360d9f948f32c7cf247601cf",
+              "genesis": "sha256:c688bc0dd64519d02a007cc5649b93b29fb4ee102e1cb157cd1b676c098b22bc",
+              "position": 1,
+              "prev": "sha256:0d7f59bf6a4ca33fef5bee904bc696d557c8b7a7c0695fe3684ce24d17f9aad5",
+              "seq_sig": "GuLurLVhmjae0Y_G9rZtv-G3LIhMdKAP0gZ6SWTZkbJhcxReXr5FVqu5MUYZayDWEgroWBFuFQ2D2T4GpSRCAg"
+            },
+            "headerHash": "sha256:d67b6851be2f73207bb4e21579f5eb499ec896c58870946f24e4a1b8ef20bf1c",
+            "replay": true,
+            "verdict": {
+              "authorized": true,
+              "effective": true,
+              "known": true
+            }
+          }
+        }
+      },
+      "k4": {
+        "phases": [
+          {
+            "phase": "live",
+            "sourceReaders": [
+              "alice",
+              "bob",
+              "carol",
+              "ivan"
+            ],
+            "destinationReaders": [
+              "alice",
+              "bob",
+              "kim"
+            ],
+            "bobReadsRequest": false,
+            "bobGetsDerivedProof": true
+          },
+          {
+            "phase": "cold",
+            "sourceReaders": [
+              "alice",
+              "bob",
+              "carol",
+              "ivan"
+            ],
+            "destinationReaders": [
+              "alice",
+              "bob",
+              "kim"
+            ],
+            "bobReadsRequest": false,
+            "bobGetsDerivedProof": true
+          }
+        ],
+        "expectation": {
+          "activation": {
+            "audience": "spine",
+            "context": "F",
+            "currentParticipants": [
+              "alice",
+              "bob",
+              "kim"
+            ],
+            "position": 1
+          },
+          "admit": {
+            "audience": "members",
+            "context": "S",
+            "position": 20,
+            "readers": [
+              "alice",
+              "bob",
+              "carol",
+              "ivan"
+            ]
+          },
+          "inspectionFounders": [
+            "ivan"
+          ],
+          "mandate": {
+            "inspector": "ivan",
+            "offer": "o2",
+            "prefix": 14,
+            "source": "S"
+          },
+          "request": {
+            "bodyInPublicProof": false,
+            "context": "S",
+            "position": 14,
+            "readers": [
+              "alice",
+              "carol",
+              "ivan"
+            ]
+          },
+          "requesterFieldInMandate": false,
+          "result": {
+            "offer": "o2",
+            "result": "pass:o2"
+          }
+        }
+      }
+    },
+    "sqlite": {
+      "contexts": {
+        "D": {
+          "genesis": "sha256:cc2b36ec9d970303ea0f792db573aba1ab65a976a8b6afc7c436062c12eefeea",
+          "head": 1,
+          "headHash": "sha256:2ef6b5a0b899fbe81d8a142718c9a8cc16dab5bc08893047c7ebd43acbcc2f79",
+          "initialWriter": "ed25519:kQnbVfeXl6OWRi-4lcKtzqfoaDwvMFbAelR1FVU3tz4"
+        },
+        "F": {
+          "genesis": "sha256:c688bc0dd64519d02a007cc5649b93b29fb4ee102e1cb157cd1b676c098b22bc",
+          "head": 3,
+          "headHash": "sha256:64a0591e1fa8a780515e3caf4a5a5a56babbb532ef819a2fcac2b8cff3c00e8c",
+          "initialWriter": "ed25519:7kXsuaygGgq9g-9W3ZhcjIdObn9K687fIL2NiMKgrdc"
+        },
+        "I": {
+          "genesis": "sha256:95dd3b18f8c50cc8c84e0e33ea085d936bbea7b511dd3dcd43449898ae994d8c",
+          "head": 1,
+          "headHash": "sha256:40202849b77b9b7fe77741a9ae3be453cca948f44c90aebc7fadc13cd984af23",
+          "initialWriter": "ed25519:vtfSq2aNo--tYTmY8G96v3h186a3Z3qfPOlH1313YKY"
+        },
+        "S": {
+          "genesis": "sha256:46378b74aa6b5cf737e61b1638025f5aa27537a630a8ccd0a7d6c81014e042d5",
+          "head": 24,
+          "headHash": "sha256:432335f779db57d32498f4f0e218d99c6deaff6cf5c507b973727849e93a7c7c",
+          "initialWriter": "ed25519:dPhc2jTRwnxGIUhHMekVecPZxs_A2UsoGqEekWIFiqk"
+        }
+      },
+      "proofs": {
+        "D": {
+          "identity": "sha256:d93128d3fbe056c702a56c7fe7bea7d13eeb9c12843b5d3c55d26edb87bdc977",
+          "frontier": 1,
+          "genesis": "sha256:cc2b36ec9d970303ea0f792db573aba1ab65a976a8b6afc7c436062c12eefeea"
+        },
+        "F": {
+          "identity": "sha256:3b108a60c3d7605255ab88c3d199146ad0a2845bcebccc3617282276ec2a2c75",
+          "frontier": 3,
+          "genesis": "sha256:c688bc0dd64519d02a007cc5649b93b29fb4ee102e1cb157cd1b676c098b22bc"
+        },
+        "I": {
+          "identity": "sha256:8544450dd8083e6818e156e73214bfc5deb2bcef5312b0f321d227a2fa429464",
+          "frontier": 1,
+          "genesis": "sha256:95dd3b18f8c50cc8c84e0e33ea085d936bbea7b511dd3dcd43449898ae994d8c"
+        },
+        "S": {
+          "identity": "sha256:5881a19b5dfecaee1cb4fd0014d817a867f32cb510d4f812f57cf5c03dd50387",
+          "frontier": 24,
+          "genesis": "sha256:46378b74aa6b5cf737e61b1638025f5aa27537a630a8ccd0a7d6c81014e042d5"
+        }
+      },
+      "healthyBoundaries": 20,
+      "adverseCases": 29,
+      "adverseSteps": 43,
+      "mutations": {
+        "cases": 209,
+        "categories": {
+          "codec malformed_envelope": 18,
+          "profile invalid_genesis": 154,
+          "unauthorized": 5,
+          "destination_mismatch": 30,
+          "profile unsupported_profile": 2
+        }
+      },
+      "matrix": {
+        "actualReaders": [
+          "alice",
+          "bob",
+          "carol",
+          "ivan",
+          "kim"
+        ],
+        "completedHeads": {
+          "F": 3,
+          "S": 24
+        },
+        "immediatelyAcrossAttachQuestions": 143,
+        "actualReaderPreAttachQuestions": 55,
+        "completedTransferHistoricalQuestions": 100
+      },
+      "k1": {
+        "malformedInputs": 21,
+        "exactRetryChecks": 63,
+        "recordedColdRetries": 21,
+        "recordedCompletedRetries": 21,
+        "immediateRetryEvidence": "executed assertions in ordering-scope-participant-input.test.ts; not duplicated in JSON",
+        "releases": {
+          "S": 45,
+          "D": 1
+        },
+        "activationEffective": true,
+        "final": {
+          "activations": 1,
+          "deliveryConfirmed": true,
+          "destination": "active",
+          "exports": {
+            "D": {
+              "buyer": "bob",
+              "delivery_slot": 25
+            },
+            "S": {
+              "accepted_offer": "o3",
+              "winner": "bob"
+            }
+          },
+          "fulfilled": true,
+          "heads": {
+            "D": 1,
+            "F": 3,
+            "I": 1,
+            "S": 45
+          },
+          "imports": [
+            "S-export",
+            "D-export"
+          ],
+          "inspection": {
+            "attached": true,
+            "imports": 1,
+            "requested": true,
+            "resultInI": "pass:o2",
+            "resultInS": "pass:o2"
+          },
+          "owners": {
+            "R_deliver": [],
+            "R_fulfil": [],
+            "R_sell": []
+          },
+          "releases": [
+            "S",
+            "D"
+          ],
+          "rights": {
+            "R_deliver": {
+              "D": "released",
+              "F": "spent",
+              "I": "absent",
+              "S": "absent"
+            },
+            "R_fulfil": {
+              "D": "absent",
+              "F": "spent",
+              "I": "absent",
+              "S": "released"
+            },
+            "R_sell": {
+              "D": "absent",
+              "F": "absent",
+              "I": "absent",
+              "S": "spent"
+            }
+          },
+          "sale": {
+            "accepted_offer": "o3",
+            "status": "closed",
+            "winner": "bob"
+          },
+          "verifiedProofs": [
+            "S",
+            "D"
+          ],
+          "writers": {
+            "D": "WD",
+            "F": "WF",
+            "I": "WI",
+            "S": "W1"
+          }
+        }
+      },
+      "k3": [
+        {
+          "file": "k3-bob-unauthorized-accept-sqlite.json",
+          "memberAttempts": 1,
+          "releaseEffective": true,
+          "activationEffective": true,
+          "activations": 1
+        },
+        {
+          "file": "k3-bob-unauthorized-close-sqlite.json",
+          "memberAttempts": 1,
+          "releaseEffective": true,
+          "activationEffective": true,
+          "activations": 1
+        },
+        {
+          "file": "k3-carol-malformed-grant-sqlite.json",
+          "memberAttempts": 1,
+          "releaseEffective": true,
+          "activationEffective": true,
+          "activations": 1
+        },
+        {
+          "file": "k3-member-scope-attempts-sqlite.json",
+          "memberAttempts": 6,
+          "releaseEffective": true,
+          "activationEffective": true,
+          "activations": 1
+        }
+      ],
+      "l1": {
+        "savedInputs": 33,
+        "exactRetryChecks": 99,
+        "final": {
+          "activations": 1,
+          "deliveryConfirmed": true,
+          "destination": "active",
+          "exports": {
+            "D": {
+              "buyer": "bob",
+              "delivery_slot": 25
+            },
+            "S": {
+              "accepted_offer": "o3",
+              "winner": "bob"
+            }
+          },
+          "fulfilled": true,
+          "heads": {
+            "D": 5,
+            "F": 11,
+            "I": 5,
+            "S": 42
+          },
+          "imports": [
+            "S-export",
+            "D-export"
+          ],
+          "inspection": {
+            "attached": true,
+            "imports": 1,
+            "requested": true,
+            "resultInI": "pass:o2",
+            "resultInS": "pass:o2"
+          },
+          "owners": {
+            "R_deliver": [],
+            "R_fulfil": [],
+            "R_sell": []
+          },
+          "releases": [
+            "S",
+            "D"
+          ],
+          "rights": {
+            "R_deliver": {
+              "D": "released",
+              "F": "spent",
+              "I": "absent",
+              "S": "absent"
+            },
+            "R_fulfil": {
+              "D": "absent",
+              "F": "spent",
+              "I": "absent",
+              "S": "released"
+            },
+            "R_sell": {
+              "D": "absent",
+              "F": "absent",
+              "I": "absent",
+              "S": "spent"
+            }
+          },
+          "sale": {
+            "accepted_offer": "o3",
+            "status": "closed",
+            "winner": "bob"
+          },
+          "verifiedProofs": [
+            "S",
+            "D"
+          ],
+          "writers": {
+            "D": "WD",
+            "F": "WF",
+            "I": "WI",
+            "S": "W1"
+          }
+        }
+      },
+      "l2": [
+        {
+          "storage": "sqlite",
+          "phase": "cold-open",
+          "cryptoSites": 9,
+          "injectedCases": 17,
+          "originalExceptions": 17,
+          "coldExactRetries": 17
+        },
+        {
+          "storage": "sqlite",
+          "phase": "activation",
+          "cryptoSites": 135,
+          "injectedCases": 151,
+          "originalExceptions": 151,
+          "durableExactRetries": 151,
+          "returnedFaultVerdicts": 0
+        },
+        {
+          "storage": "sqlite",
+          "malformedCases": 13,
+          "newPositions": 0,
+          "healthyAppendAndColdRetry": true
+        },
+        {
+          "storage": "sqlite",
+          "phase": "signatures",
+          "coldVerificationCalls": 51,
+          "coldInjectedCases": 51,
+          "activationVerificationCalls": 124,
+          "activationSigningCalls": 1,
+          "selectedActivationCases": [
+            {
+              "at": 1,
+              "call": "verify",
+              "outcome": "precommit refusal",
+              "committedBeforeRetry": false,
+              "retry": "fresh append"
+            },
+            {
+              "at": 64,
+              "call": "verify",
+              "outcome": "original exception",
+              "committedBeforeRetry": true,
+              "retry": "exact replay"
+            },
+            {
+              "at": 125,
+              "call": "verify",
+              "outcome": "original exception",
+              "committedBeforeRetry": true,
+              "retry": "exact replay"
+            },
+            {
+              "at": 3,
+              "call": "sign",
+              "outcome": "original exception",
+              "committedBeforeRetry": false,
+              "retry": "fresh append"
+            }
+          ]
+        }
+      ],
+      "l3": {
+        "D": {
+          "attemptVerdict": {
+            "authorized": false,
+            "effective": false,
+            "known": false,
+            "reason": "unhandled"
+          },
+          "attemptPosition": 1,
+          "proofIdentity": "sha256:8bd144626b5187c3646c84ab3ab311f8a717c80b32c00bbcd00455902d28913e",
+          "proofFrontier": 2,
+          "releaseEffective": true,
+          "activationEffective": true,
+          "resultEffective": null,
+          "final": {
+            "activations": 1,
+            "deliveryConfirmed": true,
+            "destination": "active",
+            "exports": {
+              "D": {
+                "buyer": "bob",
+                "delivery_slot": 25
+              },
+              "S": {
+                "accepted_offer": "o3",
+                "winner": "bob"
+              }
+            },
+            "fulfilled": true,
+            "heads": {
+              "D": 2,
+              "F": 3,
+              "I": 1,
+              "S": 24
+            },
+            "imports": [
+              "S-export",
+              "D-export"
+            ],
+            "inspection": {
+              "attached": true,
+              "imports": 1,
+              "requested": true,
+              "resultInI": "pass:o2",
+              "resultInS": "pass:o2"
+            },
+            "owners": {
+              "R_deliver": [],
+              "R_fulfil": [],
+              "R_sell": []
+            },
+            "releases": [
+              "S",
+              "D"
+            ],
+            "rights": {
+              "R_deliver": {
+                "D": "released",
+                "F": "spent",
+                "I": "absent",
+                "S": "absent"
+              },
+              "R_fulfil": {
+                "D": "absent",
+                "F": "spent",
+                "I": "absent",
+                "S": "released"
+              },
+              "R_sell": {
+                "D": "absent",
+                "F": "absent",
+                "I": "absent",
+                "S": "spent"
+              }
+            },
+            "sale": {
+              "accepted_offer": "o3",
+              "status": "closed",
+              "winner": "bob"
+            },
+            "verifiedProofs": [
+              "S",
+              "D"
+            ],
+            "writers": {
+              "D": "WD",
+              "F": "WF",
+              "I": "WI",
+              "S": "W1"
+            }
+          }
+        },
+        "I": {
+          "attemptVerdict": {
+            "authorized": false,
+            "effective": false,
+            "known": false,
+            "reason": "unhandled"
+          },
+          "attemptPosition": 1,
+          "proofIdentity": "sha256:1c48328467667c62e07b3642e0c59574b68b6069ebcd1ec9b0d003b0965d0762",
+          "proofFrontier": 2,
+          "releaseEffective": null,
+          "activationEffective": null,
+          "resultEffective": true,
+          "final": null
+        },
+        "F": {
+          "attemptVerdict": {
+            "authorized": false,
+            "effective": false,
+            "known": false,
+            "reason": "unhandled"
+          },
+          "attemptPosition": 2,
+          "proofIdentity": "sha256:32a4b1cd491eb56e2927ae7173b7ebe0ef0e7eead356d6a27b6d504b02d497fd",
+          "proofFrontier": 4,
+          "releaseEffective": null,
+          "activationEffective": null,
+          "resultEffective": null,
+          "final": {
+            "activations": 1,
+            "deliveryConfirmed": true,
+            "destination": "active",
+            "exports": {
+              "D": {
+                "buyer": "bob",
+                "delivery_slot": 25
+              },
+              "S": {
+                "accepted_offer": "o3",
+                "winner": "bob"
+              }
+            },
+            "fulfilled": true,
+            "heads": {
+              "D": 1,
+              "F": 4,
+              "I": 1,
+              "S": 24
+            },
+            "imports": [
+              "S-export",
+              "D-export"
+            ],
+            "inspection": {
+              "attached": true,
+              "imports": 1,
+              "requested": true,
+              "resultInI": "pass:o2",
+              "resultInS": "pass:o2"
+            },
+            "owners": {
+              "R_deliver": [],
+              "R_fulfil": [],
+              "R_sell": []
+            },
+            "releases": [
+              "S",
+              "D"
+            ],
+            "rights": {
+              "R_deliver": {
+                "D": "released",
+                "F": "spent",
+                "I": "absent",
+                "S": "absent"
+              },
+              "R_fulfil": {
+                "D": "absent",
+                "F": "spent",
+                "I": "absent",
+                "S": "released"
+              },
+              "R_sell": {
+                "D": "absent",
+                "F": "absent",
+                "I": "absent",
+                "S": "spent"
+              }
+            },
+            "sale": {
+              "accepted_offer": "o3",
+              "status": "closed",
+              "winner": "bob"
+            },
+            "verifiedProofs": [
+              "S",
+              "D"
+            ],
+            "writers": {
+              "D": "WD",
+              "F": "WF",
+              "I": "WI",
+              "S": "W1"
+            }
+          }
+        }
+      },
+      "m1": {
+        "recordedDiagnostics": [
+          {
+            "storage": "sqlite",
+            "catalogue": "21 original catches; 12 converting try bodies",
+            "rows": [
+              {
+                "catch": "append.prepare",
+                "sentinel": "Error",
+                "outcome": "precommit refusal; same-facade recovery",
+                "coldExactRetry": true,
+                "reachedStack": [
+                  "at verifyEnvelope (spike/src/codec.ts:200:8)",
+                  "at Object.prepare (spike/src/journal.ts:38:24)",
+                  "at append (spike/src/append.ts:130:34)",
+                  "at Context.submit (spike/src/context.ts:172:17)",
+                  "at Journal.submit (spike/src/journal.ts:175:35)",
+                  "at ScopeJournal.submit (spike/src/scope.ts:346:33)"
+                ]
+              },
+              {
+                "catch": "append.prepare",
+                "sentinel": "codec-looking TypeError",
+                "outcome": "precommit refusal; same-facade recovery",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "append.prepare",
+                "sentinel": "undefined",
+                "outcome": "precommit refusal; same-facade recovery",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "append.prepare",
+                "sentinel": "object",
+                "outcome": "precommit refusal; same-facade recovery",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "append.prepare",
+                "sentinel": "string",
+                "outcome": "precommit refusal; same-facade recovery",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "append.prepare",
+                "sentinel": "revoked Proxy",
+                "outcome": "precommit refusal; same-facade recovery",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "codec.parseCanonical",
+                "sentinel": "Error",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true,
+                "reachedStack": [
+                  "at parseCanonical (spike/src/codec.ts:94:22)",
+                  "at verifyEnvelope (spike/src/codec.ts:198:72)",
+                  "at spike/src/scope-proof.ts:56:40",
+                  "at wireInput (spike/src/scope-proof.ts:161:16)",
+                  "at assertPublicData (spike/src/scope-proof.ts:56:24)",
+                  "at assertPublicData (spike/src/scope-proof.ts:58:12)",
+                  "at assertPublicData (spike/src/scope-proof.ts:58:12)",
+                  "at spike/src/scope-proof.ts:116:5",
+                  "at wireInput (spike/src/scope-proof.ts:161:16)",
+                  "at verifyPublicProof (spike/src/scope-proof.ts:112:16)",
+                  "at replayScopeView (spike/src/scope.ts:200:38)",
+                  "at get state (spike/src/scope.ts:325:21)",
+                  "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+                ]
+              },
+              {
+                "catch": "codec.parseCanonical",
+                "sentinel": "codec-looking TypeError",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "codec.parseCanonical",
+                "sentinel": "undefined",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "codec.parseCanonical",
+                "sentinel": "object",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "codec.parseCanonical",
+                "sentinel": "string",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "codec.parseCanonical",
+                "sentinel": "revoked Proxy",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.foldSystem",
+                "sentinel": "Error",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true,
+                "reachedStack": [
+                  "at own (spike/src/descriptor.ts:155:93)",
+                  "at packageIn (spike/src/descriptor.ts:165:10)",
+                  "at foldSystem (spike/src/foundation.ts:497:19)",
+                  "at foldEntry (spike/src/foundation.ts:366:19)",
+                  "at interpretView (spike/src/interpret.ts:137:21)",
+                  "at verifyPublicProof (spike/src/scope-proof.ts:135:23)",
+                  "at replayScopeView (spike/src/scope.ts:200:38)",
+                  "at get state (spike/src/scope.ts:325:21)",
+                  "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+                ]
+              },
+              {
+                "catch": "foundation.foldSystem",
+                "sentinel": "codec-looking TypeError",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.foldSystem",
+                "sentinel": "undefined",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.foldSystem",
+                "sentinel": "object",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.foldSystem",
+                "sentinel": "string",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.foldSystem",
+                "sentinel": "revoked Proxy",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.audience",
+                "sentinel": "Error",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true,
+                "reachedStack": [
+                  "at foldEntry (spike/src/foundation.ts:420:37)",
+                  "at interpretView (spike/src/interpret.ts:137:21)",
+                  "at verifyPublicProof (spike/src/scope-proof.ts:135:23)",
+                  "at replayScopeView (spike/src/scope.ts:200:38)",
+                  "at get state (spike/src/scope.ts:325:21)",
+                  "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+                ]
+              },
+              {
+                "catch": "foundation.audience",
+                "sentinel": "codec-looking TypeError",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.audience",
+                "sentinel": "undefined",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.audience",
+                "sentinel": "object",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.audience",
+                "sentinel": "string",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.audience",
+                "sentinel": "revoked Proxy",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.issuanceEnvelope",
+                "sentinel": "Error",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true,
+                "reachedStack": [
+                  "at publicKeyOf (spike/src/codec.ts:151:10)",
+                  "at bodyShape (spike/src/codec.ts:158:3)",
+                  "at envelopeShape (spike/src/codec.ts:178:3)",
+                  "at envelopeBytes (spike/src/codec.ts:191:3)",
+                  "at verifyIssuance (spike/src/foundation.ts:566:32)",
+                  "at verifyEmbeddedInvite (spike/src/foundation.ts:599:13)",
+                  "at foldAccept (spike/src/foundation.ts:607:13)",
+                  "at foldSystem (spike/src/foundation.ts:512:14)",
+                  "at foldEntry (spike/src/foundation.ts:366:19)",
+                  "at interpretView (spike/src/interpret.ts:137:21)",
+                  "at verifyPublicProof (spike/src/scope-proof.ts:135:23)",
+                  "at replayScopeView (spike/src/scope.ts:200:38)",
+                  "at get state (spike/src/scope.ts:325:21)",
+                  "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+                ]
+              },
+              {
+                "catch": "foundation.issuanceEnvelope",
+                "sentinel": "codec-looking TypeError",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.issuanceEnvelope",
+                "sentinel": "undefined",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.issuanceEnvelope",
+                "sentinel": "object",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.issuanceEnvelope",
+                "sentinel": "string",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.issuanceEnvelope",
+                "sentinel": "revoked Proxy",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.issuanceHeader",
+                "sentinel": "Error",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true,
+                "reachedStack": [
+                  "at canonicalize (spike/src/canon.ts:39:23)",
+                  "at verifyIssuance (spike/src/foundation.ts:577:23)",
+                  "at verifyEmbeddedInvite (spike/src/foundation.ts:599:13)",
+                  "at foldAccept (spike/src/foundation.ts:607:13)",
+                  "at foldSystem (spike/src/foundation.ts:512:14)",
+                  "at foldEntry (spike/src/foundation.ts:366:19)",
+                  "at interpretView (spike/src/interpret.ts:137:21)",
+                  "at verifyPublicProof (spike/src/scope-proof.ts:135:23)",
+                  "at replayScopeView (spike/src/scope.ts:200:38)",
+                  "at get state (spike/src/scope.ts:325:21)",
+                  "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+                ]
+              },
+              {
+                "catch": "foundation.issuanceHeader",
+                "sentinel": "codec-looking TypeError",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.issuanceHeader",
+                "sentinel": "undefined",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.issuanceHeader",
+                "sentinel": "object",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.issuanceHeader",
+                "sentinel": "string",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.issuanceHeader",
+                "sentinel": "revoked Proxy",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.dispatch",
+                "sentinel": "Error",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true,
+                "reachedStack": [
+                  "at dispatch (spike/src/foundation.ts:658:17)",
+                  "at foldOrigin (spike/src/foundation.ts:478:10)",
+                  "at foldEntry (spike/src/foundation.ts:358:15)",
+                  "at interpretView (spike/src/interpret.ts:137:21)",
+                  "at verifyPublicProof (spike/src/scope-proof.ts:135:23)",
+                  "at replayScopeView (spike/src/scope.ts:200:38)",
+                  "at get state (spike/src/scope.ts:325:21)",
+                  "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+                ]
+              },
+              {
+                "catch": "foundation.dispatch",
+                "sentinel": "codec-looking TypeError",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.dispatch",
+                "sentinel": "undefined",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.dispatch",
+                "sentinel": "object",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.dispatch",
+                "sentinel": "string",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "foundation.dispatch",
+                "sentinel": "revoked Proxy",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "journal.precheck",
+                "sentinel": "Error",
+                "outcome": "precommit refusal; same-facade recovery",
+                "coldExactRetry": true,
+                "reachedStack": [
+                  "at verifyEnvelope (spike/src/codec.ts:200:8)",
+                  "at Journal.submit (spike/src/journal.ts:172:22)",
+                  "at ScopeJournal.submit (spike/src/scope.ts:346:33)"
+                ]
+              },
+              {
+                "catch": "journal.precheck",
+                "sentinel": "codec-looking TypeError",
+                "outcome": "precommit refusal; same-facade recovery",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "journal.precheck",
+                "sentinel": "undefined",
+                "outcome": "precommit refusal; same-facade recovery",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "journal.precheck",
+                "sentinel": "object",
+                "outcome": "precommit refusal; same-facade recovery",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "journal.precheck",
+                "sentinel": "string",
+                "outcome": "precommit refusal; same-facade recovery",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "journal.precheck",
+                "sentinel": "revoked Proxy",
+                "outcome": "precommit refusal; same-facade recovery",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "ordering.admission",
+                "sentinel": "Error",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true,
+                "reachedStack": [
+                  "at publicKeyOf (spike/src/codec.ts:151:10)",
+                  "at orderingAdmission (spike/src/ordering.ts:65:11)",
+                  "at verifyJournalView (spike/src/journal.ts:213:27)",
+                  "at spike/src/scope-proof.ts:125:5",
+                  "at wireInput (spike/src/scope-proof.ts:161:16)",
+                  "at verifyPublicProof (spike/src/scope-proof.ts:112:16)",
+                  "at replayScopeView (spike/src/scope.ts:200:38)",
+                  "at get state (spike/src/scope.ts:325:21)",
+                  "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+                ]
+              },
+              {
+                "catch": "ordering.admission",
+                "sentinel": "codec-looking TypeError",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "ordering.admission",
+                "sentinel": "undefined",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "ordering.admission",
+                "sentinel": "object",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "ordering.admission",
+                "sentinel": "string",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "ordering.admission",
+                "sentinel": "revoked Proxy",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "scopeProof.wireInput",
+                "sentinel": "Error",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true,
+                "reachedStack": [
+                  "at publicKeyOf (spike/src/codec.ts:151:10)",
+                  "at bodyShape (spike/src/codec.ts:158:3)",
+                  "at envelopeShape (spike/src/codec.ts:178:3)",
+                  "at verifyEnvelope (spike/src/codec.ts:199:3)",
+                  "at spike/src/scope-proof.ts:56:40",
+                  "at wireInput (spike/src/scope-proof.ts:161:16)",
+                  "at assertPublicData (spike/src/scope-proof.ts:56:24)",
+                  "at assertPublicData (spike/src/scope-proof.ts:58:12)",
+                  "at assertPublicData (spike/src/scope-proof.ts:58:12)",
+                  "at spike/src/scope-proof.ts:116:5",
+                  "at wireInput (spike/src/scope-proof.ts:161:16)",
+                  "at verifyPublicProof (spike/src/scope-proof.ts:112:16)",
+                  "at replayScopeView (spike/src/scope.ts:200:38)",
+                  "at get state (spike/src/scope.ts:325:21)",
+                  "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+                ]
+              },
+              {
+                "catch": "scopeProof.wireInput",
+                "sentinel": "codec-looking TypeError",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "scopeProof.wireInput",
+                "sentinel": "undefined",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "scopeProof.wireInput",
+                "sentinel": "object",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "scopeProof.wireInput",
+                "sentinel": "string",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "scopeProof.wireInput",
+                "sentinel": "revoked Proxy",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "scope.releaseOpening",
+                "sentinel": "Error",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true,
+                "reachedStack": [
+                  "at publicKeyOf (spike/src/codec.ts:151:10)",
+                  "at bodyShape (spike/src/codec.ts:158:3)",
+                  "at envelopeShape (spike/src/codec.ts:178:3)",
+                  "at verifyEnvelope (spike/src/codec.ts:199:3)",
+                  "at replayScopeView (spike/src/scope.ts:184:26)",
+                  "at get state (spike/src/scope.ts:325:21)",
+                  "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+                ]
+              },
+              {
+                "catch": "scope.releaseOpening",
+                "sentinel": "codec-looking TypeError",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "scope.releaseOpening",
+                "sentinel": "undefined",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "scope.releaseOpening",
+                "sentinel": "object",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "scope.releaseOpening",
+                "sentinel": "string",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "scope.releaseOpening",
+                "sentinel": "revoked Proxy",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "scope.semantic",
+                "sentinel": "Error",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true,
+                "reachedStack": [
+                  "at object (spike/src/scope.ts:59:52)",
+                  "at replayScopeView (spike/src/scope.ts:148:17)",
+                  "at get state (spike/src/scope.ts:325:21)",
+                  "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+                ]
+              },
+              {
+                "catch": "scope.semantic",
+                "sentinel": "codec-looking TypeError",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "scope.semantic",
+                "sentinel": "undefined",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "scope.semantic",
+                "sentinel": "object",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "scope.semantic",
+                "sentinel": "string",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              },
+              {
+                "catch": "scope.semantic",
+                "sentinel": "revoked Proxy",
+                "outcome": "original value; unavailable facade",
+                "coldExactRetry": true
+              }
+            ]
+          },
+          {
+            "storage": "sqlite",
+            "coldOpenCases": [
+              {
+                "context": "S",
+                "seam": "ordering-key",
+                "sentinel": "Error",
+                "recovered": true
+              },
+              {
+                "context": "S",
+                "seam": "ordering-key",
+                "sentinel": "codec-looking TypeError",
+                "recovered": true
+              },
+              {
+                "context": "S",
+                "seam": "ordering-key",
+                "sentinel": "undefined",
+                "recovered": true
+              },
+              {
+                "context": "S",
+                "seam": "ordering-key",
+                "sentinel": "object",
+                "recovered": true
+              },
+              {
+                "context": "S",
+                "seam": "ordering-key",
+                "sentinel": "string",
+                "recovered": true
+              },
+              {
+                "context": "S",
+                "seam": "ordering-key",
+                "sentinel": "revoked Proxy",
+                "recovered": true
+              },
+              {
+                "context": "S",
+                "seam": "open-key",
+                "sentinel": "Error",
+                "recovered": true
+              },
+              {
+                "context": "S",
+                "seam": "open-key",
+                "sentinel": "codec-looking TypeError",
+                "recovered": true
+              },
+              {
+                "context": "S",
+                "seam": "open-key",
+                "sentinel": "undefined",
+                "recovered": true
+              },
+              {
+                "context": "S",
+                "seam": "open-key",
+                "sentinel": "object",
+                "recovered": true
+              },
+              {
+                "context": "S",
+                "seam": "open-key",
+                "sentinel": "string",
+                "recovered": true
+              },
+              {
+                "context": "S",
+                "seam": "open-key",
+                "sentinel": "revoked Proxy",
+                "recovered": true
+              },
+              {
+                "context": "S",
+                "seam": "cold-parse",
+                "sentinel": "Error",
+                "recovered": true
+              },
+              {
+                "context": "S",
+                "seam": "cold-parse",
+                "sentinel": "codec-looking TypeError",
+                "recovered": true
+              },
+              {
+                "context": "S",
+                "seam": "cold-parse",
+                "sentinel": "undefined",
+                "recovered": true
+              },
+              {
+                "context": "S",
+                "seam": "cold-parse",
+                "sentinel": "object",
+                "recovered": true
+              },
+              {
+                "context": "S",
+                "seam": "cold-parse",
+                "sentinel": "string",
+                "recovered": true
+              },
+              {
+                "context": "S",
+                "seam": "cold-parse",
+                "sentinel": "revoked Proxy",
+                "recovered": true
+              },
+              {
+                "context": "F",
+                "seam": "ordering-key",
+                "sentinel": "Error",
+                "recovered": true
+              },
+              {
+                "context": "F",
+                "seam": "ordering-key",
+                "sentinel": "codec-looking TypeError",
+                "recovered": true
+              },
+              {
+                "context": "F",
+                "seam": "ordering-key",
+                "sentinel": "undefined",
+                "recovered": true
+              },
+              {
+                "context": "F",
+                "seam": "ordering-key",
+                "sentinel": "object",
+                "recovered": true
+              },
+              {
+                "context": "F",
+                "seam": "ordering-key",
+                "sentinel": "string",
+                "recovered": true
+              },
+              {
+                "context": "F",
+                "seam": "ordering-key",
+                "sentinel": "revoked Proxy",
+                "recovered": true
+              },
+              {
+                "context": "F",
+                "seam": "open-key",
+                "sentinel": "Error",
+                "recovered": true
+              },
+              {
+                "context": "F",
+                "seam": "open-key",
+                "sentinel": "codec-looking TypeError",
+                "recovered": true
+              },
+              {
+                "context": "F",
+                "seam": "open-key",
+                "sentinel": "undefined",
+                "recovered": true
+              },
+              {
+                "context": "F",
+                "seam": "open-key",
+                "sentinel": "object",
+                "recovered": true
+              },
+              {
+                "context": "F",
+                "seam": "open-key",
+                "sentinel": "string",
+                "recovered": true
+              },
+              {
+                "context": "F",
+                "seam": "open-key",
+                "sentinel": "revoked Proxy",
+                "recovered": true
+              },
+              {
+                "context": "F",
+                "seam": "cold-parse",
+                "sentinel": "Error",
+                "recovered": true
+              },
+              {
+                "context": "F",
+                "seam": "cold-parse",
+                "sentinel": "codec-looking TypeError",
+                "recovered": true
+              },
+              {
+                "context": "F",
+                "seam": "cold-parse",
+                "sentinel": "undefined",
+                "recovered": true
+              },
+              {
+                "context": "F",
+                "seam": "cold-parse",
+                "sentinel": "object",
+                "recovered": true
+              },
+              {
+                "context": "F",
+                "seam": "cold-parse",
+                "sentinel": "string",
+                "recovered": true
+              },
+              {
+                "context": "F",
+                "seam": "cold-parse",
+                "sentinel": "revoked Proxy",
+                "recovered": true
+              }
+            ]
+          },
+          {
+            "storage": "sqlite",
+            "constructorCases": [
+              {
+                "factory": "create",
+                "sentinel": "Error",
+                "closeFailureInjected": false,
+                "recovered": true
+              },
+              {
+                "factory": "create",
+                "sentinel": "Error",
+                "closeFailureInjected": true,
+                "recovered": true
+              },
+              {
+                "factory": "create",
+                "sentinel": "codec-looking TypeError",
+                "closeFailureInjected": false,
+                "recovered": true
+              },
+              {
+                "factory": "create",
+                "sentinel": "codec-looking TypeError",
+                "closeFailureInjected": true,
+                "recovered": true
+              },
+              {
+                "factory": "create",
+                "sentinel": "undefined",
+                "closeFailureInjected": false,
+                "recovered": true
+              },
+              {
+                "factory": "create",
+                "sentinel": "undefined",
+                "closeFailureInjected": true,
+                "recovered": true
+              },
+              {
+                "factory": "create",
+                "sentinel": "object",
+                "closeFailureInjected": false,
+                "recovered": true
+              },
+              {
+                "factory": "create",
+                "sentinel": "object",
+                "closeFailureInjected": true,
+                "recovered": true
+              },
+              {
+                "factory": "create",
+                "sentinel": "string",
+                "closeFailureInjected": false,
+                "recovered": true
+              },
+              {
+                "factory": "create",
+                "sentinel": "string",
+                "closeFailureInjected": true,
+                "recovered": true
+              },
+              {
+                "factory": "create",
+                "sentinel": "revoked Proxy",
+                "closeFailureInjected": false,
+                "recovered": true
+              },
+              {
+                "factory": "create",
+                "sentinel": "revoked Proxy",
+                "closeFailureInjected": true,
+                "recovered": true
+              },
+              {
+                "factory": "open",
+                "sentinel": "Error",
+                "closeFailureInjected": false,
+                "recovered": true
+              },
+              {
+                "factory": "open",
+                "sentinel": "Error",
+                "closeFailureInjected": true,
+                "recovered": true
+              },
+              {
+                "factory": "open",
+                "sentinel": "codec-looking TypeError",
+                "closeFailureInjected": false,
+                "recovered": true
+              },
+              {
+                "factory": "open",
+                "sentinel": "codec-looking TypeError",
+                "closeFailureInjected": true,
+                "recovered": true
+              },
+              {
+                "factory": "open",
+                "sentinel": "undefined",
+                "closeFailureInjected": false,
+                "recovered": true
+              },
+              {
+                "factory": "open",
+                "sentinel": "undefined",
+                "closeFailureInjected": true,
+                "recovered": true
+              },
+              {
+                "factory": "open",
+                "sentinel": "object",
+                "closeFailureInjected": false,
+                "recovered": true
+              },
+              {
+                "factory": "open",
+                "sentinel": "object",
+                "closeFailureInjected": true,
+                "recovered": true
+              },
+              {
+                "factory": "open",
+                "sentinel": "string",
+                "closeFailureInjected": false,
+                "recovered": true
+              },
+              {
+                "factory": "open",
+                "sentinel": "string",
+                "closeFailureInjected": true,
+                "recovered": true
+              },
+              {
+                "factory": "open",
+                "sentinel": "revoked Proxy",
+                "closeFailureInjected": false,
+                "recovered": true
+              },
+              {
+                "factory": "open",
+                "sentinel": "revoked Proxy",
+                "closeFailureInjected": true,
+                "recovered": true
+              }
+            ]
+          },
+          {
+            "storage": "sqlite",
+            "policyLimits": [
+              "parser nominal SyntaxError",
+              "wire exact message allowlist",
+              "ScopeProofError class",
+              "ScopeProfileError class"
+            ],
+            "inspectionCatches": {
+              "wire": 2,
+              "scope": 1
+            }
+          },
+          {
+            "storage": "sqlite",
+            "catches": [
+              "context.submit",
+              "journal.submit",
+              "scope.submit"
+            ],
+            "injectedValues": 6,
+            "exactRetryRecoveries": 6
+          }
+        ],
+        "sqliteCleanupDiagnostics": [
+          {
+            "backend": "sqlite only",
+            "cleanupCases": [
+              {
+                "scenario": "constructor-rollback",
+                "originalIdentity": true,
+                "cleanupCalls": 1,
+                "residualOpenTransaction": false
+              },
+              {
+                "scenario": "constructor-rollback",
+                "originalIdentity": true,
+                "cleanupCalls": 1,
+                "residualOpenTransaction": false
+              },
+              {
+                "scenario": "constructor-rollback",
+                "originalIdentity": true,
+                "cleanupCalls": 1,
+                "residualOpenTransaction": false
+              },
+              {
+                "scenario": "constructor-rollback",
+                "originalIdentity": true,
+                "cleanupCalls": 1,
+                "residualOpenTransaction": false
+              },
+              {
+                "scenario": "constructor-rollback",
+                "originalIdentity": true,
+                "cleanupCalls": 1,
+                "residualOpenTransaction": false
+              },
+              {
+                "scenario": "constructor-rollback",
+                "originalIdentity": true,
+                "cleanupCalls": 1,
+                "residualOpenTransaction": false
+              },
+              {
+                "scenario": "constructor-close",
+                "originalIdentity": true,
+                "cleanupCalls": 1,
+                "residualOpenTransaction": false
+              },
+              {
+                "scenario": "constructor-close",
+                "originalIdentity": true,
+                "cleanupCalls": 1,
+                "residualOpenTransaction": false
+              },
+              {
+                "scenario": "constructor-close",
+                "originalIdentity": true,
+                "cleanupCalls": 1,
+                "residualOpenTransaction": false
+              },
+              {
+                "scenario": "constructor-close",
+                "originalIdentity": true,
+                "cleanupCalls": 1,
+                "residualOpenTransaction": false
+              },
+              {
+                "scenario": "constructor-close",
+                "originalIdentity": true,
+                "cleanupCalls": 1,
+                "residualOpenTransaction": false
+              },
+              {
+                "scenario": "constructor-close",
+                "originalIdentity": true,
+                "cleanupCalls": 1,
+                "residualOpenTransaction": false
+              },
+              {
+                "scenario": "constructor-both",
+                "originalIdentity": true,
+                "cleanupCalls": 2,
+                "residualOpenTransaction": false
+              },
+              {
+                "scenario": "constructor-both",
+                "originalIdentity": true,
+                "cleanupCalls": 2,
+                "residualOpenTransaction": false
+              },
+              {
+                "scenario": "constructor-both",
+                "originalIdentity": true,
+                "cleanupCalls": 2,
+                "residualOpenTransaction": false
+              },
+              {
+                "scenario": "constructor-both",
+                "originalIdentity": true,
+                "cleanupCalls": 2,
+                "residualOpenTransaction": false
+              },
+              {
+                "scenario": "constructor-both",
+                "originalIdentity": true,
+                "cleanupCalls": 2,
+                "residualOpenTransaction": false
+              },
+              {
+                "scenario": "constructor-both",
+                "originalIdentity": true,
+                "cleanupCalls": 2,
+                "residualOpenTransaction": false
+              },
+              {
+                "scenario": "serialized-rollback",
+                "originalIdentity": true,
+                "cleanupCalls": 1,
+                "residualOpenTransaction": true
+              },
+              {
+                "scenario": "serialized-rollback",
+                "originalIdentity": true,
+                "cleanupCalls": 1,
+                "residualOpenTransaction": true
+              },
+              {
+                "scenario": "serialized-rollback",
+                "originalIdentity": true,
+                "cleanupCalls": 1,
+                "residualOpenTransaction": true
+              },
+              {
+                "scenario": "serialized-rollback",
+                "originalIdentity": true,
+                "cleanupCalls": 1,
+                "residualOpenTransaction": true
+              },
+              {
+                "scenario": "serialized-rollback",
+                "originalIdentity": true,
+                "cleanupCalls": 1,
+                "residualOpenTransaction": true
+              },
+              {
+                "scenario": "serialized-rollback",
+                "originalIdentity": true,
+                "cleanupCalls": 1,
+                "residualOpenTransaction": true
+              }
+            ]
+          }
+        ],
+        "ownFactVariants": 2,
+        "ownPackageCases": 5,
+        "ownHealthy": {
+          "facts": {
+            "accepted_offer": "o3",
+            "buyer": "ed25519:QwRr_kCSs-lJlOraFdzCDYqqB7ZY_TlU644O-4vcpd4",
+            "delivery_slot": 25,
+            "winner": "ed25519:QwRr_kCSs-lJlOraFdzCDYqqB7ZY_TlU644O-4vcpd4"
+          },
+          "final": {
+            "activations": 1,
+            "deliveryConfirmed": true,
+            "destination": "active",
+            "exports": {
+              "D": {
+                "buyer": "bob",
+                "delivery_slot": 25
+              },
+              "S": {
+                "accepted_offer": "o3",
+                "winner": "bob"
+              }
+            },
+            "fulfilled": true,
+            "heads": {
+              "D": 1,
+              "F": 3,
+              "I": 1,
+              "S": 24
+            },
+            "imports": [
+              "S-export",
+              "D-export"
+            ],
+            "inspection": {
+              "attached": true,
+              "imports": 1,
+              "requested": true,
+              "resultInI": "pass:o2",
+              "resultInS": "pass:o2"
+            },
+            "owners": {
+              "R_deliver": [],
+              "R_fulfil": [],
+              "R_sell": []
+            },
+            "releases": [
+              "S",
+              "D"
+            ],
+            "rights": {
+              "R_deliver": {
+                "D": "released",
+                "F": "spent",
+                "I": "absent",
+                "S": "absent"
+              },
+              "R_fulfil": {
+                "D": "absent",
+                "F": "spent",
+                "I": "absent",
+                "S": "released"
+              },
+              "R_sell": {
+                "D": "absent",
+                "F": "absent",
+                "I": "absent",
+                "S": "spent"
+              }
+            },
+            "sale": {
+              "accepted_offer": "o3",
+              "status": "closed",
+              "winner": "bob"
+            },
+            "verifiedProofs": [
+              "S",
+              "D"
+            ],
+            "writers": {
+              "D": "WD",
+              "F": "WF",
+              "I": "WI",
+              "S": "W1"
+            }
+          },
+          "retry": {
+            "header": {
+              "commitment": "sha256:666cc6ff701326a9d4cc68b1fcc484f5578fe76d360d9f948f32c7cf247601cf",
+              "genesis": "sha256:c688bc0dd64519d02a007cc5649b93b29fb4ee102e1cb157cd1b676c098b22bc",
+              "position": 1,
+              "prev": "sha256:0d7f59bf6a4ca33fef5bee904bc696d557c8b7a7c0695fe3684ce24d17f9aad5",
+              "seq_sig": "GuLurLVhmjae0Y_G9rZtv-G3LIhMdKAP0gZ6SWTZkbJhcxReXr5FVqu5MUYZayDWEgroWBFuFQ2D2T4GpSRCAg"
+            },
+            "headerHash": "sha256:d67b6851be2f73207bb4e21579f5eb499ec896c58870946f24e4a1b8ef20bf1c",
+            "replay": true,
+            "verdict": {
+              "authorized": true,
+              "effective": true,
+              "known": true
+            }
+          }
+        }
+      },
+      "k4": {
+        "phases": [
+          {
+            "phase": "live",
+            "sourceReaders": [
+              "alice",
+              "bob",
+              "carol",
+              "ivan"
+            ],
+            "destinationReaders": [
+              "alice",
+              "bob",
+              "kim"
+            ],
+            "bobReadsRequest": false,
+            "bobGetsDerivedProof": true
+          },
+          {
+            "phase": "cold",
+            "sourceReaders": [
+              "alice",
+              "bob",
+              "carol",
+              "ivan"
+            ],
+            "destinationReaders": [
+              "alice",
+              "bob",
+              "kim"
+            ],
+            "bobReadsRequest": false,
+            "bobGetsDerivedProof": true
+          }
+        ],
+        "expectation": {
+          "activation": {
+            "audience": "spine",
+            "context": "F",
+            "currentParticipants": [
+              "alice",
+              "bob",
+              "kim"
+            ],
+            "position": 1
+          },
+          "admit": {
+            "audience": "members",
+            "context": "S",
+            "position": 20,
+            "readers": [
+              "alice",
+              "bob",
+              "carol",
+              "ivan"
+            ]
+          },
+          "inspectionFounders": [
+            "ivan"
+          ],
+          "mandate": {
+            "inspector": "ivan",
+            "offer": "o2",
+            "prefix": 14,
+            "source": "S"
+          },
+          "request": {
+            "bodyInPublicProof": false,
+            "context": "S",
+            "position": 14,
+            "readers": [
+              "alice",
+              "carol",
+              "ivan"
+            ]
+          },
+          "requesterFieldInMandate": false,
+          "result": {
+            "offer": "o2",
+            "result": "pass:o2"
+          }
+        }
+      }
+    }
+  },
+  "backendIdentityAgreement": true
+}
