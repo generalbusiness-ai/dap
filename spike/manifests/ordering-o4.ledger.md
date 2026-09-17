@@ -3,6 +3,14 @@
 Request: `git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:1b6384e27d6dbfd5a22da3330378776d32ad23ab`.
 Promise: `18ba74b01cbbea27e2d8c18b063ff482428c95aa` in that workroom.
 
+The latest combined measured contract at this documentation branch's base
+is run 9 (`f8987d22`, final candidate `15b660ca`): lifecycle manifest
+`sha256:92ad0023e387cd4a6305d074ab99f7a29cbcc1699cd88b8dcf439a446ef58828`
+and opening rule `/3`
+`sha256:9e9bcbdd74fe244fb63c5e339256ab508b2b3251d2e8fa642b3309cd1f1049e6`.
+M1's documentation/count-assertion component below is a new manifest boundary;
+its final combined runtime and validation remain separate from run 9.
+
 The historical combined K1–K4 run-8 contract is lifecycle manifest
 `sha256:a766fe56564b026a96c37630d261512c0f608adf5ec7c5ee2d11aca23eaf45fe`.
 Runs 5–7 used historical manifest
@@ -17,8 +25,9 @@ Runs 1–7 retain their historical `475b415b` rule and exact source boundaries.
 The scope profile, runtime and evidence verifier are in `src/scope*.ts`;
 `ordering-profile.md` defines the trusted completeness assertion and explicit
 source-to-F disclosures. The scope implementation content id hashes its
-actual code and transitive local harness boundary. It is measured alongside
-package ids for each run. Runtime and fixtures import no expected lifecycle
+explicit 16-file list, detailed in the profile; it does not cover every
+transitive source and specifically excludes `observe.ts` and `corpus.ts`.
+It is measured alongside package ids for each run. Runtime and fixtures import no expected lifecycle
 states. Tests drive signed operations and compare observed states against
 all 20 healthy boundaries and the current 29 adverse branches on memory and SQLite.
 Fully materialized genesis mutations enumerate every actual signed field and
@@ -54,8 +63,10 @@ other signed genesis declarations remain covered by the destination hash.
 
 Limits: the source serving writer is trusted for opening completeness;
 malicious signed omissions, forks, copied databases and retired keys signing
-historical prefixes are outside that guarantee. Source members can detect a
-lying projection by recomputing the rule. It is not an effectiveness oracle.
+historical prefixes are outside that guarantee. Source members with all
+relevant openings can detect a lying projection by recomputing the rule;
+ordinary members may lack another actor's hidden attempt. It is not an
+effectiveness oracle.
 The public source membership/offer bodies are intentionally disclosed to all
 F spine readers, including Kim and Carol's participation/stub. Private Sale
 amounts, terms, counters and Inspection request bodies are absent from the
@@ -823,3 +834,88 @@ This records task executes no tests. Only fresh run-9 records and these
 ledger/reproduction notes follow the frozen source. Independent O4 approval,
 publication and landing are still pending; a completed TAP report is not
 an independent checker verdict.
+
+
+## M1 documentation and provenance correction
+
+Review `66effd75` of exact `15b660caaf06e1ea4698e83a94e3717cfd48572b`,
+ratified as `919baa74` and adopted as `739b7bf7`, reproduced the original
+L1–L3 cases but found the same exception-conversion class in ordering
+admission. M1 runtime, Scope facts/package repair and independent catch audit
+have separate owners; this component changes documentation and reuses the
+existing matrix's outcomes for explicit count assertions. It claims no runtime
+repair, full-suite result or approval by itself.
+
+**Run-9 provenance correction.** The earlier run-9 paragraph's “original raw
+result.json” and the reproduction README's “raw result remains unchanged”
+are inaccurate descriptions of creation provenance. `runner-failed.py` never
+wrote that file. `resume.py` created `run-9/result.json` by parsing retained
+TAP and running typecheck only. `wrapper-error.txt` is a later explanatory
+paraphrase, not captured original stderr; the exact parser error and the
+undecodable diagnostic are in `result.json`'s `unparsedDiagnostics`.
+No historical output or recovery file is changed by this correction.
+The builder test-child exit status remains **unknown**. Review `66effd75`
+independently reran `f8987d22` and `15b660ca` with Node exit 0, 492 tests,
+488 passes, four retained Club TODOs and typecheck exit 0. Those reviewer
+measurements do not retroactively fill the builder's missing exit status.
+
+Run 9's 94-blob source index is a wider measurement record than the explicit
+16-source scope runtime id. In particular, changed `observe.ts` and `corpus.ts`
+were pinned in the former and excluded from the latter. M1 does not rewrite
+that historical identity formula or call it a repository-wide hash.
+
+The profile and manifest now document the reviewed proof-size and deep-input
+progress limits, model_unavailable's synthetic-only fixture coverage,
+Inspection's refused string-field audiences, and the residual privileged Club
+standing projection case. The four overlapping frontier/prefix/release/replay
+guards remain defence in depth without independent first-guard test claims;
+the frontier-23 reason stays unchanged. The progress/depth examples are review
+observations at their original sources, not newly measured M1 tests. Typed/message conversions, TypeScript
+construction and postfault read/final-verify limitations remain explicit.
+The dedicated catch catalogue separates inventory, runtime requirements and
+measured injection coverage. Final combined M1 runtime/Scope ids and the
+combined run must be recorded after the other components integrate.
+
+
+The M1 documentation component selects manifest
+`sha256:00bdb77671000310c01a1761364285c6e0b1a643b1dc300ab9f419dc82b4988a`.
+The executable manifest's public-opening rule is unchanged at `9e9bcbdd`;
+only its prose identity and the test's expected manifest id change. This
+component contains no runtime source edit. Its measured matrix/specification
+checks and typecheck will be recorded separately below; the pending integrated
+M1 runtime and Scope package ids must not be inferred from this docs-only tree.
+
+
+Documentation/count-assertion source
+`a9d27c3d0dc15c924bbcc5865ca07e7201d06b4f` passes **3/3 selected checks**:
+the manifest identity check and the existing materialized-genesis matrix on
+memory and SQLite. Both matrices retain exactly 209 cases and the declared
+30/5/154/18/2 distribution. Whole-tree typecheck exits 0. No additional matrix
+or broad suite ran. [Exact source, commands and hashes](ordering-o4-runs/m1-docs/run-1/result.json),
+[raw checks](ordering-o4-runs/m1-docs/run-1/focused.txt),
+[typecheck](ordering-o4-runs/m1-docs/run-1/typecheck.txt) and two fresh matrix
+observations are retained. Runtime remains exactly `15b660ca` in this isolated
+component; these passing checks do not validate the separate M1 fault repairs.
+The catch catalogue was reconciled with the independent baseline audit and
+retains its 21-site AST inventory and machine-readable classification.
+
+Root separately verified Scope own-facts/package component
+`4710d3e65b1dbeba16af7b358998c546e967747d`, measured at
+`8e854c26b30de7a376dc71f5e0e8bf24160aaefa`: 11/11 focused checks,
+typecheck exit 0, eight observations in identical backend pairs and 24 path
+hashes. It entered the integration branch as
+`9c0aaf0adab7d6e0070d15fda2e558eac823b183`. This documents that
+component linkage without claiming it ran in this documentation checkout or
+assigning the future combined Scope identity. Club remains unchanged.
+
+The root's revised measurement runner now persists the child exit before
+parsing diagnostics. Its parser was checked against all run-9 diagnostics
+and a synthetic failure; that is a runner check, not a repeated noncampaign
+suite and not recovery of run 9's unknown builder exit status.
+
+Pending final-source fields are the integrated M1 runtime/Scope package ids,
+updated catch locations/count (the baseline is 21; parser-inspection and
+constructor cleanup may add catches), and per-site reached injection/results
+on each applicable backend. Root must bind these to the frozen runtime source
+and combined measurement before independent review. The catalogue and this
+component do not substitute static inspection for those results.

@@ -1,0 +1,7 @@
+A: faulty open threw original fault
+A: fault consumed true
+A: clean cold open head 23
+B: fault consumed true | threw original
+B: facade blocked scope: facade unavailable; reopen after replay failure
+B: cold head 1 cold verdict {"known":true,"authorized":true,"effective":true} activations 1
+B: exact retry replay {"known":true,"authorized":true,"effective":true}

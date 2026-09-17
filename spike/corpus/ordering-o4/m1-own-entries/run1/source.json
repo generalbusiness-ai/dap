@@ -1,0 +1,190 @@
+{
+  "head": "8e854c26b30de7a376dc71f5e0e8bf24160aaefa",
+  "files": [
+    {
+      "path": "spike/fixtures/booking.ts",
+      "blob": "3f4c348766a6fa720a08eff3b8e32d9bf1096f23",
+      "sha256": "6777d56312946db4328c948ca96c256f8b2022c232196d98f1b5bde58d26cd19"
+    },
+    {
+      "path": "spike/fixtures/club-baseline.ts",
+      "blob": "7b1cdbd58b02d4108ff6c3b9f86efc4d68e527dc",
+      "sha256": "221f44e00ca09492afc168290b1eb91b73b50d2b18141fd6ce2ff0cf5852e5e1"
+    },
+    {
+      "path": "spike/fixtures/club.ts",
+      "blob": "93a73fcb2d5bc5502059144b7a7f1c8571e2a39e",
+      "sha256": "88642a2c965f0c3c90644765bddf7d8bc8aeba2c52867aaee134e7634d9140d7"
+    },
+    {
+      "path": "spike/fixtures/discussion.ts",
+      "blob": "57aff7b0d60a9767470e1dfe00617a19ec9356d0",
+      "sha256": "303cae35774e92bd2e5a5701e61dfd5ffc637fd6c34bb8b40ecdbfd38a783f4e"
+    },
+    {
+      "path": "spike/fixtures/inspection.ts",
+      "blob": "84ab2131aa5ec8c5c99b7353d4a9a232e1388b75",
+      "sha256": "9bab92aacac2a1dca2802d9cae7cc6c797484800ceeb03aa5fd7962f82f6e8c7"
+    },
+    {
+      "path": "spike/fixtures/ordering-lifecycle-runner.ts",
+      "blob": "b21699829065246fe9adbd2677653e9279a70025",
+      "sha256": "d14745ef2c472d574a41309e1e7cb9b1a4a84cb9416430eb9b228562a3e1568f"
+    },
+    {
+      "path": "spike/fixtures/ordering-scope-faults.ts",
+      "blob": "b0fd9b95f218dcf3992b380b1744383adb8d9839",
+      "sha256": "3ad5e63b38dca8c72c07801ce6e2a56c50de3112ed7b8131f70a394d22cc62b0"
+    },
+    {
+      "path": "spike/fixtures/ordering-scope-records.ts",
+      "blob": "d7e5e8588c0e7ed0bed12b84153aadf897791ea4",
+      "sha256": "d454b6355c32450ef71292babb53fafae0d29d79bc18af0f60f9c6a1da1a55b5"
+    },
+    {
+      "path": "spike/fixtures/sale.ts",
+      "blob": "f0a52cee15ab524885132eab2e151a208ebf6d42",
+      "sha256": "600cf82f597a496b35b7b05c5f9b7b5b5bb1337b35c7f87509671968c7ca04b4"
+    },
+    {
+      "path": "spike/package-lock.json",
+      "blob": "7ffc85646fa4c16032ab98a857c0a7fc04a2fdad",
+      "sha256": "5b4cf7d79eaa656b5175d7791158376a6c38ea446eb5c1b610be2e56bf359150"
+    },
+    {
+      "path": "spike/package.json",
+      "blob": "8c7a04dc192b1f1121e52292e8e93e38d2b59397",
+      "sha256": "6450b0d2a11935f0d195c8e540c8f5d9c81bbcb8c7e6fb35be5d8992ceb6e6f7"
+    },
+    {
+      "path": "spike/src/append.ts",
+      "blob": "ebdf46e1044e0d3c614d76f3feca7c5f4c22f57a",
+      "sha256": "bda403bbf5a7f735032de356e4f37367606a658516edbdf134421954ea2eb5f8"
+    },
+    {
+      "path": "spike/src/canon.ts",
+      "blob": "ca0bbd4dfddbbad30f60a24bf982b92420f59311",
+      "sha256": "a96803612114d2584fbe90110a16984300357dcc446936ff39ecfd5475fc9afe"
+    },
+    {
+      "path": "spike/src/checker.ts",
+      "blob": "0f9e4c1adb77b605c9d78013a8880dad204e48e6",
+      "sha256": "91625033431ff38e59d2a697d9568dfe20ae7fd357af828d9baccc748e8ecbf3"
+    },
+    {
+      "path": "spike/src/codec.ts",
+      "blob": "c7748c9ca4b86805fcf0cf63f2836a83f002b8fb",
+      "sha256": "0986dbf1d635b3b0c69cfa6ad75c80c3326d2be9ae9446b8ac29a6bd7985ff19"
+    },
+    {
+      "path": "spike/src/context.ts",
+      "blob": "f433f528e7591c680b196892484be14802287aa7",
+      "sha256": "7342644d363cc487c2c3449828403f427d2f1abdbdc1fca1b60dd5c6b7f7f841"
+    },
+    {
+      "path": "spike/src/control-verifier.ts",
+      "blob": "3ffd2678c2eaf19c723e893b7934cef2b4d615d2",
+      "sha256": "17a62d5bd66b3290f6228dc7bdf510289685b596c315240c19a1f13521cd1891"
+    },
+    {
+      "path": "spike/src/corpus.ts",
+      "blob": "ed4a61e40db4e74f69d8c729ab9db5f4ba608a02",
+      "sha256": "ddcb26b53ace25e00f3c959b361ab462a647f1ca0df4145f4bd066b3a3c9f8fc"
+    },
+    {
+      "path": "spike/src/descriptor.ts",
+      "blob": "cd69f8d9e12b34f231e631627c027ee993ce4103",
+      "sha256": "b4ed2cdd489d8c94d1720594a730c0186e6e468081c570d0a40293cbeef55e82"
+    },
+    {
+      "path": "spike/src/foundation.ts",
+      "blob": "7c919697298973ebb25c51cf69a980f9b3cb8a57",
+      "sha256": "86700a4174c85f46a1395ab3283a1ae64ccb6d9e3c5afdd9455a60db72eee3cc"
+    },
+    {
+      "path": "spike/src/generate.ts",
+      "blob": "6525733360dcf2babdf2de1993109c0c019bec1b",
+      "sha256": "deb13881823cdfca49fb6125d2b84d3fb4432f22096f118a7e66c19b9eb530b1"
+    },
+    {
+      "path": "spike/src/interpret.ts",
+      "blob": "2ab1449d933ee3dbd2aa937651354c288f2a7f41",
+      "sha256": "1b9ecaeb1b912669d60c6f9385fd8f1103798575b9d6a35f3043e5c314e22353"
+    },
+    {
+      "path": "spike/src/journal.ts",
+      "blob": "8bbe92c020a0a93e95034c1ca677556883a3ec9e",
+      "sha256": "3991aaf70a54c82d787c3f480d8a4ed26126e75ed5d2ac44af139e98ace68bb8"
+    },
+    {
+      "path": "spike/src/observe.ts",
+      "blob": "890a7d60eef4f6c1be7011cc63fcd7bbc1362950",
+      "sha256": "17d1d8788ace100a1ee8b0e1a89ee2e4027586994deaceb4f7f0d769264a8661"
+    },
+    {
+      "path": "spike/src/oracle.ts",
+      "blob": "e5c73497bdcbb9450d1c5e5950c8a25b24fc00d3",
+      "sha256": "f3ed8a6232f20446d61e83815eafb3c7451d46cee91ea094e019b478fa04abdd"
+    },
+    {
+      "path": "spike/src/ordering.ts",
+      "blob": "a9e15949c64fda1b468671a2157ff924a426590e",
+      "sha256": "5c91f897f08d3308a7cff597f01491d85feb0623ea1dd429e3f2cdfd35f57ce2"
+    },
+    {
+      "path": "spike/src/ownership.ts",
+      "blob": "3fa753eb7ccf6133c0a44b9c71ba812961dc6b4c",
+      "sha256": "c826cfb34e8784347cf26d6d157a2c27ca2db47e26ce85ec9ef5ef2cd40281f1"
+    },
+    {
+      "path": "spike/src/scope-package.ts",
+      "blob": "4880155af3c59e97dee662466228dc90ee3cd8d0",
+      "sha256": "e58995680d9f1fd71aa0bb18d604cfe29f52ae33c389a59557ab3b753e1c027c"
+    },
+    {
+      "path": "spike/src/scope-profile.ts",
+      "blob": "a404aefb4fc6c71961132027c562fe7cf119fe6f",
+      "sha256": "05c821aae7c52440c21d860708b8d40f7ed66744c5a4e63d4192dd4474e1361c"
+    },
+    {
+      "path": "spike/src/scope-proof.ts",
+      "blob": "695d7ec6a7ecb3a109355408bd6a855b286ce744",
+      "sha256": "a01282aff49601faed3275a8f39c5237fc57bc3eb407aa76045dea76d1e48e29"
+    },
+    {
+      "path": "spike/src/scope.ts",
+      "blob": "71f98b14dd48371582f738b6fc18e485baf8e790",
+      "sha256": "03c084b640d068d3433ed68f25e1d38cc3034ca166bb8e8d5ed46a95ce0bb115"
+    },
+    {
+      "path": "spike/src/script.ts",
+      "blob": "23bd4640e4b2834bb008b90361d7531671e59d70",
+      "sha256": "64776e892fc67741b688c20b6cf11672fea082b41f070bb3518db3809444ef38"
+    },
+    {
+      "path": "spike/src/sqlite.ts",
+      "blob": "e3261c3629edee663a2d273cf0e1a45609988e9c",
+      "sha256": "5dfdc9734f7ca8f823ab343b005b0a8575d303d404f1686c4b3d72e6278a3ad0"
+    },
+    {
+      "path": "spike/src/types.ts",
+      "blob": "7c69f7740efa3faa84215b35ab0b74a855558191",
+      "sha256": "3539141c8f736192919960302ccdc36b48a34fb1b4043915fb5ff559ef998f36"
+    },
+    {
+      "path": "spike/test/ordering-scope-own-entries.test.ts",
+      "blob": "0c3f50bfa161fdf3fcccd0c51be698327e4514c6",
+      "sha256": "5a1fe9584e90ea649297776cdf1c631ece7cc45c345f128dce5a4c4b58f5cd6d"
+    },
+    {
+      "path": "spike/test/ordering-scope-property-names.test.ts",
+      "blob": "dd661326dbaba0b285d62fee74047a3690a56734",
+      "sha256": "746b55d516974f92bcd543593c49153d45372f2ebe2c63105b04b9c564b1316d"
+    },
+    {
+      "path": "spike/tsconfig.json",
+      "blob": "3d95cbb48c6233aa73f36a58eed9ae49a054e851",
+      "sha256": "a8d6fd45c7174f95d19d7cb970bd3e35d75cbc73bd948b63389ad96a87bae3c9"
+    }
+  ]
+}

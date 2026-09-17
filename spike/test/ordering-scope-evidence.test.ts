@@ -16,6 +16,7 @@ import { SALE } from '../fixtures/sale.ts';
 import { INSPECTION } from '../fixtures/inspection.ts';
 import { recordScope } from '../fixtures/ordering-scope-records.ts';
 import { genesisPaths } from '../manifests/ordering-lifecycle.ts';
+import type { Verdict } from '../src/types.ts';
 
 function dormant(world: LifecycleWorld) {
   const state = world.contexts.F!.state;
@@ -129,7 +130,7 @@ for (const storage of ['memory','sqlite'] as const) test('O4 every materialized 
     const original = world.destination!;
     const mutations = genesisPaths(original as never).flatMap(path => (['replace','remove'] as const).map(operation => ({ path, operation })));
     mutations.push({ path: '/extra', operation: 'add' as never });
-    const records: unknown[] = [];
+    const records: { path: string; operation: string; verdict?: Verdict; category?: string; diagnostic?: string }[] = [];
     for (const mutation of mutations) {
       let candidate: ScopeJournal | undefined;
       let backend: MemoryBackend | SQLiteBackend | undefined;
@@ -156,6 +157,17 @@ for (const storage of ['memory','sqlite'] as const) test('O4 every materialized 
     recordScope('materialized-genesis-mutations-' + storage,{ genesis:original,records });
     console.log('materialized genesis mutations:', records.length);
     assert.equal(records.length, genesisPaths(original as never).length * 2 + 1);
+    assert.equal(records.length, 209, 'the declared signed-genesis matrix must remain complete');
+    const counts = new Map<string, number>();
+    for (const record of records) {
+      const category = record.category ?? record.verdict?.reason;
+      assert.ok(category, 'every mutation has a recognized rejection category');
+      counts.set(category, (counts.get(category) ?? 0) + 1);
+    }
+    assert.deepEqual(Object.fromEntries(counts), {
+      destination_mismatch: 30, unauthorized: 5, 'profile invalid_genesis': 154,
+      'codec malformed_envelope': 18, 'profile unsupported_profile': 2,
+    });
   } finally { world.close(); }
 });
 

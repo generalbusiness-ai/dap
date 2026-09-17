@@ -1,0 +1,11 @@
+{"scenario":"constructor-rollback","originalPreserved":false,"cleanupReplacedOriginal":true,"cleanupCalls":1,"handleStillOpen":true,"transactionStillOpen":true}
+file:///private/tmp/dap-o4-m1-faults/spike/manifests/ordering-o4-runs/m1/before/sqlite-cleanup.mjs:27
+    console.log(JSON.stringify({ scenario, originalPreserved: error === original, cleanupReplacedOriginal: error === cleanup, cleanupCalls, handleStillOpen: captured.isOpen, transactionStillOpen: captured.isTransaction }));
+                                                                                                                                                                                                             ^
+
+Error: database is not open
+    at file:///private/tmp/dap-o4-m1-faults/spike/manifests/ordering-o4-runs/m1/before/sqlite-cleanup.mjs:27:206 {
+  code: 'ERR_INVALID_STATE'
+}
+
+Node.js v26.8.2

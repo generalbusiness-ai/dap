@@ -1,11 +1,14 @@
 # Ordering spike report
 
-**Measured O6 candidate; repaired O4 and O6 await independent approval.**
+**M1 O4 measurement incorporated; O6 refresh and independent approval pending.**
 The bootstrap meets goal 4's local fixture criterion. O4's executed transfer
 and replay checks support goal 1 within its trusted-writer fixture. Independent
 reviews found further blockers despite passing tests. K1–K4 and then L1–L3
 correct participant-input handling, exception propagation, proof availability
-and disclosure accounting. The current movable writer profile is `/3`, and
+and disclosure accounting. Review `66effd75` subsequently found another
+exception-conversion route and constructor cleanup gap. The M1 components
+address those paths and document remaining resource and classification limits;
+O4 has measured the combined repair; the bounded O6 refresh is declared below. The movable writer profile is `/3`, and
 the distinct public-opening rule is now `/3`. Earlier failures and measurements remain at
 their original sources. O2/O3/O5 was separately approved and landed; that
 acceptance does not approve these O4/O6 changes.
@@ -41,7 +44,7 @@ requirement even when Node exits zero.
 | O1 codec and journal | Full `747a0905`: 188 tests, 187 pass, one failing Club TODO; 600 seeds clean. Specification `43295693`: 11/11. V6 integration `9575c7c4`: 191 selected, 187 pass, four failing TODOs. G1/G2 `2c727b7d`: 202 selected, 198 pass, four failing TODOs. Typecheck passes at each boundary. | Earlier passing snapshots missed ownership bypasses. G1's head check now refuses stale raw and owned Context writes inside serialization; their own append/fold errors disable them. The final two runs exclude three campaigns and do not relabel the older full run. [Ledger][o1] |
 | O2 concurrency, retry and admission | Focused `ea2b65e6`: 9/9. Integrated `d3ff5f1b`: 189 tests, 188 pass, one failing Club TODO; 600 visibility seeds clean; typecheck passes. | Three schedules submit 126 requests through six concurrent client processes per schedule: 78 new entries, 39 exact replays, nine changed-content refusals. No append or model change was needed. Participant removal is controlled at the admission interface because F0 has no removal event. [Ledger][o2] |
 | O3 handover | Original `/2`: `3cdd1f3b` 69/70; `aae4051e` full 200 tests, 199 pass, one Club TODO, 600 seeds clean. `8756c233` 71/71 but typecheck fails; `acfe2522` 71/71 and typecheck passes. H1/H2 `/3`: aggregate `773a38ec` selects 325 tests, 321 pass, four Club TODOs, zero ordinary failures, but typecheck fails. | Original corrections were error wording and test typing. The later review exposes a real wrong-head proof and repeated full-prefix authentication. `/3` changes the protocol and caches verification. `713315d` changes only the malformed-test `Json[]` annotation; 12 handover tests and typecheck pass there, separately from the full run. [Ledger][ordering-integration] |
-| O4 transfer lifecycle | Run 1 `ee86290f`: 98/100, two recorder failures. Run 2 `b35b267e`: 100/100 focused; full 315 tests, 311 pass, four Club TODOs; 600 seeds pass. Replay `faf26c07`: 6/6. G1/G2 `91941fa5`: 345 selected, 341 pass, four TODOs, including 122 O4 checks. `/3` `e8ccb2ef`: 124/124. K1–K4 `2ee1b43a`: 469 selected, 465 pass, four TODOs, including all 144 O4 checks. L1–L3 `f8987d22`: completed TAP reports 492 selected, 488 pass, four TODOs, including 167 O4 checks; typecheck passes. | Run 8 retains 92 fresh observation files and regenerates scope identities under the revised rule and packages. The prior 600-seed result remains historical; no campaign repeated in run 8. Run 9 retains 100 observations. Its reporting wrapper failed after the test child completed; the child exit code is unavailable. Complete TAP outcomes and successful typecheck are retained. Component failures remain separate. [Ledger][o4] |
+| O4 transfer lifecycle | Run 1 `ee86290f`: 98/100, two recorder failures. Run 2 `b35b267e`: 100/100 focused; full 315 tests, 311 pass, four Club TODOs; 600 seeds pass. Replay `faf26c07`: 6/6. G1/G2 `91941fa5`: 345 selected, 341 pass, four TODOs, including 122 O4 checks. `/3` `e8ccb2ef`: 124/124. K1–K4 `2ee1b43a`: 469 selected, 465 pass, four TODOs, including all 144 O4 checks. L1–L3 `f8987d22`: completed TAP reports 492 selected, 488 pass, four TODOs, including 167 O4 checks; typecheck passes. M1 `79cd0002`: 512 selected/508 pass/four TODOs, including 187 O4 checks; Node/typecheck/wrapper exit 0. | Run 8 retains 92 fresh observation files and regenerates scope identities under the revised rule and packages. The prior 600-seed result remains historical; no campaign repeated in run 8. Run 9 retains 100 observations. Its reporting wrapper failed after the test child completed; the child exit code is unavailable. Complete TAP outcomes and successful typecheck are retained. M1 run 10 has 106 observations and 98 source/config/doc blobs; it does not recover run 9's missing exit. Component failures remain separate. [Ledger][o4] |
 | O5 isolated control verifier | Original `462d7dec`: 53 pass, one runner failure; `ac563035`: 54/54, then test-cast typecheck failure. Full `/2` source `0a1daff7`: 256 tests, 255 pass, one Club TODO, 55 O5 checks and 600 seeds pass. Revised `/3` source `773a38ec`: all 86 O5 checks pass within its 325-test invocation. | Original repairs address permission-runner paths and typing. H1 additionally repairs exact-head verification and duplicate detection, expands 47 vectors to 76 and retains the accepted old `/2` attack. Real-journal and isolated-reader evidence remain separate from application semantics. [Ledger][o5] |
 | O6 envelope and route | `/2` sources: `c75894b8` 2/2; `f9995e87` 371 selected/367 pass/four TODOs; `19b6d434` 402 selected/398 pass/four TODOs. `/3` `8c5598ff`: 2/2. K1–K4 `b6c7ab7a` and L1–L3 `1ea700b1`: each 2/2 bootstrap checks, typecheck and actual SQLite CLI pass. | The two combined `/2` runs exclude three campaigns. Runs 4–6 check only O6 and typecheck. The Sale-only bootstrap is unchanged and its fresh run-6 signed bytes match runs 4–5, apart from PID and database path. The changed Scope/Inspection identities are separate. [Ledger][o6] |
 
@@ -277,7 +280,13 @@ saving its exit status. The test child's exit code is therefore **unknown**,
 not asserted as zero. Recovery parsed 34 JSON diagnostics, retained that one
 line verbatim and ran only typecheck; the noncampaign suite was not repeated.
 These complete TAP outcomes are distinct from the wrapper's exit-1 metadata
-failure. [O4 run 9][o4-run9]
+failure. `runner-failed.py` never wrote `result.json`; `resume.py` created it
+from retained TAP and the later typecheck. `wrapper-error.txt` is a later
+explanatory paraphrase, not captured original stderr. The exact parse error
+and undecodable line are in `result.json`'s `unparsedDiagnostics`. Review
+`66effd75` independently reran both `f8987d22` and `15b660ca` with Node exit 0,
+the same 492/488/four-TODO totals and passing typecheck. Those reviewer runs
+do not recover the builder's unknown child exit. [O4 run 9][o4-run9]
 
 Component sources retain their own boundaries: L1's 33 focused checks at
 `28981dd1`; L2's 49 plus one separately selected check at `086fb8a8`, then
@@ -292,6 +301,102 @@ first/middle/final activation verifications and its signing call. It does
 not inject every activation signature verification or all 2,870 crypto calls
 in the checker workload. The remaining boundary is stated below. Repaired
 O4 and O6 still require their own independent approval.
+
+## M1: catch classification, cleanup and remaining limits
+
+Independent review `66effd75` requested changes at `15b660ca` despite
+reproducing run 9 and all 100 observations. Ordering admission caught an
+unexpected key-import fault as `malformed_control`; nested proof replay then
+turned that into an ordinary ineffective activation. Cold replay of the same
+committed event activated the rights. A later Scope-constructor failure could
+also leave Journal's backend lease held. Ratification `919baa74` and adoption
+`739b7bf7` retain the original O4 authorization. These findings extend the
+exception class found by earlier reviews; they do not invalidate or relabel
+those earlier measured outputs.
+
+The runtime component returns ordering shape refusals directly and converts
+only privately identified malformed-key errors at its key-validation catch.
+Unexpected key-import errors retain their identity. JSON parsing converts
+nominal `SyntaxError` only; other errors and opaque values propagate, including
+revoked values whose exception inspection throws. An injected `SyntaxError`
+at that parser seam remains indistinguishable from a native syntax error.
+Scope construction closes an acquired Journal when setup fails and preserves
+the original error through secondary cleanup failure. SQLite constructor
+cleanup attempts close even after rollback fails; serialized cleanup also
+preserves the original operation error. Failed rollback may leave an open
+transaction: its caller must discard/close that handle and reopen. Error
+preservation does not guarantee cleanup succeeds.
+
+The separate own-entry component copies destination facts as own data and
+checks only own package entries. Legitimate property-name keys remain usable;
+preserving an altered claimed fact does not authenticate it or activate a
+mismatched source export. Club's privileged `__proto__` standing-projection
+limitation remains outside this repair.
+
+The catch catalogue distinguishes declared-input conversion, intentional
+parser/class/message conversion, precommit refusal and rethrow. Its baseline
+contains 21 runtime catches. Runtime component `57745b99` adds parser-inspection
+and constructor-cleanup catches, for 23. The final catalogue reconciles their sites and reached
+injection records. The matrix
+selects an in-body seam in each of 12 converting try bodies on both backends,
+with six unexpected thrown-value forms and separate policy-class controls.
+This is catch-body coverage, not injection at every operation, crypto call or
+arbitrary external package. SQLite-specific catches are not memory-backend
+sites. Scope open authenticates/restores; checks forcing nested semantics by
+reading state afterward are labelled “open plus state”.
+
+Component results remain separate. Runtime `57745b99` and test-only
+successor `37a3e121` each pass 41 focused checks and typecheck. Their 11
+diagnostic objects agree exactly, including 144 converting-body outcomes,
+24 sampled stacks, 72 cold-open cases, 48 constructor cases, 24 SQLite cleanup
+cases and 12 committed lost-reply recoveries. The helper filters operation
+kinds before collecting stacks. Its observed 56.7204-to-18.3150-second pair
+is neither a controlled benchmark nor a production/full-suite speed claim.
+Only one of the 29 allowed wire-error messages is dynamically sampled.
+Close-fault mocks perform real close first: they establish error preservation,
+not resource release when native close itself fails. The own-entry component
+passes 11 checks/typecheck at `8e854c26`, with eight observations; the docs/count
+component passes three checks/typecheck at `a9d27c3d`.
+
+Combined source `79cd00029504deb92c121dbf12859680dfe78358` then passes
+**512 selected tests, 508 pass, zero ordinary failures and four retained Club
+TODOs**, including all 187 O4 checks in that same invocation. Node, typecheck
+and the reporting wrapper each exit 0. Run 10 retains 106 fresh observations
+and pins 98 source/configuration/documentation blobs. No campaign is repeated;
+these combined results are separate from the component runs and O6's checks.
+
+Activation still puts whole source packets in one signed envelope, bounded
+at 65,536 bytes, with no chunking or pre-release size reservation. Review at
+`15b660ca` measured a 65,408-byte S proof after about 100 unknown-kind attempts:
+activation returned `envelope_bounds` after both releases, leaving F dormant.
+An 80-attempt, 57,828-byte proof activated. These content-dependent reviewer
+examples are not an event-count limit or new M1 builder run. Long honest
+histories can reach the same barrier; timeout cannot restore released rights.
+The byte bound is not a depth bound: the review's roughly 2,076-level array
+passed envelope validation but overflowed `structuredClone` before append,
+storing no bytes and requiring reopen. M1 documents that availability limit;
+it does not add a depth protocol or guarantee progress for every history.
+
+Refused Inspection requests with string seller/inspector fields still name
+those principals in their audience alongside the actor; malformed non-string
+fields fall back to the actor. Ineffectiveness does not imply actor-only
+visibility. This supplements, without narrowing, the S20/F1 mandate/result
+disclosure below. The fixed registry cannot exercise an actually missing
+bound model: `model_unavailable` has synthetic classification coverage only.
+The existing genesis sweep now asserts 209 outcomes and their 30/5/154/18/2
+distribution. Overlapping frontier/prefix/release/replay guards remain defence
+in depth, not four independently isolated negative scenarios; S23 still
+returns `ineffective_release` for the missing S24 release.
+
+The Scope runtime id hashes an explicit 16-file list, not the repository or
+all imports. It excludes `observe.ts` and `corpus.ts`; run 9's 94-blob source
+index separately pins those files. M1 selects runtime `96619acc`, Scope package
+`2f32c21e` and lifecycle manifest `00bdb776`; run 10 retains their full hashes
+and its broader 98-blob source index. Sale, Inspection and join-policy identities
+remain unchanged.
+The public-opening rule remains `/3`, `9e9bcbdd`, and the completeness
+certificate remains `/1`; prior identities and measurements stay historical.
+[Catch contract][m1-catches], [component record][m1-runtime], [own entries][m1-own]
 
 ## Goal 4: actual creation and joining
 
@@ -500,15 +605,20 @@ source `dap.close`; destination activation still enforces its own close gate.
 Supported ScopeJournal construction uses `create`/`open`, which force strict
 folding; the private TypeScript constructor is an API restriction, not a
 JavaScript sandbox. Unexpected strict replay faults preserve their original
-thrown value. Declared codec/canonical input errors remain ordinary refusals,
-and deliberate Scope policy-error instances or listed exact Journal/control
-Error messages may still be classified as policy failures. Precommit envelope
+thrown value. Declared codec/canonical input errors remain ordinary refusals.
+The parser's nominal `SyntaxError`, deliberately thrown Scope policy-error
+instances and listed exact Journal/control Error messages may still be
+classified as policy failures; these conversions can differ from healthy
+replay under deliberate policy-class injection. Precommit envelope
 checks can refuse after a fault without storing bytes. After a postcommit
 replay fault, submission, retained Context writes, interpretation and export
 are blocked; memory-backed `proof()` and retained `context.view()` may still
 read history. A fault in final verification after successful replay can throw
 without disabling the facade, while the replayed outcome remains unchanged.
-The guarantee is not universal refusal of all postfault access. [Error boundary][profile]
+A standalone interpret/export call checks availability but does not
+automatically disable the facade if its own replay throws; managed state/submit
+is the cleanup path. The guarantee is not universal refusal of all postfault
+access. [Error boundary][profile]
 
 The proof also explicitly discloses source spine/member authority bodies to
 every F spine reader. Carol's participation and o2 stub reach Kim, who was
@@ -592,16 +702,25 @@ changed the runtime. The 22 early artifacts at `4be9b2c` and all later
 exact-head records remain tied to their own candidates, never this successor.
 
 
-The current L1–L3 O6 source `1ea700b15ded453fdeed52dbae25c2d4dd8057db`
+The historical L1–L3 O6 source `1ea700b15ded453fdeed52dbae25c2d4dd8057db`
 integrates O4's frozen `f8987d22` cleanly. Its two bootstrap checks, whole-tree
 typecheck and actual SQLite CLI have recorded exit-zero results. [O6 run 6][o6-run6]
 is separate from O4 run 9's complete TAP and unknown child exit status.
 Final O4 records candidate `15b660caaf06e1ea4698e83a94e3717cfd48572b`
-is incorporated without runtime changes after measurement: all 94 pinned
-source/configuration blobs and 100 observation hashes match locally. All 25
-old O6 run files and both bootstrap files are unchanged. No full suite or
-campaign is repeated for this records-only integration. O4/O6 independent
-approval and landing remain pending.
+entered candidate `9fc72be9627e7e7855cb08b812aee2db472da933` without runtime
+changes after measurement: all 94 pinned source/configuration blobs and 100
+observation hashes matched at that historical boundary. All 25 older O6 run
+files and both bootstrap files were unchanged. No full suite or campaign was
+repeated for that records-only integration. M1 later changes the runtime;
+those historical comparisons are not equality claims for its successor.
+
+M1 O4 measured source `79cd00029504deb92c121dbf12859680dfe78358` enters
+this O6 integration cleanly, with no O6 runtime or test edit. A source freeze
+will precede run 7's two bootstrap checks, typecheck and fresh-database SQLite
+CLI. Final O4 run-10 records and actual O6 outputs will be incorporated before
+handoff; no O4/full suite or campaign is repeated here. All earlier exact-head
+artifacts remain historical. O4/O6 independent approval and landing remain
+pending.
 
 [goals]: https://github.com/generalbusiness-ai/dap/blob/598170fa5907655bc48c346a2dd4dd98853314a8/notes/2026-09-14-evolving-spaces-design.md#L80-L107
 [bootstrap]: https://github.com/generalbusiness-ai/dap/blob/598170fa5907655bc48c346a2dd4dd98853314a8/notes/2026-09-14-evolving-spaces-design.md#L537-L573
@@ -610,7 +729,7 @@ approval and landing remain pending.
 [o2]: https://github.com/generalbusiness-ai/dap/blob/b6d156163285c8eaab3d05766dd9b0de35fef79b/spike/manifests/ordering-o2.ledger.md
 [o3]: https://github.com/generalbusiness-ai/dap/blob/c527584d5399f20dff33625e20cb97d237bdad98/spike/manifests/ordering-o3.ledger.md
 [o5]: https://github.com/generalbusiness-ai/dap/blob/936acce94e5cd024b0164fc6cd2af027f611545e/spike/manifests/ordering-o5.ledger.md
-[profile]: https://github.com/generalbusiness-ai/dap/blob/f8987d22890e7cf2471d7124544c539d69c0a835/spike/ordering-profile.md
+[profile]: https://github.com/generalbusiness-ai/dap/blob/79cd00029504deb92c121dbf12859680dfe78358/spike/ordering-profile.md
 [o6]: https://github.com/generalbusiness-ai/dap/blob/6fa5ae314e327b38512f4f8e500a45c3626fb779/spike/manifests/ordering-o6.ledger.md
 [o6-source]: https://github.com/generalbusiness-ai/dap/blob/1ea700b15ded453fdeed52dbae25c2d4dd8057db/spike/test/fixtures/o6-bootstrap.ts
 [o6-tests]: https://github.com/generalbusiness-ai/dap/blob/1ea700b15ded453fdeed52dbae25c2d4dd8057db/spike/test/ordering-bootstrap.test.ts
@@ -619,7 +738,7 @@ approval and landing remain pending.
 [o4]: https://github.com/generalbusiness-ai/dap/blob/15b660caaf06e1ea4698e83a94e3717cfd48572b/spike/manifests/ordering-o4.ledger.md
 [o4-results]: https://github.com/generalbusiness-ai/dap/tree/edacc32db1495504d10ae7a92f02af272e49e9f2/spike/manifests/ordering-o4-runs/run-7-observations
 [o4-development]: https://github.com/generalbusiness-ai/dap/blob/2b48c4c4484ecd722aa891cd6efa5362121c0f6e/spike/corpus/ordering-o4/development/README.md
-[lifecycle]: https://github.com/generalbusiness-ai/dap/blob/f8987d22890e7cf2471d7124544c539d69c0a835/spike/manifests/ordering-lifecycle.md
+[lifecycle]: https://github.com/generalbusiness-ai/dap/blob/79cd00029504deb92c121dbf12859680dfe78358/spike/manifests/ordering-lifecycle.md
 [ordering-integration]: https://github.com/generalbusiness-ai/dap/blob/edacc32db1495504d10ae7a92f02af272e49e9f2/spike/manifests/ordering-integration.ledger.md
 [o4-replay]: https://github.com/generalbusiness-ai/dap/blob/4ea7d966cc44fc2641e4f99516403bb46d50ba7f/spike/manifests/ordering-o4-runs/run-4.json
 [o6-run2]: https://github.com/generalbusiness-ai/dap/blob/eca816033530c04379bde487bd3b2b016b1f2045/spike/manifests/ordering-o6-runs/run-2.json
@@ -635,3 +754,7 @@ approval and landing remain pending.
 [o4-l1]: https://github.com/generalbusiness-ai/dap/blob/f8987d22890e7cf2471d7124544c539d69c0a835/spike/manifests/ordering-o4-l1.ledger.md
 [o4-l2]: https://github.com/generalbusiness-ai/dap/blob/f8987d22890e7cf2471d7124544c539d69c0a835/spike/manifests/ordering-o4-l2.ledger.md
 [o4-run9]: https://github.com/generalbusiness-ai/dap/blob/15b660caaf06e1ea4698e83a94e3717cfd48572b/spike/manifests/ordering-o4-runs/run-9.json
+
+[m1-catches]: https://github.com/generalbusiness-ai/dap/blob/79cd00029504deb92c121dbf12859680dfe78358/spike/ordering-catch-boundary.md
+[m1-runtime]: https://github.com/generalbusiness-ai/dap/blob/79cd00029504deb92c121dbf12859680dfe78358/spike/manifests/ordering-o4-m1.ledger.md
+[m1-own]: https://github.com/generalbusiness-ai/dap/blob/79cd00029504deb92c121dbf12859680dfe78358/spike/manifests/ordering-o4-m1-own-entries.ledger.md

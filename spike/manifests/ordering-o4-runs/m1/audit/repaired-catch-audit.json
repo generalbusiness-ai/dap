@@ -1,0 +1,1128 @@
+{
+  "title": "O4-M1 repaired catch audit",
+  "baseline": "15b660caaf06e1ea4698e83a94e3717cfd48572b",
+  "source": "37a3e12178923b8198950a332b76c7503fc13c15",
+  "records_head": null,
+  "status": "No additional blocking catch-coverage gap found within the stated bounded M1 contract; independent static and retained-record audit only",
+  "source_pin_verified": true,
+  "runtime_graph_files": 15,
+  "runtime_catch_count": 23,
+  "baseline_runtime_catch_count": 21,
+  "inventory": [
+    {
+      "file": "spike/src/append.ts",
+      "line": 131
+    },
+    {
+      "file": "spike/src/codec.ts",
+      "line": 95
+    },
+    {
+      "file": "spike/src/codec.ts",
+      "line": 99
+    },
+    {
+      "file": "spike/src/context.ts",
+      "line": 210
+    },
+    {
+      "file": "spike/src/foundation.ts",
+      "line": 367
+    },
+    {
+      "file": "spike/src/foundation.ts",
+      "line": 430
+    },
+    {
+      "file": "spike/src/foundation.ts",
+      "line": 567
+    },
+    {
+      "file": "spike/src/foundation.ts",
+      "line": 578
+    },
+    {
+      "file": "spike/src/foundation.ts",
+      "line": 659
+    },
+    {
+      "file": "spike/src/journal.ts",
+      "line": 129
+    },
+    {
+      "file": "spike/src/journal.ts",
+      "line": 173
+    },
+    {
+      "file": "spike/src/journal.ts",
+      "line": 182
+    },
+    {
+      "file": "spike/src/ordering.ts",
+      "line": 66
+    },
+    {
+      "file": "spike/src/scope-proof.ts",
+      "line": 162
+    },
+    {
+      "file": "spike/src/scope-proof.ts",
+      "line": 168
+    },
+    {
+      "file": "spike/src/scope.ts",
+      "line": 185
+    },
+    {
+      "file": "spike/src/scope.ts",
+      "line": 259
+    },
+    {
+      "file": "spike/src/scope.ts",
+      "line": 263
+    },
+    {
+      "file": "spike/src/scope.ts",
+      "line": 302
+    },
+    {
+      "file": "spike/src/scope.ts",
+      "line": 328
+    },
+    {
+      "file": "spike/src/scope.ts",
+      "line": 347
+    },
+    {
+      "file": "spike/src/sqlite.ts",
+      "line": 38
+    },
+    {
+      "file": "spike/src/sqlite.ts",
+      "line": 75
+    }
+  ],
+  "inventory_artifact": "/tmp/dap-o4-m1-repaired-catch-inventory.json",
+  "baseline_artifact": "/tmp/dap-o4-m1-catch-audit.json",
+  "run_path": "/tmp/dap-o4-m1-faults/spike/manifests/ordering-o4-runs/m1/run-2",
+  "focused": {
+    "tests": 41,
+    "pass": 41,
+    "fail": 0,
+    "typecheck_exit": 0,
+    "outputs_hash_verified": 2,
+    "converting_rows_per_store": 72,
+    "sampled_error_stacks_per_store": 12,
+    "prior_outputs_hash_verified": 8
+  },
+  "observed_additional_counts": {
+    "cold_memory": 36,
+    "cold_sqlite": 36,
+    "constructor_memory": 24,
+    "constructor_sqlite": 24,
+    "policy_memory": 4,
+    "inspection_memory": {
+      "wire": 2,
+      "scope": 1
+    },
+    "policy_sqlite": 4,
+    "inspection_sqlite": {
+      "wire": 2,
+      "scope": 1
+    },
+    "sqlite_cleanup": 24,
+    "lostreply_memory": 6,
+    "lostreply_sqlite": 6
+  },
+  "converting_body_coverage": [
+    {
+      "baselineId": "C01",
+      "file": "spike/src/append.ts",
+      "line": 131,
+      "diagnosticName": "append.prepare",
+      "seam": "crypto.verify in Journal encoding.prepare",
+      "behavior": "precommit invalid_envelope; head remains0; same facade then accepts healthy attempt",
+      "observed": {
+        "memory": {
+          "cases": 6,
+          "sentinels": [
+            "Error",
+            "codec-looking TypeError",
+            "undefined",
+            "object",
+            "string",
+            "revoked Proxy"
+          ],
+          "sampledErrorStack": [
+            "at verifyEnvelope (spike/src/codec.ts:200:8)",
+            "at Object.prepare (spike/src/journal.ts:38:24)",
+            "at append (spike/src/append.ts:130:34)",
+            "at Context.submit (spike/src/context.ts:172:17)",
+            "at Journal.submit (spike/src/journal.ts:175:35)",
+            "at ScopeJournal.submit (spike/src/scope.ts:346:33)"
+          ],
+          "coldExactRetry": true
+        },
+        "sqlite": {
+          "cases": 6,
+          "sentinels": [
+            "Error",
+            "codec-looking TypeError",
+            "undefined",
+            "object",
+            "string",
+            "revoked Proxy"
+          ],
+          "sampledErrorStack": [
+            "at verifyEnvelope (spike/src/codec.ts:200:8)",
+            "at Object.prepare (spike/src/journal.ts:38:24)",
+            "at append (spike/src/append.ts:130:34)",
+            "at Context.submit (spike/src/context.ts:172:17)",
+            "at Journal.submit (spike/src/journal.ts:175:35)",
+            "at ScopeJournal.submit (spike/src/scope.ts:346:33)"
+          ],
+          "coldExactRetry": true
+        }
+      }
+    },
+    {
+      "baselineId": "C02",
+      "file": "spike/src/codec.ts",
+      "line": 95,
+      "diagnosticName": "codec.parseCanonical",
+      "seam": "JSON.parse inside parseCanonical and wireInput",
+      "behavior": "unknown originals propagate; managed facade unavailable; new parser inspection guard preserves revoked Proxy",
+      "observed": {
+        "memory": {
+          "cases": 6,
+          "sentinels": [
+            "Error",
+            "codec-looking TypeError",
+            "undefined",
+            "object",
+            "string",
+            "revoked Proxy"
+          ],
+          "sampledErrorStack": [
+            "at parseCanonical (spike/src/codec.ts:94:22)",
+            "at verifyEnvelope (spike/src/codec.ts:198:72)",
+            "at spike/src/scope-proof.ts:56:40",
+            "at wireInput (spike/src/scope-proof.ts:161:16)",
+            "at assertPublicData (spike/src/scope-proof.ts:56:24)",
+            "at assertPublicData (spike/src/scope-proof.ts:58:12)",
+            "at assertPublicData (spike/src/scope-proof.ts:58:12)",
+            "at spike/src/scope-proof.ts:116:5",
+            "at wireInput (spike/src/scope-proof.ts:161:16)",
+            "at verifyPublicProof (spike/src/scope-proof.ts:112:16)",
+            "at replayScopeView (spike/src/scope.ts:200:38)",
+            "at get state (spike/src/scope.ts:325:21)",
+            "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+          ],
+          "coldExactRetry": true
+        },
+        "sqlite": {
+          "cases": 6,
+          "sentinels": [
+            "Error",
+            "codec-looking TypeError",
+            "undefined",
+            "object",
+            "string",
+            "revoked Proxy"
+          ],
+          "sampledErrorStack": [
+            "at parseCanonical (spike/src/codec.ts:94:22)",
+            "at verifyEnvelope (spike/src/codec.ts:198:72)",
+            "at spike/src/scope-proof.ts:56:40",
+            "at wireInput (spike/src/scope-proof.ts:161:16)",
+            "at assertPublicData (spike/src/scope-proof.ts:56:24)",
+            "at assertPublicData (spike/src/scope-proof.ts:58:12)",
+            "at assertPublicData (spike/src/scope-proof.ts:58:12)",
+            "at spike/src/scope-proof.ts:116:5",
+            "at wireInput (spike/src/scope-proof.ts:161:16)",
+            "at verifyPublicProof (spike/src/scope-proof.ts:112:16)",
+            "at replayScopeView (spike/src/scope.ts:200:38)",
+            "at get state (spike/src/scope.ts:325:21)",
+            "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+          ],
+          "coldExactRetry": true
+        }
+      }
+    },
+    {
+      "baselineId": "C04",
+      "file": "spike/src/foundation.ts",
+      "line": 367,
+      "diagnosticName": "foundation.foldSystem",
+      "seam": "registry get via descriptor.own \u2192 packageIn \u2192 foldSystem",
+      "behavior": "strict original propagation; direct registry seam is distinct from nested issuance",
+      "observed": {
+        "memory": {
+          "cases": 6,
+          "sentinels": [
+            "Error",
+            "codec-looking TypeError",
+            "undefined",
+            "object",
+            "string",
+            "revoked Proxy"
+          ],
+          "sampledErrorStack": [
+            "at own (spike/src/descriptor.ts:155:93)",
+            "at packageIn (spike/src/descriptor.ts:165:10)",
+            "at foldSystem (spike/src/foundation.ts:497:19)",
+            "at foldEntry (spike/src/foundation.ts:366:19)",
+            "at interpretView (spike/src/interpret.ts:137:21)",
+            "at verifyPublicProof (spike/src/scope-proof.ts:135:23)",
+            "at replayScopeView (spike/src/scope.ts:200:38)",
+            "at get state (spike/src/scope.ts:325:21)",
+            "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+          ],
+          "coldExactRetry": true
+        },
+        "sqlite": {
+          "cases": 6,
+          "sentinels": [
+            "Error",
+            "codec-looking TypeError",
+            "undefined",
+            "object",
+            "string",
+            "revoked Proxy"
+          ],
+          "sampledErrorStack": [
+            "at own (spike/src/descriptor.ts:155:93)",
+            "at packageIn (spike/src/descriptor.ts:165:10)",
+            "at foldSystem (spike/src/foundation.ts:497:19)",
+            "at foldEntry (spike/src/foundation.ts:366:19)",
+            "at interpretView (spike/src/interpret.ts:137:21)",
+            "at verifyPublicProof (spike/src/scope-proof.ts:135:23)",
+            "at replayScopeView (spike/src/scope.ts:200:38)",
+            "at get state (spike/src/scope.ts:325:21)",
+            "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+          ],
+          "coldExactRetry": true
+        }
+      }
+    },
+    {
+      "baselineId": "C05",
+      "file": "spike/src/foundation.ts",
+      "line": 430,
+      "diagnosticName": "foundation.audience",
+      "seam": "registered binding.audience callback within foldEntry try",
+      "behavior": "strict original propagation",
+      "observed": {
+        "memory": {
+          "cases": 6,
+          "sentinels": [
+            "Error",
+            "codec-looking TypeError",
+            "undefined",
+            "object",
+            "string",
+            "revoked Proxy"
+          ],
+          "sampledErrorStack": [
+            "at foldEntry (spike/src/foundation.ts:420:37)",
+            "at interpretView (spike/src/interpret.ts:137:21)",
+            "at verifyPublicProof (spike/src/scope-proof.ts:135:23)",
+            "at replayScopeView (spike/src/scope.ts:200:38)",
+            "at get state (spike/src/scope.ts:325:21)",
+            "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+          ],
+          "coldExactRetry": true
+        },
+        "sqlite": {
+          "cases": 6,
+          "sentinels": [
+            "Error",
+            "codec-looking TypeError",
+            "undefined",
+            "object",
+            "string",
+            "revoked Proxy"
+          ],
+          "sampledErrorStack": [
+            "at foldEntry (spike/src/foundation.ts:420:37)",
+            "at interpretView (spike/src/interpret.ts:137:21)",
+            "at verifyPublicProof (spike/src/scope-proof.ts:135:23)",
+            "at replayScopeView (spike/src/scope.ts:200:38)",
+            "at get state (spike/src/scope.ts:325:21)",
+            "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+          ],
+          "coldExactRetry": true
+        }
+      }
+    },
+    {
+      "baselineId": "C06",
+      "file": "spike/src/foundation.ts",
+      "line": 567,
+      "diagnosticName": "foundation.issuanceEnvelope",
+      "seam": "createPublicKey via envelopeBytes inside verifyIssuance",
+      "behavior": "unbranded originals propagate; private-brand malformed-input classification retained",
+      "observed": {
+        "memory": {
+          "cases": 6,
+          "sentinels": [
+            "Error",
+            "codec-looking TypeError",
+            "undefined",
+            "object",
+            "string",
+            "revoked Proxy"
+          ],
+          "sampledErrorStack": [
+            "at publicKeyOf (spike/src/codec.ts:151:10)",
+            "at bodyShape (spike/src/codec.ts:158:3)",
+            "at envelopeShape (spike/src/codec.ts:178:3)",
+            "at envelopeBytes (spike/src/codec.ts:191:3)",
+            "at verifyIssuance (spike/src/foundation.ts:566:32)",
+            "at verifyEmbeddedInvite (spike/src/foundation.ts:599:13)",
+            "at foldAccept (spike/src/foundation.ts:607:13)",
+            "at foldSystem (spike/src/foundation.ts:512:14)",
+            "at foldEntry (spike/src/foundation.ts:366:19)",
+            "at interpretView (spike/src/interpret.ts:137:21)",
+            "at verifyPublicProof (spike/src/scope-proof.ts:135:23)",
+            "at replayScopeView (spike/src/scope.ts:200:38)",
+            "at get state (spike/src/scope.ts:325:21)",
+            "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+          ],
+          "coldExactRetry": true
+        },
+        "sqlite": {
+          "cases": 6,
+          "sentinels": [
+            "Error",
+            "codec-looking TypeError",
+            "undefined",
+            "object",
+            "string",
+            "revoked Proxy"
+          ],
+          "sampledErrorStack": [
+            "at publicKeyOf (spike/src/codec.ts:151:10)",
+            "at bodyShape (spike/src/codec.ts:158:3)",
+            "at envelopeShape (spike/src/codec.ts:178:3)",
+            "at envelopeBytes (spike/src/codec.ts:191:3)",
+            "at verifyIssuance (spike/src/foundation.ts:566:32)",
+            "at verifyEmbeddedInvite (spike/src/foundation.ts:599:13)",
+            "at foldAccept (spike/src/foundation.ts:607:13)",
+            "at foldSystem (spike/src/foundation.ts:512:14)",
+            "at foldEntry (spike/src/foundation.ts:366:19)",
+            "at interpretView (spike/src/interpret.ts:137:21)",
+            "at verifyPublicProof (spike/src/scope-proof.ts:135:23)",
+            "at replayScopeView (spike/src/scope.ts:200:38)",
+            "at get state (spike/src/scope.ts:325:21)",
+            "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+          ],
+          "coldExactRetry": true
+        }
+      }
+    },
+    {
+      "baselineId": "C07",
+      "file": "spike/src/foundation.ts",
+      "line": 578,
+      "diagnosticName": "foundation.issuanceHeader",
+      "seam": "Object.keys via canon.canonicalize(header preimage)",
+      "behavior": "unbranded originals propagate; this is inside serialization, unlike hashing afterward",
+      "observed": {
+        "memory": {
+          "cases": 6,
+          "sentinels": [
+            "Error",
+            "codec-looking TypeError",
+            "undefined",
+            "object",
+            "string",
+            "revoked Proxy"
+          ],
+          "sampledErrorStack": [
+            "at canonicalize (spike/src/canon.ts:39:23)",
+            "at verifyIssuance (spike/src/foundation.ts:577:23)",
+            "at verifyEmbeddedInvite (spike/src/foundation.ts:599:13)",
+            "at foldAccept (spike/src/foundation.ts:607:13)",
+            "at foldSystem (spike/src/foundation.ts:512:14)",
+            "at foldEntry (spike/src/foundation.ts:366:19)",
+            "at interpretView (spike/src/interpret.ts:137:21)",
+            "at verifyPublicProof (spike/src/scope-proof.ts:135:23)",
+            "at replayScopeView (spike/src/scope.ts:200:38)",
+            "at get state (spike/src/scope.ts:325:21)",
+            "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+          ],
+          "coldExactRetry": true
+        },
+        "sqlite": {
+          "cases": 6,
+          "sentinels": [
+            "Error",
+            "codec-looking TypeError",
+            "undefined",
+            "object",
+            "string",
+            "revoked Proxy"
+          ],
+          "sampledErrorStack": [
+            "at canonicalize (spike/src/canon.ts:39:23)",
+            "at verifyIssuance (spike/src/foundation.ts:577:23)",
+            "at verifyEmbeddedInvite (spike/src/foundation.ts:599:13)",
+            "at foldAccept (spike/src/foundation.ts:607:13)",
+            "at foldSystem (spike/src/foundation.ts:512:14)",
+            "at foldEntry (spike/src/foundation.ts:366:19)",
+            "at interpretView (spike/src/interpret.ts:137:21)",
+            "at verifyPublicProof (spike/src/scope-proof.ts:135:23)",
+            "at replayScopeView (spike/src/scope.ts:200:38)",
+            "at get state (spike/src/scope.ts:325:21)",
+            "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+          ],
+          "coldExactRetry": true
+        }
+      }
+    },
+    {
+      "baselineId": "C08",
+      "file": "spike/src/foundation.ts",
+      "line": 659,
+      "diagnosticName": "foundation.dispatch",
+      "seam": "registered model.fold invoked inside dispatch try",
+      "behavior": "strict original propagation",
+      "observed": {
+        "memory": {
+          "cases": 6,
+          "sentinels": [
+            "Error",
+            "codec-looking TypeError",
+            "undefined",
+            "object",
+            "string",
+            "revoked Proxy"
+          ],
+          "sampledErrorStack": [
+            "at dispatch (spike/src/foundation.ts:658:17)",
+            "at foldOrigin (spike/src/foundation.ts:478:10)",
+            "at foldEntry (spike/src/foundation.ts:358:15)",
+            "at interpretView (spike/src/interpret.ts:137:21)",
+            "at verifyPublicProof (spike/src/scope-proof.ts:135:23)",
+            "at replayScopeView (spike/src/scope.ts:200:38)",
+            "at get state (spike/src/scope.ts:325:21)",
+            "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+          ],
+          "coldExactRetry": true
+        },
+        "sqlite": {
+          "cases": 6,
+          "sentinels": [
+            "Error",
+            "codec-looking TypeError",
+            "undefined",
+            "object",
+            "string",
+            "revoked Proxy"
+          ],
+          "sampledErrorStack": [
+            "at dispatch (spike/src/foundation.ts:658:17)",
+            "at foldOrigin (spike/src/foundation.ts:478:10)",
+            "at foldEntry (spike/src/foundation.ts:358:15)",
+            "at interpretView (spike/src/interpret.ts:137:21)",
+            "at verifyPublicProof (spike/src/scope-proof.ts:135:23)",
+            "at replayScopeView (spike/src/scope.ts:200:38)",
+            "at get state (spike/src/scope.ts:325:21)",
+            "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+          ],
+          "coldExactRetry": true
+        }
+      }
+    },
+    {
+      "baselineId": "C10",
+      "file": "spike/src/journal.ts",
+      "line": 173,
+      "diagnosticName": "journal.precheck",
+      "seam": "crypto.verify in initial Journal.submit verifyEnvelope",
+      "behavior": "precommit invalid_envelope; no new entry; same facade accepts healthy retry",
+      "observed": {
+        "memory": {
+          "cases": 6,
+          "sentinels": [
+            "Error",
+            "codec-looking TypeError",
+            "undefined",
+            "object",
+            "string",
+            "revoked Proxy"
+          ],
+          "sampledErrorStack": [
+            "at verifyEnvelope (spike/src/codec.ts:200:8)",
+            "at Journal.submit (spike/src/journal.ts:172:22)",
+            "at ScopeJournal.submit (spike/src/scope.ts:346:33)"
+          ],
+          "coldExactRetry": true
+        },
+        "sqlite": {
+          "cases": 6,
+          "sentinels": [
+            "Error",
+            "codec-looking TypeError",
+            "undefined",
+            "object",
+            "string",
+            "revoked Proxy"
+          ],
+          "sampledErrorStack": [
+            "at verifyEnvelope (spike/src/codec.ts:200:8)",
+            "at Journal.submit (spike/src/journal.ts:172:22)",
+            "at ScopeJournal.submit (spike/src/scope.ts:346:33)"
+          ],
+          "coldExactRetry": true
+        }
+      }
+    },
+    {
+      "baselineId": "C12",
+      "file": "spike/src/ordering.ts",
+      "line": 66,
+      "diagnosticName": "ordering.admission",
+      "seam": "createPublicKey in orderingAdmission \u2192 verifyJournalView \u2192 wireInput",
+      "behavior": "unexpected originals now propagate; only private codec errors convert at remaining catch",
+      "observed": {
+        "memory": {
+          "cases": 6,
+          "sentinels": [
+            "Error",
+            "codec-looking TypeError",
+            "undefined",
+            "object",
+            "string",
+            "revoked Proxy"
+          ],
+          "sampledErrorStack": [
+            "at publicKeyOf (spike/src/codec.ts:151:10)",
+            "at orderingAdmission (spike/src/ordering.ts:65:11)",
+            "at verifyJournalView (spike/src/journal.ts:213:27)",
+            "at spike/src/scope-proof.ts:125:5",
+            "at wireInput (spike/src/scope-proof.ts:161:16)",
+            "at verifyPublicProof (spike/src/scope-proof.ts:112:16)",
+            "at replayScopeView (spike/src/scope.ts:200:38)",
+            "at get state (spike/src/scope.ts:325:21)",
+            "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+          ],
+          "coldExactRetry": true
+        },
+        "sqlite": {
+          "cases": 6,
+          "sentinels": [
+            "Error",
+            "codec-looking TypeError",
+            "undefined",
+            "object",
+            "string",
+            "revoked Proxy"
+          ],
+          "sampledErrorStack": [
+            "at publicKeyOf (spike/src/codec.ts:151:10)",
+            "at orderingAdmission (spike/src/ordering.ts:65:11)",
+            "at verifyJournalView (spike/src/journal.ts:213:27)",
+            "at spike/src/scope-proof.ts:125:5",
+            "at wireInput (spike/src/scope-proof.ts:161:16)",
+            "at verifyPublicProof (spike/src/scope-proof.ts:112:16)",
+            "at replayScopeView (spike/src/scope.ts:200:38)",
+            "at get state (spike/src/scope.ts:325:21)",
+            "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+          ],
+          "coldExactRetry": true
+        }
+      }
+    },
+    {
+      "baselineId": "C13",
+      "file": "spike/src/scope-proof.ts",
+      "line": 162,
+      "diagnosticName": "scopeProof.wireInput",
+      "seam": "createPublicKey during assertPublicData committed-opening verification",
+      "behavior": "unknown originals propagate; intentionally broad message policy documented separately",
+      "observed": {
+        "memory": {
+          "cases": 6,
+          "sentinels": [
+            "Error",
+            "codec-looking TypeError",
+            "undefined",
+            "object",
+            "string",
+            "revoked Proxy"
+          ],
+          "sampledErrorStack": [
+            "at publicKeyOf (spike/src/codec.ts:151:10)",
+            "at bodyShape (spike/src/codec.ts:158:3)",
+            "at envelopeShape (spike/src/codec.ts:178:3)",
+            "at verifyEnvelope (spike/src/codec.ts:199:3)",
+            "at spike/src/scope-proof.ts:56:40",
+            "at wireInput (spike/src/scope-proof.ts:161:16)",
+            "at assertPublicData (spike/src/scope-proof.ts:56:24)",
+            "at assertPublicData (spike/src/scope-proof.ts:58:12)",
+            "at assertPublicData (spike/src/scope-proof.ts:58:12)",
+            "at spike/src/scope-proof.ts:116:5",
+            "at wireInput (spike/src/scope-proof.ts:161:16)",
+            "at verifyPublicProof (spike/src/scope-proof.ts:112:16)",
+            "at replayScopeView (spike/src/scope.ts:200:38)",
+            "at get state (spike/src/scope.ts:325:21)",
+            "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+          ],
+          "coldExactRetry": true
+        },
+        "sqlite": {
+          "cases": 6,
+          "sentinels": [
+            "Error",
+            "codec-looking TypeError",
+            "undefined",
+            "object",
+            "string",
+            "revoked Proxy"
+          ],
+          "sampledErrorStack": [
+            "at publicKeyOf (spike/src/codec.ts:151:10)",
+            "at bodyShape (spike/src/codec.ts:158:3)",
+            "at envelopeShape (spike/src/codec.ts:178:3)",
+            "at verifyEnvelope (spike/src/codec.ts:199:3)",
+            "at spike/src/scope-proof.ts:56:40",
+            "at wireInput (spike/src/scope-proof.ts:161:16)",
+            "at assertPublicData (spike/src/scope-proof.ts:56:24)",
+            "at assertPublicData (spike/src/scope-proof.ts:58:12)",
+            "at assertPublicData (spike/src/scope-proof.ts:58:12)",
+            "at spike/src/scope-proof.ts:116:5",
+            "at wireInput (spike/src/scope-proof.ts:161:16)",
+            "at verifyPublicProof (spike/src/scope-proof.ts:112:16)",
+            "at replayScopeView (spike/src/scope.ts:200:38)",
+            "at get state (spike/src/scope.ts:325:21)",
+            "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+          ],
+          "coldExactRetry": true
+        }
+      }
+    },
+    {
+      "baselineId": "C15",
+      "file": "spike/src/scope.ts",
+      "line": 185,
+      "diagnosticName": "scope.releaseOpening",
+      "seam": "createPublicKey in verifyEnvelope at replayScopeView release-opening try",
+      "behavior": "unknown originals propagate; private codec malformed release remains typed refusal",
+      "observed": {
+        "memory": {
+          "cases": 6,
+          "sentinels": [
+            "Error",
+            "codec-looking TypeError",
+            "undefined",
+            "object",
+            "string",
+            "revoked Proxy"
+          ],
+          "sampledErrorStack": [
+            "at publicKeyOf (spike/src/codec.ts:151:10)",
+            "at bodyShape (spike/src/codec.ts:158:3)",
+            "at envelopeShape (spike/src/codec.ts:178:3)",
+            "at verifyEnvelope (spike/src/codec.ts:199:3)",
+            "at replayScopeView (spike/src/scope.ts:184:26)",
+            "at get state (spike/src/scope.ts:325:21)",
+            "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+          ],
+          "coldExactRetry": true
+        },
+        "sqlite": {
+          "cases": 6,
+          "sentinels": [
+            "Error",
+            "codec-looking TypeError",
+            "undefined",
+            "object",
+            "string",
+            "revoked Proxy"
+          ],
+          "sampledErrorStack": [
+            "at publicKeyOf (spike/src/codec.ts:151:10)",
+            "at bodyShape (spike/src/codec.ts:158:3)",
+            "at envelopeShape (spike/src/codec.ts:178:3)",
+            "at verifyEnvelope (spike/src/codec.ts:199:3)",
+            "at replayScopeView (spike/src/scope.ts:184:26)",
+            "at get state (spike/src/scope.ts:325:21)",
+            "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+          ],
+          "coldExactRetry": true
+        }
+      }
+    },
+    {
+      "baselineId": "C16",
+      "file": "spike/src/scope.ts",
+      "line": 259,
+      "diagnosticName": "scope.semantic",
+      "seam": "Array.isArray in scope.object(payload with proofs), called within per-action try",
+      "behavior": "unknown originals propagate; nominal Scope classes retain intentional refusal behavior",
+      "observed": {
+        "memory": {
+          "cases": 6,
+          "sentinels": [
+            "Error",
+            "codec-looking TypeError",
+            "undefined",
+            "object",
+            "string",
+            "revoked Proxy"
+          ],
+          "sampledErrorStack": [
+            "at object (spike/src/scope.ts:59:52)",
+            "at replayScopeView (spike/src/scope.ts:148:17)",
+            "at get state (spike/src/scope.ts:325:21)",
+            "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+          ],
+          "coldExactRetry": true
+        },
+        "sqlite": {
+          "cases": 6,
+          "sentinels": [
+            "Error",
+            "codec-looking TypeError",
+            "undefined",
+            "object",
+            "string",
+            "revoked Proxy"
+          ],
+          "sampledErrorStack": [
+            "at object (spike/src/scope.ts:59:52)",
+            "at replayScopeView (spike/src/scope.ts:148:17)",
+            "at get state (spike/src/scope.ts:325:21)",
+            "at ScopeJournal.submit (spike/src/scope.ts:352:24)"
+          ],
+          "coldExactRetry": true
+        }
+      }
+    }
+  ],
+  "other_catch_coverage": [
+    {
+      "ids": [
+        "C03",
+        "C11",
+        "C19"
+      ],
+      "sites": [
+        "context.ts:210",
+        "journal.ts:182",
+        "scope.ts:347"
+      ],
+      "coverage": "Six lost-reply originals per store after backend.serialized successfully returns; observed original equality, retained Context write refusal, Scope unavailable, clean reopen and exact saved retry. This covers propagation catches, not the SQLite transaction catch itself."
+    },
+    {
+      "ids": [
+        "C09"
+      ],
+      "sites": [
+        "journal.ts:129"
+      ],
+      "coverage": "36 cold cases per store across S/F, ordering key/open key/parser and six sentinels. S exercises Journal.open; F includes first Scope.state when a nested source proof is required. Original equality and clean lease/reopen recovery are asserted."
+    },
+    {
+      "ids": [
+        "C14",
+        "C17"
+      ],
+      "sites": [
+        "scope-proof.ts:168",
+        "scope.ts:263"
+      ],
+      "coverage": "Throwing message getters exercise both exception-inspection catches on each store; observed getter counts wire2/scope1. Matrix revoked Proxy cases independently require preserving the outer original. These are not ordinary policy verdicts."
+    },
+    {
+      "ids": [
+        "C18"
+      ],
+      "sites": [
+        "scope.ts:328"
+      ],
+      "coverage": "Ten non-precommit converter rows \u00d7 six sentinels per store reach managed postcommit state replay, which makes Scope unavailable; exact cold retry then reconstructs an effective activation. Reached Error samples show get state and Scope.submit."
+    },
+    {
+      "ids": [
+        "C20",
+        "C21"
+      ],
+      "sites": [
+        "sqlite.ts:38",
+        "sqlite.ts:75"
+      ],
+      "coverage": "24 SQLite-only double-fault cases: constructor rollback, constructor close, both constructor cleanup stages, serialized rollback \u00d7 six originals. All preserve original identity. Failed serialized rollback explicitly leaves an open transaction until caller disposes it. Structurally N/A for MemoryBackend."
+    },
+    {
+      "ids": [
+        "M1-parser-inspection"
+      ],
+      "sites": [
+        "codec.ts:99"
+      ],
+      "coverage": "New guard around instanceof SyntaxError is reached by revoked Proxy in nested proof and cold parser cases on both stores; original-value equality would fail without the guard. Injected nominal SyntaxError deliberately converts."
+    },
+    {
+      "ids": [
+        "M1-scope-constructor"
+      ],
+      "sites": [
+        "scope.ts:302"
+      ],
+      "coverage": "24 cases per store: create/open \u00d7 six original values \u00d7 with/without secondary close throw. Original preserved; exact memory Backend object reopens, SQLite uses a fresh handle to the same durable genesis. Close mock completes actual close before throwing, so resource-release failure before close is not proven recoverable."
+    }
+  ],
+  "limitations": [
+    "This is an independent static/source-and-record audit, not a new executed test run, workroom ratification or general correctness approval. It covers the repository runtime graph and supplied registered fixture callbacks, not arbitrary external package implementations.",
+    "Reach counters are asserted once for every matrix injection. Full stack samples are retained for the Error row only: 12 per store, 24 total. Six sentinel outcomes per seam do not imply every operation/call index within that try was swept.",
+    "The two blanket precommit verification catches intentionally replace arbitrary faults with invalid_envelope. They add no position and retain a usable facade; do not claim unchanged exception propagation there.",
+    "SyntaxError at the JSON.parse boundary is nominal, not origin-branded. Exported ScopeProofError/ScopeProfileError and an exact allowlisted plain Error message intentionally become policy verdicts. The new test samples one of29 allowlisted messages; it does not dynamically exercise all29.",
+    "Scope/SQLite close-fault mocks call actual close before throwing. Original identity is protected by finally even for a failure before release by static reasoning, but automatic resource recovery in that case is not measured or promised. Failed transactional rollback leaves an observed open transaction until explicit caller disposal.",
+    "SQLite constructor and transaction catch coverage is SQLite-only. The memory lost-reply test exercises its own serialization wrapper without pretending MemoryBackend supplies SQL rollback. The dishonest-writer fixture fallback remains outside this runtime graph and always forks memory.",
+    "Strict foundation propagation is tied to the documented Scope static factories; a JavaScript caller can bypass TypeScript-private construction and wrap a non-strict Journal. No new runtime construction sandbox is added.",
+    "Final verifyEnvelope at scope.ts:353 remains outside managed submit/state catches. interpret/export have no catch that poisons on their own replay fault; proof() and retained Context.view() can remain readable on memory after a managed replay fault. These are preserved profile limits, not repaired claims.",
+    "Four malformed JSON strings plus one valid canonical control, nine malformed assign payloads per store followed by valid handover/restart, and existing codec/handover checks ran in the41 focused tests. The retained malformed issuance/private-brand and malformed release-proof tests remain in unchanged source; they are not among this focused run\u2019s four files, so this audit makes no fresh pass claim for those cases.",
+    "Normal Scope.state replay failure cannot roll back an already accepted action. The formal matrix confirms durable bytes and cold saved retry; it does not declare a transient injected nominal-policy verdict stable after removing the injection."
+  ],
+  "run_file_sha256": {
+    "summary.json": "6445fc414a0ffb20662b30649ef318c42c965f7643cd709939f490a2d87591ec",
+    "source.json": "ba483179671ac963ae740fc3b0cbb7318e162be8dc58e71ea1ef332057bfe82a",
+    "identities.json": "6403772d47cad58b5de90d37bea0c841cc29e5152e991a43e7ce8ea02e7dc2e0",
+    "results.json": "225eca148cab685a1f138b7233a7195d572ea6fc7d7777c250e9cab458565a06",
+    "comparison.json": "f941312ad4a3173afd72e8a366203c5efe8330427fc814a3c70c8a459c6e419f",
+    "focused.txt": "bbee945ffa5b5332a62ed77fda5804242d5dddee47b840419e35863526adf353",
+    "typecheck.txt": "c13cdfb986ee40a7a2614e780678b6307a8b1368291811d1a2cae9e00dfd60cd"
+  },
+  "results": {
+    "source": "37a3e12178923b8198950a332b76c7503fc13c15",
+    "sourceUnchanged": true,
+    "runtimeUnchangedFromPrior": true,
+    "results": [
+      {
+        "command": [
+          "node",
+          "--test",
+          "test/ordering-scope-catch-boundaries.test.ts",
+          "test/ordering-scope-cleanup.test.ts",
+          "test/codec.test.ts",
+          "test/ordering-handover.test.ts"
+        ],
+        "env": {},
+        "exit": 0,
+        "seconds": 18.31503258300654,
+        "output": "focused.txt",
+        "sha256": "bbee945ffa5b5332a62ed77fda5804242d5dddee47b840419e35863526adf353"
+      },
+      {
+        "command": [
+          "npm",
+          "run",
+          "typecheck"
+        ],
+        "env": {},
+        "exit": 0,
+        "seconds": 0.910097333995509,
+        "output": "typecheck.txt",
+        "sha256": "c13cdfb986ee40a7a2614e780678b6307a8b1368291811d1a2cae9e00dfd60cd"
+      }
+    ]
+  },
+  "runtime_source": "57745b99b7908ee499426ce4553484dfde572b9d",
+  "records_head_contents_verified": false,
+  "measured_records": {
+    "run-1": {
+      "source": "57745b99b7908ee499426ce4553484dfde572b9d",
+      "results": {
+        "source": "57745b99b7908ee499426ce4553484dfde572b9d",
+        "sourceUnchanged": true,
+        "results": [
+          {
+            "command": [
+              "node",
+              "--test",
+              "test/ordering-scope-catch-boundaries.test.ts",
+              "test/ordering-scope-cleanup.test.ts",
+              "test/codec.test.ts",
+              "test/ordering-handover.test.ts"
+            ],
+            "env": {},
+            "exit": 0,
+            "seconds": 56.7204088330036,
+            "output": "focused.txt",
+            "sha256": "fd43de2838d123d6cee8c9c3f7d43057c7712cc8ea5a525982bd8e672e77ffc4"
+          },
+          {
+            "command": [
+              "npm",
+              "run",
+              "typecheck"
+            ],
+            "env": {},
+            "exit": 0,
+            "seconds": 0.9462112089968286,
+            "output": "typecheck.txt",
+            "sha256": "c13cdfb986ee40a7a2614e780678b6307a8b1368291811d1a2cae9e00dfd60cd"
+          },
+          {
+            "command": [
+              "node",
+              "manifests/ordering-o4-runs/m1/before/l2-ordering.mjs",
+              "memory"
+            ],
+            "env": {
+              "WT": "/tmp/dap-o4-m1-faults"
+            },
+            "exit": 0,
+            "seconds": 0.787936875000014,
+            "output": "l2-ordering-memory.txt",
+            "sha256": "0eb75aebb83efd39eeefef1ac4dd7c3d2a6d4726a67d7de9e3675c66e7e3e76e"
+          },
+          {
+            "command": [
+              "node",
+              "manifests/ordering-o4-runs/m1/before/l2-ordering.mjs",
+              "sqlite"
+            ],
+            "env": {
+              "WT": "/tmp/dap-o4-m1-faults"
+            },
+            "exit": 0,
+            "seconds": 0.8208742080023512,
+            "output": "l2-ordering-sqlite.txt",
+            "sha256": "0eb75aebb83efd39eeefef1ac4dd7c3d2a6d4726a67d7de9e3675c66e7e3e76e"
+          },
+          {
+            "command": [
+              "node",
+              "manifests/ordering-o4-runs/m1/before/l2-open-and-lease.mjs",
+              "memory"
+            ],
+            "env": {
+              "WT": "/tmp/dap-o4-m1-faults"
+            },
+            "exit": 0,
+            "seconds": 0.5790129579982022,
+            "output": "l2-open-and-lease-memory.txt",
+            "sha256": "db6a360353d5e0e7a4a65a510389bf43aa867470e9ef694c4b2ab05ebcda10ed"
+          },
+          {
+            "command": [
+              "node",
+              "manifests/ordering-o4-runs/m1/before/l2-open-and-lease.mjs",
+              "sqlite"
+            ],
+            "env": {
+              "WT": "/tmp/dap-o4-m1-faults"
+            },
+            "exit": 0,
+            "seconds": 0.5946399579988793,
+            "output": "l2-open-and-lease-sqlite.txt",
+            "sha256": "db6a360353d5e0e7a4a65a510389bf43aa867470e9ef694c4b2ab05ebcda10ed"
+          },
+          {
+            "command": [
+              "node",
+              "manifests/ordering-o4-runs/m1/before/parse-fault.mjs"
+            ],
+            "env": {
+              "WT": "/tmp/dap-o4-m1-faults"
+            },
+            "exit": 0,
+            "seconds": 0.6487300000007963,
+            "output": "parse-fault.txt",
+            "sha256": "5271b017a1f4cd477ae52262f193b2513914f3d82fd8e60e58766e91fd4f0b2c"
+          },
+          {
+            "command": [
+              "node",
+              "manifests/ordering-o4-runs/m1/before/sqlite-cleanup.mjs"
+            ],
+            "env": {
+              "WT": "/tmp/dap-o4-m1-faults"
+            },
+            "exit": 0,
+            "seconds": 0.059184459008974954,
+            "output": "sqlite-cleanup.txt",
+            "sha256": "8db6d4de136f4459c8633f4ab2a79711e47b0cc1eae7328f58d90fa5acf42886"
+          }
+        ]
+      },
+      "fileSHA256": {
+        "l2-ordering-memory.txt": "0eb75aebb83efd39eeefef1ac4dd7c3d2a6d4726a67d7de9e3675c66e7e3e76e",
+        "summary.json": "cc1463e24abdf1a8b6bc4fa85a8404eab30919af294f9e1e97fe1222d8d7ddbb",
+        "l2-open-and-lease-memory.txt": "db6a360353d5e0e7a4a65a510389bf43aa867470e9ef694c4b2ab05ebcda10ed",
+        "l2-open-and-lease-sqlite.txt": "db6a360353d5e0e7a4a65a510389bf43aa867470e9ef694c4b2ab05ebcda10ed",
+        "source.json": "dcba5268475d39abc970cedf4b93c2943ea075ed6ee3633b80f405eab4f723f1",
+        "l2-ordering-sqlite.txt": "0eb75aebb83efd39eeefef1ac4dd7c3d2a6d4726a67d7de9e3675c66e7e3e76e",
+        "identities.json": "35ac5ac8d395b8dc6757e9c4714d069e934004c2c0c26f6da93a4c856260b726",
+        "results.json": "2fa7b332fd2eb05355c9502862a24a4be80589d2d3ae335a06b29c244011e7b2",
+        "parse-fault.txt": "5271b017a1f4cd477ae52262f193b2513914f3d82fd8e60e58766e91fd4f0b2c",
+        "focused.txt": "fd43de2838d123d6cee8c9c3f7d43057c7712cc8ea5a525982bd8e672e77ffc4",
+        "sqlite-cleanup.txt": "8db6d4de136f4459c8633f4ab2a79711e47b0cc1eae7328f58d90fa5acf42886",
+        "typecheck.txt": "c13cdfb986ee40a7a2614e780678b6307a8b1368291811d1a2cae9e00dfd60cd"
+      }
+    },
+    "run-2": {
+      "source": "37a3e12178923b8198950a332b76c7503fc13c15",
+      "results": {
+        "source": "37a3e12178923b8198950a332b76c7503fc13c15",
+        "sourceUnchanged": true,
+        "runtimeUnchangedFromPrior": true,
+        "results": [
+          {
+            "command": [
+              "node",
+              "--test",
+              "test/ordering-scope-catch-boundaries.test.ts",
+              "test/ordering-scope-cleanup.test.ts",
+              "test/codec.test.ts",
+              "test/ordering-handover.test.ts"
+            ],
+            "env": {},
+            "exit": 0,
+            "seconds": 18.31503258300654,
+            "output": "focused.txt",
+            "sha256": "bbee945ffa5b5332a62ed77fda5804242d5dddee47b840419e35863526adf353"
+          },
+          {
+            "command": [
+              "npm",
+              "run",
+              "typecheck"
+            ],
+            "env": {},
+            "exit": 0,
+            "seconds": 0.910097333995509,
+            "output": "typecheck.txt",
+            "sha256": "c13cdfb986ee40a7a2614e780678b6307a8b1368291811d1a2cae9e00dfd60cd"
+          }
+        ]
+      },
+      "fileSHA256": {
+        "summary.json": "6445fc414a0ffb20662b30649ef318c42c965f7643cd709939f490a2d87591ec",
+        "source.json": "ba483179671ac963ae740fc3b0cbb7318e162be8dc58e71ea1ef332057bfe82a",
+        "identities.json": "6403772d47cad58b5de90d37bea0c841cc29e5152e991a43e7ce8ea02e7dc2e0",
+        "results.json": "225eca148cab685a1f138b7233a7195d572ea6fc7d7777c250e9cab458565a06",
+        "comparison.json": "f941312ad4a3173afd72e8a366203c5efe8330427fc814a3c70c8a459c6e419f",
+        "focused.txt": "bbee945ffa5b5332a62ed77fda5804242d5dddee47b840419e35863526adf353",
+        "typecheck.txt": "c13cdfb986ee40a7a2614e780678b6307a8b1368291811d1a2cae9e00dfd60cd"
+      }
+    }
+  },
+  "successor_equivalence": {
+    "changed_paths": [
+      "spike/test/ordering-scope-catch-boundaries.test.ts"
+    ],
+    "runtime_files_unchanged": true,
+    "identical_diagnostic_objects": 11,
+    "identical_converter_rows": 144,
+    "identical_sampled_stacks": 24,
+    "all_15_seam_kind_mappings_match": true,
+    "prior_focused_seconds": 56.7204088330036,
+    "successor_focused_seconds": 18.31503258300654,
+    "timing_limit": "One observed command pair, not a controlled performance benchmark; no runtime optimization claim."
+  }
+}

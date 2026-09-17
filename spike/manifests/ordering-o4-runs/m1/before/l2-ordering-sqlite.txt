@@ -1,0 +1,7 @@
+A: faulty open threw DIFFERENT value: Journal: malformed_control
+A: fault consumed true
+A: clean cold open head 23
+B: fault consumed true | returned verdict {"known":true,"authorized":true,"effective":false,"reason":"Journal view: malformed_control"}
+B: facade still usable after returned verdict
+B: cold head 1 cold verdict {"known":true,"authorized":true,"effective":true} activations 1
+B: exact retry replay {"known":true,"authorized":true,"effective":true}

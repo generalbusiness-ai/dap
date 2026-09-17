@@ -1,0 +1,12 @@
+{
+  "implementation": "sha256:99a856227a4c953826da5f56b4c276b4c0f61a0d997248c7103a912ae7892900",
+  "scopePackage": "sha256:58d944e9d74cb409604246d1e4dab18eaa117e4253f8ee2f0403f3a40aefbb0e",
+  "salePackage": "sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85",
+  "inspectionPackage": "sha256:18a886c149b383b8630836307195c1a89b90c463e7e32df6e0663b5d4ecc3030",
+  "publicProofRule": "sha256:9e9bcbdd74fe244fb63c5e339256ab508b2b3251d2e8fa642b3309cd1f1049e6",
+  "joinPolicy": "sha256:ac852ebab4f55816e55cd0fd71b7280267bffaca097046d4880b24ac63b01455",
+  "lifecycleIds": {
+    "ORDERING_LIFECYCLE_MANIFEST_ID": "sha256:92ad0023e387cd4a6305d074ab99f7a29cbcc1699cd88b8dcf439a446ef58828",
+    "PUBLIC_OPENING_RULE_ID": "sha256:9e9bcbdd74fe244fb63c5e339256ab508b2b3251d2e8fa642b3309cd1f1049e6"
+  }
+}

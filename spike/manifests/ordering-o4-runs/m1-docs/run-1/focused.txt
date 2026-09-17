@@ -1,0 +1,14 @@
+✔ manifest identity binds the prose and executable source, independently recomputed (1.206833ms)
+ℹ ORDERING_LIFECYCLE_MANIFEST_ID sha256:00bdb77671000310c01a1761364285c6e0b1a643b1dc300ab9f419dc82b4988a
+materialized genesis mutations: 209
+materialized genesis mutations: 209
+✔ O4 every materialized signed F genesis field/container is bound before either release: memory (2478.559417ms)
+✔ O4 every materialized signed F genesis field/container is bound before either release: sqlite (2679.918958ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5241.031375

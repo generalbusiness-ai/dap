@@ -622,3 +622,54 @@ limits, the TypeScript-only construction restriction and remaining postfault
 read-access/precommit refusal boundaries. Internal factual QA found and
 corrected a historical source-equality wording ambiguity; it was read-only
 and is not independent checker approval. O4/O6 remain unapproved candidates.
+
+
+## M1 integration and declared run 7
+
+O6 integrates frozen O4 source
+`79cd00029504deb92c121dbf12859680dfe78358` cleanly under its original request.
+The bootstrap and tests remain unchanged. Review `66effd75` requested changes
+at `15b660ca` after reproducing the L1–L3 results: ordering admission converted
+an unexpected key fault into a verdict and Scope setup could retain a lease
+after failure. Ratification `919baa74` and adoption `739b7bf7` authorized M1.
+O4's catch catalogue now classifies 23 runtime catches, with measured in-body
+seams for 12 converting bodies, separately from intentional policy conversions
+and precommit refusals. Ordering/parser propagation, Scope/SQLite cleanup and
+own-entry repairs are accompanied by explicit classification, resource,
+Inspection audience and postfault-read limits. The report does not claim a
+JavaScript sandbox, guaranteed cleanup or progress for every source history.
+
+O4 component `32b69bc8` retains runtime `57745b99` and test-only `37a3e121`:
+each passes 41 checks/typecheck, with all 11 diagnostics exactly equal. The
+observed 56.7204-to-18.3150-second pair measures the helper change, not a
+production or controlled benchmark. Separate own-entry and docs components
+retain their 11- and three-check runs. O4's combined run 10 at `79cd0002`
+passes 512 selected tests, 508 pass, zero ordinary failures and four retained
+Club TODOs; all 187 O4 checks pass in that same invocation. Node, typecheck and
+wrapper exit 0. It retains 106 observations and 98 source/config/doc blobs.
+Its final records commit is pending integration; O6 does not repeat that suite.
+
+Current combined identities:
+
+- Scope runtime `sha256:96619acc4777bd2f95859901d7f993d75ab1db485f7a49af2da89040c81f1af1`;
+- Scope package `sha256:2f32c21e7336da17596fd86af75a863d2de79651cd050100e19b3958042bba61`;
+- lifecycle manifest `sha256:00bdb77671000310c01a1761364285c6e0b1a643b1dc300ab9f419dc82b4988a`;
+- public-opening rule `/3`, unchanged `sha256:9e9bcbdd74fe244fb63c5e339256ab508b2b3251d2e8fa642b3309cd1f1049e6`.
+
+Sale, Inspection, join policy and movable writer profile remain unchanged.
+These runtime/package ids cover their declared inputs, not the entire repo;
+O4's broader measurement index remains a separate source claim.
+
+Run-9 provenance correction: `resume.py` created `result.json` from retained
+TAP and a later typecheck; the failed original runner never wrote it.
+`wrapper-error.txt` is a later explanatory paraphrase, not captured stderr;
+the exact parse error is in `result.json`. Builder child exit remains unknown.
+The reviewer's separate exit-zero reruns do not recover that missing metadata.
+Historical outputs and recovery files remain unchanged.
+
+A clean O6 source freeze precedes only the two bootstrap checks, whole-tree
+typecheck and actual fresh-database SQLite CLI. Signed transcript comparison
+will use actual generated output, not assumed equality. All earlier O6 run
+files and bootstrap source are preserved. No full suite/campaign, main edit,
+push or publication is part of this run. O4/O6 independent acceptance remains
+pending.

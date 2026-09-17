@@ -9,7 +9,7 @@ manifest; O4 must cite the identity it executes.
 
 This revision covers participant-input resilience, strict unexpected-error
 propagation, availability of certified transfer after ineffective member
-attempts, and explicit Inspection disclosure accounting (K1–K4 and L1–L3).
+attempts, and explicit Inspection disclosure accounting (K1–K4, L1–L3 and M1).
 Opening rule `/3` additionally distinguishes an application kind proved
 unbound at the event position from a bound but unavailable or indeterminate
 kind. The mandate and result disclosed by S20/F1 remain explicitly public;
@@ -31,7 +31,8 @@ The following manifest identities and their runs remain historical evidence, not
 - `sha256:75de2a860b049b5d9dcad3dab234be14d7a965d53df2e0d0eae8de6f05a1b327`;
 - `sha256:fc55bfa123891e750f7bbe3a0d9cb33b5f65c07750db08bc984544ed2dd6b378`;
 - `sha256:d94090b21ce42f2eec4a046558b3a776895d82905c2096a19df1f5f02e011f86`;
-- `sha256:a766fe56564b026a96c37630d261512c0f608adf5ec7c5ee2d11aca23eaf45fe` (combined K1–K4, source `2ee1b43a`).
+- `sha256:a766fe56564b026a96c37630d261512c0f608adf5ec7c5ee2d11aca23eaf45fe` (combined K1–K4, source `2ee1b43a`);
+- `sha256:92ad0023e387cd4a6305d074ab99f7a29cbcc1699cd88b8dcf439a446ef58828` (combined L1–L3, source `f8987d22`).
 
 Component-only manifests also remain historical: K4
 `sha256:b2501d040c87c31fee574549254902cc00b3a86d98a94098d7b8296bef2c59e6`
@@ -203,7 +204,9 @@ Its `ineffectiveActorOnly` exception requires a known, determinate source
 verdict with `effective === false` and an audience of exactly the actor alone.
 The rule explicitly excludes `model_unavailable`, `not_in_v1`, `package_unavailable`,
 `scope_runtime_required`, `unhandled`, and `audience_error:` / `fold_error:`
-reason prefixes, including per-model reasons. The separate `unboundActorOnly`
+reason prefixes, including per-model reasons. `model_unavailable` is a
+synthetic diagnostic control: the fixed fixture registry does not reach an
+actually unavailable bound model. The separate `unboundActorOnly`
 exception requires a listed application kind absent from the effective binding
 history before its event position and the exact foundation outcome
 `known:false`, `authorized:false`, `effective:false`, `reason:unhandled`,
@@ -472,3 +475,55 @@ bound unavailable/placeholder attempt still prevents certification. Effective
 narrow authority and existing authentication/completeness checks stay enforced.
 The writer remains trusted for classification; a recipient cannot prove it
 from an opaque header, and source detection requires all relevant openings.
+
+
+## M1 resource, disclosure and coverage limits
+
+M1 follows review `66effd75`, ratification `919baa74` and adoption `739b7bf7`
+in the same O4 workroom. It requires classification of every catch reachable
+from strict replay or proof verification, including ordering admission;
+[the catch catalogue](../ordering-catch-boundary.md) gives the source and
+measured coverage rather than claiming that a passing crypto sweep covers all
+error boundaries. The public-opening rule remains `/3` (`9e9bcbdd`) and the
+completeness certificate remains `/1`. Updating this prose yields a new
+lifecycle manifest without changing those protocol declarations.
+
+Activation carries complete source packets inside one signed envelope and
+therefore shares the existing 65,536-byte envelope bound. The fixture has no
+proof chunking or pre-release size reservation. At reviewed `15b660ca`, about
+100 ordinary unknown attempts produced a 65,408-byte S proof and activation
+was refused with `envelope_bounds` after both releases became effective;
+F remained dormant. With 80 attempts the 57,828-byte proof activated. These
+reviewer measurements, also reproduced at `e0467ae9`, are content-dependent
+examples, not an event-count limit or new builder run. A long honest history
+can reach the same barrier. No timeout reverses releases.
+
+There is no declared nesting-depth bound. Review's roughly 2,076-level array
+input passed envelope checks and overflowed `structuredClone` before append,
+storing no bytes but requiring a fresh facade. M1 documents this input-resource
+limit; it adds no new depth protocol. Runtime/input shape affect the threshold.
+
+A refused Inspection request still adds any string seller/inspector values to
+its assigned audience along with its actor. Non-string values fall back to the
+actor. The named recipients can therefore read such an ineffective request;
+refusal is not an assurance of actor-only visibility. The healthy S14/S20/F1
+request-derived disclosure contract above is unchanged.
+
+The core own-property repair is bounded. Scope destination-author facts and
+package names have a separate M1 repair; the frozen Club standing projection
+still mishandles a `__proto__` member after a privileged `set-standing` event.
+O4 neither changes Club nor relabels its earlier positive or negative result.
+The private Scope constructor constrains TypeScript callers, not JavaScript
+execution. Postfault proof/view reads on memory and the final-verification
+exception that leaves a successfully replayed facade usable remain limits.
+Deliberately thrown Scope policy classes and allowlisted Journal/control Error
+messages remain intentional conversions, as detailed in the catch catalogue.
+
+The materialized-genesis test asserts its already-computed 209 outcomes:
+30 `destination_mismatch`, five actual `unauthorized`, 154 recognized invalid
+genesis, 18 malformed envelopes and two unsupported profiles. These assertions
+reuse the existing sweep. The frontier-at-least-r, prefix-pin, r = p+1 and
+replay-limit guards remain defence in depth: later checks duplicate them,
+so the existing tests do not isolate each first guard. These are not four
+independent negative cases. The S23-frontier packet still
+returns `ineffective_release` because it cannot establish the S24 release.

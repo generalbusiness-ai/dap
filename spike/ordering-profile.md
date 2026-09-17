@@ -595,10 +595,16 @@ transition and source prefixes pinned by F's genesis. Exact retries retain
 the original receipt and verdict, including a failed attempt retried after a
 later successful activation. A later activation has no further effect.
 
-Kinds, roles, models and related string-keyed tables resolve only their own
-entries. Inherited JavaScript property names do not supply bindings or grants.
-Unknown roles retain their existing empty-capability behavior, while an
-explicitly declared own name such as `constructor` or `__proto__` remains usable.
+The core kind, role and model registries use own-property lookup and safe
+own-data writes. Inherited JavaScript names do not supply bindings or grants;
+unknown roles keep their empty-capability behavior, while explicitly declared
+own names such as `constructor` or `__proto__` remain usable. This is a bounded
+runtime statement, not a claim about every string-keyed table in every fixture.
+The M1 scope-facts/package correction separately covers destination-author
+facts copying and package availability. The frozen Club projection still drops
+a standing keyed by `__proto__`; creating that standing needs the privileged
+`set-standing` capability. Club's code, identities and positive/negative
+experiment are unchanged, and this is not claimed fixed by O4.
 
 Scope's policy refusals, profile validation errors and public-proof validation
 errors have explicit types. The codec and legacy canonicalizer identify their
@@ -631,3 +637,73 @@ Memory-backed `proof()` and retained `context.view()` may still read history.
 A fault in the final verification after a successful replay can throw without
 disabling the facade; the replayed outcome remains unchanged. Existing envelope
 prechecks can refuse a submission after a fault before any bytes are stored.
+
+
+## O4: progress and input-resource limits
+
+The 65,536-byte signed-envelope bound also applies to an activation carrying
+whole source proofs. There is no proof chunking or pre-release proof-size
+reservation. An ordinary member can add enough ineffective attempts to grow
+headers beyond an activatable packet even when every attempt is safely hidden.
+Independent review `66effd75` at `15b660ca` reports that about 100 unknown-kind
+attempts produced a 65,408-byte S proof and an `envelope_bounds` activation
+refusal after both releases had become effective; F's rights remained dormant.
+With 80 attempts the 57,828-byte S proof still activated. These are measured
+fixture examples, not a fixed event-count threshold: the activation contains
+more than the S proof, and sizes depend on the bodies. The same limit existed
+at `e0467ae9` and can be reached by a long honest history. A timeout does not
+restore either source right. The fixture provides safety under its declared
+trust, not progress for every finite source history.
+
+The envelope byte limit is not a nesting-depth bound. The same review reports
+that an ordinary member's offer or embedded invitation nested around 2,076
+array levels passed envelope validation but overflowed `structuredClone`
+before append. No bytes were stored; the facade became unavailable and needed
+a healthy reopen. The exact threshold depends on the runtime and input shape.
+No new depth protocol bound or recursive-resource guarantee is introduced by
+M1; deep input remains a documented availability limit.
+
+`model_unavailable` remains excluded by the opening rule. The L3 synthetic
+handler diagnostic tests exercise classification of that reason, but the fixed
+fixture registry cannot reach an actually missing bound model. They are not a
+measurement of a live missing-model recovery path. A refused Inspection request
+with string `seller` or `inspector` fields still includes those named principals
+in its audience alongside the actor; non-string fields fall back to the actor.
+Ineffectiveness alone therefore does not make every Inspection attempt
+actor-only or keep its body secret from the named seller/inspector.
+
+Four overlapping guards remain as defence in depth: frontier at least r,
+source-prefix pin, r = p+1 and the replay limit. Later checks duplicate their
+protection, so the existing tests do not independently demonstrate that each
+first guard is necessary. They are not four isolated negative scenarios.
+A certificate ending
+at S23 still cannot establish the S24 release and returns `ineffective_release`.
+This revision retains that diagnostic rather than inventing an earlier rejection.
+
+## O4: identity and catch-audit boundaries
+
+`scopeImplementationId()` hashes the explicit 16-file source list in
+`scope-profile.ts`: `scope-profile.ts`, `scope.ts`, `scope-proof.ts`,
+`scope-package.ts`, `foundation.ts`, `interpret.ts`, `journal.ts`, `ordering.ts`,
+`codec.ts`, `append.ts`, `context.ts`, `ownership.ts`, `descriptor.ts`,
+`types.ts`, `canon.ts` and `sqlite.ts`. It is not a hash of the entire repository
+or every transitive import. In particular, `observe.ts` and `corpus.ts` are not
+covered. Run 9's independent 94-blob measurement index covers a broader named
+set of runtime, tests, fixtures, contract and package/compiler configuration.
+The runtime identity and measurement index make different claims; each later
+run must state its own source list, ids and hashes.
+
+The [strict-path catch catalogue](ordering-catch-boundary.md) separates declared
+input conversion, intentional typed/message policy conversion, rethrow and
+precommit admission refusal. Its source and measurement columns constrain the
+claims above; an inventory is not evidence that every possible exception or
+resource-exhaustion path was injected. Constructor cleanup, ordering key import
+and parser-boundary changes have their own frozen M1 component measurement,
+linked from that catalogue; combined results remain a separate source boundary.
+The original M1 constructor fault happened after Journal had acquired its
+lease: memory could not reopen the identical backend, and SQLite needed the
+caller to close its handle. Construction now closes the acquired Journal when
+later Scope setup fails, while managed state/submit replay retains its existing
+cleanup path. The catch catalogue records original-error preservation and the
+limits of fallible native cleanup; it does not treat every failed open as
+automatically recoverable.

@@ -1,0 +1,40 @@
+{
+  "source": "8e854c26b30de7a376dc71f5e0e8bf24160aaefa",
+  "runs": [
+    {
+      "name": "focused",
+      "command": [
+        "node",
+        "--test",
+        "test/ordering-scope-own-entries.test.ts",
+        "test/ordering-scope-property-names.test.ts"
+      ],
+      "cwd": "/tmp/dap-o4-m1-own-entries/spike",
+      "exitCode": 0,
+      "seconds": 4.607373583014123,
+      "output": "focused.txt"
+    },
+    {
+      "name": "typecheck",
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "cwd": "/tmp/dap-o4-m1-own-entries/spike",
+      "exitCode": 0,
+      "seconds": 0.9701090840098914,
+      "output": "typecheck.txt"
+    }
+  ],
+  "observations": {
+    "l1-property-inputs-memory.json": "e0fd12d8619ab7cb7d04682a2e2f2258107f3ad2def5212161523bd7c4b3ccc2",
+    "l1-property-inputs-sqlite.json": "e0fd12d8619ab7cb7d04682a2e2f2258107f3ad2def5212161523bd7c4b3ccc2",
+    "m1-own-facts-memory.json": "241bc03da5ea64a026e2003c630601e79238e7ea51d47ff10ba736729c6a042f",
+    "m1-own-facts-sqlite.json": "241bc03da5ea64a026e2003c630601e79238e7ea51d47ff10ba736729c6a042f",
+    "m1-own-healthy-memory.json": "829f3799c9f8edc1df38a4136f37d801ad1fde88775b59560d11dae9011986d8",
+    "m1-own-healthy-sqlite.json": "829f3799c9f8edc1df38a4136f37d801ad1fde88775b59560d11dae9011986d8",
+    "m1-own-packages-memory.json": "d9f45f275634cbb20eb2221e35f1a8a5879db033e9f4472205f14f326de57851",
+    "m1-own-packages-sqlite.json": "d9f45f275634cbb20eb2221e35f1a8a5879db033e9f4472205f14f326de57851"
+  }
+}

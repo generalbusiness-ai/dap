@@ -5,7 +5,7 @@ import { canonicalize, envelopeId, verifyEnvelope, isCodecValidationError, type 
 import { Journal, type JournalOptions } from './journal.ts';
 import { F0_ID, RUNTIME, K, heldAt } from './foundation.ts';
 import { interpretView } from './interpret.ts';
-import { own, type PackageDescriptor } from './descriptor.ts';
+import { own, setOwn, type PackageDescriptor } from './descriptor.ts';
 import type { Entry, EventBody, Receipt, Refusal, Verdict } from './types.ts';
 import type { TransportCredential } from './append.ts';
 import type { ViewEntry } from './context.ts';
@@ -101,7 +101,7 @@ function init(genesis: EventBody, id: string): ScopeState {
     const retained = [...new Set(transition.sources.flatMap(e => [...e.dependencies.packages, e.dependencies.implementation]))].sort();
     if (canonicalize(retained) !== canonicalize(transition.retainedDependencies)) throw new ScopeProfileError('scope: missing retained dependencies');
     state.transition = transition;
-    state.facts = Object.assign({}, ...transition.sources.map(e => e.facts));
+    for (const source of transition.sources) for (const [name, value] of Object.entries(source.facts)) setOwn(state.facts, name, value);
   }
   return state;
 }
@@ -297,7 +297,13 @@ export class ScopeJournal {
   private readonly writerKey: KeyObject;
   private unavailable = false;
   private constructor(journal: Journal, packages: Record<string, PackageDescriptor>, writerKey: KeyObject) {
-    if (!scopeSetup(journal.context.entries[0]!.event)) throw new Error('scope: profile required');
+    try {
+      if (!scopeSetup(journal.context.entries[0]!.event)) throw new Error('scope: profile required');
+    } catch (error) {
+      // Both factories have already acquired a Journal lease. A failed Scope
+      // wrapper must release it, preserving the original validation failure.
+      try { journal.close(); } finally { throw error; }
+    }
     this.journal = journal; this.packages = packages; this.writerKey = writerKey;
   }
   static create(opts: JournalOptions, genesis: ActorEnvelope | string, origins: (ActorEnvelope | string)[] = []): ScopeJournal {
@@ -361,7 +367,7 @@ function validateScopeGenesis(event: EventBody, packages: Record<string, Package
   if (p.foundation !== F0_ID || p.runtime !== RUNTIME) fail('unsupported foundation or runtime');
   if (!p.sequencing || typeof p.sequencing !== 'object' || Array.isArray(p.sequencing)) fail('sequencing object');
   if (!Array.isArray(p.grants) || !p.grants.every((g: any) => g && typeof g === 'object' && !Array.isArray(g) && typeof g.principal === 'string' && Object.keys(g).every(k => ['principal','roles','rights','capabilities'].includes(k)) && ['roles','rights','capabilities'].every(k => g[k] === undefined || Array.isArray(g[k]) && g[k].every((v: unknown) => typeof v === 'string')))) fail('grant shape');
-  if (!Array.isArray(p.bindings) || !p.bindings.length || !p.bindings.every((b: any) => b && typeof b === 'object' && Object.keys(b).every(k => ['package','resolution'].includes(k)) && typeof b.package === 'string' && !!packages[b.package])) fail('binding shape or missing package');
+  if (!Array.isArray(p.bindings) || !p.bindings.length || !p.bindings.every((b: any) => b && typeof b === 'object' && Object.keys(b).every(k => ['package','resolution'].includes(k)) && typeof b.package === 'string' && !!own(packages, b.package))) fail('binding shape or missing package');
   if (!Array.isArray(p.origins) || !p.origins.every((o: any) => o && typeof o === 'object' && !Array.isArray(o) && Object.keys(o).sort().join(',') === 'actor,kind,nonce,payload' && typeof o.kind === 'string' && typeof o.actor === 'string' && typeof o.nonce === 'string') || !Array.isArray(p.referents) || !p.referents.every((r: unknown) => typeof r === 'string') || typeof p.route !== 'string' || !p.route) fail('origins, referents or route shape');
   const setup = scopeSetup(event); if (!setup) fail('missing setup');
   if (setup!.role !== 'fulfilment' && p.transition !== undefined) fail('unexpected transition');
