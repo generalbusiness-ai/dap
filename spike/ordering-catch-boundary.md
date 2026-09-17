@@ -8,7 +8,8 @@ AST inventory finds **21 runtime catch clauses**, not 20, in the static runtime
 import graph from `scope.ts` and `scope-proof.ts`; fixture/test catches are
 outside this count. The [retained inventory](manifests/ordering-o4-runs/m1-docs/baseline-catch-inventory.json)
 pins its source and discovery method. Baseline line numbers below identify historical sites,
-not permanent line numbers in later source.
+not permanent line numbers in later source. The measured M1 implementation
+and its 23-catch inventory are recorded in the current-source section below.
 
 ScopeJournal create/open force strict foundation folding. Scope state replay,
 exports and public-proof interpretation also select strict mode. Legacy Context,
@@ -55,15 +56,15 @@ M1's parser classification is based on the host parser's SyntaxError type,
 not the codec's private validation identity. A SyntaxError deliberately injected
 at that exact parser seam is therefore classified as malformed JSON; unrelated
 Error/TypeError or opaque values must retain identity. Exception inspection
-must not replace a revoked Proxy with a new TypeError. The final source record
-must include any new inspection catch in its updated inventory.
+does not replace a revoked Proxy with a new TypeError. The measured inventory
+includes the new parser-inspection catch.
 
 Scope setup runs after Journal create/open has acquired a lease. At the
 baseline, a key-import failure in the Scope constructor escapes before cleanup,
 so an identical memory backend cannot reopen; SQLite needs caller cleanup.
-M1 must close the acquired Journal when subsequent Scope setup/replay fails,
-preserve the original exception, and demonstrate healthy reopen on both stores.
-Any new constructor/cleanup catch must appear in the final-source inventory.
+M1 closes the acquired Journal when subsequent Scope setup fails and preserves
+the original exception through a secondary cleanup error. Both factories are
+measured on both stores; the resource-recovery limits are stated below.
 A private TypeScript constructor is not a JavaScript sandbox. Scope.open
 restores/authenticates the base Journal and setup; it does not eagerly compute
 full Scope.state. A probe that accesses state afterward must be labelled
@@ -95,7 +96,7 @@ helper, outside the runtime graph: it falls back from a producer error to a
 forged projection, and its source fork always uses MemoryBackend. That fallback
 must not establish runtime exception propagation or SQLite-site coverage.
 
-## Evidence and remaining final-source fields
+## Historical evidence
 
 Historical K2/L2 tests are bounded: K2 injects 120 activation registry accesses
 per backend; final L2 source `8f48a39e` covers 9 issuance crypto/key calls during
@@ -109,11 +110,68 @@ can establish coverage of the header-preimage catch at `foundation.ts:578`.
 
 Independent review `66effd75` reports a wider crypto sweep at the baseline and
 finds the ordering conversion. That reviewer measurement and the builder's
-M1 measurement must stay separate. The final M1 runtime source, updated catch
-count/locations, per-catch injection names, both-store results and cleanup
-limits must be recorded after the runtime source freezes. The [machine-readable independent audit](manifests/ordering-o4-runs/m1-docs/baseline-catch-audit.json)
+M1 measurement must stay separate. The [machine-readable baseline audit](manifests/ordering-o4-runs/m1-docs/baseline-catch-audit.json)
 retains the per-site in-try injection seams, exact 29-message baseline wire
 allowlist and expected cleanup behavior. It is static analysis, not a new
-fault run. This documentation component does not assign those future results, a combined runtime id, or an
-independent approval. Its own focused tests only validate the manifest and
-existing mutation matrix count assertions.
+fault run. The original documentation component at `a9d27c3d` ran only the
+manifest and existing mutation-count checks; it did not measure runtime faults.
+
+## Measured M1 source and coverage
+
+Runtime source `57745b99b7908ee499426ce4553484dfde572b9d` and the test-only
+successor `37a3e12178923b8198950a332b76c7503fc13c15` are preserved in component
+records head `32b69bc8ab9dc150ea6e68198e8871b74dcb9a6e`.
+The [component ledger](manifests/ordering-o4-m1.ledger.md) and
+[independent source-and-record audit](manifests/ordering-o4-runs/m1-integration-audit/repaired-catch-audit.md)
+record the exact sources, commands, hashes and sampled stacks. This audit
+inspected retained executions; it did not run a second suite or grant workroom
+approval. The separate Scope own-entry component is recorded in its
+[ledger](manifests/ordering-o4-m1-own-entries.ledger.md). Combined results and
+identities belong to the main O4 ledger, not either isolated component.
+
+Both M1 focused runs passed 41 checks and typechecking. Each of the 12
+converting try bodies listed above has six unexpected thrown-value cases on
+memory and on SQLite: 72 cases per store. The test asserts one reached injection
+per case and retains a stack for each Error sample, 12 per store. C01 and C10
+intentionally return a precommit refusal and preserve the old head; the other
+ten preserve the original thrown value and disable the managed facade.
+Every case checks the exact saved bytes and healthy cold retry. C04 injects
+directly through `packageIn` inside `foldSystem`; C07 injects `Object.keys`
+inside header serialization; C12 reaches ordering admission through nested
+Journal-view proof verification. This is coverage of each catch body, not
+every operation or crypto call within it.
+
+The same runs include 36 cold-open cases and 24 constructor cases per store,
+four deliberate policy conversions and two exception-inspection controls per
+store, 24 SQLite-only cleanup cases, and six committed lost-reply recoveries
+per store. Four malformed JSON strings, a valid JSON control, nine malformed
+assignment payloads per store followed by valid handover, and existing codec
+and handover checks retain declared-input behavior. Older malformed issuance
+and release-proof tests remain separate source-bound evidence until the
+combined run executes them.
+
+The exact runtime inventory has 23 catches: all 21 baseline sites, the parser
+inspection guard at `codec.ts:99`, and Scope constructor cleanup at
+`scope.ts:302`. The parser conversion is now at `codec.ts:95`; Scope state
+and submit catches moved to lines 328 and 347; SQLite's transaction catch is
+at line 75. Other baseline line locations are unchanged. The accompanying
+AST inventory records all sites; the own-entry merge changes neither these
+catch clauses nor their line locations.
+
+SQLite now preserves the original error through secondary rollback/close
+failure and attempts close even if constructor rollback fails. Failed
+transaction rollback can leave an open transaction, which the tests observe
+before explicit caller disposal. Close-fault mocks perform the real close
+before throwing: they measure original-error preservation, not automatic
+recovery from a native close that never releases resources. SQLite catches
+remain inapplicable to memory. The new parser guard preserves revoked outer
+values; nominal SyntaxError, exported Scope policy classes and allowlisted
+Error messages still intentionally convert. One of the 29 allowlisted
+messages is dynamically sampled, not all 29.
+
+The successor test hook rejects irrelevant operation kinds before constructing
+a stack. All 11 diagnostic objects, including all 144 converter outcomes and
+24 sampled stacks, are exactly equal across the two runs. The focused command
+took 56.7204 seconds before and 18.3150 seconds after this test-only change.
+That is one observed pair, not a controlled benchmark or full-suite speed
+claim. Runtime bytes and all assertions remain unchanged by the optimization.

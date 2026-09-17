@@ -698,9 +698,12 @@ input conversion, intentional typed/message policy conversion, rethrow and
 precommit admission refusal. Its source and measurement columns constrain the
 claims above; an inventory is not evidence that every possible exception or
 resource-exhaustion path was injected. Constructor cleanup, ordering key import
-and parser-boundary changes require their own frozen M1 runtime measurement.
+and parser-boundary changes have their own frozen M1 component measurement,
+linked from that catalogue; combined results remain a separate source boundary.
 The original M1 constructor fault happened after Journal had acquired its
 lease: memory could not reopen the identical backend, and SQLite needed the
-caller to close its handle. The repair must close the acquired Journal when
-later Scope setup or replay fails; the catch catalogue records its tested
-cleanup boundary rather than treating every failed open as automatically safe.
+caller to close its handle. Construction now closes the acquired Journal when
+later Scope setup fails, while managed state/submit replay retains its existing
+cleanup path. The catch catalogue records original-error preservation and the
+limits of fallible native cleanup; it does not treat every failed open as
+automatically recoverable.
