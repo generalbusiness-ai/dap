@@ -194,3 +194,19 @@ recommended reusable runner. `summary.mjs` only derives IDs and counts from
 the completed observations. Package/lock/tsconfig hashes are now included in
 the frozen source index. All 475 evidence files indexed from e046 remain
 byte-identical; original component failures and rule versions are historical.
+
+
+### M1 correction to run-9 record provenance
+
+The run-9 paragraph above uses “original” and “unchanged” too broadly.
+`resume.py` **created** `run-9/result.json` after the first wrapper had failed;
+that file is recovered metadata derived from the saved complete TAP, plus
+its own typecheck command. `wrapper-error.txt` is a later paraphrase, not an
+original stderr capture. Read `result.json` → `unparsedDiagnostics` for the
+exact parser error and retained raw diagnostic. The files themselves are
+preserved unchanged; this appended correction does not relabel their origin.
+The builder child's process exit remains unknown. The independent checker
+later reran source `f8987d22` and head `15b660ca` with Node exit 0, but those
+separate observations do not recover the earlier builder exit status.
+The runtime id covers 16 named sources; the 94-blob run-9 index separately
+pins broader source and configuration, including `observe.ts` and `corpus.ts`.
