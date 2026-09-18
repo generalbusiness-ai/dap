@@ -385,7 +385,7 @@ arbitrary clients nor cryptographic verification, durable crash recovery,
 general migration or all possible histories. Those boundaries were part
 of the [spike plan][plan].
 
-[experienced]: https://github.com/generalbusiness-ai/dap/blob/e2fb7ef319687ca16b8a3bbf23eb29130963af2f/notes/2026-09-15-sale-as-experienced.md
+[experienced]: ../notes/2026-09-15-sale-as-experienced.md
 [goals]: https://github.com/generalbusiness-ai/dap/blob/772a514a08c2fac72fe534c8490c8d33a3e1c2d1/notes/2026-09-14-evolving-spaces-design.md#L80-L107
 [falsification]: https://github.com/generalbusiness-ai/dap/blob/772a514a08c2fac72fe534c8490c8d33a3e1c2d1/notes/2026-09-14-one-series-many-views.md#L393-L409
 [plan]: https://github.com/generalbusiness-ai/dap/blob/772a514a08c2fac72fe534c8490c8d33a3e1c2d1/notes/2026-09-15-spike-plan.md#L22-L80

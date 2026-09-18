@@ -9,16 +9,26 @@ dap lets people coordinate around a sale, a booking or any other shared
 activity. Each activity records signed actions in one agreed order;
 packages supply the rules that turn those actions into state and next
 actions; people may read different parts of the history, but their views
-must agree on every shared decision. This is a proposed design whose
-experiments have not yet run.
+must agree on every shared decision.
+
+**The spikes have run and reported.** Both are complete and landed. The
+[visibility spike report](../spike/REPORT.md) and the [ordering spike
+report](../spike/ORDERING-REPORT.md) say what was established and what was
+not; read the opening of the visibility report first if you want the
+verdict rather than the design. The short version is that the agreement
+property and the privacy bound held in the fixtures that were run, and the
+claim that an agent could author these models within a small repair budget
+was falsified.
 
 **First reading:** start with the sale as experienced, then the design
-note, then the views note, then ordering. The design note opens with the
-goals (§0), in priority order: evolvability, ease of programming as an
-agent, comprehension simplicity for a person, lightweight
+note, then the views note, then ordering. The notes describe the design;
+the two spike reports say how much of it was demonstrated, and the notes
+have not been rewritten to match every spike result. The design note opens
+with the goals (§0), in priority order: evolvability, ease of programming
+as an agent, comprehension simplicity for a person, lightweight
 decentralization. Each has one criterion the spikes report against.
 
-Five notes, each owning one concern:
+Six notes, each owning one concern:
 
 - [Evolving spaces](2026-09-14-evolving-spaces-design.md) — what the things
   are: goals, referents, events, contexts, audiences, packages, authority,
@@ -31,10 +41,17 @@ Five notes, each owning one concern:
   split/join protocols, the ordering spike.
 - [The sale as experienced](2026-09-15-sale-as-experienced.md) — the trace
   as five people would live it in a general-purpose dap mobile app, with
-  every screen element traced to `observe` and every constraint shown.
+  every constraint shown. It names the screen fields an app would want and
+  is explicit about which of them the spike built: the anchor is
+  implemented nowhere, and the thread, the hidden count and the pause come
+  from elsewhere than `observe`. Verified against the landed spike.
 - [Spike plan](2026-09-15-spike-plan.md) — the fixture decisions, the
   predeclarations, and the task breakdown for the visibility spike and the
-  ordering spike.
+  ordering spike. Every task in it is done.
+- [Club admission](2026-09-16-club-admission-decision.md) — why the Club
+  model's original admission policy was left failing rather than revised,
+  and the two alternatives that were not adopted. It owns the spike's one
+  outright negative result.
 
 Links into gitseq, atseq and noseq assume sibling checkouts beside this repository;
 each cited note records the inspected commit.

@@ -171,8 +171,8 @@ did try to decide admissions, is the spike's one outright failure.
 
 **Offers arriving.** Bob's offer arrives as two positions. The stub
 `[6, sale.offer]` is visible to every member; the terms
-`[7, sale.offer_terms]` are visible to Bob and Alice. Alice's
-Her offers show o1 by Buyer Bob with `amount: 700`. Carol's offer
+`[7, sale.offer_terms]` are visible to Bob and Alice. Alice's offers show
+o1 by Buyer Bob with `amount: 700`. Carol's offer
 follows the same shape `[8, sale.offer]` `[9, sale.offer_terms]`, and Alice
 sees o2 at 750. Her affordances now include Counter and Accept. They name
 kinds, not targets, so it is the client that decides which offer a tap
