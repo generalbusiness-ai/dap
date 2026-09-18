@@ -1,43 +1,69 @@
 # Visibility spike report
 
-**Historical V6 was independently approved in review #1805 at
-`05c98e2d778124648834b9b00e772a6ad270a870` and landed as main
-`19af1c8fb46cc91c61a2027647f04a6f305b5cdc`.** Club's original admission
-policy remains a negative result. This follow-up corrects the report's
-scope and adds measured evidence; independent review of this follow-up
-is still required.
+## What this is
 
-The small-repair claim did not hold: **Sale required six semantic repairs
-against a budget of two. Club does not meet the original admission policy.**
-The repaired Sale and Booking implementations show useful agreement across
-partial views within their revised, bounded experiments. Agreement alone
-did not establish the business promises or privacy budgets.
+dap is a design for **shared application contexts that can change while
+they are running**. A group of people hold one signed series of events. Each
+person sees only the parts addressed to them. The software they run is one
+general-purpose client rather than an application written for the occasion,
+and a context can gain a new capability part-way through without rewriting
+what already happened.
 
-Hugh chose to retain Club's negative result for V6, without commissioning
-a revised Club experiment or changing its privacy promise. That instruction
-is recorded in workroom assert
-`git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:bdcfbdc00e9861fb9f8e9b3d21f3104796d8be93`.
-The [decision record][club-decision] preserves that choice and the
-uncommissioned alternatives.
+This spike is a disposable experiment built to attack that design, not a
+product and not a prototype of one. It implemented three small models on a
+shared foundation — **Sale** (an auction-like private-bid sale), **Booking**
+(a room reservation with a clock) and **Club** (admission by member vote) —
+and then tried to break two specific claims:
 
-## Findings against the goals
+1. that people holding **different partial views of the same series still
+   agree** about what happened, and
+2. that an **agent can write such a model** within a small repair budget,
+   without quietly widening who can see what until everyone sees everything.
 
-| Criterion | Finding |
+Both claims were written down in advance, together with the conditions that
+would count as refuting them. That matters for reading what follows: this
+report records a test that was allowed to fail, and in one respect it did.
+
+## What the spike shows
+
+| If you want to know… | What this spike established |
 |---|---|
-| Goal 1: evolvability | Integrated deterministic tests support the criterion of attaching a package mid-stream while preserving prior outcomes, with bounded activation, replay, dependency pause/resume and binding locality. All three historical V6 binding cases pass. This does not establish state migration or arbitrary model composition. |
-| Goal 2: ease of programming as an agent | **Not met.** Sale exceeds the repair budget; Club's smaller count applies to an incomplete policy. Landed Booking is within its model budget but includes revised guards and a separate foundation repair. |
-| Predeclared falsification: repair budget | **Falsified by Sale.** Six semantic repairs exceed the two-fix budget. |
-| Predeclared falsification: widening every audience until everyone sees everything | **Not observed in the bounded repaired Sale and Booking results.** They retain private audiences and pass their revised checks without making every event public. Club's original policy still fails, so this is not a successful three-model demonstration or a proof about every possible model. |
+| **Can people with different partial views of one series still agree on the outcome?** | **Yes, for the fixtures actually executed.** In the repaired Sale and Booking experiments, participants who could see different subsets of events still reached the same verdict on every event they could both see, including the Sale case the design was built around: the seller accepts a second offer after the sale is already decided, and every participant independently judges that attempt ineffective for the same public reason. This is a real result about these fixtures, not a proof about every possible model. |
+| **Does privacy survive, or does everything drift public?** | **It survived here, and that was the explicit trap.** The predeclared way to fail was to keep agreement by widening every audience until everyone saw everything. That was **not observed**: the repaired Sale and Booking keep genuinely private audiences — offer amounts stay between bidder and seller — and still pass their revised checks. Because Club's original policy still fails, this is a two-model result, not a clean three-model demonstration. |
+| **Can a context gain a new capability mid-stream without breaking its past?** | **Yes, for the executed fixtures.** A package can be attached part-way through a live context; earlier events keep their original meaning and outcomes, replay unchanged, and a client that cannot yet fetch the new package pauses honestly rather than guessing. This is the design's first priority, and it held. It is **not** a demonstration of general state migration or of composing arbitrary models. |
+| **Can an agent write one of these models cheaply?** | **No. This is the spike's negative result.** The budget was two semantic repairs and one added kind per model. Sale needed **six** semantic repairs, which falsifies the claim as written. Club never met its original admission policy at all. Booking came in within its model budget, but only alongside revised guards and a separate repair to the shared foundation. If you take one finding from this report, take this one. |
+| **Can a newcomer understand a context from the screen?** | **Not measured.** The [narrative companion][experienced] walks the same sale as five people would meet it on a phone, and it is an inspection by its authors, not a trial with real users. No claim is made here. |
+| **Can this run without infrastructure?** | **Yes, but that was tested elsewhere.** One process on one host with no external services, including creating and joining a context, is the ordering spike's criterion and is reported in [its own report](ORDERING-REPORT.md), which found it met within that fixture. |
 
-These are the [design's goal criteria][goals] and the [views note's explicit
-falsification condition][falsification]. Goal 3, **comprehension simplicity
-for a person**, asks whether a newcomer can answer from the screen what
-the context is about, what they can do and what they cannot see and why.
-The narrative provides an inspection, not a user trial. Goal 4,
-**lightweight decentralization**, requires one process on one host with no
-external services, including context creation and joining in the ordering
-fixture. That criterion belongs to the ordering spike and is not measured
-by this visibility report.
+The short version: **the agreement property held and privacy held, in the
+fixtures that were actually run; the cost of authoring did not.** Agreement
+on its own did not establish the business promises or the privacy budgets —
+those needed their own checks, and Club's did not pass.
+
+These are the [design's goal criteria][goals] and the views note's explicit
+[falsification condition][falsification].
+
+## What was decided about the failure
+
+Club's original admission policy fails for reasons the report records in
+full. Hugh chose to **retain that negative result** rather than commission a
+revised Club experiment or relax its privacy promise. A research spike does
+not need to add mechanism to erase its own negative result. That instruction
+is recorded in workroom assert
+`git:sha1:e15db5d98cd3510f3f20f06b3d0e1ec58379d2b1#git:sha1:bdcfbdc00e9861fb9f8e9b3d21f3104796d8be93`,
+and the [decision record][club-decision] preserves both the choice and the
+alternatives that were not adopted.
+
+## Provenance of this report
+
+Historical V6 was independently approved in review #1805 at
+`05c98e2d778124648834b9b00e772a6ad270a870` and landed as main
+`19af1c8fb46cc91c61a2027647f04a6f305b5cdc`. This follow-up corrects the
+report's scope and adds measured evidence; independent review of this
+follow-up is still required.
+
+Everything from here on is the evidence, written for a reader checking the
+work rather than orienting to it.
 
 ## Exact source results
 
@@ -359,6 +385,7 @@ arbitrary clients nor cryptographic verification, durable crash recovery,
 general migration or all possible histories. Those boundaries were part
 of the [spike plan][plan].
 
+[experienced]: https://github.com/generalbusiness-ai/dap/blob/e2fb7ef319687ca16b8a3bbf23eb29130963af2f/notes/2026-09-15-sale-as-experienced.md
 [goals]: https://github.com/generalbusiness-ai/dap/blob/772a514a08c2fac72fe534c8490c8d33a3e1c2d1/notes/2026-09-14-evolving-spaces-design.md#L80-L107
 [falsification]: https://github.com/generalbusiness-ai/dap/blob/772a514a08c2fac72fe534c8490c8d33a3e1c2d1/notes/2026-09-14-one-series-many-views.md#L393-L409
 [plan]: https://github.com/generalbusiness-ai/dap/blob/772a514a08c2fac72fe534c8490c8d33a3e1c2d1/notes/2026-09-15-spike-plan.md#L22-L80
