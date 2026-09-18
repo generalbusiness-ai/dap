@@ -417,7 +417,10 @@ bytes naming this existing context. The route resolves to that journal;
 it does not create a new context or authorize a different genesis.
 
 The newcomer uses Bob's fixture principal. Alice issues
-an actual signed invitation through ordinary journal admission. The client
+an actual signed invitation through ordinary journal admission. Issuance
+itself is a fixed Seller policy in the fixture, not an admission decision:
+the route mints a Buyer invitation for whoever reaches it, refusing only a
+principal it cannot parse. The client
 verifies the delivered invitation and header prefix, then signs its own
 redemption using the published genesis and invitation proof. The existing
 foundation admits it once. Signature verification and interpretation are
@@ -461,6 +464,10 @@ invitation or changing the initial two-entry journal.
 
 This is explicit fixture routing using direct calls. It is not HTTP, DNS,
 durable discovery, an authenticated transport or production onboarding.
+Invitation issuance is a fixed Seller policy in the fixture, with no
+admission decision behind it, so nothing here demonstrates an admission
+policy. The registry supports one signed listing, one author, one route and
+one local database per context.
 It pins the published genesis and writer after trusting the publication's
 author; signatures do not establish a real-world identity. The deterministic
 keys are test keys. Reopen re-registers the same envelope. It is a normal
