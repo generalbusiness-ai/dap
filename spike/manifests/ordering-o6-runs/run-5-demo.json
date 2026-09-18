@@ -1,0 +1,254 @@
+{
+  "node": "v26.8.2",
+  "pid": 8541,
+  "platform": "darwin",
+  "profile": "dap.fixture.single-writer/3",
+  "database": "/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/dap-o6-demo-k1-k4-zt4a6tqu/journal.db",
+  "topology": "one process, local SQLite file, in-process route registry; no external services",
+  "publication": "{\"G\":\"{\\\"body\\\":{\\\"actor\\\":\\\"ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w\\\",\\\"kind\\\":\\\"ai.generalbusiness.dap.genesis\\\",\\\"nonce\\\":\\\"62626262626262626262626262626262\\\",\\\"payload\\\":{\\\"bindings\\\":[{\\\"package\\\":\\\"sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85\\\"}],\\\"foundation\\\":\\\"sha256:5a7be1514529bac249c683ada733e64273f94b2700abf8a55c47dcb7ebfb8d78\\\",\\\"grants\\\":[{\\\"capabilities\\\":[\\\"ai.generalbusiness.dap.invite\\\",\\\"ai.generalbusiness.dap.attach\\\",\\\"ai.generalbusiness.dap.grant\\\",\\\"ai.generalbusiness.dap.disclose\\\",\\\"ai.generalbusiness.dap.close\\\"],\\\"principal\\\":\\\"ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w\\\",\\\"roles\\\":[\\\"Seller\\\"]}],\\\"origins\\\":[{\\\"actor\\\":\\\"ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w\\\",\\\"kind\\\":\\\"com.example.sale.listing\\\",\\\"nonce\\\":\\\"61616161616161616161616161616161\\\",\\\"payload\\\":{\\\"ask\\\":800,\\\"description\\\":\\\"A guitar offered for sale\\\",\\\"referent\\\":\\\"guitar-o6\\\",\\\"route\\\":\\\"fixture:ordering-o6/guitar\\\"}}],\\\"referents\\\":[\\\"guitar-o6\\\"],\\\"route\\\":\\\"fixture:ordering-o6/guitar\\\",\\\"runtime\\\":\\\"dap.fixture.ts/1\\\",\\\"sequencing\\\":{\\\"control\\\":\\\"ed25519:iodf_x6zhFFXes1a_uQFRWVo3XyJ4JCGOgVXvHr0nxc\\\",\\\"profile\\\":\\\"dap.fixture.single-writer/3\\\",\\\"writer\\\":\\\"ed25519:bnoc3Smwt4_ROvTFWY_v9O8qlxZuPKby5Pv8zYBQW_E\\\"}}},\\\"sig\\\":\\\"6Gz1bdSnRKMe2uvSr58Aa4dtVa_7zNtgrnqlWsJiGI1YsiEHy0wS4k44KEeM-Cy8O8AnL1cRmjrW9b7qPsd8DQ\\\"}\",\"L\":\"{\\\"body\\\":{\\\"actor\\\":\\\"ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w\\\",\\\"kind\\\":\\\"com.example.sale.listing\\\",\\\"nonce\\\":\\\"61616161616161616161616161616161\\\",\\\"payload\\\":{\\\"ask\\\":800,\\\"description\\\":\\\"A guitar offered for sale\\\",\\\"referent\\\":\\\"guitar-o6\\\",\\\"route\\\":\\\"fixture:ordering-o6/guitar\\\"}},\\\"sig\\\":\\\"UL8NWIQFv4LHX0OMKBW3Gv2VcC97txYGrBrJtoxks_DslH-jMlrzzey_GSN1HVCrYPVoT0m299HQC9s6r1_ACA\\\"}\",\"route\":\"fixture:ordering-o6/guitar\"}",
+  "genesis": "sha256:080afaa386822dba15e5f694e16c554cf305ff06f031df9709b8a01935b1503c",
+  "origin": "sha256:1a2a4d30944bc14b399a54f9c19419201730d6874aed4c4fcb5c697fccca1fd6",
+  "route": "fixture:ordering-o6/guitar",
+  "signedInvitation": "{\"body\":{\"action_id\":\"o6-invite:ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q\",\"actor\":\"ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w\",\"genesis\":\"sha256:080afaa386822dba15e5f694e16c554cf305ff06f031df9709b8a01935b1503c\",\"kind\":\"ai.generalbusiness.dap.invite\",\"nonce\":\"63636363636363636363636363636363\",\"payload\":{\"grants\":{\"principal\":\"ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q\",\"roles\":[\"Buyer\"]},\"invitee\":\"ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q\",\"token_id\":\"o6-invite:ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q\"}},\"sig\":\"ZSDkQLnF5eAU2ygz7gc7mTUtbf6aSI5KrN7SWpHCK5kCh9DpkMmSIHJwO_BzltI34rpp8oJ1yM4uLrlzBp3UAQ\"}",
+  "signedAcceptance": "{\"body\":{\"action_id\":\"o6-accept:bob\",\"actor\":\"ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q\",\"genesis\":\"sha256:080afaa386822dba15e5f694e16c554cf305ff06f031df9709b8a01935b1503c\",\"kind\":\"ai.generalbusiness.dap.accept_invite\",\"nonce\":\"64646464646464646464646464646464\",\"payload\":{\"invite\":{\"actorSig\":\"ZSDkQLnF5eAU2ygz7gc7mTUtbf6aSI5KrN7SWpHCK5kCh9DpkMmSIHJwO_BzltI34rpp8oJ1yM4uLrlzBp3UAQ\",\"event\":{\"action_id\":\"o6-invite:ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q\",\"actor\":\"ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w\",\"genesis\":\"sha256:080afaa386822dba15e5f694e16c554cf305ff06f031df9709b8a01935b1503c\",\"kind\":\"ai.generalbusiness.dap.invite\",\"nonce\":\"63636363636363636363636363636363\",\"payload\":{\"grants\":{\"principal\":\"ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q\",\"roles\":[\"Buyer\"]},\"invitee\":\"ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q\",\"token_id\":\"o6-invite:ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q\"}},\"header\":{\"commitment\":\"sha256:4850778a7bd785fc8a91c48d5a95cff2e66873ec554585e915c8d57766a24481\",\"genesis\":\"sha256:080afaa386822dba15e5f694e16c554cf305ff06f031df9709b8a01935b1503c\",\"position\":2,\"prev\":\"sha256:c04b89d5d950facb77a73f3de29800c5d4ab288cce0e476c639149ee01f0bace\",\"seq_sig\":\"hTRAUGcaqcyC-OdQYb12RDF6x4Q0dSonL5lxwLfuJWzLw2nS86HVa-CbO-3qW2xpyVI8Jlr1QWTrDRVvrQnFDA\"}}}},\"sig\":\"N2rli8UM_X_erOSGs2wkyHLeP_gOLAXsGy3X96BZfKi5xliT3A4hKaWj7DUWoLYGZ1p8zwItoH22t_3j5S4_AA\"}",
+  "joined": {
+    "header": {
+      "commitment": "sha256:77a11c768dd4375d340ea950fecea43cf7d817c5d36ef5ab5234fc1fb1293508",
+      "genesis": "sha256:080afaa386822dba15e5f694e16c554cf305ff06f031df9709b8a01935b1503c",
+      "position": 3,
+      "prev": "sha256:9620d676fe1555dc810b0160c00f0009bac84e06b31667f1c4ef98d41daadad1",
+      "seq_sig": "63cuoo8yOKjFwSFwgHuUrg7L6JEE-OpV4lu0r7REatP2480MSvTVZ7HQDN3MU7_PtFxx_bJ_2UhlHP5AZ_-VAg"
+    },
+    "headerHash": "sha256:c6e06aeedc59bac6120eaba9d463ea2ffe3d3d76a520e08a15167a8c4daf91e6",
+    "replay": false,
+    "verdict": {
+      "known": true,
+      "authorized": true,
+      "effective": true
+    }
+  },
+  "retry": {
+    "header": {
+      "commitment": "sha256:77a11c768dd4375d340ea950fecea43cf7d817c5d36ef5ab5234fc1fb1293508",
+      "genesis": "sha256:080afaa386822dba15e5f694e16c554cf305ff06f031df9709b8a01935b1503c",
+      "position": 3,
+      "prev": "sha256:9620d676fe1555dc810b0160c00f0009bac84e06b31667f1c4ef98d41daadad1",
+      "seq_sig": "63cuoo8yOKjFwSFwgHuUrg7L6JEE-OpV4lu0r7REatP2480MSvTVZ7HQDN3MU7_PtFxx_bJ_2UhlHP5AZ_-VAg"
+    },
+    "headerHash": "sha256:c6e06aeedc59bac6120eaba9d463ea2ffe3d3d76a520e08a15167a8c4daf91e6",
+    "replay": true,
+    "verdict": {
+      "known": true,
+      "authorized": true,
+      "effective": true
+    }
+  },
+  "reopenedRetry": {
+    "header": {
+      "commitment": "sha256:77a11c768dd4375d340ea950fecea43cf7d817c5d36ef5ab5234fc1fb1293508",
+      "genesis": "sha256:080afaa386822dba15e5f694e16c554cf305ff06f031df9709b8a01935b1503c",
+      "position": 3,
+      "prev": "sha256:9620d676fe1555dc810b0160c00f0009bac84e06b31667f1c4ef98d41daadad1",
+      "seq_sig": "63cuoo8yOKjFwSFwgHuUrg7L6JEE-OpV4lu0r7REatP2480MSvTVZ7HQDN3MU7_PtFxx_bJ_2UhlHP5AZ_-VAg"
+    },
+    "headerHash": "sha256:c6e06aeedc59bac6120eaba9d463ea2ffe3d3d76a520e08a15167a8c4daf91e6",
+    "replay": true,
+    "verdict": {
+      "known": true,
+      "authorized": true,
+      "effective": true
+    }
+  },
+  "verifiedView": [
+    {
+      "position": 0,
+      "event": {
+        "actor": "ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w",
+        "kind": "ai.generalbusiness.dap.genesis",
+        "nonce": "62626262626262626262626262626262",
+        "payload": {
+          "bindings": [
+            {
+              "package": "sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85"
+            }
+          ],
+          "foundation": "sha256:5a7be1514529bac249c683ada733e64273f94b2700abf8a55c47dcb7ebfb8d78",
+          "grants": [
+            {
+              "capabilities": [
+                "ai.generalbusiness.dap.invite",
+                "ai.generalbusiness.dap.attach",
+                "ai.generalbusiness.dap.grant",
+                "ai.generalbusiness.dap.disclose",
+                "ai.generalbusiness.dap.close"
+              ],
+              "principal": "ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w",
+              "roles": [
+                "Seller"
+              ]
+            }
+          ],
+          "origins": [
+            {
+              "actor": "ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w",
+              "kind": "com.example.sale.listing",
+              "nonce": "61616161616161616161616161616161",
+              "payload": {
+                "ask": 800,
+                "description": "A guitar offered for sale",
+                "referent": "guitar-o6",
+                "route": "fixture:ordering-o6/guitar"
+              }
+            }
+          ],
+          "referents": [
+            "guitar-o6"
+          ],
+          "route": "fixture:ordering-o6/guitar",
+          "runtime": "dap.fixture.ts/1",
+          "sequencing": {
+            "control": "ed25519:iodf_x6zhFFXes1a_uQFRWVo3XyJ4JCGOgVXvHr0nxc",
+            "profile": "dap.fixture.single-writer/3",
+            "writer": "ed25519:bnoc3Smwt4_ROvTFWY_v9O8qlxZuPKby5Pv8zYBQW_E"
+          }
+        }
+      },
+      "committed": "{\"body\":{\"actor\":\"ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w\",\"kind\":\"ai.generalbusiness.dap.genesis\",\"nonce\":\"62626262626262626262626262626262\",\"payload\":{\"bindings\":[{\"package\":\"sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85\"}],\"foundation\":\"sha256:5a7be1514529bac249c683ada733e64273f94b2700abf8a55c47dcb7ebfb8d78\",\"grants\":[{\"capabilities\":[\"ai.generalbusiness.dap.invite\",\"ai.generalbusiness.dap.attach\",\"ai.generalbusiness.dap.grant\",\"ai.generalbusiness.dap.disclose\",\"ai.generalbusiness.dap.close\"],\"principal\":\"ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w\",\"roles\":[\"Seller\"]}],\"origins\":[{\"actor\":\"ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w\",\"kind\":\"com.example.sale.listing\",\"nonce\":\"61616161616161616161616161616161\",\"payload\":{\"ask\":800,\"description\":\"A guitar offered for sale\",\"referent\":\"guitar-o6\",\"route\":\"fixture:ordering-o6/guitar\"}}],\"referents\":[\"guitar-o6\"],\"route\":\"fixture:ordering-o6/guitar\",\"runtime\":\"dap.fixture.ts/1\",\"sequencing\":{\"control\":\"ed25519:iodf_x6zhFFXes1a_uQFRWVo3XyJ4JCGOgVXvHr0nxc\",\"profile\":\"dap.fixture.single-writer/3\",\"writer\":\"ed25519:bnoc3Smwt4_ROvTFWY_v9O8qlxZuPKby5Pv8zYBQW_E\"}}},\"sig\":\"6Gz1bdSnRKMe2uvSr58Aa4dtVa_7zNtgrnqlWsJiGI1YsiEHy0wS4k44KEeM-Cy8O8AnL1cRmjrW9b7qPsd8DQ\"}",
+      "header": {
+        "commitment": "sha256:080afaa386822dba15e5f694e16c554cf305ff06f031df9709b8a01935b1503c",
+        "genesis": "sha256:080afaa386822dba15e5f694e16c554cf305ff06f031df9709b8a01935b1503c",
+        "position": 0,
+        "prev": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+        "seq_sig": "uUEjTMZ3kr0n8RbLtGr4qkWsIoUHJBJv6BAxSf5ewa-ZJ8WXKjBiCS3OqzrMwZ1WWfx9hF_6mx3zX7yde-skCw"
+      },
+      "headerHash": "sha256:0d775cec21a33e1811e420890b12e9821990f9701c9c8c689a78ebf4c3f22631",
+      "via": "audience"
+    },
+    {
+      "position": 1,
+      "event": {
+        "actor": "ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w",
+        "kind": "com.example.sale.listing",
+        "nonce": "61616161616161616161616161616161",
+        "payload": {
+          "ask": 800,
+          "description": "A guitar offered for sale",
+          "referent": "guitar-o6",
+          "route": "fixture:ordering-o6/guitar"
+        }
+      },
+      "committed": "{\"body\":{\"actor\":\"ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w\",\"kind\":\"com.example.sale.listing\",\"nonce\":\"61616161616161616161616161616161\",\"payload\":{\"ask\":800,\"description\":\"A guitar offered for sale\",\"referent\":\"guitar-o6\",\"route\":\"fixture:ordering-o6/guitar\"}},\"sig\":\"UL8NWIQFv4LHX0OMKBW3Gv2VcC97txYGrBrJtoxks_DslH-jMlrzzey_GSN1HVCrYPVoT0m299HQC9s6r1_ACA\"}",
+      "header": {
+        "commitment": "sha256:1a2a4d30944bc14b399a54f9c19419201730d6874aed4c4fcb5c697fccca1fd6",
+        "genesis": "sha256:080afaa386822dba15e5f694e16c554cf305ff06f031df9709b8a01935b1503c",
+        "position": 1,
+        "prev": "sha256:0d775cec21a33e1811e420890b12e9821990f9701c9c8c689a78ebf4c3f22631",
+        "seq_sig": "heaD4pfehuK5YbLURWpXrpPjHLMA1Nga4UGDPas3aruiV5tbewC9j79d5vAr7Awbt4I1mt2qYf1MczG4Gvc6DQ"
+      },
+      "headerHash": "sha256:c04b89d5d950facb77a73f3de29800c5d4ab288cce0e476c639149ee01f0bace",
+      "via": "audience"
+    },
+    {
+      "position": 2,
+      "event": {
+        "action_id": "o6-invite:ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q",
+        "actor": "ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w",
+        "genesis": "sha256:080afaa386822dba15e5f694e16c554cf305ff06f031df9709b8a01935b1503c",
+        "kind": "ai.generalbusiness.dap.invite",
+        "nonce": "63636363636363636363636363636363",
+        "payload": {
+          "grants": {
+            "principal": "ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q",
+            "roles": [
+              "Buyer"
+            ]
+          },
+          "invitee": "ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q",
+          "token_id": "o6-invite:ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q"
+        }
+      },
+      "committed": "{\"body\":{\"action_id\":\"o6-invite:ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q\",\"actor\":\"ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w\",\"genesis\":\"sha256:080afaa386822dba15e5f694e16c554cf305ff06f031df9709b8a01935b1503c\",\"kind\":\"ai.generalbusiness.dap.invite\",\"nonce\":\"63636363636363636363636363636363\",\"payload\":{\"grants\":{\"principal\":\"ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q\",\"roles\":[\"Buyer\"]},\"invitee\":\"ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q\",\"token_id\":\"o6-invite:ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q\"}},\"sig\":\"ZSDkQLnF5eAU2ygz7gc7mTUtbf6aSI5KrN7SWpHCK5kCh9DpkMmSIHJwO_BzltI34rpp8oJ1yM4uLrlzBp3UAQ\"}",
+      "header": {
+        "commitment": "sha256:4850778a7bd785fc8a91c48d5a95cff2e66873ec554585e915c8d57766a24481",
+        "genesis": "sha256:080afaa386822dba15e5f694e16c554cf305ff06f031df9709b8a01935b1503c",
+        "position": 2,
+        "prev": "sha256:c04b89d5d950facb77a73f3de29800c5d4ab288cce0e476c639149ee01f0bace",
+        "seq_sig": "hTRAUGcaqcyC-OdQYb12RDF6x4Q0dSonL5lxwLfuJWzLw2nS86HVa-CbO-3qW2xpyVI8Jlr1QWTrDRVvrQnFDA"
+      },
+      "headerHash": "sha256:9620d676fe1555dc810b0160c00f0009bac84e06b31667f1c4ef98d41daadad1",
+      "via": "audience"
+    },
+    {
+      "position": 3,
+      "event": {
+        "action_id": "o6-accept:bob",
+        "actor": "ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q",
+        "genesis": "sha256:080afaa386822dba15e5f694e16c554cf305ff06f031df9709b8a01935b1503c",
+        "kind": "ai.generalbusiness.dap.accept_invite",
+        "nonce": "64646464646464646464646464646464",
+        "payload": {
+          "invite": {
+            "actorSig": "ZSDkQLnF5eAU2ygz7gc7mTUtbf6aSI5KrN7SWpHCK5kCh9DpkMmSIHJwO_BzltI34rpp8oJ1yM4uLrlzBp3UAQ",
+            "event": {
+              "action_id": "o6-invite:ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q",
+              "actor": "ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w",
+              "genesis": "sha256:080afaa386822dba15e5f694e16c554cf305ff06f031df9709b8a01935b1503c",
+              "kind": "ai.generalbusiness.dap.invite",
+              "nonce": "63636363636363636363636363636363",
+              "payload": {
+                "grants": {
+                  "principal": "ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q",
+                  "roles": [
+                    "Buyer"
+                  ]
+                },
+                "invitee": "ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q",
+                "token_id": "o6-invite:ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q"
+              }
+            },
+            "header": {
+              "commitment": "sha256:4850778a7bd785fc8a91c48d5a95cff2e66873ec554585e915c8d57766a24481",
+              "genesis": "sha256:080afaa386822dba15e5f694e16c554cf305ff06f031df9709b8a01935b1503c",
+              "position": 2,
+              "prev": "sha256:c04b89d5d950facb77a73f3de29800c5d4ab288cce0e476c639149ee01f0bace",
+              "seq_sig": "hTRAUGcaqcyC-OdQYb12RDF6x4Q0dSonL5lxwLfuJWzLw2nS86HVa-CbO-3qW2xpyVI8Jlr1QWTrDRVvrQnFDA"
+            }
+          }
+        }
+      },
+      "committed": "{\"body\":{\"action_id\":\"o6-accept:bob\",\"actor\":\"ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q\",\"genesis\":\"sha256:080afaa386822dba15e5f694e16c554cf305ff06f031df9709b8a01935b1503c\",\"kind\":\"ai.generalbusiness.dap.accept_invite\",\"nonce\":\"64646464646464646464646464646464\",\"payload\":{\"invite\":{\"actorSig\":\"ZSDkQLnF5eAU2ygz7gc7mTUtbf6aSI5KrN7SWpHCK5kCh9DpkMmSIHJwO_BzltI34rpp8oJ1yM4uLrlzBp3UAQ\",\"event\":{\"action_id\":\"o6-invite:ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q\",\"actor\":\"ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w\",\"genesis\":\"sha256:080afaa386822dba15e5f694e16c554cf305ff06f031df9709b8a01935b1503c\",\"kind\":\"ai.generalbusiness.dap.invite\",\"nonce\":\"63636363636363636363636363636363\",\"payload\":{\"grants\":{\"principal\":\"ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q\",\"roles\":[\"Buyer\"]},\"invitee\":\"ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q\",\"token_id\":\"o6-invite:ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q\"}},\"header\":{\"commitment\":\"sha256:4850778a7bd785fc8a91c48d5a95cff2e66873ec554585e915c8d57766a24481\",\"genesis\":\"sha256:080afaa386822dba15e5f694e16c554cf305ff06f031df9709b8a01935b1503c\",\"position\":2,\"prev\":\"sha256:c04b89d5d950facb77a73f3de29800c5d4ab288cce0e476c639149ee01f0bace\",\"seq_sig\":\"hTRAUGcaqcyC-OdQYb12RDF6x4Q0dSonL5lxwLfuJWzLw2nS86HVa-CbO-3qW2xpyVI8Jlr1QWTrDRVvrQnFDA\"}}}},\"sig\":\"N2rli8UM_X_erOSGs2wkyHLeP_gOLAXsGy3X96BZfKi5xliT3A4hKaWj7DUWoLYGZ1p8zwItoH22t_3j5S4_AA\"}",
+      "header": {
+        "commitment": "sha256:77a11c768dd4375d340ea950fecea43cf7d817c5d36ef5ab5234fc1fb1293508",
+        "genesis": "sha256:080afaa386822dba15e5f694e16c554cf305ff06f031df9709b8a01935b1503c",
+        "position": 3,
+        "prev": "sha256:9620d676fe1555dc810b0160c00f0009bac84e06b31667f1c4ef98d41daadad1",
+        "seq_sig": "63cuoo8yOKjFwSFwgHuUrg7L6JEE-OpV4lu0r7REatP2480MSvTVZ7HQDN3MU7_PtFxx_bJ_2UhlHP5AZ_-VAg"
+      },
+      "headerHash": "sha256:c6e06aeedc59bac6120eaba9d463ea2ffe3d3d76a520e08a15167a8c4daf91e6",
+      "via": "audience"
+    }
+  ],
+  "interpretation": {
+    "frontier": 3,
+    "participants": [
+      "ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w",
+      "ed25519:gTl3Dqh9F19Wo1Rmw0x-zMuNipG07jeiXfYPW4_Js5Q"
+    ],
+    "admission": {
+      "known": true,
+      "authorized": true,
+      "effective": true
+    },
+    "bindings": {
+      "com.example.sale.accept": "sha256:a5e09c9f11afd439f22651db51e2b5b20917c7f86d67ae4e455df2df932a636b",
+      "com.example.sale.close": "sha256:94d89a776b2574a375a20a6d8a3218683b9e3dae76d012fd71311d8b1a797186",
+      "com.example.sale.counter": "sha256:dfa255f6c37c7768cb6cee514aaa620c3e039c9bcf665416f39e480633d100b0",
+      "com.example.sale.listing": "sha256:43a386cf03ba57e09c464dff660765019286af1dddab623d48d5e1d63c9c5bac",
+      "com.example.sale.offer": "sha256:1fc32f8a987ea16b9fe5636a80905e990c17a71c6e13d7c9c59bd13c00cb495e",
+      "com.example.sale.offer_terms": "sha256:5ab16adb57788a67a35bc94faed5c60bf83b4ab9c1377781ef941b7ed62d720a",
+      "com.example.sale.withdraw": "sha256:a4492bd5e849bc64ea258417fd61fc4d0385404d7181d6652b4828a005ccb5f7"
+    }
+  },
+  "entriesAfterReopen": 4,
+  "pendingPublications": 4
+}

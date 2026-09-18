@@ -1,0 +1,46 @@
+{
+  "input_snapshot": "f9995e8761f23bbf0e71f004b29199c05ee35663",
+  "node": "v26.8.2",
+  "runs": [
+    {
+      "name": "run-2-tests",
+      "command": [
+        "node",
+        "--test",
+        "--test-skip-pattern=case [57], the campaign:",
+        "test/**/*.test.ts"
+      ],
+      "exit_code": 0,
+      "summary": {
+        "tests": 371,
+        "pass": 367,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 4
+      },
+      "campaign_tests_excluded": 3
+    },
+    {
+      "name": "typecheck-2",
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "run-2-demo",
+      "command": [
+        "node",
+        "test/fixtures/o6-bootstrap.ts",
+        "/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/dap-o6-demo-final-0x3dufw2/journal.db"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "full_campaign_boundary": "b35b267ea5392e5361905018ee350ec4df07aa55",
+  "campaigns_repeated": false,
+  "retained_negative": "Four executing Club TODOs: original A1 and three A5 cases"
+}

@@ -1,0 +1,65 @@
+{
+  "input_snapshot": "1ea700b15ded453fdeed52dbae25c2d4dd8057db",
+  "node": "v26.8.2",
+  "scope": "O6 bootstrap only, whole-tree typecheck and actual SQLite CLI; no repeated O4, aggregate or campaign suite",
+  "o4_input": "f8987d22890e7cf2471d7124544c539d69c0a835",
+  "runs": [
+    {
+      "name": "run-6-tests",
+      "command": [
+        "node",
+        "--test",
+        "test/ordering-bootstrap.test.ts"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 0.144,
+      "summary": {
+        "tests": 2,
+        "pass": 2,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    {
+      "name": "typecheck-6",
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 0.901
+    },
+    {
+      "name": "run-6-demo",
+      "command": [
+        "node",
+        "test/fixtures/o6-bootstrap.ts",
+        "/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/dap-o6-demo-l1-l3-hyg8i202/journal.db"
+      ],
+      "exit_code": 0,
+      "wall_seconds": 0.095
+    }
+  ],
+  "demo": {
+    "profile": "dap.fixture.single-writer/3",
+    "genesis": "sha256:080afaa386822dba15e5f694e16c554cf305ff06f031df9709b8a01935b1503c",
+    "origin": "sha256:1a2a4d30944bc14b399a54f9c19419201730d6874aed4c4fcb5c697fccca1fd6",
+    "route": "fixture:ordering-o6/guitar",
+    "receipt": "sha256:c6e06aeedc59bac6120eaba9d463ea2ffe3d3d76a520e08a15167a8c4daf91e6",
+    "entriesAfterReopen": 4,
+    "pendingPublications": 4,
+    "unchangedFromRun5ExceptPidAndDatabase": true,
+    "stderrEmpty": true
+  },
+  "scopeIdentities": {
+    "manifest": "sha256:92ad0023e387cd4a6305d074ab99f7a29cbcc1699cd88b8dcf439a446ef58828",
+    "runtime": "sha256:cbc58a25deebafd4bcb6318c8eace26027ffa09ed796061efdf27770feee67fe",
+    "scopePackage": "sha256:21195fc775e76dd7bcc0e0dc57488527c01260de4cb17b7f0de021d00161bed5",
+    "inspectionPackage": "sha256:18a886c149b383b8630836307195c1a89b90c463e7e32df6e0663b5d4ecc3030",
+    "openingRule": "sha256:9e9bcbdd74fe244fb63c5e339256ab508b2b3251d2e8fa642b3309cd1f1049e6"
+  },
+  "approvalBoundary": "O4 and O6 remain unapproved; earlier aggregate acceptance does not cover these changes"
+}

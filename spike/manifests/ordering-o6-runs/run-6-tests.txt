@@ -1,0 +1,11 @@
+✔ O6: a newcomer reaches the published route, redeems a signed invitation, verifies and retries after reopen (29.141583ms)
+ℹ {"genesis":"sha256:080afaa386822dba15e5f694e16c554cf305ff06f031df9709b8a01935b1503c","origin":"sha256:1a2a4d30944bc14b399a54f9c19419201730d6874aed4c4fcb5c697fccca1fd6","route":"fixture:ordering-o6/guitar","positions":[0,1,2,3],"admission":{"known":true,"authorized":true,"effective":true},"receipt":"sha256:c6e06aeedc59bac6120eaba9d463ea2ffe3d3d76a520e08a15167a8c4daf91e6","retry":"sha256:c6e06aeedc59bac6120eaba9d463ea2ffe3d3d76a520e08a15167a8c4daf91e6","reopenedRetry":"sha256:c6e06aeedc59bac6120eaba9d463ea2ffe3d3d76a520e08a15167a8c4daf91e6"}
+✔ O6: malformed, forged, unadopted or mismatched publications cannot resolve a journal (9.072917ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 113.068875
