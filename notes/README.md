@@ -28,7 +28,7 @@ with the goals (§0), in priority order: evolvability, ease of programming
 as an agent, comprehension simplicity for a person, lightweight
 decentralization. Each has one criterion the spikes report against.
 
-Six notes, each owning one concern:
+Seven notes, each owning one concern:
 
 - [Evolving spaces](2026-09-14-evolving-spaces-design.md) — what the things
   are: goals, referents, events, contexts, audiences, packages, authority,
@@ -52,6 +52,11 @@ Six notes, each owning one concern:
   model's original admission policy was left failing rather than revised,
   and the two alternatives that were not adopted. It owns the spike's one
   outright negative result.
+- [Authoring language directions](2026-09-18-authoring-language-directions.md)
+  — after goal 2 fell: what a source language and compiler for
+  application-behaviour packages should do, ranked, with a sweep of the
+  original use cases and a proposed next spike. A research note; it adopts
+  nothing.
 
 Links into gitseq, atseq and noseq assume sibling checkouts beside this repository;
 each cited note records the inspected commit.
