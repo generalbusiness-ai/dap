@@ -28,7 +28,7 @@ with the goals (§0), in priority order: evolvability, ease of programming
 as an agent, comprehension simplicity for a person, lightweight
 decentralization. Each has one criterion the spikes report against.
 
-Seven notes, each owning one concern:
+Eight notes, each owning one concern:
 
 - [Evolving spaces](2026-09-14-evolving-spaces-design.md) — what the things
   are: goals, referents, events, contexts, audiences, packages, authority,
@@ -57,6 +57,10 @@ Seven notes, each owning one concern:
   application-behaviour packages should do, ranked, with a sweep of the
   original use cases and a proposed next spike. A research note; it adopts
   nothing.
+- [Compiler spike plan](2026-09-18-compiler-spike-plan.md) — the next
+  spike as fixture decisions, predeclarations and tasks: goal 2 rerun
+  under a compiler, three new models, two arms. A draft plan; not yet
+  reviewed.
 
 Links into gitseq, atseq and noseq assume sibling checkouts beside this repository;
 each cited note records the inspected commit.
