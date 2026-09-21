@@ -581,10 +581,10 @@ how that residue runs.
    promise, report loop and Woah's task obligation model are this pattern in
    a workroom; the language form is smaller. It replaces the harness hooks
    the spike needed, and it is the natural shape for D13's services. An
-   obligation is a contract with a named performer, so when the performer
-   fails, blame falls on the performer: the model declared, the client did
-   not honour. §1 shows the spike charging four such failures to model
-   authors. Two further things Racket names that the spike built by hand:
+   obligation is a contract with a named performer. The spike required
+   four author repairs to these boundary contracts, which §1 counts as
+   authoring work. Once a correct contract exists, failure to honour it
+   is attributed to its performer. Two further things Racket names that the spike built by hand:
    a kind's expected-binding identity is a contract on a boundary, and
    `stale_binding` is the contract changing under a signed intent; and an
    audience term that reads prior effective state is a dependent contract,

@@ -51,9 +51,8 @@ assertions, captured material and other parties' signed acts apart, and
 shows how far each fact can be relied on. The first experiment is one
 person-controlled account, one
 bounded episode, one real exchange through an ordinary channel, and one
-voluntary contribution by another party. §8 lists the steps. Nothing
-starts until a willing person and a bounded segment of a real episode
-exist.
+voluntary contribution by another party. §8 sets out one pilot in five stages. Nothing starts until a willing
+person and a bounded segment of a real episode exist.
 
 Two project terms are used throughout. A **context** is one governed
 scope of decisions with one ordered record of events. A **perspective**
@@ -110,8 +109,9 @@ depends on who is talking. To the claimant and the adjuster it is the
 claim. To the claimant and a sibling it is the claim together with the
 family's own arrangements around it. To the adjuster and the contractor
 it is the repair. The design's word for the shared thing is the
-referent, and each person's view of it is their perspective; one name,
-many meanings, and no view is the master copy.
+referent, and each person's view of it is their perspective. One name,
+many meanings. No person's screen shows the whole situation, and
+contexts and permissions remain distinct.
 
 **Participation roles are multiple and may be nebulous.** For any one
 space three questions can be asked, and the answers differ for each
@@ -136,7 +136,7 @@ substrate carries both.
 
 | Relationship | What passes between them | Structure | What dap enforces |
 |---|---|---|---|
-| siblings arranging who visits when | informal chat | none | that each message is signed, ordered and readable by exactly those it was addressed to |
+| siblings arranging who visits when | informal chat | no prescribed workflow | signed messages in a shared order, with access governed by the declared audience and disclosure rules and the stated hosting trust |
 | a patient and a specialist | what-if questions, answers, a decision | light: a question has an answer, a decision has a date | the same, plus the few declared facts: this answer belongs to that question, this decision stands |
 | a claimant and an insurer | the insurer's checklist, evidence, deadlines | strong: items, guards, standing | the checklist's rules, judged the same way by everyone who can see them |
 
@@ -332,141 +332,117 @@ So before any real link, four prerequisites: a reachable invitation
 flow, authenticated reads, contribution rights scoped to one act, and a
 plain statement of what "confirmed as theirs" establishes.
 
-## 8. Next steps
+## 8. Next steps: one pilot in five stages
 
 Product evidence comes before general machinery. A fixed observation
 window around the episode means the real exchange is sought early, not
-after the whole case has run.
+after the whole case has run. Each stage is one workroom request when it
+is next; none is filed by this note. The authoring step of §7 runs on
+its own, gates nothing here, and does not take priority over the pilot
+when effort is scarce.
 
-**How the steps depend on each other.** R1 selects the segment. R2
-finalizes the pilot trust boundary for that segment, so it needs R1. R3
-needs R1 and may use sanitized or invented material before R2; no real
-material is used before R2. R4 and R5 may be prototyped together against
-an agreed contract, but R5 completes only after it runs over R4's
-package. E1 needs R2, R4 and R5. E2 happens inside E1's window. E3 needs
-the four rung-2 prerequisites of §7, which become their own small request
-once E2 has shown that an exchange is wanted. P6 runs on its own. R6
-happens when the observation window ends or an earlier stop is reached,
-whether or not E2 and E3 completed. Deployment and runtime choices wait
-for R6.
+The stages run in order. Stage 2 may use sanitized or invented material
+before stage 1's trust boundary is settled; no real material is used
+before it. Stage 3 builds against stage 2's record. Stage 4 needs stages
+1 and 3. Stage 5 happens when the observation window ends or an earlier
+stop is reached, whether or not an exchange was answered. Deployment and
+runtime choices wait for stage 5.
 
-| Step | Who | Needs |
-|---|---|---|
-| R1 Choose the person and the segment | Hugh | nothing |
-| R2 Pilot trust and control | Hugh with builder | R1 |
-| R3 Phone mock on that episode | builder, then five people | R1 |
-| R4 Account package | builder, checker | R3 |
-| R5 Smallest end-to-end | builder | R3, and R4 to complete |
-| E1 The episode, alone | the person, with the help chosen in R1 | R2, R4, R5 |
-| E2 One exchange, early | the same person | inside E1 |
-| E3 One contribution | the same person and one other party | E2, and the rung-2 prerequisites |
-| P6 Authoring step 1 | builder, checker | nothing |
-| R6 Direction review | Hugh | the window's end, or an earlier stop |
+### Stage 1: choose the episode and the operating boundary
 
-Each is one workroom request when it is next. None is filed by this
-note.
+Owner: Hugh, with builder for the boundary.
 
-### R1 Choose the person and the segment
+Produces, in one brief: a willing person; a bounded segment of a real
+episode, a week, one encounter or one claim exchange, not the whole case;
+their current method, recorded; the help they will be supplied under §3
+and what needs their approval; the ordinary channels involved; the
+immediate outcome they want; a fixed observation window; and the pilot's
+operating boundary: a provisional operator, storage, export and recovery
+arrangements, and the privacy boundary stated in plain words, with who
+can read what during the pilot and how that is enforced. The claim is
+preferred; whichever case a willing person can be found for decides.
 
-Produces:
+Stop when: no willing person with a bounded segment exists, or the
+boundary cannot be stated honestly for the chosen segment. Then choose
+another segment or wait; no later stage starts.
 
-- a willing person;
-- a bounded segment of a real episode: a week, one encounter, or one
-  claim exchange, not the whole case;
-- their current method, recorded;
-- the help they will be supplied under §3, and what needs their
-  approval;
-- the ordinary channels involved;
-- the immediate outcome they want;
-- a fixed observation window.
+### Stage 2: test the screens
 
-The claim is preferred. Whichever case a willing person can be found for
-decides.
-
-Stop when: no willing person with a bounded segment exists. Then the
-pilot waits, and no later product step starts; P6 is unaffected.
-
-### R2 Pilot trust and control
-
-Produces: a provisional operator; storage, export and recovery
-arrangements; the privacy boundary stated in plain words; who can read
-what during the pilot, and how that is enforced.
-
-Stop when: the boundary cannot be stated honestly for the chosen
-segment. Then choose another segment.
-
-### R3 Phone mock on that episode
+Owner: builder, then five people.
 
 Produces: a storyboard on a phone using the chosen segment, asking the
 five screen questions of §7, including a changed arrangement and
-selected sharing with one other party; five people asked.
+selected sharing with one other party; five people asked; the observed
+answers, the revisions they caused and the remaining blockers recorded.
 
-Ends when: the observed answers, the revisions they caused and the
-remaining blockers are recorded. A failing screen means a design
-revision, not a verdict on the direction, and implementation does not
-proceed until the record exists.
+Ends when: that record exists. A failing screen means a design revision,
+not a verdict on the direction, and stage 3 does not start until the
+record exists.
 
-### R4 Account package
+### Stage 3: build one complete path
 
-Produces: a manifest frozen before authoring, with the three record
-kinds, capture events, and standing that can change; the cases of §5
-predeclared, including cancellation, correction, retraction and
-conflicting sources; a privacy budget; the package authored under the
-checker.
+Owner: builder, with checker on the package.
+
+Produces, in one implementation request with internal checks: the
+account package, from a manifest frozen before authoring, with the three
+record kinds, capture events, standing that can change, the cases of §5
+predeclared including cancellation, correction, retraction and
+conflicting sources, and a privacy budget, authored under the checker;
+and a minimal client over it for the chosen segment, with the anchor and
+actions that name their targets. Manual capture and confirmation are
+allowed, if visible and counted.
 
 Stop when: for some participant and visibility basis, the standing that
 participant's own view derives differs from the oracle's projection for
 that same participant. Different evidence may support different
 standing for different participants; shared visible outcomes must agree.
 A mismatch sends the account rules and their visibility dependencies
-back for revision.
+back for revision. Otherwise the stage ends when the client runs the
+chosen segment over the package.
 
-### R5 Smallest end-to-end
+### Stage 4: run the bounded episode
 
-Produces: a minimal client over the account package for the chosen
-segment, with the anchor and actions that name their targets. Manual
-capture and confirmation are allowed, if visible and counted.
+Owner: the person, with the help chosen in stage 1.
 
-Ends when: the client runs the chosen segment over R4's package.
+One pilot, three observations inside one window:
 
-### E1 The episode, alone
-
-Produces: the account kept through the window with every other party
-outside, and these measurements:
-
-- the total burden of capture, correction, approvals, permissions and
-  helper or operator work, counted separately for the person, any
-  helper and the operator;
-- whether a usable next step existed when one was due, allowing that
-  waiting is sometimes the right step;
-- comprehension and useful action, against the person's previous
-  method;
-- whether the three record kinds stayed distinct;
-- the advocate ledger of §6.
+- **Alone.** The account kept with every other party outside. Measured:
+  the total burden of capture, correction, approvals, permissions and
+  helper or operator work, counted separately for the person, any helper
+  and the operator; whether a usable next step existed when one was due,
+  allowing that waiting is sometimes the right step; comprehension and
+  useful action against the person's previous method; whether the three
+  record kinds stayed distinct; the advocate ledger of §6.
+- **One ordinary exchange, early.** One concise question or proposed
+  arrangement sent through an ordinary channel; the reply captured with
+  its source; standing updated. If the reply cannot be captured without
+  re-keying, that is a finding about ingestion usability, not about the
+  foundation.
+- **One direct contribution, optional.** After the four rung-2
+  prerequisites of §7, which become their own small request once the
+  exchange has shown one is wanted: one "can you confirm this
+  arrangement?" link; the other party acts once; whether they did, what
+  they saw, the friction, whether it deepened. A refusal is a finding.
+  One party is not a market test.
 
 Stop when: the burden exceeds the previous method with no gain in
 comprehension or action. Then it is a filing system, and the first
 experiment of §2 is redesigned.
 
-### E2 One exchange, early
+### Stage 5: review
 
-Produces, inside the window: one concise question or proposed
-arrangement sent through an ordinary channel; the reply captured with
-its source; standing updated.
+Owner: Hugh.
 
-A failure means: if the reply cannot be captured without re-keying, that
-is a finding about ingestion usability, not about the foundation.
+Produces, when the window ends or an earlier stop is reached: what the
+pilot established, with each exchange and contribution classified as
+completed, declined, unanswered or not attempted, and why; the advocate
+ledger; the generality story of §4 checked against every product
+decision made; whether to proceed to deployment and runtime choices, and
+with which constraints. This is the decision point.
 
-### E3 One contribution
+### Beside the pilot: the authoring step
 
-Produces, after the rung-2 prerequisites: one "can you confirm this
-arrangement?" link; the other party acts once; measurements of whether
-they did, what they saw, the friction, and whether it deepened.
-
-A failure means: a refusal is recorded as a finding. One party is not a
-market test.
-
-### P6 Authoring step 1
+Owner: builder, checker. Independent of the stages.
 
 Produces: the revised authoring plan's claims A1 to A3. The declaration
 layer can express the Sale package, rejects the known bad shapes, and
@@ -475,25 +451,13 @@ holds across the existing package corpus.
 Stop when: any of A1, A2 or A3 is refuted. Then packages stay
 hand-written and the catalog is small.
 
-### R6 Direction review
-
-Produces: what E1 to E3 established, with each exchange and contribution
-classified as completed, declined, unanswered or not attempted, and why;
-the advocate ledger; the generality story of §4 checked against every
-product decision made; whether to proceed to deployment and runtime
-choices, and with which constraints.
-
-Stop when: never. This is the decision point.
-
 ## 9. What this note does not decide
 
-- Which real episode R1 uses. The claim is the provisional operational
-  test and the care episode the purpose test; access decides.
-- Which of the three kinds of help the pilot supplies, and what each may
-  do. R1 decides.
+- Which real episode stage 1 uses, and which of the three kinds of help
+  the pilot supplies. Stage 1 decides.
 - A surface syntax for packages, the runtime, WebAssembly, payment,
   discovery, identity beyond an engagement, and deployment
   infrastructure.
 - Whether the multi-organisation story of §4 becomes the second
   experiment. It is a design check now; the second experiment is chosen
-  at R6.
+  at stage 5.

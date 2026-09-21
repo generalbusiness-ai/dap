@@ -5,8 +5,10 @@ status: >-
   report 1bf0b745). Not yet approved; it adopts nothing and authorizes
   no implementation. It is step 3 of the authoring spike plan, gated on
   that plan's step 2 and on the MVP product description, and its product
-  is three alternative source shapes with their tradeoffs for a person to
-  choose from.
+  is the actual alternatives, up to three, with their tradeoffs for a
+  person to choose from. Narrowed after the checker's second review:
+  the first round is small, and breadth is added only if a useful
+  difference appears.
 origin: >-
   Hugh's question of 2026-09-20: how to measure the ability to reason about
   candidate authoring languages cheaply enough to try many large and small
@@ -96,16 +98,16 @@ declaration layer.
 | Decision | Choice | Why | Does not claim |
 |---|---|---|---|
 | Semantic ground truth | Per situation, a frozen tuple: the model version (landed, or the kept run-1 or run-6 program), the harness and client versions, the trace, package availability, the rendering shown, and the matching answer key. Keys come from `foldPrefix` and `oracleObserve`, the foundation's audience assignment, `checkContext`, the declared `config.joinDisclosure`, and the Sale trace's Inspection attach. Every notation renders that same situation's program, historical variants included, so a reasoner is never scored against a key for a program it was not shown | The kept run-1 program permits a withdrawal the landed fixture refuses; scoring a correct reading of one against the key of the other would be a source and key mismatch, not a reasoning error | That the fixtures are the only possible semantics for the notations |
-| Candidates, round one | Six to eight renderings of Sale differing in kind: the directions note's DDL-and-acts shape; an entity-shaped form with acts as methods; a role-grouped form ("Seller may …"); a rule form with facts and guards as clauses; a tabular form with one row per act; the directions note's D8 sketch as written; and the TypeScript fixture itself | Large differences first, so the pruning is about shape and not punctuation | That the set is complete |
-| Candidates, round two | Small mutations of each survivor: readers on columns versus on acts; reasons inline versus in one table; guard order explicit versus derived; comments present versus absent; keyword and layout choices; and a Club rendering of each survivor | Small differences are cheap to try once the shape is fixed | That every small difference was tried |
+| Candidates, first round | The TypeScript fixture and two contrasting renderings of Sale: the directions note's DDL-and-acts shape, and a rule form with facts and guards as clauses | The smallest set that can show a difference; breadth is added only if it does | That the set is complete |
+| Candidates, later rounds, only if a useful difference appears | Further shapes (entity-shaped, role-grouped, tabular); small mutations of a survivor; a Club rendering | Cheap once a difference exists to chase | That every difference was tried |
 | Situations | Thirty per package, drawn from campaign seeds at chosen frontiers, plus the hand-written trace, mixed on purpose: cases where every view agrees, cases from the kept run-1 and run-6 models where a view diverges, and cases that pause on a missing package; a held-out set of ten is kept back for the finalists | The harness reproduces any of them from seed and frontier; a bank built only on the repaired fixture answers "agrees" almost every time and measures nothing | Coverage of the state space |
 | Trace notation | Positions, kind, actor and payload where the answering principal can read it, in one fixed layout for every candidate. Readability is **not** shown: the who-can-read question would otherwise be answered by the trace | Simplification 2; the review | That this is a good notation for people |
 | Question bank | §4, generated from the situations, with the harness answer stored beside each question | Exact grading | Anything about questions a person would ask |
 | Answer format | One fixed JSON shape per question type, so grading is mechanical; a malformed answer is wrong | Cheapness | Partial credit |
-| Controls | The TypeScript fixture as the familiarity baseline; a scrambled-identifier copy of each candidate as a naming control only; a no-source condition to measure guessing; question order shuffled per run | Without these a result is a result about the model's training set | That familiarity can be subtracted; it is a real cost and the report says so |
+| Controls | The TypeScript fixture as the familiarity baseline; a no-source condition to measure guessing; question order shuffled per run; a scrambled-identifier copy as a naming control only in a later round | Without these a result is a result about the model's training set | That familiarity can be subtracted; it is a real cost and the report says so |
 | Calibration | Before any candidate runs: the original and a mutated fixture, one broken guard and one broken audience rule, must produce different keys on a preselected set of mutation-sensitive questions; a reasoner shown the mutated rendering is scored against the mutated key, and a correct reasoner should stay correct; a separate, deliberate mismatch control, mutated rendering against the original key, must show a predeclared decrease of at least ten points; the no-source and trivial-predictor thresholds are stated before any candidate runs. Scrambling is a naming control only, never a calibration gate | A bank that shortcuts must be caught before it is used, without penalizing correct reasoning | Anything about people |
-| Models and sampling | One large and one small model, three samples per question, temperature fixed and recorded, prompts identical across candidates except for the rendering | Variance and the clarity signal | Anything about a model not run |
-| Writing tasks | Three per package: change one manifest promise and edit the declaration; locate the wrong declaration from a checker counterexample; author one new act from a one-line specification | Goal 2 is writing; reading alone would miss it | Rigor equal to the reading bank, until the compiler grades edits |
+| Models and sampling | One model in the first round, three samples per question, temperature fixed and recorded, prompts identical across candidates except for the rendering; a second model size only in a later round | Variance first; the clarity signal later | Anything about a model not run |
+| Writing tasks | Deferred to a later round; the first round measures reading only | Model-graded writing is the weaker signal and adds cost before a difference exists | Anything about writing |
 | Metrics | Accuracy per candidate, per question type, per model, with intervals from the samples; source length in tokens; the large-versus-small gap; writing task score; time to answer, recorded and not scored | The tradeoff table needs all of them | A single score |
 | Selection rule | §5 | | |
 
@@ -149,11 +151,11 @@ A prediction that fails is reported with what happened instead.
 The report does not pick. It computes the front of candidates that no
 other candidate beats on all of: non-local reading accuracy at the small
 model, writing task score, and source length. From that front it offers
-three, chosen to differ from each other in shape, each with a one-page
-tradeoff: where it wins, where it loses, the large-versus-small gap, the
-familiarity baseline beside it, and the Club rendering's result. Where
-the front has fewer than three members the report says so and fills from
-the nearest candidates, marked as such. A person chooses one, and the
+the actual alternatives, at most three and chosen to differ in shape,
+each with a one-page tradeoff: where it wins, where it loses, the
+familiarity baseline beside it, and any later-round result. Where the
+front has fewer than three members the report offers fewer; it does not
+fill from dominated candidates. A person chooses one, and the
 chosen rendering and its Club counterpart become the surface syntax over
 the declaration layer.
 

@@ -42,10 +42,11 @@ the derivations. It must reproduce the repaired Sale from a declaration,
 reject the recorded bad shapes with reproducing scripts, and reject the
 original Club as expected. If it cannot, the idea is refuted cheaply.
 **Step 2** runs one fresh authoring task with total effort measured from
-the first draft, beside a declarative TypeScript control that uses the
-same derivations, so that the compiler's help and any new syntax are
-measured apart. **Step 3** compares notations under the separate
-notation plan. Steps 2 and 3 wait for the MVP product description to say
+the first draft against a predeclared budget; the landed six repairs
+are context for reading the result, not a control arm. **Step 3**, a
+narrow notation comparison under the separate notation plan, is
+optional and is commissioned only if notation is shown to be the
+bottleneck. Steps 2 and 3 wait for the MVP product description to say
 who authors packages. Composition, admission and the retroactive
 audience become their own experiments later, each with its own stopping
 point.
@@ -55,10 +56,9 @@ point.
 | Step | Claim | Established if | Refuted if |
 |---|---|---|---|
 | 1 | **A1. The derivations reproduce the repaired Sale.** | A Sale declaration compiles through the layer to a package that passes the unchanged Sale manifest's predeclared cases and 200-seed campaign, with `observe`, affordances, audience rules, backlog and disclosure policy all derived and none hand-written | The declaration cannot express a rule the fixture needs, or the derived package fails a predeclared case |
-| 1 | **A2. The check sees what the checker found.** | Each diagnosed shape of §4.2 is refused with the named diagnostic, and the script it carries fails the unchanged checker against the model the table names; each prevention of §4.2 holds under the generator; the original Club is refused with the unjudgeable-reference diagnostic and its A5 script fails the checker | Any diagnosed shape compiles, a script passes the checker (a false positive), a prevention fails under the generator, or Club compiles |
+| 1 | **A2. The check sees what the checker found.** | Each diagnosed shape of §4.2 is refused with the named diagnostic, and the pinned witness it names fails the unchanged checker against the model named, for the reason named; each regression of §4.2 is preserved as stated; each prevention of §4.2 holds under the generator; the original Club is refused with the unjudgeable-reference diagnostic and its A5 witnesses fail the checker | Any diagnosed shape compiles, a witness passes the checker or fails it for another reason, a regression is lost, a prevention fails under the generator, or Club compiles |
 | 1 | **A3. The check is sound on the corpus.** | The derived Sale and a derived Booking pass their campaigns, and no campaign finds a visibility violation the check accepted | A campaign finds a visibility violation in a declaration the check accepted; the report names the expression class the check missed |
-| 2 | **A4. Total authoring effort falls.** | A fresh agent authors Sale under §4.4 in the declaration layer; every correction from the first draft is counted, compile-caught and checker-caught alike; the total is at most six **and** the checker-caught share is at most two | The total exceeds six, **or** the checker-caught share exceeds two. The landed six semantic repairs are a reference point, not a contemporaneous unassisted arm, so A4 compares against a number measured under a different protocol and says so |
-| 2 | **A5. Assistance and syntax are separable.** | The control of §3, a TypeScript builder with the same derivations and checks, is authored under the same protocol by a second fresh agent, and its totals are reported beside the declaration layer's. The two arms differ in representation as §3 defines; if they turn out identical the run is reported as a replication, not a control | Not refutable; it is the control that makes A4 interpretable |
+| 2 | **A4. The author meets the predeclared repair budget.** | A fresh agent authors Sale under §4.4 in the declaration layer; every correction from the first draft is counted, compile-caught and checker-caught alike; the total is at most six **and** the checker-caught share is at most two | The total exceeds six, **or** the checker-caught share exceeds two. The landed six semantic repairs are descriptive context measured under a different protocol; meeting the budget does not establish a causal improvement over hand authoring, and the report says so |
 
 Two measurements accompany the claims and are not claims: source lines
 against emitted lines, and the number of corrections caught at compile
@@ -109,11 +109,10 @@ The first plan's decisions stand unless a row replaces one.
 | Readers | Two annotations per row and per column: `readers` at recording and `max` readers after disclosure; role membership is evaluated at the event's position from grants strictly before it, and a later grant never widens an earlier event's readers | D3 needs both; the grammar sketch supplied one | Per-field encryption |
 | Dependency check | Every expression that feeds state, an audience, a query result or an affordance carries a dependency set of the rows and relations it reads. Containment, `readers(act) ⊆ readers(dependency)`, is checked for guards, effects, derived columns, queries and affordances alike. An absence test or an aggregate depends on the whole relation, so the relation's readers must contain the act's readers, which is the completeness condition | The review's example: a public column `total = count(private_table)` passes a guard-only check and gives readers different public state | Soundness beyond the corpus; A3 bounds it |
 | Versioned rows | An assignment is a row version keyed by the producing position; the visible value is the latest visible version; a disclosure inserts a version at its original position and never overwrites a newer one | Equal verdicts do not make assignments commute; the Sale fixture keeps versions and picks the latest visible, and the layer states that rule | Anything about performance |
-| Diagnostics | Name the act, the expression, the dependency, the reader who diverges, the reason that would differ, and a reproducing `Step[]` script the unchanged checker must find failing against the model named | Executable diagnostics | Short scripts |
+| Diagnostics | Name the act, the expression, the dependency, the reader who diverges and the reason that would differ, and link to the pinned regression witness of §4.2 that shows the failure. The layer does not synthesize reproducing scripts in general; the witnesses are fixed files replayed by the unchanged checker | Executable evidence without a second obligation on the layer | That every diagnostic has a witness; one without is reported as unwitnessed |
 | Derivations | Audience rule per kind, total over runtime JSON; the split of mixed-reader columns into public and private kinds with linkage; the disclosure policy from `max`; the backlog kinds from the dependency graph; `effects` for grant effects; guard order; `observe`; affordances derived from the same guards the fold uses, so that offered and possible coincide; budget and invariant functions that run beside the manifest's | D3 to D6; the review found offered and possible differ in the landed Sale | Minimal derivations |
 | Club | The original policy is an expected rejection; a public-record or trusted-evidence Club is a separately changed experiment under the first plan's §4.7 | The decision note; the review | That Club can be rerun unchanged |
 | Counting | Total corrections from the first draft; each classified by the directions note's seven classes, by whether compile-caught or checker-caught, and by blame: fold defect, or a declaration constraining a client | The first spike's boundary; the blame subsection of the directions note | That the budget of two carries over unchanged; A4 states the comparison |
-| Control | A TypeScript builder API with the same derivations and checks, in which guards and effects are ordinary TypeScript functions over typed rows, authored under the same protocol by a second fresh agent. The representation difference is exactly that: data with a predicate form, against code | Separates the derivations from the representation, as far as two arms can | Anything about which is better to read; step 3 |
 | Harness | Unchanged; one loader test for emitted modules | The measurement must be the same | Anything about the deferred experiments |
 
 ## 4. Predeclarations
@@ -137,17 +136,28 @@ the frontier, the violation class and the outcome difference, and its
 test asserts those values; a script that merely fails the checker for
 some other reason is not a witness.
 
-| Shape | Source | Required diagnostic | Script must fail the checker against |
+**Diagnosed shapes.** Each is refused, and its witness fails the
+unchanged checker for the reason named.
+
+| Shape | Source | Required diagnostic | Pinned witness |
 |---|---|---|---|
-| Sale: an accept guard reads stubs recorded under `members` | Sale ledger fix 2; prediction 1 | containment on `accept` reading `offer`: a newcomer judges the accept `no_such_offer` where the oracle accepts it | `corpus/sale/run1/seed-158.json` against the run-1 model: Dana at frontier 7, mismatch class, view `no_such_offer` and `accepted` null where the oracle accepts `o3`. The `already_decided` variant (manifest case 3, Dana at 20) is recorded as a second witness from the trace |
-| Sale: a withdrawal or replacement of a stub no reader holds is effective (the tombstone rule) | Sale ledger fix 3; prediction 2 | absence over `offer` without completeness: "no such stub" is unjudgeable from a partial relation | `corpus/sale/run1/seed-72.json`, `seed-96.json` and `seed-172.json` against the run-1 model: each three steps ending at position 4, invariant class, "replacement (or withdrawal) of unknown stub". They witness the tombstone rule itself, not a hidden existing stub |
-| Sale: a counter's readers from its payload | Sale ledger fixes 1 and 7 | audience from payload | the baseline package at `fd1e23b`, Bob at 10; `corpus/sale/run6/seed-172.json`, 181 or 200 against the kept run-6 model |
-| Sale: a counter addressed by a payload `author` field | Sale ledger fix 5 | self-asserted reference | V3-F2's steps against `corpus/sale/run1/model.ts` |
-| Club, original policy | decision note A5 | unjudgeable reference: `vote` (members) holds `ref application` whose readers are applicant and committee, and the guard needs the row's kind | the A5 cases in `test/club-a5.test.ts` |
+| Sale: an accept guard reads stubs recorded under `members` | Sale ledger fix 2; prediction 1 | containment on `accept` reading `offer`: a newcomer judges the accept `no_such_offer` where the oracle accepts it | `corpus/sale/run1/seed-158.json` against the run-1 model: Dana at frontier 7, mismatch class, view `no_such_offer` and `accepted` null where the oracle accepts `o3`; and manifest case 3 against the run-1 model: Dana at 20, mismatch class, view `no_such_offer` where the oracle says `already_decided` |
+| Sale: a counter's readers from its payload | Sale ledger fix 7 | audience from payload | `corpus/sale/run6/seed-172.json` (Carol at 4), `seed-181.json` and `seed-200.json` (Bob at 4) against the kept run-6 model, budget class |
+| Sale: a counter addressed by a payload `author` field | Sale ledger fix 5 | self-asserted reference | V3-F2's steps against `corpus/sale/run1/model.ts`: the wrong-party counter is effective and Carol at 7 is a budget violation |
+| Club, original policy | decision note A5 | unjudgeable reference: `vote` (members) holds `ref application` whose readers are applicant and committee, and the guard needs the row's kind | the three retained A5 cases in `test/club-a5.test.ts` |
 
 Club A1 is a missing business guard, not a visibility error; the layer
 is predicted not to catch it, and its test in `test/club.test.ts` bounds
 what the check can see.
+
+**Regressions.** These are not visibility diagnostics. They are kept as
+fixed replays that the derived packages must preserve, and no checker
+change is made to fit them.
+
+| Regression | Source | What it shows | Kept as |
+|---|---|---|---|
+| The tombstone rule: a withdrawal or replacement of a stub that does not exist, for any reader or the oracle, is effective under the run-1 model | Sale ledger fix 3; prediction 2 | a missing business prerequisite, an existence guard, which the run-1 fold deliberately omitted; a completeness check cannot invent it | `corpus/sale/run1/seed-72.json`, `seed-96.json` and `seed-172.json`, each three steps ending at position 4, invariant class, "replacement (or withdrawal) of unknown stub". The layer requires an existence guard or a typed reference on such acts, and the visibility of that prerequisite is then checked as an ordinary dependency |
+| The counter that never reached its party | Sale ledger fix 1 | under-delivery: at the baseline package `fd1e23b`, Bob cannot read position 10, the checker is clean, and only the manifest's required readership catches it | a manifest-regression check: the literal trace's readability table, asserted against the derived Sale |
 
 **Preventions.** A derived declaration is tested by prevention, since a
 policy cannot change a recorded event.
@@ -155,7 +165,7 @@ policy cannot change a recorded event.
 | Derived | Source | Prevention test | Detection stays |
 |---|---|---|---|
 | Booking's disclosure policy with authorized-only | Booking fixes 1 and 2 | the generator under the derived policy produces no private disclosure across 200 seeds | every entry of `corpus/booking/run2/` remains a detected violation, as `test/booking-corpus.test.ts` asserts |
-| Sale's backlog | Sale fix 2 | the derived backlog, with the absence rule above, clears run-1 signatures 1, 2 and 4; signature 3 is cleared by the absence rule alone | the run-1 corpus remains detected against the run-1 model |
+| Sale's backlog | Sale fix 2 | the derived backlog clears run-1 signatures 1, 2 and 4 under the generator; signature 3 is the tombstone regression above, cleared by the existence guard the layer requires | the run-1 corpus remains detected against the run-1 model |
 
 ### 4.3 Predictions, recorded before any run
 
@@ -166,14 +176,10 @@ policy cannot change a recorded event.
    aggregate or an absence, not a guard.
 4. In step 2 the total is at most six, and at least four of the six are
    compile-caught.
-5. The TypeScript control's total is within one of the declaration
-   layer's, which would mean the derivations and not the syntax carry the
-   result.
 
 ### 4.4 Authoring protocol
 
-A fresh agent per arm, given an identical sanitized packet frozen
-before either starts: the design note §§1 to 4 and §8, the views note,
+One fresh agent, given a sanitized packet frozen before it starts: the design note §§1 to 4 and §8, the views note,
 the layer's README with Discussion as the worked example,
 interface-only documentation of the harness, and the frozen manifest.
 The packet excludes the harness README as it stands, because it carries
@@ -183,8 +189,8 @@ permitted files and tools and their versions are listed in the packet.
 The agent commits its raw first draft before the first invocation of
 the layer, the checker, any test or any campaign; every later semantic
 change is a correction under §4.1. While correcting, it may run the
-layer and sees each diagnostic's text and script, not the checker's
-verdict on it. Recorded: the first draft; every correction; source and
+layer and sees each diagnostic's text and the witness it links to, not
+the checker's verdict. Recorded: the first draft; every correction; source and
 emitted lines.
 
 ## 5. Work breakdown
@@ -192,11 +198,11 @@ emitted lines.
 | Task | Entry | Exit | Review gate |
 |---|---|---|---|
 | A1 Declaration layer | This plan approved | The builder or schema, the dependency check over all five expression sites with completeness for absence and aggregates, versioned rows, the derivations, the emitter, the loader test; the layer's README | Checker verifies the dependency rule against the review's counterexamples and the versioning rule against the Sale fixture |
-| A2 Reproduce and reject | A1 | A Sale declaration whose emitted package passes the unchanged Sale manifest; a Booking declaration likewise; the §4.2 shapes committed and refused with scripts that fail the checker; the preventions holding; Club refused; one derived audience rule broken and found by the checker; A1 to A3 decided | Checker reproduces one result table and two scripts |
+| A2 Reproduce and reject | A1 | A Sale declaration whose emitted package passes the unchanged Sale manifest; a Booking declaration likewise; the §4.2 shapes committed and refused with their pinned witnesses failing the checker for the reason named; the regressions preserved; the preventions holding; Club refused; one derived audience rule broken and found by the checker; A1 to A3 decided | Checker reproduces one result table and two witnesses |
 | Stop | A2 | If any of A1, A2 or A3 is refuted, the report and nothing more | |
-| A3 One authoring task, with control | A2, and the MVP description's answer on who authors | Sale by a fresh agent in the layer and by a second fresh agent in the TypeScript control, both under §4.4; totals by class, catch site and blame; A4 and A5 decided | Checker verifies the ledgers and the class assignments |
-| A4 Notation | A3, and the MVP description's answer | The notation plan's N1 to N4 | As that plan says |
-| A5 Report | A4, or the Stop | Claims and predictions first; per-step tables; what the check missed; what is not established | Checker verifies every claim against committed runs |
+| A3 One authoring task | A2, and the MVP description's answer on who authors | Sale by a fresh agent in the layer under §4.4; totals by class, catch site and blame; A4 decided | Checker verifies the ledger and the class assignments |
+| A4 Notation, optional | A3, and evidence that notation is the bottleneck | The notation plan's narrow first round | As that plan says; commissioned separately |
+| A5 Report | The last commissioned authoring step, or the Stop | Claims and predictions first; per-step tables; what the check missed; what is not established. It does not wait for the optional notation step | Checker verifies every claim against committed runs |
 
 ## 6. Deferred experiments, each with its own plan when it is next
 
