@@ -28,7 +28,7 @@ with the goals (§0), in priority order: evolvability, ease of programming
 as an agent, comprehension simplicity for a person, lightweight
 decentralization. Each has one criterion the spikes report against.
 
-Eight notes, each owning one concern:
+Ten notes, each owning one concern:
 
 - [Evolving spaces](2026-09-14-evolving-spaces-design.md) — what the things
   are: goals, referents, events, contexts, audiences, packages, authority,
@@ -57,10 +57,23 @@ Eight notes, each owning one concern:
   application-behaviour packages should do, ranked, with a sweep of the
   original use cases and a proposed next spike. A research note; it adopts
   nothing.
-- [Compiler spike plan](2026-09-18-compiler-spike-plan.md) — the next
-  spike as fixture decisions, predeclarations and tasks: goal 2 rerun
-  under a compiler, three new models, two arms. A draft plan; not yet
-  reviewed.
+- [Authoring spike plan](2026-09-18-compiler-spike-plan.md) — a
+  declaration layer on the current foundation that must reproduce Sale
+  and reject the recorded bad shapes, with a stop if it cannot; then one
+  authoring task against a predeclared budget; notation optional after
+  that. Revised after review; composition, admission and the retroactive
+  audience deferred to their own experiments. A draft; not yet approved.
+- [Notation spike plan](2026-09-20-notation-spike-plan.md) — the optional
+  step 3 of the authoring plan, commissioned only if notation proves the
+  bottleneck: a small first round comparing the TypeScript fixture with
+  two renderings on one calibrated question bank, reporting the
+  alternatives the evidence supports, at most three, for a person to
+  choose from. A draft; not yet approved.
+- [Direction and next steps](2026-09-20-direction-and-next-steps.md) —
+  useful alone, then one exchange, then one contribution: the product
+  framing, the three roles, the participation ladder, the three kinds of
+  record, and an ordered set of next steps with stopping points. Revised
+  after review; not yet approved.
 
 Links into gitseq, atseq and noseq assume sibling checkouts beside this repository;
 each cited note records the inspected commit.

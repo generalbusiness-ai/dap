@@ -80,6 +80,36 @@ bindings (four rule functions), the guard order, and the two config
 declarations. The business content is roughly the seven kinds, six guards,
 one cross-partition constraint and the manifest's four invariants.
 
+### Who was blamed
+
+Racket's contract system exists to answer one question at a boundary:
+which party broke its side. Findler and Felleisen's higher-order contracts
+carry two parties, and Dimoulas, Findler, Flanagan and Felleisen's
+correct-blame theorem is the guarantee that a failing check names the
+party that supplied the faulty value, never a bystander. Read the ledgers
+with that question and four of the counted repairs are not defects in a
+model's fold. They added or corrected contracts the model places on a
+client: declarations the model author had to write, which remain part of
+the total authoring cost, and which are a different kind of work from
+repairing a guard.
+
+| Model | Counted semantic repairs | Of those, obligations on a client |
+|---|---|---|
+| Sale | 6 | 2: the join disclosure (fix 2) and the disclosure policy (fix 4) |
+| Booking | 2 | 2: the disclosure policy (fix 1) and its authorized-only rule (fix 2) |
+
+Booking's whole budget went on contracts it placed on someone else; its
+own fold needed no repair. The ledgers count them as the author's work,
+and rightly: a client cannot violate a contract that was not yet
+declared, and Sale's run 3 lost 100 of 200 seeds because the model had
+declared nothing about disclosure. Once a correct contract exists, a
+client's noncompliance is a different event, reported against the client
+and never scored as a model repair. This does not rescue goal 2. It says
+the next spike should score a declaration that constrains another party
+separately from a repair to a fold, and report both in the total. D3
+says where such a contract could be enforced, and the obligations
+subsection of §3 says what it is.
+
 ## 2. What the compiler must produce
 
 The spike's package is a flat descriptor (`spike/src/descriptor.ts`): per
@@ -113,8 +143,10 @@ retroactive class of D2. A guard in a fold refuses kind `k` by consulting
 fact `f`. The compiler checks that every reader of `k` at any later
 position is a reader of `f`: `readers(k) ⊆ readers(f)`, evaluated
 symbolically over the audience terms and the join rule. `spine` contains
-everything; `members@n` does not contain `members@t` for `n > t` unless
-`f` is retroactive; `named` sets compare by construction. A guard that
+everything; for `t < n` with a newcomer, `readers(f@t)` does not contain
+`readers(k@n)` unless the earlier evidence is disclosed or made
+retroactively readable, so a guard at `n` on a fact recorded at `t`
+fails the check; `named` sets compare by construction. A guard that
 fails the check is a compile error that names the diverging reader in the
 ledger's own vocabulary: "a member joining after position of `offer` judges
 `accept` as `no_such_offer` where the oracle says `already_decided`".
@@ -126,6 +158,16 @@ fixes 1, 3, 5 and 7.
 
 **Needs.** Guards written declaratively (pattern or predicate over facts),
 not as arbitrary code, so the compiler can see which facts each reads.
+And the check must cover more than guards. Codex's review of 2026-09-20
+gave the counterexample: a public act with an unconditional guard and an
+effect `total = count(private_table)` passes a guard-only check, and
+different readers compute different public state. So every expression
+that feeds state, an audience, a query result or an affordance carries a
+dependency set, and containment is checked on all of them. An absence
+test or an aggregate depends on the whole relation, so the relation's
+readers must contain the act's readers: a reader who holds only some
+rows cannot establish that no matching row exists. That completeness
+condition is what the Sale tombstone rule (fix 3) lacked.
 
 **Precedent.** Information-flow label checking (Jif; Viaduct compiles one
 labelled program to a distributed protocol). Choreographic programming's
@@ -137,7 +179,11 @@ compiler proves correctness, non-malleability and cost that the target,
 Bitcoin Script, cannot express; the guarantees live in the compiler.
 
 **Test.** Feed the compiler the recorded Sale baseline shape. It must reject
-it with the position-18 diagnostic before any campaign runs.
+it with the position-18 diagnostic before any campaign runs. And the
+offered-versus-possible defect the review found in the landed Sale, terms
+on a declined offer succeeding while not offered, must not be
+expressible once affordances derive from the same guards the fold uses
+(D5).
 
 ### D2. A retroactive audience for effective public facts
 
@@ -175,8 +221,23 @@ partial-completion rules generated.
 **Removes.** The duplication between manifest and model, fixes 4 and 6, and
 the ceremony that gitseq measured for split kinds.
 
+**Where the contract is enforced, and by whom.** A disclosure policy is a
+contract on the discloser's client, and the tempting fix is to have the
+foundation refuse a `dap.disclose` that exceeds a kind's maximum readers.
+That fails for the reason Racket's complete-monitoring result states: a
+contract can be enforced only on a channel the monitor can observe. A
+viewer judging a disclosure cannot see the kind at a hidden position,
+because the header commits to content and reveals no kind, so a fold-level
+refusal would not be uniformly judgeable, which is what D1 forbids. The
+serving party sees both sides. So the disclosure contract belongs to the
+serving party in the first profile, and a violation of a declared
+contract is the discloser's fault, reported as such. This is a proposed
+boundary, not existing behaviour: today the foundation records an
+authorized `dap.disclose` without any maximum-reader check.
+
 **Precedent.** Daml's signatories, observers and stakeholders on a template;
-Viaduct's confidentiality labels per value.
+Viaduct's confidentiality labels per value; Racket contracts for the
+boundary discipline and for blame.
 
 **Test.** The Sale manifest's budget section becomes the model's
 declaration; the checker's budget function is generated from it and finds
@@ -241,15 +302,21 @@ than checked afterwards.
    gitseq's relational projection with row-to-event derivation is the
    shape. It needs one more column, the readers, and the audience table
    versioned by basis so that as-of reads keep their earlier visibility.
-3. **Disclosures become insertions, not replay.** The design says a
-   recipient may need to rebuild from the earliest newly visible position,
-   because a hand-written fold might have judged later events differently
-   had it seen the disclosed one. Under D1, if the containment check is
-   sound, it could not have: the
-   client's verdicts on every event it already saw equal the oracle's. So
-   the client folds the disclosed event with the dependencies the
-   disclosure carries, inserts its rows, and changes nothing after it.
-   The pause on a missing dependency stays as it is.
+3. **Disclosures become insertions, not replay, given versioned rows.**
+   The design says a recipient may need to rebuild from the earliest
+   newly visible position, because a hand-written fold might have judged
+   later events differently had it seen the disclosed one. Under D1, if
+   the containment check is sound, it could not have: the client's
+   verdicts on every event it already saw equal the oracle's. But equal
+   verdicts do not make assignments commute. Disclosing an earlier
+   assignment after a later one must not overwrite the newer value, so
+   D4's rows must be versioned: an assignment is a row version keyed by
+   the producing position, the visible value is the latest visible
+   version, and a disclosure inserts a version at its original position.
+   The Sale fixture does exactly this by hand for terms and counters.
+   With that rule stated, the client folds the disclosed event with the
+   dependencies the disclosure carries, inserts its versions, and changes
+   nothing after it. The pause on a missing dependency stays as it is.
 
 Two limits. Chain verification is unchanged: a newcomer still verifies
 headers from genesis, and a client that adopts a served snapshot instead
@@ -259,6 +326,10 @@ makes that trust partial and checkable, since any row names the position
 it came from and can be verified against its header and bytes on demand.
 And these are licences, not measurements. The atseq lesson stands: cold
 replay is the oracle, and incremental paths are measured separately.
+Racket's experience points the same way: checking soundly at boundaries at
+run time cost Typed Racket programs past 100 times in Takikawa and
+colleagues' measurements, and per-participant replay is the dap analogue
+of that dynamic check, which is why D1 pays statically and folds once.
 
 ### D5. Affordances derived from guards
 
@@ -286,7 +357,10 @@ the generated function, with targets the spike's list lacks.
 facts, never through a free string. Where the referring kind's readers
 cannot read the referent, the compiler resolves what they can: the position
 by header commitment (`ctx.commitmentAt`) and the authority at that position
-(`ctx.holdersAt`), which is the Club's `shown` rule. Where a guard needs the
+(`ctx.holdersAt`), which is the Club's `shown` rule. A commitment lookup
+establishes that a position with that id exists; it does not prove that
+an effective row of the expected kind stands there, and the compiler
+must not let a guard treat the one as the other. Where a guard needs the
 referent's content, the compiler reports and offers the two routes the Club
 decision note records: a public record kind, or trusted evidence.
 
@@ -297,7 +371,10 @@ Club negative result into a diagnostic at authoring time.
 which the descriptor already supplies.
 
 **Test.** The Club's `shown` rule regenerates from a `ref application`
-field, and the compiler reports the A1 and A5 shapes on the Club policy.
+field, and the compiler refuses the original Club policy with the A5
+shape as an unjudgeable reference. A1, a second admission of an existing
+member, is a missing business guard, not a visibility error; the check is
+not expected to see it.
 
 ### D7. Ambient inputs as typed primitives
 
@@ -503,7 +580,18 @@ how that residue runs.
    performance is a signed event the fold judges. gitseq's request,
    promise, report loop and Woah's task obligation model are this pattern in
    a workroom; the language form is smaller. It replaces the harness hooks
-   the spike needed, and it is the natural shape for D13's services.
+   the spike needed, and it is the natural shape for D13's services. An
+   obligation is a contract with a named performer. The spike required
+   four author repairs to these boundary contracts, which §1 counts as
+   authoring work. Once a correct contract exists, failure to honour it
+   is attributed to its performer. Two further things Racket names that the spike built by hand:
+   a kind's expected-binding identity is a contract on a boundary, and
+   `stale_binding` is the contract changing under a signed intent; and an
+   audience term that reads prior effective state is a dependent contract,
+   Racket's `->i` shape, with the same expressive gain and the same
+   complexity cliff. What does not transfer is the checking machinery: a
+   Racket contract assumes one runtime where the monitor observes both
+   parties, and dap's parties see different things.
 
 3. **Code inside the package, behind a typed interface.** The residue,
    chess legality, a cryptographic check, a parser, is verification that is
@@ -687,6 +775,12 @@ residual cost of the design, and the note that reports it should say so.
 
 ## 6. A next spike: goal 2 under a compiler
 
+**Superseded on 2026-09-21.** This section is the first proposal, kept
+as a record. The authoring spike plan replaces it: the original Club is
+an expected rejection rather than a rerun, the three new domains are
+separately commissioned experiments, and the counting starts at the raw
+first draft rather than at the first draft that compiles.
+
 1. Write the package contract of D9 as types the existing harness accepts;
    the flat descriptor is already close.
 2. Implement the smallest compiler for the fact, readers, guard and
@@ -720,6 +814,12 @@ of the design rather than of the language.
   https://docs.daml.com/concepts/ledger-model/ledger-privacy.html
 - Viaduct (Acay, Recto, Gancher, Myers, Shi, PLDI 2021):
   https://www.cs.cornell.edu/andru/papers/viaduct/viaduct.pdf
+- Racket contracts: Findler and Felleisen, "Contracts for Higher-Order
+  Functions" (ICFP 2002); Dimoulas, Findler, Flanagan and Felleisen,
+  "Correct Blame for Contracts: No More Scapegoating" (POPL 2011):
+  https://www2.ccs.neu.edu/racket/pubs/popl11-dfff.pdf; Takikawa, Feltey,
+  Greenman, New, Vitek and Felleisen, "Is Sound Gradual Typing Dead?" (POPL
+  2016): https://popl16.sigplan.org/details/POPL-2016-papers/19/Is-Sound-Gradual-Typing-Dead-
 - Jif: https://www.cs.cornell.edu/jif/
 - Choreographic programming: HasChor (ICFP 2023)
   https://arxiv.org/abs/2303.00924; Choral https://www.choral-lang.org/;
