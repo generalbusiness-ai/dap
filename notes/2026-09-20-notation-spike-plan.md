@@ -139,7 +139,7 @@ loses on them has a problem with legibility rather than with shape.
 **Predictions, recorded before any run.**
 
 1. The non-local spread across candidates is at least fifteen points at
-   the small model; the local spread is under five.
+   the pinned model; the local spread is under five.
 2. The TypeScript baseline wins or ties on local questions and loses on
    judgeability and backlog questions to at least one candidate.
 3. Readers declared on columns beat readers declared on acts for the
