@@ -36,7 +36,11 @@ relationship: a claim, a care episode, a renovation, a sale. Every party
 has their own view of one shared thing, and the design exists so that
 those views can differ without disagreeing about what was decided. The
 product is a coherent place to take part in such a situation as it spans
-people, organisations and independently governed dealings. By Hugh's criterion the strongest cases are the ones where one party is
+people, organisations and independently governed dealings. In everyday
+words: "we're using this dap to track the claim." What "this dap" means
+depends on which participants are talking about it, and the structure
+inside it is whatever the relationship between those participants calls
+for, from a chat to a checklist. By Hugh's criterion the strongest cases are the ones where one party is
 structurally at a disadvantage, and those are the cases where that party
 can least bring anyone else in. So the product must not depend on anyone
 else adopting it. A person's space must give them a coherent, attributed
@@ -96,22 +100,57 @@ The design's agreement property is about recorded decisions: everyone who can se
 does not mean agreement about what actually happened, what is owed, or
 whose interpretation is right. Those stay open; §5 says how the record keeps them open.
 
-## 3. Who introduces it, who it serves, who controls it, and who helps
+## 3. Participants, and the relationship a space serves
 
-Every space has three roles. Any party may hold all three for a space of
-their own.
+The everyday experience is "we're using this dap to track the claim",
+together with a weak or strong offer or request to become a participant:
+a link someone can open, an invitation carrying a role, a request to be
+let in. "This dap" is a name the participants share. What it means
+depends on who is talking. To the claimant and the adjuster it is the
+claim. To the claimant and a sibling it is the claim together with the
+family's own arrangements around it. To the adjuster and the contractor
+it is the repair. The design's word for the shared thing is the
+referent, and each person's view of it is their perspective; one name,
+many meanings, and no view is the master copy.
 
-| Role | In the device story | In dap | In the first experiment |
+**Participation roles are multiple and may be nebulous.** For any one
+space three questions can be asked, and the answers differ for each
+kind of interaction and each space:
+
+- who introduced it, or pays for it;
+- whose interests it serves;
+- who controls it: who holds the founding permissions, who chooses who
+  runs it, and who can take the whole record away.
+
+One person may answer all three. Several people may share one answer. In
+the device story the insurer introduces and the customer is served; in a
+family's arrangements nobody introduces and everyone is served; in the
+first experiment the person who starts alone answers all three. A
+supplier may introduce dap while the person it was introduced to keeps
+their space, their history and their choice of representatives. None of
+these roles is fixed by the product.
+
+**The semantics in a space are for the relationship those participants
+share.** They may be very unstructured or quite structured, and one
+substrate carries both.
+
+| Relationship | What passes between them | Structure | What dap enforces |
 |---|---|---|---|
-| introduces or pays | the insurer, the realtor | whoever sets up the space and publishes its address | nobody, or the person's helper |
-| whose interests it serves | the customer | the person the space is built to show things to | the person who starts alone |
-| controls | left ambiguous | holds the founding permissions, chooses who runs the space, and can take the whole record away | that person |
+| siblings arranging who visits when | informal chat | none | that each message is signed, ordered and readable by exactly those it was addressed to |
+| a patient and a specialist | what-if questions, answers, a decision | light: a question has an answer, a decision has a date | the same, plus the few declared facts: this answer belongs to that question, this decision stands |
+| a claimant and an insurer | the insurer's checklist, evidence, deadlines | strong: items, guards, standing | the checklist's rules, judged the same way by everyone who can see them |
 
-A supplier may introduce dap while the person it was introduced to keeps
-their space, their history and their choice of representatives.
+Where the dap provides structure, it enforces it. Where it provides
+only affordances for unstructured communication, enforcement is the
+assurance that people can share in a trustworthy way: attribution,
+order, and audience. In the design's terms that spectrum runs from the
+Discussion package to the Sale package on one foundation, and a space
+can gain structure part-way through by attaching a package, which is
+the design's first goal.
 
-Help comes in three kinds. §6's test records which kind supplied each
-thing the person could not do alone, so the kinds must stay distinct.
+**Help** is participation too, and it comes in three kinds. §6's test
+records which kind supplied each thing a person could not do alone, so
+the kinds must stay distinct.
 
 | Kind of help | What it brings | What it does not establish by itself |
 |---|---|---|
@@ -124,16 +163,18 @@ of control. The first experiment must say which of the three kinds of
 help it supplies, what each may do without asking, what needs the
 person's approval, and what happens when a helper disappears.
 
-A **capability** says what someone may do. An **obligation** says what they are expected or committed to do.
-Delegation to a helper is a capability, granted by whoever holds the
-authority to grant it. A promise the helper makes is an obligation. The
-record identifies who granted the authority, who made a promise, and who
-performed it.
+A **capability** says what someone may do. An **obligation** says what
+they are expected or committed to do. Delegation to a helper is a
+capability, granted by whoever holds the authority to grant it. A
+promise the helper makes is an obligation. The record identifies who
+granted the authority, who made a promise, and who performed it.
 
 ## 4. Participation deepens per relationship
 
 Each relationship in a situation sits on its own rung. Different
-parties are on different rungs at the same time, and stay there.
+parties are on different rungs at the same time, and stay there. A
+rung says how deeply the other party takes part, not how structured the
+space is; a chat and a checklist can each sit at any rung.
 
 | Rung | The one who starts | Another party | What the space does |
 |---|---|---|---|
