@@ -72,11 +72,12 @@ domain. Its stopping point is A1 to A3. If any of A1, A2 or A3 is refuted, the
 findings are published and the work stops; the authoring trial requires
 all three established at the pinned boundary.
 
-Steps 2 and 3 are gated on the MVP product description. If that
-description says packages are authored by a few developers from a
-catalog, step 2 still runs but its budget is a developer's, not an
-agent's, and step 3 may not run at all. If it says agents author
-packages on demand, both run as written.
+Step 2 is gated on the MVP product description. If that description
+says packages are authored by a few developers from a catalog, step 2
+still runs but its budget is a developer's, not an agent's. Step 3
+remains optional and separately commissioned only if the authoring trial
+identifies notation as a bottleneck, regardless of who authors; agent
+authorship alone does not commission it.
 
 The experiments this draft once bundled are listed in §6 with entry
 conditions, and each gets its own plan when it is next.
@@ -171,7 +172,8 @@ policy cannot change a recorded event.
 
 1. A1 holds and the derived Sale is under a fifth of the fixture's 389
    lines of hand-written source.
-2. Every §4.2 shape is refused and every script fails the checker.
+2. Every diagnosed shape of §4.2 is refused and its pinned witness fails
+   for the named reason; the regressions and preventions hold.
 3. A3 holds on Sale and Booking; if it fails, the missed class is an
    aggregate or an absence, not a guard.
 4. In step 2 the total is at most six, and at least four of the six are

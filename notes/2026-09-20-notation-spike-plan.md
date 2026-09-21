@@ -29,25 +29,30 @@ compiler-plan: notes/2026-09-18-compiler-spike-plan.md
 
 The authoring spike's declaration layer has no surface syntax; step 3
 chooses one, and this plan says how, with evidence rather than a sketch. It
-renders one package in several candidate notations that all mean the same
-thing, asks the same generated questions of each rendering, and grades
-the answers against the harness, which already computes affordances,
+renders one package in candidate notations that all mean the same thing,
+asks the same generated questions of each rendering, and grades the
+answers against the harness, which already computes affordances,
 audiences, verdicts, projections and judgeability for every principal at
 every frontier. The reasoner is the system under test, the notation is
 the variable, and the harness is the answer key, so nothing is graded by
-hand. Two rounds, large differences then small ones, end in a report
-that offers **three alternatives** with their measured tradeoffs rather
-than a winner. A person chooses one, and that choice becomes the surface
-syntax over the declaration layer. The spike also says what it cannot measure: human comprehension, and
-familiarity as a cost that no baseline can remove.
+hand. The first round is small: the TypeScript fixture and two
+contrasting renderings, one model, reading only, one frozen bank. It
+ends in a report that offers the alternatives the evidence actually
+supports, at most three, with their measured tradeoffs rather than a
+winner. A person chooses one, and that choice becomes the surface syntax
+over the declaration layer. Breadth, further shapes, a second model
+size, a Club rendering, writing tasks, is follow-up work commissioned
+only if the first round shows a useful difference. The spike also says
+what it cannot measure: human comprehension, and familiarity as a cost
+that no baseline can remove.
 
 ## 1. What the spike must show
 
 | Claim | Established if | Refuted if |
 |---|---|---|
-| **N1. Notation is a lever.** | At least one candidate beats the TypeScript fixture baseline on the non-local questions of §4 by ten points of accuracy at the small model, outside the sampling interval, on held-out situations, with the same semantics underneath | No candidate beats the baseline on non-local questions; then the notation is not where authoring cost moves, and the declaration layer keeps its structured form. An improvement under ten points, or inside the interval, is reported as not established, which is neither verdict |
-| **N2. The questions discriminate.** | The spread of non-local accuracy across candidates, best minus worst, exceeds the spread of local accuracy by at least ten points at the small model; ranking is not the test, since two banks can rank alike and separate differently | The non-local spread is within ten points of the local spread; the bank is not measuring what the spike found expensive |
-| **N3. Reading and writing can pull apart.** | Some candidate ranks differently on the reading bank and on the writing tasks | Every candidate ranks the same on both; then one number would have done and the tradeoff report is simpler than planned |
+| **N1. Notation is a lever.** | At least one candidate beats the TypeScript fixture baseline on the non-local questions of §4 by ten points of accuracy at the pinned model, outside the sampling interval, on held-out situations, with the same semantics underneath | No candidate beats the baseline on non-local questions; then the notation is not where authoring cost moves, and the declaration layer keeps its structured form. An improvement under ten points, or inside the interval, is reported as not established, which is neither verdict |
+| **N2. The questions discriminate.** | The spread of non-local accuracy across candidates, best minus worst, exceeds the spread of local accuracy by at least ten points at the pinned model; ranking is not the test, since two banks can rank alike and separate differently | The non-local spread is within ten points of the local spread; the bank is not measuring what the spike found expensive |
+| **N3. Reading and writing can pull apart.** (follow-up, not this round) | Some candidate ranks differently on the reading bank and on the writing tasks | Every candidate ranks the same on both. N3 is decided only if a later round runs writing tasks; the first round reports it as not tested |
 
 Two measurements accompany the claims and are not claims: source length
 per candidate in tokens, and the gap between the large and the small
@@ -58,13 +63,13 @@ model, which is the familiarity and clarity signal §3 explains.
 The generator and grader come first, because they are small and reuse
 the harness, and because a bank whose answers do not change under a
 semantic mutation of the fixture is not worth running candidates
-through. Round one renders the Sale package in six to eight
-shapes that differ in kind, prunes to three or four, and round two makes
-small mutations of the survivors and adds a Club rendering of each, so
-that references by commitment, folded disclosures and grant effects are
-exercised before anything is chosen. The report follows, then the human
-choice, then the chosen rendering becomes the surface syntax over the
-declaration layer.
+through. The first round renders the Sale package in the three representations
+of §3 and runs the bank once with one pinned model. The report follows
+directly, then the human choice, then the chosen rendering becomes the
+surface syntax over the declaration layer. Further shapes, small
+mutations, a Club rendering, a second model size and writing tasks are
+follow-up rounds, each commissioned separately and only if the first
+round shows a useful difference.
 
 ### Simplifications adopted
 
@@ -77,21 +82,20 @@ declaration layer.
 2. **One trace notation for every candidate.** A situation is presented
    in a fixed neutral format, so the trace's own notation is not a second
    variable.
-3. **Sale for every candidate, Club for the finalists.** Sale covers
-   partition, decision and split kinds; Club adds references resolved by
-   commitment, disclosures the model folds, and a declared effect.
-   Booking is held back; its clock is one primitive and not a shape
-   question.
-4. **Two model sizes, fixed sampling.** A large and a small model, three
-   samples per question, temperature fixed and recorded. The small model
-   is the sharper instrument because the large one compensates for a bad
-   notation.
-5. **Writing tasks graded against a reference until the compiler
-   exists.** Reading answers are harness-graded, exact match. Writing
-   answers are graded by a second model against a builder-prepared
-   reference edit, and the report marks them as the weaker signal.
-6. **Three alternatives, not one.** The selection rule of §5 produces a
-   front, and a person chooses from it.
+3. **Sale only in the first round.** Sale covers partition, decision
+   and split kinds. A Club rendering, which would add references
+   resolved by commitment, folded disclosures and a declared effect, is
+   follow-up. Booking is held back; its clock is one primitive and not a
+   shape question.
+4. **One pinned model, fixed sampling.** Three samples per question,
+   temperature fixed and recorded. A second model size, which would give
+   the clarity signal, is follow-up.
+5. **Reading only in the first round.** Reading answers are
+   harness-graded, exact match. Writing tasks, which can only be graded
+   by a second model against a reference until a parser exists, are
+   follow-up.
+6. **The alternatives the evidence supports, not a fixed three.** The
+   selection rule of §5 produces a front, and a person chooses from it.
 
 ## 3. Fixture decisions
 
@@ -108,7 +112,7 @@ declaration layer.
 | Calibration | Before any candidate runs: the original and a mutated fixture, one broken guard and one broken audience rule, must produce different keys on a preselected set of mutation-sensitive questions; a reasoner shown the mutated rendering is scored against the mutated key, and a correct reasoner should stay correct; a separate, deliberate mismatch control, mutated rendering against the original key, must show a predeclared decrease of at least ten points; the no-source and trivial-predictor thresholds are stated before any candidate runs. Scrambling is a naming control only, never a calibration gate | A bank that shortcuts must be caught before it is used, without penalizing correct reasoning | Anything about people |
 | Models and sampling | One model in the first round, three samples per question, temperature fixed and recorded, prompts identical across candidates except for the rendering; a second model size only in a later round | Variance first; the clarity signal later | Anything about a model not run |
 | Writing tasks | Deferred to a later round; the first round measures reading only | Model-graded writing is the weaker signal and adds cost before a difference exists | Anything about writing |
-| Metrics | Accuracy per candidate, per question type, per model, with intervals from the samples; source length in tokens; the large-versus-small gap; writing task score; time to answer, recorded and not scored | The tradeoff table needs all of them | A single score |
+| Metrics | Accuracy per candidate, per question type, with intervals from the samples, on the bank and on the held-out set; source length in tokens; time to answer, recorded and not scored. A model-size gap and a writing score exist only if a follow-up round runs them | The tradeoff table needs all of them | A single score |
 | Selection rule | §5 | | |
 
 ## 4. The question bank
@@ -146,18 +150,18 @@ loses on them has a problem with legibility rather than with shape.
 
 A prediction that fails is reported with what happened instead.
 
-## 5. Selection: three alternatives
+## 5. Selection: the alternatives the evidence supports
 
 The report does not pick. It computes the front of candidates that no
-other candidate beats on all of: non-local reading accuracy at the small
-model, writing task score, and source length. From that front it offers
-the actual alternatives, at most three and chosen to differ in shape,
-each with a one-page tradeoff: where it wins, where it loses, the
-familiarity baseline beside it, and any later-round result. Where the
-front has fewer than three members the report offers fewer; it does not
-fill from dominated candidates. A person chooses one, and the
-chosen rendering and its Club counterpart become the surface syntax over
-the declaration layer.
+other candidate beats on both of: non-local reading accuracy on the
+held-out set, and source length. From that front it offers the actual
+alternatives, at most three and chosen to differ in shape, each with a
+one-page tradeoff: where it wins, where it loses, and the familiarity
+baseline beside it. Where the front has fewer than three members the
+report offers fewer; it does not fill from dominated candidates. A
+person chooses one, and the chosen rendering becomes the surface syntax
+over the declaration layer. A follow-up round that adds writing or a
+second model size adds those measures to the front when it runs.
 
 ## 6. Work breakdown
 
@@ -166,18 +170,18 @@ Each task is one builder request and one checker review.
 | Task | Entry | Exit | Review gate |
 |---|---|---|---|
 | N1 Generator and grader | The authoring plan's step 2 done, and the MVP description's answer on who authors | `spike/notation/`: a situation generator over seeds, frontiers and the kept divergent models; the neutral trace renderer without readability; the question generator for the eight types with harness answers stored; the exact grader; the run script; the calibration gate of §3 passed on the Sale trace | Checker verifies the answers against the harness by hand for one situation, and reruns the calibration |
-| N2 Round one candidates | N1 | Six to eight Sale renderings under `spike/notation/candidates/`, each with a faithfulness review that walks the fixture line by line and names any construct the rendering cannot express; the round-one run at both model sizes; the pruning to three or four with the numbers that did it | Checker verifies faithfulness independently for two candidates and reproduces one result table |
-| N3 Round two | N2 | Small mutations of each survivor and a Club rendering of each, with faithfulness reviews; the round-two run; the writing tasks run on the survivors with their reference edits committed | Checker reproduces one candidate's numbers and checks two writing gradings against the reference |
-| N4 Report and the three | N3 | The claims N1 to N3 decided; the predictions against outcomes; the full result tables; the front; three alternatives with their tradeoff pages; what the spike does not establish | Checker verifies every number against the committed runs |
+| N2 First-round candidates and run | N1 | The three representations of §3 under `spike/notation/candidates/`, the two hand-written ones with a faithfulness review that walks the fixture line by line and names any construct the rendering cannot express; the bank run once with the pinned model, three samples per question, on the bank and on the held-out set | Checker verifies faithfulness independently for both renderings and reproduces the result table |
+| N4 Report and the alternatives | N2 | N1 and N2 decided, N3 reported as not tested; the predictions against outcomes; the result tables with intervals; source length in tokens; the front of §5; the alternatives it supports, at most three, with their tradeoff pages; what the spike does not establish | Checker verifies every number against the committed runs |
 | Choice | N4 | Hugh names one alternative; it becomes the surface syntax over the declaration layer of the authoring plan | none; a human act |
+| Follow-up rounds, uncommissioned | A useful difference in N4 | Any of: further shapes, small mutations of a survivor, a Club rendering, a second model size, writing tasks with reference edits, a scrambled-identifier naming control. Each is its own request with its own exit | As that request says |
 
 ## 7. Cost
 
-Round one at eight candidates, thirty situations, seven question types,
-three samples and two models is about ten thousand short calls, each a
-rendering of under a hundred lines plus a trace. Round two is smaller.
-The whole spike is tens of dollars of inference and a few days of
-builder time, most of it writing and reviewing renderings.
+The first round at three representations, thirty situations plus ten
+held out, eight question types, three samples and one model is about
+three thousand short calls, each a rendering of under a hundred lines
+plus a trace: a few dollars of inference and a day or two of builder
+time, most of it writing and reviewing two renderings.
 
 ## 8. Out of scope, and why
 
