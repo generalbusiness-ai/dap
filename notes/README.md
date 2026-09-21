@@ -71,8 +71,8 @@ Ten notes, each owning one concern:
 - [Direction and next steps](2026-09-20-direction-and-next-steps.md) —
   useful alone, then one exchange, then one contribution: the product
   framing, the three roles, the participation ladder, the three kinds of
-  record, and an ordered set of next steps with stopping points. A draft;
-  not yet reviewed.
+  record, and an ordered set of next steps with stopping points. Revised
+  after review; not yet approved.
 
 Links into gitseq, atseq and noseq assume sibling checkouts beside this repository;
 each cited note records the inspected commit.

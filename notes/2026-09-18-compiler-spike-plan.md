@@ -57,8 +57,8 @@ point.
 | 1 | **A1. The derivations reproduce the repaired Sale.** | A Sale declaration compiles through the layer to a package that passes the unchanged Sale manifest's predeclared cases and 200-seed campaign, with `observe`, affordances, audience rules, backlog and disclosure policy all derived and none hand-written | The declaration cannot express a rule the fixture needs, or the derived package fails a predeclared case |
 | 1 | **A2. The check sees what the checker found.** | Each diagnosed shape of §4.2 is refused with the named diagnostic, and the script it carries fails the unchanged checker against the model the table names; each prevention of §4.2 holds under the generator; the original Club is refused with the unjudgeable-reference diagnostic and its A5 script fails the checker | Any diagnosed shape compiles, a script passes the checker (a false positive), a prevention fails under the generator, or Club compiles |
 | 1 | **A3. The check is sound on the corpus.** | The derived Sale and a derived Booking pass their campaigns, and no campaign finds a visibility violation the check accepted | A campaign finds a visibility violation in a declaration the check accepted; the report names the expression class the check missed |
-| 2 | **A4. Total authoring effort falls.** | A fresh agent authors Sale under §4.4 in the declaration layer; every correction from the first draft is counted, compile-caught and checker-caught alike; the total is at most the landed six semantic repairs, and the compile-caught share is reported | The total exceeds six, or the checker-caught share alone exceeds the original budget of two |
-| 2 | **A5. Assistance and syntax are separable.** | The declarative TypeScript control, same derivations and checks and TypeScript surface, is run under the same protocol, and its totals are reported beside the declaration layer's | Not refutable; it is the control that makes A4 interpretable |
+| 2 | **A4. Total authoring effort falls.** | A fresh agent authors Sale under §4.4 in the declaration layer; every correction from the first draft is counted, compile-caught and checker-caught alike; the total is at most six **and** the checker-caught share is at most two | The total exceeds six, **or** the checker-caught share exceeds two. The landed six semantic repairs are a reference point, not a contemporaneous unassisted arm, so A4 compares against a number measured under a different protocol and says so |
+| 2 | **A5. Assistance and syntax are separable.** | The control of §3, a TypeScript builder with the same derivations and checks, is authored under the same protocol by a second fresh agent, and its totals are reported beside the declaration layer's. The two arms differ in representation as §3 defines; if they turn out identical the run is reported as a replication, not a control | Not refutable; it is the control that makes A4 interpretable |
 
 Two measurements accompany the claims and are not claims: source lines
 against emitted lines, and the number of corrections caught at compile
@@ -68,8 +68,9 @@ time against those caught by the checker.
 
 Step 1 first, because it is the technology test of the central claim
 and needs nothing from anyone: no parser, no foundation change, no new
-domain. Its stopping point is A1 to A3. If A1 or A2 is refuted, the
-report says so and nothing further is planned under this note.
+domain. Its stopping point is A1 to A3. If any of A1, A2 or A3 is refuted, the
+findings are published and the work stops; the authoring trial requires
+all three established at the pinned boundary.
 
 Steps 2 and 3 are gated on the MVP product description. If that
 description says packages are authored by a few developers from a
@@ -104,7 +105,7 @@ The first plan's decisions stand unless a row replaces one.
 
 | Decision | Choice | Why | Does not claim |
 |---|---|---|---|
-| Declaration layer | `spike/lang/`: a typed builder or structured-data schema for roles, tables with columns, acts with guards and effects, invariants and queries; one command emits a fixture module in the shape of `fixtures/sale.ts` with the source id and layer version in `config` | Everything a compiler must see, without a parser | A surface syntax |
+| Declaration layer | `spike/lang/`: structured-data declarations (a JSON schema) for roles, tables with columns, acts with guards and effects, invariants and queries, with guard and effect expressions in a small predicate form the checker can read; one command emits a fixture module in the shape of `fixtures/sale.ts` with the source id and layer version in `config` | Everything a compiler must see, without a parser | A surface syntax |
 | Readers | Two annotations per row and per column: `readers` at recording and `max` readers after disclosure; role membership is evaluated at the event's position from grants strictly before it, and a later grant never widens an earlier event's readers | D3 needs both; the grammar sketch supplied one | Per-field encryption |
 | Dependency check | Every expression that feeds state, an audience, a query result or an affordance carries a dependency set of the rows and relations it reads. Containment, `readers(act) ⊆ readers(dependency)`, is checked for guards, effects, derived columns, queries and affordances alike. An absence test or an aggregate depends on the whole relation, so the relation's readers must contain the act's readers, which is the completeness condition | The review's example: a public column `total = count(private_table)` passes a guard-only check and gives readers different public state | Soundness beyond the corpus; A3 bounds it |
 | Versioned rows | An assignment is a row version keyed by the producing position; the visible value is the latest visible version; a disclosure inserts a version at its original position and never overwrites a newer one | Equal verdicts do not make assignments commute; the Sale fixture keeps versions and picks the latest visible, and the layer states that rule | Anything about performance |
@@ -112,7 +113,7 @@ The first plan's decisions stand unless a row replaces one.
 | Derivations | Audience rule per kind, total over runtime JSON; the split of mixed-reader columns into public and private kinds with linkage; the disclosure policy from `max`; the backlog kinds from the dependency graph; `effects` for grant effects; guard order; `observe`; affordances derived from the same guards the fold uses, so that offered and possible coincide; budget and invariant functions that run beside the manifest's | D3 to D6; the review found offered and possible differ in the landed Sale | Minimal derivations |
 | Club | The original policy is an expected rejection; a public-record or trusted-evidence Club is a separately changed experiment under the first plan's §4.7 | The decision note; the review | That Club can be rerun unchanged |
 | Counting | Total corrections from the first draft; each classified by the directions note's seven classes, by whether compile-caught or checker-caught, and by blame: fold defect, or a declaration constraining a client | The first spike's boundary; the blame subsection of the directions note | That the budget of two carries over unchanged; A4 states the comparison |
-| Control | A declarative TypeScript builder with the same derivations and checks, authored under the same protocol by a second fresh agent | Separates assistance from syntax | Anything about which is better to read; step 3 |
+| Control | A TypeScript builder API with the same derivations and checks, in which guards and effects are ordinary TypeScript functions over typed rows, authored under the same protocol by a second fresh agent. The representation difference is exactly that: data with a predicate form, against code | Separates the derivations from the representation, as far as two arms can | Anything about which is better to read; step 3 |
 | Harness | Unchanged; one loader test for emitted modules | The measurement must be the same | Anything about the deferred experiments |
 
 ## 4. Predeclarations
@@ -130,12 +131,16 @@ The report gives totals by each.
 ### 4.2 Diagnosed shapes, preventions and expected rejections
 
 The builder writes each recorded shape in the declaration layer from the
-ledgers and commits it under `spike/lang/baselines/`.
+ledgers and commits it under `spike/lang/baselines/`. Every diagnostic
+witness pins the model, the harness and client boundary, the participant,
+the frontier, the violation class and the outcome difference, and its
+test asserts those values; a script that merely fails the checker for
+some other reason is not a witness.
 
 | Shape | Source | Required diagnostic | Script must fail the checker against |
 |---|---|---|---|
-| Sale: an accept guard reads stubs recorded under `members` | Sale ledger fix 2; prediction 1 | containment on `accept` reading `offer`; the newcomer judges `no_such_offer` where the oracle says `already_decided` | `corpus/sale/run1/seed-72.json`, Erin at 8, and manifest case 3, against the run-1 model |
-| Sale: a withdrawal of an unread stub is effective | Sale ledger fix 3; prediction 2 | absence over `offer` without completeness: the reader lacks rows, so "no such stub" is unjudgeable | `corpus/sale/run1/seed-96.json` at 17 and `seed-172.json` at 18, against the run-1 model |
+| Sale: an accept guard reads stubs recorded under `members` | Sale ledger fix 2; prediction 1 | containment on `accept` reading `offer`: a newcomer judges the accept `no_such_offer` where the oracle accepts it | `corpus/sale/run1/seed-158.json` against the run-1 model: Dana at frontier 7, mismatch class, view `no_such_offer` and `accepted` null where the oracle accepts `o3`. The `already_decided` variant (manifest case 3, Dana at 20) is recorded as a second witness from the trace |
+| Sale: a withdrawal or replacement of a stub no reader holds is effective (the tombstone rule) | Sale ledger fix 3; prediction 2 | absence over `offer` without completeness: "no such stub" is unjudgeable from a partial relation | `corpus/sale/run1/seed-72.json`, `seed-96.json` and `seed-172.json` against the run-1 model: each three steps ending at position 4, invariant class, "replacement (or withdrawal) of unknown stub". They witness the tombstone rule itself, not a hidden existing stub |
 | Sale: a counter's readers from its payload | Sale ledger fixes 1 and 7 | audience from payload | the baseline package at `fd1e23b`, Bob at 10; `corpus/sale/run6/seed-172.json`, 181 or 200 against the kept run-6 model |
 | Sale: a counter addressed by a payload `author` field | Sale ledger fix 5 | self-asserted reference | V3-F2's steps against `corpus/sale/run1/model.ts` |
 | Club, original policy | decision note A5 | unjudgeable reference: `vote` (members) holds `ref application` whose readers are applicant and committee, and the guard needs the row's kind | the A5 cases in `test/club-a5.test.ts` |
@@ -167,14 +172,20 @@ policy cannot change a recorded event.
 
 ### 4.4 Authoring protocol
 
-As the first spike's §4.5: a fresh agent per model, given the design
-note §§1 to 4 and §8, the views note, the layer's README with Discussion
-as the worked example, the harness README and the frozen manifest; it
-may run the layer and sees each diagnostic's text and script, not the
-checker's verdict on it; it may not run the checker, the invariant tests
-or the campaign before the first draft is committed; it is not given the
-directions note, the landed fixtures or the ledgers. Recorded: the first
-draft; every correction under §4.1; source and emitted lines.
+A fresh agent per arm, given an identical sanitized packet frozen
+before either starts: the design note §§1 to 4 and §8, the views note,
+the layer's README with Discussion as the worked example,
+interface-only documentation of the harness, and the frozen manifest.
+The packet excludes the harness README as it stands, because it carries
+Sale's results and repairs; the directions note; the landed fixtures;
+the baseline shapes; the ledgers; and every checker output. The
+permitted files and tools and their versions are listed in the packet.
+The agent commits its raw first draft before the first invocation of
+the layer, the checker, any test or any campaign; every later semantic
+change is a correction under §4.1. While correcting, it may run the
+layer and sees each diagnostic's text and script, not the checker's
+verdict on it. Recorded: the first draft; every correction; source and
+emitted lines.
 
 ## 5. Work breakdown
 
@@ -182,7 +193,7 @@ draft; every correction under §4.1; source and emitted lines.
 |---|---|---|---|
 | A1 Declaration layer | This plan approved | The builder or schema, the dependency check over all five expression sites with completeness for absence and aggregates, versioned rows, the derivations, the emitter, the loader test; the layer's README | Checker verifies the dependency rule against the review's counterexamples and the versioning rule against the Sale fixture |
 | A2 Reproduce and reject | A1 | A Sale declaration whose emitted package passes the unchanged Sale manifest; a Booking declaration likewise; the §4.2 shapes committed and refused with scripts that fail the checker; the preventions holding; Club refused; one derived audience rule broken and found by the checker; A1 to A3 decided | Checker reproduces one result table and two scripts |
-| Stop | A2 | If A1 or A2 is refuted, the report and nothing more | |
+| Stop | A2 | If any of A1, A2 or A3 is refuted, the report and nothing more | |
 | A3 One authoring task, with control | A2, and the MVP description's answer on who authors | Sale by a fresh agent in the layer and by a second fresh agent in the TypeScript control, both under §4.4; totals by class, catch site and blame; A4 and A5 decided | Checker verifies the ledgers and the class assignments |
 | A4 Notation | A3, and the MVP description's answer | The notation plan's N1 to N4 | As that plan says |
 | A5 Report | A4, or the Stop | Claims and predictions first; per-step tables; what the check missed; what is not established | Checker verifies every claim against committed runs |

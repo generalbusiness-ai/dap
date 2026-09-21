@@ -88,24 +88,27 @@ carry two parties, and Dimoulas, Findler, Flanagan and Felleisen's
 correct-blame theorem is the guarantee that a failing check names the
 party that supplied the faulty value, never a bystander. Read the ledgers
 with that question and four of the counted repairs are not defects in a
-model's fold at all. They are obligations the model places on a client,
-and the model's budget was charged when the client violated them.
+model's fold. They added or corrected contracts the model places on a
+client: declarations the model author had to write, which remain part of
+the total authoring cost, and which are a different kind of work from
+repairing a guard.
 
 | Model | Counted semantic repairs | Of those, obligations on a client |
 |---|---|---|
 | Sale | 6 | 2: the join disclosure (fix 2) and the disclosure policy (fix 4) |
 | Booking | 2 | 2: the disclosure policy (fix 1) and its authorized-only rule (fix 2) |
 
-Booking's whole budget went on obligations it placed on someone else; its
-own fold needed no repair. The ledgers say so themselves: the policy
-"binds a conforming client; the checker still judges what is readable, so
-a non-conforming client is still caught." Sale's run 3 lost 100 of 200
-seeds to the generator's disclosing client with no model change at all.
-This does not rescue goal 2: Sale still needs four repairs against a
-budget of two. It changes what the number means, and it says the next
-spike should score a declaration that constrains another party
-separately from a repair to a fold. D3 says where such a contract can be
-enforced, and the obligations subsection of §3 says what it is.
+Booking's whole budget went on contracts it placed on someone else; its
+own fold needed no repair. The ledgers count them as the author's work,
+and rightly: a client cannot violate a contract that was not yet
+declared, and Sale's run 3 lost 100 of 200 seeds because the model had
+declared nothing about disclosure. Once a correct contract exists, a
+client's noncompliance is a different event, reported against the client
+and never scored as a model repair. This does not rescue goal 2. It says
+the next spike should score a declaration that constrains another party
+separately from a repair to a fold, and report both in the total. D3
+says where such a contract could be enforced, and the obligations
+subsection of §3 says what it is.
 
 ## 2. What the compiler must produce
 
@@ -140,8 +143,10 @@ retroactive class of D2. A guard in a fold refuses kind `k` by consulting
 fact `f`. The compiler checks that every reader of `k` at any later
 position is a reader of `f`: `readers(k) ⊆ readers(f)`, evaluated
 symbolically over the audience terms and the join rule. `spine` contains
-everything; `members@n` does not contain `members@t` for `n > t` unless
-`f` is retroactive; `named` sets compare by construction. A guard that
+everything; for `t < n` with a newcomer, `readers(f@t)` does not contain
+`readers(k@n)` unless the earlier evidence is disclosed or made
+retroactively readable, so a guard at `n` on a fact recorded at `t`
+fails the check; `named` sets compare by construction. A guard that
 fails the check is a compile error that names the diverging reader in the
 ledger's own vocabulary: "a member joining after position of `offer` judges
 `accept` as `no_such_offer` where the oracle says `already_decided`".
@@ -225,8 +230,10 @@ viewer judging a disclosure cannot see the kind at a hidden position,
 because the header commits to content and reveals no kind, so a fold-level
 refusal would not be uniformly judgeable, which is what D1 forbids. The
 serving party sees both sides. So the disclosure contract belongs to the
-serving party in the first profile, and its violation is the discloser's
-fault, reported as such, and never a model outcome or a repair.
+serving party in the first profile, and a violation of a declared
+contract is the discloser's fault, reported as such. This is a proposed
+boundary, not existing behaviour: today the foundation records an
+authorized `dap.disclose` without any maximum-reader check.
 
 **Precedent.** Daml's signatories, observers and stakeholders on a template;
 Viaduct's confidentiality labels per value; Racket contracts for the
@@ -350,7 +357,10 @@ the generated function, with targets the spike's list lacks.
 facts, never through a free string. Where the referring kind's readers
 cannot read the referent, the compiler resolves what they can: the position
 by header commitment (`ctx.commitmentAt`) and the authority at that position
-(`ctx.holdersAt`), which is the Club's `shown` rule. Where a guard needs the
+(`ctx.holdersAt`), which is the Club's `shown` rule. A commitment lookup
+establishes that a position with that id exists; it does not prove that
+an effective row of the expected kind stands there, and the compiler
+must not let a guard treat the one as the other. Where a guard needs the
 referent's content, the compiler reports and offers the two routes the Club
 decision note records: a public record kind, or trusted evidence.
 
@@ -361,7 +371,10 @@ Club negative result into a diagnostic at authoring time.
 which the descriptor already supplies.
 
 **Test.** The Club's `shown` rule regenerates from a `ref application`
-field, and the compiler reports the A1 and A5 shapes on the Club policy.
+field, and the compiler refuses the original Club policy with the A5
+shape as an unjudgeable reference. A1, a second admission of an existing
+member, is a missing business guard, not a visibility error; the check is
+not expected to see it.
 
 ### D7. Ambient inputs as typed primitives
 
@@ -761,6 +774,12 @@ composition and cross-context repairs exceed the budget, that is the
 residual cost of the design, and the note that reports it should say so.
 
 ## 6. A next spike: goal 2 under a compiler
+
+**Superseded on 2026-09-21.** This section is the first proposal, kept
+as a record. The authoring spike plan replaces it: the original Club is
+an expected rejection rather than a rerun, the three new domains are
+separately commissioned experiments, and the counting starts at the raw
+first draft rather than at the first draft that compiles.
 
 1. Write the package contract of D9 as types the existing harness accepts;
    the flat descriptor is already close.

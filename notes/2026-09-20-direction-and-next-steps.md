@@ -113,7 +113,7 @@ their space, their history and their choice of representatives.
 Help comes in three kinds. §6's test records which kind supplied each
 thing the person could not do alone, so the kinds must stay distinct.
 
-| Kind of help | What it brings | What it is not |
+| Kind of help | What it brings | What it does not establish by itself |
 |---|---|---|
 | a **human representative**: a family member, a friend, an appointed helper | attention, judgment, and authority to act for the person where the person grants it | expertise |
 | a **service professional**, acting for a firm under a mandate | expertise, capacity, reputation, and colleagues who can take over | the person's own judgment or authority |
@@ -125,8 +125,10 @@ help it supplies, what each may do without asking, what needs the
 person's approval, and what happens when a helper disappears.
 
 A **capability** says what someone may do. An **obligation** says what they are expected or committed to do.
-Delegation to a helper is a capability. A promise the helper makes is an
-obligation. The record shows both as the helper's acts.
+Delegation to a helper is a capability, granted by whoever holds the
+authority to grant it. A promise the helper makes is an obligation. The
+record identifies who granted the authority, who made a promise, and who
+performed it.
 
 ## 4. Participation deepens per relationship
 
@@ -295,25 +297,30 @@ Product evidence comes before general machinery. A fixed observation
 window around the episode means the real exchange is sought early, not
 after the whole case has run.
 
-**How the steps depend on each other.** R1 and R2 come first and gate
-everything except P6. R3 needs R1. R4 and R5 need R3. E1 needs R2, R4 and
-R5. E2 happens inside E1's window. E3 needs the four rung-2
-prerequisites of §7, which become their own small request once E2 has
-shown that an exchange is wanted. P6 runs on its own. R6 waits for E1 to
-E3, and deployment and runtime choices wait for R6.
+**How the steps depend on each other.** R1 selects the segment. R2
+finalizes the pilot trust boundary for that segment, so it needs R1. R3
+needs R1 and may use sanitized or invented material before R2; no real
+material is used before R2. R4 and R5 may be prototyped together against
+an agreed contract, but R5 completes only after it runs over R4's
+package. E1 needs R2, R4 and R5. E2 happens inside E1's window. E3 needs
+the four rung-2 prerequisites of §7, which become their own small request
+once E2 has shown that an exchange is wanted. P6 runs on its own. R6
+happens when the observation window ends or an earlier stop is reached,
+whether or not E2 and E3 completed. Deployment and runtime choices wait
+for R6.
 
 | Step | Who | Needs |
 |---|---|---|
 | R1 Choose the person and the segment | Hugh | nothing |
-| R2 Pilot trust and control | Hugh with builder | nothing |
+| R2 Pilot trust and control | Hugh with builder | R1 |
 | R3 Phone mock on that episode | builder, then five people | R1 |
 | R4 Account package | builder, checker | R3 |
-| R5 Smallest end-to-end | builder | R3 |
+| R5 Smallest end-to-end | builder | R3, and R4 to complete |
 | E1 The episode, alone | the person, with the help chosen in R1 | R2, R4, R5 |
 | E2 One exchange, early | the same person | inside E1 |
 | E3 One contribution | the same person and one other party | E2, and the rung-2 prerequisites |
 | P6 Authoring step 1 | builder, checker | nothing |
-| R6 Direction review | Hugh | E1 to E3 |
+| R6 Direction review | Hugh | the window's end, or an earlier stop |
 
 Each is one workroom request when it is next. None is filed by this
 note.
@@ -336,7 +343,7 @@ The claim is preferred. Whichever case a willing person can be found for
 decides.
 
 Stop when: no willing person with a bounded segment exists. Then the
-pilot waits, and nothing below starts.
+pilot waits, and no later product step starts; P6 is unaffected.
 
 ### R2 Pilot trust and control
 
@@ -353,8 +360,10 @@ Produces: a storyboard on a phone using the chosen segment, asking the
 five screen questions of §7, including a changed arrangement and
 selected sharing with one other party; five people asked.
 
-Stop when: never. A failing screen means a design revision, not a
-verdict on the direction.
+Ends when: the observed answers, the revisions they caused and the
+remaining blockers are recorded. A failing screen means a design
+revision, not a verdict on the direction, and implementation does not
+proceed until the record exists.
 
 ### R4 Account package
 
@@ -364,8 +373,12 @@ predeclared, including cancellation, correction, retraction and
 conflicting sources; a privacy budget; the package authored under the
 checker.
 
-Stop when: the checker finds that standing cannot agree across views.
-Then §5 is wrong and is revised.
+Stop when: for some participant and visibility basis, the standing that
+participant's own view derives differs from the oracle's projection for
+that same participant. Different evidence may support different
+standing for different participants; shared visible outcomes must agree.
+A mismatch sends the account rules and their visibility dependencies
+back for revision.
 
 ### R5 Smallest end-to-end
 
@@ -373,7 +386,7 @@ Produces: a minimal client over the account package for the chosen
 segment, with the anchor and actions that name their targets. Manual
 capture and confirmation are allowed, if visible and counted.
 
-Stop when: never. It ends when the client runs the segment.
+Ends when: the client runs the chosen segment over R4's package.
 
 ### E1 The episode, alone
 
@@ -418,14 +431,16 @@ Produces: the revised authoring plan's claims A1 to A3. The declaration
 layer can express the Sale package, rejects the known bad shapes, and
 holds across the existing package corpus.
 
-Stop when: A1 or A2 is refuted. Then packages stay hand-written and the
-catalog is small.
+Stop when: any of A1, A2 or A3 is refuted. Then packages stay
+hand-written and the catalog is small.
 
 ### R6 Direction review
 
-Produces: what E1 to E3 established; the advocate ledger; the generality
-story of §4 checked against every product decision made; whether to
-proceed to deployment and runtime choices, and with which constraints.
+Produces: what E1 to E3 established, with each exchange and contribution
+classified as completed, declined, unanswered or not attempted, and why;
+the advocate ledger; the generality story of §4 checked against every
+product decision made; whether to proceed to deployment and runtime
+choices, and with which constraints.
 
 Stop when: never. This is the decision point.
 
