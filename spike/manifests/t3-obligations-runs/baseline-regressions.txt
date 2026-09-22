@@ -123,7 +123,7 @@ test at spike/test/club-a5.test.ts:76:11
 ⚠ original policy requires rejection of invalid targets and no admission grant (3.010792ms) # V5-A5 retained negative result; no policy repair commissioned
   AssertionError [ERR_ASSERTION]: votes and admission must refer to an effective application; invalid targets must not grant Member
   + actual - expected
-  
+
     {
   +   grants: 1,
   -   grants: 0,
@@ -185,7 +185,7 @@ test at spike/test/club-a5.test.ts:76:11
         }
       ]
     }
-  
+
       at TestContext.<anonymous> (file:///private/tmp/dap-t3-obligations/spike/test/club-a5.test.ts:77:12)
       at Test.runInAsyncScope (node:async_hooks:226:14)
       at Test.run (node:internal/test_runner/test:1402:25)
@@ -208,7 +208,7 @@ test at spike/test/club-a5.test.ts:76:11
 ⚠ original policy requires rejection of invalid targets and no admission grant (0.350916ms) # V5-A5 retained negative result; no policy repair commissioned
   AssertionError [ERR_ASSERTION]: votes and admission must refer to an effective application; invalid targets must not grant Member
   + actual - expected
-  
+
     {
   +   grants: 1,
   -   grants: 0,
@@ -270,7 +270,7 @@ test at spike/test/club-a5.test.ts:76:11
         }
       ]
     }
-  
+
       at TestContext.<anonymous> (file:///private/tmp/dap-t3-obligations/spike/test/club-a5.test.ts:77:12)
       at Test.runInAsyncScope (node:async_hooks:226:14)
       at Test.run (node:internal/test_runner/test:1402:25)
@@ -293,7 +293,7 @@ test at spike/test/club-a5.test.ts:76:11
 ⚠ original policy requires rejection of invalid targets and no admission grant (0.323375ms) # V5-A5 retained negative result; no policy repair commissioned
   AssertionError [ERR_ASSERTION]: votes and admission must refer to an effective application; invalid targets must not grant Member
   + actual - expected
-  
+
     {
   +   grants: 1,
   -   grants: 0,
@@ -355,7 +355,7 @@ test at spike/test/club-a5.test.ts:76:11
         }
       ]
     }
-  
+
       at TestContext.<anonymous> (file:///private/tmp/dap-t3-obligations/spike/test/club-a5.test.ts:77:12)
       at Test.runInAsyncScope (node:async_hooks:226:14)
       at Test.run (node:internal/test_runner/test:1402:25)
@@ -377,9 +377,9 @@ test at spike/test/club-a5.test.ts:76:11
 test at spike/test/club.test.ts:265:1
 ⚠ plan §4.2: a second admission is ineffective once the applicant holds Member (105.498334ms) # V5-A1: revised experiment and policy repair pending
   AssertionError [ERR_ASSERTION]: the plan requires rejection of an existing Member
-  
+
   true !== false
-  
+
       at TestContext.<anonymous> (file:///private/tmp/dap-t3-obligations/spike/test/club.test.ts:283:10)
       at Test.runInAsyncScope (node:async_hooks:226:14)
       at Test.run (node:internal/test_runner/test:1402:25)

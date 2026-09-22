@@ -168,3 +168,8 @@ The checkpoint hands the design note an exact public form candidate, its
 passing Sale evidence, and the Club reader/trigger counterexample that a
 successor must resolve. Checker review is requested for this counterexample
 exit; the combined implementation acceptance checklist remains unmet.
+
+Capture normalization: trailing whitespace in the baseline regression log and
+the extra empty final line in the typecheck log were removed after capture.
+Test output content, implementation and results are unchanged; no campaigns
+were repeated for this formatting correction.
