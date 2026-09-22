@@ -1,5 +1,8 @@
 # Declaration layer, T1
 
+**Stopped with a retained privacy counterexample.** See [the report](REPORT.md).
+The emitted packages are experimental negative evidence, not passing replacements.
+
 This is the A1/A2 experiment on main `9c4e04e5`. It changes no foundation,
 checker, generator, manifest, historical corpus or existing test.
 

@@ -1,0 +1,75 @@
+{
+  "candidate": "22444f85",
+  "package": "sha256:1622c6c066d57f1f503a79e0eff1192c6f6b41da841135ca817d18e3138b843e",
+  "sourceId": "sha256:e66b40e6b3f4d5af0747487c20b5d240ee48a14a17252268bf8b8794e7f8b448",
+  "checkerDiagnostics": [],
+  "steps": [
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "bob",
+      "grants": {
+        "roles": [
+          "Buyer"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "bob"
+    },
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "carol",
+      "grants": {
+        "roles": [
+          "Buyer"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "carol"
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.sale.offer",
+      "payload": {
+        "offer_id": "o1"
+      }
+    },
+    {
+      "type": "act",
+      "actor": "carol",
+      "kind": "com.example.sale.offer_terms",
+      "payload": {
+        "offer_id": "o1",
+        "amount": 777,
+        "seller": "alice"
+      }
+    }
+  ],
+  "verdict": {
+    "known": true,
+    "authorized": true,
+    "effective": false,
+    "reason": "ineffective",
+    "perModel": {
+      "sale": {
+        "effective": false,
+        "reason": "not_author"
+      }
+    }
+  },
+  "readership": {
+    "alice": true,
+    "bob": true,
+    "carol": true
+  },
+  "violations": [
+    "bob@7 budget: bob can read the sale.offer_terms at 7, whose parties are carol+alice"
+  ],
+  "derivedBudgetViolations": []
+}

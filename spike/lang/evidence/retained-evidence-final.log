@@ -1,0 +1,21 @@
+✔ retained candidate campaign failure seed 35 (3441.2805ms)
+✔ retained candidate campaign failure seed 56 (2227.234667ms)
+✔ retained candidate campaign failure seed 105 (2808.728417ms)
+✔ retained candidate campaign failure seed 110 (2624.087875ms)
+✔ retained candidate campaign failure seed 135 (3579.285458ms)
+✔ retained T1 counterexample: accepted declaration delivers refused Carol terms to Bob; derived budget misses it (230.711459ms)
+✔ retained counterexample has a clean hand-written control and is deletion-minimal (396.298792ms)
+✔ derived Sale preserves tombstone regression 72 (45.580917ms)
+✔ derived Sale preserves tombstone regression 96 (43.792958ms)
+✔ derived Sale preserves tombstone regression 172 (42.756917ms)
+✔ derived Sale retains literal readership, including Bob at 10 (3.845334ms)
+✔ unchanged checker detects a deliberately narrowed derived offer audience with a clean control (203.798875ms)
+✔ retained V3-F1 projection regression: hostile disclosure shows 700 where the original projection keeps null (157.777917ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 14823.438375

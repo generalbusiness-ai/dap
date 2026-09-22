@@ -1,0 +1,47 @@
+[
+  {
+    "seed": 35,
+    "entries": 60,
+    "violations": 25,
+    "classes": [
+      "budget"
+    ],
+    "first": "carol@42 budget: carol can read the sale.offer_terms at 42, whose parties are dana+alice"
+  },
+  {
+    "seed": 56,
+    "entries": 60,
+    "violations": 4,
+    "classes": [
+      "budget"
+    ],
+    "first": "dana@56 budget: dana can read the sale.offer_terms at 56, whose parties are carol+alice"
+  },
+  {
+    "seed": 105,
+    "entries": 60,
+    "violations": 14,
+    "classes": [
+      "budget"
+    ],
+    "first": "dana@50 budget: dana can read the sale.offer_terms at 50, whose parties are carol+alice"
+  },
+  {
+    "seed": 110,
+    "entries": 60,
+    "violations": 7,
+    "classes": [
+      "budget"
+    ],
+    "first": "bob@53 budget: bob can read the sale.offer_terms at 53, whose parties are dana+alice"
+  },
+  {
+    "seed": 135,
+    "entries": 60,
+    "violations": 31,
+    "classes": [
+      "budget"
+    ],
+    "first": "bob@29 budget: bob can read the sale.offer_terms at 29, whose parties are dana+alice"
+  }
+]
