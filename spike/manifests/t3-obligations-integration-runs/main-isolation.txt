@@ -1,0 +1,32 @@
+✔ O4 K2 every activation registry fault propagates unchanged and cold exact retry agrees: memory (9769.312ms)
+ℹ {"storage":"memory","totalLookups":120,"originalExceptions":120,"exactRetryRecoveries":120,"returnedFaultVerdicts":0}
+✔ O4 K2 every activation registry fault propagates unchanged and cold exact retry agrees: sqlite (10127.074333ms)
+ℹ {"storage":"sqlite","totalLookups":120,"originalExceptions":120,"exactRetryRecoveries":120,"returnedFaultVerdicts":0}
+✔ O4 K2 cold open throws the original nested registry error while ordinary Journal keeps legacy verdicts: memory (124.856666ms)
+✔ O4 K2 cold open throws the original nested registry error while ordinary Journal keeps legacy verdicts: sqlite (141.076917ms)
+✔ O4 K2 export and public-proof interpretations preserve original non-Error failures (432.525917ms)
+✔ O4 K2 an unlisted error inside wireInput retains its identity (103.94925ms)
+✔ O4 G2 failed activation, dormant exercise and exact retries permit later activation: memory (683.284417ms)
+✔ O4 G2 failed activation, dormant exercise and exact retries permit later activation: sqlite (691.444708ms)
+✔ O4 G2 another participant admitted event cannot block activation: memory (355.901583ms)
+✔ O4 G2 another participant admitted event cannot block activation: sqlite (393.850167ms)
+✔ O4 G2 keeps current authorization gate: memory (280.052459ms)
+✔ O4 G2 keeps current closed gate: memory (283.795125ms)
+✔ O4 G2 keeps current authorization gate: sqlite (324.37675ms)
+✔ O4 G2 keeps current closed gate: sqlite (316.424833ms)
+✔ O4 unexpected post-commit replay error is thrown and disables facade: memory (382.944125ms)
+✔ O4 unexpected post-commit replay error is thrown and disables facade: sqlite (431.817083ms)
+✔ O4 malformed release-proof shape has an explicit policy refusal: memory (307.131792ms)
+✔ O4 malformed release-proof shape has an explicit policy refusal: sqlite (338.371167ms)
+✔ O4 thrown fold handler is a real failure with durable bytes: memory (126.713709ms)
+✔ O4 thrown audience handler is a real failure with durable bytes: memory (128.758ms)
+✔ O4 thrown fold handler is a real failure with durable bytes: sqlite (145.746666ms)
+✔ O4 thrown audience handler is a real failure with durable bytes: sqlite (146.532167ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 20844.287458

@@ -38,7 +38,11 @@ public admission but cannot read its earlier members-only votes, so her fold
 reports `no_quorum` and creates no grant obligation. The test removes each of
 the seven logical steps in turn and confirms the mismatch disappears. This is
 deletion-minimal over those declared steps, not a proof of a globally shortest
-trace.
+trace. In direction §5 terms, this is an unjudgeable public act: public
+admission is judged on members-only votes. A public-trigger obligation cannot
+safely take a trigger whose effectiveness depends on evidence unavailable to
+that reader. This refutes this candidate restriction, not obligations in
+general.
 
 A longer delayed-performance fixture retains exactly five mismatches for Erin.
 The first is `no_quorum` at frontier 13; the named grant is subsequently
@@ -63,7 +67,11 @@ shape. It does not prove that a hidden public dependency was included. The
 client must supply every effective declared dependency it can read. The
 negative empty-backlog case demonstrates the consequence of breaking that
 assumption: the card is fulfilled and the subsequent replacement is effective
-in the full fold, while Ivan reports `no_such_offer`.
+in the full fold, while Ivan reports `no_such_offer`. Detecting the missing
+delivery at completion would require an immediate, independent assertion that
+the required bodies have reached the recipient. The current matcher does not
+make that assertion. Its later dependent trace reveals the checker mismatch,
+so empty-backlog fulfillment remains a client completeness gap.
 
 Club's recipe checks the obligation, role, current-participant principal and
 sole Member role grant. Its client must select the actor of the named target
@@ -95,6 +103,10 @@ state change and remain actor-only. Obligation application performances must
 already have a spine audience; a private one is refused and rolled back.
 Named disclosure performance is explicitly public protocol metadata (positions
 and recipients), while the disclosed bodies retain their individual readership.
+That public metadata has a readership cost: everyone, including later joiners,
+learns which recipient received which disclosed positions and when the
+completion occurred in the sequence. Public clock observations also reveal
+the declared time used for deadlines.
 Generic declaration and matcher callbacks operate on copies. The optional
 form stages the fold and rolls back failures, including model state, grants
 and disclosures; strict verification still propagates the original exception.
@@ -173,3 +185,70 @@ Capture normalization: trailing whitespace in the baseline regression log and
 the extra empty final line in the typecheck log were removed after capture.
 Test output content, implementation and results are unchanged; no campaigns
 were repeated for this formatting correction.
+
+## Integration follow-up: baseline replay isolation
+
+The original specimen and its campaign evidence remain pinned to `b4f18e3b`.
+To reproduce the original campaign identities, run the earlier commands at
+that commit. Running them at the integration correction uses the successor
+foundation identity instead.
+The report/whitespace head was `f792e77b`. A subsequent independent full legacy
+suite exposed four ordinary failures outside the earlier targeted checks:
+`ordering-scope-nested-faults.test.ts` lost the ordinary Journal's legacy error
+verdict with `cold registry failure` in memory and SQLite. The corresponding
+`ordering-scope-phase.test.ts` cases threw the injected `ineffective_release`
+error before the intended post-commit replay assertion.
+The earlier targeted passes did not establish full isolation of baseline F0.
+
+The two affected files were then run independently against `9c4e04e5` and
+`f792e77b`: main passed all 22 tests, while the T3 head passed 18 and failed the
+same four. Their nested-fault campaigns counted 120 package lookups per storage
+on main and 758 on the T3 head. Captures are preserved in
+`manifests/t3-obligations-integration-runs/main-isolation.txt` and
+`before-isolation.txt`.
+
+The cause was opt-in detection that enumerated every available registry entry
+before each fold, including unused packages, outside the ordinary fold's error
+handling. A separate genesis preflight also repeated binding lookups before the
+original resolution step. Lazy registries made those reads observable: errors
+occurred at different positions and outside the intended catch boundary.
+Keeping the old F0 identifier was not sufficient to preserve its behavior.
+
+The narrow integration correction is committed separately at
+`2a110ea8493e7ad60e67aa458d0c082d17d67f1e`. Staging is now selected only from the
+explicit genesis foundation or the foundation already pinned in state. Genesis
+checks obligation compatibility during its existing per-binding lookup;
+`foundationFor` is used only when authoring a context. The Club visibility rule,
+matchers, negative controls and original captured campaigns are unchanged.
+
+Changing foundation source changes the source-hashed opt-in identity. The old
+specimen retains `sha256:0879301040559d01899781329458a709926948acef2143297fab0d459d9f13e6`;
+the successor uses
+`sha256:3a8f5565053cd09265043da46ed74a17b785cc8f5cb05d0475e7fbd7abe56a21`.
+Baseline F0 and both candidate package identities are unchanged. The successor
+identity is recorded separately in the integration run directory; the original
+identity file is not relabelled as evidence for this successor.
+
+One complete `npm test` run from `spike`, including both candidate campaigns,
+passed at the exact correction head: 536 tests, 532 passes, zero ordinary
+failures and the same four existing TODO failures, in 1,144.6 seconds.
+`npm run typecheck` also passed. All four previously failing isolation tests
+now pass in memory and SQLite. The nested-fault diagnostics return to the
+baseline 120 lookups, 120 original exceptions, 120 exact-retry recoveries and
+zero returned fault verdicts for each storage.
+
+The successor campaign counts are identical to the original specimen's:
+Sale has 200 seeds, 11,273 positions, 938 fulfilled obligations and no
+violations. Club has 200 seeds, 11,785 positions, 1,103 fulfilled obligations,
+41 failing seeds and 874 checker violations. Its first finding remains seed 1,
+Dana at frontier 15 with `no_quorum`. The successor's foundation identity
+changes trace hashes; the retained logs distinguish those traces from the
+original campaign. The corrected integration does not resolve the Club
+counterexample or either client matching/completeness limitation.
+
+The integration directory holds `full-suite.txt`, `typecheck.txt`, the two
+pre-correction reproduction logs, `identities.json` and `summary.json`.
+Only captured trailing whitespace and redundant empty final lines were
+normalized; output content and results are unchanged. No source changed
+after the tested correction head. This successor remains a counterexample
+report exit for #7441, not acceptance of the combined obligation form.

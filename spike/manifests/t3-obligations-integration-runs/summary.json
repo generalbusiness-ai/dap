@@ -1,0 +1,330 @@
+{
+  "request": "dap #7441",
+  "exit": "counterexample report; combined obligation form acceptance remains unmet",
+  "identities": {
+    "implementation": "2a110ea8493e7ad60e67aa458d0c082d17d67f1e",
+    "originalSpecimen": "b4f18e3b775bb602fa4e7c41818af68f31dc76f0",
+    "preCorrectionReport": "f792e77ba01b5d79c752862689f74576bb41bb27",
+    "form": "dap.fixture.obligations/1",
+    "baselineFoundation": "sha256:5a7be1514529bac249c683ada733e64273f94b2700abf8a55c47dcb7ebfb8d78",
+    "obligationFoundation": "sha256:3a8f5565053cd09265043da46ed74a17b785cc8f5cb05d0475e7fbd7abe56a21",
+    "sale": "sha256:1c3a2ca25dc4f34bf59617dfd61a1bcf46e461bb818414d29c6035446a9915ac",
+    "club": "sha256:b45df4e969da0253ec1c763be7ed511718f2d1b9aa43154694926c1e4725e3eb",
+    "originalObligationFoundation": "sha256:0879301040559d01899781329458a709926948acef2143297fab0d459d9f13e6"
+  },
+  "isolationReproduction": {
+    "command": "node --test spike/test/ordering-scope-nested-faults.test.ts spike/test/ordering-scope-phase.test.ts",
+    "main": {
+      "head": "9c4e04e52ca9f16d3014c9d7d79a148bd039123e",
+      "capture": "main-isolation.txt",
+      "tests": 22,
+      "pass": 22,
+      "fail": 0,
+      "todo": 0,
+      "duration_ms": 20844.287458,
+      "nestedRegistryDiagnostics": [
+        {
+          "storage": "memory",
+          "totalLookups": 120,
+          "originalExceptions": 120,
+          "exactRetryRecoveries": 120,
+          "returnedFaultVerdicts": 0
+        },
+        {
+          "storage": "sqlite",
+          "totalLookups": 120,
+          "originalExceptions": 120,
+          "exactRetryRecoveries": 120,
+          "returnedFaultVerdicts": 0
+        }
+      ]
+    },
+    "before": {
+      "head": "f792e77ba01b5d79c752862689f74576bb41bb27",
+      "capture": "before-isolation.txt",
+      "tests": 22,
+      "pass": 18,
+      "fail": 4,
+      "todo": 0,
+      "duration_ms": 120597.369708,
+      "nestedRegistryDiagnostics": [
+        {
+          "storage": "memory",
+          "totalLookups": 758,
+          "originalExceptions": 758,
+          "exactRetryRecoveries": 758,
+          "returnedFaultVerdicts": 0
+        },
+        {
+          "storage": "sqlite",
+          "totalLookups": 758,
+          "originalExceptions": 758,
+          "exactRetryRecoveries": 758,
+          "returnedFaultVerdicts": 0
+        }
+      ]
+    }
+  },
+  "successorFullSuite": {
+    "head": "2a110ea8493e7ad60e67aa458d0c082d17d67f1e",
+    "command": "npm test",
+    "cwd": "spike",
+    "exitCode": 0,
+    "capture": "full-suite.txt",
+    "tests": 536,
+    "pass": 532,
+    "fail": 0,
+    "todo": 4,
+    "duration_ms": 1144581.059,
+    "nestedRegistryDiagnostics": [
+      {
+        "storage": "memory",
+        "totalLookups": 120,
+        "originalExceptions": 120,
+        "exactRetryRecoveries": 120,
+        "returnedFaultVerdicts": 0
+      },
+      {
+        "storage": "sqlite",
+        "totalLookups": 120,
+        "originalExceptions": 120,
+        "exactRetryRecoveries": 120,
+        "returnedFaultVerdicts": 0
+      }
+    ]
+  },
+  "typecheck": {
+    "head": "2a110ea8493e7ad60e67aa458d0c082d17d67f1e",
+    "command": "npm run typecheck",
+    "cwd": "spike",
+    "exitCode": 0,
+    "capture": "typecheck.txt"
+  },
+  "campaigns": [
+    {
+      "fixture": "sale",
+      "seeds": 200,
+      "positions": 11273,
+      "obligations": 938,
+      "failures": [],
+      "failingSeeds": 0,
+      "violationCount": 0
+    },
+    {
+      "fixture": "club",
+      "seeds": 200,
+      "positions": 11785,
+      "obligations": 1103,
+      "failures": [
+        {
+          "seed": 1,
+          "count": 57,
+          "first": "dana@15 mismatch: observe differs at 15 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:abd96d6bf51475fc22e7e41701ed2ccffbdab6a97bd3fb, view undefined; obligations.2: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.15.effective: oracle true, view false; outcomes.15.perModel.club.effective: oracle true, view false; outcomes.15.perModel.club.reason: oracle null, view no_quorum; outcomes.15.reason: oracle null, view ineffective]"
+        },
+        {
+          "seed": 8,
+          "count": 4,
+          "first": "frank@31 mismatch: observe differs at 31 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:c71a462dc6f5a9c3c3e5f0faa3beef4204a5ec4ffb2079, view undefined; obligations.4: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.31.effective: oracle true, view false; outcomes.31.perModel.club.effective: oracle true, view false; outcomes.31.perModel.club.reason: oracle null, view no_quorum; outcomes.31.reason: oracle null, view ineffective]"
+        },
+        {
+          "seed": 9,
+          "count": 27,
+          "first": "erin@25 mismatch: observe differs at 25 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:ed7dd04ab164d4e1ed76c3f6779207b5789370b2043654, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.25.effective: oracle true, view false; outcomes.25.perModel.club.effective: oracle true, view false; outcomes.25.perModel.club.reason: oracle null, view no_quorum; outcomes.25.reason: oracle null, view ineffective]"
+        },
+        {
+          "seed": 12,
+          "count": 18,
+          "first": "erin@15 mismatch: observe differs at 15 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:60071b11050fbbd69d2ac92a737145db3ec1c9b24bfcc6, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.15.effective: oracle true, view false; outcomes.15.perModel.club.effective: oracle true, view false; outcomes.15.perModel.club.reason: oracle null, view no_quorum; outcomes.15.reason: oracle null, view ineffective]"
+        },
+        {
+          "seed": 16,
+          "count": 48,
+          "first": "erin@20 mismatch: observe differs at 20 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:db111fd7e12dbbabeb56eef107053fbd3fc3647f3bda4d, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.20.effective: oracle true, view false; outcomes.20.perModel.club.effective: oracle true, view false; outcomes.20.perModel.club.reason: oracle null, view no_quorum; outcomes.20.reason: oracle null, view ineffective]"
+        },
+        {
+          "seed": 28,
+          "count": 66,
+          "first": "erin@17 mismatch: observe differs at 17 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:efb414e8048db1402a0171d3dc3c2aad0232373ec053fd, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.17.effective: oracle true, view false; outcomes.17.perModel.club.effective: oracle true, view false; outcomes.17.perModel.club.reason: oracle null, view no_quorum; outcomes.17.reason: oracle null, view ineffective]"
+        },
+        {
+          "seed": 31,
+          "count": 9,
+          "first": "frank@21 mismatch: observe differs at 21 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:f199bebee2e9bd10a76e733da4afe9ba1dc7eb9c9f5391, view undefined; obligations.4: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.21.effective: oracle true, view false; outcomes.21.perModel.club.effective: oracle true, view false; outcomes.21.perModel.club.reason: oracle null, view no_quorum; outcomes.21.reason: oracle null, view ineffective]"
+        },
+        {
+          "seed": 38,
+          "count": 42,
+          "first": "erin@16 mismatch: observe differs at 16 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:5ff3238ad750b57d9383e6533ed9529185fc8c917e65e7, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.16.effective: oracle true, view false; outcomes.16.perModel.club.effective: oracle true, view false; outcomes.16.perModel.club.reason: oracle null, view no_quorum; outcomes.16.reason: oracle null, view ineffective]"
+        },
+        {
+          "seed": 41,
+          "count": 4,
+          "first": "frank@18 mismatch: observe differs at 18 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:81db0f0f636d1bc2b7d9b1abb2def5f87ba47e8e307f7c, view undefined; obligations.4: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.18.effective: oracle true, view false; outcomes.18.perModel.club.effective: oracle true, view false; outcomes.18.perModel.club.reason: oracle null, view no_quorum; outcomes.18.reason: oracle null, view ineffective]"
+        },
+        {
+          "seed": 57,
+          "count": 5,
+          "first": "frank@32 mismatch: observe differs at 32 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:5023680734f155cd502ae14a3656d50c9c0874bc61cafa, view undefined; obligations.4: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.32.effective: oracle true, view false; outcomes.32.perModel.club.effective: oracle true, view false; outcomes.32.perModel.club.reason: oracle null, view no_quorum; outcomes.32.reason: oracle null, view ineffective]"
+        },
+        {
+          "seed": 60,
+          "count": 12,
+          "first": "frank@27 mismatch: observe differs at 27 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:f779b4036d3d4f9443e5d28395352f78cf9002593751c9, view undefined; obligations.4: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.27.effective: oracle true, view false; outcomes.27.perModel.club.effective: oracle true, view false; outcomes.27.perModel.club.reason: oracle null, view no_quorum; outcomes.27.reason: oracle null, view ineffective]"
+        },
+        {
+          "seed": 61,
+          "count": 26,
+          "first": "erin@19 mismatch: observe differs at 19 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:99bbc5ccad8245f52e365c7fa77f8ae5dff42f7aa8f586, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.19.effective: oracle true, view false; outcomes.19.perModel.club.effective: oracle true, view false; outcomes.19.perModel.club.reason: oracle null, view no_quorum; outcomes.19.reason: oracle null, view ineffective]"
+        },
+        {
+          "seed": 65,
+          "count": 6,
+          "first": "erin@38 mismatch: observe differs at 38 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:03af7c0dbd8e8c8f53819d195012fab25d7a7580030aa0, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.38.effective: oracle true, view false; outcomes.38.perModel.club.effective: oracle true, view false; outcomes.38.perModel.club.reason: oracle null, view no_quorum; outcomes.38.reason: oracle null, view ineffective]"
+        },
+        {
+          "seed": 73,
+          "count": 14,
+          "first": "erin@18 mismatch: observe differs at 18 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:62d651813bd6c113b05e27f8991b047ba20946478af0e6, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.18.effective: oracle true, view false; outcomes.18.perModel.club.effective: oracle true, view false; outcomes.18.perModel.club.reason: oracle null, view no_quorum; outcomes.18.reason: oracle null, view ineffective]"
+        },
+        {
+          "seed": 77,
+          "count": 5,
+          "first": "frank@26 mismatch: observe differs at 26 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:b7bdbf98351602ad9099291851f777a023594beedc3943, view undefined; obligations.4: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.26.effective: oracle true, view false; outcomes.26.perModel.club.effective: oracle true, view false; outcomes.26.perModel.club.reason: oracle null, view no_quorum; outcomes.26.reason: oracle null, view ineffective]"
+        },
+        {
+          "seed": 78,
+          "count": 16,
+          "first": "erin@17 mismatch: observe differs at 17 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:f1a1daeb24164e16eba5e84d6460dfc9da07268b9a5e2e, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.17.effective: oracle true, view false; outcomes.17.perModel.club.effective: oracle true, view false; outcomes.17.perModel.club.reason: oracle null, view no_quorum; outcomes.17.reason: oracle null, view ineffective]"
+        },
+        {
+          "seed": 80,
+          "count": 21,
+          "first": "erin@17 mismatch: observe differs at 17 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:5579edca130d016c5109b7a73ce1fa5ac9d25c75ef5559, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.17.effective: oracle true, view false; outcomes.17.perModel.club.effective: oracle true, view false; outcomes.17.perModel.club.reason: oracle null, view no_quorum; outcomes.17.reason: oracle null, view ineffective]"
+        },
+        {
+          "seed": 84,
+          "count": 16,
+          "first": "erin@40 mismatch: observe differs at 40 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:c1c7ee6de17098f5b82f13c1a16648ba904758261b2beb, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.40.effective: oracle true, view false; outcomes.40.perModel.club.effective: oracle true, view false; outcomes.40.perModel.club.reason: oracle null, view no_quorum; outcomes.40.reason: oracle null, view ineffective]"
+        },
+        {
+          "seed": 88,
+          "count": 32,
+          "first": "erin@24 mismatch: observe differs at 24 [outcomes.24.perModel.club.reason: oracle no_majority, view no_quorum]"
+        },
+        {
+          "seed": 90,
+          "count": 26,
+          "first": "erin@18 mismatch: observe differs at 18 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:757991e54b1ed4de30682ec018c3c18e3d645506b4cfce, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.18.effective: oracle true, view false; outcomes.18.perModel.club.effective: oracle true, view false; outcomes.18.perModel.club.reason: oracle null, view no_quorum; outcomes.18.reason: oracle null, view ineffective]"
+        },
+        {
+          "seed": 93,
+          "count": 21,
+          "first": "erin@21 mismatch: observe differs at 21 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:5052addb1de57bd80307ff438d9bd1039fa0ad17e7e78a, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.21.effective: oracle true, view false; outcomes.21.perModel.club.effective: oracle true, view false; outcomes.21.perModel.club.reason: oracle null, view no_quorum; outcomes.21.reason: oracle null, view ineffective]"
+        },
+        {
+          "seed": 102,
+          "count": 23,
+          "first": "erin@20 mismatch: observe differs at 20 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:78af782cdcbf95189b8085939f9cff1c7d11c665e79366, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.20.effective: oracle true, view false; outcomes.20.perModel.club.effective: oracle true, view false; outcomes.20.perModel.club.reason: oracle null, view no_quorum; outcomes.20.reason: oracle null, view ineffective]"
+        },
+        {
+          "seed": 103,
+          "count": 8,
+          "first": "frank@22 mismatch: observe differs at 22 [outcomes.22.perModel.club.reason: oracle no_majority, view no_quorum]"
+        },
+        {
+          "seed": 107,
+          "count": 18,
+          "first": "erin@26 mismatch: observe differs at 26 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:904b51b1b0e4ee54479d7f444e86084c018a975886204c, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.26.effective: oracle true, view false; outcomes.26.perModel.club.effective: oracle true, view false; outcomes.26.perModel.club.reason: oracle null, view no_quorum; outcomes.26.reason: oracle null, view ineffective]"
+        },
+        {
+          "seed": 109,
+          "count": 49,
+          "first": "erin@15 mismatch: observe differs at 15 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:8dc629c0ba6d411158226529de0f86fb123fd9d08c94ec, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.15.effective: oracle true, view false; outcomes.15.perModel.club.effective: oracle true, view false; outcomes.15.perModel.club.reason: oracle null, view no_quorum; outcomes.15.reason: oracle null, view ineffective]"
+        },
+        {
+          "seed": 134,
+          "count": 17,
+          "first": "erin@18 mismatch: observe differs at 18 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:d607434fd1a7074ca8cd3141dbc90bae86f2f131377d45, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.18.effective: oracle true, view false; outcomes.18.perModel.club.effective: oracle true, view false; outcomes.18.perModel.club.reason: oracle null, view no_quorum; outcomes.18.reason: oracle null, view ineffective]"
+        },
+        {
+          "seed": 142,
+          "count": 19,
+          "first": "erin@17 mismatch: observe differs at 17 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:b560bc2e260072758c9f8e7145b1ed79187e8ecc8f4172, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.17.effective: oracle true, view false; outcomes.17.perModel.club.effective: oracle true, view false; outcomes.17.perModel.club.reason: oracle null, view no_quorum; outcomes.17.reason: oracle null, view ineffective]"
+        },
+        {
+          "seed": 149,
+          "count": 20,
+          "first": "erin@22 mismatch: observe differs at 22 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:0b4e677111510b77a0e2aa2ecfa634f92c14c9d0ec5ce2, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.22.effective: oracle true, view false; outcomes.22.perModel.club.effective: oracle true, view false; outcomes.22.perModel.club.reason: oracle null, view no_quorum; outcomes.22.reason: oracle null, view ineffective]"
+        },
+        {
+          "seed": 150,
+          "count": 30,
+          "first": "erin@27 mismatch: observe differs at 27 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:ef1230364406440cc8b782eb6f7bc67c88db893e0886b8, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.27.effective: oracle true, view false; outcomes.27.perModel.club.effective: oracle true, view false; outcomes.27.perModel.club.reason: oracle null, view no_quorum; outcomes.27.reason: oracle null, view ineffective]"
+        },
+        {
+          "seed": 154,
+          "count": 11,
+          "first": "erin@16 mismatch: observe differs at 16 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:026b2072e8c16eb128280a35e8cc8aed6a9091e1707f9b, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.16.effective: oracle true, view false; outcomes.16.perModel.club.effective: oracle true, view false; outcomes.16.perModel.club.reason: oracle null, view no_quorum; outcomes.16.reason: oracle null, view ineffective]"
+        },
+        {
+          "seed": 156,
+          "count": 7,
+          "first": "erin@37 mismatch: observe differs at 37 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:2b5808d17c977dcca379e0f11b644fc23b94678b0b12c7, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.37.effective: oracle true, view false; outcomes.37.perModel.club.effective: oracle true, view false; outcomes.37.perModel.club.reason: oracle null, view no_quorum; outcomes.37.reason: oracle null, view ineffective]"
+        },
+        {
+          "seed": 157,
+          "count": 31,
+          "first": "erin@19 mismatch: observe differs at 19 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:09f2405fe96fbc14c375ecbbc7c013a6f438768a634212, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.19.effective: oracle true, view false; outcomes.19.perModel.club.effective: oracle true, view false; outcomes.19.perModel.club.reason: oracle null, view no_quorum; outcomes.19.reason: oracle null, view ineffective]"
+        },
+        {
+          "seed": 159,
+          "count": 30,
+          "first": "dana@12 mismatch: observe differs at 12 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:8b27620046aa65b8c03e0dcdf20d32e583b5e0c422adeb, view undefined; obligations.2: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.12.effective: oracle true, view false; outcomes.12.perModel.club.effective: oracle true, view false; outcomes.12.perModel.club.reason: oracle null, view no_quorum; outcomes.12.reason: oracle null, view ineffective]"
+        },
+        {
+          "seed": 167,
+          "count": 13,
+          "first": "erin@15 mismatch: observe differs at 15 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:d2a2da37d3ddea02f79ff5652e6d5ce1b74892f02ab6ed, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.15.effective: oracle true, view false; outcomes.15.perModel.club.effective: oracle true, view false; outcomes.15.perModel.club.reason: oracle null, view no_quorum; outcomes.15.reason: oracle null, view ineffective]"
+        },
+        {
+          "seed": 173,
+          "count": 4,
+          "first": "frank@21 mismatch: observe differs at 21 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:c6a76443d3f59b4a09f671ea02a07ea8551a959b60ba91, view undefined; obligations.4: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.21.effective: oracle true, view false; outcomes.21.perModel.club.effective: oracle true, view false; outcomes.21.perModel.club.reason: oracle null, view no_quorum; outcomes.21.reason: oracle null, view ineffective]"
+        },
+        {
+          "seed": 175,
+          "count": 40,
+          "first": "erin@22 mismatch: observe differs at 22 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:4d8df31726cfb32b68e9c99df8a8121ebf075cfeaef2f7, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.22.effective: oracle true, view false; outcomes.22.perModel.club.effective: oracle true, view false; outcomes.22.perModel.club.reason: oracle null, view no_quorum; outcomes.22.reason: oracle null, view ineffective]"
+        },
+        {
+          "seed": 180,
+          "count": 5,
+          "first": "frank@19 mismatch: observe differs at 19 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:fe12a0346c41fbc503ffc88d7c62477f379124b44e16bb, view undefined; obligations.4: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.19.effective: oracle true, view false; outcomes.19.perModel.club.effective: oracle true, view false; outcomes.19.perModel.club.reason: oracle null, view no_quorum; outcomes.19.reason: oracle null, view ineffective]"
+        },
+        {
+          "seed": 181,
+          "count": 28,
+          "first": "erin@24 mismatch: observe differs at 24 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:7d5c7d6588f02676b8352ea3c42bc73eafcef523e01354, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.24.effective: oracle true, view false; outcomes.24.perModel.club.effective: oracle true, view false; outcomes.24.perModel.club.reason: oracle null, view no_quorum; outcomes.24.reason: oracle null, view ineffective]"
+        },
+        {
+          "seed": 190,
+          "count": 5,
+          "first": "frank@34 mismatch: observe differs at 34 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:c06d516a04b5cbad1997b944b9d72687bb2bd34db9b297, view undefined; obligations.4: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.34.effective: oracle true, view false; outcomes.34.perModel.club.effective: oracle true, view false; outcomes.34.perModel.club.reason: oracle null, view no_quorum; outcomes.34.reason: oracle null, view ineffective]"
+        },
+        {
+          "seed": 192,
+          "count": 36,
+          "first": "erin@16 mismatch: observe differs at 16 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:7a5a04d3fa519fd9d0639248d1618aa2bea628b0a16568, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.16.effective: oracle true, view false; outcomes.16.perModel.club.effective: oracle true, view false; outcomes.16.perModel.club.reason: oracle null, view no_quorum; outcomes.16.reason: oracle null, view ineffective]"
+        },
+        {
+          "seed": 197,
+          "count": 5,
+          "first": "frank@48 mismatch: observe differs at 48 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:3455fbe051cd688d83fc226d052411614fd25b6f5d9e9a, view undefined; obligations.4: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.48.effective: oracle true, view false; outcomes.48.perModel.club.effective: oracle true, view false; outcomes.48.perModel.club.reason: oracle null, view no_quorum; outcomes.48.reason: oracle null, view ineffective]"
+        }
+      ],
+      "failingSeeds": 41,
+      "violationCount": 874
+    }
+  ],
+  "captureNormalization": "Trailing whitespace and redundant empty final lines removed; content and results unchanged."
+}

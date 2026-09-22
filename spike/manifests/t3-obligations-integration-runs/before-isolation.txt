@@ -1,0 +1,78 @@
+✔ O4 K2 every activation registry fault propagates unchanged and cold exact retry agrees: memory (57428.0185ms)
+ℹ {"storage":"memory","totalLookups":758,"originalExceptions":758,"exactRetryRecoveries":758,"returnedFaultVerdicts":0}
+✔ O4 K2 every activation registry fault propagates unchanged and cold exact retry agrees: sqlite (59841.105875ms)
+ℹ {"storage":"sqlite","totalLookups":758,"originalExceptions":758,"exactRetryRecoveries":758,"returnedFaultVerdicts":0}
+✖ O4 K2 cold open throws the original nested registry error while ordinary Journal keeps legacy verdicts: memory (89.714667ms)
+✖ O4 K2 cold open throws the original nested registry error while ordinary Journal keeps legacy verdicts: sqlite (101.271542ms)
+✔ O4 K2 export and public-proof interpretations preserve original non-Error failures (2902.105666ms)
+✔ O4 K2 an unlisted error inside wireInput retains its identity (93.352958ms)
+✔ O4 G2 failed activation, dormant exercise and exact retries permit later activation: memory (695.272167ms)
+✔ O4 G2 failed activation, dormant exercise and exact retries permit later activation: sqlite (691.489125ms)
+✔ O4 G2 another participant admitted event cannot block activation: memory (362.245792ms)
+✔ O4 G2 another participant admitted event cannot block activation: sqlite (395.617542ms)
+✔ O4 G2 keeps current authorization gate: memory (281.866834ms)
+✔ O4 G2 keeps current closed gate: memory (289.687375ms)
+✔ O4 G2 keeps current authorization gate: sqlite (323.790333ms)
+✔ O4 G2 keeps current closed gate: sqlite (315.491917ms)
+✖ O4 unexpected post-commit replay error is thrown and disables facade: memory (300.6815ms)
+✖ O4 unexpected post-commit replay error is thrown and disables facade: sqlite (348.018875ms)
+✔ O4 malformed release-proof shape has an explicit policy refusal: memory (299.309209ms)
+✔ O4 malformed release-proof shape has an explicit policy refusal: sqlite (343.613542ms)
+✔ O4 thrown fold handler is a real failure with durable bytes: memory (120.656041ms)
+✔ O4 thrown audience handler is a real failure with durable bytes: memory (122.94775ms)
+✔ O4 thrown fold handler is a real failure with durable bytes: sqlite (151.233083ms)
+✔ O4 thrown audience handler is a real failure with durable bytes: sqlite (154.493542ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 18
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 120597.369708
+
+✖ failing tests:
+
+test at spike/test/ordering-scope-nested-faults.test.ts:69:54
+✖ O4 K2 cold open throws the original nested registry error while ordinary Journal keeps legacy verdicts: memory (89.714667ms)
+  Error: cold registry failure
+      at TestContext.<anonymous> (file:///private/tmp/dap-t3-obligations/spike/test/ordering-scope-nested-faults.test.ts:75:19)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+
+test at spike/test/ordering-scope-nested-faults.test.ts:69:54
+✖ O4 K2 cold open throws the original nested registry error while ordinary Journal keeps legacy verdicts: sqlite (101.271542ms)
+  Error: cold registry failure
+      at TestContext.<anonymous> (file:///private/tmp/dap-t3-obligations/spike/test/ordering-scope-nested-faults.test.ts:75:19)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+
+test at spike/test/ordering-scope-phase.test.ts:59:53
+✖ O4 unexpected post-commit replay error is thrown and disables facade: memory (300.6815ms)
+  Error: ineffective_release
+      at TestContext.<anonymous> (file:///private/tmp/dap-t3-obligations/spike/test/ordering-scope-phase.test.ts:64:19)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
+
+test at spike/test/ordering-scope-phase.test.ts:59:53
+✖ O4 unexpected post-commit replay error is thrown and disables facade: sqlite (348.018875ms)
+  Error: ineffective_release
+      at TestContext.<anonymous> (file:///private/tmp/dap-t3-obligations/spike/test/ordering-scope-phase.test.ts:64:19)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7)
