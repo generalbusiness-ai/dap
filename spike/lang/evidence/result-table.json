@@ -1,0 +1,62 @@
+{
+  "candidate": "22444f8536a8932fc758d77bb614a1424635fec3",
+  "baseline": "9c4e04e52ca9f16d3014c9d7d79a148bd039123e",
+  "firstDraft": "6a82d61c",
+  "claims": {
+    "A1": "counterexample",
+    "A2": "unresolved",
+    "A3": "counterexample"
+  },
+  "frozenSuite": {
+    "tests": 34,
+    "pass": 32,
+    "fail": 2,
+    "durationMilliseconds": 392694.126792
+  },
+  "campaigns": {
+    "sale": {
+      "seeds": 200,
+      "entries": 11069,
+      "failedSeeds": [
+        35,
+        56,
+        105,
+        110,
+        135
+      ],
+      "budgetFindingsAcrossFrontiers": 81,
+      "nonBudgetFindings": 0
+    },
+    "booking": {
+      "seeds": 200,
+      "entries": 12000,
+      "failedSeeds": [],
+      "findings": 0
+    }
+  },
+  "verification": {
+    "layerChecksPassed": 23,
+    "historicalWitnessChecksPassed": 11,
+    "stopEvidenceChecksPassed": 8,
+    "retainedCampaignReplaysPassed": 5,
+    "clubOrdinaryChecksPassed": 3,
+    "clubRetainedTodoFailures": 4,
+    "strictLanguageTypecheck": "pass",
+    "originalSourcesChanged": false,
+    "semanticsChangedAfterCounterexample": false
+  },
+  "sourceMeasurements": {
+    "sale": {
+      "lines": 50,
+      "bytes": 6585,
+      "emittedLines": 1748,
+      "emittedBytes": 48667
+    },
+    "booking": {
+      "lines": 35,
+      "bytes": 5585,
+      "emittedLines": 1308,
+      "emittedBytes": 40666
+    }
+  }
+}

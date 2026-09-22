@@ -1,0 +1,26 @@
+lang/compiler.ts(32,36): error TS2345: Argument of type 'Record<string, unknown>' is not assignable to parameter of type '{ [key: string]: Json; } | { [key: string]: unknown; op: string; }'.
+lang/compiler.ts(33,36): error TS2345: Argument of type 'Record<string, unknown>' is not assignable to parameter of type '{ [key: string]: Json; } | { [key: string]: unknown; op: string; }'.
+lang/generated/booking.ts(133,51): error TS2345: Argument of type '{ actor: string; payload: {}; kind: string; }' is not assignable to parameter of type 'EventBody'.
+  Property 'nonce' is missing in type '{ actor: string; payload: {}; kind: string; }' but required in type 'EventBody'.
+lang/generated/booking.ts(140,54): error TS2345: Argument of type '{ actor: string; payload: {}; kind: string; }' is not assignable to parameter of type 'EventBody'.
+  Property 'nonce' is missing in type '{ actor: string; payload: {}; kind: string; }' but required in type 'EventBody'.
+lang/generated/booking.ts(184,90): error TS2345: Argument of type '{ kind: string; actor: string; payload: {}; }' is not assignable to parameter of type 'EventBody'.
+  Property 'nonce' is missing in type '{ kind: string; actor: string; payload: {}; }' but required in type 'EventBody'.
+lang/generated/discussion.ts(133,51): error TS2345: Argument of type '{ actor: string; payload: {}; kind: string; }' is not assignable to parameter of type 'EventBody'.
+  Property 'nonce' is missing in type '{ actor: string; payload: {}; kind: string; }' but required in type 'EventBody'.
+lang/generated/discussion.ts(140,54): error TS2345: Argument of type '{ actor: string; payload: {}; kind: string; }' is not assignable to parameter of type 'EventBody'.
+  Property 'nonce' is missing in type '{ actor: string; payload: {}; kind: string; }' but required in type 'EventBody'.
+lang/generated/discussion.ts(184,90): error TS2345: Argument of type '{ kind: string; actor: string; payload: {}; }' is not assignable to parameter of type 'EventBody'.
+  Property 'nonce' is missing in type '{ kind: string; actor: string; payload: {}; }' but required in type 'EventBody'.
+lang/generated/sale.ts(133,51): error TS2345: Argument of type '{ actor: string; payload: {}; kind: string; }' is not assignable to parameter of type 'EventBody'.
+  Property 'nonce' is missing in type '{ actor: string; payload: {}; kind: string; }' but required in type 'EventBody'.
+lang/generated/sale.ts(140,54): error TS2345: Argument of type '{ actor: string; payload: {}; kind: string; }' is not assignable to parameter of type 'EventBody'.
+  Property 'nonce' is missing in type '{ actor: string; payload: {}; kind: string; }' but required in type 'EventBody'.
+lang/generated/sale.ts(184,90): error TS2345: Argument of type '{ kind: string; actor: string; payload: {}; }' is not assignable to parameter of type 'EventBody'.
+  Property 'nonce' is missing in type '{ kind: string; actor: string; payload: {}; }' but required in type 'EventBody'.
+lang/runtime.ts(133,51): error TS2345: Argument of type '{ actor: string; payload: {}; kind: string; }' is not assignable to parameter of type 'EventBody'.
+  Property 'nonce' is missing in type '{ actor: string; payload: {}; kind: string; }' but required in type 'EventBody'.
+lang/runtime.ts(140,54): error TS2345: Argument of type '{ actor: string; payload: {}; kind: string; }' is not assignable to parameter of type 'EventBody'.
+  Property 'nonce' is missing in type '{ actor: string; payload: {}; kind: string; }' but required in type 'EventBody'.
+lang/runtime.ts(184,90): error TS2345: Argument of type '{ kind: string; actor: string; payload: {}; }' is not assignable to parameter of type 'EventBody'.
+  Property 'nonce' is missing in type '{ kind: string; actor: string; payload: {}; }' but required in type 'EventBody'.

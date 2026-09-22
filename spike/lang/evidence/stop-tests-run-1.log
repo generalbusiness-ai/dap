@@ -1,0 +1,15 @@
+✔ retained T1 counterexample: accepted declaration delivers refused Carol terms to Bob; derived budget misses it (244.404708ms)
+✔ retained counterexample has a clean hand-written control and is deletion-minimal (411.636333ms)
+✔ derived Sale preserves tombstone regression 72 (46.4145ms)
+✔ derived Sale preserves tombstone regression 96 (46.108791ms)
+✔ derived Sale preserves tombstone regression 172 (46.125542ms)
+✔ derived Sale retains literal readership, including Bob at 10 (4.667ms)
+✔ unchanged checker detects a deliberately narrowed derived offer audience with a clean control (230.34025ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1181.480667

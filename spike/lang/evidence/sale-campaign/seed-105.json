@@ -1,0 +1,524 @@
+{
+  "seed": 105,
+  "manifest": "sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9",
+  "package": "sha256:1622c6c066d57f1f503a79e0eff1192c6f6b41da841135ca817d18e3138b843e",
+  "snapshot": "22444f8536a8932fc758d77bb614a1424635fec3",
+  "baseNonce": "genesis:105",
+  "expected": "dana@50 budget: dana can read the sale.offer_terms at 50, whose parties are carol+alice",
+  "steps": [
+    {
+      "type": "attach",
+      "actor": "alice",
+      "pkg": "com.example.side",
+      "audience": []
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.inspection.request",
+      "payload": {
+        "offer_id": "none",
+        "seller": "alice",
+        "inspector": "alice"
+      },
+      "nonce": "n:4fc2f7c6d8b3505b"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.side.note",
+      "payload": {
+        "text": "note 2"
+      },
+      "nonce": "n:e50882d27537872c"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.side.note",
+      "payload": {
+        "text": "note 3"
+      },
+      "nonce": "n:f18708dde786e0b6"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.side.note",
+      "payload": {
+        "text": "note 4"
+      },
+      "nonce": "n:7266c3babde7580f"
+    },
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "bob",
+      "grants": {
+        "roles": [
+          "Buyer"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "bob"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.side.note",
+      "payload": {
+        "text": "note 6"
+      },
+      "nonce": "n:362117c39625fb83"
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.sale.offer",
+      "payload": {
+        "offer_id": "o7"
+      },
+      "nonce": "n:2565de3708fad70c"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.sale.counter",
+      "payload": {
+        "offer_id": "o7",
+        "amount": 966,
+        "author": "bob"
+      },
+      "nonce": "n:cb16b10d3fef3730"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.sale.counter",
+      "payload": {
+        "offer_id": "o7",
+        "amount": 859,
+        "author": "bob"
+      },
+      "nonce": "n:20ad2a8ec99edd8d"
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.sale.offer_terms",
+      "payload": {
+        "offer_id": "o7",
+        "amount": 548,
+        "seller": "alice"
+      },
+      "nonce": "n:da616b094a307b5a"
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        7
+      ],
+      "to": [
+        "bob"
+      ]
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.sale.counter",
+      "payload": {
+        "offer_id": "o7",
+        "amount": 928,
+        "author": "bob"
+      },
+      "nonce": "n:8455a86141a8c2ec"
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        2
+      ],
+      "to": [
+        "bob"
+      ]
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.sale.offer",
+      "payload": {
+        "offer_id": "o14",
+        "replaces": "o7"
+      },
+      "nonce": "n:455fdc1a717a1007"
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.inspection.request",
+      "payload": {
+        "offer_id": "o7",
+        "seller": "alice",
+        "inspector": "alice"
+      },
+      "nonce": "n:ee5b16bd051a202d"
+    },
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "carol",
+      "grants": {
+        "roles": [
+          "Buyer"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "carol"
+    },
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "dana",
+      "grants": {
+        "roles": [
+          "Buyer"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "dana"
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        22
+      ],
+      "to": [
+        "carol"
+      ]
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.sale.accept",
+      "payload": {
+        "offer_id": "o14"
+      },
+      "nonce": "n:06042a471de91654"
+    },
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "erin",
+      "grants": {
+        "roles": [
+          "Buyer"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "erin"
+    },
+    {
+      "type": "act",
+      "actor": "carol",
+      "kind": "com.example.sale.offer",
+      "payload": {
+        "offer_id": "o21"
+      },
+      "nonce": "n:5bae3d31ca3f0328"
+    },
+    {
+      "type": "act",
+      "actor": "carol",
+      "kind": "com.example.sale.offer",
+      "payload": {
+        "offer_id": "o22",
+        "replaces": "o21"
+      },
+      "nonce": "n:2b1d3150789d4e28"
+    },
+    {
+      "type": "act",
+      "actor": "erin",
+      "kind": "com.example.sale.offer",
+      "payload": {
+        "offer_id": "o23"
+      },
+      "nonce": "n:df0f362e54cf3379"
+    },
+    {
+      "type": "invite",
+      "inviter": "alice",
+      "invitee": "ivan",
+      "grants": {
+        "roles": [
+          "Buyer"
+        ]
+      }
+    },
+    {
+      "type": "accept",
+      "invitee": "ivan"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.side.note",
+      "payload": {
+        "text": "note 25"
+      },
+      "nonce": "n:9e51427bf482679e"
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        27
+      ],
+      "to": [
+        "carol"
+      ]
+    },
+    {
+      "type": "act",
+      "actor": "dana",
+      "kind": "com.example.sale.offer",
+      "payload": {
+        "offer_id": "o27"
+      },
+      "nonce": "n:b0be52f9660212a1"
+    },
+    {
+      "type": "act",
+      "actor": "alice",
+      "kind": "com.example.sale.counter",
+      "payload": {
+        "offer_id": "o21",
+        "amount": 811,
+        "author": "carol"
+      },
+      "nonce": "n:f3ed61744b4c17bc"
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.sale.offer",
+      "payload": {
+        "offer_id": "o29"
+      },
+      "nonce": "n:104aae49875fb264"
+    },
+    {
+      "type": "act",
+      "actor": "ivan",
+      "kind": "com.example.sale.offer",
+      "payload": {
+        "offer_id": "o30"
+      },
+      "nonce": "n:0ed0b539b9ad7f7c"
+    },
+    {
+      "type": "act",
+      "actor": "dana",
+      "kind": "com.example.sale.offer",
+      "payload": {
+        "offer_id": "o31"
+      },
+      "nonce": "n:1e92625db548b8bb"
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        30
+      ],
+      "to": [
+        "carol"
+      ]
+    },
+    {
+      "type": "act",
+      "actor": "ivan",
+      "kind": "com.example.sale.withdraw",
+      "payload": {
+        "offer_id": "o30"
+      },
+      "nonce": "n:8b6e762812bf1926"
+    },
+    {
+      "type": "act",
+      "actor": "dana",
+      "kind": "com.example.sale.close",
+      "payload": {
+        "outcome": "sold"
+      },
+      "nonce": "n:653c268225bc393b"
+    },
+    {
+      "type": "act",
+      "actor": "erin",
+      "kind": "com.example.sale.offer",
+      "payload": {
+        "offer_id": "o35"
+      },
+      "nonce": "n:15c2e40a384433f0"
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        40
+      ],
+      "to": [
+        "bob"
+      ]
+    },
+    {
+      "type": "act",
+      "actor": "carol",
+      "kind": "com.example.sale.withdraw",
+      "payload": {
+        "offer_id": "o21"
+      },
+      "nonce": "n:cab1ffdb4852470c"
+    },
+    {
+      "type": "act",
+      "actor": "ivan",
+      "kind": "com.example.sale.offer",
+      "payload": {
+        "offer_id": "o38"
+      },
+      "nonce": "n:d07f74acde5521da"
+    },
+    {
+      "type": "act",
+      "actor": "carol",
+      "kind": "com.example.sale.offer_terms",
+      "payload": {
+        "offer_id": "o31",
+        "amount": 874,
+        "seller": "alice"
+      },
+      "nonce": "n:2091c6d202554a8c"
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        44
+      ],
+      "to": [
+        "carol"
+      ]
+    },
+    {
+      "type": "disclose",
+      "actor": "alice",
+      "positions": [
+        46
+      ],
+      "to": [
+        "ivan"
+      ]
+    },
+    {
+      "type": "act",
+      "actor": "carol",
+      "kind": "com.example.sale.counter",
+      "payload": {
+        "offer_id": "o35",
+        "amount": 657,
+        "author": "erin"
+      },
+      "nonce": "n:bf2bb99f12f3e1d4"
+    },
+    {
+      "type": "act",
+      "actor": "dana",
+      "kind": "com.example.inspection.request",
+      "payload": {
+        "offer_id": "o31",
+        "seller": "alice",
+        "inspector": "alice"
+      },
+      "nonce": "n:19f7030a9ccd7067"
+    },
+    {
+      "type": "act",
+      "actor": "erin",
+      "kind": "com.example.sale.offer_terms",
+      "payload": {
+        "offer_id": "o23",
+        "amount": 958,
+        "seller": "alice"
+      },
+      "nonce": "n:d82f7017f738a177"
+    },
+    {
+      "type": "act",
+      "actor": "dana",
+      "kind": "com.example.sale.offer_terms",
+      "payload": {
+        "offer_id": "o14",
+        "amount": 676,
+        "seller": "alice"
+      },
+      "nonce": "n:13a45a992dde63e8"
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.sale.offer",
+      "payload": {
+        "offer_id": "o46"
+      },
+      "nonce": "n:a861ffd50185f00d"
+    },
+    {
+      "type": "act",
+      "actor": "dana",
+      "kind": "com.example.sale.withdraw",
+      "payload": {
+        "offer_id": "o27"
+      },
+      "nonce": "n:5c323b12befd7b69"
+    },
+    {
+      "type": "act",
+      "actor": "bob",
+      "kind": "com.example.sale.offer",
+      "payload": {
+        "offer_id": "o48"
+      },
+      "nonce": "n:a0d6e4b4388cdfd2"
+    }
+  ],
+  "findings": [
+    "dana@50 budget: dana can read the sale.offer_terms at 50, whose parties are carol+alice",
+    "dana@51 budget: dana can read the sale.offer_terms at 50, whose parties are carol+alice",
+    "dana@52 budget: dana can read the sale.offer_terms at 50, whose parties are carol+alice",
+    "dana@53 budget: dana can read the sale.offer_terms at 50, whose parties are carol+alice",
+    "dana@54 budget: dana can read the sale.offer_terms at 50, whose parties are carol+alice",
+    "dana@55 budget: dana can read the sale.offer_terms at 50, whose parties are carol+alice",
+    "bob@56 budget: bob can read the sale.offer_terms at 56, whose parties are dana+alice",
+    "dana@56 budget: dana can read the sale.offer_terms at 50, whose parties are carol+alice",
+    "bob@57 budget: bob can read the sale.offer_terms at 56, whose parties are dana+alice",
+    "dana@57 budget: dana can read the sale.offer_terms at 50, whose parties are carol+alice",
+    "bob@58 budget: bob can read the sale.offer_terms at 56, whose parties are dana+alice",
+    "dana@58 budget: dana can read the sale.offer_terms at 50, whose parties are carol+alice",
+    "bob@59 budget: bob can read the sale.offer_terms at 56, whose parties are dana+alice",
+    "dana@59 budget: dana can read the sale.offer_terms at 50, whose parties are carol+alice"
+  ],
+  "entries": 60
+}

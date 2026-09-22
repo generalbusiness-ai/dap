@@ -1,0 +1,15 @@
+{
+  "sourceCommit": "6a82d61cc2fd707bf3d7aa3252125b0ec85b790c",
+  "command": "node --test lang/test/witnesses.test.ts",
+  "cwd": "spike",
+  "runtime": "v26.9.0",
+  "exitCode": 0,
+  "tests": 11,
+  "passed": 11,
+  "failed": 0,
+  "repairsAfterBaseline": 0,
+  "testSha256": "e24b8db6782e274592377c0206a6d433bf8af6a4f6a129cad92e48c7c0a098bc",
+  "output": "witnesses-run-1.txt",
+  "outputSha256": "2fb1e64430dd6f61ac1226f8bab2763ce78bd00a692c2be8f8ab6f8685bd4dbc",
+  "note": "First invocation after the raw draft was committed. No tests or typechecking ran on these witness files before that commit. Positive generated-package replays and Club are measured separately."
+}

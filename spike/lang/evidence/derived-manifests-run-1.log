@@ -1,0 +1,133 @@
+✔ the manifest is one experiment identity over its prose and executable part, and the prose states the same bounds (0.936625ms)
+ℹ BOOKING_MANIFEST_ID sha256:cb4514f4967891077ad78e1dd0fba4c17438fb32b98cd8bd790df8531b35dd16
+ℹ booking package sha256:6cd4246ce8b1cbf369a278ce07f055b7fc3c68f597ff7c1a8956d2aa6a233970
+✔ case 1, two requests for one slot: the admin publishes one, the other stays pending and its publication is overlap (147.7205ms)
+✔ case 2, free exactly one: two occupancies, one freed, the other active; a second free is already_free (223.222667ms)
+✔ case 3, duplicate publication: a second occupancy with the same booking id is duplicate_id (63.0005ms)
+✔ case 4, only the admin publishes: a booker's occupancy is unauthorized before any model rule (52.799584ms)
+✔ case 5, expiry: when the clock reaches an occupancy's end it is expired for every member, and an overlapping occupancy is then effective (183.375209ms)
+✔ case 6, cross-view: an occupancy before J joins, an overlapping publication after, and a free of the earlier one are judged the same way in every view (222.34625ms)
+✔ case 7, the campaign: every manifest seed replays with zero violations of the property, the pause rule, the invariants and the privacy budget (379659.751584ms)
+ℹ seeds 200, 379651 ms, coverage {"joins":955,"attaches":198,"disclosures":1629,"requests":2553,"occupancies":1497,"effectiveOccupancies":652,"linkedOccupancies":471,"frees":383,"cancels":419,"effectiveCancels":324,"ticks":1630,"entries":12000}
+✔ the repair ledger exists, its totals agree with its entries, and it states the budget outcome (2.103542ms)
+ℹ fixes 2, added kinds 0, budget within
+✔ V4-F2: the budget detects private fields published through com.example.booking.occupancy (73.883958ms)
+✔ V4-F2: the budget detects private fields published through com.example.booking.free (84.274625ms)
+✔ V4-F2: the budget detects private fields published through ai.generalbusiness.dap.observe (70.776875ms)
+✔ V4-F2: the budget detects a spoofed booker claim naming the reader published through com.example.booking.occupancy (72.327875ms)
+✔ V4-F2: the budget detects a spoofed booker claim naming the reader published through com.example.booking.free (84.343333ms)
+✔ V4-F2: the budget detects a spoofed booker claim naming the reader published through ai.generalbusiness.dap.observe (71.40175ms)
+✔ V4-F2: the budget detects nested private fields published through com.example.booking.occupancy (72.58375ms)
+✔ V4-F2: the budget detects nested private fields published through com.example.booking.free (82.36575ms)
+✔ V4-F2: the budget detects nested private fields published through ai.generalbusiness.dap.observe (68.19425ms)
+✔ V4-F1: seed 1 position 50 keeps Carol and her own request id private; hostile redisclosure is detected (23.784ms)
+✔ V4-F1: current authority controls publication; authorized refusals, stale and closed attempts retain their audience (437.656209ms)
+✔ case 1, the trace: positions 0 to 19 replay with the readability of the table, the literal projections and the outcomes at 17 and 18, under the model's declared join disclosure (1188.940583ms)
+ℹ literal trace without the join disclosure: 5 violations; first: ivan@15 mismatch: observe differs at 15 [models.sale.offers.0: oracle {"id":"o3","author":"bob","position":15,"replaces":"o1","sta, view undefined; outcomes.15.effective: oracle true, view false; outcomes.15.perModel.sale.effective: oracle true, view false; outcomes.15.perModel.sale.reason: oracle null, view no_such_offer; outcomes.15.reason: oracle null, view ineffective]
+✔ case 2, replacement with a hidden predecessor: Ivan sees o3 open replacing o1, and a later accept of o1 is ineffective for everyone (978.500292ms)
+ℹ literal case 2 without the join disclosure: 3 violations; first: ivan@15 mismatch: observe differs at 15 [models.sale.offers.0: oracle {"id":"o3","author":"bob","position":15,"replaces":"o1","sta, view undefined; outcomes.15.effective: oracle true, view false; outcomes.15.perModel.sale.effective: oracle true, view false; outcomes.15.perModel.sale.reason: oracle null, view no_such_offer; outcomes.15.reason: oracle null, view ineffective]
+✔ case 3, late joiner after the decision: a second accept is ineffective in every view, equality holds at every frontier, and a disclosure of the decision keeps it (854.910541ms)
+✔ case 4, late joiner judging a public event on a hidden fact: a withdrawal of a stub recorded before Dana joined, then an accept of it, are judged the same way in every view (367.31175ms)
+✖ case 5, the campaign: every manifest seed replays with zero violations of the property, the pause rule, the invariants and the privacy budget (388454.831084ms)
+ℹ seeds 200, 388448 ms, coverage {"joins":938,"attaches":198,"disclosures":1702,"offers":328,"replacements":53,"withdrawals":192,"counters":218,"accepts":115,"effectiveAccepts":20,"closes":294,"entries":11069,"privateDisclosures":0,"inspectionAttaches":0,"inspectionRequests":120,"unboundInspectionRequests":120}
+✔ the repair ledger exists, its totals agree with its entries, and it states the budget outcome (0.599125ms)
+ℹ fixes 7, added kinds 0, budget exceeded
+✖ V3-F1: a private payload disclosed to a non-party is a budget violation on what they can read, whatever the projection hides (5.85375ms)
+✔ V3-F2: the kept run-6 model refuses a wrong-party counter, and the budget reports its misdelivery (6.80475ms)
+✔ V3-F3: null private payloads are recorded with a deterministic ineffective verdict, replay cold, retry exactly, and a valid action follows (233.633417ms)
+✔ V3-G1: an ineffective stub by carol does not make them a counter party (kept run-6 guard regression) (9.763292ms)
+✔ V3-G1: an ineffective stub by carol does not make them a counter party (current audience) (46.744416ms)
+✔ V3-G1: an ineffective stub by ivan does not make them a counter party (kept run-6 guard regression) (9.104958ms)
+✔ V3-G1: an ineffective stub by ivan does not make them a counter party (current audience) (47.3435ms)
+✔ Fix 7: wrong-author, malformed, unauthorized and stale counters never address a supplied non-party, and late members replay them consistently (302.784209ms)
+ℹ tests 34
+ℹ suites 0
+ℹ pass 32
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 392694.126792
+
+✖ failing tests:
+
+test at test/sale.test.ts:167:1
+✖ case 5, the campaign: every manifest seed replays with zero violations of the property, the pause rule, the invariants and the privacy budget (388454.831084ms)
+  AssertionError [ERR_ASSERTION]: seed 35: carol@42 budget: carol can read the sale.offer_terms at 42, whose parties are dana+alice
+  carol@43 budget: carol can read the sale.offer_terms at 42, whose parties are dana+alice
+  carol@44 budget: carol can read the sale.offer_terms at 42, whose parties are dana+alice
+  carol@45 budget: carol can read the sale.offer_terms at 42, whose parties are dana+alice
+  carol@46 budget: carol can read the sale.offer_terms at 42, whose parties are dana+alice
+  carol@47 budget: carol can read the sale.offer_terms at 42, whose parties are dana+alice
+  ... 25 violations
+  seed 56: dana@56 budget: dana can read the sale.offer_terms at 56, whose parties are carol+alice
+  dana@57 budget: dana can read the sale.offer_terms at 56, whose parties are carol+alice
+  dana@58 budget: dana can read the sale.offer_terms at 56, whose parties are carol+alice
+  dana@59 budget: dana can read the sale.offer_terms at 56, whose parties are carol+alice
+  seed 105: dana@50 budget: dana can read the sale.offer_terms at 50, whose parties are carol+alice
+  dana@51 budget: dana can read the sale.offer_terms at 50, whose parties are carol+alice
+  dana@52 budget: dana can read the sale.offer_terms at 50, whose parties are carol+alice
+  dana@53 budget: dana can read the sale.offer_terms at 50, whose parties are carol+alice
+  dana@54 budget: dana can read the sale.offer_terms at 50, whose parties are carol+alice
+  dana@55 budget: dana can read the sale.offer_terms at 50, whose parties are carol+alice
+  ... 14 violations
+  seed 110: bob@53 budget: bob can read the sale.offer_terms at 53, whose parties are dana+alice
+  bob@54 budget: bob can read the sale.offer_terms at 53, whose parties are dana+alice
+  bob@55 budget: bob can read the sale.offer_terms at 53, whose parties are dana+alice
+  bob@56 budget: bob can read the sale.offer_terms at 53, whose parties are dana+alice
+  bob@57 budget: bob can read the sale.offer_terms at 53, whose parties are dana+alice
+  bob@58 budget: bob can read the sale.offer_terms at 53, whose parties are dana+alice
+  ... 7 violations
+  seed 135: bob@29 budget: bob can read the sale.offer_terms at 29, whose parties are dana+alice
+  bob@30 budget: bob can read the sale.offer_terms at 29, whose parties are dana+alice
+  bob@31 budget: bob can read the sale.offer_terms at 29, whose parties are dana+alice
+  bob@32 budget: bob can read the sale.offer_terms at 29, whose parties are dana+alice
+  bob@33 budget: bob can read the sale.offer_terms at 29, whose parties are dana+alice
+  bob@34 budget: bob can read the sale.offer_terms at 29, whose parties are dana+alice
+  ... 31 violations
+  + actual - expected
+
+  + [
+  +   35,
+  +   56,
+  +   105,
+  +   110,
+  +   135
+  + ]
+  - []
+
+      at TestContext.<anonymous> (file:///private/tmp/dap-t1-declaration/spike/test/sale.test.ts:212:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ 35, 56, 105, 110, 135 ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at test/sale.test.ts:234:1
+✖ V3-F1: a private payload disclosed to a non-party is a budget violation on what they can read, whatever the projection hides (5.85375ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  700 !== null
+
+      at TestContext.<anonymous> (file:///private/tmp/dap-t1-declaration/spike/test/sale.test.ts:241:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 700,
+    expected: null,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

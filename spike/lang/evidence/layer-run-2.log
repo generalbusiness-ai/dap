@@ -1,0 +1,31 @@
+✔ sale is a checked data declaration (1.39325ms)
+✔ booking is a checked data declaration (0.270083ms)
+✔ discussion is a checked data declaration (0.074333ms)
+✔ lateMember is refused with its diagnostic and pinned witness (0.762667ms)
+✔ payloadAudience is refused with its diagnostic and pinned witness (0.28975ms)
+✔ assertedReference is refused with its diagnostic and pinned witness (0.304166ms)
+✔ club is refused with its diagnostic and pinned witness (0.085375ms)
+✔ count cannot read a private relation in a public guard (0.9185ms)
+✔ count cannot read a private relation in a public effect (0.56075ms)
+✔ count cannot read a private relation in a public derived column (0.719042ms)
+✔ count cannot read a private relation in a public query (0.49525ms)
+✔ count cannot read a private relation in a public affordance (0.609375ms)
+✔ absent cannot read a private relation in a public guard (0.42075ms)
+✔ absent cannot read a private relation in a public effect (0.371583ms)
+✔ absent cannot read a private relation in a public derived column (0.473916ms)
+✔ absent cannot read a private relation in a public query (0.342ms)
+✔ absent cannot read a private relation in a public affordance (0.455041ms)
+✔ a sibling row projection does not authorize a private aggregate (0.418ms)
+✔ record splitting derives two event kinds and a public linkage prerequisite (0.187083ms)
+✔ backlog and disclosure kinds are derived from dependencies and maxima (0.322584ms)
+✔ emitted fixture loads as a descriptor whose source and runtime are pinned (0.470959ms)
+✔ latest version is selected by original position, never disclosure arrival (0.214625ms)
+✔ derived audiences are total over runtime JSON (0.295583ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 23
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 165.055292
