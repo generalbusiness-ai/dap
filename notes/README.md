@@ -20,15 +20,16 @@ property and the privacy bound held in the fixtures that were run, and the
 claim that an agent could author these models within a small repair budget
 was falsified.
 
-**First reading:** start with the sale as experienced, then the design
-note, then the views note, then ordering. The notes describe the design;
+**First reading:** start with the direction and next steps, which says
+what the next task is and what waits; then the sale as experienced, the
+design note, the views note and ordering for the design itself. The notes describe the design;
 the two spike reports say how much of it was demonstrated, and the notes
 have not been rewritten to match every spike result. The design note opens
 with the goals (§0), in priority order: evolvability, ease of programming
 as an agent, comprehension simplicity for a person, lightweight
 decentralization. Each has one criterion the spikes report against.
 
-Eleven notes, each owning one concern:
+Twelve notes, each owning one concern:
 
 - [Evolving spaces](2026-09-14-evolving-spaces-design.md) — what the things
   are: goals, referents, events, contexts, audiences, packages, authority,
@@ -79,6 +80,12 @@ Eleven notes, each owning one concern:
   compared with dap in both directions; what people use, ranked; Web
   onboarding, payment and chat without the channel silo as options; the
   competing ways to do the job. A research note; it adopts nothing.
+- [Technology spikes plan](2026-09-22-technology-spikes-plan.md) — the
+  next tasks: independent spikes on the declaration layer, composition,
+  obligations, agents as participants, extensibility, admission and the
+  account package, each with claims and a stop rule, carried before
+  real-world modelling; what each hands the pilot. A draft; not yet
+  reviewed.
 
 Links into gitseq, atseq and noseq assume sibling checkouts beside this repository;
 each cited note records the inspected commit.

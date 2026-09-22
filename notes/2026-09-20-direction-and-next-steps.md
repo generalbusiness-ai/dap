@@ -54,8 +54,12 @@ bounded episode, one real exchange through an ordinary channel, and one
 voluntary contribution by another party. The success factor is comprehension: a person must be able to say what
 this is about, what they can do now, and what they cannot see and why,
 from the screen alone, and every stage is judged on that before
-anything else. §8 sets out one pilot in five stages. Nothing starts
-until a willing person and a bounded segment of a real episode exist.
+anything else. §8 says what the next tasks are: technology spikes on composition,
+interaction, extensibility and agents as participants, carried a long
+way before real-world modelling, because Hugh's attention for
+coordinating real environments is limited now. The five-stage pilot is
+the conditional follow-up, and nothing in it starts until a willing
+person and a bounded segment of a real episode exist.
 
 Two project terms are used throughout. A **context** is one governed
 scope of decisions with one ordered record of events. A **perspective**
@@ -223,7 +227,16 @@ the kinds must stay distinct.
 |---|---|---|
 | a **human representative**: a family member, a friend, an appointed helper | attention, judgment, and authority to act for the person where the person grants it | expertise |
 | a **service professional**, acting for a firm under a mandate | expertise, capacity, reputation, and colleagues who can take over | the person's own judgment or authority |
-| a **software assistant** | administrative work: capture, drafting, reminders, the next step | judgment, expertise, or authority to intervene |
+| a **personal agent** | administrative work, capture, drafting, reminders and the next step; and, with granted authority, participation: it may act in a context as a principal, hand work to others and take it through obligations, negotiate within declared limits with another party's agent, ask what it may do before acting, and propose changes to the arrangement for the person to approve | the person's judgment, or authority the person did not grant; every act it takes is attributed to it, and every act that needs approval waits for the person |
+
+Personal agents can take part in dap in ways the Weixin comparison did
+not anticipate, because in dap an assistant is an ordinary principal
+(design note §1). A person may delegate a bounded authority to their
+agent, the record shows who granted it, what the agent promised and what
+it performed, and two people's agents can reach a shared decision in one
+context that every view judges alike. That is the technology spike T4 in
+the spikes plan, and it is why the row above says participation and not
+only administration.
 
 Hugh's phrase "through an agent of their choosing" is not yet an account
 of control. The first experiment must say which of the three kinds of
@@ -304,10 +317,13 @@ own coherent account never requires the other party's agreement.
 One boundary follows, and it is a specification to state before the
 account package is written. A query indexed by a viewer describes that
 viewer's selected view, not the whole relation: "my evidence disputes
-Friday" is a valid personal query. A shared decision may not treat
-incomplete private evidence as if it were globally complete: a public
-decision that depends on reports not disclosed to everyone it binds is
-rejected. The account's cases pair the two.
+Friday" is a valid personal query. The constraint is on validation
+rules, not on anyone's private grounds for choosing an act: a person may
+decide to act on evidence only they hold, but a rule that decides
+whether a shared act is effective may not depend on evidence that is
+not readable by everyone the act binds. A public decision whose guard
+reads undisclosed reports is rejected. The account's cases pair the
+two.
 
 A history of what an insurer said helps the person who kept it, and
 harms the same person if it is wrong. So the screen always shows
@@ -383,7 +399,7 @@ unconfirmed. Every screen also obeys the legibility rules of §2.
 | rung 0 | invite a family member, appoint a helper with a role | foundation invite and grant | reuse; what the helper may do without asking is a product decision (§3) |
 | rung 0 | the account package: the three record kinds, capture events, standing that can change | not designed | design and author it as the first package, under the checker, with the §5 cases predeclared |
 | rung 0 | the five screen questions and the anchor | the narrative note says the anchor is implemented nowhere and offered actions carry no targets | build a minimal client over the projection, with derived actions that name their targets |
-| rung 0 | a software assistant as an ordinary principal | in the design; obligations proposed in the directions note | not a prerequisite; manual steps are acceptable scaffolding if visible and counted; add the obligation form when a concrete need arises |
+| rung 0 | a personal agent as an ordinary principal with granted authority and approval rules | in the design; obligations proposed in the directions note; spikes T3 and T4 | not a prerequisite for the pilot; manual steps are acceptable scaffolding if visible and counted; the spikes build the form |
 | rung 1 | capture of external material with its source, and an outgoing message composed from the account | nothing | the capture event is application-level, in the account package; the message is a rendered query; no transport |
 | rung 2 | another party's slice by link, and their act recorded as theirs | test keys and fixture routing only; nothing authenticated (see below) | before any real link: the four prerequisites listed below |
 | any real episode | a provisional operator, storage, export, recovery, a stated privacy boundary | nothing | choose them before the episode; long-term deployment can wait |
@@ -411,14 +427,29 @@ So before any real link, four prerequisites: a reachable invitation
 flow, authenticated reads, contribution rights scoped to one act, and a
 plain statement of what "confirmed as theirs" establishes.
 
-## 8. Next steps: one pilot in five stages
+## 8. Next tasks: technology spikes now, the pilot when attention allows
 
-Product evidence comes before general machinery. A fixed observation
-window around the episode means the real exchange is sought early, not
-after the whole case has run. Each stage is one workroom request when it
-is next; none is filed by this note. The authoring step of §7 runs on
-its own, gates nothing here, and does not take priority over the pilot
-when effort is scarce.
+**The next task** is the set of technology spikes in the spikes plan
+(`2026-09-22-technology-spikes-plan.md`): the declaration layer,
+composition, obligations, agents as participants, extensibility,
+admission and the account package, each independent, each on the
+harness, each with its own stop rule, and none needing a real
+environment. Hugh chose this order on 2026-09-22: his attention for
+coordinating real environments is limited now, and the open questions
+around composition, interaction and extensibility should be carried a
+long way before real-world modelling, with his guidance from past events
+supplying the episodes the spikes need.
+
+**The conditional follow-up** is the pilot below, unchanged in shape. It
+starts when attention allows and a willing person exists, and by then
+the spikes will have handed it tested forms for obligations, approvals,
+joining, closing and the account itself; the spikes plan's §5 says
+which. Product evidence still comes before general infrastructure: the
+spikes settle rules on fixtures, they do not build a platform.
+
+Each stage is one workroom request when it is next; none is filed by
+this note. A fixed observation window around the episode means the real
+exchange is sought early, not after the whole case has run.
 
 The stages run in order. Stage 2 may use sanitized or invented material
 before stage 1's trust boundary is settled; no real material is used
