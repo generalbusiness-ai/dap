@@ -33,6 +33,31 @@ export interface FoldCtx {
   origin: boolean;
 }
 
+/** A declaration of owed work, never an instruction to emit an event. */
+export interface ObligationDraft {
+  role: string;
+  act: { kind: string; input: Json };
+  within?: number;
+  blocks: string[];
+}
+export interface ObligationRecord extends ObligationDraft {
+  id: string;
+  model: string;
+  source: number;
+  sourceId: string;
+  status: 'open' | 'fulfilled' | 'lapsed';
+  performedAt?: number;
+  performedBy?: Principal;
+  lapsedAt?: number;
+}
+export interface ObligationForm<S, C extends Json> {
+  on: string[];
+  contract: string;
+  thenOblige(state: S, event: EventBody, ctx: FoldCtx, config: C): ObligationDraft[];
+  /** Absent means exact payload equality after removing payload.obligation. */
+  matches?(owed: ObligationDraft, event: EventBody, ctx: FoldCtx, config: C): boolean;
+}
+
 export interface FoldResult<S = Json> {
   effective: boolean;
   state: S;
@@ -78,6 +103,7 @@ export interface ModelSpec<S = Json, C extends Json = Json> {
    * identity when set.
    */
   ambient?: boolean;
+  obligations?: ObligationForm<S, C>;
 }
 
 export interface AudienceCtx {
@@ -188,6 +214,11 @@ export function modelId(m: ModelSpec, module: string | undefined): Json {
     roles: (m.roles ?? {}) as Json,
     module: module ? moduleHash(module) : null,
     ...(m.ambient ? { ambient: true } : {}),
+    ...(m.obligations ? { obligations: {
+      version: 'dap.fixture.obligations/1', on: m.obligations.on, contract: m.obligations.contract,
+      thenOblige: codeId(m.obligations.thenOblige),
+      matches: m.obligations.matches ? codeId(m.obligations.matches) : null,
+    } } : {}),
   };
 }
 

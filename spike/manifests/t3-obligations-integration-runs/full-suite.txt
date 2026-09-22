@@ -1,0 +1,928 @@
+
+> dap-spike@0.0.1 test
+> node --test 'test/**/*.test.ts'
+
+✔ a submission without a credential is refused; a forged credential for a non-participant is refused (2.041625ms)
+✔ stable facts are checked first: wrong genesis, missing action id, envelope bounds (0.729042ms)
+✔ positions are dense and every header binds its predecessor (0.716041ms)
+✔ the memory backend refuses re-entrant appends (0.144625ms)
+✔ audience reads frozen preceding state without changing model state or earlier audiences (8.015125ms)
+✔ attaching a handler retains the original audience read scope and rolls back undeclared reads (3.086291ms)
+✔ binding identity includes the audience read scope even when resolved handlers match (0.312792ms)
+✔ an audience error discards all model effects, survives retry, and replays consistently (11.016292ms)
+✔ run 2 corpus: all 139 recovered privacy failures replay and are deletion-minimal (16657.26325ms)
+ℹ 139 recovered failures, all deletion-minimal; explicit private disclosures remain budget violations under the repaired model
+✔ run 7 corpus pins the unrepaired foundation snapshot and preserves every failing full series (9.266917ms)
+✔ the manifest is one experiment identity over its prose and executable part, and the prose states the same bounds (0.743792ms)
+ℹ BOOKING_MANIFEST_ID sha256:cb4514f4967891077ad78e1dd0fba4c17438fb32b98cd8bd790df8531b35dd16
+ℹ booking package sha256:0556de5c337344eaa15afcbbbf5d22aa82c384bd6841d4ffb0c07185d4b7ec27
+✔ case 1, two requests for one slot: the admin publishes one, the other stays pending and its publication is overlap (49.864792ms)
+✔ case 2, free exactly one: two occupancies, one freed, the other active; a second free is already_free (69.583208ms)
+✔ case 3, duplicate publication: a second occupancy with the same booking id is duplicate_id (12.114084ms)
+✔ case 4, only the admin publishes: a booker's occupancy is unauthorized before any model rule (10.384167ms)
+✔ case 5, expiry: when the clock reaches an occupancy's end it is expired for every member, and an overlapping occupancy is then effective (91.93425ms)
+✔ case 6, cross-view: an occupancy before J joins, an overlapping publication after, and a free of the earlier one are judged the same way in every view (59.515167ms)
+✔ case 7, the campaign: every manifest seed replays with zero violations of the property, the pause rule, the invariants and the privacy budget (84142.763ms)
+ℹ seeds 200, 84143 ms, coverage {"joins":955,"attaches":198,"disclosures":1629,"requests":2553,"occupancies":1497,"effectiveOccupancies":652,"linkedOccupancies":471,"frees":383,"cancels":419,"effectiveCancels":324,"ticks":1630,"entries":12000}
+✔ the repair ledger exists, its totals agree with its entries, and it states the budget outcome (0.435583ms)
+ℹ fixes 2, added kinds 0, budget within
+✔ V4-F2: the budget detects private fields published through com.example.booking.occupancy (13.009208ms)
+✔ V4-F2: the budget detects private fields published through com.example.booking.free (14.631ms)
+✔ V4-F2: the budget detects private fields published through ai.generalbusiness.dap.observe (11.896333ms)
+✔ V4-F2: the budget detects a spoofed booker claim naming the reader published through com.example.booking.occupancy (11.839125ms)
+✔ V4-F2: the budget detects a spoofed booker claim naming the reader published through com.example.booking.free (14.252875ms)
+✔ V4-F2: the budget detects a spoofed booker claim naming the reader published through ai.generalbusiness.dap.observe (12.553042ms)
+✔ V4-F2: the budget detects nested private fields published through com.example.booking.occupancy (13.051083ms)
+✔ V4-F2: the budget detects nested private fields published through com.example.booking.free (15.067959ms)
+✔ V4-F2: the budget detects nested private fields published through ai.generalbusiness.dap.observe (12.454625ms)
+✔ V4-F1: seed 1 position 50 keeps Carol and her own request id private; hostile redisclosure is detected (20.517333ms)
+✔ V4-F1: current authority controls publication; authorized refusals, stale and closed attempts retain their audience (77.205417ms)
+▶ post-baseline A5: invariants detect votes and admission naming invitation-acceptance
+  ⚠ original policy requires rejection of invalid targets and no admission grant (1.264459ms) # V5-A5 retained negative result; no policy repair commissioned
+✔ post-baseline A5: invariants detect votes and admission naming invitation-acceptance (563.977167ms)
+ℹ {"clubA5":"invitation-acceptance","manifest":"sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde","package":"sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e","nonce":"v6-followup:a5:invitation-acceptance","target":{"position":6,"id":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","kind":"ai.generalbusiness.dap.accept_invite","effective":true},"votes":[9,10],"admit":11,"grants":[{"position":12,"payload":{"principal":"dana","roles":["Member"]}}],"readers":[{"reader":"alice","votes":[true,true],"admit":true},{"reader":"bob","votes":[true,true],"admit":true},{"reader":"carol","votes":[true,true],"admit":true},{"reader":"dana","votes":[true,true],"admit":true},{"reader":"frank","votes":[true,true],"admit":true}],"findings":["*@9 invariant: vote at 9 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","*@10 invariant: vote at 9 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","*@10 invariant: vote at 10 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","*@11 invariant: vote at 9 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","*@11 invariant: vote at 10 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","*@11 invariant: admit at 11 of unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","*@12 invariant: vote at 9 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","*@12 invariant: vote at 10 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","*@12 invariant: admit at 11 of unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402"],"steps":[{"step":{"type":"invite","inviter":"alice","invitee":"bob","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:f8e2b2760606029da0845a7d1a315291e617637c63b050ebb68630514b7b6367","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"bob"},"entries":[{"id":"sha256:efb8d15b0646f022fab90d7fa589e5c858af4582891d05da9f2faf860eb75974","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"carol","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:2c862f052244d244f6849a5f8550c6296624802360d2d5ffdf61af5be3c7aba5","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"carol"},"entries":[{"id":"sha256:0f0864ee38e0f0f414103426c0077d1f1e4def4c230d92a73a4186d6a6585445","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"dana","grants":{"roles":[]}},"entries":[{"id":"sha256:6ad4fb318d409b441764b707208069089d376825d667dd7564cc3e5af42e788b","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"dana"},"entries":[{"id":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"frank","grants":{"roles":["Member"]}},"entries":[{"id":"sha256:a17796beda7c55ae1c20e6f4932a7898d8d592fa7140165d1422f310a57a3a65","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"frank"},"entries":[{"id":"sha256:b8d9f7790068c1434997289287b529a5db9ceb85715fdc63409cdff2e61c153a","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"act","actor":"bob","kind":"com.example.club.vote","payload":{"application_id":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","choice":"yes"},"nonce":"a5:8"},"entries":[{"id":"sha256:632055e52d15f825f7a76c0a99f68d18f486456eb6c09c2f60112308e6531cd3","kind":"com.example.club.vote"}],"application":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402"},{"step":{"type":"act","actor":"carol","kind":"com.example.club.vote","payload":{"application_id":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","choice":"yes"},"nonce":"a5:9"},"entries":[{"id":"sha256:fda5a153a368c42c7ed414a49abd94a20f220d4b7a674e92987ddad8a594a9c1","kind":"com.example.club.vote"}],"application":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402"},{"step":{"type":"act","actor":"alice","kind":"com.example.club.admit","payload":{"application_id":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402"},"nonce":"a5:10"},"entries":[{"id":"sha256:f451b2ca7acf3076ef78633c5e8ac889fe58deff8dae5c8a7218a00d0fe28fa0","kind":"com.example.club.admit"},{"id":"sha256:a754806be4313ee8d4f36e37459779495610a4623c19fd82107ebe76e88e6ff9","kind":"ai.generalbusiness.dap.grant"}],"application":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402"}],"minimal":[{"step":{"type":"invite","inviter":"alice","invitee":"bob","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:f8e2b2760606029da0845a7d1a315291e617637c63b050ebb68630514b7b6367","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"bob"},"entries":[{"id":"sha256:efb8d15b0646f022fab90d7fa589e5c858af4582891d05da9f2faf860eb75974","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"dana","grants":{"roles":[]}},"entries":[{"id":"sha256:6ad4fb318d409b441764b707208069089d376825d667dd7564cc3e5af42e788b","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"dana"},"entries":[{"id":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"act","actor":"bob","kind":"com.example.club.vote","payload":{"application_id":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","choice":"yes"},"nonce":"a5:8"},"entries":[{"id":"sha256:632055e52d15f825f7a76c0a99f68d18f486456eb6c09c2f60112308e6531cd3","kind":"com.example.club.vote"}],"application":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402"}]}
+▶ post-baseline A5: invariants detect votes and admission naming malformed-apply
+  ⚠ original policy requires rejection of invalid targets and no admission grant (0.36475ms) # V5-A5 retained negative result; no policy repair commissioned
+✔ post-baseline A5: invariants detect votes and admission naming malformed-apply (556.585875ms)
+ℹ {"clubA5":"malformed-apply","manifest":"sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde","package":"sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e","nonce":"v6-followup:a5:malformed-apply","target":{"position":9,"id":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","kind":"com.example.club.apply","effective":false},"votes":[10,11],"admit":12,"grants":[{"position":13,"payload":{"principal":"dana","roles":["Member"]}}],"readers":[{"reader":"alice","votes":[true,true],"admit":true},{"reader":"bob","votes":[true,true],"admit":true},{"reader":"carol","votes":[true,true],"admit":true},{"reader":"dana","votes":[true,true],"admit":true},{"reader":"frank","votes":[true,true],"admit":true}],"findings":["*@10 invariant: vote at 10 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","*@11 invariant: vote at 10 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","*@11 invariant: vote at 11 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","*@12 invariant: vote at 10 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","*@12 invariant: vote at 11 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","*@12 invariant: admit at 12 of unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","*@13 invariant: vote at 10 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","*@13 invariant: vote at 11 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","*@13 invariant: admit at 12 of unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736"],"steps":[{"step":{"type":"invite","inviter":"alice","invitee":"bob","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:5efae4c957e9ffd536fb4792e17bd3859d4bf40bfd6112b2d7d5d0bf192b2c07","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"bob"},"entries":[{"id":"sha256:652cef6366598679e968e08a6a92073b4031f5b9ef6e668ab950ac7a16962ff7","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"carol","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:6dbefe6ff4ceb5da17f9f5efc1b14111d624f39029bea047b182bba7ae2dff92","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"carol"},"entries":[{"id":"sha256:a3effcce32797773f4e151ef320c41e9294ef145c8ec7ce955f1a55fcde3ace5","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"dana","grants":{"roles":[]}},"entries":[{"id":"sha256:cfb273dd78ce62e8b78692805e96e0778043c3e99521c32f205ce67b5070813a","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"dana"},"entries":[{"id":"sha256:52b396f21bd7075cdda314069da7237e0d440a6225b667cf0c4b8075209461d0","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"frank","grants":{"roles":["Member"]}},"entries":[{"id":"sha256:9c29a84f5149dc5aefb9e903b0055760b44ce5b4935c99f9c414dfe8ecfa44d5","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"frank"},"entries":[{"id":"sha256:727b5c7f0f81e145be8267dffbf05b031f50a5e76aa85f47c1e5e0a94dbfc6e1","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"act","actor":"dana","kind":"com.example.club.apply","payload":{"statement":17},"nonce":"a5:8"},"entries":[{"id":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","kind":"com.example.club.apply"}]},{"step":{"type":"act","actor":"bob","kind":"com.example.club.vote","payload":{"application_id":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","choice":"yes"},"nonce":"a5:9"},"entries":[{"id":"sha256:d3de847e94ade9127f25543fadba6a4ccfd0fff85ce31ab431ba4342f5438365","kind":"com.example.club.vote"}],"application":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736"},{"step":{"type":"act","actor":"carol","kind":"com.example.club.vote","payload":{"application_id":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","choice":"yes"},"nonce":"a5:10"},"entries":[{"id":"sha256:4be906ea88e31394bcd43a900c4433174599b9f22562cfa14d374e46c545f4b3","kind":"com.example.club.vote"}],"application":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736"},{"step":{"type":"act","actor":"alice","kind":"com.example.club.admit","payload":{"application_id":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736"},"nonce":"a5:11"},"entries":[{"id":"sha256:9e0bb3f36faee4bb5407d592e3acbe1adde72f9f69a3966061dbcdfe2d12e31c","kind":"com.example.club.admit"},{"id":"sha256:be683307f1918e59caab7323b3a10efc44c9f02a9c5f6b95db6ce8585d9b01f7","kind":"ai.generalbusiness.dap.grant"}],"application":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736"}],"minimal":[{"step":{"type":"invite","inviter":"alice","invitee":"bob","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:5efae4c957e9ffd536fb4792e17bd3859d4bf40bfd6112b2d7d5d0bf192b2c07","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"bob"},"entries":[{"id":"sha256:652cef6366598679e968e08a6a92073b4031f5b9ef6e668ab950ac7a16962ff7","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"dana","grants":{"roles":[]}},"entries":[{"id":"sha256:cfb273dd78ce62e8b78692805e96e0778043c3e99521c32f205ce67b5070813a","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"dana"},"entries":[{"id":"sha256:52b396f21bd7075cdda314069da7237e0d440a6225b667cf0c4b8075209461d0","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"act","actor":"dana","kind":"com.example.club.apply","payload":{"statement":17},"nonce":"a5:8"},"entries":[{"id":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","kind":"com.example.club.apply"}]},{"step":{"type":"act","actor":"bob","kind":"com.example.club.vote","payload":{"application_id":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","choice":"yes"},"nonce":"a5:9"},"entries":[{"id":"sha256:d3de847e94ade9127f25543fadba6a4ccfd0fff85ce31ab431ba4342f5438365","kind":"com.example.club.vote"}],"application":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736"}]}
+▶ post-baseline A5: invariants detect votes and admission naming standing-reason
+  ⚠ original policy requires rejection of invalid targets and no admission grant (0.285166ms) # V5-A5 retained negative result; no policy repair commissioned
+✔ post-baseline A5: invariants detect votes and admission naming standing-reason (458.567166ms)
+ℹ {"clubA5":"standing-reason","manifest":"sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde","package":"sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e","nonce":"v6-followup:a5:standing-reason","target":{"position":9,"id":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","kind":"com.example.club.standing_reason","effective":true},"votes":[10,11],"admit":12,"grants":[{"position":13,"payload":{"principal":"alice","roles":["Member"]}}],"readers":[{"reader":"alice","votes":[true,true],"admit":true},{"reader":"bob","votes":[true,true],"admit":true},{"reader":"carol","votes":[true,true],"admit":true},{"reader":"dana","votes":[true,true],"admit":true},{"reader":"frank","votes":[true,true],"admit":true}],"findings":["*@10 invariant: vote at 10 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","*@11 invariant: vote at 10 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","*@11 invariant: vote at 11 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","*@12 invariant: vote at 10 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","*@12 invariant: vote at 11 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","*@12 invariant: admit at 12 of unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","*@13 invariant: vote at 10 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","*@13 invariant: vote at 11 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","*@13 invariant: admit at 12 of unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"],"steps":[{"step":{"type":"invite","inviter":"alice","invitee":"bob","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:1cd4cd1c3b0ffc6884370cbb9d75deace66b85bf6c650c44f63400d306d7920e","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"bob"},"entries":[{"id":"sha256:39aa2439256a95b04087b2f285626a4b0bd8d24652c28753e00b322c4140baba","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"carol","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:da31de3a21d459bbde38aacc48766635fbddbad71cf4d772575e9e7de8d749b8","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"carol"},"entries":[{"id":"sha256:70e92440be9b93badac5ca1c684c57672ed3e83f0dc98a98f193c70fe1da2bd1","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"dana","grants":{"roles":[]}},"entries":[{"id":"sha256:82066a312c85860039f63e39fd97ed5abe3e2ba74e7684dc5296b7adb88f63a8","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"dana"},"entries":[{"id":"sha256:720923b61c08be8c6e196d688f3dba317614c519e80e0be1f193c86b6bc3e9a4","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"frank","grants":{"roles":["Member"]}},"entries":[{"id":"sha256:b2c53e1d54dc0ec05c0c6b67afe498df6d2b51eec4aec49c367359d8c0b60e2b","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"frank"},"entries":[{"id":"sha256:c624a58e82907beadbd925b6194f58599fbf88a2c3074979cd3ecf46f593cb47","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"act","actor":"alice","kind":"com.example.club.standing_reason","payload":{"member":"dana","text":"private reason, not an application"},"nonce":"a5:8"},"entries":[{"id":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","kind":"com.example.club.standing_reason"}]},{"step":{"type":"act","actor":"bob","kind":"com.example.club.vote","payload":{"application_id":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","choice":"yes"},"nonce":"a5:9"},"entries":[{"id":"sha256:28583cb1694a7351446b112cfbb524e5461c58e121c49b03c074a3d993715756","kind":"com.example.club.vote"}],"application":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"},{"step":{"type":"act","actor":"carol","kind":"com.example.club.vote","payload":{"application_id":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","choice":"yes"},"nonce":"a5:10"},"entries":[{"id":"sha256:64d93c1e0993f8529264dff3764d6fb6b43cff1bd0674921c8e595e32a71a422","kind":"com.example.club.vote"}],"application":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"},{"step":{"type":"act","actor":"alice","kind":"com.example.club.admit","payload":{"application_id":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"},"nonce":"a5:11"},"entries":[{"id":"sha256:f578658d5cf3fa76bcbfbb13eb4939f8fc90e495e11d4faa31b1920bf325eb55","kind":"com.example.club.admit"},{"id":"sha256:3423e61343784c1f9cb6fbc3b4ef9d4a13068c98c19f5da5e08388e62835ab72","kind":"ai.generalbusiness.dap.grant"}],"application":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"}],"minimal":[{"step":{"type":"invite","inviter":"alice","invitee":"bob","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:1cd4cd1c3b0ffc6884370cbb9d75deace66b85bf6c650c44f63400d306d7920e","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"bob"},"entries":[{"id":"sha256:39aa2439256a95b04087b2f285626a4b0bd8d24652c28753e00b322c4140baba","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"act","actor":"alice","kind":"com.example.club.standing_reason","payload":{"member":"dana","text":"private reason, not an application"},"nonce":"a5:8"},"entries":[{"id":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","kind":"com.example.club.standing_reason"}]},{"step":{"type":"act","actor":"bob","kind":"com.example.club.vote","payload":{"application_id":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","choice":"yes"},"nonce":"a5:9"},"entries":[{"id":"sha256:28583cb1694a7351446b112cfbb524e5461c58e121c49b03c074a3d993715756","kind":"com.example.club.vote"}],"application":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"}]}
+✔ Club baseline corpus: all three recorded seeds reproduce, are deletion-minimal with links preserved, and pass under the repaired model (528.921084ms)
+ℹ seed 81: 56 -> 7 steps; baseline mismatch, repaired clean; application sha256:89924c7ce0dc9ce04507ba8c5d0a87aabad44d546de84cb98f3254e5de7b0c2a -> sha256:e87e8afb059e1b5e803e8e3185e9aa8e73c4c556071a47011517c4d8fddae264
+ℹ seed 107: 55 -> 7 steps; baseline mismatch, repaired clean; application sha256:4f0f3e78520528dcab968444b6a6cff82b228527073747195cd54bb3e3bc31a3 -> sha256:d65ff528f2c97768b9d4047ab5de6e70432c904d018c39066a129a8c8276bbb0
+ℹ seed 182: 56 -> 7 steps; baseline mismatch, repaired clean; application sha256:68a19df79a2ff25c4314170bda712055b392130f69916d53da3186853d271781 -> sha256:ab2f75ce53c1a698561eabe21d46129607400de4a54d198b10f18a316c5c49e5
+ℹ manifest sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde; baseline sha256:6aeac545386d59b2d4645bfa9d951b576ae66119484f723d1fb765ff1a02a08f; repaired sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e
+✔ the manifest is one experiment identity over its prose and executable part, and the prose states the same bounds (0.726167ms)
+ℹ CLUB_MANIFEST_ID sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde
+ℹ club package sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e
+✔ case 1, quorum: three committee members, two yes votes, admit is effective and the applicant is granted Member (84.774792ms)
+✔ case 2, no quorum: one vote, admit is no_quorum; a no vote and a yes vote is no_majority (104.951084ms)
+✔ case 3, lapsed: a lapsed committee member's vote is lapsed, the admit that relied on it is no_quorum, and a second vote by one member is already_voted (62.033416ms)
+✔ case 4, late committee member: a vote before any disclosure of the application is unknown_application, after a disclosure it is effective, and every member judges both the same way (120.331792ms)
+✔ Club disclosure across activation: payload before activation pauses until closure (127.224291ms)
+✔ Club disclosure across activation: activation before payload (95.689083ms)
+✔ post-baseline A2: an ordinary Member judges a late committee vote before and after private application disclosure (95.463042ms)
+✔ post-baseline A2: an ordinary Member verifies admission and the Member grant without reading the application (91.456125ms)
+⚠ plan §4.2: a second admission is ineffective once the applicant holds Member (138.184833ms) # V5-A1: revised experiment and policy repair pending
+ℹ plan §4.2 violated: admit at 18 is effective after Dana already received Member at 15; frozen-manifest checks still pass
+✔ case 5, the campaign: every manifest seed replays with zero violations of the property, the pause rule, the invariants and the privacy budget (122726.5255ms)
+ℹ seeds 200, 122727 ms, coverage {"joins":991,"attaches":200,"disclosures":1939,"applications":629,"votes":1575,"effectiveVotes":1001,"admits":343,"effectiveAdmits":126,"standings":514,"grants":246,"entries":11939}
+✔ the repair ledger exists, its totals agree with its entries, and it states the budget outcome (0.364958ms)
+ℹ fixes 1, added kinds 0, budget within
+✔ test keys reproduce the independent RFC 8032 Ed25519 vector (6.205708ms)
+✔ fixed vectors pin each signed object, exact UTF-8 bytes, identity and signature (6.793167ms)
+✔ fixed rejection vector: tampered body (0.59575ms)
+✔ fixed rejection vector: actor signs noncanonical bytes (0.380167ms)
+✔ fixed rejection vector: wrong prev, correctly signed (0.157334ms)
+✔ fixed rejection vector: wrong commitment, correctly signed (0.328709ms)
+✔ fixed rejection vector: unassigned sequencer key (0.577875ms)
+✔ fixed rejection vector: sequencer signs full header bytes (0.20725ms)
+✔ canonical encoding supports RFC 8785 numbers, UTF-16 ordering and unnormalized strings (0.208542ms)
+✔ canonical encoding rejects lossy JS data, invalid Unicode and noncanonical byte inputs (1.323584ms)
+✔ principals and signatures have one exact encoding and must match their signing key (0.751584ms)
+✔ body profile validates required and forbidden fields without interpreting the payload (0.706084ms)
+✔ header-only verification authenticates disclosure evidence and exposes no private fields (0.851625ms)
+✔ wire verification enforces genesis identity, destinations, origin opt-in and evidence placement (3.735584ms)
+✔ wire framing is canonical and decoded entries are independent frozen snapshots (0.39275ms)
+✔ O1-G1 raw Context cannot resume stale admission after Journal closes on memory (12.891208ms)
+ℹ {"storage":"memory","raw":{"error":"Error: Context: stale fold; restore before writing","invitation":null,"redemption":null,"participants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"]},"coldParticipants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"],"coldInviteVerdict":null}
+✔ O1-G1 raw Context cannot resume stale admission after Journal closes on sqlite (10.472167ms)
+ℹ {"storage":"sqlite","raw":{"error":"Error: SQLiteBackend: unavailable or re-entrant transaction","invitation":null,"redemption":null,"participants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"]},"coldParticipants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"],"coldInviteVerdict":null}
+✔ O1-G1 raw Context stays inactive after its own committed append loses its reply on memory (6.322375ms)
+ℹ {"storage":"memory","raw":{"error":"Error: Context: inactive after a write error; restore before writing","invitation":null,"redemption":null,"participants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"]},"coldParticipants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"],"coldInviteVerdict":null}
+✔ O1-G1 raw Context stays inactive after its own committed append loses its reply on sqlite (9.112875ms)
+ℹ {"storage":"sqlite","raw":{"error":"Error: Context: inactive after a write error; restore before writing","invitation":null,"redemption":null,"participants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"]},"coldParticipants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"],"coldInviteVerdict":null}
+✔ O1-G1 two unowned raw Contexts cannot write from different folded heads on memory (8.400375ms)
+✔ O1-G1 two unowned raw Contexts cannot write from different folded heads on sqlite (8.008625ms)
+✔ O1-G1 freshness is checked inside serialization without scanning history for refusal (15.054375ms)
+✔ O1-G1 a current raw Context preserves successful writes and exact retries on memory (7.025375ms)
+✔ O1-G1 a current raw Context preserves successful writes and exact retries on sqlite (5.929417ms)
+✔ O5 isolated reader verifies an actual O3 SQLite handover and successor (223.157166ms)
+ℹ o5-journal-proof:{"proof":{"pinnedGenesis":"sha256:6c377b4ad1d1179e3a7178571fb06533a1346bdd98b7a07cb15b148f39bc50bd","genesis":{"header":{"commitment":"sha256:6c377b4ad1d1179e3a7178571fb06533a1346bdd98b7a07cb15b148f39bc50bd","genesis":"sha256:6c377b4ad1d1179e3a7178571fb06533a1346bdd98b7a07cb15b148f39bc50bd","position":0,"prev":"sha256:0000000000000000000000000000000000000000000000000000000000000000","seq_sig":"fQ1u595c3b5-k-BoeqOUq725A7VgJVygilEuW9CkZhKSOMWRRMrpUxu8leGEUhA2oAT412Q8x1tZ4ckjm_Z4Bw"},"committed":"{\"body\":{\"actor\":\"ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w\",\"kind\":\"ai.generalbusiness.dap.genesis\",\"nonce\":\"02020202020202020202020202020202\",\"payload\":{\"bindings\":[{\"package\":\"sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85\"}],\"foundation\":\"sha256:5a7be1514529bac249c683ada733e64273f94b2700abf8a55c47dcb7ebfb8d78\",\"grants\":[{\"capabilities\":[\"ai.generalbusiness.dap.invite\",\"ai.generalbusiness.dap.attach\",\"ai.generalbusiness.dap.grant\",\"ai.generalbusiness.dap.disclose\",\"ai.generalbusiness.dap.close\"],\"principal\":\"ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w\",\"roles\":[\"Seller\"]}],\"origins\":[{\"actor\":\"ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w\",\"kind\":\"com.example.sale.listing\",\"nonce\":\"01010101010101010101010101010101\",\"payload\":{\"ask\":800,\"referent\":\"guitar-1\"}}],\"referents\":[\"guitar-1\"],\"route\":\"route:o1-test\",\"runtime\":\"dap.fixture.ts/1\",\"sequencing\":{\"control\":\"ed25519:iodf_x6zhFFXes1a_uQFRWVo3XyJ4JCGOgVXvHr0nxc\",\"profile\":\"dap.fixture.single-writer/3\",\"writer\":\"ed25519:bnoc3Smwt4_ROvTFWY_v9O8qlxZuPKby5Pv8zYBQW_E\"}}},\"sig\":\"REjZAelqk8PAnky2GhxMSRILmDxoMoRSyU4Su-MLA75deWR5JqqnsvuPNikyj5yeVQzncEoNY1zp4yYNpLBaCw\"}"},"entries":[{"header":{"commitment":"sha256:2f34e40e1201e9915671e467eab3035014b78e0579275669844ba20780a696f3","genesis":"sha256:6c377b4ad1d1179e3a7178571fb06533a1346bdd98b7a07cb15b148f39bc50bd","position":1,"prev":"sha256:342673a307e5c4ba0a2073c143389151325d8f0e80e7780fd0f078ee8532d200","seq_sig":"ubM6Lycmtbso-2xq9W_NpP8QaDlUDxiLoPpzsxfnEazbZAWRBoCGUqUinA9rxeRe4PVPSvVL43lQAsEvRbcnAQ"}},{"header":{"commitment":"sha256:121676453b05f6c299d002066add279e5efe600cb009b465e691825be53c0de4","genesis":"sha256:6c377b4ad1d1179e3a7178571fb06533a1346bdd98b7a07cb15b148f39bc50bd","position":2,"prev":"sha256:2a70f1cc247d5ce5b86bb486b9165bad1793771509391b69384328316ad00969","seq_sig":"X0HJuFbMf0G9r2SVIpRho4KmHNs4fR-AfOdUTsRPhCTx93pJPNKTL3OHfAT4rGSbLAZdjPCfAqcm2UjVlWTYDw"},"committed":"{\"body\":{\"action_id\":\"o5-real-seal\",\"actor\":\"ed25519:iodf_x6zhFFXes1a_uQFRWVo3XyJ4JCGOgVXvHr0nxc\",\"genesis\":\"sha256:6c377b4ad1d1179e3a7178571fb06533a1346bdd98b7a07cb15b148f39bc50bd\",\"kind\":\"ai.generalbusiness.dap.seq.seal\",\"nonce\":\"a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1\",\"payload\":{\"epoch\":0,\"predecessor\":{\"headerHash\":\"sha256:2a70f1cc247d5ce5b86bb486b9165bad1793771509391b69384328316ad00969\",\"position\":1}}},\"sig\":\"EtrUa2JPrXbQKhaI4sxiHuM5_6Yt7v87oc3u1vwnDm6rUA36Pux9sO5KUsovM2Tf3EIajjiCYKJCJNxdmVNYAw\"}"},{"header":{"commitment":"sha256:594e115f7020d20ca3d5f06d4fd72fbb29aa92436375d8932ef230a2599f9cec","genesis":"sha256:6c377b4ad1d1179e3a7178571fb06533a1346bdd98b7a07cb15b148f39bc50bd","position":3,"prev":"sha256:5f4a665a58627338c0380689f190ad668ade41ae6edfe7ba7a6c30ecc7237b5e","seq_sig":"ocdEKwtBVg6sX0H6hVL0fEzuc4hN2TUkHWOBeAxLnZEAZxJMic5PPvBYY7s2MbkfJ1s1y6AytnKP6e3A0fDDAg"},"committed":"{\"body\":{\"action_id\":\"o5-real-assign\",\"actor\":\"ed25519:iodf_x6zhFFXes1a_uQFRWVo3XyJ4JCGOgVXvHr0nxc\",\"genesis\":\"sha256:6c377b4ad1d1179e3a7178571fb06533a1346bdd98b7a07cb15b148f39bc50bd\",\"kind\":\"ai.generalbusiness.dap.seq.assign\",\"nonce\":\"a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2\",\"payload\":{\"epoch\":1,\"predecessor\":{\"headerHash\":\"sha256:5f4a665a58627338c0380689f190ad668ade41ae6edfe7ba7a6c30ecc7237b5e\",\"position\":2},\"writer\":\"ed25519:6kpsY-KcUgq-9VB7Ey7F-ZVHdq6-vnuSQh7qaRRG0iw\"}},\"sig\":\"o5gUdi9MgY0k5pMfLcDD276kdpevTpTfoQbOFLD2pteOjql3zWz50wubEXj7LcsimzWycbzB3Y39qvT8k5xlAQ\"}"},{"header":{"commitment":"sha256:ab09d34b0fa2f0561cff72dad2810420c4566ab3f9dbec72b38c9d793cffd004","genesis":"sha256:6c377b4ad1d1179e3a7178571fb06533a1346bdd98b7a07cb15b148f39bc50bd","position":4,"prev":"sha256:fc0836fa43de474d8e7e25e9e269260f635de00fb5a764f8b23f259c2731ee85","seq_sig":"exfWxzTLIeoYVk3uY4wnVP2PbZASH1tWa-iMV5jiporAUkWbiXs6SYiEwfpFbvrmqBZOdtxKZiE7wYNR5AuGDA"}}]},"result":{"genesis":"sha256:6c377b4ad1d1179e3a7178571fb06533a1346bdd98b7a07cb15b148f39bc50bd","profile":"dap.fixture.single-writer/3","control":"ed25519:iodf_x6zhFFXes1a_uQFRWVo3XyJ4JCGOgVXvHr0nxc","epoch":1,"writer":"ed25519:6kpsY-KcUgq-9VB7Ey7F-ZVHdq6-vnuSQh7qaRRG0iw","sealed":false,"head":{"position":4,"headerHash":"sha256:e30ba8d3c9fd6ee56c0c85ed0e2d98ca1ae5347beef3e7dce91eaad231998ec6","commitment":"sha256:ab09d34b0fa2f0561cff72dad2810420c4566ab3f9dbec72b38c9d793cffd004"},"assignments":[{"epoch":0,"writer":"ed25519:bnoc3Smwt4_ROvTFWY_v9O8qlxZuPKby5Pv8zYBQW_E","firstPosition":0},{"epoch":1,"writer":"ed25519:6kpsY-KcUgq-9VB7Ey7F-ZVHdq6-vnuSQh7qaRRG0iw","firstPosition":4}],"controlEntries":2,"opaqueEntries":2}}
+✔ O5 spec proof: genesis-only (3.277083ms)
+✔ O5 spec proof: ordinary-payload-unavailable (1.1025ms)
+✔ O5 spec proof: two-client-nominations-have-no-authority (1.144208ms)
+✔ O5 spec proof: interrupted-after-seal (2.070458ms)
+✔ O5 spec proof: valid-handover (1.857083ms)
+✔ O5 spec proof: two-handovers (2.91225ms)
+✔ O5 spec proof: v1-fixed-writer (0.582417ms)
+✔ O5 spec proof: v1-request-does-not-assign (0.792167ms)
+✔ O5 spec proof: v1-seal-cannot-change-profile (1.116541ms)
+✔ O5 spec proof: genesis-control-is-writer (0.301208ms)
+✔ O5 spec proof: unsupported-profile (0.210042ms)
+✔ O5 spec proof: wrong-genesis-pin (0.166625ms)
+✔ O5 spec proof: assign-without-seal (1.113125ms)
+✔ O5 spec proof: request-does-not-authorize-successor (1.277125ms)
+✔ O5 spec proof: retired-writer-continuation (2.213375ms)
+✔ O5 spec proof: successor-cannot-sign-assignment (1.368708ms)
+✔ O5 spec proof: writer-is-not-seal-authority (0.674708ms)
+✔ O5 spec proof: stranger-is-not-seal-authority (1.069416ms)
+✔ O5 spec proof: writer-is-not-assign-authority (1.47075ms)
+✔ O5 spec proof: successor-is-not-assign-authority (1.1865ms)
+✔ O5 spec proof: seal-predecessor-is-not-bare-header-hash (0.598084ms)
+✔ O5 spec proof: assign-predecessor-is-not-bare-header-hash (1.029125ms)
+✔ O5 spec proof: stale-assign-head (1.57575ms)
+✔ O5 spec proof: skipped-seal-epoch (0.851042ms)
+✔ O5 spec proof: skipped-assign-epoch (1.235542ms)
+✔ O5 spec proof: negative-epoch (1.060459ms)
+✔ O5 spec proof: fractional-epoch (1.828084ms)
+✔ O5 spec proof: ordinary-after-seal (1.686667ms)
+✔ O5 spec proof: request-after-seal (1.798375ms)
+✔ O5 spec proof: seal-after-seal (1.617625ms)
+✔ O5 spec proof: second-competing-assignment (4.453917ms)
+✔ O5 spec proof: retired-key-cannot-be-revived (2.474166ms)
+✔ O5 spec proof: control-cannot-become-writer (1.314417ms)
+✔ O5 spec proof: unknown-control-kind (0.622333ms)
+✔ O5 spec proof: extra-control-payload-field (0.618708ms)
+✔ O5 spec proof: missing-control-payload-field (0.671083ms)
+✔ O5 spec proof: application-opening-is-not-accepted (0.548125ms)
+✔ O5 spec proof: wrong-prev-header-hash (19.689375ms)
+✔ O5 spec proof: skipped-position (0.316667ms)
+✔ O5 spec proof: receipt-retry-is-not-a-second-position (0.340542ms)
+✔ O5 spec proof: wrong-body-destination (4.102541ms)
+✔ O5 spec proof: forged-actor-signature (0.559959ms)
+✔ O5 spec proof: forged-writer-signature (0.31575ms)
+✔ O5 spec proof: missing-assign-opening-detected-after-seal (0.852083ms)
+✔ O5 spec proof: missing-controls-detected-at-successor-signature (9.499125ms)
+✔ O5 spec proof: opening-exposes-same-sealed-suffix (1.239ms)
+✔ O5 spec proof: LIMIT-hidden-seal-and-old-writer-suffix (1.236833ms)
+✔ O5 spec proof: legacy-movable-v2-is-unsupported (0.120666ms)
+✔ O5 spec proof: seal-predecessor-commitment-string (0.537917ms)
+✔ O5 spec proof: seal-predecessor-position-only (0.530167ms)
+✔ O5 spec proof: seal-predecessor-hash-only (0.526375ms)
+✔ O5 spec proof: seal-predecessor-extra-commitment (0.539209ms)
+✔ O5 spec proof: seal-predecessor-null (3.235333ms)
+✔ O5 spec proof: seal-predecessor-array (1.605208ms)
+✔ O5 spec proof: seal-predecessor-wrong-position (1.267958ms)
+✔ O5 spec proof: seal-predecessor-wrong-hash (0.911125ms)
+✔ O5 spec proof: seal-predecessor-commitment-in-hash (1.032625ms)
+✔ O5 spec proof: seal-predecessor-string-position (1.597542ms)
+✔ O5 spec proof: assign-predecessor-commitment-string (2.876792ms)
+✔ O5 spec proof: assign-predecessor-position-only (1.660541ms)
+✔ O5 spec proof: assign-predecessor-hash-only (2.546542ms)
+✔ O5 spec proof: assign-predecessor-extra-commitment (1.726666ms)
+✔ O5 spec proof: assign-predecessor-null (2.121708ms)
+✔ O5 spec proof: assign-predecessor-array (2.025958ms)
+✔ O5 spec proof: assign-predecessor-wrong-position (1.686416ms)
+✔ O5 spec proof: assign-predecessor-wrong-hash (2.062375ms)
+✔ O5 spec proof: assign-predecessor-commitment-in-hash (2.558416ms)
+✔ O5 spec proof: assign-predecessor-string-position (3.481375ms)
+✔ O5 spec proof: repeated-hidden-commitment (0.65925ms)
+✔ O5 spec proof: repeated-genesis-commitment (0.679417ms)
+✔ O5 spec proof: fixed-writer-repeated-commitment (0.568375ms)
+✔ O5 spec proof: checker-seal-relocation-with-repeated-C (0.759667ms)
+✔ O5 spec proof: exact-head-authorized-seal (3.229209ms)
+✔ O5 spec proof: same-seal-envelope-at-different-position (0.937542ms)
+✔ O5 spec proof: same-seal-position-different-header-hash (2.339542ms)
+✔ O5 spec proof: same-assign-envelope-after-different-seal (12.050458ms)
+✔ O5 compare: ordinary-signed-head-fork (13.616875ms)
+✔ O5 compare: competing-signed-assignments (29.468291ms)
+✔ O5 compare: same-history (2.59675ms)
+✔ O5 compare: one-history-is-prefix (2.194541ms)
+✔ O5 omission limit uses identical headers and cannot be mistaken for completeness proof (1.175166ms)
+✔ O5 proof boundary rejects unrelated inputs and does not mutate callers (6.42725ms)
+✔ O5 H1 rejects relocated exact control bytes on individually unique histories (2.929917ms)
+✔ O5 H1 retains historical v2 vectors and unchanged fixed-writer proof bytes (2.294625ms)
+✔ O5 executes with packages, application payloads and grant folds unavailable (245.841709ms)
+✔ a package declaring a name under the system prefix is refused, whatever it claims about itself (24.869625ms)
+✔ a descriptor whose id does not match its content is refused (2.940958ms)
+✔ two handlers for one kind without a resolution is ambiguous; a resolution naming exactly both is accepted (2.4195ms)
+✔ resolution retains the capability and the active audience policy: attaching a handler never widens (0.433417ms)
+✔ identities follow executable content: a changed fold changes descriptor and binding ids (0.277459ms)
+✔ binding identity is per kind: an unrelated attach does not change it; a relevant change does (0.406083ms)
+✔ an application intent captures its binding by default; a relevant attach stales it, an unrelated private attach does not; a missing binding is refused (3.269584ms)
+✔ the manifest is one experiment identity over its prose, its executable part and the package, and the prose states the same bounds (0.89875ms)
+ℹ DISCUSSION_MANIFEST_ID sha256:d5f67ab9b25babd202cd5d1c0bbae80271f92df6aa421eb666eb2af777668c9f
+✔ normal replay: generated series over the manifest seeds have zero violations, and the corpus exercises joins, a side attach and disclosures (221.009417ms)
+✔ pause and resume: a client without the side package pauses at the attach and resumes to equality with it (22.252708ms)
+✔ planted fault: closing privately breaks the shared outcome for a late joiner, and the checker finds it (15.0735ms)
+✔ shrinking: the failing series reduces to a minimal script that still fails (18.857792ms)
+✔ expected outcomes, independent of the fold: closure is seen by a late joiner; posts are seen exactly by members at the time and by disclosure; a post after closure and an unauthorized post are ineffective (50.079833ms)
+✔ F5: the generator never exceeds its entry bound, even when a compound step would (9.763875ms)
+✔ the sale trace 0 to 5 interprets to the oracle for every participant at every frontier (40.639208ms)
+✔ a late joiner, a members-audience event before they joined, a disclosure and an as-of query keep the property (61.445834ms)
+✔ the views note's pause example: a disclosure followed by an unavailable package pauses with last through the position before, under the disclosure's basis, and resumes (3.141125ms)
+✔ a dependency-incomplete disclosure pauses: the event is disclosed but the attach it needs is not (0.5725ms)
+✔ a cached interpretation is reused only for the same principal, view content, basis and packages; a pause is never reused (3.311667ms)
+✔ F2: a disclosed event whose binding the principal cannot resolve pauses with dependency_missing, and resumes once the attach is disclosed (0.894667ms)
+✔ F1: a contradiction that changes no displayed state is caught through outcomes: a shared decision whose fold reads private votes (0.947084ms)
+✔ G1: an always-effective co-handler cannot mask a contradiction; per-handler outcomes are compared (0.665166ms)
+✔ G2: a disclosed intent that is genuinely stale is a stale_binding verdict, not a permanent pause (0.540291ms)
+✔ G3: affordances come from the visible binding, so a hidden attach with its own affordances causes no false mismatch (0.612041ms)
+✔ H1: a binding identity restored by an unseen attach is a missing dependency, not a stale intent: activation provenance decides (1.84775ms)
+✔ J1: a saved intent sequenced after a hidden attach is a missing dependency for a viewer who sees the intent but not the attach; the header carries the activation (1.055917ms)
+✔ K1: a disclosed attach that builds on a hidden attach is a missing dependency: the header names what it requires (1.1535ms)
+✔ L1: the facts an attach is refused on are among its requirements: a conflicting model definition and a repeated package (1.785125ms)
+✔ L2: a malformed attach payload is recorded with a malformed verdict, its exact retry replays, and a valid submission follows; evidence extraction never throws (0.428417ms)
+✔ M1: evidence handlers follow the branch attach takes: a resolution on a new kind is ignored, and the installer of the bound model is required (0.682667ms)
+✔ M2: a package name inherited from Object.prototype is not a package: recorded as package_unavailable, exact retry replays, and evidence extraction never throws (1.118333ms)
+✔ N1: an attach the sequencer could not resolve stays ineffective for every judge, whatever package a client has or fetches later; a new attach succeeds once the sequencer has it (0.509125ms)
+✔ authorized issue, issuer revoked, then redeemed: effective (authority judged at issuance) (3.211834ms)
+✔ unissued token: refused at admission, never sequenced (0.83775ms)
+✔ unauthorized issuer: the invite is sequenced but ineffective, and its token admits nobody (0.661ms)
+✔ member-side verification refuses a header that is not in the chain (0.506208ms)
+✔ wrong invitee cannot redeem (0.480917ms)
+✔ exact retry of a committed acceptance after consumption returns the receipt; changed content and reuse are refused (0.680959ms)
+✔ V1 Sale visibility trace through verified bytes and memory (271.843042ms)
+✔ V1 Sale visibility trace through verified bytes and sqlite (280.275125ms)
+✔ signed stable facts precede retry and admission; raw Context cannot bypass proof (9.247292ms)
+✔ exclusive SQLite owner excludes a second OS process and releases on close (476.271875ms)
+✔ SIGKILL at before-write preserves one atomic append boundary (169.823167ms)
+✔ SIGKILL at after-entry preserves one atomic append boundary (187.530083ms)
+✔ SIGKILL at after-head preserves one atomic append boundary (160.16575ms)
+✔ SIGKILL at after-retry preserves one atomic append boundary (179.490917ms)
+✔ SIGKILL at after-consumption preserves one atomic append boundary (199.246625ms)
+✔ SIGKILL at after-outbox preserves one atomic append boundary (171.847625ms)
+✔ SIGKILL at before-commit preserves one atomic append boundary (169.913167ms)
+✔ SIGKILL at after-commit preserves one atomic append boundary (147.32425ms)
+✔ outbox resumes saved bytes after crash before notification and after delivery before ack (149.618417ms)
+✔ restart rejects tampered stored body despite unchanged signed wire bytes (8.846292ms)
+✔ signed invitations and origin duplicate checks accept finite fractional JCS numbers (10.653041ms)
+✔ outbox awaits asynchronous confirmation and retains failed publications (9.615292ms)
+✔ restart rejects SQL row positions that disagree with signed entry positions (5.027792ms)
+✔ journal pins the signed genesis profile and writer assignment to its backend (4.05875ms)
+✔ V1 signed invitation issued before revocation remains redeemable after SQLite restart (19.585042ms)
+✔ V1 signed unauthorized and unissued invitations cannot admit another participant (16.757084ms)
+✔ initialization SIGKILL at after-entry retains all or none of genesis and origins (156.278583ms)
+✔ initialization SIGKILL at after-commit retains all or none of genesis and origins (150.232ms)
+✔ uncertain committed response requires reopen before another action (14.493917ms)
+✔ recipient view verification checks original actor proofs and rejects hidden envelope leakage (10.500709ms)
+✔ one live Journal owns each backend: revoked authority cannot be admitted through a stale facade (17.564958ms)
+✔ O1-F1 closed memory Context cannot issue or accept from stale authority after a new facade revokes it (5.967875ms)
+ℹ {"staleParticipants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"],"liveParticipants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"],"coldParticipants":["ed25519:iojj3XQJ8ZX9UtstPLpdcspnCb8dlBIb83SIAbQPb1w"],"coldInviteVerdict":null}
+✔ O1-F1 raw Context restoration or creation cannot bypass a live Journal on memory (3.045917ms)
+✔ O1-F1 raw Context restoration or creation cannot bypass a live Journal on sqlite (5.634417ms)
+✔ O1-F1 a previously acquired raw Context loses write access while Journal owns its backend on memory (4.28725ms)
+✔ O1-F1 a previously acquired raw Context loses write access while Journal owns its backend on sqlite (6.473209ms)
+✔ O1-F1 a lost reply through direct Context.submit invalidates every owned write path on memory (7.1675ms)
+✔ O1-F1 a lost reply through direct Context.submit invalidates every owned write path on sqlite (10.103834ms)
+✔ T3 obligation foundation is explicitly pinned and cannot attach into baseline F0 (3.8945ms)
+✔ T3 delayed disclosure: literal open and fulfilled prefixes, own-view client, no fold-generated act (255.662291ms)
+✔ T3 missing disclosure: deadline equality open, later clock lapsed, late performance blocked (94.396916ms)
+✔ T3 mismatch, role, independent capability and one performance controls (129.5225ms)
+✔ T3 private or mixed clock is refused without publication or time change (49.344834ms)
+✔ T3 Sale trace missing Ivan disclosure blocks the original Ivan@15 failure (331.515041ms)
+✔ T3 Club delayed grant: literal performance succeeds; later reader retains the five-mismatch counterexample (377.695583ms)
+✔ T3 original Club negative remains: invitation-acceptance (229.593583ms)
+✔ T3 original Club negative remains: malformed-apply (267.29ms)
+✔ T3 original Club negative remains: standing-reason (211.909583ms)
+✔ T3 negative client boundary: incomplete Sale disclosure can fulfil card and still break view equality (41.600958ms)
+✔ T3 negative client boundary: grant recipe does not authenticate hidden target actor (6.608166ms)
+✔ T3 conforming sale campaign, 200 seeds (299226.59675ms)
+ℹ {"fixture":"sale","seeds":200,"positions":11273,"obligations":938,"failures":[]}
+✔ T3 conforming club campaign, 200 seeds (842453.036ms)
+ℹ {"fixture":"club","seeds":200,"positions":11785,"obligations":1103,"failures":[{"seed":1,"count":57,"first":"dana@15 mismatch: observe differs at 15 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:abd96d6bf51475fc22e7e41701ed2ccffbdab6a97bd3fb, view undefined; obligations.2: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.15.effective: oracle true, view false; outcomes.15.perModel.club.effective: oracle true, view false; outcomes.15.perModel.club.reason: oracle null, view no_quorum; outcomes.15.reason: oracle null, view ineffective]"},{"seed":8,"count":4,"first":"frank@31 mismatch: observe differs at 31 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:c71a462dc6f5a9c3c3e5f0faa3beef4204a5ec4ffb2079, view undefined; obligations.4: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.31.effective: oracle true, view false; outcomes.31.perModel.club.effective: oracle true, view false; outcomes.31.perModel.club.reason: oracle null, view no_quorum; outcomes.31.reason: oracle null, view ineffective]"},{"seed":9,"count":27,"first":"erin@25 mismatch: observe differs at 25 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:ed7dd04ab164d4e1ed76c3f6779207b5789370b2043654, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.25.effective: oracle true, view false; outcomes.25.perModel.club.effective: oracle true, view false; outcomes.25.perModel.club.reason: oracle null, view no_quorum; outcomes.25.reason: oracle null, view ineffective]"},{"seed":12,"count":18,"first":"erin@15 mismatch: observe differs at 15 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:60071b11050fbbd69d2ac92a737145db3ec1c9b24bfcc6, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.15.effective: oracle true, view false; outcomes.15.perModel.club.effective: oracle true, view false; outcomes.15.perModel.club.reason: oracle null, view no_quorum; outcomes.15.reason: oracle null, view ineffective]"},{"seed":16,"count":48,"first":"erin@20 mismatch: observe differs at 20 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:db111fd7e12dbbabeb56eef107053fbd3fc3647f3bda4d, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.20.effective: oracle true, view false; outcomes.20.perModel.club.effective: oracle true, view false; outcomes.20.perModel.club.reason: oracle null, view no_quorum; outcomes.20.reason: oracle null, view ineffective]"},{"seed":28,"count":66,"first":"erin@17 mismatch: observe differs at 17 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:efb414e8048db1402a0171d3dc3c2aad0232373ec053fd, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.17.effective: oracle true, view false; outcomes.17.perModel.club.effective: oracle true, view false; outcomes.17.perModel.club.reason: oracle null, view no_quorum; outcomes.17.reason: oracle null, view ineffective]"},{"seed":31,"count":9,"first":"frank@21 mismatch: observe differs at 21 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:f199bebee2e9bd10a76e733da4afe9ba1dc7eb9c9f5391, view undefined; obligations.4: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.21.effective: oracle true, view false; outcomes.21.perModel.club.effective: oracle true, view false; outcomes.21.perModel.club.reason: oracle null, view no_quorum; outcomes.21.reason: oracle null, view ineffective]"},{"seed":38,"count":42,"first":"erin@16 mismatch: observe differs at 16 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:5ff3238ad750b57d9383e6533ed9529185fc8c917e65e7, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.16.effective: oracle true, view false; outcomes.16.perModel.club.effective: oracle true, view false; outcomes.16.perModel.club.reason: oracle null, view no_quorum; outcomes.16.reason: oracle null, view ineffective]"},{"seed":41,"count":4,"first":"frank@18 mismatch: observe differs at 18 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:81db0f0f636d1bc2b7d9b1abb2def5f87ba47e8e307f7c, view undefined; obligations.4: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.18.effective: oracle true, view false; outcomes.18.perModel.club.effective: oracle true, view false; outcomes.18.perModel.club.reason: oracle null, view no_quorum; outcomes.18.reason: oracle null, view ineffective]"},{"seed":57,"count":5,"first":"frank@32 mismatch: observe differs at 32 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:5023680734f155cd502ae14a3656d50c9c0874bc61cafa, view undefined; obligations.4: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.32.effective: oracle true, view false; outcomes.32.perModel.club.effective: oracle true, view false; outcomes.32.perModel.club.reason: oracle null, view no_quorum; outcomes.32.reason: oracle null, view ineffective]"},{"seed":60,"count":12,"first":"frank@27 mismatch: observe differs at 27 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:f779b4036d3d4f9443e5d28395352f78cf9002593751c9, view undefined; obligations.4: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.27.effective: oracle true, view false; outcomes.27.perModel.club.effective: oracle true, view false; outcomes.27.perModel.club.reason: oracle null, view no_quorum; outcomes.27.reason: oracle null, view ineffective]"},{"seed":61,"count":26,"first":"erin@19 mismatch: observe differs at 19 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:99bbc5ccad8245f52e365c7fa77f8ae5dff42f7aa8f586, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.19.effective: oracle true, view false; outcomes.19.perModel.club.effective: oracle true, view false; outcomes.19.perModel.club.reason: oracle null, view no_quorum; outcomes.19.reason: oracle null, view ineffective]"},{"seed":65,"count":6,"first":"erin@38 mismatch: observe differs at 38 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:03af7c0dbd8e8c8f53819d195012fab25d7a7580030aa0, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.38.effective: oracle true, view false; outcomes.38.perModel.club.effective: oracle true, view false; outcomes.38.perModel.club.reason: oracle null, view no_quorum; outcomes.38.reason: oracle null, view ineffective]"},{"seed":73,"count":14,"first":"erin@18 mismatch: observe differs at 18 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:62d651813bd6c113b05e27f8991b047ba20946478af0e6, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.18.effective: oracle true, view false; outcomes.18.perModel.club.effective: oracle true, view false; outcomes.18.perModel.club.reason: oracle null, view no_quorum; outcomes.18.reason: oracle null, view ineffective]"},{"seed":77,"count":5,"first":"frank@26 mismatch: observe differs at 26 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:b7bdbf98351602ad9099291851f777a023594beedc3943, view undefined; obligations.4: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.26.effective: oracle true, view false; outcomes.26.perModel.club.effective: oracle true, view false; outcomes.26.perModel.club.reason: oracle null, view no_quorum; outcomes.26.reason: oracle null, view ineffective]"},{"seed":78,"count":16,"first":"erin@17 mismatch: observe differs at 17 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:f1a1daeb24164e16eba5e84d6460dfc9da07268b9a5e2e, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.17.effective: oracle true, view false; outcomes.17.perModel.club.effective: oracle true, view false; outcomes.17.perModel.club.reason: oracle null, view no_quorum; outcomes.17.reason: oracle null, view ineffective]"},{"seed":80,"count":21,"first":"erin@17 mismatch: observe differs at 17 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:5579edca130d016c5109b7a73ce1fa5ac9d25c75ef5559, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.17.effective: oracle true, view false; outcomes.17.perModel.club.effective: oracle true, view false; outcomes.17.perModel.club.reason: oracle null, view no_quorum; outcomes.17.reason: oracle null, view ineffective]"},{"seed":84,"count":16,"first":"erin@40 mismatch: observe differs at 40 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:c1c7ee6de17098f5b82f13c1a16648ba904758261b2beb, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.40.effective: oracle true, view false; outcomes.40.perModel.club.effective: oracle true, view false; outcomes.40.perModel.club.reason: oracle null, view no_quorum; outcomes.40.reason: oracle null, view ineffective]"},{"seed":88,"count":32,"first":"erin@24 mismatch: observe differs at 24 [outcomes.24.perModel.club.reason: oracle no_majority, view no_quorum]"},{"seed":90,"count":26,"first":"erin@18 mismatch: observe differs at 18 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:757991e54b1ed4de30682ec018c3c18e3d645506b4cfce, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.18.effective: oracle true, view false; outcomes.18.perModel.club.effective: oracle true, view false; outcomes.18.perModel.club.reason: oracle null, view no_quorum; outcomes.18.reason: oracle null, view ineffective]"},{"seed":93,"count":21,"first":"erin@21 mismatch: observe differs at 21 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:5052addb1de57bd80307ff438d9bd1039fa0ad17e7e78a, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.21.effective: oracle true, view false; outcomes.21.perModel.club.effective: oracle true, view false; outcomes.21.perModel.club.reason: oracle null, view no_quorum; outcomes.21.reason: oracle null, view ineffective]"},{"seed":102,"count":23,"first":"erin@20 mismatch: observe differs at 20 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:78af782cdcbf95189b8085939f9cff1c7d11c665e79366, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.20.effective: oracle true, view false; outcomes.20.perModel.club.effective: oracle true, view false; outcomes.20.perModel.club.reason: oracle null, view no_quorum; outcomes.20.reason: oracle null, view ineffective]"},{"seed":103,"count":8,"first":"frank@22 mismatch: observe differs at 22 [outcomes.22.perModel.club.reason: oracle no_majority, view no_quorum]"},{"seed":107,"count":18,"first":"erin@26 mismatch: observe differs at 26 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:904b51b1b0e4ee54479d7f444e86084c018a975886204c, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.26.effective: oracle true, view false; outcomes.26.perModel.club.effective: oracle true, view false; outcomes.26.perModel.club.reason: oracle null, view no_quorum; outcomes.26.reason: oracle null, view ineffective]"},{"seed":109,"count":49,"first":"erin@15 mismatch: observe differs at 15 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:8dc629c0ba6d411158226529de0f86fb123fd9d08c94ec, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.15.effective: oracle true, view false; outcomes.15.perModel.club.effective: oracle true, view false; outcomes.15.perModel.club.reason: oracle null, view no_quorum; outcomes.15.reason: oracle null, view ineffective]"},{"seed":134,"count":17,"first":"erin@18 mismatch: observe differs at 18 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:d607434fd1a7074ca8cd3141dbc90bae86f2f131377d45, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.18.effective: oracle true, view false; outcomes.18.perModel.club.effective: oracle true, view false; outcomes.18.perModel.club.reason: oracle null, view no_quorum; outcomes.18.reason: oracle null, view ineffective]"},{"seed":142,"count":19,"first":"erin@17 mismatch: observe differs at 17 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:b560bc2e260072758c9f8e7145b1ed79187e8ecc8f4172, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.17.effective: oracle true, view false; outcomes.17.perModel.club.effective: oracle true, view false; outcomes.17.perModel.club.reason: oracle null, view no_quorum; outcomes.17.reason: oracle null, view ineffective]"},{"seed":149,"count":20,"first":"erin@22 mismatch: observe differs at 22 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:0b4e677111510b77a0e2aa2ecfa634f92c14c9d0ec5ce2, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.22.effective: oracle true, view false; outcomes.22.perModel.club.effective: oracle true, view false; outcomes.22.perModel.club.reason: oracle null, view no_quorum; outcomes.22.reason: oracle null, view ineffective]"},{"seed":150,"count":30,"first":"erin@27 mismatch: observe differs at 27 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:ef1230364406440cc8b782eb6f7bc67c88db893e0886b8, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.27.effective: oracle true, view false; outcomes.27.perModel.club.effective: oracle true, view false; outcomes.27.perModel.club.reason: oracle null, view no_quorum; outcomes.27.reason: oracle null, view ineffective]"},{"seed":154,"count":11,"first":"erin@16 mismatch: observe differs at 16 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:026b2072e8c16eb128280a35e8cc8aed6a9091e1707f9b, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.16.effective: oracle true, view false; outcomes.16.perModel.club.effective: oracle true, view false; outcomes.16.perModel.club.reason: oracle null, view no_quorum; outcomes.16.reason: oracle null, view ineffective]"},{"seed":156,"count":7,"first":"erin@37 mismatch: observe differs at 37 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:2b5808d17c977dcca379e0f11b644fc23b94678b0b12c7, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.37.effective: oracle true, view false; outcomes.37.perModel.club.effective: oracle true, view false; outcomes.37.perModel.club.reason: oracle null, view no_quorum; outcomes.37.reason: oracle null, view ineffective]"},{"seed":157,"count":31,"first":"erin@19 mismatch: observe differs at 19 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:09f2405fe96fbc14c375ecbbc7c013a6f438768a634212, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.19.effective: oracle true, view false; outcomes.19.perModel.club.effective: oracle true, view false; outcomes.19.perModel.club.reason: oracle null, view no_quorum; outcomes.19.reason: oracle null, view ineffective]"},{"seed":159,"count":30,"first":"dana@12 mismatch: observe differs at 12 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:8b27620046aa65b8c03e0dcdf20d32e583b5e0c422adeb, view undefined; obligations.2: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.12.effective: oracle true, view false; outcomes.12.perModel.club.effective: oracle true, view false; outcomes.12.perModel.club.reason: oracle null, view no_quorum; outcomes.12.reason: oracle null, view ineffective]"},{"seed":167,"count":13,"first":"erin@15 mismatch: observe differs at 15 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:d2a2da37d3ddea02f79ff5652e6d5ce1b74892f02ab6ed, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.15.effective: oracle true, view false; outcomes.15.perModel.club.effective: oracle true, view false; outcomes.15.perModel.club.reason: oracle null, view no_quorum; outcomes.15.reason: oracle null, view ineffective]"},{"seed":173,"count":4,"first":"frank@21 mismatch: observe differs at 21 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:c6a76443d3f59b4a09f671ea02a07ea8551a959b60ba91, view undefined; obligations.4: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.21.effective: oracle true, view false; outcomes.21.perModel.club.effective: oracle true, view false; outcomes.21.perModel.club.reason: oracle null, view no_quorum; outcomes.21.reason: oracle null, view ineffective]"},{"seed":175,"count":40,"first":"erin@22 mismatch: observe differs at 22 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:4d8df31726cfb32b68e9c99df8a8121ebf075cfeaef2f7, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.22.effective: oracle true, view false; outcomes.22.perModel.club.effective: oracle true, view false; outcomes.22.perModel.club.reason: oracle null, view no_quorum; outcomes.22.reason: oracle null, view ineffective]"},{"seed":180,"count":5,"first":"frank@19 mismatch: observe differs at 19 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:fe12a0346c41fbc503ffc88d7c62477f379124b44e16bb, view undefined; obligations.4: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.19.effective: oracle true, view false; outcomes.19.perModel.club.effective: oracle true, view false; outcomes.19.perModel.club.reason: oracle null, view no_quorum; outcomes.19.reason: oracle null, view ineffective]"},{"seed":181,"count":28,"first":"erin@24 mismatch: observe differs at 24 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:7d5c7d6588f02676b8352ea3c42bc73eafcef523e01354, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.24.effective: oracle true, view false; outcomes.24.perModel.club.effective: oracle true, view false; outcomes.24.perModel.club.reason: oracle null, view no_quorum; outcomes.24.reason: oracle null, view ineffective]"},{"seed":190,"count":5,"first":"frank@34 mismatch: observe differs at 34 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:c06d516a04b5cbad1997b944b9d72687bb2bd34db9b297, view undefined; obligations.4: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.34.effective: oracle true, view false; outcomes.34.perModel.club.effective: oracle true, view false; outcomes.34.perModel.club.reason: oracle null, view no_quorum; outcomes.34.reason: oracle null, view ineffective]"},{"seed":192,"count":36,"first":"erin@16 mismatch: observe differs at 16 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:7a5a04d3fa519fd9d0639248d1618aa2bea628b0a16568, view undefined; obligations.3: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.16.effective: oracle true, view false; outcomes.16.perModel.club.effective: oracle true, view false; outcomes.16.perModel.club.reason: oracle null, view no_quorum; outcomes.16.reason: oracle null, view ineffective]"},{"seed":197,"count":5,"first":"frank@48 mismatch: observe differs at 48 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:3455fbe051cd688d83fc226d052411614fd25b6f5d9e9a, view undefined; obligations.4: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.48.effective: oracle true, view false; outcomes.48.perModel.club.effective: oracle true, view false; outcomes.48.perModel.club.reason: oracle null, view no_quorum; outcomes.48.reason: oracle null, view ineffective]"}]}
+✔ T3 default exact matcher distinguishes two live obligations and permits one performance (2.274458ms)
+✔ T3 staged fold rolls back declaration-error (0.574291ms)
+✔ T3 staged fold rolls back matcher-error (0.672916ms)
+✔ T3 staged fold rolls back private-performance (0.644125ms)
+✔ T3 Club public-trigger counterexample is deletion-minimal over its seven declared logical steps (468.054125ms)
+ℹ {"steps":["join-bob","join-dana","apply","vote-alice","vote-bob","admit","join-erin"],"positions":13,"first":"erin@10 mismatch: observe differs at 10 [affordances.0: oracle undefined, view com.example.club.apply; models.club.applications.0: oracle {\"id\":\"sha256:8da5c497011b66a0e866df062e853edfb0d4c26e1055f5, view undefined; obligations.2: oracle {\"role\":\"ObligationService\",\"act\":{\"kind\":\"ai.generalbusines, view undefined; outcomes.10.effective: oracle true, view false; outcomes.10.perModel.club.effective: oracle true, view false; outcomes.10.perModel.club.reason: oracle null, view no_quorum; outcomes.10.reason: oracle null, view ineffective]"}
+✔ O6: a newcomer reaches the published route, redeems a signed invitation, verifies and retries after reopen (39.195083ms)
+ℹ {"genesis":"sha256:080afaa386822dba15e5f694e16c554cf305ff06f031df9709b8a01935b1503c","origin":"sha256:1a2a4d30944bc14b399a54f9c19419201730d6874aed4c4fcb5c697fccca1fd6","route":"fixture:ordering-o6/guitar","positions":[0,1,2,3],"admission":{"known":true,"authorized":true,"effective":true},"receipt":"sha256:c6e06aeedc59bac6120eaba9d463ea2ffe3d3d76a520e08a15167a8c4daf91e6","retry":"sha256:c6e06aeedc59bac6120eaba9d463ea2ffe3d3d76a520e08a15167a8c4daf91e6","reopenedRetry":"sha256:c6e06aeedc59bac6120eaba9d463ea2ffe3d3d76a520e08a15167a8c4daf91e6"}
+✔ O6: malformed, forged, unadopted or mismatched publications cannot resolve a journal (24.163083ms)
+✔ O3 same-context handover preserves prefix, dense positions, retry results, control verdicts and publication on memory (34.815375ms)
+✔ O3 same-context handover preserves prefix, dense positions, retry results, control verdicts and publication on sqlite (32.883ms)
+✔ O3 SIGKILL during seal at before-commit retains the committed control boundary (181.199375ms)
+✔ O3 SIGKILL during seal at after-commit retains the committed control boundary (179.209333ms)
+✔ O3 SIGKILL during seal at after-receipt retains the committed control boundary (283.504125ms)
+✔ O3 SIGKILL during assign at before-commit retains the committed control boundary (168.33375ms)
+✔ O3 SIGKILL during assign at after-commit retains the committed control boundary (157.440916ms)
+✔ O3 SIGKILL during assign at after-receipt retains the committed control boundary (227.33775ms)
+✔ O3 independent nominations and two signed assignments cannot install two successors (14.866625ms)
+✔ O3 rejects forged and wrong authority, stale or swapped predecessor head fields, skipped seals and malformed nominations without an append (18.600959ms)
+✔ O3 cold authentication rejects a correctly signed control with wrong payload predecessor or wrong header predecessor (21.522541ms)
+✔ O3 v3 pins distinct writer/control keys and exact sequencing fields before any durable initialization (8.687125ms)
+✔ O-H1 repeated entry commitments are rejected by journal and view, movable=false (14.070833ms)
+✔ O-H1 repeated entry commitments are rejected by journal and view, movable=true (15.755792ms)
+✔ O-H2 append never rereads the full journal under serialization, movable=false (4.906792ms)
+✔ O-H2 append never rereads the full journal under serialization, movable=true (17.98425ms)
+✔ O-H1 repeated adopted commitments fail before durable creation, movable=false (8.3ms)
+✔ O-H1 repeated adopted commitments fail before durable creation, movable=true (18.815042ms)
+✔ O-H2 lost reply poisons the cache owner and cold retry reconciles the committed seal on memory, direct=false (15.81025ms)
+✔ O-H2 lost reply poisons the cache owner and cold retry reconciles the committed seal on memory, direct=true (11.940166ms)
+✔ O-H2 lost reply poisons the cache owner and cold retry reconciles the committed seal on sqlite, direct=false (26.309584ms)
+✔ O-H2 lost reply poisons the cache owner and cold retry reconciles the committed seal on sqlite, direct=true (51.627834ms)
+✔ O-H2 an unexpected signed tail is not silently trusted by the live cache (9.970709ms)
+✔ O-H1 a control signature cannot move to a different header at the same position, even with unique commitments (12.172959ms)
+✔ O-H1 archived movable profile /2 is unsupported on journal open and view authentication (7.463125ms)
+✔ O-H2 a cache callback exception after durable write disables every owned write path (24.291416ms)
+✔ O-H1 a missing retry row cannot append an already committed envelope, movable=false (9.876875ms)
+✔ O-H1 a missing retry row cannot append an already committed envelope, movable=true (9.913875ms)
+✔ manifest identity binds the prose and executable source, independently recomputed (1.620292ms)
+ℹ ORDERING_LIFECYCLE_MANIFEST_ID sha256:00bdb77671000310c01a1761364285c6e0b1a643b1dc300ab9f419dc82b4988a
+✔ every healthy boundary states all heads, writers, right statuses and exact active owners (1.859417ms)
+✔ join boundaries have two releases, dormant initialization and one activation followed by progress (0.78ms)
+✔ all adverse cases have resolvable branches, full safe observations and exact reason coverage (1.943584ms)
+✔ restarts, alternative valid proof material and timeouts cannot duplicate or revive authority (0.236083ms)
+✔ failed activation and an intervening dormant exercise permit fresh activation, preserving both retry receipts (0.429375ms)
+✔ another admitted participant event cannot occupy a permanent activation slot (0.136667ms)
+✔ public proof disclosure has a finite named rule and keeps private source kinds excluded (0.151666ms)
+✔ public exports are exact, source-linked and exclude the private accepted amount (0.184625ms)
+✔ changed-genesis enumeration covers every field, container, removal and added field (2.948083ms)
+✔ independent safety checks detect double ownership, premature activation and import duplication (0.312375ms)
+✔ future observation comparison rejects changed, missing and additional state, including unsafe mutations (0.168917ms)
+✔ replay obligations preserve pre-attach outcomes, local import timing and writer retry identity (0.124125ms)
+✔ O2 concurrent clients: barrier-six-forward (735.196792ms)
+✔ O2 concurrent clients: barrier-six-reverse (430.5195ms)
+✔ O2 concurrent clients: barrier-six-rotated (537.33325ms)
+✔ O2 invitation lost-reply schedule: before-append (179.205125ms)
+✔ O2 invitation lost-reply schedule: after-consumption (159.388ms)
+✔ O2 invitation lost-reply schedule: after-commit (148.695625ms)
+✔ O2 invitation lost-reply schedule: after-reply-before-notification (174.072917ms)
+✔ O2 publication SIGKILL replays the exact saved wire entry without a new action (304.396ms)
+✔ O2 removed-participant admission fixture recovers a lost reply after authenticated restart (152.287291ms)
+✔ O4 M1 each converting catch try body preserves unexpected values or its documented precommit refusal: memory (6605.830583ms)
+ℹ {"storage":"memory","catalogue":"21 original catches; 12 converting try bodies","rows":[{"catch":"append.prepare","sentinel":"Error","outcome":"precommit refusal; same-facade recovery","coldExactRetry":true,"reachedStack":["at verifyEnvelope (spike/src/codec.ts:200:8)","at Object.prepare (spike/src/journal.ts:38:24)","at append (spike/src/append.ts:130:34)","at Context.submit (spike/src/context.ts:172:17)","at Journal.submit (spike/src/journal.ts:175:35)","at ScopeJournal.submit (spike/src/scope.ts:346:33)"]},{"catch":"append.prepare","sentinel":"codec-looking TypeError","outcome":"precommit refusal; same-facade recovery","coldExactRetry":true},{"catch":"append.prepare","sentinel":"undefined","outcome":"precommit refusal; same-facade recovery","coldExactRetry":true},{"catch":"append.prepare","sentinel":"object","outcome":"precommit refusal; same-facade recovery","coldExactRetry":true},{"catch":"append.prepare","sentinel":"string","outcome":"precommit refusal; same-facade recovery","coldExactRetry":true},{"catch":"append.prepare","sentinel":"revoked Proxy","outcome":"precommit refusal; same-facade recovery","coldExactRetry":true},{"catch":"codec.parseCanonical","sentinel":"Error","outcome":"original value; unavailable facade","coldExactRetry":true,"reachedStack":["at parseCanonical (spike/src/codec.ts:94:22)","at verifyEnvelope (spike/src/codec.ts:198:72)","at spike/src/scope-proof.ts:56:40","at wireInput (spike/src/scope-proof.ts:161:16)","at assertPublicData (spike/src/scope-proof.ts:56:24)","at assertPublicData (spike/src/scope-proof.ts:58:12)","at assertPublicData (spike/src/scope-proof.ts:58:12)","at spike/src/scope-proof.ts:116:5","at wireInput (spike/src/scope-proof.ts:161:16)","at verifyPublicProof (spike/src/scope-proof.ts:112:16)","at replayScopeView (spike/src/scope.ts:200:38)","at get state (spike/src/scope.ts:325:21)","at ScopeJournal.submit (spike/src/scope.ts:352:24)"]},{"catch":"codec.parseCanonical","sentinel":"codec-looking TypeError","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"codec.parseCanonical","sentinel":"undefined","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"codec.parseCanonical","sentinel":"object","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"codec.parseCanonical","sentinel":"string","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"codec.parseCanonical","sentinel":"revoked Proxy","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.foldSystem","sentinel":"Error","outcome":"original value; unavailable facade","coldExactRetry":true,"reachedStack":["at own (spike/src/descriptor.ts:181:93)","at packageIn (spike/src/descriptor.ts:191:10)","at foldSystem (spike/src/foundation.ts:583:19)","at foldEntryInner (spike/src/foundation.ts:413:19)","at foldEntry (spike/src/foundation.ts:368:24)","at interpretView (spike/src/interpret.ts:137:21)","at verifyPublicProof (spike/src/scope-proof.ts:135:23)","at replayScopeView (spike/src/scope.ts:200:38)","at get state (spike/src/scope.ts:325:21)","at ScopeJournal.submit (spike/src/scope.ts:352:24)"]},{"catch":"foundation.foldSystem","sentinel":"codec-looking TypeError","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.foldSystem","sentinel":"undefined","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.foldSystem","sentinel":"object","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.foldSystem","sentinel":"string","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.foldSystem","sentinel":"revoked Proxy","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.audience","sentinel":"Error","outcome":"original value; unavailable facade","coldExactRetry":true,"reachedStack":["at foldEntryInner (spike/src/foundation.ts:467:37)","at foldEntry (spike/src/foundation.ts:368:24)","at interpretView (spike/src/interpret.ts:137:21)","at verifyPublicProof (spike/src/scope-proof.ts:135:23)","at replayScopeView (spike/src/scope.ts:200:38)","at get state (spike/src/scope.ts:325:21)","at ScopeJournal.submit (spike/src/scope.ts:352:24)"]},{"catch":"foundation.audience","sentinel":"codec-looking TypeError","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.audience","sentinel":"undefined","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.audience","sentinel":"object","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.audience","sentinel":"string","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.audience","sentinel":"revoked Proxy","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.issuanceEnvelope","sentinel":"Error","outcome":"original value; unavailable facade","coldExactRetry":true,"reachedStack":["at publicKeyOf (spike/src/codec.ts:151:10)","at bodyShape (spike/src/codec.ts:158:3)","at envelopeShape (spike/src/codec.ts:178:3)","at envelopeBytes (spike/src/codec.ts:191:3)","at verifyIssuance (spike/src/foundation.ts:653:32)","at verifyEmbeddedInvite (spike/src/foundation.ts:686:13)","at foldAccept (spike/src/foundation.ts:694:13)","at foldSystem (spike/src/foundation.ts:599:14)","at foldEntryInner (spike/src/foundation.ts:413:19)","at foldEntry (spike/src/foundation.ts:368:24)","at interpretView (spike/src/interpret.ts:137:21)","at verifyPublicProof (spike/src/scope-proof.ts:135:23)","at replayScopeView (spike/src/scope.ts:200:38)","at get state (spike/src/scope.ts:325:21)","at ScopeJournal.submit (spike/src/scope.ts:352:24)"]},{"catch":"foundation.issuanceEnvelope","sentinel":"codec-looking TypeError","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.issuanceEnvelope","sentinel":"undefined","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.issuanceEnvelope","sentinel":"object","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.issuanceEnvelope","sentinel":"string","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.issuanceEnvelope","sentinel":"revoked Proxy","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.issuanceHeader","sentinel":"Error","outcome":"original value; unavailable facade","coldExactRetry":true,"reachedStack":["at canonicalize (spike/src/canon.ts:39:23)","at verifyIssuance (spike/src/foundation.ts:664:23)","at verifyEmbeddedInvite (spike/src/foundation.ts:686:13)","at foldAccept (spike/src/foundation.ts:694:13)","at foldSystem (spike/src/foundation.ts:599:14)","at foldEntryInner (spike/src/foundation.ts:413:19)","at foldEntry (spike/src/foundation.ts:368:24)","at interpretView (spike/src/interpret.ts:137:21)","at verifyPublicProof (spike/src/scope-proof.ts:135:23)","at replayScopeView (spike/src/scope.ts:200:38)","at get state (spike/src/scope.ts:325:21)","at ScopeJournal.submit (spike/src/scope.ts:352:24)"]},{"catch":"foundation.issuanceHeader","sentinel":"codec-looking TypeError","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.issuanceHeader","sentinel":"undefined","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.issuanceHeader","sentinel":"object","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.issuanceHeader","sentinel":"string","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.issuanceHeader","sentinel":"revoked Proxy","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.dispatch","sentinel":"Error","outcome":"original value; unavailable facade","coldExactRetry":true,"reachedStack":["at dispatch (spike/src/foundation.ts:734:17)","at foldOrigin (spike/src/foundation.ts:564:10)","at foldEntryInner (spike/src/foundation.ts:405:15)","at foldEntry (spike/src/foundation.ts:368:24)","at interpretView (spike/src/interpret.ts:137:21)","at verifyPublicProof (spike/src/scope-proof.ts:135:23)","at replayScopeView (spike/src/scope.ts:200:38)","at get state (spike/src/scope.ts:325:21)","at ScopeJournal.submit (spike/src/scope.ts:352:24)"]},{"catch":"foundation.dispatch","sentinel":"codec-looking TypeError","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.dispatch","sentinel":"undefined","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.dispatch","sentinel":"object","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.dispatch","sentinel":"string","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.dispatch","sentinel":"revoked Proxy","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"journal.precheck","sentinel":"Error","outcome":"precommit refusal; same-facade recovery","coldExactRetry":true,"reachedStack":["at verifyEnvelope (spike/src/codec.ts:200:8)","at Journal.submit (spike/src/journal.ts:172:22)","at ScopeJournal.submit (spike/src/scope.ts:346:33)"]},{"catch":"journal.precheck","sentinel":"codec-looking TypeError","outcome":"precommit refusal; same-facade recovery","coldExactRetry":true},{"catch":"journal.precheck","sentinel":"undefined","outcome":"precommit refusal; same-facade recovery","coldExactRetry":true},{"catch":"journal.precheck","sentinel":"object","outcome":"precommit refusal; same-facade recovery","coldExactRetry":true},{"catch":"journal.precheck","sentinel":"string","outcome":"precommit refusal; same-facade recovery","coldExactRetry":true},{"catch":"journal.precheck","sentinel":"revoked Proxy","outcome":"precommit refusal; same-facade recovery","coldExactRetry":true},{"catch":"ordering.admission","sentinel":"Error","outcome":"original value; unavailable facade","coldExactRetry":true,"reachedStack":["at publicKeyOf (spike/src/codec.ts:151:10)","at orderingAdmission (spike/src/ordering.ts:65:11)","at verifyJournalView (spike/src/journal.ts:213:27)","at spike/src/scope-proof.ts:125:5","at wireInput (spike/src/scope-proof.ts:161:16)","at verifyPublicProof (spike/src/scope-proof.ts:112:16)","at replayScopeView (spike/src/scope.ts:200:38)","at get state (spike/src/scope.ts:325:21)","at ScopeJournal.submit (spike/src/scope.ts:352:24)"]},{"catch":"ordering.admission","sentinel":"codec-looking TypeError","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"ordering.admission","sentinel":"undefined","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"ordering.admission","sentinel":"object","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"ordering.admission","sentinel":"string","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"ordering.admission","sentinel":"revoked Proxy","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"scopeProof.wireInput","sentinel":"Error","outcome":"original value; unavailable facade","coldExactRetry":true,"reachedStack":["at publicKeyOf (spike/src/codec.ts:151:10)","at bodyShape (spike/src/codec.ts:158:3)","at envelopeShape (spike/src/codec.ts:178:3)","at verifyEnvelope (spike/src/codec.ts:199:3)","at spike/src/scope-proof.ts:56:40","at wireInput (spike/src/scope-proof.ts:161:16)","at assertPublicData (spike/src/scope-proof.ts:56:24)","at assertPublicData (spike/src/scope-proof.ts:58:12)","at assertPublicData (spike/src/scope-proof.ts:58:12)","at spike/src/scope-proof.ts:116:5","at wireInput (spike/src/scope-proof.ts:161:16)","at verifyPublicProof (spike/src/scope-proof.ts:112:16)","at replayScopeView (spike/src/scope.ts:200:38)","at get state (spike/src/scope.ts:325:21)","at ScopeJournal.submit (spike/src/scope.ts:352:24)"]},{"catch":"scopeProof.wireInput","sentinel":"codec-looking TypeError","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"scopeProof.wireInput","sentinel":"undefined","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"scopeProof.wireInput","sentinel":"object","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"scopeProof.wireInput","sentinel":"string","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"scopeProof.wireInput","sentinel":"revoked Proxy","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"scope.releaseOpening","sentinel":"Error","outcome":"original value; unavailable facade","coldExactRetry":true,"reachedStack":["at publicKeyOf (spike/src/codec.ts:151:10)","at bodyShape (spike/src/codec.ts:158:3)","at envelopeShape (spike/src/codec.ts:178:3)","at verifyEnvelope (spike/src/codec.ts:199:3)","at replayScopeView (spike/src/scope.ts:184:26)","at get state (spike/src/scope.ts:325:21)","at ScopeJournal.submit (spike/src/scope.ts:352:24)"]},{"catch":"scope.releaseOpening","sentinel":"codec-looking TypeError","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"scope.releaseOpening","sentinel":"undefined","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"scope.releaseOpening","sentinel":"object","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"scope.releaseOpening","sentinel":"string","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"scope.releaseOpening","sentinel":"revoked Proxy","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"scope.semantic","sentinel":"Error","outcome":"original value; unavailable facade","coldExactRetry":true,"reachedStack":["at object (spike/src/scope.ts:59:52)","at replayScopeView (spike/src/scope.ts:148:17)","at get state (spike/src/scope.ts:325:21)","at ScopeJournal.submit (spike/src/scope.ts:352:24)"]},{"catch":"scope.semantic","sentinel":"codec-looking TypeError","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"scope.semantic","sentinel":"undefined","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"scope.semantic","sentinel":"object","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"scope.semantic","sentinel":"string","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"scope.semantic","sentinel":"revoked Proxy","outcome":"original value; unavailable facade","coldExactRetry":true}]}
+✔ O4 M1 each converting catch try body preserves unexpected values or its documented precommit refusal: sqlite (5743.197458ms)
+ℹ {"storage":"sqlite","catalogue":"21 original catches; 12 converting try bodies","rows":[{"catch":"append.prepare","sentinel":"Error","outcome":"precommit refusal; same-facade recovery","coldExactRetry":true,"reachedStack":["at verifyEnvelope (spike/src/codec.ts:200:8)","at Object.prepare (spike/src/journal.ts:38:24)","at append (spike/src/append.ts:130:34)","at Context.submit (spike/src/context.ts:172:17)","at Journal.submit (spike/src/journal.ts:175:35)","at ScopeJournal.submit (spike/src/scope.ts:346:33)"]},{"catch":"append.prepare","sentinel":"codec-looking TypeError","outcome":"precommit refusal; same-facade recovery","coldExactRetry":true},{"catch":"append.prepare","sentinel":"undefined","outcome":"precommit refusal; same-facade recovery","coldExactRetry":true},{"catch":"append.prepare","sentinel":"object","outcome":"precommit refusal; same-facade recovery","coldExactRetry":true},{"catch":"append.prepare","sentinel":"string","outcome":"precommit refusal; same-facade recovery","coldExactRetry":true},{"catch":"append.prepare","sentinel":"revoked Proxy","outcome":"precommit refusal; same-facade recovery","coldExactRetry":true},{"catch":"codec.parseCanonical","sentinel":"Error","outcome":"original value; unavailable facade","coldExactRetry":true,"reachedStack":["at parseCanonical (spike/src/codec.ts:94:22)","at verifyEnvelope (spike/src/codec.ts:198:72)","at spike/src/scope-proof.ts:56:40","at wireInput (spike/src/scope-proof.ts:161:16)","at assertPublicData (spike/src/scope-proof.ts:56:24)","at assertPublicData (spike/src/scope-proof.ts:58:12)","at assertPublicData (spike/src/scope-proof.ts:58:12)","at spike/src/scope-proof.ts:116:5","at wireInput (spike/src/scope-proof.ts:161:16)","at verifyPublicProof (spike/src/scope-proof.ts:112:16)","at replayScopeView (spike/src/scope.ts:200:38)","at get state (spike/src/scope.ts:325:21)","at ScopeJournal.submit (spike/src/scope.ts:352:24)"]},{"catch":"codec.parseCanonical","sentinel":"codec-looking TypeError","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"codec.parseCanonical","sentinel":"undefined","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"codec.parseCanonical","sentinel":"object","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"codec.parseCanonical","sentinel":"string","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"codec.parseCanonical","sentinel":"revoked Proxy","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.foldSystem","sentinel":"Error","outcome":"original value; unavailable facade","coldExactRetry":true,"reachedStack":["at own (spike/src/descriptor.ts:181:93)","at packageIn (spike/src/descriptor.ts:191:10)","at foldSystem (spike/src/foundation.ts:583:19)","at foldEntryInner (spike/src/foundation.ts:413:19)","at foldEntry (spike/src/foundation.ts:368:24)","at interpretView (spike/src/interpret.ts:137:21)","at verifyPublicProof (spike/src/scope-proof.ts:135:23)","at replayScopeView (spike/src/scope.ts:200:38)","at get state (spike/src/scope.ts:325:21)","at ScopeJournal.submit (spike/src/scope.ts:352:24)"]},{"catch":"foundation.foldSystem","sentinel":"codec-looking TypeError","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.foldSystem","sentinel":"undefined","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.foldSystem","sentinel":"object","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.foldSystem","sentinel":"string","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.foldSystem","sentinel":"revoked Proxy","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.audience","sentinel":"Error","outcome":"original value; unavailable facade","coldExactRetry":true,"reachedStack":["at foldEntryInner (spike/src/foundation.ts:467:37)","at foldEntry (spike/src/foundation.ts:368:24)","at interpretView (spike/src/interpret.ts:137:21)","at verifyPublicProof (spike/src/scope-proof.ts:135:23)","at replayScopeView (spike/src/scope.ts:200:38)","at get state (spike/src/scope.ts:325:21)","at ScopeJournal.submit (spike/src/scope.ts:352:24)"]},{"catch":"foundation.audience","sentinel":"codec-looking TypeError","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.audience","sentinel":"undefined","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.audience","sentinel":"object","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.audience","sentinel":"string","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.audience","sentinel":"revoked Proxy","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.issuanceEnvelope","sentinel":"Error","outcome":"original value; unavailable facade","coldExactRetry":true,"reachedStack":["at publicKeyOf (spike/src/codec.ts:151:10)","at bodyShape (spike/src/codec.ts:158:3)","at envelopeShape (spike/src/codec.ts:178:3)","at envelopeBytes (spike/src/codec.ts:191:3)","at verifyIssuance (spike/src/foundation.ts:653:32)","at verifyEmbeddedInvite (spike/src/foundation.ts:686:13)","at foldAccept (spike/src/foundation.ts:694:13)","at foldSystem (spike/src/foundation.ts:599:14)","at foldEntryInner (spike/src/foundation.ts:413:19)","at foldEntry (spike/src/foundation.ts:368:24)","at interpretView (spike/src/interpret.ts:137:21)","at verifyPublicProof (spike/src/scope-proof.ts:135:23)","at replayScopeView (spike/src/scope.ts:200:38)","at get state (spike/src/scope.ts:325:21)","at ScopeJournal.submit (spike/src/scope.ts:352:24)"]},{"catch":"foundation.issuanceEnvelope","sentinel":"codec-looking TypeError","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.issuanceEnvelope","sentinel":"undefined","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.issuanceEnvelope","sentinel":"object","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.issuanceEnvelope","sentinel":"string","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.issuanceEnvelope","sentinel":"revoked Proxy","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.issuanceHeader","sentinel":"Error","outcome":"original value; unavailable facade","coldExactRetry":true,"reachedStack":["at canonicalize (spike/src/canon.ts:39:23)","at verifyIssuance (spike/src/foundation.ts:664:23)","at verifyEmbeddedInvite (spike/src/foundation.ts:686:13)","at foldAccept (spike/src/foundation.ts:694:13)","at foldSystem (spike/src/foundation.ts:599:14)","at foldEntryInner (spike/src/foundation.ts:413:19)","at foldEntry (spike/src/foundation.ts:368:24)","at interpretView (spike/src/interpret.ts:137:21)","at verifyPublicProof (spike/src/scope-proof.ts:135:23)","at replayScopeView (spike/src/scope.ts:200:38)","at get state (spike/src/scope.ts:325:21)","at ScopeJournal.submit (spike/src/scope.ts:352:24)"]},{"catch":"foundation.issuanceHeader","sentinel":"codec-looking TypeError","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.issuanceHeader","sentinel":"undefined","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.issuanceHeader","sentinel":"object","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.issuanceHeader","sentinel":"string","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.issuanceHeader","sentinel":"revoked Proxy","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.dispatch","sentinel":"Error","outcome":"original value; unavailable facade","coldExactRetry":true,"reachedStack":["at dispatch (spike/src/foundation.ts:734:17)","at foldOrigin (spike/src/foundation.ts:564:10)","at foldEntryInner (spike/src/foundation.ts:405:15)","at foldEntry (spike/src/foundation.ts:368:24)","at interpretView (spike/src/interpret.ts:137:21)","at verifyPublicProof (spike/src/scope-proof.ts:135:23)","at replayScopeView (spike/src/scope.ts:200:38)","at get state (spike/src/scope.ts:325:21)","at ScopeJournal.submit (spike/src/scope.ts:352:24)"]},{"catch":"foundation.dispatch","sentinel":"codec-looking TypeError","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.dispatch","sentinel":"undefined","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.dispatch","sentinel":"object","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.dispatch","sentinel":"string","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"foundation.dispatch","sentinel":"revoked Proxy","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"journal.precheck","sentinel":"Error","outcome":"precommit refusal; same-facade recovery","coldExactRetry":true,"reachedStack":["at verifyEnvelope (spike/src/codec.ts:200:8)","at Journal.submit (spike/src/journal.ts:172:22)","at ScopeJournal.submit (spike/src/scope.ts:346:33)"]},{"catch":"journal.precheck","sentinel":"codec-looking TypeError","outcome":"precommit refusal; same-facade recovery","coldExactRetry":true},{"catch":"journal.precheck","sentinel":"undefined","outcome":"precommit refusal; same-facade recovery","coldExactRetry":true},{"catch":"journal.precheck","sentinel":"object","outcome":"precommit refusal; same-facade recovery","coldExactRetry":true},{"catch":"journal.precheck","sentinel":"string","outcome":"precommit refusal; same-facade recovery","coldExactRetry":true},{"catch":"journal.precheck","sentinel":"revoked Proxy","outcome":"precommit refusal; same-facade recovery","coldExactRetry":true},{"catch":"ordering.admission","sentinel":"Error","outcome":"original value; unavailable facade","coldExactRetry":true,"reachedStack":["at publicKeyOf (spike/src/codec.ts:151:10)","at orderingAdmission (spike/src/ordering.ts:65:11)","at verifyJournalView (spike/src/journal.ts:213:27)","at spike/src/scope-proof.ts:125:5","at wireInput (spike/src/scope-proof.ts:161:16)","at verifyPublicProof (spike/src/scope-proof.ts:112:16)","at replayScopeView (spike/src/scope.ts:200:38)","at get state (spike/src/scope.ts:325:21)","at ScopeJournal.submit (spike/src/scope.ts:352:24)"]},{"catch":"ordering.admission","sentinel":"codec-looking TypeError","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"ordering.admission","sentinel":"undefined","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"ordering.admission","sentinel":"object","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"ordering.admission","sentinel":"string","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"ordering.admission","sentinel":"revoked Proxy","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"scopeProof.wireInput","sentinel":"Error","outcome":"original value; unavailable facade","coldExactRetry":true,"reachedStack":["at publicKeyOf (spike/src/codec.ts:151:10)","at bodyShape (spike/src/codec.ts:158:3)","at envelopeShape (spike/src/codec.ts:178:3)","at verifyEnvelope (spike/src/codec.ts:199:3)","at spike/src/scope-proof.ts:56:40","at wireInput (spike/src/scope-proof.ts:161:16)","at assertPublicData (spike/src/scope-proof.ts:56:24)","at assertPublicData (spike/src/scope-proof.ts:58:12)","at assertPublicData (spike/src/scope-proof.ts:58:12)","at spike/src/scope-proof.ts:116:5","at wireInput (spike/src/scope-proof.ts:161:16)","at verifyPublicProof (spike/src/scope-proof.ts:112:16)","at replayScopeView (spike/src/scope.ts:200:38)","at get state (spike/src/scope.ts:325:21)","at ScopeJournal.submit (spike/src/scope.ts:352:24)"]},{"catch":"scopeProof.wireInput","sentinel":"codec-looking TypeError","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"scopeProof.wireInput","sentinel":"undefined","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"scopeProof.wireInput","sentinel":"object","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"scopeProof.wireInput","sentinel":"string","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"scopeProof.wireInput","sentinel":"revoked Proxy","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"scope.releaseOpening","sentinel":"Error","outcome":"original value; unavailable facade","coldExactRetry":true,"reachedStack":["at publicKeyOf (spike/src/codec.ts:151:10)","at bodyShape (spike/src/codec.ts:158:3)","at envelopeShape (spike/src/codec.ts:178:3)","at verifyEnvelope (spike/src/codec.ts:199:3)","at replayScopeView (spike/src/scope.ts:184:26)","at get state (spike/src/scope.ts:325:21)","at ScopeJournal.submit (spike/src/scope.ts:352:24)"]},{"catch":"scope.releaseOpening","sentinel":"codec-looking TypeError","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"scope.releaseOpening","sentinel":"undefined","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"scope.releaseOpening","sentinel":"object","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"scope.releaseOpening","sentinel":"string","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"scope.releaseOpening","sentinel":"revoked Proxy","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"scope.semantic","sentinel":"Error","outcome":"original value; unavailable facade","coldExactRetry":true,"reachedStack":["at object (spike/src/scope.ts:59:52)","at replayScopeView (spike/src/scope.ts:148:17)","at get state (spike/src/scope.ts:325:21)","at ScopeJournal.submit (spike/src/scope.ts:352:24)"]},{"catch":"scope.semantic","sentinel":"codec-looking TypeError","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"scope.semantic","sentinel":"undefined","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"scope.semantic","sentinel":"object","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"scope.semantic","sentinel":"string","outcome":"original value; unavailable facade","coldExactRetry":true},{"catch":"scope.semantic","sentinel":"revoked Proxy","outcome":"original value; unavailable facade","coldExactRetry":true}]}
+✔ O4 M1 cold key import and parser faults retain identity and release the Journal lease: memory (1123.921042ms)
+ℹ {"storage":"memory","coldOpenCases":[{"context":"S","seam":"ordering-key","sentinel":"Error","recovered":true},{"context":"S","seam":"ordering-key","sentinel":"codec-looking TypeError","recovered":true},{"context":"S","seam":"ordering-key","sentinel":"undefined","recovered":true},{"context":"S","seam":"ordering-key","sentinel":"object","recovered":true},{"context":"S","seam":"ordering-key","sentinel":"string","recovered":true},{"context":"S","seam":"ordering-key","sentinel":"revoked Proxy","recovered":true},{"context":"S","seam":"open-key","sentinel":"Error","recovered":true},{"context":"S","seam":"open-key","sentinel":"codec-looking TypeError","recovered":true},{"context":"S","seam":"open-key","sentinel":"undefined","recovered":true},{"context":"S","seam":"open-key","sentinel":"object","recovered":true},{"context":"S","seam":"open-key","sentinel":"string","recovered":true},{"context":"S","seam":"open-key","sentinel":"revoked Proxy","recovered":true},{"context":"S","seam":"cold-parse","sentinel":"Error","recovered":true},{"context":"S","seam":"cold-parse","sentinel":"codec-looking TypeError","recovered":true},{"context":"S","seam":"cold-parse","sentinel":"undefined","recovered":true},{"context":"S","seam":"cold-parse","sentinel":"object","recovered":true},{"context":"S","seam":"cold-parse","sentinel":"string","recovered":true},{"context":"S","seam":"cold-parse","sentinel":"revoked Proxy","recovered":true},{"context":"F","seam":"ordering-key","sentinel":"Error","recovered":true},{"context":"F","seam":"ordering-key","sentinel":"codec-looking TypeError","recovered":true},{"context":"F","seam":"ordering-key","sentinel":"undefined","recovered":true},{"context":"F","seam":"ordering-key","sentinel":"object","recovered":true},{"context":"F","seam":"ordering-key","sentinel":"string","recovered":true},{"context":"F","seam":"ordering-key","sentinel":"revoked Proxy","recovered":true},{"context":"F","seam":"open-key","sentinel":"Error","recovered":true},{"context":"F","seam":"open-key","sentinel":"codec-looking TypeError","recovered":true},{"context":"F","seam":"open-key","sentinel":"undefined","recovered":true},{"context":"F","seam":"open-key","sentinel":"object","recovered":true},{"context":"F","seam":"open-key","sentinel":"string","recovered":true},{"context":"F","seam":"open-key","sentinel":"revoked Proxy","recovered":true},{"context":"F","seam":"cold-parse","sentinel":"Error","recovered":true},{"context":"F","seam":"cold-parse","sentinel":"codec-looking TypeError","recovered":true},{"context":"F","seam":"cold-parse","sentinel":"undefined","recovered":true},{"context":"F","seam":"cold-parse","sentinel":"object","recovered":true},{"context":"F","seam":"cold-parse","sentinel":"string","recovered":true},{"context":"F","seam":"cold-parse","sentinel":"revoked Proxy","recovered":true}]}
+✔ O4 M1 cold key import and parser faults retain identity and release the Journal lease: sqlite (1245.721042ms)
+ℹ {"storage":"sqlite","coldOpenCases":[{"context":"S","seam":"ordering-key","sentinel":"Error","recovered":true},{"context":"S","seam":"ordering-key","sentinel":"codec-looking TypeError","recovered":true},{"context":"S","seam":"ordering-key","sentinel":"undefined","recovered":true},{"context":"S","seam":"ordering-key","sentinel":"object","recovered":true},{"context":"S","seam":"ordering-key","sentinel":"string","recovered":true},{"context":"S","seam":"ordering-key","sentinel":"revoked Proxy","recovered":true},{"context":"S","seam":"open-key","sentinel":"Error","recovered":true},{"context":"S","seam":"open-key","sentinel":"codec-looking TypeError","recovered":true},{"context":"S","seam":"open-key","sentinel":"undefined","recovered":true},{"context":"S","seam":"open-key","sentinel":"object","recovered":true},{"context":"S","seam":"open-key","sentinel":"string","recovered":true},{"context":"S","seam":"open-key","sentinel":"revoked Proxy","recovered":true},{"context":"S","seam":"cold-parse","sentinel":"Error","recovered":true},{"context":"S","seam":"cold-parse","sentinel":"codec-looking TypeError","recovered":true},{"context":"S","seam":"cold-parse","sentinel":"undefined","recovered":true},{"context":"S","seam":"cold-parse","sentinel":"object","recovered":true},{"context":"S","seam":"cold-parse","sentinel":"string","recovered":true},{"context":"S","seam":"cold-parse","sentinel":"revoked Proxy","recovered":true},{"context":"F","seam":"ordering-key","sentinel":"Error","recovered":true},{"context":"F","seam":"ordering-key","sentinel":"codec-looking TypeError","recovered":true},{"context":"F","seam":"ordering-key","sentinel":"undefined","recovered":true},{"context":"F","seam":"ordering-key","sentinel":"object","recovered":true},{"context":"F","seam":"ordering-key","sentinel":"string","recovered":true},{"context":"F","seam":"ordering-key","sentinel":"revoked Proxy","recovered":true},{"context":"F","seam":"open-key","sentinel":"Error","recovered":true},{"context":"F","seam":"open-key","sentinel":"codec-looking TypeError","recovered":true},{"context":"F","seam":"open-key","sentinel":"undefined","recovered":true},{"context":"F","seam":"open-key","sentinel":"object","recovered":true},{"context":"F","seam":"open-key","sentinel":"string","recovered":true},{"context":"F","seam":"open-key","sentinel":"revoked Proxy","recovered":true},{"context":"F","seam":"cold-parse","sentinel":"Error","recovered":true},{"context":"F","seam":"cold-parse","sentinel":"codec-looking TypeError","recovered":true},{"context":"F","seam":"cold-parse","sentinel":"undefined","recovered":true},{"context":"F","seam":"cold-parse","sentinel":"object","recovered":true},{"context":"F","seam":"cold-parse","sentinel":"string","recovered":true},{"context":"F","seam":"cold-parse","sentinel":"revoked Proxy","recovered":true}]}
+✔ O4 M1 Scope constructor cleanup covers create and open, preserving the original value even if close fails: memory (487.079459ms)
+ℹ {"storage":"memory","constructorCases":[{"factory":"create","sentinel":"Error","closeFailureInjected":false,"recovered":true},{"factory":"create","sentinel":"Error","closeFailureInjected":true,"recovered":true},{"factory":"create","sentinel":"codec-looking TypeError","closeFailureInjected":false,"recovered":true},{"factory":"create","sentinel":"codec-looking TypeError","closeFailureInjected":true,"recovered":true},{"factory":"create","sentinel":"undefined","closeFailureInjected":false,"recovered":true},{"factory":"create","sentinel":"undefined","closeFailureInjected":true,"recovered":true},{"factory":"create","sentinel":"object","closeFailureInjected":false,"recovered":true},{"factory":"create","sentinel":"object","closeFailureInjected":true,"recovered":true},{"factory":"create","sentinel":"string","closeFailureInjected":false,"recovered":true},{"factory":"create","sentinel":"string","closeFailureInjected":true,"recovered":true},{"factory":"create","sentinel":"revoked Proxy","closeFailureInjected":false,"recovered":true},{"factory":"create","sentinel":"revoked Proxy","closeFailureInjected":true,"recovered":true},{"factory":"open","sentinel":"Error","closeFailureInjected":false,"recovered":true},{"factory":"open","sentinel":"Error","closeFailureInjected":true,"recovered":true},{"factory":"open","sentinel":"codec-looking TypeError","closeFailureInjected":false,"recovered":true},{"factory":"open","sentinel":"codec-looking TypeError","closeFailureInjected":true,"recovered":true},{"factory":"open","sentinel":"undefined","closeFailureInjected":false,"recovered":true},{"factory":"open","sentinel":"undefined","closeFailureInjected":true,"recovered":true},{"factory":"open","sentinel":"object","closeFailureInjected":false,"recovered":true},{"factory":"open","sentinel":"object","closeFailureInjected":true,"recovered":true},{"factory":"open","sentinel":"string","closeFailureInjected":false,"recovered":true},{"factory":"open","sentinel":"string","closeFailureInjected":true,"recovered":true},{"factory":"open","sentinel":"revoked Proxy","closeFailureInjected":false,"recovered":true},{"factory":"open","sentinel":"revoked Proxy","closeFailureInjected":true,"recovered":true}]}
+✔ O4 M1 Scope constructor cleanup covers create and open, preserving the original value even if close fails: sqlite (568.044ms)
+ℹ {"storage":"sqlite","constructorCases":[{"factory":"create","sentinel":"Error","closeFailureInjected":false,"recovered":true},{"factory":"create","sentinel":"Error","closeFailureInjected":true,"recovered":true},{"factory":"create","sentinel":"codec-looking TypeError","closeFailureInjected":false,"recovered":true},{"factory":"create","sentinel":"codec-looking TypeError","closeFailureInjected":true,"recovered":true},{"factory":"create","sentinel":"undefined","closeFailureInjected":false,"recovered":true},{"factory":"create","sentinel":"undefined","closeFailureInjected":true,"recovered":true},{"factory":"create","sentinel":"object","closeFailureInjected":false,"recovered":true},{"factory":"create","sentinel":"object","closeFailureInjected":true,"recovered":true},{"factory":"create","sentinel":"string","closeFailureInjected":false,"recovered":true},{"factory":"create","sentinel":"string","closeFailureInjected":true,"recovered":true},{"factory":"create","sentinel":"revoked Proxy","closeFailureInjected":false,"recovered":true},{"factory":"create","sentinel":"revoked Proxy","closeFailureInjected":true,"recovered":true},{"factory":"open","sentinel":"Error","closeFailureInjected":false,"recovered":true},{"factory":"open","sentinel":"Error","closeFailureInjected":true,"recovered":true},{"factory":"open","sentinel":"codec-looking TypeError","closeFailureInjected":false,"recovered":true},{"factory":"open","sentinel":"codec-looking TypeError","closeFailureInjected":true,"recovered":true},{"factory":"open","sentinel":"undefined","closeFailureInjected":false,"recovered":true},{"factory":"open","sentinel":"undefined","closeFailureInjected":true,"recovered":true},{"factory":"open","sentinel":"object","closeFailureInjected":false,"recovered":true},{"factory":"open","sentinel":"object","closeFailureInjected":true,"recovered":true},{"factory":"open","sentinel":"string","closeFailureInjected":false,"recovered":true},{"factory":"open","sentinel":"string","closeFailureInjected":true,"recovered":true},{"factory":"open","sentinel":"revoked Proxy","closeFailureInjected":false,"recovered":true},{"factory":"open","sentinel":"revoked Proxy","closeFailureInjected":true,"recovered":true}]}
+✔ O4 M1 documents intentional policy conversions and guards exception inspection: memory (606.831583ms)
+ℹ {"storage":"memory","policyLimits":["parser nominal SyntaxError","wire exact message allowlist","ScopeProofError class","ScopeProfileError class"],"inspectionCatches":{"wire":2,"scope":1}}
+✔ O4 M1 documents intentional policy conversions and guards exception inspection: sqlite (652.645708ms)
+ℹ {"storage":"sqlite","policyLimits":["parser nominal SyntaxError","wire exact message allowlist","ScopeProofError class","ScopeProfileError class"],"inspectionCatches":{"wire":2,"scope":1}}
+✔ O4 M1 native parser SyntaxError stays a declared input refusal (0.20525ms)
+✔ O4 M1 malformed ordering controls remain ordinary refusals and valid handover continues: memory (215.645625ms)
+✔ O4 M1 malformed ordering controls remain ordinary refusals and valid handover continues: sqlite (244.156292ms)
+✔ O4 M1 SQLite operational faults survive secondary rollback and close faults (38.07375ms)
+ℹ {"backend":"sqlite only","cleanupCases":[{"scenario":"constructor-rollback","originalIdentity":true,"cleanupCalls":1,"residualOpenTransaction":false},{"scenario":"constructor-rollback","originalIdentity":true,"cleanupCalls":1,"residualOpenTransaction":false},{"scenario":"constructor-rollback","originalIdentity":true,"cleanupCalls":1,"residualOpenTransaction":false},{"scenario":"constructor-rollback","originalIdentity":true,"cleanupCalls":1,"residualOpenTransaction":false},{"scenario":"constructor-rollback","originalIdentity":true,"cleanupCalls":1,"residualOpenTransaction":false},{"scenario":"constructor-rollback","originalIdentity":true,"cleanupCalls":1,"residualOpenTransaction":false},{"scenario":"constructor-close","originalIdentity":true,"cleanupCalls":1,"residualOpenTransaction":false},{"scenario":"constructor-close","originalIdentity":true,"cleanupCalls":1,"residualOpenTransaction":false},{"scenario":"constructor-close","originalIdentity":true,"cleanupCalls":1,"residualOpenTransaction":false},{"scenario":"constructor-close","originalIdentity":true,"cleanupCalls":1,"residualOpenTransaction":false},{"scenario":"constructor-close","originalIdentity":true,"cleanupCalls":1,"residualOpenTransaction":false},{"scenario":"constructor-close","originalIdentity":true,"cleanupCalls":1,"residualOpenTransaction":false},{"scenario":"constructor-both","originalIdentity":true,"cleanupCalls":2,"residualOpenTransaction":false},{"scenario":"constructor-both","originalIdentity":true,"cleanupCalls":2,"residualOpenTransaction":false},{"scenario":"constructor-both","originalIdentity":true,"cleanupCalls":2,"residualOpenTransaction":false},{"scenario":"constructor-both","originalIdentity":true,"cleanupCalls":2,"residualOpenTransaction":false},{"scenario":"constructor-both","originalIdentity":true,"cleanupCalls":2,"residualOpenTransaction":false},{"scenario":"constructor-both","originalIdentity":true,"cleanupCalls":2,"residualOpenTransaction":false},{"scenario":"serialized-rollback","originalIdentity":true,"cleanupCalls":1,"residualOpenTransaction":true},{"scenario":"serialized-rollback","originalIdentity":true,"cleanupCalls":1,"residualOpenTransaction":true},{"scenario":"serialized-rollback","originalIdentity":true,"cleanupCalls":1,"residualOpenTransaction":true},{"scenario":"serialized-rollback","originalIdentity":true,"cleanupCalls":1,"residualOpenTransaction":true},{"scenario":"serialized-rollback","originalIdentity":true,"cleanupCalls":1,"residualOpenTransaction":true},{"scenario":"serialized-rollback","originalIdentity":true,"cleanupCalls":1,"residualOpenTransaction":true}]}
+✔ O4 M1 Context, Journal and Scope submit catches preserve committed lost-reply identity: memory (1151.873291ms)
+ℹ {"storage":"memory","catches":["context.submit","journal.submit","scope.submit"],"injectedValues":6,"exactRetryRecoveries":6}
+✔ O4 M1 Context, Journal and Scope submit catches preserve committed lost-reply identity: sqlite (895.813125ms)
+ℹ {"storage":"sqlite","catches":["context.submit","journal.submit","scope.submit"],"injectedValues":6,"exactRetryRecoveries":6}
+✔ O4 K3 ordinary member scope attempts cannot strand certification: memory (796.912708ms)
+✔ O4 K3 ordinary member scope attempts cannot strand certification: sqlite (831.317416ms)
+✔ O4 K3 failed actor-only attempt permits certified transfer: bob-unauthorized-accept memory (487.899375ms)
+✔ O4 K3 failed actor-only attempt permits certified transfer: carol-malformed-grant memory (563.067208ms)
+✔ O4 K3 failed actor-only attempt permits certified transfer: bob-unauthorized-close memory (498.747875ms)
+✔ O4 K3 failed actor-only attempt permits certified transfer: bob-unauthorized-accept sqlite (545.450041ms)
+✔ O4 K3 failed actor-only attempt permits certified transfer: carol-malformed-grant sqlite (516.093458ms)
+✔ O4 K3 failed actor-only attempt permits certified transfer: bob-unauthorized-close sqlite (530.77075ms)
+✔ O4 K4 actual Inspection mandate and result reach Bob and F readers: memory (1178.5725ms)
+✔ O4 K4 actual Inspection mandate and result reach Bob and F readers: sqlite (895.899542ms)
+materialized genesis mutations: 209
+materialized genesis mutations: 209
+✔ O4 release proof pins come from F genesis: r=p+1, exact prefix and source writer: memory (733.531167ms)
+✔ O4 release proof pins come from F genesis: r=p+1, exact prefix and source writer: sqlite (757.844584ms)
+✔ O4 altered public proof bodies cannot activate a destination: memory (493.811042ms)
+✔ O4 altered public proof bodies cannot activate a destination: sqlite (601.07175ms)
+✔ O4 actual revoked release source cannot be repaired by stripping its revocation: memory (503.027625ms)
+✔ O4 actual revoked release source cannot be repaired by stripping its revocation: sqlite (430.923083ms)
+✔ O4 public/full scope replay agrees at every opened release-prefix position: memory (637.964ms)
+✔ O4 public/full scope replay agrees at every opened release-prefix position: sqlite (662.376042ms)
+✔ O4 actual activation, exports and F views exclude Sale private fields and the Inspection request body: memory (574.039542ms)
+✔ O4 actual activation, exports and F views exclude Sale private fields and the Inspection request body: sqlite (602.963125ms)
+✔ O4 every materialized signed F genesis field/container is bound before either release: memory (2535.426167ms)
+✔ O4 every materialized signed F genesis field/container is bound before either release: sqlite (2717.90125ms)
+✔ O4 withdrawn o3 cannot be restored by stripping the real withdrawal: memory (564.893542ms)
+✔ O4 withdrawn o3 cannot be restored by stripping the real withdrawal: sqlite (621.785375ms)
+✔ O4 H1 a signed duplicate-commitment fault proof refuses activation without poisoning the destination: memory (478.436333ms)
+✔ O4 H1 a signed duplicate-commitment fault proof refuses activation without poisoning the destination: sqlite (529.380042ms)
+✔ O4 R2 every issuance hash/key fault rejects cold open and preserves healthy replay: memory (833.952709ms)
+ℹ {"storage":"memory","phase":"cold-open","cryptoSites":["createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash"],"injectedCases":17,"originalExceptions":17,"coldExactRetries":17}
+✔ O4 R2 every issuance hash/key fault rejects cold open and preserves healthy replay: sqlite (692.499958ms)
+ℹ {"storage":"sqlite","phase":"cold-open","cryptoSites":["createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash"],"injectedCases":17,"originalExceptions":17,"coldExactRetries":17}
+✔ O4 R2 every nested issuance hash/key fault disables activation facade without changing durable bytes: memory (16250.815ms)
+ℹ {"storage":"memory","phase":"activation","cryptoSites":["createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash"],"injectedCases":151,"originalExceptions":151,"durableExactRetries":151,"returnedFaultVerdicts":0}
+✔ O4 R2 every nested issuance hash/key fault disables activation facade without changing durable bytes: sqlite (16457.588708ms)
+ℹ {"storage":"sqlite","phase":"activation","cryptoSites":["createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash","createPublicKey","createHash","createHash"],"injectedCases":151,"originalExceptions":151,"durableExactRetries":151,"returnedFaultVerdicts":0}
+✔ O4 R2 signed and legacy issuance preserve every hash-stage fault value (106.450416ms)
+ℹ {"boundary":"legacy","sites":["createHash","update","digest","createHash","update","digest"],"thrownValuesPerSite":8}
+ℹ {"boundary":"signed","sites":["createPublicKey","createHash","update","digest","createHash","update","digest"],"thrownValuesPerSite":8}
+✔ O4 R2 malformed signed and legacy issuance stays an admission refusal and leaves Scope usable: memory (138.691083ms)
+ℹ {"storage":"memory","malformedCases":13,"newPositions":0,"healthyAppendAndColdRetry":true}
+✔ O4 R2 malformed signed and legacy issuance stays an admission refusal and leaves Scope usable: sqlite (157.906541ms)
+ℹ {"storage":"sqlite","malformedCases":13,"newPositions":0,"healthyAppendAndColdRetry":true}
+✔ O4 R2 codec-looking unexpected TypeError and opaque values remain exceptions in wireInput (101.597167ms)
+✔ O4 L2 signature faults during cold open and representative activation stages preserve recovery: memory (761.84925ms)
+ℹ {"storage":"memory","phase":"signatures","coldVerificationCalls":51,"coldInjectedCases":51,"activationVerificationCalls":124,"activationSigningCalls":1,"selectedActivationCases":[{"at":1,"call":"verify","outcome":"precommit refusal","committedBeforeRetry":false,"retry":"fresh append"},{"at":64,"call":"verify","outcome":"original exception","committedBeforeRetry":true,"retry":"exact replay"},{"at":125,"call":"verify","outcome":"original exception","committedBeforeRetry":true,"retry":"exact replay"},{"at":3,"call":"sign","outcome":"original exception","committedBeforeRetry":false,"retry":"fresh append"}]}
+✔ O4 L2 signature faults during cold open and representative activation stages preserve recovery: sqlite (840.778709ms)
+ℹ {"storage":"sqlite","phase":"signatures","coldVerificationCalls":51,"coldInjectedCases":51,"activationVerificationCalls":124,"activationSigningCalls":1,"selectedActivationCases":[{"at":1,"call":"verify","outcome":"precommit refusal","committedBeforeRetry":false,"retry":"fresh append"},{"at":64,"call":"verify","outcome":"original exception","committedBeforeRetry":true,"retry":"exact replay"},{"at":125,"call":"verify","outcome":"original exception","committedBeforeRetry":true,"retry":"exact replay"},{"at":3,"call":"sign","outcome":"original exception","committedBeforeRetry":false,"retry":"fresh append"}]}
+✔ O4 L2 declared malformed proof bytes remain policy refusals and permit later activation: memory (375.45825ms)
+✔ O4 L2 declared malformed proof bytes remain policy refusals and permit later activation: sqlite (412.908417ms)
+✔ O4 actual signed lifecycle matches all 20 predeclared boundaries: memory (1231.971ms)
+✔ O4 actual signed lifecycle matches all 20 predeclared boundaries: sqlite (1015.241333ms)
+✔ O4 actual adverse trace: one-source-release-missing:memory (500.245834ms)
+✔ O4 actual adverse trace: withheld-release-evidence:memory (748.497791ms)
+✔ O4 actual adverse trace: intervening-dormant-exercise:memory (1299.676875ms)
+✔ O4 actual adverse trace: intervening-participant-event:memory (498.210416ms)
+✔ O4 actual adverse trace: restart-before-activation:memory (473.106084ms)
+✔ O4 actual adverse trace: repeated-activation-after-restart:memory (725.248667ms)
+✔ O4 actual adverse trace: exact-retry-activation:memory (498.771166ms)
+✔ O4 actual adverse trace: timeout-after-hidden-activation:memory (489.453958ms)
+✔ O4 actual adverse trace: duplicate-inspection-import:memory (185.380292ms)
+✔ O4 actual adverse trace: duplicate-state-import:memory (475.688417ms)
+✔ O4 actual adverse trace: stale-source-proposal-at-source:memory (338.092166ms)
+✔ O4 actual adverse trace: stale-source-proposal-at-destination:memory (459.980917ms)
+✔ O4 actual adverse trace: unauthorized-release:memory (300.995959ms)
+✔ O4 actual adverse trace: release-unowned-right:memory (296.960042ms)
+✔ O4 actual adverse trace: release-already-released-right:memory (347.417959ms)
+✔ O4 actual adverse trace: receipt-for-ineffective-release:memory (445.361ms)
+✔ O4 actual adverse trace: receipt-for-unauthorized-release:memory (440.02825ms)
+✔ O4 actual adverse trace: wrong-destination-release:memory (460.074792ms)
+✔ O4 actual adverse trace: two-sources-export-same-right:memory (369.051666ms)
+✔ O4 actual adverse trace: mismatched-buyer:memory (449.113334ms)
+✔ O4 actual adverse trace: stale-export-prefix:memory (326.724667ms)
+✔ O4 actual adverse trace: spend-before-activation-S:memory (380.301625ms)
+✔ O4 actual adverse trace: spend-before-activation-D:memory (369.755333ms)
+✔ O4 actual adverse trace: spend-before-activation-F:memory (371.471459ms)
+✔ O4 actual adverse trace: spend-before-activation-F-deliver:memory (361.832709ms)
+✔ O4 actual adverse trace: origin-spends-transferred-right:memory (359.505ms)
+✔ O4 actual adverse trace: move-preserves-retry:memory (260.254917ms)
+✔ O4 actual adverse trace: unassigned-writer-candidates:memory (237.428542ms)
+✔ O4 actual adverse trace: retired-writer-continuation:memory (265.755ms)
+✔ O4 actual adverse trace: one-source-release-missing:sqlite (458.248875ms)
+✔ O4 actual adverse trace: withheld-release-evidence:sqlite (709.630083ms)
+✔ O4 actual adverse trace: intervening-dormant-exercise:sqlite (1200.791375ms)
+✔ O4 actual adverse trace: intervening-participant-event:sqlite (487.601791ms)
+✔ O4 actual adverse trace: restart-before-activation:sqlite (490.394583ms)
+✔ O4 actual adverse trace: repeated-activation-after-restart:sqlite (731.992292ms)
+✔ O4 actual adverse trace: exact-retry-activation:sqlite (522.486125ms)
+✔ O4 actual adverse trace: timeout-after-hidden-activation:sqlite (526.439167ms)
+✔ O4 actual adverse trace: duplicate-inspection-import:sqlite (204.646125ms)
+✔ O4 actual adverse trace: duplicate-state-import:sqlite (522.436583ms)
+✔ O4 actual adverse trace: stale-source-proposal-at-source:sqlite (380.544833ms)
+✔ O4 actual adverse trace: stale-source-proposal-at-destination:sqlite (545.809458ms)
+✔ O4 actual adverse trace: unauthorized-release:sqlite (408.177667ms)
+✔ O4 actual adverse trace: release-unowned-right:sqlite (363.895125ms)
+✔ O4 actual adverse trace: release-already-released-right:sqlite (430.946458ms)
+✔ O4 actual adverse trace: receipt-for-ineffective-release:sqlite (515.547292ms)
+✔ O4 actual adverse trace: receipt-for-unauthorized-release:sqlite (477.093083ms)
+✔ O4 actual adverse trace: wrong-destination-release:sqlite (516.986ms)
+✔ O4 actual adverse trace: two-sources-export-same-right:sqlite (514.964334ms)
+✔ O4 actual adverse trace: mismatched-buyer:sqlite (521.672083ms)
+✔ O4 actual adverse trace: stale-export-prefix:sqlite (359.309333ms)
+✔ O4 actual adverse trace: spend-before-activation-S:sqlite (422.574083ms)
+✔ O4 actual adverse trace: spend-before-activation-D:sqlite (396.62225ms)
+✔ O4 actual adverse trace: spend-before-activation-F:sqlite (392.047875ms)
+✔ O4 actual adverse trace: spend-before-activation-F-deliver:sqlite (388.959292ms)
+✔ O4 actual adverse trace: origin-spends-transferred-right:sqlite (399.059459ms)
+✔ O4 actual adverse trace: move-preserves-retry:sqlite (287.046833ms)
+✔ O4 actual adverse trace: unassigned-writer-candidates:sqlite (269.072417ms)
+✔ O4 actual adverse trace: retired-writer-continuation:sqlite (295.759083ms)
+✔ O4 K2 every activation registry fault propagates unchanged and cold exact retry agrees: memory (12133.54475ms)
+ℹ {"storage":"memory","totalLookups":120,"originalExceptions":120,"exactRetryRecoveries":120,"returnedFaultVerdicts":0}
+✔ O4 K2 every activation registry fault propagates unchanged and cold exact retry agrees: sqlite (12036.096291ms)
+ℹ {"storage":"sqlite","totalLookups":120,"originalExceptions":120,"exactRetryRecoveries":120,"returnedFaultVerdicts":0}
+✔ O4 K2 cold open throws the original nested registry error while ordinary Journal keeps legacy verdicts: memory (147.7645ms)
+✔ O4 K2 cold open throws the original nested registry error while ordinary Journal keeps legacy verdicts: sqlite (197.676459ms)
+✔ O4 K2 export and public-proof interpretations preserve original non-Error failures (617.312833ms)
+✔ O4 K2 an unlisted error inside wireInput retains its identity (128.193125ms)
+✔ O4 M1 source fact union preserves own property names and source binding: memory (1263.68925ms)
+✔ O4 M1 Scope genesis rejects inherited packages and accepts declared own property-name bindings: memory (33.830291ms)
+✔ O4 M1 unchanged facts complete transfer with cold state and exact activation retry: memory (781.468958ms)
+✔ O4 M1 source fact union preserves own property names and source binding: sqlite (973.500375ms)
+✔ O4 M1 Scope genesis rejects inherited packages and accepts declared own property-name bindings: sqlite (36.556625ms)
+✔ O4 M1 unchanged facts complete transfer with cold state and exact activation retry: sqlite (829.61825ms)
+✔ O4 K1 malformed participant requests preserve retries and the signed lifecycle: memory (3455.837959ms)
+✔ O4 K1 malformed participant requests preserve retries and the signed lifecycle: sqlite (3255.975541ms)
+✔ O4 G2 failed activation, dormant exercise and exact retries permit later activation: memory (952.839792ms)
+✔ O4 G2 failed activation, dormant exercise and exact retries permit later activation: sqlite (888.370875ms)
+✔ O4 G2 another participant admitted event cannot block activation: memory (457.252875ms)
+✔ O4 G2 another participant admitted event cannot block activation: sqlite (446.033875ms)
+✔ O4 G2 keeps current authorization gate: memory (356.857625ms)
+✔ O4 G2 keeps current closed gate: memory (345.104334ms)
+✔ O4 G2 keeps current authorization gate: sqlite (351.381959ms)
+✔ O4 G2 keeps current closed gate: sqlite (350.454917ms)
+✔ O4 unexpected post-commit replay error is thrown and disables facade: memory (452.491625ms)
+✔ O4 unexpected post-commit replay error is thrown and disables facade: sqlite (487.162583ms)
+✔ O4 malformed release-proof shape has an explicit policy refusal: memory (350.037417ms)
+✔ O4 malformed release-proof shape has an explicit policy refusal: sqlite (365.380041ms)
+✔ O4 thrown fold handler is a real failure with durable bytes: memory (133.080416ms)
+✔ O4 thrown audience handler is a real failure with durable bytes: memory (132.730584ms)
+✔ O4 thrown fold handler is a real failure with durable bytes: sqlite (160.324959ms)
+✔ O4 thrown audience handler is a real failure with durable bytes: sqlite (149.687584ms)
+✔ O4 L1 property-name attempts retain retries, cold state and completed transfer: memory (2303.678709ms)
+✔ O4 L1 property-name attempts retain retries, cold state and completed transfer: sqlite (2258.992667ms)
+✔ O4 L1 explicitly owned property-name kinds, models, roles and resolutions still work: memory (7.282167ms)
+✔ O4 L1 explicitly owned property-name kinds, models, roles and resolutions still work: sqlite (11.759792ms)
+✔ O4 L1 registry inheritance is absent while own data keys survive copying and serialization (0.438917ms)
+✔ O4 scope exercise honors attached refusing handler: memory (270.603375ms)
+✔ O4 scope exercise honors attached refusing handler: sqlite (241.881916ms)
+✔ O4 preserves original Sale 0–19 outcomes, model and member readability (166.108083ms)
+✔ O4 later attach, handover and transfer preserve actual pre-attach as-of replay (327.079083ms)
+✔ O4 goal 1: all actual readers and historical frontiers survive attach, handover and completed transfer: memory (1499.47725ms)
+✔ O4 goal 1: all actual readers and historical frontiers survive attach, handover and completed transfer: sqlite (1877.850708ms)
+✔ O4 L3 unbound D member attempt permits certified completed transfer: memory (506.960042ms)
+✔ O4 L3 unbound I attempt preserves proof and later inspection result: memory (97.711042ms)
+✔ O4 L3 unbound F member attempt preserves proof and both spends: memory (632.77425ms)
+✔ O4 L3 unbound D member attempt permits certified completed transfer: sqlite (462.836667ms)
+✔ O4 L3 unbound I attempt preserves proof and later inspection result: sqlite (85.650792ms)
+✔ O4 L3 unbound F member attempt preserves proof and both spends: sqlite (620.563166ms)
+✔ a listing origin opens the sale; the origin actor needs no grant (1.939333ms)
+✔ the same origin adopted twice is a genesis error (0.402208ms)
+✔ an origin whose kind does not resolve is an unhandled verdict and inert (1.111958ms)
+✔ an origin binds no expected binding: a foreign binding on an origin is ignored (0.41675ms)
+✔ a listing submitted later, not as an origin, is refused by the model (0.992834ms)
+✔ C1: a second issuance with the same label is its own token; admission and verification use the same issuance object and a tampered envelope supplies nothing (3.698459ms)
+✔ C1: an unauthorized issuance is never an issued token, at admission or in the fold (0.724833ms)
+✔ C3a: a narrow attach caps every kind it declares; a members-audience event of that package is not served beyond the cap (1.504709ms)
+✔ C3b: observe honours a declared narrower audience (0.77725ms)
+✔ C5: an intent bound to another context cannot be adopted as an origin; a system kind cannot be an origin (1.250875ms)
+✔ C8: committed entries and receipts are snapshots; a caller cannot rewrite them (0.553709ms)
+✔ C9: a malformed system payload is a deterministic ineffective verdict with the actor as its only reader; folding and retry continue (0.561209ms)
+✔ C10: close stops application events and leaves foundation administration open (0.5885ms)
+✔ a capped package cannot widen through a members policy either (0.733917ms)
+✔ D1: a member who never saw the private invitation verifies the acceptance from headers and the spine alone (0.800333ms)
+✔ D2: captured values are outside the identity, so they must live in config, which is inside it (0.316709ms)
+✔ D2: an installed descriptor is frozen; replacing a fold after attach throws and changes nothing (0.114458ms)
+✔ D2: a second definition under a model name in use is refused unless it is the same definition (0.201083ms)
+✔ D3: observe may narrow only to current members; naming a future member is ineffective and read by the actor alone (0.540583ms)
+✔ E1: a module-local helper is part of identity; same text and config in different modules bind differently and conflict on a shared model name (0.939875ms)
+✔ E2: a shallow-frozen input descriptor is frozen recursively on attach; a nested config cannot change (0.152625ms)
+✔ run 1 corpus: every shrunk series still fails against the run-1 model with the recorded failure kind, and is reported against the current model (479.583583ms)
+ℹ seed-103: 3 steps; run-1 model invariant; current model clean
+ℹ seed-121: 3 steps; run-1 model invariant; current model clean
+ℹ seed-129: 3 steps; run-1 model invariant; current model clean
+ℹ seed-138: 3 steps; run-1 model invariant; current model clean
+ℹ seed-146: 6 steps; run-1 model mismatch; current model clean
+ℹ seed-158: 6 steps; run-1 model mismatch; current model clean
+ℹ seed-172: 3 steps; run-1 model invariant; current model clean
+ℹ seed-183: 3 steps; run-1 model invariant; current model clean
+ℹ seed-189: 3 steps; run-1 model invariant; current model clean
+ℹ seed-56: 3 steps; run-1 model invariant; current model clean
+ℹ seed-65: 8 steps; run-1 model mismatch; current model clean
+ℹ seed-72: 3 steps; run-1 model invariant; current model clean
+ℹ seed-74: 3 steps; run-1 model invariant; current model clean
+ℹ seed-79: 6 steps; run-1 model mismatch; current model clean
+ℹ seed-8: 6 steps; run-1 model mismatch; current model clean
+ℹ seed-86: 6 steps; run-1 model mismatch; current model clean
+ℹ seed-96: 3 steps; run-1 model invariant; current model clean
+✔ run 6 corpus: the current foundation fixes unauthorized leaks; the repaired audience fixes the remaining authorized leaks (603.568042ms)
+ℹ seed-112: 5 steps; kept model clean under current foundation; current model clean
+ℹ seed-141: 5 steps; kept model clean under current foundation; current model clean
+ℹ seed-160: 5 steps; kept model clean under current foundation; current model clean
+ℹ seed-172: 3 steps; kept model budget violation; current model clean
+ℹ seed-181: 3 steps; kept model budget violation; current model clean
+ℹ seed-193: 5 steps; kept model clean under current foundation; current model clean
+ℹ seed-197: 5 steps; kept model clean under current foundation; current model clean
+ℹ seed-200: 3 steps; kept model budget violation; current model clean
+ℹ seed-42: 5 steps; kept model clean under current foundation; current model clean
+✔ positions 0 to 5 carry the kinds and audiences of the trace (3.93975ms)
+✔ Alice reads every position; hidden count 0 (1.631583ms)
+✔ Bob's view: spine plus his own invitation; Carol's invitation is a header (0.855708ms)
+✔ Carol's view: spine plus her own invitation; Bob's invitation is a header (0.675042ms)
+✔ a late joiner receives the whole spine and addressed events, and members audiences are not retroactive (1.678292ms)
+✔ case 1, the trace: positions 0 to 19 replay with the readability of the table, the literal projections and the outcomes at 17 and 18, under the model's declared join disclosure (229.703167ms)
+ℹ literal trace without the join disclosure: 5 violations; first: ivan@15 mismatch: observe differs at 15 [models.sale.offers.0: oracle {"id":"o3","author":"bob","position":15,"status":"open","rep, view undefined; outcomes.15.effective: oracle true, view false; outcomes.15.perModel.sale.effective: oracle true, view false; outcomes.15.perModel.sale.reason: oracle null, view no_such_offer; outcomes.15.reason: oracle null, view ineffective]
+✔ case 2, replacement with a hidden predecessor: Ivan sees o3 open replacing o1, and a later accept of o1 is ineffective for everyone (195.07025ms)
+ℹ literal case 2 without the join disclosure: 3 violations; first: ivan@15 mismatch: observe differs at 15 [models.sale.offers.0: oracle {"id":"o3","author":"bob","position":15,"status":"open","rep, view undefined; outcomes.15.effective: oracle true, view false; outcomes.15.perModel.sale.effective: oracle true, view false; outcomes.15.perModel.sale.reason: oracle null, view no_such_offer; outcomes.15.reason: oracle null, view ineffective]
+✔ case 3, late joiner after the decision: a second accept is ineffective in every view, equality holds at every frontier, and a disclosure of the decision keeps it (165.869334ms)
+✔ case 4, late joiner judging a public event on a hidden fact: a withdrawal of a stub recorded before Dana joined, then an accept of it, are judged the same way in every view (66.216583ms)
+✔ case 5, the campaign: every manifest seed replays with zero violations of the property, the pause rule, the invariants and the privacy budget (77132.929541ms)
+ℹ seeds 200, 77132 ms, coverage {"joins":942,"attaches":199,"disclosures":1722,"offers":195,"replacements":25,"withdrawals":147,"counters":157,"accepts":114,"effectiveAccepts":20,"closes":295,"entries":11047,"privateDisclosures":0,"inspectionAttaches":0,"inspectionRequests":118,"unboundInspectionRequests":118}
+✔ the repair ledger exists, its totals agree with its entries, and it states the budget outcome (0.47175ms)
+ℹ fixes 7, added kinds 0, budget exceeded
+✔ V3-F1: a private payload disclosed to a non-party is a budget violation on what they can read, whatever the projection hides (3.939334ms)
+✔ V3-F2: the kept run-6 model refuses a wrong-party counter, and the budget reports its misdelivery (6.524292ms)
+✔ V3-F3: null private payloads are recorded with a deterministic ineffective verdict, replay cold, retry exactly, and a valid action follows (43.11775ms)
+✔ V3-G1: an ineffective stub by carol does not make them a counter party (kept run-6 guard regression) (9.065333ms)
+✔ V3-G1: an ineffective stub by carol does not make them a counter party (current audience) (8.186166ms)
+✔ V3-G1: an ineffective stub by ivan does not make them a counter party (kept run-6 guard regression) (8.671542ms)
+✔ V3-G1: an ineffective stub by ivan does not make them a counter party (current audience) (8.030458ms)
+✔ Fix 7: wrong-author, malformed, unauthorized and stale counters never address a supplied non-party, and late members replay them consistently (56.822167ms)
+✔ O4 public proof reconstructs signed Sale facts and grants across handover on memory (53.039083ms)
+✔ O4 public proof reconstructs signed Sale facts and grants across handover on sqlite (60.237125ms)
+✔ O4 source pins distinguish genesis, initial writer and requested frontier (34.712333ms)
+✔ O4 public proof rejects malformed, tampered and incomplete authenticated prefixes (36.894542ms)
+✔ O4 public proof rejects missing, changed and forged handover evidence (47.70525ms)
+✔ O4 public proof rejects private bodies supplied at their genuine signed positions (29.321333ms)
+✔ O4 public proof rejects a public kind carrying nested private extras despite valid signatures (25.450916ms)
+✔ O4 public proof rejects private data attached outside its declared shape (32.619042ms)
+✔ O4 public proof requires semantic packages and disclosed attachment bodies (54.046542ms)
+✔ O4 public proof cannot hide an authenticated grant body as a private position (31.881583ms)
+✔ O4 public proof cannot hide an authenticated revoke body as a private position (29.000375ms)
+✔ O4 public proof cannot omit a withdrawal to turn a refused acceptance into a decision (41.109209ms)
+✔ O4 certificate binds every authority opening on memory (54.959834ms)
+✔ O4 certificate signer follows the frontier header across assignment on memory (86.3745ms)
+✔ O4 certificate strictly pins type, rule, genesis, frontier and shape on memory (74.957583ms)
+✔ O4 producer refuses a capped authority audience on memory (24.393333ms)
+✔ O4 malicious writer omissions exceed destination trust but member recomputation detects them on memory (53.919291ms)
+✔ O4 L3 later binding preserves earlier unbound proof but bound indeterminate outcomes cannot hide on memory (246.436792ms)
+✔ O4 public and full semantic verdicts agree at every opening of every certified prefix on memory (92.570833ms)
+✔ O4 disclosure and observation remain hidden under the named public rule on memory (31.074834ms)
+✔ O4 certificate binds every authority opening on sqlite (66.176042ms)
+✔ O4 certificate signer follows the frontier header across assignment on sqlite (87.524208ms)
+✔ O4 certificate strictly pins type, rule, genesis, frontier and shape on sqlite (81.033667ms)
+✔ O4 producer refuses a capped authority audience on sqlite (34.205667ms)
+✔ O4 malicious writer omissions exceed destination trust but member recomputation detects them on sqlite (60.378125ms)
+✔ O4 L3 later binding preserves earlier unbound proof but bound indeterminate outcomes cannot hide on sqlite (314.264333ms)
+✔ O4 public and full semantic verdicts agree at every opening of every certified prefix on sqlite (100.746125ms)
+✔ O4 disclosure and observation remain hidden under the named public rule on sqlite (40.581417ms)
+✔ V6 sale: the checker detects one narrowed audience rule (163.786917ms)
+ℹ {"model":"sale","manifest":"sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9","package":"sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85","mutant":"sha256:cfbe9b57a0d03196eefb2e3df18f1ecfa0817758853fbba2b6c6789bce23fce8","kind":"com.example.sale.offer","entries":6,"violations":1,"first":"alice@5 mismatch: observe differs at 5 [models.sale.accepted: oracle o1, view null; models.sale.status: oracle decided, view open; outcomes.5.effective: oracle true, view false; outcomes.5.perModel.sale.effective: oracle true, view false; outcomes.5.perModel.sale.reason: oracle null, view no_such_offer; outcomes.5.reason: oracle null, view ineffective]"}
+ℹ {"corpus":"v6-sale","manifest":"sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9","package":"sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85","mutant":"sha256:cfbe9b57a0d03196eefb2e3df18f1ecfa0817758853fbba2b6c6789bce23fce8","nonce":"v6:sale","originalSteps":4,"steps":[{"step":{"type":"invite","inviter":"alice","invitee":"bob","grants":{"roles":["Buyer"]}},"entries":[{"id":"sha256:259c64ab91c0a4c5f3173ea3c5ecd1dae31aad3ef0e38755a2e7367c6447f98c","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"bob"},"entries":[{"id":"sha256:77a3b1ced99c3f404c8bb40c85057b56bc453d593419e97f92b83c59559166cb","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"act","actor":"bob","kind":"com.example.sale.offer","payload":{"offer_id":"o1"},"nonce":"v6:4"},"entries":[{"id":"sha256:586281868199913bc072a9dad01e8e9bc2b55193dbe2d1880bd0e0e79a7a4067","kind":"com.example.sale.offer"}]},{"step":{"type":"act","actor":"alice","kind":"com.example.sale.accept","payload":{"offer_id":"o1"},"nonce":"v6:5"},"entries":[{"id":"sha256:beb1444a0c93de85bcecbb333105df27860c50dcaf3140a8ad7fa1ef1eecc8f6","kind":"com.example.sale.accept"}]}]}
+ℹ {"committedCorpus":"v6-sale","recordSnapshot":"742e64a06d06226b456f489eb53deacc1bc9f5db","violations":1,"finding":"alice@5 mismatch: observe differs at 5 [models.sale.accepted: oracle o1, view null; models.sale.status: oracle decided, view open; outcomes.5.effective: oracle true, view false; outcomes.5.perModel.sale.effective: oracle true, view false; outcomes.5.perModel.sale.reason: oracle null, view no_such_offer; outcomes.5.reason: oracle null, view ineffective]","deletions":4,"control":"clean"}
+✔ V6 sale: an unrelated private attach preserves a shared intent; a relevant binding change stales it (20.749875ms)
+ℹ {"model":"sale","manifest":"sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9","package":"sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85","unrelated":4,"shared":5,"relevant":6,"stale":7,"fresh":8,"violations":0}
+✔ V6 booking: the checker detects one narrowed audience rule (69.916666ms)
+ℹ {"model":"booking","manifest":"sha256:cb4514f4967891077ad78e1dd0fba4c17438fb32b98cd8bd790df8531b35dd16","package":"sha256:0556de5c337344eaa15afcbbbf5d22aa82c384bd6841d4ffb0c07185d4b7ec27","mutant":"sha256:cad57243b94ef8b451168fc4265cc7fe0463af104d43faced5f8712da2ec9983","kind":"com.example.booking.occupancy","entries":5,"violations":1,"first":"bob@4 mismatch: observe differs at 4 [outcomes.4.effective: oracle true, view false; outcomes.4.perModel.booking.effective: oracle true, view false; outcomes.4.perModel.booking.reason: oracle null, view no_such_occupancy; outcomes.4.reason: oracle null, view ineffective]"}
+ℹ {"corpus":"v6-booking","manifest":"sha256:cb4514f4967891077ad78e1dd0fba4c17438fb32b98cd8bd790df8531b35dd16","package":"sha256:0556de5c337344eaa15afcbbbf5d22aa82c384bd6841d4ffb0c07185d4b7ec27","mutant":"sha256:cad57243b94ef8b451168fc4265cc7fe0463af104d43faced5f8712da2ec9983","nonce":"v6:booking","originalSteps":4,"steps":[{"step":{"type":"invite","inviter":"alice","invitee":"bob","grants":{"roles":["Booker"]}},"entries":[{"id":"sha256:42d07670362f88fe8988e267a1536926ba8165f29be51dbfd980371a047c2930","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"bob"},"entries":[{"id":"sha256:8a5603ece26d4a971c03c9a4d9be8bbab7ee515faf8e214867e0ad79d9a46b0c","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"act","actor":"alice","kind":"com.example.booking.occupancy","payload":{"booking_id":"b1","room":"room-1","start":1,"end":3},"nonce":"v6:3"},"entries":[{"id":"sha256:31588b6760af1ccb145acf78489915373aca9a9614dac855977ae2f24c1c9174","kind":"com.example.booking.occupancy"}]},{"step":{"type":"act","actor":"alice","kind":"com.example.booking.free","payload":{"booking_id":"b1"},"nonce":"v6:4"},"entries":[{"id":"sha256:cfd639cbd2ad61d9d1072479a17e906843e4dc09f68c06c4217e4a5e40f8b2c1","kind":"com.example.booking.free"}]}]}
+ℹ {"committedCorpus":"v6-booking","recordSnapshot":"742e64a06d06226b456f489eb53deacc1bc9f5db","violations":1,"finding":"bob@4 mismatch: observe differs at 4 [outcomes.4.effective: oracle true, view false; outcomes.4.perModel.booking.effective: oracle true, view false; outcomes.4.perModel.booking.reason: oracle null, view no_such_occupancy; outcomes.4.reason: oracle null, view ineffective]","deletions":4,"control":"clean"}
+✔ V6 booking: an unrelated private attach preserves a shared intent; a relevant binding change stales it (11.640666ms)
+ℹ {"model":"booking","manifest":"sha256:cb4514f4967891077ad78e1dd0fba4c17438fb32b98cd8bd790df8531b35dd16","package":"sha256:0556de5c337344eaa15afcbbbf5d22aa82c384bd6841d4ffb0c07185d4b7ec27","unrelated":3,"shared":4,"relevant":5,"stale":6,"fresh":7,"violations":0}
+✔ V6 club: the checker detects one narrowed audience rule (294.652084ms)
+ℹ {"model":"club","manifest":"sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde","package":"sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e","mutant":"sha256:276d0f9610eba50cff5a922b06117b5300a918d0c538a629befa1292228e3b1e","kind":"com.example.club.standing","entries":8,"violations":2,"first":"bob@7 mismatch: observe differs at 7 [affordances.0: oracle com.example.club.vote, view undefined; models.club.applications.0.votes.yes: oracle 0, view 1; outcomes.7.effective: oracle false, view true; outcomes.7.perModel.club.effective: oracle false, view true; outcomes.7.perModel.club.reason: oracle lapsed, view null; outcomes.7.reason: oracle ineffective, view null]"}
+ℹ {"corpus":"v6-club","manifest":"sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde","package":"sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e","mutant":"sha256:276d0f9610eba50cff5a922b06117b5300a918d0c538a629befa1292228e3b1e","nonce":"v6:club","originalSteps":7,"steps":[{"step":{"type":"invite","inviter":"alice","invitee":"bob","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:3e73b2a8ed8b85302925611134a8c459631fa3edc5a6d0b47c75bcde127631be","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"bob"},"entries":[{"id":"sha256:00d2be5cbdf574555cc260b937e4c130852c6c46a54d709e4e33579cba880b22","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"dana","grants":{"roles":[]}},"entries":[{"id":"sha256:cb431f70546e211a6216d513b1d3b6c666f23e505c84f894f614629e1250d622","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"dana"},"entries":[{"id":"sha256:98ed4464fecc47636bebee69ac6295900bfa6c8f8a64779e205bedbeb0407450","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"act","actor":"dana","kind":"com.example.club.apply","payload":{"statement":"please"},"nonce":"v6:5"},"entries":[{"id":"sha256:971e9bd20f74b23e89cb265bd0f5318778652c22b88dfbdf91bbd51b9ca2ae05","kind":"com.example.club.apply"}]},{"step":{"type":"act","actor":"alice","kind":"com.example.club.standing","payload":{"member":"bob","standing":"lapsed"},"nonce":"v6:6"},"entries":[{"id":"sha256:5fac89a5616249aa497becd44bf51aa1a009bde5e80b0cb2a4fbe4c974edc86b","kind":"com.example.club.standing"}]},{"step":{"type":"act","actor":"bob","kind":"com.example.club.vote","payload":{"application_id":"sha256:971e9bd20f74b23e89cb265bd0f5318778652c22b88dfbdf91bbd51b9ca2ae05","choice":"yes"},"nonce":"v6:7"},"entries":[{"id":"sha256:bba005ee18a5807674fba081bffdff6cc4df8fee6069cc4efeb976e4d00a03f5","kind":"com.example.club.vote"}],"application":"sha256:971e9bd20f74b23e89cb265bd0f5318778652c22b88dfbdf91bbd51b9ca2ae05"}]}
+ℹ {"committedCorpus":"v6-club","recordSnapshot":"742e64a06d06226b456f489eb53deacc1bc9f5db","violations":2,"finding":"bob@7 mismatch: observe differs at 7 [affordances.0: oracle com.example.club.vote, view undefined; models.club.applications.0.votes.yes: oracle 0, view 1; outcomes.7.effective: oracle false, view true; outcomes.7.perModel.club.effective: oracle false, view true; outcomes.7.perModel.club.reason: oracle lapsed, view null; outcomes.7.reason: oracle ineffective, view null]","deletions":7,"control":"clean"}
+✔ V6 club: an unrelated private attach preserves a shared intent; a relevant binding change stales it (13.356625ms)
+ℹ {"model":"club","manifest":"sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde","package":"sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e","unrelated":3,"shared":4,"relevant":5,"stale":6,"fresh":7,"violations":0}
+✔ V6 serving mutation: hiding a spine revocation is detected without changing the recorded history (69.977584ms)
+ℹ {"mutation":"hidden-spine-revocation","manifest":"sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9","package":"sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85","at":4,"violations":2,"first":"bob@4 mismatch: observe differs at 4 [affordances.0: oracle undefined, view com.example.sale.offer]","dependent":"bob@5 mismatch: observe differs at 5 [affordances.0: oracle undefined, view com.example.sale.offer; affordances.1: oracle undefined, view com.example.sale.offer_terms; affordances.2: oracle undefined, view com.example.sale.withdraw; models.sale.offers.0: oracle undefined, view {\"id\":\"after-revocation\",\"author\":\"bob\",\"position\":5,\"status; outcomes.5.effective: oracle false, view true; outcomes.5.perModel: oracle undefined, view {\"sale\":{\"effective\":true,\"reason\":null}}; outcomes.5.reason: oracle unauthorized, view null]"}
+ℹ {"corpus":"v6-hidden-revocation","manifest":"sha256:2377e5df338aaa854a56540092bf286aab0ef2dceb563dff6a0fcbdb4633aec9","package":"sha256:cd32a3f52b025b04a885280cebf3078689d505a67d2168dcf6c5f899a51e8a85","nonce":"v6:hidden-revocation","originalSteps":4,"steps":[{"step":{"type":"invite","inviter":"alice","invitee":"bob","grants":{"roles":["Buyer"]}},"entries":[{"id":"sha256:5c9e71807414f9c4c05adee9e28c369cb4ae7f4a0db9b9e70d885cf7dc0610de","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"bob"},"entries":[{"id":"sha256:06d6fbf8d7a3cf5d1e681dae6c07c72763af2c8104ed23f9c78f13d1d45a927c","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"act","actor":"alice","kind":"ai.generalbusiness.dap.revoke","payload":{"principal":"bob","roles":["Buyer"]},"nonce":"v6:4"},"entries":[{"id":"sha256:38fbbe9950ebbf57179ba60bd4b6ab6f6e4625d5c187483fe73a2faf15e0df30","kind":"ai.generalbusiness.dap.revoke"}]}]}
+ℹ {"committedCorpus":"v6-hidden-revocation","recordSnapshot":"742e64a06d06226b456f489eb53deacc1bc9f5db","violations":1,"finding":"bob@4 mismatch: observe differs at 4 [affordances.0: oracle undefined, view com.example.sale.offer]","deletions":3,"control":"clean"}
+ℹ tests 536
+ℹ suites 0
+ℹ pass 532
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 4
+ℹ duration_ms 1144581.059
+
+✖ failing tests:
+
+test at test/club-a5.test.ts:76:11
+⚠ original policy requires rejection of invalid targets and no admission grant (1.264459ms) # V5-A5 retained negative result; no policy repair commissioned
+  AssertionError [ERR_ASSERTION]: votes and admission must refer to an effective application; invalid targets must not grant Member
+  + actual - expected
+
+    {
+  +   grants: 1,
+  -   grants: 0,
+      readers: [
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'alice',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        },
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'bob',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        },
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'carol',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        },
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'dana',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        },
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'frank',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        }
+      ]
+    }
+
+      at TestContext.<anonymous> (file:///private/tmp/dap-t3-obligations/spike/test/club-a5.test.ts:77:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at TestContext.test (node:internal/test_runner/test:400:20)
+      at TestContext.<anonymous> (file:///private/tmp/dap-t3-obligations/spike/test/club-a5.test.ts:76:11)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: { readers: [ [Object], [Object], [Object], [Object], [Object] ], grants: 1 },
+    expected: { readers: [ [Object], [Object], [Object], [Object], [Object] ], grants: 0 },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at test/club-a5.test.ts:76:11
+⚠ original policy requires rejection of invalid targets and no admission grant (0.36475ms) # V5-A5 retained negative result; no policy repair commissioned
+  AssertionError [ERR_ASSERTION]: votes and admission must refer to an effective application; invalid targets must not grant Member
+  + actual - expected
+
+    {
+  +   grants: 1,
+  -   grants: 0,
+      readers: [
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'alice',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        },
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'bob',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        },
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'carol',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        },
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'dana',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        },
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'frank',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        }
+      ]
+    }
+
+      at TestContext.<anonymous> (file:///private/tmp/dap-t3-obligations/spike/test/club-a5.test.ts:77:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at TestContext.test (node:internal/test_runner/test:400:20)
+      at TestContext.<anonymous> (file:///private/tmp/dap-t3-obligations/spike/test/club-a5.test.ts:76:11)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: { readers: [ [Object], [Object], [Object], [Object], [Object] ], grants: 1 },
+    expected: { readers: [ [Object], [Object], [Object], [Object], [Object] ], grants: 0 },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at test/club-a5.test.ts:76:11
+⚠ original policy requires rejection of invalid targets and no admission grant (0.285166ms) # V5-A5 retained negative result; no policy repair commissioned
+  AssertionError [ERR_ASSERTION]: votes and admission must refer to an effective application; invalid targets must not grant Member
+  + actual - expected
+
+    {
+  +   grants: 1,
+  -   grants: 0,
+      readers: [
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'alice',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        },
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'bob',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        },
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'carol',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        },
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'dana',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        },
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'frank',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        }
+      ]
+    }
+
+      at TestContext.<anonymous> (file:///private/tmp/dap-t3-obligations/spike/test/club-a5.test.ts:77:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at TestContext.test (node:internal/test_runner/test:400:20)
+      at TestContext.<anonymous> (file:///private/tmp/dap-t3-obligations/spike/test/club-a5.test.ts:76:11)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: { readers: [ [Object], [Object], [Object], [Object], [Object] ], grants: 1 },
+    expected: { readers: [ [Object], [Object], [Object], [Object], [Object] ], grants: 0 },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at test/club.test.ts:265:1
+⚠ plan §4.2: a second admission is ineffective once the applicant holds Member (138.184833ms) # V5-A1: revised experiment and policy repair pending
+  AssertionError [ERR_ASSERTION]: the plan requires rejection of an existing Member
+
+  true !== false
+
+      at TestContext.<anonymous> (file:///private/tmp/dap-t3-obligations/spike/test/club.test.ts:283:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

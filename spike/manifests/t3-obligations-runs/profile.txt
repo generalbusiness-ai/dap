@@ -1,0 +1,9 @@
+✔ T3 obligation foundation is explicitly pinned and cannot attach into baseline F0 (3.794875ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 150.953708

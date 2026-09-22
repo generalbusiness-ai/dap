@@ -19,10 +19,13 @@ import { snapshot } from './append.ts';
 import {
   attach as attachPackage,
   bindingId,
+  moduleHash,
   emptyEnvironment,
   findModel,
   type AttachResolution,
   type Environment,
+  type FoldCtx,
+  type ObligationRecord,
   type PackageDescriptor,
   packageIn,
   own,
@@ -104,6 +107,14 @@ export const F0_ID = contentId({
   capabilities: Object.values(CAP).sort(),
 });
 
+/** Opt-in foundation identity. Baseline F0 remains unchanged for original packages. */
+export const OBLIGATION_FORM = 'dap.fixture.obligations/1';
+export const F0_OBLIGATIONS_ID = contentId({ base: F0_ID, extension: OBLIGATION_FORM, source: moduleHash(import.meta.url) });
+
+export function foundationFor(packages: Record<string, PackageDescriptor>, bindings: { package: string }[]): string {
+  return bindings.some((b) => Object.values(packageIn(packages, b.package)?.models ?? {}).some((m) => m.obligations)) ? F0_OBLIGATIONS_ID : F0_ID;
+}
+
 // ----- payload shapes -----
 
 export interface GrantSpec {
@@ -173,6 +184,7 @@ export interface InviteRecord {
 
 export interface FoundationState {
   genesisId: string;
+  foundationId: string;
   participants: Principal[];
   /** every grant and revocation with its position; authority at a position is derived from it */
   grantHistory: GrantRecord[];
@@ -192,11 +204,14 @@ export interface FoundationState {
   verdicts: Verdict[];
   /** model states by model id */
   models: Record<string, Json>;
+  obligations: ObligationRecord[];
+  obligationClock: number;
 }
 
 export function initialFoundationState(genesisId: string): FoundationState {
   return {
     genesisId,
+    foundationId: '',
     participants: [],
     grantHistory: [],
     invites: {},
@@ -209,6 +224,8 @@ export function initialFoundationState(genesisId: string): FoundationState {
     kindsAt: [],
     verdicts: [],
     models: {},
+    obligations: [],
+    obligationClock: 0,
   };
 }
 
@@ -251,7 +268,7 @@ function validPayload(kind: Kind, payload: unknown): unknown | undefined {
 
 // ----- authority -----
 
-function roleCapabilities(env: Environment, role: string): string[] {
+export function roleCapabilities(env: Environment, role: string): string[] {
   for (const pkg of env.packages) {
     for (const m of Object.values(pkg.models)) {
       const caps = own(m.roles, role);
@@ -344,6 +361,31 @@ export function genesisError(code: GenesisErrorCode, message: string): GenesisEr
  * the environment; system kinds are handled here.
  */
 export function foldEntry(state: FoundationState, input: FoldInput): Verdict {
+  // The pinned profile selects semantics; inspecting an unrelated registry
+  // entry here would move legacy lookup failures outside their original catch.
+  const enabled = state.foundationId === F0_OBLIGATIONS_ID ||
+    (input.entry.position === 0 && isObj(input.entry.event.payload) && input.entry.event.payload.foundation === F0_OBLIGATIONS_ID);
+  if (!enabled) return foldEntryInner(state, input);
+  // Descriptor callbacks execute on a staged fold. A bad declaration or
+  // matcher cannot leave model state, grants or disclosures half-installed.
+  const trial = { ...structuredClone({ ...state, env: undefined }), env: state.env } as FoundationState;
+  try {
+    const verdict = foldEntryInner(trial, input);
+    Object.assign(state, trial);
+    return verdict;
+  } catch (error) {
+    if (input.throwOnError || input.entry.position === 0) throw error;
+    const verdict: Verdict = { known: true, authorized: false, effective: false, reason: 'obligation_error' };
+    const pos = input.entry.position;
+    state.audiences[pos] = named(input.entry.event.actor);
+    state.membersAt[pos] = [...state.participants];
+    state.kindsAt[pos] = input.entry.event.kind;
+    state.verdicts[pos] = verdict;
+    return verdict;
+  }
+}
+
+function foldEntryInner(state: FoundationState, input: FoldInput): Verdict {
   const { entry, origin, packages, entries } = input;
   const ev = entry.event;
   const pos = entry.position;
@@ -351,8 +393,13 @@ export function foldEntry(state: FoundationState, input: FoldInput): Verdict {
   let verdict: Verdict;
   let audience: Audience | undefined;
   let modelsBefore: FoundationState['models'] | undefined;
+  const obligationReason = pos > 0 && !origin ? obligationRefusal(state, entry, entries) : undefined;
 
-  if (pos === 0) {
+  if (obligationReason) {
+    const cap = own(SYSTEM_KINDS, ev.kind)?.requires ?? own(state.env.kinds, ev.kind)?.capability;
+    verdict = { known: true, authorized: !cap || heldAt(state, ev.actor, cap, pos), effective: false, reason: obligationReason };
+    if (obligationReason === 'obligation_private_clock') audience = named(ev.actor);
+  } else if (pos === 0) {
     verdict = foldGenesis(state, ev, packages);
   } else if (origin) {
     verdict = foldOrigin(state, entry, entries, input.throwOnError);
@@ -436,6 +483,37 @@ export function foldEntry(state: FoundationState, input: FoldInput): Verdict {
       }
     }
   }
+  // The optional form uses public records so later joiners replay completion and lapse.
+  if (verdict.effective && obligationEnabled(state)) {
+    const namedObligation = obligationName(ev);
+    if (namedObligation !== undefined && audience.kind !== 'spine' && ev.kind !== K.disclose) throw new Error('obligated performance must be public');
+    if (namedObligation !== undefined) {
+      const owed = state.obligations.find((o) => o.id === namedObligation)!;
+      owed.status = 'fulfilled'; owed.performedAt = pos; owed.performedBy = ev.actor;
+      audience = SPINE;
+    }
+    if (ev.kind === K.observe && isObj(ev.payload) && isObj(ev.payload.fact) && Number.isSafeInteger(ev.payload.fact.clock)) {
+      state.obligationClock = Math.max(state.obligationClock, ev.payload.fact.clock as number);
+      for (const owed of state.obligations) if (owed.status === 'open' && owed.within !== undefined && state.obligationClock > owed.within) {
+        owed.status = 'lapsed'; owed.lapsedAt = pos;
+      }
+      audience = SPINE;
+    }
+    for (const pkg of state.env.packages) for (const model of Object.values(pkg.models)) {
+      const form = model.obligations;
+      if (!form?.on.includes(ev.kind)) continue;
+      if (!ev.kind.startsWith(SYSTEM_PREFIX) && verdict.perModel?.[model.id]?.effective !== true) continue;
+      const drafts = form.thenOblige(structuredClone(state.models[model.id]!), structuredClone(ev), modelContext(state, entry, origin, entries), model.config);
+      for (const [index, draft] of drafts.entries()) {
+        if (!draft || typeof draft.role !== 'string' || !own(model.roles, draft.role)?.length ||
+            !draft.act || typeof draft.act.kind !== 'string' || draft.act.input === undefined ||
+            !Array.isArray(draft.blocks) || !draft.blocks.every((k) => typeof k === 'string') ||
+            (draft.within !== undefined && (!Number.isSafeInteger(draft.within) || draft.within < 0))) throw new Error('invalid obligation');
+        if (audience.kind !== 'spine' && ev.kind !== K.accept_invite) throw new Error('obligation trigger must be public');
+        state.obligations.push({ ...structuredClone(draft), id: contentId({ source: entry.id, model: model.id, index }), model: model.id, source: pos, sourceId: entry.id, status: draft.within !== undefined && state.obligationClock > draft.within ? 'lapsed' : 'open' });
+      }
+    }
+  }
   state.audiences[pos] = audience;
   state.membersAt[pos] = [...state.participants];
   state.kindsAt[pos] = ev.kind;
@@ -445,7 +523,8 @@ export function foldEntry(state: FoundationState, input: FoldInput): Verdict {
 
 function foldGenesis(state: FoundationState, ev: EventBody, packages: Record<string, PackageDescriptor>): Verdict {
   const p = ev.payload as unknown as GenesisPayload;
-  if (p.foundation !== F0_ID) throw genesisError('foundation_mismatch', 'genesis pins a different foundation');
+  if (p.foundation !== F0_ID && p.foundation !== F0_OBLIGATIONS_ID) throw genesisError('foundation_mismatch', 'genesis pins a different foundation');
+  state.foundationId = p.foundation;
   if (!p.sequencing?.writer) throw genesisError('no_writer', 'genesis names no writer');
   const seen = new Set<string>();
   for (const o of p.origins) {
@@ -458,14 +537,21 @@ function foldGenesis(state: FoundationState, ev: EventBody, packages: Record<str
   }
   const scope = scopeSetup(ev);
   state.participants = scope ? [...scope.founders] : [ev.actor];
+  let hasObligationBinding = false;
   for (const b of p.bindings) {
     const pkg = packageIn(packages, b.package);
     if (!pkg) throw genesisError('foundation_mismatch', `genesis binds unknown package ${b.package}`);
+    // Reuse the binding lookup the baseline already performs. A preflight
+    // lookup changes the observable error phase of a lazy package registry.
+    const obligationBinding = Object.values(pkg.models).some((m) => m.obligations);
+    if (obligationBinding && p.foundation !== F0_OBLIGATIONS_ID) throw genesisError('foundation_mismatch', 'obligation binding requires its foundation');
+    hasObligationBinding ||= obligationBinding;
     const out = attachPackage(state.env, pkg, { resolution: b.resolution, position: 0 });
     if (!out.ok) throw genesisError('foundation_mismatch', `genesis binding refused: ${out.reason}`);
     state.env = out.env;
     for (const m of Object.values(pkg.models)) setOwn(state.models, m.id, m.init(m.config));
   }
+  if (p.foundation === F0_OBLIGATIONS_ID && !hasObligationBinding) throw genesisError('foundation_mismatch', 'obligation foundation requires an obligation binding');
   for (const g of p.grants) applyGrant(state, 0, g, 'grant');
   return { known: true, authorized: true, effective: true };
 }
@@ -496,6 +582,7 @@ function foldSystem(state: FoundationState, entry: Entry, packages: Record<strin
       if (entry.header.requires === undefined) return { known: true, authorized: true, effective: false, reason: 'package_unavailable' };
       const pkg = packageIn(packages, p.package);
       if (!pkg) return { known: true, authorized: true, effective: false, reason: 'package_unavailable' };
+      if (Object.values(pkg.models).some((m) => m.obligations) && state.foundationId !== F0_OBLIGATIONS_ID) return { known: true, authorized: true, effective: false, reason: 'foundation_mismatch' };
       const out = attachPackage(state.env, pkg, { resolution: p.resolution, position: pos, ...(p.audience ? { ceiling: [ev.actor, ...p.audience] } : {}) });
       if (!out.ok) return { known: true, authorized: true, effective: false, reason: out.reason };
       state.env = out.env;
@@ -634,18 +721,7 @@ function dispatch(state: FoundationState, entry: Entry, handlers: string[], orig
   const ev = entry.event;
   const perModel: Verdict['perModel'] = {};
   let anyEffective = false;
-  const members = [...state.participants];
-  const ctx = {
-    position: entry.position,
-    id: entry.id,
-    members,
-    origin,
-    holders: (cap: string) => members.filter((m) => heldAt(state, m, cap, entry.position)),
-    // Public facts of the chain a model may consult: the commitment at any earlier position, hidden or
-    // not (the interpreter's chain carries headers for hidden positions), and who held a capability there.
-    commitmentAt: (i: number) => (i >= 0 && i <= entry.position ? entries[i]?.id : undefined),
-    holdersAt: (cap: string, i: number) => (i >= 0 && i <= entry.position ? (i === entry.position ? members : (state.membersAt[i] ?? [])).filter((m) => heldAt(state, m, cap, i)) : []),
-  };
+  const ctx = modelContext(state, entry, origin, entries);
   for (const modelId of handlers) {
     const model = findModel(state.env, modelId);
     if (!model) {
@@ -668,6 +744,59 @@ function dispatch(state: FoundationState, entry: Entry, handlers: string[], orig
     setOwn(perModel, modelId, { effective: r.effective, reason: r.reason });
   }
   return { known: true, authorized: true, effective: anyEffective, reason: anyEffective ? undefined : 'ineffective', perModel };
+}
+
+export function modelContext(state: FoundationState, entry: Entry, origin: boolean, entries: readonly Entry[]): FoldCtx {
+  const members = [...state.participants];
+  return {
+    position: entry.position,
+    id: entry.id,
+    members,
+    origin,
+    holders: (cap: string) => members.filter((m) => heldAt(state, m, cap, entry.position)),
+    // Public facts of the chain a model may consult: the commitment at any earlier position, hidden or
+    // not (the interpreter's chain carries headers for hidden positions), and who held a capability there.
+    commitmentAt: (i: number) => (i >= 0 && i <= entry.position ? entries[i]?.id : undefined),
+    holdersAt: (cap: string, i: number) => (i >= 0 && i <= entry.position ? (i === entry.position ? members : (state.membersAt[i] ?? [])).filter((m) => heldAt(state, m, cap, i)) : []),
+  };
+ }
+
+export function obligationEnabled(state: FoundationState): boolean {
+  return state.env.packages.some((pkg) => Object.values(pkg.models).some((model) => model.obligations));
+}
+export function obligationName(event: EventBody): string | undefined {
+  return isObj(event.payload) && typeof event.payload.obligation === 'string' ? event.payload.obligation : undefined;
+}
+/** Holding this role never supplies the act's independent capability. */
+export function holdsObligationRole(state: FoundationState, principal: Principal, owed: ObligationRecord, position = Number.MAX_SAFE_INTEGER): boolean {
+  const model = findModel(state.env, owed.model);
+  const caps = own(model?.roles, owed.role);
+  return caps !== undefined && caps.length > 0 && caps.every((cap) => heldAt(state, principal, cap, position));
+}
+function obligationRefusal(state: FoundationState, entry: Entry, entries: readonly Entry[]): string | undefined {
+  if (!obligationEnabled(state)) return undefined;
+  const event = entry.event;
+  const cap = own(SYSTEM_KINDS, event.kind)?.requires ?? own(state.env.kinds, event.kind)?.capability;
+  if (cap && !heldAt(state, event.actor, cap, entry.position)) return undefined;
+  if (event.kind === K.observe && isObj(event.payload) && isObj(event.payload.fact) && 'clock' in event.payload.fact) {
+    if (event.payload.audience !== undefined || Object.keys(event.payload).some((k) => k !== 'fact') ||
+        Object.keys(event.payload.fact).length !== 1 || !Number.isSafeInteger(event.payload.fact.clock) || (event.payload.fact.clock as number) < 0) return 'obligation_private_clock';
+  }
+  if (isObj(event.payload) && Object.hasOwn(event.payload, 'obligation') && !isStr(event.payload.obligation)) return 'malformed_obligation';
+  const id = obligationName(event);
+  if (id !== undefined) {
+    const owed = state.obligations.find((o) => o.id === id);
+    if (!owed) return 'unknown_obligation';
+    if (owed.status !== 'open') return 'obligation_' + owed.status;
+    if (!holdsObligationRole(state, event.actor, owed, entry.position)) return 'obligation_wrong_actor';
+    if (event.kind !== owed.act.kind) return 'obligation_mismatch';
+    const model = findModel(state.env, owed.model)!;
+    const matcher = model.obligations!.matches;
+    const { obligation: _, ...payload } = event.payload as Record<string, Json>;
+    if (!(matcher ? matcher(structuredClone(owed), structuredClone(event), modelContext(state, entry, false, entries), model.config) : canonicalize(payload) === canonicalize(owed.act.input))) return 'obligation_mismatch';
+  }
+  const blocking = state.obligations.find((o) => o.status !== 'fulfilled' && o.blocks.includes(event.kind));
+  return blocking ? 'obligation_' + blocking.status : undefined;
 }
 
 export type Visibility = 'audience' | 'disclosure' | 'hidden';

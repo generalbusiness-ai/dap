@@ -1,0 +1,11 @@
+{
+  "implementation": "2a110ea8493e7ad60e67aa458d0c082d17d67f1e",
+  "originalSpecimen": "b4f18e3b775bb602fa4e7c41818af68f31dc76f0",
+  "preCorrectionReport": "f792e77ba01b5d79c752862689f74576bb41bb27",
+  "form": "dap.fixture.obligations/1",
+  "baselineFoundation": "sha256:5a7be1514529bac249c683ada733e64273f94b2700abf8a55c47dcb7ebfb8d78",
+  "obligationFoundation": "sha256:3a8f5565053cd09265043da46ed74a17b785cc8f5cb05d0475e7fbd7abe56a21",
+  "sale": "sha256:1c3a2ca25dc4f34bf59617dfd61a1bcf46e461bb818414d29c6035446a9915ac",
+  "club": "sha256:b45df4e969da0253ec1c763be7ed511718f2d1b9aa43154694926c1e4725e3eb",
+  "originalObligationFoundation": "sha256:0879301040559d01899781329458a709926948acef2143297fab0d459d9f13e6"
+}

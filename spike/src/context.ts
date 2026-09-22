@@ -7,7 +7,7 @@ import { assertBackendAccess, type BackendLease } from './ownership.ts';
 import { contentId, nonce, type Json } from './canon.ts';
 import { attachRequires, bindingId, packageIn, own, type PackageDescriptor } from './descriptor.ts';
 import {
-  F0_ID,
+  foundationFor,
   K,
   RUNTIME,
   foldEntry,
@@ -81,7 +81,7 @@ export class Context {
     const backend = opts.backend ?? new MemoryBackend();
     assertBackendAccess(backend);
     const payload: GenesisPayload = {
-      foundation: F0_ID,
+      foundation: foundationFor(opts.packages, opts.bindings ?? []),
       runtime: RUNTIME,
       sequencing: { profile: 'single-writer', writer: opts.writer ?? opts.creator },
       grants: opts.grants ?? [],

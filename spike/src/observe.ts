@@ -5,8 +5,8 @@
 // principal, and the affordances the principal holds.
 
 import type { Json } from './canon.ts';
-import { own, setOwn, bindingIdOf, findModel, visibleBinding, type ObserveCtx } from './descriptor.ts';
-import { K, SYSTEM_KINDS, holdsNow, type FoundationState } from './foundation.ts';
+import { own, setOwn, bindingIdOf, findModel, visibleBinding, type ObserveCtx, type ObligationRecord } from './descriptor.ts';
+import { K, SYSTEM_KINDS, holdsNow, holdsObligationRole, obligationEnabled, type FoundationState } from './foundation.ts';
 import type { Principal } from './types.ts';
 
 export interface Observation {
@@ -24,6 +24,8 @@ export interface Observation {
   outcomes: Record<string, { effective: boolean; reason: string | null; perModel?: Record<string, { effective: boolean; reason: string | null }> }>;
   models: Record<string, Json>;
   affordances: string[];
+  obligations?: ObligationRecord[];
+  obligationAffordances?: string[];
 }
 
 export interface VisibilityFn {
@@ -126,6 +128,11 @@ export function observe(state: FoundationState, p: Principal, basis: number, vis
     bindings,
     outcomes,
     models,
-    affordances: [...new Set([...foundationAffordances(state, p), ...modelAffordances(state, p, ctx)])].sort(),
+    affordances: [...new Set([...foundationAffordances(state, p), ...modelAffordances(state, p, ctx)])]
+      .filter((kind) => !state.obligations.some((o) => visible(o.source) && o.status !== 'fulfilled' && o.blocks.includes(kind))).sort(),
+    ...(obligationEnabled(state) ? {
+      obligations: state.obligations.filter((o) => visible(o.source)).map((o) => structuredClone(o)),
+      obligationAffordances: state.obligations.filter((o) => visible(o.source) && o.status === 'open' && holdsObligationRole(state, p, o)).map((o) => o.id),
+    } : {}),
   };
 }

@@ -1,0 +1,8 @@
+{
+  "baseline": "9c4e04e52ca9f16d3014c9d7d79a148bd039123e",
+  "form": "dap.fixture.obligations/1",
+  "baselineFoundation": "sha256:5a7be1514529bac249c683ada733e64273f94b2700abf8a55c47dcb7ebfb8d78",
+  "obligationFoundation": "sha256:0879301040559d01899781329458a709926948acef2143297fab0d459d9f13e6",
+  "sale": "sha256:1c3a2ca25dc4f34bf59617dfd61a1bcf46e461bb818414d29c6035446a9915ac",
+  "club": "sha256:b45df4e969da0253ec1c763be7ed511718f2d1b9aa43154694926c1e4725e3eb"
+}
