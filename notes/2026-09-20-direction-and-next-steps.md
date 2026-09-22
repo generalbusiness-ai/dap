@@ -51,8 +51,11 @@ assertions, captured material and other parties' signed acts apart, and
 shows how far each fact can be relied on. The first experiment is one
 person-controlled account, one
 bounded episode, one real exchange through an ordinary channel, and one
-voluntary contribution by another party. §8 sets out one pilot in five stages. Nothing starts until a willing
-person and a bounded segment of a real episode exist.
+voluntary contribution by another party. The success factor is comprehension: a person must be able to say what
+this is about, what they can do now, and what they cannot see and why,
+from the screen alone, and every stage is judged on that before
+anything else. §8 sets out one pilot in five stages. Nothing starts
+until a willing person and a bounded segment of a real episode exist.
 
 Two project terms are used throughout. A **context** is one governed
 scope of decisions with one ordered record of events. A **perspective**
@@ -95,9 +98,73 @@ scheme.
   bounded episode, with selected exchanges and contributions. It is a
   pilot choice, not the architecture.
 
+**Four hypotheses, kept apart.** The Weixin survey supports the first
+two directly and the third not at all. The third is dap's entry point.
+The fourth is the larger opportunity, and the one the authoring work
+exists for.
+
+- (a) People will use light structure around a real activity.
+- (b) An organiser or professional can introduce a tool through an
+  existing relationship, and it saves their bookkeeping.
+- (c) A person values a retained, attributed account across independent
+  providers enough to maintain it, contribute to it, or pay for it.
+- (d) An organiser, a developer or an assistant can turn a useful change
+  in an arrangement into understandable interaction rules at acceptable
+  total cost, while preserving earlier outcomes, appropriate views and
+  authority.
+
+The first three concern the personal-account entry point. The fourth is
+about evolving interactions: acquiring and changing small,
+relationship-specific rules without replacing the workspace, losing
+history, or silently changing who sees what and who may act. A
+successful static account does not establish (d); a failed entry route
+does not refute it. The language work in the authoring plan is a way to
+make such adaptation affordable, not something an end user is expected
+to type.
+
+The pilot is designed so that (c) can be observed on its own: what
+currently stands, who said it, what is still disputed, and what the
+person retains and can share when a helper or provider changes. Neither
+aggregation nor a different architecture establishes that advantage by
+itself, and existing products already offer parts of it; §7 names them
+as the bar. For (d) the pilot carries one cheap observation, in stage 1
+and stage 2 below, and no build.
+
 The design's agreement property is about recorded decisions: everyone who can see a decision judges it the same way. It
 does not mean agreement about what actually happened, what is owed, or
 whose interpretation is right. Those stay open; §5 says how the record keeps them open.
+
+### Comprehension is the success factor
+
+The design's third goal, comprehension simplicity for a person, ranks
+above lightweight decentralization and has never been measured.
+Comprehension is the first design gate. Google Wave is the warning: its
+mechanics were close to dap's, a replayable shared timeline with private
+replies and attachable structure, and Google closed it in 2010 for
+inadequate adoption. Why it was not adopted is commentary, not
+established; what the closure shows is that sophisticated collaboration
+mechanics alone do not ensure adoption. A record that is correct,
+attributed and private, and that nobody understands, would fail the
+same way.
+
+dap has five hazards of the same shape, and each needs a legibility rule
+the screens obey.
+
+| Hazard | The person's experience | The rule |
+|---|---|---|
+| partial views | "some of this is missing and I don't know why" | the limits of the view are made clear: known hidden positions are shown, with whatever explanation the person is entitled to see, and where the source or the route to access is unknown the screen says so. The header of a hidden position carries no actor, audience or route, and disclosure can itself be private, so the screen never invents an explanation |
+| structure arriving mid-stream | "this changed shape while I wasn't looking" | orientation is preserved when structure arrives: the person can still answer the three questions, and the new structure is announced as a change. Whether it appears as a card in the thread or as a compact case-and-next-action screen is tested, not assumed |
+| standing that changes | "was Friday confirmed or not?" | every fact shows who said it, when, and how far it can be relied on; a change of standing is shown as a change, with the old evidence still visible |
+| roles that are multiple and nebulous | "who is this person, and what can they do here?" | each participant is shown as what they are in this relationship, in the person's own words where possible, and their permissions are visible before they act |
+| the anchor over several contexts | "which of these is the real one?" | one screen answers the three questions at the top; the threads beneath are labelled by relationship, and nothing on the screen uses the substrate's vocabulary |
+
+The test is the five screen questions of §7, asked unaided. The stage 2
+gate in §8 is a pass condition, not a record-keeping step. Familiar
+forms are the first candidates to test: a numbered chain in a chat, an
+email thread with comments, a checklist, a card on a board, a receipt, a
+"forwarded" label. The Weixin survey shows such forms in mass use, but
+their adoption also depended on the platform and the relationship around
+them, so the form is a candidate, not a proven cause.
 
 ## 3. Participants, and the relationship a space serves
 
@@ -234,6 +301,14 @@ the account's cases include not only missing confirmation but
 cancellation, correction, retraction and conflicting sources. A person's
 own coherent account never requires the other party's agreement.
 
+One boundary follows, and it is a specification to state before the
+account package is written. A query indexed by a viewer describes that
+viewer's selected view, not the whole relation: "my evidence disputes
+Friday" is a valid personal query. A shared decision may not treat
+incomplete private evidence as if it were globally complete: a public
+decision that depends on reports not disclosed to everyone it binds is
+rejected. The account's cases pair the two.
+
 A history of what an insurer said helps the person who kept it, and
 harms the same person if it is wrong. So the screen always shows
 standing, and an act a helper performed is recorded as the helper's.
@@ -300,7 +375,7 @@ the spike reports claim. Nothing here is proven in general.
 The screen questions referred to below are the design's three, from goal
 3: what is this about, what can I do now, and what can I not see and
 why. The experiment adds two: who said this, and what remains
-unconfirmed.
+unconfirmed. Every screen also obeys the legibility rules of §2.
 
 | Needed by | Piece | State | What to do |
 |---|---|---|---|
@@ -312,6 +387,10 @@ unconfirmed.
 | rung 1 | capture of external material with its source, and an outgoing message composed from the account | nothing | the capture event is application-level, in the account package; the message is a rendered query; no transport |
 | rung 2 | another party's slice by link, and their act recorded as theirs | test keys and fixture routing only; nothing authenticated (see below) | before any real link: the four prerequisites listed below |
 | any real episode | a provisional operator, storage, export, recovery, a stated privacy boundary | nothing | choose them before the episode; long-term deployment can wait |
+| any real episode | the baseline: existing chat and email plus a shared document, calendar or checklist, selected with the person | exists everywhere | this is what "less burden than the previous method" is measured against |
+| any real episode | the bar for useful-alone: products that already offer parts of it, such as care coordination with calendars, tasks and messages, a person-held health record with imported documents and time-limited sharing, a client hub tied to quotes and appointments, a shared inbox with internal discussion and guest conversations, and assistants that draft across apps with named approval | exist; advertised capability, not evaluated here | the pilot's distinguishing observation is what stands, who said it, what is disputed, and what the person retains and can share when a helper or provider changes |
+| rung 1 and 2 | the path to test first: an ordinary link, an understandable page, one scoped confirmation, an explicit receipt back through the existing channel; manual return, capture and notification allowed if counted | nothing | build this path; the survey's four chat designs and its identity and payment options are background, not stages |
+| any card | preview data authored separately and public-safe, never the private anchor's title, status or summary, since chat platforms crawl links and a crawler must neither consume an invitation nor gain access | nothing | required before any card is shared |
 | any | packages whose view property holds for the checked fragment | the authoring plan's step 1, claims A1 to A3 including the corpus check | run it independently beside the product work |
 | later | a helper who joins late reads the public history | the retroactive audience | its own experiment; now product-motivated |
 | later | continuity across episodes and providers | design §1, unbuilt | after the first episode |
@@ -356,11 +435,23 @@ Produces, in one brief: a willing person; a bounded segment of a real
 episode, a week, one encounter or one claim exchange, not the whole case;
 their current method, recorded; the help they will be supplied under §3
 and what needs their approval; the ordinary channels involved; the
-immediate outcome they want; a fixed observation window; and the pilot's
-operating boundary: a provisional operator, storage, export and recovery
-arrangements, and the privacy boundary stated in plain words, with who
-can read what during the pilot and how that is enforced. The claim is
-preferred; whichever case a willing person can be found for decides.
+immediate outcome they want; who introduces the space, whose work it
+saves, and the concrete request that gives another party a reason to
+act, since a card is an access mechanism and "join our space" is not a
+reason; a fixed observation window; a fixed budget of screen revisions
+and fresh recruits for stage 2; and the pilot's operating boundary: a
+provisional operator, storage, export and recovery arrangements, and the
+privacy boundary stated in plain words, with who can read what during
+the pilot and how that is enforced. The claim is preferred; whichever
+case a willing person can be found for decides. The preferred introducer
+is an aligned, recurring organiser or professional who is already
+reachable, not a new sales effort. The brief also says who writes and
+maintains the package for this pilot; a small hand-written catalog is a
+legitimate start and is not to be confused with agent-created rules. And
+it asks the introducer for two recent cases and one exception their
+current template handles poorly, distinguishing ordinary configuration
+from an actual new rule; the absence of a useful exception is a finding
+too.
 
 Stop when: no willing person with a bounded segment exists, or the
 boundary cannot be stated honestly for the chosen segment. Then choose
@@ -371,13 +462,25 @@ another segment or wait; no later stage starts.
 Owner: builder, then five people.
 
 Produces: a storyboard on a phone using the chosen segment, asking the
-five screen questions of §7, including a changed arrangement and
-selected sharing with one other party; five people asked; the observed
+five screen questions of §7 unaided, including a changed arrangement,
+a change of standing, and selected sharing with one other party; five
+people asked, none of them involved in building it; the observed
 answers, the revisions they caused and the remaining blockers recorded.
+Where stage 1 supplied a useful exception, one more scene tests
+hypothesis (d): an informal request gains a confirmation that names its
+target, the arrangement changes, and the participants can still say what
+stands, who may act, and what is private. If the episode supplied no
+exception, that scene is a clearly separated follow-up.
 
-Ends when: that record exists. A failing screen means a design revision,
-not a verdict on the direction, and stage 3 does not start until the
-record exists.
+Passes when: four of the five answer all five questions correctly,
+unaided, on every screen shown, and each performs one useful action on
+it. The five are plausible users of the chosen episode. A screen that
+fails is revised and asked again of fresh people, within the revision
+and recruitment budget set in stage 1. If the budget is exhausted, the
+learning is recorded and the work returns to the episode and its
+framing without proceeding to build. A failing screen is a design
+revision, not a verdict on the direction. Five people find problems;
+they do not estimate adoption.
 
 ### Stage 3: build one complete path
 
@@ -387,7 +490,12 @@ Produces, in one implementation request with internal checks: the
 account package, from a manifest frozen before authoring, with the three
 record kinds, capture events, standing that can change, the cases of §5
 predeclared including cancellation, correction, retraction and
-conflicting sources, and a privacy budget, authored under the checker;
+conflicting sources, the paired personal-query and rejected-public-decision
+case of §5, and a privacy budget, with literal expected standing,
+provenance and readership asserted as well as checker equality, since a
+consistently wrong account can still agree with itself; authored under
+the checker, with specification, authoring and repair, human review and
+operating effort recorded;
 and a minimal client over it for the chosen segment, with the anchor and
 actions that name their targets. Manual capture and confirmation are
 allowed, if visible and counted.
@@ -404,7 +512,18 @@ chosen segment over the package.
 
 Owner: the person, with the help chosen in stage 1.
 
-One pilot, three observations inside one window:
+One pilot, three kinds of value observed inside one window, so that
+hypothesis (c) of §2 is seen on its own:
+
+- organiser value: the current arrangement, its source and the next
+  step found with less total burden than the previous method;
+- contribution value: one specific confirmation or correction another
+  party answers because it helps their own immediate work;
+- continuity and control value: a real or clearly labelled simulated
+  handoff to a helper, using a selected slice, without reconstructing
+  the case or exposing unrelated material.
+
+And three observations:
 
 - **Alone.** The account kept with every other party outside. Measured:
   the total burden of capture, correction, approvals, permissions and
@@ -424,6 +543,13 @@ One pilot, three observations inside one window:
   arrangement?" link; the other party acts once; whether they did, what
   they saw, the friction, whether it deepened. A refusal is a finding.
   One party is not a market test.
+
+Also recorded: the work replaced and the work added; whether the person
+returns unprompted when another need arises; whether the introducer
+wants to use it for another case. A reply through an external channel
+is captured evidence, never that party's signed act. Failure to get a
+direct contribution does not refute useful-alone value, and useful-alone
+success does not establish the collaboration hypothesis.
 
 Stop when: the burden exceeds the previous method with no gain in
 comprehension or action. Then it is a filing system, and the first
