@@ -361,7 +361,10 @@ export function genesisError(code: GenesisErrorCode, message: string): GenesisEr
  * the environment; system kinds are handled here.
  */
 export function foldEntry(state: FoundationState, input: FoldInput): Verdict {
-  const enabled = obligationEnabled(state) || Object.values(input.packages).some((pkg) => Object.values(pkg.models).some((m) => m.obligations));
+  // The pinned profile selects semantics; inspecting an unrelated registry
+  // entry here would move legacy lookup failures outside their original catch.
+  const enabled = state.foundationId === F0_OBLIGATIONS_ID ||
+    (input.entry.position === 0 && isObj(input.entry.event.payload) && input.entry.event.payload.foundation === F0_OBLIGATIONS_ID);
   if (!enabled) return foldEntryInner(state, input);
   // Descriptor callbacks execute on a staged fold. A bad declaration or
   // matcher cannot leave model state, grants or disclosures half-installed.
@@ -520,7 +523,7 @@ function foldEntryInner(state: FoundationState, input: FoldInput): Verdict {
 
 function foldGenesis(state: FoundationState, ev: EventBody, packages: Record<string, PackageDescriptor>): Verdict {
   const p = ev.payload as unknown as GenesisPayload;
-  if (p.foundation !== foundationFor(packages, p.bindings)) throw genesisError('foundation_mismatch', 'genesis pins a different foundation');
+  if (p.foundation !== F0_ID && p.foundation !== F0_OBLIGATIONS_ID) throw genesisError('foundation_mismatch', 'genesis pins a different foundation');
   state.foundationId = p.foundation;
   if (!p.sequencing?.writer) throw genesisError('no_writer', 'genesis names no writer');
   const seen = new Set<string>();
@@ -534,14 +537,21 @@ function foldGenesis(state: FoundationState, ev: EventBody, packages: Record<str
   }
   const scope = scopeSetup(ev);
   state.participants = scope ? [...scope.founders] : [ev.actor];
+  let hasObligationBinding = false;
   for (const b of p.bindings) {
     const pkg = packageIn(packages, b.package);
     if (!pkg) throw genesisError('foundation_mismatch', `genesis binds unknown package ${b.package}`);
+    // Reuse the binding lookup the baseline already performs. A preflight
+    // lookup changes the observable error phase of a lazy package registry.
+    const obligationBinding = Object.values(pkg.models).some((m) => m.obligations);
+    if (obligationBinding && p.foundation !== F0_OBLIGATIONS_ID) throw genesisError('foundation_mismatch', 'obligation binding requires its foundation');
+    hasObligationBinding ||= obligationBinding;
     const out = attachPackage(state.env, pkg, { resolution: b.resolution, position: 0 });
     if (!out.ok) throw genesisError('foundation_mismatch', `genesis binding refused: ${out.reason}`);
     state.env = out.env;
     for (const m of Object.values(pkg.models)) setOwn(state.models, m.id, m.init(m.config));
   }
+  if (p.foundation === F0_OBLIGATIONS_ID && !hasObligationBinding) throw genesisError('foundation_mismatch', 'obligation foundation requires an obligation binding');
   for (const g of p.grants) applyGrant(state, 0, g, 'grant');
   return { known: true, authorized: true, effective: true };
 }
