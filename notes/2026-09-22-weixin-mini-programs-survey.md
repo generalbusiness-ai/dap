@@ -108,8 +108,10 @@ activity.
   property has no counterpart.
 - **Identity and trust are centralised.** Real-name identity is a
   strength for onboarding and a limit for anyone who wants a
-  context-scoped identity, a chosen representative, or their own
-  serving party. There is one serving party.
+  context-scoped identity or a chosen representative. Identity and
+  distribution depend on Tencent; an application's backend may be the
+  developer's own, and portability and export depend on that
+  application.
 - **Notification is rationed by category.** Long-term subscription
   messages go to licensed public services. Everyone else gets one
   message per user tap. Any dap-like space that needs to tell a person
@@ -211,7 +213,8 @@ a card is tapped: an identity, a payment method, and the conversation
 the card was shared into. Any Web-native equivalent has to supply the
 same three from outside the platform the tap happens in, and then keep
 the record outside it. The approaches below are grouped by which of the
-three they supply. None is speculative; each is shipping in 2026.
+three they supply. Each is checked against its current documentation;
+where a platform has withdrawn an option, the text says so.
 
 ### The card: making a dap link legible everywhere
 
@@ -232,16 +235,18 @@ three they supply. None is speculative; each is shipping in 2026.
   developer platform apps embedded in posts. A rung-2 act, "confirm this
   arrangement", can be a button on such a card, with the signed act
   happening in dap and the card merely carrying the link.
-- **Install-free execution**: App Clips on iOS and Instant Apps on
-  Android are the closest native analogues of a mini program, launched
-  from a link, a QR code or Messages; progressive web apps and the Web
-  Share Target API are the Web's own version. A dap client as a PWA that
+- **Install-free execution**: App Clips on iOS are the closest native
+  analogue of a mini program, launched from a link, a QR code or
+  Messages. Android's Instant Apps were the other and are historical:
+  Google documents the shutdown of publication, serving and the Instant
+  API from December 2025. Progressive web apps and the Web Share Target
+  API are the Web's own version. A dap client as a PWA that
   opens from any card and can be shared back into any chat needs no
   platform permission.
 
 ### The identity: a key the person already holds
 
-- **Passkeys (WebAuthn)** are the Web's account-free sign-in: a
+- **Passkeys (WebAuthn)** are the Web's passwordless sign-in: a
   per-site key pair, synced across a person's devices by Apple, Google
   and password managers, created in one tap. They are scoped to the
   relying party, and the PRF extension that could derive per-context
@@ -286,17 +291,21 @@ three they supply. None is speculative; each is shipping in 2026.
   which is a quiet onboarding path where a payment is genuinely part of
   the engagement.
 
-### What generates onboarding at scale
+### Candidate routes to test
 
-Reading the Weixin numbers for causes rather than counts, five things
-generate it, and each has a Web-native form.
+The Weixin examples show five routes by which people arrived, without
+isolating what made each one work; the 群接龙 interview names
+bookkeeping relief, platform distribution and merchant incentives
+together. Each route has a Web-native form and each is a hypothesis for
+the pilot, not a ranking.
 
 1. **A card into a chat that already exists.** The relationship
    distributes the space. This is the ladder's rung 1 and needs only
-   unfurling to work everywhere. It is the single largest generator, and
-   the one dap can have without any platform's permission.
+   unfurling to work everywhere, and it is the route dap can have without
+   any platform's permission.
 2. **A code at the point of need.** Scan-to-order is the largest mini
-   program category because the QR code is on the table. For dap the
+   program category, and the QR code on the table is part of how; the
+   rest is the restaurant, the payment and the menu already being there. For dap the
    equivalents are a code on the insurer's letter, on the facility's
    brochure, on the contractor's estimate: the supplier furnishes the
    card, and the person keeps the space.
@@ -306,9 +315,11 @@ generate it, and each has a Web-native form.
 4. **A platform's own mini-app store.** Telegram Mini Apps, LINE Mini
    Apps, App Clips: reach is built in, and TON-linked Telegram mini apps
    passed 100 million monthly users in 2025. The cost is the platform's
-   rules and, for Telegram, a crypto wallet as the payment rail. A dap
-   client can be published there as one more surface without living
-   there.
+   rules; for Telegram, digital goods and services must be paid in
+   Telegram Stars while physical goods and services may use other
+   providers and currencies, and any payment integration follows that
+   platform's current rules. A dap client can be published there as one
+   more surface without living there.
 5. **An identity people already hold.** Passkeys, a phone number, an
    atproto handle. Every account created is a person lost; every key
    reused is a person kept.
@@ -363,11 +374,13 @@ is the record, so the conversation cannot leave. dap's design already
 inverts both, and the design space below follows from that.
 
 **What replaces the channel.** In dap an audience is a property of a
-message and a view is a subsequence of one series. A channel is
-therefore a view, not a container: the sibling thread and the adjuster
-thread are two audiences over one record, and a message can be in both
-without being copied. The design note calls this one series, many views.
-Three products show parts of it working.
+message and a view is a subsequence of one series. Within one governed
+context a channel is therefore a view, not a container: two threads can
+be two audiences over one record, and a message can be in both without
+being copied. Independently governed dealings, the family's arrangements
+and the insurer's claim, retain separate histories, composed with source
+attribution in the person's perspective; they are not merged into one
+record to simplify the chat. Three products show parts of this working.
 
 - **Front and Missive**, shared inboxes, put an email thread and the
   team's private comments on one timeline with two audiences. That is
@@ -414,14 +427,16 @@ background.
    message is a signed event; other parties who tap the card are at
    rung 2. The chat platform stays the place people look, the record is
    dap's, and the silo is avoided because the same series serves every
-   audience. This is what a Matrix bridge does for rooms, done for a
-   situation.
+   audience. An ordinary card links to a scoped dap page; it does not
+   itself synchronize messages or return attention to the originating
+   chat. A live bridge, which maps remote users and operates across
+   services as a Matrix bridge does, is a separate optional integration.
 3. **Structure as cards on that timeline.** An act's affordance renders
    as a card; the fold's verdict updates it; a checklist is a sequence
    of cards. The conversation and the structure are one timeline, which
-   is the group-tools model and the reason the chain in a chat beat
-   every purpose-built tool. Attaching a package mid-stream adds new
-   card kinds without moving anyone.
+   is the group-tools model; the chain in a chat is the observed example,
+   and why it spread is not isolated by this survey. Attaching a package
+   mid-stream adds new card kinds without moving anyone.
 4. **The anchor over many chats.** One screen per person, composed
    across every context that shares the referent, with the three
    questions answered at the top and the threads beneath. Shared-inbox
@@ -455,9 +470,10 @@ semantics.
 | shared inboxes such as Missive | several accounts and organisations, internal discussion, guest conversations, tasks and an audit trail | the dual-audience thread and a composed screen exist; the anchor is not unique |
 | assistants such as Lindy | source-backed administrative work across apps with named approval for actions that reach outside | capture, summarising and drafting are not distinguishing by themselves |
 
-What none of them advertise, and what the pilot should therefore be
-built to observe, is an understandable account of what currently
-stands, who said it, what is still disputed, and what the person
+The combination the pilot is built to observe, which this survey did
+not find advertised together and did not evaluate hands-on, is an
+understandable account of what currently stands, who said it, what is
+still disputed, and what the person
 retains and can share when a helper or a provider changes.
 
 ## 10. What this does not establish
@@ -474,7 +490,8 @@ roadmap; the direction note fixes the first path to test. The
 platform's own reports rank by program, not by relationship shape.
 Nothing here is evidence that a person-held account would be adopted;
 it is evidence that the surrounding behaviour exists and that the
-platform cannot provide the account.
+platform does not itself provide a user-governed, portable account
+across independent services.
 
 ## Sources
 
@@ -505,6 +522,9 @@ platform cannot provide the account.
   https://www.lindy.ai/
 - Slack link unfurling: https://docs.slack.dev/messaging/unfurling-links-in-messages/
 - WebAuthn PRF extension is optional: https://www.w3.org/TR/webauthn-3/#prf-extension
+- Android Instant Apps shutdown from December 2025: https://developer.android.com/topic/google-play-instant
+- Telegram payment rules, Stars for digital goods: https://core.telegram.org/bots/payments-stars
+- Matrix bridges: https://matrix.org/docs/matrix-concepts/elements-of-matrix/#bridges
 - Telegram Mini Apps scale: https://bitcoinist.com/ton-mini-apps-pass-100m-monthly-active-users-on-telegram/
 - Digital Credentials API status, Chrome 141 and Safari 26:
   https://developer.chrome.com/blog/digital-credentials-api-shipped and
@@ -515,4 +535,3 @@ platform cannot provide the account.
 - Matrix room history visibility and event graph:
   https://matrix-org.github.io/synapse/latest/development/room-dag-concepts.html
   and https://matrix.org/blog/2026/07/08/matrix-v1.19-release/
-

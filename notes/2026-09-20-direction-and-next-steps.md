@@ -98,21 +98,37 @@ scheme.
   bounded episode, with selected exchanges and contributions. It is a
   pilot choice, not the architecture.
 
-**Three hypotheses, kept apart.** The Weixin survey supports the first
-two directly and the third not at all, and the third is dap's own.
+**Four hypotheses, kept apart.** The Weixin survey supports the first
+two directly and the third not at all. The third is dap's entry point.
+The fourth is the larger opportunity, and the one the authoring work
+exists for.
 
 - (a) People will use light structure around a real activity.
 - (b) An organiser or professional can introduce a tool through an
   existing relationship, and it saves their bookkeeping.
 - (c) A person values a retained, attributed account across independent
   providers enough to maintain it, contribute to it, or pay for it.
+- (d) An organiser, a developer or an assistant can turn a useful change
+  in an arrangement into understandable interaction rules at acceptable
+  total cost, while preserving earlier outcomes, appropriate views and
+  authority.
+
+The first three concern the personal-account entry point. The fourth is
+about evolving interactions: acquiring and changing small,
+relationship-specific rules without replacing the workspace, losing
+history, or silently changing who sees what and who may act. A
+successful static account does not establish (d); a failed entry route
+does not refute it. The language work in the authoring plan is a way to
+make such adaptation affordable, not something an end user is expected
+to type.
 
 The pilot is designed so that (c) can be observed on its own: what
 currently stands, who said it, what is still disputed, and what the
 person retains and can share when a helper or provider changes. Neither
 aggregation nor a different architecture establishes that advantage by
 itself, and existing products already offer parts of it; §7 names them
-as the bar.
+as the bar. For (d) the pilot carries one cheap observation, in stage 1
+and stage 2 below, and no build.
 
 The design's agreement property is about recorded decisions: everyone who can see a decision judges it the same way. It
 does not mean agreement about what actually happened, what is owed, or
@@ -285,6 +301,14 @@ the account's cases include not only missing confirmation but
 cancellation, correction, retraction and conflicting sources. A person's
 own coherent account never requires the other party's agreement.
 
+One boundary follows, and it is a specification to state before the
+account package is written. A query indexed by a viewer describes that
+viewer's selected view, not the whole relation: "my evidence disputes
+Friday" is a valid personal query. A shared decision may not treat
+incomplete private evidence as if it were globally complete: a public
+decision that depends on reports not disclosed to everyone it binds is
+rejected. The account's cases pair the two.
+
 A history of what an insurer said helps the person who kept it, and
 harms the same person if it is wrong. So the screen always shows
 standing, and an act a helper performed is recorded as the helper's.
@@ -421,7 +445,13 @@ privacy boundary stated in plain words, with who can read what during
 the pilot and how that is enforced. The claim is preferred; whichever
 case a willing person can be found for decides. The preferred introducer
 is an aligned, recurring organiser or professional who is already
-reachable, not a new sales effort.
+reachable, not a new sales effort. The brief also says who writes and
+maintains the package for this pilot; a small hand-written catalog is a
+legitimate start and is not to be confused with agent-created rules. And
+it asks the introducer for two recent cases and one exception their
+current template handles poorly, distinguishing ordinary configuration
+from an actual new rule; the absence of a useful exception is a finding
+too.
 
 Stop when: no willing person with a bounded segment exists, or the
 boundary cannot be stated honestly for the chosen segment. Then choose
@@ -436,6 +466,11 @@ five screen questions of §7 unaided, including a changed arrangement,
 a change of standing, and selected sharing with one other party; five
 people asked, none of them involved in building it; the observed
 answers, the revisions they caused and the remaining blockers recorded.
+Where stage 1 supplied a useful exception, one more scene tests
+hypothesis (d): an informal request gains a confirmation that names its
+target, the arrangement changes, and the participants can still say what
+stands, who may act, and what is private. If the episode supplied no
+exception, that scene is a clearly separated follow-up.
 
 Passes when: four of the five answer all five questions correctly,
 unaided, on every screen shown, and each performs one useful action on
@@ -455,7 +490,12 @@ Produces, in one implementation request with internal checks: the
 account package, from a manifest frozen before authoring, with the three
 record kinds, capture events, standing that can change, the cases of §5
 predeclared including cancellation, correction, retraction and
-conflicting sources, and a privacy budget, authored under the checker;
+conflicting sources, the paired personal-query and rejected-public-decision
+case of §5, and a privacy budget, with literal expected standing,
+provenance and readership asserted as well as checker equality, since a
+consistently wrong account can still agree with itself; authored under
+the checker, with specification, authoring and repair, human review and
+operating effort recorded;
 and a minimal client over it for the chosen segment, with the anchor and
 actions that name their targets. Manual capture and confirmation are
 allowed, if visible and counted.
