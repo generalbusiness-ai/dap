@@ -1,0 +1,396 @@
+▶ post-baseline A5: invariants detect votes and admission naming invitation-acceptance
+  ⚠ original policy requires rejection of invalid targets and no admission grant (3.010792ms) # V5-A5 retained negative result; no policy repair commissioned
+✔ post-baseline A5: invariants detect votes and admission naming invitation-acceptance (471.14825ms)
+ℹ {"clubA5":"invitation-acceptance","manifest":"sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde","package":"sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e","nonce":"v6-followup:a5:invitation-acceptance","target":{"position":6,"id":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","kind":"ai.generalbusiness.dap.accept_invite","effective":true},"votes":[9,10],"admit":11,"grants":[{"position":12,"payload":{"principal":"dana","roles":["Member"]}}],"readers":[{"reader":"alice","votes":[true,true],"admit":true},{"reader":"bob","votes":[true,true],"admit":true},{"reader":"carol","votes":[true,true],"admit":true},{"reader":"dana","votes":[true,true],"admit":true},{"reader":"frank","votes":[true,true],"admit":true}],"findings":["*@9 invariant: vote at 9 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","*@10 invariant: vote at 9 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","*@10 invariant: vote at 10 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","*@11 invariant: vote at 9 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","*@11 invariant: vote at 10 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","*@11 invariant: admit at 11 of unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","*@12 invariant: vote at 9 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","*@12 invariant: vote at 10 on unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","*@12 invariant: admit at 11 of unknown application sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402"],"steps":[{"step":{"type":"invite","inviter":"alice","invitee":"bob","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:f8e2b2760606029da0845a7d1a315291e617637c63b050ebb68630514b7b6367","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"bob"},"entries":[{"id":"sha256:efb8d15b0646f022fab90d7fa589e5c858af4582891d05da9f2faf860eb75974","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"carol","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:2c862f052244d244f6849a5f8550c6296624802360d2d5ffdf61af5be3c7aba5","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"carol"},"entries":[{"id":"sha256:0f0864ee38e0f0f414103426c0077d1f1e4def4c230d92a73a4186d6a6585445","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"dana","grants":{"roles":[]}},"entries":[{"id":"sha256:6ad4fb318d409b441764b707208069089d376825d667dd7564cc3e5af42e788b","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"dana"},"entries":[{"id":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"frank","grants":{"roles":["Member"]}},"entries":[{"id":"sha256:a17796beda7c55ae1c20e6f4932a7898d8d592fa7140165d1422f310a57a3a65","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"frank"},"entries":[{"id":"sha256:b8d9f7790068c1434997289287b529a5db9ceb85715fdc63409cdff2e61c153a","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"act","actor":"bob","kind":"com.example.club.vote","payload":{"application_id":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","choice":"yes"},"nonce":"a5:8"},"entries":[{"id":"sha256:632055e52d15f825f7a76c0a99f68d18f486456eb6c09c2f60112308e6531cd3","kind":"com.example.club.vote"}],"application":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402"},{"step":{"type":"act","actor":"carol","kind":"com.example.club.vote","payload":{"application_id":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","choice":"yes"},"nonce":"a5:9"},"entries":[{"id":"sha256:fda5a153a368c42c7ed414a49abd94a20f220d4b7a674e92987ddad8a594a9c1","kind":"com.example.club.vote"}],"application":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402"},{"step":{"type":"act","actor":"alice","kind":"com.example.club.admit","payload":{"application_id":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402"},"nonce":"a5:10"},"entries":[{"id":"sha256:f451b2ca7acf3076ef78633c5e8ac889fe58deff8dae5c8a7218a00d0fe28fa0","kind":"com.example.club.admit"},{"id":"sha256:a754806be4313ee8d4f36e37459779495610a4623c19fd82107ebe76e88e6ff9","kind":"ai.generalbusiness.dap.grant"}],"application":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402"}],"minimal":[{"step":{"type":"invite","inviter":"alice","invitee":"bob","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:f8e2b2760606029da0845a7d1a315291e617637c63b050ebb68630514b7b6367","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"bob"},"entries":[{"id":"sha256:efb8d15b0646f022fab90d7fa589e5c858af4582891d05da9f2faf860eb75974","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"dana","grants":{"roles":[]}},"entries":[{"id":"sha256:6ad4fb318d409b441764b707208069089d376825d667dd7564cc3e5af42e788b","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"dana"},"entries":[{"id":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"act","actor":"bob","kind":"com.example.club.vote","payload":{"application_id":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402","choice":"yes"},"nonce":"a5:8"},"entries":[{"id":"sha256:632055e52d15f825f7a76c0a99f68d18f486456eb6c09c2f60112308e6531cd3","kind":"com.example.club.vote"}],"application":"sha256:5259ca84daaaeccac4eb49e690513e26f0602f40d9029c2213f1c638a3e36402"}]}
+▶ post-baseline A5: invariants detect votes and admission naming malformed-apply
+  ⚠ original policy requires rejection of invalid targets and no admission grant (0.350916ms) # V5-A5 retained negative result; no policy repair commissioned
+✔ post-baseline A5: invariants detect votes and admission naming malformed-apply (482.150208ms)
+ℹ {"clubA5":"malformed-apply","manifest":"sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde","package":"sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e","nonce":"v6-followup:a5:malformed-apply","target":{"position":9,"id":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","kind":"com.example.club.apply","effective":false},"votes":[10,11],"admit":12,"grants":[{"position":13,"payload":{"principal":"dana","roles":["Member"]}}],"readers":[{"reader":"alice","votes":[true,true],"admit":true},{"reader":"bob","votes":[true,true],"admit":true},{"reader":"carol","votes":[true,true],"admit":true},{"reader":"dana","votes":[true,true],"admit":true},{"reader":"frank","votes":[true,true],"admit":true}],"findings":["*@10 invariant: vote at 10 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","*@11 invariant: vote at 10 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","*@11 invariant: vote at 11 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","*@12 invariant: vote at 10 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","*@12 invariant: vote at 11 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","*@12 invariant: admit at 12 of unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","*@13 invariant: vote at 10 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","*@13 invariant: vote at 11 on unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","*@13 invariant: admit at 12 of unknown application sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736"],"steps":[{"step":{"type":"invite","inviter":"alice","invitee":"bob","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:5efae4c957e9ffd536fb4792e17bd3859d4bf40bfd6112b2d7d5d0bf192b2c07","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"bob"},"entries":[{"id":"sha256:652cef6366598679e968e08a6a92073b4031f5b9ef6e668ab950ac7a16962ff7","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"carol","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:6dbefe6ff4ceb5da17f9f5efc1b14111d624f39029bea047b182bba7ae2dff92","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"carol"},"entries":[{"id":"sha256:a3effcce32797773f4e151ef320c41e9294ef145c8ec7ce955f1a55fcde3ace5","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"dana","grants":{"roles":[]}},"entries":[{"id":"sha256:cfb273dd78ce62e8b78692805e96e0778043c3e99521c32f205ce67b5070813a","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"dana"},"entries":[{"id":"sha256:52b396f21bd7075cdda314069da7237e0d440a6225b667cf0c4b8075209461d0","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"frank","grants":{"roles":["Member"]}},"entries":[{"id":"sha256:9c29a84f5149dc5aefb9e903b0055760b44ce5b4935c99f9c414dfe8ecfa44d5","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"frank"},"entries":[{"id":"sha256:727b5c7f0f81e145be8267dffbf05b031f50a5e76aa85f47c1e5e0a94dbfc6e1","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"act","actor":"dana","kind":"com.example.club.apply","payload":{"statement":17},"nonce":"a5:8"},"entries":[{"id":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","kind":"com.example.club.apply"}]},{"step":{"type":"act","actor":"bob","kind":"com.example.club.vote","payload":{"application_id":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","choice":"yes"},"nonce":"a5:9"},"entries":[{"id":"sha256:d3de847e94ade9127f25543fadba6a4ccfd0fff85ce31ab431ba4342f5438365","kind":"com.example.club.vote"}],"application":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736"},{"step":{"type":"act","actor":"carol","kind":"com.example.club.vote","payload":{"application_id":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","choice":"yes"},"nonce":"a5:10"},"entries":[{"id":"sha256:4be906ea88e31394bcd43a900c4433174599b9f22562cfa14d374e46c545f4b3","kind":"com.example.club.vote"}],"application":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736"},{"step":{"type":"act","actor":"alice","kind":"com.example.club.admit","payload":{"application_id":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736"},"nonce":"a5:11"},"entries":[{"id":"sha256:9e0bb3f36faee4bb5407d592e3acbe1adde72f9f69a3966061dbcdfe2d12e31c","kind":"com.example.club.admit"},{"id":"sha256:be683307f1918e59caab7323b3a10efc44c9f02a9c5f6b95db6ce8585d9b01f7","kind":"ai.generalbusiness.dap.grant"}],"application":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736"}],"minimal":[{"step":{"type":"invite","inviter":"alice","invitee":"bob","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:5efae4c957e9ffd536fb4792e17bd3859d4bf40bfd6112b2d7d5d0bf192b2c07","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"bob"},"entries":[{"id":"sha256:652cef6366598679e968e08a6a92073b4031f5b9ef6e668ab950ac7a16962ff7","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"dana","grants":{"roles":[]}},"entries":[{"id":"sha256:cfb273dd78ce62e8b78692805e96e0778043c3e99521c32f205ce67b5070813a","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"dana"},"entries":[{"id":"sha256:52b396f21bd7075cdda314069da7237e0d440a6225b667cf0c4b8075209461d0","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"act","actor":"dana","kind":"com.example.club.apply","payload":{"statement":17},"nonce":"a5:8"},"entries":[{"id":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","kind":"com.example.club.apply"}]},{"step":{"type":"act","actor":"bob","kind":"com.example.club.vote","payload":{"application_id":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736","choice":"yes"},"nonce":"a5:9"},"entries":[{"id":"sha256:d3de847e94ade9127f25543fadba6a4ccfd0fff85ce31ab431ba4342f5438365","kind":"com.example.club.vote"}],"application":"sha256:088e28480122ea8bd0fa8de66b5cef83aa9402da071d6f370cd9ddb4bbfdf736"}]}
+▶ post-baseline A5: invariants detect votes and admission naming standing-reason
+  ⚠ original policy requires rejection of invalid targets and no admission grant (0.323375ms) # V5-A5 retained negative result; no policy repair commissioned
+✔ post-baseline A5: invariants detect votes and admission naming standing-reason (376.970833ms)
+ℹ {"clubA5":"standing-reason","manifest":"sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde","package":"sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e","nonce":"v6-followup:a5:standing-reason","target":{"position":9,"id":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","kind":"com.example.club.standing_reason","effective":true},"votes":[10,11],"admit":12,"grants":[{"position":13,"payload":{"principal":"alice","roles":["Member"]}}],"readers":[{"reader":"alice","votes":[true,true],"admit":true},{"reader":"bob","votes":[true,true],"admit":true},{"reader":"carol","votes":[true,true],"admit":true},{"reader":"dana","votes":[true,true],"admit":true},{"reader":"frank","votes":[true,true],"admit":true}],"findings":["*@10 invariant: vote at 10 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","*@11 invariant: vote at 10 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","*@11 invariant: vote at 11 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","*@12 invariant: vote at 10 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","*@12 invariant: vote at 11 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","*@12 invariant: admit at 12 of unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","*@13 invariant: vote at 10 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","*@13 invariant: vote at 11 on unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","*@13 invariant: admit at 12 of unknown application sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"],"steps":[{"step":{"type":"invite","inviter":"alice","invitee":"bob","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:1cd4cd1c3b0ffc6884370cbb9d75deace66b85bf6c650c44f63400d306d7920e","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"bob"},"entries":[{"id":"sha256:39aa2439256a95b04087b2f285626a4b0bd8d24652c28753e00b322c4140baba","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"carol","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:da31de3a21d459bbde38aacc48766635fbddbad71cf4d772575e9e7de8d749b8","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"carol"},"entries":[{"id":"sha256:70e92440be9b93badac5ca1c684c57672ed3e83f0dc98a98f193c70fe1da2bd1","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"dana","grants":{"roles":[]}},"entries":[{"id":"sha256:82066a312c85860039f63e39fd97ed5abe3e2ba74e7684dc5296b7adb88f63a8","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"dana"},"entries":[{"id":"sha256:720923b61c08be8c6e196d688f3dba317614c519e80e0be1f193c86b6bc3e9a4","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"invite","inviter":"alice","invitee":"frank","grants":{"roles":["Member"]}},"entries":[{"id":"sha256:b2c53e1d54dc0ec05c0c6b67afe498df6d2b51eec4aec49c367359d8c0b60e2b","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"frank"},"entries":[{"id":"sha256:c624a58e82907beadbd925b6194f58599fbf88a2c3074979cd3ecf46f593cb47","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"act","actor":"alice","kind":"com.example.club.standing_reason","payload":{"member":"dana","text":"private reason, not an application"},"nonce":"a5:8"},"entries":[{"id":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","kind":"com.example.club.standing_reason"}]},{"step":{"type":"act","actor":"bob","kind":"com.example.club.vote","payload":{"application_id":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","choice":"yes"},"nonce":"a5:9"},"entries":[{"id":"sha256:28583cb1694a7351446b112cfbb524e5461c58e121c49b03c074a3d993715756","kind":"com.example.club.vote"}],"application":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"},{"step":{"type":"act","actor":"carol","kind":"com.example.club.vote","payload":{"application_id":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","choice":"yes"},"nonce":"a5:10"},"entries":[{"id":"sha256:64d93c1e0993f8529264dff3764d6fb6b43cff1bd0674921c8e595e32a71a422","kind":"com.example.club.vote"}],"application":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"},{"step":{"type":"act","actor":"alice","kind":"com.example.club.admit","payload":{"application_id":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"},"nonce":"a5:11"},"entries":[{"id":"sha256:f578658d5cf3fa76bcbfbb13eb4939f8fc90e495e11d4faa31b1920bf325eb55","kind":"com.example.club.admit"},{"id":"sha256:3423e61343784c1f9cb6fbc3b4ef9d4a13068c98c19f5da5e08388e62835ab72","kind":"ai.generalbusiness.dap.grant"}],"application":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"}],"minimal":[{"step":{"type":"invite","inviter":"alice","invitee":"bob","grants":{"roles":["Committee","Member"]}},"entries":[{"id":"sha256:1cd4cd1c3b0ffc6884370cbb9d75deace66b85bf6c650c44f63400d306d7920e","kind":"ai.generalbusiness.dap.invite"}]},{"step":{"type":"accept","invitee":"bob"},"entries":[{"id":"sha256:39aa2439256a95b04087b2f285626a4b0bd8d24652c28753e00b322c4140baba","kind":"ai.generalbusiness.dap.accept_invite"}]},{"step":{"type":"act","actor":"alice","kind":"com.example.club.standing_reason","payload":{"member":"dana","text":"private reason, not an application"},"nonce":"a5:8"},"entries":[{"id":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","kind":"com.example.club.standing_reason"}]},{"step":{"type":"act","actor":"bob","kind":"com.example.club.vote","payload":{"application_id":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b","choice":"yes"},"nonce":"a5:9"},"entries":[{"id":"sha256:28583cb1694a7351446b112cfbb524e5461c58e121c49b03c074a3d993715756","kind":"com.example.club.vote"}],"application":"sha256:1ea3edb828b2def3e2cba19b5400af9edb63543cb8f6b612c59a0c94dabedf7b"}]}
+✔ Club baseline corpus: all three recorded seeds reproduce, are deletion-minimal with links preserved, and pass under the repaired model (426.383292ms)
+ℹ seed 81: 56 -> 7 steps; baseline mismatch, repaired clean; application sha256:89924c7ce0dc9ce04507ba8c5d0a87aabad44d546de84cb98f3254e5de7b0c2a -> sha256:e87e8afb059e1b5e803e8e3185e9aa8e73c4c556071a47011517c4d8fddae264
+ℹ seed 107: 55 -> 7 steps; baseline mismatch, repaired clean; application sha256:4f0f3e78520528dcab968444b6a6cff82b228527073747195cd54bb3e3bc31a3 -> sha256:d65ff528f2c97768b9d4047ab5de6e70432c904d018c39066a129a8c8276bbb0
+ℹ seed 182: 56 -> 7 steps; baseline mismatch, repaired clean; application sha256:68a19df79a2ff25c4314170bda712055b392130f69916d53da3186853d271781 -> sha256:ab2f75ce53c1a698561eabe21d46129607400de4a54d198b10f18a316c5c49e5
+ℹ manifest sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde; baseline sha256:6aeac545386d59b2d4645bfa9d951b576ae66119484f723d1fb765ff1a02a08f; repaired sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e
+✔ the manifest is one experiment identity over its prose and executable part, and the prose states the same bounds (1.025083ms)
+ℹ CLUB_MANIFEST_ID sha256:806ae62febaa0b28f35fcc7099bcb00db73a61d0921806c911e993b6db808fde
+ℹ club package sha256:ef19bdaf2a70813266ab7e490ac3759580df0613efc382bef8bf5b4a96523f4e
+✔ case 1, quorum: three committee members, two yes votes, admit is effective and the applicant is granted Member (72.317ms)
+✔ case 2, no quorum: one vote, admit is no_quorum; a no vote and a yes vote is no_majority (68.002917ms)
+✔ case 3, lapsed: a lapsed committee member's vote is lapsed, the admit that relied on it is no_quorum, and a second vote by one member is already_voted (55.485708ms)
+✔ case 4, late committee member: a vote before any disclosure of the application is unknown_application, after a disclosure it is effective, and every member judges both the same way (85.95475ms)
+✔ Club disclosure across activation: payload before activation pauses until closure (82.371458ms)
+✔ Club disclosure across activation: activation before payload (72.3195ms)
+✔ post-baseline A2: an ordinary Member judges a late committee vote before and after private application disclosure (83.47875ms)
+✔ post-baseline A2: an ordinary Member verifies admission and the Member grant without reading the application (61.340291ms)
+⚠ plan §4.2: a second admission is ineffective once the applicant holds Member (105.498334ms) # V5-A1: revised experiment and policy repair pending
+ℹ plan §4.2 violated: admit at 18 is effective after Dana already received Member at 15; frozen-manifest checks still pass
+✔ case 5, the campaign: every manifest seed replays with zero violations of the property, the pause rule, the invariants and the privacy budget (135755.309666ms)
+ℹ seeds 200, 135750 ms, coverage {"joins":991,"attaches":200,"disclosures":1939,"applications":629,"votes":1575,"effectiveVotes":1001,"admits":343,"effectiveAdmits":126,"standings":514,"grants":246,"entries":11939}
+✔ the repair ledger exists, its totals agree with its entries, and it states the budget outcome (0.430791ms)
+ℹ fixes 1, added kinds 0, budget within
+✔ a package declaring a name under the system prefix is refused, whatever it claims about itself (3.307708ms)
+✔ a descriptor whose id does not match its content is refused (0.171125ms)
+✔ two handlers for one kind without a resolution is ambiguous; a resolution naming exactly both is accepted (0.792875ms)
+✔ resolution retains the capability and the active audience policy: attaching a handler never widens (0.419708ms)
+✔ identities follow executable content: a changed fold changes descriptor and binding ids (0.279ms)
+✔ binding identity is per kind: an unrelated attach does not change it; a relevant change does (0.453541ms)
+✔ an application intent captures its binding by default; a relevant attach stales it, an unrelated private attach does not; a missing binding is refused (28.928708ms)
+✔ the sale trace 0 to 5 interprets to the oracle for every participant at every frontier (44.04425ms)
+✔ a late joiner, a members-audience event before they joined, a disclosure and an as-of query keep the property (39.727875ms)
+✔ the views note's pause example: a disclosure followed by an unavailable package pauses with last through the position before, under the disclosure's basis, and resumes (4.937292ms)
+✔ a dependency-incomplete disclosure pauses: the event is disclosed but the attach it needs is not (0.690166ms)
+✔ a cached interpretation is reused only for the same principal, view content, basis and packages; a pause is never reused (7.756291ms)
+✔ F2: a disclosed event whose binding the principal cannot resolve pauses with dependency_missing, and resumes once the attach is disclosed (2.108333ms)
+✔ F1: a contradiction that changes no displayed state is caught through outcomes: a shared decision whose fold reads private votes (1.803541ms)
+✔ G1: an always-effective co-handler cannot mask a contradiction; per-handler outcomes are compared (0.990083ms)
+✔ G2: a disclosed intent that is genuinely stale is a stale_binding verdict, not a permanent pause (1.313917ms)
+✔ G3: affordances come from the visible binding, so a hidden attach with its own affordances causes no false mismatch (1.235916ms)
+✔ H1: a binding identity restored by an unseen attach is a missing dependency, not a stale intent: activation provenance decides (2.173125ms)
+✔ J1: a saved intent sequenced after a hidden attach is a missing dependency for a viewer who sees the intent but not the attach; the header carries the activation (1.093875ms)
+✔ K1: a disclosed attach that builds on a hidden attach is a missing dependency: the header names what it requires (1.616ms)
+✔ L1: the facts an attach is refused on are among its requirements: a conflicting model definition and a repeated package (1.903708ms)
+✔ L2: a malformed attach payload is recorded with a malformed verdict, its exact retry replays, and a valid submission follows; evidence extraction never throws (0.488167ms)
+✔ M1: evidence handlers follow the branch attach takes: a resolution on a new kind is ignored, and the installer of the bound model is required (0.738583ms)
+✔ M2: a package name inherited from Object.prototype is not a package: recorded as package_unavailable, exact retry replays, and evidence extraction never throws (1.361041ms)
+✔ N1: an attach the sequencer could not resolve stays ineffective for every judge, whatever package a client has or fetches later; a new attach succeeds once the sequencer has it (0.571167ms)
+✔ run 1 corpus: every shrunk series still fails against the run-1 model with the recorded failure kind, and is reported against the current model (597.627833ms)
+ℹ seed-103: 3 steps; run-1 model invariant; current model clean
+ℹ seed-121: 3 steps; run-1 model invariant; current model clean
+ℹ seed-129: 3 steps; run-1 model invariant; current model clean
+ℹ seed-138: 3 steps; run-1 model invariant; current model clean
+ℹ seed-146: 6 steps; run-1 model mismatch; current model clean
+ℹ seed-158: 6 steps; run-1 model mismatch; current model clean
+ℹ seed-172: 3 steps; run-1 model invariant; current model clean
+ℹ seed-183: 3 steps; run-1 model invariant; current model clean
+ℹ seed-189: 3 steps; run-1 model invariant; current model clean
+ℹ seed-56: 3 steps; run-1 model invariant; current model clean
+ℹ seed-65: 8 steps; run-1 model mismatch; current model clean
+ℹ seed-72: 3 steps; run-1 model invariant; current model clean
+ℹ seed-74: 3 steps; run-1 model invariant; current model clean
+ℹ seed-79: 6 steps; run-1 model mismatch; current model clean
+ℹ seed-8: 6 steps; run-1 model mismatch; current model clean
+ℹ seed-86: 6 steps; run-1 model mismatch; current model clean
+ℹ seed-96: 3 steps; run-1 model invariant; current model clean
+✔ run 6 corpus: the current foundation fixes unauthorized leaks; the repaired audience fixes the remaining authorized leaks (683.245417ms)
+ℹ seed-112: 5 steps; kept model clean under current foundation; current model clean
+ℹ seed-141: 5 steps; kept model clean under current foundation; current model clean
+ℹ seed-160: 5 steps; kept model clean under current foundation; current model clean
+ℹ seed-172: 3 steps; kept model budget violation; current model clean
+ℹ seed-181: 3 steps; kept model budget violation; current model clean
+ℹ seed-193: 5 steps; kept model clean under current foundation; current model clean
+ℹ seed-197: 5 steps; kept model clean under current foundation; current model clean
+ℹ seed-200: 3 steps; kept model budget violation; current model clean
+ℹ seed-42: 5 steps; kept model clean under current foundation; current model clean
+✔ positions 0 to 5 carry the kinds and audiences of the trace (3.545167ms)
+✔ Alice reads every position; hidden count 0 (1.888958ms)
+✔ Bob's view: spine plus his own invitation; Carol's invitation is a header (0.862166ms)
+✔ Carol's view: spine plus her own invitation; Bob's invitation is a header (0.738583ms)
+✔ a late joiner receives the whole spine and addressed events, and members audiences are not retroactive (1.601833ms)
+✔ case 1, the trace: positions 0 to 19 replay with the readability of the table, the literal projections and the outcomes at 17 and 18, under the model's declared join disclosure (291.603917ms)
+ℹ literal trace without the join disclosure: 5 violations; first: ivan@15 mismatch: observe differs at 15 [models.sale.offers.0: oracle {"id":"o3","author":"bob","position":15,"status":"open","rep, view undefined; outcomes.15.effective: oracle true, view false; outcomes.15.perModel.sale.effective: oracle true, view false; outcomes.15.perModel.sale.reason: oracle null, view no_such_offer; outcomes.15.reason: oracle null, view ineffective]
+✔ case 2, replacement with a hidden predecessor: Ivan sees o3 open replacing o1, and a later accept of o1 is ineffective for everyone (217.398667ms)
+ℹ literal case 2 without the join disclosure: 3 violations; first: ivan@15 mismatch: observe differs at 15 [models.sale.offers.0: oracle {"id":"o3","author":"bob","position":15,"status":"open","rep, view undefined; outcomes.15.effective: oracle true, view false; outcomes.15.perModel.sale.effective: oracle true, view false; outcomes.15.perModel.sale.reason: oracle null, view no_such_offer; outcomes.15.reason: oracle null, view ineffective]
+✔ case 3, late joiner after the decision: a second accept is ineffective in every view, equality holds at every frontier, and a disclosure of the decision keeps it (177.815583ms)
+✔ case 4, late joiner judging a public event on a hidden fact: a withdrawal of a stub recorded before Dana joined, then an accept of it, are judged the same way in every view (65.582667ms)
+✔ case 5, the campaign: every manifest seed replays with zero violations of the property, the pause rule, the invariants and the privacy budget (84996.88125ms)
+ℹ seeds 200, 84992 ms, coverage {"joins":942,"attaches":199,"disclosures":1722,"offers":195,"replacements":25,"withdrawals":147,"counters":157,"accepts":114,"effectiveAccepts":20,"closes":295,"entries":11047,"privateDisclosures":0,"inspectionAttaches":0,"inspectionRequests":118,"unboundInspectionRequests":118}
+✔ the repair ledger exists, its totals agree with its entries, and it states the budget outcome (0.498916ms)
+ℹ fixes 7, added kinds 0, budget exceeded
+✔ V3-F1: a private payload disclosed to a non-party is a budget violation on what they can read, whatever the projection hides (5.170625ms)
+✔ V3-F2: the kept run-6 model refuses a wrong-party counter, and the budget reports its misdelivery (7.028292ms)
+✔ V3-F3: null private payloads are recorded with a deterministic ineffective verdict, replay cold, retry exactly, and a valid action follows (50.345042ms)
+✔ V3-G1: an ineffective stub by carol does not make them a counter party (kept run-6 guard regression) (10.012ms)
+✔ V3-G1: an ineffective stub by carol does not make them a counter party (current audience) (10.1995ms)
+✔ V3-G1: an ineffective stub by ivan does not make them a counter party (kept run-6 guard regression) (9.365583ms)
+✔ V3-G1: an ineffective stub by ivan does not make them a counter party (current audience) (9.595875ms)
+✔ Fix 7: wrong-author, malformed, unauthorized and stale counters never address a supplied non-party, and late members replay them consistently (63.199208ms)
+ℹ tests 65
+ℹ suites 0
+ℹ pass 61
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 4
+ℹ duration_ms 136680.935625
+
+✖ failing tests:
+
+test at spike/test/club-a5.test.ts:76:11
+⚠ original policy requires rejection of invalid targets and no admission grant (3.010792ms) # V5-A5 retained negative result; no policy repair commissioned
+  AssertionError [ERR_ASSERTION]: votes and admission must refer to an effective application; invalid targets must not grant Member
+  + actual - expected
+  
+    {
+  +   grants: 1,
+  -   grants: 0,
+      readers: [
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'alice',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        },
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'bob',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        },
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'carol',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        },
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'dana',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        },
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'frank',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        }
+      ]
+    }
+  
+      at TestContext.<anonymous> (file:///private/tmp/dap-t3-obligations/spike/test/club-a5.test.ts:77:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at TestContext.test (node:internal/test_runner/test:400:20)
+      at TestContext.<anonymous> (file:///private/tmp/dap-t3-obligations/spike/test/club-a5.test.ts:76:11)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: { readers: [ [Object], [Object], [Object], [Object], [Object] ], grants: 1 },
+    expected: { readers: [ [Object], [Object], [Object], [Object], [Object] ], grants: 0 },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at spike/test/club-a5.test.ts:76:11
+⚠ original policy requires rejection of invalid targets and no admission grant (0.350916ms) # V5-A5 retained negative result; no policy repair commissioned
+  AssertionError [ERR_ASSERTION]: votes and admission must refer to an effective application; invalid targets must not grant Member
+  + actual - expected
+  
+    {
+  +   grants: 1,
+  -   grants: 0,
+      readers: [
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'alice',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        },
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'bob',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        },
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'carol',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        },
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'dana',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        },
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'frank',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        }
+      ]
+    }
+  
+      at TestContext.<anonymous> (file:///private/tmp/dap-t3-obligations/spike/test/club-a5.test.ts:77:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at TestContext.test (node:internal/test_runner/test:400:20)
+      at TestContext.<anonymous> (file:///private/tmp/dap-t3-obligations/spike/test/club-a5.test.ts:76:11)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: { readers: [ [Object], [Object], [Object], [Object], [Object] ], grants: 1 },
+    expected: { readers: [ [Object], [Object], [Object], [Object], [Object] ], grants: 0 },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at spike/test/club-a5.test.ts:76:11
+⚠ original policy requires rejection of invalid targets and no admission grant (0.323375ms) # V5-A5 retained negative result; no policy repair commissioned
+  AssertionError [ERR_ASSERTION]: votes and admission must refer to an effective application; invalid targets must not grant Member
+  + actual - expected
+  
+    {
+  +   grants: 1,
+  -   grants: 0,
+      readers: [
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'alice',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        },
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'bob',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        },
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'carol',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        },
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'dana',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        },
+        {
+  +       admit: true,
+  -       admit: false,
+          reader: 'frank',
+          votes: [
+  +         true,
+  +         true
+  -         false,
+  -         false
+          ]
+        }
+      ]
+    }
+  
+      at TestContext.<anonymous> (file:///private/tmp/dap-t3-obligations/spike/test/club-a5.test.ts:77:12)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.start (node:internal/test_runner/test:1262:17)
+      at TestContext.test (node:internal/test_runner/test:400:20)
+      at TestContext.<anonymous> (file:///private/tmp/dap-t3-obligations/spike/test/club-a5.test.ts:76:11)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: { readers: [ [Object], [Object], [Object], [Object], [Object] ], grants: 1 },
+    expected: { readers: [ [Object], [Object], [Object], [Object], [Object] ], grants: 0 },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at spike/test/club.test.ts:265:1
+⚠ plan §4.2: a second admission is ineffective once the applicant holds Member (105.498334ms) # V5-A1: revised experiment and policy repair pending
+  AssertionError [ERR_ASSERTION]: the plan requires rejection of an existing Member
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///private/tmp/dap-t3-obligations/spike/test/club.test.ts:283:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
