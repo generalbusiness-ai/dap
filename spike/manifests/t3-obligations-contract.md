@@ -59,9 +59,11 @@ those acts blocked. There is no implicit recovery or cancellation.
 
 An effective admission obliges the grant role to grant Member to the actor of
 the named target. Its public recipe contains only the target commitment. The
-performing grant carries that target body as evidence. Every reader checks its
-commitment against the public chain, then checks the principal equals the
-target actor and that the sole granted role is Member. This preserves the
+performing client selects the actor from its own readable target body. The
+matcher checks a current participant is named and that the sole granted role is
+Member. Selecting the correct target actor is a client conformance assumption:
+publishing the entire target body as evidence would expose a private Club
+application. The public card cannot authenticate that hidden-source relation. This preserves the
 original Club grant policy, including its known invalid-target defect: this
 form does not silently repair V5-A5 by requiring the target be an application.
 
@@ -96,3 +98,9 @@ backlog is also expressed by the same disclosure recipe, so neither old
 Any repair after this frozen contract is named in the report. Claims concern
 these executed fixtures and conforming clients, not arbitrary notification
 systems, human response, or complete-backlog authentication.
+
+Pre-run correction, before implementation or fixtures: parent review identified
+that embedding a Club target body in a public grant would leak its private
+statement. The contract now keeps that body private and states correct-target
+selection as client conformance; a wrong-target negative control must expose
+this boundary. The previous frozen version remains in git history.
