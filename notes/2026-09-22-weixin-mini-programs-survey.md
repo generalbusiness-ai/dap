@@ -39,10 +39,10 @@ situation spans six programs and three group chats with no shared
 history; audiences and views are whatever each developer coded;
 notification and even the right to operate in medical or financial
 categories are gated by licence; and identity and distribution run
-through Tencent, so nobody can bring their own identity or chosen
-representative, though an application's backend may be its developer's
-own. What is demonstrated at scale is that people use light structure
-around a real activity, and that an organiser or professional can
+through Tencent, so nobody can bring their own identity, though an
+application's backend may be its developer's own. What is demonstrated
+at scale is that people use light structure around a real activity, and
+that an organiser or professional can
 introduce a tool through an existing relationship. What is not
 demonstrated, here or anywhere in this survey, is that people value a
 retained, attributed account across independent providers enough to
@@ -58,7 +58,7 @@ activity.
 
 | Weixin | Nearest dap idea | What differs |
 |---|---|---|
-| a Mini Program: one developer's app inside WeChat, reviewed by Tencent, under a category | a package plus the client that renders it | one developer owns logic, data and screen together; nothing composes across programs; and only people and businesses are participants, whereas in dap an assistant is an ordinary principal and a personal agent can take part with granted authority |
+| a Mini Program: one developer's app inside WeChat, reviewed by Tencent, under a category | a package plus the client that renders it | one developer owns logic, data and screen together; nothing composes across programs. dap proposes separately attributed agent principals with scoped grants and recorded approvals; Tencent documents agents deployed through Mini Programs, and this survey has not compared those with dap's semantics. The distinction worth keeping is explicit authority and attribution, not the presence of agents |
 | `openid` per program and `unionid` per developer, on a real-name WeChat identity | a principal | issued and verified by Tencent; a person cannot bring their own key or run without Tencent |
 | `openGID`: a group chat id a program receives when opened from a card shared into that group; different programs get different ids for the same group | a context-scoped identity; "this dap" shared into a relationship | the same per-context isolation choice dap makes for keys, but only for groups, only on share-open, and with no membership list |
 | a share card into a group chat, or a QR code | the envelope and route; the weak offer to become a participant | one tap and you are in; there is no invitation carrying a role |
@@ -110,8 +110,8 @@ activity.
   property has no counterpart.
 - **Identity and trust are centralised.** Real-name identity is a
   strength for onboarding and a limit for anyone who wants a
-  context-scoped identity or a chosen representative. Identity and
-  distribution depend on Tencent; an application's backend may be the
+  context-scoped identity. Identity and distribution depend on Tencent;
+  an application's backend may be the
   developer's own, and portability and export depend on that
   application.
 - **Notification is rationed by category.** Long-term subscription
@@ -528,6 +528,7 @@ across independent services.
 - Telegram payment rules, Stars for digital goods: https://core.telegram.org/bots/payments-stars
 - Matrix bridges: https://matrix.org/docs/matrix-concepts/elements-of-matrix/#bridges
 - Telegram Mini Apps scale: https://bitcoinist.com/ton-mini-apps-pass-100m-monthly-active-users-on-telegram/
+- Tencent Cloud, publishing an agent application to a WeChat Mini Program: https://intl.cloud.tencent.com/document/product/1254/73282?lang=en
 - Digital Credentials API status, Chrome 141 and Safari 26:
   https://developer.chrome.com/blog/digital-credentials-api-shipped and
   https://www.corbado.com/blog/digital-credentials-api
