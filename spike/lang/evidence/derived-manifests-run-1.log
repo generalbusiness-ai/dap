@@ -86,7 +86,7 @@ test at test/sale.test.ts:167:1
   bob@34 budget: bob can read the sale.offer_terms at 29, whose parties are dana+alice
   ... 31 violations
   + actual - expected
-  
+
   + [
   +   35,
   +   56,
@@ -95,7 +95,7 @@ test at test/sale.test.ts:167:1
   +   135
   + ]
   - []
-  
+
       at TestContext.<anonymous> (file:///private/tmp/dap-t1-declaration/spike/test/sale.test.ts:212:10)
       at Test.runInAsyncScope (node:async_hooks:226:14)
       at Test.run (node:internal/test_runner/test:1402:25)
@@ -114,9 +114,9 @@ test at test/sale.test.ts:167:1
 test at test/sale.test.ts:234:1
 ✖ V3-F1: a private payload disclosed to a non-party is a budget violation on what they can read, whatever the projection hides (5.85375ms)
   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
-  
+
   700 !== null
-  
+
       at TestContext.<anonymous> (file:///private/tmp/dap-t1-declaration/spike/test/sale.test.ts:241:10)
       at Test.runInAsyncScope (node:async_hooks:226:14)
       at Test.run (node:internal/test_runner/test:1402:25)

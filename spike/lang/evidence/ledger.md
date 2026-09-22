@@ -91,3 +91,8 @@ party, and the generated projection does not enforce the original party mask
 after hostile disclosure. The first is an audience/maximum-readership defect,
 the second a derived-projection defect. Both belong to the layer/declaration,
 not to a foundation change. Their witnesses and report are the exit.
+
+Evidence log normalization after capture: trailing spaces and tabs were removed
+from `club-negative-confirmation.log` and `derived-manifests-run-1.log`.
+Their text, observations and results are otherwise unchanged; no checks were
+rerun and no candidate semantics changed.
