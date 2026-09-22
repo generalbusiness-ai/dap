@@ -28,7 +28,7 @@ with the goals (§0), in priority order: evolvability, ease of programming
 as an agent, comprehension simplicity for a person, lightweight
 decentralization. Each has one criterion the spikes report against.
 
-Ten notes, each owning one concern:
+Eleven notes, each owning one concern:
 
 - [Evolving spaces](2026-09-14-evolving-spaces-design.md) — what the things
   are: goals, referents, events, contexts, audiences, packages, authority,
@@ -74,6 +74,11 @@ Ten notes, each owning one concern:
   framing, the three roles, the participation ladder, the three kinds of
   record, and an ordered set of next steps with stopping points. Revised
   after review; not yet approved.
+- [Weixin Mini Programs survey](2026-09-22-weixin-mini-programs-survey.md)
+  — the largest working example of situated multi-party software,
+  compared with dap in both directions; what people use, ranked; Web
+  onboarding, payment and chat without the channel silo as options; the
+  competing ways to do the job. A research note; it adopts nothing.
 
 Links into gitseq, atseq and noseq assume sibling checkouts beside this repository;
 each cited note records the inspected commit.
