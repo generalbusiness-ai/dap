@@ -2,6 +2,7 @@
 // hand-written series can be rebuilt into a fresh context, checked, and
 // shrunk to a minimal failing one.
 
+import { performObligations } from './obligation-client.ts';
 import type { Json } from './canon.ts';
 import { Context, type ContextOptions } from './context.ts';
 import type { PackageDescriptor } from './descriptor.ts';
@@ -20,6 +21,8 @@ export interface Script {
   steps: Step[];
   /** honour the models' declared join disclosures (default true); false replays the literal steps only */
   joinDisclosure?: boolean;
+  /** Run the explicit obligation client between steps (default true). */
+  obligations?: boolean;
 }
 
 /**
@@ -179,7 +182,7 @@ export function replay(script: Script): Replay {
   const ctx = Context.create({ ...script.base, packages: { ...script.base.packages } });
   const positions: number[] = [];
   const pendingInvites: Pending = new Map();
-  for (const step of script.steps) positions.push(applyStep(ctx, step, pendingInvites, script.joinDisclosure !== false));
+  for (const step of script.steps) positions.push(applyStep(ctx, step, pendingInvites, script.joinDisclosure !== false, script.obligations !== false));
   return { ctx, positions };
 }
 
@@ -189,7 +192,7 @@ function stepNonce(ctx: Context): string {
 }
 
 /** Apply one step to a live context; returns the position it landed at, or -1. A join may be followed by the declared join disclosure. */
-export function applyStep(ctx: Context, step: Step, pendingInvites: Pending, joinDisclosure = true): number {
+export function applyStep(ctx: Context, step: Step, pendingInvites: Pending, joinDisclosure = true, obligations = true): number {
   let pos = -1;
   {
     switch (step.type) {
@@ -236,6 +239,7 @@ export function applyStep(ctx: Context, step: Step, pendingInvites: Pending, joi
       }
     }
   }
+  if (obligations && ctx.state.obligations.some((o) => o.status === 'open')) performObligations(ctx);
   return pos;
 }
 

@@ -10,7 +10,7 @@
 import type { Json } from './canon.ts';
 import { Context } from './context.ts';
 import type { PackageDescriptor } from './descriptor.ts';
-import { K, holdsNow, type FoundationState } from './foundation.ts';
+import { K, holdsNow, obligationEnabled, type FoundationState } from './foundation.ts';
 import { observe } from './observe.ts';
 import { applyStep, disclosurePolicy, disclosablePosition, joinBacklog, type Pending, type Script, type Step } from './script.ts';
 import type { Entry, Principal } from './types.ts';
@@ -82,11 +82,11 @@ export function generate(spec: GeneratorSpec, seed: number): Script {
   for (let step = 0; step < spec.bounds.maxPositions; step++) {
     const entries = ctx.head + 1;
     const room = spec.bounds.maxPositions - entries;
-    if (room <= 0) break;
+    if (room <= 0 || (obligationEnabled(ctx.state) && room <= 1)) break;
     const members = [...ctx.state.participants];
     const roll = r();
     // late joiner: an invite and an accept, two entries, only when both fit
-    const joinEntries = 2 + (joinBacklog(ctx.state, ctx.entries, ctx.head + 3).positions.length ? 1 : 0);
+    const joinEntries = 2 + (obligationEnabled(ctx.state) ? 1 : 0) + (joinBacklog(ctx.state, ctx.entries, ctx.head + 3).positions.length ? 1 : 0);
     if (roll < 0.12 && room >= joinEntries && joinedCount < spec.newcomers.length && members.length < spec.bounds.maxParticipants) {
       const invitee = spec.newcomers[joinedCount++]!;
       const inviter = members.find((m) => observe(ctx.state, m, ctx.head, () => true).affordances.includes(K.invite));
