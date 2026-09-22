@@ -1,0 +1,51 @@
+✔ sale is a checked data declaration (1.149792ms)
+✔ booking is a checked data declaration (0.235375ms)
+✔ discussion is a checked data declaration (0.074375ms)
+✔ lateMember is refused with its diagnostic and pinned witness (0.557166ms)
+✔ payloadAudience is refused with its diagnostic and pinned witness (0.219625ms)
+✖ assertedReference is refused with its diagnostic and pinned witness (0.425333ms)
+✔ club is refused with its diagnostic and pinned witness (0.04975ms)
+✔ count cannot read a private relation in a public guard (0.577709ms)
+✔ count cannot read a private relation in a public effect (0.451958ms)
+✔ count cannot read a private relation in a public derived column (0.602583ms)
+✔ count cannot read a private relation in a public query (0.306708ms)
+✔ count cannot read a private relation in a public affordance (0.414042ms)
+✔ absent cannot read a private relation in a public guard (0.285917ms)
+✔ absent cannot read a private relation in a public effect (0.335792ms)
+✔ absent cannot read a private relation in a public derived column (0.248792ms)
+✔ absent cannot read a private relation in a public query (0.22ms)
+✔ absent cannot read a private relation in a public affordance (0.319375ms)
+✔ a sibling row projection does not authorize a private aggregate (0.203292ms)
+✔ record splitting derives two event kinds and a public linkage prerequisite (0.088458ms)
+✔ backlog and disclosure kinds are derived from dependencies and maxima (0.210333ms)
+✔ emitted fixture loads as a descriptor whose source and runtime are pinned (0.395417ms)
+✔ latest version is selected by original position, never disclosure arrival (0.1795ms)
+✔ derived audiences are total over runtime JSON (0.234625ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 22
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 124.33225
+
+✖ failing tests:
+
+test at lang/test/layer.test.ts:18:13
+✖ assertedReference is refused with its diagnostic and pinned witness (0.425333ms)
+  AssertionError [ERR_ASSERTION]: [{"code":"self-asserted reference","act":"com.example.sale.counter","site":"guard","expression":"reference","dependency":"offers","reader":"sale-parties","reason":"a payload claim is not the author of an effective referenced row","witness":"corpus/sale/run1/seed-158.json"}]
+      at TestContext.<anonymous> (file:///private/tmp/dap-t1-declaration/spike/lang/test/layer.test.ts:20:10)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

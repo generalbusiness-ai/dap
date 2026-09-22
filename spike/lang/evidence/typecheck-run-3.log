@@ -1,0 +1,5 @@
+lang/test/layer.test.ts(63,158): error TS2322: Type 'string | number | never[] | { offer_id?: undefined; author?: undefined; } | { offer_id: never[]; author: {}; } | null' is not assignable to type 'Json'.
+  Type '{ offer_id?: undefined; author?: undefined; }' is not assignable to type 'Json'.
+    Type '{ offer_id?: undefined; author?: undefined; }' is not assignable to type '{ [key: string]: Json; }'.
+      Property 'offer_id' is incompatible with index signature.
+        Type 'undefined' is not assignable to type 'Json'.

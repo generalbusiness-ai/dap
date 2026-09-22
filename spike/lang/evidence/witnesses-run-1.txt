@@ -1,0 +1,19 @@
+✔ the historical witnesses pin the unchanged harness, client, manifests and kept models (1.055375ms)
+✔ members-stub witness: run-1 seed 158 is Dana@7, accepted o3 versus null and no_such_offer (23.871959ms)
+✔ members-stub witness: literal manifest case 3 is Dana@20, already_decided versus no_such_offer (92.799917ms)
+✔ payload-audience witness: run-6 seed 172 is carol@4 budget (16.63925ms)
+✔ payload-audience witness: run-6 seed 181 is bob@4 budget (13.455917ms)
+✔ payload-audience witness: run-6 seed 200 is bob@4 budget (13.08375ms)
+✔ self-asserted-reference witness: V3-F2 against run 1 is effective, and Carol@7 is budget (15.518417ms)
+✔ tombstone regression: run-1 seed 72, three steps ending at 4, replacement at 4 of unknown stub o2 (12.838834ms)
+✔ tombstone regression: run-1 seed 96, three steps ending at 4, withdrawal at 4 of unknown stub none (12.509042ms)
+✔ tombstone regression: run-1 seed 172, three steps ending at 4, replacement at 4 of unknown stub o10 (12.7345ms)
+✔ manifest-only regression: exact fd1e23b model leaves Bob@10 header-only while checker equality is clean (135.533417ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 473.060417

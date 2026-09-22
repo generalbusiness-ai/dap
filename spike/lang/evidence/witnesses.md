@@ -33,3 +33,13 @@ the repaired trace names `author: bob`.
 The positive derived Sale manifest and campaign checks are separate.
 Club's retained A5 witnesses and A1 guard limit remain in their original
 test files.
+
+## First run
+
+The unexecuted first draft was committed as `6a82d61c`. The first
+invocation of `node --test lang/test/witnesses.test.ts` from `spike`
+passed all 11 tests without repairs. `witnesses-run-1.json` records the
+source, runtime, command and output digest; `witnesses-run-1.txt` is the
+captured output. These passing historical witnesses establish the named
+failure signatures. They do not by themselves establish the declaration
+layer's diagnostic or derivation claims.
