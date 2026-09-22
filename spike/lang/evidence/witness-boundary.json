@@ -1,0 +1,18 @@
+{
+  "sourceCommit": "9c4e04e52ca9f16d3014c9d7d79a148bd039123e",
+  "description": "Unchanged current harness and foundation; original run-1 projection-only budget; run-6 and wrong-party counters use current readable-events budget. All witness scripts disable join disclosure except V3-F2, whose pre-counter prefix has nothing to disclose.",
+  "sha256": {
+    "src/checker.ts": "91625033431ff38e59d2a697d9568dfe20ae7fd357af828d9baccc748e8ecbf3",
+    "src/context.ts": "7342644d363cc487c2c3449828403f427d2f1abdbdc1fca1b60dd5c6b7f7f841",
+    "src/foundation.ts": "86700a4174c85f46a1395ab3283a1ae64ccb6d9e3c5afdd9455a60db72eee3cc",
+    "src/descriptor.ts": "b4ed2cdd489d8c94d1720594a730c0186e6e468081c570d0a40293cbeef55e82",
+    "src/script.ts": "64776e892fc67741b688c20b6cf11672fea082b41f070bb3518db3809444ef38",
+    "src/interpret.ts": "1b9ecaeb1b912669d60c6f9385fd8f1103798575b9d6a35f3043e5c314e22353",
+    "src/observe.ts": "17d1d8788ace100a1ee8b0e1a89ee2e4027586994deaceb4f7f0d769264a8661",
+    "src/oracle.ts": "f3ed8a6232f20446d61e83815eafb3c7451d46cee91ea094e019b478fa04abdd",
+    "manifests/sale.ts": "601595bd306321ea68d728780eb2a7d84abae381e4097d52a19adc479cd877b5",
+    "manifests/sale.md": "489507995f27bc60c8dd8b77ced74f06ebaeae2791bb68f59b548078c4d73e1e",
+    "corpus/sale/run1/model.ts": "15c4d175d9f99ad3be38d9dc952cb7066afa8f6d5cc16a7f95e7f5fc78101bd6",
+    "corpus/sale/run6/model.ts": "a31c470db39a2682495cde09ac7398ba2a88b952ed2fdf43929bc622712168ff"
+  }
+}
