@@ -442,7 +442,7 @@ describe("the scope's budget (section 9.2), here 12 entries", () => {
     const commitment = await s.commitment();                  // entries 7 and 8: nine entries, and three reserved with the closing checkpoint
     const head = await s.head();
     // A third hold would be entry 9 and would reserve a fourth entry: ten and four do not fit in twelve. Nothing is written.
-    expect(await s.act(una, "take-hold", { fields: { commitment }, expected: { commitment: 2 } })).toEqual({ answer: "refused", reason: "scope-full", judgedAt: head });
+    expect(await s.act(una, "take-hold", { fields: { commitment }, expected: { commitment: 2 } })).toEqual({ answer: "refused", reason: "scope-full", judgedAt: head, ...(cohort === "whole-scope" ? { name: "scopeEntries" } : {}) });
     // Both admitted ends are written, and the closing checkpoint that was reserved from the start.
     s.c.clock.now = at(HOLD);
     expect([await s.alarm(), (await s.entries(9)).map((e) => e.input.type), await s.count("hold", "ended")]).toEqual([true, ["timed", "timed"], holds.length]);

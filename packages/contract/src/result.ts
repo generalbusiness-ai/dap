@@ -66,6 +66,6 @@ export interface Head { seq: number; hash: Digest }
 
 export type Answer =
   | { answer: "accepted"; receipt: Receipt }
-  | { answer: "refused"; reason: RefusalReason; name?: string; judgedAt: Head }   // `name`: the `reason` that the failed guard declares, if it declares one
+  | { answer: "refused"; reason: RefusalReason; name?: string; judgedAt: Head }   // `name`: a declared guard reason or the exhausted whole-scope budget
   | { answer: "unavailable"; reason: UnavailableReason }
   | { answer: "mismatch"; reason: MismatchReason };

@@ -125,3 +125,8 @@ export const PROPOSED_BOUNDS: Bounds = {
   dispatchRetryMaxSeconds: 300,
   drainRetrySeconds: 1,
 };
+
+/** The closed names returned when a logical scope budget is exhausted. */
+export const SCOPE_BOUNDS = ["scopeEntries", "scopeBytes", "scopeItems", "scopeRecords", "scopeRequests"] as const;
+export type ScopeBoundName = typeof SCOPE_BOUNDS[number];
+export const isScopeBoundName = (name: unknown): name is ScopeBoundName => typeof name === "string" && (SCOPE_BOUNDS as readonly string[]).includes(name);

@@ -15,6 +15,7 @@
  */
 
 import type { Answer, DeliveryRefusal, Created, MismatchReason, RefusalReason, ScopeApi, UnavailableReason } from "@generalbusiness/dap-contract";
+import { isScopeBoundName } from "@generalbusiness/dap-contract";
 import { REFUSAL_REASONS, isItemQueryRead, among, isOutboxItem, isHead, isItem, isListOf, isLogPage, isRead, isReceipt, isRecord, isRetainedInput, isSealed, isSummary } from "@generalbusiness/artroom-bytes";
 
 // Each table has every member of its union, and the compiler says so when the contract gains or loses one.
@@ -33,7 +34,7 @@ function isCreated(v: unknown): v is Created {
   if (!isRecord(v)) return false;
   switch (v["answer"]) {
     case "accepted": return only(v, "answer", "receipt") && isReceipt(v["receipt"]);
-    case "refused": return only(v, "answer", "reason") && among(CREATION_REFUSED)(v["reason"]);
+    case "refused": return (only(v, "answer", "reason") || (only(v, "answer", "reason", "name") && v["reason"] === "scope-full" && isScopeBoundName(v["name"]))) && among(CREATION_REFUSED)(v["reason"]);
     case "unavailable": return only(v, "answer", "reason") && among(UNAVAILABLE)(v["reason"]);
     default: return false;
   }

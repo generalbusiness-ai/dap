@@ -69,7 +69,7 @@
  * deltas, entries EB6 and EC2).
  */
 
-import type { Bounds, Input } from "@generalbusiness/dap-contract";
+import type { Bounds, Input, ScopeBoundName } from "@generalbusiness/dap-contract";
 import { isPlatformDefinition } from "@generalbusiness/artroom-bytes";
 import { AmountError, amountMath, holding, naturalAmount, NOTHING, subtract, sum, times, type Amount } from "./held.ts";
 import { closureOf, outcomeReservation, ownerReservations, type Owners } from "./ledger.ts";
@@ -240,4 +240,18 @@ export function fits(view: StateView, definition: ValidDefinition, bounds: Pick<
   // from capacity admission. Old definitions keep their existing shortcut.
   const standing = definition.standing ? owed(view, definition, input, owners) : null;
   return settles || scope.head.seq + 1 + (standing ?? owed(view, definition, input, owners)) <= bounds.scopeEntries;
+}
+
+/** Compare actual use and the one pending-work Amount. Equality still fits. */
+export function capacityFull(used: Amount, pending: Amount, bounds: Pick<Bounds, ScopeBoundName>): ScopeBoundName | null {
+  const total = amountMath(true).sum(used, pending);
+  const dimensions = { scopeEntries: "entries", scopeBytes: "bytes", scopeItems: "items", scopeRecords: "records", scopeRequests: "requests" } as const;
+  // Check the whole configuration before selecting a refusal; no invalid
+  // later ceiling can be concealed by an earlier exhausted one.
+  for (const bound of Object.keys(dimensions) as ScopeBoundName[]) {
+    const n = bounds[bound];
+    if (!Number.isSafeInteger(n) || n < 0 || Object.is(n, -0)) throw new AmountError(`capacity ${bound} ceiling is invalid`);
+  }
+  for (const bound of Object.keys(dimensions) as ScopeBoundName[]) if (total[dimensions[bound]] > bounds[bound]) return bound;
+  return null;
 }

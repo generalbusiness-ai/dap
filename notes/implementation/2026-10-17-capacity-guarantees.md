@@ -803,3 +803,79 @@ all four added admission/replay ceilings and named refusals, historical
 incomplete byte spans, the remaining native boundary witnesses, final
 gate and independent Source review remain unfinished. This branch is
 local development, not an approved capacity guarantee.
+
+### All-five post-fold admission and named refusals (development checkpoint)
+
+The opt-in runtime now compares actual Used plus the existing reserved
+Amount with all five logical ceilings. It does so after the proposed
+entry, retention, fold and redaction, in the same SQLite transaction.
+Used reads the journal head, logical byte domains and digests, and the
+existing item, record and pending-request key counters. There is no new
+reservation traversal or persisted Used cache. Equality fits; invalid
+operands, intermediate sums and ceilings do not become free room.
+Legacy scopes still use their existing entry-only admission and settlement
+exemptions. Opted-in timed entries and other settlements pass the same
+five-dimensional check as new work.
+
+The write verdict now takes full(head, bound). Opt-in creation, act,
+preparation, delivery, checkpoint and offered-outcome answers carry the
+closed budget name when the transaction refuses. These are serving
+answers; entry and diagnosis formats have not changed. The strict client
+creation parser accepts the five names only on scope-full and still
+accepts the legacy unnamed reply. Internal and timed capacity failures
+also keep the name in the turn's invocation-local measurement.
+
+The existing metrics-v1 reason slot accepts scopeEntries, scopeBytes,
+scopeItems, scopeRecords and scopeRequests. A public scope-full answer
+with a valid budget name records that name there. Arbitrary guard names
+still cannot enter the closed slot. The point shape, native end, public
+answer and loss accounting remain the existing ones. A real request-limit
+refusal after eviction produces answer/scopeRequests/refused. No new
+telemetry dataset, provider query or deployment was used.
+
+The native boundary cases use real scopes, judgment, SQLite and eviction,
+with the existing labelled lane/authority fixture. Creation succeeds
+exactly at its actual byte use plus pending reservation and refuses one
+byte below it. That refusal keeps no genesis, item or retained bytes;
+retrying the same signed creation after eviction at the exact ceiling
+succeeds. The item and request cases accept the last key and refuse the
+next one, preserving the complete stored snapshot and logical bytes.
+The native read-token case uses the existing synthetic host answer: at
+one record, minting-to-live replaces the key, while a second job's token
+preparation is refused without a host call or storage change. It remains
+no evidence of a token at an actual provider.
+
+A further real-scope witness tightens the byte ceiling at restart to the
+actual Used plus Reserved of an already pending report. An ordinary
+remark is refused at that filled budget; the genuine report acceptance
+and closing checkpoint both remain funded. This is a deployment-ceiling
+fixture, with no item or duty injected by hand. Existing entry-budget
+timed settlements pass for both legacy and opt-in scopes.
+
+The pure comparison case passes. The expanded native boundary run passes
+four cases. The subsequent focused closure passes 11 cases and fails one
+old exact assertion because the opt-in refusal now includes scopeEntries;
+that assertion was updated to require the name for opt-in only, and its
+two legacy/opt-in timed cases pass. That closure also passes the new
+filled-byte settlement witness, request metric witness and owner record
+witness. All seven metric cases and the strict client-parser case pass.
+Derive, Scope, Replay, Platform and Client test compilers pass.
+
+One focused native control passes baseline, temporarily ignores the item
+ceiling, and fails the intended assertion when the extra item is wrongly
+accepted (97944, CLOSED0/b44f5d). The script restored Source. Earlier
+failed attempts are retained separately: the first native fixture used a
+wrong expected revision and tried to send from a comment, which the
+validator correctly refuses; both were corrected. The first metrics run
+could not open loopback in the sandbox and ran no cases; the configured
+local runner passed when loopback access was enabled. These failures are
+not passing evidence. Reports use the /tmp/artroom-capacity-all-bounds-
+prefix; no gate ran.
+
+This supersedes the preceding checkpoint's statement that all-four added
+runtime admission ceilings and named refusals were unwired. Complete
+platform clause/owner/standing reservations and producer refusal checks,
+all-five replay with explicit historical redacted-byte incompleteness,
+the remaining native conservation witnesses, final gate and independent
+Source review remain unfinished. Checking actual use prevents a committed
+overflow; it does not by itself prove every admitted task was fully funded.

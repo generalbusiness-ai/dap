@@ -7,7 +7,7 @@
  * the answer to a creation, is the contract's, and is exported here again.
  */
 
-import type { ActType, Answer, Beside, Bounds, CapabilityName, DeclaredDefinition, Digest, OutboxId, Entry, FactRef, Created, Grant, ObservationUse, PlatformDefinition, Receipt, RefusalReason, ScopeId, Seed, Settlement, SignedIntent, UnavailableReason } from "@generalbusiness/dap-contract";
+import type { ActType, Answer, Beside, Bounds, ScopeBoundName, CapabilityName, DeclaredDefinition, Digest, OutboxId, Entry, FactRef, Created, Grant, ObservationUse, PlatformDefinition, Receipt, RefusalReason, ScopeId, Seed, Settlement, SignedIntent, UnavailableReason } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, intentDigest, isDigest, isGrant, isPlatformDefinition, newIncarnation, parseStrict, platformName, retainedValueKey, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
 import { actNeeds, actionOf, outcomeValueDomains, checkpointOf, clockOf, counted, derivable, factsNamed, ownersOf, inputTexts, isObject, judgeAct, judgeCheckpoint, judgeGenesis, judgePreparation, own, placesOf, prepareRules, presentedTypes, readFields, runnable, stepsOf, validateDefinition, windowOf } from "@generalbusiness/dap-derive";
 import type { ActJudgment, Clock as Reading, Draft, Fetched, SignedCreation, GrantDecision, JudgeContext, Needed, Observing, Own, Owners, Placed, PlatformRules, Presented, Snapshots, StateView, Texts, ValidDefinition, Window } from "@generalbusiness/dap-derive";
@@ -24,7 +24,7 @@ export type { Created };
 /** How a checkpoint is answered (section 9.2). It has no caller outside the scope. */
 export type Checkpointed =
   | { answer: "written"; fact: FactRef }
-  | { answer: "refused"; reason: RefusalReason }
+  | { answer: "refused"; reason: RefusalReason; name?: ScopeBoundName }
   | { answer: "unavailable"; reason: UnavailableReason };
 
 /**
@@ -508,7 +508,7 @@ export class Scope {
             this.#store.cover(valid.indexes);
             return {
               verdict: "write", draft: judged.draft, retain: [...(bytes === null ? [] : [{ kind: "definition", digest: valid.digest, bytes } as const]), ...children.retain, ...used(judged.draft, facts), ...texts.retain(valid, judged.draft)],
-              sealed: answer, unfit: () => refused("bad-field"), full: () => refused("scope-full"),
+              sealed: answer, unfit: () => refused("bad-field"), full: (_head, bound) => ({ ...refused("scope-full"), ...(valid.declared.capacity ? { name: bound } : {}) }),
             };
           case "repeat": {
             const kept = this.#store.stored(0)!;
@@ -630,7 +630,7 @@ export class Scope {
               // An entry over the size bound, or a grant that is not canonical values, is never written.
               unfit: (why) => ({ answer: "refused", reason: why === "size" ? "bad-field" : "unauthorized", judgedAt: head }),
               // Section 9.2: an act is refused when the pending work it would admit, with that already admitted, has no room to settle.
-              full: () => ({ answer: "refused", reason: "scope-full", judgedAt: head }),
+              full: (_head, bound) => ({ answer: "refused", reason: "scope-full", judgedAt: head, ...(definition.declared.capacity ? { name: bound } : {}) }),
             };
           }
           case "due": return { verdict: "stop" };
@@ -719,7 +719,7 @@ export class Scope {
               },
               unfit: (why) => ({ answer: "refused", reason: why === "size" ? "bad-field" : "unauthorized", judgedAt: head }),
               // Section 17.3: a preparation is new work. It is admitted only with the room of what it reserves.
-              full: () => ({ answer: "refused", reason: "scope-full", judgedAt: head }),
+              full: (_head, bound) => ({ answer: "refused", reason: "scope-full", judgedAt: head, ...(definition.declared.capacity ? { name: bound } : {}) }),
             };
           }
           case "due": return { verdict: "stop" };
@@ -785,8 +785,8 @@ export class Scope {
         const judged = judgeCheckpoint(view, definition, checkpointOf(view), { clock, bounds });
         switch (judged.result) {
           case "write":
-            if (view.scope()!.head.seq + 1 >= bounds.scopeEntries) return said<Checkpointed>(unavailable("unavailable"));
-            return { verdict: "write", draft: judged.draft, retain: [], sealed: ({ entry, hash }) => ({ answer: "written", fact: { at: entry.at, seq: entry.seq, hash } }), unfit: () => unavailable("unavailable"), full: () => unavailable("unavailable") };
+            if (!definition.declared.capacity && view.scope()!.head.seq + 1 >= bounds.scopeEntries) return said<Checkpointed>(unavailable("unavailable"));
+            return { verdict: "write", draft: judged.draft, retain: [], sealed: ({ entry, hash }) => ({ answer: "written", fact: { at: entry.at, seq: entry.seq, hash } }), unfit: () => unavailable("unavailable"), full: (_head, bound) => definition.declared.capacity ? { answer: "refused", reason: "scope-full", name: bound } : unavailable("unavailable") };
           case "due": return { verdict: "stop" };
           case "refused": return said<Checkpointed>({ answer: "refused", reason: judged.reason });
           case "unavailable": return said<Checkpointed>(unavailable(judged.reason));

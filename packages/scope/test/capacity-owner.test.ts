@@ -25,6 +25,7 @@ test("native read-token reservations keep their entry bytes after the mint repla
     d.acts["request-check"] = { ...form, step: "open", on: "job", fields: { name: { ...name, required: true } }, effects: [{ value: { slot: "name", from: { field: "name" } } }, { value: { slot: "deadline", from: { time: { plusSeconds: 1800 } } } }] };
   });
   const asked = creation(at(60), under), c = controls(asked.name, START);
+  c.bounds = { ...c.bounds, scopeRecords: 1 };
   let sends = 0;
   wired.set(asked.name, () => ({ capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE, outside: {
     accepts: (owner, kind) => owner === "git-read@1" && kind === "mint",
@@ -49,6 +50,13 @@ test("native read-token reservations keep their entry bytes after the mint repla
     expect(before.pending).toEqual({ entries: 7, items: 0, records: 0, bytes: 7 * PROPOSED_BOUNDS.entryBytes, requests: 0 });
     await scope.restart();
     expect(await inspect()).toEqual(before);
+    expect(sends).toBe(1);
+    // Updating minting -> live spent no second key. A different job would
+    // create a second token record and must be refused at the same ceiling.
+    const second = await scope.did(una, "request-check", { fields: { name: "ci" } });
+    const beforeRefusal = await inspect();
+    expect(await scope.stub.prepare(scope.intent(vic, "git-read@1:job-read", { fields: { job: second.fact } }), [grantOf(vic, scope.at, [JOB_READ_ACTION])], "git-read@1", "job-read")).toMatchObject({ answer: "refused", reason: "scope-full", name: "scopeRecords" });
+    expect(await inspect()).toEqual(beforeRefusal);
     expect(sends).toBe(1);
   } finally { wired.delete(asked.name); }
 });
