@@ -1,0 +1,37 @@
+/** Transfer a send form's existing Amount to the request it actually made. */
+import type { Entry, SendForm } from "@generalbusiness/dap-contract";
+import { isPlatformDefinition } from "@generalbusiness/artroom-bytes";
+import { bound } from "./handlers.ts";
+import { AmountError, amountMath, NOTHING, requestEntries, subtract, type Amount } from "./held.ts";
+import { formOf } from "./sends.ts";
+import type { ValidDefinition } from "./validate/index.ts";
+import { own } from "./values.ts";
+
+/** The pending-request unit becomes Used at this entry. Keep the rest of
+ * the actual source form's full Amount as derived folded bookkeeping. */
+export function requestReservation(definition: ValidDefinition, entry: Entry, n: number): Amount {
+  const { sum } = amountMath(true);
+  const input = entry.input;
+  let path: string | null = null, forms: readonly SendForm[] | undefined;
+  if (input.type === "act" || input.type === "genesis") {
+    const kind = input.type === "act" ? input.signed.intent.kind : definition.declared.genesis;
+    path = `acts.${kind}`;
+    forms = own(definition.declared.acts, kind)?.sends;
+  } else if (input.type === "delivery" && (input.message.class === "request" || input.message.class === "advisory")) {
+    const handler = bound(definition, input.message, input.from)?.handler;
+    const named = Object.entries(definition.declared.receives).find(([, form]) => form === handler);
+    if (named) { path = `receives.${named[0]}`; forms = named[1].sends; }
+  } else if (input.type === "outcome") {
+    // A native outcome without a data send mark has no result clause,
+    // exactly as runClause interprets it. Its owner funds this request.
+    const amount = (n === 0 && isPlatformDefinition(input.owner) ? own(definition.reserving?.kinds, input.kind)?.request : undefined) ?? requestEntries(definition.pendingWorkAmounts.entry.bytes);
+    return subtract(amount, { ...NOTHING, requests: 1 });
+  }
+  const form = forms && formOf(definition, forms, entry, n);
+  const index = form && forms ? forms.indexOf(form as SendForm) : -1;
+  const amount = path !== null && index >= 0 ? own(definition.pendingWorkAmounts.requests, `${path}.sends.${index}`) : undefined;
+  if (!amount) throw new AmountError(`request ${entry.seq}.${n} has no originating send Amount`);
+  // Keep the existing platform clause-mark terms until their per-send
+  // integration is complete; never lose them while narrowing written work.
+  return subtract(sum(amount, definition.reserving?.clause ?? NOTHING), { ...NOTHING, requests: 1 });
+}

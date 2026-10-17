@@ -21,7 +21,7 @@ import type { Accepted, Account, Decided, HeldCreation, Holder, Item, ObservedHe
 import type { Dispatched, OutboxItem, OperationStatus, Outgoing, Retained, Sending, Store, Stored } from "./store.ts";
 import { ARCHIVE_PIN_KEY, archivePinBytes } from "./archive-pin.ts";
 import { LocalSigners, SIGNER_INDEX_BOUNDS } from "./local-signers.ts";
-import type { ItemDuty } from "@generalbusiness/dap-derive";
+import type { Amount, ItemDuty } from "@generalbusiness/dap-derive";
 
 export type SqlValue = string | number | null | ArrayBuffer;
 export interface Sql {
@@ -108,6 +108,9 @@ const DUE = "o.held = 0 AND o.ack IS NULL AND o.result IS NULL AND o.diagnosis I
 
 /** An operation that is not settled: it still reserves room (derive's `pendingOf`). */
 const OPEN = "opened + unknown + unopened > 0";
+
+/** Request bookkeeping is joined to its existing outbox key; it is no new logical record. */
+const REQUEST_ROWS = "SELECT o.seq, o.n, o.target, o.request, o.result, o.diagnosis, e.hash, r.value AS reservation FROM outbox o JOIN entry e ON e.seq = o.seq LEFT JOIN folded r ON r.kind = 'capacity-request' AND r.key = json_array(o.seq, o.n)";
 
 type Row = Record<string, SqlValue>;
 /** The entry that opened an operation and its ordinal there, from its ID. */
@@ -241,8 +244,11 @@ export class SqliteStore implements Store {
     return row && { seq: row["seq"] as number, intent: row["intent"] as Digest };
   }
   request(seq: number, n: number): OwnRequest | null {
-    const row = this.#one("SELECT o.seq, o.n, o.target, o.request, o.result, o.diagnosis, e.hash FROM outbox o JOIN entry e ON e.seq = o.seq WHERE o.seq = ? AND o.n = ? AND o.request IS NOT NULL", seq, n);
+    const row = this.#one(`${REQUEST_ROWS} WHERE o.seq = ? AND o.n = ? AND o.request IS NOT NULL`, seq, n);
     return row && requestOf(row);
+  }
+  pendingRequests(): readonly OwnRequest[] {
+    return this.#all(`${REQUEST_ROWS} WHERE o.request IS NOT NULL AND o.result IS NULL AND (o.diagnosis IS NULL OR json_extract(o.diagnosis, '$.finding') <> 'undelivered') ORDER BY o.seq, o.n`).map(requestOf);
   }
   decided(from: ScopeRef, seq: number, n: number): Decided | null {
     const row = this.#one("SELECT hash, by FROM inbox WHERE scope = ? AND inc = ? AND seq = ? AND n = ?", from.scope, from.inc, seq, n);
@@ -349,15 +355,16 @@ export class SqliteStore implements Store {
       else if (row["kind"] === "account") memory.putAccount(json<Account>(row["value"]));
       else if (row["kind"] === "capacity-item") memory.putItemDuties(Number(row["key"]), json(row["value"]));
       else if (row["kind"] === "capacity-holder") memory.settleHolder(Number(row["key"]));
-      // The count of a declared index is derived state: a checkpoint holds no row of it.
-      else if (row["kind"] === "keyed") continue;
+      // Index counts are absent from checkpoints; request Amounts are
+      // attached to their existing request below, rather than added twice.
+      else if (row["kind"] === "keyed" || row["kind"] === "capacity-request") continue;
       else memory.putTexts(...json<[number, string, Digest[]]>(row["value"]));
     }
     for (const row of this.#all("SELECT value FROM operation ORDER BY seq, k")) memory.putOperation(json(row["value"]));
     for (const row of this.#all("SELECT value FROM record")) memory.putRecord(json(row["value"]));
     for (const row of this.#all("SELECT intent, capability, step, seq FROM prepared")) memory.putPrepared({ intent: row["intent"] as Digest, capability: row["capability"] as CapabilityName, step: row["step"] as string, seq: row["seq"] as number });
     for (const row of this.#all("SELECT seq, actor, idem, intent FROM entry WHERE actor IS NOT NULL")) memory.putAccepted(row["actor"] as KeyId, row["idem"] as string, { seq: row["seq"] as number, intent: row["intent"] as Digest });
-    for (const row of this.#all("SELECT o.seq, o.n, o.target, o.request, o.result, o.diagnosis, e.hash FROM outbox o JOIN entry e ON e.seq = o.seq WHERE o.request IS NOT NULL")) memory.putRequest(requestOf(row));
+    for (const row of this.#all(`${REQUEST_ROWS} WHERE o.request IS NOT NULL`)) memory.putRequest(requestOf(row));
     for (const row of this.#all("SELECT scope, inc, seq, n, hash, by FROM inbox")) {
       // The record keeps the source's scope and incarnation; its kind is not part of the key and is not read.
       const at = { scope: row["scope"], inc: row["inc"], kind: "lane" } as ScopeRef;
@@ -394,6 +401,9 @@ export class SqliteStore implements Store {
     // The row was written with its entry, by `append`. The send's address and the entry's hash never change.
     if (!this.#one("SELECT 1 AS x FROM outbox WHERE seq = ? AND n = ?", r.seq, r.n)) throw new Error(`no send ${r.seq}.${r.n} is in the outbox`);
     this.#run("UPDATE outbox SET request = ?, result = ?, diagnosis = ? WHERE seq = ? AND n = ?", r.type, r.result && canonicalize(r.result), r.diagnosis && canonicalize(r.diagnosis), r.seq, r.n);
+    const key = canonicalize([r.seq, r.n]);
+    if (r.reservation === undefined) this.#run("DELETE FROM folded WHERE kind = 'capacity-request' AND key = ?", key);
+    else this.#fold("capacity-request", key, r.reservation);
   }
   putDecided(from: FactRef, n: number, by: number): void {
     this.#run("INSERT INTO inbox (scope, inc, seq, n, hash, by) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT (scope, inc, seq, n) DO UPDATE SET hash = excluded.hash, by = excluded.by", from.at.scope, from.at.inc, from.seq, n, from.hash, by);
@@ -568,8 +578,10 @@ function outboxItemOf(row: Row): OutboxItem {
 }
 
 function requestOf(row: Row): OwnRequest {
+  const reservation = orNull<Amount>(row["reservation"]);
   return {
     seq: row["seq"] as number, n: row["n"] as number, hash: row["hash"] as Digest, type: row["request"] as OwnRequest["type"], to: json(row["target"]),
     result: orNull(row["result"]), diagnosis: orNull(row["diagnosis"]),
+    ...(reservation === null ? {} : { reservation }),
   };
 }

@@ -71,7 +71,7 @@
 
 import type { Bounds, Input } from "@generalbusiness/dap-contract";
 import { isPlatformDefinition } from "@generalbusiness/artroom-bytes";
-import { AmountError, amountMath, holding, naturalAmount, NOTHING, sum, times, type Amount } from "./held.ts";
+import { AmountError, amountMath, holding, naturalAmount, NOTHING, subtract, sum, times, type Amount } from "./held.ts";
 import { closureOf, outcomeReservation, ownerReservations, type Owners } from "./ledger.ts";
 import { markerOwed } from "./markers.ts";
 import type { StateView } from "./state.ts";
@@ -168,12 +168,12 @@ export function reserved(view: StateView, definition: ValidDefinition, head: Inp
   // Section 17.2, "What a mark may start": a clause may hold an effect mark, and the request reserves what that mark may start.
   const clause = definition.clauseEntries + (definition.reserving?.clause.entries ?? 0);
   if (whole) {
-    // An already-sent request is Used, so reserve no second pending-request
-    // unit here. Its result may still retain one foreign source entry.
-    const after = checkedAmount(sum(checkedAmount(definition.pendingWorkAmounts.clause), checkedAmount(definition.reserving?.clause ?? NOTHING)));
-    const source = { ...NOTHING, bytes: checked(definition.pendingWorkAmounts.entry.bytes) };
-    add(scale(open.requests, checkedAmount(sum(entry(2), source, after))));
-    add(scale(open.unavailable, checkedAmount(sum(entry(1), source, after))));
+    for (const request of view.pendingRequests()) {
+      if (!request.reservation) throw new AmountError(`request ${request.seq}.${request.n} has no originating reservation`);
+      const remaining = request.diagnosis === null ? request.reservation : request.diagnosis.finding === "delivery-unavailable" ? subtract(request.reservation, entry(1)) : null;
+      if (remaining === null) throw new AmountError(`request ${request.seq}.${request.n} has an invalid pending diagnosis`);
+      add(remaining);
+    }
   } else {
     add(entry(product(checked(2 + checked(clause)), open.requests)));
     add(entry(product(checked(1 + clause), open.unavailable)));
@@ -223,14 +223,21 @@ export function reserved(view: StateView, definition: ValidDefinition, head: Inp
  * nothing else pending is the closing checkpoint: after it nothing is
  * reserved, and it fits because its entry was. The next entry that is not a
  * checkpoint is asked with the reservation counted again.
+ *
+ * The opt-in cohort checks every proposed head, including settlements.
+ * A settlement spends the room already reserved; it gets no ceiling exemption.
  */
 export function fits(view: StateView, definition: ValidDefinition, bounds: Pick<Bounds, "scopeEntries">, input: Input, settled = false, owners?: Owners | null): boolean {
   const scope = view.scope();
   if (!scope) return true;
+  if (definition.declared.capacity?.name === "whole-scope") {
+    // A settlement spends its existing room; it cannot bypass the ceiling.
+    return amountMath(true).sum({ ...NOTHING, entries: scope.head.seq }, { ...NOTHING, entries: 1 }, reserved(view, definition, input, owners)).entries <= bounds.scopeEntries;
+  }
   const settles = settled || input.type === "timed" || input.type === "diagnosis" || input.type === "outcome"
     || (input.type === "delivery" && (input.message.class === "control" || ("clause" in input && input.clause !== "conflict")));
   // Validate C1 state/arithmetic even when an owed settlement is exempt
   // from capacity admission. Old definitions keep their existing shortcut.
-  const reserved = definition.standing ? owed(view, definition, input, owners) : null;
-  return settles || scope.head.seq + 1 + (reserved ?? owed(view, definition, input, owners)) <= bounds.scopeEntries;
+  const standing = definition.standing ? owed(view, definition, input, owners) : null;
+  return settles || scope.head.seq + 1 + (standing ?? owed(view, definition, input, owners)) <= bounds.scopeEntries;
 }

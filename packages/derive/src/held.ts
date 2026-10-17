@@ -53,6 +53,13 @@ export function naturalAmount(amount: Amount): Amount {
 const DIMENSIONS = ["entries", "items", "records", "bytes", "requests"] as const;
 const each = (of: (dimension: (typeof DIMENSIONS)[number]) => number): Amount => ({ entries: of("entries"), items: of("items"), records: of("records"), bytes: of("bytes"), requests: of("requests") });
 
+/** Transfer an already funded part without hiding a negative remainder. */
+export function subtract(amount: Amount, spent: Amount): Amount {
+  naturalAmount(amount);
+  naturalAmount(spent);
+  return naturalAmount(each(dimension => amount[dimension] - spent[dimension]));
+}
+
 /** The sum of amounts, by dimension: distinct tasks are summed. */
 export const sum = (...amounts: readonly Amount[]): Amount => each((d) => amounts.reduce((n, a) => n + a[d], 0));
 /** One amount, n times. */

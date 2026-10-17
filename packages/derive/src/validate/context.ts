@@ -67,7 +67,7 @@ export interface PendingWork {
   opens: string | null;
   mayCreateCopy: boolean;
   sets: ClauseSet;
-  requests: { most: number; clauses: readonly ClauseSet[] }[];
+  requests: { send: number; most: number; clauses: readonly ClauseSet[] }[];
 }
 
 /**

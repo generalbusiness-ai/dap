@@ -728,3 +728,78 @@ settler exemption before fixing that handoff would refuse already owed
 work. This remains required work, alongside complete owner terms,
 five-axis admission/replay, incomplete historical byte spans, native
 boundary witnesses, final gate and Source review.
+
+## Originating request Amounts and checked entry settlements
+
+The validator now keeps one future-request Amount per exact send form,
+using the same request/clause calculation that funds a settling form.
+When the fold writes a request, the existing formOf selector identifies
+its source form, including conditional sends and fan-out ordinals. Its
+pending-request unit becomes Used; the remaining Amount is recorded on
+the existing request as derived bookkeeping. No second clause selector
+or reservation calculator was added. Native outcome requests follow the
+existing runClause interpretation: a data send mark at ordinal zero, or
+an empty result clause when the owner supplied no data send mark.
+
+An ordered pendingRequests view reads only requests without a result or
+an undelivered diagnosis. A delivery-unavailable diagnosis spends one
+reserved entry and its byte stand-in; the result's room remains. A result
+or undelivered diagnosis releases this request's duty. SQLite joins the
+Amount to the existing outbox key through folded bookkeeping. Checkpoints
+and historical Views preserve it. Entry and diagnosis formats are
+unchanged, and old cohorts omit the new request member.
+
+With this handoff, the entry-only settlement exemption is removed for
+the opt-in cohort. fits checks every proposed head using checked Amount
+arithmetic. Timed commits now check the same post-fold ceiling inside
+their transaction. Invalid Amounts leave no committed write and answer
+unavailable. Legacy interpretation and its settlement exemption remain
+unchanged. This is the entry ceiling; the four added ceilings are still
+not wired into admission or replay.
+
+The strengthened filled-budget witness now conserves the opt-in total:
+the acceptance and the request it creates leave five used plus three
+reserved entries at a limit of eight. Legacy still has its old five plus
+four row under the exemption. The real-scope version accepts the owed
+settlement after actual eviction and refuses ordinary work before and
+after it. The existing timed-hold witness also passes under both cohorts
+at the filled entry budget and writes the closing checkpoint.
+
+The selected native run passes nine cases across real driver diagnoses,
+timed settlements, item/holder terms, request settlement and eviction
+(64847, CLOSED0/b659ef). Its raw transaction probe removes an outbox's
+pending status and Amount together, then throws: both roll back. That
+probe is storage evidence, not a judged result. The dispatcher scenarios
+use test authority and controlled transport; the native owner scenario
+uses the previously labelled synthetic host answer. No provider runs.
+
+Six focused Derive files pass 90 cases. Conditional same-name and
+distinct-name sends, unconditional sends, fan-out, a late result after a
+diagnosis, and the filled-budget request handoff retain their original
+witnesses under legacy and opt-in rules. All three Replay View cases
+pass, including the full verifier over judged request/item history, a
+delivery-unavailable diagnosis and its covering checkpoint. Its grants
+remain explicitly trusted as recorded. It also compares historical heads
+with fresh folds in different query orders; it proves these derived
+entries and checkpoint, not complete five-axis replay or authority.
+
+A focused pure control initially restored the wrong global clause charge
+and failed the intended pending-row assertion. After entry settlement
+checks were enabled, the native control passes baseline and fails when
+that same wrong charge refuses the already owed acceptance (11300,
+CLOSED0/727f9c). Source is restored. Derive, Scope, Replay and Platform
+test compilers pass. The original failures remain: the first row assertion
+still expected legacy counts for the opt-in cohort; an attempted member
+row used retains where only rules rows allow it and was removed; a
+declared tell used a field address where that grammar requires a slot,
+which was corrected. Compilers caught missing Amount imports, a local
+name shadowing reserved, and an untyped tuple in the budget assertion.
+Those failed runs are not passing evidence. No gate ran.
+
+The global extra terms for platform clause marks are deliberately still
+carried, not discarded, while their per-send integration remains owed.
+Complete platform/owner and standing terms, their pre-admission checks,
+all four added admission/replay ceilings and named refusals, historical
+incomplete byte spans, the remaining native boundary witnesses, final
+gate and independent Source review remain unfinished. This branch is
+local development, not an approved capacity guarantee.

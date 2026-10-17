@@ -24,6 +24,7 @@ import { isLocalId, isObject, isScopeRef, own, same } from "./values.ts";
 import type { ValidDefinition } from "./validate/index.ts";
 import { checkStandingEntry, StandingError } from "./standing.ts";
 import { updateItemDuties } from "./item-duties.ts";
+import { requestReservation } from "./request-duties.ts";
 import { itemSettledBy, itemSettlementBinding } from "./handlers.ts";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 
@@ -234,7 +235,9 @@ export function applyEntry(writer: StateWriter, definition: ValidDefinition, ent
 
   // Section 7.4: only a request has a result, so only a request is outstanding.
   for (const send of entry.sends) {
-    if (send.message.class === "request") writer.putRequest({ seq: entry.seq, n: send.n, hash, type: send.message.type, to: send.to, result: null, diagnosis: null });
+    if (send.message.class === "request") writer.putRequest({ seq: entry.seq, n: send.n, hash, type: send.message.type, to: send.to, result: null, diagnosis: null,
+      ...(definition.declared.capacity?.name === "whole-scope" ? { reservation: requestReservation(definition, entry, send.n) } : {}),
+    });
   }
 
   // Section 17.2, "A request that an outcome sends": where the send of the kind states `once`, the fold notes that this operation

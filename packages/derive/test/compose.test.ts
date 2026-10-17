@@ -414,11 +414,12 @@ describe("room to settle (section 17.2)", () => {
     d.acts.ask.effects.push({ value: { slot: "until", from: { field: "until" } } });
   };
   /** The entries written, and the entries reserved at that head. */
-  const row = (s: Ledger) => [s.entries.length, owed(s.state, s.definition, s.last.input)];
+  const row = (s: Ledger): [number, number] => [s.entries.length, owed(s.state, s.definition, s.last.input)];
 
-  test("a late result sets a timer again (the fifth witness of section 17.4): each request reserves its two entries and the deadline its clause can create, and every row is within the budget the act was admitted in", () => {
+  test.each(["legacy", "whole-scope"] as const)("%s: a late result sets a timer again; every request, diagnosis and resulting deadline stays within its admitted budget", cohort => {
     // X12: `ask` sends two requests, and the `applied` clause of each sets `asked` again. The deadline has passed, so `asked` is due at once.
     const x12 = variant(ticket, (d) => {
+      if (cohort === "whole-scope") d.capacity = { name: "whole-scope", version: 1 };
       pausing(d);
       d.acts.ask.sends[0].tell.result = { applied: [{ state: "asked" }] };
       d.acts.ask.sends.push(structuredClone(d.acts.ask.sends[0]));
@@ -426,6 +427,7 @@ describe("room to settle (section 17.2)", () => {
     const D = created();
     const S = new Scope(x12);                                  // entries 0 and 1: one more than the contract's table, which has a creation only
     const ask = S.did(una, "ask", fields({ desk: D.at, until: t(-60) }));
+    for (const request of S.state.pendingRequests()) expect(request.reservation).toEqual(cohort === "whole-scope" ? { entries: 3, items: 0, records: 0, bytes: 4 * PROPOSED_BOUNDS.entryBytes, requests: 0 } : undefined);
     // The act: a deadline that reserves 1, two requests that reserve 3 each, and the closing checkpoint. It fits in 11 entries and not in 10.
     expect([row(S), fits(S.state, x12, { scopeEntries: 11 }, ask.input), fits(S.state, x12, { scopeEntries: 10 }, ask.input)]).toEqual([[3, 8], true, false]);
     const rows = [];
@@ -448,6 +450,8 @@ describe("room to settle (section 17.2)", () => {
     rows.push(row(S));
     // Timed; both diagnoses; a result and its timed entry, twice; the closing checkpoint. Written and reserved are 11 in every row.
     expect(rows).toEqual([[4, 7], [6, 5], [7, 4], [8, 3], [9, 2], [10, 1], [11, 0]]);
+    expect(S.state.pendingRequests()).toEqual([]);
+    expect(S.replay().all()).toEqual(S.state.all());
   });
 
   test.each(["legacy", "whole-scope"] as const)("%s: a pending job and relationship copy spend their reserved entries at a full budget; non-settling work is refused", cohort => {
@@ -479,7 +483,8 @@ describe("room to settle (section 17.2)", () => {
     const x15 = jobs(["requested", "timed-out"]);
     // A job reserves its deadline's entry, and for its answer three: the answer's own, and the two of the request that it sends, whose
     // clauses start nothing. Timed out, it still reserves the three. A copy that is `set` reserves one entry. For any request the
-    // runtime holds the two entries and one more, the most that a clause of any request of the definition can start.
+    // legacy runtime holds the two entries and one more, the most that a clause of any request of the definition can start.
+    // The opt-in fold keeps this particular request's originating clause Amount instead.
     expect([x15.deadlines["job"], x15.pending, x15.pendingCopies, x15.clauseEntries]).toEqual([{ requested: 1 }, { job: { requested: 3, "timed-out": 3 } }, [{ name: "closes", kind: "lane", states: ["set"], entries: 1 }], 1]);
     // A timed entry is never refused. So a job that its deadline can take to a state that awaits an answer reserves the answer before it.
     expect(jobs(["timed-out"]).pending).toEqual({ job: { requested: 3, "timed-out": 3 } });
@@ -501,7 +506,7 @@ describe("room to settle (section 17.2)", () => {
     /** P sets a link to this scope, or removes one, and the update arrives. */
     const update = (kind: string, over: Over) => commit(judged(S, P, P.did(rita, kind, over).seq));
     const linked = fields({ target: S.at, about: 0 });
-    const done: [string, number[]][] = [];
+    const done: [string, [number, number]][] = [];
     const step = (what: string) => done.push([what, row(S)]);
 
     step(update("link", linked));                             // entry 2: the copy is `set`
@@ -515,12 +520,14 @@ describe("room to settle (section 17.2)", () => {
     step(check(true));                                        // a second answer: the job is `passed`, which no `settles` lists
     step(update("unlink", on(P, 2)));                         // entry 6: the update that takes the copy out of `set`
     step(act("note"));
-    // The two settling entries are written though written and reserved then pass the budget: for the request that the answer sent,
-    // the runtime holds one entry more than that request's own closure, which the job reserved. That is used only against new work.
+    // Legacy settlement is exempt when the global clause maximum takes the
+    // row past the budget. The opt-in source-specific handoff stays within it.
+    const pending = cohort === "whole-scope" ? 4 : 5;
     expect(done).toEqual([
       ["new work", [3, 2]], ["new work", [4, 6]], ["scope-full, scope-full, scope-full", [4, 6]], ["write", [5, 5]],
-      ["scope-full", [5, 5]], ["settles", [6, 5]], ["scope-full", [6, 5]], ["settles", [7, 4]], ["scope-full", [7, 4]],
+      ["scope-full", [5, 5]], ["settles", [6, pending]], ["scope-full", [6, pending]], ["settles", [7, pending - 1]], ["scope-full", [7, pending - 1]],
     ]);
+    if (cohort === "whole-scope") expect(done.every(([, [used, reserved]]) => used + reserved <= budget.scopeEntries)).toBe(true);
     expect(S.replay().snapshot()).toBe(S.state.snapshot());
   });
 

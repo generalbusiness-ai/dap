@@ -20,7 +20,7 @@
 import type { Bounds, FactRef, Head, Prepared, SignedIntent } from "@generalbusiness/dap-contract";
 import { carryProducerName } from "./receiver-facts.ts";
 import { CanonicalError, canonicalize, entryHash, parseStrict, utf8, verifySignedIntent } from "@generalbusiness/artroom-bytes";
-import { applyEntry, clockOf, entryOf, fits, isEntryOf, isIntent, same, judgeTimed, nextDue, StandingError, timeMs, timeOf } from "@generalbusiness/dap-derive";
+import { AmountError, applyEntry, clockOf, entryOf, fits, isEntryOf, isIntent, same, judgeTimed, nextDue, StandingError, timeMs, timeOf } from "@generalbusiness/dap-derive";
 import type { Clock as Reading, Draft, Due, Fetched, Owners, PlatformRules, RuleInput, StateView, ValidDefinition } from "@generalbusiness/dap-derive";
 import { ownOf, retainedFacts, snapshotsOf } from "./core.ts";
 import type { Ports, Resolver } from "./ports.ts";
@@ -282,7 +282,7 @@ export class Turns {
     try {
       return this.#telling(() => this.#timed(definition, turn, selected, snapshot));
     } catch (error) {
-      if (error instanceof Unfit) return "unfit";   // thrown before anything was written
+      if (error instanceof Unfit || error instanceof Full || error instanceof AmountError) return "unfit"; // the transaction retained no write
       throw error;
     }
   }
@@ -296,7 +296,8 @@ export class Turns {
       const judged = judgeTimed(this.#store, definition, selected, { clock, bounds: this.#bounds, capabilities: this.#ports.capabilities ?? undefined, platform: this.#platform() });   // 6.3 and 6.4
       if (judged.result === "unavailable") return judged.reason === "clock-behind" ? "clock-behind" : "unfit";
       if (judged.result === "dropped") return "dropped";
-      this.#seal(definition, judged.draft, clock, []);                 // 6.5
+      const sealed = this.#seal(definition, judged.draft, clock, []);                 // 6.5
+      if (definition.declared.capacity?.name === "whole-scope" && !fits(this.#store, definition, this.#bounds, sealed.entry.input, true, this.#owners())) throw new Full();
       turn.wrote = true;
       return "written";
     });
@@ -310,7 +311,7 @@ export class Turns {
     } catch (error) {
       // The entry would have left an admitted task no room to settle. The transaction wrote nothing.
       if (error instanceof Full && full) return { end: "answer", answer: (full as () => A)() };
-      if (error instanceof StandingError) return { end: "unavailable" };
+      if (error instanceof StandingError || error instanceof AmountError) return { end: "unavailable" };
       throw error;
     }
   }

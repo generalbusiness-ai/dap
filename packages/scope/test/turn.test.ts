@@ -1,7 +1,7 @@
 import { describe, expect, test, vi } from "vitest";
 import { DOMAINS, PROPOSED_BOUNDS, type Receipt } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, rawRetainedJSON, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
-import { AmountError, MemoryState, applyEntry, checkpointOf, stateDigest, timeMs } from "@generalbusiness/dap-derive";
+import { AmountError, MemoryState, applyEntry, checkpointOf, reserved, stateDigest, timeMs } from "@generalbusiness/dap-derive";
 import { SqliteStore, Turns, Wakes, production } from "../src/index.ts";
 import { variant } from "@generalbusiness/dap-derive/testing";
 import { HOLD, at, definition, create, rita, una, vic } from "./support.ts";
@@ -435,8 +435,9 @@ describe("the clock behind the history (section 5.3)", () => {
 });
 
 describe("the scope's budget (section 9.2), here 12 entries", () => {
-  test("an act is refused scope-full when the duties it would admit have no room to settle; every admitted hold's end and the closing checkpoint are then written", async () => {
-    const s = await create({ scopeEntries: 12 });
+  test.each(["legacy", "whole-scope"] as const)("%s: new work cannot take admitted holds' timed entries or the closing checkpoint", async cohort => {
+    const under = cohort === "whole-scope" ? variant(definition.declared, d => { d.capacity = { name: "whole-scope", version: 1 }; }) : definition;
+    const s = await create({ scopeEntries: 12 }, {}, under);
     const holds = await s.holds(2);                           // entries 1 to 6: two holds, each with a deadline that reserves one entry
     const commitment = await s.commitment();                  // entries 7 and 8: nine entries, and three reserved with the closing checkpoint
     const head = await s.head();
@@ -464,8 +465,9 @@ describe("the scope's budget (section 9.2), here 12 entries", () => {
     expect([await s.stub.checkpoint(), (await s.head()).seq]).toMatchObject([{ answer: "written", fact: { seq: closing } }, scopeEntries - 1]);
   });
 
-  test("a report that awaits its acceptance reserves that entry: at a full budget new work is refused, and the acceptance is written", async () => {
-    const s = await create({ scopeEntries: 6 });
+  test.each(["legacy", "whole-scope"] as const)("%s: a full report scope still writes its acceptance and the request that acceptance reserved", async cohort => {
+    const base = cohort === "whole-scope" ? variant(definition.declared, d => { d.capacity = { name: "whole-scope", version: 1 }; }) : definition;
+    const s = await create({ scopeEntries: 6 }, {}, base);
     const commitment = await s.commitment();                  // entries 1 and 2
     const report = (await s.did(una, "report", { fields: { commitment }, expected: { commitment: 2 } })).fact.seq;   // entry 3: four written, two reserved
     expect(await s.submit(s.remark())).toMatchObject({ answer: "refused", reason: "scope-full" });
@@ -475,11 +477,11 @@ describe("the scope's budget (section 9.2), here 12 entries", () => {
 
     // The same lane, where the acceptance also asks for a lane to be created, and where the clause of another request, of a
     // renewal, can move a hold's end. A report then reserves three entries: the acceptance, and the two of the request it sends.
-    // For any pending request the runtime holds one entry more, the most that a clause of any request of the definition can start.
-    // So the state after the acceptance reserves more than the report did. It is written all the same, because the turn passes the
-    // judge's word that the entry settles: no free entry is asked of it. Everything else is still refused.
+    // Legacy requests use the global largest clause and may pass the entry
+    // ceiling under the settlement exemption. The opt-in handoff keeps this
+    // send's own Amount, so its checked settlement remains within the ceiling.
     const asks = { create: { kind: "lane", definition: "self", fields: { title: { const: "another" }, opener: { signer: true } } } };
-    const asking = variant(definition.declared, (def) => {
+    const asking = variant(base.declared, (def) => {
       def.acts["accept-report"].sends = [{ create: { ...asks.create, result: {} } }];
       def.acts.renew.sends = [{ create: { ...asks.create, result: { applied: [{ value: { slot: "until", from: { time: { plusSeconds: 600 } } } }] } } }];
     });
@@ -487,8 +489,19 @@ describe("the scope's budget (section 9.2), here 12 entries", () => {
     const a = await create({ scopeEntries: 8 }, {}, asking);
     const under = await a.commitment();
     const reported = (await a.did(una, "report", { fields: { commitment: under }, expected: { commitment: 2 } })).fact.seq;   // four written, four reserved
+    if (cohort === "whole-scope") await a.restart();
     expect([await a.submit(a.remark()), await a.act(vic, "accept-report", { on: reported, expected: { on: 1 } }), await a.submit(a.remark())])
       .toMatchObject([{ answer: "refused", reason: "scope-full" }, { answer: "accepted", receipt: { fact: { seq: 4 }, sends: ["4.0"] } }, { answer: "refused", reason: "scope-full" }]);
+    if (cohort === "whole-scope") {
+      const row = await a.inside(state => {
+        const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) });
+        const last = JSON.parse(store.stored(store.scope()!.head.seq)!.bytes);
+        // Real judged acceptance/storage at the filled entry budget. Test
+        // authority and the unresolved transport remain fixture stand-ins.
+        return [store.scope()!.head.seq + 1, reserved(store, asking, last.input).entries];
+      });
+      expect(row).toEqual([5, 3]);
+    }
   });
 
   test("after a closing checkpoint nothing is reserved; the next entry that is not a checkpoint is admitted only with a closing checkpoint reserved again", async () => {

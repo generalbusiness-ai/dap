@@ -34,6 +34,9 @@ export interface PendingWorkAmounts {
   pendingCopies: readonly (Omit<PendingCopy, "entries"> & { amount: Amount })[];
   clause: Amount;
   decisions: Readonly<Record<string, Amount>>;
+  /** Opt-in: one future request of each exact send form, including its
+   * pending-request unit. The fold transfers that unit to Used. */
+  requests?: Readonly<Record<string, Amount>>;
 }
 
 export interface Capacity {
@@ -136,7 +139,8 @@ export function capacityOf(d: Pick<Defining, "bad" | "bounds" | "pendingWork" | 
    */
   // Each request here is future work of a settling form: its pending-request unit is Reserved, not Used. Its result may newly
   // retain its foreign source entry. The largest clause closure is propagated in every dimension already known here.
-  const requestsOf = (form: PendingWork): Amount => sum(...form.requests.map((request) => times(request.most, sum(requestEntries(d.bounds.entryBytes), largest(...request.clauses.map((c) => starts(c)))))));
+  const requestAmount = (request: PendingWork["requests"][number]): Amount => sum(requestEntries(d.bounds.entryBytes), largest(...request.clauses.map(c => starts(c))));
+  const requestsOf = (form: PendingWork): Amount => sum(...form.requests.map(request => times(request.most, requestAmount(request))));
   const amountOf = (form: PendingWork): Amount => {
     const settled = form.settles && "subject" in form.settles ? form.settles : undefined;
     forms.push(form);
@@ -164,9 +168,10 @@ export function capacityOf(d: Pick<Defining, "bad" | "bounds" | "pendingWork" | 
   // A request reserves, beside its two entries, the most that one of its clauses can start. The runtime holds the largest over
   // every request form of the definition, which is never less (section 17.2, "More, and never less").
   const clause = largest(...d.clauseSets.map((c) => starts(c)));
+  const requests = d.wholeCapacity ? Object.fromEntries(d.pendingWork.flatMap(form => form.requests.map(request => [`${form.path}.sends.${request.send}`, requestAmount(request)]))) : undefined;
   for (const form of unbounded) d.bad("reserve-unbounded", form.path, "the forms that settle lead back to the state this one settles, so no reservation covers what its settlement can start");
   const marked = unbounded.size === 0 ? markers.data() : null;
   const decisions = Object.fromEntries(d.pendingWork.filter((form) => form.path.startsWith("receives.")).map((form) => [form.path, starts(form.sets)]));
   const decisionEntries = Object.fromEntries(Object.entries(decisions).map(([path, amount]) => [path, amount.entries]));
-  return { pendingWorkAmounts: { entry, deadlines: deadlineAmounts, pending: pendingAmounts, pendingCopies: copyAmounts, clause, decisions }, deadlines, pending, pendingCopies, clauseEntries: clause.entries, decisionEntries, ...(marked ? { markers: marked } : {}) };
+  return { pendingWorkAmounts: { entry, deadlines: deadlineAmounts, pending: pendingAmounts, pendingCopies: copyAmounts, clause, decisions, ...(requests ? { requests } : {}) }, deadlines, pending, pendingCopies, clauseEntries: clause.entries, decisionEntries, ...(marked ? { markers: marked } : {}) };
 }

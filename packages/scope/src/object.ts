@@ -181,7 +181,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     const outsideState: StateView = {
       scope: () => store.scope(), keyCounts: () => store.keyCounts(), item: (...args) => store.item(...args), count: (...args) => store.count(...args), page: (...args) => store.page(...args),
       relation: (...args) => store.relation(...args), copies: (...args) => store.copies(...args), accepted: (...args) => store.accepted(...args),
-      request: (...args) => store.request(...args), decided: (...args) => store.decided(...args), creation: (...args) => store.creation(...args),
+      request: (...args) => store.request(...args), pendingRequests: () => store.pendingRequests(), decided: (...args) => store.decided(...args), creation: (...args) => store.creation(...args),
       operation: (...args) => store.operation(...args), texts: (...args) => store.texts(...args), prepared: (...args) => store.prepared(...args),
       preparations: (...args) => store.preparations(...args), record: (...args) => store.record(...args), records: (...args) => store.records(...args),
       recordCount: (...args) => store.recordCount(...args), observed: (...args) => store.observed(...args), incarnations: (...args) => store.incarnations(...args),

@@ -11,6 +11,7 @@ import { canonicalBytes, canonicalize, digestBytes } from "@generalbusiness/artr
 import { pendingOf } from "./ledger.ts";
 import { byteOrder } from "./values.ts";
 import type { ItemDuty } from "./item-duties.ts";
+import type { Amount } from "./held.ts";
 
 export type { Item, Party, Status };
 
@@ -43,6 +44,8 @@ export interface OwnRequest {
   seq: number; n: number; hash: Digest; type: Request["type"]; to: ScopeRef | Seed;
   result: { seq: number; clause: "applied" | "refused" | "superseded" | "conflict" } | null;
   diagnosis: { seq: number; finding: "undelivered" | "delivery-unavailable" } | null;
+  /** Opt-in pending result/diagnosis room, derived from the originating form. */
+  reservation?: Amount;
 }
 
 /** The applied creation result this scope holds for a seed (section 7.2). */
@@ -242,6 +245,9 @@ export interface StateView {
   copies(name: string, kind: ScopeKind, states?: readonly string[]): number;
   accepted(actor: KeyId, idempotencyKey: string): Accepted | null;
   request(seq: number, n: number): OwnRequest | null;
+  /** No result or undelivered diagnosis; a delivery-unavailable request
+   * remains pending. Ordered by the sending entry and send ordinal. */
+  pendingRequests(): readonly OwnRequest[];
   /** The record of the incoming delivery from that scope, entry and ordinal, if one was recorded. */
   decided(from: ScopeRef, seq: number, n: number): Decided | null;
   creation(seed: Digest): HeldCreation | null;
@@ -438,6 +444,9 @@ export class MemoryState implements StateWriter {
   }
   accepted(actor: KeyId, idempotencyKey: string) { return this.#accepted.get(key(actor, idempotencyKey))?.[2] ?? null; }
   request(seq: number, n: number) { return this.#requests.get(key(seq, n)) ?? null; }
+  pendingRequests(): readonly OwnRequest[] {
+    return [...this.#pendingRequests].map(at => this.#requests.get(at)!).sort((a, b) => a.seq - b.seq || a.n - b.n);
+  }
   decided(from: ScopeRef, seq: number, n: number) { return this.#decided.get(key(from.scope, from.inc, seq, n)) ?? null; }
   creation(seed: Digest) { return this.#creations.get(seed) ?? null; }
   operation(id: OperationId) { return this.#operations.get(id) ?? null; }
