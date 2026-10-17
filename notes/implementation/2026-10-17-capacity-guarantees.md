@@ -2,8 +2,8 @@
 
 Work in progress under request `b4062d8c`, promise `d3e026bd`, and full
 capacity root `113a54bd`. This branch starts from Main `2637e6bb`, tree
-`c7e7188b`. It is not ready for review or landing: configuration parsing
-is present, but runtime admission and replay still use the old entry-only
+`c7e7188b`. It is not ready for review or landing: configuration parsing and the shared Amount traversal
+are present, but runtime admission and replay still use the old entry-only
 check. No whole-scope capacity guarantee is established by this checkpoint.
 
 ## Adopted boundary
@@ -106,3 +106,40 @@ propagation, and actual runtime/replay/restart/legacy witnesses. The gate
 is owed once at the final implementation freeze before independent
 exact-head review. No gate has run for this branch, and no artifact or
 approval is filed for this incomplete implementation.
+
+
+## Shared traversal checkpoint
+
+`reserved` now carries the existing task Amounts through the same pending
+work walk; `owed` projects its entry component. `heldReserved` keeps the
+holder Amounts and `heldEntries` projects them. `markerReserved` uses
+`markerReservations`; `markerOwed` projects its entries. There is no second
+task calculator. The legacy path still reads its existing numeric entry
+terms, including C1's validation and closing-checkpoint behavior.
+
+The opted-in path retains the known timed, item/copy settlement, marker,
+platform outcome and holder terms. An already-sent request contributes no
+second Reserved pending-request unit: that unit belongs in Used. It still
+reserves diagnosis/result entries, the result's foreign source bytes and
+its declared clause. Future requests remain Reserved until sent. The
+closing and provisional confirmation entries retain the static entry-size
+stand-in. Producer-specific retained terms, owner record closures and
+complete arithmetic checks inside every nested closure are still owed.
+These partial Amounts are not yet an admission guarantee.
+
+Focused development checks selected `forms-settles.test.ts`,
+`forms-holds.test.ts` and `standing.test.ts`: 55 passed. The added scenario
+uses the existing made-up marker definition with real in-memory judges and
+fold. It distinguishes a short marker settlement from the alternative
+that sends a request: future pending-request reservation moves to an
+actually pending request, while the entry projection remains identical.
+It is not a native scope, complete byte accounting or storage witness.
+
+A separate focused case checks a fractional record operand before a zero
+item count can conceal it. It passes normally and fails by the intended
+assertion when only that pre-multiplication check is removed; source is
+restored afterward. The added Amount checker requires all five fields to
+be nonnegative safe integers and refuses negative zero. Runtime usage,
+first-key counts, transaction rollback, historical bytes and persistent
+duty identity are still the next implementation work. No gate or Source
+review is claimed for this checkpoint.

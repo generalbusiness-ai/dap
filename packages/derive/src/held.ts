@@ -40,6 +40,16 @@ import { isObject, own } from "./values.ts";
 export interface Amount { entries: number; items: number; records: number; bytes: number; requests: number }
 
 export const NOTHING: Amount = { entries: 0, items: 0, records: 0, bytes: 0, requests: 0 };
+/** Invalid capacity arithmetic cannot be used as free room. */
+export class AmountError extends Error {}
+
+export function naturalAmount(amount: Amount): Amount {
+  for (const dimension of DIMENSIONS) {
+    const n = amount[dimension];
+    if (!Number.isSafeInteger(n) || n < 0 || Object.is(n, -0)) throw new AmountError(`reserved ${dimension} operand is invalid`);
+  }
+  return amount;
+}
 const DIMENSIONS = ["entries", "items", "records", "bytes", "requests"] as const;
 const each = (of: (dimension: (typeof DIMENSIONS)[number]) => number): Amount => ({ entries: of("entries"), items: of("items"), records: of("records"), bytes: of("bytes"), requests: of("requests") });
 

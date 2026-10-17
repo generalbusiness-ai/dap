@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { DeclaredDefinition, PlatformData, PlatformDefinition, Subject } from "@generalbusiness/dap-contract";
 import { canonicalBytes, entryHash, factRefOf, parseStrictBytes } from "@generalbusiness/artroom-bytes";
-import { PROFILES, applyEntry, clockOf, entryOf, fits, itemAwaits, judgeDelivery, markerAmounts, markerReservations, owed, validateDefinition } from "../src/index.ts";
+import { AmountError, PROFILES, applyEntry, clockOf, entryOf, fits, itemAwaits, judgeDelivery, markerAmounts, markerReservations, owed, reserved, validateDefinition } from "../src/index.ts";
 import type { Draft, PlatformRules, RuleEffect, ValidDefinition } from "../src/index.ts";
 import { Scope, arriving, directory, fields, forged, keys, on, valid, type Over } from "./fixtures.ts";
 
@@ -79,6 +79,36 @@ class Full extends Scope {
 }
 
 describe("18.54: two marks on one item, and a state settlement beside them", () => {
+  test("whole-scope checks pending Amount operands before a zero live count can hide a fractional record term", () => {
+    const definition = valid(changed(M, (d) => {
+      d.capacity = { name: "whole-scope", version: 1 };
+      for (const kind of ["mark-a", "mark-a-far", "mark-b"]) delete d.acts[kind];
+    }));
+    const scope = new Full(definition);
+    expect(scope.state.count("job", "open")).toBe(0);
+    const malformed = { ...definition, pendingWorkAmounts: { ...definition.pendingWorkAmounts, pending: {
+      job: { open: { ...definition.pendingWorkAmounts.pending["job"]!["open"]!, records: 0.5 } },
+    } } };
+    expect(() => reserved(scope.state, malformed, scope.last.input)).toThrow(AmountError);
+  });
+
+  test("the shared traversal keeps marker alternatives and future requests as Amounts, then moves a sent request from Reserved to Used", () => {
+    // This is the existing made-up marker definition and real judges/fold in
+    // memory, not a native scope or a complete byte-admission witness.
+    const definition = valid(changed(M, (d) => { d.capacity = { name: "whole-scope", version: 1 }; }));
+    const unit = PROPOSED_BOUNDS.entryBytes;
+    for (const far of [false, true]) {
+      const scope = new Full(definition);
+      const id = scope.started();
+      expect(reserved(scope.state, definition, scope.last.input)).toEqual({ entries: 6, bytes: 7 * unit, items: 0, records: 0, requests: 1 });
+      expect(scope.does(far ? "mark-a-far" : "mark-a", on(scope, id))).toBe("settles");
+      const amount = reserved(scope.state, definition, scope.last.input);
+      expect(amount).toEqual({ entries: far ? 5 : 3, bytes: (far ? 6 : 3) * unit, items: 0, records: 0, requests: 0 });
+      expect(scope.state.outstanding().requests).toBe(far ? 1 : 0);
+      expect(owed(scope.state, definition, scope.last.input)).toBe(amount.entries);
+    }
+  });
+
   test("18.54 case 1: a job that is open with both marks false reserves 3 for a, 1 for b and 1 for its state: 5 entries", () => {
     // (job, a) is the larger of its two forms: `mark-a`, 1 entry, and `mark-a-far`, 1 entry and the 2 of its request.
     const forms = Object.fromEntries(m.markers!["job"]!.forms.map((form) => [form.path, [form.slot, form.base]]));

@@ -26,6 +26,8 @@ export interface PendingCopy { name: string; kind: ScopeKind; states: readonly s
  * fields of Capacity are entry projections of these amounts, not a second calculation or five-dimensional admission.
  */
 export interface PendingWorkAmounts {
+  /** The static entry-size stand-in, before producer-specific retained terms. */
+  entry: Amount;
   deadlines: Readonly<Record<string, Readonly<Record<string, Amount>>>>;
   pending: Readonly<Record<string, Readonly<Record<string, Amount>>>>;
   pendingCopies: readonly (Omit<PendingCopy, "entries"> & { amount: Amount })[];
@@ -160,5 +162,5 @@ export function capacityOf(d: Pick<Defining, "bad" | "bounds" | "pendingWork" | 
   const marked = unbounded.size === 0 ? markers.data() : null;
   const decisions = Object.fromEntries(d.pendingWork.filter((form) => form.path.startsWith("receives.")).map((form) => [form.path, starts(form.sets)]));
   const decisionEntries = Object.fromEntries(Object.entries(decisions).map(([path, amount]) => [path, amount.entries]));
-  return { pendingWorkAmounts: { deadlines: deadlineAmounts, pending: pendingAmounts, pendingCopies: copyAmounts, clause, decisions }, deadlines, pending, pendingCopies, clauseEntries: clause.entries, decisionEntries, ...(marked ? { markers: marked } : {}) };
+  return { pendingWorkAmounts: { entry, deadlines: deadlineAmounts, pending: pendingAmounts, pendingCopies: copyAmounts, clause, decisions }, deadlines, pending, pendingCopies, clauseEntries: clause.entries, decisionEntries, ...(marked ? { markers: marked } : {}) };
 }

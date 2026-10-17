@@ -33,7 +33,7 @@
  */
 
 import type { Item, StateView } from "./state.ts";
-import { NOTHING, largest, sum, type Amount } from "./held.ts";
+import { NOTHING, largest, sum, times, type Amount } from "./held.ts";
 import type { ValidDefinition } from "./validate/index.ts";
 import { own } from "./values.ts";
 
@@ -175,23 +175,28 @@ const PAGE = 64;
  * not read: a final state has no marker task, and its state task is counted
  * at the count of the state with no mark completed, which is never less.
  */
-export function markerOwed(view: StateView, definition: Pick<ValidDefinition, "markers" | "declared">): number {
+export function markerReserved(view: StateView, definition: Pick<ValidDefinition, "markers" | "declared">): Amount {
   const markers = definition.markers;
-  if (!markers) return 0;
-  const amounts = markerAmounts(markers);
-  let entries = 0;
+  if (!markers) return NOTHING;
+  const amounts = markerReservations(markers);
+  let reserved = NOTHING;
   for (const [name, type] of Object.entries(markers)) {
     for (const [state, { final }] of Object.entries(own(definition.declared.items, name)?.states ?? {})) {
       const most = amounts.awaits(name, state, []);
-      if (most === 0) continue;
-      if (final) { entries += most * view.count(name, state); continue; }
+      if (most.entries === 0) continue;
+      if (final) { reserved = sum(reserved, times(view.count(name, state), most)); continue; }
       for (let after: number | null = null; ;) {
         const page = view.page(name, [state], after, PAGE);
-        for (const item of page.items) entries += amounts.awaits(name, state, marksDone(type, item));
+        for (const item of page.items) reserved = sum(reserved, amounts.awaits(name, state, marksDone(type, item)));
         if (!page.more || page.items.length === 0) break;
         after = page.items.at(-1)!.id;
       }
     }
   }
-  return entries;
+  return reserved;
+}
+
+/** The legacy entry API projects the same marker traversal. */
+export function markerOwed(view: StateView, definition: Pick<ValidDefinition, "markers" | "declared">): number {
+  return markerReserved(view, definition).entries;
 }
