@@ -23,6 +23,11 @@ test("a hold reader without local holds owes no record work, while a license eff
     data.acts.file.effects.push({ capability: { name: "hold", do: "license", with: { export: { const: 0 }, from: { const: null }, checkpoint: { const: 0 }, hold: { const: 0 }, instance: { const: "i" }, k: { const: 1 } } } });
   });
   expect(producer.holdTypes).toEqual([]);
+  const pin = owner.effect("hold@1", "license", { export: 0, from: scope.at, checkpoint: 0, hold: 0, instance: "i", k: 1 }, {
+    view: scope.state, definition: producer, scope: scope.state.scope()!, self: scope.head.seq + 1,
+    kind: "file", fields: {}, signer: null, facts: new Map(), clock: clockOf(scope.state, scope.now), own: scope.own,
+  });
+  expect(pin).toMatchObject([{ kind: "receiver-pin", key: [0], state: "standing", values: { holder: null, decided: 1 } }]);
   expect(() => ownerReservations(owner, scope.state, producer)).toThrow("hold@1 record producer has no complete reservation Amount");
 });
 

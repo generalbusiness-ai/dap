@@ -1531,7 +1531,12 @@ not supply the missing license closure or change the refusal of workspace
 staging whose ancestry-snapshot writer has no finite byte ceiling.
 
 A focused Derive witness checks the empty owner Amount and the license
-exception. A native Scope witness creates the opt-in scope, applies a
+exception. It also runs the native license effect against the fixture's
+folded state: with no local hold it creates a standing receiver pin whose
+holder is null and whose decided number is one. This is a real effect
+producer boundary, without injecting a raw record into a runtime. The
+strengthened focused case and Derive compiler pass. A native Scope
+witness creates the opt-in scope, applies a
 settle effect with no record to update, refuses a staged guard without
 changing storage, evicts the object and checks HTTP replay consistency.
 It uses fixture authority and data, with actual capability code, SQLite,
