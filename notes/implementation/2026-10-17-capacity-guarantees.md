@@ -582,3 +582,76 @@ and passes both selected cases.
 Complete producer/owner Amounts, all five transactional admission axes,
 historical incomplete byte spans, the full runtime/replay boundary
 witnesses, final gate and independent Source review remain unfinished.
+
+## Unbounded native snapshot producer
+
+Opted-in definitions that can create a native hold workspace now refuse
+with reserve-unbounded at capacity, naming the hold@1/check
+ancestry-snapshot producer. isRetainedInput checks shape; snapshotRead
+checks canonical bytes and digest. Neither limits the writer's byte
+length. RETAINED_INPUT_BYTES is a read ceiling and cannot supply this
+missing producer maximum. No new snapshot maximum was invented.
+
+The native hasWorkspace predicate is now in capability/workspace.ts and
+shared by the validator and the existing capability code. A listed
+hold@1 guard or effect enables the native instance step. With a local
+hold type, the instance can feed stage and then check. Merely listing
+hold@1 and using its item-form hold effects does not enable an instance;
+nor can a definition with no local hold type stage one. Those declarations
+remain eligible. A guard need not pass for its presence to enable the
+separately authorized native steps. This follows the existing native
+workspace rule, not a new activation policy.
+
+The direct validator witness names the producer, preserves exact legacy
+bytes, and checks both unreachable cases. The validator/capability files
+pass 71 cases. The focused guard-removal control passes its baseline,
+then fails the expected named refusal when the guard is removed (38746,
+CLOSED0/0a3dac), restoring source. Initial fixture placement put a guard on
+a comment, whose grammar forbids guards; moving it to renew corrected
+that fixture. A wrong-directory diagnostic command changed no file.
+
+Real production creation also passes: native capability code accepts the
+same legacy declaration, while the opted-in declaration refuses before
+writing any genesis row (4548, CLOSED0/295829). No act, staging, provider
+or test authority runs in that witness. The first runtime attempt used
+the default test fixture, whose capability code is absent, and failed its
+legacy acceptance precondition (55995, CLOSED1/885b96); it is not evidence
+of the new refusal. Scope and Replay test compilers pass. No gate ran.
+
+### Journey producer inventory at this checkpoint
+
+This is a source inventory of the two exported lane declarations and the
+36 entries in the native platform version catalog. It identifies what the
+journey's room families can retain; it does not establish any live room's
+activated pins. All 38 original declarations validate. Trying the opt-in
+on the exported issue and change now yields the named snapshot refusal;
+the other catalog entries still validate only the partial implementation.
+That is not proof that their owner terms or admission are complete.
+
+| Room family | Named retained producers and existing maxima |
+| --- | --- |
+| Every scope | Canonical journal entries use entryBytes. A declaration and its statically named child closure use definitionBytes and namedDefinitions at creation. Foreign fact fields, presented facts and a delivery's source use the accepted local entryBytes ceiling and the shared usesPerEntry cap. |
+| Issue and change | Detached bodies, report summaries, verdict bodies and comments use raw UTF-8 maxima of 65,536 in the exported declarations; the retained JSON string budget uses six bytes per raw byte plus quotes. Both use hold@1 and git-read@1, and have local hold types and native workspaces. Their ancestry snapshot producer lacks a writer maximum, so an opted-in declaration refuses. They declare no evaluator expressions. |
+| Membership | Native foreign-entry fields and inline entry data. The catalog's membership@6 has no detached text, value place, outcome evidence value or observation-retained value declaration. |
+| Rules | Foreign-entry fields; keep-configuration retains artroom-check-configuration-1 at 32,768 canonical bytes. Activation retains artroom-definition-1 at 262,144 per declared value place, with the main digest and 16 dependency places in rules@4. Named definition closure validation remains separate. |
+| Directory and register | Foreign-entry fields, validated child declarations retained at creation, inline entries, and owner-derived creation/import tasks. No detached text or observation-retained value declaration appears in directory@10 or its partition. Complete owner task Amounts remain owed. |
+| Destination | Foreign-entry fields; judge observes artroom-rules-extents-1 at 262,144 and declares artroom-changed-set-1 evidence at 262,144 in destination@6. Its other owner operations, token cleanup and closure Amounts still require completion. |
+| Inbox | Inline entries; no separate field, observation-value or outcome evidence producer appears in inbox@1. |
+
+The exported issue digest is
+sha256:325cb4f33da9deb1a31d85ba0f1456068d4d9d08009978b779aed70cb08e00ad;
+change is
+sha256:3f0389ba644e6d58e96a352debcc77d01661ffcf349c6db53d0645c2513eae70.
+No pinned declaration or catalog default was changed. The bounded source
+probe used native Node type stripping with existing dependencies and
+wrote only a scratch JSON inventory. An initial probe treated the VERSIONS
+record as an array and produced no inventory; the corrected probe reads
+its 36 entries. Source authorities are field-retention.ts,
+created-definitions.ts and scope/definitions.ts; native capability
+workspace/hold/ancestry code; the lanes' issue/change/shared data; and the
+platform catalog, rules-scope and destination data/code.
+
+This closes the known unbounded ancestry-snapshot branch by refusal. Full
+producer/owner Amounts, five-axis transactional admission and replay,
+historical incomplete byte spans, native boundary witnesses, final gate
+and Source review remain unfinished.

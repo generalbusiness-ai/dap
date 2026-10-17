@@ -40,6 +40,7 @@ import { timeMs, type Clock } from "../time.ts";
 import type { ValidDefinition } from "../validate/index.ts";
 import { own, same } from "../values.ts";
 import { isAncestryCheck, objectIdLength } from "./ancestry.ts";
+import { hasWorkspace } from "./workspace.ts";
 
 export const HOLD: CapabilityName = "hold@1";
 
@@ -79,9 +80,7 @@ export const LICENSE_BOUND = 3;
  * and no option. The validator's list, the commit and a replay all use this
  * one function, and no entry records its answer.
  */
-export const hasWorkspace = (definition: Pick<ValidDefinition, "declared" | "underived">): boolean =>
-  definition.declared.capabilities.some((c) => c.name === "hold" && c.version === 1)
-  && definition.underived.some((u) => u.capability === HOLD && (u.form === "guard" || u.form === "effect"));
+export { hasWorkspace } from "./workspace.ts";
 
 // ---------------------------------------------------------------- what the rules read
 

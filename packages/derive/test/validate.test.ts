@@ -148,6 +148,29 @@ describe("the definition validator", () => {
     expect(checked.ok && checked.definition.ruleInputBytes).toBe(262_144);
   });
 
+  test("whole-scope refuses the reachable native ancestry-snapshot producer without treating a read ceiling as its maximum", () => {
+    // The native workspace predicate enables instance -> stage -> check
+    // independently of whether this particular guard can pass. No writer
+    // ceiling exists for check's separate retained snapshot.
+    const data = clone(lane);
+    data.acts["renew"]!.guards.push({ capability: { name: "hold", guard: "staged", with: {} } });
+    const bytes = canonicalBytes(data);
+    const legacy = validateDefinition(data, PROPOSED_BOUNDS);
+    expect(legacy.ok ? [] : legacy.problems).toEqual([]);
+    expect(legacy.ok && canonicalBytes(legacy.definition.declared)).toEqual(bytes);
+    const checked = validateDefinition({ ...data, capacity: { name: "whole-scope", version: 1 } }, PROPOSED_BOUNDS);
+    expect(checked.ok ? [] : checked.problems).toEqual([expect.objectContaining({ code: "reserve-unbounded", path: "capacity", message: expect.stringContaining("hold@1/check ancestry-snapshot producer") })]);
+    // Merely listing hold@1 and using its item-form hold effects cannot
+    // create the workspace instance which staging requires.
+    expect(validateDefinition({ ...clone(lane), capacity: { name: "whole-scope", version: 1 } }, PROPOSED_BOUNDS).ok).toBe(true);
+    // Native guard usage without any local hold type cannot stage either.
+    const noHolds = clone(small);
+    noHolds.capabilities = [{ name: "hold", version: 1 }];
+    noHolds.acts["edit"]!.guards.push({ capability: { name: "hold", guard: "staged", with: {} } });
+    expect(validateDefinition({ ...noHolds, capacity: { name: "whole-scope", version: 1 } }, PROPOSED_BOUNDS).ok).toBe(true);
+    expect(canonicalBytes(data)).toEqual(bytes);
+  });
+
   test("a definition that passes carries its digest, its timed and hold types, and the slots each `where` reads", () => {
     expect(laneDefinition.digest).toBe(definitionDigest(lane));
     expect(laneDefinition.timedTypes).toEqual(["hold"]);
