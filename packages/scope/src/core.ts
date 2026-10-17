@@ -420,8 +420,9 @@ export class Scope {
    * `definitions`: the declarations of the definitions this one names in
    * `create` sends, and of those they name in turn. Each that is named is
    * retained by its digest with the genesis (section 9.2), so that a child
-   * can read it from this scope. One that is named and not supplied is not
-   * retained, and a creation under it waits. One that is supplied and is not
+   * can read it from this scope. Opt-in creation requires the complete
+   * reachable set before genesis. Legacy creation leaves an absent one
+   * out, and a creation under it waits. One that is supplied and is not
    * a valid declaration is refused `unsupported-definition`.
    *
    * `beside`: the detached texts that the creation intent's fields name

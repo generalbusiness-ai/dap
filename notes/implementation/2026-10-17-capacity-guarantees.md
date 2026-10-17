@@ -1176,3 +1176,93 @@ This remains WIP: direct marks on settling forms still have their existing
 fail-closed restriction, and native owner/standing Amounts, producer and
 birth checks, remaining boundaries and final freeze/review remain. No
 gate, Source approval, capacity landing, WIP push or deployment ran.
+
+## Opt-in birth retains the complete native child-declaration closure
+
+Planner decision 9455d1c5 is implemented for the static create selectors.
+A shared bounded reader follows each reachable declaration once per
+digest, excludes the root's own digest, validates each supplied declaration,
+and keeps its canonical bytes. The existing namedDefinitions limit counts
+distinct named children. Missing or unsupported child declarations produce
+an unsupported-definition result with a validation Problem that names the
+digest. A supplier that cannot be read remains unavailable. Legacy roots
+keep their prior optional absence behavior, including the prior handling
+of a supplier's unsupported-definition answer.
+
+Both signed creation and child delivery use that shared reader before a
+genesis turn. The existing closed transport answers are preserved: signed
+creation returns refused/unsupported-definition; child delivery returns
+retry/unsupported-definition. The missing-name Problem is available from
+the closure validator; no extra field is added to either transport reply.
+No act reason, recorded Input, diagnosis or declaration format changes.
+
+Replay uses the same closure and limit at an opt-in genesis. A new closed
+birth-definition consumer names those replay-required reads, distinct from
+the existing definition-child archive consumer. Each canonical declaration
+is charged through ByteUsage once per byte domain and digest. The earlier
+explicit incomplete stop for the optional child birth set is removed for
+this opt-in cohort. A missing retained child still makes replay incomplete;
+it cannot establish a complete genesis byte check. Legacy replay continues
+without inferring its optional birth-time retained set from current bytes.
+
+The pure shared-reader witness uses real digest-addressed fixture
+declarations, with a transitive child and repeated/shared edges. It shows
+exact-limit completion, one-below refusal, each digest read once, a named
+missing-child Problem, legacy absence, unavailable supply and wrong bytes.
+The retained-plan witness checks that birth-definition is genesis-only and
+replay-required while definition-child stays an archive consumer.
+
+A native signed-birth witness refuses a missing grandchild without a
+genesis, then accepts the same request with the complete set. SQLite keeps
+the root, branch and shared leaf once each; an unrelated supplied
+declaration is not retained. The scope accepts at its measured Used bytes
+plus the closing entry-size reservation, survives eviction at that exact
+ceiling, and replays through HTTP. One byte below the ceiling refuses birth
+and leaves no scope. The legacy version accepts with no supplied children.
+A second native witness has a real legacy parent retain its opt-in child
+but not that child's leaf. Its actual create send reaches the child's
+admission path, reads the parent's native birth/proof and declaration APIs,
+and returns retry/unsupported-definition on the actual missing leaf with
+no child genesis. Resolver/definition adapters, data and authority are
+fixtures; storage, send, raw native proofs and HTTP reads are real.
+
+Replay accepts the exact genesis byte ceiling and rejects one byte below
+it at entry zero. A separate made-up platform history genuinely retains an
+extra definition-domain value in its first act, then aliases the already
+retained birth leaf in its second act. At the genesis ceiling, replay gets
+through genesis and fails at the first act, which is where the extra value
+first becomes Used. At the final exact ceiling both acts replay; one byte
+below it fails at the second act. The birth leaf is not charged twice.
+Those histories use real in-memory judges/fold and explicit retained data;
+they do not claim native platform execution or production authority.
+
+Two isolated controls distinguish the new behavior. Restoring optional
+missing children incorrectly admits the native signed birth (16402,
+CLOSED0/a1e97d). Omitting the replay birth closure incorrectly accepts one
+byte below the genesis ceiling (37302, CLOSED0/a578d1). Each baseline passes,
+the intended assertion fails with the fault, and the source is restored.
+Neither control overlaps another source-dependent check. Focused checks
+pass three Derive cases, twelve distinct Replay cases and nine native
+founding cases. The twelve Replay cases comprise the eleven-case closure
+report and the two-case child file after adding the alias witness; the
+birth case is shared between those reports. Derive, Scope, Replay and
+Platform test compilers pass. Reports use the
+/tmp/artroom-capacity-birth-closure- prefix.
+
+Earlier failed attempts are not passing evidence. A regular declaration
+fixture incorrectly included a platform-only value annotation; that unused
+act was removed before the shared-reader witness. The signed fixture used
+the declaration's genesis kind instead of the native found intent; it now
+signs found. The initial child adapter lacked the normal declared-create
+birth/proof ports, and then captured a test-context RPC stub for use inside
+another Durable Object. Native workerd correctly refused that I/O context
+crossing. The corrected adapters create stubs inside the receiving context
+and use the actual parent's bounded birth/proof and retained reads. An
+attempt to evict the still-unstarted child reported that it was not running;
+no second child or hidden background job was inferred from that result.
+
+This remains WIP. The directly signed genesis-body presence question
+2c76d80c remains open. Direct settling-form mark support, native
+owner/standing Amounts, producer checks, remaining conservation boundaries,
+the final gate and independent Source review are still required. No gate,
+capacity landing, WIP push or deployment ran.

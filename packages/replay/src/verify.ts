@@ -41,7 +41,7 @@ import { DOMAINS, PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Bounds, CapabilityName, Digest, Entry, FactRef, Grant, Head, KeyId, Observation, ObservationRequest, ObservationUse, MismatchName, PlatformData, PlatformDefinition, Report, RetainedInput, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import { rawRetainedJSON, domainRetainedJSON, canonicalize, intentDigest, isDigest, isEntry, isObservationUse, isPlatformDefinition, parseStrict, platformName, scopeIdOf, utf8, verifySignedIntent } from "@generalbusiness/artroom-bytes";
 import {
-  AmountError, ByteUsage, capacityFull, creates, amountMath, subtract, NOTHING, reserved, actValueDependencies, observedValueDependencies, detachedTextDependencies, outcomeValueDependencies, outcomeSnapshotDependencies, requiredDependency, textDependency, MISMATCHES, MemoryState, WINDOWS, actionOf, agrees, applyEntry, drawsOf, clockOf, contentStates, entryOf, fits, observedName, headsOf, highestHead, isFactRef, isLocalId, isObject, isScopeRef, isUnprovenDecisionBinding, judgeAct, judgeCheckpoint, judgeDelivery,
+  AmountError, ByteUsage, capacityFull, namedDeclarations, amountMath, subtract, NOTHING, reserved, actValueDependencies, observedValueDependencies, detachedTextDependencies, outcomeValueDependencies, outcomeSnapshotDependencies, requiredDependency, textDependency, MISMATCHES, MemoryState, WINDOWS, actionOf, agrees, applyEntry, drawsOf, clockOf, contentStates, entryOf, fits, observedName, headsOf, highestHead, isFactRef, isLocalId, isObject, isScopeRef, isUnprovenDecisionBinding, judgeAct, judgeCheckpoint, judgeDelivery,
   judgeDiagnosis, outcomeValueDomains, fixedBy, judgeGenesis, judgeGrant, judgeOutcome, judgePreparation, judgeTimed, membershipOf, nextDue, observedOf, own, ownersOf, ruleAt, same, snapshotRead, stepsOf, timeMs, updateOf, sentBy, validateDefinition, windowOf,
 } from "@generalbusiness/dap-derive";
 import type { DependencyOrigin, RequiredDependency, ActJudgment, Capabilities, Clock, DrawOptions, Fetched, Judgment, Observing, Owners, PlatformRules, PreparationJudgment, RecordedRef, Retains, Rules, StateView, TimedJudgment, ValidDefinition, Window } from "@generalbusiness/dap-derive";
@@ -1426,10 +1426,20 @@ class Verifier {
     const state = run.state;
     const definition = run.definition ?? (run.definition = await this.#pin(run, where, input.type));
     const bounds = this.#bounds;
-    // Pending planner decision b7fd0295: present-day child bytes do not
-    // establish which optional declarations genesis retained. Do not claim
-    // a complete historical byte check from that unrecorded birth set.
-    if (input.type === "genesis" && definition.declared.capacity && creates(definition.declared).length > 0) throw new Stop("incomplete", "the genesis's retained child-definition set is not established", where);
+    // Opt-in birth requires the complete native child-declaration closure.
+    // Its retained bytes therefore belong to genesis, even when a later
+    // value aliases them. Legacy histories keep their optional birth set.
+    if (input.type === "genesis" && definition.declared.capacity) {
+      const children = await namedDeclarations(definition, async digest => {
+        const kept = await this.#retained(run, requiredDependency({ at: where, input: input.type }, "birth-definition", { kind: "definition", digest }), "the required child declaration");
+        if (domainRetainedJSON(DOMAINS.definition, digest, kept.bytes) === undefined) throw new Stop("incomplete", `a retained input is not the one named: the child declaration, ${digest}`, where);
+        return { ok: true, bytes: kept.bytes };
+      }, bytes => {
+        const checked = validateDefinition(parseStrict(bytes), bounds, RULE_PROFILES);
+        return checked.ok && !checked.definition.underived.some(underived => !this.#capabilities?.implements(underived)) ? checked.definition : null;
+      }, bounds.namedDefinitions);
+      if (!children.ok) throw new Stop(children.reason === "unavailable" ? "incomplete" : "unsupported-definition", children.reason === "unavailable" ? "a required child declaration cannot be read" : children.problems[0]!.message, where);
+    }
     // Sections 4.1 and 9.4: a genesis states the genesis act of the definition that it pins. Integrity mode reads no definition, and does not check this.
     if (input.type === "genesis" && input.kind !== definition.declared.genesis) throw mismatch(`genesis-kind: the genesis records the kind ${input.kind}, and the genesis act of the pinned definition is ${definition.declared.genesis}`);
 
