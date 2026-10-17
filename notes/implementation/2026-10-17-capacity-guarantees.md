@@ -1451,3 +1451,65 @@ Both adopted birth-retention decisions are now implemented in this WIP.
 Native owner/standing Amounts, producer checks, remaining conservation
 boundaries, final freeze/gate and independent Source review remain. No
 gate, Source approval, capacity landing, WIP push or deployment ran.
+
+## Known standing entry slots carry an Amount
+
+C1's standing declaration names an entry-slot floor, with exactly
+item/slot/entries/max. It does not name the future form or producer that
+will spend it. The known slot contribution now uses the existing journal
+entry Amount: n = entries * (max - count), with n entries and n entry-size
+byte units for an opt-in definition. This is the minimum known component,
+not a full handoff funding claim. Request 7799ffd5 asks the planner to
+confirm the floor's scope or name a concrete full-vector mapping. A
+three-entry handoff also retains a foreign result entry and has a pending
+request; the entry-slot floor by itself must not be described as funding
+all of that work. No unknown future producer has been assigned a zero
+maximum or a newly invented ceiling.
+
+standingReserved reads the existing bounded singleton selector once and
+uses standingAmount. The scalar standingEntries API projects its entries;
+the shared reserved walk adds the full contribution. Validation calls the
+same arithmetic with count zero and the already derived entry unit, so an
+unsafe standing byte amount names standing with reserve-unbounded before
+creation. Operands and the entry unit are checked even when no slots
+remain. Legacy C1 keeps its prior entry-only Amount and arithmetic path.
+No new declaration field, cache, counter, selector, Input or diagnosis is
+introduced, and the monotonicity/prospective check is unchanged.
+
+The two new pure cases show six slot entries/six byte units before and
+after genesis, the closing unit in the shared ledger, counter reduction,
+finality and re-fold preservation, legacy projection, zero remaining,
+invalid units hidden behind zero, and named validation of unsafe bytes.
+The complete focused standing file passes ten cases.
+
+The native witness isolates bytes from the entry ceiling. Its entry bound
+leaves one ordinary entry free; its byte bound equals actual Used plus
+the six slot byte units and closing unit. Birth accepts at equality and
+refuses one byte below with no stored scope. After eviction, ordinary
+chatter refuses scopeBytes and the complete stored snapshot is unchanged.
+A counter increase releases three slot entries and byte units. Finality
+and a later eviction keep the remaining three units. HTTP replay agrees.
+The same fixture without the opt-in marker accepts and replays with a
+one-byte scopeBytes ceiling below its actual stored bytes, preserving
+legacy admission/replay. The fixture closes its unused dummy child sends;
+it does not claim that an absent child closure was established. Data,
+authority and an unused rule are fixtures; validation, journal/storage,
+counter projection, transaction, eviction and routes are native. No
+directory policy, new platform version, outside owner or provider runs.
+
+Two isolated controls distinguish the changes. Dropping standing bytes in
+the shared ledger leaves only the closing byte unit instead of seven
+(20016, CLOSED0/922d35). Skipping full standing-amount validation incorrectly
+accepts an unsafe definition (79130, CLOSED0/0ff251). Each baseline passes,
+the intended assertion fails with the fault, and the source is restored.
+No source-dependent check overlaps a mutation. Final focused checks pass
+ten Derive cases and three native cases, including both existing C1
+native witnesses. The enhanced native file also passes its added legacy
+HTTP comparison. Derive, Scope, Replay and Platform test compilers pass.
+Reports use the /tmp/artroom-capacity-standing-amount- prefix.
+
+The complete standing/handoff interpretation remains pending on 7799ffd5;
+this checkpoint is not offered as completion of that broader promise.
+Native owner Amounts, producer checks, remaining conservation boundaries,
+final freeze/gate and independent Source review also remain. No gate,
+Source approval, capacity landing, WIP push or deployment ran.

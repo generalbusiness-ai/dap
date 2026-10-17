@@ -77,7 +77,7 @@ import { markerOwed } from "./markers.ts";
 import type { StateView } from "./state.ts";
 import type { ValidDefinition } from "./validate/index.ts";
 import { own } from "./values.ts";
-import { standingEntries, StandingError } from "./standing.ts";
+import { standingReserved, StandingError } from "./standing.ts";
 
 /**
  * Section 17.2a, "What a holder reserves, in full": the entries that the
@@ -196,7 +196,7 @@ export function reserved(view: StateView, definition: ValidDefinition, head: Inp
   // counts its own records (`Owners.reserves`). With no code no such record is made, so none reserves.
   add(whole ? ownerReservations(owners, view, definition) : entriesOnly(owners?.reserves?.(view, definition) ?? 0));
   if (definition.standing) {
-    add(entriesOnly(standingEntries(view, definition)));
+    add(standingReserved(view, definition));
     if (!Number.isSafeInteger(amount.entries) || amount.entries < 0 || Object.is(amount.entries, -0)) throw new StandingError("aggregate reserved entries are invalid");
   }
   // The closing checkpoint is reserved unless the history already ends on a checkpoint with nothing pending.

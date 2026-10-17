@@ -1,12 +1,14 @@
 /** C1's closed platform declaration and its bounded native read plan. */
 import type { StandingReservation } from "@generalbusiness/dap-contract";
+import { AmountError, type Amount } from "../held.ts";
+import { StandingError, standingAmount } from "../standing.ts";
 import { byteOrder, isObject, own } from "../values.ts";
 import type { Defining } from "./context.ts";
 
 export interface Standing extends StandingReservation { readonly states: readonly string[] }
 const natural = (value: unknown): value is number => typeof value === "number" && Number.isSafeInteger(value) && value >= 0 && !Object.is(value, -0);
 
-export function standingOf(d: Defining, value: unknown, rawItems: unknown): Standing | null {
+export function standingOf(d: Defining, value: unknown, rawItems: unknown, entry: Amount): Standing | null {
   const o = d.rec(value, "standing", ["item", "slot", "entries", "max"]);
   if (!o) return null;
   const ill = (path: string, message: string): null => d.bad("unsupported-definition", `standing.${path}`, message);
@@ -21,5 +23,11 @@ export function standingOf(d: Defining, value: unknown, rawItems: unknown): Stan
   if (slot.hasDefault && (!isObject(rawSlot) || rawSlot["default"] !== 0 || Object.is(rawSlot["default"], -0))) return ill("slot", "has no default or exactly the default 0");
   const total = o["entries"] * o["max"];
   if (!Number.isSafeInteger(total) || total > d.bounds.scopeEntries) return ill("entries", "entries times max fits the safe scope-entry bound");
+  if (d.wholeCapacity) try {
+    standingAmount({ entries: o["entries"], max: o["max"] }, 0, entry, true);
+  } catch (error) {
+    if (!(error instanceof AmountError || error instanceof StandingError)) throw error;
+    return d.bad("reserve-unbounded", "standing", `standing entry slots have no safe Amount: ${error.message}`);
+  }
   return { item: item.name, slot: o["slot"] as string, entries: o["entries"], max: o["max"], states: [...item.states.keys()].sort(byteOrder) };
 }

@@ -311,7 +311,7 @@ export function validateDefinition(input: unknown, bounds: Bounds, profiles: Rea
   }
   if (problems.length > 0) return { ok: false, problems };
   // Section 17.2a: a reservation that an item holds, and what each kind of `outcomes` reserves. In platform data only.
-  const standing = Object.hasOwn(top, "standing") ? standingOf(d, top["standing"], top["items"]) : null;
+  const standing = Object.hasOwn(top, "standing") ? standingOf(d, top["standing"], top["items"], capacity.pendingWorkAmounts.entry) : null;
   const { decisionEntries: _decisionEntries, ...persistedCapacity } = capacity;
   if (problems.length > 0) return { ok: false, problems };
   try {
