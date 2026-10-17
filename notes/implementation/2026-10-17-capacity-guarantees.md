@@ -1553,3 +1553,21 @@ the source. No source-dependent process overlaps either mutation.
 Logs use /tmp/artroom-capacity-hold-reader-. This remains local WIP, with
 the broader owner/producer audit, standing decision, final gate and
 independent review still pending.
+
+### Standing disposition adopted
+
+Planner answered request 7799ffd5 in acdd1f6b, accepted by builder: C1
+standing remains an entry-slot floor. It reserves entries multiplied by
+max minus count, and those entries' bytes at entryBytes. It names no
+concrete task or form, so it reserves no item, record or request unit. A
+real handoff is admitted in all five dimensions when it arrives, including
+its request, result and retained foreign entry. Older pins keep their
+entries-only interpretation. A full handoff guarantee needs a declared
+form and is separate work after this stop.
+
+The standing implementation and focused evidence at checkpoint 29a61e6a
+already implement this disposition. No code or test result changes with
+the decision. Earlier pending-standing statements describe their own
+checkpoints; this disposition resolves that choice. Complete capacity
+owner/producer conservation, final freeze and independent review remain
+open. No gate, Source, landing, push or deployment accompanies this note.
