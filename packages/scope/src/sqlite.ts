@@ -21,6 +21,7 @@ import type { Accepted, Account, Decided, HeldCreation, Holder, Item, ObservedHe
 import type { Dispatched, OutboxItem, OperationStatus, Outgoing, Retained, Sending, Store, Stored } from "./store.ts";
 import { ARCHIVE_PIN_KEY, archivePinBytes } from "./archive-pin.ts";
 import { LocalSigners, SIGNER_INDEX_BOUNDS } from "./local-signers.ts";
+import type { ItemDuty } from "@generalbusiness/dap-derive";
 
 export type SqlValue = string | number | null | ArrayBuffer;
 export interface Sql {
@@ -303,6 +304,14 @@ export class SqliteStore implements Store {
   // item are read by the item, from the index `operation_for`.
   holder(item: number): Held | null { return this.#folded<Holder>("holder", String(item))?.held ?? null; }
   holders(): readonly Holder[] { return this.#all("SELECT value FROM folded WHERE kind = 'holder'").map((row) => json<Holder>(row["value"])).sort((a, b) => a.item - b.item); }
+  itemDuties(item?: number): readonly ItemDuty[] {
+    if (item !== undefined) return this.#folded<readonly ItemDuty[]>("capacity-item", String(item)) ?? [];
+    return this.#all("SELECT value FROM folded WHERE kind = 'capacity-item'").flatMap(row => json<readonly ItemDuty[]>(row["value"])).sort((a, b) => a.item - b.item || byteOrder(canonicalize([a.kind, a.slot]), canonicalize([b.kind, b.slot])));
+  }
+  putItemDuties(item: number, duties: readonly ItemDuty[]): void {
+    if (duties.length === 0) this.#run("DELETE FROM folded WHERE kind = 'capacity-item' AND key = ?", String(item));
+    else this.#fold("capacity-item", String(item), duties);
+  }
   operationsFor(item: number): readonly Operation[] { return this.#all("SELECT value FROM operation WHERE json_extract(value, '$.for') = ? ORDER BY seq, k", item).map((row) => json<Operation>(row["value"])); }
   account(seq: number, n: number): number | null { return this.#folded<Account>("account", canonicalize([seq, n]))?.item ?? null; }
   accountsOf(item: number): readonly Account[] {
@@ -336,6 +345,7 @@ export class SqliteStore implements Store {
       else if (row["kind"] === "observed") memory.putObserved(json(row["value"]));
       else if (row["kind"] === "holder") { const holder = json<Holder>(row["value"]); memory.putHolder(holder.item, holder.held); }
       else if (row["kind"] === "account") memory.putAccount(json<Account>(row["value"]));
+      else if (row["kind"] === "capacity-item") memory.putItemDuties(Number(row["key"]), json(row["value"]));
       // The count of a declared index is derived state: a checkpoint holds no row of it.
       else if (row["kind"] === "keyed") continue;
       else memory.putTexts(...json<[number, string, Digest[]]>(row["value"]));

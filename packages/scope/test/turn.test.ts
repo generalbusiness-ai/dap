@@ -6,6 +6,36 @@ import { SqliteStore, Turns, Wakes, production } from "../src/index.ts";
 import { variant } from "@generalbusiness/dap-derive/testing";
 import { HOLD, at, definition, create, rita, una, vic } from "./support.ts";
 
+test("opt-in report duty survives an ordinary final transition and actual object eviction; at a filled scope only its real settlement spends that room", async () => {
+  // Real scope, judge, fold, SQLite and object eviction. The lane data and
+  // membership/grants are the existing labelled test fixture's stand-ins.
+  const under = variant(definition.declared, (d) => {
+    d.capacity = { name: "whole-scope", version: 1 };
+    d.acts.abandon = structuredClone(d.acts["accept-report"]);
+    delete d.acts.abandon.settles;
+  });
+  const openReport = async (limit: number) => {
+    const scope = await create({ scopeEntries: limit }, {}, under);
+    const commitment = await scope.commitment();
+    const report = (await scope.did(una, "report", { fields: { commitment }, expected: { commitment: 2 } })).fact.seq;
+    return { scope, report };
+  };
+  const { scope: stuck, report } = await openReport(8);
+  expect(await stuck.act(vic, "abandon", { on: report, expected: { on: 1 } })).toMatchObject({ answer: "accepted" });
+  expect(await stuck.submit(stuck.remark())).toMatchObject({ answer: "accepted" });
+  await stuck.restart();
+  expect(await stuck.submit(stuck.remark())).toMatchObject({ answer: "refused", reason: "scope-full" });
+  expect((await stuck.head()).seq).toBe(5);
+  const duties = await stuck.inside(state => new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) }).all().itemDuties);
+  expect(duties).toEqual([{ item: report, kind: "state", slot: null, amount: { entries: 1, items: 0, records: 0, bytes: PROPOSED_BOUNDS.entryBytes + 262_144, requests: 0 } }]);
+
+  const { scope: settled, report: pending } = await openReport(6);
+  await settled.restart();
+  expect(await settled.submit(settled.remark())).toMatchObject({ answer: "refused", reason: "scope-full" });
+  expect(await settled.act(vic, "accept-report", { on: pending, expected: { on: 1 } })).toMatchObject({ answer: "accepted", receipt: { fact: { seq: 4 } } });
+  expect(await settled.stub.checkpoint()).toMatchObject({ answer: "written", fact: { seq: 5 } });
+});
+
 test("the opt-in foreign-entry retained-writer ceiling accepts exact bytes and refuses one more without changing legacy retention", async () => {
   // Real Turns, transaction and SQLite with hand-authored draft/retention.
   // The JSON string payload intentionally is not a foreign sealed entry;

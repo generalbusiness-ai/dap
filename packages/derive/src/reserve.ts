@@ -73,7 +73,7 @@ import type { Bounds, Input } from "@generalbusiness/dap-contract";
 import { isPlatformDefinition } from "@generalbusiness/artroom-bytes";
 import { AmountError, amountMath, holding, naturalAmount, NOTHING, sum, times, type Amount } from "./held.ts";
 import { closureOf, type Owners } from "./ledger.ts";
-import { markerOwed, markerReserved } from "./markers.ts";
+import { markerOwed } from "./markers.ts";
 import type { StateView } from "./state.ts";
 import type { ValidDefinition } from "./validate/index.ts";
 import { own } from "./values.ts";
@@ -140,20 +140,26 @@ export function reserved(view: StateView, definition: ValidDefinition, head: Inp
   };
   for (const [type, states] of Object.entries(definition.deadlines)) {
     for (const [state, chain] of Object.entries(states)) {
+      if (whole) { naturalAmount(definition.pendingWorkAmounts.deadlines[type]![state]!); continue; }
       const count = checked(view.count(type, state));
-      add(whole ? scale(count, definition.pendingWorkAmounts.deadlines[type]![state]!) : entry(product(chain, count)));
+      add(entry(product(chain, count)));
     }
   }
   // Section 17.2, rows 3 and 4: an item, and a relationship copy, that awaits its settlement.
   for (const [type, states] of Object.entries(definition.pending)) {
     for (const [state, pending] of Object.entries(states)) {
+      if (whole) { naturalAmount(definition.pendingWorkAmounts.pending[type]![state]!); continue; }
       const count = checked(view.count(type, state));
-      add(whole ? scale(count, definition.pendingWorkAmounts.pending[type]![state]!) : entry(product(pending, count)));
+      add(entry(product(pending, count)));
     }
   }
   // Revision 22, "A marker duty": an item of a type that some form settles by a mark reserves its state task and each marker task
   // that is pending, by its own marks. A definition with no such form has none, and counts as it did.
-  add(whole ? markerReserved(view, definition) : entry(markerOwed(view, definition)));
+  if (whole) {
+    // Item duties retain their admitted room across ordinary changes of
+    // state or marker. The fold alone releases an identified settlement.
+    for (const duty of view.itemDuties()) add(duty.amount);
+  } else add(entry(markerOwed(view, definition)));
   for (const [index, copy] of definition.pendingCopies.entries()) {
     const count = checked(view.copies(copy.name, copy.kind, copy.states));
     add(whole ? scale(count, definition.pendingWorkAmounts.pendingCopies[index]!.amount) : entry(product(copy.entries, count)));

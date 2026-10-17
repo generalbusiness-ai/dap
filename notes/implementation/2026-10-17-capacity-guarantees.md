@@ -371,3 +371,48 @@ source restored. The Derive test compiler passes. All earlier development
 results retain their own source and run boundaries. Complete owner
 closures, remaining producer inventory, actual-settler duty release and
 runtime/replay integration remain owed. No gate or Source review ran.
+
+## Persistent item-duty checkpoint
+
+Opted-in item duties now keep their admitted Amount as derived folded
+records, keyed by item and its state, marker or deadline task. The amounts
+are projections of pendingWorkAmounts and markerReservations; no second
+closure calculator is added. An ordinary change can raise a duty's amount
+but cannot lower or remove it. The reservation walk sums the stored item
+duties rather than dropping them when their item leaves a pending state.
+Memory and SQLite snapshots include nonempty duties only for this cohort.
+Legacy folds add no member and retain their earlier checkpoint bytes.
+These bookkeeping records are outside logical capability/relationship
+record counts and logical retained-payload bytes.
+
+Primary-act settlements and actual timed entries identify their own task
+for release before the new state's task is retained. A state settlement
+does not release some other marker duty just because the item becomes
+final. Alias-selected acts and handler/copy bindings are still conservative
+in this intermediate implementation: they keep their prior duty. Those
+paths, final holder release and complete producer/closure terms must be
+finished before enabling and reviewing whole-scope admission. This is
+explicitly not a completed duty-release implementation.
+
+The settlement file passed 15 cases. Its new in-memory scenario sets a
+marker through an ordinary act, settles a different marker, then settles
+the item's state: the first marker's duty remains even on the final item.
+Rebuilding the full state by folding the same entries reproduces that
+snapshot; a legacy state has no duty member.
+
+A native scope case also passes (37666, CLOSED0/957a42), with 21 other
+cases unselected. An ordinary final transition keeps the report's duty;
+after ordinary traffic fills the unreserved room and the actual Durable
+Object is evicted, the next act still refuses scope-full at the correct
+entry boundary. A separate report at its full entry limit survives
+eviction, accepts its genuine settlement, then writes the reserved closing
+checkpoint. The scope, judgments, fold, SQLite and object eviction are
+real; lane data and membership/grants use the labelled fixture stand-ins.
+This proves neither the other four admission axes nor native platform
+authority, complete replay or every settlement selector.
+
+Its focused native control passes baseline and fails the intended refusal
+when prior duty records are discarded on each touched item (80168,
+CLOSED0/f2a8cb), with source restored. Initial compiler checks found the
+missing read-facade method and an unused import; both were fixed. Scope
+and Derive test compilers pass. No final gate or Source review has run.

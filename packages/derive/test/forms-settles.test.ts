@@ -79,6 +79,29 @@ class Full extends Scope {
 }
 
 describe("18.54: two marks on one item, and a state settlement beside them", () => {
+  test("an opt-in item keeps each admitted duty through ordinary marker and final-state changes; only its actual settling entry releases that duty", () => {
+    const definition = valid(changed(M, (d) => {
+      d.capacity = { name: "whole-scope", version: 1 };
+      d.acts.note = structuredClone(d.acts["mark-b"]);
+      delete d.acts.note.settles;
+    }));
+    const scope = new Full(definition);
+    const id = scope.started();
+    const held = scope.state.itemDuties(id);
+    scope.free(10);
+    expect(scope.does("note", on(scope, id))).toBe("new work");
+    expect(scope.item(id).values["b"]).toBe(true);
+    expect(scope.state.itemDuties(id)).toEqual(held);
+    expect(scope.does("mark-a", on(scope, id))).toBe("settles");
+    expect(scope.state.itemDuties(id).map(duty => [duty.kind, duty.slot])).toEqual([["mark", "b"], ["state", null]]);
+    expect(scope.does("close", on(scope, id))).toBe("settles");
+    expect(scope.item(id).state).toBe("done");
+    expect(scope.state.itemDuties(id).map(duty => [duty.kind, duty.slot])).toEqual([["mark", "b"]]);
+    expect(owed(scope.state, definition, scope.last.input)).toBe(2); // b and the closing checkpoint
+    expect(scope.replay().all()).toEqual(scope.state.all());
+    expect(Object.hasOwn(new Scope(m).state.all(), "itemDuties")).toBe(false);
+  });
+
   test("whole-scope checks pending Amount operands before a zero live count can hide a fractional record term", () => {
     const definition = valid(changed(M, (d) => {
       d.capacity = { name: "whole-scope", version: 1 };

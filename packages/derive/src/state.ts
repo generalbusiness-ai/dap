@@ -10,6 +10,7 @@ import type { CapabilityName, Digest, FactRef, FieldValue, Head, Held, Incarnati
 import { canonicalBytes, canonicalize, digestBytes } from "@generalbusiness/artroom-bytes";
 import { pendingOf } from "./ledger.ts";
 import { byteOrder } from "./values.ts";
+import type { ItemDuty } from "./item-duties.ts";
 
 export type { Item, Party, Status };
 
@@ -200,6 +201,8 @@ export interface StateSnapshot {
   holders?: readonly Holder[];
   /** The account of each request that an entry with an account sent, by the sending entry and the send's ordinal (section 17.2a). Absent: none. */
   accounts?: readonly Account[];
+  /** Opt-in admitted item duties. Older cohorts never add this member. */
+  itemDuties?: readonly ItemDuty[];
 }
 
 /** The digest a checkpoint entry carries: SHA-256 of the snapshot's canonical JSON. */
@@ -208,6 +211,7 @@ export function stateDigest(snapshot: StateSnapshot): Digest {
 }
 
 export interface StateView {
+  itemDuties(item?: number): readonly ItemDuty[];
   /** Null before the genesis entry. */
   scope(): ScopeState | null;
   keyCounts(): KeyCounts;
@@ -305,6 +309,7 @@ export interface StateView {
 
 /** The changes an entry makes. Only the fold calls these. */
 export interface StateWriter extends StateView {
+  putItemDuties(item: number, duties: readonly ItemDuty[]): void;
   setScope(scope: ScopeState): void;
   putItem(item: Item): void;
   addCount(type: string, state: string, by: number): void;
@@ -375,6 +380,7 @@ export class MemoryState implements StateWriter {
   readonly #records = new Map<string, RecordState>();
   readonly #observed = new Map<string, ObservedHead>();
   readonly #holders = new Map<number, Held>();
+  readonly #itemDuties = new Map<number, readonly ItemDuty[]>();
   readonly #accounts = new Map<string, Account>();
   /**
    * For each observed scope ID, the incarnations of the observed heads that are held, once each, in byte order. `putObserved`
@@ -467,6 +473,13 @@ export class MemoryState implements StateWriter {
 
   holder(item: number) { return this.#holders.get(item) ?? null; }
   holders(): Holder[] { return [...this.#holders].sort(([a], [b]) => a - b).map(([item, held]) => ({ item, held })); }
+  itemDuties(item?: number): readonly ItemDuty[] {
+    return item === undefined ? [...this.#itemDuties].sort(([a], [b]) => a - b).flatMap(([, duties]) => duties) : this.#itemDuties.get(item) ?? [];
+  }
+  putItemDuties(item: number, duties: readonly ItemDuty[]): void {
+    if (duties.length === 0) this.#itemDuties.delete(item);
+    else this.#itemDuties.set(item, [...duties].sort((a, b) => byteOrder(key(a.kind, a.slot ?? ""), key(b.kind, b.slot ?? ""))));
+  }
   operationsFor(item: number) { return [...this.#operations.values()].filter((o) => o.for === item).sort((a, b) => keyOrder(a.id.split(":").map(Number), b.id.split(":").map(Number))); }
   account(seq: number, n: number) { return this.#accounts.get(key(seq, n))?.item ?? null; }
   accountsOf(item: number) { return [...this.#accounts.values()].filter((a) => a.item === item).sort((a, b) => keyOrder([a.seq, a.n], [b.seq, b.n])); }
@@ -549,6 +562,7 @@ export class MemoryState implements StateWriter {
       ...(this.#observed.size === 0 ? {} : { observed: sorted(this.#observed.values(), (h) => [h.of.scope, h.of.inc, h.subject]) }),
       ...(this.#holders.size === 0 ? {} : { holders: this.holders() }),
       ...(this.#accounts.size === 0 ? {} : { accounts: sorted(this.#accounts.values(), (a) => [a.seq, a.n]) }),
+      ...(this.#itemDuties.size === 0 ? {} : { itemDuties: this.itemDuties() }),
     };
   }
   /** The snapshot as one canonical text, to compare two states. */

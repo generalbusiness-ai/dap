@@ -122,7 +122,10 @@ export function markerReservations(types: Markers, base: (type: string, form: Ma
     const t = own(types, name);
     return t ? t.marks.filter((mark) => !done.includes(mark) && t.forms.some((form) => form.slot === mark && form.in.includes(state))) : [];
   };
-  return { awaits, pending };
+  return { awaits, pending, task: (name: string, slot: string | null, state: string, done: readonly string[]): Amount => {
+    const type = own(types, name);
+    return type ? workOf(name, type, slot, state, completed(type, done)) : NOTHING;
+  } };
 }
 
 /** The existing numeric API is the entry projection of the same traversal, including a caller's optional numeric base. */

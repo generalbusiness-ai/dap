@@ -23,6 +23,7 @@ import type { Item, ObservedHead, StateWriter, Status } from "./state.ts";
 import { isLocalId, isObject, isScopeRef, own, same } from "./values.ts";
 import type { ValidDefinition } from "./validate/index.ts";
 import { checkStandingEntry, StandingError } from "./standing.ts";
+import { updateItemDuties } from "./item-duties.ts";
 
 /** An entry that this state cannot take: out of sequence, or with an effect on nothing. */
 export class FoldError extends Error {
@@ -151,6 +152,7 @@ export function applyEntry(writer: StateWriter, definition: ValidDefinition, ent
     const was = before.get(id) ?? null;
     // Section 6.3: an existing item that one entry changes rises by one, once, however many effects touch it.
     writer.putItem(was ? { ...item, revision: was.revision + 1 } : item);
+    updateItemDuties(writer, definition, entry, was, writer.item(id)!);
     // Section 17.2a, "An index that an item type declares": the rows of an item are written in the transaction of the entry that
     // opens it, with the item, and by no later entry: an indexed slot is fixed. A type that declares no index has none.
     if (!was) for (const row of indexRows(definition, item, entry.at)) writer.putIndexed(item.type, row.slot, row.key, item.id);
