@@ -3,7 +3,7 @@ import { PROPOSED_BOUNDS, type PlatformData, type PlatformSend } from "@generalb
 import { clockOf, fits, judgeDelivery, judgeGenesis, reserved, validateDefinition } from "../src/index.ts";
 import { Ledger, T0, creation, sent, arriving, created, keys, on } from "./fixtures.ts";
 
-import { platformRequests as fixture, futurePlatformRequests, platformRequestRules } from "./fixtures-platform-requests.ts";
+import { platformRequests as fixture, futurePlatformRequests, settlingPlatformMarks, platformRequestRules } from "./fixtures-platform-requests.ts";
 
 const E = PROPOSED_BOUNDS.entryBytes;
 
@@ -21,6 +21,40 @@ test("each platform request takes the maximum of its joint written and marked cl
     { entries: 3, items: 1, records: 0, bytes: 4 * E, requests: 0 },
     { entries: 2, items: 0, records: 0, bytes: 3 * E, requests: 0 },
   ]);
+});
+
+test("state and marker duties fund a settling mark's item and its future request, without inventing forbidden state-change edges", () => {
+  for (const marker of [false, true]) {
+    const definition = settlingPlatformMarks(marker), scope = created(definition, {});
+    scope.did(keys.rita, "wait", on(scope, 0));
+    expect(reserved(scope.state, definition, scope.last.input)).toEqual({ entries: 6, items: 2, records: 0, bytes: 7 * E, requests: 1 });
+    expect(fits(scope.state, definition, { scopeEntries: 8 }, scope.last.input)).toBe(true);
+    expect(fits(scope.state, definition, { scopeEntries: 7 }, scope.last.input)).toBe(false);
+    const old = structuredClone(definition.declared) as PlatformData;
+    delete old.capacity;
+    const legacy = validateDefinition(old, PROPOSED_BOUNDS, undefined, { platform: true });
+    expect(legacy.ok).toBe(false);
+    if (!legacy.ok) expect(legacy.problems).toContainEqual(expect.objectContaining({ code: "reserve-unbounded", path: "acts.resolve-note.effects.1" }));
+  }
+  const cycle = structuredClone(settlingPlatformMarks().declared) as PlatformData;
+  cycle.acts["finish-row"]!.effects = [...cycle.acts["finish-row"]!.effects, { code: "open-row", row: "P1", most: { effects: 0, operations: [], opens: "row" } }];
+  const refused = validateDefinition(cycle, PROPOSED_BOUNDS, undefined, { platform: true });
+  expect(refused.ok).toBe(false);
+  if (!refused.ok) expect(refused.problems).toContainEqual(expect.objectContaining({ code: "reserve-unbounded", path: "acts.finish-row" }));
+
+  const operations = structuredClone(settlingPlatformMarks().declared) as PlatformData;
+  operations.acts["resolve-note"]!.effects = [...operations.acts["resolve-note"]!.effects, { code: "open-noop", row: "P5", most: { effects: 2, operations: ["noop"] } }];
+  const counted = validateDefinition(operations, PROPOSED_BOUNDS, undefined, { platform: true });
+  expect(counted.ok).toBe(true);
+  if (counted.ok) expect(counted.definition.pendingWorkAmounts.pending["note"]!["waiting"]).toEqual({ entries: 7, items: 2, records: 0, bytes: 8 * E, requests: 1 });
+
+  const holder = structuredClone(settlingPlatformMarks().declared) as PlatformData;
+  delete holder.acts["ask"];
+  delete holder.acts["both"];
+  holder.items["row"]!.holds = { operations: { noop: 1 } };
+  const held = validateDefinition(holder, PROPOSED_BOUNDS, undefined, { platform: true });
+  expect(held.ok).toBe(false);
+  if (!held.ok) expect(held.problems).toContainEqual(expect.objectContaining({ code: "holds", path: "acts.resolve-note.effects.1" }));
 });
 
 test("a bare platform request fits its own exact entry budget and retains legacy's existing reservation projection", () => {

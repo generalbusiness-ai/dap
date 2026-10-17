@@ -413,6 +413,27 @@ describe("the form `{ of, sets, in }` at the validator", () => {
     const checkedCopy = validateDefinition(parseStrictBytes(canonicalBytes(ownCopy)), PROPOSED_BOUNDS, PROFILES, { platform: true });
     expect(checkedCopy.ok).toBe(true);
     if (checkedCopy.ok) expect(checkedCopy.definition.pendingWorkAmounts.pendingCopies.map(({ amount }) => [amount.entries, amount.items, amount.records])).toEqual([[1, 1, 0]]);
+    // The opt-in copy duty also counts a rule's opening, without charging
+    // arbitrary state changes that a settling rule is forbidden to return.
+    ownCopy.capacity = { name: "whole-scope", version: 1 };
+    ownCopy.receives["record-a"]!.opens = null;
+    ownCopy.receives["record-a"]!.effects = [...ownCopy.receives["record-a"]!.effects, { code: "copy-result", row: "X3", most: { effects: 2, opens: "result" } }];
+    const markedCopy = validateDefinition(parseStrictBytes(canonicalBytes(ownCopy)), PROPOSED_BOUNDS, PROFILES, { platform: true });
+    expect(markedCopy.ok).toBe(true);
+    // The handler also reserves its retained foreign source entry.
+    if (markedCopy.ok) expect(markedCopy.definition.pendingWorkAmounts.pendingCopies.map(({ amount }) => amount)).toEqual([{ entries: 1, items: 1, records: 0, bytes: 2 * PROPOSED_BOUNDS.entryBytes, requests: 0 }]);
+
+    const holder = structuredClone(ownCopy);
+    holder.items["result"]!.holds = { requests: 1 };
+    delete holder.acts["mark-a-far"];
+    holder.receives["record-a"]!.opens = "result";
+    holder.receives["record-a"]!.effects = holder.receives["record-a"]!.effects.filter(effect => !("code" in effect));
+    const copyHolder = validateDefinition(holder, PROPOSED_BOUNDS, PROFILES, { platform: true });
+    expect(copyHolder).toMatchObject({ ok: false, problems: expect.arrayContaining([expect.objectContaining({ code: "holds", path: "receives.record-a.opens" })]) });
+    holder.receives["record-a"]!.opens = null;
+    holder.acts["mark-a-far"] = structuredClone(ownCopy.acts["mark-a-far"]!);
+    const actHolder = validateDefinition(holder, PROPOSED_BOUNDS, PROFILES, { platform: true });
+    expect(actHolder).toMatchObject({ ok: false, problems: expect.arrayContaining([expect.objectContaining({ code: "holds", path: "acts.mark-a-far.on" })]) });
   });
 
   test("18.51 cases 2 and 3, and the grammar: the mark is a required truth value with the default false that is not fixed, `in` lists no final state, and no written effect sets the mark but to true", () => {

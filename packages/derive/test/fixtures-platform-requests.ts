@@ -40,6 +40,20 @@ export function futurePlatformRequests(withKind = false) {
   return valid(validateDefinition(data, PROPOSED_BOUNDS, undefined, { platform: true }));
 }
 
+/** A direct settling-form mark opens a row whose settlement sends the
+ * remaining tail request. State changes by that rule are prohibited. */
+export function settlingPlatformMarks(marker = false) {
+  const data = structuredClone(futurePlatformRequests(true).declared) as PlatformData;
+  data.acts["resolve-note"]!.sends = [];
+  data.acts["resolve-note"]!.effects = [...data.acts["resolve-note"]!.effects, { code: "open-row", row: "P1", most: { effects: 2, operations: [], opens: "row" } }];
+  if (marker) {
+    data.items["note"]!.values["released"] = { fixed: false, required: true, of: { type: "bool" }, default: false };
+    data.acts["resolve-note"]!.settles = { of: "on", sets: "released", in: ["waiting"] };
+    data.acts["resolve-note"]!.effects = [{ value: { slot: "released", from: { const: true } } }, ...data.acts["resolve-note"]!.effects.slice(1)];
+  }
+  return valid(validateDefinition(data, PROPOSED_BOUNDS, undefined, { platform: true }));
+}
+
 
 export const platformRequestRules: PlatformRules = { named: "platform:task@1", rules: {
   "open-row": { place: "effect", most: 1, run: given => [{ effect: "open", item: given.resolved.self, type: "row", state: "pending" }] },

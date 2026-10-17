@@ -62,6 +62,7 @@ export interface Counting {
   checked?: boolean;
   graph: TimedGraph;
   moves: readonly TimedMove[];
+  /** Its own entry, retained producers/opening, and direct marked work. */
   entry(form: PendingWork): Amount;
   deadline(entries: number): Amount;
   starts(set: ClauseSet): Amount;

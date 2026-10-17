@@ -36,7 +36,7 @@ import type { FieldType, Held } from "@generalbusiness/dap-contract";
 import { AmountError, NOTHING, amountMath, closure, holding, itemOf, one, requestOf, retainedBytes, starts, type Amount, type ClauseStarts, type Counting, type KindStated, type Starts, STARTS_NOTHING } from "../held.ts";
 import { markerReservations } from "../markers.ts";
 import { isObject, own } from "../values.ts";
-import type { Capacity, CapacityReader, PlatformRequests } from "./capacity.ts";
+import type { Capacity, CapacityReader, PlatformWork } from "./capacity.ts";
 import { marked, type Defining } from "./context.ts";
 import { at, type Rec } from "./shape.ts";
 
@@ -90,7 +90,7 @@ export interface Reserving {
 const CLAUSES = ["applied", "refused", "superseded", "undelivered", "conflict"] as const;
 
 type CapacityData = Pick<Capacity, "pendingWorkAmounts" | "markers">;
-export interface ReservationPlan extends PlatformRequests { finish(capacity: CapacityData): Reserving | undefined }
+export interface ReservationPlan extends PlatformWork { finish(capacity: CapacityData): Reserving | undefined }
 
 /** Legacy entry point: its complete written capacities are already known. */
 export function reserving(d: Defining, top: Rec, capacity: CapacityData, outcomeValues: Readonly<Record<string, readonly import("../ledger.ts").EvidenceValueDomain[]>> = {}): Reserving | undefined {
@@ -110,7 +110,7 @@ export function reserving(d: Defining, top: Rec, capacity: CapacityData, outcome
   }, outcomeValues)?.finish(capacity);
 }
 
-/** Read marks first. Whole-scope platform requests then share the pending
+/** Read marks first. Whole-scope platform work then shares the pending
  * state graph; finish materializes the checked, finite closures. */
 export function prepareReserving(d: Defining, top: Rec, reader: CapacityReader, outcomeValues: Readonly<Record<string, readonly import("../ledger.ts").EvidenceValueDomain[]>> = {}): ReservationPlan | undefined {
   if (!d.platform) return undefined;
@@ -261,21 +261,29 @@ export function prepareReserving(d: Defining, top: Rec, reader: CapacityReader, 
   // The marks of the written lists of acts and handlers, and the clauses of their sends.
   const opened = new Set<string>();
   const requestClauses = new Map<string, readonly ClauseStarts[]>();
+  const formMarks = new Map<string, readonly Starts[]>();
   const forms = (written: Rec, family: string) => {
     for (const [name, fv] of Object.entries(written)) {
       if (!isObject(fv)) continue;
       const path = at(family, name);
+      const marks: Starts[] = [];
       (Array.isArray(fv["effects"]) ? fv["effects"] : []).forEach((e, i) => {
         const most = marked(e) ? mostOf(e, at(at(path, "effects"), i)) : STARTS_NOTHING;
         // Check 2: a handler of an advisory is no request, so its entry opens no holder.
         if (most.opens !== null && holderTypes.has(most.opens) && fv["class"] === "advisory") bad("holds", at(at(path, "effects"), i), "a type that states holds is opened only by new work, and no handler of an advisory opens one");
         if (most.opens !== null) opened.add(most.opens);
-        // I3 merge: section 17.2, "What a mark may start", a settling form: the reservation of an item that awaits its settlement
-        // counts what a mark of the settling form may start. `capacity.ts` counts the written effects of such a form, and no mark
-        // (I3 deltas, entry GB5). Until it does, a settling form whose mark may open a kind that no item holds, or an item, is
-        // refused: its entry is written with no free room, and nothing would have reserved what it starts.
-        if ("settles" in fv && (most.opens !== null || most.operations.some((kind) => !held.has(kind)))) bad("reserve-unbounded", at(at(path, "effects"), i), "a form that declares settles holds a mark that may open an item, or an operation of a kind that no item holds, and no reservation of this source counts what such a mark starts");
+        if ("settles" in fv) {
+          // Section 6.4 / 17.2: a settling form's rule changes no state.
+          // Its mark counts operations and its opening, not arbitrary
+          // state-change edges. The runtime rejects those state effects.
+          if (d.wholeCapacity && most.opens !== null && holderTypes.has(most.opens)) bad("holds", at(at(path, "effects"), i), "a settling form's mark cannot open a type that states holds; only new work opens a holder");
+          if (!d.wholeCapacity && (most.opens !== null || most.operations.some(kind => !held.has(kind)))) bad("reserve-unbounded", at(at(path, "effects"), i), "a form that declares settles holds a mark that may open an item, or an operation of a kind that no item holds, and no reservation of this source counts what such a mark starts");
+        }
+        if (marked(e)) marks.push(d.wholeCapacity && "settles" in fv ? { ...most, effects: 0 } : most);
       });
+      formMarks.set(path, marks);
+      const opening = family === "acts" && fv["step"] === "open" ? fv["on"] : fv["opens"];
+      if (d.wholeCapacity && "settles" in fv && typeof opening === "string" && holderTypes.has(opening)) bad("holds", at(path, family === "acts" ? "on" : "opens"), "a settling form cannot open a type that states holds; only new work opens a holder");
       if (fv["class"] === "advisory" && typeof fv["opens"] === "string" && holderTypes.has(fv["opens"])) bad("holds", at(path, "opens"), "a type that states holds is opened only by new work, and no handler of an advisory opens one");
       (Array.isArray(fv["sends"]) ? fv["sends"] : []).forEach((s, i) => {
         if (!isObject(s)) return;
@@ -318,7 +326,17 @@ export function prepareReserving(d: Defining, top: Rec, reader: CapacityReader, 
     return amount;
   };
 
-  return { request, finish(capacity) {
+  const effects = (path: string): Amount => {
+    const marks = formMarks.get(path);
+    if (!marks) throw new AmountError(`the form ${path} has no marked-effect closure`);
+    return sum(...marks.map(mark => {
+      const amount = starts(c, mark, { item: true });
+      if (!amount) throw new AmountError(`the form ${path} has no finite marked-effect Amount`);
+      return amount;
+    }));
+  };
+
+  return { request, effects, finish(capacity) {
     if (d.wholeCapacity) largest(...everyState());
 
     // Checks 4 and 5, for each kind that no item holds, and so for each such kind below another (edge 3).
@@ -383,9 +401,8 @@ export function prepareReserving(d: Defining, top: Rec, reader: CapacityReader, 
       const producer = d.pendingWork.find(form => form.path === path)!.retained;
       const retained = d.wholeCapacity ? sum({ ...NOTHING, bytes: fieldRetainedBytes(producer, bounds) }, { ...NOTHING, bytes: d.rules.size * d.ruleInputBytes }).bytes : bounds.entryBytes;
       let amount: Amount | null = sum({ ...NOTHING, entries: 1, records: bounds.derivedEffects, bytes: bounds.entryBytes }, { ...NOTHING, bytes: retained }, written);
-      for (const [i, effect] of (Array.isArray(handler["effects"]) ? handler["effects"] : []).entries()) {
-        if (!marked(effect)) continue;
-        const more = starts(c, mostOf(effect, at(at(path, "effects"), i)), { item: false });
+      for (const mark of formMarks.get(path) ?? []) {
+        const more = starts(c, mark, { item: false });
         amount = amount && more ? sum(amount, more) : null;
       }
       if (!amount) { bad("reserve-unbounded", binding.path, "a bound handler's mark lists a kind with no finite closure"); continue; }

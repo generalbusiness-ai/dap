@@ -181,6 +181,18 @@ function three(using = rules()) {
 }
 
 describe("18.53, at the validator: the index, the binding selector and `bound`", () => {
+  test("an opt-in bound settlement reserves its source and fields without charging forbidden rule state changes", () => {
+    const checked = changed(M, data => {
+      data.capacity = { name: "whole-scope", version: 1 };
+      data.items.job.holds.items = 1;
+      data.items.result = { many: true, max: 8, states: { done: { final: true } }, initial: "done", parties: {}, refs: {}, values: {} };
+      data.receives.stop.settles = { of: "also.job", in: ["queued"] };
+      data.receives.stop.effects[1].most = { effects: 2, operations: [], opens: "result" };
+    });
+    expect(checked.ok).toBe(true);
+    if (checked.ok) expect(checked.definition.reserving!.dec["stop"]).toEqual({ entries: 1, items: 0, records: PROPOSED_BOUNDS.derivedEffects, bytes: 3 * PROPOSED_BOUNDS.entryBytes, requests: 0 });
+  });
+
   test("C2 integer indexes preserve fixed required platform slots and exact selector ranges", () => {
     const checked = integerJobs();
     expect(checked.ok).toBe(true);

@@ -54,21 +54,24 @@ export interface Capacity {
 }
 
 /** Lazy edges into the same pending-work graph, before its closures are
- * frozen. Platform clause marks can open items whose settling forms send
+ * frozen. Platform marks can open items whose settling forms send
  * further requests. Those requests must return through this graph. */
 export interface CapacityReader {
   inState(type: string, state: string): Amount;
   clause(path: string): Amount;
   written: Amount;
 }
-export interface PlatformRequests { request(path: string): Amount | undefined }
+export interface PlatformWork {
+  request(path: string): Amount | undefined;
+  effects(path: string): Amount;
+}
 
 /**
  * The chains are finite here: the validator refuses a cycle of timed rules
  * first. Each rule's chain was computed once, with the cycle check. A cycle
  * of settling forms is refused here, as `reserve-unbounded`.
  */
-export function capacityOf(d: Pick<Defining, "bad" | "bounds" | "pendingWork" | "clauseSets" | "clauseRetains" | "clausePaths" | "platform" | "types" | "wholeCapacity" | "ruleInputBytes" | "rules">, graph: TimedGraph, moves: readonly TimedMove[], prepare?: (reader: CapacityReader) => PlatformRequests | undefined): Capacity {
+export function capacityOf(d: Pick<Defining, "bad" | "bounds" | "pendingWork" | "clauseSets" | "clauseRetains" | "clausePaths" | "platform" | "types" | "wholeCapacity" | "ruleInputBytes" | "rules">, graph: TimedGraph, moves: readonly TimedMove[], prepare?: (reader: CapacityReader) => PlatformWork | undefined): Capacity {
   const { sum, times, largest } = amountMath(d.wholeCapacity);
   const entry: Amount = { ...NOTHING, entries: 1, bytes: d.bounds.entryBytes };
   // One settling form's own entry and declared openings. Changes to existing subjects and to the copy being settled create
@@ -92,7 +95,10 @@ export function capacityOf(d: Pick<Defining, "bad" | "bounds" | "pendingWork" | 
   const unbounded = new Set<PendingWork>();
   // Revision 22, "A marker duty": an item of a type that some form settles by a mark reserves by its state and by the marks that
   // are `true`. Every form that settles an item of such a type, by a mark or by state, is counted there, and not below.
-  const markers = markerCapacity(d, { checked: d.wholeCapacity, graph, moves, entry: entryFor, deadline, starts: (set) => starts(set), requests: (form) => requestsOf(form) }, unbounded);
+  // The platform plan counts only outputs allowed on this form. A
+  // settling rule can open work but is forbidden to change states.
+  const marksOfForm = (form: PendingWork): Amount => platform?.effects(form.path) ?? NOTHING;
+  const markers = markerCapacity(d, { checked: d.wholeCapacity, graph, moves, entry: form => sum(entryFor(form), marksOfForm(form)), deadline, starts: (set) => starts(set), requests: (form) => requestsOf(form) }, unbounded);
   for (const form of d.pendingWork) {
     if (form.settles && "subject" in form.settles && !markers.marked(form.settles.type)) for (const state of new Set(form.settles.states)) settlers.set(key(form.settles.type, state), [...(settlers.get(key(form.settles.type, state)) ?? []), form]);
   }
@@ -163,7 +169,7 @@ export function capacityOf(d: Pick<Defining, "bad" | "bounds" | "pendingWork" | 
   const amountOf = (form: PendingWork): Amount => {
     const settled = form.settles && "subject" in form.settles ? form.settles : undefined;
     forms.push(form);
-    const amount = sum(entryFor(form), starts(form.sets, settled), requestsOf(form));
+    const amount = sum(entryFor(form), starts(form.sets, settled), requestsOf(form), marksOfForm(form));
     forms.pop();
     return amount;
   };

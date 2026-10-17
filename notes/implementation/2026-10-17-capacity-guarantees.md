@@ -1266,3 +1266,89 @@ This remains WIP. The directly signed genesis-body presence question
 owner/standing Amounts, producer checks, remaining conservation boundaries,
 the final gate and independent Source review are still required. No gate,
 capacity landing, WIP push or deployment ran.
+
+## Settling-form marks are part of the admitted duty
+
+The platform work plan now supplies each form's direct marked closure to
+the existing state, marker and relationship-copy traversal. A future
+request and a direct marked opening return through that same graph. A
+settling form reserves its entry, written effects, future sends, and the
+items and unheld operations that its direct marks can start. No second
+reservation calculator or stored total is introduced.
+
+Contract revision 23 at 3b3e394f, section 17.2, explicitly counts those
+marks. Its revision 22 exception says that a rule of a form declaring
+settles changes no state: count its operations and opening only. The
+runtime already enforces that exception in handlers.ts/effects.ts and
+ruleMayNot. The new opt-in graph therefore excludes arbitrary state-change
+edges from those direct marks, even when the mark's general effects
+ceiling is positive. Original mark shape/count validation still runs.
+Request-result clause marks retain their normal state-change treatment.
+Bound decision quotes use the same parsed marks and exception. Legacy
+quotes and the old unsupported settling-mark cases keep their prior path.
+
+Section 17.2a check 2 also requires new work to open a holder. Opt-in
+settling forms therefore cannot open a type that states holds, either by
+a mark or by their declared opening. Finite ordinary item openings are
+supported. A mark that opens an item whose settlement recreates its own
+pending opening remains a genuine cycle and is refused reserve-unbounded.
+
+The pure witness covers state and marker duties with a direct opening
+mark, followed by an item's future request. Their original reservation is
+six entries, two items, seven entry-size byte units and one request,
+including the closing checkpoint. At Used two, eight entries fits and
+seven does not. It also counts an unheld operation's declared closure,
+refuses a genuine opening cycle, preserves the legacy refusal, and
+refuses a settling mark that could open a holder. No native outside owner
+execution is claimed for the operation metadata case.
+
+The existing copy witness now also checks a direct marked opening under
+the opt-in flag. Its duty needs one entry, one item and two entry-size byte
+units: one for itself and one for the handler's mandatory retained foreign
+source. Its own relationship key already exists, so no new record is
+reserved. Separate made-up cases refuse a holder opened by a copy-settling
+handler or by an act settling another subject. A bound-decision witness
+checks one deciding entry, its source and fact field, and its record
+ceiling; it does not add arbitrary state changes forbidden on that form.
+
+Two native scenarios exercise the direct mark at the full eight-entry
+budget, one settling by state and the other by a marker. New work refuses
+after eviction, while the real settling act opens the funded row. That
+row's actual settlement sends its funded request; a real child records
+its bad-field refusal, and the parent records the result, opens and settles
+the tail. All three item keys remain Used, every admitted item duty is
+released, and the closing checkpoint writes. HTTP replay is consistent.
+The state scenario deliberately loads fixture code that returns an illegal
+state effect. The rule runs, the native answer is unavailable, and the
+stored item, head, key counts and duties remain unchanged. Correct fixture
+code then settles the original funded duty. Data, authority, code and the
+small resolver adapter are fixtures; storage, judgment/fold, eviction,
+child results and HTTP reads are real. No outside owner or provider runs.
+
+Two isolated controls distinguish the changes. Omitting direct marked
+work leaves only two reserved entries instead of six in both native
+settlement modes (90084, CLOSED0/76a7c5). Removing the new-work holder
+restriction incorrectly validates the copy-settling holder opening (5800,
+CLOSED0/605fb6). Baselines pass, the intended assertions fail with the
+faults, and both scripts restore the source. No source-dependent check
+overlaps either mutation. Final focused checks pass 136 Derive cases and
+all four native platform request/settlement scenarios. Derive, Scope,
+Replay and Platform test compilers pass. Reports use the
+/tmp/artroom-capacity-settling-marks- prefix.
+
+Earlier failures remain separate. TypeScript caught writes through
+readonly fixture effect arrays and a fault probe initially inserted in the
+wrong test. The copy witness initially expected only its own entry-size
+byte unit; inspection of the handler's retained source term established
+the second unit, and the corrected conservation assertion passes. These
+were fixture/evidence corrections, not passing runs or waived terms.
+
+The old fail-closed gap for direct settling-form marks is now closed for
+the admitted state, marker and copy duties. Planner report 19fc769b has
+also been read and adopted: before any directly signed opt-in genesis,
+every named typed detached-text digest needs its matching string body;
+otherwise bad-field writes no genesis. That birth-body implementation is
+next. Legacy birth presence cannot be inferred from a later alias.
+Native owner/standing Amounts, producer checks, remaining conservation
+boundaries and final freeze/gate/independent Source review remain. No
+gate, Source approval, capacity landing, WIP push or deployment ran.
