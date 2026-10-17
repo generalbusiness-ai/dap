@@ -72,7 +72,7 @@
 import type { Bounds, Input } from "@generalbusiness/dap-contract";
 import { isPlatformDefinition } from "@generalbusiness/artroom-bytes";
 import { AmountError, amountMath, holding, naturalAmount, NOTHING, sum, times, type Amount } from "./held.ts";
-import { closureOf, type Owners } from "./ledger.ts";
+import { closureOf, outcomeReservation, ownerReservations, type Owners } from "./ledger.ts";
 import { markerOwed } from "./markers.ts";
 import type { StateView } from "./state.ts";
 import type { ValidDefinition } from "./validate/index.ts";
@@ -182,7 +182,7 @@ export function reserved(view: StateView, definition: ValidDefinition, head: Inp
   // the data of its kind states, or what its owner declares.
   for (const { owner, kind, entries: outcomes, unsent } of open.outcomes) {
     const counted = isPlatformDefinition(owner) ? own(definition.reserving?.kinds, kind) : undefined;
-    add(whole && counted !== undefined && counted.attempts !== null ? scale(outcomes, counted.outcome) : entry(product(outcomes, checked(1 + checked(closureOf(owners, owner, kind, definition))))));
+    add(whole ? scale(outcomes, outcomeReservation(owners, owner, kind, definition)) : entry(product(outcomes, checked(1 + checked(closureOf(owners, owner, kind, definition))))));
     // Section 17.2, "A request that an outcome sends": the request of the kind's `send`, with its 2 entries and what one clause can
     // start. Under `holds` the request is one of its account's `requests`, and the holder reserves it.
     if (counted?.request && !counted.held) {
@@ -194,7 +194,7 @@ export function reserved(view: StateView, definition: ValidDefinition, head: Inp
   add(whole ? heldReserved(view, definition) : entry(heldEntries(view, definition)));
   // Section 17.2, row 6: a capability record that awaits its messages, and what its capability declares for it. The owners' code
   // counts its own records (`Owners.reserves`). With no code no such record is made, so none reserves.
-  add(entriesOnly(owners?.reserves?.(view, definition) ?? 0));
+  add(whole ? ownerReservations(owners, view, definition) : entriesOnly(owners?.reserves?.(view, definition) ?? 0));
   if (definition.standing) {
     add(entriesOnly(standingEntries(view, definition)));
     if (!Number.isSafeInteger(amount.entries) || amount.entries < 0 || Object.is(amount.entries, -0)) throw new StandingError("aggregate reserved entries are invalid");

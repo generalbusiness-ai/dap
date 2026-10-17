@@ -35,7 +35,8 @@ import { isDigest, isFactRef, isLocalId, isRecord, timeMs } from "@generalbusine
 import type { Capabilities, CapabilityGiven, Maximum, Recorded } from "../capability.ts";
 import { isLocalFact, type Own } from "../fields.ts";
 import { WINDOWS, type Window } from "../grant.ts";
-import { operationId, type Opening, type OperationRules, type OutcomeDerived, type OutcomeInput, type Owners } from "../ledger.ts";
+import { operationId, ownerReservations, type Opening, type OperationRules, type OutcomeDerived, type OutcomeInput, type Owners } from "../ledger.ts";
+import { amountMath, NOTHING as NO_AMOUNT } from "../held.ts";
 import { recordEffects, stepsOf, type StepDerived, type StepGiven, type StepRefusal, type Steps } from "../prepare.ts";
 import type { Item, Operation, RecordState, StateView } from "../state.ts";
 import type { ValidDefinition } from "../validate/index.ts";
@@ -357,6 +358,7 @@ const REVOKED = 2 * GIT_READ_ATTEMPTS.revoke;
 const OPERATION_RULES: Readonly<Record<string, OperationRules>> = {
   [GIT_READ_KINDS.mint]: {
     selects: false, read: false, retries: () => false, closure: REVOKED, most: { effects: 3, requests: 0, operations: 1 },
+    reservation: definition => amountMath(true).times(1 + REVOKED, definition.pendingWorkAmounts.entry),
     wellFormed: (result, evidence) => ownAnswer(result, evidence) && (result !== "confirmed" || minted(evidence.body) !== null),
     derives: (view, operation, outcome) => {
       const token = tokenBy(view, "minting", "mint", operation);
@@ -369,6 +371,7 @@ const OPERATION_RULES: Readonly<Record<string, OperationRules>> = {
   },
   [GIT_READ_KINDS.revoke]: {
     selects: false, read: false, retries: () => true, wellFormed: ownAnswer, most: { effects: 1, requests: 0, operations: 0 },
+    reservation: definition => definition.pendingWorkAmounts.entry,
     derives: (view, operation, outcome) => {
       const token = outcome.result === "confirmed" ? tokenBy(view, "revoking", "revocation", operation) : null;
       return token ? recorded([moved(token, "ended")]) : NOTHING;
@@ -383,7 +386,13 @@ const OPERATION_RULES: Readonly<Record<string, OperationRules>> = {
  * `token` says"): 6 for each `live` token, for its revocation with at most
  * 3 attempts. While it is `minting`, the closure of its mint holds the same.
  */
-const gitReadReserves = (view: StateView): number => REVOKED * view.recordCount(GIT_READ, "token", "live");
+const gitReadReservations = (view: StateView, definition: ValidDefinition) => {
+  const { times } = amountMath(definition.declared.capacity?.name === "whole-scope");
+  // The token key already exists. Revocation outcomes only replace it;
+  // they open no item, request or separately retained input.
+  return times(view.recordCount(GIT_READ, "token", "live"), times(REVOKED, definition.pendingWorkAmounts.entry));
+};
+const gitReadReserves = (view: StateView, definition: ValidDefinition): number => gitReadReservations(view, definition).entries;
 
 // I3 merge: nothing opens the revocation of a `live` read token. The note gives it to "the entry that decides the job, a `check` or
 // a `check-error`" (section 3.11). Those are rows of the lane's data, and this capability declares no effect that a row could write,
@@ -421,6 +430,7 @@ export function gitRead(): Capabilities & Steps & Owners {
     },
     rules: (owner, kind) => (owner === GIT_READ ? (slotOf(OPERATION_RULES, kind) ?? null) : null),
     reserves: gitReadReserves,
+    reservations: gitReadReservations,
     // Section 6.1, "A declared maximum for everything that derives". The guard derives no effect. The step: one record, and two
     // effects for the one operation that it opens. An outcome: what its rule states above.
     maxima: [step("step", "job-read", 3, 1), ...Object.entries(OPERATION_RULES).map(([kind, rules]) => ({ ...step("outcome", kind, 0, 0), ...rules.most! }))],
@@ -456,6 +466,7 @@ export function capabilitiesOf<T extends Capabilities>(first: T, ...others: read
     ...(owning.length === 0 ? {} : {
       rules: ((owner, kind) => owning.map((p) => p.rules(owner, kind)).find((rules) => rules !== null) ?? null) satisfies Owners["rules"],
       reserves: ((view, definition) => owning.reduce((n, p) => n + (p.reserves?.(view, definition) ?? 0), 0)) satisfies Owners["reserves"],
+      reservations: ((view, definition) => owning.reduce((amount, p) => amountMath(true).sum(amount, ownerReservations(p, view, definition)), NO_AMOUNT)) satisfies Owners["reservations"],
     }),
   };
 }

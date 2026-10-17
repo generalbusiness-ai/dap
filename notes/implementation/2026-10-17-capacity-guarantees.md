@@ -655,3 +655,76 @@ This closes the known unbounded ancestry-snapshot branch by refusal. Full
 producer/owner Amounts, five-axis transactional admission and replay,
 historical incomplete byte spans, native boundary witnesses, final gate
 and Source review remain unfinished.
+
+## Owner Amount handoff
+
+The existing pending-work traversal now reads full Amounts for opted-in
+owner outcomes and pending owner records. Platform kinds whose data
+already states the amounts keep using those data-derived terms. Other
+outcomes require the pinned owner's reservation declaration. An outcome
+declaration must include at least its own entry and entry-byte stand-in;
+missing or invalid terms refuse the calculation instead of becoming zero.
+Legacy scopes still use closure and scalar reserves as before.
+
+Pending-record reservations have a full Amount reader beside the legacy
+entry projection. The calculator checks all components and checks that
+the entry projection agrees. A scalar-only record reader is incomplete
+even when it returns zero at the current head. Capability composition and
+the platform-owner wrapper preserve the new reader, so combining code
+cannot silently drop a missing declaration. The test choice facade forwards
+it too; its explicitly record-free stand-in returns an empty Amount.
+
+The native git-read@1 implementation now supplies these terms. Each mint
+outcome includes its existing six-entry revocation closure. A live token
+keeps those six future entries at entryBytes each. Revocation updates the
+existing token key; it creates no item, first record key, pending request
+or separate retained input. The scalar entry count is a projection of
+that same Amount. This adds no producer maximum and changes no record or
+entry format.
+
+The in-memory native job-read witness judges the preparation and the
+mint's answer and folds both. It checks 15 reserved entries/entry-byte
+units before the mint's answer (two possible outcomes with cleanup, plus
+the closing checkpoint), then six owner units and one closing unit after
+the token becomes live. Deciding the job does not fabricate the missing
+native live-token cleanup path: its existing task remains reserved. The
+lane, initial scope, grant and host answer are labelled fixtures; the
+capability code is native. The preparation/ledger files pass ten cases.
+Additional validator, record and ancestry files pass their focused run.
+
+A real-scope witness passes through native capability code, the real
+driver, SQLite and actual object eviction (54540, CLOSED0/40b6cc). The
+host answer and authority are fixture stand-ins, and no raw record is
+injected. One token key is retained, the replacement mint result creates
+no second key, the owner Amount remains six entry-byte units after
+eviction, and the mock host is called once. This checks calculation and
+storage continuity at a loose budget, not five-axis admission at a limit.
+
+The focused control removes the live token's byte terms while preserving
+its entries. Its baseline passes, then its intended byte assertion fails
+(50548, CLOSED0/d2a4fb), and source is restored. Derive, Scope, Replay and
+Platform test compilers pass. Derive's compiler also found two readonly
+guard-list mutations in the previous snapshot fixture; they now assign
+new lists. The runtime fixture's first compile used a nonexistent store
+entry reader; it now reads the actual stored canonical journal entry.
+These were compile failures, not passing verification. No gate ran.
+
+This is still a development handoff. hold@1 explicitly supplies an empty
+record Amount only when its native workspace predicate proves it owns no
+such tasks; its workspace record Amount is still incomplete and raises an
+explicit AmountError. The known local workspace/snapshot branch already
+refuses opt-in validation, but the remaining finite owner/standing terms
+and other platform owner declarations still need completion and proper
+pre-admission handling. No claim is made that all eligible definitions
+are yet runnable under the new rule.
+
+The existing request calculation also retains a known conservation gap:
+settling forms reserve their own send's clause closure, whereas the live
+request fold reserves the global largest clause closure. The old witness
+allows its settling entry to pass the entry budget for that reason. The
+full opt-in rule must instead retain the originating request's Amount
+through the native formOf selector, diagnosis and result; removing the
+settler exemption before fixing that handoff would refuse already owed
+work. This remains required work, alongside complete owner terms,
+five-axis admission/replay, incomplete historical byte spans, native
+boundary witnesses, final gate and Source review.

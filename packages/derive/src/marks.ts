@@ -346,6 +346,8 @@ export interface OutcomeGives { effects: readonly RuleEffect[]; sends: readonly 
  * outcome that would hold more writes nothing.
  */
 export interface OutcomeRule {
+  /** Trusted code's whole-scope Amount when the pinned data does not state it. */
+  reservation?(definition: ValidDefinition): import("./held.ts").Amount;
   valueDomains?: readonly import("./ledger.ts").EvidenceValueDomain[];
   values?(evidence: Evidence): readonly import("./ledger.ts").EvidenceValue[];
   selects: boolean;

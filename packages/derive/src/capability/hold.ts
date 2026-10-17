@@ -41,6 +41,7 @@ import type { ValidDefinition } from "../validate/index.ts";
 import { own, same } from "../values.ts";
 import { isAncestryCheck, objectIdLength } from "./ancestry.ts";
 import { hasWorkspace } from "./workspace.ts";
+import { AmountError, NOTHING as NO_AMOUNT } from "../held.ts";
 
 export const HOLD: CapabilityName = "hold@1";
 
@@ -971,6 +972,10 @@ export function holdCapability(options: HoldOptions): Capabilities & Steps & Own
     },
     rules: (owner, kind) => (owner === HOLD ? (own(OPERATION_RULES, kind) ?? null) : null),
     reserves: holdReserves,
+    reservations: (_view, definition) => {
+      if (!hasWorkspace(definition)) return NO_AMOUNT;
+      throw new AmountError("hold@1 record producer has no complete reservation Amount");
+    },
     // Section 6.1, "A declared maximum for everything that derives". Each written effect changes at most one record. A step: its
     // records, and two effects for each operation that it opens. An outcome: what its rule states above. One hold of an entry: an
     // opening derives the fork and one operation, 3; an end derives the instance and, for each live token, its record and its

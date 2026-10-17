@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { SignedIntent } from "@generalbusiness/dap-contract";
 import { intentDigest, isSealed } from "@generalbusiness/artroom-bytes";
-import { JOB_READ_ACTION, WINDOWS, capabilitiesOf, clockOf, gitRead, holdCapability, judgePreparation, preparationStatus, settleOutcome } from "../src/index.ts";
+import { JOB_READ_ACTION, WINDOWS, capabilitiesOf, clockOf, gitRead, holdCapability, judgePreparation, ownerReservations, preparationStatus, reserved, settleOutcome } from "../src/index.ts";
 import type { GrantDecision, Steps, Window } from "../src/index.ts";
 import { kindOf } from "../src/operand.ts";
 import { Scope, grantOf, keys, lane, laneDefinition, on, otherLane, t, variant } from "./fixtures.ts";
@@ -113,27 +113,54 @@ const checking = variant(lane, (def: any) => {
 
 describe("the step `job-read` of `git-read@1` (authority note, sections 3.11 and 5.7; plan step 24), on the capability's own code", () => {
   const code = capabilitiesOf(holdCapability({ tokensPerHold: 2, rootRetentionSeconds: null }), gitRead());
-  const lanes = () => {
-    const s = new Scope(checking);                                 // entries 0 and 1
+  const lanes = (definition = checking) => {
+    const s = new Scope(definition);                                 // entries 0 and 1
     s.did(una, "publish", { fields: { checks: [{ name: "ci", checker: paul.member }, { name: "lint", checker: sam.member }] } });
     const job = (name: string) => s.fact(s.did(una, "request-check", { fields: { name } }).seq);
     // Every key holds the action of the step, so each refusal below is the step's own. `granted` records what the step asked of the grant.
     const asked: { action: string; window: Window }[] = [];
     const ask = (who: typeof paul, fields: Record<string, unknown>, over: { kind?: string; on?: number | null } = {}) => {
       const signed = s.intent(who, over.kind ?? "git-read@1:job-read", { fields: fields as never, ...(over.on === undefined ? {} : { on: over.on }) });
-      const j = judgePreparation(s.state, checking, { signed, capability: "git-read@1", step: "job-read" }, {
+      const j = judgePreparation(s.state, definition, { signed, capability: "git-read@1", step: "job-read" }, {
         clock: clockOf(s.state, s.now), bounds: PROPOSED_BOUNDS, steps: code, own: s.own,
         granted: ({ action, window }) => { asked.push({ action, window }); return { result: "granted", grant: grantOf(who, s.at, [JOB_READ_ACTION]) }; },
       });
       return { signed, j, said: j.result === "refused" ? `${j.reason}: ${j.detail}` : j.result === "repeat" ? `repeat ${j.seq}` : j.result };
     };
     const outcome = (operation: string, result: "confirmed" | "refused" | "unknown", body: unknown = {}) => {
-      const j = settleOutcome(s.state, checking, { type: "outcome", operation: operation as never, attempt: 1, result, evidence: result === "unknown" ? { basis: "none", body } : { basis: "own-answer", body } }, { clock: clockOf(s.state, s.now), bounds: PROPOSED_BOUNDS, owners: code });
+      const j = settleOutcome(s.state, definition, { type: "outcome", operation: operation as never, attempt: 1, result, evidence: result === "unknown" ? { basis: "none", body } : { basis: "own-answer", body } }, { clock: clockOf(s.state, s.now), bounds: PROPOSED_BOUNDS, owners: code });
       return j.result === "write" ? s.seal(j.draft) : j.result;
     };
     const token = (n: number): Record<string, unknown> | null => { const r = s.state.record("git-read@1", "token", [n]); return r && { state: r.state, ...r.values }; };
     return { s, job, ask, asked, outcome, token };
   };
+
+  test("an opted-in native live read token keeps its six revocation entries and their bytes, without reserving another token key", () => {
+    // Real in-memory preparation/outcome judgments, native capability code
+    // and fold. Lane data, initial scope and granted authority are fixtures;
+    // the offered host answer is synthetic, and no provider is called.
+    const definition = variant(checking.declared, data => { data.capacity = { name: "whole-scope", version: 1 }; });
+    const { s, job, ask, outcome, token } = lanes(definition);
+    const ci = job("ci"), prepared = ask(paul, { job: ci });
+    if (prepared.j.result !== "write") throw new Error("native job-read must prepare");
+    const mint = s.seal(prepared.j.draft).seq;
+    expect(ownerReservations(code, s.state, definition)).toEqual({ entries: 0, items: 0, records: 0, bytes: 0, requests: 0 });
+    // Two possible mint outcomes, each with its six-entry revocation
+    // closure, plus the scope's closing checkpoint.
+    expect(reserved(s.state, definition, s.last.input, code)).toEqual({ entries: 15, items: 0, records: 0, bytes: 15 * PROPOSED_BOUNDS.entryBytes, requests: 0 });
+    expect(typeof outcome(`${mint}:0`, "confirmed", { token: "tok_1", ends: t(1700) })).toBe("object");
+    expect(token(1)?.["state"]).toBe("live");
+    const amount = { entries: 6, items: 0, records: 0, bytes: 6 * PROPOSED_BOUNDS.entryBytes, requests: 0 };
+    expect(ownerReservations(code, s.state, definition)).toEqual(amount);
+    expect(reserved(s.state, definition, s.last.input, code)).toEqual({ ...amount, entries: 7, bytes: 7 * PROPOSED_BOUNDS.entryBytes });
+    const keys = s.state.keyCounts();
+    s.did(paul, "decide", on(s, ci.seq));
+    // The native version has no path from this act to a live token's
+    // revocation. It retains that task, rather than assuming it ended.
+    expect(ownerReservations(code, s.state, definition)).toEqual(amount);
+    expect(s.state.keyCounts()).toEqual(keys);
+    expect(s.replay().all()).toEqual(s.state.all());
+  });
 
   test("the checker that the lane's rules name is given one read token for a requested job, once: the entry holds the token `minting` with its one mint; every other request is refused and mints nothing", () => {
     const { s, job, ask, asked, token } = lanes();

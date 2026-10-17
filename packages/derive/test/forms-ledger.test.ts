@@ -2,10 +2,46 @@ import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Entry, Evidence, OperationId } from "@generalbusiness/dap-contract";
 import { entryHash } from "@generalbusiness/artroom-bytes";
-import { FoldError, applyEntry, checkpointOf, clockOf, operationId, operationOpening, operationStanding, owed, settleOutcome, tokenPast } from "../src/index.ts";
+import { AmountError, FoldError, applyEntry, capabilitiesOf, checkpointOf, clockOf, gitRead, operationId, operationOpening, operationStanding, owed, reserved as reservedAmount, settleOutcome, tokenPast } from "../src/index.ts";
 import type { Opening, OperationRules, Owners } from "../src/index.ts";
 import { kindOf } from "../src/operand.ts";
-import { Scope, t, ticketDefinition } from "./fixtures.ts";
+import { Scope, t, ticketDefinition, variant } from "./fixtures.ts";
+
+test("opt-in owner-record reservations reject scalar-only, inconsistent and invalid Amounts, even when the current entry count is zero", () => {
+  // This is the owner/calculator boundary. The callbacks below are explicit
+  // stand-ins; the native job-read witness separately exercises real code.
+  const definition = variant(ticketDefinition.declared, data => { data.capacity = { name: "whole-scope", version: 1 }; });
+  const scope = new Scope(definition);
+  const read = (owner: Owners) => reservedAmount(scope.state, definition, scope.last.input, owner);
+  const scalar: Owners = { rules: () => null, reserves: () => 0 };
+  expect(() => read(scalar)).toThrow("owner-record producer has no full reservation Amount");
+  const zero = { entries: 0, items: 0, records: 0, bytes: 0, requests: 0 };
+  expect(() => read({ ...scalar, reservations: () => ({ ...zero, bytes: 0.5 }) })).toThrow(AmountError);
+  expect(() => read({ ...scalar, reservations: () => ({ ...zero, entries: 1 }) })).toThrow("entry projection");
+  const { reservations: _missing, ...legacyCode } = gitRead();
+  expect(() => read(capabilitiesOf(gitRead(), legacyCode))).toThrow("owner-record producer has no full reservation Amount");
+  // Omission of the opt-in still reads the scalar as it always did.
+  expect(owed(scope.state, ticketDefinition, scope.last.input, scalar)).toBe(1);
+});
+
+test("opt-in outcome reservations keep the owner's complete Amount and refuse a missing or invalid declaration", () => {
+  // Calculator boundary: the operation is folded by hand and the owner is
+  // a stand-in. This does not establish an actual producer's maxima.
+  const definition = variant(ticketDefinition.declared, data => { data.capacity = { name: "whole-scope", version: 1 }; });
+  const scope = new Scope(definition);
+  open(scope, { owner: "hold@1", kind: "mint", attempts: 1 });
+  const read = (rule: OperationRules) => reservedAmount(scope.state, definition, scope.last.input, { rules: () => rule });
+  const legacy = { selects: false, read: false, retries: () => false, closure: 2 };
+  expect(() => read(legacy)).toThrow("hold@1/mint outcome producer has no full reservation Amount");
+  const base = definition.pendingWorkAmounts.entry;
+  expect(() => read({ ...legacy, reservation: () => ({ ...base, bytes: base.bytes - 1 }) })).toThrow("omits its own entry");
+  expect(() => read({ ...legacy, reservation: () => ({ ...base, records: 0.5 }) })).toThrow(AmountError);
+  const future = { entries: 3, items: 1, records: 2, bytes: 4 * PROPOSED_BOUNDS.entryBytes + 10, requests: 1 };
+  // First and possible late outcome, each carrying its full future task,
+  // then the once-per-scope closing checkpoint.
+  expect(read({ ...legacy, reservation: () => future })).toEqual({ entries: 7, items: 2, records: 4, bytes: 9 * PROPOSED_BOUNDS.entryBytes + 20, requests: 2 });
+  expect(owed(scope.state, ticketDefinition, scope.last.input, { rules: () => legacy })).toBe(7);
+});
 
 /**
  * Made-up owner rules, one for each kind the cases use. They stand in for

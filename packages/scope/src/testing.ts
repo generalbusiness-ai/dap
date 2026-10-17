@@ -12,6 +12,7 @@
 import { CAPABILITIES, PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Bounds, Capability, CapabilityName, Digest, Entry, ObservationRequest, PlatformDefinition, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
 import type { Capabilities, ContentStates, Delivered, Fetched, Owners, Recorded, StateView, Steps, ValidDefinition, Window } from "@generalbusiness/dap-derive";
+import { ownerReservations, NOTHING } from "@generalbusiness/dap-derive";
 import { observing } from "./authority.ts";
 import type { EffectAnswer, EffectRequest, Outside } from "./operations.ts";
 import type { Authority, Clock, Definitions, Ports, Readers, Resolver, Rules, Transport } from "./ports.ts";
@@ -141,6 +142,7 @@ export function chosenCapability(choice: () => CapabilityChoice): Capabilities &
     get maxima() { return real() ? code.maxima : undefined; },
     rules: (owner: Parameters<Owners["rules"]>[0], kind: string) => (real() ? code.rules(owner, kind) : null),
     reserves: (view: StateView, definition: ValidDefinition) => (real() ? (code.reserves?.(view, definition) ?? 0) : 0),
+    reservations: (view: StateView, definition: ValidDefinition) => real() ? ownerReservations(code, view, definition) : NOTHING,
     // The three optional members are read at each use, so that each is absent while the stand-in answers.
   } as unknown as Capabilities & Steps & Owners;
 }

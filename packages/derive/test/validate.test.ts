@@ -153,7 +153,7 @@ describe("the definition validator", () => {
     // independently of whether this particular guard can pass. No writer
     // ceiling exists for check's separate retained snapshot.
     const data = clone(lane);
-    data.acts["renew"]!.guards.push({ capability: { name: "hold", guard: "staged", with: {} } });
+    data.acts["renew"]!.guards = [...data.acts["renew"]!.guards, { capability: { name: "hold", guard: "staged", with: {} } }];
     const bytes = canonicalBytes(data);
     const legacy = validateDefinition(data, PROPOSED_BOUNDS);
     expect(legacy.ok ? [] : legacy.problems).toEqual([]);
@@ -166,7 +166,7 @@ describe("the definition validator", () => {
     // Native guard usage without any local hold type cannot stage either.
     const noHolds = clone(small);
     noHolds.capabilities = [{ name: "hold", version: 1 }];
-    noHolds.acts["edit"]!.guards.push({ capability: { name: "hold", guard: "staged", with: {} } });
+    noHolds.acts["edit"]!.guards = [...noHolds.acts["edit"]!.guards, { capability: { name: "hold", guard: "staged", with: {} } }];
     expect(validateDefinition({ ...noHolds, capacity: { name: "whole-scope", version: 1 } }, PROPOSED_BOUNDS).ok).toBe(true);
     expect(canonicalBytes(data)).toEqual(bytes);
   });
