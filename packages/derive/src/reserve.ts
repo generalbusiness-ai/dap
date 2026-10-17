@@ -61,12 +61,11 @@
  *   its request draws on its holder;
  * - with each pending request, what the marks of one clause can start.
  *
- * What is not counted is in the deltas note. The count is of entries, never
- * of bytes. For an operation it is partial: the other four dimensions of
- * section 17.1, and so the records that an outcome derives, are request
- * `cc570904`'s. No adopted effect states a closure at the opening, so the
- * owner's code declares it, and the count asks the owners' rules (I3
- * deltas, entries EB6 and EC2).
+ * All five dimensions use this traversal. Entry-only callers project its
+ * entry component. An operation's owner supplies its producer closure;
+ * an opted-in scope refuses a reachable producer without a finite quote.
+ * The owner's code declares that closure because no adopted effect states
+ * it at the opening (I3 deltas, entries EB6 and EC2).
  */
 
 import type { Bounds, Input, ScopeBoundName } from "@generalbusiness/dap-contract";

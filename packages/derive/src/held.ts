@@ -28,9 +28,10 @@
  * of a reservation": "the entry size of section 7.5 stands in for this
  * whole amount"), and so is the bound on one foreign entry. What an item in
  * a state reserves includes its declared future requests and the foreign
- * source entry that each result may retain. The other item, record and
- * retention terms of a settlement remain partial (section 17.5; request
- * `cc570904`). These pure amounts are not five-dimensional admission.
+ * source entry that each result may retain. Opted-in definitions add the
+ * actual item, record, request and retained-input terms of that closure.
+ * Runtime and Replay combine this reservation with stored logical usage.
+ * Legacy definitions keep their earlier private Amount projections.
  */
 
 import type { Held } from "@generalbusiness/dap-contract";

@@ -21,10 +21,11 @@ import { fieldRetainedBytes } from "../field-retention.ts";
 export interface PendingCopy { name: string; kind: ScopeKind; states: readonly string[]; entries: number }
 
 /**
- * The known declared task terms, in Amount form: entries, declared future requests, and their entries' stand-in bytes, including
- * each result's foreign source entry, a declared primary opening and a possible first relationship copy. Other item/record
- * terms and retained inputs remain owed under cc570904. The numeric
- * fields of Capacity are entry projections of these amounts, not a second calculation or five-dimensional admission.
+ * The declared task closure in all five dimensions, including retained
+ * inputs, future requests and their foreign result entries, item openings
+ * and first relationship-copy keys. Native producers join this same graph.
+ * The numeric fields of Capacity project its entry component. Legacy
+ * definitions retain their earlier private projections and entry admission.
  */
 export interface PendingWorkAmounts {
   /** The static entry-size stand-in, before producer-specific retained terms. */
