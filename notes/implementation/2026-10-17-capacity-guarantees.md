@@ -1074,3 +1074,45 @@ refused signed-birth presence still need disposition and implementation.
 Complete platform per-send clause, native owner and standing Amounts,
 pre-admission producer checks, the remaining conservation boundaries,
 final freeze/gate and independent Source review are still required.
+
+## Each platform send retains its own joint clause Amount
+
+This checkpoint connects an actual opt-in platform send to its written
+and marked result clauses. Each clause keeps its native source path. The
+shared request calculator adds the written work and marked work of that
+same clause, then takes the largest clause. The fold retains the Amount
+of the send that actually ran, including the send ordinal. A quiet send
+does not inherit an unrelated send's larger clause. Conflict is new work:
+its marks remain in item-pool and reach accounting, but do not increase
+an owed request's reservation. Platform data with no outcome kinds still
+has its result marks counted. Legacy calculation and folded requests keep
+their previous path.
+
+Three made-up platform cases pass at the pure derive boundary, beside
+seven clause-identity cases. They show joint clause alternatives, separate
+ordinals, exact entry equality, legacy behavior, and a real judged result
+that opens an item whose settling act releases its duty. A native witness
+also passes at exact entry and item ceilings. It evicts the sender, refuses
+new work at the filled entry ceiling, creates a real child that refuses
+its unexpected field, delivers that child's actual result to the parent,
+opens and settles the marked row, and replays the history through HTTP.
+Data, mark code, authority and the RPC resolver are fixtures. Scope
+storage, judgment/fold, child creation and delivery, eviction and routes
+are native. No outside operation or provider runs.
+
+The focused native control restores the common maximum for each send.
+Baseline passes; with that one fault, the quiet send at equality is
+incorrectly refused and the acceptance assertion fails. The script
+restores the source (2946, CLOSED0/4fe01c). This control ran alone. The
+Derive, Scope, Replay and Platform test compilers pass. Reports use the
+/tmp/artroom-capacity-platform-clause- prefix. Earlier fixture failures
+are not passing evidence: a helper omitted platform context, and a child
+could not load a fixture declaration addressed as self. Explicit native
+platform version lookup and real platform judgment fix those fixtures.
+
+This is a WIP checkpoint. Requests emitted by a future settling form
+still need the marked clause closure connected into that form's original
+reservation. Native owner and standing Amounts, producer checks, the two
+birth-provenance decisions, remaining boundaries and final review are
+also pending. No gate, Source approval, capacity landing, capacity-code
+push or deployment ran.

@@ -85,7 +85,7 @@ export interface Starts { effects: number; operations: readonly string[]; opens:
 export const STARTS_NOTHING: Starts = { effects: 0, operations: [], opens: null };
 
 /** One clause of a result: its effect marks, and the bytes of the values that its rows of `observes` state under `retains`, plus the evidence values its pinned owner declares. */
-export interface ClauseStarts { marks: readonly Starts[]; retains: number }
+export interface ClauseStarts { marks: readonly Starts[]; retains: number; written?: Amount; reserved?: boolean }
 
 /**
  * One kind of `outcomes`, as its data states it. `attempts`: the most
@@ -176,7 +176,8 @@ export function requestOf(c: Counting, clauses: readonly ClauseStarts[], how: { 
   const { sum, largest, times } = amountMath(c.checked === true);
   const byClause: Amount[] = [];
   for (const clause of clauses) {
-    let started = sum(c.written, { ...NOTHING, bytes: clause.retains });
+    if (c.checked && clause.reserved === false) continue;
+    let started = sum(clause.written ?? c.written, { ...NOTHING, bytes: clause.retains });
     for (const mark of clause.marks) {
       const more = starts(c, mark, how);
       if (!more) return null;

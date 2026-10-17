@@ -10,7 +10,7 @@
  */
 
 import type { ScopeKind } from "@generalbusiness/dap-contract";
-import { NOTHING, amountMath, requestEntries, retainedBytes, type Amount } from "../held.ts";
+import { AmountError, NOTHING, amountMath, requestEntries, retainedBytes, type Amount } from "../held.ts";
 import type { Markers } from "../markers.ts";
 import type { ClauseSet, Defining, PendingWork } from "./context.ts";
 import { markerCapacity } from "./markers.ts";
@@ -37,6 +37,8 @@ export interface PendingWorkAmounts {
   /** Opt-in: one future request of each exact send form, including its
    * pending-request unit. The fold transfers that unit to Used. */
   requests?: Readonly<Record<string, Amount>>;
+  /** Opt-in platform data: written work of each exact reserved clause. */
+  clauses?: Readonly<Record<string, Amount>>;
 }
 
 export interface Capacity {
@@ -56,7 +58,7 @@ export interface Capacity {
  * first. Each rule's chain was computed once, with the cycle check. A cycle
  * of settling forms is refused here, as `reserve-unbounded`.
  */
-export function capacityOf(d: Pick<Defining, "bad" | "bounds" | "pendingWork" | "clauseSets" | "clauseRetains" | "types" | "wholeCapacity" | "ruleInputBytes" | "rules">, graph: TimedGraph, moves: readonly TimedMove[]): Capacity {
+export function capacityOf(d: Pick<Defining, "bad" | "bounds" | "pendingWork" | "clauseSets" | "clauseRetains" | "clausePaths" | "platform" | "types" | "wholeCapacity" | "ruleInputBytes" | "rules">, graph: TimedGraph, moves: readonly TimedMove[]): Capacity {
   const { sum, times, largest } = amountMath(d.wholeCapacity);
   const entry: Amount = { ...NOTHING, entries: 1, bytes: d.bounds.entryBytes };
   // One settling form's own entry and declared openings. Changes to existing subjects and to the copy being settled create
@@ -168,10 +170,15 @@ export function capacityOf(d: Pick<Defining, "bad" | "bounds" | "pendingWork" | 
   // A request reserves, beside its two entries, the most that one of its clauses can start. The runtime holds the largest over
   // every request form of the definition, which is never less (section 17.2, "More, and never less").
   const clause = largest(...d.clauseSets.map((c) => starts(c)));
+  const clauses = d.wholeCapacity && d.platform ? Object.fromEntries(d.clauseSets.map(set => {
+    const path = d.clausePaths.get(set);
+    if (path === undefined) throw new AmountError("a reserved clause has no native source path");
+    return [path, starts(set)];
+  })) : undefined;
   const requests = d.wholeCapacity ? Object.fromEntries(d.pendingWork.flatMap(form => form.requests.map(request => [`${form.path}.sends.${request.send}`, requestAmount(request)]))) : undefined;
   for (const form of unbounded) d.bad("reserve-unbounded", form.path, "the forms that settle lead back to the state this one settles, so no reservation covers what its settlement can start");
   const marked = unbounded.size === 0 ? markers.data() : null;
   const decisions = Object.fromEntries(d.pendingWork.filter((form) => form.path.startsWith("receives.")).map((form) => [form.path, starts(form.sets)]));
   const decisionEntries = Object.fromEntries(Object.entries(decisions).map(([path, amount]) => [path, amount.entries]));
-  return { pendingWorkAmounts: { entry, deadlines: deadlineAmounts, pending: pendingAmounts, pendingCopies: copyAmounts, clause, decisions, ...(requests ? { requests } : {}) }, deadlines, pending, pendingCopies, clauseEntries: clause.entries, decisionEntries, ...(marked ? { markers: marked } : {}) };
+  return { pendingWorkAmounts: { entry, deadlines: deadlineAmounts, pending: pendingAmounts, pendingCopies: copyAmounts, clause, decisions, ...(requests ? { requests } : {}), ...(clauses ? { clauses } : {}) }, deadlines, pending, pendingCopies, clauseEntries: clause.entries, decisionEntries, ...(marked ? { markers: marked } : {}) };
 }

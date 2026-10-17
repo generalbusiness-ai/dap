@@ -194,7 +194,7 @@ export function validateDefinition(input: unknown, bounds: Bounds, profiles: Rea
     ruleInputBytes: 0,
     ...read, bounds, name: typeof top["name"] === "string" ? top["name"] : null, typeNames: new Set(isObject(top["items"]) ? Object.keys(top["items"]) : []), types: new Map(), rules: new Set(), holds: false, holdTypes: new Set(),
     capabilities: new Map(), underived: [],
-    indexes: [], clauseSets: [], clauseRetains: new Map(), clause: null, pendingWork: [], platform, marks: [], places: new Map(), valueSets: [], bindings: [], observing: false,
+    indexes: [], clauseSets: [], clauseRetains: new Map(), clausePaths: new Map(), clause: null, pendingWork: [], platform, marks: [], places: new Map(), valueSets: [], bindings: [], observing: false,
   };
 
   const profile = rec(top["profile"], "profile", ["name", "version"]);

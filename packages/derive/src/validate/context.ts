@@ -122,6 +122,7 @@ export interface Defining extends Shapes {
   readonly indexes: RangeIndex[];
   readonly clauseSets: ClauseSet[];         // one for each result clause that is reserved for (section 17.2)
   readonly clauseRetains: Map<ClauseSet, unknown>;
+  readonly clausePaths: Map<ClauseSet, string>;
   clause: ClauseSet | null;                 // the list of effects being read, when what it can set is asked: a reserved clause, or the effects of an act or handler
   readonly pendingWork: PendingWork[];                // one for each act and handler that was read
   readonly platform: boolean;               // the platform option: the data of a platform definition, which may hold a mark at seven places (section 6.1)

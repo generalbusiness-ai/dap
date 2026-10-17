@@ -33,7 +33,7 @@
 import { RETAINED_INPUT_BYTES } from "@generalbusiness/dap-contract";
 import { fieldRetention, fieldRetainedBytes } from "../field-retention.ts";
 import type { FieldType, Held } from "@generalbusiness/dap-contract";
-import { NOTHING, amountMath, closure, holding, itemOf, one, requestOf, retainedBytes, starts, type Amount, type ClauseStarts, type Counting, type KindStated, type Starts, STARTS_NOTHING } from "../held.ts";
+import { AmountError, NOTHING, amountMath, closure, holding, itemOf, one, requestOf, retainedBytes, starts, type Amount, type ClauseStarts, type Counting, type KindStated, type Starts, STARTS_NOTHING } from "../held.ts";
 import { markerReservations } from "../markers.ts";
 import { isObject, own } from "../values.ts";
 import type { Capacity } from "./capacity.ts";
@@ -70,15 +70,19 @@ export interface Reserving {
   /**
    * `req` and `itm`. Both are the largest over every form of the
    * definition, which is never less than over the forms of one account
-   * (section 17.2, "More, and never less"): the folded state does not say
-   * which form made a request, and a pending request reserves the same.
+   * (section 17.2, "More, and never less"). Legacy folded requests use
+   * this common amount; opt-in requests retain their originating send's
+   * joint written/marked amount below.
    */
   req: Amount;
   itm: Amount;
   /** By message: one bound deciding entry and what its handler's effects can start. Its requests draw on the holder. */
   dec: Readonly<Record<string, Amount>>;
-  /** The largest that the marks of one clause of a result can start, which every pending request reserves beside what its written effects start. */
+  /** The largest marked clause closure. Opt-in requests use `requests`
+   * instead of adding this maximum to an independent written maximum. */
   clause: Amount;
+  /** Opt-in: the joint written/marked closure of each originating send. */
+  requests?: Readonly<Record<string, Amount>>;
   /** The held kinds that a clause of a request can reach: a final holder keeps their counts while a request of its account is pending. */
   reach: readonly string[];
 }
@@ -199,9 +203,14 @@ export function reserving(d: Defining, top: Rec, capacity: Pick<Capacity, "pendi
       const p = at(at(path, "result"), clause);
       const marks = (Array.isArray(effects) ? effects : []).flatMap((e, i) => (marked(e) ? [mostOf(e, at(p, i))] : []));
       for (const mark of marks) if (mark.opens !== null && holderTypes.has(mark.opens)) bad("holds", p, `a type that states holds is opened only by new work, and a clause's mark may open ${mark.opens}`);
-      // Opt-in written clauses already include these values in the shared
-      // clause Amount. Keep only their marks here, avoiding a second charge.
-      matched.push({ path: p, starts: { marks, retains: d.wholeCapacity ? 0 : retainedBytes(rows) } });
+      // Conflict is new work. Keep its marks for item/reach accounting,
+      // while requestOf excludes it from an owed request's reservation.
+      let written: Amount | undefined;
+      if (d.wholeCapacity) {
+        written = path.startsWith("outcomes.") || clause === "conflict" ? NOTHING : own(capacity.pendingWorkAmounts.clauses, p);
+        if (!written) throw new AmountError(`the request clause ${p} has no written Amount`);
+      }
+      matched.push({ path: p, starts: { marks, retains: d.wholeCapacity ? 0 : retainedBytes(rows), ...(written ? { written, reserved: clause !== "conflict" } : {}) } });
     }
     everyClause.push(...matched.map((clause) => clause.starts));
     return matched;
@@ -230,6 +239,7 @@ export function reserving(d: Defining, top: Rec, capacity: Pick<Capacity, "pendi
 
   // The marks of the written lists of acts and handlers, and the clauses of their sends.
   const opened = new Set<string>();
+  const requestClauses = new Map<string, readonly ClauseStarts[]>();
   const forms = (written: Rec, family: string) => {
     for (const [name, fv] of Object.entries(written)) {
       if (!isObject(fv)) continue;
@@ -249,7 +259,10 @@ export function reserving(d: Defining, top: Rec, capacity: Pick<Capacity, "pendi
       (Array.isArray(fv["sends"]) ? fv["sends"] : []).forEach((s, i) => {
         if (!isObject(s)) return;
         const send = marked(s) ? s : Object.values(s).find((form) => isObject(form) && "result" in form);
-        for (const clause of clausesOf(send, marked(s) ? at(at(path, "sends"), i) : at(at(at(path, "sends"), i), Object.keys(s)[0] ?? ""))) for (const mark of clause.starts.marks) if (mark.opens !== null) opened.add(mark.opens);
+        const origin = at(at(path, "sends"), i);
+        const clauses = clausesOf(send, marked(s) ? origin : at(origin, Object.keys(s)[0] ?? ""));
+        if (send && d.wholeCapacity) requestClauses.set(origin, clauses.map(clause => clause.starts));
+        for (const clause of clauses) for (const mark of clause.starts.marks) if (mark.opens !== null) opened.add(mark.opens);
       });
     }
   };
@@ -261,7 +274,7 @@ export function reserving(d: Defining, top: Rec, capacity: Pick<Capacity, "pendi
   // A kind that a mark lists is counted by the data, so it states its attempts.
   for (const [kind, most] of mosts) for (const listed of most.operations) if (!stated.has(listed)) bad("shape", at(at(at("outcomes", kind), "most"), "operations"), `the kind ${listed} is listed, and states no attempts`);
 
-  if (kindsWritten && Object.keys(kindsWritten).length === 0 && holderTypes.size === 0 && adds.size === 0) return undefined;
+  if (!d.wholeCapacity && kindsWritten && Object.keys(kindsWritten).length === 0 && holderTypes.size === 0 && adds.size === 0) return undefined;
 
   // Rule 11 of "A marker duty": an unnamed item reserves the whole sum of rule 6, with no mark completed. A marked type has no
   // row in pending: its state task and each marker task are counted together by the shared calculator, beside its deadline.
@@ -277,7 +290,7 @@ export function reserving(d: Defining, top: Rec, capacity: Pick<Capacity, "pendi
     initial: (type) => { const of = d.types.get(type); return of ? inState(type, of.initial) : NOTHING; },
     change: largest(...everyState),
     entry: bounds.entryBytes,
-    written: capacity.pendingWorkAmounts.clause,
+    written: d.wholeCapacity ? NOTHING : capacity.pendingWorkAmounts.clause,
   };
 
   // Checks 4 and 5, for each kind that no item holds, and so for each such kind below another (edge 3).
@@ -325,6 +338,12 @@ export function reserving(d: Defining, top: Rec, capacity: Pick<Capacity, "pendi
   }
   if (d.problems.length > 0) return undefined;
 
+  const requests = d.wholeCapacity ? Object.fromEntries([...requestClauses].map(([path, clauses]) => {
+    const amount = requestOf(c, clauses, { item: true });
+    if (!amount) throw new AmountError(`the request ${path} has no finite clause Amount`);
+    return [path, amount];
+  })) : undefined;
+
   const itm = itemOf(c, [...opened].filter((type) => !holderTypes.has(type)));
   // dec(m): a bound handler opens no item directly and its sends draw on
   // q. Its written effects can start deadlines/settlements, and an effect
@@ -360,6 +379,7 @@ export function reserving(d: Defining, top: Rec, capacity: Pick<Capacity, "pendi
     holders: Object.fromEntries([...holds].map(([type, of]) => [type, { holds: of, amount: holding(of, amounts) }])),
     adds: Object.fromEntries([...adds].map(([name, of]) => [name, { on: of.on, adds: of.adds, amount: holding(of.adds, amounts) }])),
     req, itm, dec,
+    ...(requests ? { requests } : {}),
     clause: largest(...(byClause as Amount[])),
     reach: reachFrom(everyClause.flatMap((clause) => clause.marks.flatMap((mark) => mark.operations)).filter((k) => held.has(k))),
   };

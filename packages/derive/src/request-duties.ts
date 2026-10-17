@@ -2,7 +2,7 @@
 import type { Entry, SendForm } from "@generalbusiness/dap-contract";
 import { isPlatformDefinition } from "@generalbusiness/artroom-bytes";
 import { bound } from "./handlers.ts";
-import { AmountError, amountMath, NOTHING, requestEntries, subtract, type Amount } from "./held.ts";
+import { AmountError, NOTHING, requestEntries, subtract, type Amount } from "./held.ts";
 import { formOf } from "./sends.ts";
 import type { ValidDefinition } from "./validate/index.ts";
 import { own } from "./values.ts";
@@ -10,7 +10,6 @@ import { own } from "./values.ts";
 /** The pending-request unit becomes Used at this entry. Keep the rest of
  * the actual source form's full Amount as derived folded bookkeeping. */
 export function requestReservation(definition: ValidDefinition, entry: Entry, n: number): Amount {
-  const { sum } = amountMath(true);
   const input = entry.input;
   let path: string | null = null, forms: readonly SendForm[] | undefined;
   if (input.type === "act" || input.type === "genesis") {
@@ -29,9 +28,9 @@ export function requestReservation(definition: ValidDefinition, entry: Entry, n:
   }
   const form = forms && formOf(definition, forms, entry, n);
   const index = form && forms ? forms.indexOf(form as SendForm) : -1;
-  const amount = path !== null && index >= 0 ? own(definition.pendingWorkAmounts.requests, `${path}.sends.${index}`) : undefined;
+  const origin = path !== null && index >= 0 ? `${path}.sends.${index}` : null;
+  const amounts = definition.reserving?.requests ?? definition.pendingWorkAmounts.requests;
+  const amount = origin === null ? undefined : own(amounts, origin);
   if (!amount) throw new AmountError(`request ${entry.seq}.${n} has no originating send Amount`);
-  // Keep the existing platform clause-mark terms until their per-send
-  // integration is complete; never lose them while narrowing written work.
-  return subtract(sum(amount, definition.reserving?.clause ?? NOTHING), { ...NOTHING, requests: 1 });
+  return subtract(amount, { ...NOTHING, requests: 1 });
 }
