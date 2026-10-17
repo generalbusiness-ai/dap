@@ -103,25 +103,29 @@ function detachedBounds(types: Readonly<Record<string, FieldType & { default?: F
   return limits;
 }
 
+/** Bounds established by one successful field check. These are upper
+ * bounds from a verified phase, never retained sizes. */
+export function checkedTextBounds(definition: ValidDefinition, input: Entry["input"]): ReadonlyMap<Digest, number> {
+  if (input.type === "act") return detachedBounds(own(definition.declared.acts, input.signed.intent.kind)?.fields ?? {}, input.signed.intent.fields);
+  if (input.type === "genesis" && input.decision === "applied") {
+    const fields = own(definition.declared.acts, definition.declared.genesis)!.fields;
+    const given = input.founding ? input.founding.intent.fields : input.source ? creationFields(input.message, input.source, fields) : null;
+    return given ? detachedBounds(fields, given) : new Map();
+  }
+  if (input.type === "delivery" && "decision" in input && input.message.class === "request" && (input.decision === "applied" || input.decision === "superseded" && input.message.type === "tell")) {
+    const received = bound(definition, input.message, input.from);
+    if (received?.handler && received.fields) return detachedBounds(received.handler.fields, received.fields);
+  }
+  return new Map();
+}
+
 /** A previous successful check of this same digest can prove its bound after erasure. */
 function priorDetachedBounds(definition: ValidDefinition, context: Reading, at: ScopeRef, before: number): Map<Digest, number> {
   const limits = new Map<Digest, number>();
-  const keep = (types: Readonly<Record<string, FieldType & { default?: FieldValue }>>, fields: Readonly<Record<string, FieldValue>> | null): void => {
-    for (const [digest, max] of fields ? detachedBounds(types, fields) : []) limits.set(digest, Math.min(limits.get(digest) ?? Number.POSITIVE_INFINITY, max));
-  };
-  if (!context.own) return limits;
-  for (let seq = 0; seq < before; seq++) {
+  if (context.own) for (let seq = 0; seq < before; seq++) {
     const entry = context.own(seq)?.entry;
     if (!entry || entry.seq !== seq || !same(entry.at, at)) continue;
-    const input = entry.input;
-    if (input?.type === "act") keep(own(definition.declared.acts, input.signed.intent.kind)?.fields ?? {}, input.signed.intent.fields);
-    else if (input?.type === "genesis" && input.decision === "applied") {
-      const fields = own(definition.declared.acts, definition.declared.genesis)!.fields;
-      keep(fields, input["founding"] ? input["founding"].intent.fields : input.source ? creationFields(input.message, input.source, fields) : null);
-    } else if (input?.type === "delivery" && "decision" in input && input.message.class === "request" && (input.decision === "applied" || (input.decision === "superseded" && input.message.type === "tell"))) {
-      const received = bound(definition, input.message, input.from);
-      if (received?.handler) keep(received.handler.fields, received.fields);
-    }
+    for (const [digest, max] of checkedTextBounds(definition, entry.input)) limits.set(digest, Math.min(limits.get(digest) ?? Number.POSITIVE_INFINITY, max));
   }
   return limits;
 }

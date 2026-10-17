@@ -1724,3 +1724,41 @@ redacted, before final note consolidation, Main recut, gate and Source
 review. A missing size must produce an explicit incomplete span rather
 than an unsupported pass or false mismatch. This checkpoint has no gate,
 Source, review, landing, push or deployment.
+
+## Refused bodies remain replayable after redaction
+
+The native receiver-pin chain now attaches and legally erases the refused
+payload in both actual scopes. Before the fix, Replay reported a mismatch
+at the original bad-field refusal: an unavailable size was treated as if it
+had passed the field check. The original size remains unknown. Replay now
+tests the possible field-comparison classes and accepts one only when the
+entire derived entry is byte-identical to the journal. It does not assign
+a size, change byte accounting, or waive derivation of effects and sends.
+The result is incomplete with reason "redacted size not retained" and the
+exact historical span, from the refusal through the entry before erasure.
+
+Earlier successful checks constrain those possibilities. Their strictly
+improving bounds are indexed by digest and journal position, queried only
+before the deciding entry, and trimmed with invalidated coverage. This
+shares Derive's existing field-phase proof helper. Bound-holder deliveries
+retain the separate unproven-binding rule; an erased size cannot establish
+which side of binding a refusal took. Recovered aliases rederive the same
+entry with actual sizes. Partial recovery leaves other gaps conditional;
+a valid-size recovery disproves a fabricated refusal and retracts its
+consumers. Arbitrary extra effects cannot be explained by an unknown size.
+
+Focused checks pass: 18 Replay tests, three native Scope tests, and the
+Derive, Scope, Replay and Platform test compilers. The native case uses
+actual journals, admission, legal redaction, eviction and HTTP Replay;
+its declarations, authority and clock are fixtures. Pure adversarial
+cases explicitly fabricate historical refusals and anchor a foreign send;
+they do not claim native admission of those impossible histories.
+
+Three isolated controls each passed their baseline and failed the intended
+assertion with one fault: disabling conditional rederivation causes the
+false native mismatch (4785, CLOSED0/40f395); ignoring the earlier bound
+accepts a fabricated refusal as incomplete (15843, CLOSED0/3e5930);
+ignoring recovered sizes falsely accepts a fabricated refusal as consistent
+(3364, CLOSED0/6eed51). Sources were restored before the next check.
+Logs use /tmp/artroom-capacity-refused-redaction-. Final note consolidation,
+Main recut, gate and exact-head Source review remain; none has run yet.

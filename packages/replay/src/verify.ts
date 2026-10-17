@@ -42,9 +42,9 @@ import type { Bounds, CapabilityName, Digest, Entry, FactRef, Grant, Head, KeyId
 import { rawRetainedJSON, domainRetainedJSON, canonicalize, intentDigest, isDigest, isEntry, isObservationUse, isPlatformDefinition, parseStrict, platformName, scopeIdOf, utf8, verifySignedIntent } from "@generalbusiness/artroom-bytes";
 import {
   AmountError, ByteUsage, capacityFull, namedDeclarations, amountMath, subtract, NOTHING, reserved, actValueDependencies, observedValueDependencies, detachedTextDependencies, outcomeValueDependencies, outcomeSnapshotDependencies, requiredDependency, textDependency, MISMATCHES, MemoryState, WINDOWS, actionOf, agrees, applyEntry, drawsOf, clockOf, contentStates, entryOf, fits, observedName, headsOf, highestHead, isFactRef, isLocalId, isObject, isScopeRef, isUnprovenDecisionBinding, judgeAct, judgeCheckpoint, judgeDelivery,
-  judgeDiagnosis, outcomeValueDomains, fixedBy, judgeGenesis, judgeGrant, judgeOutcome, judgePreparation, judgeTimed, membershipOf, nextDue, observedOf, own, ownersOf, ruleAt, same, snapshotRead, stepsOf, timeMs, updateOf, sentBy, validateDefinition, windowOf,
+  judgeDiagnosis, outcomeValueDomains, fixedBy, judgeGenesis, judgeGrant, judgeOutcome, judgePreparation, judgeTimed, membershipOf, nextDue, observedOf, own, ownersOf, ruleAt, same, snapshotRead, stepsOf, timeMs, updateOf, sentBy, validateDefinition, windowOf, checkedTextBounds,
 } from "@generalbusiness/dap-derive";
-import type { DependencyOrigin, RequiredDependency, ActJudgment, Capabilities, Clock, DrawOptions, Fetched, Judgment, Observing, Owners, PlatformRules, PreparationJudgment, RecordedRef, Retains, Rules, StateView, TimedJudgment, ValidDefinition, Window } from "@generalbusiness/dap-derive";
+import type { DependencyOrigin, RequiredDependency, ActJudgment, Capabilities, Clock, DrawOptions, Fetched, Judgment, Observing, Owners, PlatformRules, PreparationJudgment, RecordedRef, Retains, Rules, StateView, Texts, TimedJudgment, ValidDefinition, Window } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES, evaluateRules } from "@generalbusiness/dap-derive/rule";
 import { PAGE_ENTRIES, PAGE_REPLY_BYTES, RETAINED_REPLY_BYTES, hashOfBytes, type HistorySource, type Stored } from "./source.ts";
 import { IdentityEvidence, type IdentityFrame, type ReceiverIdentityCode } from "./identity.ts";
@@ -389,6 +389,9 @@ const sameScope = (a: ScopeRef, b: ScopeRef): boolean => a.scope === b.scope && 
 const named = (ref: ScopeRef): string => `${ref.scope} (incarnation ${ref.inc})`;
 
 class Verifier {
+  /** Prefix field-check evidence, not sizes. Strictly improving bounds
+   * make historical queries logarithmic without rescanning each prefix. */
+  readonly #textBounds = new Map<ScopeId, Map<Digest, { seq: number; max: number }[]>>();
   readonly #source: HistorySource;
   readonly #mode: Report["mode"];
   readonly #target: ScopeId;
@@ -521,6 +524,10 @@ class Verifier {
     }
     for (const [id, run] of this.#runs) {
       run.sealed.length = Math.min(run.sealed.length, cut.get(id)!);
+      for (const [digest, limits] of this.#textBounds.get(id) ?? []) {
+        while (limits.length > 0 && limits.at(-1)!.seq >= run.sealed.length) limits.pop();
+        if (limits.length === 0) this.#textBounds.get(id)!.delete(digest);
+      }
       run.redactions.clear();
       for (const { entry } of run.sealed) for (const effect of entry.effects) if (effect.effect === "redact") for (const digest of effect.texts) run.redactions.set(digest, entry.seq);
     }
@@ -537,6 +544,17 @@ class Verifier {
     // an alias. Older optional births retain their presence ambiguity: an
     // alias proves content, never that the body came beside that birth.
     return !!run.definition?.declared.capacity || !(birth?.type === "genesis" && birth.founding !== null && birth.decision === "refused" && run.unknownByteTexts.get(digest) === 0);
+  }
+
+  #textBound(run: Run, digest: Digest, before: number): number {
+    const limits = this.#textBounds.get(run.id)?.get(digest) ?? [];
+    let low = 0, high = limits.length;
+    while (low < high) {
+      const middle = Math.floor((low + high) / 2);
+      if (limits[middle]!.seq < before) low = middle + 1;
+      else high = middle;
+    }
+    return limits[low - 1]?.max ?? Number.POSITIVE_INFINITY;
   }
 
   /** Recover earlier byte comparisons without walking reservations again. */
@@ -907,6 +925,15 @@ class Verifier {
       } finally { this.#checking.pop(); }
     }
     run.sealed.push({ entry, hash });
+    if (run.definition?.declared.capacity) {
+      const known = this.#textBounds.get(run.id) ?? new Map<Digest, { seq: number; max: number }[]>();
+      for (const [digest, max] of checkedTextBounds(run.definition, entry.input)) {
+        const limits = known.get(digest) ?? [];
+        if (max < (limits.at(-1)?.max ?? Number.POSITIVE_INFINITY)) limits.push({ seq: entry.seq, max });
+        known.set(digest, limits);
+      }
+      if (known.size > 0) this.#textBounds.set(run.id, known);
+    }
     if (run.revised && entry.input.type === "act" && entry.input.signed.intent.kind === run.revised.kind) run.revised.at.push(entry.seq);
   }
 
@@ -1547,14 +1574,45 @@ class Verifier {
     const copyOf = (fact: FactRef | null) => facts.find((f) => f.fact.hash === fact?.hash) ?? null;
     const sealed = (seq: unknown): Entry | null => (isLocalId(seq) ? (run.sealed[seq]?.entry ?? null) : null);
     let judged: ActJudgment | Judgment | TimedJudgment | PreparationJudgment;
-    let judgeText: ((view: StateView, texts: (digest: Digest) => number | null | undefined) => ActJudgment | Judgment) | null = null;
+    let judgeText: ((view: StateView, texts: Texts) => ActJudgment | Judgment) | null = null;
+    const unknown = [...texts].filter(([, size]) => size === null).map(([digest]) => digest);
+    const refusedField = input.type === "genesis" ? input.decision === "refused" : input.type === "delivery" && "decision" in input && input.decision === "refused" && input.reason?.code === "bad-field" && input.reason.name === undefined;
+    const tell = input.type === "delivery" && input.message.class === "request" && input.message.type === "tell" ? input.message : null;
+    const messageName = tell && isObject(tell.body) ? tell.body["message"] : null;
+    const sourceKind = input.type === "delivery" ? input.from.at.kind : null;
+    const fieldBound = tell && Object.values(definition.declared.receives).some(handler => handler.class === "tell" && handler.message === messageName && handler.from.kind === sourceKind && "bound" in handler);
+    const conditionalRefusal = !!definition.declared.capacity && refusedField && unknown.length > 0 && !fieldBound;
+    const withTextGaps = (view: StateView, judge: NonNullable<typeof judgeText>, lookup: Texts): ActJudgment | Judgment => {
+      if (!conditionalRefusal) return judge(view, lookup);
+      const limits = new Map<Digest, Set<number>>();
+      const measured: Texts = digest => lookup(digest);
+      measured.redactedOver = (digest, max) => { const seen = limits.get(digest) ?? new Set<number>(); seen.add(max); limits.set(digest, seen); return false; };
+      let initial: ActJudgment | Judgment | undefined, failure: unknown;
+      try { initial = judge(view, measured); } catch (error) { failure = error; }
+      const matches = (result: ActJudgment | Judgment) => result.result === "write" && canonicalize(entryOf(view, result.draft, clock)) === bytes;
+      if (initial && matches(initial)) return initial;
+      // The missing size may explain the recorded refusal. Test only its
+      // comparison classes; never invent a number or put one in byte
+      // accounting. Earlier successful checks exclude impossible classes.
+      for (const [digest, maxima] of limits) for (const max of maxima) {
+        if (this.#textBound(run, digest, entry.seq) <= max) continue;
+        const conditional: Texts = named => lookup(named);
+        conditional.redactedOver = (named, bound) => named === digest && bound <= max;
+        try {
+          const candidate = judge(view, conditional);
+          if (matches(candidate)) return candidate;
+        } catch { /* a different unknown comparison may explain the refusal */ }
+      }
+      if (!initial) throw failure;
+      return initial;
+    };
     switch (input.type) {
       case "genesis": {
         this.#trusts.add("minted");
         if (input["founding"]) {
           const asked = { name: run.id, inc: input.inc, seed: input.seed, creation: input["founding"] };
           judgeText = (view, texts) => judgeGenesis(view, definition, asked, { ...reading, texts, source: null });
-          judged = judgeText(state, reading.texts);
+          judged = withTextGaps(state, judgeText, reading.texts);
         }
         else {
           if (!input.source || input.n === null || !input.message) throw mismatch("a genesis has a signed creation intent or a request from its creator");
@@ -1562,7 +1620,7 @@ class Verifier {
           const source = copyOf(input.source);
           const asked = { name: run.id, inc: input.inc, to: input.seed, from: input.source, n: input.n, message: input.message };
           judgeText = (view, texts) => judgeGenesis(view, definition, asked, { ...reading, texts, source: source && { entry: source.entry, under: source.under } });
-          judged = judgeText(state, reading.texts);
+          judged = withTextGaps(state, judgeText, reading.texts);
         }
         break;
       }
@@ -1600,7 +1658,7 @@ class Verifier {
         if (actRows) values.push(...actRows.values);
         const actContext = { ...reading, presented: input.presented, grants: input.authority.map((grant) => ({ grant, current: true })), membership: fixedIn(run, input), ...(input.observed ? { observed: input.observed } : {}), ...(values.length > 0 ? { values } : {}), ...(actRows ? { observed: actRows.observed, observing: actRows.observing } : {}) };
         judgeText = (view, texts) => judgeAct(view, definition, input.signed, { ...actContext, texts });
-        judged = judgeText(state, reading.texts);
+        judged = withTextGaps(state, judgeText, reading.texts);
         if (actRows) await this.#byRows(run, entry, judged, actRows.observed, where, depth);
         break;
       case "delivery": {
@@ -1632,7 +1690,7 @@ class Verifier {
         const delivered = { to, from: input.from, n: input.n, message: input.message };
         const deliveryContext = { ...reading, source: { entry: source.entry, under: source.under }, origin, ...(further ? { observed: further } : {}), ...(clauseRows ?? {}) };
         judgeText = (view, texts) => judgeDelivery(view, definition, delivered, { ...deliveryContext, texts });
-        judged = judgeText(state, reading.texts);
+        judged = withTextGaps(state, judgeText, reading.texts);
         if (clauseRows) await this.#byRows(run, entry, judged, clauseRows.observed, where, depth);
         break;
       }
@@ -1726,7 +1784,6 @@ class Verifier {
       if (canonicalize(derived[part]) !== canonicalize(entry[part])) throw mismatch(`the recorded ${part} are not the ones derived again`);
     }
     if (canonicalize(derived) !== bytes) throw mismatch("the recorded entry is not the one derived again");
-    const unknown = [...texts].filter(([, size]) => size === null).map(([digest]) => digest);
     if (definition.declared.capacity && judgeText && unknown.length > 0) {
       const again = judgeText;
       run.textJudgments.set(entry.seq, { digests: unknown, again: view => {
@@ -1734,7 +1791,7 @@ class Verifier {
           if (texts.get(digest) !== null || !this.#recoverableText(run, digest)) return reading.texts(digest);
           return this.#knownTexts.get(digest)!.size ?? undefined;
         };
-        const judgment = again(view, recovered);
+        const judgment = withTextGaps(view, again, recovered);
         return judgment.result === "write" && canonicalize(entryOf(view, judgment.draft, clock)) === bytes;
       } });
     }

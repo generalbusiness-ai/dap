@@ -33,11 +33,16 @@ test("native receiver pins fund item and request transfers at full scope ceiling
   data.receives["license"]!.opens = "job";
   data.acts["finish"] = { ...data.acts["touch"]!, on: "job", guards: [{ state: ["pending"] }], settles: { of: "on", in: ["pending"] }, effects: [{ state: "done" }], sends: [request] };
   data.acts["ballast"] = { ...data.acts["touch"]!, step: "open", on: "ballast", sends: [request] };
+  const bodySlot = { fixed: false, required: false, of: { type: "text" as const, detached: true as const, max: PIN_BOUNDS.textBytes } };
+  data.items["intent"]!.values["body"] = bodySlot;
+  data.acts["attach"] = { ...data.acts["touch"]!, fields: { body: { ...bodySlot.of, required: true } }, guards: [{ state: ["open"] }], effects: [{ value: { slot: "body", from: { field: "body" } } }] };
+  data.acts["erase"] = { ...data.acts["touch"]!, guards: [{ state: ["open"] }], effects: [{ state: "closed" }, { redact: { slot: "body" } }] };
   const under = valid(validateDefinition(data, PIN_BOUNDS));
   const senderData = receiverPinData();
   delete senderData.capacity;
   senderData.name = "pin-sender"; senderData.capabilities = []; senderData.receives = {};
   senderData.items["intent"]!.refs["peer"] = { fixed: false, required: false, to: { type: "scope", kind: "directory" } };
+  senderData.items["intent"]!.values["body"] = bodySlot;
   senderData.acts = { file: senderData.acts["file"]!, connect: {
     ...senderData.acts["touch"]!, fields: { peer: { type: "scope", kind: "directory", required: true } }, effects: [{ ref: { slot: "peer", from: { field: "peer" } } }],
   }, send: {
@@ -45,8 +50,9 @@ test("native receiver pins fund item and request transfers at full scope ceiling
     // a detached field. The receiver judges that text as a body; it need
     // not have the same field type as the source's digest.
     ...senderData.acts["touch"]!, fields: { target: { type: "fact", kind: ["file"], under: data.name, required: true }, k: { type: "int", min: 1, max: 3, required: true }, body: { type: "digest", required: false }, kept: { type: "text", detached: true, max: PIN_BOUNDS.textBytes, required: false } },
+    guards: [{ state: ["open"] }], effects: [{ value: { slot: "body", from: { field: "kept" } } }],
     sends: [{ tell: { to: { slot: "peer" }, message: "export-license", fields: { export: { field: "target" }, k: { field: "k" }, body: { field: "body" } }, result: {} } }],
-  } };
+  }, erase: { ...senderData.acts["touch"]!, guards: [{ state: ["open"] }], effects: [{ state: "closed" }, { redact: { slot: "body" } }] } };
   const senderUnder = valid(validateDefinition(senderData, PIN_BOUNDS));
   const peers = new Map<string, ValidDefinition>();
   const wire = (name: string, definition: ValidDefinition, receiver = false) => {
@@ -182,5 +188,26 @@ test("native receiver pins fund item and request transfers at full scope ceiling
     } });
     const replayed = await verify(source, { mode: "replay", scope: receiver.name, grants: "as-recorded", capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE, bounds: receiver.c.bounds, platform: named => named === "platform:task@1" ? { data: childData, rules: {} } : null });
     expect([replayed.report.result, replayed.why], JSON.stringify(replayed.report)).toEqual(["consistent", null]);
+
+    // Remove the actual payload from both scopes through legal slot
+    // aliases. No retained size survives. A fresh replay must describe
+    // that evidence gap, rather than infer that the refused body was valid.
+    receiver.c.bounds = { ...receiver.c.bounds, scopeEntries: 18 };
+    await receiver.restart();
+    const attached = await receiver.stub.submit(receiver.intent(rita, "attach", { on: 0, expected: { on: 1 }, fields: { body: digest } }), receiver.grants(), { texts: [body] });
+    expect(attached.answer).toBe("accepted");
+    const erased = await receiver.did(rita, "erase", { on: 0, expected: { on: 2 } });
+    await sender.did(rita, "erase", { on: 0, expected: { on: 3 } });
+    expect((await inspect()).text).toBeNull();
+    await receiver.restart(); await sender.restart();
+    const fresh = httpSource("https://scope.test", { reader, fetch: async (url, init) => {
+      const response = await route(new Request(url, init), env.SCOPES);
+      return { status: response.status, body: response.body };
+    } });
+    expect((await fresh.retained(receiver.name, "text", digest, { bytes: 6 * PIN_BOUNDS.textBytes + 2 })).ok).toBe(false);
+    expect((await fresh.retained(sender.name, "text", digest, { bytes: 6 * PIN_BOUNDS.textBytes + 2 })).ok).toBe(false);
+    const redacted = await verify(fresh, { mode: "replay", scope: receiver.name, grants: "as-recorded", capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE, bounds: receiver.c.bounds, platform: named => named === "platform:task@1" ? { data: childData, rules: {} } : null });
+    expect([redacted.report.result, redacted.why], JSON.stringify(redacted.report)).toEqual(["incomplete", "redacted size not retained"]);
+    expect(redacted.report.incompleteBytes).toEqual([{ scope: receiver.at, from: refused.answer.fact.seq, through: erased.fact.seq - 1, reason: "redacted size not retained" }]);
   } finally { for (const name of peers.keys()) wired.delete(name); }
 });
