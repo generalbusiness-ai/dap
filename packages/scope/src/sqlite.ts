@@ -304,6 +304,8 @@ export class SqliteStore implements Store {
   // item are read by the item, from the index `operation_for`.
   holder(item: number): Held | null { return this.#folded<Holder>("holder", String(item))?.held ?? null; }
   holders(): readonly Holder[] { return this.#all("SELECT value FROM folded WHERE kind = 'holder'").map((row) => json<Holder>(row["value"])).sort((a, b) => a.item - b.item); }
+  holderSettled(item: number): boolean { return this.#folded<boolean>("capacity-holder", String(item)) === true; }
+  settleHolder(item: number): void { this.#fold("capacity-holder", String(item), true); }
   itemDuties(item?: number): readonly ItemDuty[] {
     if (item !== undefined) return this.#folded<readonly ItemDuty[]>("capacity-item", String(item)) ?? [];
     return this.#all("SELECT value FROM folded WHERE kind = 'capacity-item'").flatMap(row => json<readonly ItemDuty[]>(row["value"])).sort((a, b) => a.item - b.item || byteOrder(canonicalize([a.kind, a.slot]), canonicalize([b.kind, b.slot])));
@@ -346,6 +348,7 @@ export class SqliteStore implements Store {
       else if (row["kind"] === "holder") { const holder = json<Holder>(row["value"]); memory.putHolder(holder.item, holder.held); }
       else if (row["kind"] === "account") memory.putAccount(json<Account>(row["value"]));
       else if (row["kind"] === "capacity-item") memory.putItemDuties(Number(row["key"]), json(row["value"]));
+      else if (row["kind"] === "capacity-holder") memory.settleHolder(Number(row["key"]));
       // The count of a declared index is derived state: a checkpoint holds no row of it.
       else if (row["kind"] === "keyed") continue;
       else memory.putTexts(...json<[number, string, Digest[]]>(row["value"]));

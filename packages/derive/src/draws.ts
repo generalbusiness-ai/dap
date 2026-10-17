@@ -214,6 +214,9 @@ export function released(view: StateView, definition: ValidDefinition, item: num
   const r = definition.reserving;
   if (!held || !of || !r) return held;
   if (!own(own(definition.declared.items, of.type)?.states, of.state)?.final) return held;
+  // Opt-in room is released by the holder's actual final settlement. An
+  // ordinary final-looking change cannot make its admitted counts vanish.
+  if (definition.declared.capacity?.name === "whole-scope" && !view.holderSettled(item)) return held;
   const open = view.operationsFor(item).filter((operation) => !operationSettled(operation));
   const pending = view.accountsOf(item).some((account) => {
     const request = view.request(account.seq, account.n);

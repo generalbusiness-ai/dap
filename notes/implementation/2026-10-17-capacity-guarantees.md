@@ -526,3 +526,59 @@ byte-checkpoint passes and controls retain their original coverage; they
 are not proof of this corrected identity. Scope and Replay test compilers
 pass. Full five-axis runtime/replay admission and its final gate remain
 unfinished; no Source review or landing has been requested.
+
+## Final holder release and relationship-copy audit
+
+An opted-in final holder now keeps its remaining counts until the fold
+identifies that holder's own final state settlement. A marker settlement
+releases its marker task; it does not release the holder pool even when
+the same entry makes the item final. The existing release calculation
+still preserves kinds reachable by unsettled operations or pending
+account requests. Genuine draws continue to reduce their real counts.
+No floor or second reservation calculator was introduced.
+
+The fold records a derived settled-holder fact, rebuilt from the journal
+and retained in SQLite/checkpoints and historical Replay Views. The
+optional snapshot member is absent for old cohorts. It is bookkeeping,
+not a new logical record, retained input or admission dimension. A holder
+with no reachable state settlement can retain room forever, as the owner
+decision permits; final state alone cannot discard admitted room.
+
+The focused in-memory witness distinguishes ordinary final state, a
+genuine marker settlement that also makes the item final, and the
+holder's actual state settlement. After a late outcome, the first two
+keep their remaining holder counts; the last releases them. The callbacks,
+platform data, sender entries and authority are explicitly made-up Works
+fixtures. Four final-holder cases pass, and the related holds file gives
+39 passing cases together before the marker extension. The strengthened
+four-case file also passes. A focused control removes the opt-in release
+guard: its baseline passes and the intended count assertion fails with
+null instead of the retained operations/requests (83268, CLOSED0/15b636).
+Source is restored.
+
+The strengthened historical-view witness passes and agrees with a fresh
+fold at each queried earlier head, including before and after settlement.
+A separate raw-bookkeeping probe on real SQLite passes atomic rollback,
+checkpoint projection, exclusion from logical key/byte totals, and actual
+Durable Object eviction (47655, CLOSED0/a7e07e). It deliberately writes
+bookkeeping directly, so it does not claim a native judged holder
+settlement. Derive, Scope and Replay test compilers pass. No gate ran.
+
+The relationship-copy audit found that the existing write path already
+identifies its actual settler. Only an applied relate handler writes the
+copy; its own pending-state exit sets settlesCopy. Refusal and supersession
+write no relationship effect. RuleEffect excludes relation, so ordinary
+item/platform effects cannot change that copy. The count remains keyed
+by owner scope/incarnation, name and item. An additional persistent copy
+ledger would duplicate those facts and was removed before checkpointing.
+The existing full-budget job/copy witness now runs under both legacy and
+whole-scope definitions; both pass through real in-memory judgments and
+folds. Its scope initialization and authority remain fixture stand-ins,
+and this is still the existing entry-budget admission, not five-axis proof.
+An initial edit command used the wrong working directory; that resulting
+report selected no cases and is not evidence. The corrected report runs
+and passes both selected cases.
+
+Complete producer/owner Amounts, all five transactional admission axes,
+historical incomplete byte spans, the full runtime/replay boundary
+witnesses, final gate and independent Source review remain unfinished.

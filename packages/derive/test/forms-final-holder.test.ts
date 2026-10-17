@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import type { Entry } from "@generalbusiness/dap-contract";
 import { entryHash } from "@generalbusiness/artroom-bytes";
-import { FoldError, applyEntry, drawsOf, stateDigest } from "../src/index.ts";
+import { FoldError, applyEntry, drawsOf, heldReserved, stateDigest } from "../src/index.ts";
 import { on, valid } from "./fixtures.ts";
 import { OWNER, TELL, Works, changed, opened, works } from "./fixtures-holds.ts";
 
@@ -22,6 +22,42 @@ const started = () => {
   const job = s.last.seq;
   return { s, job, step: s.opened()[0]! };
 };
+
+test("opt-in holder room survives an ordinary final transition and late outcomes; only its own final settlement permits release", () => {
+  // Invariant: a final state alone never discards admitted holder room.
+  // Real in-memory judges/fold; all platform data, callbacks, source
+  // entries and authority are the explicitly made-up Works fixture.
+  const under = valid(changed(works, data => {
+    data.capacity = { name: "whole-scope", version: 1 };
+    data.acts.settle = structuredClone(data.acts.finish);
+    data.acts.settle.settles = { of: "on", in: ["open"] };
+    data.items.job.values.mark = { fixed: false, required: true, of: { type: "bool" }, default: false };
+    data.acts["mark-final"] = structuredClone(data.acts.finish);
+    data.acts["mark-final"].settles = { of: "on", sets: "mark", in: ["open"] };
+    data.acts["mark-final"].effects.unshift({ value: { slot: "mark", from: { const: true } } });
+  }));
+  const run = (kind: string) => {
+    const s = new Works(under);
+    s.script.begin = ({ resolved }) => opened(0, "step", 1, resolved.self);
+    expect(s.start()).toBe("written");
+    const job = s.last.seq, step = s.opened()[0]!;
+    const before = s.state.holder(job);
+    expect(s.does(kind, on(s, job))).toBe("written");
+    expect(s.item(job).state).toBe("done");
+    expect(s.state.holder(job)).toEqual(before); // open work still reaches these kinds
+    expect(s.outcome(step, 1, "confirmed")).toBe("written");
+    expect(s.replay().all()).toEqual(s.state.all());
+    return { s, job, before };
+  };
+  const ordinary = run("finish"), marked = run("mark-final"), settled = run("settle");
+  expect(ordinary.s.state.holder(ordinary.job)).toEqual(ordinary.before);
+  expect(ordinary.s.state.holderSettled(ordinary.job)).toBe(false);
+  expect(heldReserved(ordinary.s.state, under).entries).toBeGreaterThan(0);
+  expect([marked.s.state.holderSettled(marked.job), marked.s.state.holder(marked.job)]).toEqual([false, marked.before]);
+  expect(settled.s.state.holder(settled.job)).toBeNull();
+  expect(settled.s.state.holderSettled(settled.job)).toBe(true);
+  expect(heldReserved(settled.s.state, under)).toEqual({ entries: 0, items: 0, records: 0, bytes: 0, requests: 0 });
+});
 
 test("a no-account result clause cannot draw a retained positive count from a final holder: nothing is written, the result stays offered, and the fold rejects the same draw", () => {
   const { s, job, step } = started();

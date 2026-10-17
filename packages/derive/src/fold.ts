@@ -24,7 +24,7 @@ import { isLocalId, isObject, isScopeRef, own, same } from "./values.ts";
 import type { ValidDefinition } from "./validate/index.ts";
 import { checkStandingEntry, StandingError } from "./standing.ts";
 import { updateItemDuties } from "./item-duties.ts";
-import { itemSettlementBinding } from "./handlers.ts";
+import { itemSettledBy, itemSettlementBinding } from "./handlers.ts";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 
 /** An entry that this state cannot take: out of sequence, or with an effect on nothing. */
@@ -163,6 +163,12 @@ export function applyEntry(writer: StateWriter, definition: ValidDefinition, ent
     // Section 6.3: an existing item that one entry changes rises by one, once, however many effects touch it.
     writer.putItem(was ? { ...item, revision: was.revision + 1 } : item);
     updateItemDuties(writer, definition, entry, was, writer.item(id)!, itemSettlement);
+    if (definition.declared.capacity?.name === "whole-scope" && was && writer.holder(id) !== null
+      && own(own(definition.declared.items, item.type)?.states, item.state)?.final) {
+      // A marker or deadline settles its own task. The holder's remaining
+      // pool is released only by its identified final state settlement.
+      if (itemSettlement?.item === id && !("sets" in itemSettlement.form) && itemSettledBy(itemSettlement.form, was, item)) writer.settleHolder(id);
+    }
     // Section 17.2a, "An index that an item type declares": the rows of an item are written in the transaction of the entry that
     // opens it, with the item, and by no later entry: an indexed slot is fixed. A type that declares no index has none.
     if (!was) for (const row of indexRows(definition, item, entry.at)) writer.putIndexed(item.type, row.slot, row.key, item.id);

@@ -450,12 +450,13 @@ describe("room to settle (section 17.2)", () => {
     expect(rows).toEqual([[4, 7], [6, 5], [7, 4], [8, 3], [9, 2], [10, 1], [11, 0]]);
   });
 
-  test("a pending job at a full budget (the first witness of section 17.4, in entries): its first answer is written from what the job reserved, also after its deadline and with the request it sends; an answer that leaves it pending, a second answer and every other new work are refused; a copy that awaits its settlement is the same", () => {
+  test.each(["legacy", "whole-scope"] as const)("%s: a pending job and relationship copy spend their reserved entries at a full budget; non-settling work is refused", cohort => {
     // X15: a job is `requested` with a deadline, which times it out. `check` declares that it settles a job in the listed states.
     // It answers `ok` or not, and tells the job's desk. The `closes` handler declares that it settles a copy that is `set`. A
     // `note` is a comment: one entry, and no task. As in X12, the clause of another request, of `ask`, can start a deadline.
     const form = { also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [] };
     const jobs = (listed: string[]) => variant(ticket, (d) => {
+      if (cohort === "whole-scope") d.capacity = { name: "whole-scope", version: 1 };
       pausing(d);
       d.acts.ask.sends[0].tell.result = { applied: [{ state: "asked" }] };
       d.items.job = {

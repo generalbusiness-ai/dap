@@ -68,6 +68,7 @@ test("historical item duties contain only their head's admitted tasks, preserve 
   // made-up platform data and test authority. No native scope or host.
   const declared = structuredClone(data);
   declared.capacity = { name: "whole-scope", version: 1 };
+  declared.items["row"]!.holds = { requests: 1 };
   declared.acts["finish"]!.settles = { of: "on", in: ["live"] };
   declared.acts["discard"] = structuredClone(data.acts["finish"]!);
   const definition = valid(validateDefinition(declared, PROPOSED_BOUNDS, undefined, { platform: true }));
@@ -79,6 +80,7 @@ test("historical item duties contain only their head's admitted tasks, preserve 
   const view = new View();
   for (const { entry, hash } of history.entries) view.fold(definition, entry, hash, history.foldOptions);
   expect(view.itemDuties().map(duty => duty.item)).toEqual([second]);
+  expect([view.holderSettled(first), view.holder(first), view.holderSettled(second), view.holder(second)]).toEqual([true, null, false, { requests: 1 }]);
   for (const seq of [1, 3, 2, 4, 0, 1]) expect(view.at(seq).state.all()).toEqual(history.replay(seq + 1).all());
 });
 

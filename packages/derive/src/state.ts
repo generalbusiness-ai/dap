@@ -203,6 +203,8 @@ export interface StateSnapshot {
   accounts?: readonly Account[];
   /** Opt-in admitted item duties. Older cohorts never add this member. */
   itemDuties?: readonly ItemDuty[];
+  /** Opt-in holders whose own final settlement was folded, in item order. */
+  settledHolders?: readonly number[];
 }
 
 /** The digest a checkpoint entry carries: SHA-256 of the snapshot's canonical JSON. */
@@ -211,6 +213,7 @@ export function stateDigest(snapshot: StateSnapshot): Digest {
 }
 
 export interface StateView {
+  holderSettled(item: number): boolean;
   itemDuties(item?: number): readonly ItemDuty[];
   /** Null before the genesis entry. */
   scope(): ScopeState | null;
@@ -309,6 +312,7 @@ export interface StateView {
 
 /** The changes an entry makes. Only the fold calls these. */
 export interface StateWriter extends StateView {
+  settleHolder(item: number): void;
   putItemDuties(item: number, duties: readonly ItemDuty[]): void;
   setScope(scope: ScopeState): void;
   putItem(item: Item): void;
@@ -381,6 +385,7 @@ export class MemoryState implements StateWriter {
   readonly #observed = new Map<string, ObservedHead>();
   readonly #holders = new Map<number, Held>();
   readonly #itemDuties = new Map<number, readonly ItemDuty[]>();
+  readonly #settledHolders = new Set<number>();
   readonly #accounts = new Map<string, Account>();
   /**
    * For each observed scope ID, the incarnations of the observed heads that are held, once each, in byte order. `putObserved`
@@ -473,6 +478,8 @@ export class MemoryState implements StateWriter {
 
   holder(item: number) { return this.#holders.get(item) ?? null; }
   holders(): Holder[] { return [...this.#holders].sort(([a], [b]) => a - b).map(([item, held]) => ({ item, held })); }
+  holderSettled(item: number): boolean { return this.#settledHolders.has(item); }
+  settleHolder(item: number): void { this.#settledHolders.add(item); }
   itemDuties(item?: number): readonly ItemDuty[] {
     return item === undefined ? [...this.#itemDuties].sort(([a], [b]) => a - b).flatMap(([, duties]) => duties) : this.#itemDuties.get(item) ?? [];
   }
@@ -563,6 +570,7 @@ export class MemoryState implements StateWriter {
       ...(this.#holders.size === 0 ? {} : { holders: this.holders() }),
       ...(this.#accounts.size === 0 ? {} : { accounts: sorted(this.#accounts.values(), (a) => [a.seq, a.n]) }),
       ...(this.#itemDuties.size === 0 ? {} : { itemDuties: this.itemDuties() }),
+      ...(this.#settledHolders.size === 0 ? {} : { settledHolders: [...this.#settledHolders].sort((a, b) => a - b) }),
     };
   }
   /** The snapshot as one canonical text, to compare two states. */

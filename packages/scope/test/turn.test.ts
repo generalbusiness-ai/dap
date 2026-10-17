@@ -6,6 +6,35 @@ import { SqliteStore, Turns, Wakes, production } from "../src/index.ts";
 import { variant } from "@generalbusiness/dap-derive/testing";
 import { HOLD, at, definition, create, rita, una, vic } from "./support.ts";
 
+test("holder settlement bookkeeping survives actual eviction, rolls back atomically and counts as no logical record or retained byte", async () => {
+  // Raw derived-bookkeeping writes on real SQLite, explicitly not judged
+  // holder settlements. The pure holder witness proves when the fold writes
+  // this fact; this probe proves persistence, checkpoint projection and units.
+  const under = variant(definition.declared, d => { d.capacity = { name: "whole-scope", version: 1 }; });
+  const scope = await create({}, {}, under);
+  const written = await scope.inside(state => {
+    const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) });
+    const counts = store.keyCounts(), bytes = store.logicalBytes();
+    expect(store.all().settledHolders).toBeUndefined();
+    store.transaction(() => store.settleHolder(900));
+    const before = store.all();
+    let rolledBack = false;
+    try { store.transaction(() => { store.settleHolder(901); throw new Error("rollback holder settlement probe"); }); }
+    catch (error) { rolledBack = error instanceof Error && error.message === "rollback holder settlement probe"; }
+    return { counts, bytes, afterCounts: store.keyCounts(), afterBytes: store.logicalBytes(), before, after: store.all(), rolledBack };
+  });
+  expect(written.rolledBack).toBe(true);
+  expect(written.after).toEqual(written.before);
+  expect([written.afterCounts, written.afterBytes]).toEqual([written.counts, written.bytes]);
+  expect(written.after.settledHolders).toEqual([900]);
+  await scope.restart();
+  const reopened = await scope.inside(state => {
+    const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) });
+    return { settled: store.holderSettled(900), rolledBack: store.holderSettled(901), snapshot: store.all() };
+  });
+  expect(reopened).toEqual({ settled: true, rolledBack: false, snapshot: written.after });
+});
+
 test("opt-in report duty survives an ordinary final transition and actual object eviction; at a filled scope only its real settlement spends that room", async () => {
   // Real scope, judge, fold, SQLite and object eviction. The lane data and
   // membership/grants are the existing labelled test fixture's stand-ins.
