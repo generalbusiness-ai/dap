@@ -41,7 +41,7 @@ import { DOMAINS, PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Bounds, CapabilityName, Digest, Entry, FactRef, Grant, Head, KeyId, Observation, ObservationRequest, ObservationUse, MismatchName, PlatformData, PlatformDefinition, Report, RetainedInput, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import { rawRetainedJSON, domainRetainedJSON, canonicalize, intentDigest, isDigest, isEntry, isObservationUse, isPlatformDefinition, parseStrict, platformName, scopeIdOf, utf8, verifySignedIntent } from "@generalbusiness/artroom-bytes";
 import {
-  ByteUsage, capacityFull, creates, reserved, actValueDependencies, observedValueDependencies, detachedTextDependencies, outcomeValueDependencies, outcomeSnapshotDependencies, requiredDependency, textDependency, MISMATCHES, MemoryState, WINDOWS, actionOf, agrees, applyEntry, drawsOf, clockOf, contentStates, entryOf, fits, observedName, headsOf, highestHead, isFactRef, isLocalId, isObject, isScopeRef, isUnprovenDecisionBinding, judgeAct, judgeCheckpoint, judgeDelivery,
+  AmountError, ByteUsage, capacityFull, creates, amountMath, subtract, NOTHING, reserved, actValueDependencies, observedValueDependencies, detachedTextDependencies, outcomeValueDependencies, outcomeSnapshotDependencies, requiredDependency, textDependency, MISMATCHES, MemoryState, WINDOWS, actionOf, agrees, applyEntry, drawsOf, clockOf, contentStates, entryOf, fits, observedName, headsOf, highestHead, isFactRef, isLocalId, isObject, isScopeRef, isUnprovenDecisionBinding, judgeAct, judgeCheckpoint, judgeDelivery,
   judgeDiagnosis, outcomeValueDomains, fixedBy, judgeGenesis, judgeGrant, judgeOutcome, judgePreparation, judgeTimed, membershipOf, nextDue, observedOf, own, ownersOf, ruleAt, same, snapshotRead, stepsOf, timeMs, updateOf, sentBy, validateDefinition, windowOf,
 } from "@generalbusiness/dap-derive";
 import type { DependencyOrigin, RequiredDependency, ActJudgment, Capabilities, Clock, DrawOptions, Fetched, Judgment, Observing, Owners, PlatformRules, PreparationJudgment, RecordedRef, Retains, Rules, StateView, TimedJudgment, ValidDefinition, Window } from "@generalbusiness/dap-derive";
@@ -189,15 +189,14 @@ export interface Coded {
  * (I3 deltas, section 31). Each member is a number of steps, and a replay
  * adds to it.
  *
- * - `folds`: entries of a source scope that were folded into its view, for
- *   the values of the observations that other scopes retain of it. Each
- *   entry of a source is folded there once, so this is at most the entries
- *   of the sources that were checked.
+ * - `folds`: checked entries folded into a scope's historical view, for
+ *   observations or for a recovered text's earlier judgment. Each entry
+ *   is folded there once, so this is at most the entries that were checked.
  * - `values`: values that the definition of a source scope answered from a
  *   state of its view. One for each distinct source scope, incarnation,
  *   head, definition and subject that a replayed entry names.
- * - `states`: states of a source that were built from its view's log, for
- *   a head before the one that the view was folded through.
+ * - `states`: earlier states built from a scope's view log, for an
+ *   observation or a recovered text's judgment.
  * - `runs`: lookups of the run of a retained observation among the runs
  *   that the scope's earlier entries name. One for each retained
  *   observation that is not of the run of the entry before it.
@@ -320,10 +319,11 @@ interface Run {
   owed: Map<Digest, FactRef>;
   /** Logical retained bytes, independent of the traversal's reply allowance. */
   bytes: ByteUsage;
-  incompleteBytes: { from: number; through: number }[];
   unknownByteTexts: Map<Digest, number>;
   byteIntervals: { digest: Digest; from: number; through: number }[];
   redactions: Map<Digest, number>;
+  byteHeads: Map<number, { known: number; missing: number; pending: number }>;
+  textJudgments: Map<number, { digests: readonly Digest[]; again(view: StateView): boolean }>;
   /** Section 16.1: the latest checked entry that retains each read, by its run and its number, with the observation as that entry retains it. */
   reads: Map<string, Retains>;
   /** The runs of the retained observations: each run that an entry so far names, and the run of the latest such entry. */
@@ -409,6 +409,10 @@ class Verifier {
   readonly #coded = new Set<PlatformDefinition>();
   /** The foreign facts proven, by scope, position and hash: by replay of their source, or by an anchor. */
   readonly #proven = new Map<string, "replayed" | "anchored">();
+  /** A content proof can recover a text size across retained aliases. */
+  readonly #knownTexts = new Map<Digest, { bytes: number; size: number | null }>();
+  readonly #checking: FactRef[] = [];
+  readonly #needs = new Map<ScopeId, Map<string, { seq: number; user: FactRef }>>();
   readonly #anchored: FactRef[] = [];
   /** Each tombstone that answered for a text whose bytes are gone, with the slot that held the text. */
   readonly #redacted: Report["redacted"][number][] = [];
@@ -471,13 +475,6 @@ class Verifier {
       const last = target.sealed[target.head.seq]!;
       if (last.hash !== target.head.hash) throw new Stop("mismatch", "the head the source states is not the hash of its last entry", { at: target.at!, seq: last.entry.seq, hash: last.hash });
       await this.#settle();
-      // Continue every other check across missing historical text sizes.
-      // Only after tombstones are settled can these become redacted spans.
-      const partial = [...this.#runs.values()].find(run => run.incompleteBytes.length > 0);
-      if (partial) {
-        const seq = partial.incompleteBytes[0]!.from, sealed = partial.sealed[seq]!;
-        throw new Stop("incomplete", "redacted size not retained", { at: partial.at!, seq, hash: sealed.hash });
-      }
       // Section 16.4: a check whose walk cannot be derived gets no claim. It is said last, so that every mismatch that the history
       // shows is reported first: of the record's snapshot, and of the act that the guard `ancestry` admitted on the record.
       const unwalked = this.#unwalked[0];
@@ -486,20 +483,122 @@ class Verifier {
       if (!(error instanceof Stop)) throw error;
       stop = error;
     }
+    try { this.#recoverHistoricalBytes(); }
+    catch (error) { if (!(error instanceof Stop)) throw error; stop = error; }
+    if (!stop) {
+      const span = this.#byteSpans()[0];
+      if (span) {
+        const run = this.#runs.get(span.scope.scope)!, sealed = run.sealed[span.from]!;
+        stop = new Stop("incomplete", span.reason, { at: run.at!, seq: span.from, hash: sealed.hash });
+      }
+    }
     return this.#report(target, stop);
   }
 
-  #report(target: Run, stop: Stop | null): Verification {
-    const through = target.sealed.at(-1);
-    const at = target.at ?? target.said;
-    const covered = [target, ...[...this.#runs.values()].filter((run) => run !== target)].filter((run) => run.sealed.length > 0);
-    const proven = [...this.#proven.values()];
+  #depend(source: ScopeId, seq: number, user: FactRef): void {
+    if (source === user.at.scope) return;
+    const edges = this.#needs.get(source) ?? new Map<string, { seq: number; user: FactRef }>();
+    edges.set(`${user.at.scope}:${user.seq}:${seq}`, { seq, user });
+    this.#needs.set(source, edges);
+  }
+
+  /** Retract a disproved prefix and every checked entry that depended on it.
+   * Sorted reverse edges are consumed once as cutoffs move earlier. */
+  #invalidateCoverage(source: ScopeId, seq: number): void {
+    const cut = new Map([...this.#runs].map(([id, run]) => [id, run.sealed.length]));
+    cut.set(source, seq);
+    const reverse = new Map([...this.#needs].map(([id, edges]) => [id, { edges: [...edges.values()].sort((a, b) => b.seq - a.seq), next: 0 }]));
+    const queue = [source];
+    for (let i = 0; i < queue.length; i++) {
+      const id = queue[i]!, from = cut.get(id)!, list = reverse.get(id);
+      if (!list) continue;
+      while (list.next < list.edges.length && list.edges[list.next]!.seq >= from) {
+        const edge = list.edges[list.next++]!, user = edge.user;
+        if (user.seq >= (cut.get(user.at.scope) ?? 0)) continue;
+        cut.set(user.at.scope, user.seq);
+        queue.push(user.at.scope);
+      }
+    }
+    for (const [id, run] of this.#runs) {
+      run.sealed.length = Math.min(run.sealed.length, cut.get(id)!);
+      run.redactions.clear();
+      for (const { entry } of run.sealed) for (const effect of entry.effects) if (effect.effect === "redact") for (const digest of effect.texts) run.redactions.set(digest, entry.seq);
+    }
+    for (const [key, how] of this.#proven) {
+      const [id, position] = key.split(":", 2);
+      if (how === "replayed" && Number(position) >= (cut.get(id as ScopeId) ?? Infinity)) this.#proven.delete(key);
+    }
+  }
+
+  #recoverableText(run: Run, digest: Digest): boolean {
+    if (!this.#knownTexts.has(digest)) return false;
+    const birth = run.sealed[0]?.entry.input;
+    // A refused signed creation does not record whether a missing optional
+    // body came beside it. An alias proves content, not that birth presence.
+    return !(birth?.type === "genesis" && birth.founding !== null && birth.decision === "refused" && run.unknownByteTexts.get(digest) === 0);
+  }
+
+  /** Recover earlier byte comparisons without walking reservations again. */
+  #recoverHistoricalBytes(): void {
+    const arithmetic = amountMath(true);
+    for (const run of this.#runs.values()) {
+      let failure: { seq: number; why: string } | null = null;
+      const fail = (seq: number, why: string) => { if (seq < run.sealed.length && (failure === null || seq < failure.seq)) failure = { seq, why }; };
+      for (const [seq, judgment] of run.textJudgments) {
+        if (seq >= run.sealed.length || !judgment.digests.some(digest => this.#recoverableText(run, digest))) continue;
+        let same = false;
+        try { same = judgment.again(this.#viewAt(run, seq - 1)); } catch { /* a non-derivable recovered input is a mismatch */ }
+        if (!same) fail(seq, "a recovered text changes the recorded judgment");
+      }
+      const events = new Map<number, { add: number[]; remove: number[] }>();
+      const intervals = [...run.byteIntervals, ...[...run.unknownByteTexts].map(([digest, from]) => ({ digest, from, through: run.sealed.length - 1 }))];
+      for (const interval of intervals) {
+        const known = this.#knownTexts.get(interval.digest), through = Math.min(interval.through, run.sealed.length - 1);
+        if (!known || !this.#recoverableText(run, interval.digest) || through < interval.from) continue;
+        for (const [position, action] of [[interval.from, "add"], [through + 1, "remove"]] as const) {
+          const event = events.get(position) ?? { add: [], remove: [] };
+          event[action].push(known.bytes); events.set(position, event);
+        }
+      }
+      const positions = [...events.keys()].sort((a, b) => a - b);
+      let next = 0, extra = 0, resolved = 0;
+      let checking = 0;
+      try {
+        for (const [seq, head] of run.byteHeads) {
+          if (seq >= run.sealed.length) continue;
+          checking = seq;
+          while (next < positions.length && positions[next]! <= seq) {
+            const event = events.get(positions[next++]!)!;
+            for (const bytes of event.remove) { extra = subtract({ ...NOTHING, bytes: extra }, { ...NOTHING, bytes }).bytes; if (resolved === 0) throw new AmountError("recovered count is invalid"); resolved--; }
+            for (const bytes of event.add) { extra = arithmetic.sum({ ...NOTHING, bytes: extra }, { ...NOTHING, bytes }).bytes; resolved++; }
+          }
+          if (resolved > head.missing) throw new AmountError("recovered count is invalid");
+          const used = arithmetic.sum({ ...NOTHING, bytes: head.known }, { ...NOTHING, bytes: extra });
+          if (resolved !== head.missing) continue;
+          if (capacityFull(used, { ...NOTHING, bytes: head.pending }, this.#bounds)) fail(seq, "the entry exceeds scopeBytes: Used plus Reserved is over its ceiling");
+        }
+      } catch (error) {
+        if (!(error instanceof AmountError)) throw error;
+        fail(checking, "recovered capacity arithmetic is invalid");
+      }
+      if (failure !== null) {
+        const found = failure as { seq: number; why: string }, sealed = run.sealed[found.seq]!;
+        const at = { at: run.at!, seq: found.seq, hash: sealed.hash };
+        this.#invalidateCoverage(run.id, found.seq);
+        throw new Stop("mismatch", found.why, at);
+      }
+    }
+  }
+
+  #byteSpans(): NonNullable<Report["incompleteBytes"]> {
     // Sweep interval endpoints once, rather than copying the growing set
     // of missing digests at every head. Unproved loss dominates an overlap.
-    const incompleteBytes = [...this.#runs.values()].flatMap(run => {
+    return [...this.#runs.values()].flatMap(run => {
       const intervals = [...run.byteIntervals, ...[...run.unknownByteTexts].map(([digest, from]) => ({ digest, from, through: run.sealed.length - 1 }))];
       const events = new Map<number, [number, number]>();
-      for (const span of intervals) {
+      for (const original of intervals) {
+        if (this.#recoverableText(run, original.digest)) continue;
+        const span = { ...original, through: Math.min(original.through, run.sealed.length - 1) };
         if (span.through < span.from) continue;
         const column = (run.redactions.get(span.digest) ?? -1) > span.through ? 0 : 1;
         for (const [position, delta] of [[span.from, 1], [span.through + 1, -1]] as const) {
@@ -521,6 +620,20 @@ class Verifier {
       }
       return spans;
     });
+  }
+
+  #report(target: Run, stop: Stop | null): Verification {
+    const through = target.sealed.at(-1);
+    const at = target.at ?? target.said;
+    const covered = [target, ...[...this.#runs.values()].filter((run) => run !== target)].filter((run) => run.sealed.length > 0);
+    const proven = [...this.#proven.values()];
+    const incompleteBytes = this.#byteSpans();
+    const redacted = this.#redacted.filter(redaction => {
+      const run = this.#runs.get(redaction.tombstone.at.scope)!;
+      const entry = run.sealed[redaction.tombstone.seq]?.entry;
+      if (!entry) return false;
+      return !run.definition?.declared.capacity || entry.effects.some(effect => effect.effect === "redact" && effect.item === redaction.item && effect.slot === redaction.slot && effect.texts.some(digest => typeof this.#knownTexts.get(digest)?.size !== "number"));
+    });
     const report: Report = {
       mode: this.#mode,
       // Consistent: the head checked through. Otherwise: the head the check was aiming for.
@@ -528,8 +641,8 @@ class Verifier {
       coverage: covered.map((run) => ({ scope: run.at!, from: 0, through: run.sealed.length - 1 })),
       anchors: this.#anchored,
       dependencies: { verified: proven.filter((how) => how === "replayed").length, anchored: proven.filter((how) => how === "anchored").length, missing: stop?.missing ? [stop.missing] : [] },
-      trusts: [...(Object.keys(TRUSTS) as Trust[]).filter((trust) => this.#trusts.has(trust)).map((trust) => TRUSTS[trust]), ...[...this.#coded].sort().map(platformCode)],
-      redacted: this.#redacted,
+      trusts: [...(Object.keys(TRUSTS) as Trust[]).filter((trust) => this.#trusts.has(trust) && (trust !== "redacted" || redacted.length > 0)).map((trust) => TRUSTS[trust]), ...[...this.#coded].sort().map(platformCode)],
+      redacted,
       ...(incompleteBytes.length > 0 ? { incompleteBytes } : {}),
       result: stop ? stop.result : "consistent",
       ...(stop?.at ? { at: stop.at } : {}),
@@ -545,7 +658,7 @@ class Verifier {
     if (this.#runs.size >= this.#limits.scopes) throw new Stop("incomplete", `the limit of ${this.#limits.scopes} scopes was reached`);
     const got = await this.#page(id, 0);
     if (!got.ok) return got.reason;
-    const run: Run = { id, said: got.page.scope, head: got.page.head, at: null, named: null, definition: null, platform: null, state: new MemoryState(), sealed: [], foldInputs: new Map(), read: new Map(), next: 0, busy: false, depth: Number.POSITIVE_INFINITY, owed: new Map(), bytes: new ByteUsage(), incompleteBytes: [], unknownByteTexts: new Map(), byteIntervals: [], redactions: new Map(), reads: new Map(), runs: { seen: new Set(), last: null }, observed: undefined, viewed: null, membership: undefined, rulesScope: undefined, revised: null, snapshots: new Map() };
+    const run: Run = { id, said: got.page.scope, head: got.page.head, at: null, named: null, definition: null, platform: null, state: new MemoryState(), sealed: [], foldInputs: new Map(), read: new Map(), next: 0, busy: false, depth: Number.POSITIVE_INFINITY, owed: new Map(), bytes: new ByteUsage(), unknownByteTexts: new Map(), byteIntervals: [], redactions: new Map(), byteHeads: new Map(), textJudgments: new Map(), reads: new Map(), runs: { seen: new Set(), last: null }, observed: undefined, viewed: null, membership: undefined, rulesScope: undefined, revised: null, snapshots: new Map() };
     if (!this.#take(run, 0, got.page.entries, got.page.next)) return "the source's first page is not the entries from the genesis in order";
     this.#runs.set(id, run);
     return run;
@@ -603,11 +716,15 @@ class Verifier {
     run.unknownByteTexts.delete(digest);
   }
 
-  #retainBytes(run: Run, key: Pick<RetainedInput, "kind" | "digest" | "domain">, size: number | null, seq: number): void {
+  #retainBytes(run: Run, key: Pick<RetainedInput, "kind" | "digest" | "domain">, size: number | null, seq: number, payload?: string): void {
     const text = key.kind === "text" || key.kind === "value" && key.domain === DOMAINS.text;
     const before = text && run.bytes.unknownText(key.digest);
     run.bytes.retain(key, size);
     if (!text) return;
+    if (payload !== undefined) {
+      const value = domainRetainedJSON(DOMAINS.text, key.digest, payload, { canonical: true });
+      if (value !== undefined) this.#knownTexts.set(key.digest, { bytes: utf8(payload).length, size: typeof value === "string" ? utf8(value).length : null });
+    }
     const after = run.bytes.unknownText(key.digest);
     if (!before && after) run.unknownByteTexts.set(key.digest, seq);
     if (before && !after) this.#endUnknownBytes(run, key.digest, seq - 1);
@@ -625,7 +742,7 @@ class Verifier {
       throw new Stop("incomplete", `a retained input is missing: ${what}, ${digest} (${got.reason})`, at);
     }
     this.#count(got.bytes);
-    if (run.definition === null || run.definition.declared.capacity) this.#retainBytes(run, key, utf8(got.input.bytes).length, at.seq);
+    if (run.definition === null || run.definition.declared.capacity) this.#retainBytes(run, key, utf8(got.input.bytes).length, at.seq, got.input.bytes);
     return got.input;
   }
 
@@ -646,7 +763,7 @@ class Verifier {
     this.#count(got.bytes);
     const text = domainRetainedJSON(DOMAINS.text, digest, got.input.bytes);
     if (typeof text !== "string") return null;
-    if (run.definition?.declared.capacity) this.#retainBytes(run, key, utf8(got.input.bytes).length, origin.at.seq);
+    if (run.definition?.declared.capacity) this.#retainBytes(run, key, utf8(got.input.bytes).length, origin.at.seq, got.input.bytes);
     return utf8(text).length;
   }
 
@@ -670,12 +787,19 @@ class Verifier {
    */
   async #settle(): Promise<void> {
     const owing = () => [...this.#runs.values()].find((run) => run.owed.size > 0);
+    const recover = (run: Run) => {
+      if (!run.definition?.declared.capacity) return;
+      for (const digest of run.owed.keys()) if (this.#recoverableText(run, digest) && typeof this.#knownTexts.get(digest)?.size === "number") run.owed.delete(digest);
+    };
     for (let run = owing(); run; run = owing()) {
+      recover(run);
+      if (run.owed.size === 0) continue;
       try {
         await this.#advance(run, run.head.seq, run.depth);
       } catch (error) {
         if (!(error instanceof Gap)) throw error;
       }
+      recover(run);
       const [owed] = run.owed;
       if (owed) throw new Stop("incomplete", `a retained input is missing: the detached text ${owed[0]}, which no later entry of ${run.id} redacts`, owed[1]);
     }
@@ -695,6 +819,8 @@ class Verifier {
    * checked against that entry's bytes before its content is read.
    */
   async #advance(run: Run, through: number, depth: number, expect?: { hash: Digest; user: FactRef }): Promise<void> {
+    const user = this.#checking.at(-1);
+    if (user) this.#depend(run.id, through, user);
     run.depth = Math.min(run.depth, depth);
     if (through < run.sealed.length) return;
     // A fact names a sealed entry, so no entry can need one that is sealed after it (section 3).
@@ -767,6 +893,7 @@ class Verifier {
     if (input.type === "preparation" && !verifySignedIntent(input.signed)) throw mismatch("the preparation's signature is not its actor's over its intent");
 
     if (this.#mode === "replay") {
+      this.#checking.push(where);
       try {
         await this.#replay(run, entry, hash, stored.bytes, where, depth);
       } catch (error) {
@@ -776,7 +903,7 @@ class Verifier {
         if (isUnprovenDecisionBinding(error)) throw new Stop("incomplete", error.message, where);
         // A judge or the fold could not take the entry at all.
         throw mismatch(`the entry cannot be derived again: ${error instanceof Error ? error.message : String(error)}`);
-      }
+      } finally { this.#checking.pop(); }
     }
     run.sealed.push({ entry, hash });
     if (run.revised && entry.input.type === "act" && entry.input.signed.intent.kind === run.revised.kind) run.revised.at.push(entry.seq);
@@ -857,7 +984,10 @@ class Verifier {
     const key = `${fact.at.scope}:${fact.seq}:${fact.hash}`;
     const known = this.#proven.get(key);
     const run = this.#runs.get(fact.at.scope);
-    if (known && (known === "anchored" || (run?.at && sameScope(run.at, fact.at)))) return known;
+    if (known && (known === "anchored" || (run?.at && sameScope(run.at, fact.at)))) {
+      if (known === "replayed") this.#depend(fact.at.scope, fact.seq, user);
+      return known;
+    }
 
     if (this.#anchors.some((a) => a.scope === fact.at.scope && a.seq === fact.seq && a.hash === fact.hash)) {
       this.#proven.set(key, "anchored");
@@ -865,6 +995,7 @@ class Verifier {
       this.#trusts.add("anchors");
       return "anchored";
     }
+    this.#depend(fact.at.scope, fact.seq, user);
     if (depth >= this.#limits.depth) throw new Stop("incomplete", `the limit of ${this.#limits.depth} on the depth of foreign facts was reached`, user);
     const opened = run ?? await this.#open(fact.at.scope);
     const source = typeof opened === "string" ? null : opened;
@@ -1110,19 +1241,23 @@ class Verifier {
         this.#count(got.bytes);
         if (domainRetainedJSON(domain, digest, got.input.bytes) !== undefined) {
           matched = got.input.bytes;
-          if (run.definition?.declared.capacity) this.#retainBytes(run, key, utf8(got.input.bytes).length, where.seq);
+          if (run.definition?.declared.capacity) this.#retainBytes(run, key, utf8(got.input.bytes).length, where.seq, got.input.bytes);
         }
         if (matched !== null) break;
       }
       if (matched === null) throw new Stop("incomplete", `a retained input is missing: the value that an observation of the entry names, ${digest}`, where);
       values.push(matched);
     }
-    const state = run.state;
+    const state = run.state, previous = new Map<string, Retains | null>();
     return {
       observed, values,
       observing: {
         membership: recordedMembership(run), rules: run.rulesScope && state.scope() ? run.rulesScope(state) : null,
-        last: (use) => run.reads.get(`${use.read.run}:${use.read.n}`) ?? null,
+        last: (use) => {
+          const key = `${use.read.run}:${use.read.n}`;
+          if (!previous.has(key)) previous.set(key, run.reads.get(key) ?? null);
+          return previous.get(key)!;
+        },
         content: (named) => { const data = this.#platform?.(named)?.data; return data ? contentStates(data) : null; },
       },
     };
@@ -1401,15 +1536,22 @@ class Verifier {
     const copyOf = (fact: FactRef | null) => facts.find((f) => f.fact.hash === fact?.hash) ?? null;
     const sealed = (seq: unknown): Entry | null => (isLocalId(seq) ? (run.sealed[seq]?.entry ?? null) : null);
     let judged: ActJudgment | Judgment | TimedJudgment | PreparationJudgment;
+    let judgeText: ((view: StateView, texts: (digest: Digest) => number | null | undefined) => ActJudgment | Judgment) | null = null;
     switch (input.type) {
       case "genesis": {
         this.#trusts.add("minted");
-        if (input["founding"]) judged = judgeGenesis(state, definition, { name: run.id, inc: input.inc, seed: input.seed, creation: input["founding"] }, { ...reading, source: null });
+        if (input["founding"]) {
+          const asked = { name: run.id, inc: input.inc, seed: input.seed, creation: input["founding"] };
+          judgeText = (view, texts) => judgeGenesis(view, definition, asked, { ...reading, texts, source: null });
+          judged = judgeText(state, reading.texts);
+        }
         else {
           if (!input.source || input.n === null || !input.message) throw mismatch("a genesis has a signed creation intent or a request from its creator");
           this.#trusts.add("held");
           const source = copyOf(input.source);
-          judged = judgeGenesis(state, definition, { name: run.id, inc: input.inc, to: input.seed, from: input.source, n: input.n, message: input.message }, { ...reading, source: source && { entry: source.entry, under: source.under } });
+          const asked = { name: run.id, inc: input.inc, to: input.seed, from: input.source, n: input.n, message: input.message };
+          judgeText = (view, texts) => judgeGenesis(view, definition, asked, { ...reading, texts, source: source && { entry: source.entry, under: source.under } });
+          judged = judgeText(state, reading.texts);
         }
         break;
       }
@@ -1445,7 +1587,9 @@ class Verifier {
           values.push(kept.bytes);
         }
         if (actRows) values.push(...actRows.values);
-        judged = judgeAct(state, definition, input.signed, { ...reading, presented: input.presented, grants: input.authority.map((grant) => ({ grant, current: true })), membership: fixedIn(run, input), ...(input.observed ? { observed: input.observed } : {}), ...(values.length > 0 ? { values } : {}), ...(actRows ? { observed: actRows.observed, observing: actRows.observing } : {}) });
+        const actContext = { ...reading, presented: input.presented, grants: input.authority.map((grant) => ({ grant, current: true })), membership: fixedIn(run, input), ...(input.observed ? { observed: input.observed } : {}), ...(values.length > 0 ? { values } : {}), ...(actRows ? { observed: actRows.observed, observing: actRows.observing } : {}) };
+        judgeText = (view, texts) => judgeAct(view, definition, input.signed, { ...actContext, texts });
+        judged = judgeText(state, reading.texts);
         if (actRows) await this.#byRows(run, entry, judged, actRows.observed, where, depth);
         break;
       case "delivery": {
@@ -1474,7 +1618,10 @@ class Verifier {
         // the ten-second window of the two rows of the authority note's table stands, as a stand-in.
         if (further && !definition.observing) await this.#observed(run, entry, further, WINDOWS.once, where, depth);
         const clauseRows = definition.observing && "clause" in input ? await this.#hand(run, entry, further, where) : null;
-        judged = judgeDelivery(state, definition, { to, from: input.from, n: input.n, message: input.message }, { ...reading, source: { entry: source.entry, under: source.under }, origin, ...(further ? { observed: further } : {}), ...(clauseRows ?? {}) });
+        const delivered = { to, from: input.from, n: input.n, message: input.message };
+        const deliveryContext = { ...reading, source: { entry: source.entry, under: source.under }, origin, ...(further ? { observed: further } : {}), ...(clauseRows ?? {}) };
+        judgeText = (view, texts) => judgeDelivery(view, definition, delivered, { ...deliveryContext, texts });
+        judged = judgeText(state, reading.texts);
         if (clauseRows) await this.#byRows(run, entry, judged, clauseRows.observed, where, depth);
         break;
       }
@@ -1568,6 +1715,18 @@ class Verifier {
       if (canonicalize(derived[part]) !== canonicalize(entry[part])) throw mismatch(`the recorded ${part} are not the ones derived again`);
     }
     if (canonicalize(derived) !== bytes) throw mismatch("the recorded entry is not the one derived again");
+    const unknown = [...texts].filter(([, size]) => size === null).map(([digest]) => digest);
+    if (definition.declared.capacity && judgeText && unknown.length > 0) {
+      const again = judgeText;
+      run.textJudgments.set(entry.seq, { digests: unknown, again: view => {
+        const recovered = (digest: Digest) => {
+          if (texts.get(digest) !== null || !this.#recoverableText(run, digest)) return reading.texts(digest);
+          return this.#knownTexts.get(digest)!.size ?? undefined;
+        };
+        const judgment = again(view, recovered);
+        return judgment.result === "write" && canonicalize(entryOf(view, judgment.draft, clock)) === bytes;
+      } });
+    }
     const foldedWith: DrawOptions = { ...foldInputs, values: judged.draft.values?.map(value => value.bytes) };
     applyEntry(state, definition, entry, hash, foldedWith);
     if (definition.declared.capacity?.name === "whole-scope" || input.type === "delivery" && input.message.class === "request" || identity?.mode === "partition-v1" && facts.length > 0) run.foldInputs.set(entry.seq, foldedWith);
@@ -1579,12 +1738,11 @@ class Verifier {
       }
       const counted = run.bytes.count();
       const used = { entries: entry.seq + 1, ...state.keyCounts(), bytes: counted.complete ? counted.bytes : null };
-      const bound = capacityFull(used, reserved(state, definition, input, ownersOf(definition, run.platform, this.#owners)), bounds);
+      const pending = reserved(state, definition, input, ownersOf(definition, run.platform, this.#owners));
+      const bound = capacityFull(used, pending, bounds);
       if (bound) throw mismatch(`the entry exceeds ${bound}: Used plus Reserved is over its ceiling`);
       if (!counted.complete) {
-        const last = run.incompleteBytes.at(-1);
-        if (last?.through === entry.seq - 1) last.through = entry.seq;
-        else run.incompleteBytes.push({ from: entry.seq, through: entry.seq });
+        run.byteHeads.set(entry.seq, { known: counted.knownBytes, missing: counted.missing, pending: pending.bytes });
       }
     } else if (!fits(state, definition, bounds, input, judged.draft.settles, ownersOf(definition, run.platform, this.#owners))) throw mismatch("the taking or new-work entry exceeds the budget of used plus reserved entries");
     // Section 16.1: this entry is now the latest that retains each of its reads, in its grant and in `observed`. A preparation retains one in its grant,

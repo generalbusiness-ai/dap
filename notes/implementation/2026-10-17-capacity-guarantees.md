@@ -986,3 +986,91 @@ resolves its current size, but earlier unknown heads are still reported
 incomplete rather than retrospectively compared using that now-known
 size. That conservative report is not proof that all available historical
 bytes were checked. Resolve this before the full Source claim.
+
+### Recovering earlier byte checks from a later alias (development checkpoint)
+
+A checked canonical value in the text byte domain can establish the body
+and size of the same digest used earlier as detached text. Replay now
+keeps those size proofs across scopes. At an unknown historical head it
+records the known subtotal, missing count and the bytes of that head's
+already-derived pending Amount. Once a later alias supplies the body,
+interval endpoints add its canonical size to each affected earlier head.
+The byte comparison uses the shared checked arithmetic and capacity
+comparison. It does not traverse reservations again or assume that an
+unknown producer has size zero.
+
+A recovered size also needs the original judgment. Replay keeps the same
+pure judge closure that derived an affected genesis, act or delivery.
+It checks it at the historical state through the existing View, with the
+newly known text sizes and the original recorded inputs and evidence.
+The derived entry must still match in full. This handles oversized text,
+a non-string value under a purported text digest, and correctly recorded
+refusals. Historical observing-last lookups keep their commit-time answer;
+a later entry cannot change that captured context. View folds are shared
+with historical observation reads and are counted in Tally. The focused
+witness bounds those folds by the number of covered entries.
+
+If a recovered body proves an earlier byte overflow or a changed judgment,
+coverage is retracted from that entry. Reverse dependencies also retract
+every affected consumer prefix, including consumers of cached foreign
+proofs and transitive consumers. Replayed dependency counts drop the
+retracted facts. Explicit caller anchors remain explicit trusts. Reverse
+edges are sorted and consumed once as cutoffs move earlier. Byte-span and
+tombstone reports use the remaining verified prefixes, so an invalidated
+suffix cannot prove an earlier redaction.
+
+When all missing sizes of a historical span are recovered and its checks
+pass, that span no longer appears in incompleteBytes. If one body remains
+unknown, its byte gap and redaction trust remain. A content proof is not
+proof of optional storage presence at a directly signed refused birth;
+that case stays conservative. Planner request 2c76d80c asks for a concrete
+opt-in named-body pre-birth rule with b7fd0295's child-declaration closure.
+Both requests remain pending. No creation policy or recorded Input format
+has silently changed.
+
+Six new in-memory verifier cases pass. They use judged fixture histories
+and explicitly trusted fixture authority. They show exact recovered-byte
+equality and refusal one byte below it, invalid recovered text, coverage
+retraction through transitive and cached proofs, preservation of a child's
+correct bad-field refusal, and partial recovery that leaves another body
+incomplete. The refusal case takes its creator send on an exact caller
+anchor; it does not claim that creator's history was replayed. The negative
+text cases deliberately start with an unknown fixture size, not a body
+that any native writer is claimed to have admitted.
+
+A real two-scope witness also passes. One native scope genuinely retains
+and repeatedly writes a body, then redacts it after restarting at its
+actual Used-plus-Reserved ceiling. A second scope vouches for that earlier
+fact and later retains the matching body as a declared text-domain value.
+The resolver adapter reads the first real object's sealed entry. After
+actual eviction of both objects, HTTP reads show the original text source
+absent and the value source present. Replay recovers the earlier totals,
+accepts the exact earlier ceiling and rejects one byte below it, retracting
+the source suffix and consumer. Data, authority and the small RPC resolver
+are fixtures; storage, retention, redaction, eviction and read routes are
+real. No outside operation or provider runs.
+
+The final focused closure passes 13 Replay cases and three selected native
+cases, including the existing real-route legacy/opt-in redaction witness.
+The existing verifier/decision closure passes 58 cases. Replay and Scope
+test compilers pass. One focused control passes baseline and omits the
+cached-proof dependency; the intended assertion then catches a foreign
+consumer prefix incorrectly left covered (75223, CLOSED0/527476). Source
+is restored. No control overlapped the final native runs.
+
+Earlier failures remain separate: the first alias fixture used a name
+outside the closed platform-name union and failed before genesis. It now
+uses made-up task data under the existing task namespace with explicit
+fixture code. TypeScript caught index-signature accesses and an overly
+broad deferred-judge return type. The first native alias case expected a
+revision bump after a no-effect vouch; the native revision stays one, and
+the corrected case passes. These are not passing evidence. Reports have
+the /tmp/artroom-capacity-recovered- prefix. No gate, Source review,
+landing, capacity-code push or deployment ran.
+
+This resolves the preceding checkpoint's later-alias conservation gap for
+histories whose retention is established. Child-declaration and directly
+refused signed-birth presence still need disposition and implementation.
+Complete platform per-send clause, native owner and standing Amounts,
+pre-admission producer checks, the remaining conservation boundaries,
+final freeze/gate and independent Source review are still required.
