@@ -107,6 +107,23 @@ describe("18.54: two marks on one item, and a state settlement beside them", () 
     // The three independent duties each reserve one retained rule input,
     // including the larger a alternative. The closing checkpoint has none.
     expect(reserved(withRules.state, guarded, withRules.last.input)).toEqual({ entries: 6, bytes: 10 * unit, items: 0, records: 0, requests: 1 });
+    const withFields = valid(changed(M, (d) => {
+      d.capacity = { name: "whole-scope", version: 1 };
+      d.outcomes = {};
+      d.acts["mark-b"].fields = {
+        memo: { type: "text", max: 3, detached: true, required: false },
+        proof: { type: "fact", under: "fixture", kind: ["fact"], required: false },
+        value: { type: "digest", value: { domain: "fixture-value", max: 17 }, required: false },
+      };
+      d.acts["mark-b"].presents = { extra: { under: "fixture", kind: ["fact"], required: false } };
+    }, true));
+    const retained = new Full(withFields);
+    retained.started();
+    // Three NUL bytes occupy twenty canonical JSON bytes. The field and
+    // presented fact may each retain one foreign entry beside that text,
+    // and the value place has its own seventeen-byte canonical ceiling.
+    expect(canonicalBytes("\0\0\0").length).toBe(20);
+    expect(reserved(retained.state, withFields, retained.last.input)).toEqual({ entries: 6, bytes: 9 * unit + 37, items: 0, records: 0, requests: 1 });
     for (const far of [false, true]) {
       const scope = new Full(definition);
       const id = scope.started();

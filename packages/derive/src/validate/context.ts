@@ -61,6 +61,7 @@ export type ClauseSet = { subject: string; type: string; state?: string; slot?: 
  * except when its own copy is the task being settled, which already implies that key.
  */
 export interface PendingWork {
+  retained: import("../field-retention.ts").FieldProducers;
   path: string;
   settles: { subject: string; type: string; states: readonly string[]; slot?: string } | { copy: readonly string[]; name: string; kind: string } | null;
   opens: string | null;

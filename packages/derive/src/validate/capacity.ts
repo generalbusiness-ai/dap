@@ -15,6 +15,7 @@ import type { Markers } from "../markers.ts";
 import type { ClauseSet, Defining, PendingWork } from "./context.ts";
 import { markerCapacity } from "./markers.ts";
 import type { TimedGraph, TimedMove } from "./timed.ts";
+import { fieldRetainedBytes } from "../field-retention.ts";
 
 /** A relationship whose copies await a settlement in those states (section 17.2, row 4), and the entries each reserves. */
 export interface PendingCopy { name: string; kind: ScopeKind; states: readonly string[]; entries: number }
@@ -61,7 +62,7 @@ export function capacityOf(d: Pick<Defining, "bad" | "bounds" | "pendingWork" | 
   // at most once per distinct declared rule. Count every rule conservatively;
   // a checkpoint, timed entry or result clause evaluates no rule guard.
   const ruleInputs = d.wholeCapacity ? times(d.rules.size, { ...NOTHING, bytes: d.ruleInputBytes }) : NOTHING;
-  const entryFor = (form: PendingWork): Amount => sum(entry, ruleInputs, { ...NOTHING, items: form.opens === null ? 0 : 1, records: form.mayCreateCopy ? 1 : 0 });
+  const entryFor = (form: PendingWork): Amount => sum(entry, ruleInputs, { ...NOTHING, bytes: d.wholeCapacity ? fieldRetainedBytes(form.retained, d.bounds) : 0, items: form.opens === null ? 0 : 1, records: form.mayCreateCopy ? 1 : 0 });
   const deadline = (entries: number): Amount => times(entries, entry);
   /** A deadline's known amount in that state, with each timed entry at the entry-size stand-in. */
   const held = (type: string, state: string): Amount => deadline(graph.fromState.get(type)?.get(state) ?? 0);

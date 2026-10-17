@@ -359,6 +359,10 @@ export class Turns {
    * `applyEntry` is the only code that changes folded state.
    */
   #seal(definition: ValidDefinition, draft: Draft, clock: Reading, retain: readonly Retained[], facts?: readonly Fetched[]): Sealed {
+    // The foreign-entry term uses this scope's entry ceiling. Constrain
+    // accepted retained copies at the same boundary, including results;
+    // a peer's independently configured ceiling is not that guarantee.
+    if (definition.declared.capacity?.name === "whole-scope" && retain.some(input => input.kind === "entry" && utf8(input.bytes).length > this.#bounds.entryBytes)) throw new Unfit("size");
     const entry = entryOf(this.#store, draft, clock);
     let bytes: string;
     try {

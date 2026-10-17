@@ -6,6 +6,29 @@ import { SqliteStore, Turns, Wakes, production } from "../src/index.ts";
 import { variant } from "@generalbusiness/dap-derive/testing";
 import { HOLD, at, definition, create, rita, una, vic } from "./support.ts";
 
+test("the opt-in foreign-entry retained-writer ceiling accepts exact bytes and refuses one more without changing legacy retention", async () => {
+  // Real Turns, transaction and SQLite with hand-authored draft/retention.
+  // The JSON string payload intentionally is not a foreign sealed entry;
+  // this witnesses the size boundary, not hash or authority validation.
+  for (const whole of [false, true]) {
+    const under = whole ? variant(definition.declared, (d) => { d.capacity = { name: "whole-scope", version: 1 }; }) : definition;
+    const s = await create({}, {}, under);
+    const results = await s.inside(async (state) => {
+      const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: (work) => state.storage.transactionSync(work) });
+      const turns = new Turns(store, { clock: s.c.clock, rules: production().rules, alarm: { set: () => undefined }, capabilities: null }, s.c.bounds, () => under, () => undefined);
+      const run = async (size: number) => {
+        const bytes = canonicalize("x".repeat(size - 2)), digest = digestBytes(utf8(bytes));
+        const end = await turns.run({ asks: () => [], judge: (view) => ({ verdict: "write", retain: [{ kind: "entry", digest, bytes }], draft: { input: { type: "checkpoint", ...checkpointOf(view) }, uses: [], prepared: [], effects: [], sends: [], judgesTime: false }, sealed: () => "written", unfit: () => "unfit", full: () => "full" }) });
+        return { end, retained: store.retained("entry", digest) !== null };
+      };
+      const before = store.scope()!.head.seq;
+      const exact = await run(s.c.bounds.entryBytes), extra = await run(s.c.bounds.entryBytes + 1);
+      return { exact, extra, written: store.scope()!.head.seq - before };
+    });
+    expect(results).toEqual({ exact: { end: { end: "answer", answer: "written" }, retained: true }, extra: { end: { end: "answer", answer: whole ? "unfit" : "written" }, retained: !whole }, written: whole ? 1 : 2 });
+  }
+});
+
 test("the opt-in rule-input writer ceiling accepts exact canonical bytes and refuses one more even when evaluation returns false; legacy retention is unchanged", async () => {
   // Real Turns, rule evaluator, transaction and SQLite; asks/judge below
   // are deliberately supplied by hand. This is the retained-writer

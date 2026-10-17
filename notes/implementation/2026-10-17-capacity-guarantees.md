@@ -297,3 +297,49 @@ capabilities and an explicitly undefined optional profile member in the
 new tests; all were fixed. Scope and Derive test compilers pass. No gate,
 review or landing occurred. The other retained producers, complete task
 amounts, actual-settler release and integrated admission/replay remain owed.
+
+## Typed-field producer checkpoint
+
+The existing typed-field retention walk is shared by future settling forms
+and bound-handler reservations. It counts a possible foreign entry for
+each fact field and presented fact, capped by usesPerEntry; a handler also
+counts its mandatory source within that cap. Detached text reserves its
+canonical JSON payload, at most six times its raw UTF-8 bound plus two
+quotes. An act's declared value place reserves its canonical-byte maximum.
+Optional fields count at their maximum. Repeated inputs can use less at
+runtime through domain/digest deduplication.
+
+These terms extend entryFor in the existing task traversal and the
+holder's bound-handler amount. Legacy bound handlers use the earlier
+raw-text terms through the same field walk. No alternate task calculator
+or serialized declaration member is introduced. Observation-row values,
+named child definitions, snapshot producers and owner-specific record
+closures still need complete coverage.
+
+The foreign-entry stand-in must also hold at the writer: a peer can have
+an independently configured entry ceiling. The opt-in Turn now refuses a
+retained entry copy larger than this scope's entryBytes before appending
+anything. Thus accepted copies, including delivery/result sources, have
+the same finite ceiling that their task reserves. Legacy accepts copies
+as before. This is an enforced accepted-input bound, not an inference
+from the retained-read ceiling.
+
+The new typed-field marker fixture reserves two possible foreign copies,
+twenty canonical bytes for three NUL text bytes, and seventeen bytes for a
+value place. The initial holder/settlement run passed 49 cases; after the
+fixture's final value-place addition, binding/settlement files passed 39
+cases. A focused escape control passes before the change and fails when
+canonical text reservation is replaced with raw length, with source
+restored (45682, CLOSED0/6faeff). That control preceded the fixture's added
+seventeen-byte value place; its result is not relabelled as a later run.
+
+The native foreign-entry writer case passes (52710, CLOSED0/339f56), with
+twenty other cases unselected. Its final guard-removal control passes the
+baseline and fails the intended one-byte-over assertion (6225,
+CLOSED0/272c2a), restoring source. Both exact-limit acceptance and legacy
+retention are checked. Turns, transactions and SQLite are real; the
+drafts and retained JSON payloads are hand-authored and deliberately do
+not claim authentic foreign entries, digest validation or authority.
+Scope and Derive test compilers pass. The first new helper compiler check
+caught an untyped value-place access, which was fixed before these passes.
+No gate, Source review or landing ran. Full capacity remains unfinished.

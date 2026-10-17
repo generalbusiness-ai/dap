@@ -31,6 +31,7 @@
 // which wait for the authority note's rows). Their kinds are counted by the closure that their rules declare, as on main.
 
 import { RETAINED_INPUT_BYTES } from "@generalbusiness/dap-contract";
+import { fieldRetention, fieldRetainedBytes } from "../field-retention.ts";
 import type { FieldType, Held } from "@generalbusiness/dap-contract";
 import { NOTHING, amountMath, closure, holding, itemOf, one, requestOf, retainedBytes, starts, type Amount, type ClauseStarts, type Counting, type KindStated, type Starts, STARTS_NOTHING } from "../held.ts";
 import { markerReservations } from "../markers.ts";
@@ -326,13 +327,6 @@ export function reserving(d: Defining, top: Rec, capacity: Pick<Capacity, "pendi
   // dec(m): a bound handler opens no item directly and its sends draw on
   // q. Its written effects can start deadlines/settlements, and an effect
   // mark can open a kind that no item holds, whose whole closure is here.
-  const retention = (type: FieldType): { facts: number; texts: number } => {
-    if (type.type === "fact") return { facts: 1, texts: 0 };
-    if (type.type === "text") return { facts: 0, texts: type.detached ? Math.min(type.max, bounds.textBytes) : 0 };
-    if (type.type === "list") { const of = retention(type.of); const max = Math.min(type.max, bounds.listElements); return { facts: max * of.facts, texts: max * of.texts }; }
-    if (type.type === "record") return Object.values(type.of).map(retention).reduce((a, b) => ({ facts: a.facts + b.facts, texts: a.texts + b.texts }), { facts: 0, texts: 0 });
-    return { facts: 0, texts: 0 };
-  };
   const decisions = new Map<string, Amount[]>();
   for (const binding of d.bindings) {
     const path = binding.path.slice(0, -".bound".length);
@@ -341,15 +335,19 @@ export function reserving(d: Defining, top: Rec, capacity: Pick<Capacity, "pendi
     const written = own(capacity.pendingWorkAmounts.decisions, path) ?? NOTHING;
     // The derived-effect ceiling stands in for the records a handler can
     // change, as entryBytes stands in for the whole static entry size.
-    let amount: Amount | null = sum({ ...NOTHING, entries: 1, records: bounds.derivedEffects, bytes: 2 * bounds.entryBytes }, written);
+    const producer = d.pendingWork.find(form => form.path === path)!.retained;
+    const retained = d.wholeCapacity ? sum({ ...NOTHING, bytes: fieldRetainedBytes(producer, bounds) }, { ...NOTHING, bytes: d.rules.size * d.ruleInputBytes }).bytes : bounds.entryBytes;
+    let amount: Amount | null = sum({ ...NOTHING, entries: 1, records: bounds.derivedEffects, bytes: bounds.entryBytes }, { ...NOTHING, bytes: retained }, written);
     for (const [i, effect] of (Array.isArray(handler["effects"]) ? handler["effects"] : []).entries()) {
       if (!marked(effect)) continue;
       const more = starts(c, mostOf(effect, at(at(path, "effects"), i)), { item: false });
       amount = amount && more ? sum(amount, more) : null;
     }
     if (!amount) { bad("reserve-unbounded", binding.path, "a bound handler's mark lists a kind with no finite closure"); continue; }
-    const retains = Object.values(isObject(handler["fields"]) ? handler["fields"] : {}).map((field) => retention(field as FieldType)).reduce((a, b) => ({ facts: a.facts + b.facts, texts: a.texts + b.texts }), { facts: 0, texts: 0 });
-    amount = sum(amount, { ...NOTHING, bytes: Math.min(retains.facts, Math.max(0, bounds.usesPerEntry - 1)) * bounds.entryBytes + retains.texts });
+    if (!d.wholeCapacity) {
+      const retains = fieldRetention(Object.values(isObject(handler["fields"]) ? handler["fields"] : {}) as FieldType[], bounds);
+      amount = sum(amount, { ...NOTHING, bytes: Math.min(retains.facts, Math.max(0, bounds.usesPerEntry - 1)) * bounds.entryBytes + retains.texts });
+    }
     decisions.set(binding.message, [...(decisions.get(binding.message) ?? []), amount]);
   }
   if (d.problems.length > 0) return undefined;
