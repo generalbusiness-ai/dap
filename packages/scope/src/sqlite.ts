@@ -161,6 +161,15 @@ export class SqliteStore implements Store {
   // ---------------------------------------------------------------- the view (derive's StateView)
 
   scope(): ScopeState | null { return orNull<ScopeState>(this.#one("SELECT v FROM meta WHERE k = 'scope'")?.["v"]); }
+  /** Derive logical key counts from the stored rows; final states and transport ACKs do not erase keys. */
+  keyCounts() {
+    const row = this.#one(`SELECT
+      (SELECT COUNT(*) FROM item) AS items,
+      (SELECT COUNT(*) FROM record) + (SELECT COUNT(*) FROM folded WHERE kind = 'relation') AS records,
+      (SELECT COUNT(*) FROM outbox WHERE request IS NOT NULL AND result IS NULL
+        AND (diagnosis IS NULL OR json_extract(diagnosis, '$.finding') <> 'undelivered')) AS requests`)!;
+    return { items: row["items"] as number, records: row["records"] as number, requests: row["requests"] as number };
+  }
   item(id: number): Item | null { return orNull<Item>(this.#one("SELECT record FROM item WHERE id = ?", id)?.["record"]); }
   /** Internal Site proof reads check allocation before materializing JSON. */
   itemBytes(id: number): number | null {

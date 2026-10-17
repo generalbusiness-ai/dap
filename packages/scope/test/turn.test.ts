@@ -1,9 +1,52 @@
 import { describe, expect, test, vi } from "vitest";
 import { PROPOSED_BOUNDS, type Receipt } from "@generalbusiness/dap-contract";
+import { canonicalize } from "@generalbusiness/artroom-bytes";
 import { MemoryState, applyEntry, checkpointOf, stateDigest, timeMs } from "@generalbusiness/dap-derive";
 import { SqliteStore, Turns, Wakes, production } from "../src/index.ts";
 import { variant } from "@generalbusiness/dap-derive/testing";
 import { HOLD, at, definition, create, rita, una, vic } from "./support.ts";
+
+test("logical key counts in real SQLite retain final keys, ignore transport ACKs, survive reopening and roll back with their writes", async () => {
+  const s = await create();
+  const counts = await s.inside(async (state) => {
+    // Raw storage-boundary writes, deliberately not judged or sealed acts.
+    // This witnesses SQL units/rollback only, not authority or capacity admission.
+    const open = () => new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: (work) => state.storage.transactionSync(work) });
+    const store = open(), before = store.keyCounts(), scope = store.scope()!;
+    const item = { ...store.all().items[0]!, id: 900, type: "count-probe", state: "open" };
+    const record = { capability: "hold@1" as const, kind: "count-probe", key: ["one"], state: "live", values: {}, seq: 900 };
+    const relation = { owner: scope.at, name: "count-probe", item: 900, state: "live", revision: 900 };
+    store.transaction(() => { store.putItem(item); store.putRecord(record); store.putRelation(relation); });
+    const inserted = store.keyCounts();
+    store.transaction(() => {
+      store.putItem({ ...item, state: "final" });
+      store.putRecord({ ...record, state: "final" });
+      store.putRelation({ ...relation, state: "final" });
+    });
+    const replaced = store.keyCounts();
+    state.storage.sql.exec("INSERT INTO outbox (seq,n,target,class,message,next,request) VALUES (?,0,?,'request',?,0,'tell')", 900, canonicalize(scope.at), canonicalize({ class: "request", type: "tell", body: { message: "count-probe", fields: {} } }));
+    const request = { seq: 900, n: 0, hash: scope.head.hash, type: "tell" as const, to: scope.at, result: null, diagnosis: null };
+    store.acknowledge(900, 0, [], { at: scope.at, ...scope.head });
+    const acknowledged = store.keyCounts();
+    store.putRequest({ ...request, diagnosis: { seq: 901, finding: "delivery-unavailable" } });
+    const unavailable = store.keyCounts();
+    store.putRequest({ ...request, diagnosis: { seq: 902, finding: "undelivered" } });
+    const undelivered = store.keyCounts();
+    store.putRequest({ ...request, result: { seq: 903, clause: "applied" } });
+    const answered = store.keyCounts();
+    let rolledBack = false;
+    try {
+      store.transaction(() => { store.putItem({ ...item, id: 901 }); store.putRecord({ ...record, key: ["two"] }); throw new Error("rollback count probe"); });
+    } catch (error) { rolledBack = error instanceof Error && error.message === "rollback count probe"; }
+    return { before, inserted, replaced, acknowledged, unavailable, undelivered, answered, rolledBack, afterRollback: store.keyCounts(), reopened: open().keyCounts() };
+  });
+  const retained = { ...counts.before, items: counts.before.items + 1, records: counts.before.records + 2 };
+  const pending = { ...retained, requests: retained.requests + 1 };
+  expect([counts.inserted, counts.replaced]).toEqual([retained, retained]);
+  expect([counts.acknowledged, counts.unavailable]).toEqual([pending, pending]);
+  expect([counts.undelivered, counts.answered, counts.afterRollback, counts.reopened]).toEqual([retained, retained, retained, retained]);
+  expect(counts.rolledBack).toBe(true);
+});
 
 describe("the head check (section 5.2, steps 4 to 6)", () => {
   test("a second act commits while the first is in preparation; the first starts again from step 3 and is prepared and judged on the new head", async () => {

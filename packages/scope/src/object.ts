@@ -179,7 +179,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     const readers = wiring.readers?.(made);
     // The outside port reads the current record when it sends, outside any commit. A facade gives it only state reads, not the store.
     const outsideState: StateView = {
-      scope: () => store.scope(), item: (...args) => store.item(...args), count: (...args) => store.count(...args), page: (...args) => store.page(...args),
+      scope: () => store.scope(), keyCounts: () => store.keyCounts(), item: (...args) => store.item(...args), count: (...args) => store.count(...args), page: (...args) => store.page(...args),
       relation: (...args) => store.relation(...args), copies: (...args) => store.copies(...args), accepted: (...args) => store.accepted(...args),
       request: (...args) => store.request(...args), decided: (...args) => store.decided(...args), creation: (...args) => store.creation(...args),
       operation: (...args) => store.operation(...args), texts: (...args) => store.texts(...args), prepared: (...args) => store.prepared(...args),

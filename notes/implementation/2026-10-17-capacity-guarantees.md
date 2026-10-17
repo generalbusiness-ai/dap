@@ -2,7 +2,7 @@
 
 Work in progress under request `b4062d8c`, promise `d3e026bd`, and full
 capacity root `113a54bd`. This branch starts from Main `2637e6bb`, tree
-`c7e7188b`. It is not ready for review or landing: configuration parsing and the shared Amount traversal
+`c7e7188b`. It is not ready for review or landing: configuration parsing, the shared Amount traversal and logical key reads
 are present, but runtime admission and replay still use the old entry-only
 check. No whole-scope capacity guarantee is established by this checkpoint.
 
@@ -143,3 +143,44 @@ be nonnegative safe integers and refuses negative zero. Runtime usage,
 first-key counts, transaction rollback, historical bytes and persistent
 duty identity are still the next implementation work. No gate or Source
 review is claimed for this checkpoint.
+
+
+## Logical key-count checkpoint
+
+`StateView.keyCounts()` now reads items, records and pending requests.
+Memory uses the item/record/relation maps and a derived pending-request
+key set. SQLite counts the retained rows: every item key, every capability
+record plus relationship-copy key, and outgoing requests with neither a
+result nor an undelivered diagnosis. Replacing a key or making its state
+final does not add or remove that key. A transport acknowledgment does
+not remove the request's unit. The outside-state facade forwards the same
+read without exposing writes. No counter is added to checkpoint bytes.
+
+The memory boundary file passed two cases, including replacements, final
+keys, delivery-unavailable, undelivered, late result and rebuilding from
+retained rows. A new raw storage-boundary case also passed in the real
+Durable Object's SQLite runtime: one selected case, with the file's other
+17 cases deliberately unselected. It checks the same units, the actual
+Store acknowledgment method, transaction rollback and reopening a
+SqliteStore over the same storage. Its initial run is owner 88301,
+CLOSED0/chunk9c43e3. It uses raw test rows, not judged or sealed acts; it
+does not establish native authority, capacity admission or an actual
+Durable Object eviction/restart. Those witnesses remain owed.
+
+A focused native control changes only the item query to omit final keys.
+The baseline passes; the changed query fails the intended retained-key
+assertion (expected two items, received one). The control restores source
+and reports DISTINGUISHES (owner 93500, CLOSED0/ef55c2). No whole suite or
+mutation sweep ran. The Scope test compiler passes after forwarding the
+new read through its facade. The first compiler attempt lacked the
+package-local Workers types; an owned copy of the existing dependencies
+resolved that, without an installation. It then identified the missing
+facade method, which was added before the passing compiler run.
+
+SQLite derives these values on demand, without a persisted Used cache.
+This checkpoint makes no constant-time or physical-storage cost claim.
+Canonical byte-domain accounting, complete reservation producers, duty
+identity/release, multi-dimensional post-fold admission, named refusals,
+replay and actual lifecycle/legacy witnesses are still unfinished. This
+branch remains unready for Source review or landing; its gate is still
+owed once at the final implementation freeze.

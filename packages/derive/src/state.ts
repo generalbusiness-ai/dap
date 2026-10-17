@@ -153,6 +153,9 @@ export interface ObservedHead { of: Pick<ScopeRef, "scope" | "inc">; subject: st
 /** Which records of one kind a read asks for: those in one of `states`, and those whose value `member` equals `value`. Absent: every one. */
 export interface RecordsWhere { states?: readonly string[]; member?: string; value?: unknown }
 
+/** Logical first-key counts, independent of item/record state and transport bookkeeping. */
+export interface KeyCounts { items: number; records: number; requests: number }
+
 /** Items in ascending ID order. `more`: the page stopped at its limit and at least one further item follows. */
 export interface Page { items: readonly Item[]; more: boolean }
 
@@ -207,6 +210,7 @@ export function stateDigest(snapshot: StateSnapshot): Digest {
 export interface StateView {
   /** Null before the genesis entry. */
   scope(): ScopeState | null;
+  keyCounts(): KeyCounts;
   item(id: number): Item | null;
   /** The exact number of items of that type in that state, live or retained final (section 6.5). */
   count(type: string, state: string): number;
@@ -362,6 +366,7 @@ export class MemoryState implements StateWriter {
   readonly #relations = new Map<string, Relation>();
   readonly #accepted = new Map<string, readonly [KeyId, string, Accepted]>();
   readonly #requests = new Map<string, OwnRequest>();
+  readonly #pendingRequests = new Set<string>();
   readonly #decided = new Map<string, Decided>();
   readonly #creations = new Map<Digest, HeldCreation>();
   readonly #operations = new Map<OperationId, Operation>();
@@ -397,6 +402,7 @@ export class MemoryState implements StateWriter {
   constructor(tally?: { steps: number }) { this.tally = tally; }
 
   scope() { return this.#scope; }
+  keyCounts(): KeyCounts { return { items: this.#items.size, records: this.#relations.size + this.#records.size, requests: this.#pendingRequests.size }; }
   item(id: number) { return this.#items.get(id) ?? null; }
   count(type: string, state: string) { return this.#counts.get(key(type, state))?.[2] ?? 0; }
   page(type: string, states: readonly string[], after: number | null, limit: number): Page {
@@ -498,7 +504,12 @@ export class MemoryState implements StateWriter {
     this.#relations.set(at, r);
   }
   putAccepted(actor: KeyId, idempotencyKey: string, accepted: Accepted) { this.#accepted.set(key(actor, idempotencyKey), [actor, idempotencyKey, accepted]); }
-  putRequest(r: OwnRequest) { this.#requests.set(key(r.seq, r.n), r); }
+  putRequest(r: OwnRequest) {
+    const at = key(r.seq, r.n);
+    this.#requests.set(at, r);
+    if (r.result === null && r.diagnosis?.finding !== "undelivered") this.#pendingRequests.add(at);
+    else this.#pendingRequests.delete(at);
+  }
   putDecided(from: FactRef, n: number, by: number) { this.#decided.set(key(from.at.scope, from.at.inc, from.seq, n), { from: { scope: from.at.scope, inc: from.at.inc }, seq: from.seq, hash: from.hash, n, by }); }
   putCreation(seed: Digest, held: HeldCreation) { this.#creations.set(seed, held); }
   putOperation(operation: Operation) { this.#operations.set(operation.id, operation); }
