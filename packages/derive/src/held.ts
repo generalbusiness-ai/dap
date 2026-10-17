@@ -46,7 +46,7 @@ export class AmountError extends Error {}
 export function naturalAmount(amount: Amount): Amount {
   for (const dimension of DIMENSIONS) {
     const n = amount[dimension];
-    if (!Number.isSafeInteger(n) || n < 0 || Object.is(n, -0)) throw new AmountError(`reserved ${dimension} operand is invalid`);
+    if (!Number.isSafeInteger(n) || n < 0 || Object.is(n, -0)) throw new AmountError(`capacity ${dimension} operand is invalid`);
   }
   return amount;
 }

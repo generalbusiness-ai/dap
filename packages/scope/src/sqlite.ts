@@ -14,8 +14,9 @@
  */
 
 import type { CapabilityName, Digest, Entry, FactRef, FieldValue, Held, Incarnation, KeyId, OperationId, ScopeId, ScopeKind, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isScopeRef, parseStrict } from "@generalbusiness/artroom-bytes";
-import { isObject, MemoryState, byteOrder, operationId, operationStanding, pendingOf, slotOf, timeMs } from "@generalbusiness/dap-derive";
+import { DOMAINS } from "@generalbusiness/dap-contract";
+import { RETAINED_BYTE_DOMAINS, canonicalize, isDigest, isScopeRef, parseStrict } from "@generalbusiness/artroom-bytes";
+import { AmountError, NOTHING, naturalAmount, isObject, MemoryState, byteOrder, operationId, operationStanding, pendingOf, slotOf, timeMs } from "@generalbusiness/dap-derive";
 import type { Accepted, Account, Decided, HeldCreation, Holder, Item, ObservedHead, Operation, Outstanding, OwnRequest, Page, PreparedStep, RangeIndex, RecordState, RecordsWhere, Relation, ScopeState, StateSnapshot } from "@generalbusiness/dap-derive";
 import type { Dispatched, OutboxItem, OperationStatus, Outgoing, Retained, Sending, Store, Stored } from "./store.ts";
 import { ARCHIVE_PIN_KEY, archivePinBytes } from "./archive-pin.ts";
@@ -169,6 +170,24 @@ export class SqliteStore implements Store {
       (SELECT COUNT(*) FROM outbox WHERE request IS NOT NULL AND result IS NULL
         AND (diagnosis IS NULL OR json_extract(diagnosis, '$.finding') <> 'undelivered')) AS requests`)!;
     return { items: row["items"] as number, records: row["records"] as number, requests: row["requests"] as number };
+  }
+  logicalBytes(): number {
+    const kinds = Object.entries(RETAINED_BYTE_DOMAINS);
+    const cases = kinds.map(() => "WHEN ? THEN ?").join(" ");
+    const row = this.#one(`WITH sources(domain,digest,size) AS (
+      SELECT ?,hash,octet_length(bytes) FROM entry
+      UNION ALL SELECT CASE kind ${cases} ELSE NULL END,digest,octet_length(bytes) FROM retained_input
+      UNION ALL SELECT domain,digest,octet_length(bytes) FROM retained_value
+    ), counted AS (
+      SELECT domain,digest,MAX(size) AS size,COUNT(DISTINCT size)>1 AS conflict FROM sources GROUP BY domain,digest
+    ) SELECT COALESCE(SUM(size),0) AS bytes,COALESCE(MAX(conflict),0) AS conflict,
+      (SELECT COUNT(*) FROM retained_input WHERE kind NOT IN (${kinds.map(() => "?").join(",")}))
+      + (SELECT COUNT(*) FROM retained_value WHERE domain='') AS invalid FROM counted`,
+    DOMAINS.entry, ...kinds.flatMap(([kind, domain]) => [kind, domain]), ...kinds.map(([kind]) => kind))!;
+    if (row["invalid"] !== 0 || row["conflict"] !== 0) throw new AmountError("stored retained-byte identity is inconsistent");
+    const bytes = row["bytes"] as number;
+    naturalAmount({ ...NOTHING, bytes });
+    return bytes;
   }
   item(id: number): Item | null { return orNull<Item>(this.#one("SELECT record FROM item WHERE id = ?", id)?.["record"]); }
   /** Internal Site proof reads check allocation before materializing JSON. */

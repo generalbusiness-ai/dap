@@ -184,3 +184,47 @@ identity/release, multi-dimensional post-fold admission, named refusals,
 replay and actual lifecycle/legacy witnesses are still unfinished. This
 branch remains unready for Source review or landing; its gate is still
 owed once at the final implementation freeze.
+
+## Logical byte-count checkpoint
+
+`retainedByteDomain` states the native identity of each retained kind.
+Definition, entry, text and snapshot use their hashing domains; a rule
+input uses raw SHA-256, represented internally by null. A value states its
+own domain. This accounting identity changes no transport or storage key.
+
+`ByteUsage` counts a journal and retained inputs once per domain and digest,
+across their physical sources. A text redaction removes that source from
+then onward; an independently retained copy remains counted. An unknown
+historical text size produces an explicit incomplete result, with a known
+subtotal and missing count instead of a complete byte total. A checked copy
+can supply that size. This is bookkeeping, not payload or authority
+validation; replay integration and incomplete-span reporting remain owed.
+Invalid operands, inconsistent known sizes and unsafe totals leave the
+existing account unchanged.
+
+`SqliteStore.logicalBytes` derives the current total from actual UTF-8
+journal and retained payload lengths, grouped across the three physical
+tables. It excludes indexes and folded records and does not trust the
+journal's size cache. Unknown retained kinds, empty value domains and
+conflicting sizes for one identity refuse the read. No Used cache is
+persisted and no physical-cost claim follows from this query.
+
+Three pure bookkeeping cases pass. The new native SQLite case passes with
+18 other cases unselected (owner 48423, CLOSED0/bdadb4). It checks the
+fixture's exact journal-plus-definition baseline; duplicate journal,
+retained-entry and value sources; eight-byte Unicode text and a
+seventeen-byte rule input; redaction; rollback; conflict refusal; and
+reopening a Store over the same storage. These are raw storage writes,
+not judged acts, actual eviction/restart or capacity admission. The
+conflict catch accepts only AmountError. The initial run (61946, CLOSED1)
+failed because its expected baseline omitted the definition that genesis
+retains. That failure remains separate from the corrected passing run.
+
+A focused native control replaces UTF-8 byte length with character length
+for retained inputs. Its baseline passes and its changed source fails the
+Unicode assertion (7613/7626 instead of 7617/7634); the source is restored
+(owner 16115, CLOSED0/f6f794). Bytes, Derive and Scope compiler checks pass,
+including the final Scope test compiler after correcting the witness.
+No whole suite or gate ran. Complete producer reservations, persistent duty
+release, transactional admission, named refusals and integrated replay
+remain unfinished; this branch is not ready for review or landing.

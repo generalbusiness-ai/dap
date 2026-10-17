@@ -1,10 +1,62 @@
 import { describe, expect, test, vi } from "vitest";
-import { PROPOSED_BOUNDS, type Receipt } from "@generalbusiness/dap-contract";
-import { canonicalize } from "@generalbusiness/artroom-bytes";
-import { MemoryState, applyEntry, checkpointOf, stateDigest, timeMs } from "@generalbusiness/dap-derive";
+import { DOMAINS, PROPOSED_BOUNDS, type Receipt } from "@generalbusiness/dap-contract";
+import { canonicalize, digestBytes, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
+import { AmountError, MemoryState, applyEntry, checkpointOf, stateDigest, timeMs } from "@generalbusiness/dap-derive";
 import { SqliteStore, Turns, Wakes, production } from "../src/index.ts";
 import { variant } from "@generalbusiness/dap-derive/testing";
 import { HOLD, at, definition, create, rita, una, vic } from "./support.ts";
+
+test("logical bytes in real SQLite count UTF-8 payloads once across journal and retained domains, redact texts, and roll back retention", async () => {
+  const s = await create();
+  const sizes = await s.inside(async (state) => {
+    // Raw storage-boundary writes. No payload here is offered as a judged
+    // act, producer reservation, privacy admission or publication witness.
+    const open = () => new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: (work) => state.storage.transactionSync(work) });
+    const store = open(), journal = store.storedFrom(0, 100), first = journal[0]!;
+    // This fixture's genesis also retains its pinned definition. No rule
+    // runs on genesis, and no foreign fact or detached text is supplied.
+    const initialBytes = journal.reduce((n, row) => n + utf8(row.bytes).length, 0) + utf8(canonicalize(definition.declared)).length;
+    const before = store.logicalBytes();
+    // The recorded size is a cache; the retained byte check reads actual
+    // payload lengths, and excludes all folded-state/bookkeeping bytes.
+    state.storage.sql.exec("UPDATE entry SET size=1");
+    store.putRecord({ capability: "hold@1", kind: "byte-probe", key: ["large-metadata"], state: "live", values: { ignored: "x".repeat(1024) }, seq: 900 });
+    const afterMetadata = store.logicalBytes();
+    store.retain({ kind: "entry", digest: first.hash, bytes: first.bytes, under: "fixture" });
+    store.retain({ kind: "value", domain: DOMAINS.entry, digest: first.hash, bytes: first.bytes });
+    const duplicated = store.logicalBytes();
+    const text = canonicalize("é😀"), digest = textDigest("é😀");
+    store.retain({ kind: "text", digest, bytes: text });
+    store.retain({ kind: "text", digest, bytes: text });
+    const withText = store.logicalBytes();
+    const rule = canonicalize({ text: "é😀" });
+    store.retain({ kind: "rule", digest: digestBytes(utf8(rule)), bytes: rule });
+    const withRule = store.logicalBytes();
+    store.forget("text", digest);
+    const redacted = store.logicalBytes();
+    let rolledBack = false;
+    try {
+      store.transaction(() => { store.retain({ kind: "text", digest: textDigest("q"), bytes: canonicalize("q") }); throw new Error("rollback byte probe"); });
+    } catch (error) { rolledBack = error instanceof Error && error.message === "rollback byte probe"; }
+    const afterRollback = store.logicalBytes();
+    let rejectedConflict = false;
+    try {
+      store.transaction(() => {
+        state.storage.sql.exec("UPDATE retained_value SET bytes=bytes || ' ' WHERE domain=? AND digest=?", DOMAINS.entry, first.hash);
+        store.logicalBytes();
+      });
+    } catch (error) {
+      if (!(error instanceof AmountError)) throw error;
+      rejectedConflict = true;
+    }
+    return { initialBytes, before, afterMetadata, duplicated, withText, withRule, redacted, rolledBack, afterRollback, rejectedConflict, afterConflict: store.logicalBytes(), reopened: open().logicalBytes() };
+  });
+  expect([sizes.before, sizes.afterMetadata, sizes.duplicated]).toEqual(Array(3).fill(sizes.initialBytes));
+  // JSON string é😀 is 8 UTF-8 bytes; the rule's JSON record is 17.
+  expect([sizes.withText, sizes.withRule]).toEqual([sizes.initialBytes + 8, sizes.initialBytes + 25]);
+  expect([sizes.redacted, sizes.afterRollback, sizes.afterConflict, sizes.reopened]).toEqual(Array(4).fill(sizes.initialBytes + 17));
+  expect([sizes.rolledBack, sizes.rejectedConflict]).toEqual([true, true]);
+});
 
 test("logical key counts in real SQLite retain final keys, ignore transport ACKs, survive reopening and roll back with their writes", async () => {
   const s = await create();
