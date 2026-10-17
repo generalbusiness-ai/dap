@@ -1,12 +1,13 @@
 # Compact journey cards in the AI app
 
-Design revision in progress, 17 October 2026. Request `a9551a6d`, guidance
+Design revision for review, 17 October 2026. Request `a9551a6d`, guidance
 `5eeea1be`, clarification `f89c614b`, promise `3710cde8`; base Main
 `95959b92`. This packet revises
 the presentation in the [landed journey design](2026-10-17-journey-views-design.md).
 Its facts and distinctions still apply. The examples are fictional. This
-checkpoint contains concepts and an interaction specification; rendered
-HTML examples, browser evidence and independent review remain due.
+packet contains concepts, 56 static states in two themes, an interaction
+specification and browser evidence. Checker review and planner read are
+still required. Runtime resources and the kit remain future work.
 
 The card shows one thing that needs the person. Clicking its title opens
 its detail in full screen. An act advances the card in place and records
@@ -220,23 +221,75 @@ The added failed-check example, Change 23, is also synthetic. It uses
 `test/storage.test.ts`; its two failures remove approval from that screen.
 This identifier is a design fixture, not a local Git object.
 
-## Concepts and remaining evidence
+## Static examples and browser evidence
 
 The [concept directory](2026-10-17-compact-cards-design/concepts/) contains
 the primary carousel, opened question, failed/unknown changes, full
 updates and diff/receipt examples. They establish the visual direction;
-the static HTML examples must carry the exact fixture data above. The
+the [light examples](2026-10-17-compact-cards-design/examples/index-light.html)
+and [dark examples](2026-10-17-compact-cards-design/examples/index-dark.html)
+carry the fixture data above. The
 initial carousel pagination and some initially generated actor/event
 facts were corrected before retaining the concepts. Rejected drafts are
 not part of this packet.
 
-Before design review, produce light and dark HTML examples at 560 px chat
-width and 390 px phone width, plus a 320 px layout check. Cover each
-screen in the control table and the requested work/decision sequence.
-Inspect focus, 200% text enlargement, full hashes, unavailable and stale
-states, long titles, absent data, exact update ranges and all Back links.
-Compare concept and browser images directly. Show tall→short and
-short→tall content measurements without claiming an actual host test.
+The initial queue has five items whose fixture states can coexist.
+The two work offers appear in a later two-item queue, after the separate
+decision and conditions revision. The concept's illustrative `1 / 7`
+therefore becomes `1 / 5`; the shape and layout stay the same. Approval
+advances the question to its decision state rather than jumping past that
+decision into later work. The exact Change 12 interdiff remains separate
+from Change 18's two-line empty-list diff.
+
+Clarification `f89c614b` also changes two concept details: an ordinary act
+updates the card and context without adding a chat message, and detail
+uses full screen with Back. Structural spacing and typography use host
+tokens with local fallback values. The retained images precede these
+changes; the HTML examples are the current specification.
+
+The flow checked is carousel → title → detail → Back → same position,
+then approval → receipt → refreshed question → decision → clamped next
+item → exact-version Diff → nested Back. Other checks cover unknown
+publication recovery, failed-check draft identity, complete update ranges,
+receipt-context retry, and disabled stale or unauthorized acts.
+
+The Browser plugin was not available. Existing Playwright 1.63.0 and an
+isolated headless Chrome checked 112 pages at viewport widths 592, 390
+and 320: 336 combinations. The first width gives the chat surface 560 px
+after its outer insets. Page identities match, content is present, links
+resolve, console errors are absent, and there is no horizontal overflow
+or control below the 44 px target. The dedicated card root measures
+204 px for the initial carousel, 364 px for phone question detail, and
+259 px for its receipt. The return to the carousel measures 204 px again.
+
+Five detail/receipt states fit at 200% text. A focused 320 px check covers
+keyboard focus and a separately labelled long-title/controller stress
+fixture. The sampled title, summary and controller text has a minimum
+contrast ratio of 5.65:1. Its warning/error console is empty. The retry
+snapshot retains approval entry 246 and offers only a receipt update.
+
+[Browser evidence](2026-10-17-compact-cards-design/verification/browser-report.json),
+[focused accessibility evidence](2026-10-17-compact-cards-design/verification/accessibility-report.json)
+and selected screenshots are retained with the exact harnesses and file
+hashes. A later annotation marks an unavailable settlement position as
+missing; the [input continuity proof](2026-10-17-compact-cards-design/verification/input-continuity.json)
+checks that every rendered HTML, CSS and JavaScript input is unchanged.
+Model-context objects in the manifest are design data. Missing standalone
+scope positions remain explicit; they are not made-up journal evidence.
+
+These are local browser results for fictional static snapshots. The
+preview links carry a local return point and focus; full screen is a
+separate example page. They prove no host transition, live refresh,
+server-side duplicate protection, model act, signing or real receipt.
+The context and resize contract still needs the S2 test-host witness.
+
+The generator is [build.py](2026-10-17-compact-cards-design/build.py).
+This branch changes documents and their static examples only. Source and
+tests are unchanged from Main `95959b92`, tree
+`25f0f778edfb5f93863fc1acff0bb7627229af14`. The candidate tree is recorded
+in its exact-head Gitseq artifacts. Under `docs/testing.md`, no whole gate
+is repeated for this document-only revision; no inherited gate pass is
+claimed for the unresolved runtime or harness work.
 
 After capacity, the implementation slice must prove the resource and
 bridge inside a test host: app-only details, quiet navigation context,
