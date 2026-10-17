@@ -416,3 +416,28 @@ when prior duty records are discarded on each touched item (80168,
 CLOSED0/f2a8cb), with source restored. Initial compiler checks found the
 missing read-facade method and an unused import; both were fixed. Scope
 and Derive test compilers pass. No final gate or Source review has run.
+
+## Historical duty-view checkpoint
+
+The replay View now logs writes of item duties alongside its existing
+per-record history. Looking up an earlier head reconstructs the duty set
+at that head, including an empty set after a genuine settlement. An
+ordinary final transition preserves its duty in both the full fold and
+the historical view. The lookup still avoids folding the whole prefix.
+
+A new scenario first failed against the prior View: the current head had
+the correct duty, but an earlier head omitted its itemDuties member
+(865d6a CLOSED1; report duty-historical-before). Adding the missing write
+log fixes that gap. The View file then passes both cases (714c6b CLOSED0),
+including the unchanged legacy declared-index case. The new case compares
+several heads in nonsequential order against a full journal fold. It uses
+made-up platform data and test authority in memory, not a native scope,
+foreign authority read or full replay-verifier acceptance. Replay's test
+compiler passes (84fdbd CLOSED0). The original failed report remains
+separate; no control rerun or whole gate was needed for this correction.
+
+Remaining duty selector, copy/holder, producer and full admission/replay
+witnesses remain required before Source review. The reviewed journey
+design has now landed on Main92bedfda; it adds notes only, with its tree
+exactly matching reviewed911d8c16. Its original parent lifecycle is under
+planner reconciliation50babd01; the full Source child is natively landed.

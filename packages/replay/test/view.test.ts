@@ -32,6 +32,25 @@ const data: PlatformData = {
   receives: {}, timed: {}, rules: {}, outcomes: {},
 };
 
+test("historical item duties contain only their head's admitted tasks, preserve an ordinary final transition and remove a genuine settlement", () => {
+  // Real in-memory judges/fold and historical View, with this file's
+  // made-up platform data and test authority. No native scope or host.
+  const declared = structuredClone(data);
+  declared.capacity = { name: "whole-scope", version: 1 };
+  declared.acts["finish"]!.settles = { of: "on", in: ["live"] };
+  declared.acts["discard"] = structuredClone(data.acts["finish"]!);
+  const definition = valid(validateDefinition(declared, PROPOSED_BOUNDS, undefined, { platform: true }));
+  const history = created(definition, {});
+  const add = (key: string) => history.did(keys.rita, "add", { fields: { key, category: d("3") } }).seq;
+  const first = add(d("1")), second = add(d("2"));
+  history.did(keys.rita, "finish", on(history, first));
+  history.did(keys.rita, "discard", on(history, second));
+  const view = new View();
+  for (const { entry, hash } of history.entries) view.fold(definition, entry, hash, history.foldOptions);
+  expect(view.itemDuties().map(duty => duty.item)).toEqual([second]);
+  for (const seq of [1, 3, 2, 4, 0, 1]) expect(view.at(seq).state.all()).toEqual(history.replay(seq + 1).all());
+});
+
 test("historical declared indexes return exactly the live and final items of their head, in any order, and incomplete indexes answer no lookup", () => {
   // Invariant: the historical StateView has the same complete declared
   // indexes as the fold at that head, including final items and no future rows.
