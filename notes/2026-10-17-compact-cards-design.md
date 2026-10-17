@@ -1,15 +1,22 @@
 # Compact journey cards in the AI app
 
 Design revision in progress, 17 October 2026. Request `a9551a6d`, guidance
-`5eeea1be`, promise `3710cde8`; base Main `95959b92`. This packet revises
+`5eeea1be`, clarification `f89c614b`, promise `3710cde8`; base Main
+`95959b92`. This packet revises
 the presentation in the [landed journey design](2026-10-17-journey-views-design.md).
 Its facts and distinctions still apply. The examples are fictional. This
 checkpoint contains concepts and an interaction specification; rendered
 HTML examples, browser evidence and independent review remain due.
 
 The card shows one thing that needs the person. Clicking its title opens
-that thing. Reading stays inside the card. An act leaves a short receipt
-and a short chat message, after which the next card can open.
+its detail in full screen. An act advances the card in place and records
+a short receipt in model context. Chat messages accompany an explicit
+handoff to the model.
+
+The kit is generic. Its card takes an item kind, displayed revision,
+actor chip, reasons this person is needed, at most two revision-bound
+acts, a one-line model context and a useful text fallback. Needs you,
+Work, Decision and Change compose this card; the kit knows no lane types.
 
 ## A small surface with a stable return point
 
@@ -39,15 +46,10 @@ parent may remove a stale item without rewriting the history of the
 screen the person just read. Unavailable refreshes keep Back available
 and show a short unavailable state, never a fabricated empty queue.
 
-This keeps the prototype's title→detail→Back choice, as requested, despite
-the inline-navigation restriction reported in its research. Expanding
-details beneath the slide would keep the queue visible, but would also
-keep its controls beside an unrelated detail and grow the frame. Moving
-every short question into full screen would preserve a single inline
-surface, but add a host transition to a small reading task. Replacing
-the card's content gives short details one return point; full screen is
-reserved for the records that need its space. This is a deliberate design
-choice, with actual host acceptance still owed by the implementation.
+The inline card remains a summary. Title→detail→Back uses the host's
+full-screen transition, as clarification `f89c614b` requires. Back closes
+full screen and restores the refreshed summary and its return point.
+Actual host acceptance remains owed by the implementation.
 
 ## Screens and their controls
 
@@ -86,14 +88,15 @@ refuses a changed target in one line, for example **Out of date: question
 text is now v2.** It never approves the new version by substituting it.
 The same protection applies to an older mounted copy in chat.
 
-On acceptance, replace the acts with a one-line receipt, for example
-**Approved question q7 text v2 · entry 246**. Send one short message to
-chat, **✓ Approved question q7 text v2.** The model can acknowledge briefly
-and open the next carousel card. It does not restate the question or its
-alternatives. Keep the receipt visible while the next card loads. An act
-failure keeps its subject open and sends no success message.
+On acceptance, advance the card in place and record a one-line receipt,
+for example **Approved question q7 text v2 · entry 246**, through
+`ui/update-model-context`. Keep that receipt visible while the next card
+loads. Send `ui/message` only when the person explicitly hands off to the
+model; an ordinary act starts no chat turn. An act failure keeps its
+subject open and emits no success receipt. Free text goes to the host's
+composer rather than an input field inside the card.
 
-If the act succeeded but posting the chat message failed, preserve its
+If the act succeeded but reporting its model context failed, preserve its
 receipt and record identity. Recovery retries the notification, not the
 act. Opening the next card supersedes older instances for writes. Their
 receipts remain readable; their old actions remain unavailable. The kit
@@ -101,19 +104,23 @@ must prove that a duplicate click or notification cannot repeat a write.
 
 ## Data for the view and context for the model
 
-The model-visible opening result contains only an opaque view handle,
-item identity, screen kind and counts. The view obtains titles, bodies,
+Every view tool returns useful text for a host without views. The
+model-visible opening result contains item identity, revision, screen
+kind and counts, plus that short fallback. The view obtains titles, bodies,
 diffs, actors and histories through a tool callable only by the app. Do
 not depend on a host keeping the initial `structuredContent` or `_meta`
 private or delivering either intact to the view.
 
-Navigation updates context quietly with the screen kind, opaque subject
-identity, position, and available navigation. It starts no chat reply.
+Navigation updates context quietly through `ui/update-model-context` with
+the item, exact displayed revision, entry positions read, who it waits on,
+what settles it, and available navigation. It starts no chat reply.
 It includes no title, body, diff, actor details or full update history.
 For example: **Question q7, text v2 is open. Back is available.** An act
 receipt can disclose its short outcome and exact subject/version; it does
 not disclose the card's body. Tool descriptions state what tools expose
 and do. They do not instruct the model to answer in a particular style.
+The S2 witness must show that a subsequent model act binds to the same
+revision named by the card's current context.
 
 The prototype is a behavior reference. Its `tellModel` includes titles;
 the card kit must use the narrower context above. Its receipt view lacks
@@ -137,9 +144,8 @@ one line on a slide; its full meaning is available when the item opens.
 Do not shrink type or controls to force long content into those targets.
 Receipt copy remains one short sentence, allowed to wrap on a phone.
 
-A full record or long diff opens in full screen before it would overflow
-the inline host's available content height. The updates detail likewise
-uses full screen when all entries do not fit. The slide stays compact.
+A full record, question detail, diff or updates detail opens in full
+screen. The inline slide stays compact.
 Full screen uses the host's content surface and safe-area insets with
 one outer scroll area. Its Back returns to the same item and restores the
 inline height. A host that refuses full screen gets a readable unavailable
@@ -158,12 +164,14 @@ with white text; dark links use `#5FA880`. Muted text is `#6B6A5F` or
 `#A3A295`. Validate contrast in the rendered examples rather than assuming
 a host theme's tokens satisfy it.
 
-System fonts avoid external font loads. Use 13, 15 and 18 px, regular and
-semibold, with monospace for hashes, versions, ranges and code. Keep a
-16 px content inset, fine separators, 6 px corners and 44 px controls.
-Use the existing clipped lower-right corner on primary acts. Avoid a
+Use host style variables for typography, spacing, borders and corners;
+load no custom fonts. The initial concepts' 13, 15 and 18 px sizes are
+fallback references, not overrides of the host's type scale. Monospace
+distinguishes hashes, versions, ranges and code. Keep 44 px targets.
+Brand colour is an accent only. Avoid a
 second panel inside an item. Chat supplies the narration, so headings,
-facts and controls do not repeat a page masthead or field labels.
+facts and controls do not repeat a page masthead or field labels. Show no
+wordmark where the host already supplies the app name.
 
 People use a circle, agents a square, and checkers an outlined diamond.
 Names and role text accompany the marks. Every agent names its controller.
@@ -237,3 +245,12 @@ rejected stale acts, full-screen transitions and resize in both directions.
 The design review does not complete that runtime acceptance. No live
 room, production act, provider call, push or deployment is part of this
 checkpoint.
+
+The S2 browser rehearsal compares this in-place/context receipt flow with
+the prototype's message-per-act loop. Record which one it keeps and why;
+the current design follows clarification `f89c614b` pending that evidence.
+S0 owns the `inguz.space` sandbox domain and proxied apex/wildcard records.
+A resource's `_meta.ui.domain` identifies its `<id>.inguz.space` origin.
+The kit reads CSP from each package resource's metadata, rather than
+substituting a hard-coded empty policy; the journey's views declare none.
+The later dap web host remains outside this design and S2 kit slice.
