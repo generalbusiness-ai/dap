@@ -378,6 +378,7 @@ export class Turns {
     for (const input of retain) this.#store.retain(input);
     applyEntry(this.#store, definition, entry, hash, {
       bounds: this.#bounds, platform: this.#platform(), own: ownOf(this.#store), facts: retainedFacts(this.#store, entry).map(read => facts?.find(fact => same(fact.fact, read.fact)) ?? read), snapshot: snapshotsOf(this.#store),
+      values: draft.values?.map(value => value.bytes),
       texts: (digest) => { const kept = this.#store.retained("text", digest); if (!kept) return undefined; const text: unknown = parseStrict(kept.bytes); return typeof text === "string" ? utf8(text).length : undefined; },
     });
     // Section 6.6: a redaction removes the bytes of each text it lists from the retained inputs, in the commit that seals its tombstone.

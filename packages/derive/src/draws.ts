@@ -74,7 +74,7 @@ const heldOf = (counts: Counts): Held | null => {
 
 type Drawing = Pick<Entry, "seq" | "input" | "effects" | "sends"> & Partial<Pick<Entry, "time" | "clamped">>;
 /** Pinned rules and bounds, needed only when a binding selector is derived. */
-export interface DrawOptions extends Partial<Pick<Reading, "facts" | "own" | "texts" | "snapshot">> { bounds?: Bounds | undefined; platform?: PlatformRules | undefined }
+export interface DrawOptions extends Partial<Pick<Reading, "facts" | "own" | "texts" | "snapshot">> { bounds?: Bounds | undefined; platform?: PlatformRules | undefined; values?: readonly string[] | undefined }
 
 /** What that entry does to the counts of the holders, on the state before it; or the fault of an entry that draws past a count, or opens a held operation with no holder. */
 export function drawsOf(view: StateView, definition: ValidDefinition, entry: Drawing, options: DrawOptions = {}, binding?: { item: number; message: string } | null): Drawn | DrawFault {

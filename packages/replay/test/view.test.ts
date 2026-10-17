@@ -1,9 +1,10 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type PlatformData } from "@generalbusiness/dap-contract";
 import { canonicalize } from "@generalbusiness/artroom-bytes";
-import { validateDefinition, type StateView } from "@generalbusiness/dap-derive";
+import { checkpointOf, judgeCheckpoint, validateDefinition, type StateView } from "@generalbusiness/dap-derive";
 import { d, created, keys, on, valid } from "@generalbusiness/dap-derive/testing";
 import { View } from "../src/view.ts";
+import { MemorySource, verify } from "../src/index.ts";
 
 // Made-up platform data, with no marked rules. The fixture's test authority
 // stands in for membership. Its genesis and acts are judged in memory;
@@ -31,6 +32,36 @@ const data: PlatformData = {
   },
   receives: {}, timed: {}, rules: {}, outcomes: {},
 };
+
+test("replay derives an opt-in alias settlement's duty and accepts the checkpoint covering its remaining ordinary-final duty", async () => {
+  // A declared made-up scope with real in-memory judgments/fold/verifier.
+  // Fixture grants are explicitly trusted as recorded, not native authority.
+  const declared = structuredClone(data);
+  declared.name = "duty-replay-fixture";
+  delete (declared as Partial<PlatformData>).outcomes;
+  delete declared.items["row"]!.indexes;
+  declared.capacity = { name: "whole-scope", version: 1 };
+  declared.acts["finish"]!.settles = { of: "on", in: ["live"] };
+  const other = structuredClone(declared.acts["finish"]!);
+  other.fields = { target: { type: "item", of: "row", required: true } };
+  other.also = { other: { item: "row", by: "target" } };
+  other.settles = { of: "also.other", in: ["live"] };
+  other.guards = [{ state: ["live"] }, { of: "also.other", state: ["live"] }];
+  other.effects = [{ state: "done" }, { of: "also.other", state: "done" }];
+  declared.acts["finish-other"] = other;
+  const definition = valid(validateDefinition(declared, PROPOSED_BOUNDS));
+  const history = created(definition, {});
+  const add = (key: string) => history.did(keys.rita, "add", { fields: { key, category: d("3") } }).seq;
+  const first = add(d("1")), second = add(d("2"));
+  history.did(keys.rita, "finish-other", { ...on(history, first, { other: second }), fields: { target: second } });
+  expect(history.state.itemDuties().map(duty => duty.item)).toEqual([first]);
+  const checkpoint = judgeCheckpoint(history.state, definition, checkpointOf(history.state), history.context());
+  if (checkpoint.result !== "write") throw new Error("the fixture checkpoint must be written");
+  history.seal(checkpoint.draft);
+  const source = new MemorySource([{ scope: history.at, entries: history.entries.map(({ entry, hash }) => ({ seq: entry.seq, hash, bytes: canonicalize(entry) })), retained: [{ kind: "definition", digest: definition.digest, bytes: canonicalize(definition.declared) }] }]);
+  const replayed = await verify(source, { mode: "replay", scope: history.at.scope, grants: "as-recorded" });
+  expect([replayed.report.result, replayed.why]).toEqual(["consistent", null]);
+});
 
 test("historical item duties contain only their head's admitted tasks, preserve an ordinary final transition and remove a genuine settlement", () => {
   // Real in-memory judges/fold and historical View, with this file's

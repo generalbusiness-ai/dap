@@ -1495,8 +1495,9 @@ class Verifier {
       if (canonicalize(derived[part]) !== canonicalize(entry[part])) throw mismatch(`the recorded ${part} are not the ones derived again`);
     }
     if (canonicalize(derived) !== bytes) throw mismatch("the recorded entry is not the one derived again");
-    applyEntry(state, definition, entry, hash, foldInputs);
-    if (input.type === "delivery" && input.message.class === "request" || identity?.mode === "partition-v1" && facts.length > 0) run.foldInputs.set(entry.seq, foldInputs);
+    const foldedWith: DrawOptions = { ...foldInputs, values: judged.draft.values?.map(value => value.bytes) };
+    applyEntry(state, definition, entry, hash, foldedWith);
+    if (definition.declared.capacity?.name === "whole-scope" || input.type === "delivery" && input.message.class === "request" || identity?.mode === "partition-v1" && facts.length > 0) run.foldInputs.set(entry.seq, foldedWith);
     if (!fits(state, definition, bounds, input, judged.draft.settles, ownersOf(definition, run.platform, this.#owners))) throw mismatch("the taking or new-work entry exceeds the budget of used plus reserved entries");
     // Section 16.1: this entry is now the latest that retains each of its reads, in its grant and in `observed`. A preparation retains one in its grant,
     // and an outcome and a delivery of a result in `observed` alone.

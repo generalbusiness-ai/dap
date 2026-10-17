@@ -79,6 +79,65 @@ class Full extends Scope {
 }
 
 describe("18.54: two marks on one item, and a state settlement beside them", () => {
+  test("opt-in alias settlement binds the old target before the same entry changes its selecting reference", () => {
+    // Made-up lane data; real in-memory judgments and fold, with fixture
+    // authority. The mutable selector makes post-entry binding incorrect.
+    const definition = valid(changed(M, (d) => {
+      d.capacity = { name: "whole-scope", version: 1 };
+      d.items.job.refs.target = { fixed: false, required: false, to: { type: "item", of: "job" } };
+      d.acts.point = structuredClone(d.acts["mark-a"]);
+      delete d.acts.point.settles;
+      d.acts.point.fields = { target: { type: "item", of: "job", required: true } };
+      d.acts.point.effects = [{ ref: { slot: "target", from: { field: "target" } } }];
+      d.acts["mark-target"] = structuredClone(d.acts["mark-a"]);
+      d.acts["mark-target"].fields = { next: { type: "item", of: "job", required: true } };
+      d.acts["mark-target"].also = { target: { item: "job", via: { slot: "target", of: "on" } } };
+      d.acts["mark-target"].settles.of = "also.target";
+      d.acts["mark-target"].effects = [{ ref: { slot: "target", from: { field: "next" } } }, set("a", "also.target")];
+    }));
+    const scope = new Scope(definition);
+    const start = () => scope.did(keys.una, "start", fields({ desk: directory })).seq;
+    const primary = start(), oldTarget = start(), newTarget = start();
+    scope.did(keys.una, "point", { ...on(scope, primary), fields: { target: oldTarget } });
+    scope.did(keys.una, "mark-target", { ...on(scope, primary, { target: oldTarget }), fields: { next: newTarget } });
+    expect(scope.item(primary).refs["target"]).toBe(newTarget);
+    expect(scope.item(oldTarget).values["a"]).toBe(true);
+    expect(scope.state.itemDuties(oldTarget).some(duty => duty.slot === "a")).toBe(false);
+    expect(scope.state.itemDuties(newTarget).some(duty => duty.slot === "a")).toBe(true);
+    expect(scope.replay().all()).toEqual(scope.state.all());
+  });
+
+  test("opt-in delivered handlers release only their selected item's genuine duty; an ordinary message and a refused advisory retain it", () => {
+    // The receiver's judgments/fold are real in memory. Sender entries are
+    // made by hand and anchored, not judged foreign histories or authority.
+    const definition = valid(changed(M, (d) => {
+      d.capacity = { name: "whole-scope", version: 1 };
+      const handler = { message: "flag", class: "tell", from: { kind: "directory" }, fields: { job: { type: "item", of: "job", required: true } }, opens: null, also: { job: { item: "job", by: "job" } }, settles: { of: "also.job", sets: "a", in: ["open"] }, guards: [], effects: [set("a", "also.job")], sends: [], attention: [] };
+      d.receives.flag = handler;
+      d.receives.note = { ...structuredClone(handler), message: "note" };
+      delete d.receives.note.settles;
+      d.receives.advice = { ...structuredClone(handler), message: "index", class: "advisory" };
+    }));
+    const scope = new Scope(definition);
+    const first = scope.did(keys.una, "start", fields({ desk: directory })).seq;
+    const second = scope.did(keys.una, "start", fields({ desk: directory })).seq;
+    const deliver = (name: string, id: number, seq: number, advisory = false) => {
+      const message = advisory ? { class: "advisory", type: "index", body: { fields: {} } } as const : { class: "request", type: "tell", body: { message: name, fields: { job: scope.fact(id) } } } as const;
+      const send = { n: 0, to: scope.at, message };
+      const source = forged(directory, seq, { type: "checkpoint", through: 0, state: entryHash(scope.last) }, [send]);
+      const arrival = { ...send, from: factRefOf(source.entry) };
+      const judged = judgeDelivery(scope.state, definition, arrival, arriving(scope, arrival, { ...source, under: "desk" }));
+      expect(judged.result).toBe("write");
+      if (judged.result === "write") scope.seal(judged.draft);
+    };
+    deliver("note", first, 300);
+    deliver("flag", second, 301);
+    deliver("advice", second, 302, true); // missing required job: valid no-effect advisory entry
+    expect(scope.state.itemDuties(first).some(duty => duty.slot === "a")).toBe(true);
+    expect(scope.state.itemDuties(second).some(duty => duty.slot === "a")).toBe(false);
+    expect(scope.replay().all()).toEqual(scope.state.all());
+  });
+
   test("an opt-in item keeps each admitted duty through ordinary marker and final-state changes; only its actual settling entry releases that duty", () => {
     const definition = valid(changed(M, (d) => {
       d.capacity = { name: "whole-scope", version: 1 };

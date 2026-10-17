@@ -36,6 +36,32 @@ test("opt-in report duty survives an ordinary final transition and actual object
   expect(await settled.stub.checkpoint()).toMatchObject({ answer: "written", fact: { seq: 5 } });
 });
 
+test("an opt-in native alias settlement spends only the selected report's duty while an ordinary final change of its primary report remains reserved", async () => {
+  // Real native scope/judgment/SQLite/eviction with the shared lane and
+  // scripted membership/grants fixture; no native platform authority.
+  const under = variant(definition.declared, (d) => {
+    d.capacity = { name: "whole-scope", version: 1 };
+    const act = structuredClone(d.acts["accept-report"]);
+    act.fields = { target: { type: "item", of: "report", required: true } };
+    act.also = { target: { item: "report", by: "target" } };
+    act.guards.push({ of: "also.target", state: ["reported"] });
+    act.settles = { of: "also.target", in: ["reported"] };
+    act.effects = [{ state: "accepted" }, { of: "also.target", state: "accepted" }];
+    d.acts["accept-peer"] = act;
+  });
+  const s = await create({ scopeEntries: 8 }, {}, under);
+  const commitment = await s.commitment();
+  const report = async () => (await s.did(una, "report", { fields: { commitment }, expected: { commitment: 2 } })).fact.seq;
+  const primary = await report(), target = await report();
+  expect(await s.submit(s.remark())).toMatchObject({ answer: "refused", reason: "scope-full" });
+  expect(await s.act(vic, "accept-peer", { on: primary, fields: { target }, expected: { on: 1, target: 1 } })).toMatchObject({ answer: "accepted", receipt: { fact: { seq: 5 } } });
+  await s.restart();
+  const duties = await s.inside(state => new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) }).itemDuties());
+  expect(duties.map(duty => [duty.item, duty.kind])).toEqual([[primary, "state"]]);
+  expect(await s.submit(s.remark())).toMatchObject({ answer: "refused", reason: "scope-full" });
+  expect((await s.head()).seq).toBe(5);
+});
+
 test("the opt-in foreign-entry retained-writer ceiling accepts exact bytes and refuses one more without changing legacy retention", async () => {
   // Real Turns, transaction and SQLite with hand-authored draft/retention.
   // The JSON string payload intentionally is not a foreign sealed entry;

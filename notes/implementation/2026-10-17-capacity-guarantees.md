@@ -441,3 +441,55 @@ witnesses remain required before Source review. The reviewed journey
 design has now landed on Main92bedfda; it adds notes only, with its tree
 exactly matching reviewed911d8c16. Its original parent lifecycle is under
 planner reconciliation50babd01; the full Source child is natively landed.
+
+## Item settlement-binding checkpoint
+
+The fold now resolves an item's settling form on the pre-entry state.
+Acts use the existing field/fact readers, alsoItems and pinned selectors;
+applied handlers use the same prepareHandler stage as their judge. The
+judge and fold share the actual state/marker settlement predicate. Guards
+and effects are not rerun, and a runtime-only Draft hint cannot release
+a duty. A no-effect advisory, including one whose fields refused, has no
+settlement to reconstruct. Ordinary effects still cannot release another
+task's reservation.
+
+Retained value bytes needed by a selector accompany the fold internally.
+Runtime supplies the values that its draft actually retained. Replay
+supplies its rederived values and keeps the opt-in fold inputs needed to
+reconstruct historical heads. No declaration, entry or diagnosis form is
+changed. Alias-selected acts and delivered item settlements are now
+implemented; relationship-copy duties and final-holder release remain
+unfinished, as do complete producer/owner terms and five-axis admission.
+
+Focused settlement and binding files pass 42 cases. New scenarios bind
+a target through a mutable reference before that same entry changes the
+reference, and distinguish an ordinary message from a genuine delivered
+marker settlement. The receiver's judgments/fold are real in memory;
+sender entries and authority remain labelled fixture stand-ins. The first
+handler case used an unsupported advisory type; correcting it to the
+native index type made the two new cases pass. The compiler also caught
+an array being treated as a Map; the lookup was corrected.
+
+A real-scope alias witness then passes across actual eviction at the
+filled entry limit (24079, CLOSED0/556315). One entry makes both reports
+final but settles only its selected report: the primary report's duty
+persists. Initial run75930 failed before creation because the new fixture
+lacked the required live-state guard on its second subject; that guard
+was added before the passing run. Its focused control passes baseline
+and fails the exact duty-identity assertion when the primary is used
+instead of the selected item (17907, CLOSED0/879854), restoring source.
+This witnesses fixture scope/judges/storage, not native platform authority.
+
+The Replay View file passes all three cases, including a full verifier
+run over a judged declared fixture and its covering checkpoint (373ad2,
+CLOSED0). Its grants are explicitly trusted as recorded; it proves item
+duty derivation/checkpoint agreement, not the unfinished four capacity
+axes or native authority. Scope, Derive and Replay test compilers pass.
+No gate or Source review ran.
+
+The byte-domain audit found a separate error to correct next: retained
+entry copies use rawRetainedJSON and raw SHA-256 content digests, whereas
+the journal uses the tagged entryHash domain. The earlier raw storage
+probe gave its retained entry the journal hash and did not establish that
+native distinction. Its passing result must not be used to claim the
+current byte map is correct. Full capacity remains unready for review.
