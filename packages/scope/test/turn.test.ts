@@ -6,6 +6,37 @@ import { SqliteStore, Turns, Wakes, production } from "../src/index.ts";
 import { variant } from "@generalbusiness/dap-derive/testing";
 import { HOLD, at, definition, create, rita, una, vic } from "./support.ts";
 
+test("the opt-in rule-input writer ceiling accepts exact canonical bytes and refuses one more even when evaluation returns false; legacy retention is unchanged", async () => {
+  // Real Turns, rule evaluator, transaction and SQLite; asks/judge below
+  // are deliberately supplied by hand. This is the retained-writer
+  // boundary, not an authentic act, valid checkpoint or replay witness.
+  for (const whole of [false, true]) {
+    const under = whole ? variant(definition.declared, (d) => { d.capacity = { name: "whole-scope", version: 1 }; }) : definition;
+    const s = await create({}, {}, under);
+    const result = await s.inside(async (state) => {
+      const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: (work) => state.storage.transactionSync(work) });
+      const turns = new Turns(store, { clock: s.c.clock, rules: production().rules, alarm: { set: () => undefined }, capabilities: null }, s.c.bounds, () => under, () => undefined);
+      const limit = 262_144;
+      const run = (bytes: number) => {
+        const input = "x".repeat(bytes - 2), canonical = canonicalize(input), digest = digestBytes(utf8(canonical));
+        return turns.run({
+          asks: () => [{ rule: "not-self", source: under.declared.rules["not-self"]!, input, digest }],
+          judge: (view, _clock, prepared) => {
+            expect(prepared).toEqual([{ rule: "not-self", input: digest, result: false }]);
+            return { verdict: "write", retain: [], draft: { input: { type: "checkpoint", ...checkpointOf(view) }, uses: [], prepared, effects: [], sends: [], judgesTime: false }, sealed: () => "written", unfit: () => "unfit", full: () => "full" };
+          },
+        }).then((end) => ({ end, size: utf8(canonical).length, prepared: store.retained("rule", digest) !== null }));
+      };
+      const before = store.scope()!.head.seq;
+      const exact = await run(limit), extra = await run(limit + 1);
+      return { before, after: store.scope()!.head.seq, exact, extra };
+    });
+    expect(result.exact).toEqual({ end: { end: "answer", answer: "written" }, size: 262_144, prepared: true });
+    expect(result.extra).toEqual({ end: { end: "answer", answer: whole ? "unfit" : "written" }, size: 262_145, prepared: !whole });
+    expect(result.after - result.before).toBe(whole ? 1 : 2);
+  }
+});
+
 test("logical bytes in real SQLite count UTF-8 payloads once across journal and retained domains, redact texts, and roll back retention", async () => {
   const s = await create();
   const sizes = await s.inside(async (state) => {

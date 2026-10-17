@@ -331,6 +331,10 @@ export class Turns {
         return { kind: "rule", digest: p.input, bytes: canonicalize(asked.input) };
       });
       try {
+        // Evaluation may return false for an oversized input and still name
+        // its digest. The opt-in producer ceiling must also constrain the
+        // bytes retained by this writer; an evaluator budget alone does not.
+        if (definition.ruleInputBytes !== undefined && rules.some((input) => utf8(input.bytes).length > definition.ruleInputBytes!)) throw new Unfit("size");
         const sealed = this.#seal(definition, verdict.draft, clock, [...verdict.retain, ...rules], verdict.facts);   // 6.5
         // Section 9.2: an entry that admits pending work is kept only if every admitted task still has room to settle. The count is of
         // the state the fold just wrote, so it is under the head check, and a verifier derives the same number. Section 17.3: an

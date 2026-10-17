@@ -108,6 +108,7 @@ export function mark(d: Defining, v: unknown, path: string, kind: MarkKind, more
  */
 export interface Defining extends Shapes {
   readonly wholeCapacity: boolean;
+  ruleInputBytes: number;
   readonly bounds: Bounds;
   readonly name: string | null;             // the name the definition states, which `under` is compared with. Null: it states none, which is reported
   readonly typeNames: ReadonlySet<string>;  // every key of `items`, known before any item type is read

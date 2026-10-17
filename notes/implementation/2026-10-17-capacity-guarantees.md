@@ -258,3 +258,42 @@ and fails that intended assertion, with source restored (owner 17865,
 CLOSED0/54ea10). These are pure metadata witnesses, not native tasks or
 complete admission. Producer maxima, actual-settler duty release and the
 remaining runtime/replay work are still owed. No gate or review ran.
+
+## Retained rule-input producer checkpoint
+
+The restricted evaluator's input budget was not a retained-writer bound:
+evaluation catches an oversized input as false and still records its input
+digest. An opted-in definition with rules now requires a finite canonical
+input ceiling from its pinned profile. The restricted profile supplies its
+existing 262,144-byte limit. A profile without that declaration refuses
+reserve-unbounded, naming the retained rule-input producer. Legacy profile
+interpretation and retained writes remain unchanged.
+
+The opt-in Turn checks actual canonical UTF-8 input bytes before sealing.
+An oversized retained input returns the existing unfit response and writes
+nothing. Each future settling act/handler conservatively reserves one
+such input per declared rule; its guards share one fixed input context,
+and the collector deduplicates a rule and input digest. The actual store
+still deduplicates identical bytes across rules. Timed entries, result
+clauses and closing checkpoints evaluate no rule guards and gain no such
+term. The derived ceiling is not added to declaration or entry bytes.
+
+The validator/settlement files passed 80 cases. A strengthened focused
+marker scenario then passed: its three independent guarded duties add
+three input ceilings to Reserved, with no input for the closing checkpoint.
+The new native writer-boundary case passes against real Turns, restricted
+evaluation, transactions and SQLite. It accepts exactly 262,144 canonical
+bytes and refuses 262,145 only for the opt-in definition. Legacy keeps
+both; the evaluator's prepared result is explicitly false in each case.
+The asks/judge are supplied by hand, so these are not authentic acts,
+valid checkpoints, replay or full capacity witnesses.
+
+The first native run (41856, CLOSED0/61da5f) preceded the final test type
+fixes and explicit prepared-result assertion. The final witness passes
+the control baseline and fails the intended oversized-retention assertion
+when the writer guard alone is disabled (92170, CLOSED0/fb01a6); source is
+restored. Initial compiler checks caught an incorrect Alarm shape, missing
+capabilities and an explicitly undefined optional profile member in the
+new tests; all were fixed. Scope and Derive test compilers pass. No gate,
+review or landing occurred. The other retained producers, complete task
+amounts, actual-settler release and integrated admission/replay remain owed.

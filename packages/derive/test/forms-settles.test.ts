@@ -97,6 +97,16 @@ describe("18.54: two marks on one item, and a state settlement beside them", () 
     // memory, not a native scope or a complete byte-admission witness.
     const definition = valid(changed(M, (d) => { d.capacity = { name: "whole-scope", version: 1 }; }));
     const unit = PROPOSED_BOUNDS.entryBytes;
+    const guarded = valid(changed(M, (d) => {
+      d.capacity = { name: "whole-scope", version: 1 };
+      d.rules.check = "true";
+      for (const kind of ["mark-a", "mark-a-far", "mark-b", "close"]) d.acts[kind].guards.push({ rule: "check" });
+    }));
+    const withRules = new Full(guarded);
+    withRules.started();
+    // The three independent duties each reserve one retained rule input,
+    // including the larger a alternative. The closing checkpoint has none.
+    expect(reserved(withRules.state, guarded, withRules.last.input)).toEqual({ entries: 6, bytes: 10 * unit, items: 0, records: 0, requests: 1 });
     for (const far of [false, true]) {
       const scope = new Full(definition);
       const id = scope.started();

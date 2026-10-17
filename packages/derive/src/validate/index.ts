@@ -34,6 +34,7 @@ import { setOnce } from "./markers.ts";
 import { timedEntryBytes, timedGraph, timedKinds, timedRules } from "./timed.ts";
 import { standingOf, type Standing } from "./standing.ts";
 import { AmountError } from "../held.ts";
+import { PROFILE } from "../rule/profile.ts";
 
 export type { MarkKind, MarkPlace, RangeIndex } from "./context.ts";
 export type { Problem, ProblemCode } from "./shape.ts";
@@ -74,6 +75,8 @@ export interface ValidDefinition {
   readonly pendingCopies: readonly PendingCopy[];
   /** Known declared task terms, including future requests and their result-source bytes. Other axes/retention remain partial. */
   readonly pendingWorkAmounts: PendingWorkAmounts;
+  /** Opt-in writer ceiling for each retained rule input; absent in legacy definitions. */
+  readonly ruleInputBytes?: number;
   /**
    * Section 6.11: each form that this package reads and does not derive by
    * itself, with the capability version whose own code derives it. A runtime
@@ -132,9 +135,9 @@ export type Validation = { ok: true; definition: ValidDefinition } | { ok: false
  * the table that checks each rule; this one checks names and shapes only, so
  * that the judges never load the engine.
  */
-export interface Profile { admit?: (source: string) => string | null }
+export interface Profile { admit?: (source: string) => string | null; inputBytes?: number }
 
-export const PROFILES: Readonly<Record<string, Profile>> = { "restricted@1": {} };
+export const PROFILES: Readonly<Record<string, Profile>> = { "restricted@1": { inputBytes: PROFILE.inputBytes } };
 
 /**
  * What only a platform definition may state, and only the platform package passes (section 6.1). `platform`: the value is the data
@@ -187,6 +190,7 @@ export function validateDefinition(input: unknown, bounds: Bounds, profiles: Rea
 
   const d: Defining = {
     wholeCapacity: isObject(top["capacity"]) && top["capacity"]["name"] === "whole-scope",
+    ruleInputBytes: 0,
     ...read, bounds, name: typeof top["name"] === "string" ? top["name"] : null, typeNames: new Set(isObject(top["items"]) ? Object.keys(top["items"]) : []), types: new Map(), rules: new Set(), holds: false, holdTypes: new Set(),
     capabilities: new Map(), underived: [],
     indexes: [], clauseSets: [], clause: null, pendingWork: [], platform, marks: [], places: new Map(), valueSets: [], bindings: [], observing: false,
@@ -201,6 +205,11 @@ export function validateDefinition(input: unknown, bounds: Bounds, profiles: Rea
     const refusal = text === null ? null : (evaluator?.admit?.(text) ?? null);
     if (refusal !== null) bad("rule", at("rules", name), refusal);
     d.rules.add(name);
+  }
+  if (d.wholeCapacity && d.rules.size > 0) {
+    const limit = evaluator?.inputBytes;
+    if (limit === undefined || !Number.isSafeInteger(limit) || limit <= 0) bad("reserve-unbounded", "profile", "retained rule-input producer has no finite canonical-byte ceiling");
+    else d.ruleInputBytes = limit;
   }
 
   // Section 6.1: each capability the definition uses, by name and version. They are read first: a field type may name one.
@@ -298,7 +307,7 @@ export function validateDefinition(input: unknown, bounds: Bounds, profiles: Rea
   if (problems.length > 0) return { ok: false, problems };
   try {
     const keyed = [...d.types.values()].flatMap((type): [string, readonly string[]][] => (type.indexes ? [[type.name, type.indexes]] : []));
-    return { ok: true, definition: { declared, digest: definitionDigest(declared), timedTypes: [...timedTypes].sort(), holdTypes: [...d.holdTypes].sort(), indexes: d.indexes, ...persistedCapacity, underived: d.underived, marks: d.marks, observing: d.observing, ...(reserved ? { reserving: reserved } : {}), ...(standing ? { standing } : {}), ...(keyed.length > 0 ? { keyed: Object.fromEntries(keyed) } : {}) } };
+    return { ok: true, definition: { declared, digest: definitionDigest(declared), timedTypes: [...timedTypes].sort(), holdTypes: [...d.holdTypes].sort(), indexes: d.indexes, ...persistedCapacity, underived: d.underived, marks: d.marks, observing: d.observing, ...(d.ruleInputBytes > 0 ? { ruleInputBytes: d.ruleInputBytes } : {}), ...(reserved ? { reserving: reserved } : {}), ...(standing ? { standing } : {}), ...(keyed.length > 0 ? { keyed: Object.fromEntries(keyed) } : {}) } };
   } catch {
     return { ok: false, problems: [{ code: "shape", path: "", message: "has no canonical bytes" }] };
   }

@@ -52,12 +52,16 @@ export interface Capacity {
  * first. Each rule's chain was computed once, with the cycle check. A cycle
  * of settling forms is refused here, as `reserve-unbounded`.
  */
-export function capacityOf(d: Pick<Defining, "bad" | "bounds" | "pendingWork" | "clauseSets" | "types" | "wholeCapacity">, graph: TimedGraph, moves: readonly TimedMove[]): Capacity {
+export function capacityOf(d: Pick<Defining, "bad" | "bounds" | "pendingWork" | "clauseSets" | "types" | "wholeCapacity" | "ruleInputBytes" | "rules">, graph: TimedGraph, moves: readonly TimedMove[]): Capacity {
   const { sum, times, largest } = amountMath(d.wholeCapacity);
   const entry: Amount = { ...NOTHING, entries: 1, bytes: d.bounds.entryBytes };
   // One settling form's own entry and declared openings. Changes to existing subjects and to the copy being settled create
   // no new item/key. Initial-state pending work remains in starts, so the opening unit is included once, beside that pending work.
-  const entryFor = (form: PendingWork): Amount => sum(entry, { ...NOTHING, items: form.opens === null ? 0 : 1, records: form.mayCreateCopy ? 1 : 0 });
+  // Guard inputs are identical for one act/handler context and are retained
+  // at most once per distinct declared rule. Count every rule conservatively;
+  // a checkpoint, timed entry or result clause evaluates no rule guard.
+  const ruleInputs = d.wholeCapacity ? times(d.rules.size, { ...NOTHING, bytes: d.ruleInputBytes }) : NOTHING;
+  const entryFor = (form: PendingWork): Amount => sum(entry, ruleInputs, { ...NOTHING, items: form.opens === null ? 0 : 1, records: form.mayCreateCopy ? 1 : 0 });
   const deadline = (entries: number): Amount => times(entries, entry);
   /** A deadline's known amount in that state, with each timed entry at the entry-size stand-in. */
   const held = (type: string, state: string): Amount => deadline(graph.fromState.get(type)?.get(state) ?? 0);

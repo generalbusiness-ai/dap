@@ -137,6 +137,17 @@ describe("the definition validator", () => {
     expect(canonicalBytes(original)).toEqual(bytes);
   });
 
+  test("an opted-in retained rule-input producer requires a finite profile ceiling while legacy profiles keep their interpretation", () => {
+    const data = { ...clone(ticket), capacity: { name: "whole-scope" as const, version: 1 as const } };
+    expect(validateDefinition(ticket, PROPOSED_BOUNDS, { "restricted@1": {} }).ok).toBe(true);
+    for (const inputBytes of [undefined, 0, 0.5, Infinity, Number.MAX_SAFE_INTEGER + 1]) {
+      const checked = validateDefinition(data, PROPOSED_BOUNDS, { "restricted@1": inputBytes === undefined ? {} : { inputBytes } });
+      expect(checked.ok ? [] : checked.problems).toContainEqual(expect.objectContaining({ code: "reserve-unbounded", path: "profile", message: expect.stringContaining("rule-input producer") }));
+    }
+    const checked = validateDefinition(data, PROPOSED_BOUNDS);
+    expect(checked.ok && checked.definition.ruleInputBytes).toBe(262_144);
+  });
+
   test("a definition that passes carries its digest, its timed and hold types, and the slots each `where` reads", () => {
     expect(laneDefinition.digest).toBe(definitionDigest(lane));
     expect(laneDefinition.timedTypes).toEqual(["hold"]);
