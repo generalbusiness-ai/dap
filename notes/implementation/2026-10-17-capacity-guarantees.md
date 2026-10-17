@@ -188,9 +188,12 @@ owed once at the final implementation freeze.
 ## Logical byte-count checkpoint
 
 `retainedByteDomain` states the native identity of each retained kind.
-Definition, entry, text and snapshot use their hashing domains; a rule
-input uses raw SHA-256, represented internally by null. A value states its
-own domain. This accounting identity changes no transport or storage key.
+The original checkpoint incorrectly assigned the journal's tagged domain
+to retained entry copies. The later audit correction below fixes that:
+definition, text and snapshot use their tagged domains; retained entry
+copies and rule inputs use raw SHA-256, represented internally by null.
+The journal keeps its tagged entry domain, and a value states its own
+domain. This accounting identity changes no transport or storage key.
 
 `ByteUsage` counts a journal and retained inputs once per domain and digest,
 across their physical sources. A text redaction removes that source from
@@ -493,3 +496,33 @@ the journal uses the tagged entryHash domain. The earlier raw storage
 probe gave its retained entry the journal hash and did not establish that
 native distinction. Its passing result must not be used to claim the
 current byte map is correct. Full capacity remains unready for review.
+
+## Raw retained-entry domain correction
+
+The native readers establish the distinction: useOf names a foreign
+copy by SHA-256 of its canonical bytes, and rawRetainedJSON checks that
+digest; entryHash tags the journal's bytes with artroom-entry-1. The
+retained-kind map now assigns entry copies to the raw domain alongside
+rule inputs. Journal/value copies under the tagged entry domain remain
+distinct from that raw input. Native byte counts still use actual payload
+lengths, and domain/digest duplicates count once.
+
+The SQLite witness now computes the actual raw content digest of its real
+journal entry, checks it through rawRetainedJSON, and checks that it is
+not the journal hash. It retains that raw JSON under entry/rule storage
+aliases and a separately tagged journal-domain value copy. This is an
+explicit storage-identity probe: the copied entry is not claimed as an
+actual rule input, nor is this an admission or authority witness. The
+native case passes (32886, CLOSED0/067d8b). A focused control restores
+the wrong tagged mapping and fails its intended total, 10,563 rather than
+9,086, after a passing baseline (44144, CLOSED0/276309); source is restored.
+
+The first revised pure case still passed under the wrong mapping: it
+included both raw aliases at once, whose totals concealed the swapped
+classification. That before report is non-distinguishing. Intermediate
+assertions now distinguish adding the raw entry from adding its raw rule
+alias. All three strengthened pure cases pass (006c27 CLOSED0). Earlier
+byte-checkpoint passes and controls retain their original coverage; they
+are not proof of this corrected identity. Scope and Replay test compilers
+pass. Full five-axis runtime/replay admission and its final gate remain
+unfinished; no Source review or landing has been requested.

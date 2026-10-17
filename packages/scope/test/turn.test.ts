@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from "vitest";
 import { DOMAINS, PROPOSED_BOUNDS, type Receipt } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, digestBytes, rawRetainedJSON, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
 import { AmountError, MemoryState, applyEntry, checkpointOf, stateDigest, timeMs } from "@generalbusiness/dap-derive";
 import { SqliteStore, Turns, Wakes, production } from "../src/index.ts";
 import { variant } from "@generalbusiness/dap-derive/testing";
@@ -126,13 +126,20 @@ test("logical bytes in real SQLite count UTF-8 payloads once across journal and 
     // This fixture's genesis also retains its pinned definition. No rule
     // runs on genesis, and no foreign fact or detached text is supplied.
     const initialBytes = journal.reduce((n, row) => n + utf8(row.bytes).length, 0) + utf8(canonicalize(definition.declared)).length;
+    const rawDigest = digestBytes(utf8(first.bytes)), rawBytes = utf8(first.bytes).length;
+    expect(rawDigest).not.toBe(first.hash);
+    expect(rawRetainedJSON(rawDigest, first.bytes)).toEqual(JSON.parse(first.bytes));
     const before = store.logicalBytes();
     // The recorded size is a cache; the retained byte check reads actual
     // payload lengths, and excludes all folded-state/bookkeeping bytes.
     state.storage.sql.exec("UPDATE entry SET size=1");
     store.putRecord({ capability: "hold@1", kind: "byte-probe", key: ["large-metadata"], state: "live", values: { ignored: "x".repeat(1024) }, seq: 900 });
     const afterMetadata = store.logicalBytes();
-    store.retain({ kind: "entry", digest: first.hash, bytes: first.bytes, under: "fixture" });
+    // Native journal hashes are tagged. Foreign retained copies use a raw
+    // content digest, as rule inputs do. The raw JSON copy is a separate
+    // domain from the journal; its entry/rule storage aliases count once.
+    store.retain({ kind: "entry", digest: rawDigest, bytes: first.bytes, under: "fixture" });
+    store.retain({ kind: "rule", digest: rawDigest, bytes: first.bytes });
     store.retain({ kind: "value", domain: DOMAINS.entry, digest: first.hash, bytes: first.bytes });
     const duplicated = store.logicalBytes();
     const text = canonicalize("é😀"), digest = textDigest("é😀");
@@ -159,12 +166,13 @@ test("logical bytes in real SQLite count UTF-8 payloads once across journal and 
       if (!(error instanceof AmountError)) throw error;
       rejectedConflict = true;
     }
-    return { initialBytes, before, afterMetadata, duplicated, withText, withRule, redacted, rolledBack, afterRollback, rejectedConflict, afterConflict: store.logicalBytes(), reopened: open().logicalBytes() };
+    return { initialBytes, rawBytes, before, afterMetadata, duplicated, withText, withRule, redacted, rolledBack, afterRollback, rejectedConflict, afterConflict: store.logicalBytes(), reopened: open().logicalBytes() };
   });
-  expect([sizes.before, sizes.afterMetadata, sizes.duplicated]).toEqual(Array(3).fill(sizes.initialBytes));
+  expect([sizes.before, sizes.afterMetadata]).toEqual(Array(2).fill(sizes.initialBytes));
+  expect(sizes.duplicated).toBe(sizes.initialBytes + sizes.rawBytes);
   // JSON string é😀 is 8 UTF-8 bytes; the rule's JSON record is 17.
-  expect([sizes.withText, sizes.withRule]).toEqual([sizes.initialBytes + 8, sizes.initialBytes + 25]);
-  expect([sizes.redacted, sizes.afterRollback, sizes.afterConflict, sizes.reopened]).toEqual(Array(4).fill(sizes.initialBytes + 17));
+  expect([sizes.withText, sizes.withRule]).toEqual([sizes.initialBytes + sizes.rawBytes + 8, sizes.initialBytes + sizes.rawBytes + 25]);
+  expect([sizes.redacted, sizes.afterRollback, sizes.afterConflict, sizes.reopened]).toEqual(Array(4).fill(sizes.initialBytes + sizes.rawBytes + 17));
   expect([sizes.rolledBack, sizes.rejectedConflict]).toEqual([true, true]);
 });
 

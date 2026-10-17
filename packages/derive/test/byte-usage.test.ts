@@ -7,23 +7,26 @@ import { AmountError, ByteUsage } from "../src/index.ts";
 // native entries, producer maxima or authority.
 const a = digestBytes(utf8("opaque fixture a")), b = digestBytes(utf8("opaque fixture b"));
 
-test("byte identity is domain plus digest across journal, retained and value sources; redacting one source preserves another copy", () => {
+test("byte identity separates tagged journal/value copies from raw entry/rule copies; redacting one text source preserves another copy", () => {
   const usage = new ByteUsage();
   usage.journal(0, a, 12);
   usage.retain({ kind: "entry", digest: a }, 12);
+  expect(usage.count()).toEqual({ complete: true, bytes: 24 });
+  usage.retain({ kind: "rule", digest: a }, 12);
+  expect(usage.count()).toEqual({ complete: true, bytes: 24 });
   usage.retain({ kind: "value", domain: DOMAINS.entry, digest: a }, 12);
   usage.retain({ kind: "text", digest: b }, 8);
   usage.retain({ kind: "text", digest: b }, 8);
   usage.retain({ kind: "value", domain: DOMAINS.text, digest: b }, 8);
-  expect(usage.count()).toEqual({ complete: true, bytes: 20 });
+  expect(usage.count()).toEqual({ complete: true, bytes: 32 });
   // Digests here are opaque keys: a different domain remains a different
   // accounting identity even if the supplied digest text happens to match.
   usage.retain({ kind: "value", domain: "other-fixture-domain", digest: b }, 8);
-  expect(usage.count()).toEqual({ complete: true, bytes: 28 });
+  expect(usage.count()).toEqual({ complete: true, bytes: 40 });
   usage.redact(b);
-  expect(usage.count()).toEqual({ complete: true, bytes: 28 });
+  expect(usage.count()).toEqual({ complete: true, bytes: 40 });
   usage.retain({ kind: "rule", digest: b }, 8);
-  expect(usage.count()).toEqual({ complete: true, bytes: 36 });
+  expect(usage.count()).toEqual({ complete: true, bytes: 48 });
 });
 
 test("a missing retained size is explicitly incomplete, is counted once, and ends at its redaction or a checked copy's known size", () => {
