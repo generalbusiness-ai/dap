@@ -1,16 +1,24 @@
 import { describe, expect, test, vi } from "vitest";
-import { DOMAINS, PROPOSED_BOUNDS, type Receipt } from "@generalbusiness/dap-contract";
+import { DOMAINS, PROPOSED_BOUNDS, type Receipt, type SendForm } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, rawRetainedJSON, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
 import { AmountError, MemoryState, applyEntry, checkpointOf, reserved, stateDigest, timeMs } from "@generalbusiness/dap-derive";
 import { SqliteStore, Turns, Wakes, production } from "../src/index.ts";
 import { variant } from "@generalbusiness/dap-derive/testing";
 import { HOLD, at, definition, create, rita, una, vic } from "./support.ts";
 
+// The shared lane's unused link form names a dummy child digest. These
+// settlement/storage witnesses need a closed opt-in birth, so omit only
+// that unresolved create. Child-closure admission has dedicated witnesses.
+const wholeDefinition = variant(definition.declared, d => {
+  d.capacity = { name: "whole-scope", version: 1 };
+  d.acts.link.sends = d.acts.link.sends.filter((send: SendForm) => !("create" in send));
+});
+
 test("holder settlement bookkeeping survives actual eviction, rolls back atomically and counts as no logical record or retained byte", async () => {
   // Raw derived-bookkeeping writes on real SQLite, explicitly not judged
   // holder settlements. The pure holder witness proves when the fold writes
   // this fact; this probe proves persistence, checkpoint projection and units.
-  const under = variant(definition.declared, d => { d.capacity = { name: "whole-scope", version: 1 }; });
+  const under = wholeDefinition;
   const scope = await create({}, {}, under);
   const written = await scope.inside(state => {
     const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) });
@@ -38,8 +46,7 @@ test("holder settlement bookkeeping survives actual eviction, rolls back atomica
 test("opt-in report duty survives an ordinary final transition and actual object eviction; at a filled scope only its real settlement spends that room", async () => {
   // Real scope, judge, fold, SQLite and object eviction. The lane data and
   // membership/grants are the existing labelled test fixture's stand-ins.
-  const under = variant(definition.declared, (d) => {
-    d.capacity = { name: "whole-scope", version: 1 };
+  const under = variant(wholeDefinition.declared, (d) => {
     d.acts.abandon = structuredClone(d.acts["accept-report"]);
     delete d.acts.abandon.settles;
   });
@@ -68,8 +75,7 @@ test("opt-in report duty survives an ordinary final transition and actual object
 test("an opt-in native alias settlement spends only the selected report's duty while an ordinary final change of its primary report remains reserved", async () => {
   // Real native scope/judgment/SQLite/eviction with the shared lane and
   // scripted membership/grants fixture; no native platform authority.
-  const under = variant(definition.declared, (d) => {
-    d.capacity = { name: "whole-scope", version: 1 };
+  const under = variant(wholeDefinition.declared, (d) => {
     const act = structuredClone(d.acts["accept-report"]);
     act.fields = { target: { type: "item", of: "report", required: true } };
     act.also = { target: { item: "report", by: "target" } };
@@ -96,7 +102,7 @@ test("the opt-in foreign-entry retained-writer ceiling accepts exact bytes and r
   // The JSON string payload intentionally is not a foreign sealed entry;
   // this witnesses the size boundary, not hash or authority validation.
   for (const whole of [false, true]) {
-    const under = whole ? variant(definition.declared, (d) => { d.capacity = { name: "whole-scope", version: 1 }; }) : definition;
+    const under = whole ? wholeDefinition : definition;
     const s = await create({}, {}, under);
     const results = await s.inside(async (state) => {
       const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: (work) => state.storage.transactionSync(work) });
@@ -119,7 +125,7 @@ test("the opt-in rule-input writer ceiling accepts exact canonical bytes and ref
   // are deliberately supplied by hand. This is the retained-writer
   // boundary, not an authentic act, valid checkpoint or replay witness.
   for (const whole of [false, true]) {
-    const under = whole ? variant(definition.declared, (d) => { d.capacity = { name: "whole-scope", version: 1 }; }) : definition;
+    const under = whole ? wholeDefinition : definition;
     const s = await create({}, {}, under);
     const result = await s.inside(async (state) => {
       const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: (work) => state.storage.transactionSync(work) });
@@ -436,7 +442,7 @@ describe("the clock behind the history (section 5.3)", () => {
 
 describe("the scope's budget (section 9.2), here 12 entries", () => {
   test.each(["legacy", "whole-scope"] as const)("%s: new work cannot take admitted holds' timed entries or the closing checkpoint", async cohort => {
-    const under = cohort === "whole-scope" ? variant(definition.declared, d => { d.capacity = { name: "whole-scope", version: 1 }; }) : definition;
+    const under = cohort === "whole-scope" ? wholeDefinition : definition;
     const s = await create({ scopeEntries: 12 }, {}, under);
     const holds = await s.holds(2);                           // entries 1 to 6: two holds, each with a deadline that reserves one entry
     const commitment = await s.commitment();                  // entries 7 and 8: nine entries, and three reserved with the closing checkpoint
@@ -466,7 +472,7 @@ describe("the scope's budget (section 9.2), here 12 entries", () => {
   });
 
   test.each(["legacy", "whole-scope"] as const)("%s: a full report scope still writes its acceptance and the request that acceptance reserved", async cohort => {
-    const base = cohort === "whole-scope" ? variant(definition.declared, d => { d.capacity = { name: "whole-scope", version: 1 }; }) : definition;
+    const base = cohort === "whole-scope" ? wholeDefinition : definition;
     const s = await create({ scopeEntries: 6 }, {}, base);
     const commitment = await s.commitment();                  // entries 1 and 2
     const report = (await s.did(una, "report", { fields: { commitment }, expected: { commitment: 2 } })).fact.seq;   // entry 3: four written, two reserved

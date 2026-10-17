@@ -8,8 +8,8 @@ review outcomes belong to the Gitseq artifacts for this request.
 
 This note describes the current implementation. Development checkpoints
 and their individual test logs remain in Git history through `1d5297fe`.
-They establish no independent approval or landing. The final gate and
-exact-head checker review remain required before this branch can land.
+They establish no independent approval or landing. The final gate remains
+unresolved; exact-head checker review is also required before landing.
 
 ## Admission and compatibility
 
@@ -188,4 +188,29 @@ history; these local results do not replace the final gate or review.
 The copied dependency view was found stale before the gate. The exact
 lockfile was installed in a scratch directory and adopted as private
 root and workspace copies; `npm ls --all` then passed. No package manifest
-or lockfile changed. Gate evidence must name this corrected dependency view.
+or lockfile changed. Gate evidence names this corrected dependency view.
+
+The one full gate at `4c7c2bc9` passed whitespace and workspace typechecks.
+Its test phase reported two stale Page/Counting generated bundles and
+seven native turn fixture failures, then stopped progressing after a
+Workers cross-object I/O error in Vitest's timeout handler. The original
+Vitest process was terminated after confirming unchanged output and a
+busy workerd child. The original gate exited 1 (test phase 143), with
+209.76 seconds outer wall time and 337.93 seconds outer CPU. There are no
+terminal suite totals and no full-test pass claim. The timeout's cause
+and the uncompleted cases remain unresolved. No whole suite was repeated.
+
+Focused diagnosis traced all seven fixture failures to the shared lane's
+unused link create naming a dummy child digest. The opt-in closure check
+correctly refused that unresolved birth. Those witnesses now omit only
+the unused placeholder create, as the other closed opt-in fixture already
+does. Their seven cases and two legacy counterparts pass; the native
+Scope test compiler passes. The Page and Counting generators rebuilt
+their committed client bundles, and both freshness witnesses pass.
+No runtime admission was weakened to make these fixtures pass.
+
+Raw gate evidence is in /tmp/artroom-capacity-final-gate-20261017.log and
+its .time sibling; stage logs are in the gate's reported temporary
+directory. Focused repair evidence uses /tmp/artroom-capacity-gate-.
+The passing repair runs are terminal. Temporary validation diagnostics
+were removed before those checks.
