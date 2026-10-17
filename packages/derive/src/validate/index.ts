@@ -33,6 +33,7 @@ import { decisions } from "./binding.ts";
 import { setOnce } from "./markers.ts";
 import { timedEntryBytes, timedGraph, timedKinds, timedRules } from "./timed.ts";
 import { standingOf, type Standing } from "./standing.ts";
+import { AmountError } from "../held.ts";
 
 export type { MarkKind, MarkPlace, RangeIndex } from "./context.ts";
 export type { Problem, ProblemCode } from "./shape.ts";
@@ -185,6 +186,7 @@ export function validateDefinition(input: unknown, bounds: Bounds, profiles: Rea
   if (!platform && named?.startsWith("platform:")) bad("shape", "name", "a declared definition's name does not begin with platform:");
 
   const d: Defining = {
+    wholeCapacity: isObject(top["capacity"]) && top["capacity"]["name"] === "whole-scope",
     ...read, bounds, name: typeof top["name"] === "string" ? top["name"] : null, typeNames: new Set(isObject(top["items"]) ? Object.keys(top["items"]) : []), types: new Map(), rules: new Set(), holds: false, holdTypes: new Set(),
     capabilities: new Map(), underived: [],
     indexes: [], clauseSets: [], clause: null, pendingWork: [], platform, marks: [], places: new Map(), valueSets: [], bindings: [], observing: false,
@@ -279,10 +281,18 @@ export function validateDefinition(input: unknown, bounds: Bounds, profiles: Rea
   }
   if (problems.length > 0) return { ok: false, problems };
   // Section 17.2: each reservation is derived from the definition. A closure that is not finite is refused.
-  const capacity = capacityOf(d, graph, moves);
+  let capacity: ReturnType<typeof capacityOf>;
+  let reserved: ReturnType<typeof reserving>;
+  try {
+    capacity = capacityOf(d, graph, moves);
+    if (problems.length > 0) return { ok: false, problems };
+    reserved = reserving(d, top, capacity, options.outcomeValues);
+  } catch (error) {
+    if (!(error instanceof AmountError)) throw error;
+    return { ok: false, problems: [...problems, { code: "reserve-unbounded", path: "capacity", message: error.message }] };
+  }
   if (problems.length > 0) return { ok: false, problems };
   // Section 17.2a: a reservation that an item holds, and what each kind of `outcomes` reserves. In platform data only.
-  const reserved = reserving(d, top, capacity, options.outcomeValues);
   const standing = Object.hasOwn(top, "standing") ? standingOf(d, top["standing"], top["items"]) : null;
   const { decisionEntries: _decisionEntries, ...persistedCapacity } = capacity;
   if (problems.length > 0) return { ok: false, problems };

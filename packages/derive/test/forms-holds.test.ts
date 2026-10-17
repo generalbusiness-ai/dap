@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalBytes, entryHash, parseStrictBytes } from "@generalbusiness/artroom-bytes";
-import { FoldError, MemoryState, NOTHING, applyEntry, evidenceValues, outcomeValueDomains, closure, drawsOf, heldEntries, itemOf, one, outcomes, owed, pendingOf, requestOf, retainedBytes, starts, stateDigest, validateDefinition } from "../src/index.ts";
+import { AmountError, FoldError, MemoryState, NOTHING, applyEntry, evidenceValues, outcomeValueDomains, closure, drawsOf, heldEntries, holding, itemOf, one, outcomes, owed, pendingOf, requestOf, retainedBytes, starts, stateDigest, validateDefinition } from "../src/index.ts";
 import type { Amount, Counting, KindStated, Starts, Rules, OutcomeRule, RuleEffect } from "../src/index.ts";
 import { on, valid } from "./fixtures.ts";
 import { OWNER, TELL, Works, chain, chainDefinition, changed, opened, works, worksDefinition } from "./fixtures-holds.ts";
@@ -82,6 +82,30 @@ describe("the actual return of an outcome callback stays within its declared dat
 // Scope contract, revision 23, section 17.2, "The closure of an operation", "What a mark may start" and "A request that an outcome
 // sends"; section 17.2a, "What a holder reserves, in full". Rows I3-45, I3-51 and I3-52. Each function, on a counting made by hand.
 describe("the amounts of a reservation, as pure functions (section 17.2 and 17.2a)", () => {
+  test("whole-scope nested closures reject invalid operands before multiplication or maxima can conceal them and refuse unsafe totals", () => {
+    // Pure metadata boundary, not an admitted native task. Half an attempt
+    // must not become a valid one-entry reservation after doubling.
+    const legacy = counting({ k: kind(0.5) });
+    expect(closure(legacy, "k")).toEqual(entries(1));
+    expect(() => closure({ ...legacy, checked: true }, "k")).toThrow(AmountError);
+    const zero = counting({ k: kind(1) }, [], { checked: true, change: { ...NOTHING, records: 0.5 } });
+    expect(() => closure(zero, "k")).toThrow(AmountError);
+    expect(() => requestOf({ ...zero, change: NOTHING, written: { ...NOTHING, bytes: -1 } }, [], { item: true })).toThrow(AmountError);
+    const huge = counting({ k: kind(1, {}, null, Number.MAX_SAFE_INTEGER) }, [], { checked: true });
+    expect(() => one(huge, "k")).toThrow(AmountError);
+    expect(() => holding({ operations: { missing: 1 } }, { one: {}, req: NOTHING, itm: NOTHING, checked: true })).toThrow(AmountError);
+    expect(() => holding({ operations: { k: 0.5 } }, { one: { k: { ...NOTHING, entries: 2, bytes: 2 } }, req: NOTHING, itm: NOTHING, checked: true })).toThrow(AmountError);
+    const validCounts = counting({ u: kind(3), k: kind(1, { operations: ["u"] }) });
+    expect(closure({ ...validCounts, checked: true }, "k")).toEqual(closure(validCounts, "k"));
+    // A deploy-time bound can be safe itself but make a closure unsafe.
+    // The opted-in validator must return a problem rather than throw or
+    // silently preserve an imprecise amount.
+    const data = structuredClone(works);
+    data.capacity = { name: "whole-scope", version: 1 };
+    const validation = validateDefinition(data, { ...PROPOSED_BOUNDS, entryBytes: Number.MAX_SAFE_INTEGER }, undefined, { platform: true });
+    expect(validation.ok ? [] : validation.problems.map((p) => p.code)).toContain("reserve-unbounded");
+  });
+
   test("the closure of an operation is counted by outcome entry, 2 for each attempt, with the closure of each kind that its mark lists: the verdict's kinds give 6 and 14, and a kind that reaches itself has none", () => {
     // "U has 3 attempts and opens nothing: C(U) is 6 entries. K has 1 attempt and lists U: one operation of K counts 2 times (1 + 6), which is 14 entries."
     const c = counting({ u: kind(3), k: kind(1, { operations: ["u"] }), loop: kind(1, { operations: ["loop"] }), far: kind(1, { operations: ["missing"] }) });

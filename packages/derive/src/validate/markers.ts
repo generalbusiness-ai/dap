@@ -8,7 +8,7 @@
  */
 
 import { isObject, own } from "../values.ts";
-import { NOTHING, sum, type Amount } from "../held.ts";
+import { NOTHING, amountMath, type Amount } from "../held.ts";
 import { markerReservations, type MarkedType, type MarkerForm, type Markers } from "../markers.ts";
 import type { ClauseSet, Defining, PendingWork, Type } from "./context.ts";
 import { at, type Rec } from "./shape.ts";
@@ -59,6 +59,7 @@ export function setOnce(d: Defining): void {
 
 /** What the count of section 17.2 gives this file: the chain of a deadline in a state, what a list of effects can start, and what the requests of a form reserve. */
 export interface Counting {
+  checked?: boolean;
   graph: TimedGraph;
   moves: readonly TimedMove[];
   entry(form: PendingWork): Amount;
@@ -77,6 +78,7 @@ export interface Counting {
  * runtime keeps, once the closures are known to be finite.
  */
 export function markerCapacity(d: Pick<Defining, "pendingWork" | "types">, count: Counting, unbounded: Set<PendingWork>) {
+  const { sum } = amountMath(count.checked === true);
   const marks = marksOf(d.pendingWork);
   const origin = new Map<MarkerForm, PendingWork>();
   const types = new Map<string, MarkedType>();
@@ -113,7 +115,7 @@ export function markerCapacity(d: Pick<Defining, "pendingWork" | "types">, count
     const forms = markers[name]!.forms;
     const here = forms.filter((form) => form.in.includes(state));
     for (const form of here.length > 0 ? here : forms) unbounded.add(origin.get(form)!);
-  });
+  }, count.checked);
   return {
     marked: (type: string): boolean => marks.has(type),
     awaits: (type: string, state: string): Amount => amounts.awaits(type, state, []),

@@ -10,7 +10,7 @@
  */
 
 import type { ScopeKind } from "@generalbusiness/dap-contract";
-import { NOTHING, largest, requestEntries, sum, times, type Amount } from "../held.ts";
+import { NOTHING, amountMath, requestEntries, type Amount } from "../held.ts";
 import type { Markers } from "../markers.ts";
 import type { ClauseSet, Defining, PendingWork } from "./context.ts";
 import { markerCapacity } from "./markers.ts";
@@ -52,7 +52,8 @@ export interface Capacity {
  * first. Each rule's chain was computed once, with the cycle check. A cycle
  * of settling forms is refused here, as `reserve-unbounded`.
  */
-export function capacityOf(d: Pick<Defining, "bad" | "bounds" | "pendingWork" | "clauseSets" | "types">, graph: TimedGraph, moves: readonly TimedMove[]): Capacity {
+export function capacityOf(d: Pick<Defining, "bad" | "bounds" | "pendingWork" | "clauseSets" | "types" | "wholeCapacity">, graph: TimedGraph, moves: readonly TimedMove[]): Capacity {
+  const { sum, times, largest } = amountMath(d.wholeCapacity);
   const entry: Amount = { ...NOTHING, entries: 1, bytes: d.bounds.entryBytes };
   // One settling form's own entry and declared openings. Changes to existing subjects and to the copy being settled create
   // no new item/key. Initial-state pending work remains in starts, so the opening unit is included once, beside that pending work.
@@ -71,7 +72,7 @@ export function capacityOf(d: Pick<Defining, "bad" | "bounds" | "pendingWork" | 
   const unbounded = new Set<PendingWork>();
   // Revision 22, "A marker duty": an item of a type that some form settles by a mark reserves by its state and by the marks that
   // are `true`. Every form that settles an item of such a type, by a mark or by state, is counted there, and not below.
-  const markers = markerCapacity(d, { graph, moves, entry: entryFor, deadline, starts: (set) => starts(set), requests: (form) => requestsOf(form) }, unbounded);
+  const markers = markerCapacity(d, { checked: d.wholeCapacity, graph, moves, entry: entryFor, deadline, starts: (set) => starts(set), requests: (form) => requestsOf(form) }, unbounded);
   for (const form of d.pendingWork) {
     if (form.settles && "subject" in form.settles && !markers.marked(form.settles.type)) for (const state of new Set(form.settles.states)) settlers.set(key(form.settles.type, state), [...(settlers.get(key(form.settles.type, state)) ?? []), form]);
   }

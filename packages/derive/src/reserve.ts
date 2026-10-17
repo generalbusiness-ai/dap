@@ -71,7 +71,7 @@
 
 import type { Bounds, Input } from "@generalbusiness/dap-contract";
 import { isPlatformDefinition } from "@generalbusiness/artroom-bytes";
-import { AmountError, holding, naturalAmount, NOTHING, sum, times, type Amount } from "./held.ts";
+import { AmountError, amountMath, holding, naturalAmount, NOTHING, sum, times, type Amount } from "./held.ts";
 import { closureOf, type Owners } from "./ledger.ts";
 import { markerOwed, markerReserved } from "./markers.ts";
 import type { StateView } from "./state.ts";
@@ -91,10 +91,12 @@ export function heldEntries(view: StateView, definition: ValidDefinition): numbe
 
 /** The holder's existing Amount terms, without projecting away the other dimensions. */
 export function heldReserved(view: StateView, definition: ValidDefinition): Amount {
+  const checked = definition.declared.capacity?.name === "whole-scope";
+  const { sum } = amountMath(checked);
   const r = definition.reserving;
   if (!r) return NOTHING;
   const one = Object.fromEntries(Object.entries(r.kinds).filter(([, kind]) => kind.held).map(([name, kind]) => [name, kind.whole]));
-  return view.holders().reduce((amount, holder) => sum(amount, holding(holder.held, { one, req: r.req, itm: r.itm, dec: r.dec })), NOTHING);
+  return view.holders().reduce((amount, holder) => sum(amount, holding(holder.held, { one, req: r.req, itm: r.itm, dec: r.dec, checked })), NOTHING);
 }
 
 /**

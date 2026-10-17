@@ -228,3 +228,33 @@ including the final Scope test compiler after correcting the witness.
 No whole suite or gate ran. Complete producer reservations, persistent duty
 release, transactional admission, named refusals and integrated replay
 remain unfinished; this branch is not ready for review or landing.
+
+## Checked nested arithmetic checkpoint
+
+Opted-in definitions now select operand-checked arithmetic inside the same
+Amount functions used for operation closures, starts, requests, holders,
+marker alternatives and validator task closures. Every input vector and
+multiplier is checked before addition, multiplication or a maximum can
+hide an invalid term. Intermediate totals are also checked. An unknown
+holder kind or decision has no free zero amount. Legacy definitions select
+the original arithmetic. An unsafe computed closure returns a
+reserve-unbounded validation problem rather than escaping as AmountError.
+
+The two development files for holders and settlements passed all 49
+cases. The added pure metadata case distinguishes half an attempt being
+doubled to one, an invalid vector behind a zero multiplier, a negative
+alternative, unsafe byte totals, and a holder count with no declaration.
+It also checks unchanged valid closure amounts and the validator's
+structured refusal at an unsafe configured ceiling. The Derive test
+compiler passes.
+
+The first focused control removed the multiplier check, but the witness
+still passed: its fractional example was an amount operand, which the
+remaining vector check correctly refused. That control SURVIVED and is
+not distinguishing evidence. The witness was strengthened with half a
+holder operation whose two-entry/two-byte amount would otherwise become
+valid integer totals. The same single control then passes its baseline
+and fails that intended assertion, with source restored (owner 17865,
+CLOSED0/54ea10). These are pure metadata witnesses, not native tasks or
+complete admission. Producer maxima, actual-settler duty release and the
+remaining runtime/replay work are still owed. No gate or review ran.

@@ -60,6 +60,19 @@ export const times = (n: number, amount: Amount): Amount => each((d) => n * amou
 /** The largest of amounts, by dimension: alternatives are counted for one task. */
 export const largest = (...amounts: readonly Amount[]): Amount => each((d) => Math.max(0, ...amounts.map((a) => a[d])));
 
+/** Opted-in arithmetic checks operands before zero or a maximum can hide them. */
+export function amountMath(checked: boolean) {
+  if (!checked) return { sum, times, largest };
+  return {
+    sum: (...amounts: readonly Amount[]): Amount => amounts.reduce((total, amount) => naturalAmount(sum(total, naturalAmount(amount))), NOTHING),
+    times: (n: number, amount: Amount): Amount => {
+      naturalAmount({ ...NOTHING, entries: n });
+      return naturalAmount(times(n, naturalAmount(amount)));
+    },
+    largest: (...amounts: readonly Amount[]): Amount => naturalAmount(largest(...amounts.map(naturalAmount))),
+  };
+}
+
 /** What a mark may start, as its `most` states it (section 17.2, "What a mark may start"). A mark that states no `most` starts nothing by the data. */
 export interface Starts { effects: number; operations: readonly string[]; opens: string | null }
 export const STARTS_NOTHING: Starts = { effects: 0, operations: [], opens: null };
@@ -87,6 +100,7 @@ export interface KindStated { attempts: number; most: Starts; send: { once: bool
  * largest that the written effects of one result clause can start.
  */
 export interface Counting {
+  checked?: boolean;
   kinds: Readonly<Record<string, KindStated>>;
   held: ReadonlySet<string>;
   initial(type: string): Amount;
@@ -99,7 +113,7 @@ export interface Counting {
 export const outcomes = (kind: Pick<KindStated, "attempts">): number => 2 * kind.attempts;
 
 /** One entry that the platform builds: 1 entry, at its static size, with the bytes that it may newly retain. */
-const entryOf = (c: Counting, retains = 0): Amount => ({ ...NOTHING, entries: 1, bytes: c.entry + retains });
+const entryOf = (c: Counting, retains = 0): Amount => amountMath(c.checked === true).sum({ ...NOTHING, entries: 1, bytes: c.entry }, { ...NOTHING, bytes: retains });
 
 /** One future request: its pending-request unit, diagnosis and result, and the result's foreign source entry at the entry bound. */
 export const requestEntries = (entry: number): Amount => ({ ...NOTHING, entries: 2, requests: 1, bytes: 3 * entry });
@@ -112,13 +126,14 @@ export const requestEntries = (entry: number): Amount => ({ ...NOTHING, entries:
  * counts nothing here, and the holder that the effect is `for` counts it.
  */
 export function closure(c: Counting, kind: string, open: ReadonlySet<string> = new Set()): Amount | null {
+  const { sum, times } = amountMath(c.checked === true);
   const stated = own(c.kinds, kind);
   if (!stated || open.has(kind)) return null;
   const within = new Set([...open, kind]);
   const started = starts(c, stated.most, { item: true, within });
   const request = stated.send ? requestOf(c, stated.send.clauses, { item: true, within }) : NOTHING;
   if (!started || !request) return null;
-  const n = outcomes(stated);
+  const n = c.checked ? times(2, { ...NOTHING, entries: stated.attempts }).entries : outcomes(stated);
   // The request of the `send`: once where the mark states `once`, and otherwise once for each outcome entry.
   return sum(times(n, sum(entryOf(c, stated.retains), started)), times(stated.send ? (stated.send.once ? 1 : n) : 0, request));
 }
@@ -132,6 +147,7 @@ export function closure(c: Counting, kind: string, open: ReadonlySet<string> = n
  * kind has no finite closure.
  */
 export function starts(c: Counting, most: Starts, how: { item: boolean; within?: ReadonlySet<string> }): Amount | null {
+  const { sum, times } = amountMath(c.checked === true);
   let amount = times(most.effects, c.change);
   for (const kind of most.operations) {
     if (c.held.has(kind)) continue;
@@ -150,6 +166,7 @@ export function starts(c: Counting, most: Starts, how: { item: boolean; within?:
  * the clause can start, by its written effects and by its marks.
  */
 export function requestOf(c: Counting, clauses: readonly ClauseStarts[], how: { item: boolean; within?: ReadonlySet<string> }): Amount | null {
+  const { sum, largest, times } = amountMath(c.checked === true);
   const byClause: Amount[] = [];
   for (const clause of clauses) {
     let started = sum(c.written, { ...NOTHING, bytes: clause.retains });
@@ -160,7 +177,8 @@ export function requestOf(c: Counting, clauses: readonly ClauseStarts[], how: { 
     }
     byClause.push(started);
   }
-  return sum(requestEntries(c.entry), largest(c.written, ...byClause));
+  const request = c.checked ? sum(times(2, entryOf(c)), { ...NOTHING, requests: 1, bytes: c.entry }) : requestEntries(c.entry);
+  return sum(request, largest(c.written, ...byClause));
 }
 
 /**
@@ -172,13 +190,18 @@ export function requestOf(c: Counting, clauses: readonly ClauseStarts[], how: { 
  * those draws on a count. Null: a listed kind has no finite closure.
  */
 export function one(c: Counting, kind: string): Amount | null {
+  const { sum, times } = amountMath(c.checked === true);
   const stated = own(c.kinds, kind);
   const started = stated ? starts(c, stated.most, { item: false }) : null;
-  return stated && started ? times(outcomes(stated), sum(entryOf(c, stated.retains), started)) : null;
+  const n = stated && c.checked ? times(2, { ...NOTHING, entries: stated.attempts }).entries : stated ? outcomes(stated) : 0;
+  return stated && started ? times(n, sum(entryOf(c, stated.retains), started)) : null;
 }
 
 /** `itm`: what one item of an account reserves: 1 item, and the largest, over the types that may be opened, of what an item of the type reserves in its initial state. */
-export const itemOf = (c: Counting, types: readonly string[]): Amount => sum({ ...NOTHING, items: 1 }, largest(...types.map((type) => c.initial(type))));
+export const itemOf = (c: Counting, types: readonly string[]): Amount => {
+  const { sum, largest } = amountMath(c.checked === true);
+  return sum({ ...NOTHING, items: 1 }, largest(...types.map((type) => c.initial(type))));
+};
 
 /**
  * What a holder that still holds those counts reserves, in each dimension:
@@ -187,9 +210,14 @@ export const itemOf = (c: Counting, types: readonly string[]): Amount => sum({ .
  * A count of a kind that has no amount counts nothing: the validator refuses
  * the data that states one.
  */
-export function holding(held: Held, amounts: { one: Readonly<Record<string, Amount>>; req: Amount; itm: Amount; dec?: Readonly<Record<string, Amount>> }): Amount {
-  const byKind = Object.entries(held.operations ?? {}).map(([kind, n]) => times(n, own(amounts.one, kind) ?? NOTHING));
-  const byMessage = Object.entries(held.decisions ?? {}).map(([message, n]) => times(n, own(amounts.dec, message) ?? NOTHING));
+export function holding(held: Held, amounts: { one: Readonly<Record<string, Amount>>; req: Amount; itm: Amount; dec?: Readonly<Record<string, Amount>>; checked?: boolean }): Amount {
+  const { sum, times } = amountMath(amounts.checked === true);
+  const known = (amount: Amount | undefined): Amount => {
+    if (amount === undefined && amounts.checked) throw new AmountError("holder count has no declared amount");
+    return amount ?? NOTHING;
+  };
+  const byKind = Object.entries(held.operations ?? {}).map(([kind, n]) => times(n, known(own(amounts.one, kind))));
+  const byMessage = Object.entries(held.decisions ?? {}).map(([message, n]) => times(n, known(own(amounts.dec, message))));
   return sum(...byKind, ...byMessage, times(held.requests ?? 0, amounts.req), times(held.items ?? 0, amounts.itm));
 }
 

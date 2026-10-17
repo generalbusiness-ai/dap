@@ -32,7 +32,7 @@
 
 import { RETAINED_INPUT_BYTES } from "@generalbusiness/dap-contract";
 import type { FieldType, Held } from "@generalbusiness/dap-contract";
-import { NOTHING, closure, holding, itemOf, largest, one, requestOf, retainedBytes, starts, sum, type Amount, type ClauseStarts, type Counting, type KindStated, type Starts, STARTS_NOTHING } from "../held.ts";
+import { NOTHING, amountMath, closure, holding, itemOf, one, requestOf, retainedBytes, starts, type Amount, type ClauseStarts, type Counting, type KindStated, type Starts, STARTS_NOTHING } from "../held.ts";
 import { markerReservations } from "../markers.ts";
 import { isObject, own } from "../values.ts";
 import type { Capacity } from "./capacity.ts";
@@ -87,6 +87,7 @@ const CLAUSES = ["applied", "refused", "superseded", "undelivered", "conflict"] 
 /** Reads the members, makes the checks, and computes the amounts. Undefined: the value is no platform data, or it has no kind and no `holds`. */
 export function reserving(d: Defining, top: Rec, capacity: Pick<Capacity, "pendingWorkAmounts" | "markers">, outcomeValues: Readonly<Record<string, readonly import("../ledger.ts").EvidenceValueDomain[]>> = {}): Reserving | undefined {
   if (!d.platform) return undefined;
+  const { sum, largest } = amountMath(d.wholeCapacity);
   const { bad, rec, int, list, bounds } = d;
   const kindsWritten = isObject(top["outcomes"]) ? top["outcomes"] : {};
   const typesWritten = isObject(top["items"]) ? top["items"] : {};
@@ -261,13 +262,14 @@ export function reserving(d: Defining, top: Rec, capacity: Pick<Capacity, "pendi
 
   // Rule 11 of "A marker duty": an unnamed item reserves the whole sum of rule 6, with no mark completed. A marked type has no
   // row in pending: its state task and each marker task are counted together by the shared calculator, beside its deadline.
-  const markedAmounts = capacity.markers ? markerReservations(capacity.markers) : null;
+  const markedAmounts = capacity.markers ? markerReservations(capacity.markers, undefined, undefined, d.wholeCapacity) : null;
   const inState = (type: string, state: string): Amount => sum(
     own(own(capacity.pendingWorkAmounts.deadlines, type), state) ?? NOTHING,
     own(capacity.markers, type) ? markedAmounts!.awaits(type, state, []) : (own(own(capacity.pendingWorkAmounts.pending, type), state) ?? NOTHING),
   );
   const everyState = [...d.types.values()].flatMap((type) => [...type.states.keys()].map((state) => inState(type.name, state)));
   const c: Counting = {
+    checked: d.wholeCapacity,
     kinds: Object.fromEntries(stated), held,
     initial: (type) => { const of = d.types.get(type); return of ? inState(type, of.initial) : NOTHING; },
     change: largest(...everyState),
@@ -352,7 +354,7 @@ export function reserving(d: Defining, top: Rec, capacity: Pick<Capacity, "pendi
   }
   if (d.problems.length > 0) return undefined;
   const dec = Object.fromEntries([...decisions].map(([message, amounts]) => [message, largest(...amounts)]));
-  const amounts = { one: ones, req, itm, dec };
+  const amounts = { one: ones, req, itm, dec, checked: d.wholeCapacity };
   return {
     kinds,
     holders: Object.fromEntries([...holds].map(([type, of]) => [type, { holds: of, amount: holding(of, amounts) }])),

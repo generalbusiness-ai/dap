@@ -33,7 +33,7 @@
  */
 
 import type { Item, StateView } from "./state.ts";
-import { NOTHING, largest, sum, times, type Amount } from "./held.ts";
+import { NOTHING, amountMath, type Amount } from "./held.ts";
 import type { ValidDefinition } from "./validate/index.ts";
 import { own } from "./values.ts";
 
@@ -80,7 +80,8 @@ export type Markers = Readonly<Record<string, MarkedType>>;
  * closure is then not finite (rule 9), and the validator refuses the
  * definition.
  */
-export function markerReservations(types: Markers, base: (type: string, form: MarkerForm) => Amount = (_, form) => form.amount, cyclic: (type: string, state: string) => void = () => undefined) {
+export function markerReservations(types: Markers, base: (type: string, form: MarkerForm) => Amount = (_, form) => form.amount, cyclic: (type: string, state: string) => void = () => undefined, checked = false) {
+  const { sum, largest } = amountMath(checked);
   const known = new Map<string, Amount>();
   const open = new Set<string>();
   const completed = (t: MarkedType, done: readonly string[]): string[] => t.marks.filter((mark) => done.includes(mark));
@@ -176,9 +177,11 @@ const PAGE = 64;
  * at the count of the state with no mark completed, which is never less.
  */
 export function markerReserved(view: StateView, definition: Pick<ValidDefinition, "markers" | "declared">): Amount {
+  const checked = definition.declared.capacity?.name === "whole-scope";
+  const { sum, times } = amountMath(checked);
   const markers = definition.markers;
   if (!markers) return NOTHING;
-  const amounts = markerReservations(markers);
+  const amounts = markerReservations(markers, undefined, undefined, checked);
   let reserved = NOTHING;
   for (const [name, type] of Object.entries(markers)) {
     for (const [state, { final }] of Object.entries(own(definition.declared.items, name)?.states ?? {})) {
