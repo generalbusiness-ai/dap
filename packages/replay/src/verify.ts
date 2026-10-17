@@ -41,7 +41,7 @@ import { DOMAINS, PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Bounds, CapabilityName, Digest, Entry, FactRef, Grant, Head, KeyId, Observation, ObservationRequest, ObservationUse, MismatchName, PlatformData, PlatformDefinition, Report, RetainedInput, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import { rawRetainedJSON, domainRetainedJSON, canonicalize, intentDigest, isDigest, isEntry, isObservationUse, isPlatformDefinition, parseStrict, platformName, scopeIdOf, utf8, verifySignedIntent } from "@generalbusiness/artroom-bytes";
 import {
-  actValueDependencies, observedValueDependencies, detachedTextDependencies, outcomeValueDependencies, outcomeSnapshotDependencies, requiredDependency, textDependency, MISMATCHES, MemoryState, WINDOWS, actionOf, agrees, applyEntry, drawsOf, clockOf, contentStates, entryOf, fits, observedName, headsOf, highestHead, isFactRef, isLocalId, isObject, isScopeRef, isUnprovenDecisionBinding, judgeAct, judgeCheckpoint, judgeDelivery,
+  ByteUsage, capacityFull, creates, reserved, actValueDependencies, observedValueDependencies, detachedTextDependencies, outcomeValueDependencies, outcomeSnapshotDependencies, requiredDependency, textDependency, MISMATCHES, MemoryState, WINDOWS, actionOf, agrees, applyEntry, drawsOf, clockOf, contentStates, entryOf, fits, observedName, headsOf, highestHead, isFactRef, isLocalId, isObject, isScopeRef, isUnprovenDecisionBinding, judgeAct, judgeCheckpoint, judgeDelivery,
   judgeDiagnosis, outcomeValueDomains, fixedBy, judgeGenesis, judgeGrant, judgeOutcome, judgePreparation, judgeTimed, membershipOf, nextDue, observedOf, own, ownersOf, ruleAt, same, snapshotRead, stepsOf, timeMs, updateOf, sentBy, validateDefinition, windowOf,
 } from "@generalbusiness/dap-derive";
 import type { DependencyOrigin, RequiredDependency, ActJudgment, Capabilities, Clock, DrawOptions, Fetched, Judgment, Observing, Owners, PlatformRules, PreparationJudgment, RecordedRef, Retains, Rules, StateView, TimedJudgment, ValidDefinition, Window } from "@generalbusiness/dap-derive";
@@ -318,6 +318,12 @@ interface Run {
   depth: number;
   /** Section 9.3: each detached text whose bytes are not at hand, with the first entry that names it, in the order of the history. A later tombstone of this scope answers for it. */
   owed: Map<Digest, FactRef>;
+  /** Logical retained bytes, independent of the traversal's reply allowance. */
+  bytes: ByteUsage;
+  incompleteBytes: { from: number; through: number }[];
+  unknownByteTexts: Map<Digest, number>;
+  byteIntervals: { digest: Digest; from: number; through: number }[];
+  redactions: Map<Digest, number>;
   /** Section 16.1: the latest checked entry that retains each read, by its run and its number, with the observation as that entry retains it. */
   reads: Map<string, Retains>;
   /** The runs of the retained observations: each run that an entry so far names, and the run of the latest such entry. */
@@ -465,6 +471,13 @@ class Verifier {
       const last = target.sealed[target.head.seq]!;
       if (last.hash !== target.head.hash) throw new Stop("mismatch", "the head the source states is not the hash of its last entry", { at: target.at!, seq: last.entry.seq, hash: last.hash });
       await this.#settle();
+      // Continue every other check across missing historical text sizes.
+      // Only after tombstones are settled can these become redacted spans.
+      const partial = [...this.#runs.values()].find(run => run.incompleteBytes.length > 0);
+      if (partial) {
+        const seq = partial.incompleteBytes[0]!.from, sealed = partial.sealed[seq]!;
+        throw new Stop("incomplete", "redacted size not retained", { at: partial.at!, seq, hash: sealed.hash });
+      }
       // Section 16.4: a check whose walk cannot be derived gets no claim. It is said last, so that every mismatch that the history
       // shows is reported first: of the record's snapshot, and of the act that the guard `ancestry` admitted on the record.
       const unwalked = this.#unwalked[0];
@@ -481,6 +494,33 @@ class Verifier {
     const at = target.at ?? target.said;
     const covered = [target, ...[...this.#runs.values()].filter((run) => run !== target)].filter((run) => run.sealed.length > 0);
     const proven = [...this.#proven.values()];
+    // Sweep interval endpoints once, rather than copying the growing set
+    // of missing digests at every head. Unproved loss dominates an overlap.
+    const incompleteBytes = [...this.#runs.values()].flatMap(run => {
+      const intervals = [...run.byteIntervals, ...[...run.unknownByteTexts].map(([digest, from]) => ({ digest, from, through: run.sealed.length - 1 }))];
+      const events = new Map<number, [number, number]>();
+      for (const span of intervals) {
+        if (span.through < span.from) continue;
+        const column = (run.redactions.get(span.digest) ?? -1) > span.through ? 0 : 1;
+        for (const [position, delta] of [[span.from, 1], [span.through + 1, -1]] as const) {
+          const counts = events.get(position) ?? [0, 0];
+          counts[column] += delta;
+          events.set(position, counts);
+        }
+      }
+      const spans: NonNullable<Report["incompleteBytes"]>[number][] = [], positions = [...events.keys()].sort((a, b) => a - b);
+      let redacted = 0, unavailable = 0;
+      for (let i = 0; i < positions.length - 1; i++) {
+        const from = positions[i]!, delta = events.get(from)!;
+        redacted += delta[0]; unavailable += delta[1];
+        if (redacted + unavailable === 0) continue;
+        const through = positions[i + 1]! - 1, reason = unavailable > 0 ? "retained text unavailable" : "redacted size not retained";
+        const last = spans.at(-1);
+        if (last?.through === from - 1 && last.reason === reason) last.through = through;
+        else spans.push({ scope: run.at!, from, through, reason });
+      }
+      return spans;
+    });
     const report: Report = {
       mode: this.#mode,
       // Consistent: the head checked through. Otherwise: the head the check was aiming for.
@@ -490,6 +530,7 @@ class Verifier {
       dependencies: { verified: proven.filter((how) => how === "replayed").length, anchored: proven.filter((how) => how === "anchored").length, missing: stop?.missing ? [stop.missing] : [] },
       trusts: [...(Object.keys(TRUSTS) as Trust[]).filter((trust) => this.#trusts.has(trust)).map((trust) => TRUSTS[trust]), ...[...this.#coded].sort().map(platformCode)],
       redacted: this.#redacted,
+      ...(incompleteBytes.length > 0 ? { incompleteBytes } : {}),
       result: stop ? stop.result : "consistent",
       ...(stop?.at ? { at: stop.at } : {}),
       ...(stop ? nameOf(stop) : {}),
@@ -504,7 +545,7 @@ class Verifier {
     if (this.#runs.size >= this.#limits.scopes) throw new Stop("incomplete", `the limit of ${this.#limits.scopes} scopes was reached`);
     const got = await this.#page(id, 0);
     if (!got.ok) return got.reason;
-    const run: Run = { id, said: got.page.scope, head: got.page.head, at: null, named: null, definition: null, platform: null, state: new MemoryState(), sealed: [], foldInputs: new Map(), read: new Map(), next: 0, busy: false, depth: Number.POSITIVE_INFINITY, owed: new Map(), reads: new Map(), runs: { seen: new Set(), last: null }, observed: undefined, viewed: null, membership: undefined, rulesScope: undefined, revised: null, snapshots: new Map() };
+    const run: Run = { id, said: got.page.scope, head: got.page.head, at: null, named: null, definition: null, platform: null, state: new MemoryState(), sealed: [], foldInputs: new Map(), read: new Map(), next: 0, busy: false, depth: Number.POSITIVE_INFINITY, owed: new Map(), bytes: new ByteUsage(), incompleteBytes: [], unknownByteTexts: new Map(), byteIntervals: [], redactions: new Map(), reads: new Map(), runs: { seen: new Set(), last: null }, observed: undefined, viewed: null, membership: undefined, rulesScope: undefined, revised: null, snapshots: new Map() };
     if (!this.#take(run, 0, got.page.entries, got.page.next)) return "the source's first page is not the entries from the genesis in order";
     this.#runs.set(id, run);
     return run;
@@ -555,6 +596,23 @@ class Verifier {
     return stored;
   }
 
+  #endUnknownBytes(run: Run, digest: Digest, through: number): void {
+    const from = run.unknownByteTexts.get(digest);
+    if (from === undefined) return;
+    if (through >= from) run.byteIntervals.push({ digest, from, through });
+    run.unknownByteTexts.delete(digest);
+  }
+
+  #retainBytes(run: Run, key: Pick<RetainedInput, "kind" | "digest" | "domain">, size: number | null, seq: number): void {
+    const text = key.kind === "text" || key.kind === "value" && key.domain === DOMAINS.text;
+    const before = text && run.bytes.unknownText(key.digest);
+    run.bytes.retain(key, size);
+    if (!text) return;
+    const after = run.bytes.unknownText(key.digest);
+    if (!before && after) run.unknownByteTexts.set(key.digest, seq);
+    if (before && !after) this.#endUnknownBytes(run, key.digest, seq - 1);
+  }
+
   /** Section 9.2: an input an entry names by digest. One that is missing makes the replay `incomplete`. */
   async #retained(run: Run, dependency: RequiredDependency, what: string): Promise<RetainedInput> {
     const { key, origin: { at } } = dependency;
@@ -567,6 +625,7 @@ class Verifier {
       throw new Stop("incomplete", `a retained input is missing: ${what}, ${digest} (${got.reason})`, at);
     }
     this.#count(got.bytes);
+    if (run.definition === null || run.definition.declared.capacity) this.#retainBytes(run, key, utf8(got.input.bytes).length, at.seq);
     return got.input;
   }
 
@@ -586,7 +645,9 @@ class Verifier {
     }
     this.#count(got.bytes);
     const text = domainRetainedJSON(DOMAINS.text, digest, got.input.bytes);
-    return typeof text === "string" ? utf8(text).length : null;
+    if (typeof text !== "string") return null;
+    if (run.definition?.declared.capacity) this.#retainBytes(run, key, utf8(got.input.bytes).length, origin.at.seq);
+    return utf8(text).length;
   }
 
   /**
@@ -1047,7 +1108,10 @@ class Verifier {
         const got = await this.#source.retained(run.id, key.kind, key.digest, { bytes: Math.min(left, RETAINED_REPLY_BYTES) }, "domain" in key ? key.domain : undefined);
         if (!got.ok) { this.#unread(got.reason, left < RETAINED_REPLY_BYTES, `a retained input of ${run.id}`); continue; }
         this.#count(got.bytes);
-        if (domainRetainedJSON(domain, digest, got.input.bytes) !== undefined) matched = got.input.bytes;
+        if (domainRetainedJSON(domain, digest, got.input.bytes) !== undefined) {
+          matched = got.input.bytes;
+          if (run.definition?.declared.capacity) this.#retainBytes(run, key, utf8(got.input.bytes).length, where.seq);
+        }
         if (matched !== null) break;
       }
       if (matched === null) throw new Stop("incomplete", `a retained input is missing: the value that an observation of the entry names, ${digest}`, where);
@@ -1227,6 +1291,10 @@ class Verifier {
     const state = run.state;
     const definition = run.definition ?? (run.definition = await this.#pin(run, where, input.type));
     const bounds = this.#bounds;
+    // Pending planner decision b7fd0295: present-day child bytes do not
+    // establish which optional declarations genesis retained. Do not claim
+    // a complete historical byte check from that unrecorded birth set.
+    if (input.type === "genesis" && definition.declared.capacity && creates(definition.declared).length > 0) throw new Stop("incomplete", "the genesis's retained child-definition set is not established", where);
     // Sections 4.1 and 9.4: a genesis states the genesis act of the definition that it pins. Integrity mode reads no definition, and does not check this.
     if (input.type === "genesis" && input.kind !== definition.declared.genesis) throw mismatch(`genesis-kind: the genesis records the kind ${input.kind}, and the genesis act of the pinned definition is ${definition.declared.genesis}`);
 
@@ -1234,6 +1302,7 @@ class Verifier {
     const facts: Fetched[] = [];
     for (const use of entry.uses) {
       const kept = await this.#retained(run, requiredDependency({ at: where, input: input.type }, "foreign-use", { kind: "entry", digest: use.content }), `the foreign entry ${use.fact.seq} of ${use.fact.at.scope}`);
+      if (definition.declared.capacity && utf8(kept.bytes).length > bounds.entryBytes) throw mismatch("a retained foreign entry exceeds its opt-in entryBytes producer ceiling");
       const copy = rawRetainedJSON(use.content, kept.bytes);
       if (copy === undefined) throw new Stop("incomplete", `a retained input is not the one named: the foreign entry ${use.fact.seq} of ${use.fact.at.scope}`, where);
       if (!isEntry(copy)) throw mismatch("a used foreign entry is not an entry");
@@ -1290,6 +1359,7 @@ class Verifier {
       const source = typeof p.rule === "string" && Object.hasOwn(definition.declared.rules, p.rule) ? definition.declared.rules[p.rule]! : null;
       if (source === null || !isDigest(p.input)) throw mismatch("the entry records the result of a rule its definition does not declare");
       const kept = await this.#retained(run, requiredDependency({ at: where, input: input.type }, "rule-input", { kind: "rule", digest: p.input }), `the input of rule ${p.rule}`);
+      if (definition.ruleInputBytes !== undefined && utf8(kept.bytes).length > definition.ruleInputBytes) throw mismatch("a retained rule input exceeds its opt-in producer ceiling");
       const read = rawRetainedJSON(p.input, kept.bytes);
       if (read === undefined) throw new Stop("incomplete", `a retained input is not the one named: the input of rule ${p.rule}`, where);
       const [again] = await evaluateRules([{ rule: p.rule, source, input: read, digest: p.input }]);
@@ -1307,7 +1377,10 @@ class Verifier {
       const text = dependency.key.digest;
       const size = await this.#text(run, { at: where, input: input.type }, text);
       texts.set(text, size);
-      if (size === null && !run.owed.has(text)) run.owed.set(text, where);
+      if (size === null) {
+        if (definition.declared.capacity) this.#retainBytes(run, dependency.key, null, entry.seq);
+        if (!run.owed.has(text)) run.owed.set(text, where);
+      }
     }
     // Section 6.2: a local fact, and a part of one, are read from this scope's own history: the entries checked so far.
     // Section 9.3: a rule of a platform definition is given only what section 6.1 lists. All of it is in the history, in the retained
@@ -1498,7 +1571,22 @@ class Verifier {
     const foldedWith: DrawOptions = { ...foldInputs, values: judged.draft.values?.map(value => value.bytes) };
     applyEntry(state, definition, entry, hash, foldedWith);
     if (definition.declared.capacity?.name === "whole-scope" || input.type === "delivery" && input.message.class === "request" || identity?.mode === "partition-v1" && facts.length > 0) run.foldInputs.set(entry.seq, foldedWith);
-    if (!fits(state, definition, bounds, input, judged.draft.settles, ownersOf(definition, run.platform, this.#owners))) throw mismatch("the taking or new-work entry exceeds the budget of used plus reserved entries");
+    if (definition.declared.capacity?.name === "whole-scope") {
+      run.bytes.journal(entry.seq, hash, utf8(bytes).length);
+      for (const effect of entry.effects) if (effect.effect === "redact") for (const digest of effect.texts) {
+        run.bytes.redact(digest);
+        if (!run.bytes.unknownText(digest)) this.#endUnknownBytes(run, digest, entry.seq - 1);
+      }
+      const counted = run.bytes.count();
+      const used = { entries: entry.seq + 1, ...state.keyCounts(), bytes: counted.complete ? counted.bytes : null };
+      const bound = capacityFull(used, reserved(state, definition, input, ownersOf(definition, run.platform, this.#owners)), bounds);
+      if (bound) throw mismatch(`the entry exceeds ${bound}: Used plus Reserved is over its ceiling`);
+      if (!counted.complete) {
+        const last = run.incompleteBytes.at(-1);
+        if (last?.through === entry.seq - 1) last.through = entry.seq;
+        else run.incompleteBytes.push({ from: entry.seq, through: entry.seq });
+      }
+    } else if (!fits(state, definition, bounds, input, judged.draft.settles, ownersOf(definition, run.platform, this.#owners))) throw mismatch("the taking or new-work entry exceeds the budget of used plus reserved entries");
     // Section 16.1: this entry is now the latest that retains each of its reads, in its grant and in `observed`. A preparation retains one in its grant,
     // and an outcome and a delivery of a result in `observed` alone.
     this.#retains(run, entry, hash, retainedBy(input));
@@ -1506,6 +1594,7 @@ class Verifier {
     // what the slot had held. A text that an earlier entry names, and whose bytes are gone, is reported as redacted.
     for (const effect of entry.effects) {
       if (effect.effect !== "redact") continue;
+      for (const digest of effect.texts) run.redactions.set(digest, entry.seq);
       this.#tally.owed += effect.texts.length;
       if (effect.texts.filter((text) => run.owed.delete(text)).length === 0) continue;
       this.#redacted.push({ tombstone: where, item: effect.item, slot: effect.slot });

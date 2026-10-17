@@ -45,6 +45,7 @@ export class ByteUsage {
   }
 
   retain(input: Key, size: number | null): void {
+    if (size === null && input.kind !== "text") throw new AmountError("only a historical detached text may have an unknown byte size");
     const domain = retainedByteDomain(input.kind, input.domain);
     this.#keep(this.#source(input), domain, input.digest, size);
   }
@@ -62,6 +63,11 @@ export class ByteUsage {
       this.#missing = missing;
     } else held.sources.delete(source);
     this.#sources.delete(source);
+  }
+
+  /** Constant-time identity check for a historical missing-text interval. */
+  unknownText(digest: Digest): boolean {
+    return this.#counted.get(canonicalize([DOMAINS.text, digest]))?.size === null;
   }
 
   count(): ByteCount {

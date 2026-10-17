@@ -1,5 +1,8 @@
+import { env } from "cloudflare:workers";
+import { httpSource, verify } from "@generalbusiness/artroom-replay";
+import { route } from "../src/worker.ts";
 import { expect, test } from "vitest";
-import { PROPOSED_BOUNDS, type Entry } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type Entry, type SendForm } from "@generalbusiness/dap-contract";
 import { parseStrict } from "@generalbusiness/artroom-bytes";
 import { JOB_READ_ACTION, ownerReservations, reserved } from "@generalbusiness/dap-derive";
 import { grantOf, variant } from "@generalbusiness/dap-derive/testing";
@@ -7,7 +10,7 @@ import { SqliteStore } from "../src/index.ts";
 import { CAPABILITY_CODE } from "../src/ports.ts";
 import { controls } from "../src/testing.ts";
 import { wired } from "./outside.ts";
-import { Lane, START, at, creation, definition, stubOf, una, vic } from "./support.ts";
+import { Lane, START, at, creation, definition, stubOf, reader, una, vic } from "./support.ts";
 
 test("native read-token reservations keep their entry bytes after the mint replaces its key and the object is evicted", async () => {
   // Real scope, native preparation/outcome code, SQLite, driver and eviction.
@@ -15,6 +18,9 @@ test("native read-token reservations keep their entry bytes after the mint repla
   // stand-in, not a token minted at any provider. No raw record is injected.
   const under = variant(definition.declared, d => {
     d.capacity = { name: "whole-scope", version: 1 };
+    // Close the fixture declaration: its unused link form names a dummy
+    // child whose birth-time retention is outside this token witness.
+    d.acts.link.sends = d.acts.link.sends.filter((send: SendForm) => !("create" in send));
     d.capabilities.push({ name: "git-read", version: 1 });
     const name = { type: "text", max: 64 };
     const checks = { type: "list", max: 4, of: { type: "record", of: { name: { ...name, required: true }, checker: { type: "member", required: true } } } };
@@ -58,5 +64,17 @@ test("native read-token reservations keep their entry bytes after the mint repla
     expect(await scope.stub.prepare(scope.intent(vic, "git-read@1:job-read", { fields: { job: second.fact } }), [grantOf(vic, scope.at, [JOB_READ_ACTION])], "git-read@1", "job-read")).toMatchObject({ answer: "refused", reason: "scope-full", name: "scopeRecords" });
     expect(await inspect()).toEqual(beforeRefusal);
     expect(sends).toBe(1);
+    // Read the real journal and retained inputs through native HTTP routes.
+    // The verifier trusts this fixture's recorded authority, and its host
+    // answer remains synthetic; capability/owner derivation is native code.
+    const source = httpSource("https://scope.test", { reader, fetch: async (url, init) => {
+      const response = await route(new Request(url, init), env.SCOPES);
+      return { status: response.status, body: response.body };
+    } });
+    const options = { mode: "replay", scope: scope.name, grants: "as-recorded", capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE, bounds: c.bounds } as const;
+    const replayed = await verify(source, options);
+    expect([replayed.report.result, replayed.why]).toEqual(["consistent", null]);
+    const over = await verify(source, { ...options, bounds: { ...c.bounds, scopeRecords: 0 } });
+    expect([over.report.result, over.report.at?.seq, over.why]).toEqual(["mismatch", 3, "the entry exceeds scopeRecords: Used plus Reserved is over its ceiling"]);
   } finally { wired.delete(asked.name); }
 });

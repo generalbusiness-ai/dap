@@ -242,9 +242,16 @@ export function fits(view: StateView, definition: ValidDefinition, bounds: Pick<
   return settles || scope.head.seq + 1 + (standing ?? owed(view, definition, input, owners)) <= bounds.scopeEntries;
 }
 
+/** Null bytes explicitly omit that historical check; callers must report
+ * its incomplete span. All other dimensions and operands remain checked. */
+export type CapacityUse = Omit<Amount, "bytes"> & { bytes: number | null };
+
 /** Compare actual use and the one pending-work Amount. Equality still fits. */
-export function capacityFull(used: Amount, pending: Amount, bounds: Pick<Bounds, ScopeBoundName>): ScopeBoundName | null {
-  const total = amountMath(true).sum(used, pending);
+export function capacityFull(used: CapacityUse, pending: Amount, bounds: Pick<Bounds, ScopeBoundName>): ScopeBoundName | null {
+  naturalAmount(pending);
+  // This is a projection of the known comparison, never a zero size for a
+  // producer. The byte dimension is explicitly excluded below when unknown.
+  const total = amountMath(true).sum({ ...used, bytes: used.bytes ?? 0 }, pending);
   const dimensions = { scopeEntries: "entries", scopeBytes: "bytes", scopeItems: "items", scopeRecords: "records", scopeRequests: "requests" } as const;
   // Check the whole configuration before selecting a refusal; no invalid
   // later ceiling can be concealed by an earlier exhausted one.
@@ -252,6 +259,9 @@ export function capacityFull(used: Amount, pending: Amount, bounds: Pick<Bounds,
     const n = bounds[bound];
     if (!Number.isSafeInteger(n) || n < 0 || Object.is(n, -0)) throw new AmountError(`capacity ${bound} ceiling is invalid`);
   }
-  for (const bound of Object.keys(dimensions) as ScopeBoundName[]) if (total[dimensions[bound]] > bounds[bound]) return bound;
+  for (const bound of Object.keys(dimensions) as ScopeBoundName[]) {
+    if (bound === "scopeBytes" && used.bytes === null) continue;
+    if (total[dimensions[bound]] > bounds[bound]) return bound;
+  }
   return null;
 }

@@ -72,6 +72,12 @@ test("replay derives opt-in item and originating-request duties through a diagno
   const source = new MemorySource([{ scope: history.at, entries: history.entries.map(({ entry, hash }) => ({ seq: entry.seq, hash, bytes: canonicalize(entry) })), retained: [{ kind: "definition", digest: definition.digest, bytes: canonicalize(definition.declared) }] }]);
   const replayed = await verify(source, { mode: "replay", scope: history.at.scope, grants: "as-recorded" });
   expect([replayed.report.result, replayed.why]).toEqual(["consistent", null]);
+  const exact = await verify(source, { mode: "replay", scope: history.at.scope, grants: "as-recorded", bounds: { ...PROPOSED_BOUNDS, scopeItems: 3, scopeRequests: 2 } });
+  expect([exact.report.result, exact.why]).toEqual(["consistent", null]);
+  for (const [bound, ceiling] of [["scopeItems", 2], ["scopeRequests", 1]] as const) {
+    const full = await verify(source, { mode: "replay", scope: history.at.scope, grants: "as-recorded", bounds: { ...PROPOSED_BOUNDS, [bound]: ceiling } });
+    expect([full.report.result, full.report.at?.seq, full.why]).toEqual(["mismatch", second, `the entry exceeds ${bound}: Used plus Reserved is over its ceiling`]);
+  }
 });
 
 test("historical item duties contain only their head's admitted tasks, preserve an ordinary final transition and remove a genuine settlement", () => {

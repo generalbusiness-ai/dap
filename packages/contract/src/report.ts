@@ -15,6 +15,9 @@ export interface Report {
   trusts: readonly string[];                // for example "service clock", "delivery times", "Git host as read at T"
   /** Each text that a tombstone removed, and that was therefore not derived again: the tombstone entry, and the slot that held the text. */
   redacted: readonly { tombstone: FactRef; item: number; slot: string }[];
+  /** Historical whole-scope byte checks lacking text-size evidence.
+   * Other capacity dimensions are checked throughout these inclusive spans. */
+  incompleteBytes?: readonly { scope: ScopeRef; from: number; through: number; reason: "redacted size not retained" | "retained text unavailable" }[];
   result: "consistent" | "mismatch" | "missing-dependency" | "unsupported-definition" | "incomplete";
   at?: FactRef;                             // the entry a mismatch names
   /**

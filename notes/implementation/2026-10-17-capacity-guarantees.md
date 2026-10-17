@@ -2,9 +2,13 @@
 
 Work in progress under request `b4062d8c`, promise `d3e026bd`, and full
 capacity root `113a54bd`. This branch starts from Main `2637e6bb`, tree
-`c7e7188b`. It is not ready for review or landing: configuration parsing, the shared Amount traversal and logical key reads
-are present, but runtime admission and replay still use the old entry-only
-check. No whole-scope capacity guarantee is established by this checkpoint.
+`c7e7188b`, and later incorporates reviewed journey Main `92bedfda`.
+Runtime admission now checks all five dimensions. Replay checks the added
+dimensions for histories with an established retained birth set and reports
+explicit historical byte gaps. The branch is not ready for review or
+landing: complete platform/owner/standing reservation terms and child
+retention provenance remain unfinished. No complete whole-scope capacity
+guarantee is established by these development checkpoints.
 
 ## Adopted boundary
 
@@ -879,3 +883,106 @@ all-five replay with explicit historical redacted-byte incompleteness,
 the remaining native conservation witnesses, final gate and independent
 Source review remain unfinished. Checking actual use prevents a committed
 overflow; it does not by itself prove every admitted task was fully funded.
+
+### Replay of added dimensions and historical byte gaps (development checkpoint)
+
+Opt-in replay now derives item, record and pending-request keys at each
+head, and reads the same pending-work Amount as runtime admission. It
+compares all five dimensions where bytes are known. Selected declarations,
+foreign copies, rule inputs, text, observation values and outcome inputs
+feed the existing domain/digest ByteUsage account. Selection remains the
+existing retained-consumer selectors; failed observation-domain probes
+are not counted as selected values. Journal bytes are counted in their
+own tagged domain, and redactions remove the text source before that
+head's comparison. The old cohort still uses fits and its old report.
+Opt-in retained foreign entries and rule inputs must also meet the writer
+ceilings already enforced by the runtime.
+
+A missing detached text has an explicit unknown byte size. The shared
+comparison skips only that historical byte dimension, checks its other
+operands and ceilings, and still rejects an item or request overflow.
+Only historical text can have an unknown size; a missing required input
+is not counted as zero. ByteUsage exposes a constant-time missing-text
+identity check for interval bookkeeping. The report sweeps interval
+endpoints, rather than copying a growing missing-text set at every head.
+Adjacent intervals with the same reason coalesce; unproved loss dominates
+an overlap. Metadata grows with missing-text episodes, not with their
+number multiplied by the length of the journal.
+
+Report.incompleteBytes lists the inclusive scope/from/through span and a
+reason. A checked later tombstone permits the exact adopted reason
+"redacted size not retained". If replay stops before proving a tombstone,
+or a later body is merely missing, the reason is instead "retained text
+unavailable". A later missing body cannot erase the proved redaction of
+an earlier span. Once the other derivations and tombstones have been
+checked, any surviving historical byte gap makes the whole opt-in replay
+incomplete. The plain-English rendering says that the other four capacity
+dimensions were still checked there. Neither an unknown historical size
+nor an incomplete report waives a key-dimension mismatch.
+
+One unresolved native provenance issue is tracked by planner request
+b7fd0295. namedBy intentionally permits absent child declarations at birth,
+while a later definition-domain value can retain the same declaration.
+Present-day bytes therefore do not determine that optional birth set.
+The proposed route requires a complete reachable child closure at birth
+for opt-in only; it is awaiting disposition. Until then, opt-in replay
+of a genesis with static child-digest edges explicitly stops incomplete:
+"the genesis's retained child-definition set is not established". This is
+a development stop, not a delivered exception or a waiver of complete
+byte replay. Existing cohorts and pinned declarations are unchanged.
+
+The shared native lane fixture has an unresolved dummy child in its link
+form. The new byte and token witnesses now use a closed fixture variant
+that removes only that unused create edge. They make no claim about real
+child-closure handling. Their actual native journal and retained-input
+HTTP reads replay at the exact byte budget and through the funded report
+acceptance/closing checkpoint. The native token history replays at one
+record and is rejected at zero at its genuine preparation entry. The
+host answer and authority remain the previously labelled stand-ins;
+capability and owner code, storage, HTTP reads and verifier are real.
+The isolated closed-fixture native run passes five cases.
+
+The existing real-route text witness now runs for both cohorts. Legacy
+still reports consistent with its redacted-text trust. Opt-in replay after
+actual eviction reports incomplete, reaches the same final head, and
+names only the earlier two-entry byte span as redacted size not retained.
+Both cases pass. Altered or missing current text still makes either
+cohort incomplete under the existing read obligations.
+
+Seven focused Replay cases pass: the three historical View cases, now
+including exact item/request ceilings and one-less refusals; repeated
+escaped-text deduplication at exact byte equality and one-less refusal;
+redacted spans; a later item overflow while bytes are unknown; separate
+redacted and merely missing spans; and an oversized hand-authored foreign
+copy at an explicit anchor. The last is a receiver producer-boundary
+witness, not proof of the sender's admission. The earlier initial Replay
+closure passed 56 cases, including the unchanged legacy redaction and
+report witnesses. A focused byte control passes baseline and fails the
+intended comparison when byte ceilings are ignored (93871,
+CLOSED0/5fc109); Source is restored. Derive's four focused Amount/byte
+metadata cases pass. Derive, Replay, Scope and Platform test compilers pass.
+
+Failed setup runs remain separate: the first new text fixture called did
+with an unsupported fourth context argument, then exceeded that fixture's
+40-byte maximum and reused its genesis act as an ordinary opening. These
+were corrected with act, a declared larger finite text bound and an
+ordinary opening form. A transient native replay run overlapped the
+isolated control and also hit the explicit child-retention development
+stop; it is not native passing evidence. The subsequent isolated native
+run used restored Source and the closed fixture. TypeScript also caught
+untyped send-filter callbacks, which were annotated. Reports have the
+/tmp/artroom-capacity-replay- prefix. No gate, Source review, landing,
+capacity-code push or deployment ran.
+
+This advances replay and native witnesses, not the remaining complete
+reservation proof. Child-closure disposition and implementation, full
+platform per-send clause terms, native owner and standing Amounts,
+pre-admission producer checks, remaining conservation boundaries, final
+freeze/gate and independent exact-head review are still required.
+
+A remaining byte-conservation check must cover a body learned later through
+a different retained alias of the same byte domain and digest. ByteUsage
+resolves its current size, but earlier unknown heads are still reported
+incomplete rather than retrospectively compared using that now-known
+size. That conservative report is not proof that all available historical
+bytes were checked. Resolve this before the full Source claim.

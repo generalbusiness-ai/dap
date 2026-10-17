@@ -1,18 +1,35 @@
+import { env } from "cloudflare:workers";
+import { httpSource, verify } from "@generalbusiness/artroom-replay";
+import { route } from "../src/worker.ts";
+import { CAPABILITY_CODE } from "../src/ports.ts";
 import { expect, test } from "vitest";
 import { evictDurableObject, runInDurableObject } from "cloudflare:test";
-import { PROPOSED_BOUNDS, type Entry } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type Entry, type SendForm } from "@generalbusiness/dap-contract";
 import { reserved } from "@generalbusiness/dap-derive";
 import { controls } from "../src/testing.ts";
 import { metricBindings } from "./worker.ts";
 import type { MetricPoint } from "../src/metrics.ts";
 import { variant } from "@generalbusiness/dap-derive/testing";
 import { SqliteStore } from "../src/index.ts";
-import { create, creation, definition, objectOf, START, stubOf, rita, una, vic } from "./support.ts";
+import { create, creation, definition, objectOf, START, stubOf, reader, rita, una, vic } from "./support.ts";
+
+const nativeHistory = () => httpSource("https://scope.test", { reader, fetch: async (url, init) => {
+  const response = await route(new Request(url, init), env.SCOPES);
+  return { status: response.status, body: response.body };
+} });
+
+// The shared lane's link form also names an unresolved dummy child. These
+// byte/key witnesses do not exercise that form; use a closed declaration,
+// rather than claiming a proved birth-time retained set for the placeholder.
+const wholeLane = () => variant(definition.declared, d => {
+  d.capacity = { name: "whole-scope", version: 1 };
+  d.acts.link.sends = d.acts.link.sends.filter((send: SendForm) => !("create" in send));
+});
 
 // Native scope API, judgment, folding and SQLite. Declaration and authority
 // are the shared lane fixture; no provider or production membership is claimed.
 test("opt-in item admission accepts the final free key and rolls back the next item after eviction", async () => {
-  const under = variant(definition.declared, d => { d.capacity = { name: "whole-scope", version: 1 }; });
+  const under = wholeLane();
   const scope = await create({ scopeItems: 2 }, {}, under);
   await scope.did(rita, "offer", { fields: { intent: 0 }, expected: { intent: 1 } });
   const snapshot = () => scope.inside(state => {
@@ -29,6 +46,7 @@ test("opt-in item admission accepts the final free key and rolls back the next i
 test("opt-in request admission accepts the final pending request and rolls back the next send after eviction", async () => {
   const under = variant(definition.declared, d => {
     d.capacity = { name: "whole-scope", version: 1 };
+    d.acts.link.sends = d.acts.link.sends.filter((send: SendForm) => !("create" in send));
     d.acts.offer.sends = [{ create: { kind: "lane", definition: "self", fields: { title: { const: "child" }, opener: { signer: true } }, result: {} } }];
   });
   const scope = await create({ scopeRequests: 1 }, {}, under);
@@ -52,7 +70,7 @@ test("opt-in request admission accepts the final pending request and rolls back 
 
 
 test("opt-in byte admission creates exactly at Used plus Reserved and keeps no genesis or retained inputs one byte below", async () => {
-  const under = variant(definition.declared, d => { d.capacity = { name: "whole-scope", version: 1 }; });
+  const under = wholeLane();
   const probe = await create({}, {}, under);
   const required = await probe.inside(state => {
     const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) });
@@ -63,6 +81,8 @@ test("opt-in byte admission creates exactly at Used plus Reserved and keeps no g
   // signatures; their canonical lengths and pending work are identical.
   const exact = await create({ scopeBytes: required }, {}, under);
   expect((await exact.head()).seq).toBe(0);
+  const replayed = await verify(nativeHistory(), { mode: "replay", scope: exact.name, grants: "as-recorded", capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE, bounds: exact.c.bounds });
+  expect([replayed.report.result, replayed.why]).toEqual(["consistent", null]);
   const asked = creation(undefined, under), c = controls(asked.name, START);
   c.bounds = { ...PROPOSED_BOUNDS, scopeBytes: required - 1 };
   expect(await stubOf(asked.name).create(asked.signed, under.declared)).toEqual({ answer: "refused", reason: "scope-full", name: "scopeBytes" });
@@ -76,7 +96,7 @@ test("opt-in byte admission creates exactly at Used plus Reserved and keeps no g
 });
 
 test("a filled byte budget keeps its report settlement and closing checkpoint funded after eviction", async () => {
-  const under = variant(definition.declared, d => { d.capacity = { name: "whole-scope", version: 1 }; });
+  const under = wholeLane();
   const scope = await create({}, {}, under);
   const commitment = await scope.commitment();
   const report = (await scope.did(una, "report", { fields: { commitment }, expected: { commitment: 2 } })).fact.seq;
@@ -96,4 +116,6 @@ test("a filled byte budget keeps its report settlement and closing checkpoint fu
   expect(await count()).toBeLessThanOrEqual(limit);
   expect(await scope.stub.checkpoint()).toMatchObject({ answer: "written" });
   expect(await count()).toBeLessThanOrEqual(limit);
+  const replayed = await verify(nativeHistory(), { mode: "replay", scope: scope.name, grants: "as-recorded", capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE, bounds: scope.c.bounds });
+  expect([replayed.report.result, replayed.why]).toEqual(["consistent", null]);
 });

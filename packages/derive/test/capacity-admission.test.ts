@@ -13,6 +13,9 @@ test("capacity equality admits all five budgets, while one more used or reserved
     expect(capacityFull({ ...used, [dimension]: used[dimension] + 1 }, pending, exact)).toBe(bound);
     expect(capacityFull(used, { ...pending, [dimension]: pending[dimension] + 1 }, exact)).toBe(bound);
   }
+  expect(capacityFull({ ...used, bytes: null }, pending, { ...exact, scopeBytes: 0 })).toBeNull();
+  expect(capacityFull({ ...used, bytes: null, items: 2 }, pending, { ...exact, scopeBytes: 0 })).toBe("scopeItems");
+  expect(() => capacityFull({ ...used, bytes: null }, { ...pending, bytes: NaN }, exact)).toThrow(AmountError);
   expect(() => capacityFull(used, pending, { ...exact, scopeEntries: 0, scopeRequests: NaN })).toThrow(AmountError);
   expect(() => capacityFull({ ...used, bytes: Number.MAX_SAFE_INTEGER }, pending, exact)).toThrow(AmountError);
 });

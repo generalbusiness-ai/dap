@@ -35,13 +35,16 @@ test("a missing retained size is explicitly incomplete, is counted once, and end
   missing.retain({ kind: "text", digest: b }, null);
   missing.retain({ kind: "text", digest: b }, null);
   expect(missing.count()).toEqual({ complete: false, knownBytes: 12, missing: 1 });
+  expect(missing.unknownText(b)).toBe(true);
   missing.redact(b);
   expect(missing.count()).toEqual({ complete: true, bytes: 12 });
+  expect(missing.unknownText(b)).toBe(false);
 
   const copied = new ByteUsage();
   copied.retain({ kind: "text", digest: b }, null);
   copied.retain({ kind: "value", domain: DOMAINS.text, digest: b }, 8);
   expect(copied.count()).toEqual({ complete: true, bytes: 8 });
+  expect(copied.unknownText(b)).toBe(false);
   copied.redact(b);
   expect(copied.count()).toEqual({ complete: true, bytes: 8 });
 });
