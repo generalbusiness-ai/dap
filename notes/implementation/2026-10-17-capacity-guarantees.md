@@ -1352,3 +1352,102 @@ next. Legacy birth presence cannot be inferred from a later alias.
 Native owner/standing Amounts, producer checks, remaining conservation
 boundaries and final freeze/gate/independent Source review remain. No
 gate, Source approval, capacity landing, WIP push or deployment ran.
+
+## Every named opt-in signed-birth body is present before genesis
+
+Planner decision 19fc769b is implemented. The existing textsNamed selector
+finds each distinct typed detached-text digest in the signed birth input,
+including a digest beside another invalid field. The shared
+genesisBodiesPresent predicate requires a retained-size answer for every
+name under an opt-in definition. Native Received supplies such an answer
+only for a matching string body. Zero bytes is a present empty string.
+An invalid value that is not a digest names no body. Older definitions
+keep their previous judgment path.
+
+Native signed creation checks the predicate before external fact or rule
+preparation reads. Missing or non-matching bodies answer bad-field and
+write no genesis, even when another field would otherwise produce a
+recorded refused birth. The genesis judge enforces the same predicate
+before it can record a signed genesis. Its historical null-size answer
+remains allowed for replay: the cohort's birth rule establishes original
+presence, while the verifier must still recover the payload or prove its
+redaction. Child deliveries retain their existing pre-turn body fetches.
+No recorded Input, diagnosis, act reason or transport shape changes.
+
+An existing scope answers a repeat from its original genesis. It needs
+neither supplied bodies nor its child declarations again. This also fixes
+the preceding child-closure checkpoint's preflight on an existing opt-in
+scope: a closed birth was still being asked for its child set before the
+repeat judge could answer. The closure requirement now applies to a new
+opt-in birth. Legacy creation retains its previous path.
+
+For opt-in byte recovery, the birth rule establishes the body-presence
+fact that a later alias cannot establish by itself. A matching string
+alias can therefore resolve an earlier refused signed birth's unknown
+bytes and recheck its original judgment and capacity. Older optional birth
+presence remains unknown. A known non-string cannot satisfy the opt-in
+body predicate: replay retracts that birth and its dependent consumer.
+
+The pure genesis witness covers every named body, a partial set, an
+unrelated bad field, empty text, a malformed non-digest value, legacy
+recorded refusal and repeat judgment. Two native scenarios cover both a
+refused and an applied birth. The first proves that missing/wrong bodies
+return bad-field before the deliberately absent fact is fetched. Once its
+matching body is supplied, that fact is fetched and correctly leaves the
+creation unavailable with no genesis. A separate request has two named
+bodies and an invalid count: duplicate supply of only one body writes
+nothing; both matching bodies allow the recorded refused genesis, retain
+both canonical strings and the full child closure, and replay completely
+through HTTP. After eviction, repeating with no bodies or children returns
+the same refusal and leaves storage unchanged. The legacy version still
+records its refusal without the optional body.
+
+The applied native birth names one body in two fields. It retains that
+body once, later writes and redacts it through normal acts, then repeats
+the original receipt after eviction without bodies or children. Replay
+reports incomplete with the exact redacted-size span from genesis through
+the pre-redaction write, entries zero to one. That is an incomplete byte
+proof, not a complete replay claim. Declaration/authority and the missing
+fact are fixtures; storage, preflight, judgment/fold, retention, redaction,
+eviction and HTTP reads are real. No provider or outside operation runs.
+
+Two in-memory replay cases add later-alias evidence. A real judged refused
+birth has a named body and an unrelated bad count; that judgment does not
+read the body's size, although the native retention rule retains it. Its
+fixture source deliberately omits the payload. A second judged platform
+history uses the first birth's fact and retains the matching string as a
+text-domain value. Replay recovers the original exact byte ceiling; one
+byte below it fails at genesis and retracts the consumer. Without the
+alias the missing body stays incomplete. The same alias does not complete
+the legacy optional birth. A negative non-string case uses an explicitly
+unknown historical size, not an admitted native body, and is rejected at
+the original birth. No claim is made that a native terminal refused scope
+deleted a body without a redaction. The original fixture's declaration has
+extra valid quiet acts so its byte boundary, rather than the consumer's,
+decides the comparison.
+
+Three isolated controls distinguish the changed boundaries. Bypassing the
+presence predicate incorrectly fetches the absent dependency and returns
+unavailable instead of bad-field (13360, CLOSED0/fdeb12). Requiring child
+inputs again on an existing scope hides its original repeat refusal behind
+unsupported-definition (58078, CLOSED0/d15614). Restoring the former
+refused-birth recovery restriction leaves the complete opt-in alias case
+incomplete (48164, CLOSED0/33fced). Baselines pass, the intended assertions
+fail with each fault, and the source is restored. No mutation overlaps
+another source-dependent check. Final focused checks pass seven Derive,
+fourteen Replay and twelve native cases. Derive, Scope, Replay and
+Platform test compilers pass. Reports use the
+/tmp/artroom-capacity-genesis-bodies- prefix.
+
+Earlier failures are not passing evidence. The redaction witness first
+expected consistent rather than the required incomplete byte result; it
+now asserts the exact reason and span. The first recovered-byte fixture did not separate the original and
+consumer byte budgets. Valid unused fixture acts now make the original
+scope decide the shared ceiling, and the exact/one-below assertions reach
+the intended genesis boundary. A malformed orchestration script was rejected
+before any edit or test started, then corrected.
+
+Both adopted birth-retention decisions are now implemented in this WIP.
+Native owner/standing Amounts, producer checks, remaining conservation
+boundaries, final freeze/gate and independent Source review remain. No
+gate, Source approval, capacity landing, WIP push or deployment ran.

@@ -533,9 +533,10 @@ class Verifier {
   #recoverableText(run: Run, digest: Digest): boolean {
     if (!this.#knownTexts.has(digest)) return false;
     const birth = run.sealed[0]?.entry.input;
-    // A refused signed creation does not record whether a missing optional
-    // body came beside it. An alias proves content, not that birth presence.
-    return !(birth?.type === "genesis" && birth.founding !== null && birth.decision === "refused" && run.unknownByteTexts.get(digest) === 0);
+    // The opt-in birth rule establishes original presence independently of
+    // an alias. Older optional births retain their presence ambiguity: an
+    // alias proves content, never that the body came beside that birth.
+    return !!run.definition?.declared.capacity || !(birth?.type === "genesis" && birth.founding !== null && birth.decision === "refused" && run.unknownByteTexts.get(digest) === 0);
   }
 
   /** Recover earlier byte comparisons without walking reservations again. */

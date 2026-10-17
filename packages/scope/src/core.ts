@@ -9,7 +9,7 @@
 
 import type { ActType, Answer, Beside, Bounds, ScopeBoundName, CapabilityName, DeclaredDefinition, Digest, OutboxId, Entry, FactRef, Created, Grant, ObservationUse, PlatformDefinition, Receipt, RefusalReason, ScopeId, Seed, Settlement, SignedIntent, UnavailableReason } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, intentDigest, isDigest, isGrant, isPlatformDefinition, newIncarnation, parseStrict, platformName, retainedValueKey, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
-import { actNeeds, actionOf, outcomeValueDomains, checkpointOf, clockOf, counted, derivable, factsNamed, ownersOf, inputTexts, isObject, judgeAct, judgeCheckpoint, judgeGenesis, judgePreparation, own, placesOf, prepareRules, presentedTypes, readFields, runnable, stepsOf, validateDefinition, windowOf } from "@generalbusiness/dap-derive";
+import { actNeeds, actionOf, outcomeValueDomains, checkpointOf, clockOf, counted, derivable, factsNamed, genesisBodiesPresent, ownersOf, inputTexts, isObject, judgeAct, judgeCheckpoint, judgeGenesis, judgePreparation, own, placesOf, prepareRules, presentedTypes, readFields, runnable, stepsOf, validateDefinition, windowOf } from "@generalbusiness/dap-derive";
 import type { ActJudgment, Clock as Reading, Draft, Fetched, SignedCreation, GrantDecision, JudgeContext, Needed, Observing, Own, Owners, Placed, PlatformRules, Presented, Snapshots, StateView, Texts, ValidDefinition, Window } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { ReceiverReads } from "./receiver-reads.ts";
@@ -467,6 +467,13 @@ export class Scope {
     // What the seed names: the platform name, or the digest of the declaration.
     const names: Digest | PlatformDefinition = bytes === null ? definition as PlatformDefinition : valid.digest;
 
+    const act = own(valid.declared.acts, valid.declared.genesis)!;
+    const texts = Received.beside(besideOf(beside).texts, act.fields, bounds);
+    const existing = this.#store.scope();
+    // Check before any external preparation/fact reads. A repeat reads
+    // its original receipt and needs no supplied body or child closure.
+    if (!existing && !genesisBodiesPresent(valid, creation, texts.sizes)) return refused("bad-field");
+
     // Section 9.2: the declarations this scope retains for its children, from what the creator supplied.
     const supplied = new Map<Digest, string>();
     try {
@@ -474,7 +481,7 @@ export class Scope {
     } catch {
       return refused("unsupported-definition");   // not values that have canonical bytes
     }
-    const children = await namedBy(valid, (digest): Promise<DefinitionRead> => {
+    const children = valid.declared.capacity && existing ? { ok: true as const, retain: [] } : await namedBy(valid, (digest): Promise<DefinitionRead> => {
       const given = supplied.get(digest);
       return Promise.resolve(given === undefined ? { ok: false, reason: "absent" } : { ok: true, bytes: given });
     }, (text) => this.validate(text), bounds.namedDefinitions);
@@ -484,14 +491,12 @@ export class Scope {
     // Step 1: the facts the creation intent's fields name. A scope that has its genesis is asked again, a repeat: the judge answers it
     // from the genesis, or refuses it as another creation, and reads no fact. So none is fetched, and a fact that cannot be read
     // now does not hide the receipt (section 7.4, as for a delivery that the store has decided).
-    const act = own(valid.declared.acts, valid.declared.genesis)!;
     const fields = readFields(act.fields, creation.intent.fields, bounds);
     // No scope exists yet, so no fact can name it: every fact a creation names is foreign.
     const named = fields.ok && !this.#store.scope() ? factsNamed(act.fields, fields.fields, null) : [];
     const facts = named.length > bounds.usesPerEntry ? null : await fetchFacts(resolver, bounds, named);
     if (!facts) return unavailable("dependency-unavailable");
 
-    const texts = Received.beside(besideOf(beside).texts, act.fields, bounds);
     const asked = (inc: SignedCreation["inc"]): SignedCreation => ({ name, inc, seed, creation: creation });
     const context = (clock: Reading) => ({ clock, bounds, facts, source: null, texts: texts.sizes, capabilities: this.#ports.capabilities ?? undefined, platform: platform ?? undefined });
     const pinned = (): Pinned => this.pinned() ?? { named: names, definition: valid, platform };

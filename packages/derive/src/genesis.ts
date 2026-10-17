@@ -14,7 +14,7 @@
 import type { Entry, FactRef, FactUse, GrantMark, Incarnation, Prepared, Reason, Request, ScopeId, ScopeRef, Seed, Send, SignedIntent } from "@generalbusiness/dap-contract";
 import { deliveryCauseDigest, intentDigest, isDigest, isIncarnation, isSeed, messageDigest, scopeIdOf, seedDigest, verifySignedIntent } from "@generalbusiness/artroom-bytes";
 import { judgeDelivery, reasonOf, sentBy, type DeliveryContext } from "./delivery.ts";
-import { creationFields, isEntryOf, isIntent, readFacts, readFields, useOf } from "./fields.ts";
+import { creationFields, isEntryOf, isIntent, readFacts, readFields, textsNamed, useOf, type Texts } from "./fields.ts";
 import type { Fetched, Judging } from "./guards.ts";
 import { derive, giving } from "./handlers.ts";
 import { withinCounts } from "./draws.ts";
@@ -36,6 +36,14 @@ export interface SignedCreation { name: ScopeId; inc: Incarnation; seed: Seed; c
 
 /** What asks for a child (section 7.2): the delivery of a `create`, which is addressed by its seed. */
 export interface Creation { name: ScopeId; inc: Incarnation; to: Seed; from: FactRef; n: number; message: Request }
+
+/** Opt-in signed birth has a body for every named typed detached text,
+ * even if another field later makes genesis refuse. A null size is only
+ * a historical replay answer: birth requires presence, while replay still
+ * has to recover the payload or prove the later redaction. */
+export function genesisBodiesPresent(definition: ValidDefinition, creation: SignedIntent, texts?: Texts): boolean {
+  return !definition.declared.capacity || textsNamed(own(definition.declared.acts, definition.declared.genesis)!.fields, creation.intent.fields).every(digest => texts?.(digest) !== undefined);
+}
 
 /** The name that the creation register's definition states (section 7.1; authority note, section 12.1). */
 const REGISTER = "platform:register";
@@ -137,6 +145,8 @@ function genesisJudged(view: StateView, definition: ValidDefinition, asked: Sign
     if (causeOf(context.source.entry, asked.message, context.facts) !== seed.cause) return unverified("the seed's cause does not match the source entry");
     source = { fact: asked.from, entry: context.source.entry, under: context.source.under };
   }
+
+  if (creation && !genesisBodiesPresent(definition, creation, context.texts)) return { result: "refused", reason: "bad-field", detail: "a named genesis text has no matching body" };
 
   const at: ScopeRef = { scope: asked.name, inc: asked.inc, kind: seed.kind };
   const child = "creation" in asked ? null : asked;
