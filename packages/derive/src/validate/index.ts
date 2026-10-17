@@ -154,7 +154,7 @@ export function validateDefinition(input: unknown, bounds: Bounds, profiles: Rea
   const { problems, bad, rec, entries, str } = read;
 
   const platform = options.platform === true;
-  const top = rec(input, "", ["format", "name", "profile", "capabilities", "genesis", "items", "acts", "receives", "timed", "rules", ...(platform ? ["outcomes"] : [])], ["level", ...(platform ? ["standing"] : [])]);
+  const top = rec(input, "", ["format", "name", "profile", "capabilities", "genesis", "items", "acts", "receives", "timed", "rules", ...(platform ? ["outcomes"] : [])], ["level", "capacity", ...(platform ? ["standing"] : [])]);
   if (!top) return { ok: false, problems };
   // Section 6.1: the bound on a definition's canonical bytes limits the validator's work, so it is checked before anything is read.
   // A value with no canonical bytes is refused at the end, as before.
@@ -168,6 +168,14 @@ export function validateDefinition(input: unknown, bounds: Bounds, profiles: Rea
     const level = rec(top["level"], "level", ["name", "version"]);
     if (level && (level["name"] !== "recorded" || level["version"] !== 1)) {
       bad("unsupported-definition", "level", "this runtime implements only recorded durability version 1");
+    }
+  }
+  // The definition pins its rule for the scope's entire life. Never add a
+  // default field to older definitions or reinterpret an unknown version.
+  if (Object.hasOwn(top, "capacity")) {
+    const capacity = rec(top["capacity"], "capacity", ["name", "version"]);
+    if (capacity && (capacity["name"] !== "whole-scope" || capacity["version"] !== 1)) {
+      bad("unsupported-definition", "capacity", "this runtime implements only whole-scope capacity version 1");
     }
   }
   // Section 6.1: a definition states its own name, which `under` is compared with. A name that begins `platform:` is the name of a

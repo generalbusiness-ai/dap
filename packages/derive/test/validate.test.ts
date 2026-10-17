@@ -114,6 +114,29 @@ describe("the definition validator", () => {
     if (!result.ok) for (const p of result.problems) expect(p.path + p.message).not.toBe("");
   });
 
+  test("capacity is a pinned opt-in: omission keeps the legacy bytes, the supported rule has its own digest, and unknown rules cannot fall back", () => {
+    const original = clone(small);
+    const bytes = canonicalBytes(original);
+    const legacy = validateDefinition(original, PROPOSED_BOUNDS);
+    expect(legacy.ok).toBe(true);
+    if (!legacy.ok) throw new Error("the legacy fixture must validate");
+    expect(canonicalBytes(legacy.definition.declared)).toEqual(bytes);
+    expect(Object.hasOwn(legacy.definition.declared, "capacity")).toBe(false);
+
+    const declared = { ...clone(small), capacity: { name: "whole-scope" as const, version: 1 as const } };
+    const opted = validateDefinition(declared, PROPOSED_BOUNDS);
+    expect(opted.ok).toBe(true);
+    if (!opted.ok) throw new Error("the supported capacity rule must validate");
+    expect(opted.definition.declared.capacity).toEqual({ name: "whole-scope", version: 1 });
+    expect(opted.definition.digest).toBe(definitionDigest(declared));
+    expect(opted.definition.digest).not.toBe(legacy.definition.digest);
+    for (const capacity of [{ name: "whole-scope", version: 2 }, { name: "entries", version: 1 }]) {
+      const unknown = validateDefinition({ ...clone(small), capacity }, PROPOSED_BOUNDS);
+      expect(unknown.ok ? [] : unknown.problems).toEqual([expect.objectContaining({ code: "unsupported-definition", path: "capacity" })]);
+    }
+    expect(canonicalBytes(original)).toEqual(bytes);
+  });
+
   test("a definition that passes carries its digest, its timed and hold types, and the slots each `where` reads", () => {
     expect(laneDefinition.digest).toBe(definitionDigest(lane));
     expect(laneDefinition.timedTypes).toEqual(["hold"]);
