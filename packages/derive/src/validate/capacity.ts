@@ -10,7 +10,7 @@
  */
 
 import type { ScopeKind } from "@generalbusiness/dap-contract";
-import { NOTHING, amountMath, requestEntries, type Amount } from "../held.ts";
+import { NOTHING, amountMath, requestEntries, retainedBytes, type Amount } from "../held.ts";
 import type { Markers } from "../markers.ts";
 import type { ClauseSet, Defining, PendingWork } from "./context.ts";
 import { markerCapacity } from "./markers.ts";
@@ -53,7 +53,7 @@ export interface Capacity {
  * first. Each rule's chain was computed once, with the cycle check. A cycle
  * of settling forms is refused here, as `reserve-unbounded`.
  */
-export function capacityOf(d: Pick<Defining, "bad" | "bounds" | "pendingWork" | "clauseSets" | "types" | "wholeCapacity" | "ruleInputBytes" | "rules">, graph: TimedGraph, moves: readonly TimedMove[]): Capacity {
+export function capacityOf(d: Pick<Defining, "bad" | "bounds" | "pendingWork" | "clauseSets" | "clauseRetains" | "types" | "wholeCapacity" | "ruleInputBytes" | "rules">, graph: TimedGraph, moves: readonly TimedMove[]): Capacity {
   const { sum, times, largest } = amountMath(d.wholeCapacity);
   const entry: Amount = { ...NOTHING, entries: 1, bytes: d.bounds.entryBytes };
   // One settling form's own entry and declared openings. Changes to existing subjects and to the copy being settled create
@@ -125,7 +125,7 @@ export function capacityOf(d: Pick<Defining, "bad" | "bounds" | "pendingWork" | 
       const most = e.state !== undefined ? sum(held(e.type, e.state), awaits(e.type, e.state)) : deadline(graph.fromSlot.get(e.type)?.get(e.slot!) ?? 0);
       bySubject.set(e.subject, largest(bySubject.get(e.subject) ?? NOTHING, most));
     }
-    return sum(...bySubject.values());
+    return sum(...bySubject.values(), { ...NOTHING, bytes: d.wholeCapacity ? retainedBytes(d.clauseRetains.get(set)) : 0 });
   };
   /**
    * What a settling form reserves: its own entry; what its effects can

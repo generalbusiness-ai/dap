@@ -199,7 +199,9 @@ export function reserving(d: Defining, top: Rec, capacity: Pick<Capacity, "pendi
       const p = at(at(path, "result"), clause);
       const marks = (Array.isArray(effects) ? effects : []).flatMap((e, i) => (marked(e) ? [mostOf(e, at(p, i))] : []));
       for (const mark of marks) if (mark.opens !== null && holderTypes.has(mark.opens)) bad("holds", p, `a type that states holds is opened only by new work, and a clause's mark may open ${mark.opens}`);
-      matched.push({ path: p, starts: { marks, retains: retainedBytes(rows) } });
+      // Opt-in written clauses already include these values in the shared
+      // clause Amount. Keep only their marks here, avoiding a second charge.
+      matched.push({ path: p, starts: { marks, retains: d.wholeCapacity ? 0 : retainedBytes(rows) } });
     }
     everyClause.push(...matched.map((clause) => clause.starts));
     return matched;

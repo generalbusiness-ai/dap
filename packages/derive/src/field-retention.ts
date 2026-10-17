@@ -1,11 +1,11 @@
 /** Retained producers named by typed fields. Bounds are producer maxima,
  * not read limits. Logical text bytes include canonical JSON escaping. */
 import type { Bounds, FieldType } from "@generalbusiness/dap-contract";
-import { amountMath, NOTHING } from "./held.ts";
+import { amountMath, NOTHING, retainedBytes } from "./held.ts";
 import { isObject } from "./values.ts";
 
 export interface FieldRetained { facts: number; texts: number; values: number }
-export interface FieldProducers { fields: readonly FieldType[]; presented: number; source: boolean }
+export interface FieldProducers { fields: readonly FieldType[]; presented: number; source: boolean; observes?: unknown }
 
 /** Legacy callers keep the earlier raw-text terms; opt-in callers use canonical payload maxima. */
 export function fieldRetention(fields: readonly FieldType[], bounds: Pick<Bounds, "textBytes" | "listElements">, checked = false): FieldRetained {
@@ -43,5 +43,5 @@ export function fieldRetainedBytes(producers: FieldProducers, bounds: Pick<Bound
   const facts = sum({ ...NOTHING, entries: fields.facts }, { ...NOTHING, entries: producers.presented }, { ...NOTHING, entries: producers.source ? 1 : 0 }).entries;
   // Validate the cap before min can conceal an invalid configured operand.
   const cap = times(1, { ...NOTHING, entries: bounds.usesPerEntry }).entries;
-  return sum(times(Math.min(facts, cap), { ...NOTHING, bytes: bounds.entryBytes }), { ...NOTHING, bytes: fields.texts }, { ...NOTHING, bytes: fields.values }).bytes;
+  return sum(times(Math.min(facts, cap), { ...NOTHING, bytes: bounds.entryBytes }), { ...NOTHING, bytes: fields.texts }, { ...NOTHING, bytes: fields.values }, { ...NOTHING, bytes: retainedBytes(producers.observes) }).bytes;
 }

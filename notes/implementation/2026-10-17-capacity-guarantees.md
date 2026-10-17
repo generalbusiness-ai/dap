@@ -343,3 +343,31 @@ not claim authentic foreign entries, digest validation or authority.
 Scope and Derive test compilers pass. The first new helper compiler check
 caught an untyped value-place access, which was fixed before these passes.
 No gate, Source review or landing ran. Full capacity remains unfinished.
+
+## Observation-value producer checkpoint
+
+Future settling acts now include the canonical maxima that their rules
+observation rows declare under retains. The same clause effect sets carry
+their observation-value rows through the existing request/task Amount
+walk. A result clause with rows and no written effects is still work.
+Alternatives take the componentwise maximum. Conflict remains new work
+and is not added to this request reservation. The holder's mark-only
+clause component no longer charges these same row values a second time
+under the opt-in rule; its written-clause component already includes them.
+Legacy arithmetic and clause traversal keep their earlier interpretation.
+
+A made-up platform marker scenario with no outcome kinds or holders
+reserves eleven bytes for its future act's row and the larger of seventeen
+or twenty-three bytes for its request's row-only result clauses. After the
+request is sent, its future pending-request unit becomes Used while the
+twenty-three retained bytes remain Reserved. This pure/in-memory scenario
+passed; it is not an actual rules scope, authority read, durable admission
+or native settlement witness.
+
+Focused send, observation and holder files passed 51 cases. A separate
+single-case control passes its baseline and fails the intended expected-23
+assertion when row-only clauses are omitted (81681, CLOSED0/1a6137), with
+source restored. The Derive test compiler passes. All earlier development
+results retain their own source and run boundaries. Complete owner
+closures, remaining producer inventory, actual-settler duty release and
+runtime/replay integration remain owed. No gate or Source review ran.

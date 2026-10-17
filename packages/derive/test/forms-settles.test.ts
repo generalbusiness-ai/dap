@@ -124,6 +124,24 @@ describe("18.54: two marks on one item, and a state settlement beside them", () 
     // and the value place has its own seventeen-byte canonical ceiling.
     expect(canonicalBytes("\0\0\0").length).toBe(20);
     expect(reserved(retained.state, withFields, retained.last.input)).toEqual({ entries: 6, bytes: 9 * unit + 37, items: 0, records: 0, requests: 1 });
+    const withRows = valid(changed(M, (d) => {
+      d.capacity = { name: "whole-scope", version: 1 };
+      d.outcomes = {};
+      const row = (max: number, clause = false) => ({ of: "rules", window: 60, use: "once", ...(clause ? { without: "write" } : {}), retains: [{ domain: "fixture-row-value", max }] });
+      d.acts["mark-b"].observes = [row(11)];
+      const send = d.acts["mark-a-far"].sends[0].tell;
+      send.result = {};
+      send.observes = { applied: [row(17, true)], refused: [row(23, true)] };
+    }, true));
+    const observed = new Full(withRows);
+    const observedJob = observed.started();
+    // No outcome kinds or holders: row-only result clauses must still
+    // reserve their value. These alternatives take 23, rather than 17+23.
+    expect(withRows.reserving).toBeUndefined();
+    expect(withRows.pendingWorkAmounts.clause.bytes).toBe(23);
+    expect(reserved(observed.state, withRows, observed.last.input)).toEqual({ entries: 6, bytes: 7 * unit + 34, items: 0, records: 0, requests: 1 });
+    expect(observed.does("mark-a-far", on(observed, observedJob))).toBe("settles");
+    expect(reserved(observed.state, withRows, observed.last.input)).toEqual({ entries: 5, bytes: 6 * unit + 34, items: 0, records: 0, requests: 0 });
     for (const far of [false, true]) {
       const scope = new Full(definition);
       const id = scope.started();
