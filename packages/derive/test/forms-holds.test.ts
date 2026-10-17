@@ -90,6 +90,8 @@ describe("the amounts of a reservation, as pure functions (section 17.2 and 17.2
     expect(() => closure({ ...legacy, checked: true }, "k")).toThrow(AmountError);
     const zero = counting({ k: kind(1) }, [], { checked: true, change: { ...NOTHING, records: 0.5 } });
     expect(() => closure(zero, "k")).toThrow(AmountError);
+    expect(() => closure({ ...zero, changing: () => NOTHING }, "k")).toThrow(AmountError);
+    expect(() => closure({ ...zero, change: NOTHING, changing: () => ({ ...NOTHING, records: 0.5 }) }, "k")).toThrow(AmountError);
     expect(() => requestOf({ ...zero, change: NOTHING, written: { ...NOTHING, bytes: -1 } }, [], { item: true })).toThrow(AmountError);
     const huge = counting({ k: kind(1, {}, null, Number.MAX_SAFE_INTEGER) }, [], { checked: true });
     expect(() => one(huge, "k")).toThrow(AmountError);

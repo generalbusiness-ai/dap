@@ -36,7 +36,7 @@ import type { FieldType, Held } from "@generalbusiness/dap-contract";
 import { AmountError, NOTHING, amountMath, closure, holding, itemOf, one, requestOf, retainedBytes, starts, type Amount, type ClauseStarts, type Counting, type KindStated, type Starts, STARTS_NOTHING } from "../held.ts";
 import { markerReservations } from "../markers.ts";
 import { isObject, own } from "../values.ts";
-import type { Capacity } from "./capacity.ts";
+import type { Capacity, CapacityReader, PlatformRequests } from "./capacity.ts";
 import { marked, type Defining } from "./context.ts";
 import { at, type Rec } from "./shape.ts";
 
@@ -89,10 +89,32 @@ export interface Reserving {
 
 const CLAUSES = ["applied", "refused", "superseded", "undelivered", "conflict"] as const;
 
-/** Reads the members, makes the checks, and computes the amounts. Undefined: the value is no platform data, or it has no kind and no `holds`. */
-export function reserving(d: Defining, top: Rec, capacity: Pick<Capacity, "pendingWorkAmounts" | "markers">, outcomeValues: Readonly<Record<string, readonly import("../ledger.ts").EvidenceValueDomain[]>> = {}): Reserving | undefined {
+type CapacityData = Pick<Capacity, "pendingWorkAmounts" | "markers">;
+export interface ReservationPlan extends PlatformRequests { finish(capacity: CapacityData): Reserving | undefined }
+
+/** Legacy entry point: its complete written capacities are already known. */
+export function reserving(d: Defining, top: Rec, capacity: CapacityData, outcomeValues: Readonly<Record<string, readonly import("../ledger.ts").EvidenceValueDomain[]>> = {}): Reserving | undefined {
+  const { sum } = amountMath(d.wholeCapacity);
+  const marked = capacity.markers ? markerReservations(capacity.markers, undefined, undefined, d.wholeCapacity) : null;
+  return prepareReserving(d, top, {
+    inState: (type, state) => sum(
+      own(own(capacity.pendingWorkAmounts.deadlines, type), state) ?? NOTHING,
+      own(capacity.markers, type) ? marked!.awaits(type, state, []) : (own(own(capacity.pendingWorkAmounts.pending, type), state) ?? NOTHING),
+    ),
+    clause: path => {
+      const amount = own(capacity.pendingWorkAmounts.clauses, path);
+      if (!amount) throw new AmountError(`the request clause ${path} has no written Amount`);
+      return amount;
+    },
+    written: capacity.pendingWorkAmounts.clause,
+  }, outcomeValues)?.finish(capacity);
+}
+
+/** Read marks first. Whole-scope platform requests then share the pending
+ * state graph; finish materializes the checked, finite closures. */
+export function prepareReserving(d: Defining, top: Rec, reader: CapacityReader, outcomeValues: Readonly<Record<string, readonly import("../ledger.ts").EvidenceValueDomain[]>> = {}): ReservationPlan | undefined {
   if (!d.platform) return undefined;
-  const { sum, largest } = amountMath(d.wholeCapacity);
+  const { sum, largest, times } = amountMath(d.wholeCapacity);
   const { bad, rec, int, list, bounds } = d;
   const kindsWritten = isObject(top["outcomes"]) ? top["outcomes"] : {};
   const typesWritten = isObject(top["items"]) ? top["items"] : {};
@@ -205,12 +227,11 @@ export function reserving(d: Defining, top: Rec, capacity: Pick<Capacity, "pendi
       for (const mark of marks) if (mark.opens !== null && holderTypes.has(mark.opens)) bad("holds", p, `a type that states holds is opened only by new work, and a clause's mark may open ${mark.opens}`);
       // Conflict is new work. Keep its marks for item/reach accounting,
       // while requestOf excludes it from an owed request's reservation.
-      let written: Amount | undefined;
-      if (d.wholeCapacity) {
-        written = path.startsWith("outcomes.") || clause === "conflict" ? NOTHING : own(capacity.pendingWorkAmounts.clauses, p);
-        if (!written) throw new AmountError(`the request clause ${p} has no written Amount`);
-      }
-      matched.push({ path: p, starts: { marks, retains: d.wholeCapacity ? 0 : retainedBytes(rows), ...(written ? { written, reserved: clause !== "conflict" } : {}) } });
+      matched.push({ path: p, starts: d.wholeCapacity ? {
+        marks, retains: 0,
+        get written() { return path.startsWith("outcomes.") || clause === "conflict" ? NOTHING : reader.clause(p); },
+        reserved: clause !== "conflict",
+      } : { marks, retains: retainedBytes(rows) } });
     }
     everyClause.push(...matched.map((clause) => clause.starts));
     return matched;
@@ -276,113 +297,117 @@ export function reserving(d: Defining, top: Rec, capacity: Pick<Capacity, "pendi
 
   if (!d.wholeCapacity && kindsWritten && Object.keys(kindsWritten).length === 0 && holderTypes.size === 0 && adds.size === 0) return undefined;
 
-  // Rule 11 of "A marker duty": an unnamed item reserves the whole sum of rule 6, with no mark completed. A marked type has no
-  // row in pending: its state task and each marker task are counted together by the shared calculator, beside its deadline.
-  const markedAmounts = capacity.markers ? markerReservations(capacity.markers, undefined, undefined, d.wholeCapacity) : null;
-  const inState = (type: string, state: string): Amount => sum(
-    own(own(capacity.pendingWorkAmounts.deadlines, type), state) ?? NOTHING,
-    own(capacity.markers, type) ? markedAmounts!.awaits(type, state, []) : (own(own(capacity.pendingWorkAmounts.pending, type), state) ?? NOTHING),
-  );
-  const everyState = [...d.types.values()].flatMap((type) => [...type.states.keys()].map((state) => inState(type.name, state)));
+  const everyState = () => [...d.types.values()].flatMap((type) => [...type.states.keys()].map((state) => reader.inState(type.name, state)));
   const c: Counting = {
     checked: d.wholeCapacity,
     kinds: Object.fromEntries(stated), held,
-    initial: (type) => { const of = d.types.get(type); return of ? inState(type, of.initial) : NOTHING; },
-    change: largest(...everyState),
+    initial: (type) => { const of = d.types.get(type); return of ? reader.inState(type, of.initial) : NOTHING; },
+    change: d.wholeCapacity ? NOTHING : largest(...everyState()),
+    // No graph edge exists when the mark changes zero states. Every
+    // state's Amount is still checked at finish, including unused states.
+    ...(d.wholeCapacity ? { changing: (effects: number) => times(effects, effects === 0 ? NOTHING : largest(...everyState())) } : {}),
     entry: bounds.entryBytes,
-    written: d.wholeCapacity ? NOTHING : capacity.pendingWorkAmounts.clause,
+    written: d.wholeCapacity ? NOTHING : reader.written,
   };
 
-  // Checks 4 and 5, for each kind that no item holds, and so for each such kind below another (edge 3).
-  for (const [kind, of] of stated) {
-    if (held.has(kind)) continue;
-    const path = at("outcomes", kind);
-    const listed = of.most.operations.find((k) => held.has(k));
-    if (listed !== undefined) { bad("reserve-unbounded", at(path, "most"), `no item holds this kind, and its mark lists the held kind ${listed}: an outcome entry of it has no account, so no holder is named for what it opens`); continue; }
-    const inClause = sends.get(kind)?.clauses.find((clause) => clause.starts.marks.some((mark) => mark.operations.some((k) => held.has(k))));
-    if (inClause) { bad("reserve-unbounded", inClause.path, "no item holds this kind, and a clause of its send holds a mark that lists a held kind: the request has no account, so nothing keeps the holder's count until the clause runs"); continue; }
-    if (!closure(c, kind)) bad("reserve-unbounded", path, "the kinds that no item holds open each other in a circle, so no reservation by kind covers one operation of this kind");
-  }
-  if (d.problems.length > 0) return undefined;
-
-  /** The held kinds that one step from a kind reaches: by its mark, and by a clause of its send. */
-  const step = (kind: string): string[] => [...(mosts.get(kind)?.operations ?? []), ...(sends.get(kind)?.clauses ?? []).flatMap((clause) => clause.starts.marks.flatMap((mark) => mark.operations))].filter((k) => held.has(k));
-  const reachFrom = (first: readonly string[]): string[] => {
-    const matched = new Set<string>();
-    const todo = [...first];
-    for (let k = todo.pop(); k !== undefined; k = todo.pop()) if (!matched.has(k)) { matched.add(k); todo.push(...step(k)); }
-    return [...matched].sort();
-  };
-
-  const req = requestOf(c, everyClause, { item: true });
-  const marksOfClause = (clause: ClauseStarts): Amount | null => clause.marks.reduce<Amount | null>((n, mark) => { const more = starts(c, mark, { item: true }); return n && more ? sum(n, more) : null; }, { ...NOTHING, bytes: clause.retains });
-  const byClause = everyClause.map(marksOfClause);
-  if (!req || byClause.includes(null)) { bad("reserve-unbounded", "", "a clause of a result holds a mark that lists a kind whose closure is not finite"); return undefined; }
-
-  // Every nonempty own name is permitted, including __proto__. Neither
-  // table has an inherited setter that can turn a kind into a prototype.
-  const kinds: Record<string, KindReserved> = Object.create(null);
-  const ones: Record<string, Amount> = Object.create(null);
-  for (const kind of Object.keys(kindsWritten)) {
-    const of = stated.get(kind);
-    const isHeld = held.has(kind);
-    const whole = of ? (isHeld ? one(c, kind) : closure(c, kind)) : NOTHING;
-    const send = sends.get(kind);
-    const request = send ? requestOf(c, send.clauses.map((clause) => clause.starts), { item: true }) : null;
-    if (!whole || (send && !request)) { bad("reserve-unbounded", at("outcomes", kind), "a kind that its mark or a clause of its send lists has no finite closure"); continue; }
-    // One outcome entry with what it starts, beside the request: for a held kind, `one(k)` over n(k); for another, C(k) without its requests, over n(k).
-    const started = of ? starts(c, of.most, { item: !isHeld }) : null;
-    const outcome = of && started ? sum({ ...NOTHING, entries: 1, bytes: c.entry + of.retains }, started) : NOTHING;
-    kinds[kind] = { attempts: of?.attempts ?? null, held: isHeld, most: mosts.get(kind) ?? STARTS_NOTHING, outcome, whole, request, once: send?.once === true, reach: reachFrom(step(kind)) };
-    if (isHeld) ones[kind] = whole;
-  }
-  if (d.problems.length > 0) return undefined;
-
-  const requests = d.wholeCapacity ? Object.fromEntries([...requestClauses].map(([path, clauses]) => {
+  const request = (path: string): Amount | undefined => {
+    const clauses = requestClauses.get(path);
+    if (!clauses) return undefined;
     const amount = requestOf(c, clauses, { item: true });
     if (!amount) throw new AmountError(`the request ${path} has no finite clause Amount`);
-    return [path, amount];
-  })) : undefined;
-
-  const itm = itemOf(c, [...opened].filter((type) => !holderTypes.has(type)));
-  // dec(m): a bound handler opens no item directly and its sends draw on
-  // q. Its written effects can start deadlines/settlements, and an effect
-  // mark can open a kind that no item holds, whose whole closure is here.
-  const decisions = new Map<string, Amount[]>();
-  for (const binding of d.bindings) {
-    const path = binding.path.slice(0, -".bound".length);
-    const handler = Object.entries(handlersWritten).find(([name]) => at("receives", name) === path)?.[1];
-    if (!isObject(handler)) continue;
-    const written = own(capacity.pendingWorkAmounts.decisions, path) ?? NOTHING;
-    // The derived-effect ceiling stands in for the records a handler can
-    // change, as entryBytes stands in for the whole static entry size.
-    const producer = d.pendingWork.find(form => form.path === path)!.retained;
-    const retained = d.wholeCapacity ? sum({ ...NOTHING, bytes: fieldRetainedBytes(producer, bounds) }, { ...NOTHING, bytes: d.rules.size * d.ruleInputBytes }).bytes : bounds.entryBytes;
-    let amount: Amount | null = sum({ ...NOTHING, entries: 1, records: bounds.derivedEffects, bytes: bounds.entryBytes }, { ...NOTHING, bytes: retained }, written);
-    for (const [i, effect] of (Array.isArray(handler["effects"]) ? handler["effects"] : []).entries()) {
-      if (!marked(effect)) continue;
-      const more = starts(c, mostOf(effect, at(at(path, "effects"), i)), { item: false });
-      amount = amount && more ? sum(amount, more) : null;
-    }
-    if (!amount) { bad("reserve-unbounded", binding.path, "a bound handler's mark lists a kind with no finite closure"); continue; }
-    if (!d.wholeCapacity) {
-      const retains = fieldRetention(Object.values(isObject(handler["fields"]) ? handler["fields"] : {}) as FieldType[], bounds);
-      amount = sum(amount, { ...NOTHING, bytes: Math.min(retains.facts, Math.max(0, bounds.usesPerEntry - 1)) * bounds.entryBytes + retains.texts });
-    }
-    decisions.set(binding.message, [...(decisions.get(binding.message) ?? []), amount]);
-  }
-  if (d.problems.length > 0) return undefined;
-  const dec = Object.fromEntries([...decisions].map(([message, amounts]) => [message, largest(...amounts)]));
-  const amounts = { one: ones, req, itm, dec, checked: d.wholeCapacity };
-  return {
-    kinds,
-    holders: Object.fromEntries([...holds].map(([type, of]) => [type, { holds: of, amount: holding(of, amounts) }])),
-    adds: Object.fromEntries([...adds].map(([name, of]) => [name, { on: of.on, adds: of.adds, amount: holding(of.adds, amounts) }])),
-    req, itm, dec,
-    ...(requests ? { requests } : {}),
-    clause: largest(...(byClause as Amount[])),
-    reach: reachFrom(everyClause.flatMap((clause) => clause.marks.flatMap((mark) => mark.operations)).filter((k) => held.has(k))),
+    return amount;
   };
+
+  return { request, finish(capacity) {
+    if (d.wholeCapacity) largest(...everyState());
+
+    // Checks 4 and 5, for each kind that no item holds, and so for each such kind below another (edge 3).
+    for (const [kind, of] of stated) {
+      if (held.has(kind)) continue;
+      const path = at("outcomes", kind);
+      const listed = of.most.operations.find((k) => held.has(k));
+      if (listed !== undefined) { bad("reserve-unbounded", at(path, "most"), `no item holds this kind, and its mark lists the held kind ${listed}: an outcome entry of it has no account, so no holder is named for what it opens`); continue; }
+      const inClause = sends.get(kind)?.clauses.find((clause) => clause.starts.marks.some((mark) => mark.operations.some((k) => held.has(k))));
+      if (inClause) { bad("reserve-unbounded", inClause.path, "no item holds this kind, and a clause of its send holds a mark that lists a held kind: the request has no account, so nothing keeps the holder's count until the clause runs"); continue; }
+      if (!closure(c, kind)) bad("reserve-unbounded", path, "the kinds that no item holds open each other in a circle, so no reservation by kind covers one operation of this kind");
+    }
+    if (d.problems.length > 0) return undefined;
+
+    /** The held kinds that one step from a kind reaches: by its mark, and by a clause of its send. */
+    const step = (kind: string): string[] => [...(mosts.get(kind)?.operations ?? []), ...(sends.get(kind)?.clauses ?? []).flatMap((clause) => clause.starts.marks.flatMap((mark) => mark.operations))].filter((k) => held.has(k));
+    const reachFrom = (first: readonly string[]): string[] => {
+      const matched = new Set<string>();
+      const todo = [...first];
+      for (let k = todo.pop(); k !== undefined; k = todo.pop()) if (!matched.has(k)) { matched.add(k); todo.push(...step(k)); }
+      return [...matched].sort();
+    };
+
+    const req = requestOf(c, everyClause, { item: true });
+    const marksOfClause = (clause: ClauseStarts): Amount | null => clause.marks.reduce<Amount | null>((n, mark) => { const more = starts(c, mark, { item: true }); return n && more ? sum(n, more) : null; }, { ...NOTHING, bytes: clause.retains });
+    const byClause = everyClause.map(marksOfClause);
+    if (!req || byClause.includes(null)) { bad("reserve-unbounded", "", "a clause of a result holds a mark that lists a kind whose closure is not finite"); return undefined; }
+
+    // Every nonempty own name is permitted, including __proto__. Neither
+    // table has an inherited setter that can turn a kind into a prototype.
+    const kinds: Record<string, KindReserved> = Object.create(null);
+    const ones: Record<string, Amount> = Object.create(null);
+    for (const kind of Object.keys(kindsWritten)) {
+      const of = stated.get(kind);
+      const isHeld = held.has(kind);
+      const whole = of ? (isHeld ? one(c, kind) : closure(c, kind)) : NOTHING;
+      const send = sends.get(kind);
+      const request = send ? requestOf(c, send.clauses.map((clause) => clause.starts), { item: true }) : null;
+      if (!whole || (send && !request)) { bad("reserve-unbounded", at("outcomes", kind), "a kind that its mark or a clause of its send lists has no finite closure"); continue; }
+      // One outcome entry with what it starts, beside the request: for a held kind, `one(k)` over n(k); for another, C(k) without its requests, over n(k).
+      const started = of ? starts(c, of.most, { item: !isHeld }) : null;
+      const outcome = of && started ? sum({ ...NOTHING, entries: 1, bytes: c.entry + of.retains }, started) : NOTHING;
+      kinds[kind] = { attempts: of?.attempts ?? null, held: isHeld, most: mosts.get(kind) ?? STARTS_NOTHING, outcome, whole, request, once: send?.once === true, reach: reachFrom(step(kind)) };
+      if (isHeld) ones[kind] = whole;
+    }
+    if (d.problems.length > 0) return undefined;
+
+    const requests = d.wholeCapacity ? Object.fromEntries([...requestClauses.keys()].map(path => [path, request(path)!])) : undefined;
+
+    const itm = itemOf(c, [...opened].filter((type) => !holderTypes.has(type)));
+    // dec(m): a bound handler opens no item directly and its sends draw on
+    // q. Its written effects can start deadlines/settlements, and an effect
+    // mark can open a kind that no item holds, whose whole closure is here.
+    const decisions = new Map<string, Amount[]>();
+    for (const binding of d.bindings) {
+      const path = binding.path.slice(0, -".bound".length);
+      const handler = Object.entries(handlersWritten).find(([name]) => at("receives", name) === path)?.[1];
+      if (!isObject(handler)) continue;
+      const written = own(capacity.pendingWorkAmounts.decisions, path) ?? NOTHING;
+      // The derived-effect ceiling stands in for the records a handler can
+      // change, as entryBytes stands in for the whole static entry size.
+      const producer = d.pendingWork.find(form => form.path === path)!.retained;
+      const retained = d.wholeCapacity ? sum({ ...NOTHING, bytes: fieldRetainedBytes(producer, bounds) }, { ...NOTHING, bytes: d.rules.size * d.ruleInputBytes }).bytes : bounds.entryBytes;
+      let amount: Amount | null = sum({ ...NOTHING, entries: 1, records: bounds.derivedEffects, bytes: bounds.entryBytes }, { ...NOTHING, bytes: retained }, written);
+      for (const [i, effect] of (Array.isArray(handler["effects"]) ? handler["effects"] : []).entries()) {
+        if (!marked(effect)) continue;
+        const more = starts(c, mostOf(effect, at(at(path, "effects"), i)), { item: false });
+        amount = amount && more ? sum(amount, more) : null;
+      }
+      if (!amount) { bad("reserve-unbounded", binding.path, "a bound handler's mark lists a kind with no finite closure"); continue; }
+      if (!d.wholeCapacity) {
+        const retains = fieldRetention(Object.values(isObject(handler["fields"]) ? handler["fields"] : {}) as FieldType[], bounds);
+        amount = sum(amount, { ...NOTHING, bytes: Math.min(retains.facts, Math.max(0, bounds.usesPerEntry - 1)) * bounds.entryBytes + retains.texts });
+      }
+      decisions.set(binding.message, [...(decisions.get(binding.message) ?? []), amount]);
+    }
+    if (d.problems.length > 0) return undefined;
+    const dec = Object.fromEntries([...decisions].map(([message, amounts]) => [message, largest(...amounts)]));
+    const amounts = { one: ones, req, itm, dec, checked: d.wholeCapacity };
+    return {
+      kinds,
+      holders: Object.fromEntries([...holds].map(([type, of]) => [type, { holds: of, amount: holding(of, amounts) }])),
+      adds: Object.fromEntries([...adds].map(([name, of]) => [name, { on: of.on, adds: of.adds, amount: holding(of.adds, amounts) }])),
+      req, itm, dec,
+      ...(requests ? { requests } : {}),
+      clause: largest(...(byClause as Amount[])),
+      reach: reachFrom(everyClause.flatMap((clause) => clause.marks.flatMap((mark) => mark.operations)).filter((k) => held.has(k))),
+    };
+  } };
 }
 
 /** Every outcome reserves one value at its domain's declared maximum, whether an answer names one or not. */

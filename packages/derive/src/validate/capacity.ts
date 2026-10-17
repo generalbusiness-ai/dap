@@ -53,12 +53,22 @@ export interface Capacity {
   markers?: Markers;
 }
 
+/** Lazy edges into the same pending-work graph, before its closures are
+ * frozen. Platform clause marks can open items whose settling forms send
+ * further requests. Those requests must return through this graph. */
+export interface CapacityReader {
+  inState(type: string, state: string): Amount;
+  clause(path: string): Amount;
+  written: Amount;
+}
+export interface PlatformRequests { request(path: string): Amount | undefined }
+
 /**
  * The chains are finite here: the validator refuses a cycle of timed rules
  * first. Each rule's chain was computed once, with the cycle check. A cycle
  * of settling forms is refused here, as `reserve-unbounded`.
  */
-export function capacityOf(d: Pick<Defining, "bad" | "bounds" | "pendingWork" | "clauseSets" | "clauseRetains" | "clausePaths" | "platform" | "types" | "wholeCapacity" | "ruleInputBytes" | "rules">, graph: TimedGraph, moves: readonly TimedMove[]): Capacity {
+export function capacityOf(d: Pick<Defining, "bad" | "bounds" | "pendingWork" | "clauseSets" | "clauseRetains" | "clausePaths" | "platform" | "types" | "wholeCapacity" | "ruleInputBytes" | "rules">, graph: TimedGraph, moves: readonly TimedMove[], prepare?: (reader: CapacityReader) => PlatformRequests | undefined): Capacity {
   const { sum, times, largest } = amountMath(d.wholeCapacity);
   const entry: Amount = { ...NOTHING, entries: 1, bytes: d.bounds.entryBytes };
   // One settling form's own entry and declared openings. Changes to existing subjects and to the copy being settled create
@@ -141,8 +151,15 @@ export function capacityOf(d: Pick<Defining, "bad" | "bounds" | "pendingWork" | 
    */
   // Each request here is future work of a settling form: its pending-request unit is Reserved, not Used. Its result may newly
   // retain its foreign source entry. The largest clause closure is propagated in every dimension already known here.
-  const requestAmount = (request: PendingWork["requests"][number]): Amount => sum(requestEntries(d.bounds.entryBytes), largest(...request.clauses.map(c => starts(c))));
-  const requestsOf = (form: PendingWork): Amount => sum(...form.requests.map(request => times(request.most, requestAmount(request))));
+  const requestAmount = (form: PendingWork, request: PendingWork["requests"][number]): Amount => {
+    if (platform) {
+      const path = `${form.path}.sends.${request.send}`, amount = platform.request(path);
+      if (!amount) throw new AmountError(`the future request ${path} has no joint clause Amount`);
+      return amount;
+    }
+    return sum(requestEntries(d.bounds.entryBytes), largest(...request.clauses.map(c => starts(c))));
+  };
+  const requestsOf = (form: PendingWork): Amount => sum(...form.requests.map(request => times(request.most, requestAmount(form, request))));
   const amountOf = (form: PendingWork): Amount => {
     const settled = form.settles && "subject" in form.settles ? form.settles : undefined;
     forms.push(form);
@@ -150,6 +167,17 @@ export function capacityOf(d: Pick<Defining, "bad" | "bounds" | "pendingWork" | 
     forms.pop();
     return amount;
   };
+
+  const byPath = new Map(d.clauseSets.map(set => [d.clausePaths.get(set), set]));
+  const platform = prepare?.({
+    inState: (type, state) => sum(held(type, state), awaits(type, state)),
+    clause: path => {
+      const set = byPath.get(path);
+      if (!set) throw new AmountError(`the request clause ${path} has no written Amount`);
+      return starts(set);
+    },
+    written: NOTHING,
+  });
 
   // Collected by type and state in maps, so no write reaches a prototype: a name is an own name of the record built from them.
   const waiting = new Map<string, Map<string, Amount>>();
@@ -167,15 +195,15 @@ export function capacityOf(d: Pick<Defining, "bad" | "bounds" | "pendingWork" | 
   // Row 4: a copy in a listed state reserves what the handler that settles it reserves.
   const copyAmounts = d.pendingWork.flatMap((form): PendingWorkAmounts["pendingCopies"][number][] => (form.settles && "copy" in form.settles ? [{ name: form.settles.name, kind: form.settles.kind as ScopeKind, states: form.settles.copy, amount: amountOf(form) }] : []));
   const pendingCopies = copyAmounts.map(({ amount, ...copy }) => ({ ...copy, entries: amount.entries }));
-  // A request reserves, beside its two entries, the most that one of its clauses can start. The runtime holds the largest over
-  // every request form of the definition, which is never less (section 17.2, "More, and never less").
+  // Keep the common written maximum for legacy requests. Opt-in platform
+  // requests use their originating send's joint written/marked closure.
   const clause = largest(...d.clauseSets.map((c) => starts(c)));
   const clauses = d.wholeCapacity && d.platform ? Object.fromEntries(d.clauseSets.map(set => {
     const path = d.clausePaths.get(set);
     if (path === undefined) throw new AmountError("a reserved clause has no native source path");
     return [path, starts(set)];
   })) : undefined;
-  const requests = d.wholeCapacity ? Object.fromEntries(d.pendingWork.flatMap(form => form.requests.map(request => [`${form.path}.sends.${request.send}`, requestAmount(request)]))) : undefined;
+  const requests = d.wholeCapacity ? Object.fromEntries(d.pendingWork.flatMap(form => form.requests.map(request => [`${form.path}.sends.${request.send}`, requestAmount(form, request)]))) : undefined;
   for (const form of unbounded) d.bad("reserve-unbounded", form.path, "the forms that settle lead back to the state this one settles, so no reservation covers what its settlement can start");
   const marked = unbounded.size === 0 ? markers.data() : null;
   const decisions = Object.fromEntries(d.pendingWork.filter((form) => form.path.startsWith("receives.")).map((form) => [form.path, starts(form.sets)]));

@@ -1116,3 +1116,63 @@ reservation. Native owner and standing Amounts, producer checks, the two
 birth-provenance decisions, remaining boundaries and final review are
 also pending. No gate, Source approval, capacity landing, capacity-code
 push or deployment ran.
+
+## Future platform requests return through the same item-duty graph
+
+The next checkpoint connects each future request of a settling form to
+the joint written/marked clause calculator. Platform marks are read before
+the pending-work graph is evaluated. Their item-opening and state-change
+edges read that same graph. Its existing cycle checks therefore cover a
+request that opens an item whose settlement can send another request.
+The finished definition stores the finite Amounts; the runtime keeps the
+same admitted-duty and actual-origin transfer paths.
+
+A mark that can change zero states adds no state-change graph edge. This
+avoids inventing a dependency on every state while counting a pure item
+opening. Every state's Amount is still validated before materialization.
+The shared Amount arithmetic also validates both the static change term
+and the additional lazy term, including with a zero multiplier. Existing
+invalid-operand assertions now cover the lazy term as well. A true
+request/item cycle, and an arbitrary state change that can recreate a
+waiting ancestor, are refused as reserve-unbounded.
+
+The new pure witness has two finite future marked requests below one
+item's settling act. Before that act runs, the note duty reserves seven
+entries, two items, nine entry-size byte units and two requests. The closing
+checkpoint adds one entry and one byte unit. At Used two plus Reserved
+eight, the exact entry ceiling is ten; nine does not fit. The second
+settling form and final item are included in those original terms.
+
+A second native witness starts at that exact ceiling. After eviction,
+new work is refused, while the note's actual settling act runs and sends
+its funded request. Two real children refuse their unexpected field; the
+parent records both real results, opens the row and tail in turn, and
+settles them across further evictions. All three item keys remain Used,
+all item duties are released, and the closing checkpoint is written.
+HTTP replay is consistent. As before, data/code/authority/resolver are
+fixtures; storage, judgment/fold, child results, eviction and routes are
+real. No operation or provider runs.
+
+The focused native control removes the joint path only for future
+requests. Baseline passes; the changed source under-reserves the waiting
+item (four rather than eight total reserved entries), and the original
+pre-settlement assertion fails (90705, CLOSED0/fb8c88). The script restores
+the source. The control ran alone. Final focused checks pass 109 Derive
+cases and both native platform-request cases. Derive, Scope, Replay and
+Platform test compilers pass. Reports use the
+/tmp/artroom-capacity-platform-future- prefix. The first new fixture lacked
+a required state guard and was refused before execution. The expanded
+closure also caught an old assertion that a platform with no outcome
+kinds has no reserving metadata. It now checks the exact row-value request
+Amount; its original byte-conservation assertions still pass.
+
+The preceding checkpoint's future-request marked-closure gap is closed.
+Planner report 9455d1c5 is now read and adopted by 72047d28: opt-in creation
+requires the complete reachable child-definition closure before genesis;
+replay counts that same closure at birth, once per domain and digest.
+Implementation of that decision remains. The directly signed birth-body
+question 2c76d80c is still open.
+This remains WIP: direct marks on settling forms still have their existing
+fail-closed restriction, and native owner/standing Amounts, producer and
+birth checks, remaining boundaries and final freeze/review remain. No
+gate, Source approval, capacity landing, WIP push or deployment ran.

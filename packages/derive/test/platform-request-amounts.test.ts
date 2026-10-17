@@ -1,9 +1,9 @@
 import { expect, test } from "vitest";
-import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { clockOf, fits, judgeDelivery, judgeGenesis, reserved } from "../src/index.ts";
+import { PROPOSED_BOUNDS, type PlatformData, type PlatformSend } from "@generalbusiness/dap-contract";
+import { clockOf, fits, judgeDelivery, judgeGenesis, reserved, validateDefinition } from "../src/index.ts";
 import { Ledger, T0, creation, sent, arriving, created, keys, on } from "./fixtures.ts";
 
-import { platformRequests as fixture, platformRequestRules } from "./fixtures-platform-requests.ts";
+import { platformRequests as fixture, futurePlatformRequests, platformRequestRules } from "./fixtures-platform-requests.ts";
 
 const E = PROPOSED_BOUNDS.entryBytes;
 
@@ -60,4 +60,30 @@ test("an owed platform result transfers its request room to the row it actually 
   scope.did(keys.rita, "finish-row", on(scope, row));
   expect(reserved(scope.state, definition, scope.last.input).entries).toBe(1);
   expect(scope.state.itemDuties()).toEqual([]);
+});
+
+test("a pending item funds two future marked request edges before its settling form runs, while real request-item cycles are refused", () => {
+  const definition = futurePlatformRequests();
+  expect(definition.pendingWorkAmounts.pending["note"]!["waiting"]).toEqual({ entries: 7, items: 2, records: 0, bytes: 9 * E, requests: 2 });
+  expect(definition.pendingWorkAmounts.pending["row"]!["pending"]).toEqual({ entries: 4, items: 1, records: 0, bytes: 5 * E, requests: 1 });
+  expect(definition.pendingWorkAmounts.pending["tail"]!["pending"]).toEqual({ entries: 1, items: 0, records: 0, bytes: E, requests: 0 });
+  const scope = created(definition, {});
+  scope.did(keys.rita, "wait", on(scope, 0));
+  expect(reserved(scope.state, definition, scope.last.input)).toEqual({ entries: 8, items: 2, records: 0, bytes: 10 * E, requests: 2 });
+  expect(fits(scope.state, definition, { scopeEntries: 10 }, scope.last.input)).toBe(true);
+  expect(fits(scope.state, definition, { scopeEntries: 9 }, scope.last.input)).toBe(false);
+
+  const cyclic = structuredClone(definition.declared) as PlatformData;
+  const send = cyclic.acts["finish-row"]!.sends![0]! as Extract<PlatformSend, { create: unknown }>;
+  send.create.result = { refused: [{ code: "open-row", row: "P1", most: { effects: 0, operations: [], opens: "row" } }] };
+  const refused = validateDefinition(cyclic, PROPOSED_BOUNDS, undefined, { platform: true });
+  expect(refused.ok).toBe(false);
+  if (!refused.ok) expect(refused.problems).toContainEqual(expect.objectContaining({ code: "reserve-unbounded", path: "acts.finish-row" }));
+
+  // A mark that may change any state can recreate a waiting ancestor.
+  // Unlike the zero-change opening marks above, that is a real cycle.
+  send.create.result = { refused: [{ code: "two-changes", row: "P2", most: { effects: 1, operations: [] } }] };
+  const changing = validateDefinition(cyclic, PROPOSED_BOUNDS, undefined, { platform: true });
+  expect(changing.ok).toBe(false);
+  if (!changing.ok) expect(changing.problems.some(problem => problem.code === "reserve-unbounded")).toBe(true);
 });

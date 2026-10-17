@@ -112,6 +112,10 @@ export interface Counting {
   held: ReadonlySet<string>;
   initial(type: string): Amount;
   change: Amount;
+  /** Additional validator graph term: follow state-change edges only
+   * when this mark can change a state. Returns the scaled Amount; the
+   * static `change` term and this result are both checked. */
+  changing?(effects: number): Amount;
   entry: number;
   written: Amount;
 }
@@ -156,6 +160,7 @@ export function closure(c: Counting, kind: string, open: ReadonlySet<string> = n
 export function starts(c: Counting, most: Starts, how: { item: boolean; within?: ReadonlySet<string> }): Amount | null {
   const { sum, times } = amountMath(c.checked === true);
   let amount = times(most.effects, c.change);
+  if (c.changing) amount = sum(amount, c.changing(most.effects));
   for (const kind of most.operations) {
     if (c.held.has(kind)) continue;
     const child = closure(c, kind, how.within);

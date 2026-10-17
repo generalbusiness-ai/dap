@@ -219,7 +219,7 @@ describe("18.54: two marks on one item, and a state settlement beside them", () 
     const observedJob = observed.started();
     // No outcome kinds or holders: row-only result clauses must still
     // reserve their value. These alternatives take 23, rather than 17+23.
-    expect(withRows.reserving).toBeUndefined();
+    expect(withRows.reserving!.requests!["acts.mark-a-far.sends.0"]!.bytes).toBe(3 * unit + 23);
     expect(withRows.pendingWorkAmounts.clause.bytes).toBe(23);
     expect(reserved(observed.state, withRows, observed.last.input)).toEqual({ entries: 6, bytes: 7 * unit + 34, items: 0, records: 0, requests: 1 });
     expect(observed.does("mark-a-far", on(observed, observedJob))).toBe("settles");

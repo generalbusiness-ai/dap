@@ -25,7 +25,7 @@ import { capacityOf, type PendingWorkAmounts, type PendingCopy } from "./capacit
 import { mark, marked, type Defining, type MarkPlace, type RangeIndex } from "./context.ts";
 import { acts, receives } from "./handlers.ts";
 import { heldUnderBytes, holdForms, holdTypes } from "./hold.ts";
-import { reserving, type Reserving } from "./holds.ts";
+import { prepareReserving, reserving, type Reserving, type ReservationPlan } from "./holds.ts";
 import { itemTypes } from "./items.ts";
 import { observes } from "./observes.ts";
 import { at, shapes, type Problem } from "./shape.ts";
@@ -300,9 +300,11 @@ export function validateDefinition(input: unknown, bounds: Bounds, profiles: Rea
   let capacity: ReturnType<typeof capacityOf>;
   let reserved: ReturnType<typeof reserving>;
   try {
-    capacity = capacityOf(d, graph, moves);
+    let plan: ReservationPlan | undefined;
+    const joint = d.wholeCapacity && d.platform;
+    capacity = capacityOf(d, graph, moves, joint ? reader => (plan = prepareReserving(d, top, reader, options.outcomeValues ?? {})) : undefined);
     if (problems.length > 0) return { ok: false, problems };
-    reserved = reserving(d, top, capacity, options.outcomeValues);
+    reserved = joint ? plan?.finish(capacity) : reserving(d, top, capacity, options.outcomeValues);
   } catch (error) {
     if (!(error instanceof AmountError)) throw error;
     return { ok: false, problems: [...problems, { code: "reserve-unbounded", path: "capacity", message: error.message }] };
