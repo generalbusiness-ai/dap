@@ -1571,3 +1571,102 @@ the decision. Earlier pending-standing statements describe their own
 checkpoints; this disposition resolves that choice. Complete capacity
 owner/producer conservation, final freeze and independent review remain
 open. No gate, Source, landing, push or deployment accompanies this note.
+
+## Native receiver-pin closures use the shared graph
+
+The finite receiver-pin producer now has a full Amount. Validation collects
+its actual counter lower bound, source kind and key-selection facts. The
+existing capacity graph adds any future first pin key and its pending
+decisions beside item states, clauses, platform marks and future requests.
+It does not use a separate closure calculator. A license bound to its own
+pin replaces that key. A license in another future form can create a key,
+and must fund that pin's own decisions. Recursive closures and counters
+without a finite safe-integer lower bound refuse as reserve-unbounded,
+naming hold@1/receiver-pin. A source known to be a primitive cannot match
+the verified ScopeRef binding: its record key still counts, but it creates
+no bound-decision obligation. Unknown sources are not treated as zero.
+
+A handler's source kind and a request result's source kind are separate
+facts. A result comes from the declared recipient, not the source of the
+original handler. The graph carries that recipient kind through create,
+tell and relate clauses. This permits a finite result-created pin whose
+source has no matching handler, without inventing a recursive edge back
+to the original handler. Such a pin still funds the deciding unknown-
+handler refusal, including its retained foreign source entry.
+
+Pin binding precedes handler field validation. A detached body over the
+handler's valid-input maximum can still be retained and decided refused.
+The bound handler's quote therefore uses the existing text writer ceiling
+for that input, including canonical JSON escaping. It does not substitute
+the smaller valid-input limit. The native witness transfers a real retained
+text from a real sending scope by a digest alias; no source record or
+receiver record is injected. The internal text reader decodes the sender's
+canonical JSON string before giving it to the native delivery writer.
+
+The owner reads each standing pin's actual source and decided counter and
+uses the graph's quote for that source kind. Its scalar callback projects
+the same Amount for opt-in scopes. A pin remains in state standing after
+its last numbered decision; its zero pending amount follows the decided
+counter, not a final-state heuristic. Its retained key still counts in Used.
+The native workspace snapshot producer still has no writer maximum, and
+its opted-in definition refusal remains unchanged. Older pins keep their
+old entry-only owner calculation and have no new quote field.
+
+For the fictional native witness, let E be entryBytes and K be
+6 times the injected text writer ceiling plus 2. Each bound handler can
+open one job, whose settlement sends one request. Its quote is:
+
+| Dimension | One deciding entry and its whole closure |
+| --- | --- |
+| Entries | 4: the decision, the job's settling entry, and two request entries |
+| Bytes | 6E + K, including the decision's foreign source and the later result's foreign source |
+| Items | 1 job |
+| Records | 0: the bound receiver pin already exists |
+| Requests | 1 future request |
+
+The two remaining license numbers reserve twice that Amount. Ordinary
+traffic fills the scope so that Used plus Reserved equals all five
+ceilings: 15 entries, the measured byte total, 3 item keys, 1 record key,
+and 2 requests. The first applied license spends one unit and opens its
+real job. The second has a 64-byte control-character body whose retained
+canonical JSON is exactly 386 bytes; it is over the handler's maximum of
+4 and is decided refused. Its repeat writes and retains nothing further.
+
+New work uses exactly the freed branch's item, request and entry room.
+At full entries, items, records and requests, the job's settling act moves
+its future request from Reserved to Used. Both actual child scopes record
+refused genesis entries and send their actual results back. Each result
+releases only its own pending request. Eviction preserves the amounts and
+keys. A final checkpoint and native HTTP replay succeed. The source scope
+is a real journal under a fictional legacy declaration; the children use
+fictional trusted platform data with no rule marks. Authority, clock and
+internal transport wiring are fixtures. No workspace or outside provider
+runs. Replay uses one shared upper ceiling that covers the real source
+history; ordinary receiver traffic fills that same entry budget.
+
+Focused checks pass 53 Derive cases and three native Scope cases. These
+include the existing hold-reader and Git-read owner witnesses, old native
+license behavior and the unchanged ancestry-snapshot refusal. Derive,
+Scope, Replay and Platform test compilers pass. Initial fixture failures
+identified a missing fact reference, state guard, address slot, sender
+field declaration and an undersized replay ceiling; they were corrected
+before the final runs. The enlarged witness's initial expected scalar was
+also corrected to the full two-unit vector.
+
+Three isolated controls distinguish separate boundaries. Replacing the
+owner's full vector with an entry projection fails the native Amount
+assertion (31606, CLOSED0/7c4ae1). Omitting native work from the shared sum
+loses the result-created pin's records and entries (30297, CLOSED0/6896c3).
+Using only the valid body maximum undercounts the refused input (82024,
+CLOSED0/45d563). Each baseline passes and its intended assertion fails
+with the one fault. Sources are restored; no source-dependent check
+overlaps a control. Logs use /tmp/artroom-capacity-receiver-pins-.
+
+This supersedes the earlier checkpoint's missing receiver-pin quote, not
+the workspace-snapshot refusal. The remaining capacity audit includes
+the platform bound-decision record term, which still uses the generic
+derived-effect ceiling. Actual RuleEffect excludes capability record
+writes, so that term needs a producer check before the final freeze.
+The root remains open, with note consolidation, Main recut, one final
+gate and independent Source review still due. No gate, Source, landing,
+push or deployment ran for this checkpoint.

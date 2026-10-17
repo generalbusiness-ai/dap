@@ -39,6 +39,9 @@ export interface PendingWorkAmounts {
   requests?: Readonly<Record<string, Amount>>;
   /** Opt-in platform data: written work of each exact reserved clause. */
   clauses?: Readonly<Record<string, Amount>>;
+  /** Native hold pins reserve deciding entries, including refused inputs,
+   * with the same recursive graph as other pending work. */
+  receiverPins?: { fallback: Amount; byKind: Readonly<Record<string, Amount>> };
 }
 
 export interface Capacity {
@@ -71,7 +74,7 @@ export interface PlatformWork {
  * first. Each rule's chain was computed once, with the cycle check. A cycle
  * of settling forms is refused here, as `reserve-unbounded`.
  */
-export function capacityOf(d: Pick<Defining, "bad" | "bounds" | "pendingWork" | "clauseSets" | "clauseRetains" | "clausePaths" | "platform" | "types" | "wholeCapacity" | "ruleInputBytes" | "rules">, graph: TimedGraph, moves: readonly TimedMove[], prepare?: (reader: CapacityReader) => PlatformWork | undefined): Capacity {
+export function capacityOf(d: Pick<Defining, "bad" | "bounds" | "pendingWork" | "clauseSets" | "clauseRetains" | "clausePaths" | "platform" | "types" | "wholeCapacity" | "ruleInputBytes" | "rules" | "native">, graph: TimedGraph, moves: readonly TimedMove[], prepare?: (reader: CapacityReader) => PlatformWork | undefined): Capacity {
   const { sum, times, largest } = amountMath(d.wholeCapacity);
   const entry: Amount = { ...NOTHING, entries: 1, bytes: d.bounds.entryBytes };
   // One settling form's own entry and declared openings. Changes to existing subjects and to the copy being settled create
@@ -80,7 +83,13 @@ export function capacityOf(d: Pick<Defining, "bad" | "bounds" | "pendingWork" | 
   // at most once per distinct declared rule. Count every rule conservatively;
   // a checkpoint, timed entry or result clause evaluates no rule guard.
   const ruleInputs = d.wholeCapacity ? times(d.rules.size, { ...NOTHING, bytes: d.ruleInputBytes }) : NOTHING;
-  const entryFor = (form: PendingWork): Amount => sum(entry, ruleInputs, { ...NOTHING, bytes: d.wholeCapacity ? fieldRetainedBytes(form.retained, d.bounds) : 0, items: form.opens === null ? 0 : 1, records: form.mayCreateCopy ? 1 : 0 });
+  const entryFor = (form: PendingWork, pinBound = false): Amount => {
+    // A pin binds before handler field validation. Even an over-sized
+    // detached body gets a deciding refusal, so use its actual writer
+    // ceiling here, rather than the bound on valid handler inputs.
+    const retained = pinBound ? { ...form.retained, fields: form.retained.fields.map(field => field.type === "text" && field.detached ? { ...field, max: d.bounds.textBytes } : field) } : form.retained;
+    return sum(entry, ruleInputs, { ...NOTHING, bytes: d.wholeCapacity ? fieldRetainedBytes(retained, d.bounds) : 0, items: form.opens === null ? 0 : 1, records: form.mayCreateCopy ? 1 : 0 });
+  };
   const deadline = (entries: number): Amount => times(entries, entry);
   /** A deadline's known amount in that state, with each timed entry at the entry-size stand-in. */
   const held = (type: string, state: string): Amount => deadline(graph.fromState.get(type)?.get(state) ?? 0);
@@ -127,7 +136,7 @@ export function capacityOf(d: Pick<Defining, "bad" | "bounds" | "pendingWork" | 
       return NOTHING;
     }
     open.add(k);
-    let most = largest(...(settlers.get(k) ?? []).map(amountOf));
+    let most = largest(...(settlers.get(k) ?? []).map(form => amountOf(form)));
     for (const rule of moves) if (rule.type === type && rule.states.includes(state)) most = largest(most, awaits(type, rule.to));
     open.delete(k);
     done.set(k, most);
@@ -139,14 +148,15 @@ export function capacityOf(d: Pick<Defining, "bad" | "bounds" | "pendingWork" | 
    * a state holds the chain of its deadline and what awaits its settlement.
    * `but`: the states of one subject that are not counted.
    */
-  const starts = (set: ClauseSet, but?: { subject: string; states: readonly string[] }): Amount => {
+  const starts = (set: ClauseSet, but?: { subject: string; states: readonly string[] }, pinBound = false): Amount => {
     const bySubject = new Map<string, Amount>();
     for (const e of set) {
       if (e.state !== undefined && but?.subject === e.subject && but.states.includes(e.state)) continue;
       const most = e.state !== undefined ? sum(held(e.type, e.state), awaits(e.type, e.state)) : deadline(graph.fromSlot.get(e.type)?.get(e.slot!) ?? 0);
       bySubject.set(e.subject, largest(bySubject.get(e.subject) ?? NOTHING, most));
     }
-    return sum(...bySubject.values(), { ...NOTHING, bytes: d.wholeCapacity ? retainedBytes(d.clauseRetains.get(set)) : 0 });
+    const native = (d.native.tasks.get(set) ?? []).map(task => task.existing && pinBound ? NOTHING : sum({ ...NOTHING, records: 1 }, task.source === null || task.remaining === 0 ? NOTHING : times(task.remaining, receiverPin(task.source))));
+    return sum(...bySubject.values(), ...native, { ...NOTHING, bytes: d.wholeCapacity ? retainedBytes(d.clauseRetains.get(set)) : 0 });
   };
   /**
    * What a settling form reserves: its own entry; what its effects can
@@ -166,11 +176,25 @@ export function capacityOf(d: Pick<Defining, "bad" | "bounds" | "pendingWork" | 
     return sum(requestEntries(d.bounds.entryBytes), largest(...request.clauses.map(c => starts(c))));
   };
   const requestsOf = (form: PendingWork): Amount => sum(...form.requests.map(request => times(request.most, requestAmount(form, request))));
-  const amountOf = (form: PendingWork): Amount => {
+  const amountOf = (form: PendingWork, pinBound = false): Amount => {
     const settled = form.settles && "subject" in form.settles ? form.settles : undefined;
     forms.push(form);
-    const amount = sum(entryFor(form), starts(form.sets, settled), requestsOf(form), marksOfForm(form));
+    const amount = sum(entryFor(form, pinBound), starts(form.sets, settled, pinBound), requestsOf(form), marksOfForm(form));
     forms.pop();
+    return amount;
+  };
+
+  const pinFallback = sum(entry, { ...NOTHING, bytes: d.bounds.entryBytes });
+  const pinKinds = [...new Set(d.native.decisions.map(decision => decision.kind))];
+  const pinQuotes = new Map<string, Amount>(), pinOpen = new Set<string>();
+  const receiverPin = (kind: string): Amount => {
+    const known = pinQuotes.get(kind);
+    if (known) return known;
+    if (pinOpen.has(kind)) throw new AmountError("hold@1/receiver-pin producer has a recursive reservation closure");
+    pinOpen.add(kind);
+    const amount = kind === "*" ? largest(pinFallback, ...pinKinds.map(receiverPin)) : largest(pinFallback, ...d.native.decisions.filter(decision => decision.kind === kind).map(decision => amountOf(d.pendingWork.find(form => form.path === decision.path)!, true)));
+    pinOpen.delete(kind);
+    pinQuotes.set(kind, amount);
     return amount;
   };
 
@@ -210,9 +234,10 @@ export function capacityOf(d: Pick<Defining, "bad" | "bounds" | "pendingWork" | 
     return [path, starts(set)];
   })) : undefined;
   const requests = d.wholeCapacity ? Object.fromEntries(d.pendingWork.flatMap(form => form.requests.map(request => [`${form.path}.sends.${request.send}`, requestAmount(form, request)]))) : undefined;
+  const receiverPins = d.wholeCapacity && d.native.receiverPins ? { fallback: pinFallback, byKind: Object.fromEntries(pinKinds.map(kind => [kind, receiverPin(kind)])) } : undefined;
   for (const form of unbounded) d.bad("reserve-unbounded", form.path, "the forms that settle lead back to the state this one settles, so no reservation covers what its settlement can start");
   const marked = unbounded.size === 0 ? markers.data() : null;
   const decisions = Object.fromEntries(d.pendingWork.filter((form) => form.path.startsWith("receives.")).map((form) => [form.path, starts(form.sets)]));
   const decisionEntries = Object.fromEntries(Object.entries(decisions).map(([path, amount]) => [path, amount.entries]));
-  return { pendingWorkAmounts: { entry, deadlines: deadlineAmounts, pending: pendingAmounts, pendingCopies: copyAmounts, clause, decisions, ...(requests ? { requests } : {}), ...(clauses ? { clauses } : {}) }, deadlines, pending, pendingCopies, clauseEntries: clause.entries, decisionEntries, ...(marked ? { markers: marked } : {}) };
+  return { pendingWorkAmounts: { entry, deadlines: deadlineAmounts, pending: pendingAmounts, pendingCopies: copyAmounts, clause, decisions, ...(requests ? { requests } : {}), ...(clauses ? { clauses } : {}), ...(receiverPins ? { receiverPins } : {}) }, deadlines, pending, pendingCopies, clauseEntries: clause.entries, decisionEntries, ...(marked ? { markers: marked } : {}) };
 }

@@ -31,6 +31,7 @@ export interface Ctx {
   kind: string | null;                    // the kind of the entry these forms write (section 6.2). Null: the entry of an advisory, which has none
   handler: { update: boolean; under: string | null } | null;   // a handler: it has a sender and a source entry, a `relate` handler an update, and `under` is the definition its `from` names, if it names one
   clause: boolean;                        // a result clause: it has a sender and a result
+  senderKind?: string | undefined;        // the verified handler source, or the recipient kind of a future result
   presented: Map<string, FieldType>;      // an act: the facts presented beside the intent, by name
   elements: Map<string, FieldType | null>;// inside a list form: each element it binds, by its `as` name, with its type when the definition states it
   each: Type | null;                      // a fan-out send: the type of the items its range covers
@@ -108,6 +109,7 @@ export function mark(d: Defining, v: unknown, path: string, kind: MarkKind, more
  * read first, so every later form resolves its names against `types`.
  */
 export interface Defining extends Shapes {
+  readonly native: import("./native-capacity.ts").NativeCapacity;
   readonly wholeCapacity: boolean;
   ruleInputBytes: number;
   readonly bounds: Bounds;

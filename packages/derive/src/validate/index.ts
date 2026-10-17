@@ -31,6 +31,7 @@ import { observes } from "./observes.ts";
 import { at, shapes, type Problem } from "./shape.ts";
 import type { Markers } from "../markers.ts";
 import { decisions } from "./binding.ts";
+import { nativeCapacity } from "./native-capacity.ts";
 import { setOnce } from "./markers.ts";
 import { timedEntryBytes, timedGraph, timedKinds, timedRules } from "./timed.ts";
 import { standingOf, type Standing } from "./standing.ts";
@@ -190,6 +191,7 @@ export function validateDefinition(input: unknown, bounds: Bounds, profiles: Rea
   if (!platform && named?.startsWith("platform:")) bad("shape", "name", "a declared definition's name does not begin with platform:");
 
   const d: Defining = {
+    native: nativeCapacity(),
     wholeCapacity: isObject(top["capacity"]) && top["capacity"]["name"] === "whole-scope",
     ruleInputBytes: 0,
     ...read, bounds, name: typeof top["name"] === "string" ? top["name"] : null, typeNames: new Set(isObject(top["items"]) ? Object.keys(top["items"]) : []), types: new Map(), rules: new Set(), holds: false, holdTypes: new Set(),
