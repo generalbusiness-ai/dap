@@ -1670,3 +1670,57 @@ writes, so that term needs a producer check before the final freeze.
 The root remains open, with note consolidation, Main recut, one final
 gate and independent Source review still due. No gate, Source, landing,
 push or deployment ran for this checkpoint.
+
+## Bound decisions quote record producers, not an effect-count proxy
+
+The platform bound-decision base no longer reserves derivedEffects record
+keys for an opt-in handler. The runtime's closed BY_RULE list permits
+open, state, party, list, ref, value, operation and attempt effects. It
+excludes capability record and relationship-copy writes. The validator
+also requires bound handlers to be tell handlers, so deciding one cannot
+implicitly create a relationship copy. State and slot changes do not add
+counted record keys. A written native producer and any record keys in its
+future closure are already counted by the shared graph's written Amount.
+
+This removes a false scopeRecords refusal; it does not substitute zero
+for an unknown producer. A native license effect in the second witness
+still contributes its actual first key. Its source is explicitly none,
+so that standing record binds no future request; the key itself remains
+in Used after the entry. Legacy scopes keep the old private Amount
+projection, and their declaration bytes and entries-only admission stay
+unchanged.
+
+Two fictional trusted platform declarations have one holder with one bound
+stop. The plain stop changes only the job's state. It admits the holder
+with scopeRecords zero and settles with no free entry, item or record
+room. The native-record variant refuses the holder at zero, rolls back
+every stored row, then admits at scopeRecords one. Its stop transfers the
+one reserved record key into Used at that same ceiling. Neither variant
+refunds its final item key. The actual sending scope receives its actual
+result; duplicate delivery, eviction and native HTTP replay all pass.
+These are real journals, holder binding, capability code, transactions
+and routes. Platform data, authority, clock and resolver wiring are
+fixtures; no platform rule mark or outside provider runs.
+
+Focused checks cover 63 Derive tests and three native Scope tests, including
+the preceding receiver-pin item/request chain. One existing opt-in test
+still expected the old 256-key proxy; after the independent producer and
+native zero/one-key witnesses established the correct value, its expected
+records changed to zero and that exact case passed. The other 62 passed
+in the original focused run. Derive, Scope, Replay and Platform test
+compilers pass. An initial fixture type error used const null instead of
+the contract's none operand; the final fixture uses none.
+
+Two isolated controls distinguish the change. Restoring the generic
+effect-count proxy refuses the valid zero-record holder (80388,
+CLOSED0/20d8d5). Dropping the real native first-key contribution wrongly
+admits the one-key holder at zero (9724, CLOSED0/fe1787). Each baseline
+passes and its intended admission assertion fails with the one fault.
+Sources are restored and no source-dependent check overlaps a control.
+Logs use /tmp/artroom-capacity-bound-records-.
+
+The next audit checks refused detached-body replay after the payload is
+redacted, before final note consolidation, Main recut, gate and Source
+review. A missing size must produce an explicit incomplete span rather
+than an unsupported pass or false mismatch. This checkpoint has no gate,
+Source, review, landing, push or deployment.

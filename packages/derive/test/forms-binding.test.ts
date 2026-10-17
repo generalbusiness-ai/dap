@@ -190,7 +190,7 @@ describe("18.53, at the validator: the index, the binding selector and `bound`",
       data.receives.stop.effects[1].most = { effects: 2, operations: [], opens: "result" };
     });
     expect(checked.ok).toBe(true);
-    if (checked.ok) expect(checked.definition.reserving!.dec["stop"]).toEqual({ entries: 1, items: 0, records: PROPOSED_BOUNDS.derivedEffects, bytes: 3 * PROPOSED_BOUNDS.entryBytes, requests: 0 });
+    if (checked.ok) expect(checked.definition.reserving!.dec["stop"]).toEqual({ entries: 1, items: 0, records: 0, bytes: 3 * PROPOSED_BOUNDS.entryBytes, requests: 0 });
   });
 
   test("C2 integer indexes preserve fixed required platform slots and exact selector ranges", () => {

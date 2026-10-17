@@ -396,11 +396,12 @@ export function prepareReserving(d: Defining, top: Rec, reader: CapacityReader, 
       const handler = Object.entries(handlersWritten).find(([name]) => at("receives", name) === path)?.[1];
       if (!isObject(handler)) continue;
       const written = own(capacity.pendingWorkAmounts.decisions, path) ?? NOTHING;
-      // The derived-effect ceiling stands in for the records a handler can
-      // change, as entryBytes stands in for the whole static entry size.
+      // Platform RuleEffect cannot write capability records or copies.
+      // Written native producers and their closures are in `written`;
+      // a state/slot update creates no counted record key of its own.
       const producer = d.pendingWork.find(form => form.path === path)!.retained;
       const retained = d.wholeCapacity ? sum({ ...NOTHING, bytes: fieldRetainedBytes(producer, bounds) }, { ...NOTHING, bytes: d.rules.size * d.ruleInputBytes }).bytes : bounds.entryBytes;
-      let amount: Amount | null = sum({ ...NOTHING, entries: 1, records: bounds.derivedEffects, bytes: bounds.entryBytes }, { ...NOTHING, bytes: retained }, written);
+      let amount: Amount | null = sum({ ...NOTHING, entries: 1, records: d.wholeCapacity ? 0 : bounds.derivedEffects, bytes: bounds.entryBytes }, { ...NOTHING, bytes: retained }, written);
       for (const mark of formMarks.get(path) ?? []) {
         const more = starts(c, mark, { item: false });
         amount = amount && more ? sum(amount, more) : null;
