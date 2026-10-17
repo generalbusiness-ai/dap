@@ -12,6 +12,46 @@ import { controls } from "../src/testing.ts";
 import { wired } from "./outside.ts";
 import { Lane, START, at, creation, definition, stubOf, reader, una, vic } from "./support.ts";
 
+test("native capacity admits a hold reader without local holds and preserves its empty owner reservation through eviction and replay", async () => {
+  const under = variant(definition.declared, d => {
+    d.capacity = { name: "whole-scope", version: 1 };
+    const form = { step: "transition", on: "intent", grant: "report", also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [] };
+    d.acts = {
+      file: d.acts.file,
+      touch: { ...form, effects: [{ capability: { name: "hold", do: "settle", with: { export: { const: 0 } } } }] },
+      inspect: { ...form, guards: [{ capability: { name: "hold", guard: "staged", with: {} } }] },
+    };
+    d.receives = {}; d.timed = {};
+  });
+  expect(under.holdTypes).toEqual([]);
+  const asked = creation(at(61), under), c = controls(asked.name, START);
+  wired.set(asked.name, () => ({ capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE }));
+  try {
+    const created = await stubOf(asked.name).create(asked.signed, under.declared);
+    expect(created.answer).toBe("accepted");
+    if (created.answer !== "accepted") throw new Error(`hold reader must create: ${JSON.stringify(created)}`);
+    const scope = new Lane(asked.name, c, created.receipt.fact.at, created.receipt, asked.signed);
+    await scope.did(una, "touch", { on: 0, expected: { on: 1 } });
+    const inspect = () => scope.inside(state => {
+      const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) });
+      return { owner: ownerReservations(CAPABILITY_CODE, store, under), keys: store.keyCounts(), snapshot: store.all() };
+    });
+    const before = await inspect();
+    expect(before.owner).toEqual({ entries: 0, items: 0, records: 0, bytes: 0, requests: 0 });
+    expect(before.keys.records).toBe(0);
+    expect(await scope.act(una, "inspect", { on: 0, expected: { on: 1 } })).toMatchObject({ answer: "refused", reason: "capability-refused", name: "not-staged" });
+    expect(await inspect()).toEqual(before);
+    await scope.restart();
+    expect(await inspect()).toEqual(before);
+    const source = httpSource("https://scope.test", { reader, fetch: async (url, init) => {
+      const response = await route(new Request(url, init), env.SCOPES);
+      return { status: response.status, body: response.body };
+    } });
+    const replayed = await verify(source, { mode: "replay", scope: scope.name, grants: "as-recorded", capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE, bounds: c.bounds });
+    expect([replayed.report.result, replayed.why]).toEqual(["consistent", null]);
+  } finally { wired.delete(asked.name); }
+});
+
 test("native read-token reservations keep their entry bytes after the mint replaces its key and the object is evicted", async () => {
   // Real scope, native preparation/outcome code, SQLite, driver and eviction.
   // Lane data and authority are fixtures. The host answer below is a

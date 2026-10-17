@@ -974,6 +974,10 @@ export function holdCapability(options: HoldOptions): Capabilities & Steps & Own
     reserves: holdReserves,
     reservations: (_view, definition) => {
       if (!hasWorkspace(definition)) return NO_AMOUNT;
+      // Without a local hold, preparation cannot make a root, fork, pin
+      // or token. A license effect can still make a receiver pin without
+      // its matching guard, so it must keep its producer quote.
+      if (definition.holdTypes.length === 0 && !definition.underived.some(form => form.capability === HOLD && form.form === "effect" && form.name === "license")) return NO_AMOUNT;
       throw new AmountError("hold@1 record producer has no complete reservation Amount");
     },
     // Section 6.1, "A declared maximum for everything that derives". Each written effect changes at most one record. A step: its

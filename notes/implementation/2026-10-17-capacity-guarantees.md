@@ -1513,3 +1513,38 @@ this checkpoint is not offered as completion of that broader promise.
 Native owner Amounts, producer checks, remaining conservation boundaries,
 final freeze/gate and independent Source review also remain. No gate,
 Source approval, capacity landing, WIP push or deployment ran.
+
+### Hold readers without local hold work
+
+The native hold owner no longer requires an unavailable producer quote
+when the definition has no local hold types and no license effect. A
+listed hold guard enables workspace code, but cannot itself create a
+record. Preparation requires a local hold before it can create an
+instance, token, root, fork or pin. The other written effects only update
+existing records. This conclusion follows the actual producer paths,
+rather than treating every use of a capability as pending work.
+
+The license effect is different: it can create a receiver pin even without
+its matching guard or an actual local hold. That case still requires a
+complete Amount and retains the explicit failure. This checkpoint does
+not supply the missing license closure or change the refusal of workspace
+staging whose ancestry-snapshot writer has no finite byte ceiling.
+
+A focused Derive witness checks the empty owner Amount and the license
+exception. A native Scope witness creates the opt-in scope, applies a
+settle effect with no record to update, refuses a staged guard without
+changing storage, evicts the object and checks HTTP replay consistency.
+It uses fixture authority and data, with actual capability code, SQLite,
+transactions and routes. The first native run exposed a wrong expected
+item revision in the fixture: an effect with no item change leaves that
+revision unchanged. The corrected focused run passes.
+
+Derive and Scope test compilers pass. Two isolated controls distinguish
+the relevant failures: removing the new exception makes native creation
+unavailable (54852, CLOSED0/e79bc3); ignoring the license producer makes
+the Derive assertion fail (30056, CLOSED0/0bc0c1). Each control first passes
+its baseline, fails the intended assertion with the fault, and restores
+the source. No source-dependent process overlaps either mutation.
+Logs use /tmp/artroom-capacity-hold-reader-. This remains local WIP, with
+the broader owner/producer audit, standing decision, final gate and
+independent review still pending.

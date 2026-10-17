@@ -2,10 +2,29 @@ import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Entry, Evidence, OperationId } from "@generalbusiness/dap-contract";
 import { entryHash } from "@generalbusiness/artroom-bytes";
-import { AmountError, FoldError, applyEntry, capabilitiesOf, checkpointOf, clockOf, gitRead, operationId, operationOpening, operationStanding, owed, reserved as reservedAmount, settleOutcome, tokenPast } from "../src/index.ts";
+import { AmountError, FoldError, applyEntry, capabilitiesOf, checkpointOf, clockOf, gitRead, holdCapability, ownerReservations, operationId, operationOpening, operationStanding, owed, reserved as reservedAmount, settleOutcome, tokenPast } from "../src/index.ts";
 import type { Opening, OperationRules, Owners } from "../src/index.ts";
 import { kindOf } from "../src/operand.ts";
 import { Scope, t, ticketDefinition, variant } from "./fixtures.ts";
+
+test("a hold reader without local holds owes no record work, while a license effect still requires its producer Amount", () => {
+  const reader = variant(ticketDefinition.declared, data => {
+    data.capacity = { name: "whole-scope", version: 1 };
+    data.capabilities = [{ name: "hold", version: 1 }];
+    data.acts.file.guards.push({ capability: { name: "hold", guard: "staged", with: {} } });
+  });
+  const owner = holdCapability({ tokensPerHold: 2, rootRetentionSeconds: 600 });
+  const scope = new Scope(ticketDefinition);
+  expect(reader.holdTypes).toEqual([]);
+  expect(ownerReservations(owner, scope.state, reader)).toEqual({ entries: 0, items: 0, records: 0, bytes: 0, requests: 0 });
+  // An effect does not imply its matching guard was written. The native
+  // license effect can create a receiver pin even with no local hold.
+  const producer = variant(reader.declared, data => {
+    data.acts.file.effects.push({ capability: { name: "hold", do: "license", with: { export: { const: 0 }, from: { const: null }, checkpoint: { const: 0 }, hold: { const: 0 }, instance: { const: "i" }, k: { const: 1 } } } });
+  });
+  expect(producer.holdTypes).toEqual([]);
+  expect(() => ownerReservations(owner, scope.state, producer)).toThrow("hold@1 record producer has no complete reservation Amount");
+});
 
 test("opt-in owner-record reservations reject scalar-only, inconsistent and invalid Amounts, even when the current entry count is zero", () => {
   // This is the owner/calculator boundary. The callbacks below are explicit
