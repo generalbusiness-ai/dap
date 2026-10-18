@@ -477,14 +477,45 @@ Its preparation log is `/tmp/artroom-g0-maintained-prepare-formatted-20261018.lo
 No test process remains live against this Grow source. The independently
 frozen M1 foundation gate uses its own worktree and dependency links.
 
-## Remaining G0 work
+## Landed Main check witness
 
-The maintained declarative fixture must run through reviewed public M1.
-M1's `dap check` remains on its separate unlanded foundation head. The broad
-developer half's new/dev, bundler and real Counter/Lending conversion remain
-open. G0's final witness depends on the reviewed public check path.
-No G0 gate or Source submission has run yet.
-Gate runs once on
-the completed submitted head before independent review and local landing.
+M1 foundation now lands at Main
+`feccbbcfef618ed560e441a7711ce80941b57c22`, tree
+`b5a0a28f1b0809bf5b090689761ff5557f3c5998`, under durable receipt
+`b44d7c7561d3ff77d20334861e3cb3d5fc74616d`. Its exact-head approval and
+Main audit pass. G0 refreshes that Main without changing its native data.
+
+The first root dependency audit (`f3e7cd`) found a lock mismatch before any
+CLI run or stamp write. A read-only audit records two mismatched installed
+versions. The root view remains untouched. A new isolated checkout at exact
+Main uses a COW copy of the approved dependency view, with thirteen links
+rebound locally and 106 installed versions verified (`841654`), zero installs.
+Audit: `/tmp/artroom-m1-public-main-verified-view-20261018.json`.
+G0's separate view also verifies thirteen links, 106 versions and the sole
+CLI scope dependency reclassification before refreshing its ignored stamp
+(`61f592`). No package is fetched or installed.
+
+The maintained fixture is prepared at
+`/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/dap-grow-check-606d4f`.
+The actual Main CLI at
+`/tmp/artroom-builder-public-m1-main-20261018/packages/cli/bin/dap.js`
+runs from outside the repository with empty custody variables. It passes
+(`9a0071`/`679b8e`, exit 0): two declarations validated, site seven steps
+through entry 5, room fault 199 steps through entry 160, eight labelled
+non-native owner records, empty stderr. Semantic and presentation ids equal
+the earlier private bridge. Raw stdout/stderr logs use
+`/tmp/artroom-g0-public-main-check-20261018.`. Grow typecheck passes after
+the Main refresh (`e65a0c`). No unreviewed M1 developer code is used.
+
+The [G0 review primary](2026-10-18-grow-g0-review.md) describes the completed
+data boundary and the remaining production milestones. The earlier sections
+retain their historical checkpoint limits rather than changing those records.
+
+## Remaining G0 review work
+
+The public Main check path now passes the maintained input. G0 still needs
+its required gate, Source submission, independent review and local landing.
+Gate runs once at the completed submitted head. M1's broader developer half
+and installation acceptance remain separate open work.
 This is not G0 acceptance, a host install, a native device owner, a real
 sensor/device, photo custody, production archive admission or a deployment.
