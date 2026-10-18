@@ -27,8 +27,14 @@ export async function applicationCounterNavigationPacket2(journal = false) {
   if (board.kind === "surface") throw Error("The fixture needs an item view.");
   const { creates: _creates, ...semantic } = packet.package.semantic;
   const { semantic: _semantic, ...presentation } = packet.package.presentation;
-  return packApplication2({ name: "test.declared-navigation", version: "1", semantic, presentation: { ...presentation, views: {
+  return packApplication2({ name: "test.declared-navigation", version: "1", semantic: { ...semantic, projections: { ...semantic.projections,
+    people: readApplicationProjection({ v: 1, definition: semantic.entry, revision: "revision", sources: {
+      participants: { item: "participant", read: "many", states: ["active", "inactive", "removed"], limit: 16, fields: {} },
+    } }),
+  } }, presentation: { ...presentation, views: {
     ...presentation.views, board: { ...board, back: "record" }, record: { ...board, kind: "record", display: "fullscreen", back: "board" },
+    people: { ...board, kind: "carousel", projection: "people", item: "participants", title: "id", summary: "state", facts: ["revision"], acts: [], back: null,
+      context: "Participant {id} v{revision}", fallback: "Participant {id}: {state}" },
   } } }, signer);
 }
 

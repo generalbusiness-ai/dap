@@ -139,6 +139,40 @@ try {
     report.cases.push({ label: 'declared-log-390', entries: 2, readonlyRefusal: 'shape', fullEntryReviewClaim: false });
     await page.close();
   }
+  for (const width of [320, 592]) {
+    const page = await browser.newPage({ viewport: { width: width + 32, height: 1000 } }), errors = [];
+    page.on('pageerror', error => errors.push(String(error)));
+    page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
+    await page.goto(host.url + '/?fixture=declared&screen=people');
+    const app = page.frameLocator('#frame').frameLocator('iframe');
+    await app.getByRole('link', { name: '11', exact: true }).waitFor();
+    assert.equal(await app.getByRole('button', { name: 'Previous item', exact: true }).isDisabled(), true);
+    await app.getByRole('button', { name: 'Next item', exact: true }).click();
+    await app.getByRole('link', { name: '12', exact: true }).waitFor();
+    await app.locator('#card-root').press('ArrowRight');
+    await app.getByRole('link', { name: '13', exact: true }).waitFor();
+    assert.equal(await app.getByRole('button', { name: 'Next item', exact: true }).isDisabled(), true);
+    await app.getByRole('button', { name: 'Previous item', exact: true }).click();
+    await app.getByRole('link', { name: '12', exact: true }).waitFor();
+    await app.getByRole('link', { name: '12', exact: true }).click();
+    await app.getByRole('heading', { name: '12', exact: true }).waitFor();
+    assert.equal(await app.getByRole('button', { name: 'Next item', exact: true }).count(), 0);
+    await app.getByRole('button', { name: /Back/ }).click();
+    await app.getByRole('link', { name: '12', exact: true }).waitFor();
+    await contained(app);
+    const measured = await app.locator('#card-root').evaluate(root => ({ width: document.documentElement.clientWidth,
+      overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth, height: Math.ceil(root.getBoundingClientRect().height), viewportHeight: window.innerHeight }));
+    assert.equal(measured.width, width); assert.equal(measured.overflow, false); assert.ok(measured.viewportHeight >= measured.height);
+    const proof = await page.evaluate(() => window.proof);
+    assert.deepEqual(errors, []); assert.deepEqual(proof.errors, []); assert.deepEqual(proof.chat, []);
+    const identities = proof.contexts.map(context => context.structuredContent.identity?.item);
+    assert.ok(identities.includes('11') && identities.includes('12') && identities.includes('13'));
+    assert.equal(proof.contexts.at(-1).structuredContent.identity.item, '12');
+    assert.ok(!JSON.stringify(proof.contexts).includes('sources'));
+    await page.screenshot({ path: join(out, `declared-carousel-${width}.png`) });
+    report.cases.push({ label: `declared-carousel-${width}`, measured, identities, retainedSelection: '12', keyboardNavigation: true });
+    await page.close();
+  }
   await writeFile(join(out, 'report.json'), JSON.stringify(report, null, 2));
   console.log(JSON.stringify(report));
 } finally { await browser?.close(); await host.close(); }

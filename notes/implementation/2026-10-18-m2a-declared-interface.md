@@ -523,3 +523,22 @@ attempt could not open the Workerd loopback listener in the sandbox. The
 local-loopback run passes without deployment. Log:
 `/tmp/artroom-m2a-declared-subjects-native-loopback-20261018.log`.
 The MCP source/test typecheck passes. No final gate or delivery is claimed.
+
+### Declared carousel browser acceptance
+
+The generic carousel now has a three-participant declared fixture, using
+native item metadata from a complete `many` projection. The rendered proof
+passes at 320 and 592 pixels: previous/next controls stop at either end,
+arrow keys change selection, and detail/Back retains participant 12. Both
+screenshots were visually inspected. The inner viewport contains the card
+at each width without horizontal overflow. Model context identifies the
+displayed participant and contains no projection sources. No chat is sent.
+
+Seven targeted browser cases pass (`42860`, terminal `1d6682`), including the
+five earlier card/record/log/receipt cases. The original cached Playwright
+1.63.0 and Chromium 153.0.8010.12 run against local scripted ports. This is
+rendering/navigation evidence, not native participant or Grow acceptance.
+Report and captures: `/tmp/artroom-m2a-declared-carousel-browser-20261018/`.
+The MCP source/test typecheck passes. The generated resources are unchanged.
+Surface rendering, cross-view selection mapping and maintained application
+migration remain owed, along with the final gate, review and landing.
