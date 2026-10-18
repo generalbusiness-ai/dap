@@ -11,7 +11,7 @@ import { create, definition } from "./support.ts";
 // a native turn appends new entries; every other request performs no SQL read.
 test("reads only immutable selection keys from native SQLite", async () => {
   const lane = await create(), sealed = (await lane.sealed())[0]!, bytes = canonicalize(sealed.entry), declaration = canonicalize(definition.declared);
-  const selected: ArchiveInputSelection = { entries: [{ seq: 0, hash: sealed.hash, bytes: utf8(bytes).length }], objects: [{ key: { kind: "definition", digest: definition.digest }, bytes: utf8(declaration).length, consumers: [] }] };
+  const selected: ArchiveInputSelection = { entries: [{ seq: 0, hash: sealed.hash, bytes: utf8(bytes).length }], objects: [{ key: { kind: "definition", digest: definition.digest }, bytes: utf8(declaration).length }] };
   await lane.submit(lane.remark("later native entry"));
   await lane.restart();
   const read = await lane.inside(async state => {
@@ -35,7 +35,7 @@ test("reads only immutable selection keys from native SQLite", async () => {
 // and the shared budget fences the SQL read before its body allocation.
 test("returns no substitution for a missing named input and honors its original allowance", async () => {
   const lane = await create(), sealed = (await lane.sealed())[0]!, bytes = canonicalize(sealed.entry), declaration = canonicalize(definition.declared);
-  const selected: ArchiveInputSelection = { entries: [{ seq: 0, hash: sealed.hash, bytes: utf8(bytes).length }], objects: [{ key: { kind: "definition", digest: definition.digest }, bytes: utf8(declaration).length, consumers: [] }] };
+  const selected: ArchiveInputSelection = { entries: [{ seq: 0, hash: sealed.hash, bytes: utf8(bytes).length }], objects: [{ key: { kind: "definition", digest: definition.digest }, bytes: utf8(declaration).length }] };
   await lane.inside(async state => {
     const sql = { exec: (query: string, ...args: (string | number | null | ArrayBuffer | ArrayBufferView)[]) => state.storage.sql.exec(query, ...args), transaction: <T>(action: () => T) => state.storage.transactionSync(action) };
     const input = archiveInput(sql, selected, new ArchiveBudget());

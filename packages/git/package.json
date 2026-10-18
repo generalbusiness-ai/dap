@@ -13,7 +13,8 @@
     "./http-read": "./src/http-read.ts",
     "./archive-policy": "./src/archive-policy.ts",
     "./journal-reader": "./src/journal-reader.ts",
-    "./journal-local": "./src/journal-local.ts"
+    "./journal-local": "./src/journal-local.ts",
+    "./journal": "./src/journal.ts"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.test.json",
