@@ -305,6 +305,26 @@ R2 binding and makes no deployment or provider change. The packet comparison
 under `/tmp/artroom-m1-wire-layer-packets-20261018/` explicitly records the
 changed bytes rather than borrowing the earlier browser identity.
 
+The run at `459399ec` passed 1,824 cases, with three skipped, but Lending's
+five-case custody suite could not load. Its string alias appended the new
+`/application` subpath to `bytes/src/index.ts`. The raw result remains in
+`/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.dECKl5ubPp`.
+The alias now matches only the root package name; subpaths use the package's
+exports. The same correction applies to Counter's test and Vite configs.
+All 13 affected existing cases pass (`62810`, terminal `e2bf8a`, exit 0).
+The record is `/tmp/artroom-m1-subpath-alias-tests-20261018.log`.
+
+The actual Vite preview then exposed missing wordmarks. Preview-only links
+now point to the source SVGs and import the local font stylesheet. The browser
+typecheck passes. Fresh Chromium renders the existing fake preview with its
+wordmarks and fonts, no overlay, horizontal overflow, failed request, or
+console error. The screenshot was inspected. Scripts and raw records use
+`/tmp/artroom-m1-subpath-preview-` names; the corrected result and PNG are in
+`/tmp/artroom-m1-subpath-preview-browser-fixed-20261018/`. The browser and
+server are closed. This is preview import/rendering evidence with fake
+transport, speech and authority, separate from the successful live native
+packet witness. The maintained package entry points are unchanged.
+
 A complete gate on the corrected submitted head, finite Source evidence,
 independent review, native landing, sealed receipt and Main audit remain due.
 Planner owns publication and any authorized Cloudflare provisioning or

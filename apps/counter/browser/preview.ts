@@ -1,5 +1,6 @@
 /** FAKE transport/auth/scope/speech/clock for rendered source QA only. No audio or provider. */
 import "./style.css";
+import "../../../brand/fonts.css";
 import type { Entry, Item, MemberRef, Receipt, ScopeRef, SignedIntent, Summary } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, factRefOf, intentDigest, keyIdOfSecret, newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/artroom-bytes";
 import { secretSigner, type Fetch, type HeadStreamFetch } from "@generalbusiness/artroom-client";
@@ -54,6 +55,10 @@ const identity:ActorIdentity={origin:ORIGIN,deployment:DEPLOYMENT,scope:S,defini
 const previewLock:CustodyLock={run:async work=>work()};
 const store=privatePendingStore(identity),lock=previewLock,commands=privateCommandStore(identity),gateway=nativeGateway(identity,secretSigner(keys[0]!),{current:()=>active,lock,voiceStore:store,commandStore:commands,fetch:fakeFetch,headFetch:fakeHeads,actFetch:async(url,init)=>{const response=await fakeFetch(url,{...init,signal:init.signal as never});return{status:response.status,body:response.body,headers:new Headers({"content-type":"application/json"}),url,redirected:false};}});
 const app=mountCountingStage(document.querySelector<HTMLElement>("#counting")!,{speech,connect:()=>{},fake:true,now:()=>NOW});
+// The Vite preview reads source assets; installed packets carry their own brand/ files.
+const lightMark=document.querySelector<HTMLImageElement>(".wordmark-light"),darkMark=document.querySelector<HTMLImageElement>(".wordmark-dark");
+if(lightMark)lightMark.src=new URL("../../../brand/dap-wordmark-green.svg",import.meta.url).href;
+if(darkMark)darkMark.src=new URL("../../../brand/dist/dap-wordmark-white.svg",import.meta.url).href;
 void app.attach({identity,name:"Ada",speech,gateway,store,lock,current:()=>active,dispose:()=>{active=false;}});
 // Public test hooks expose only events/counters, never credentials/envelopes.
 Object.assign(window,{countingPreview:{end(){callbacks?.end();},error(){callbacks?.error();},loseNextReply(){lost=true;},counters(){return{plays,cancels,posts,settles,number:board.values["lastNumber"]};},staleEnd(){callbacks?.end();}}});
