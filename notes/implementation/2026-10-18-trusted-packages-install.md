@@ -325,6 +325,22 @@ server are closed. This is preview import/rendering evidence with fake
 transport, speech and authority, separate from the successful live native
 packet witness. The maintained package entry points are unchanged.
 
+The run at `8bdda9f2` passed all 1,829 Vitest cases and all 31 chained
+Node checks, with three Vitest cases skipped. The final Counter Node body
+could not bundle because its root-only esbuild aliases had the same subpath
+problem. It did not run any of its 55 cases. Its complete record remains at
+`/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.U2ja9WpnTA`.
+
+The Counter bundler now reads literal runtime exports from the three owned
+workspace manifests and resolves them inside those workspaces before building.
+Types-only exports stay out of runtime bundles. Existing pinned-tool,
+dependency, metafile, current-source and output ownership checks remain.
+The owning body now passes all 55 cases (`1519`, terminal `12794e`, exit 0).
+The raw log is `/tmp/artroom-m1-counter-export-aliases-20261018.log`; its
+metafile and compiled cases are retained in the evidence directory it names.
+This is a test-tool resolution correction; maintained packet bytes and
+native behavior are unchanged.
+
 A complete gate on the corrected submitted head, finite Source evidence,
 independent review, native landing, sealed receipt and Main audit remain due.
 Planner owns publication and any authorized Cloudflare provisioning or
