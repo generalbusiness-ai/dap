@@ -770,3 +770,45 @@ Native recorded, refused and unknown outcomes keep their existing custody
 and dispatch rules. The Counter typecheck and all 55 owning Node cases pass
 (`d3f4fa`, session `60835`, terminal `4faba2`, exit 0). The live browser
 check must run against the new packet before this correction is accepted.
+
+
+## Full maintained packets and live browser check pass
+
+The live witness passes at `4a9298acc02d8dfe2b0b250abcf93b29ca84c99a`
+(`de2cf1`, session `91059`, terminal `da87e0`, exit 0; one native/browser
+scenario, 4.69 seconds of test work). One real register12 room installs both
+complete maintained packets by immutable Git URI through production host
+fetch, private R2 content storage and the native install phases. Fresh
+Chromium contexts generate separate nonextractable keys, sign actual
+Membership7 joins, complete Counter participation/activation and Lending
+donation through live Worker routes, and restore identity after reload. The
+Counter reload retains its key but requires explicit rearming before speech.
+Both applications and Rules, Directory and Membership replay consistent with
+grants proven. The private bridge forwards the actual request bodies and
+Native response/stream bytes; it substitutes no recorded admission.
+
+Cached Playwright 1.63.0 / Chromium 153.0.8010.12 use 1280×800 and 390×844
+viewports. All 75 service/asset requests are captured without credentials in
+`/tmp/artroom-m1-live-browser-20261018/result.json`; four PNGs show the two
+interfaces. There are no JavaScript errors or unexpected console errors.
+Lending reports the two expected 404 reads for its unpublished shelf page: a
+real destination request is queued, with no remote Git publication in this
+witness. The Git upload-pack peer, repository creation host, clock and
+scheduler remain explicit fixtures. Speech playback, provider writes and
+deployment are not proved.
+
+The harness is `/tmp/artroom-m1-browser-harness-20261018/` (existing verified
+dependencies linked, zero installs). SHA-256 values of its finite sources:
+
+- `native.test.ts`: `32fba3a29b41f1ad632584d6ca24cd5c9560bedcbe8ab579fc8eb126dce2fa45`
+- `setup.ts`: `c8155a87d155acc86cca862a0219d641f73dd0ceba90fe5e5ff290826e72c34c`
+- `prepare.mts`: `b6ac47cf5e7e045a0afb7ac8796f51d8b23e2b828d5422c165e00ad33395d87c`
+- `vitest.config.mts`: `7f25ff606987a61163e36305313dbdd98e74a0a0636a3fc77cf32bca24a8c8a9`
+
+The packet manifest and complete packet bytes are beside the result; the raw
+run log is `/tmp/artroom-m1-live-browser-20261018.log`. The existing cheap
+Counter Join witness is also strengthened with a controlled refresh between
+participation and activation. It proves this local preparation waits without
+submitting activation, then completes from the next current snapshot.
+Legacy host dispatch/assets and production bucket setup still remain, and
+there has been no complete install gate or Source review.

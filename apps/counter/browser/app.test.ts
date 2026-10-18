@@ -224,7 +224,14 @@ const flush=()=>new Promise<void>(resolve=>setImmediate(resolve));
 
 test("One Join waits for a fresh record, records participation and own activation, then arms; Leave deactivates after stopping local speech",async()=>mountedJourney(async f=>{
   const joining=f.app.join("us");await flush();assert.deepEqual(f.calls,[],"connecting is not a mutation permission");assert.equal(f.app.joined(),false);
-  f.emit();await joining;assert.deepEqual(f.calls,["participate","activate"]);assert.equal(f.app.joined(),true);assert.equal(f.plays,0,"paused Join does not speak");
+  const original=f.gateway.command.bind(f.gateway);let prepared=0,atRefresh!:()=>void;
+  const refreshing=new Promise<void>(resolve=>{atRefresh=resolve;});
+  f.gateway.command=async(kind,details)=>{
+    if(kind==="activate"&&prepared++===0){f.emit("refreshing");atRefresh();return{status:"blocked",definitelyUnsent:true,refreshing:true,reason:"A fresh snapshot is still being read."};}
+    return original(kind,details);
+  };
+  f.emit();await refreshing;await flush();assert.deepEqual(f.calls,["participate"],"a refreshing preparation has submitted no activation");assert.equal(f.app.joined(),false);
+  f.emit();await joining;assert.deepEqual(f.calls,["participate","activate"]);assert.equal(prepared,2,"the still-unsent activation is prepared once the snapshot is current");assert.equal(f.app.joined(),true);assert.equal(f.plays,0,"paused Join does not speak");
   await f.app.leave();assert.equal(f.app.joined(),false);assert.deepEqual(f.calls,["participate","activate","deactivate"]);assert.equal(f.releases,1);
 }));
 
