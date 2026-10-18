@@ -3,8 +3,9 @@
 This Source completes developer request `4735dfeed42d310099ea91521ed3998b74628c20`
 and promise `8fb3e144c5ccd8dcc151d673ad89d57380a7bbca`. The parent M1 request
 `eca1c7ee` remains open for the host and install half. Planner decision
-`c643756e` confirms this split. This head contains audited Main
-`feccbbcfef618ed560e441a7711ce80941b57c22`.
+`c643756e` confirms this split. This head contains the foundation Main `feccbbcfef618ed560e441a7711ce80941b57c22`
+and approved G0 landing `9c32a3843feb68af4119c34c2afbf10c06222ee9`. The merge
+keeps the checked-session witness and G0's per-test functional budget.
 
 The developer can create a source project, compile its screen, pack signed
 bytes, check a declared native scenario and run a local development host.

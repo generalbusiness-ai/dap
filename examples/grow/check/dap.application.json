@@ -1,0 +1,35 @@
+{
+  "capabilities": [],
+  "definitions": [
+    "site.json",
+    "room.json"
+  ],
+  "entry": "site.json",
+  "host": {
+    "execution": "recorded-do",
+    "profiles": [
+      "restricted@1"
+    ]
+  },
+  "name": "ai.generalbusiness.grow-fixture",
+  "predecessor": null,
+  "presentation": {
+    "assets": [
+      {
+        "file": "index.html",
+        "mediaType": "text/html; charset=utf-8",
+        "path": "index.html"
+      }
+    ],
+    "descriptions": {},
+    "entry": "index.html"
+  },
+  "projections": {},
+  "roles": {},
+  "scenarios": [
+    "site-scenario.json",
+    "fault-scenario.json"
+  ],
+  "v": 1,
+  "version": "0.1.0"
+}

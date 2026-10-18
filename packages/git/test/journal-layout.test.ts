@@ -55,6 +55,7 @@ test("a cumulative selected prefix gives deterministic complete archive trees in
   }
 });
 
+// Both object formats perform real Git writes, reads and fsck within this budget.
 test("a validated parent extends only its final segment and cumulative input set; retrying the same manifest on the original parent gives the same commit", async () => {
   for (const format of formats) {
     const old = syntheticJournal(), first = complete(await buildJournalArchive({ format, ...described(old), input: selectedInput(old), parent: null }));
@@ -74,7 +75,7 @@ test("a validated parent extends only its final segment and cumulative input set
     const sameCutoff = await buildJournalArchive({ format, ...described(old), input: selectedInput(old), parent });
     expect(sameCutoff).toEqual({ ok: false, reason: "parent" });
   }
-});
+}, 30_000);
 
 test("wrong scope, incarnation, format or cutoff cannot extend a parent, and a Git-valid corrupt retained file is refused rather than repaired", async () => {
   const format = "sha256", old = syntheticJournal(), first = complete(await buildJournalArchive({ format, ...described(old), input: selectedInput(old), parent: null }));
