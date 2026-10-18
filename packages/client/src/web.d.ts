@@ -9,3 +9,5 @@ declare const crypto: {
   getRandomValues<T extends Uint8Array>(array: T): T;
   subtle: unknown;
 };
+/** Only the native metadata accessors are used; no key is constructed here. */
+declare const CryptoKey: { readonly prototype: object };

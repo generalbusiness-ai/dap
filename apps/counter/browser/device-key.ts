@@ -1,6 +1,6 @@
 /** Demo import and browser-held signing capability. Enrollment remains native. */
-import { b64url, canonicalize, isKeyId, isMemberRef, isRecord, isScopeRef, keyIdOfSecret, unb64url, verify } from "@generalbusiness/artroom-bytes";
-import type { Signer } from "@generalbusiness/artroom-client";
+import { b64url, canonicalize, isKeyId, isMemberRef, isRecord, isScopeRef, keyIdOfSecret, unb64url } from "@generalbusiness/artroom-bytes";
+import { storedWebCryptoSigner, type Signer } from "@generalbusiness/artroom-client";
 import { COUNTING_COMMITMENTS_DEFINITION } from "../commitments-pin.ts";
 import type { ActorIdentity } from "./voice-controller.ts";
 
@@ -38,10 +38,9 @@ export async function deviceSigner(device: SavedDevice): Promise<Signer> {
   if (!closed(device, ["name", "binding", "key"]) || typeof device.name !== "string" || !device.name || device.name.length > 64) throw new Error("The remembered device is invalid.");
   const identity = binding(device.binding, location.origin, false);
   const key = device.key;
-  if (!(key instanceof CryptoKey) || key.type !== "private" || key.extractable || key.algorithm.name !== "Ed25519" || key.usages.length !== 1 || key.usages[0] !== "sign") throw new Error("A browser-held non-extractable signing key is required.");
-  const signer: Signer = { key: identity.publicKey, sign: async bytes => b64url(new Uint8Array(await crypto.subtle.sign("Ed25519", key, Uint8Array.from(bytes)))) };
+  const signer = storedWebCryptoSigner(identity.publicKey, key);
   const challenge = new Uint8Array(crypto.getRandomValues(new Uint8Array(32)));
-  if (!verify(identity.publicKey, await signer.sign(challenge), challenge)) throw new Error("The remembered key does not match its public binding.");
+  await signer.sign(challenge);
   return signer;
 }
 export async function importDemoBundle(bytes: Uint8Array, origin: string): Promise<SavedDevice[]> {

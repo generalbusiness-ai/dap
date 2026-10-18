@@ -11,7 +11,7 @@
 import type { KeyId, MemberId, Receipt, ScopeRef, Summary } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, intentDigest, keyIdOf, timeMs, timeOf } from "@generalbusiness/artroom-bytes";
 import { ScopeHandle, httpTransport, invitationOf, requestSession, signedIntent, signerSessionRequest, wellFormedInvitation,
-  type Fetch, type InvitationLink, type Signer } from "@generalbusiness/artroom-client";
+  storedWebCryptoSigner, type Fetch, type InvitationLink, type Signer } from "@generalbusiness/artroom-client";
 import { LENDING_DEFINITION } from "../pin.ts";
 import { memberForKey } from "./model.ts";
 import { advance, envelopeKey, validKept, type Binding, type CustodyLock, type Envelope, type Kept, type KeptStore, type LendingIdentity, type Ports } from "./custody.ts";
@@ -25,7 +25,6 @@ export interface DeviceKey { publicKey: KeyId; pair: CryptoKeyPair }
 interface Subtle {
   generateKey(algorithm: { name: string }, extractable: boolean, usages: readonly string[]): Promise<unknown>;
   exportKey(format: "raw", key: unknown): Promise<ArrayBuffer>;
-  sign(algorithm: { name: string }, key: unknown, data: Uint8Array): Promise<ArrayBuffer>;
 }
 const subtle = (): Subtle => crypto.subtle as unknown as Subtle;
 export async function newDeviceKey(): Promise<DeviceKey> {
@@ -33,8 +32,7 @@ export async function newDeviceKey(): Promise<DeviceKey> {
   return { publicKey: keyIdOf(new Uint8Array(await subtle().exportKey("raw", pair.publicKey))), pair };
 }
 export function deviceSigner(device: DeviceKey): Signer {
-  if (device.pair.privateKey.extractable) throw new Error("A device key must not be extractable.");
-  return { key: device.publicKey, sign: async (bytes) => b64url(new Uint8Array(await subtle().sign({ name: "Ed25519" }, device.pair.privateKey, Uint8Array.from(bytes)))) };
+  return storedWebCryptoSigner(device.publicKey, device.pair.privateKey);
 }
 
 /** The seat an invitation offers: the room's scopes and the handle. No secret is in it. */

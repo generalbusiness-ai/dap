@@ -1,4 +1,5 @@
 export * from "./intent.ts";
+export * from "./browser-key.ts";
 export * from "./handle.ts";
 export * from "./declared.ts";
 export * from "./http.ts";
