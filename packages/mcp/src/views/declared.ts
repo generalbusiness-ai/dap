@@ -1,13 +1,15 @@
 /** The generic host interpreter for a verified declared presentation. It
  * runs no package code. Its ports are native reads, not application adapters. */
-import type { ApplicationProjectionQuery, ApplicationProjectionRead, ApplicationProjectionRow, Digest, FieldValue } from "@generalbusiness/dap-contract";
-import { canonicalize } from "@generalbusiness/artroom-bytes";
+import type { ApplicationProjectionData, ApplicationProjectionQuery, ApplicationProjectionRead, ApplicationProjectionRow, Digest, FieldValue, Item, ScopeRef } from "@generalbusiness/dap-contract";
+import { canonicalize, parseStrict } from "@generalbusiness/artroom-bytes";
 import type { ApplicationInstallation } from "@generalbusiness/artroom-bytes/application";
 import { applicationProjectionId, isApplicationJournalSource, readApplicationPackage2, type ApplicationView, type PackedApplication2 } from "@generalbusiness/artroom-bytes/application-v2";
 import { admit, evaluate, RuleEvalError } from "@generalbusiness/dap-derive/rule";
 import { ViewError } from "./session.ts";
 import type { Card, CardAction, Projection, ViewQuery, ViewSource } from "./types.ts";
 import { PRESENTATION } from "./generated.ts";
+import type { DefinitionLike } from "../describe.ts";
+import { effectiveFields, expectedOf } from "../shape.ts";
 
 export interface DeclaredViewPort {
   /** The current active native install, read under the configured membership. */
@@ -56,7 +58,36 @@ export class DeclaredViewSource implements ViewSource {
     if (rows.some(row => isApplicationJournalSource(projection.sources[view.item]!) !== !!row.entry)) throw new ViewError("unavailable", "The read confused journal entries with native items.");
     return { view, install, reply, rows };
   }
-  async #allowed(view: ApplicationView, row: ApplicationProjectionRow): Promise<CardAction[]> {
+  /** Only selected native item metadata and ref slots resolve subjects. This
+   * is not an Item read and supplies no opened/attributed or review claim. */
+  #expected(view: ApplicationView, act: string, row: ApplicationProjectionRow, data: ApplicationProjectionData): Record<string, number> | null {
+    const projection = this.packet.package.semantic.projections[view.projection]!;
+    const part = this.packet.package.semantic.definitions.find(part => part.id === projection.definition)!;
+    const definition = parseStrict(part.bytes) as DefinitionLike, declaration = definition.acts[act]!;
+    const items = new Map<number, Pick<Item, "id" | "type" | "revision" | "refs">>();
+    for (const [name, source] of Object.entries(projection.sources)) {
+      if (isApplicationJournalSource(source)) continue;
+      for (const selected of data.sources[name] ?? []) {
+        if (selected.entry || selected.type !== source.item) throw new ViewError("unavailable", "A subject source does not contain its declared native item type.");
+        const prior = items.get(selected.id);
+        if (prior && (prior.type !== selected.type || prior.revision !== selected.revision)) throw new ViewError("unavailable", "The projection disagrees about a native subject.");
+        const refs = { ...prior?.refs };
+        for (const [alias, field] of Object.entries(source.fields)) if (field.from.kind === "ref") {
+          const value = selected.fields[alias];
+          if (value === undefined) throw new ViewError("unavailable", "A subject source omitted a selected ref.");
+          if (Object.hasOwn(refs, field.from.name) && canonicalize(refs[field.from.name]) !== canonicalize(value)) throw new ViewError("unavailable", "The projection disagrees about a native ref.");
+          Object.defineProperty(refs, field.from.name, { value, enumerable: true, configurable: true });
+        }
+        items.set(selected.id, { id: selected.id, type: selected.type, revision: selected.revision, refs });
+      }
+    }
+    const expected = expectedOf(declaration, [...items.values()], row.id, effectiveFields(declaration, {}, data.scope));
+    // An absent secondary row is not permission to sign an incomplete set.
+    const names = Object.entries(declaration.also).filter(([, rule]) => rule["code"] === undefined).map(([name]) => name);
+    if (declaration.step === "transition") names.push("on");
+    return names.every(name => Object.hasOwn(expected, name)) ? expected : null;
+  }
+  async #allowed(view: ApplicationView, row: ApplicationProjectionRow, data: ApplicationProjectionData, scope: ScopeRef, definition: Digest): Promise<CardAction[]> {
     if (view.kind === "surface" || !view.acts.length) return [];
     const held = await this.port.actions(), actions: CardAction[] = [];
     for (const control of view.acts) {
@@ -64,7 +95,9 @@ export class DeclaredViewSource implements ViewSource {
       let holds = false;
       try { holds = (await evaluate(control.when, input(row))).value === true; }
       catch (error) { if (!(error instanceof RuleEvalError)) throw error; }
-      if (holds) actions.push({ id: control.act, label: control.label, purpose: "act", kind: control.act, args: {} });
+      const at = holds ? this.#expected(view, control.act, row, data) : null;
+      if (at !== null) actions.push({ id: control.act, label: control.label, purpose: "act", kind: control.act,
+        args: { target: scope.scope, on: row.id, at, digest: definition } });
     }
     return actions;
   }
@@ -74,8 +107,7 @@ export class DeclaredViewSource implements ViewSource {
       fallback: view.kind === "log" ? "This declared log has no matching entries in its recent window." : "This declared view has no matching items." };
     if (!Number.isSafeInteger(query.position) || query.position < 0 || query.position >= rows.length) throw new ViewError("shape", "The declared view position is outside its complete projection.");
     const row = rows[query.position]!, values = input(row), waiting = Object.hasOwn(view.waiting, row.state) ? template(view.waiting[row.state]!, row, "") : "";
-    const fallback = template(view.fallback, row, waiting), actions = await this.#allowed(view, row);
-    for (const action of actions) action.args = { target: install.scope.scope, on: row.id, at: { on: row.revision }, digest: install.definition };
+    const fallback = template(view.fallback, row, waiting), actions = await this.#allowed(view, row, reply.value, install.scope, install.definition);
     const card: Card = {
       identity: { item: String(row.id), kind: row.entry ? "entry" : row.type, revision: String(row.revision), subject: { scope: install.scope.scope, ...(row.entry ? {} : { item: row.id }) }, at: row.entry ? {} : { on: row.revision } },
       title: view.kind === "surface" ? query.screen : text(values[view.title]), summary: view.kind === "surface" || view.summary === null ? "" : text(values[view.summary]),
@@ -95,11 +127,11 @@ export class DeclaredViewSource implements ViewSource {
   /** Called by the mounted-view host inside the custody build, immediately
    * before signing. Native expected revisions and grants still judge submit. */
   async admit(query: ViewQuery, card: Card, action: CardAction): Promise<void> {
-    const { view, install, rows } = await this.#read(query);
+    const { view, install, reply, rows } = await this.#read(query);
     const row = rows.find(row => row.id === card.identity.subject.item);
     if (!row || card.identity.subject.scope !== install.scope.scope || canonicalize(card.declared?.data.scope ?? null) !== canonicalize(install.scope)
       || String(row.revision) !== card.identity.revision) throw new ViewError("stale", "The declared item changed. Refresh before acting; no new request was signed.");
-    const actions = await this.#allowed(view, row);
-    if (!actions.some(current => current.kind === action.kind && current.id === action.id)) throw new ViewError("stale", "This act is no longer offered under the current when and held actions; no new request was signed.");
+    const actions = await this.#allowed(view, row, reply.value, install.scope, install.definition);
+    if (!actions.some(current => current.kind === action.kind && current.id === action.id && canonicalize(current.args["at"]) === canonicalize(action.args["at"]))) throw new ViewError("stale", "This act or one of its subjects changed under the current when and held actions; no new request was signed.");
   }
 }

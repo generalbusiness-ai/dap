@@ -486,3 +486,40 @@ fixture evidence above; the complete maintained packages still owe them.
 Several-scope birth remains the parent task's separate acceptance. No hostile
 package containment, presentation update, device command or deployment is
 claimed.
+
+### Each declared control captures its own native subjects
+
+Grow's Hold binds the alert alone. Authorize also binds its heater. The
+generic interpreter now resolves each act's expected subjects from selected
+native metadata and declared ref origins, without constructing full Item
+reads. A missing secondary row hides that control. Each server-held action
+retains its complete expected set through dispatch. Before signing, the host
+reads the projection again and compares every expected revision, as well as
+the existing primary revision, current `when` and held-action checks.
+
+The made-up Counter fixture offers two controls with different subject sets.
+Moving only the secondary revision refuses before the signing fixture, while
+the primary-only control still passes. A fresh two-subject control passes and
+retains both revisions. Removing the secondary row hides only that control.
+The first run caught a test assertion against browser cards, whose action
+arguments are deliberately omitted. The assertion now uses the source read.
+Four cases pass in the corrected file; existing shape/session cases also
+pass (two files, three cases in the initial focused selection).
+
+Two named fault controls distinguish the behavior. Removing the fresh-set
+comparison changes the stale result to signed. Overwriting the retained set
+with the card's primary revision drops the secondary revision in the sent
+input. Both fail by the intended assertion and restore production source.
+The first comparison control was classified inconclusive because its async
+rejection assertion is reported as `Error`; an explicit outcome assertion
+gives the distinguishable result. Logs:
+`/tmp/artroom-m2a-declared-subjects-control-corrected-20261018.log` and
+`/tmp/artroom-m2a-declared-subjects-retention-control-20261018.log`.
+
+The affected real native projection/install/current-control witness passes
+(`12366`, terminal `ee1f57`, one case). It uses the original Counter act,
+so it proves compatibility, not native Grow Authorize acceptance. The first
+attempt could not open the Workerd loopback listener in the sandbox. The
+local-loopback run passes without deployment. Log:
+`/tmp/artroom-m2a-declared-subjects-native-loopback-20261018.log`.
+The MCP source/test typecheck passes. No final gate or delivery is claimed.

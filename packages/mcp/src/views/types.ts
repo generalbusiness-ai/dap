@@ -10,7 +10,8 @@ export interface CardIdentity {
   kind: string;
   revision: string;
   subject: { scope: string; item?: number };
-  /** The native expected-subject set captured by this projection. */
+  /** The displayed subject revision. Declared acts retain their complete,
+   * potentially different expected sets in each server-held action. */
   at: Record<string, number>;
 }
 export interface ActorChip { kind: "person" | "agent" | "checker"; name: string; controller?: string }

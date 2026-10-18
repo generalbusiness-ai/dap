@@ -1,9 +1,10 @@
 /** Pure presentation and mounted-view custody-boundary fixtures. The native
  * install/projection/standing ports below are explicit in-memory answers. */
 import { expect, test } from "vitest";
-import type { ScopeRef } from "@generalbusiness/dap-contract";
+import type { DeclaredDefinition, ScopeRef } from "@generalbusiness/dap-contract";
+import { canonicalize, definitionDigest, keyIdOfSecret, parseStrict, sign } from "@generalbusiness/artroom-bytes";
 import type { ApplicationInstallation } from "@generalbusiness/artroom-bytes/application";
-import { applicationProjectionId, applicationProjectionQueryDigest } from "@generalbusiness/artroom-bytes/application-v2";
+import { applicationProjectionId, applicationProjectionQueryDigest, packApplication2, readApplicationProjection } from "@generalbusiness/artroom-bytes/application-v2";
 import { applicationCounterPacket2, applicationCounterNavigationPacket2 } from "../../scope/test/support/application-v2-fixture.ts";
 import { DeclaredViewSource } from "../src/views/declared.ts";
 import { ViewSessions } from "../src/views/session.ts";
@@ -78,4 +79,60 @@ test("a declared record opens directly in detail with its declared Back target",
   expect(display.query.page).toBe("item");
   expect(display.card?.declared).toMatchObject({ kind: "record", display: "fullscreen", back: "board" });
   expect(display.card?.actions.map(action => action.id)).toEqual(["pause"]);
+});
+
+// Invariant: two controls on the same row retain their own complete expected
+// subjects, and a secondary revision change refuses before a signature.
+test("declared controls capture different subject sets and repeat secondary revisions before signing", async () => {
+  const base = await applicationCounterPacket2(), definition = parseStrict(base.package.semantic.definitions[0]!.bytes) as DeclaredDefinition;
+  definition.acts["hold-pledge"] = { ...definition.acts["pause"]!, also: { pledge: { item: "promise", via: { of: "on", slot: "pledge" } } } };
+  const id = definitionDigest(definition), secret = new Uint8Array(32).fill(67);
+  const board = base.package.presentation.views["board"]!;
+  if (board.kind === "surface") throw Error("This fixture needs a board.");
+  const packet = await packApplication2({ name: "test.declared-subjects", version: "1", semantic: {
+    v: 2, entry: id, definitions: [{ id, bytes: canonicalize(definition) }], host: base.package.semantic.host,
+    capabilities: [], roles: base.package.semantic.roles, predecessor: null, projections: { board: readApplicationProjection({
+      v: 1, definition: id, revision: "revision", sources: {
+        board: { item: "board", read: "one", states: ["finished", "open", "paused"], limit: 1, fields: {
+          selected: { from: { kind: "ref", name: "pledge" }, of: { type: "item", of: "promise" }, nullable: true },
+        } },
+        promises: { item: "promise", read: "many", states: ["cancelled", "expired", "failed", "fulfilled", "pledged"], limit: 1, fields: {} },
+      },
+    }) },
+  }, presentation: { v: 2, entry: "index.html", assets: base.package.presentation.assets, descriptions: {}, resources: {}, views: {
+    board: { ...board, facts: ["state"], acts: [...board.acts, { act: "hold-pledge", label: "Hold pledge", needs: "counting.control", when: "state = 'open'" }] },
+  } } }, { key: keyIdOfSecret(secret), sign: bytes => sign(secret, bytes) });
+  let revision = 7, present = true, signed = 0;
+  const sent: unknown[] = [];
+  const installation: ApplicationInstallation = { scope, directory: { ...scope, kind: "directory" }, membership: { ...scope, kind: "membership" },
+    rules: { ...scope, kind: "rules" }, destination: { ...scope, kind: "destination" }, definition: id, ids: packet.ids, item: 7 };
+  const source = new DeclaredViewSource(packet.bytes, packet.ids.release, {
+    installation: async () => installation, actions: async () => ["counting.control"],
+    projection: async query => ({ ok: true, query: applicationProjectionQueryDigest(query)!, value: {
+      v: 1, projection: applicationProjectionId(packet.package.semantic.projections["board"]!), scope, at: { seq: revision + 10, hash: `sha256:${"a".repeat(64)}` }, sources: {
+        board: [{ id: 2, type: "board", state: "open", revision: 1, fields: { selected: 3 } }],
+        promises: present ? [{ id: 3, type: "promise", state: "pledged", revision, fields: {} }] : [],
+      },
+    } }),
+  });
+  const sessions = new ViewSessions(source, { call: async () => { throw Error("No adapter."); } }, async (_kind, args, admit) => {
+    await admit(); signed++; sent.push(args["at"]);
+    return { structuredContent: { answer: "accepted" }, content: [], isError: false };
+  }, async () => { throw Error("No unresolved original."); });
+  await sessions.open("old", "board");
+  const old = await sessions.read("old", 0, { page: "item" });
+  const captured = await source.read({ screen: "board", page: "item", position: 0 });
+  expect(captured.card?.actions.map(action => action.args["at"])).toEqual([{ on: 1 }, { on: 1, pledge: 7 }]);
+  revision = 8;
+  const stale = await sessions.act("old", old.cut, "hold-pledge").then(() => ({ reason: "signed" }), error => ({ reason: error.reason }));
+  expect(stale).toEqual({ reason: "stale" });
+  expect(signed).toBe(0);
+  expect((await sessions.act("old", old.cut, "pause")).result.structuredContent["answer"]).toBe("accepted");
+  await sessions.open("fresh", "board");
+  const fresh = await sessions.read("fresh", 0, { page: "item" });
+  expect((await sessions.act("fresh", fresh.cut, "hold-pledge")).result.structuredContent["answer"]).toBe("accepted");
+  expect(sent).toEqual([{ on: 1 }, { on: 1, pledge: 8 }]);
+  present = false;
+  const incomplete = await source.read({ screen: "board", page: "item", position: 0 });
+  expect(incomplete.card?.actions.map(action => action.id)).toEqual(["pause"]);
 });

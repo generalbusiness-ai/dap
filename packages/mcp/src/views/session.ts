@@ -61,7 +61,11 @@ function checked(projection: Projection, query: ViewQuery): Projection {
     for (const entry of card.entries ?? []) if (!finite(entry.seq)) throw new ViewError("unavailable", "An entry position is malformed.");
     for (const point of card.projection) if (!finite(point.seq)) throw new ViewError("unavailable", "A projection read point is malformed.");
     for (const range of [...card.reviewIntended, ...card.unavailable]) if (!finite(range.from) || !finite(range.to) || range.from > range.to) throw new ViewError("unavailable", "An entry range is malformed.");
-    for (const action of card.actions) capturedExpected(shapeAt(action.args["at"]), card.identity.at);
+    for (const action of card.actions) {
+      const at = shapeAt(action.args["at"]);
+      if (!card.declared) capturedExpected(at, card.identity.at);
+      else if (at === undefined || Object.keys(card.identity.at).some(name => Object.hasOwn(at, name) && at[name] !== card.identity.at[name])) throw new ViewError("unavailable", "A declared act disagrees with the displayed subject revision.");
+    }
     // The kit knows screen contracts and generic act purposes, never lane states or names.
     card.actions = card.actions.filter((action) => {
       if (query.page === "summary" || query.page === "diff") return false;
@@ -189,7 +193,7 @@ export class ViewSessions {
     if (action.purpose === "check-original") {
       if (!validKey(args["idempotencyKey"]) || args["target"] === undefined) throw new ViewError("shape", "The original request's target and custody key are unavailable. No successor was signed.");
     } else {
-      args["at"] = structuredClone(card.identity.at);
+      if (!card.declared) args["at"] = structuredClone(card.identity.at);
       args["idempotencyKey"] = `view-${crypto.randomUUID()}`;
     }
     instance.busy = true;
