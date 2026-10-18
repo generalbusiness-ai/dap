@@ -137,7 +137,10 @@ signature. Native receipts must match that envelope before acknowledgement.
 Acceptance means the request was recorded. `dap application <item>` and MCP
 `application_installation` read its pending, active, or refused result. Only
 an active result includes the exact screen URL. Existing MCP `settle` reads
-the retained original. No volatile CLI custody fallback is used.
+the retained original. No volatile CLI custody fallback is used. The portable CLI command surface
+uses an explicit `applicationCommand` runtime port. Node supplies the MCP
+adapter and file custody; browser consumers do not import MCP server metrics
+or Node-only dependencies. Native CLI acceptance uses that same adapter.
 
 Membership7 invitation, browser joining, agent joining, sessions and role
 checks use the new exact cohort while preserving historical versions.

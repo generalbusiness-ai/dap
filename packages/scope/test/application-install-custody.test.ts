@@ -4,6 +4,7 @@
  * explicit fixtures. Native births, Lending publication admission and generic
  * screen routing run through the production code; screen bytes are TEST text. */
 import { command, memoryStore as cliStore, type Context } from "../../cli/src/index.ts";
+import { applicationCommands } from "../../cli/src/application-install-runtime.ts";
 import type { SignedIntent } from "@generalbusiness/dap-contract";
 import { McpService, memoryStore as custodyStore, type ServerPort } from "@generalbusiness/dap-mcp";
 import type { Fetched } from "@generalbusiness/dap-derive";
@@ -109,11 +110,13 @@ test.each(installations)("$name: one signed native install settles through Direc
       if (specimen.application === "Counter") {
         const local = cliStore(); await local.keep("operator", rita.secret);
         await local.save({ v: 1, service: port.service, key: "operator", repository: { directory, membership, rules: A.name, destination: G.name } });
-        cli = { store: local, fetch: port.fetch!, now: life.now, applicationCustody: store, applicationFetch: peer.fetch };
+        cli = { store: local, fetch: port.fetch!, now: life.now };
+        cli.applicationCommand = applicationCommands(cli, store, peer.fetch);
         const argv = ["install", f.uri, "--release", f.packet.ids.release, "--request", key, "--role", "admin", "--role", "member", "--values", specimen.values];
         const uncertain = await life.wait(() => command(cli!, argv));
         expect(uncertain.code, uncertain.lines.join("\n")).toBe(1); expect(lose).toBe(false);
         const restored = { ...cli! }; // another CLI invocation, same durable custody
+        restored.applicationCommand = applicationCommands(restored, store, peer.fetch);
         expect(await life.wait(() => command(restored, argv))).toMatchObject({ code: 0, lines: [expect.stringMatching(/^Install request recorded:/), expect.any(String), expect.any(String)] });
         installedService = new McpService(port);
         result = await life.wait(() => installedService!.call("install_application", args));
