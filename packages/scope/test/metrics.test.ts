@@ -1,4 +1,5 @@
 import { expect, test } from "vitest";
+import { SCOPE_BOUNDS } from "@generalbusiness/dap-contract";
 import { LOSS, METRIC_MAX, METRIC_POINTS, Metrics, type Metric, type MetricPoint } from "../src/metrics.ts";
 import { correlated, correlation } from "../src/correlation.ts";
 
@@ -133,4 +134,14 @@ test("a correlated diagnosis reads no provider text and maps dynamic steps to th
   expect(messageReads).toBe(0);
   expect(logged).toEqual([{ event: "outside-call-failed", step: "hold@1:mint", name: "Error", request: context.request }]);
   expect(points[0]!.blobs).toEqual(["diagnosis", "diagnosis-test", "unknown", "other", "error", "outside-call-failed", context.request, "none", "none"]);
+});
+
+
+test("capacity refusals retain only the five closed budget names in metrics-v1", () => {
+  const { metrics, points, summary } = recorder();
+  for (const name of SCOPE_BOUNDS) metrics.emit({ kind: "turn", place: "acts", end: "answer", answer: "refused", reason: name });
+  metrics.emit({ kind: "turn", place: "acts", end: "answer", answer: "refused", reason: "scopePrivateUserText" });
+  metrics.finish();
+  expect(points.filter(p => p.blobs[0] === "turn").map(p => p.blobs[5])).toEqual(SCOPE_BOUNDS);
+  expect(summary().doubles).toEqual([1, LOSS.tainted, 1, 1, 0, 0]);
 });

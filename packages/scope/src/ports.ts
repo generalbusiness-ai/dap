@@ -156,7 +156,7 @@ export interface Resolver { read(fact: FactRef, seconds: number, origin?: boolea
  */
 export type Delivery =
   | { answer: "recorded"; fact: FactRef }
-  | { answer: "retry"; reason: UnavailableReason | "scope-full" | "unsupported-definition" }
+  | { answer: "retry"; reason: UnavailableReason | "scope-full" | "unsupported-definition"; name?: import("@generalbusiness/dap-contract").ScopeBoundName }
   | { answer: "routing"; reason: RoutingRefusal }
   | { answer: "source-unverified" };
 

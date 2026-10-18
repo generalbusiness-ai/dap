@@ -17,10 +17,11 @@
  * snapshot and commit are one section.
  */
 
-import type { Bounds, FactRef, Head, Prepared, SignedIntent } from "@generalbusiness/dap-contract";
+import type { Bounds, ScopeBoundName, FactRef, Head, Prepared, SignedIntent } from "@generalbusiness/dap-contract";
+import { isScopeBoundName } from "@generalbusiness/dap-contract";
 import { carryProducerName } from "./receiver-facts.ts";
 import { CanonicalError, canonicalize, entryHash, parseStrict, utf8, verifySignedIntent } from "@generalbusiness/artroom-bytes";
-import { applyEntry, clockOf, entryOf, fits, isEntryOf, isIntent, same, judgeTimed, nextDue, StandingError, timeMs, timeOf } from "@generalbusiness/dap-derive";
+import { AmountError, applyEntry, clockOf, entryOf, capacityFull, reserved, fits, isEntryOf, isIntent, same, judgeTimed, nextDue, StandingError, timeMs, timeOf } from "@generalbusiness/dap-derive";
 import type { Clock as Reading, Draft, Due, Fetched, Owners, PlatformRules, RuleInput, StateView, ValidDefinition } from "@generalbusiness/dap-derive";
 import { ownOf, retainedFacts, snapshotsOf } from "./core.ts";
 import type { Ports, Resolver } from "./ports.ts";
@@ -70,7 +71,7 @@ export async function fetchFacts(resolver: Resolver, bounds: Bounds, named: read
 export type Verdict<A> =
   /** Write the draft. `retain`: the inputs it names by digest. `sealed` builds the answer from the sealed entry. `unfit` answers for a draft that cannot be an entry: over the size bound, or not canonical values. */
   /** `full` answers for an entry that admits new pending work and would leave no room for it to settle (section 9.2). Nothing is written then. */
-  | { verdict: "write"; draft: Draft; retain: readonly Retained[]; facts?: readonly Fetched[]; sealed(sealed: Sealed): A; unfit(why: "size" | "form"): A; full(head: Head): A }
+  | { verdict: "write"; draft: Draft; retain: readonly Retained[]; facts?: readonly Fetched[]; sealed(sealed: Sealed): A; unfit(why: "size" | "form"): A; full(head: Head, bound: ScopeBoundName): A }
   /** Step 6.3: a transition is due. Nothing is written, and the turn goes back to step 3. */
   | { verdict: "stop" }
   /** Nothing is written. */
@@ -117,6 +118,7 @@ interface Counts {
   restarts: number;   // stopped commits of the waiting input (step 7)
   timed: number;      // timed entries actually committed, apart from attempts
   wrote: boolean;
+  full: ScopeBoundName | null; // an opted-in refusal, including an internal or timed turn
   last: Reading | null;   // the turn's latest clock reading
 }
 interface Attempt { head: Head | null; asks: readonly RuleInput[]; prepared: readonly Prepared[] }
@@ -192,12 +194,12 @@ export class Turns {
     if (!current && this.#measurement) return measured(this.#measurement(), () => this.run(waiting, creation));
     const context = current, started = performance.now();
     if (context) context.turn.entered = true;
-    const turn: Counts = { attempts: 0, restarts: 0, timed: 0, wrote: false, last: null };
+    const turn: Counts = { attempts: 0, restarts: 0, timed: 0, wrote: false, full: null, last: null };
     const failures = { count: 0 };
     const end = await (context ? inOperation({ ...context, entryFailures: failures }, () => this.#run(waiting, creation, turn)) : this.#run(waiting, creation, turn));
     if (failures.count) context!.invocation.metrics.sidecar(true, ["busy", "clock-behind", "unavailable"].includes(end.end), failures.count);
-    const answer = end.end === "answer" && ["create", "acts", "preparations", "rpc:create", "rpc:acts", "rpc:preparations"].includes(context?.place ?? "") && end.answer !== null && typeof end.answer === "object" ? end.answer as { answer?: unknown; reason?: unknown } : null;
-    metric({ kind: "turn", place: context?.place ?? "alarm", end: end.end, answer: typeof answer?.answer === "string" ? answer.answer : "none", reason: typeof answer?.reason === "string" ? answer.reason : "none", duration: Math.max(0, Math.floor(performance.now() - started)), a: turn.restarts, b: turn.attempts, c: turn.timed, flag: turn.wrote ? 1 : 0 });
+    const answer = end.end === "answer" && ["create", "acts", "preparations", "rpc:create", "rpc:acts", "rpc:preparations"].includes(context?.place ?? "") && end.answer !== null && typeof end.answer === "object" ? end.answer as { answer?: unknown; reason?: unknown; name?: unknown } : null;
+    metric({ kind: "turn", place: context?.place ?? "alarm", end: end.end, answer: typeof answer?.answer === "string" ? answer.answer : "none", reason: answer?.reason === "scope-full" && isScopeBoundName(answer.name) ? answer.name : typeof answer?.reason === "string" ? answer.reason : turn.full ?? "none", duration: Math.max(0, Math.floor(performance.now() - started)), a: turn.restarts, b: turn.attempts, c: turn.timed, flag: turn.wrote ? 1 : 0 });
     return end;
   }
   async #run<A>(waiting: Waiting<A> | null, creation: ValidDefinition | undefined, turn: Counts): Promise<End<A>> {
@@ -261,7 +263,10 @@ export class Turns {
       if (!scope || !due) return null;
       if (turn.attempts >= this.#bounds.timedAttemptsPerTurn) return { end: "busy" };
       // Section 9.2: room for this entry was counted when its item was opened. A scope with no room at all writes nothing.
-      if (scope.head.seq + 1 >= this.#bounds.scopeEntries) return { end: "unavailable" };
+      if (scope.head.seq + 1 >= this.#bounds.scopeEntries) {
+        if (definition.declared.capacity) turn.full = "scopeEntries";
+        return { end: "unavailable" };
+      }
       turn.attempts++;
       const done = this.#commitTimed(definition, turn, due, scope.head);
       if (done === "written") turn.timed++;
@@ -282,7 +287,7 @@ export class Turns {
     try {
       return this.#telling(() => this.#timed(definition, turn, selected, snapshot));
     } catch (error) {
-      if (error instanceof Unfit) return "unfit";   // thrown before anything was written
+      if (error instanceof Unfit || error instanceof Full || error instanceof AmountError) return "unfit"; // the transaction retained no write
       throw error;
     }
   }
@@ -296,7 +301,11 @@ export class Turns {
       const judged = judgeTimed(this.#store, definition, selected, { clock, bounds: this.#bounds, capabilities: this.#ports.capabilities ?? undefined, platform: this.#platform() });   // 6.3 and 6.4
       if (judged.result === "unavailable") return judged.reason === "clock-behind" ? "clock-behind" : "unfit";
       if (judged.result === "dropped") return "dropped";
-      this.#seal(definition, judged.draft, clock, []);                 // 6.5
+      const sealed = this.#seal(definition, judged.draft, clock, []);                 // 6.5
+      if (definition.declared.capacity?.name === "whole-scope") {
+        const bound = this.#full(definition, sealed.entry.input, true);
+        if (bound) { turn.full = bound; throw new Full(); }
+      }
       turn.wrote = true;
       return "written";
     });
@@ -310,7 +319,7 @@ export class Turns {
     } catch (error) {
       // The entry would have left an admitted task no room to settle. The transaction wrote nothing.
       if (error instanceof Full && full) return { end: "answer", answer: (full as () => A)() };
-      if (error instanceof StandingError) return { end: "unavailable" };
+      if (error instanceof StandingError || error instanceof AmountError) return { end: "unavailable" };
       throw error;
     }
   }
@@ -331,12 +340,17 @@ export class Turns {
         return { kind: "rule", digest: p.input, bytes: canonicalize(asked.input) };
       });
       try {
+        // Evaluation may return false for an oversized input and still name
+        // its digest. The opt-in producer ceiling must also constrain the
+        // bytes retained by this writer; an evaluator budget alone does not.
+        if (definition.ruleInputBytes !== undefined && rules.some((input) => utf8(input.bytes).length > definition.ruleInputBytes!)) throw new Unfit("size");
         const sealed = this.#seal(definition, verdict.draft, clock, [...verdict.retain, ...rules], verdict.facts);   // 6.5
-        // Section 9.2: an entry that admits pending work is kept only if every admitted task still has room to settle. The count is of
-        // the state the fold just wrote, so it is under the head check, and a verifier derives the same number. Section 17.3: an
-        // entry that settles what its form declares is written against its own task's reservation, and is not asked.
-        if (!fits(this.#store, definition, this.#bounds, sealed.entry.input, verdict.draft.settles, this.#owners())) {
-          refuse(() => verdict.full(head ?? { seq: sealed.entry.seq, hash: sealed.hash }));
+        // Count after folding, retaining inputs and redacting. Every opt-in
+        // settlement spends its own reserved room inside the same transaction.
+        const bound = this.#full(definition, sealed.entry.input, verdict.draft.settles);
+        if (bound) {
+          if (definition.declared.capacity) turn.full = bound;
+          refuse(() => verdict.full(head ?? { seq: sealed.entry.seq, hash: sealed.hash }, bound));
           throw new Full();
         }
         turn.wrote = true;
@@ -348,6 +362,12 @@ export class Turns {
     }
   }
 
+  #full(definition: ValidDefinition, input: Sealed["entry"]["input"], settles = false): ScopeBoundName | null {
+    if (definition.declared.capacity?.name !== "whole-scope") return fits(this.#store, definition, this.#bounds, input, settles, this.#owners()) ? null : "scopeEntries";
+    const used = { entries: this.#store.scope()!.head.seq + 1, bytes: this.#store.logicalBytes(), ...this.#store.keyCounts() };
+    return capacityFull(used, reserved(this.#store, definition, input, this.#owners()), this.#bounds);
+  }
+
   /**
    * Step 6.5, inside the commit's transaction: the entry at this head and
    * this reading, its hash, its row, the rows of its sends, its retained
@@ -355,6 +375,10 @@ export class Turns {
    * `applyEntry` is the only code that changes folded state.
    */
   #seal(definition: ValidDefinition, draft: Draft, clock: Reading, retain: readonly Retained[], facts?: readonly Fetched[]): Sealed {
+    // The foreign-entry term uses this scope's entry ceiling. Constrain
+    // accepted retained copies at the same boundary, including results;
+    // a peer's independently configured ceiling is not that guarantee.
+    if (definition.declared.capacity?.name === "whole-scope" && retain.some(input => input.kind === "entry" && utf8(input.bytes).length > this.#bounds.entryBytes)) throw new Unfit("size");
     const entry = entryOf(this.#store, draft, clock);
     let bytes: string;
     try {
@@ -370,6 +394,7 @@ export class Turns {
     for (const input of retain) this.#store.retain(input);
     applyEntry(this.#store, definition, entry, hash, {
       bounds: this.#bounds, platform: this.#platform(), own: ownOf(this.#store), facts: retainedFacts(this.#store, entry).map(read => facts?.find(fact => same(fact.fact, read.fact)) ?? read), snapshot: snapshotsOf(this.#store),
+      values: draft.values?.map(value => value.bytes),
       texts: (digest) => { const kept = this.#store.retained("text", digest); if (!kept) return undefined; const text: unknown = parseStrict(kept.bytes); return typeof text === "string" ? utf8(text).length : undefined; },
     });
     // Section 6.6: a redaction removes the bytes of each text it lists from the retained inputs, in the commit that seals its tombstone.

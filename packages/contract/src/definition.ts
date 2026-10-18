@@ -21,10 +21,18 @@ export interface DurabilityLevel {
   version: 1;
 }
 
+/** An immutable admission and replay rule, selected by the pinned definition. */
+export interface CapacityVersion {
+  name: "whole-scope";
+  version: 1;
+}
+
 export interface DeclaredDefinition {
   format: "artroom-definition-1";
   /** Absent means recorded. Explicit recorded has its own bytes and digest; live/archived execution is not yet supported. */
   level?: DurabilityLevel;
+  /** Omission keeps entries-only admission and replay. Whole-scope counts all five logical dimensions. */
+  capacity?: CapacityVersion;
   name: string;                          // what `under` compares with
   profile: { name: string; version: number };
   capabilities: readonly { name: "hold" | "git-read"; version: number }[];

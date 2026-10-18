@@ -19,6 +19,8 @@ export * from "./ledger.ts";
 export * from "./rules.ts";
 export * from "./reserve.ts";
 export * from "./held.ts";
+export * from "./byte-usage.ts";
+export type { ItemDuty } from "./item-duties.ts";
 export * from "./draws.ts";
 export * from "./grant.ts";
 export * from "./prepare.ts";

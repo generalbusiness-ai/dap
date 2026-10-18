@@ -80,6 +80,8 @@ export class View extends MemoryState {
 
   override setScope(...given: Put<"setScope">) { super.setScope(...given); this.#keep("scope", [], (state) => state.setScope(...given)); }
   override putItem(...given: Put<"putItem">) { super.putItem(...given); this.#keep("item", [given[0].id], (state) => state.putItem(...given)); }
+  override settleHolder(...given: Put<"settleHolder">) { super.settleHolder(...given); this.#keep("settled-holder", [given[0]], (state) => state.settleHolder(...given)); }
+  override putItemDuties(...given: Put<"putItemDuties">) { super.putItemDuties(...given); this.#keep("item-duties", [given[0]], (state) => state.putItemDuties(...given)); }
   override putIndexed(...given: Put<"putIndexed">) { super.putIndexed(...given); this.#keep("indexed", given, (state) => state.putIndexed(...given)); }
   override addCount(type: string, state: string, by: number) {
     super.addCount(type, state, by);

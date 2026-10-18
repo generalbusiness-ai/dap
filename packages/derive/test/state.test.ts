@@ -1,5 +1,37 @@
 import { expect, test } from "vitest";
-import { MemoryState, type Item } from "../src/index.ts";
+import { MemoryState, type Item, type OwnRequest } from "../src/index.ts";
+import { otherLane } from "./fixtures.ts";
+
+test("logical counts keep final item and record keys, replace each key once, and keep a request pending through delivery-unavailable until its recorded settlement", () => {
+  // Direct in-memory writer boundary; not native storage, a signed entry or transport evidence.
+  const state = new MemoryState();
+  const item: Item = { id: 1, type: "note", state: "draft", revision: 1, opened: null, parties: {}, refs: {}, values: {}, attributed: [] };
+  state.putItem(item);
+  state.putItem({ ...item, state: "kept", revision: 2 });
+  const record = { capability: "hold@1" as const, kind: "lease", key: ["repo"], state: "live", values: {}, seq: 1 };
+  state.putRecord(record);
+  state.putRecord({ ...record, state: "ended", seq: 2 });
+  const relation = { owner: otherLane, name: "peer", item: 1, state: "live", revision: 1 };
+  state.putRelation(relation);
+  state.putRelation({ ...relation, state: "ended", revision: 2 });
+  const request: OwnRequest = { seq: 1, n: 0, hash: "sha256:request", type: "tell", to: otherLane, result: null, diagnosis: null };
+  state.putRequest(request);
+  state.putRequest(request);
+  expect(state.keyCounts()).toEqual({ items: 1, records: 2, requests: 1 });
+  state.putRequest({ ...request, diagnosis: { seq: 2, finding: "delivery-unavailable" } });
+  expect(state.keyCounts().requests).toBe(1);
+  state.putRequest({ ...request, diagnosis: { seq: 3, finding: "undelivered" } });
+  expect(state.keyCounts()).toEqual({ items: 1, records: 2, requests: 0 });
+  state.putRequest({ ...request, result: { seq: 4, clause: "applied" } });
+  expect(state.keyCounts().requests).toBe(0);
+  expect(state.all().requests).toHaveLength(1);
+  const rebuilt = new MemoryState(), snapshot = state.all();
+  for (const row of snapshot.items) rebuilt.putItem(row);
+  for (const row of snapshot.relations) rebuilt.putRelation(row);
+  for (const row of snapshot.records ?? []) rebuilt.putRecord(row);
+  for (const row of snapshot.requests) rebuilt.putRequest(row);
+  expect(rebuilt.keyCounts()).toEqual(state.keyCounts());
+});
 
 test("a page is read from the index by type, state and ID: it reads no item it does not return, and its cursor holds while items change state", () => {
   const state = new MemoryState();

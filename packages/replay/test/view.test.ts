@@ -1,9 +1,10 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type PlatformData } from "@generalbusiness/dap-contract";
 import { canonicalize } from "@generalbusiness/artroom-bytes";
-import { validateDefinition, type StateView } from "@generalbusiness/dap-derive";
-import { d, created, keys, on, valid } from "@generalbusiness/dap-derive/testing";
+import { checkpointOf, judgeCheckpoint, judgeDiagnosis, validateDefinition, type StateView } from "@generalbusiness/dap-derive";
+import { d, created, keys, on, otherLane, valid } from "@generalbusiness/dap-derive/testing";
 import { View } from "../src/view.ts";
+import { MemorySource, verify } from "../src/index.ts";
 
 // Made-up platform data, with no marked rules. The fixture's test authority
 // stands in for membership. Its genesis and acts are judged in memory;
@@ -31,6 +32,74 @@ const data: PlatformData = {
   },
   receives: {}, timed: {}, rules: {}, outcomes: {},
 };
+
+test("replay derives opt-in item and originating-request duties through a diagnosis and accepts their covering checkpoint", async () => {
+  // A declared made-up scope with real in-memory judgments/fold/verifier.
+  // Fixture grants are explicitly trusted as recorded, not native authority.
+  const declared = structuredClone(data);
+  declared.name = "duty-replay-fixture";
+  delete (declared as Partial<PlatformData>).outcomes;
+  delete declared.items["row"]!.indexes;
+  declared.capacity = { name: "whole-scope", version: 1 };
+  declared.items["row"]!.refs["peer"] = { fixed: true, required: true, to: { type: "scope", kind: "lane" } };
+  declared.acts["add"]!.fields["peer"] = { type: "scope", kind: "lane", required: true };
+  declared.acts["add"]!.effects = [...declared.acts["add"]!.effects, { ref: { slot: "peer", from: { field: "peer" } } }];
+  declared.acts["add"]!.sends = [{ tell: { to: { slot: "peer" }, message: "note", fields: {}, result: {} } }];
+  declared.acts["finish"]!.settles = { of: "on", in: ["live"] };
+  const other = structuredClone(declared.acts["finish"]!);
+  other.fields = { target: { type: "item", of: "row", required: true } };
+  other.also = { other: { item: "row", by: "target" } };
+  other.settles = { of: "also.other", in: ["live"] };
+  other.guards = [{ state: ["live"] }, { of: "also.other", state: ["live"] }];
+  other.effects = [{ state: "done" }, { of: "also.other", state: "done" }];
+  declared.acts["finish-other"] = other;
+  const definition = valid(validateDefinition(declared, PROPOSED_BOUNDS));
+  const history = created(definition, {});
+  const add = (key: string) => history.did(keys.rita, "add", { fields: { key, category: d("3"), peer: otherLane } }).seq;
+  const first = add(d("1")), second = add(d("2"));
+  history.did(keys.rita, "finish-other", { ...on(history, first, { other: second }), fields: { target: second } });
+  expect(history.state.itemDuties().map(duty => duty.item)).toEqual([first]);
+  expect(history.state.pendingRequests().map(request => request.reservation)).toEqual(Array(2).fill({ entries: 2, items: 0, records: 0, bytes: 3 * PROPOSED_BOUNDS.entryBytes, requests: 0 }));
+  const diagnosed = judgeDiagnosis(history.state, definition, { of: { seq: first, n: 0 }, attempts: [{ at: history.now, answer: "retry" }] }, { ...history.context(), origin: history.entries[first]!.entry });
+  if (diagnosed.result !== "write") throw new Error("the fixture diagnosis must be written");
+  history.seal(diagnosed.draft);
+  const checkpoint = judgeCheckpoint(history.state, definition, checkpointOf(history.state), history.context());
+  if (checkpoint.result !== "write") throw new Error("the fixture checkpoint must be written");
+  history.seal(checkpoint.draft);
+  const view = new View();
+  for (const { entry, hash } of history.entries) view.fold(definition, entry, hash, history.foldOptions);
+  for (const seq of [4, 1, 5, 2, 0, 3]) expect(view.at(seq).state.all()).toEqual(history.replay(seq + 1).all());
+  const source = new MemorySource([{ scope: history.at, entries: history.entries.map(({ entry, hash }) => ({ seq: entry.seq, hash, bytes: canonicalize(entry) })), retained: [{ kind: "definition", digest: definition.digest, bytes: canonicalize(definition.declared) }] }]);
+  const replayed = await verify(source, { mode: "replay", scope: history.at.scope, grants: "as-recorded" });
+  expect([replayed.report.result, replayed.why]).toEqual(["consistent", null]);
+  const exact = await verify(source, { mode: "replay", scope: history.at.scope, grants: "as-recorded", bounds: { ...PROPOSED_BOUNDS, scopeItems: 3, scopeRequests: 2 } });
+  expect([exact.report.result, exact.why]).toEqual(["consistent", null]);
+  for (const [bound, ceiling] of [["scopeItems", 2], ["scopeRequests", 1]] as const) {
+    const full = await verify(source, { mode: "replay", scope: history.at.scope, grants: "as-recorded", bounds: { ...PROPOSED_BOUNDS, [bound]: ceiling } });
+    expect([full.report.result, full.report.at?.seq, full.why]).toEqual(["mismatch", second, `the entry exceeds ${bound}: Used plus Reserved is over its ceiling`]);
+  }
+});
+
+test("historical item duties contain only their head's admitted tasks, preserve an ordinary final transition and remove a genuine settlement", () => {
+  // Real in-memory judges/fold and historical View, with this file's
+  // made-up platform data and test authority. No native scope or host.
+  const declared = structuredClone(data);
+  declared.capacity = { name: "whole-scope", version: 1 };
+  declared.items["row"]!.holds = { requests: 1 };
+  declared.acts["finish"]!.settles = { of: "on", in: ["live"] };
+  declared.acts["discard"] = structuredClone(data.acts["finish"]!);
+  const definition = valid(validateDefinition(declared, PROPOSED_BOUNDS, undefined, { platform: true }));
+  const history = created(definition, {});
+  const add = (key: string) => history.did(keys.rita, "add", { fields: { key, category: d("3") } }).seq;
+  const first = add(d("1")), second = add(d("2"));
+  history.did(keys.rita, "finish", on(history, first));
+  history.did(keys.rita, "discard", on(history, second));
+  const view = new View();
+  for (const { entry, hash } of history.entries) view.fold(definition, entry, hash, history.foldOptions);
+  expect(view.itemDuties().map(duty => duty.item)).toEqual([second]);
+  expect([view.holderSettled(first), view.holder(first), view.holderSettled(second), view.holder(second)]).toEqual([true, null, false, { requests: 1 }]);
+  for (const seq of [1, 3, 2, 4, 0, 1]) expect(view.at(seq).state.all()).toEqual(history.replay(seq + 1).all());
+});
 
 test("historical declared indexes return exactly the live and final items of their head, in any order, and incomplete indexes answer no lookup", () => {
   // Invariant: the historical StateView has the same complete declared

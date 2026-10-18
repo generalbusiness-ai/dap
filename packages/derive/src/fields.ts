@@ -30,7 +30,12 @@ export type Own = (seq: number) => Sealed | null;
  * asked for, as for a text that a tombstone removed since; nothing about
  * them is checked. Undefined: no text came under that digest.
  */
-export type Texts = (digest: Digest) => number | null | undefined;
+export interface Texts {
+  (digest: Digest): number | null | undefined;
+  /** Replay may check a conditional refusal while the original size is
+   * unknown. This reports no size and is used only for a null reading. */
+  redactedOver?(digest: Digest, max: number): boolean;
+}
 
 /**
  * The bytes of a snapshot of staged refs that this scope retains under that
@@ -183,6 +188,7 @@ export function readFacts(view: StateView, types: ActType["fields"], fields: Rea
         const size = local.texts(value as Digest);
         if (size === undefined) return { result: "bad-field", detail: `${name} names a text that did not come with the input, or whose bytes its digest does not name`, uses };
         if (size !== null && size > type.max) return { result: "bad-field", detail: `${name} names a text of ${size} bytes; at most ${type.max}`, uses };
+        if (size === null && local.texts.redactedOver?.(value as Digest, type.max)) return { result: "bad-field", detail: `${name}'s refusal depends on its unavailable original text size`, uses };
       }
       if (type.type !== "fact") continue;
       const ref = value as FactRef;

@@ -90,9 +90,9 @@ export class Node {
   }
 
   /** The ticket that send `n` of this scope's entry `seq` creates: the object its seed names. */
-  async created(seq: number, n = 0): Promise<Node> {
+  async created(seq: number, n = 0, declared: DeclaredDefinition = ticketDefinition.declared): Promise<Node> {
     const send = (await this.entries())[seq]!.sends.find((s) => s.n === n)!;
-    return new Node(scopeIdOf(send.to as Seed), ticketDefinition.declared);
+    return new Node(scopeIdOf(send.to as Seed), declared);
   }
   /** Send `n` of entry `seq`, as transport carries it. */
   async envelope(seq: number, n = 0): Promise<Delivered> {
@@ -131,20 +131,20 @@ export async function later(seconds: number, ...nodes: readonly Node[]): Promise
  * A desk created by rita, with the declaration of the ticket its definition names in a `create`: the desk retains it,
  * and each ticket reads it from the desk. Transport is undisturbed from here on.
  */
-export async function desk(): Promise<Node> {
+export async function desk(under: ValidDefinition = deskDefinition, children: readonly ValidDefinition[] = [ticketDefinition]): Promise<Node> {
   net.hold = net.deaf = null;
-  const { signed, name } = creation(deskDefinition, { source: "a repository" });
-  const node = new Node(name, deskDefinition.declared);
-  const answer = await node.stub.create(signed, deskDefinition.declared, [ticketDefinition.declared]);
+  const { signed, name } = creation(under, { source: "a repository" });
+  const node = new Node(name, under.declared);
+  const answer = await node.stub.create(signed, under.declared, children.map(child => child.declared));
   if (answer.answer !== "accepted") throw new Error(`the desk was not founded: ${JSON.stringify(answer)}`);
   await settle(node);
   return node;
 }
 
 /** A ticket the desk creates for rita and confirms: its entry 0 is the genesis and its entry 1 the confirmation. */
-export async function ticket(D: Node, title: string): Promise<Node> {
+export async function ticket(D: Node, title: string, under: ValidDefinition = ticketDefinition): Promise<Node> {
   const opened = await D.did(rita, "open-issue", { fields: { title } });
-  const node = await D.created(opened.fact.seq);
+  const node = await D.created(opened.fact.seq, 0, under.declared);
   await settle(D, node);
   return node;
 }

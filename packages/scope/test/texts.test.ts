@@ -1,5 +1,5 @@
 import { env } from "cloudflare:workers";
-import { runInDurableObject } from "cloudflare:test";
+import { evictDurableObject, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import type { DeclaredDefinition, Digest, Entry, Seed } from "@generalbusiness/dap-contract";
 import { scopeIdOf, textDigest } from "@generalbusiness/artroom-bytes";
@@ -42,12 +42,13 @@ const notes = variant(base, (def) => {
 });
 const source = httpSource("https://scopes.test", { fetch: routed });
 
-test("a detached text over the real route: the entry holds its digest and the scope keeps its bytes; a text that is not the one named is bad-field; a redaction removes the bytes, and replay reports them as redacted", async () => {
+test.each(["legacy", "whole-scope"] as const)("%s: a detached text over the real route: the entry holds its digest and the scope keeps its bytes; a text that is not the one named is bad-field; a redaction removes the bytes, and replay reports them as redacted", async cohort => {
+  const under = cohort === "whole-scope" ? variant(notes.declared, d => { d.capacity = { name: "whole-scope", version: 1 }; }) : notes;
   net.hold = net.deaf = null;
   const signer = secretSigner(rita.secret);
   const now = timeMs(net.clock.now)!;
   const transport = httpTransport("https://scopes.test", { fetch: routed });
-  const { answer, scope } = await create(transport, await signedIntent(signer, { to: null, kind: "found" }, { now }), notes.declared, [], reader);
+  const { answer, scope } = await create(transport, await signedIntent(signer, { to: null, kind: "found" }, { now }), under.declared, [], reader);
   if (answer.answer !== "accepted" || !scope) throw new Error(`not founded: ${JSON.stringify(answer)}`);
   const at = answer.receipt.fact.at;
   const grants = [grantOf(rita, at, ["write", "strike"])];
@@ -84,8 +85,10 @@ test("a detached text over the real route: the entry holds its digest and the sc
   // Replay derives every entry again. The two texts are not missing: they are reported as redacted, with the tombstone.
   expect(await act("write", { body: t3 }, [third])).toMatchObject({ answer: "accepted" });
   const replayed = async () => verify(source, { mode: "replay", scope: at.scope, grants: "as-recorded" });
+  if (cohort === "whole-scope") await evictDurableObject(env.NET.get(env.NET.idFromName(at.scope)));
   const { report, why } = await replayed();
-  expect([report.result, why, report.redacted]).toEqual(["consistent", null, [{ tombstone: struck.receipt.fact, item: note, slot: "body" }]]);
+  expect([report.result, why, report.redacted]).toEqual([cohort === "whole-scope" ? "incomplete" : "consistent", cohort === "whole-scope" ? "redacted size not retained" : null, [{ tombstone: struck.receipt.fact, item: note, slot: "body" }]]);
+  expect(report.incompleteBytes).toEqual(cohort === "whole-scope" ? [{ scope: at, from: note, through: note + 1, reason: "redacted size not retained" }] : undefined);
   expect(report.trusts).toContain(TRUSTS.redacted);
   // The bytes of a text that no entry redacts are a retained input. With other bytes under its digest, or with none, the replay
   // claims nothing.

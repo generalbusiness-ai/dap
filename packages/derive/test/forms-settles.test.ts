@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { DeclaredDefinition, PlatformData, PlatformDefinition, Subject } from "@generalbusiness/dap-contract";
 import { canonicalBytes, entryHash, factRefOf, parseStrictBytes } from "@generalbusiness/artroom-bytes";
-import { PROFILES, applyEntry, clockOf, entryOf, fits, itemAwaits, judgeDelivery, markerAmounts, markerReservations, owed, validateDefinition } from "../src/index.ts";
+import { AmountError, PROFILES, applyEntry, clockOf, entryOf, fits, itemAwaits, judgeDelivery, markerAmounts, markerReservations, owed, reserved, validateDefinition } from "../src/index.ts";
 import type { Draft, PlatformRules, RuleEffect, ValidDefinition } from "../src/index.ts";
 import { Scope, arriving, directory, fields, forged, keys, on, valid, type Over } from "./fixtures.ts";
 
@@ -79,6 +79,163 @@ class Full extends Scope {
 }
 
 describe("18.54: two marks on one item, and a state settlement beside them", () => {
+  test("opt-in alias settlement binds the old target before the same entry changes its selecting reference", () => {
+    // Made-up lane data; real in-memory judgments and fold, with fixture
+    // authority. The mutable selector makes post-entry binding incorrect.
+    const definition = valid(changed(M, (d) => {
+      d.capacity = { name: "whole-scope", version: 1 };
+      d.items.job.refs.target = { fixed: false, required: false, to: { type: "item", of: "job" } };
+      d.acts.point = structuredClone(d.acts["mark-a"]);
+      delete d.acts.point.settles;
+      d.acts.point.fields = { target: { type: "item", of: "job", required: true } };
+      d.acts.point.effects = [{ ref: { slot: "target", from: { field: "target" } } }];
+      d.acts["mark-target"] = structuredClone(d.acts["mark-a"]);
+      d.acts["mark-target"].fields = { next: { type: "item", of: "job", required: true } };
+      d.acts["mark-target"].also = { target: { item: "job", via: { slot: "target", of: "on" } } };
+      d.acts["mark-target"].settles.of = "also.target";
+      d.acts["mark-target"].effects = [{ ref: { slot: "target", from: { field: "next" } } }, set("a", "also.target")];
+    }));
+    const scope = new Scope(definition);
+    const start = () => scope.did(keys.una, "start", fields({ desk: directory })).seq;
+    const primary = start(), oldTarget = start(), newTarget = start();
+    scope.did(keys.una, "point", { ...on(scope, primary), fields: { target: oldTarget } });
+    scope.did(keys.una, "mark-target", { ...on(scope, primary, { target: oldTarget }), fields: { next: newTarget } });
+    expect(scope.item(primary).refs["target"]).toBe(newTarget);
+    expect(scope.item(oldTarget).values["a"]).toBe(true);
+    expect(scope.state.itemDuties(oldTarget).some(duty => duty.slot === "a")).toBe(false);
+    expect(scope.state.itemDuties(newTarget).some(duty => duty.slot === "a")).toBe(true);
+    expect(scope.replay().all()).toEqual(scope.state.all());
+  });
+
+  test("opt-in delivered handlers release only their selected item's genuine duty; an ordinary message and a refused advisory retain it", () => {
+    // The receiver's judgments/fold are real in memory. Sender entries are
+    // made by hand and anchored, not judged foreign histories or authority.
+    const definition = valid(changed(M, (d) => {
+      d.capacity = { name: "whole-scope", version: 1 };
+      const handler = { message: "flag", class: "tell", from: { kind: "directory" }, fields: { job: { type: "item", of: "job", required: true } }, opens: null, also: { job: { item: "job", by: "job" } }, settles: { of: "also.job", sets: "a", in: ["open"] }, guards: [], effects: [set("a", "also.job")], sends: [], attention: [] };
+      d.receives.flag = handler;
+      d.receives.note = { ...structuredClone(handler), message: "note" };
+      delete d.receives.note.settles;
+      d.receives.advice = { ...structuredClone(handler), message: "index", class: "advisory" };
+    }));
+    const scope = new Scope(definition);
+    const first = scope.did(keys.una, "start", fields({ desk: directory })).seq;
+    const second = scope.did(keys.una, "start", fields({ desk: directory })).seq;
+    const deliver = (name: string, id: number, seq: number, advisory = false) => {
+      const message = advisory ? { class: "advisory", type: "index", body: { fields: {} } } as const : { class: "request", type: "tell", body: { message: name, fields: { job: scope.fact(id) } } } as const;
+      const send = { n: 0, to: scope.at, message };
+      const source = forged(directory, seq, { type: "checkpoint", through: 0, state: entryHash(scope.last) }, [send]);
+      const arrival = { ...send, from: factRefOf(source.entry) };
+      const judged = judgeDelivery(scope.state, definition, arrival, arriving(scope, arrival, { ...source, under: "desk" }));
+      expect(judged.result).toBe("write");
+      if (judged.result === "write") scope.seal(judged.draft);
+    };
+    deliver("note", first, 300);
+    deliver("flag", second, 301);
+    deliver("advice", second, 302, true); // missing required job: valid no-effect advisory entry
+    expect(scope.state.itemDuties(first).some(duty => duty.slot === "a")).toBe(true);
+    expect(scope.state.itemDuties(second).some(duty => duty.slot === "a")).toBe(false);
+    expect(scope.replay().all()).toEqual(scope.state.all());
+  });
+
+  test("an opt-in item keeps each admitted duty through ordinary marker and final-state changes; only its actual settling entry releases that duty", () => {
+    const definition = valid(changed(M, (d) => {
+      d.capacity = { name: "whole-scope", version: 1 };
+      d.acts.note = structuredClone(d.acts["mark-b"]);
+      delete d.acts.note.settles;
+    }));
+    const scope = new Full(definition);
+    const id = scope.started();
+    const held = scope.state.itemDuties(id);
+    scope.free(10);
+    expect(scope.does("note", on(scope, id))).toBe("new work");
+    expect(scope.item(id).values["b"]).toBe(true);
+    expect(scope.state.itemDuties(id)).toEqual(held);
+    expect(scope.does("mark-a", on(scope, id))).toBe("settles");
+    expect(scope.state.itemDuties(id).map(duty => [duty.kind, duty.slot])).toEqual([["mark", "b"], ["state", null]]);
+    expect(scope.does("close", on(scope, id))).toBe("settles");
+    expect(scope.item(id).state).toBe("done");
+    expect(scope.state.itemDuties(id).map(duty => [duty.kind, duty.slot])).toEqual([["mark", "b"]]);
+    expect(owed(scope.state, definition, scope.last.input)).toBe(2); // b and the closing checkpoint
+    expect(scope.replay().all()).toEqual(scope.state.all());
+    expect(Object.hasOwn(new Scope(m).state.all(), "itemDuties")).toBe(false);
+  });
+
+  test("whole-scope checks pending Amount operands before a zero live count can hide a fractional record term", () => {
+    const definition = valid(changed(M, (d) => {
+      d.capacity = { name: "whole-scope", version: 1 };
+      for (const kind of ["mark-a", "mark-a-far", "mark-b"]) delete d.acts[kind];
+    }));
+    const scope = new Full(definition);
+    expect(scope.state.count("job", "open")).toBe(0);
+    const malformed = { ...definition, pendingWorkAmounts: { ...definition.pendingWorkAmounts, pending: {
+      job: { open: { ...definition.pendingWorkAmounts.pending["job"]!["open"]!, records: 0.5 } },
+    } } };
+    expect(() => reserved(scope.state, malformed, scope.last.input)).toThrow(AmountError);
+  });
+
+  test("the shared traversal keeps marker alternatives and future requests as Amounts, then moves a sent request from Reserved to Used", () => {
+    // This is the existing made-up marker definition and real judges/fold in
+    // memory, not a native scope or a complete byte-admission witness.
+    const definition = valid(changed(M, (d) => { d.capacity = { name: "whole-scope", version: 1 }; }));
+    const unit = PROPOSED_BOUNDS.entryBytes;
+    const guarded = valid(changed(M, (d) => {
+      d.capacity = { name: "whole-scope", version: 1 };
+      d.rules.check = "true";
+      for (const kind of ["mark-a", "mark-a-far", "mark-b", "close"]) d.acts[kind].guards.push({ rule: "check" });
+    }));
+    const withRules = new Full(guarded);
+    withRules.started();
+    // The three independent duties each reserve one retained rule input,
+    // including the larger a alternative. The closing checkpoint has none.
+    expect(reserved(withRules.state, guarded, withRules.last.input)).toEqual({ entries: 6, bytes: 10 * unit, items: 0, records: 0, requests: 1 });
+    const withFields = valid(changed(M, (d) => {
+      d.capacity = { name: "whole-scope", version: 1 };
+      d.outcomes = {};
+      d.acts["mark-b"].fields = {
+        memo: { type: "text", max: 3, detached: true, required: false },
+        proof: { type: "fact", under: "fixture", kind: ["fact"], required: false },
+        value: { type: "digest", value: { domain: "fixture-value", max: 17 }, required: false },
+      };
+      d.acts["mark-b"].presents = { extra: { under: "fixture", kind: ["fact"], required: false } };
+    }, true));
+    const retained = new Full(withFields);
+    retained.started();
+    // Three NUL bytes occupy twenty canonical JSON bytes. The field and
+    // presented fact may each retain one foreign entry beside that text,
+    // and the value place has its own seventeen-byte canonical ceiling.
+    expect(canonicalBytes("\0\0\0").length).toBe(20);
+    expect(reserved(retained.state, withFields, retained.last.input)).toEqual({ entries: 6, bytes: 9 * unit + 37, items: 0, records: 0, requests: 1 });
+    const withRows = valid(changed(M, (d) => {
+      d.capacity = { name: "whole-scope", version: 1 };
+      d.outcomes = {};
+      const row = (max: number, clause = false) => ({ of: "rules", window: 60, use: "once", ...(clause ? { without: "write" } : {}), retains: [{ domain: "fixture-row-value", max }] });
+      d.acts["mark-b"].observes = [row(11)];
+      const send = d.acts["mark-a-far"].sends[0].tell;
+      send.result = {};
+      send.observes = { applied: [row(17, true)], refused: [row(23, true)] };
+    }, true));
+    const observed = new Full(withRows);
+    const observedJob = observed.started();
+    // No outcome kinds or holders: row-only result clauses must still
+    // reserve their value. These alternatives take 23, rather than 17+23.
+    expect(withRows.reserving!.requests!["acts.mark-a-far.sends.0"]!.bytes).toBe(3 * unit + 23);
+    expect(withRows.pendingWorkAmounts.clause.bytes).toBe(23);
+    expect(reserved(observed.state, withRows, observed.last.input)).toEqual({ entries: 6, bytes: 7 * unit + 34, items: 0, records: 0, requests: 1 });
+    expect(observed.does("mark-a-far", on(observed, observedJob))).toBe("settles");
+    expect(reserved(observed.state, withRows, observed.last.input)).toEqual({ entries: 5, bytes: 6 * unit + 34, items: 0, records: 0, requests: 0 });
+    for (const far of [false, true]) {
+      const scope = new Full(definition);
+      const id = scope.started();
+      expect(reserved(scope.state, definition, scope.last.input)).toEqual({ entries: 6, bytes: 7 * unit, items: 0, records: 0, requests: 1 });
+      expect(scope.does(far ? "mark-a-far" : "mark-a", on(scope, id))).toBe("settles");
+      const amount = reserved(scope.state, definition, scope.last.input);
+      expect(amount).toEqual({ entries: far ? 5 : 3, bytes: (far ? 6 : 3) * unit, items: 0, records: 0, requests: 0 });
+      expect(scope.state.outstanding().requests).toBe(far ? 1 : 0);
+      expect(owed(scope.state, definition, scope.last.input)).toBe(amount.entries);
+    }
+  });
+
   test("18.54 case 1: a job that is open with both marks false reserves 3 for a, 1 for b and 1 for its state: 5 entries", () => {
     // (job, a) is the larger of its two forms: `mark-a`, 1 entry, and `mark-a-far`, 1 entry and the 2 of its request.
     const forms = Object.fromEntries(m.markers!["job"]!.forms.map((form) => [form.path, [form.slot, form.base]]));
@@ -256,6 +413,27 @@ describe("the form `{ of, sets, in }` at the validator", () => {
     const checkedCopy = validateDefinition(parseStrictBytes(canonicalBytes(ownCopy)), PROPOSED_BOUNDS, PROFILES, { platform: true });
     expect(checkedCopy.ok).toBe(true);
     if (checkedCopy.ok) expect(checkedCopy.definition.pendingWorkAmounts.pendingCopies.map(({ amount }) => [amount.entries, amount.items, amount.records])).toEqual([[1, 1, 0]]);
+    // The opt-in copy duty also counts a rule's opening, without charging
+    // arbitrary state changes that a settling rule is forbidden to return.
+    ownCopy.capacity = { name: "whole-scope", version: 1 };
+    ownCopy.receives["record-a"]!.opens = null;
+    ownCopy.receives["record-a"]!.effects = [...ownCopy.receives["record-a"]!.effects, { code: "copy-result", row: "X3", most: { effects: 2, opens: "result" } }];
+    const markedCopy = validateDefinition(parseStrictBytes(canonicalBytes(ownCopy)), PROPOSED_BOUNDS, PROFILES, { platform: true });
+    expect(markedCopy.ok).toBe(true);
+    // The handler also reserves its retained foreign source entry.
+    if (markedCopy.ok) expect(markedCopy.definition.pendingWorkAmounts.pendingCopies.map(({ amount }) => amount)).toEqual([{ entries: 1, items: 1, records: 0, bytes: 2 * PROPOSED_BOUNDS.entryBytes, requests: 0 }]);
+
+    const holder = structuredClone(ownCopy);
+    holder.items["result"]!.holds = { requests: 1 };
+    delete holder.acts["mark-a-far"];
+    holder.receives["record-a"]!.opens = "result";
+    holder.receives["record-a"]!.effects = holder.receives["record-a"]!.effects.filter(effect => !("code" in effect));
+    const copyHolder = validateDefinition(holder, PROPOSED_BOUNDS, PROFILES, { platform: true });
+    expect(copyHolder).toMatchObject({ ok: false, problems: expect.arrayContaining([expect.objectContaining({ code: "holds", path: "receives.record-a.opens" })]) });
+    holder.receives["record-a"]!.opens = null;
+    holder.acts["mark-a-far"] = structuredClone(ownCopy.acts["mark-a-far"]!);
+    const actHolder = validateDefinition(holder, PROPOSED_BOUNDS, PROFILES, { platform: true });
+    expect(actHolder).toMatchObject({ ok: false, problems: expect.arrayContaining([expect.objectContaining({ code: "holds", path: "acts.mark-a-far.on" })]) });
   });
 
   test("18.51 cases 2 and 3, and the grammar: the mark is a required truth value with the default false that is not fixed, `in` lists no final state, and no written effect sets the mark but to true", () => {

@@ -59,8 +59,12 @@ export interface Bounds {
   timedAttemptsPerTurn: number;
   routingRefusals: number;         // before a sender stops and writes a diagnosis; a retry policy, not a proof
 
-  // Section 9.2: a scope's budget. The contract owes both to the proof plan (R4). The values are temporary.
+  // Sections 9.2 and 17.1: logical scope budgets. R4 owes measured values; all defaults remain temporary.
   scopeEntries: number;            // entries one scope may hold. An entry that admits pending work is refused `scope-full` unless every admitted task still has an entry to settle in
+  scopeBytes: number;              // canonical entries and retained inputs, once per byte domain/digest; whole-scope opt-in only
+  scopeItems: number;              // first item keys, including retained final items; whole-scope opt-in only
+  scopeRecords: number;            // capability records and relationship copies, including final states; whole-scope opt-in only
+  scopeRequests: number;           // requests without a result or undelivered diagnosis; whole-scope opt-in only
   namedDefinitions: number;        // the definitions a scope's own definition may name in `create` sends, and those name in turn, whose bytes the scope retains for its children. The contract states none; temporary
   // Section 7.4: sending. The contract states none of these; all are retry policies, temporary, and owed to the proof plan.
   dispatchSeconds: number;         // how long a sender waits for the answer to one dispatch before the attempt counts as unanswered
@@ -110,9 +114,19 @@ export const PROPOSED_BOUNDS: Bounds = {
   timedAttemptsPerTurn: 64,
   routingRefusals: 3,
   scopeEntries: 100_000,
+  // Temporary deployment ceilings adopted in planner decision 63195bdd, not physical-storage guarantees.
+  scopeBytes: 1_073_741_824,
+  scopeItems: 100_000,
+  scopeRecords: 200_000,
+  scopeRequests: 10_000,
   namedDefinitions: 16,
   dispatchSeconds: 30,
   dispatchRetrySeconds: 1,
   dispatchRetryMaxSeconds: 300,
   drainRetrySeconds: 1,
 };
+
+/** The closed names returned when a logical scope budget is exhausted. */
+export const SCOPE_BOUNDS = ["scopeEntries", "scopeBytes", "scopeItems", "scopeRecords", "scopeRequests"] as const;
+export type ScopeBoundName = typeof SCOPE_BOUNDS[number];
+export const isScopeBoundName = (name: unknown): name is ScopeBoundName => typeof name === "string" && (SCOPE_BOUNDS as readonly string[]).includes(name);

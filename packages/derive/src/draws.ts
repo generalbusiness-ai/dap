@@ -74,7 +74,7 @@ const heldOf = (counts: Counts): Held | null => {
 
 type Drawing = Pick<Entry, "seq" | "input" | "effects" | "sends"> & Partial<Pick<Entry, "time" | "clamped">>;
 /** Pinned rules and bounds, needed only when a binding selector is derived. */
-export interface DrawOptions extends Partial<Pick<Reading, "facts" | "own" | "texts" | "snapshot">> { bounds?: Bounds | undefined; platform?: PlatformRules | undefined }
+export interface DrawOptions extends Partial<Pick<Reading, "facts" | "own" | "texts" | "snapshot">> { bounds?: Bounds | undefined; platform?: PlatformRules | undefined; values?: readonly string[] | undefined }
 
 /** What that entry does to the counts of the holders, on the state before it; or the fault of an entry that draws past a count, or opens a held operation with no holder. */
 export function drawsOf(view: StateView, definition: ValidDefinition, entry: Drawing, options: DrawOptions = {}, binding?: { item: number; message: string } | null): Drawn | DrawFault {
@@ -214,6 +214,9 @@ export function released(view: StateView, definition: ValidDefinition, item: num
   const r = definition.reserving;
   if (!held || !of || !r) return held;
   if (!own(own(definition.declared.items, of.type)?.states, of.state)?.final) return held;
+  // Opt-in room is released by the holder's actual final settlement. An
+  // ordinary final-looking change cannot make its admitted counts vanish.
+  if (definition.declared.capacity?.name === "whole-scope" && !view.holderSettled(item)) return held;
   const open = view.operationsFor(item).filter((operation) => !operationSettled(operation));
   const pending = view.accountsOf(item).some((account) => {
     const request = view.request(account.seq, account.n);

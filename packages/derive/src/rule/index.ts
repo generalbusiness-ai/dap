@@ -10,6 +10,7 @@ import { canonicalBytes, digestBytes } from "@generalbusiness/artroom-bytes";
 import type { Profile, RuleInput } from "../index.ts";
 import { RuleEvalError } from "./errors.ts";
 import { admit, evaluate } from "./evaluator.ts";
+import { PROFILE } from "./profile.ts";
 
 export { BUDGET_CODES, TYPE_CODES, RuleEvalError, RuleRuntimeFailure, type EvalCode } from "./errors.ts";
 export { ENGINE_FINGERPRINT, admit, assertEngine, evaluate, probeResults, type Evaluation, type Meter } from "./evaluator.ts";
@@ -18,6 +19,7 @@ export { JSONATA_VERSION, PROFILE } from "./profile.ts";
 /** The profile table for `validateDefinition` that also checks each rule's text against the profile. */
 export const RULE_PROFILES: Readonly<Record<string, Profile>> = {
   "restricted@1": {
+    inputBytes: PROFILE.inputBytes,
     admit(source) {
       try {
         admit(source);

@@ -114,6 +114,63 @@ describe("the definition validator", () => {
     if (!result.ok) for (const p of result.problems) expect(p.path + p.message).not.toBe("");
   });
 
+  test("capacity is a pinned opt-in: omission keeps the legacy bytes, the supported rule has its own digest, and unknown rules cannot fall back", () => {
+    const original = clone(small);
+    const bytes = canonicalBytes(original);
+    const legacy = validateDefinition(original, PROPOSED_BOUNDS);
+    expect(legacy.ok).toBe(true);
+    if (!legacy.ok) throw new Error("the legacy fixture must validate");
+    expect(canonicalBytes(legacy.definition.declared)).toEqual(bytes);
+    expect(Object.hasOwn(legacy.definition.declared, "capacity")).toBe(false);
+
+    const declared = { ...clone(small), capacity: { name: "whole-scope" as const, version: 1 as const } };
+    const opted = validateDefinition(declared, PROPOSED_BOUNDS);
+    expect(opted.ok).toBe(true);
+    if (!opted.ok) throw new Error("the supported capacity rule must validate");
+    expect(opted.definition.declared.capacity).toEqual({ name: "whole-scope", version: 1 });
+    expect(opted.definition.digest).toBe(definitionDigest(declared));
+    expect(opted.definition.digest).not.toBe(legacy.definition.digest);
+    for (const capacity of [{ name: "whole-scope", version: 2 }, { name: "entries", version: 1 }]) {
+      const unknown = validateDefinition({ ...clone(small), capacity }, PROPOSED_BOUNDS);
+      expect(unknown.ok ? [] : unknown.problems).toEqual([expect.objectContaining({ code: "unsupported-definition", path: "capacity" })]);
+    }
+    expect(canonicalBytes(original)).toEqual(bytes);
+  });
+
+  test("an opted-in retained rule-input producer requires a finite profile ceiling while legacy profiles keep their interpretation", () => {
+    const data = { ...clone(ticket), capacity: { name: "whole-scope" as const, version: 1 as const } };
+    expect(validateDefinition(ticket, PROPOSED_BOUNDS, { "restricted@1": {} }).ok).toBe(true);
+    for (const inputBytes of [undefined, 0, 0.5, Infinity, Number.MAX_SAFE_INTEGER + 1]) {
+      const checked = validateDefinition(data, PROPOSED_BOUNDS, { "restricted@1": inputBytes === undefined ? {} : { inputBytes } });
+      expect(checked.ok ? [] : checked.problems).toContainEqual(expect.objectContaining({ code: "reserve-unbounded", path: "profile", message: expect.stringContaining("rule-input producer") }));
+    }
+    const checked = validateDefinition(data, PROPOSED_BOUNDS);
+    expect(checked.ok && checked.definition.ruleInputBytes).toBe(262_144);
+  });
+
+  test("whole-scope refuses the reachable native ancestry-snapshot producer without treating a read ceiling as its maximum", () => {
+    // The native workspace predicate enables instance -> stage -> check
+    // independently of whether this particular guard can pass. No writer
+    // ceiling exists for check's separate retained snapshot.
+    const data = clone(lane);
+    data.acts["renew"]!.guards = [...data.acts["renew"]!.guards, { capability: { name: "hold", guard: "staged", with: {} } }];
+    const bytes = canonicalBytes(data);
+    const legacy = validateDefinition(data, PROPOSED_BOUNDS);
+    expect(legacy.ok ? [] : legacy.problems).toEqual([]);
+    expect(legacy.ok && canonicalBytes(legacy.definition.declared)).toEqual(bytes);
+    const checked = validateDefinition({ ...data, capacity: { name: "whole-scope", version: 1 } }, PROPOSED_BOUNDS);
+    expect(checked.ok ? [] : checked.problems).toEqual([expect.objectContaining({ code: "reserve-unbounded", path: "capacity", message: expect.stringContaining("hold@1/check ancestry-snapshot producer") })]);
+    // Merely listing hold@1 and using its item-form hold effects cannot
+    // create the workspace instance which staging requires.
+    expect(validateDefinition({ ...clone(lane), capacity: { name: "whole-scope", version: 1 } }, PROPOSED_BOUNDS).ok).toBe(true);
+    // Native guard usage without any local hold type cannot stage either.
+    const noHolds = clone(small);
+    noHolds.capabilities = [{ name: "hold", version: 1 }];
+    noHolds.acts["edit"]!.guards = [...noHolds.acts["edit"]!.guards, { capability: { name: "hold", guard: "staged", with: {} } }];
+    expect(validateDefinition({ ...noHolds, capacity: { name: "whole-scope", version: 1 } }, PROPOSED_BOUNDS).ok).toBe(true);
+    expect(canonicalBytes(data)).toEqual(bytes);
+  });
+
   test("a definition that passes carries its digest, its timed and hold types, and the slots each `where` reads", () => {
     expect(laneDefinition.digest).toBe(definitionDigest(lane));
     expect(laneDefinition.timedTypes).toEqual(["hold"]);

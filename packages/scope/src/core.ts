@@ -7,9 +7,9 @@
  * the answer to a creation, is the contract's, and is exported here again.
  */
 
-import type { ActType, Answer, Beside, Bounds, CapabilityName, DeclaredDefinition, Digest, OutboxId, Entry, FactRef, Created, Grant, ObservationUse, PlatformDefinition, Receipt, RefusalReason, ScopeId, Seed, Settlement, SignedIntent, UnavailableReason } from "@generalbusiness/dap-contract";
+import type { ActType, Answer, Beside, Bounds, ScopeBoundName, CapabilityName, DeclaredDefinition, Digest, OutboxId, Entry, FactRef, Created, Grant, ObservationUse, PlatformDefinition, Receipt, RefusalReason, ScopeId, Seed, Settlement, SignedIntent, UnavailableReason } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, intentDigest, isDigest, isGrant, isPlatformDefinition, newIncarnation, parseStrict, platformName, retainedValueKey, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
-import { actNeeds, actionOf, outcomeValueDomains, checkpointOf, clockOf, counted, derivable, factsNamed, ownersOf, inputTexts, isObject, judgeAct, judgeCheckpoint, judgeGenesis, judgePreparation, own, placesOf, prepareRules, presentedTypes, readFields, runnable, stepsOf, validateDefinition, windowOf } from "@generalbusiness/dap-derive";
+import { actNeeds, actionOf, outcomeValueDomains, checkpointOf, clockOf, counted, derivable, factsNamed, genesisBodiesPresent, ownersOf, inputTexts, isObject, judgeAct, judgeCheckpoint, judgeGenesis, judgePreparation, own, placesOf, prepareRules, presentedTypes, readFields, runnable, stepsOf, validateDefinition, windowOf } from "@generalbusiness/dap-derive";
 import type { ActJudgment, Clock as Reading, Draft, Fetched, SignedCreation, GrantDecision, JudgeContext, Needed, Observing, Own, Owners, Placed, PlatformRules, Presented, Snapshots, StateView, Texts, ValidDefinition, Window } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { ReceiverReads } from "./receiver-reads.ts";
@@ -24,7 +24,7 @@ export type { Created };
 /** How a checkpoint is answered (section 9.2). It has no caller outside the scope. */
 export type Checkpointed =
   | { answer: "written"; fact: FactRef }
-  | { answer: "refused"; reason: RefusalReason }
+  | { answer: "refused"; reason: RefusalReason; name?: ScopeBoundName }
   | { answer: "unavailable"; reason: UnavailableReason };
 
 /**
@@ -420,8 +420,9 @@ export class Scope {
    * `definitions`: the declarations of the definitions this one names in
    * `create` sends, and of those they name in turn. Each that is named is
    * retained by its digest with the genesis (section 9.2), so that a child
-   * can read it from this scope. One that is named and not supplied is not
-   * retained, and a creation under it waits. One that is supplied and is not
+   * can read it from this scope. Opt-in creation requires the complete
+   * reachable set before genesis. Legacy creation leaves an absent one
+   * out, and a creation under it waits. One that is supplied and is not
    * a valid declaration is refused `unsupported-definition`.
    *
    * `beside`: the detached texts that the creation intent's fields name
@@ -466,6 +467,13 @@ export class Scope {
     // What the seed names: the platform name, or the digest of the declaration.
     const names: Digest | PlatformDefinition = bytes === null ? definition as PlatformDefinition : valid.digest;
 
+    const act = own(valid.declared.acts, valid.declared.genesis)!;
+    const texts = Received.beside(besideOf(beside).texts, act.fields, bounds);
+    const existing = this.#store.scope();
+    // Check before any external preparation/fact reads. A repeat reads
+    // its original receipt and needs no supplied body or child closure.
+    if (!existing && !genesisBodiesPresent(valid, creation, texts.sizes)) return refused("bad-field");
+
     // Section 9.2: the declarations this scope retains for its children, from what the creator supplied.
     const supplied = new Map<Digest, string>();
     try {
@@ -473,7 +481,7 @@ export class Scope {
     } catch {
       return refused("unsupported-definition");   // not values that have canonical bytes
     }
-    const children = await namedBy(valid, (digest): Promise<DefinitionRead> => {
+    const children = valid.declared.capacity && existing ? { ok: true as const, retain: [] } : await namedBy(valid, (digest): Promise<DefinitionRead> => {
       const given = supplied.get(digest);
       return Promise.resolve(given === undefined ? { ok: false, reason: "absent" } : { ok: true, bytes: given });
     }, (text) => this.validate(text), bounds.namedDefinitions);
@@ -483,14 +491,12 @@ export class Scope {
     // Step 1: the facts the creation intent's fields name. A scope that has its genesis is asked again, a repeat: the judge answers it
     // from the genesis, or refuses it as another creation, and reads no fact. So none is fetched, and a fact that cannot be read
     // now does not hide the receipt (section 7.4, as for a delivery that the store has decided).
-    const act = own(valid.declared.acts, valid.declared.genesis)!;
     const fields = readFields(act.fields, creation.intent.fields, bounds);
     // No scope exists yet, so no fact can name it: every fact a creation names is foreign.
     const named = fields.ok && !this.#store.scope() ? factsNamed(act.fields, fields.fields, null) : [];
     const facts = named.length > bounds.usesPerEntry ? null : await fetchFacts(resolver, bounds, named);
     if (!facts) return unavailable("dependency-unavailable");
 
-    const texts = Received.beside(besideOf(beside).texts, act.fields, bounds);
     const asked = (inc: SignedCreation["inc"]): SignedCreation => ({ name, inc, seed, creation: creation });
     const context = (clock: Reading) => ({ clock, bounds, facts, source: null, texts: texts.sizes, capabilities: this.#ports.capabilities ?? undefined, platform: platform ?? undefined });
     const pinned = (): Pinned => this.pinned() ?? { named: names, definition: valid, platform };
@@ -508,7 +514,7 @@ export class Scope {
             this.#store.cover(valid.indexes);
             return {
               verdict: "write", draft: judged.draft, retain: [...(bytes === null ? [] : [{ kind: "definition", digest: valid.digest, bytes } as const]), ...children.retain, ...used(judged.draft, facts), ...texts.retain(valid, judged.draft)],
-              sealed: answer, unfit: () => refused("bad-field"), full: () => refused("scope-full"),
+              sealed: answer, unfit: () => refused("bad-field"), full: (_head, bound) => ({ ...refused("scope-full"), ...(valid.declared.capacity ? { name: bound } : {}) }),
             };
           case "repeat": {
             const kept = this.#store.stored(0)!;
@@ -630,7 +636,7 @@ export class Scope {
               // An entry over the size bound, or a grant that is not canonical values, is never written.
               unfit: (why) => ({ answer: "refused", reason: why === "size" ? "bad-field" : "unauthorized", judgedAt: head }),
               // Section 9.2: an act is refused when the pending work it would admit, with that already admitted, has no room to settle.
-              full: () => ({ answer: "refused", reason: "scope-full", judgedAt: head }),
+              full: (_head, bound) => ({ answer: "refused", reason: "scope-full", judgedAt: head, ...(definition.declared.capacity ? { name: bound } : {}) }),
             };
           }
           case "due": return { verdict: "stop" };
@@ -719,7 +725,7 @@ export class Scope {
               },
               unfit: (why) => ({ answer: "refused", reason: why === "size" ? "bad-field" : "unauthorized", judgedAt: head }),
               // Section 17.3: a preparation is new work. It is admitted only with the room of what it reserves.
-              full: () => ({ answer: "refused", reason: "scope-full", judgedAt: head }),
+              full: (_head, bound) => ({ answer: "refused", reason: "scope-full", judgedAt: head, ...(definition.declared.capacity ? { name: bound } : {}) }),
             };
           }
           case "due": return { verdict: "stop" };
@@ -785,8 +791,8 @@ export class Scope {
         const judged = judgeCheckpoint(view, definition, checkpointOf(view), { clock, bounds });
         switch (judged.result) {
           case "write":
-            if (view.scope()!.head.seq + 1 >= bounds.scopeEntries) return said<Checkpointed>(unavailable("unavailable"));
-            return { verdict: "write", draft: judged.draft, retain: [], sealed: ({ entry, hash }) => ({ answer: "written", fact: { at: entry.at, seq: entry.seq, hash } }), unfit: () => unavailable("unavailable"), full: () => unavailable("unavailable") };
+            if (!definition.declared.capacity && view.scope()!.head.seq + 1 >= bounds.scopeEntries) return said<Checkpointed>(unavailable("unavailable"));
+            return { verdict: "write", draft: judged.draft, retain: [], sealed: ({ entry, hash }) => ({ answer: "written", fact: { at: entry.at, seq: entry.seq, hash } }), unfit: () => unavailable("unavailable"), full: (_head, bound) => definition.declared.capacity ? { answer: "refused", reason: "scope-full", name: bound } : unavailable("unavailable") };
           case "due": return { verdict: "stop" };
           case "refused": return said<Checkpointed>({ answer: "refused", reason: judged.reason });
           case "unavailable": return said<Checkpointed>(unavailable(judged.reason));

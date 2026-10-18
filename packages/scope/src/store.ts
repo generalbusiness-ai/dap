@@ -64,6 +64,8 @@ export interface Store extends StateWriter {
   transaction<T>(work: () => T): T;
   /** The slots a `where` index must cover, as the validator derived them (section 6.5). Set once the definition is known. */
   cover(indexes: readonly RangeIndex[]): void;
+  /** Canonical journal and retained payload bytes, once per byte domain/digest; no folded state or bookkeeping. */
+  logicalBytes(): number;
 
   /**
    * The entry row, one outbox row for each of its sends, and one driver row

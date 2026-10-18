@@ -89,7 +89,7 @@ export type OutcomeRecorded =
   | { recorded: "repeat"; seq: number }
   | { recorded: "conflict"; seq: number }
   | { recorded: "refused"; detail: string }
-  | { recorded: "unavailable" };
+  | { recorded: "unavailable"; reason?: "scope-full"; name?: import("@generalbusiness/dap-contract").ScopeBoundName };
 
 /** Takes the late answer of an attempt that was sent, at any time after it, also after a restart. */
 export type LateAnswers = (operation: OperationId, attempt: number, answer: EffectAnswer) => Promise<OutcomeRecorded>;
@@ -708,12 +708,12 @@ export class Operations {
         switch (judged.result) {
           case "write":
             // Room for this entry was reserved when its operation was opened (sections 17.2, row 5, and 17.3). A scope with no room at all writes nothing.
-            if (view.scope()!.head.seq + 1 >= bounds.scopeEntries) return said({ recorded: "unavailable" });
+            if (!definition.declared.capacity && view.scope()!.head.seq + 1 >= bounds.scopeEntries) return said({ recorded: "unavailable" });
             return {
               // Section 16.1, "A value that a row may retain": each value that a retained observation names is kept with the entry.
               verdict: "write", draft: judged.draft, ...(interpreted ? { facts: interpreted } : {}), retain: [...retain.filter((given) => given.kind === "snapshot" && named.includes(given.digest)), ...valuesOf(judged.draft)],
               sealed: (sealed) => { wrote.sealed = sealed; rows.sealed(sealed); return { recorded: "written", fact: { at: sealed.entry.at, seq: sealed.entry.seq, hash: sealed.hash } }; },
-              unfit: () => ({ recorded: "refused", detail: "the outcome cannot be an entry" }), full: () => ({ recorded: "unavailable" }),
+              unfit: () => ({ recorded: "refused", detail: "the outcome cannot be an entry" }), full: (_head, bound) => ({ recorded: "unavailable", ...(definition.declared.capacity ? { reason: "scope-full", name: bound } : {}) }),
             };
           case "repeat": return said({ recorded: "repeat", seq: judged.seq });
           case "conflict": return said({ recorded: "conflict", seq: judged.seq });

@@ -28,6 +28,7 @@ import type { AttemptState, Operation, OutcomeState, StateView } from "./state.t
 import { timeMs, type Clock } from "./time.ts";
 import type { ValidDefinition } from "./validate/index.ts";
 import { own } from "./values.ts";
+import { AmountError, naturalAmount, NOTHING, type Amount } from "./held.ts";
 
 export type Owner = CapabilityName | PlatformDefinition;
 /** Native runtime admission metadata; it changes no recorded data or effects. */
@@ -168,6 +169,9 @@ export interface OperationRules {
    * `cc570904`'s.
    */
   closure?: number;
+  /** One future outcome entry and its complete closure under whole-scope
+   * capacity, using existing maxima of the pinned owner. */
+  reservation?(definition: ValidDefinition): Amount;
 }
 
 /**
@@ -182,6 +186,34 @@ export interface OperationRules {
 export interface Owners {
   rules(owner: Owner, kind: string): OperationRules | null;
   reserves?(view: StateView, definition: ValidDefinition): number;
+  /** Full pending-record terms for the opt-in cohort. A scalar reader is
+   * never interpreted as zero bytes or other missing dimensions. */
+  reservations?(view: StateView, definition: ValidDefinition): Amount;
+}
+
+/** The owner's one full Amount, checked against its legacy entry projection. */
+export function ownerReservations(owners: Owners | null | undefined, view: StateView, definition: ValidDefinition): Amount {
+  if (!owners?.reservations) {
+    if (owners?.reserves) throw new AmountError("owner-record producer has no full reservation Amount");
+    return NOTHING;
+  }
+  const amount = naturalAmount(owners.reservations(view, definition));
+  if (owners.reserves) {
+    const entries = owners.reserves(view, definition);
+    naturalAmount({ ...NOTHING, entries });
+    if (entries !== amount.entries) throw new AmountError("owner-record reservation disagrees with its entry projection");
+  }
+  return amount;
+}
+
+/** The data-derived Amount or the pinned owner's full declaration. */
+export function outcomeReservation(owners: Owners | null | undefined, owner: Owner, kind: string, definition: ValidDefinition): Amount {
+  const counted = isPlatformDefinition(owner) ? own(definition.reserving?.kinds, kind) : undefined;
+  const amount = counted && counted.attempts !== null ? counted.outcome : owners?.rules(owner, kind)?.reservation?.(definition);
+  if (amount === undefined) throw new AmountError(`${owner}/${kind} outcome producer has no full reservation Amount`);
+  naturalAmount(amount);
+  if (amount.entries < 1 || amount.bytes < definition.pendingWorkAmounts.entry.bytes) throw new AmountError(`${owner}/${kind} outcome reservation omits its own entry`);
+  return amount;
 }
 
 /**

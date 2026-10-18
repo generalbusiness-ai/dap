@@ -12,6 +12,25 @@ import { Node, creation as creationIn, net, routed, soon } from "./net.ts";
 import { HOLD, START, at, definition, create, creation, reader, rita, stubOf, una } from "./support.ts";
 
 describe("founding a directory (sections 2.2, 2.3 and 7.1)", () => {
+  test("an opted-in declaration with an unbounded native snapshot producer is refused before genesis; the same legacy declaration still creates", async () => {
+    // Real production creation/validation/SQLite and native capability code.
+    // No staging, outside operation, user act or test authority runs.
+    const under = variant(definition.declared, d => {
+      d.acts.renew.guards.push({ capability: { name: "hold", guard: "staged", with: {} } });
+    });
+    const intent: Intent = { v: 1, to: null, actor: rita.key, kind: "found", on: null, expected: {}, fields: { title: "A lane", opener: rita.member }, idempotencyKey: crypto.randomUUID(), notAfter: timeOf(Date.now() + 60_000) };
+    const signed = signIntent(intent, rita.secret);
+    const seed: Seed = { v: 1, kind: "directory", definition: under.digest, creator: null, cause: intentDigest(intent), ordinal: 0 };
+    const legacy = stubOf(scopeIdOf(seed), env.AS_DEPLOYED);
+    expect(await legacy.create(signed, under.declared)).toMatchObject({ answer: "accepted", receipt: { fact: { seq: 0 } } });
+    const declared: DeclaredDefinition = { ...under.declared, capacity: { name: "whole-scope", version: 1 } };
+    const name = scopeIdOf({ ...seed, definition: definitionDigest(declared) });
+    const stub = stubOf(name, env.AS_DEPLOYED);
+    expect(await stub.create(signed, declared)).toEqual({ answer: "refused", reason: "unsupported-definition" });
+    const held = await runInDurableObject(env.AS_DEPLOYED.get(env.AS_DEPLOYED.idFromName(name)), (_instance, state) => state.storage.sql.exec("SELECT COUNT(*) AS entries FROM entry").toArray());
+    expect(held).toEqual([{ entries: 0 }]);
+  });
+
   test("entry 0 holds the seed, the signed intent and a minted incarnation, and the scope answers under its own name only", async () => {
     const s = await create();
     expect(await s.stub.entry(reader, 0)).toMatchObject({

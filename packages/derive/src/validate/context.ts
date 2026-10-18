@@ -31,6 +31,7 @@ export interface Ctx {
   kind: string | null;                    // the kind of the entry these forms write (section 6.2). Null: the entry of an advisory, which has none
   handler: { update: boolean; under: string | null } | null;   // a handler: it has a sender and a source entry, a `relate` handler an update, and `under` is the definition its `from` names, if it names one
   clause: boolean;                        // a result clause: it has a sender and a result
+  senderKind?: string | undefined;        // the verified handler source, or the recipient kind of a future result
   presented: Map<string, FieldType>;      // an act: the facts presented beside the intent, by name
   elements: Map<string, FieldType | null>;// inside a list form: each element it binds, by its `as` name, with its type when the definition states it
   each: Type | null;                      // a fan-out send: the type of the items its range covers
@@ -61,12 +62,13 @@ export type ClauseSet = { subject: string; type: string; state?: string; slot?: 
  * except when its own copy is the task being settled, which already implies that key.
  */
 export interface PendingWork {
+  retained: import("../field-retention.ts").FieldProducers;
   path: string;
   settles: { subject: string; type: string; states: readonly string[]; slot?: string } | { copy: readonly string[]; name: string; kind: string } | null;
   opens: string | null;
   mayCreateCopy: boolean;
   sets: ClauseSet;
-  requests: { most: number; clauses: readonly ClauseSet[] }[];
+  requests: { send: number; most: number; clauses: readonly ClauseSet[] }[];
 }
 
 /**
@@ -107,6 +109,9 @@ export function mark(d: Defining, v: unknown, path: string, kind: MarkKind, more
  * read first, so every later form resolves its names against `types`.
  */
 export interface Defining extends Shapes {
+  readonly native: import("./native-capacity.ts").NativeCapacity;
+  readonly wholeCapacity: boolean;
+  ruleInputBytes: number;
   readonly bounds: Bounds;
   readonly name: string | null;             // the name the definition states, which `under` is compared with. Null: it states none, which is reported
   readonly typeNames: ReadonlySet<string>;  // every key of `items`, known before any item type is read
@@ -118,6 +123,8 @@ export interface Defining extends Shapes {
   readonly holdTypes: Set<string>;          // section 6.8: the types a `hold: open` effect targets
   readonly indexes: RangeIndex[];
   readonly clauseSets: ClauseSet[];         // one for each result clause that is reserved for (section 17.2)
+  readonly clauseRetains: Map<ClauseSet, unknown>;
+  readonly clausePaths: Map<ClauseSet, string>;
   clause: ClauseSet | null;                 // the list of effects being read, when what it can set is asked: a reserved clause, or the effects of an act or handler
   readonly pendingWork: PendingWork[];                // one for each act and handler that was read
   readonly platform: boolean;               // the platform option: the data of a platform definition, which may hold a mark at seven places (section 6.1)

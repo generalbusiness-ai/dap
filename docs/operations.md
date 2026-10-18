@@ -103,6 +103,10 @@ numbers from 0 through 2,147,483,647. Durations are milliseconds.
 [metrics.ts](../packages/scope/src/metrics.ts) defines the closed places,
 reasons, diagnosis steps and events. Unlisted values and invalid numbers
 are dropped and counted, without truncating caller text into a valid row.
+For an opted-in whole-scope `scope-full` refusal, the turn reason names the
+exhausted budget: `scopeEntries`, `scopeBytes`, `scopeItems`, `scopeRecords`
+or `scopeRequests`. Legacy refusals keep `scope-full`. These five names
+are a closed extension of the existing reason slot; no guard name enters it.
 
 A native end is `answer`, `idle`, `busy`, `clock-behind` or `unavailable`.
 It stays separate from the public answer. Internal diagnosis turns can end

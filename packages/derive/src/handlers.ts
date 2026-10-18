@@ -14,7 +14,7 @@ import { deriveEffects } from "./effects.ts";
 import { creationFields, factsNamed, isEntryOf, isLocalFact, messageFields, presentedTypes, readFacts, readFields, textsNamed, updateOf, type Reading, type Update } from "./fields.ts";
 import { signerOf } from "./fold.ts";
 import { judgeGuards, slotOf, type Fetched, type Judging } from "./guards.ts";
-import { RuleFault, fieldOutsideType, markOf, selectedBy, type AtHand, type Giving, type JudgedInput } from "./marks.ts";
+import { RuleFault, atHand, atHandByRows, placesOf, fieldOutsideType, markOf, selectedBy, type AtHand, type Giving, type JudgedInput } from "./marks.ts";
 import { listedBy, rowsOfClause, settle, waits, type Needed, type Settled, type Settling } from "./observes.ts";
 import { conditionsReadClock, deriveSends, formOf, readsClock } from "./sends.ts";
 import type { Item, OwnRequest, ScopeState, StateView } from "./state.ts";
@@ -103,25 +103,29 @@ function detachedBounds(types: Readonly<Record<string, FieldType & { default?: F
   return limits;
 }
 
+/** Bounds established by one successful field check. These are upper
+ * bounds from a verified phase, never retained sizes. */
+export function checkedTextBounds(definition: ValidDefinition, input: Entry["input"]): ReadonlyMap<Digest, number> {
+  if (input.type === "act") return detachedBounds(own(definition.declared.acts, input.signed.intent.kind)?.fields ?? {}, input.signed.intent.fields);
+  if (input.type === "genesis" && input.decision === "applied") {
+    const fields = own(definition.declared.acts, definition.declared.genesis)!.fields;
+    const given = input.founding ? input.founding.intent.fields : input.source ? creationFields(input.message, input.source, fields) : null;
+    return given ? detachedBounds(fields, given) : new Map();
+  }
+  if (input.type === "delivery" && "decision" in input && input.message.class === "request" && (input.decision === "applied" || input.decision === "superseded" && input.message.type === "tell")) {
+    const received = bound(definition, input.message, input.from);
+    if (received?.handler && received.fields) return detachedBounds(received.handler.fields, received.fields);
+  }
+  return new Map();
+}
+
 /** A previous successful check of this same digest can prove its bound after erasure. */
 function priorDetachedBounds(definition: ValidDefinition, context: Reading, at: ScopeRef, before: number): Map<Digest, number> {
   const limits = new Map<Digest, number>();
-  const keep = (types: Readonly<Record<string, FieldType & { default?: FieldValue }>>, fields: Readonly<Record<string, FieldValue>> | null): void => {
-    for (const [digest, max] of fields ? detachedBounds(types, fields) : []) limits.set(digest, Math.min(limits.get(digest) ?? Number.POSITIVE_INFINITY, max));
-  };
-  if (!context.own) return limits;
-  for (let seq = 0; seq < before; seq++) {
+  if (context.own) for (let seq = 0; seq < before; seq++) {
     const entry = context.own(seq)?.entry;
     if (!entry || entry.seq !== seq || !same(entry.at, at)) continue;
-    const input = entry.input;
-    if (input?.type === "act") keep(own(definition.declared.acts, input.signed.intent.kind)?.fields ?? {}, input.signed.intent.fields);
-    else if (input?.type === "genesis" && input.decision === "applied") {
-      const fields = own(definition.declared.acts, definition.declared.genesis)!.fields;
-      keep(fields, input["founding"] ? input["founding"].intent.fields : input.source ? creationFields(input.message, input.source, fields) : null);
-    } else if (input?.type === "delivery" && "decision" in input && input.message.class === "request" && (input.decision === "applied" || (input.decision === "superseded" && input.message.type === "tell"))) {
-      const received = bound(definition, input.message, input.from);
-      if (received?.handler) keep(received.handler.fields, received.fields);
-    }
+    for (const [digest, max] of checkedTextBounds(definition, entry.input)) limits.set(digest, Math.min(limits.get(digest) ?? Number.POSITIVE_INFINITY, max));
   }
   return limits;
 }
@@ -295,6 +299,56 @@ export function overMax(view: StateView, definition: ValidDefinition, type: stri
 /** The guards, effects, sends and attention of one act or handler, and what it declares that it settles. */
 export interface Forms { guards: readonly Guard[]; effects: readonly EffectForm[]; sends: readonly SendForm[]; attention: readonly Notify[]; settles?: Settles | undefined }
 
+export interface ItemSettlement { item: number; form: Extract<Settles, { of: unknown }> }
+
+/** The judge and fold use the same condition for an actual item settlement. */
+export function itemSettledBy(form: ItemSettlement["form"], before: Item | undefined, after: Item | undefined): boolean {
+  if (!before || !after || !form.in.includes(before.state)) return false;
+  return "sets" in form ? own(before.values, form.sets) === false && own(after.values, form.sets) === true : !form.in.includes(after.state);
+}
+
+/** Identify the recorded form's item on the pre-entry state. Guards and
+ * effects are not rerun, and no runtime-only Draft hint is trusted. */
+export function itemSettlementBinding(view: StateView, definition: ValidDefinition, entry: Pick<Entry, "seq" | "input" | "effects">, context: Reading, values?: readonly string[]): ItemSettlement | null {
+  const scope = view.scope(), input = entry.input;
+  // In particular a refused advisory has no decision flag, but also has
+  // no item effect. It must not reconstruct failed fields as a settlement.
+  if (!scope || !entry.effects.some(effect => effect.effect === "state" || effect.effect === "value" || effect.effect === "hold")) return null;
+  if (input.type === "act") {
+    const act = own(definition.declared.acts, input.signed.intent.kind), form = act?.settles;
+    if (!act || !form || !("of" in form)) return null;
+    if (form.of === "on") return input.signed.intent.on === null ? null : { item: input.signed.intent.on, form };
+    const read = readFields(act.fields, input.signed.intent.fields, context.bounds);
+    if (!read.ok) throw new RuleFault("an item settlement cannot reconstruct its act fields");
+    const local = { at: scope.at, own: context.own, texts: context.texts };
+    const named = readFacts(view, act.fields, read.fields, context.facts, local);
+    const presents = presentedTypes(act.presents), shown = readFields(presents, input.presented, context.bounds);
+    const extra = shown.ok ? readFacts(view, presents, shown.fields, context.facts, local) : null;
+    if (named.result !== "read" || extra?.result !== "read") throw new RuleFault("an item settlement cannot reconstruct its act facts");
+    const facts = new Map([...named.facts, ...extra.facts]);
+    const fields = named.fields, places = placesOf(act.fields, fields);
+    const beside = definition.observing ? atHandByRows(values, places) : atHand(input.observed, values, places);
+    const g = { ...giving(view, context, scope, entry.seq, { type: "act", signed: input.signed, grant: null, presented: input.presented }, { clock: false }, fields, facts), beside };
+    const primary = act.step === "transition" && input.signed.intent.on !== null ? view.item(input.signed.intent.on) : null;
+    const subjects = alsoItems(view, definition, act.also, fields, primary, undefined, (mark, bound) => selectedBy({ ...g, subjects: bound }, mark));
+    if (!subjects.ok) throw new RuleFault("an item settlement cannot reconstruct its act subjects");
+    const item = subjects.items.find(([name]) => name === form.of.slice("also.".length))?.[1];
+    return item ? { item: item.id, form } : null;
+  }
+  if (input.type !== "delivery" || (input.message.class !== "request" && input.message.class !== "advisory")) return null;
+  if ("decision" in input && input.decision !== "applied") return null;
+  const source = context.facts.find(fact => same(fact.fact, input.from));
+  const matched = bound(definition, input.message, input.from, source?.under), form = matched?.handler?.settles;
+  if (!matched?.handler || !matched.fields || !form || !("of" in form)) return null;
+  if (!source || !isEntryOf(source.entry, input.from)) throw new RuleFault("an item settlement has no retained source entry");
+  const ready = prepareHandler(view, definition, context, scope, matched.handler, matched.kind, matched.fields,
+    { source, update: input.message.class === "request" ? updateOf(input.message, input.from) : null },
+    { type: "delivery", from: input.from, n: input.n, message: input.message });
+  if (ready.result !== "ready") throw new RuleFault("an item settlement cannot reconstruct its handler subjects");
+  const item = ready.j.subjects.get(form.of);
+  return item ? { item: item.id, form } : null;
+}
+
 export type Ran =
   /**
    * `settles`: the form declares that it settles an item, the item was in a listed state, and these effects take it out of them
@@ -356,10 +410,8 @@ export function derive(j: Judging, forms: Forms, opens: string | null, cause: Di
   // By a mark (revision 21): before the entry the subject's state was one of `in` and its mark was `false`, and after the entry's
   // effects the mark is `true`. An entry of the form that finds the mark `true` already, or the state outside `in`, is new work.
   const settled = forms.settles && "of" in forms.settles ? forms.settles : null;
-  const mark = (settled as { sets?: string } | null)?.sets;
   const [was, is] = settled ? [j.subjects.get(settled.of), effects.working.get(settled.of)] : [];
-  const settles = !!settled && !!was && !!is && settled.in.includes(was.state)
-    && (mark !== undefined ? own(was.values, mark) === false && own(is.values, mark) === true : !settled.in.includes(is.state));
+  const settles = settled !== null && itemSettledBy(settled, was, is);
   return { result: "ran", effects: effects.effects, sends: sends.sends, prepared: j.used, judgesTime, settles };
 }
 

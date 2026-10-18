@@ -24,7 +24,8 @@
  *   it can start (`ValidDefinition.pending`). A copy of a relationship in a
  *   state that its handler declares with `settles: { copy }` reserves the
  *   same (`ValidDefinition.pendingCopies`);
- * - a provisional scope: the entry that records its confirmation;
+ * - a provisional scope: the entry that records its confirmation, and
+ *   for whole-scope capacity the creator-result entry it retains;
  * - an operation that is not settled (row 5; authority note, section 5.8):
  *   2 entries for each attempt that has no outcome or may still be opened,
  *   its first outcome and its late answer, and 1 for each attempt whose
@@ -61,23 +62,22 @@
  *   its request draws on its holder;
  * - with each pending request, what the marks of one clause can start.
  *
- * What is not counted is in the deltas note. The count is of entries, never
- * of bytes. For an operation it is partial: the other four dimensions of
- * section 17.1, and so the records that an outcome derives, are request
- * `cc570904`'s. No adopted effect states a closure at the opening, so the
- * owner's code declares it, and the count asks the owners' rules (I3
- * deltas, entries EB6 and EC2).
+ * All five dimensions use this traversal. Entry-only callers project its
+ * entry component. An operation's owner supplies its producer closure;
+ * an opted-in scope refuses a reachable producer without a finite quote.
+ * The owner's code declares that closure because no adopted effect states
+ * it at the opening (I3 deltas, entries EB6 and EC2).
  */
 
-import type { Bounds, Input } from "@generalbusiness/dap-contract";
+import type { Bounds, Input, ScopeBoundName } from "@generalbusiness/dap-contract";
 import { isPlatformDefinition } from "@generalbusiness/artroom-bytes";
-import { holding } from "./held.ts";
-import { closureOf, type Owners } from "./ledger.ts";
+import { AmountError, amountMath, holding, naturalAmount, NOTHING, subtract, sum, times, type Amount } from "./held.ts";
+import { closureOf, outcomeReservation, ownerReservations, type Owners } from "./ledger.ts";
 import { markerOwed } from "./markers.ts";
 import type { StateView } from "./state.ts";
 import type { ValidDefinition } from "./validate/index.ts";
 import { own } from "./values.ts";
-import { standingEntries, StandingError } from "./standing.ts";
+import { standingReserved, StandingError } from "./standing.ts";
 
 /**
  * Section 17.2a, "What a holder reserves, in full": the entries that the
@@ -86,10 +86,17 @@ import { standingEntries, StandingError } from "./standing.ts";
  * open, and not every item that ever held one.
  */
 export function heldEntries(view: StateView, definition: ValidDefinition): number {
+  return heldReserved(view, definition).entries;
+}
+
+/** The holder's existing Amount terms, without projecting away the other dimensions. */
+export function heldReserved(view: StateView, definition: ValidDefinition): Amount {
+  const checked = definition.declared.capacity?.name === "whole-scope";
+  const { sum } = amountMath(checked);
   const r = definition.reserving;
-  if (!r) return 0;
+  if (!r) return NOTHING;
   const one = Object.fromEntries(Object.entries(r.kinds).filter(([, kind]) => kind.held).map(([name, kind]) => [name, kind.whole]));
-  return view.holders().reduce((entries, holder) => entries + holding(holder.held, { one, req: r.req, itm: r.itm, dec: r.dec }).entries, 0);
+  return view.holders().reduce((amount, holder) => sum(amount, holding(holder.held, { one, req: r.req, itm: r.itm, dec: r.dec, checked })), NOTHING);
 }
 
 /**
@@ -99,57 +106,107 @@ export function heldEntries(view: StateView, definition: ValidDefinition): numbe
  * outcome is judged, so none has a closure.
  */
 export function owed(view: StateView, definition: ValidDefinition, head: Input, owners?: Owners | null): number {
+  return reserved(view, definition, head, owners).entries;
+}
+
+/**
+ * The one pending-work traversal. Legacy scopes retain their entry terms;
+ * opted-in scopes keep the Amount components already declared by each task.
+ * Complete producer terms and admission are separate from this projection.
+ */
+export function reserved(view: StateView, definition: ValidDefinition, head: Input, owners?: Owners | null): Amount {
   const scope = view.scope();
-  if (!scope) return 0;
+  if (!scope) return NOTHING;
+  const whole = definition.declared.capacity?.name === "whole-scope";
+  const entriesOnly = (entries: number): Amount => ({ ...NOTHING, entries });
   const natural = (n: number): boolean => Number.isSafeInteger(n) && n >= 0 && !Object.is(n, -0);
   // C1 admits no invalid operand, even where multiplication by zero or a
   // later contribution would otherwise conceal it. Old definitions keep
   // their original arithmetic and read behavior.
   const checked = (n: number): number => {
+    if (whole && !natural(n)) throw new AmountError("reserved operand is invalid");
     if (definition.standing && !natural(n)) throw new StandingError("reserved entry operand is invalid");
     return n;
   };
+  const checkedAmount = (amount: Amount): Amount => whole ? naturalAmount(amount) : amount;
+  const scale = (n: number, amount: Amount): Amount => checkedAmount(times(checked(n), checkedAmount(amount)));
+  const entry = (n: number): Amount => whole ? scale(n, definition.pendingWorkAmounts.entry) : entriesOnly(n);
   const product = (...factors: number[]): number => checked(factors.reduce((n, factor) => checked(n * checked(factor)), 1));
-  let entries = scope.status === "provisional" ? 1 : 0;        // the confirmation
-  const add = (n: number): void => { entries = checked(entries + checked(n)); };
+  let amount = entry(scope.status === "provisional" ? 1 : 0);        // the confirmation
+  const add = (more: Amount): void => {
+    checkedAmount(more);
+    const entries = checked(amount.entries + checked(more.entries));
+    amount = checkedAmount({ ...sum(amount, more), entries });
+  };
+  // Confirmation records its creator's result as a retained foreign
+  // source, in addition to its own journal entry. Both writers are bounded
+  // by the accepted entry maximum; the source adds bytes, not an entry.
+  if (whole && scope.status === "provisional") add({ ...NOTHING, bytes: definition.pendingWorkAmounts.entry.bytes });
   for (const [type, states] of Object.entries(definition.deadlines)) {
-    for (const [state, chain] of Object.entries(states)) add(product(chain, view.count(type, state)));
+    for (const [state, chain] of Object.entries(states)) {
+      if (whole) { naturalAmount(definition.pendingWorkAmounts.deadlines[type]![state]!); continue; }
+      const count = checked(view.count(type, state));
+      add(entry(product(chain, count)));
+    }
   }
   // Section 17.2, rows 3 and 4: an item, and a relationship copy, that awaits its settlement.
   for (const [type, states] of Object.entries(definition.pending)) {
-    for (const [state, reserved] of Object.entries(states)) add(product(reserved, view.count(type, state)));
+    for (const [state, pending] of Object.entries(states)) {
+      if (whole) { naturalAmount(definition.pendingWorkAmounts.pending[type]![state]!); continue; }
+      const count = checked(view.count(type, state));
+      add(entry(product(pending, count)));
+    }
   }
   // Revision 22, "A marker duty": an item of a type that some form settles by a mark reserves its state task and each marker task
   // that is pending, by its own marks. A definition with no such form has none, and counts as it did.
-  add(markerOwed(view, definition));
-  for (const copy of definition.pendingCopies) add(product(copy.entries, view.copies(copy.name, copy.kind, copy.states)));
+  if (whole) {
+    // Item duties retain their admitted room across ordinary changes of
+    // state or marker. The fold alone releases an identified settlement.
+    for (const duty of view.itemDuties()) add(duty.amount);
+  } else add(entry(markerOwed(view, definition)));
+  for (const [index, copy] of definition.pendingCopies.entries()) {
+    const count = checked(view.copies(copy.name, copy.kind, copy.states));
+    add(whole ? scale(count, definition.pendingWorkAmounts.pendingCopies[index]!.amount) : entry(product(copy.entries, count)));
+  }
   const open = view.outstanding();
   // Section 17.2, "What a mark may start": a clause may hold an effect mark, and the request reserves what that mark may start.
   const clause = definition.clauseEntries + (definition.reserving?.clause.entries ?? 0);
-  add(product(checked(2 + checked(clause)), open.requests));
-  add(product(checked(1 + clause), open.unavailable));
+  if (whole) {
+    for (const request of view.pendingRequests()) {
+      if (!request.reservation) throw new AmountError(`request ${request.seq}.${request.n} has no originating reservation`);
+      const remaining = request.diagnosis === null ? request.reservation : request.diagnosis.finding === "delivery-unavailable" ? subtract(request.reservation, entry(1)) : null;
+      if (remaining === null) throw new AmountError(`request ${request.seq}.${request.n} has an invalid pending diagnosis`);
+      add(remaining);
+    }
+  } else {
+    add(entry(product(checked(2 + checked(clause)), open.requests)));
+    add(entry(product(checked(1 + clause), open.unavailable)));
+  }
   // Section 17.2, row 5: each outcome entry that an operation may still write, and with it the closure of one outcome entry: what
   // the data of its kind states, or what its owner declares.
   for (const { owner, kind, entries: outcomes, unsent } of open.outcomes) {
-    add(product(outcomes, checked(1 + checked(closureOf(owners, owner, kind, definition)))));
+    const counted = isPlatformDefinition(owner) ? own(definition.reserving?.kinds, kind) : undefined;
+    add(whole ? scale(outcomes, outcomeReservation(owners, owner, kind, definition)) : entry(product(outcomes, checked(1 + checked(closureOf(owners, owner, kind, definition))))));
     // Section 17.2, "A request that an outcome sends": the request of the kind's `send`, with its 2 entries and what one clause can
     // start. Under `holds` the request is one of its account's `requests`, and the holder reserves it.
-    const counted = isPlatformDefinition(owner) ? own(definition.reserving?.kinds, kind) : undefined;
-    if (counted?.request && !counted.held) add(product(counted.once ? unsent : outcomes, counted.request.entries));
+    if (counted?.request && !counted.held) {
+      const count = checked(counted.once ? unsent : outcomes);
+      add(whole ? scale(count, counted.request) : entry(product(count, counted.request.entries)));
+    }
   }
   // Section 17.2a: what each holder still holds.
-  add(heldEntries(view, definition));
+  add(whole ? heldReserved(view, definition) : entry(heldEntries(view, definition)));
   // Section 17.2, row 6: a capability record that awaits its messages, and what its capability declares for it. The owners' code
   // counts its own records (`Owners.reserves`). With no code no such record is made, so none reserves.
-  add(owners?.reserves?.(view, definition) ?? 0);
+  add(whole ? ownerReservations(owners, view, definition) : entriesOnly(owners?.reserves?.(view, definition) ?? 0));
   if (definition.standing) {
-    add(standingEntries(view, definition));
-    if (!Number.isSafeInteger(entries) || entries < 0 || Object.is(entries, -0)) throw new StandingError("aggregate reserved entries are invalid");
+    add(standingReserved(view, definition));
+    if (!Number.isSafeInteger(amount.entries) || amount.entries < 0 || Object.is(amount.entries, -0)) throw new StandingError("aggregate reserved entries are invalid");
   }
   // The closing checkpoint is reserved unless the history already ends on a checkpoint with nothing pending.
-  const total = entries === 0 && head.type === "checkpoint" ? 0 : entries + 1;
-  if (definition.standing && !Number.isSafeInteger(total)) throw new StandingError("aggregate reserved entries overflow");
-  return total;
+  if (amount.entries === 0 && head.type === "checkpoint") return amount;
+  add(entry(1));
+  return amount;
 }
 
 /**
@@ -170,14 +227,45 @@ export function owed(view: StateView, definition: ValidDefinition, head: Input, 
  * nothing else pending is the closing checkpoint: after it nothing is
  * reserved, and it fits because its entry was. The next entry that is not a
  * checkpoint is asked with the reservation counted again.
+ *
+ * The opt-in cohort checks every proposed head, including settlements.
+ * A settlement spends the room already reserved; it gets no ceiling exemption.
  */
 export function fits(view: StateView, definition: ValidDefinition, bounds: Pick<Bounds, "scopeEntries">, input: Input, settled = false, owners?: Owners | null): boolean {
   const scope = view.scope();
   if (!scope) return true;
+  if (definition.declared.capacity?.name === "whole-scope") {
+    // A settlement spends its existing room; it cannot bypass the ceiling.
+    return amountMath(true).sum({ ...NOTHING, entries: scope.head.seq }, { ...NOTHING, entries: 1 }, reserved(view, definition, input, owners)).entries <= bounds.scopeEntries;
+  }
   const settles = settled || input.type === "timed" || input.type === "diagnosis" || input.type === "outcome"
     || (input.type === "delivery" && (input.message.class === "control" || ("clause" in input && input.clause !== "conflict")));
   // Validate C1 state/arithmetic even when an owed settlement is exempt
   // from capacity admission. Old definitions keep their existing shortcut.
-  const reserved = definition.standing ? owed(view, definition, input, owners) : null;
-  return settles || scope.head.seq + 1 + (reserved ?? owed(view, definition, input, owners)) <= bounds.scopeEntries;
+  const standing = definition.standing ? owed(view, definition, input, owners) : null;
+  return settles || scope.head.seq + 1 + (standing ?? owed(view, definition, input, owners)) <= bounds.scopeEntries;
+}
+
+/** Null bytes explicitly omit that historical check; callers must report
+ * its incomplete span. All other dimensions and operands remain checked. */
+export type CapacityUse = Omit<Amount, "bytes"> & { bytes: number | null };
+
+/** Compare actual use and the one pending-work Amount. Equality still fits. */
+export function capacityFull(used: CapacityUse, pending: Amount, bounds: Pick<Bounds, ScopeBoundName>): ScopeBoundName | null {
+  naturalAmount(pending);
+  // This is a projection of the known comparison, never a zero size for a
+  // producer. The byte dimension is explicitly excluded below when unknown.
+  const total = amountMath(true).sum({ ...used, bytes: used.bytes ?? 0 }, pending);
+  const dimensions = { scopeEntries: "entries", scopeBytes: "bytes", scopeItems: "items", scopeRecords: "records", scopeRequests: "requests" } as const;
+  // Check the whole configuration before selecting a refusal; no invalid
+  // later ceiling can be concealed by an earlier exhausted one.
+  for (const bound of Object.keys(dimensions) as ScopeBoundName[]) {
+    const n = bounds[bound];
+    if (!Number.isSafeInteger(n) || n < 0 || Object.is(n, -0)) throw new AmountError(`capacity ${bound} ceiling is invalid`);
+  }
+  for (const bound of Object.keys(dimensions) as ScopeBoundName[]) {
+    if (bound === "scopeBytes" && used.bytes === null) continue;
+    if (total[dimensions[bound]] > bounds[bound]) return bound;
+  }
+  return null;
 }
