@@ -2,11 +2,11 @@
  * private local R2, generic Room route and journal projection. Git/repository
  * host, clock, scheduler and setup inspector are explicit fixtures. No live
  * provider, deployed host, arbitrary package containment or browser runs. */
-import { env } from "cloudflare:test";
+import { env, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { canonicalize, isSeed, scopeIdOf, textDigest } from "@generalbusiness/artroom-bytes";
 import { encodeApplicationProjectionQuery, readApplicationProjectionReply } from "@generalbusiness/artroom-bytes/application-v2";
-import type { ApplicationProjectionQuery, ScopeRef } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type ApplicationProjectionQuery, type ScopeRef } from "@generalbusiness/dap-contract";
 import { DECLARED_APPLICATION_COHORT as C } from "@generalbusiness/dap-platform";
 import { requestSession, sessionRequest } from "@generalbusiness/artroom-client";
 import nativeWorker from "../../../apps/room/worker.ts";
@@ -17,10 +17,20 @@ import { applicationHttpPeer } from "./support/application-http-peer.ts";
 import { sessionRoom } from "./support/session-room.ts";
 import { dispatchFixture, driveFixture, effectFixture } from "./support/native-fixture-lifetime.ts";
 import { rita, routed } from "./repository.ts";
-import { soon } from "./net.ts";
+import { soon, net } from "./net.ts";
+import { Scope } from "../src/core.ts";
+import { production } from "../src/ports.ts";
+import { ReadPreparation } from "../src/read-preparation.ts";
+import { SessionPreparation } from "../src/session-preparation.ts";
+import { PreparationFlights } from "../src/preparation-flight.ts";
+import { sessionReferencesIn } from "../src/namespace.ts";
+import { ApplicationProjections } from "../src/applications/projection.ts";
+import { applicationDeclarationsIn } from "../src/applications/projection-source.ts";
+import { SqliteStore, type SqlValue } from "../src/sqlite.ts";
+import type { Sessions } from "../src/sessions.ts";
 
 test("native installed projection reads exact journal state and survives R2 deletion and eviction", async () => {
-  const { life, R, D, children } = await sessionRoom(C.register), [M, A, G] = children;
+  const room = await sessionRoom(C.register), { life, R, D, children } = room, [M, A, G] = children;
   if (!M || !A || !G) throw Error("The native cohort needs its three siblings.");
   const packet = await applicationCounterPacket2("state = 'open'", "native"), f = await applicationResolverFixture("sha1", undefined, {}, undefined, packet);
   const peer = applicationHttpPeer(f), bindings = { SCOPES: env.PLATFORM, APPLICATION_CONTENT: env.APPLICATION_CONTENT, APPLICATION_TRUST: JSON.stringify(f.trust) };
@@ -70,6 +80,29 @@ test("native installed projection reads exact journal state and survives R2 dele
     const ads = peer.ads(); await env.APPLICATION_CONTENT.delete(f.key);
     await life.wait(() => A.restart()); await life.wait(() => app.restart());
     expect((await read()).raw).toBe(first.raw); expect(peer.ads()).toBe(ads);
+    // Real native storage and production read owner. Only the post-body
+    // session-configuration loss is scripted; it changes no roster or key.
+    const finalAuthority = await life.wait(() => runInDurableObject(app.object, async (_instance, state) => {
+      const results = [];
+      for (const fault of [false, true]) {
+        const raw = { exec: (sql: string, ...args: SqlValue[]) => state.storage.sql.exec(sql, ...args), transaction: <T>(work: () => T) => state.storage.transactionSync(work) };
+        const store = new SqliteStore(raw), core = new Scope(app.name, store, production(), PROPOSED_BOUNDS);
+        let sessions: Sessions | null = room.sessions, bodies = 0;
+        const sql = { exec(text: string, ...args: SqlValue[]) {
+          const cursor = raw.exec(text, ...args);
+          if (text.startsWith("SELECT record FROM item")) { bodies++; if (fault) sessions = null; }
+          return cursor;
+        } };
+        const preparation = new ReadPreparation(sql, { policy: () => "projection-authority-test-v1", declared: bytes => core.validate(bytes), platform: named => core.platform(named) });
+        const sessionPreparation = new SessionPreparation(preparation, () => sessions, net.clock, sessionReferencesIn(env.PLATFORM));
+        const owner = new ApplicationProjections({ name: app.name, sql, sessions: () => sessions, clock: net.clock, sessionPreparation,
+          flights: new PreparationFlights(), source: applicationDeclarationsIn(env.PLATFORM) });
+        results.push({ fault, result: await owner.read(encodeApplicationProjectionQuery(query), session.session.reader()), bodies });
+      }
+      return results;
+    }));
+    expect(finalAuthority.map(row => row.result.ok ? "ok" : row.result.reason)).toEqual(["ok", "sessions-unavailable"]);
+    expect(finalAuthority.map(row => row.bodies)).toEqual([1, 1]);
     const board = first.value.value.sources["board"]![0]!;
     await life.wait(() => app.did(rita, "reset", { on: board.id, expected: { on: board.revision }, fields: { generation: 1 } }));
     const updated = await read(); expect(updated.status, updated.raw).toBe(200); if (!updated.value?.ok) return;

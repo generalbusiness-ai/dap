@@ -4,10 +4,9 @@ Preparation under Source child `823817ed` and promise `63dc4e4e`, within
 M2a `b6aaa3ce` and parent promise `9ebca0a5`. The preparation began at
 M1's frozen candidate `432dab40` and now incorporates audited Main
 `29ccc2fd`, including the separately approved N1 link correction. M1's
-three code children are landed and audited. Parent reconciliation
-`0345dc57` remains with planner; provider error 10042 still prevents the
-required hosting deployment until the operator enables object storage.
-Planner has now reconciled M1 as delivered through supersession `88029e7f`
+three code children are landed and audited. Provider error 10042 still
+prevents the required hosting deployment until the operator enables object
+storage. Planner reconciled M1 as delivered through supersession `88029e7f`
 and report `ed91bc62`; its published N1 report is `e96099d5`. Both requested
 reports were read and ratified. This head still claims no hosted acceptance
 or M2a delivery.
@@ -204,6 +203,16 @@ typechecks pass. This is focused compatibility evidence, not the final gate.
 The native read and single-scope install now have the focused witnesses
 above. Generic rendering, current control authority, shared MCP/kit use
 and the maintained complete packages remain implementation work.
+
+The real SQLite witness now also checks final read authority. With the same
+native rows and Membership-issued token, the normal read succeeds; losing
+session configuration immediately after the item body read refuses with
+`sessions-unavailable`. Each path reads that body once. The focused witness
+passes (`64416`, terminal `d68217`, exit 0). Bypassing the last authority
+guard makes the intended refusal fail (`14838`, terminal `64bb45`, source
+restored). Logs are `/tmp/artroom-m2a-projection-final-authority-20261018.log`
+and `/tmp/artroom-m2a-projection-final-authority-control-20261018.log`.
+The loss is a local configuration fixture; no actual roster or key changes.
 
 The following acceptance remains owed: shared host/MCP/kit projection bytes
 and revision, presentation declarations and generic kinds, model-facing
