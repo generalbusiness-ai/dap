@@ -1,6 +1,10 @@
 /** Real native Counter scenarios; only the final test's verifier reports are
  * deliberately faulted, to show the scenario cannot hide failed replay. */
-import { readFile } from "node:fs/promises";
+import { mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
+import { spawnSync } from "node:child_process";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { expect, test, vi } from "vitest";
 import type { DeclaredDefinition, FactRef, FieldValue, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest } from "@generalbusiness/artroom-bytes";
@@ -45,6 +49,36 @@ function scenario(): any {
   ] };
 }
 const refused = (work: () => Promise<unknown>): Promise<unknown> => work().then(() => "accepted", error => error);
+
+test("the actual check bin refuses vacuous scenarios and preserves explicit answer and state witnesses", async () => {
+  const root = await realpath(await mkdtemp(join(tmpdir(), "dap-scenario-check-")));
+  const packed = await packet(), bin = fileURLToPath(new URL("../bin/dap.js", import.meta.url));
+  try {
+    await writeFile(join(root, "definition.json"), packed.package.semantic.definitions[0]!.bytes);
+    await writeFile(join(root, "index.html"), "<!doctype html><title>TEST scenario fixture</title>");
+    await writeFile(join(root, "dap.application.json"), JSON.stringify({ v: 1, name: "test.example.scenarios", version: "0.1.0", entry: "definition.json", definitions: ["definition.json"],
+      host: { execution: "recorded-do", profiles: ["restricted@1"] }, capabilities: [], projections: {}, roles: {}, predecessor: null,
+      presentation: { entry: "index.html", assets: [{ path: "index.html", file: "index.html", mediaType: "text/html" }], descriptions: {} }, scenarios: ["scenario.json"] }));
+    const advance = { advance: "2026-10-18T12:01:00Z" }, sign = { sign: { actor: "controller", kind: "initialize" }, save: "unsent" };
+    const assertion = { assert: { item: 0, values: { target: 10 } } };
+    for (const [steps, meaningful] of [
+      [[advance], false], [[sign], false],
+      [[scenario().steps[0]], true], [[assertion], true], [[advance, assertion], true], [[sign, assertion], true],
+    ] as const) {
+      const input = scenario(); input.steps = steps;
+      await writeFile(join(root, "scenario.json"), JSON.stringify(input));
+      const run = spawnSync(process.execPath, [bin, "check", root], { cwd: tmpdir(), encoding: "utf8", timeout: 30_000, env: { ...process.env, DAP_HOME: "", ARTROOM_HOME: "" } });
+      expect(run.error).toBeUndefined();
+      if (meaningful) {
+        expect([run.status, run.stderr]).toEqual([0, ""]);
+        expect(run.stdout).toContain("native replay consistent");
+      } else {
+        expect([run.status, run.stdout]).toEqual([1, ""]);
+        expect(run.stderr).toContain("Each scenario needs an expected act or retry answer, or a nonempty state assertion.");
+      }
+    }
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
 
 test("data scenarios judge explicit grants, reuse saved signatures, assert native state and require replay", async () => {
   const input = scenario(); input.actors.agent.principal = "controller"; input.actors.outsider.principal = "controller";
