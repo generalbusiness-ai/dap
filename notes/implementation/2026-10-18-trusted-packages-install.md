@@ -68,6 +68,33 @@ rewrite: the copied relative links already resolved correctly. The corrected
 read-only audit accepts and verifies those targets. Only cloned caches were
 removed; the frozen developer view stayed untouched.
 
+## Private content checkpoint
+
+`packages/scope/src/applications/content.ts` holds admitted canonical package
+bytes in private R2, keyed by exact release id. It exposes no public route,
+listing, delete or arbitrary-key method. Trust, signature and native host
+checks precede any write. A conditional create refuses replacement; both a
+successful write and a competing write require exact checked readback.
+A lost successful write reply stays unknown; a later get or retry finds the
+same bytes without another write. Corrupt stored bytes refuse without repair.
+Metadata and streamed payload allowances precede package parsing.
+
+Four focused cases pass (`6eb8e9` / session `99813` to `11236e`, exit 0),
+with an actual local R2 binding for create races, independent-store readback,
+unknown-reply recovery, corruption and refusal without a grant. The race
+schedules two actual misses before conditional puts; exactly one write wins.
+A separate labelled metadata/body stand-in proves an oversized body is
+cancelled before reading. No provider bucket is used. Scope source/test
+typechecks pass; the only new binding so far is in the test configuration.
+
+R2 replaces the initial SQLite store direction because the package's 16 MiB
+wire allowance exceeds the [documented 2 MB SQL row limit](https://developers.cloudflare.com/durable-objects/platform/limits/).
+[The R2 Workers API](https://developers.cloudflare.com/r2/api/workers/workers-api-reference/)
+supports conditional puts and returns null on a failed condition. This
+implementation choice does not change native scope persistence. A production
+private bucket/binding and generic route remain part of the reviewed install
+head before planner provisioning/deployment.
+
 ## Host fetch decision pending
 
 Request `9640b02a` asks the planner to settle one concrete transport gap.
@@ -81,10 +108,9 @@ binding at the host; no such substitution is made.
 ## Remaining implementation
 
 The host needs a private content store keyed by content id and a route bound
-to room, installation and exact presentation. The planned store uses a
-host-owned SQLite Durable Object, separate from application scope state.
-Only admitted immutable bytes enter it. The binding, class and route will be
-part of the reviewed install head, before planner deployment.
+to room, installation and exact presentation. The private R2 store above is separate from application scope state.
+Only admitted immutable bytes enter it. The production binding and route
+remain part of the reviewed install head, before planner deployment.
 
 A new immutable rules version must record one admin-signed install and its
 selected default roles. Existing generic native operations and checked

@@ -2,6 +2,8 @@
 declare namespace Cloudflare {
   interface Env {
     SCOPES: DurableObjectNamespace;
+    /** Local emulator only; no provider bucket is used by tests. */
+    APPLICATION_CONTENT: R2Bucket;
     METRIC_CONTROL: DurableObjectNamespace;
     AS_DEPLOYED: DurableObjectNamespace;
     NET: DurableObjectNamespace;

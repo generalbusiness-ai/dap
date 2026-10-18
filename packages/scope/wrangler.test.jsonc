@@ -18,6 +18,7 @@
       { "name": "AGENTS", "class_name": "PlatformMcpAgent" }
     ]
   },
+  "r2_buckets": [{ "binding": "APPLICATION_CONTENT", "bucket_name": "application-content-test" }],
   "services": [{ "binding": "API", "service": "artroom-scope-test", "entrypoint": "NetService" }],
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["TestScope", "MetricControlScope", "ScopeObject", "NetScope", "PlatformScope", "PlatformMcpRegistry", "PlatformMcpAgent"] }]
 }
