@@ -302,3 +302,58 @@ These direct calls do not prove the runtime's restart driver. Scope source
 and test typechecks pass. The test-only HTTP peer's TextDecoder now explicitly
 sets both narrow constructor options; this fixes its test typecheck without
 changing transport behavior. No complete gate or Source review is claimed.
+
+
+## Checked role delivery preparation
+
+Draft opt-in cohort register12/directory11/membership7/rules5 adds a checked
+Rules-to-Directory-to-Membership route. Default additions are a canonical,
+bounded record of only the selected roles. Directory accepts only its
+recorded full Rules reference and forwards to its recorded Membership.
+It sends the actual Membership and destination references back as context.
+Rules locks those references in its versioned guard after the first context;
+they cannot be fixed schema slots because Native fixed slots are set only
+in the entry that opens their item.
+
+Membership unions the selected defaults with its current role lists. It
+keeps all other actions and roles. A full list produces a recorded refused
+answer without changing any list. Its native answer is bound to the original
+job, release, semantics and additions. Rules waits if that answer arrives
+before Directory's context, then accepts only the exact full Membership
+reference. Refolding agrees for both scopes. The new cohort is registered
+for explicit testing but no fresh host room setup selects it yet. Existing
+cohorts and NEWEST retain their prior data.
+
+Five focused Native in-memory cases pass (`8ae0b9`, exit 0), including the
+real Register/Directory/sibling creation and confirmation judges, early
+Membership answer, selected-role union and full-list refusal. Repository
+creation and member authority are labelled fixtures; this is not a storage,
+restart, live provider or full replay-verifier witness. Platform source and
+test typechecks pass. Earlier runs exposed the outgoing request bound of
+zero, a guaranteed-send declaration, and a fixed-slot update; the corrected
+forms pass whole validation and the actual message chain.
+
+Planner decision `716ace64` settles refused installs as final: unknown work
+continues under the original signed act, but a definitive refusal does not
+retry. Changed conditions require a new ordinary admin act. The draft now
+marks refused final. Follow-up `00f747ea` asks to reconcile zero effects on
+all refusals with non-atomic later steps, and the crash-before-first-cache-
+write continuation; neither behavior is silently invented.
+
+Child creation remains unfinished. The real Core bounds values beside an
+act by its declared value places; the direct in-memory judge is more general.
+The current original proof reads additional definition values without giving
+each a place, so it must be corrected before any real-runtime acceptance
+claim. The planned native handoff uses existing detached text inputs, at
+most 17 definitions of at most 64 KiB each, verified against the signed
+semantic proof. Directory must retain those exact bytes before it creates
+an ordinary child. No native judge or replay primitive is to change. This
+is an implementation plan, not a completed custody witness. All current
+preparation remains unsubmitted, with no full gate or Source review.
+
+The developer publication is confirmed by planner report `864b5ae2`, read
+and ratified (`edd4a509`). Main `bfa02edd` and workroom `4077145f` were pushed
+and verified equal to their remote refs. G0's parent now closes by planner
+supersession `57185c8a` without a duplicate landing; M1 stays open until its
+install child has landed and been audited. Queued M2a request `b6aaa3ce`
+waits for the M1 install delivery.

@@ -162,7 +162,7 @@ export const FIRST_ACTIONS: { readonly [role in Role]: readonly string[] } = {
 };
 
 /** The first lists of each version. */
-export const FIRST_ACTIONS_OF: Readonly<Record<string, typeof FIRST_ACTIONS>> = { [MEMBERSHIP_1]: FIRST_ACTIONS_1, [MEMBERSHIP]: FIRST_ACTIONS, "platform:membership@4": { ...FIRST_ACTIONS, admin: [...FIRST_ACTIONS.admin, "application.establish"] }, "platform:membership@5": { ...FIRST_ACTIONS, admin: [...FIRST_ACTIONS.admin, "application.establish"] }, "platform:membership@6": { ...FIRST_ACTIONS, admin: [...FIRST_ACTIONS.admin, "application.establish"] } };
+export const FIRST_ACTIONS_OF: Readonly<Record<string, typeof FIRST_ACTIONS>> = { [MEMBERSHIP_1]: FIRST_ACTIONS_1, [MEMBERSHIP]: FIRST_ACTIONS, "platform:membership@4": { ...FIRST_ACTIONS, admin: [...FIRST_ACTIONS.admin, "application.establish"] }, "platform:membership@5": { ...FIRST_ACTIONS, admin: [...FIRST_ACTIONS.admin, "application.establish"] }, "platform:membership@6": { ...FIRST_ACTIONS, admin: [...FIRST_ACTIONS.admin, "application.establish"] }, "platform:membership@7": { ...FIRST_ACTIONS, admin: [...FIRST_ACTIONS.admin, "application.install"] } };
 
 /**
  * The form of a handle (section 3.1; section 12.1.8, rows q and r): `@`,

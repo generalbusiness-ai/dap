@@ -2,14 +2,16 @@
  * authority are fixtures; admission answers below are scripted, with no Git,
  * storage, retry driver, or hosted install running in this witness. */
 import { expect, test } from "vitest";
-import { canonicalize, definitionDigest } from "@generalbusiness/artroom-bytes";
+import { canonicalize, definitionDigest, isRecord } from "@generalbusiness/artroom-bytes";
 import { packApplication } from "@generalbusiness/artroom-client/application";
 import { secretSigner } from "@generalbusiness/artroom-client";
-import { clockOf, judgeOutcome } from "@generalbusiness/dap-derive";
+import { clockOf, judgeOutcome, runnable, validateDefinition } from "@generalbusiness/dap-derive";
 import { d, keys, membership } from "@generalbusiness/dap-derive/testing";
 import { countingCommitments } from "../../../apps/counter/commitments.ts";
-import { platform } from "../src/index.ts";
+import { platform, TRUSTED_APPLICATION_COHORT, SIBLINGS_OF, DIRECTORY_OF } from "../src/index.ts";
 import { APPLICATION_INSTALL_RULES } from "../src/application-install.ts";
+import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
+import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { Rulebook } from "./support-rules.ts";
 
 async function fixture() {
@@ -50,7 +52,8 @@ test("install admission retains signed semantics, requires authority and exact a
   expect(outcome(seq, "confirmed", answer, "own-answer").result).not.toBe("write");
   expect(outcome(seq, "confirmed", { ...answer, release: d("d") }).result).not.toBe("write");
   expect(r.item(seq).values["phase"]).toBe("admission");
-  expect(outcome(seq, "confirmed", answer).result).toBe("write");
+  const accepted = outcome(seq, "confirmed", answer);
+  expect(accepted.result, JSON.stringify(accepted)).toBe("write");
   expect(r.item(seq)).toMatchObject({ state: "pending", values: { phase: "grants" } });
   expect(r.state.page("definition", ["active"], null, 16).items).toMatchObject([{ values: { digest: packet.package.semantic.entry }, parties: { activator: keys.rita.member } }]);
   expect(r.act(keys.rita, "install-application", { fields: { ...fields, roles: [] } as never }, { values }).result).toBe("write");
@@ -76,4 +79,56 @@ test("install rejects altered proof and records a bounded host refusal", async (
   expect(r.item(seq)).toMatchObject({ state: "refused", values: { reason: "unsupported-object-format" } });
   expect(r.last.sends).toEqual([]);
   expect(r.replay().snapshot()).toEqual(r.state.snapshot());
+});
+
+
+// The new route is opt-in and every selected native version must validate as
+// a whole; no list of version names is evidence that a factory can run them.
+test("trusted install cohort validates whole with the selected embedded rules", () => {
+  const C = TRUSTED_APPLICATION_COHORT;
+  expect(DIRECTORY_OF[C.register]).toBe(C.directory);
+  expect(SIBLINGS_OF[C.directory]).toEqual({ membership: C.membership, rules: C.rules, destination: C.destination });
+  for (const pin of Object.values(C)) {
+    const supplied = platform(pin)!;
+    const checked = validateDefinition(supplied.data, PROPOSED_BOUNDS, RULE_PROFILES, { platform: true });
+    expect(checked.ok ? [] : checked.problems, pin).toEqual([]);
+    if (checked.ok) expect(runnable(checked.definition, supplied.rules), pin).toBe(true);
+  }
+});
+
+// Invariant: the original selected defaults reach this room's actual native
+// Membership, preserve its existing actions, and only its full-ref answer
+// advances the install. A reply arriving before Directory context waits.
+test.each([false, true])("checked native grant route preserves existing actions and waits for exact room context (full=%s)", async full => {
+  const { installGraph } = await import("./support-application-install.ts");
+  const { A, D, M, send } = installGraph();
+  const { packet, values } = await fixture();
+  const fields = { uri: `git+https://git.example/test.git/@${"a".repeat(40)}/application.dap.json`, release: packet.ids.release, semantic: packet.ids.semantic, roles: ["member"], values: "{}" };
+  const installer = { ...keys.rita, member: { membership: M.at, member: "@rita" as const } };
+  if (full) expect(M.act(installer, "set-actions", { on: 0, expected: { on: M.item(0).revision }, fields: { role: "member", actions: Array.from({ length: 64 }, (_, index) => `test.action${index}`) } }, { membership: M.at }).result).toBe("write");
+  expect(A.act(installer, "install-application", { fields }, { values, membership: M.at }).result).toBe("write");
+  const job = A.head.seq;
+  const accepted = A.outcome(`${job}:0`, { uri: fields.uri, ...packet.ids, publisher: packet.package.release.manifest.publisher, policy: d("c") });
+  send(D, A, accepted);
+  const forward = D.head.seq;
+  const before = [...M.item(0).values["memberActions"] as string[]];
+  const grantSend = D.last.sends.find(send => send.message.class === "request" && isRecord(send.message.body) && send.message.body["message"] === "application-grants")!;
+  const contextSend = D.last.sends.find(send => send.message.class === "request" && isRecord(send.message.body) && send.message.body["message"] === "application-context")!;
+  send(M, D, forward, grantSend.n);
+  const answered = M.head.seq;
+  const answerSend = M.last.sends.find(send => send.message.class === "request")!;
+  expect(send(A, M, answered, answerSend.n, false)).toMatchObject({ result: "unavailable" });
+  expect(A.item(job).values["phase"]).toBe("grants");
+  send(A, D, forward, contextSend.n);
+  send(A, M, answered, answerSend.n);
+  if (full) {
+    expect(A.item(job)).toMatchObject({ state: "refused", values: { reason: "role-actions-full", phase: "grants" } });
+    expect(M.item(0).values["memberActions"]).toEqual(before);
+  } else {
+    expect(A.item(job).values["phase"]).toBe("creation");
+    expect(M.item(0).values["memberActions"]).toEqual([...before, "counting.fulfill"]);
+  }
+  expect(M.item(0).values["adminActions"]).not.toContain("counting.fulfill");
+  expect(A.replay().snapshot()).toEqual(A.state.snapshot());
+  expect(M.replay().snapshot()).toEqual(M.state.snapshot());
 });

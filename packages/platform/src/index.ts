@@ -1,3 +1,6 @@
+import { TRUSTED_APPLICATION_COHORT } from "./application-install-wire.ts";
+import { directory11, directoryRules11, membership7, membershipRules7 } from "./application-install-grants.ts";
+export { TRUSTED_APPLICATION_COHORT } from "./application-install-wire.ts";
 import { APPLICATION_INSTALL_RULES, applicationInstallRulesScope, applicationInstallRules } from "./application-install.ts";
 import { INVITATION_KEY_COHORT, directory9, directoryRules9, membership6, membershipRules6 } from "./invitation-key.ts";
 export { INVITATION_KEY_COHORT, directory9, directoryRules9, membership6, membershipRules6 } from "./invitation-key.ts";
@@ -135,6 +138,9 @@ export interface Platform {
  * cannot run.
  */
 const VERSION_DATA: Readonly<Record<string, Platform>> = {
+  [TRUSTED_APPLICATION_COHORT.register]: { data: register, rules: registerRules },
+  [TRUSTED_APPLICATION_COHORT.directory]: { data: directory11, rules: directoryRules11, membership: directoryMembership, rulesScope: directoryRulesScope },
+  [TRUSTED_APPLICATION_COHORT.membership]: { data: membership7, rules: membershipRules7, observed: (state, asked) => standingOf(state, asked, TRUSTED_APPLICATION_COHORT.membership) },
   [PARTITION_COHORT.register]: { data: register, rules: registerRules },
   [PARTITION_COHORT.directory]: { data: directory10, rules: directoryRules10, membership: directoryMembership, rulesScope: directoryRulesScope },
   [PARTITION_COHORT.partition]: { data: directoryPartition1, rules: directoryPartitionRules1, membership: directoryMembership, rulesScope: directoryRulesScope },
