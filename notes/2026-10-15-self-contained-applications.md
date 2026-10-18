@@ -89,7 +89,7 @@ dap app upgrade <uri>@<id>      # adopt a successor under its declared upgrade p
 | Definitions | One `definition.ts`, `definition.json` and `pin.ts` for each application, kept in agreement by a script | One or more definitions with their declared creation edges, pinned together |
 | Rule expressions | Inside each definition | Unchanged |
 | Read projections | None. Screens read the journal and compute their own state (`examples/lending/shelf.ts`) | One declared projection for each definition |
-| Presentation | `browser/` code compiled into the Worker | Static assets in the package, bound to the projections |
+| Presentation | `browser/` code compiled into the Worker | `ui://` resources in the package, bound to the projections and served by the room's MCP endpoint |
 | Act descriptions | None: "An act definition has no description text" (`docs/cli.md`) | Text for each act and field, read by screens and agents |
 | Scenarios | An ad hoc `test-support.ts` for each application | A standard scenario form that `dap check` runs and replays |
 | Upgrade path | Not possible | A declared predecessor, and optionally a carry-forward rule (section 6, gap 10) |
@@ -143,6 +143,8 @@ still shows which presentation was in use from which position.
 
 ### 5.1 The presentation trust model
 
+See [forge contract 4.7](2026-10-15-unified-forge-design.md#47-application-projections-and-a-trusted-host-shell).
+
 "No server code" doesn't make a package's screens safe. Today the lending
 interface is trusted JavaScript served from the host's own origin
 (`packages/scope/src/lending.ts`). Its content security policy allows
@@ -170,11 +172,27 @@ the host for them:
 - **What the member sees.** The shell shows each act it is asked to sign.
   Whether every act needs a confirmation is a later design choice.
 
-This note records that boundary as a prerequisite. The design of the
-frame, the messages and the confirmations is still owed. Until that
-boundary exists, the host installs only packages its operator trusts
-(milestone M1). The generic interface needs no package code at all, so it
-is safe for any package.
+This note records that boundary as a prerequisite. The
+[MCP Apps extension](https://github.com/modelcontextprotocol/ext-apps/blob/main/specification/2026-01-26/apps.mdx)
+of the Model Context Protocol (`io.modelcontextprotocol/ui`, stable
+2026-01-26) supplies the design of the frame, messages and confirmations.
+A package's screens are `ui://` resources. A host renders each one in a
+sandboxed frame; dap uses a separate registrable domain that holds no
+keys. The frame talks to its host only through JSON-RPC over `postMessage`.
+Tool calls, model context and messages go through the host. The dap host
+keeps the member's keys and signs; the host's approval of a call started
+by a screen supplies the confirmation.
+
+The desktop AI apps used for the MVP test already implement the host
+side. The extension's [reference host](https://github.com/modelcontextprotocol/ext-apps/tree/main/examples/basic-host)
+shows the double-frame sandbox. Dap's own page becomes another host of
+the same screens, using `<id>.inguz.space` as each application's sandbox
+origin. Browser, MCP and agents therefore consume one presentation
+(section 3, principle 6; forge contract 4.7). MVP S2 builds the screens
+and the kit; the dap web host is a later request. Until that host lands,
+M1 still installs only packages its operator trusts. The chat hosts
+already provide their presentation boundary. The generic interface needs
+no package code at all, so it is safe for any package.
 
 ## 6. The gaps
 
