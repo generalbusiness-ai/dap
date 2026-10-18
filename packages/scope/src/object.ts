@@ -1,4 +1,4 @@
-import { applicationRoom, applicationInstallation } from "@generalbusiness/dap-platform";
+import { applicationRoom, applicationInstallation, applicationProjectionDeclaration } from "@generalbusiness/dap-platform";
 /**
  * One scope as one Durable Object (scope contract, section 2.3): the object
  * named by the scope's ID in the one scope namespace, with SQLite storage.
@@ -34,7 +34,7 @@ import { DurableObject } from "cloudflare:workers";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { SessionAnswer } from "@generalbusiness/dap-contract";
 import type { Answer, Beside, Bounds, Cursor, DeclaredDefinition, Digest, OutboxId, Entry, Grant, Input, LogPage, OperationId, PlatformDefinition, Read, RetainedInput, ScopeId, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalize, isRecord, digestBytes, isHead, isScopeId, isScopeRef, retainedReadArgument, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isRecord, digestBytes, isHead, isScopeId, isScopeRef, parseStrict, retainedReadArgument, utf8 } from "@generalbusiness/artroom-bytes";
 import { isEntryOf, timeMs, timeOf, type Item } from "@generalbusiness/dap-derive";
 import { sourceName } from "@generalbusiness/dap-platform";
 import type { ScopeState } from "@generalbusiness/dap-derive";
@@ -487,6 +487,17 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   applicationInstallation(directory: import("@generalbusiness/dap-contract").ScopeRef, item: number) {
     this.#first(); const pinned = this.#scope.pinned();
     return pinned?.definition ? applicationInstallation(this.#store, pinned.named, directory, item) : null;
+  }
+  applicationProjectionDeclaration(directory: import("@generalbusiness/dap-contract").ScopeRef, item: number, name: string) {
+    this.#first(); const pinned = this.#scope.pinned();
+    if (!pinned?.definition) return null;
+    return applicationProjectionDeclaration(this.#store, pinned.named, directory, item, name, (domain, digest, most) => {
+      const size = this.#store.retainedSize("value", digest, domain);
+      if (size === null || !Number.isSafeInteger(size) || size < 0 || size > most) return undefined;
+      const retained = this.#store.retained("value", digest, domain);
+      if (!retained || utf8(retained.bytes).length !== size) return undefined;
+      try { return parseStrict(retained.bytes); } catch { return undefined; }
+    });
   }
   declared(digest: Digest): string | null { this.#first(); return declaredBy(this.#store, digest, this.#scope.pinned()?.named); }
   /** A detached text that a send of this scope's entry at `seq` names, for the scope that received that send (section 6.2). */

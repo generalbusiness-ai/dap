@@ -107,6 +107,38 @@ The updated catalog witness and native proof witness pass together
 The new full cohort, host storage/admission, native read route and viewer
 authorization are still owed; none is enabled by the wire export alone.
 
+The opt-in cohort is now Register13, Directory12, Membership7, Rules6,
+Destination8 and Inbox1. Defaults and the M1 cohort keep their exact pins.
+Destination8 adopts the new factory's checked publication provenance;
+Destination7 retains the M1 factory policy. The common predicate is called
+with each version's explicit pins, with no numeric-version fallback.
+The focused version and earlier M1 install cases pass (`9ad2ec`, eight
+cases). Complete 45-entry generation validates all bodies and rule tables;
+all 42 previously recorded bodies are unchanged (`ec6156`). Its evidence
+is `/tmp/artroom-m2a-cohort-catalog-validation-20261018.json`, SHA-256
+`90034cde46e86a1fbf25c0d20c9e55fc338c00e284d6c818ba5223d99f730a69`.
+
+The extended native in-memory witness creates the exact new room siblings,
+routes selected role additions, creates and confirms the application, and
+records the native announcement that makes the original install active.
+The new factory policy passes and the M1 policy refuses that new birth.
+Changing the M1 policy to the new pins makes the intended assertion fail
+(`c3b1b8`, source restored). The first birth attempts (`44c304`, `a50ec4`)
+exposed a fixture grant using the global made-up membership, rather than
+the room-specific installer. Supplying that room-specific fixture grant
+fixes the witness (`5a74ff`); no production guard was weakened.
+
+The native metadata reader selects only a completed Rules6 install's exact
+retained proof, checks its identities/publisher and returns the named entry
+scope declaration. Missing content, unknown names, old pins and pending jobs
+return no declaration. The Scope RPC checks retained byte sizes before
+reading the values and uses no R2/Git fallback. The in-memory case now covers
+completion and declaration selection (`695f36`, two cases), with fixture
+value custody; source/test typechecks pass. Real SQLite retention, host
+admission and transport, authorized projection reads and browser/MCP use
+remain owed. Child-scope projections still require checked birth provenance
+in the later several-scope integration.
+
 It does not yet read a journal, authorize a viewer, install a package, or
 render a view. Those remain implementation work.
 

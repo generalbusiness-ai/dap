@@ -79,10 +79,10 @@ export class DestinationHost implements Outside {
   #revokeCursor: RevocationPosition | null = null;
   constructor(given: OutsideGiven, options: DestinationHostOptions) { this.#given = given; this.#options = options; }
 
-  accepts(owner: string, kind: string): boolean { return ["platform:destination@4", "platform:destination@5", "platform:destination@6", "platform:destination@7"].includes(owner) && kind === "file-judge" || isOf(owner, OWNER) && ([...Object.values(DESTINATION_KINDS), "check-judge", "reservation-stage", "reservation-delete"] as string[]).includes(kind); }
+  accepts(owner: string, kind: string): boolean { return ["platform:destination@4", "platform:destination@5", "platform:destination@6", "platform:destination@7", "platform:destination@8"].includes(owner) && kind === "file-judge" || isOf(owner, OWNER) && ([...Object.values(DESTINATION_KINDS), "check-judge", "reservation-stage", "reservation-delete"] as string[]).includes(kind); }
   /** Repeating these reads never repeats a host mutation. The driver keeps the same attempt. */
   readonly recovery = {
-    accepts: (owner: string, kind: string): boolean => ["platform:destination@4", "platform:destination@5", "platform:destination@6", "platform:destination@7"].includes(owner) && kind === "file-judge" || isOf(owner, OWNER) && [DESTINATION_KINDS.judge, DESTINATION_KINDS.read, DESTINATION_KINDS.adoptRead, "check-judge"].includes(kind as "judge" | "read" | "adopt-read" | "check-judge"),
+    accepts: (owner: string, kind: string): boolean => ["platform:destination@4", "platform:destination@5", "platform:destination@6", "platform:destination@7", "platform:destination@8"].includes(owner) && kind === "file-judge" || isOf(owner, OWNER) && [DESTINATION_KINDS.judge, DESTINATION_KINDS.read, DESTINATION_KINDS.adoptRead, "check-judge"].includes(kind as "judge" | "read" | "adopt-read" | "check-judge"),
     read: (request: EffectRequest): Promise<EffectAnswer | null> => this.recovery.accepts(request.owner, request.kind) ? this.send(request) : Promise.resolve(null),
   };
 
@@ -178,7 +178,7 @@ export class DestinationHost implements Outside {
         if (reply?.["id"] !== token || typeof reply["revoked"] !== "boolean") return null;
         return answer(reply["revoked"] ? "confirmed" : "refused", { token });
       }
-      if (operation.kind === DESTINATION_KINDS.judge || ["platform:destination@4", "platform:destination@5", "platform:destination@6", "platform:destination@7"].includes(operation.owner) && operation.kind === "file-judge") {
+      if (operation.kind === DESTINATION_KINDS.judge || ["platform:destination@4", "platform:destination@5", "platform:destination@6", "platform:destination@7", "platform:destination@8"].includes(operation.owner) && operation.kind === "file-judge") {
         const publication = this.#judging();
         if (publication?.type === "file-publication") return this.#inspectFile(repository, ref, publication);
         const list = this.#list(this.#judging());
@@ -256,7 +256,7 @@ export class DestinationHost implements Outside {
     const reader = this.#options.snapshotReader;
     const scope = this.#given.scope();
     const intent = asked?.intent;
-    if (!reader || scope?.at.kind !== "destination" || !["platform:destination@3", "platform:destination@4", "platform:destination@5", "platform:destination@6", "platform:destination@7"].includes(this.#given.genesis()?.seed.definition ?? "") || !verifySignedIntent(asked)
+    if (!reader || scope?.at.kind !== "destination" || !["platform:destination@3", "platform:destination@4", "platform:destination@5", "platform:destination@6", "platform:destination@7", "platform:destination@8"].includes(this.#given.genesis()?.seed.definition ?? "") || !verifySignedIntent(asked)
       || intent.kind !== "git-read@1:job-read" || intent.on !== null || Object.keys(intent.expected).length || Object.keys(intent.fields).length !== 1 || !isFactRef(intent.fields["job"])) return null;
     const jobFact = intent.fields["job"];
     if (!intent.to || canonicalize(intent.to) !== canonicalize(jobFact.at)) return null;

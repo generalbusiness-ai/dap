@@ -405,7 +405,7 @@ export function outsideOf(given: OutsideGiven, sql: Pick<SqlStorage, "exec">, en
   };
   const selected = (owner: string, kind: string): Outside => {
     if (owner === "platform:rules@5" && ["fetch-application", "admit-application"].includes(kind)) return wiring("application", [env.APPLICATION_CONTENT, env.APPLICATION_TRUST], () => applicationHostOutside(env, PROPOSED_BOUNDS, fetch));
-    if (owner === "platform:directory@11" && kind === "announce-application") return announcement;
+    if ((owner === "platform:directory@11" || owner === "platform:directory@12") && kind === "announce-application") return announcement;
     return pick();
   };
   return {

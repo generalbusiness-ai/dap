@@ -10,8 +10,8 @@ import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { applicationInstallRulesScope, applicationInstallRules } from "./application-install.ts";
 import { INSTALL_DEFINITION_BYTES, INSTALL_DEFINITIONS, readInstallAdditions } from "./application-install-wire.ts";
 import { applicationValues } from "./application.ts";
+export { DECLARED_APPLICATION_RULES } from "./application-install-v2-wire.ts";
 
-export const DECLARED_APPLICATION_RULES = "platform:rules@6" as const;
 export const APPLICATION_SEMANTIC_VALUE2 = { domain: "dap-application-semantics-2", max: PROPOSED_BOUNDS.definitionBytes } as const;
 export const APPLICATION_RELEASE_VALUE2 = { domain: "dap-application-release-2", max: 4096 } as const;
 const install = applicationInstallRulesScope.acts["install-application"]!;

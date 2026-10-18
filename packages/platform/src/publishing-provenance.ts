@@ -149,7 +149,8 @@ export function applicationPublicationOrigin(from: FactRef, directory: ScopeRef,
 
 /** M1's new Directory handler factory. Destination7 alone adopts this policy;
  * destination4 keeps its original signed-act factory boundary. */
-export function installedApplicationPublicationOrigin(from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly Fetched[]): boolean | null {
+function installedApplicationOrigin(from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly Fetched[],
+  pins: Readonly<{ directory: string; rules: string; destination: string }>): boolean | null {
   try {
     const genesis = facts.find(copy => copy.fact.seq === 0 && same(copy.fact.at, from.at));
     if (!genesis) return null;
@@ -165,13 +166,13 @@ export function installedApplicationPublicationOrigin(from: FactRef, directory: 
     if (creator.under !== "platform:directory" || first.under !== "platform:directory" || !isEntryOf(creator.entry, creator.fact) || !isEntryOf(first.entry, first.fact)
       || creator.entry.input.type !== "delivery" || first.entry.input.type !== "genesis") return false;
     const office = first.entry.input, made = creator.entry.input;
-    if (!isSeed(office.seed) || office.seed.definition !== "platform:directory@11" || office.seed.kind !== "directory" || office.decision !== "applied"
+    if (!isSeed(office.seed) || office.seed.definition !== pins.directory || office.seed.kind !== "directory" || office.decision !== "applied"
       || office.inc !== directory.inc || scopeIdOf(office.seed) !== directory.scope || made.message.class !== "request" || made.message.type !== "tell"
       || !("decision" in made) || made.decision !== "applied" || made.from.at.kind !== "rules" || !isObject(made.message.body) || made.message.body["message"] !== "application-create"
       || !isObject(made.message.body["fields"])) return false;
     const sibling = (kind: "rules" | "membership" | "destination", pin: string, at: ScopeRef) => first.entry.sends.some(send => isSeed(send.to)
       && send.to.kind === kind && send.to.definition === pin && same(send.to.creator, directory) && scopeIdOf(send.to) === at.scope);
-    if (!sibling("rules", "platform:rules@5", made.from.at) || !sibling("destination", "platform:destination@7", destination)) return false;
+    if (!sibling("rules", pins.rules, made.from.at) || !sibling("destination", pins.destination, destination)) return false;
     const requested = made.message.body["fields"];
     if (requested["definition"] !== seed.definition || !isMemberRef(requested["installer"]) || typeof requested["genesis"] !== "string"
       || typeof requested["needsDestination"] !== "boolean" || deliveryCauseDigest({ v: 1, from: made.from, n: made.n, message: messageDigest(made.message) }) !== seed.cause) return false;
@@ -185,4 +186,13 @@ export function installedApplicationPublicationOrigin(from: FactRef, directory: 
     const expected = { ...fields, ...(requested["needsDestination"] ? { destination } : {}) };
     return same(body["fields"], expected) && sentBy(creator.entry, { from: born.source, n: born.n, to: seed, message: born.message });
   } catch { return false; }
+}
+
+/** Preserve the exact M1 factory policy for Destination7. */
+export function installedApplicationPublicationOrigin(from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly Fetched[]): boolean | null {
+  return installedApplicationOrigin(from, directory, destination, facts, { directory: "platform:directory@11", rules: "platform:rules@5", destination: "platform:destination@7" });
+}
+/** Only Destination8 adopts the declared-projection cohort's factory. */
+export function declaredApplicationPublicationOrigin(from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly Fetched[]): boolean | null {
+  return installedApplicationOrigin(from, directory, destination, facts, { directory: "platform:directory@12", rules: "platform:rules@6", destination: "platform:destination@8" });
 }
