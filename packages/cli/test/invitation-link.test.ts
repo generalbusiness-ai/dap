@@ -31,11 +31,13 @@ test("the client's invitation link is the command line's", async () => {
   }
   // A person link must reject unusable proof input before touching private custody, just as an agent link does.
   const seed = b64url(new Uint8Array(32));
+  for (const definition of ["platform:membership@6", "platform:membership@7"]) {
   for (const secret of ["not-a-seed", b64url(new Uint8Array(31)), seed.slice(0, -1) + "B", seed + "="]) {
-    expect(await command(ctx, ["join", text({ ...link, definition: "platform:membership@6", secret })])).toMatchObject({ code: 2 });
+    expect(await command(ctx, ["join", text({ ...link, definition, secret })])).toMatchObject({ code: 2 });
   }
-  expect(await command(ctx, ["join", text({ ...link, definition: "platform:membership@6", secret: seed, invitation: 1_000_000_001 })])).toMatchObject({ code: 2 });
-  expect(wellFormedInvitation({ ...link, definition: "platform:membership@6", secret: seed })).toBe(true);
+  expect(await command(ctx, ["join", text({ ...link, definition, secret: seed, invitation: 1_000_000_001 })])).toMatchObject({ code: 2 });
+  expect(wellFormedInvitation({ ...link, definition, secret: seed })).toBe(true);
+  }
   expect([storeCalls, fetchCalls]).toEqual([0, 0]);
   for (const service of ["https://scopes.test", "https://scopes.test/base/", "https://scopes.test:8443", "http://127.0.0.1:7781", "http://127.2.3.4", "http://[::1]:7781"]) {
     expect(wellFormedInvitation({ ...link, service }), service).toBe(true);

@@ -13,7 +13,7 @@ import { command, memoryStore, type Context } from "../src/index.ts";
 // STAND-IN directory (no creation); sibling IDs in the link are placeholders
 // never read here. memoryStore stands for local persistence. Loss/unavailable
 // replies and pause are STAND-INs for transport and scheduling, with no sleep.
-test.each(["platform:membership@2", "platform:membership@6"] as const)("join retries its exact private envelope after accepted reply loss and inbox wait failure across restart; saved facts and links cannot substitute another enrollment (%s)", async definition => {
+test.each(["platform:membership@2", "platform:membership@6", "platform:membership@7"] as const)("join retries its exact private envelope after accepted reply loss and inbox wait failure across restart; saved facts and links cannot substitute another enrollment (%s)", async definition => {
   const clock = net.clock.now;
   net.hold = net.deaf = null;
   const owner = beginSessionFixture({ secret: b64url(crypto.getRandomValues(new Uint8Array(32))), sessions: true, inspector: "a test reader" });
@@ -23,11 +23,11 @@ test.each(["platform:membership@2", "platform:membership@6"] as const)("join ret
     const seat = await M.did(rita, "seat", { expected: { roster: 1 } });
     await M.did(rita, "first-key", { fields: { member: seat }, expected: await M.expected({ roster: 0, member: seat }) });
     await settle(O, M, await M.created(seat));
-    const invitationSecret = definition === "platform:membership@6" ? b64url(new Uint8Array(32).fill(79)) : "the private invitation secret of at least 32 bytes";
+    const invitationSecret = definition !== "platform:membership@2" ? b64url(new Uint8Array(32).fill(79)) : "the private invitation secret of at least 32 bytes";
     const invitation = await M.did(rita, "invite-member", { fields: { handle: "@joiner", role: "member", ...invitationIssueFields(definition, invitationSecret), inviteEnds: timeOf(timeMs(net.clock.now)! + 3600_000) } });
-    const linkData = { v: 1, service: "https://scopes.test", repository: { directory: await O.at(), membership: await M.at(), rules: O.name, destination: O.name }, invitation, secret: invitationSecret, handle: "@joiner", ...(definition === "platform:membership@6" ? { definition } : {}) };
+    const linkData = { v: 1, service: "https://scopes.test", repository: { directory: await O.at(), membership: await M.at(), rules: O.name, destination: O.name }, invitation, secret: invitationSecret, handle: "@joiner", ...(definition !== "platform:membership@2" ? { definition } : {}) };
     const link = `artroom-invite:${b64url(utf8(JSON.stringify(linkData)))}`;
-    if (definition === "platform:membership@6") {
+    if (definition !== "platform:membership@2") {
       const before = (await M.summary()).at;
       expect(await M.act(una, "join", { fields: { invitation, secret: invitationSecret } })).toMatchObject({ answer: "refused", reason: "bad-intent" });
       expect((await M.summary()).at).toEqual(before);
@@ -79,7 +79,7 @@ test.each(["platform:membership@2", "platform:membership@6"] as const)("join ret
     const joins = async () => (await M.entries()).filter((entry) => entry.input.type === "act" && entry.input.signed.intent.kind === "join");
     expect(initialAnswers).toEqual([["accepted", null, null]]);
     expect(await joins()).toHaveLength(1);
-    if (definition === "platform:membership@6") {
+    if (definition !== "platform:membership@2") {
       const history = JSON.stringify(await M.entries());
       expect(history).not.toContain(invitationSecret);
       expect(history).not.toContain('"secret"');
@@ -129,7 +129,7 @@ test.each(["platform:membership@2", "platform:membership@6"] as const)("join ret
     expect([await store.secret("device"), (await store.config())!.join, (await store.config())!.repository!.inbox]).toEqual([key, undefined, accepted.join!.repository.inbox]);
     expect(initialAnswers).toEqual([["accepted", null, null]]);
     expect(await joins()).toHaveLength(1);
-    if (definition === "platform:membership@6") {
+    if (definition !== "platform:membership@2") {
       const history = JSON.stringify(await M.entries());
       expect(history).not.toContain(invitationSecret);
       expect(history).not.toContain('"secret"');

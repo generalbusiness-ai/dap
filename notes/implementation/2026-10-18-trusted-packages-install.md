@@ -605,3 +605,34 @@ all seven cases pass (`4dae5f`, session `78517`, terminal `c963e5`, exit 0).
 The captured log is `/tmp/artroom-m1-sdk-native-install-20261018.log`. Client
 and Scope test typechecks pass. CLI/MCP install and browser integration remain
 under this open Source child.
+
+
+## Generic room selection and Membership7 enrollment
+
+The CLI offers the opt-in `trusted-application` cohort (register12). Active
+`counting-commitments` selection is removed, and an old retained register6
+setup plan refuses before any send. Historical catalog pins, native judging
+and replay support remain. Omission retains the legacy generic register3
+setup behavior; the new installation guide will name the explicit cohort.
+
+Membership7 uses the same private invitation-key proof as Membership6. Exact
+pin recognition now covers SDK person/agent invitations, retained browser
+joining, CLI issuance and enrollment, the Directory11 sibling binding, native
+own-member authority, session issuance, and join serving limits. Its role
+table names `application.install` for admins, consistent with its initial
+action list. No historical pin's lists or proof rules change.
+
+Focused browser/agent codec cases pass (`e3eb99`, four cases, two files) and
+CLI selection/retained invitation cases pass (`c0c99b`, nine cases, three
+files). The real enrollment run first exposed the missing exact runtime
+pins; after correction, person join, authority, sessions and limits pass
+(`364d1f`, session `12389`, terminal `dfc392`, twelve cases across four files).
+The agent witness's wrong-pin control now uses Membership6's same proof
+format against Membership7, preserving the receipt-mismatch witness rather
+than expecting legacy secret input to reach a new native receipt. That
+corrected real-room witness passes (`fb912f`, session `24871`, terminal
+`4ce72e`, exit 0). Captured logs are
+`/tmp/artroom-m1-cohort-enrollment-20261018.log` and
+`/tmp/artroom-m1-agent-key-native-20261018.log`. Platform, Scope and CLI source
+and owning test typechecks pass. Maintained browser connection and the
+complete CLI/MCP install flow remain owed.

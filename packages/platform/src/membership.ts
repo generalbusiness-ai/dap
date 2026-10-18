@@ -123,7 +123,7 @@ export const ROLE_TABLE: readonly (readonly [actions: readonly string[], roles: 
 ];
 
 /** The table of each version. */
-export const ROLE_TABLE_OF: Readonly<Record<string, typeof ROLE_TABLE>> = { [MEMBERSHIP_1]: ROLE_TABLE_1, [MEMBERSHIP]: ROLE_TABLE, "platform:membership@4": [...ROLE_TABLE, [["application.establish"], ["admin"]]], "platform:membership@5": [...ROLE_TABLE, [["application.establish"], ["admin"]]], "platform:membership@6": [...ROLE_TABLE, [["application.establish"], ["admin"]]] };
+export const ROLE_TABLE_OF: Readonly<Record<string, typeof ROLE_TABLE>> = { [MEMBERSHIP_1]: ROLE_TABLE_1, [MEMBERSHIP]: ROLE_TABLE, "platform:membership@4": [...ROLE_TABLE, [["application.establish"], ["admin"]]], "platform:membership@5": [...ROLE_TABLE, [["application.establish"], ["admin"]]], "platform:membership@6": [...ROLE_TABLE, [["application.establish"], ["admin"]]], "platform:membership@7": [...ROLE_TABLE, [["application.install"], ["admin"]]] };
 
 /** The actions that the table of section 3.2 gives one role, in the order of its rows. */
 export const actionsIn = (role: Role): string[] => ROLE_TABLE.flatMap(([actions, roles]) => (roles.includes(role) ? actions : []));

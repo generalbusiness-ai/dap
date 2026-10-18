@@ -1,11 +1,11 @@
 /**
  * The invitation link that `artroom invite` prints and `artroom join`, the page and the MCP server's `join` read: the
  * service, the repository's scopes, the invitation's number and secret, the handle, and the membership version the
- * invitation is in. Legacy cohorts present the invitation secret. Membership@6 treats it as an
+ * invitation is in. Legacy cohorts present the invitation secret. Membership@6 and @7 treat it as an
  * invitation signing seed that stays private and creates a key-bound proof.
  */
 import { invitationServiceUrl } from "./invitation-service.ts";
-import { INVITATION_KEY_MEMBERSHIP } from "@generalbusiness/dap-contract";
+import { usesInvitationKey } from "./invitation-fields.ts";
 import type { ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import { b64url, isScopeId, isScopeRef, unb64url } from "@generalbusiness/artroom-bytes";
 
@@ -29,9 +29,9 @@ export function invitationOf(text: string): InvitationLink | null {
   }
 }
 
-/** Validate the public context and, for membership@6, the private seed before retaining custody or signing. */
+/** Validate the public context and, for invitation-key memberships, the private seed before retaining custody or signing. */
 export function wellFormedInvitation(link: InvitationLink): boolean {
-  if (link.definition === INVITATION_KEY_MEMBERSHIP) {
+  if (usesInvitationKey(link.definition)) {
     if (typeof link.secret !== "string" || link.secret.length !== 43 || link.invitation > 1_000_000_000) return false;
     const seed = unb64url(link.secret);
     if (!seed) return false;
