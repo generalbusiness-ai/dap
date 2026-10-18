@@ -280,6 +280,31 @@ passes. Logs use the `/tmp/artroom-m1-wire-layer-` prefix. Page assets rebuild
 from the corrected shared codec; no application or provider rights were
 added by that move.
 
+The import-boundary fault control passes (`23562`, terminal `1966d6`, exit
+0): broadening the exact reader exception makes the existing architecture
+witness fail by its intended broad-import assertion. Source is restored.
+The record is `/tmp/artroom-m1-wire-layer-import-control-20261018.log`.
+
+The shared-codec move changes compiled presentation identities. The full live
+browser witness therefore runs again at
+`cc9d8bf0716a810e5132dfd68e0b512fda002edf` (`13018`, terminal `cae439`, exit 0).
+Both complete packets pass actual Membership7 enrollment, signed Counter
+Join and Lending donation, private-key restoration and proven native replay
+through Room. The 75 request records, new packet manifest and four screenshots
+are under `/tmp/artroom-m1-live-browser-20261018/`, with raw log
+`/tmp/artroom-m1-wire-layer-browser-20261018.log`. Fresh mobile Counter and
+desktop Lending screenshots were inspected. There are no JavaScript errors
+or unexpected console errors; the two unpublished-page 404s remain explicit.
+The earlier Room pass remains separate under
+`/tmp/artroom-m1-live-browser-4c176f88a-20261018/`.
+
+The final production Room dry-run also passes with locked Wrangler 4.124.0.
+Output is `/tmp/artroom-m1-room-wire-layer-dry-run-20261018/`, with log
+`/tmp/artroom-m1-room-wire-layer-dry-run-20261018.log`. It lists the private
+R2 binding and makes no deployment or provider change. The packet comparison
+under `/tmp/artroom-m1-wire-layer-packets-20261018/` explicitly records the
+changed bytes rather than borrowing the earlier browser identity.
+
 A complete gate on the corrected submitted head, finite Source evidence,
 independent review, native landing, sealed receipt and Main audit remain due.
 Planner owns publication and any authorized Cloudflare provisioning or
