@@ -876,9 +876,65 @@ This prepares scope ownership for the dev host. It does not start a server,
 add routes, provide live reload or complete dev. Foundation's separate
 corrected candidate remains frozen for its gate and fresh review.
 
+## Local dev host checkpoint
+
+`dap dev [directory] [--port port] [--scenario listed-file]` now serves a
+loopback preview and an inspection panel. The default port is 5173. The
+selected scenario is explicit or the first listed scenario. The same checked
+executor opens its actual in-memory SQLite scope. The logical clock starts
+at the scenario's final time and advances with requests. The panel reports
+public TEST actors, open local reads and in-memory persistence. It grants
+no membership and uses no operator custody.
+
+The local native routes support signed acts, exact settlement, summary,
+history, entries, final items and retained inputs. They use the native
+Core and bounded Reads implementation. Authority comes only from the
+scenario's explicit per-key grants. Supplied grants cannot enlarge it.
+Host and Origin must match the bound loopback service. Request bytes are
+bounded before JSON parsing. Outside operations remain closed.
+
+Rebuilds and requests share one queue. Presentation-only changes preserve
+the native scope and history. Semantic or scenario-input changes open a
+new checked scope, then close the old one. A failed build retains the prior
+preview, displays an error and pauses new acts. Settlement and reads remain
+available. Watched file changes rebuild the package and send an SSE reload.
+The injected preview label/reload script belongs only to dev, outside the
+canonical package bytes. This single-root fixture does not provide native
+child transport, production sessions, provider calls or hosted durability.
+
+Two native HTTP/SDK cases pass (`61a441`). They cover actual signatures,
+unchanged retries and receipts, refusal of an unlisted key, Origin and
+supplied-grant refusal, replay, presentation retention, failed-build recovery
+and scenario/semantic restart. The selected actual-bin case passes
+(`48130a`/`a9ad15`) with empty custody paths. Its owned POSIX process group
+receives SIGTERM, the inner host reports closed and the outer launcher ends
+by that signal. It makes no claim of Windows process-group evidence.
+MCP inventory passes five cases (`9905a3`) and both native recipes pass
+(`4b5011`/`c31036`). Final scope/CLI typechecks pass (`8d6715`/`c1270d`).
+Earlier typechecks found a string-to-digest argument and unknown test JSON
+response types (`65b96a`, `fb5fc7`). A native digest guard and test response
+types correct those failures (`95b6c2`, `9fc391`).
+
+The actual browser witness (`065cb3`/`4a5a7b`) uses cached Playwright
+1.63.0 and Chromium 153.0.8010.12 because the Browser plugin is absent.
+Native IndexedDB/non-extractable keys persist across watched CSS reload.
+A Node SDK act reaches the actual native scope and survives that edit.
+The browser displays failed-build status, recovers after source repair,
+and reloads after a semantic restart. The original scope is then unavailable.
+The fresh browser key is absent from the TEST authority list. The inspection
+panel, URL/title/content, overlay/console, desktop 960 by 720 and mobile
+390 by 844 checks pass; four screenshots are inspected. Native act transport
+in this witness is Node SDK, not browser enrollment. Browser and server close
+before return. Controlled fixture edits stay in temporary files.
+
+Harness: `/tmp/artroom-m1-dev-browser-20261018.mjs`. Results and PNGs:
+`/tmp/artroom-m1-dev-browser-20261018/`. Logs use `/tmp/artroom-m1-dev-`.
+No dependency installation, full developer gate, Source review, publication,
+room install or deployment accompanies this checkpoint.
+
 ## Remaining developer work
 
-Dev, Counter/Lending package conversion, and the matching browser
+Counter/Lending package conversion and the matching browser
 evidence remain due. Existing public asset modules come from the foundation
 candidate. Compiler equivalence above leaves those assets unchanged.
 The complete package conversion will replace their host composition.

@@ -1459,6 +1459,7 @@ works; the count given is the default recipe's.
 | Activity | Default | --generic | --generic=add |
 |---|---|---|---|
 | `dap check [<directory>]` (local command) | Local files and native scenarios with explicit TEST authority; no MCP tool | Local only | Local only |
+| `dap dev [<directory>]` (local command) | Local loopback preview with explicit TEST scenarios; no MCP tool | Local only | Local only |
 | `dap new <directory>` (local command) | Creates local template files with public TEST scenarios; no MCP tool | Local only | Local only |
 | `dap pack [<directory>]` (local command) | Local files and an existing named publisher key; no MCP tool | Local only | Local only |
 | `dap install <base-url>`, `--plan`, `--planned` | `create` with `platform:register@3` (or the cohort's register), kind install, the host, namespace, policy and creator keys: 1. The signed intent is kept before it is sent, which is what --plan keeps; after a lost reply, settle adds 1 | `create`: 1 | 1 |
