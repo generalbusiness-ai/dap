@@ -331,7 +331,7 @@ missing-retained-input witnesses above. CLI test/source typecheck passes
 (`baa9ca`). Evidence uses `/tmp/artroom-m1-check-` and
 `/tmp/artroom-m1-scenario-`. No full M1 gate has run.
 
-## Remaining developer work
+## Accepted facts and non-native scenario-owner records
 
 The standard scenario layer now also resolves `$fact` only from an actual
 accepted receipt saved by `act` or `retry`. Missing names, refused requests
@@ -362,6 +362,8 @@ each, with six normal scenario cases: falling back to the current native head
 for a missing accepted receipt (`d8b7be`/`eecd64`), and admitting a duplicate
 owner outcome (see `/tmp/artroom-m1-scenario-owner-duplicate-control-20261018.log`).
 Both exit 0. No repeated full gate or publication accompanied this bridge.
+
+## Remaining developer work
 
 Shared browser joining, storage and request custody; browser bundling;
 new/dev; Counter/Lending package
