@@ -79,22 +79,47 @@ not replace the guards.
 
 | Action | Roles | Acts it covers |
 |---|---|---|
-| `grow.sense` | sensors | `observe`: a reading or a device state |
-| `grow.climate` | climate agent, operator | `set-device` on a vent or a fan; `raise-alert`; `close-incident` |
-| `grow.heat` | operator | `set-device` on a heater; `set-band`; `authorize` an alert's proposal |
+| `grow.sense` | sensors | `observe`: a reading summary; `report-device`: a device's reported state |
+| `grow.climate` | climate agent, operator | `set-vent`, `set-fan`; `raise-alert`; `close-incident` |
+| `grow.heat` | operator | `set-heater`; `set-band`; `authorize` an alert's proposal, which is itself the heater command |
 | `grow.water` | irrigation agent, head grower | `water` inside the schedule |
 | `grow.water-more` | head grower | `approve-watering` outside the schedule |
 | `grow.apply` | head grower | `apply`: a chemical application, with product, rate and reason |
 | `grow.tend` | tenders | `probe`, `take-task`, `report-task`, `arrive`, `leave` |
 
+Each device kind has its own act, because an act's `grant` is one fixed
+string (`ActType.grant` in
+[definition.ts](../packages/contract/src/definition.ts)), not a choice a
+guard makes. `set-vent` and `set-fan` need `grow.climate`; `set-heater`
+needs `grow.heat`. The climate agent holds no `grow.heat`, so nothing has
+to tell devices apart at judging time: the grant does. A kind guard on
+each act still refuses a vent act aimed at a heater item.
+
+The operator's `authorize` is itself the heater command. Its effects move
+the alert to `authorized` and name the heater item too, setting its
+commanded state to `off`, and the operator who signs it holds
+`grow.heat`. The climate agent proposes and never signs a heater act; an
+authorization entry grants it nothing. "Restore heater 2?" later in the
+story is the same shape: the agent proposes, the operator's `authorize`
+commands.
+
+A device item's state is the commanded state, not the physical one.
+Commanding a device is an outside effect. The package declares a bounded
+device-command capability whose owner sends each command at most once and
+records `confirmed`, `refused` or `unknown`, as the platform's
+[operation driver](../packages/scope/src/operations.ts) does for its own
+sends. That owner is not designed here; it is a prerequisite (section 7,
+open question 6). The sensors' next `report-device` is the evidence of
+what the device did. A successful transition never stands for a physical
+change, and an unknown outcome stays unknown, as the application guide's
+outside-effect rule says.
+
 Three guards carry the rest of the story:
 
-- `set-device` reads the device's kind. A heater needs `grow.heat`; the
-  guard refuses the climate agent even though it holds `grow.climate`.
-- A device in the `error` state refuses `set-device`, and the refusal
-  quotes the description the sensors wrote. `error` is the one state for
-  every failure; the description says which. The definition does not
-  enumerate failure modes.
+- A device in the `error` state refuses `set-vent`, `set-fan` and
+  `set-heater`, and the refusal quotes the description the sensors wrote.
+  `error` is the one state for every failure; the description says which.
+  The definition does not enumerate failure modes.
 - `raise-alert` needs the zone out of band and the agent's own devices at
   their limits. An agent cannot ask a person to do its work for it.
 - `authorize` and `hold` name the alert's revision. An authorization of
@@ -159,8 +184,9 @@ people:
   walks over, frees the jammed vane, and reports it. The report carries a
   photo, kept in the room's custody. The sensors then record vent 2 open.
 
-The operator authorizes. Heater 2 goes off, with the authorization and
-the agent's act as two entries. The zone cools. The agent returns vents 1
+The operator authorizes, which is the heater command, signed by the
+operator: one entry. The device owner records the command's outcome, and
+the sensors report heater 2 off: two more entries. The zone cools. The agent returns vents 1
 and 4 to normal, and, because vent 2 is free again, asks once more: "Vent
 2 is responding. Restore heater 2?" That too needs the operator, so it is
 one more card with two acts. When every cell of zone 2 is in band the
@@ -250,23 +276,36 @@ ref: the report's evidence) and `watering` (states `asked`, `approved`,
 act names the revisions it expects.
 
 **Acts.** Section 3 lists them with their actions. `observe` is a
-comment-form act: it writes a reading summary and any device state change,
-and nothing else. `set-device` is a transition with the device-kind guard.
-`raise-alert` opens an alert; `authorize`, `hold` and `close-incident`
-transition it. `probe`, `take-task` and `report-task` are the tenders'
-acts. `arrive` and `leave` are comment-form acts on the site scope.
+comment-form act. A comment changes no item and carries no guards,
+effects or sends; the validator refuses one that does
+([handlers.ts](../packages/derive/src/validate/handlers.ts), the rule
+named "section 6.4"; [the ten terms](../docs/manual/ten-terms.md),
+"Step"). So `observe` records a reading summary in its input and nothing
+more, and the `grid` projection derives the latest readings from those
+entries. `report-device` is a guarded transition on the device item,
+signed by the sensors, that sets the reported state and, for `error`, the
+description. `set-vent`, `set-fan` and `set-heater` are transitions on the
+device item that set its commanded state. `raise-alert` opens an alert;
+`authorize`, `hold` and `close-incident` transition it, and `authorize`
+names the heater item as well. `probe` transitions a bench; `take-task`
+and `report-task` transition a task. `arrive` and `leave` are comment-form
+acts on the site scope, and the presence projection derives who is where
+from them.
 
 **Timed rules and handlers.** The hold expiry and the stale-bench rule are
 timed rules. A handler lets the site scope receive each room's open-alert
 count, so the overview reads one projection.
 
-**Capabilities.** The package requests two. First, a bounded outside read
-of the sensor gateway's latest samples, so the live grid shows the current
-second without an entry per second; the journal keeps what decisions
-depend on, not every sample (section 6.4). Second, custody of files sent
-with a report, for the tender's photo. Notifications come later, with the
-journey's attention work. Each capability is bounded by what the manifest
-declares and the admin grants at install.
+**Capabilities.** The package requests three. First, a bounded outside
+read of the sensor gateway's latest samples, so the live grid shows the
+current second without an entry per second; the journal keeps what
+decisions depend on, not every sample (section 6.4). Second, custody of
+files sent with a report, for the tender's photo. Third, device commands:
+a bounded owner that sends each commanded state at most once and records
+its outcome (section 3). Notifications come later, with the journey's
+attention work. Each capability is bounded by what the manifest declares
+and the admin grants at install. Bounded capabilities themselves are M2
+work (section 7).
 
 **Scenarios.** The fault story of section 4 is the package's first
 scenario: readings, the agent's acts, the alert, a hold, an authorization,
@@ -312,8 +351,14 @@ Two of this application's views, as a sketch of the form:
       { "act": "authorize", "label": "Authorize", "needs": "grow.heat", "when": "state = 'open'" },
       { "act": "hold", "label": "Hold 60 s", "needs": "grow.heat", "when": "state = 'open'" }
     ],
-    "context": "Alert {id} v{revision} open: {text} The agent asks the operator to {proposal}",
-    "fallback": "Alert {id}: {text} Proposal: {proposal}",
+    "context": "Alert {id} v{revision} {state}: {text} {waiting}",
+    "fallback": "Alert {id} v{revision} ({state}): {text} {waiting}",
+    "waiting": {
+      "open": "The agent asks the operator to {proposal}",
+      "held": "Held by the operator; it reopens in {remaining} s.",
+      "authorized": "Authorized; the agent is watching zone {zone}.",
+      "closed": "Closed."
+    },
     "refresh": "2s", "display": "inline"
   },
   "grid": {
@@ -326,12 +371,23 @@ Two of this application's views, as a sketch of the form:
 }
 ```
 
+The context and fallback derive from the displayed revision's state, so
+a held alert never reads as open, and the acts are offered only in the
+state their `when` names.
+
 The `alert` card needs no package code: the kit renders it from the
 declaration and the projection. The `grid` surface is static presentation
 in the package, a heatmap that reads its projection through the host and
-opens the declared zone and alert views. It can do nothing else, because
-it runs in the sandbox origin with no keys (applications note, section
-5.1).
+opens the declared zone and alert views. What it may do is what the host
+enforces, not what the absence of keys implies. Under section 5.1 of the
+applications note a package frame may read only its installation's
+projections and may ask the host to sign only its installation's declared
+acts, never a room act or another installation's act, and the host owns
+and enforces those boundaries. This surface declares no acts, so the host
+refuses any signing request from it. That read-only permission is a rule
+of the view description for the host to enforce, not a property of the
+sandbox, and it does not exist yet. M1's trusted-package limit holds until
+the boundary does.
 
 From the declarations the room's MCP endpoint derives, for each view, a
 tool the model may call, which returns the fallback text and the card's
@@ -367,8 +423,16 @@ summary per room every five minutes, and a threshold entry when a zone
 leaves or enters the band: a few hundred entries a day. The live grid
 reads the gateway's latest samples through the bounded outside read, and
 the zone sparkline reads the recorded summaries. The whole-scope capacity
-bounds now being built apply to each room scope; a room's readings cannot
-crowd out its acts, because the summaries are few and the acts are fewer.
+bounds now being built (request `113a54bd`, under review, with provisional
+values) apply to each room scope. They admit new work against what the
+scope retains and the reservations of work already admitted; they reserve
+nothing for future acts. A finite daily rate still fills a finite budget
+in time, and new acts can then be refused. How much a room retains, how
+readings are sampled and when old summaries are released is a policy the
+package must declare and the room's admin must set. That is future work,
+not a guarantee this note can make from traffic estimates. Work already
+funded, such as a confirmation whose bytes are reserved, is admitted ahead
+of an unadmitted new act.
 
 Every act by a person or an agent is an entry. An incident's record is
 its entry range. The day's journals are archived in Git and replay without
@@ -378,29 +442,47 @@ that fails to arrive is recorded as missing, not filled in.
 ## 7. Order and slices
 
 This application follows the journey. It needs the S2 card kit, which the
-journey builds, and M1 of the applications note, which makes a package
-installable. It should not reorder plan 032. The slices, once both exist:
+journey builds, and from the applications note both M1, which makes a
+trusted package installable, and M2, which adds declared projections, the
+generic interface, several scopes in one package, bounded capabilities
+and presentation-only updates (applications note, section 7, "M2. A
+complete application from any publisher", at main `df806354`). Section 6
+uses all five, including `present`. Two prerequisites belong to no
+milestone and need their own design: the device-command owner of section
+3, and custody for a report's evidence (open question 4). None of this is
+pulled into S2 or M1 by this note, and it does not reorder
+[plan 032](plans/032-2026-10-17-journey-as-acceptance-target.md). Each
+slice says what it needs:
 
 - **G0. Definition and scenario.** The `site` and `room` definitions of
   section 6.1 with their actions, guards and timed rules; the fault story
   as a scenario with a simulated source of readings; `dap check` passes
-  and replays it. Done when the scenario's refusals and closures match
-  section 4.
-- **G1. Views on the kit.** The alert, zone, carousel and log views as
+  and replays it. Needs today's runtime and M1's `dap check`; the
+  simulated source stands in for the sensor read and the device owner.
+  Done when the scenario's refusals and closures match section 4.
+- **G1. Views on the kit.** Needs S2 and M1. The derived tools and the
+  declared projections are M2; before M2, G1 runs on a hand-written
+  projection as a trusted package, and is a sketch of the generic form,
+  not its witness. The alert, zone, carousel and log views as
   declarations; the grid as a surface resource; the derived tools. Done
   when the operator's path of section 4 runs inside a test host with the
   kit's existing checks: app-only data, quiet context, receipts, stale
   refusals, resize.
 - **G2. Measurements from the chat.** The tenders' probe act through the
-  model, the bench carousel and the three grid layers. Done when a probe
-  typed in a chat appears in the layer and advances the carousel.
+  model, the bench carousel and the three grid layers. Needs M2's declared
+  projections for the layers. Done when a probe typed in a chat appears
+  in the layer and advances the carousel.
 - **G3. Routing.** Alerts to the holders of the authority they need, tasks
-  to the tenders present in the room, requests to the head grower. Done
-  when the fault produces the two cards of section 4 for two members and
-  the watering request a third.
+  to the tenders present in the room, requests to the head grower. Needs
+  several scopes in one package (M2) for the site scope, and the journey's
+  attention work for anything beyond the carousel. Done when the fault
+  produces the two cards of section 4 for two members and the watering
+  request a third.
 - **G4. Record and archive.** The incident's entry range, "what happened
-  today" from the read tool, and the day's archive. Done when the archived
-  journal replays and the model's answer names entries that exist.
+  today" from the read tool, and the day's archive. Needs the archive
+  milestone's clone and verify (plan 032, section 2a) and custody for the
+  photo. Done when the archived journal replays and the model's answer
+  names entries that exist.
 
 Exit test: three people on their own devices, each in their own AI app,
 in one room, through the fault story, with the agents running under their
@@ -426,13 +508,27 @@ people.
    limits in guards. Whether a room's admin can change them without a new
    definition is the rules question the evidence-rules design opened for
    landings, applied to devices.
+6. **The device-command owner.** Who sends a commanded state to a vent, a
+   fan or a heater, how its outcome is recorded, and what the room may
+   conclude before the sensors confirm it. Until that owner is designed,
+   the scenario's commands are simulated and the device item records
+   intent, not effect.
 
 ## Source
 
-Written by the planner from the self-contained applications note (sections
-3, 4, 5.1, 7 and 8), the compact cards design, the journey views design,
-plan 032, the ten terms, the application guide, the use-case catalogue's
-sweep entry for feeds and sensors, and the two prototypes of section 5.
-The prototypes' observations were made on one desktop AI app and one
-stand-in host; they claim nothing about other hosts. Nothing in this note
-was run against the dap runtime.
+Written by the planner against main `df806354` from the
+[self-contained applications note](2026-10-15-self-contained-applications.md)
+(sections 3, 4, 5.1, 7 and 8), the
+[compact cards design](2026-10-17-compact-cards-design.md), the
+[journey views design](2026-10-17-journey-views-design.md),
+[plan 032](plans/032-2026-10-17-journey-as-acceptance-target.md),
+[the ten terms](../docs/manual/ten-terms.md), the
+[application guide](../docs/write-an-application.md), the act form in
+[definition.ts](../packages/contract/src/definition.ts), the comment rule
+in [handlers.ts](../packages/derive/src/validate/handlers.ts), the
+[operation driver](../packages/scope/src/operations.ts), the
+[use-case catalogue](../docs/use-cases.md)'s sweep entry for feeds and
+sensors, and the two prototypes of section 5. The prototypes'
+observations were made on one desktop AI app and one stand-in host; they
+claim nothing about other hosts. Nothing in this note was run against the
+dap runtime.
