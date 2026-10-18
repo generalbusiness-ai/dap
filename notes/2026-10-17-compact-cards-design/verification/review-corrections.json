@@ -1,0 +1,17 @@
+{
+  "kind": "checker-requested-design-corrections",
+  "priorHead": "85ee57788e8c6c63c111fa2b6aac9ad2063f8fdf",
+  "review": "5f8906d5",
+  "priorReportSha256": "e356d3f8ca89089481f1ab46e8ca29da40f06aabb8114bf63ef0a8de5bfe6b45",
+  "priorTargets": 648,
+  "priorWidthFailures": 36,
+  "currentPages": 342,
+  "currentTargets": 654,
+  "currentSmallTargets": 0,
+  "corrections": [
+    "Separate intended cutoffs from actual read/presented coverage; summaries claim no entry bodies.",
+    "Storage offer252 links only its own known earlier v1 acceptance224/offer222, not Interface253.",
+    "Minimum width and height are both44px; the updated harness checks both."
+  ],
+  "limits": "Fictional static snapshots; no host or real write. The old height-only pass is superseded, not a44x44 pass."
+}

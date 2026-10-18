@@ -1,0 +1,75 @@
+{
+  "kind": "static-design-focused-accessibility",
+  "limits": "Local browser only; no host or real act",
+  "checks": [
+    {
+      "kind": "text-contrast",
+      "theme": "light",
+      "contrasts": [
+        {
+          "selector": ".slide-title",
+          "ratio": 11.85365157245615
+        },
+        {
+          "selector": ".summary",
+          "ratio": 5.659879099230706
+        },
+        {
+          "selector": ".controller",
+          "ratio": 5.659879099230706
+        }
+      ],
+      "pass": true
+    },
+    {
+      "kind": "long-title-and-controller-stress",
+      "theme": "light",
+      "pass": true,
+      "qualification": "DOM text stress, independent of the canonical fictional record"
+    },
+    {
+      "kind": "primary-control",
+      "theme": "light",
+      "color": "rgb(255, 255, 255)",
+      "background": "rgb(18, 63, 43)",
+      "minHeight": 44
+    },
+    {
+      "kind": "text-contrast",
+      "theme": "dark",
+      "contrasts": [
+        {
+          "selector": ".slide-title",
+          "ratio": 8.385290348760638
+        },
+        {
+          "selector": ".summary",
+          "ratio": 8.553065094835707
+        },
+        {
+          "selector": ".controller",
+          "ratio": 8.553065094835707
+        }
+      ],
+      "pass": true
+    },
+    {
+      "kind": "long-title-and-controller-stress",
+      "theme": "dark",
+      "pass": true,
+      "qualification": "DOM text stress, independent of the canonical fictional record"
+    },
+    {
+      "kind": "primary-control",
+      "theme": "dark",
+      "color": "rgb(255, 255, 255)",
+      "background": "rgb(18, 63, 43)",
+      "minHeight": 44
+    },
+    {
+      "kind": "receipt-context-retry-keeps-original-act",
+      "pass": true
+    }
+  ],
+  "console": []
+}
