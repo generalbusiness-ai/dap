@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/scope/test/lending.test.ts","body":{"commit":"feccbbcfef618ed560e441a7711ce80941b57c22","path":"packages/scope/test/lending.test.ts"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:093c5674c5a27c715062699a4de0042960359e4a","text":"Merge retired a covered predecessor; the successor is at packages/cli/test/application-local.test.ts."}
