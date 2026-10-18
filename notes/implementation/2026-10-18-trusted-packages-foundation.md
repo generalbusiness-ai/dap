@@ -33,8 +33,9 @@ It does not generate a key or contact a room.
 
 `dap check [directory]` reads `dap.application.json` and its listed data-only
 scenarios without opening operator custody. The local runner uses native
-Core, Node SQLite transactions, alarms and replay. Every scenario must have
-assertions and replay consistently. Local commands require Node's unflagged
+Core, Node SQLite transactions, alarms and replay. Every scenario needs an
+expected act or retry answer, or a nonempty assertion about native state.
+Its replay must be consistent. Local commands require Node's unflagged
 SQLite support: Node 22.13+, 23.4+, or 24+. Evidence here uses Node 26.12.
 Other CLI commands retain their existing Node requirement.
 
@@ -143,6 +144,24 @@ The focused CLI cases pass two tests, MCP inventory passes five, and both
 native server recipes pass (`615fda`, `5a3ceb`, `56a6cf`/`40bd3a`).
 The initial package-only recipe invocation selected no tests and is not a
 pass. The completed gate still needs a passing result on the corrected head.
+
+The first complete checker review (`c7600866`) requested one correction,
+F1. It found that an advance-only or sign-only scenario passed with no
+expected behavior. The review was read in full and ratified. A scenario now
+must complete at least one matching act/retry expectation or nonempty state
+assertion before its replay can produce a green result. Signing or advancing
+time alone cannot meet that requirement. Native judgment, grant handling,
+replay and deferred-envelope semantics are unchanged.
+
+Nine focused scenario cases pass (`ec52a2`/`b734a3`), with CLI production and
+test typechecks (`6a8b27`). The new actual-bin witness refuses both vacuous
+cases with empty custody paths. It preserves an expected accepted act,
+genesis-only assertions, assertions after time advances, and assertions
+after deferred signing. A selected control removes only the new requirement.
+The actual bin wrongly accepts the advance-only case, and the intended
+assertion fails (`b2dad5`/`6353c7`). Source is restored after the terminal
+test. Logs use `/tmp/artroom-m1-foundation-f1-`. The corrected head requires
+its own gate and fresh exact-head review. Earlier approvals are not implied.
 
 ## Remaining M1 work
 

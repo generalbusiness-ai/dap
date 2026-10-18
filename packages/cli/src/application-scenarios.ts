@@ -49,6 +49,7 @@ export async function runApplicationScenario(packet: PackedApplication, value: u
   if (Object.keys(given).length === 0 || !Array.isArray(steps) || steps.length < 1 || steps.length > 256) return fail("Choose 1–16 TEST actors and 1–256 scenario steps.");
   const actors = new Map<string, Actor>(), seeds: Uint8Array[] = [], keys = new Set<string>();
   const accepted = new Map<string, FactRef>(), ownerRecords: ScenarioOwnerRecord[] = [], recorded = new Set<string>();
+  let checkedBehavior = false;
   let scope: LocalApplicationScope | null = null;
   try {
     for (const [name, actor] of Object.entries(given)) {
@@ -98,6 +99,7 @@ export async function runApplicationScenario(packet: PackedApplication, value: u
       const body = object(wanted, ["answer"], ["reason"]);
       if (body["answer"] !== "accepted" && body["answer"] !== "refused" || body["answer"] === "accepted" && Object.hasOwn(body, "reason") || body["answer"] === "refused" && (typeof body["reason"] !== "string" || !/^[a-z][a-z0-9-]{0,63}$/.test(body["reason"]))) return fail("Expect accepted, or refused with its exact native reason.");
       if (answer.answer !== body["answer"] || body["answer"] === "refused" && (answer.answer !== "refused" || answer.reason !== body["reason"])) return fail(`Expected ${body["answer"]}${body["reason"] ? ` (${body["reason"]})` : ""}; native answer was ${answer.answer}${"reason" in answer ? ` (${answer.reason})` : ""}.`);
+      checkedBehavior = true;
     };
     for (let index = 0; index < steps.length; index++) {
       nodes = 0;
@@ -140,6 +142,7 @@ export async function runApplicationScenario(packet: PackedApplication, value: u
           for (const key of ["values", "parties", "refs"] as const) if (Object.hasOwn(wanted, key)) for (const [slot, wantedValue] of Object.entries(dictionary(wanted[key], 64))) {
             if (!Object.hasOwn(item[key], slot) || canonicalize(item[key][slot]) !== canonicalize(resolve(wantedValue))) return fail(`Item ${id} has an unexpected ${key}.${slot}.`);
           }
+          checkedBehavior = true;
         } else if (Object.hasOwn(step, "owner-record")) {
           object(step, ["owner-record"]);
           const record = object(step["owner-record"], ["owner", "command", "outcome"]), owner = label(record["owner"]);
@@ -158,6 +161,7 @@ export async function runApplicationScenario(packet: PackedApplication, value: u
         throw error;
       }
     }
+    if (!checkedBehavior) return fail("Each scenario needs an expected act or retry answer, or a nonempty state assertion.");
     const replay = await scope.replay();
     if (replay.report.mode !== "replay" || replay.report.result !== "consistent") return fail(`${name}: native replay ${replay.report.result}.`);
     return { name, definition, steps: steps.length, replay, authority: "scripted-test-grants", ownerRecords };
