@@ -42,6 +42,17 @@ their existing discovery and result conventions. Resource metadata links
 view tools to the four S2 `ui://dap/` resources. Resource and tool changes
 must participate in the existing generation and paging rules.
 
+Keep the browser entry separate from the server's TypeScript compilation.
+The current MCP configurations provide Node or Workers globals, not the
+browser DOM. A separate browser configuration must check the bridge;
+adding DOM globals to the server would hide an accidental browser import.
+Bundle each resource to one HTML file with inline code and styles. The
+existing Counter asset generator is the repository's build pattern, not
+a source of application-specific view code. Add a freshness witness that
+rebuilds those four resources from their actual inputs and compares the
+served bytes and digests before the final gate. Fixture histories and the
+test host must not become inputs to the production resource bundle.
+
 The view uses the standard MCP Apps handshake and JSON-RPC messages over
 `postMessage`. Accept messages only from its parent. Bound outstanding
 requests, clear their timers on reply and teardown, and report denied or
