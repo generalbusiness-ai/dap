@@ -77,17 +77,21 @@ const resultIdentity = (result: unknown, observes: unknown): string => canonical
 );
 
 /** The result clauses of one request. Each is its own list of effects, which run in a later entry. Returns what each reserved clause can set. */
-function clauses(d: Defining, v: unknown, path: string, ctx: Ctx, conflict: boolean): ClauseSet[] {
+function clauses(d: Defining, v: unknown, path: string, ctx: Ctx, conflict: boolean, observed?: unknown, senderKind?: string): ClauseSet[] {
   const r = d.rec(v, path, [], ["applied", "refused", "superseded", "undelivered", ...(conflict ? ["conflict"] : [])]);
   const reserved: ClauseSet[] = [];
-  for (const [name, e] of Object.entries(r ?? {})) {
+  const rows = isObject(observed) ? observed : {};
+  const names = new Set(Object.keys(r ?? {}));
+  if (d.wholeCapacity) for (const name of Object.keys(rows)) names.add(name);
+  for (const name of names) {
+    const e = r && Object.hasOwn(r, name) ? r[name] : [];
     // Section 17.2: a `conflict` is not reserved. Its entry is new work, and what its clause starts is counted when it is admitted.
     d.clause = name === "conflict" ? null : [];
     // Section 6.6: a clause's subjects are those of the entry that made the send, as that entry resolved them. A name that was
     // selected through a slot that is not fixed cannot be selected again when the clause runs, so a clause names none.
     const settled = new Map([...ctx.also].filter(([also]) => !ctx.unsettled?.has(also)));
-    effects(d, e, at(path, name), { ...ctx, also: settled, clause: true }, true);
-    if (d.clause) { d.clauseSets.push(d.clause); reserved.push(d.clause); }
+    effects(d, e, at(path, name), { ...ctx, also: settled, clause: true, senderKind }, true);
+    if (d.clause) { d.clauseSets.push(d.clause); d.clauseRetains.set(d.clause, own(rows, name)); d.clausePaths.set(d.clause, at(path, name)); reserved.push(d.clause); }
     d.clause = null;
   }
   return reserved;
@@ -133,7 +137,7 @@ export function sends(d: Defining, v: unknown, path: string, ctx: Ctx, top: Rec,
       // own, as data, with the `conflict` clause of a creation. It is counted as one send and one request.
       // Revision 19, "More than one send mark": a mark may state `always: true`. Its rule then gives exactly one request.
       const o = mark(d, s, at(path, i), "send", ["result"], ["always"]);
-      if (o) requests.push({ most: 1, clauses: clauses(d, o["result"], at(at(path, i), "result"), ctx, true) });
+      if (o) requests.push({ send: i, most: 1, clauses: clauses(d, o["result"], at(at(path, i), "result"), ctx, true) });
       if (o && "always" in o && o["always"] !== true) bad("shape", at(at(path, i), "always"), "is true, or is left out");
       marks.push(at(path, i));
       if (!isObject(s) || s["always"] !== true) unsure.push(at(path, i));
@@ -157,7 +161,7 @@ export function sends(d: Defining, v: unknown, path: string, ctx: Ctx, top: Rec,
       // Section 6.6: a definition cannot hold its own digest, so `self` names the creating scope's own pinned definition.
       if (r["definition"] !== "self" && !isDigest(r["definition"]) && !isPlatformDefinition(r["definition"])) bad("shape", at(p, "definition"), "is a definition digest, a platform definition, or self");
       sources(d, r["fields"], at(p, "fields"), ctx, r["kind"] === "lane");
-      requests.push({ most: 1, clauses: clauses(d, r["result"], at(p, "result"), ctx, true) });
+      requests.push({ send: i, most: 1, clauses: clauses(d, r["result"], at(p, "result"), ctx, true, r["observes"], typeof r["kind"] === "string" ? r["kind"] : undefined) });
       [kind, result] = [[k, r["kind"], r["definition"]], r["result"]];
     } else if (k === "tell") {
       const r = rec(x, p, ["to", "message", "fields", "result"], ["if", ...ROWS(d)]);
@@ -169,7 +173,7 @@ export function sends(d: Defining, v: unknown, path: string, ctx: Ctx, top: Rec,
       str(r["message"], at(p, "message"));
       condition(d, r, p, ctx);
       sources(d, r["fields"], at(p, "fields"), ctx, to?.type?.type === "scope" && to.type.kind === "lane");
-      requests.push({ most: 1, clauses: clauses(d, r["result"], at(p, "result"), ctx, false) });
+      requests.push({ send: i, most: 1, clauses: clauses(d, r["result"], at(p, "result"), ctx, false, r["observes"], to?.type?.type === "scope" ? to.type.kind : undefined) });
       [kind, result, always] = [[k, r["message"]], r["result"], !("if" in r) && alsoRead(r["to"]).length === 0];
     } else if (k === "relate") {
       const r = rec(x, p, ["to", "name", "item", "state", "detail", "result"], ["each", "if", ...ROWS(d)]);
@@ -193,7 +197,7 @@ export function sends(d: Defining, v: unknown, path: string, ctx: Ctx, top: Rec,
       // Section 6.6: a clause of a fan-out send may read `each`, the item of that send. The entry records the item of each update and
       // nothing else of the range. So `each` is found again, when the result is recorded, only where the update's `item` is `each`.
       const clauseCtx = each && canonicalize(r["item"]) === canonicalize({ item: "each" }) ? within : ctx;
-      requests.push({ most: Number.isFinite(max) ? max : 0, clauses: clauses(d, r["result"], at(p, "result"), clauseCtx, false) });
+      requests.push({ send: i, most: Number.isFinite(max) ? max : 0, clauses: clauses(d, r["result"], at(p, "result"), clauseCtx, false, r["observes"], to?.type?.type === "scope" ? to.type.kind : undefined) });
       if ("observes" in r) clauseObserves(d, r["observes"], at(p, "observes"), clauseCtx, false);
       [kind, result, always, made] = [[k, r["name"], r["state"]], r["result"], !("if" in r) && !each && alsoRead([r["to"], r["item"]]).length === 0, Number.isFinite(max) ? max : 0];
       if (problems.length === before) {

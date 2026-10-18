@@ -1,7 +1,11 @@
 import { describe, expect, test } from "vitest";
+import { runInDurableObject } from "cloudflare:test";
 import type { Entry, Input, Seed } from "@generalbusiness/dap-contract";
-import { messageDigest, scopeIdOf } from "@generalbusiness/artroom-bytes";
-import { timeMs } from "@generalbusiness/dap-derive";
+import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
+import { messageDigest, parseStrict, scopeIdOf } from "@generalbusiness/artroom-bytes";
+import { reserved, timeMs } from "@generalbusiness/dap-derive";
+import { deskDefinition, ticketDefinition, variant } from "@generalbusiness/dap-derive/testing";
+import { SqliteStore } from "../src/index.ts";
 import { reader } from "./support.ts";
 import { Node, desk, later, net, rita, settle, ticket, una } from "./net.ts";
 
@@ -122,9 +126,13 @@ describe("a relationship update (section 7.3) between two real objects", () => {
 });
 
 describe("a request that cannot be delivered (section 7.4)", () => {
-  test("another incarnation is refused by the resolver of the name and records nothing; three refusals end `undelivered`, and a log with one unanswered attempt ends `delivery-unavailable` with the request pending", async () => {
-    const D = await desk();
-    const S = await ticket(D, "S");
+  test.each(["legacy", "whole-scope"] as const)("%s: another incarnation records nothing; routing refusals end undelivered and an unanswered attempt leaves the request pending", async cohort => {
+    const under = cohort === "whole-scope" ? variant(ticketDefinition.declared, d => { d.capacity = { name: "whole-scope", version: 1 }; }) : ticketDefinition;
+    const directory = cohort === "whole-scope" ? variant(deskDefinition.declared, d => {
+      for (const form of [...Object.values(d.acts), ...Object.values(d.receives)] as { sends: { create?: { definition: string } }[] }[]) for (const send of form.sends) if (send.create?.definition === ticketDefinition.digest) send.create.definition = under.digest;
+    }) : deskDefinition;
+    const D = await desk(directory, [under]);
+    const S = await ticket(D, "S", under);
     const head = (await D.summary()).at;
     // A reference to the desk's scope ID with an incarnation the desk does not have.
     const lost = { ...(await D.at()), inc: (await S.at()).inc };
@@ -145,6 +153,38 @@ describe("a request that cannot be delivered (section 7.4)", () => {
     ]);
     // The second request is still pending: its item has not moved and it has no result. Nothing reached the desk.
     expect([(await S.item(unanswered.fact.seq))!.state, (await S.outboxItems()).find((outboxId) => outboxId.outboxId === `${unanswered.fact.seq}.0`), (await D.summary()).at]).toMatchObject(["asked", { result: null, diagnosis: { finding: "delivery-unavailable" } }, head]);
+    if (cohort === "whole-scope") {
+      // Real driver diagnoses and real SQLite, with namespace test authority
+      // and controlled transport. The Amount is derived from the native send,
+      // not injected by the probe; neither this nor eviction proves authority.
+      const inspect = () => runInDurableObject(S.object, (_instance, state) => {
+        const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) });
+        const last = parseStrict(store.stored(store.scope()!.head.seq)!.bytes) as Entry;
+        return { pending: store.pendingRequests(), keys: store.keyCounts(), amount: reserved(store, under, last.input), snapshot: store.all() };
+      });
+      const before = await inspect();
+      expect(before.pending).toHaveLength(1);
+      expect(before.pending[0]!.reservation).toEqual({ entries: 2, items: 0, records: 0, bytes: 3 * PROPOSED_BOUNDS.entryBytes, requests: 0 });
+      expect(before.keys.requests).toBe(1);
+      expect(before.amount).toEqual({ entries: 2, items: 0, records: 0, bytes: 3 * PROPOSED_BOUNDS.entryBytes, requests: 0 });
+      const rolledBack = await runInDurableObject(S.object, (_instance, state) => {
+        const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) });
+        // Explicit raw storage probe: removing the outbox's pending status
+        // and its Amount must roll back together. This is not a judged result.
+        const { reservation: _omitted, ...request } = store.pendingRequests()[0]!;
+        try {
+          store.transaction(() => {
+            store.putRequest({ ...request, result: { seq: store.scope()!.head.seq + 1, clause: "applied" } });
+            throw new Error("rollback request Amount probe");
+          });
+        } catch (error) { return error instanceof Error && error.message === "rollback request Amount probe"; }
+        return false;
+      });
+      expect(rolledBack).toBe(true);
+      expect(await inspect()).toEqual(before);
+      await S.restart();
+      expect(await inspect()).toEqual(before);
+    }
   });
 
   test("a forged delivery is `source-unverified` and records nothing: a message the source entry does not hold, and a hash the source entry does not have", async () => {

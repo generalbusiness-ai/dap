@@ -1,4 +1,5 @@
 /** Operational metrics-v1. Nothing here is an input to a native decision. */
+import { SCOPE_BOUNDS } from "@generalbusiness/dap-contract";
 import { isScopeId, utf8 } from "@generalbusiness/artroom-bytes";
 import type { MismatchReason, ReadRefusal, RefusalReason, SessionRefusal, UnavailableReason } from "@generalbusiness/dap-contract";
 
@@ -26,7 +27,7 @@ const REASONS: Record<RefusalReason | UnavailableReason | MismatchReason | ReadR
   "history-unavailable": true, "too-large": true, "sessions-unavailable": true, "bad-request": true, replayed: true,
 };
 const INCIDENTS = ["outcome-conflict", "ref-mismatch", "incarnation-conflict", "pin-confirm-no-pin", "unpin-never-admitted", "token-unowned", "branch-moved", "bad-input", "sent-again"];
-const reasons = new Set([...Object.keys(REASONS), ...EVENTS, ...INCIDENTS, "2xx", "3xx", "4xx", "5xx", "aggregated", "summary", "none"]);
+const reasons = new Set([...Object.keys(REASONS), ...SCOPE_BOUNDS, ...EVENTS, ...INCIDENTS, "2xx", "3xx", "4xx", "5xx", "aggregated", "summary", "none"]);
 const places = new Set<string>(METRIC_PLACES);
 const kinds = new Set<string>(METRIC_KINDS);
 const ends = new Set<string>(ENDS);

@@ -33,7 +33,7 @@
  */
 
 import type { Item, StateView } from "./state.ts";
-import { NOTHING, largest, sum, type Amount } from "./held.ts";
+import { NOTHING, amountMath, type Amount } from "./held.ts";
 import type { ValidDefinition } from "./validate/index.ts";
 import { own } from "./values.ts";
 
@@ -80,7 +80,8 @@ export type Markers = Readonly<Record<string, MarkedType>>;
  * closure is then not finite (rule 9), and the validator refuses the
  * definition.
  */
-export function markerReservations(types: Markers, base: (type: string, form: MarkerForm) => Amount = (_, form) => form.amount, cyclic: (type: string, state: string) => void = () => undefined) {
+export function markerReservations(types: Markers, base: (type: string, form: MarkerForm) => Amount = (_, form) => form.amount, cyclic: (type: string, state: string) => void = () => undefined, checked = false) {
+  const { sum, largest } = amountMath(checked);
   const known = new Map<string, Amount>();
   const open = new Set<string>();
   const completed = (t: MarkedType, done: readonly string[]): string[] => t.marks.filter((mark) => done.includes(mark));
@@ -121,7 +122,10 @@ export function markerReservations(types: Markers, base: (type: string, form: Ma
     const t = own(types, name);
     return t ? t.marks.filter((mark) => !done.includes(mark) && t.forms.some((form) => form.slot === mark && form.in.includes(state))) : [];
   };
-  return { awaits, pending };
+  return { awaits, pending, task: (name: string, slot: string | null, state: string, done: readonly string[]): Amount => {
+    const type = own(types, name);
+    return type ? workOf(name, type, slot, state, completed(type, done)) : NOTHING;
+  } };
 }
 
 /** The existing numeric API is the entry projection of the same traversal, including a caller's optional numeric base. */
@@ -175,23 +179,30 @@ const PAGE = 64;
  * not read: a final state has no marker task, and its state task is counted
  * at the count of the state with no mark completed, which is never less.
  */
-export function markerOwed(view: StateView, definition: Pick<ValidDefinition, "markers" | "declared">): number {
+export function markerReserved(view: StateView, definition: Pick<ValidDefinition, "markers" | "declared">): Amount {
+  const checked = definition.declared.capacity?.name === "whole-scope";
+  const { sum, times } = amountMath(checked);
   const markers = definition.markers;
-  if (!markers) return 0;
-  const amounts = markerAmounts(markers);
-  let entries = 0;
+  if (!markers) return NOTHING;
+  const amounts = markerReservations(markers, undefined, undefined, checked);
+  let reserved = NOTHING;
   for (const [name, type] of Object.entries(markers)) {
     for (const [state, { final }] of Object.entries(own(definition.declared.items, name)?.states ?? {})) {
       const most = amounts.awaits(name, state, []);
-      if (most === 0) continue;
-      if (final) { entries += most * view.count(name, state); continue; }
+      if (most.entries === 0) continue;
+      if (final) { reserved = sum(reserved, times(view.count(name, state), most)); continue; }
       for (let after: number | null = null; ;) {
         const page = view.page(name, [state], after, PAGE);
-        for (const item of page.items) entries += amounts.awaits(name, state, marksDone(type, item));
+        for (const item of page.items) reserved = sum(reserved, amounts.awaits(name, state, marksDone(type, item)));
         if (!page.more || page.items.length === 0) break;
         after = page.items.at(-1)!.id;
       }
     }
   }
-  return entries;
+  return reserved;
+}
+
+/** The legacy entry API projects the same marker traversal. */
+export function markerOwed(view: StateView, definition: Pick<ValidDefinition, "markers" | "declared">): number {
+  return markerReserved(view, definition).entries;
 }

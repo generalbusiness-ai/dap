@@ -261,7 +261,7 @@ export class Deliveries {
         switch (judged.result) {
           case "write": {
             // Section 9.2: an entry that settles nothing is written only while the scope has room; one that settles is counted for.
-            if ((view.scope()?.head.seq ?? -1) + 1 >= bounds.scopeEntries) return said(retry("scope-full"));
+            if (!definition().declared.capacity && (view.scope()?.head.seq ?? -1) + 1 >= bounds.scopeEntries) return said(retry("scope-full"));
             // Section 16.1, "A value that a row may retain": each value that a retained observation names is kept with the entry.
             const retain: Retained[] = [...used(judged.draft, [source, ...facts]), ...texts.retain(definition(), judged.draft, source.under), ...valuesOf(judged.draft)];
             if (genesis && creation) {
@@ -274,7 +274,7 @@ export class Deliveries {
               verdict: "write", draft: judged.draft, facts: [source, ...facts], retain,
               sealed: ({ entry, hash }) => { rows.sealed({ entry, hash }); return { answer: "recorded", fact: { at: entry.at, seq: entry.seq, hash } }; },
               // An entry that cannot be written now is not a decision: the sender keeps the task.
-              unfit: () => retry("unavailable"), full: () => retry("scope-full"),
+              unfit: () => retry("unavailable"), full: (_head, bound) => ({ ...retry("scope-full"), ...(definition().declared.capacity ? { name: bound } : {}) }),
             };
           }
           // A first decision and a repeat are answered alike: with the fact of the entry that recorded the message.

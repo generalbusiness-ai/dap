@@ -107,10 +107,11 @@ function answer(P: Scope, from: Scope, seq: number, n: number, outcome: "applied
 const told = (s: Scope) => s.last.effects.filter((e) => e.effect === "attention");
 
 describe("sends (section 6.6)", () => {
-  test("a fan-out at its limit makes one send for each item, in order of item ID, before the sends written after it; a send that is not made takes no ordinal (witness 18.6, at a configured limit)", () => {
+  test.each(["legacy", "whole-scope"] as const)("%s: a fan-out at its limit keeps each request's ordinal and reservation when a later conditional send is omitted", cohort => {
     const [X, issue] = [9, 1].map((n) => new Scope(ticketDefinition, rita.member, true, n)) as [Scope, Scope];
     const [A, B, C, S] = [issue.at, ...[2, 3, 4].map(address)] as [ScopeRef, ScopeRef, ScopeRef, ScopeRef];
-    const P = new Scope(pullDefinition);
+    const definition = cohort === "whole-scope" ? valid(validateDefinition({ ...pull, capacity: { name: "whole-scope", version: 1 } }, tight)) : pullDefinition;
+    const P = new Scope(definition);
     const links = [C, A, B].map((to, i) => P.did(rita, "link", fields(i === 0 ? { issue: to, how: "keyword" } : { issue: to })).seq);
     // No lane staged this work, so the `unpin` is not made: the index row takes the next ordinal, and the result the one after.
     published(P, X);
@@ -119,6 +120,7 @@ describe("sends (section 6.6)", () => {
     // fact, and its position as a number. A handler reads its sender and its source entry.
     const source = P.last.input as Extract<Input, { type: "delivery" }>;
     const sealed = P.last.seq;
+    for (const n of [0, 1, 2]) expect(P.state.request(sealed, n)?.reservation).toEqual(cohort === "whole-scope" ? { entries: 2, items: 0, records: 0, bytes: 3 * PROPOSED_BOUNDS.entryBytes, requests: 0 } : undefined);
     const [first, second] = [links[0]!, links[1]!];
     expect(P.last.sends.slice(0, 2).map((s) => s.message.class === "request" && s.message.body)).toEqual([
       { name: "closes", item: P.fact(first), state: "merged", detail: { commit: "c1", how: "keyword", from: X.at, by: source.from, made: P.fact(first), seq: first } },

@@ -15,6 +15,8 @@ test("all eight variants preserve local full fact provenance and the common cons
     }
     const child = requiredDependency(from, "definition-child", { kind: "definition", digest: d("b") });
     expect(child.purpose).toBe("archive-closure");
+    if (input === "genesis") expect(requiredDependency(from, "birth-definition", { kind: "definition", digest: d("b") }).purpose).toBe("replay-required");
+    else expect(() => requiredDependency(from, "birth-definition", { kind: "definition", digest: d("b") })).toThrow(UnsupportedConsumer);
     expect(textDependency(from, d("c"))).toEqual({ mode: "text", origin: from, consumer: "detached-text", key: { kind: "text", digest: d("c") }, archive: "omit" });
     if (input !== "act") expect(() => requiredDependency(from, "act-value", { kind: "definition", digest: d("b") })).toThrow(UnsupportedConsumer);
     if (input !== "outcome") expect(() => requiredDependency(from, "outcome-snapshot", { kind: "snapshot", digest: d("b") })).toThrow(UnsupportedConsumer);

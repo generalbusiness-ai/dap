@@ -44,6 +44,8 @@ export function render(report: Report, why: string | null = null): string {
   // Section 9.3: a text that a tombstone removed is not missing. It is reported, and nothing was derived from its bytes.
   if (report.redacted.length > 0) lines.push("Redacted texts, not derived again:");
   for (const r of report.redacted) lines.push(`  - the text of slot ${r.slot} of item ${r.item}, removed by ${fact(r.tombstone)}`);
+  if (report.incompleteBytes?.length) lines.push("Logical byte checks, incomplete; entries, items, records and requests were still checked:");
+  for (const span of report.incompleteBytes ?? []) lines.push(`  - ${scope(span.scope)}: entries ${span.from} to ${span.through}: ${span.reason}`);
   lines.push("Trusts, which this report does not show:");
   for (const t of report.trusts) lines.push(`  - ${t}`);
   return lines.join("\n");

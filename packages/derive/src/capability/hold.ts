@@ -40,6 +40,8 @@ import { timeMs, type Clock } from "../time.ts";
 import type { ValidDefinition } from "../validate/index.ts";
 import { own, same } from "../values.ts";
 import { isAncestryCheck, objectIdLength } from "./ancestry.ts";
+import { hasWorkspace } from "./workspace.ts";
+import { AmountError, NOTHING as NO_AMOUNT, amountMath, type Amount } from "../held.ts";
 
 export const HOLD: CapabilityName = "hold@1";
 
@@ -79,9 +81,7 @@ export const LICENSE_BOUND = 3;
  * and no option. The validator's list, the commit and a replay all use this
  * one function, and no entry records its answer.
  */
-export const hasWorkspace = (definition: Pick<ValidDefinition, "declared" | "underived">): boolean =>
-  definition.declared.capabilities.some((c) => c.name === "hold" && c.version === 1)
-  && definition.underived.some((u) => u.capability === HOLD && (u.form === "guard" || u.form === "effect"));
+export { hasWorkspace } from "./workspace.ts";
 
 // ---------------------------------------------------------------- what the rules read
 
@@ -904,11 +904,28 @@ const OPERATION_RULES: Readonly<Record<string, OperationRules>> = {
  * | `fork`, `selected` | 6 | Its deletion. |
  */
 export function holdReserves(view: StateView, definition: ValidDefinition): number {
+  if (definition.declared.capacity !== undefined) return holdReservations(view, definition).entries;
   if (!hasWorkspace(definition)) return 0;
   const count = (kind: string, ...states: string[]) => states.reduce((n, state) => n + view.recordCount(HOLD, kind, state), 0);
   const licenses = records(view, "receiver-pin", ["standing"]).reduce((n, pin) => n + Math.max(0, LICENSE_BOUND - (pin.values["decided"] as number)), 0);
   return 3 * count("pin", "provisional", "held") + licenses + 3 * count("root", "creating") + count("root", "retiring")
     + 2 * HOLD_ATTEMPTS.revoke * count("token", "live") + (2 * HOLD_ATTEMPTS.fork * (1 + 2 * HOLD_ATTEMPTS.revoke)) * count("fork", "creating") + 2 * HOLD_ATTEMPTS.deletion * count("fork", "selected");
+}
+
+function holdReservations(view: StateView, definition: ValidDefinition): Amount {
+  if (!hasWorkspace(definition)) return NO_AMOUNT;
+  if (definition.holdTypes.length !== 0) throw new AmountError("hold@1 workspace record producer has no complete reservation Amount");
+  const { sum, times } = amountMath(true);
+  const quotes = definition.pendingWorkAmounts.receiverPins;
+  return sum(...records(view, "receiver-pin", ["standing"]).map(pin => {
+    // Only a ScopeRef can match the verified source of a bound request.
+    const source = pin.values["task"];
+    if (!isScopeRef(source)) return NO_AMOUNT;
+    const decided = pin.values["decided"];
+    if (typeof decided !== "number" || !Number.isSafeInteger(decided)) throw new AmountError("hold@1/receiver-pin decided counter is not a safe integer");
+    if (!quotes) throw new AmountError("hold@1/receiver-pin producer has no complete reservation Amount");
+    return times(Math.max(0, LICENSE_BOUND - decided), own(quotes.byKind, source.kind) ?? quotes.fallback);
+  }));
 }
 
 // ---------------------------------------------------------------- the capability
@@ -972,6 +989,7 @@ export function holdCapability(options: HoldOptions): Capabilities & Steps & Own
     },
     rules: (owner, kind) => (owner === HOLD ? (own(OPERATION_RULES, kind) ?? null) : null),
     reserves: holdReserves,
+    reservations: holdReservations,
     // Section 6.1, "A declared maximum for everything that derives". Each written effect changes at most one record. A step: its
     // records, and two effects for each operation that it opens. An outcome: what its rule states above. One hold of an entry: an
     // opening derives the fork and one operation, 3; an end derives the instance and, for each live token, its record and its

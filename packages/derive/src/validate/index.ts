@@ -16,6 +16,7 @@
  * and `sizes` the byte bounds.
  */
 
+import { hasWorkspace } from "../capability/workspace.ts";
 import type { Bounds, DeclaredDefinition, Digest } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, utf8 } from "@generalbusiness/artroom-bytes";
 import { isObject, own } from "../values.ts";
@@ -24,15 +25,18 @@ import { capacityOf, type PendingWorkAmounts, type PendingCopy } from "./capacit
 import { mark, marked, type Defining, type MarkPlace, type RangeIndex } from "./context.ts";
 import { acts, receives } from "./handlers.ts";
 import { heldUnderBytes, holdForms, holdTypes } from "./hold.ts";
-import { reserving, type Reserving } from "./holds.ts";
+import { prepareReserving, reserving, type Reserving, type ReservationPlan } from "./holds.ts";
 import { itemTypes } from "./items.ts";
 import { observes } from "./observes.ts";
 import { at, shapes, type Problem } from "./shape.ts";
 import type { Markers } from "../markers.ts";
 import { decisions } from "./binding.ts";
+import { nativeCapacity } from "./native-capacity.ts";
 import { setOnce } from "./markers.ts";
 import { timedEntryBytes, timedGraph, timedKinds, timedRules } from "./timed.ts";
 import { standingOf, type Standing } from "./standing.ts";
+import { AmountError } from "../held.ts";
+import { PROFILE } from "../rule/profile.ts";
 
 export type { MarkKind, MarkPlace, RangeIndex } from "./context.ts";
 export type { Problem, ProblemCode } from "./shape.ts";
@@ -73,6 +77,8 @@ export interface ValidDefinition {
   readonly pendingCopies: readonly PendingCopy[];
   /** Known declared task terms, including future requests and their result-source bytes. Other axes/retention remain partial. */
   readonly pendingWorkAmounts: PendingWorkAmounts;
+  /** Opt-in writer ceiling for each retained rule input; absent in legacy definitions. */
+  readonly ruleInputBytes?: number;
   /**
    * Section 6.11: each form that this package reads and does not derive by
    * itself, with the capability version whose own code derives it. A runtime
@@ -131,9 +137,9 @@ export type Validation = { ok: true; definition: ValidDefinition } | { ok: false
  * the table that checks each rule; this one checks names and shapes only, so
  * that the judges never load the engine.
  */
-export interface Profile { admit?: (source: string) => string | null }
+export interface Profile { admit?: (source: string) => string | null; inputBytes?: number }
 
-export const PROFILES: Readonly<Record<string, Profile>> = { "restricted@1": {} };
+export const PROFILES: Readonly<Record<string, Profile>> = { "restricted@1": { inputBytes: PROFILE.inputBytes } };
 
 /**
  * What only a platform definition may state, and only the platform package passes (section 6.1). `platform`: the value is the data
@@ -154,7 +160,7 @@ export function validateDefinition(input: unknown, bounds: Bounds, profiles: Rea
   const { problems, bad, rec, entries, str } = read;
 
   const platform = options.platform === true;
-  const top = rec(input, "", ["format", "name", "profile", "capabilities", "genesis", "items", "acts", "receives", "timed", "rules", ...(platform ? ["outcomes"] : [])], ["level", ...(platform ? ["standing"] : [])]);
+  const top = rec(input, "", ["format", "name", "profile", "capabilities", "genesis", "items", "acts", "receives", "timed", "rules", ...(platform ? ["outcomes"] : [])], ["level", "capacity", ...(platform ? ["standing"] : [])]);
   if (!top) return { ok: false, problems };
   // Section 6.1: the bound on a definition's canonical bytes limits the validator's work, so it is checked before anything is read.
   // A value with no canonical bytes is refused at the end, as before.
@@ -170,6 +176,14 @@ export function validateDefinition(input: unknown, bounds: Bounds, profiles: Rea
       bad("unsupported-definition", "level", "this runtime implements only recorded durability version 1");
     }
   }
+  // The definition pins its rule for the scope's entire life. Never add a
+  // default field to older definitions or reinterpret an unknown version.
+  if (Object.hasOwn(top, "capacity")) {
+    const capacity = rec(top["capacity"], "capacity", ["name", "version"]);
+    if (capacity && (capacity["name"] !== "whole-scope" || capacity["version"] !== 1)) {
+      bad("unsupported-definition", "capacity", "this runtime implements only whole-scope capacity version 1");
+    }
+  }
   // Section 6.1: a definition states its own name, which `under` is compared with. A name that begins `platform:` is the name of a
   // platform definition, which the platform supplies in code, so no declared definition takes one. The platform package alone passes
   // the option `platform`, for the data of a definition that it supplies.
@@ -177,9 +191,12 @@ export function validateDefinition(input: unknown, bounds: Bounds, profiles: Rea
   if (!platform && named?.startsWith("platform:")) bad("shape", "name", "a declared definition's name does not begin with platform:");
 
   const d: Defining = {
+    native: nativeCapacity(),
+    wholeCapacity: isObject(top["capacity"]) && top["capacity"]["name"] === "whole-scope",
+    ruleInputBytes: 0,
     ...read, bounds, name: typeof top["name"] === "string" ? top["name"] : null, typeNames: new Set(isObject(top["items"]) ? Object.keys(top["items"]) : []), types: new Map(), rules: new Set(), holds: false, holdTypes: new Set(),
     capabilities: new Map(), underived: [],
-    indexes: [], clauseSets: [], clause: null, pendingWork: [], platform, marks: [], places: new Map(), valueSets: [], bindings: [], observing: false,
+    indexes: [], clauseSets: [], clauseRetains: new Map(), clausePaths: new Map(), clause: null, pendingWork: [], platform, marks: [], places: new Map(), valueSets: [], bindings: [], observing: false,
   };
 
   const profile = rec(top["profile"], "profile", ["name", "version"]);
@@ -191,6 +208,11 @@ export function validateDefinition(input: unknown, bounds: Bounds, profiles: Rea
     const refusal = text === null ? null : (evaluator?.admit?.(text) ?? null);
     if (refusal !== null) bad("rule", at("rules", name), refusal);
     d.rules.add(name);
+  }
+  if (d.wholeCapacity && d.rules.size > 0) {
+    const limit = evaluator?.inputBytes;
+    if (limit === undefined || !Number.isSafeInteger(limit) || limit <= 0) bad("reserve-unbounded", "profile", "retained rule-input producer has no finite canonical-byte ceiling");
+    else d.ruleInputBytes = limit;
   }
 
   // Section 6.1: each capability the definition uses, by name and version. They are read first: a field type may name one.
@@ -222,6 +244,12 @@ export function validateDefinition(input: unknown, bounds: Bounds, profiles: Rea
   }
 
   holdForms(d, top);
+  // Native workspace staging can open hold@1/check, whose retained ancestry
+  // snapshot has no producer byte ceiling. The read limit is not a writer
+  // maximum. Item-form holds alone cannot create the required instance.
+  if (d.wholeCapacity && d.holdTypes.size > 0 && hasWorkspace({ declared: input as DeclaredDefinition, underived: d.underived })) {
+    bad("reserve-unbounded", "capacity", "hold@1/check ancestry-snapshot producer has no finite canonical-byte ceiling");
+  }
   // Section 6.4, "`settles` by a mark": no written effect sets a mark but to `true`. Section 17.2a: each key of `decisions` is the
   // message of a handler that states `bound`, whose `of` names that item type.
   setOnce(d);
@@ -271,16 +299,26 @@ export function validateDefinition(input: unknown, bounds: Bounds, profiles: Rea
   }
   if (problems.length > 0) return { ok: false, problems };
   // Section 17.2: each reservation is derived from the definition. A closure that is not finite is refused.
-  const capacity = capacityOf(d, graph, moves);
+  let capacity: ReturnType<typeof capacityOf>;
+  let reserved: ReturnType<typeof reserving>;
+  try {
+    let plan: ReservationPlan | undefined;
+    const joint = d.wholeCapacity && d.platform;
+    capacity = capacityOf(d, graph, moves, joint ? reader => (plan = prepareReserving(d, top, reader, options.outcomeValues ?? {})) : undefined);
+    if (problems.length > 0) return { ok: false, problems };
+    reserved = joint ? plan?.finish(capacity) : reserving(d, top, capacity, options.outcomeValues);
+  } catch (error) {
+    if (!(error instanceof AmountError)) throw error;
+    return { ok: false, problems: [...problems, { code: "reserve-unbounded", path: "capacity", message: error.message }] };
+  }
   if (problems.length > 0) return { ok: false, problems };
   // Section 17.2a: a reservation that an item holds, and what each kind of `outcomes` reserves. In platform data only.
-  const reserved = reserving(d, top, capacity, options.outcomeValues);
-  const standing = Object.hasOwn(top, "standing") ? standingOf(d, top["standing"], top["items"]) : null;
+  const standing = Object.hasOwn(top, "standing") ? standingOf(d, top["standing"], top["items"], capacity.pendingWorkAmounts.entry) : null;
   const { decisionEntries: _decisionEntries, ...persistedCapacity } = capacity;
   if (problems.length > 0) return { ok: false, problems };
   try {
     const keyed = [...d.types.values()].flatMap((type): [string, readonly string[]][] => (type.indexes ? [[type.name, type.indexes]] : []));
-    return { ok: true, definition: { declared, digest: definitionDigest(declared), timedTypes: [...timedTypes].sort(), holdTypes: [...d.holdTypes].sort(), indexes: d.indexes, ...persistedCapacity, underived: d.underived, marks: d.marks, observing: d.observing, ...(reserved ? { reserving: reserved } : {}), ...(standing ? { standing } : {}), ...(keyed.length > 0 ? { keyed: Object.fromEntries(keyed) } : {}) } };
+    return { ok: true, definition: { declared, digest: definitionDigest(declared), timedTypes: [...timedTypes].sort(), holdTypes: [...d.holdTypes].sort(), indexes: d.indexes, ...persistedCapacity, underived: d.underived, marks: d.marks, observing: d.observing, ...(d.ruleInputBytes > 0 ? { ruleInputBytes: d.ruleInputBytes } : {}), ...(reserved ? { reserving: reserved } : {}), ...(standing ? { standing } : {}), ...(keyed.length > 0 ? { keyed: Object.fromEntries(keyed) } : {}) } };
   } catch {
     return { ok: false, problems: [{ code: "shape", path: "", message: "has no canonical bytes" }] };
   }

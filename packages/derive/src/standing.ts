@@ -1,5 +1,6 @@
 /** C1's bounded singleton selection and shared prospective counter check. */
-import type { Effect } from "@generalbusiness/dap-contract";
+import type { Effect, StandingReservation } from "@generalbusiness/dap-contract";
+import { NOTHING, amountMath, type Amount } from "./held.ts";
 import { changeItem, newItem } from "./item-effects.ts";
 import type { Item, StateView } from "./state.ts";
 import type { ValidDefinition } from "./validate/index.ts";
@@ -38,12 +39,31 @@ export function standingCounter(view: StateView, definition: ValidDefinition): S
   }
 }
 
-export function standingEntries(view: StateView, definition: ValidDefinition): number {
+/** C1 declares entry slots, not a future form. Opt-in slots include their
+ * existing journal-entry byte maximum. Other work acquires its own Amount
+ * through normal admission; this adds no handoff or producer declaration. */
+export function standingAmount(term: Pick<StandingReservation, "entries" | "max">, count: number, entry: Amount, whole: boolean): Amount {
+  if (!whole) {
+    const entries = term.entries * (term.max - count);
+    if (!natural(entries)) return invalid("standing entry amount is invalid");
+    return { ...NOTHING, entries };
+  }
+  const math = amountMath(true), one = { ...NOTHING, entries: 1 };
+  const maximum = math.times(term.max, one).entries, current = math.times(count, one).entries;
+  if (current > maximum || term.entries < 1) return invalid("standing entry operands are invalid");
+  const slots = math.times(maximum - current, math.times(term.entries, one)).entries;
+  return math.times(slots, entry);
+}
+
+/** One bounded singleton read, shared by the scalar and Amount APIs. */
+export function standingReserved(view: StateView, definition: ValidDefinition): Amount {
   const term = definition.standing;
-  if (!term) return 0;
-  const amount = term.entries * (term.max - standingCounter(view, definition).count);
-  if (!natural(amount)) return invalid("standing entry amount is invalid");
-  return amount;
+  if (!term) return NOTHING;
+  return standingAmount(term, standingCounter(view, definition).count, definition.pendingWorkAmounts.entry, !!definition.declared.capacity);
+}
+
+export function standingEntries(view: StateView, definition: ValidDefinition): number {
+  return standingReserved(view, definition).entries;
 }
 
 /** Uses the existing item transformations, never a second slot interpreter.

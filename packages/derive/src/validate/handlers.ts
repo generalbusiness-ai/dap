@@ -17,6 +17,7 @@ import { holdDoes, opensHold } from "./hold.ts";
 import { observes } from "./observes.ts";
 import { attention, sends } from "./sends.ts";
 import { at, type Rec } from "./shape.ts";
+import { nativeReceiver } from "./native-capacity.ts";
 
 const members = (v: unknown): Rec => (isObject(v) ? v : {});
 /** Whether an item type is `many`, as the definition writes it. */
@@ -213,7 +214,7 @@ export function acts(d: Defining, v: unknown, timed: Readonly<Record<string, unk
     // Section 16.1, "The subjects that an entry observes": the rows of an act, in platform data. A source reads what a guard of the
     // act may read, and no name of `also` that a mark binds.
     if ("observes" in o) observes(d, o["observes"], at(path, "observes"), { where: "act", ctx, selected: new Set([...named.marked, ...named.through]) });
-    const pendingWork: PendingWork = { path, settles: "settles" in o ? settling(d, o["settles"], at(path, "settles"), ctx, null, top) : null, opens: step === "open" ? on?.name ?? null : null, mayCreateCopy: false, sets: [], requests: [] };
+    const pendingWork: PendingWork = { retained: { fields: [...fields.values()], presented: presented.size, source: false, observes: o["observes"] }, path, settles: "settles" in o ? settling(d, o["settles"], at(path, "settles"), ctx, null, top) : null, opens: step === "open" ? on?.name ?? null : null, mayCreateCopy: false, sets: [], requests: [] };
     pendingWork.sets = setsOf(d, step === "open" ? on : null, () => effects(d, o["effects"], at(path, "effects"), ctx, false));
     // A child's genesis sends the platform's one result beside what its act declares.
     entrySends(d, path, sends(d, o["sends"], at(path, "sends"), ctx, top, pendingWork.requests), attention(d, o["attention"], at(path, "attention"), ctx), name === top["genesis"] ? 1 : 0);
@@ -270,14 +271,15 @@ export function receives(d: Defining, v: unknown, top: Rec): void {
     const of = isObject(o["bound"]) && typeof o["bound"]["of"] === "string" && o["bound"]["of"].startsWith("also.") ? o["bound"]["of"].slice(5) : null;
     const named = also(d, o["also"], at(path, "also"), fields, null, top, of === null ? null : { name: of, message, fields, written: o["fields"] });
     if ("bound" in o) bound(d, o["bound"], at(path, "bound"), { tell: cls === "tell", opens: o["opens"], message, fields }, named);
-    const ctx: Ctx = { ...naming(), on, also: named.types, nascent: on !== null, fields, kind: cls === "advisory" ? null : message, handler: { update: cls === "relate", under: typeof from?.["under"] === "string" ? from["under"] : null }, unsettled: named.unsettled };
+    const ctx: Ctx = { ...naming(), on, also: named.types, nascent: on !== null, fields, kind: cls === "advisory" ? null : message, handler: { update: cls === "relate", under: typeof from?.["under"] === "string" ? from["under"] : null }, senderKind: typeof from?.["kind"] === "string" ? from["kind"] : undefined, unsettled: named.unsettled };
     guards(d, o["guards"], at(path, "guards"), ctx, true);
     const copy = cls === "relate" && message !== null && isScopeKind(from?.["kind"]) ? { name: message, kind: from["kind"] } : null;
     const settles = "settles" in o ? settling(d, o["settles"], at(path, "settles"), ctx, copy, top) : null;
     // A singleton primary item may already exist, so its opening counts at the static maximum of one. A settlement of this
     // handler's own copy requires an existing key; a relate handler that settles an item can still receive a first key.
-    const pendingWork: PendingWork = { path, settles, opens: on?.name ?? null, mayCreateCopy: cls === "relate" && !(settles && "copy" in settles), sets: [], requests: [] };
+    const pendingWork: PendingWork = { retained: { fields: [...fields.values()], presented: 0, source: true }, path, settles, opens: on?.name ?? null, mayCreateCopy: cls === "relate" && !(settles && "copy" in settles), sets: [], requests: [] };
     pendingWork.sets = setsOf(d, on, () => effects(d, o["effects"], at(path, "effects"), ctx, false));
+    nativeReceiver(d, pendingWork, fields, o["also"], cls, message, from?.["kind"]);
     // The entry that decides a request sends the platform's one result.
     entrySends(d, path, sends(d, o["sends"], at(path, "sends"), ctx, top, pendingWork.requests), attention(d, o["attention"], at(path, "attention"), ctx), cls === "advisory" ? 0 : 1);
     d.pendingWork.push(pendingWork);

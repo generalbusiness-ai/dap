@@ -9,6 +9,7 @@
  * note's. Every list is a page with a cursor (section 9.1).
  */
 
+import type { ScopeBoundName } from "./bounds.ts";
 import type { ItemQueryRead } from "./item-query.ts";
 import type { Answer, DeliveryRefusal, RefusalReason, UnavailableReason } from "./result.ts";
 import type { DeclaredDefinition } from "./definition.ts";
@@ -25,7 +26,7 @@ import type { Cursor, OutboxItem, Item, LogPage, Read, RetainedInput, Sealed, Se
  */
 export type Created =
   | { answer: "accepted"; receipt: Receipt }
-  | { answer: "refused"; reason: RefusalReason | DeliveryRefusal | "unsupported-definition" }
+  | { answer: "refused"; reason: RefusalReason | DeliveryRefusal | "unsupported-definition"; name?: ScopeBoundName }
   | { answer: "unavailable"; reason: UnavailableReason };
 
 /**

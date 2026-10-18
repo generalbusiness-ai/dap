@@ -19,6 +19,7 @@ import type { Ctx, Defining, Type } from "./context.ts";
 import { range } from "./guards.ts";
 import { operand } from "./operands.ts";
 import { at } from "./shape.ts";
+import { nativeLicense } from "./native-capacity.ts";
 
 /**
  * One form of a definition that this package does not derive by itself,
@@ -103,7 +104,8 @@ export function capabilityEffect(d: Defining, x: unknown, p: string, ctx: Ctx, o
   if (!declared) { bad("capability", at(p, "do"), `is not an effect that ${cap.version} declares`); return; }
   const written = entries(r["with"], at(p, "with"), null);
   if (!declared.with.some((allowed) => written.every(([name]) => allowed.includes(name)))) bad("capability", at(p, "with"), `is no set of arguments that the effect ${String(r["do"])} of ${cap.version} takes`);
-  for (const [name, arg] of written) operand(d, arg, at(at(p, "with"), name), ctx, owner, false);
+  const reads = new Map(written.map(([name, arg]) => [name, operand(d, arg, at(at(p, "with"), name), ctx, owner, false)]));
+  if (cap.version === "hold@1" && r["do"] === "license") nativeLicense(d, p, isObject(r["with"]) ? r["with"] : {}, reads, ctx);
   // Section 6.4: a timed rule's effects are total, and what a capability's effect does is not this package's to show.
   if (ctx.timed) bad("timed-partial", p, "a timed rule has no capability effect");
   d.underived.push({ path: p, capability: cap.version, form: "effect", name: String(r["do"]) });

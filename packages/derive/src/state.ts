@@ -10,6 +10,8 @@ import type { CapabilityName, Digest, FactRef, FieldValue, Head, Held, Incarnati
 import { canonicalBytes, canonicalize, digestBytes } from "@generalbusiness/artroom-bytes";
 import { pendingOf } from "./ledger.ts";
 import { byteOrder } from "./values.ts";
+import type { ItemDuty } from "./item-duties.ts";
+import type { Amount } from "./held.ts";
 
 export type { Item, Party, Status };
 
@@ -42,6 +44,8 @@ export interface OwnRequest {
   seq: number; n: number; hash: Digest; type: Request["type"]; to: ScopeRef | Seed;
   result: { seq: number; clause: "applied" | "refused" | "superseded" | "conflict" } | null;
   diagnosis: { seq: number; finding: "undelivered" | "delivery-unavailable" } | null;
+  /** Opt-in pending result/diagnosis room, derived from the originating form. */
+  reservation?: Amount;
 }
 
 /** The applied creation result this scope holds for a seed (section 7.2). */
@@ -153,6 +157,9 @@ export interface ObservedHead { of: Pick<ScopeRef, "scope" | "inc">; subject: st
 /** Which records of one kind a read asks for: those in one of `states`, and those whose value `member` equals `value`. Absent: every one. */
 export interface RecordsWhere { states?: readonly string[]; member?: string; value?: unknown }
 
+/** Logical first-key counts, independent of item/record state and transport bookkeeping. */
+export interface KeyCounts { items: number; records: number; requests: number }
+
 /** Items in ascending ID order. `more`: the page stopped at its limit and at least one further item follows. */
 export interface Page { items: readonly Item[]; more: boolean }
 
@@ -197,6 +204,10 @@ export interface StateSnapshot {
   holders?: readonly Holder[];
   /** The account of each request that an entry with an account sent, by the sending entry and the send's ordinal (section 17.2a). Absent: none. */
   accounts?: readonly Account[];
+  /** Opt-in admitted item duties. Older cohorts never add this member. */
+  itemDuties?: readonly ItemDuty[];
+  /** Opt-in holders whose own final settlement was folded, in item order. */
+  settledHolders?: readonly number[];
 }
 
 /** The digest a checkpoint entry carries: SHA-256 of the snapshot's canonical JSON. */
@@ -205,8 +216,11 @@ export function stateDigest(snapshot: StateSnapshot): Digest {
 }
 
 export interface StateView {
+  holderSettled(item: number): boolean;
+  itemDuties(item?: number): readonly ItemDuty[];
   /** Null before the genesis entry. */
   scope(): ScopeState | null;
+  keyCounts(): KeyCounts;
   item(id: number): Item | null;
   /** The exact number of items of that type in that state, live or retained final (section 6.5). */
   count(type: string, state: string): number;
@@ -231,6 +245,9 @@ export interface StateView {
   copies(name: string, kind: ScopeKind, states?: readonly string[]): number;
   accepted(actor: KeyId, idempotencyKey: string): Accepted | null;
   request(seq: number, n: number): OwnRequest | null;
+  /** No result or undelivered diagnosis; a delivery-unavailable request
+   * remains pending. Ordered by the sending entry and send ordinal. */
+  pendingRequests(): readonly OwnRequest[];
   /** The record of the incoming delivery from that scope, entry and ordinal, if one was recorded. */
   decided(from: ScopeRef, seq: number, n: number): Decided | null;
   creation(seed: Digest): HeldCreation | null;
@@ -301,6 +318,8 @@ export interface StateView {
 
 /** The changes an entry makes. Only the fold calls these. */
 export interface StateWriter extends StateView {
+  settleHolder(item: number): void;
+  putItemDuties(item: number, duties: readonly ItemDuty[]): void;
   setScope(scope: ScopeState): void;
   putItem(item: Item): void;
   addCount(type: string, state: string, by: number): void;
@@ -362,6 +381,7 @@ export class MemoryState implements StateWriter {
   readonly #relations = new Map<string, Relation>();
   readonly #accepted = new Map<string, readonly [KeyId, string, Accepted]>();
   readonly #requests = new Map<string, OwnRequest>();
+  readonly #pendingRequests = new Set<string>();
   readonly #decided = new Map<string, Decided>();
   readonly #creations = new Map<Digest, HeldCreation>();
   readonly #operations = new Map<OperationId, Operation>();
@@ -370,6 +390,8 @@ export class MemoryState implements StateWriter {
   readonly #records = new Map<string, RecordState>();
   readonly #observed = new Map<string, ObservedHead>();
   readonly #holders = new Map<number, Held>();
+  readonly #itemDuties = new Map<number, readonly ItemDuty[]>();
+  readonly #settledHolders = new Set<number>();
   readonly #accounts = new Map<string, Account>();
   /**
    * For each observed scope ID, the incarnations of the observed heads that are held, once each, in byte order. `putObserved`
@@ -397,6 +419,7 @@ export class MemoryState implements StateWriter {
   constructor(tally?: { steps: number }) { this.tally = tally; }
 
   scope() { return this.#scope; }
+  keyCounts(): KeyCounts { return { items: this.#items.size, records: this.#relations.size + this.#records.size, requests: this.#pendingRequests.size }; }
   item(id: number) { return this.#items.get(id) ?? null; }
   count(type: string, state: string) { return this.#counts.get(key(type, state))?.[2] ?? 0; }
   page(type: string, states: readonly string[], after: number | null, limit: number): Page {
@@ -421,6 +444,9 @@ export class MemoryState implements StateWriter {
   }
   accepted(actor: KeyId, idempotencyKey: string) { return this.#accepted.get(key(actor, idempotencyKey))?.[2] ?? null; }
   request(seq: number, n: number) { return this.#requests.get(key(seq, n)) ?? null; }
+  pendingRequests(): readonly OwnRequest[] {
+    return [...this.#pendingRequests].map(at => this.#requests.get(at)!).sort((a, b) => a.seq - b.seq || a.n - b.n);
+  }
   decided(from: ScopeRef, seq: number, n: number) { return this.#decided.get(key(from.scope, from.inc, seq, n)) ?? null; }
   creation(seed: Digest) { return this.#creations.get(seed) ?? null; }
   operation(id: OperationId) { return this.#operations.get(id) ?? null; }
@@ -461,6 +487,15 @@ export class MemoryState implements StateWriter {
 
   holder(item: number) { return this.#holders.get(item) ?? null; }
   holders(): Holder[] { return [...this.#holders].sort(([a], [b]) => a - b).map(([item, held]) => ({ item, held })); }
+  holderSettled(item: number): boolean { return this.#settledHolders.has(item); }
+  settleHolder(item: number): void { this.#settledHolders.add(item); }
+  itemDuties(item?: number): readonly ItemDuty[] {
+    return item === undefined ? [...this.#itemDuties].sort(([a], [b]) => a - b).flatMap(([, duties]) => duties) : this.#itemDuties.get(item) ?? [];
+  }
+  putItemDuties(item: number, duties: readonly ItemDuty[]): void {
+    if (duties.length === 0) this.#itemDuties.delete(item);
+    else this.#itemDuties.set(item, [...duties].sort((a, b) => byteOrder(key(a.kind, a.slot ?? ""), key(b.kind, b.slot ?? ""))));
+  }
   operationsFor(item: number) { return [...this.#operations.values()].filter((o) => o.for === item).sort((a, b) => keyOrder(a.id.split(":").map(Number), b.id.split(":").map(Number))); }
   account(seq: number, n: number) { return this.#accounts.get(key(seq, n))?.item ?? null; }
   accountsOf(item: number) { return [...this.#accounts.values()].filter((a) => a.item === item).sort((a, b) => keyOrder([a.seq, a.n], [b.seq, b.n])); }
@@ -498,7 +533,12 @@ export class MemoryState implements StateWriter {
     this.#relations.set(at, r);
   }
   putAccepted(actor: KeyId, idempotencyKey: string, accepted: Accepted) { this.#accepted.set(key(actor, idempotencyKey), [actor, idempotencyKey, accepted]); }
-  putRequest(r: OwnRequest) { this.#requests.set(key(r.seq, r.n), r); }
+  putRequest(r: OwnRequest) {
+    const at = key(r.seq, r.n);
+    this.#requests.set(at, r);
+    if (r.result === null && r.diagnosis?.finding !== "undelivered") this.#pendingRequests.add(at);
+    else this.#pendingRequests.delete(at);
+  }
   putDecided(from: FactRef, n: number, by: number) { this.#decided.set(key(from.at.scope, from.at.inc, from.seq, n), { from: { scope: from.at.scope, inc: from.at.inc }, seq: from.seq, hash: from.hash, n, by }); }
   putCreation(seed: Digest, held: HeldCreation) { this.#creations.set(seed, held); }
   putOperation(operation: Operation) { this.#operations.set(operation.id, operation); }
@@ -538,6 +578,8 @@ export class MemoryState implements StateWriter {
       ...(this.#observed.size === 0 ? {} : { observed: sorted(this.#observed.values(), (h) => [h.of.scope, h.of.inc, h.subject]) }),
       ...(this.#holders.size === 0 ? {} : { holders: this.holders() }),
       ...(this.#accounts.size === 0 ? {} : { accounts: sorted(this.#accounts.values(), (a) => [a.seq, a.n]) }),
+      ...(this.#itemDuties.size === 0 ? {} : { itemDuties: this.itemDuties() }),
+      ...(this.#settledHolders.size === 0 ? {} : { settledHolders: [...this.#settledHolders].sort((a, b) => a - b) }),
     };
   }
   /** The snapshot as one canonical text, to compare two states. */

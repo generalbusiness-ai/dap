@@ -25,6 +25,7 @@ export type DependencyPurpose = "replay-required" | "archive-closure";
 const ALL = ["genesis", "act", "delivery", "timed", "diagnosis", "outcome", "preparation", "checkpoint"] as const;
 const REQUIRED = {
   declaration: { inputs: ALL, kinds: ["definition"] },
+  "birth-definition": { inputs: ["genesis"], kinds: ["definition"] },
   "foreign-use": { inputs: ALL, kinds: ["entry"] },
   "rule-input": { inputs: ALL, kinds: ["rule"] },
   "act-value": { inputs: ["act"], kinds: ["definition", "value"] },

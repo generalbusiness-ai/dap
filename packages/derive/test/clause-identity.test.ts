@@ -1,5 +1,6 @@
 import { expect, test } from "vitest";
 import type { ObservationUse, Send } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { factRefOf } from "@generalbusiness/artroom-bytes";
 import { judgeDelivery } from "../src/index.ts";
 import { Scope, arriving, forged, keys, membership, otherLane, t, valid } from "./fixtures.ts";
@@ -48,8 +49,11 @@ for (const { name, identical, distinct, conditional, choices } of [
   { name: "conditional same-name sends with identical results", identical: true, distinct: false, conditional: true, choices: [false, true] },
   { name: "conditional distinct-name sends with differing results", identical: false, distinct: true, conditional: true, choices: [false, true] },
   { name: "unconditional same-name sends with differing results", identical: false, distinct: false, conditional: false, choices: [true] },
-]) test(`${name} validate, send and retain the result's observation rows and effects`, () => {
-  const checked = weighed(sends(identical, distinct, conditional, true));
+]) test.each(["legacy", "whole-scope"] as const)(`%s: ${name} retain their own result rows, effects and reservation`, cohort => {
+  const checked = weighed(data => {
+    sends(identical, distinct, conditional, true)(data);
+    if (cohort === "whole-scope") data.capacity = { name: "whole-scope", version: 1 };
+  });
   expect(checked.ok).toBe(true);
   const definition = valid(checked);
   for (const choice of choices) {
@@ -60,6 +64,7 @@ for (const { name, identical, distinct, conditional, choices } of [
       .toEqual(conditional ? [[0, distinct && choice ? "ask-second" : "ask"]] : [[0, "ask"], [1, "ask"]]);
     for (const sent of origin.sends) {
       const second = !identical && (conditional ? choice : sent.n === 1);
+      expect(s.state.request(origin.seq, sent.n)?.reservation).toEqual(cohort === "whole-scope" ? { entries: 2, items: 0, records: 0, bytes: 3 * PROPOSED_BOUNDS.entryBytes, requests: 0 } : undefined);
       const request = { from: s.fact(origin.seq), n: sent.n };
       const answer: Send = { n: 0, to: s.at, message: { class: "result", of: request, outcome: "applied" } };
       const source = forged(otherLane, 9, { type: "delivery", from: request.from, n: sent.n, message: sent.message as never, decision: "applied" }, [answer]);

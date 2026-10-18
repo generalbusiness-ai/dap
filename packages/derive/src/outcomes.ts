@@ -77,6 +77,7 @@ export function ownersOf(definition: ValidDefinition, platform: PlatformRules | 
         return given;
       };
       return {
+        ...(r.reservation ? { reservation: (pinned: ValidDefinition) => r.reservation!(pinned) } : {}),
         ...(r.valueDomains ? { valueDomains: r.valueDomains } : {}),
         ...(r.values ? { values: (evidence) => run(mark, () => r.values!(evidence)) } : {}),
         selects: r.selects === true, read: r.read === true, ...(r.closure === undefined ? {} : { closure: r.closure }), ...(r.most === undefined ? {} : { most: r.most }),
@@ -100,6 +101,7 @@ export function ownersOf(definition: ValidDefinition, platform: PlatformRules | 
       };
     },
     ...(owners?.reserves ? { reserves: (view: StateView, pinned: ValidDefinition) => owners.reserves!(view, pinned) } : {}),
+    ...(owners?.reservations ? { reservations: (view: StateView, pinned: ValidDefinition) => owners.reservations!(view, pinned) } : {}),
   };
 }
 

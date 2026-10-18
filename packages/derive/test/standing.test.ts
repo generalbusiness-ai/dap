@@ -5,7 +5,7 @@ import { expect, test } from "vitest";
 import type { Effect, PlatformDefinition } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { entryHash, factRefOf } from "@generalbusiness/artroom-bytes";
-import { MemoryState, PROFILES, StandingError, applyEntry, checkStandingEntry, entryOf, fits, judgeCheckpoint, judgeDelivery, judgeDiagnosis, owed, standingCounter, standingEntries, checkpointOf, validateDefinition } from "../src/index.ts";
+import { AmountError, MemoryState, NOTHING, PROFILES, StandingError, applyEntry, checkStandingEntry, entryOf, fits, judgeCheckpoint, judgeDelivery, judgeDiagnosis, owed, reserved, standingCounter, standingEntries, standingReserved, checkpointOf, validateDefinition } from "../src/index.ts";
 import type { PlatformRules, StateView } from "../src/index.ts";
 import { arriving, desk, forged, created, keys, on, valid } from "./fixtures.ts";
 
@@ -13,6 +13,41 @@ import { standingData } from "./fixtures-standing.ts";
 const definition = () => valid(validateDefinition(standingData(), PROPOSED_BOUNDS, PROFILES, { platform: true }));
 const total = (s: ReturnType<typeof created>) => s.head.seq + 1 + owed(s.state, s.definition, s.last.input);
 const projected = (s: ReturnType<typeof created>, effects: readonly Effect[]) => checkStandingEntry(s.state, s.definition, effects, s.head.seq + 1);
+
+test("opt-in standing entry slots carry their entry-byte Amount through the shared ledger; old slots keep their scalar projection", () => {
+  const checked = validateDefinition(standingData(data => { data.capacity = { name: "whole-scope", version: 1 }; }), PROPOSED_BOUNDS, PROFILES, { platform: true });
+  const d = valid(checked), s = created(d), E = PROPOSED_BOUNDS.entryBytes;
+  expect(standingReserved(new MemoryState(), d)).toEqual({ entries: 6, items: 0, records: 0, bytes: 6 * E, requests: 0 });
+  expect(standingReserved(s.state, d)).toEqual({ entries: 6, items: 0, records: 0, bytes: 6 * E, requests: 0 });
+  expect(reserved(s.state, d, s.last.input)).toEqual({ entries: 7, items: 0, records: 0, bytes: 7 * E, requests: 0 });
+  expect(standingEntries(s.state, d)).toBe(6);
+  s.did(keys.rita, "set", { ...on(s, 0), fields: { next: 1 } });
+  expect(standingReserved(s.state, d)).toEqual({ entries: 3, items: 0, records: 0, bytes: 3 * E, requests: 0 });
+  s.did(keys.rita, "finish", on(s, 0));
+  expect(standingReserved(s.state, d).bytes).toBe(3 * E);
+  expect(standingReserved(s.replay(), d).bytes).toBe(3 * E);
+  const old = definition(), legacy = created(old);
+  expect(standingReserved(legacy.state, old)).toEqual({ ...NOTHING, entries: 6 });
+});
+
+test("whole standing amounts reject invalid units even at zero remaining, and validation names unsafe standing bytes", () => {
+  const d = valid(validateDefinition(standingData(data => { data.capacity = { name: "whole-scope", version: 1 }; }), PROPOSED_BOUNDS, PROFILES, { platform: true }));
+  const s = created(d);
+  s.did(keys.rita, "set", { ...on(s, 0), fields: { next: 2 } });
+  expect(standingReserved(s.state, d)).toEqual(NOTHING);
+  const broken = { ...d, pendingWorkAmounts: { ...d.pendingWorkAmounts, entry: { ...d.pendingWorkAmounts.entry, bytes: NaN } } };
+  expect(() => standingReserved(s.state, broken)).toThrow(AmountError);
+  const data = standingData(data => {
+    data.capacity = { name: "whole-scope", version: 1 };
+    data.standing.max = 4;
+    data.items.repo.values.count.of.max = 4;
+    data.acts.set.fields.next.max = 4;
+    data.acts = { found: data.acts.found, set: data.acts.set, chatter: data.acts.chatter };
+    data.receives = {}; data.timed = {}; data.rules = {};
+  });
+  const unsafe = validateDefinition(data, { ...PROPOSED_BOUNDS, entryBytes: Math.floor(Number.MAX_SAFE_INTEGER / 8) }, PROFILES, { platform: true });
+  expect(unsafe).toMatchObject({ ok: false, problems: expect.arrayContaining([expect.objectContaining({ code: "reserve-unbounded", path: "standing" })]) });
+});
 
 // Closed metadata is platform-only; exact declaration constraints prevent
 // a mutable/free-form selector or an unsafe reservation product.

@@ -1,9 +1,257 @@
 import { describe, expect, test, vi } from "vitest";
-import { PROPOSED_BOUNDS, type Receipt } from "@generalbusiness/dap-contract";
-import { MemoryState, applyEntry, checkpointOf, stateDigest, timeMs } from "@generalbusiness/dap-derive";
+import { DOMAINS, PROPOSED_BOUNDS, type Receipt, type SendForm } from "@generalbusiness/dap-contract";
+import { canonicalize, digestBytes, rawRetainedJSON, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
+import { AmountError, MemoryState, applyEntry, checkpointOf, reserved, stateDigest, timeMs } from "@generalbusiness/dap-derive";
 import { SqliteStore, Turns, Wakes, production } from "../src/index.ts";
 import { variant } from "@generalbusiness/dap-derive/testing";
 import { HOLD, at, definition, create, rita, una, vic } from "./support.ts";
+
+// The shared lane's unused link form names a dummy child digest. These
+// settlement/storage witnesses need a closed opt-in birth, so omit only
+// that unresolved create. Child-closure admission has dedicated witnesses.
+const wholeDefinition = variant(definition.declared, d => {
+  d.capacity = { name: "whole-scope", version: 1 };
+  d.acts.link.sends = d.acts.link.sends.filter((send: SendForm) => !("create" in send));
+});
+
+test("holder settlement bookkeeping survives actual eviction, rolls back atomically and counts as no logical record or retained byte", async () => {
+  // Raw derived-bookkeeping writes on real SQLite, explicitly not judged
+  // holder settlements. The pure holder witness proves when the fold writes
+  // this fact; this probe proves persistence, checkpoint projection and units.
+  const under = wholeDefinition;
+  const scope = await create({}, {}, under);
+  const written = await scope.inside(state => {
+    const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) });
+    const counts = store.keyCounts(), bytes = store.logicalBytes();
+    expect(store.all().settledHolders).toBeUndefined();
+    store.transaction(() => store.settleHolder(900));
+    const before = store.all();
+    let rolledBack = false;
+    try { store.transaction(() => { store.settleHolder(901); throw new Error("rollback holder settlement probe"); }); }
+    catch (error) { rolledBack = error instanceof Error && error.message === "rollback holder settlement probe"; }
+    return { counts, bytes, afterCounts: store.keyCounts(), afterBytes: store.logicalBytes(), before, after: store.all(), rolledBack };
+  });
+  expect(written.rolledBack).toBe(true);
+  expect(written.after).toEqual(written.before);
+  expect([written.afterCounts, written.afterBytes]).toEqual([written.counts, written.bytes]);
+  expect(written.after.settledHolders).toEqual([900]);
+  await scope.restart();
+  const reopened = await scope.inside(state => {
+    const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) });
+    return { settled: store.holderSettled(900), rolledBack: store.holderSettled(901), snapshot: store.all() };
+  });
+  expect(reopened).toEqual({ settled: true, rolledBack: false, snapshot: written.after });
+});
+
+test("opt-in report duty survives an ordinary final transition and actual object eviction; at a filled scope only its real settlement spends that room", async () => {
+  // Real scope, judge, fold, SQLite and object eviction. The lane data and
+  // membership/grants are the existing labelled test fixture's stand-ins.
+  const under = variant(wholeDefinition.declared, (d) => {
+    d.acts.abandon = structuredClone(d.acts["accept-report"]);
+    delete d.acts.abandon.settles;
+  });
+  const openReport = async (limit: number) => {
+    const scope = await create({ scopeEntries: limit }, {}, under);
+    const commitment = await scope.commitment();
+    const report = (await scope.did(una, "report", { fields: { commitment }, expected: { commitment: 2 } })).fact.seq;
+    return { scope, report };
+  };
+  const { scope: stuck, report } = await openReport(8);
+  expect(await stuck.act(vic, "abandon", { on: report, expected: { on: 1 } })).toMatchObject({ answer: "accepted" });
+  expect(await stuck.submit(stuck.remark())).toMatchObject({ answer: "accepted" });
+  await stuck.restart();
+  expect(await stuck.submit(stuck.remark())).toMatchObject({ answer: "refused", reason: "scope-full" });
+  expect((await stuck.head()).seq).toBe(5);
+  const duties = await stuck.inside(state => new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) }).all().itemDuties);
+  expect(duties).toEqual([{ item: report, kind: "state", slot: null, amount: { entries: 1, items: 0, records: 0, bytes: PROPOSED_BOUNDS.entryBytes + 262_144, requests: 0 } }]);
+
+  const { scope: settled, report: pending } = await openReport(6);
+  await settled.restart();
+  expect(await settled.submit(settled.remark())).toMatchObject({ answer: "refused", reason: "scope-full" });
+  expect(await settled.act(vic, "accept-report", { on: pending, expected: { on: 1 } })).toMatchObject({ answer: "accepted", receipt: { fact: { seq: 4 } } });
+  expect(await settled.stub.checkpoint()).toMatchObject({ answer: "written", fact: { seq: 5 } });
+});
+
+test("an opt-in native alias settlement spends only the selected report's duty while an ordinary final change of its primary report remains reserved", async () => {
+  // Real native scope/judgment/SQLite/eviction with the shared lane and
+  // scripted membership/grants fixture; no native platform authority.
+  const under = variant(wholeDefinition.declared, (d) => {
+    const act = structuredClone(d.acts["accept-report"]);
+    act.fields = { target: { type: "item", of: "report", required: true } };
+    act.also = { target: { item: "report", by: "target" } };
+    act.guards.push({ of: "also.target", state: ["reported"] });
+    act.settles = { of: "also.target", in: ["reported"] };
+    act.effects = [{ state: "accepted" }, { of: "also.target", state: "accepted" }];
+    d.acts["accept-peer"] = act;
+  });
+  const s = await create({ scopeEntries: 8 }, {}, under);
+  const commitment = await s.commitment();
+  const report = async () => (await s.did(una, "report", { fields: { commitment }, expected: { commitment: 2 } })).fact.seq;
+  const primary = await report(), target = await report();
+  expect(await s.submit(s.remark())).toMatchObject({ answer: "refused", reason: "scope-full" });
+  expect(await s.act(vic, "accept-peer", { on: primary, fields: { target }, expected: { on: 1, target: 1 } })).toMatchObject({ answer: "accepted", receipt: { fact: { seq: 5 } } });
+  await s.restart();
+  const duties = await s.inside(state => new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) }).itemDuties());
+  expect(duties.map(duty => [duty.item, duty.kind])).toEqual([[primary, "state"]]);
+  expect(await s.submit(s.remark())).toMatchObject({ answer: "refused", reason: "scope-full" });
+  expect((await s.head()).seq).toBe(5);
+});
+
+test("the opt-in foreign-entry retained-writer ceiling accepts exact bytes and refuses one more without changing legacy retention", async () => {
+  // Real Turns, transaction and SQLite with hand-authored draft/retention.
+  // The JSON string payload intentionally is not a foreign sealed entry;
+  // this witnesses the size boundary, not hash or authority validation.
+  for (const whole of [false, true]) {
+    const under = whole ? wholeDefinition : definition;
+    const s = await create({}, {}, under);
+    const results = await s.inside(async (state) => {
+      const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: (work) => state.storage.transactionSync(work) });
+      const turns = new Turns(store, { clock: s.c.clock, rules: production().rules, alarm: { set: () => undefined }, capabilities: null }, s.c.bounds, () => under, () => undefined);
+      const run = async (size: number) => {
+        const bytes = canonicalize("x".repeat(size - 2)), digest = digestBytes(utf8(bytes));
+        const end = await turns.run({ asks: () => [], judge: (view) => ({ verdict: "write", retain: [{ kind: "entry", digest, bytes }], draft: { input: { type: "checkpoint", ...checkpointOf(view) }, uses: [], prepared: [], effects: [], sends: [], judgesTime: false }, sealed: () => "written", unfit: () => "unfit", full: () => "full" }) });
+        return { end, retained: store.retained("entry", digest) !== null };
+      };
+      const before = store.scope()!.head.seq;
+      const exact = await run(s.c.bounds.entryBytes), extra = await run(s.c.bounds.entryBytes + 1);
+      return { exact, extra, written: store.scope()!.head.seq - before };
+    });
+    expect(results).toEqual({ exact: { end: { end: "answer", answer: "written" }, retained: true }, extra: { end: { end: "answer", answer: whole ? "unfit" : "written" }, retained: !whole }, written: whole ? 1 : 2 });
+  }
+});
+
+test("the opt-in rule-input writer ceiling accepts exact canonical bytes and refuses one more even when evaluation returns false; legacy retention is unchanged", async () => {
+  // Real Turns, rule evaluator, transaction and SQLite; asks/judge below
+  // are deliberately supplied by hand. This is the retained-writer
+  // boundary, not an authentic act, valid checkpoint or replay witness.
+  for (const whole of [false, true]) {
+    const under = whole ? wholeDefinition : definition;
+    const s = await create({}, {}, under);
+    const result = await s.inside(async (state) => {
+      const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: (work) => state.storage.transactionSync(work) });
+      const turns = new Turns(store, { clock: s.c.clock, rules: production().rules, alarm: { set: () => undefined }, capabilities: null }, s.c.bounds, () => under, () => undefined);
+      const limit = 262_144;
+      const run = (bytes: number) => {
+        const input = "x".repeat(bytes - 2), canonical = canonicalize(input), digest = digestBytes(utf8(canonical));
+        return turns.run({
+          asks: () => [{ rule: "not-self", source: under.declared.rules["not-self"]!, input, digest }],
+          judge: (view, _clock, prepared) => {
+            expect(prepared).toEqual([{ rule: "not-self", input: digest, result: false }]);
+            return { verdict: "write", retain: [], draft: { input: { type: "checkpoint", ...checkpointOf(view) }, uses: [], prepared, effects: [], sends: [], judgesTime: false }, sealed: () => "written", unfit: () => "unfit", full: () => "full" };
+          },
+        }).then((end) => ({ end, size: utf8(canonical).length, prepared: store.retained("rule", digest) !== null }));
+      };
+      const before = store.scope()!.head.seq;
+      const exact = await run(limit), extra = await run(limit + 1);
+      return { before, after: store.scope()!.head.seq, exact, extra };
+    });
+    expect(result.exact).toEqual({ end: { end: "answer", answer: "written" }, size: 262_144, prepared: true });
+    expect(result.extra).toEqual({ end: { end: "answer", answer: whole ? "unfit" : "written" }, size: 262_145, prepared: !whole });
+    expect(result.after - result.before).toBe(whole ? 1 : 2);
+  }
+});
+
+test("logical bytes in real SQLite count UTF-8 payloads once across journal and retained domains, redact texts, and roll back retention", async () => {
+  const s = await create();
+  const sizes = await s.inside(async (state) => {
+    // Raw storage-boundary writes. No payload here is offered as a judged
+    // act, producer reservation, privacy admission or publication witness.
+    const open = () => new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: (work) => state.storage.transactionSync(work) });
+    const store = open(), journal = store.storedFrom(0, 100), first = journal[0]!;
+    // This fixture's genesis also retains its pinned definition. No rule
+    // runs on genesis, and no foreign fact or detached text is supplied.
+    const initialBytes = journal.reduce((n, row) => n + utf8(row.bytes).length, 0) + utf8(canonicalize(definition.declared)).length;
+    const rawDigest = digestBytes(utf8(first.bytes)), rawBytes = utf8(first.bytes).length;
+    expect(rawDigest).not.toBe(first.hash);
+    expect(rawRetainedJSON(rawDigest, first.bytes)).toEqual(JSON.parse(first.bytes));
+    const before = store.logicalBytes();
+    // The recorded size is a cache; the retained byte check reads actual
+    // payload lengths, and excludes all folded-state/bookkeeping bytes.
+    state.storage.sql.exec("UPDATE entry SET size=1");
+    store.putRecord({ capability: "hold@1", kind: "byte-probe", key: ["large-metadata"], state: "live", values: { ignored: "x".repeat(1024) }, seq: 900 });
+    const afterMetadata = store.logicalBytes();
+    // Native journal hashes are tagged. Foreign retained copies use a raw
+    // content digest, as rule inputs do. The raw JSON copy is a separate
+    // domain from the journal; its entry/rule storage aliases count once.
+    store.retain({ kind: "entry", digest: rawDigest, bytes: first.bytes, under: "fixture" });
+    store.retain({ kind: "rule", digest: rawDigest, bytes: first.bytes });
+    store.retain({ kind: "value", domain: DOMAINS.entry, digest: first.hash, bytes: first.bytes });
+    const duplicated = store.logicalBytes();
+    const text = canonicalize("é😀"), digest = textDigest("é😀");
+    store.retain({ kind: "text", digest, bytes: text });
+    store.retain({ kind: "text", digest, bytes: text });
+    const withText = store.logicalBytes();
+    const rule = canonicalize({ text: "é😀" });
+    store.retain({ kind: "rule", digest: digestBytes(utf8(rule)), bytes: rule });
+    const withRule = store.logicalBytes();
+    store.forget("text", digest);
+    const redacted = store.logicalBytes();
+    let rolledBack = false;
+    try {
+      store.transaction(() => { store.retain({ kind: "text", digest: textDigest("q"), bytes: canonicalize("q") }); throw new Error("rollback byte probe"); });
+    } catch (error) { rolledBack = error instanceof Error && error.message === "rollback byte probe"; }
+    const afterRollback = store.logicalBytes();
+    let rejectedConflict = false;
+    try {
+      store.transaction(() => {
+        state.storage.sql.exec("UPDATE retained_value SET bytes=bytes || ' ' WHERE domain=? AND digest=?", DOMAINS.entry, first.hash);
+        store.logicalBytes();
+      });
+    } catch (error) {
+      if (!(error instanceof AmountError)) throw error;
+      rejectedConflict = true;
+    }
+    return { initialBytes, rawBytes, before, afterMetadata, duplicated, withText, withRule, redacted, rolledBack, afterRollback, rejectedConflict, afterConflict: store.logicalBytes(), reopened: open().logicalBytes() };
+  });
+  expect([sizes.before, sizes.afterMetadata]).toEqual(Array(2).fill(sizes.initialBytes));
+  expect(sizes.duplicated).toBe(sizes.initialBytes + sizes.rawBytes);
+  // JSON string é😀 is 8 UTF-8 bytes; the rule's JSON record is 17.
+  expect([sizes.withText, sizes.withRule]).toEqual([sizes.initialBytes + sizes.rawBytes + 8, sizes.initialBytes + sizes.rawBytes + 25]);
+  expect([sizes.redacted, sizes.afterRollback, sizes.afterConflict, sizes.reopened]).toEqual(Array(4).fill(sizes.initialBytes + sizes.rawBytes + 17));
+  expect([sizes.rolledBack, sizes.rejectedConflict]).toEqual([true, true]);
+});
+
+test("logical key counts in real SQLite retain final keys, ignore transport ACKs, survive reopening and roll back with their writes", async () => {
+  const s = await create();
+  const counts = await s.inside(async (state) => {
+    // Raw storage-boundary writes, deliberately not judged or sealed acts.
+    // This witnesses SQL units/rollback only, not authority or capacity admission.
+    const open = () => new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: (work) => state.storage.transactionSync(work) });
+    const store = open(), before = store.keyCounts(), scope = store.scope()!;
+    const item = { ...store.all().items[0]!, id: 900, type: "count-probe", state: "open" };
+    const record = { capability: "hold@1" as const, kind: "count-probe", key: ["one"], state: "live", values: {}, seq: 900 };
+    const relation = { owner: scope.at, name: "count-probe", item: 900, state: "live", revision: 900 };
+    store.transaction(() => { store.putItem(item); store.putRecord(record); store.putRelation(relation); });
+    const inserted = store.keyCounts();
+    store.transaction(() => {
+      store.putItem({ ...item, state: "final" });
+      store.putRecord({ ...record, state: "final" });
+      store.putRelation({ ...relation, state: "final" });
+    });
+    const replaced = store.keyCounts();
+    state.storage.sql.exec("INSERT INTO outbox (seq,n,target,class,message,next,request) VALUES (?,0,?,'request',?,0,'tell')", 900, canonicalize(scope.at), canonicalize({ class: "request", type: "tell", body: { message: "count-probe", fields: {} } }));
+    const request = { seq: 900, n: 0, hash: scope.head.hash, type: "tell" as const, to: scope.at, result: null, diagnosis: null };
+    store.acknowledge(900, 0, [], { at: scope.at, ...scope.head });
+    const acknowledged = store.keyCounts();
+    store.putRequest({ ...request, diagnosis: { seq: 901, finding: "delivery-unavailable" } });
+    const unavailable = store.keyCounts();
+    store.putRequest({ ...request, diagnosis: { seq: 902, finding: "undelivered" } });
+    const undelivered = store.keyCounts();
+    store.putRequest({ ...request, result: { seq: 903, clause: "applied" } });
+    const answered = store.keyCounts();
+    let rolledBack = false;
+    try {
+      store.transaction(() => { store.putItem({ ...item, id: 901 }); store.putRecord({ ...record, key: ["two"] }); throw new Error("rollback count probe"); });
+    } catch (error) { rolledBack = error instanceof Error && error.message === "rollback count probe"; }
+    return { before, inserted, replaced, acknowledged, unavailable, undelivered, answered, rolledBack, afterRollback: store.keyCounts(), reopened: open().keyCounts() };
+  });
+  const retained = { ...counts.before, items: counts.before.items + 1, records: counts.before.records + 2 };
+  const pending = { ...retained, requests: retained.requests + 1 };
+  expect([counts.inserted, counts.replaced]).toEqual([retained, retained]);
+  expect([counts.acknowledged, counts.unavailable]).toEqual([pending, pending]);
+  expect([counts.undelivered, counts.answered, counts.afterRollback, counts.reopened]).toEqual([retained, retained, retained, retained]);
+  expect(counts.rolledBack).toBe(true);
+});
 
 describe("the head check (section 5.2, steps 4 to 6)", () => {
   test("a second act commits while the first is in preparation; the first starts again from step 3 and is prepared and judged on the new head", async () => {
@@ -193,13 +441,14 @@ describe("the clock behind the history (section 5.3)", () => {
 });
 
 describe("the scope's budget (section 9.2), here 12 entries", () => {
-  test("an act is refused scope-full when the duties it would admit have no room to settle; every admitted hold's end and the closing checkpoint are then written", async () => {
-    const s = await create({ scopeEntries: 12 });
+  test.each(["legacy", "whole-scope"] as const)("%s: new work cannot take admitted holds' timed entries or the closing checkpoint", async cohort => {
+    const under = cohort === "whole-scope" ? wholeDefinition : definition;
+    const s = await create({ scopeEntries: 12 }, {}, under);
     const holds = await s.holds(2);                           // entries 1 to 6: two holds, each with a deadline that reserves one entry
     const commitment = await s.commitment();                  // entries 7 and 8: nine entries, and three reserved with the closing checkpoint
     const head = await s.head();
     // A third hold would be entry 9 and would reserve a fourth entry: ten and four do not fit in twelve. Nothing is written.
-    expect(await s.act(una, "take-hold", { fields: { commitment }, expected: { commitment: 2 } })).toEqual({ answer: "refused", reason: "scope-full", judgedAt: head });
+    expect(await s.act(una, "take-hold", { fields: { commitment }, expected: { commitment: 2 } })).toEqual({ answer: "refused", reason: "scope-full", judgedAt: head, ...(cohort === "whole-scope" ? { name: "scopeEntries" } : {}) });
     // Both admitted ends are written, and the closing checkpoint that was reserved from the start.
     s.c.clock.now = at(HOLD);
     expect([await s.alarm(), (await s.entries(9)).map((e) => e.input.type), await s.count("hold", "ended")]).toEqual([true, ["timed", "timed"], holds.length]);
@@ -222,8 +471,9 @@ describe("the scope's budget (section 9.2), here 12 entries", () => {
     expect([await s.stub.checkpoint(), (await s.head()).seq]).toMatchObject([{ answer: "written", fact: { seq: closing } }, scopeEntries - 1]);
   });
 
-  test("a report that awaits its acceptance reserves that entry: at a full budget new work is refused, and the acceptance is written", async () => {
-    const s = await create({ scopeEntries: 6 });
+  test.each(["legacy", "whole-scope"] as const)("%s: a full report scope still writes its acceptance and the request that acceptance reserved", async cohort => {
+    const base = cohort === "whole-scope" ? wholeDefinition : definition;
+    const s = await create({ scopeEntries: 6 }, {}, base);
     const commitment = await s.commitment();                  // entries 1 and 2
     const report = (await s.did(una, "report", { fields: { commitment }, expected: { commitment: 2 } })).fact.seq;   // entry 3: four written, two reserved
     expect(await s.submit(s.remark())).toMatchObject({ answer: "refused", reason: "scope-full" });
@@ -233,11 +483,11 @@ describe("the scope's budget (section 9.2), here 12 entries", () => {
 
     // The same lane, where the acceptance also asks for a lane to be created, and where the clause of another request, of a
     // renewal, can move a hold's end. A report then reserves three entries: the acceptance, and the two of the request it sends.
-    // For any pending request the runtime holds one entry more, the most that a clause of any request of the definition can start.
-    // So the state after the acceptance reserves more than the report did. It is written all the same, because the turn passes the
-    // judge's word that the entry settles: no free entry is asked of it. Everything else is still refused.
+    // Legacy requests use the global largest clause and may pass the entry
+    // ceiling under the settlement exemption. The opt-in handoff keeps this
+    // send's own Amount, so its checked settlement remains within the ceiling.
     const asks = { create: { kind: "lane", definition: "self", fields: { title: { const: "another" }, opener: { signer: true } } } };
-    const asking = variant(definition.declared, (def) => {
+    const asking = variant(base.declared, (def) => {
       def.acts["accept-report"].sends = [{ create: { ...asks.create, result: {} } }];
       def.acts.renew.sends = [{ create: { ...asks.create, result: { applied: [{ value: { slot: "until", from: { time: { plusSeconds: 600 } } } }] } } }];
     });
@@ -245,8 +495,19 @@ describe("the scope's budget (section 9.2), here 12 entries", () => {
     const a = await create({ scopeEntries: 8 }, {}, asking);
     const under = await a.commitment();
     const reported = (await a.did(una, "report", { fields: { commitment: under }, expected: { commitment: 2 } })).fact.seq;   // four written, four reserved
+    if (cohort === "whole-scope") await a.restart();
     expect([await a.submit(a.remark()), await a.act(vic, "accept-report", { on: reported, expected: { on: 1 } }), await a.submit(a.remark())])
       .toMatchObject([{ answer: "refused", reason: "scope-full" }, { answer: "accepted", receipt: { fact: { seq: 4 }, sends: ["4.0"] } }, { answer: "refused", reason: "scope-full" }]);
+    if (cohort === "whole-scope") {
+      const row = await a.inside(state => {
+        const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) });
+        const last = JSON.parse(store.stored(store.scope()!.head.seq)!.bytes);
+        // Real judged acceptance/storage at the filled entry budget. Test
+        // authority and the unresolved transport remain fixture stand-ins.
+        return [store.scope()!.head.seq + 1, reserved(store, asking, last.input).entries];
+      });
+      expect(row).toEqual([5, 3]);
+    }
   });
 
   test("after a closing checkpoint nothing is reserved; the next entry that is not a checkpoint is admitted only with a closing checkpoint reserved again", async () => {
