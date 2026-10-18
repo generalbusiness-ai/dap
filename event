@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:58b3c18afa1dabce210b02c993d8c18568c095df","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/capacity-bound-records.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:58ef36105e3e7ca02384bf7cc4f602dd185b44f7","text":"Merge retired a covered predecessor; the successor is at apps/counter/src/counting-assets.ts."}
