@@ -26,7 +26,7 @@ function sqlite(): Sql & { close(): void } {
         if (bindings.length) throw new LocalApplicationError("Schema bindings are unsupported.");
         db.exec(query); return { toArray: () => [] };
       }
-      const rows = db.prepare(query).all(...bindings.map(value => value instanceof ArrayBuffer ? new Uint8Array(value) : value));
+      const rows = db.prepare(query).all(...bindings.map(value => value instanceof ArrayBuffer ? Buffer.from(value) : value));
       return { toArray: () => rows.map(row => Object.fromEntries(Object.entries(row).map(([key, value]): [string, SqlValue] => {
         if (value === null || typeof value === "string" || typeof value === "number") return [key, value];
         if (value instanceof Uint8Array) return [key, new Uint8Array(value).buffer];

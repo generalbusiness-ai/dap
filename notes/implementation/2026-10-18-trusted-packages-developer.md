@@ -242,6 +242,17 @@ leaves a due item waiting. Sources are restored. Scope production typecheck
 passes (`c3e8fc`); final CLI test/production-source typecheck passes (`f22cf5`).
 Evidence logs use `/tmp/artroom-m1-local-`.
 
+The private Node adapter has been exercised on Node 26.12.0. Node's
+[SQLite module history](https://nodejs.org/api/sqlite.html) puts unflagged
+availability at 22.13.0 (23.4.0 in the 23 series); it also distinguishes the
+older Buffer bindings from general typed-array bindings added in 22.14.0.
+The adapter uses Buffer for a binary binding. When the scenario/dev commands
+are exposed, they must load this adapter lazily with a clear supported-runtime
+check so existing CLI commands retain their Node 22.0.0 launcher contract.
+No older-Node local runtime witness is claimed here.
+The four local native cases still pass after the Buffer binding adjustment
+(`715d63`, exit 0).
+
 ## Remaining developer work
 
 Shared browser joining, storage and request custody; browser bundling;
