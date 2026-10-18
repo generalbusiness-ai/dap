@@ -28,6 +28,11 @@ import { Recent } from "./recent.ts";
 import { Unshaped, capturedExpected, effectiveFields, expectedOf, needsOn, shapeAt, shapeFields, shapePresented, valuePlaces } from "./shape.ts";
 import { WORDS, type Words } from "./words.ts";
 import { McpMetrics, observedFetch, type McpMetricOptions } from "./metrics.ts";
+import { ViewResources, type PresentationPackage } from "./views/resources.ts";
+import { PRESENTATION } from "./views/generated.ts";
+import { ViewSessions } from "./views/session.ts";
+import { toolsForHost, viewTools } from "./views/tools.ts";
+import type { ViewSource } from "./views/types.ts";
 
 export interface ServerPort {
   /** The scope service's base URL. */
@@ -51,6 +56,10 @@ export interface ServerPort {
   listPageBytes?: number;
   /** The timer of the watch. The default is `setInterval`. */
   every?: (ms: number, run: () => void) => () => void;
+  /** Package resource bytes and policy. Omission serves the built-in journey resources. */
+  presentation?: PresentationPackage;
+  /** An application's authenticated card projection. The generic kit contains no lane projection. */
+  views?: ViewSource;
 }
 
 /** A tool's answer, as `tools/call` sends it: structured content with an object root, and its text. */
@@ -164,6 +173,7 @@ export class McpService {
   #service: string;
   readonly kept = new Kept();
   readonly custody: Custody;
+  readonly resources: ViewResources;
   readonly mode: Mode;
   readonly words: Words;
   readonly #port: ServerPort;
@@ -195,7 +205,9 @@ export class McpService {
     this.#service = port.service;
     this.#reads = this.#readsOf(port.service);
     this.custody = new Custody(port.custody, () => timeOf(now()));
-    this.#generic = this.#genericTools();
+    this.resources = new ViewResources(port.presentation ?? PRESENTATION);
+    const views = port.views ? new ViewSessions(port.views, { call: (name, args) => this.call(name, args) }, (kind, args, admit) => this.#viewPerform(kind, args, admit), (args) => this.call("settle", args)) : null;
+    this.#generic = { ...this.#genericTools(), ...(views ? viewTools(views) : {}) };
   }
 
   get key(): string { return this.#port.signer.key; }
@@ -211,7 +223,8 @@ export class McpService {
     const config = await this.#port.config.read();
     const read = await readInventory(this.reads, this.kept, config);
     const bindings = bindingsOf(read.inventory, this.words);
-    const generation = generationOf(bindings, read.inventory, { mode: this.mode, tools: this.#tools, words: this.words });
+    const baseGeneration = generationOf(bindings, read.inventory, { mode: this.mode, tools: this.#tools, words: this.words });
+    const generation = digestBytes(utf8(canonicalize({ tools: baseGeneration, presentation: this.resources.generation, views: !!this.#port.views })));
     const memberships = new Map<string, ScopeRef>();
     if (config.repository) memberships.set(config.repository.membership.scope, config.repository.membership);
     for (const root of config.roots ?? []) if (root.membership) memberships.set(root.membership.scope, root.membership);
@@ -243,19 +256,21 @@ export class McpService {
   #invalidate(): void { this.#stale = true; void this.check(); }
 
   /** One page of `tools/list`: at most 256 KiB, a cursor bound to the generation, and a restart for a cursor of another one. */
-  page(cursor?: unknown): Promise<{ tools: Tool[]; nextCursor?: string; generation: Digest }> {
-    return this.#metrics.list(() => this.#page(cursor), error => error instanceof ListRestart ? { end: "refused", reason: "restart" } : error instanceof TransportError ? { end: "unavailable", reason: "transport" } : { end: "error", reason: "exception" });
+  page(cursor?: unknown, ui?: boolean): Promise<{ tools: Tool[]; nextCursor?: string; generation: Digest; catalogueGeneration?: Digest }> {
+    return this.#metrics.list(() => this.#page(cursor, ui), error => error instanceof ListRestart ? { end: "refused", reason: "restart" } : error instanceof TransportError ? { end: "unavailable", reason: "transport" } : { end: "error", reason: "exception" });
   }
-  async #page(cursor?: unknown): Promise<{ tools: Tool[]; nextCursor?: string; generation: Digest }> {
+  async #page(cursor?: unknown, ui?: boolean): Promise<{ tools: Tool[]; nextCursor?: string; generation: Digest; catalogueGeneration?: Digest }> {
     const s = await this.snapshot();
+    const generation = this.#port.views && ui !== undefined ? digestBytes(utf8(canonicalize({ generation: s.generation, ui }))) : s.generation;
+    const tools = ui === undefined ? s.tools : toolsForHost(s.tools, ui);
     let from = 0;
     if (cursor !== undefined && cursor !== null) {
       const at = fromCursor<{ g: string; i: number }>(cursor);
-      if (!at || at.g !== s.generation || !Number.isSafeInteger(at.i) || at.i < 0 || at.i > s.tools.length) throw new ListRestart();
+      if (!at || at.g !== generation || !Number.isSafeInteger(at.i) || at.i < 0 || at.i > tools.length) throw new ListRestart();
       from = at.i;
     }
-    const { page, next } = pageBy(s.tools, from, this.#port.listPageBytes ?? LIST_PAGE_BYTES);
-    return { tools: page, ...(next !== null ? { nextCursor: cursorOf({ g: s.generation, i: next }) } : {}), generation: s.generation };
+    const { page, next } = pageBy(tools, from, this.#port.listPageBytes ?? LIST_PAGE_BYTES);
+    return { tools: page, ...(next !== null ? { nextCursor: cursorOf({ g: generation, i: next }) } : {}), generation, ...(generation === s.generation ? {} : { catalogueGeneration: s.generation }) };
   }
 
   // ---------------------------------------------------------------- telling subscribed clients
@@ -308,12 +323,19 @@ export class McpService {
       const binding = this.mode === "generic" ? null : s.bindings.find((b) => b.name === name) ?? null;
       if (!binding) return failed({ error: "unknown-tool", name });
       return await this.#perform(binding, given, binding.kind);
-    } catch (error) {
-      if (error instanceof Stop) return error.result;
-      if (error instanceof CustodyError) return failed({ error: "custody", state: error.why.held, key: String(given["idempotencyKey"] ?? ""), scope: String(given["target"] ?? given["scope"] ?? ""), ...("keys" in error.why ? { keys: error.why.keys } : {}), ...("recorded" in error.why ? { recorded: error.why.recorded } : {}), ...("bytes" in error.why ? { bytes: error.why.bytes } : {}), ...("reason" in error.why && error.why.reason === "budget" ? { reason: "budget" } : {}), ...("stale" in error.why && error.why.stale ? { stale: error.why.stale } : {}), ...("answer" in error.why ? { answer: error.why.answer } : {}), ...("step" in error.why && error.why.step ? { step: error.why.step } : {}) });
-      if (error instanceof TransportError) return failed({ error: "transport", scope: String(given["target"] ?? given["scope"] ?? "the scope"), submitted: false });
-      throw error;
-    }
+    } catch (error) { return this.#failure(error, given); }
+  }
+
+  #failure(error: unknown, given: Args): CallResult {
+    if (error instanceof Stop) return error.result;
+    if (error instanceof CustodyError) return failed({ error: "custody", state: error.why.held, key: String(given["idempotencyKey"] ?? ""), scope: String(given["target"] ?? given["scope"] ?? ""), ...("keys" in error.why ? { keys: error.why.keys } : {}), ...("recorded" in error.why ? { recorded: error.why.recorded } : {}), ...("bytes" in error.why ? { bytes: error.why.bytes } : {}), ...("reason" in error.why && error.why.reason === "budget" ? { reason: "budget" } : {}), ...("stale" in error.why && error.why.stale ? { stale: error.why.stale } : {}), ...("answer" in error.why ? { answer: error.why.answer } : {}), ...("step" in error.why && error.why.step ? { step: error.why.step } : {}) });
+    if (error instanceof TransportError) return failed({ error: "transport", scope: String(given["target"] ?? given["scope"] ?? "the scope"), submitted: false });
+    throw error;
+  }
+
+  async #viewPerform(kind: string, args: Args, admit: () => void): Promise<CallResult> {
+    try { return await this.#perform(null, args, kind, undefined, admit); }
+    catch (error) { return this.#failure(error, args); }
   }
 
   // ---------------------------------------------------------------- scopes and targets
@@ -382,7 +404,7 @@ export class McpService {
 
   // ---------------------------------------------------------------- an act, under custody
 
-  async #perform(binding: Binding | null, args: Args, kind: string, preparing?: { resource: unknown; capability: string; step: string }): Promise<CallResult> {
+  async #perform(binding: Binding | null, args: Args, kind: string, preparing?: { resource: unknown; capability: string; step: string }, admit?: () => void): Promise<CallResult> {
     const key = args["idempotencyKey"];
     if (!validKey(key)) return failed({ error: "shape", field: "idempotencyKey", what: "is missing, or not 1 to 128 bytes of UTF-8", declared: "a key you choose and keep" });
     const s = await this.#current();
@@ -443,6 +465,7 @@ export class McpService {
       }
       // The subjects are resolved from the fields the scope will read, defaults applied and local facts as their seq; the intent
       // signs the fields as given.
+      admit?.();
       const signed = await signedIntent(this.#port.signer, { to: summary.scope, kind, on: on as number | null, fields: shaped.fields, expected }, { idempotencyKey: key as string, now: this.#now() });
       const beside: Beside = { ...(shaped.texts.length > 0 ? { texts: shaped.texts } : {}), ...(Object.keys(presented).length > 0 ? { presented } : {}), ...(values.length > 0 ? { values } : {}) };
       return { binding: { definition: definition.name, kind, declaration, pinned: summary.definition }, envelope: { signed, beside } };

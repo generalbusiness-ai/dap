@@ -62,8 +62,9 @@ test("captured revisions survive signing, native refusal, movement and custody r
     expect(revision(await read())).toBeGreaterThan(freshAt.on);
 
     const signatures = rita.signedIntents.length;
-    const submissions = () => rita.requests.filter((path) => path === `POST /${ref.scope}/acts`).length;
+    const submissions = () => rita.requests.filter((path) => path.startsWith("POST ") && path.endsWith(`/${ref.scope}/acts`)).length;
     const sent = submissions();
+    expect(sent).toBeGreaterThan(0);
     expect((await rita.ok("rules.publish", staleArgs))["reason"]).toBe("revision-moved");
     expect((await rita.ok("act", freshArgs))["answer"]).toBe("accepted");
     expect((await rita.ok("settle", { target: "rules", idempotencyKey: "fresh" }))["answer"]).toBe("accepted");

@@ -1,7 +1,8 @@
 # Compact-card kit: implementation
 
-This is preparation for request `a9551a6d`, promise `3710cde8`, and
-clarification `f89c614b`. The design child `bc635338` is landed on Main
+This implements runtime child `6098b756`, promise `402ac9d4`, of parent
+`a9551a6d`, with clarification `f89c614b` and captured-revision disposition
+`c3079e3c`. The design child `bc635338` is landed on Main
 `df806354`; its approval does not establish runtime behavior. Reviewed
 capacity and the bounded Counting witness are now incorporated locally
 through Main `6ce62bd2`. This branch carries both.
@@ -9,9 +10,11 @@ through Main `6ce62bd2`. This branch carries both.
 The current reference is
 [the compact-card design](../2026-10-17-compact-cards-design.md).
 The prototype is a behavior reference, not an implementation to copy.
-The captured-revision prerequisite is implemented below. Resources, the
-browser bridge and screens are still being built. No complete kit or
-desktop-host acceptance is claimed.
+The generic resources, browser bridge, screens and server instance guards
+are implemented. The browser's card projection and remote scope answers
+are labelled fixtures. Native tests separately use real scopes. No actual
+journey-lane adapter, package installation, provider operation or desktop
+AI-app acceptance is claimed. The parent remains open for its acceptance.
 
 ## Boundaries
 
@@ -40,26 +43,43 @@ that adapter. M1's package installation remains separate work.
 
 ## Service and bridge
 
-Both existing wire revisions need resource list and read methods, with
-their existing discovery and result conventions. Resource metadata links
-view tools to the four S2 `ui://dap/` resources. Resource and tool changes
-must participate in the existing generation and paging rules.
+`ServerPort.views` supplies an application's trusted projection adapter;
+omission adds no view tools. `ViewSource` reads through the service's
+normal authenticated calls. The kit contains no lane projection or state
+machine. Four opening tools expose only screen, identity, exact revision,
+counts and useful text. `view_read` and `view_act` are app-only tools.
+That visibility is a host rule, not native authority.
 
-Keep the browser entry separate from the server's TypeScript compilation.
-The current MCP configurations provide Node or Workers globals, not the
-browser DOM. A separate browser configuration must check the bridge;
-adding DOM globals to the server would hide an accidental browser import.
-Bundle each resource to one HTML file with inline code and styles. The
-existing Counter asset generator is the repository's build pattern, not
-a source of application-specific view code. Add a freshness witness that
-rebuilds those four resources from their actual inputs and compares the
-served bytes and digests before the final gate. Fixture histories and the
-test host must not become inputs to the production resource bundle.
+Both wire revisions negotiate the host's MCP Apps capability. Without it,
+the tool list omits app-only tools and UI resource links; opening tools
+still return useful text. Paging cursors bind the capability profile.
+Legacy notification accounting retains the underlying catalogue generation.
+Resource bytes and metadata participate in the list generation.
 
-The view uses the standard MCP Apps handshake and JSON-RPC messages over
-`postMessage`. Accept messages only from its parent. Bound outstanding
-requests, clear their timers on reply and teardown, and report denied or
-unavailable host capabilities without inventing success.
+`ViewResources` takes an immutable package snapshot. A read compares actual
+UTF-8 bytes with the declared digest before serving them. It preserves
+the package's CSP, permissions and border preference. `views/hosts.ts`
+alone maps a declared DNS label or base32 presentation digest to its
+`inguz.space` origin. The four built-in resources declare no external
+domains or permissions. M1 package installation remains separate.
+
+Both wire revisions serve `resources/list` and `resources/read` with their
+existing discovery and result conventions. The modern result wrapper adds
+its server metadata outside each resource's retained policy metadata.
+
+The browser entry has its own DOM TypeScript configuration. The server
+keeps Node and Workers globals. `scripts/views.mjs` builds four single-file
+HTML resources from the production entry, bridge, stylesheet and template.
+`view-resources.test.ts` rebuilds them and compares the served module and
+byte digests. The fixture host and histories are not production inputs.
+
+The bridge uses the standard MCP Apps handshake and accepts messages only
+from its parent. It bounds outstanding requests at 32, with a 10-second
+reply deadline, and clears requests and input waiters on teardown. It
+boots from the standard complete tool-input notification, then reads the
+card through `view_read`. It ignores the opening tool result for bootstrap;
+the test host deliberately supplies neither initial structured data nor
+result metadata. This is not a privacy claim about those host fields.
 
 Navigation reads through the server and updates model context quietly.
 Keep projection read points, actual entry bodies read, presented ranges,
@@ -132,26 +152,89 @@ not the act. Ordinary acts start no chat turn. Only explicit handoff uses
 `ui/message`; free text goes to the host composer. Older instances keep
 readable receipts and lose their write controls.
 
-## Witnesses to build
+## Runtime state and evidence
 
-- Resource serving rejects altered bytes and preserves nonempty metadata
-  in a separate fixture; both wire revisions retain useful text fallback.
-- A basic host pages, opens, goes Back and refreshes with preserved
-  identity; denied, absent, incomplete, stale and unavailable stay distinct.
-- Actual bridge messages carry narrow context matching the displayed
-  revision. A subsequent model act signs that captured revision; a relevant
-  concurrent change causes a native refusal rather than silent retargeting.
-- Two mounted instances, duplicate clicks, lost replies and failed context
-  reporting cannot produce a second write or discard unresolved custody.
-- Browser checks cover light and dark, chat and phone, keyboard focus,
-  controller identity, accepted and denied full screen, and height changes
-  in both directions through the sandbox relay.
-- A recorded rehearsal compares in-place receipts with message-per-act.
-  State what the host actually did and why the chosen flow was retained.
+The service retains at most 128 view instances and 32 act outcomes per
+instance. A new opening supersedes the previous instance for that screen.
+The browser submits only its view key, display cut and action ID. The
+server retains the native kind, fields, captured revisions and custody key.
+It checks instance and display cut both before dispatch and again at
+signing admission, after asynchronous reads. It re-reports duplicate acts.
+A lost reply offers only settlement of its original request. An old view's
+cached receipt stays readable; a server read or refusal marks its controls
+inactive. Restarted or unknown instances refuse dispatch. This mounted-view
+state is bounded memory, not durable custody or additional authority.
 
-Fixture projections and a basic host prove their stated interfaces. They
-do not establish real lane authority, a provider operation or acceptance
-inside a desktop AI app. That acceptance remains owed under the parent
-request. No deployment is part of this preparation.
+The native card witness passes stale model and app actions through real
+scopes, counts actual intent-domain signing calls, and checks duplicate,
+lost-reply and superseded-instance behavior. A gate holds the native summary
+read while a newer view opens; releasing it makes the older action refuse
+before signing. This uses no timing sleeps. Its first gate match used an
+incorrect `/summary` suffix and timed out; the corrected match uses the
+actual summary route. The retained log is
+`/tmp/artroom-card-native-race-focused-20261018.log`. The independent
+captured-revision witness also asserts a nonzero native submission count
+before checking that retries submit nothing.
+
+The browser flow is: opening tool, sandboxed app-only read, carousel,
+title, detail, diff, Back, act, retained receipt and refreshed next card.
+The test host uses two loopback origins, a trusted cross-origin relay and
+an opaque inner iframe. Its CSP is built from resource metadata. It filters
+model and app tool lists and routes only to its own MCP service. It labels
+both its projection and remote scope answers as fixtures. This does not
+turn host visibility into server authority.
+
+The first browser matrix completed 20 assertions but required owned-process
+termination because the fixture omitted legacy subscription cleanup. The
+host now ends its legacy sessions and subscriptions. Two later matrix
+attempts timed out waiting for a next card; isolated loss and context-report
+cases passed. Successful context acknowledgements no longer rebuild the
+DOM. The reusable script waits for the host's actual iframe resize before
+hit-testing controls, rather than treating visible inner DOM as proof that
+the host has resized. These observations do not establish the cause of the
+earlier intermittent timeouts or cure broader harness request `1d3a13e3`.
+
+A 20-scenario run then exited normally with no browser or protocol errors.
+It covered 592, 390 and 320 px cards in light and dark, 200% text, keyboard
+focus, Back position, diff controls, complete and partial updates, failed
+checks, unknown outcomes, denied full screen, failed context reporting,
+superseded instances, model-context revision binding and host tool filtering.
+A later pointer probe explicitly waits for iframe resize, verifies the
+actual pointer-down and checks that a theme update keeps the pressed control
+mounted. It signs once and advances. Earlier raw-pointer attempts used
+coordinates before resize or checked connectivity after successful navigation;
+those were incorrect probe assertions, not proof of lost native writes.
+
+The receipt rehearsal uses the same fixture flow twice. The in-place mode
+posts zero chat messages and starts zero model turns. The explicitly labelled
+prototype-policy shim posts one message and starts one model turn. It does
+not run the old prototype or a real model. The chosen in-place flow preserves
+the receipt, context and next card without the extra turn, as `f89c614b`
+requires. Only an explicit Ask in chat control sends `ui/message`. No card
+has a free-text input; text stays in the host composer.
+
+Run the reproducible browser checks with pinned Playwright 1.63.0 installed
+outside the checkout:
+
+```sh
+PLAYWRIGHT_CORE=/path/to/scratch/node_modules \
+CHROMIUM=/path/to/chrome \
+VIEW_CAPTURE_OUT=/tmp/card-kit-proof \
+node --import tsx packages/mcp/test/views-browser.mjs
+```
+
+The Browser plugin is not available in this session, so the frontend-testing
+skill's Playwright fallback is used. No browser dependency is installed in
+the checkout. The capture script writes screenshots and its report only to
+the selected scratch directory. Its report names the actual Chrome version.
+The final frozen-head capture and gate are recorded separately as Gitseq
+evidence after this note is committed. This is a pre-freeze statement, not
+a claim that either pending run has passed.
+
+The parent remains open. Actual journey-lane projections, package installation,
+provider operations and desktop AI-app acceptance are separate obligations.
+Builder performs no deployment. Planner publishes reviewed Main and workroom
+state and may deploy under the user's authorization. npm publication remains
+held.
 
 Protocol reference: [MCP Apps, stable 2026-01-26](https://github.com/modelcontextprotocol/ext-apps/blob/main/specification/2026-01-26/apps.mdx).
