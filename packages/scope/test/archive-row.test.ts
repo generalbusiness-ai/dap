@@ -8,6 +8,12 @@ import { at, create, type Lane } from "./support.ts";
 
 const repository = { host: "fixture-host", namespace: "fixture-room", name: "archive-fixture", id: "fixture-repository" };
 const rows = <T>(lane: Lane, work: (store: ArchiveRows) => T) => lane.inside(state => work(new ArchiveRows({ exec: (query, ...args) => state.storage.sql.exec(query, ...args), transaction: action => state.storage.transactionSync(action) }, lane.at)));
+async function refusal(action: Promise<unknown>, reason: string): Promise<void> {
+  let rejected = false, message = "";
+  try { await action; } catch (error) { rejected = true; message = error instanceof Error ? error.message : String(error); }
+  expect(rejected, "the conflicting mark must be refused").toBe(true);
+  expect(message).toContain(reason);
+}
 
 // Invariant: one exact outstanding mark survives eviction and later native
 // entries; a stale/other confirmation cannot clear it or advance the prefix.
@@ -24,7 +30,7 @@ test("preserves a single immutable mark across a native restart and later turn",
   await lane.submit(lane.remark("later native fixture turn"));
   const later = await lane.head(); expect(later.seq).toBeGreaterThan(head.seq);
   expect((await rows(lane, store => store.load()))?.pending).toEqual(mark);
-  await expect(rows(lane, store => store.mark({ ...mark, commit: "b".repeat(40) }))).rejects.toThrow("archive-row-outstanding");
+  await refusal(rows(lane, store => store.mark({ ...mark, commit: "b".repeat(40) })), "archive-row-outstanding");
   await expect(rows(lane, store => store.confirm("b".repeat(40)))).rejects.toThrow("archive-row-conflict");
   expect((await rows(lane, store => store.load()))?.pending).toEqual(mark);
   const confirmed = await rows(lane, store => store.confirm(mark.commit));
