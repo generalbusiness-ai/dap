@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:467d7b2572db4453973390d85eb4b3f96974bea5","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/application-install-grants.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:46a0994547d62f2e31c71ba4012a5d1bb0b8a76b","text":"Merge retired a covered predecessor; the successor is at apps/room/wrangler.jsonc."}
