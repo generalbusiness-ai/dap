@@ -45,6 +45,9 @@ export interface ApplicationManifest {
 export interface ApplicationRelease { readonly manifest: ApplicationManifest; readonly sig: Base64Url }
 export interface ApplicationPackage { readonly v: 1; readonly semantic: ApplicationSemantics; readonly presentation: ApplicationPresentation; readonly release: ApplicationRelease }
 export interface ApplicationIds { readonly semantic: Digest; readonly presentation: Digest; readonly release: Digest }
+/** A verified semantic body and signed release only. It carries no screen
+ * bytes and is not a complete application package or host trust decision. */
+export interface ApplicationReleaseProof { readonly semantic: ApplicationSemantics; readonly release: ApplicationRelease; readonly ids: ApplicationIds }
 export interface PackedApplication { readonly bytes: Uint8Array; readonly ids: ApplicationIds; readonly package: ApplicationPackage }
 export interface ApplicationPackageInput {
   readonly name: string; readonly version: string;

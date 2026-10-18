@@ -4,7 +4,7 @@ import type { DeclaredDefinition, Digest } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, definitionDigest, digestBytes, isDigest, isKeyId, isRecord, parseStrict, parseStrictBytes, unb64url, utf8, verify } from "@generalbusiness/artroom-bytes";
 import type { Signer } from "./intent.ts";
 import { applicationJson } from "./application-json.ts";
-import { APPLICATION_PACKAGE_LIMITS, ApplicationPackageError, type ApplicationCreation, type ApplicationDefinition, type ApplicationIds, type ApplicationPackage, type ApplicationPackageInput, type ApplicationPackageLimits, type ApplicationPresentation, type ApplicationRelease, type ApplicationSemantics, type PackedApplication } from "./application-types.ts";
+import { APPLICATION_PACKAGE_LIMITS, ApplicationPackageError, type ApplicationCreation, type ApplicationDefinition, type ApplicationIds, type ApplicationPackage, type ApplicationPackageInput, type ApplicationPackageLimits, type ApplicationPresentation, type ApplicationRelease, type ApplicationReleaseProof, type ApplicationSemantics, type PackedApplication } from "./application-types.ts";
 export * from "./application-types.ts";
 
 const TAGS = { semantic: "dap-application-semantics-1", presentation: "dap-application-presentation-1", release: "dap-application-release-1", signature: "dap-application-release-signature-1" } as const;
@@ -157,6 +157,24 @@ function checked(value: unknown, expected: Digest | null, bounds: ApplicationPac
   if (expected !== null && (!isDigest(expected) || expected !== releaseId)) return fail("integrity");
   freeze(body);
   return { package: body as unknown as ApplicationPackage, ids: Object.freeze({ semantic: semanticId, presentation: presentationId, release: releaseId }) };
+}
+
+/** Verify a native-install proof without carrying screen assets into
+ * the journal. The signed manifest binds the exact semantic/presentation ids;
+ * this checks no presentation bytes, operator trust or native host admission. */
+export function readApplicationReleaseProof(semantic: unknown, signed: unknown, expectedRelease: Digest,
+  overrides: Partial<ApplicationPackageLimits> = {}): ApplicationReleaseProof {
+  const bounds = limits(overrides), owned = parseStrict(applicationJson({ semantic, release: signed }, bounds.bytes));
+  const body = only(owned, "release,semantic"), checkedSemantic = semantics(body["semantic"], bounds), semanticId = id("semantic", checkedSemantic, bounds);
+  const givenRelease = only(body["release"], "manifest,sig"), manifest = only(givenRelease["manifest"], "name,presentation,publisher,semantic,v,version");
+  const presentationId = manifest["presentation"];
+  if (!isDigest(presentationId)) return fail("integrity");
+  const checkedRelease = release(givenRelease, semanticId, presentationId);
+  if (!verify(checkedRelease.manifest.publisher, checkedRelease.sig, domain("signature", checkedRelease.manifest, bounds))) return fail("signature");
+  const releaseId = id("release", checkedRelease, bounds);
+  if (!isDigest(expectedRelease) || releaseId !== expectedRelease) return fail("integrity");
+  freeze(body);
+  return Object.freeze({ semantic: checkedSemantic, release: checkedRelease, ids: Object.freeze({ semantic: semanticId, presentation: presentationId, release: releaseId }) });
 }
 
 /** The wire limit precedes decoding; per-asset encoded allowance precedes

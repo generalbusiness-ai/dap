@@ -122,6 +122,22 @@ refreshing this private view's ignored lock stamp. The lock SHA-256 is
 `bf2d909d256e00845edf6fdaad6eb67a5f54305aac42bb8baa9c927567f23295`.
 No package was installed and the developer view remains unchanged.
 
+## Native proof preparation
+
+The client now exports `readApplicationReleaseProof`: a semantic body and
+signed release can be checked without carrying screen assets into a native
+journal. It reuses the package's existing semantic, closure, release, signature
+and byte-bound rules. The returned ids match the complete package; the copied
+proof is frozen. This checks no omitted presentation bytes, operator trust
+or native host admission. A full host package still passes the complete codec
+and host checks above. No package format or identity domain changes.
+
+The selected new codec witness passes (`846eff`, exit 0), with exact signed
+binding, altered semantics/signature/expected id, caller input ownership,
+pre-serialization limits and getter refusal. Client source/test typechecks
+pass. It prepares the native install rule; no native operation, grant or scope
+is created yet.
+
 ## Host fetch decision pending
 
 Request `9640b02a` asks the planner to settle one concrete transport gap.

@@ -4,7 +4,7 @@
 import { expect, test } from "vitest";
 import type { DeclaredDefinition } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, definitionDigest, utf8 } from "@generalbusiness/artroom-bytes";
-import { ApplicationPackageError, packApplication, readApplicationPackage, secretSigner, type ApplicationDefinition, type ApplicationPackageInput, type PackedApplication } from "../src/index.ts";
+import { ApplicationPackageError, packApplication, readApplicationPackage, readApplicationReleaseProof, secretSigner, type ApplicationDefinition, type ApplicationPackageInput, type PackedApplication } from "../src/index.ts";
 
 const signer = secretSigner(new Uint8Array(32).fill(7));
 type Mutable<T> = T extends readonly (infer V)[] ? Mutable<V>[] : T extends object ? { -readonly [K in keyof T]: Mutable<T[K]> } : T;
@@ -123,4 +123,25 @@ test("signing holds owned input and refuses materialized getters without invokin
   const getter = input(); let calls = 0;
   Object.defineProperty(getter.semantic, "predecessor", { enumerable: true, get: () => { calls++; return null; } });
   await rejected(getter, "invalid"); expect(calls).toBe(0);
+});
+
+// Invariant: a journal-sized proof binds its semantic body to the exact signed
+// release without treating an omitted screen body as verified package bytes.
+test("an install proof verifies exact semantics and signed release without presentation assets", async () => {
+  const packet = await packApplication(input(), signer);
+  const semantic = JSON.parse(canonicalize(packet.package.semantic)), signed = JSON.parse(canonicalize(packet.package.release));
+  const proof = readApplicationReleaseProof(semantic, signed, packet.ids.release);
+  expect(proof).toEqual({ semantic: packet.package.semantic, release: packet.package.release, ids: packet.ids });
+  expect(proof).not.toHaveProperty("presentation"); expect(proof).not.toHaveProperty("bytes");
+  expect(Object.isFrozen(proof.semantic.roles)).toBe(true);
+  semantic.roles.member = ["app.found"];
+  expect(proof.semantic.roles["member"]).toEqual(["app.edit"]);
+  refusal(() => readApplicationReleaseProof(semantic, signed, packet.ids.release), "integrity");
+  refusal(() => readApplicationReleaseProof(packet.package.semantic, signed, `sha256:${"0".repeat(64)}`), "integrity");
+  const changed = { ...signed, sig: (signed.sig[0] === "A" ? "B" : "A") + signed.sig.slice(1) };
+  refusal(() => readApplicationReleaseProof(packet.package.semantic, changed, packet.ids.release), "signature");
+  refusal(() => readApplicationReleaseProof(packet.package.semantic, signed, packet.ids.release, { bytes: 32 }), "limit");
+  let invoked = 0;
+  const getter = Object.defineProperty({ ...packet.package.semantic }, "roles", { enumerable: true, get() { invoked++; return {}; } });
+  refusal(() => readApplicationReleaseProof(getter, signed, packet.ids.release)); expect(invoked).toBe(0);
 });
