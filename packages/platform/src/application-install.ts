@@ -3,9 +3,9 @@
  * under construction; this pin is not selected by a room factory yet. */
 import type { FieldValue, PlatformData } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isRecord, parseStrict } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isDigest, isMemberRef, isRecord, parseStrict } from "@generalbusiness/artroom-bytes";
 import { readApplicationReleaseProof, readApplicationReleaseUri, type ApplicationReleaseProof } from "@generalbusiness/artroom-client/application";
-import { validateDefinition, type GuardRule, type Item, type RuleGiven, type Rules } from "@generalbusiness/dap-derive";
+import { validateDefinition, type GuardRule, type Item, type RuleGiven, type RuleEffect, type Rules } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { DEFINITION_DOMAIN, rulesScope3, rulesScopeRules3 } from "./rules-scope.ts";
 import { pinnedBy } from "./versions.ts";
@@ -27,8 +27,9 @@ export const applicationInstallRulesScope: PlatformData = {
     parties: { installer: { ...fixed, list: false, author: true } },
     refs: { scope: { fixed: false, required: false, to: { type: "scope", kind: "lane" } } },
     values: { uri: { ...fixed, of: { type: "text", max: 4096 } }, release: { ...fixed, of: digest }, semantic: { ...fixed, of: digest },
+      definitionName: { ...fixed, of: { type: "text", max: 64 } },
       presentation: { ...fixed, of: digest }, definition: { ...fixed, of: digest }, publisher: { ...fixed, of: { type: "text", max: 64 } },
-      roles: { ...fixed, of: roles }, genesis: { ...fixed, of: { type: "text", max: 16 * 1024 } },
+      roles: { fixed: true, required: false, of: roles }, genesis: { ...fixed, of: { type: "text", max: 16 * 1024 } },
       phase: { fixed: false, required: true, of: phase, default: "admission" },
       reason: { fixed: false, required: false, of: { type: "text", max: 64 } },
     },
@@ -89,9 +90,13 @@ export const applicationInstallRules: Rules = {
       return { holds: true };
     } catch { return invalid; }
   } },
-  "application-install-identities": { place: "effect", most: 3, run: given => {
+  "application-install-identities": { place: "effect", most: 4, run: given => {
     const checked = proof(given); if (!checked) throw Error("validated install retains its proof");
+    const root = checked.semantic.definitions.find(part => part.id === checked.semantic.entry)!;
+    const name = parseStrict(root.bytes);
+    if (!isRecord(name) || typeof name["name"] !== "string") throw Error("validated root name required");
     return [
+      { effect: "value", item: given.resolved.self, slot: "definitionName", value: name["name"] },
       { effect: "value", item: given.resolved.self, slot: "definition", value: checked.semantic.entry },
       { effect: "value", item: given.resolved.self, slot: "presentation", value: checked.ids.presentation },
       { effect: "value", item: given.resolved.self, slot: "publisher", value: checked.release.manifest.publisher },
@@ -102,7 +107,7 @@ export const applicationInstallRules: Rules = {
     { effect: "attempt", operation: { k: 0 }, attempt: 1, result: "opened", selected: null },
   ] },
   "application-admission": { place: "outcome", rules: {
-    selects: true, read: true, closure: 0, most: { effects: 2, requests: 0, operations: 0 }, retries: () => false,
+    selects: true, read: true, closure: 0, most: { effects: 5, requests: 0, operations: 0 }, retries: () => false,
     holds: (given, operation) => { const job = installation(given, operation.id); return job?.state === "pending" && job.values["phase"] === "admission"; },
     // The existing driver's safe-read recovery may complete a marked attempt.
     // No answer stays visibly pending; no fabricated unknown native fact.
@@ -118,8 +123,24 @@ export const applicationInstallRules: Rules = {
     derives: (given, operation, selected) => {
       const job = installation(given, operation.id); if (!job || given.input.type !== "outcome") throw Error("admission belongs to an install job");
       const body = given.input.evidence.body as Record<string, FieldValue>;
-      return { effects: given.input.result === "refused" ? [{ effect: "state", item: job.id, state: "refused" }, { effect: "value", item: job.id, slot: "reason", value: body["reason"]! }]
-        : selected === true ? [{ effect: "value", item: job.id, slot: "phase", value: "activation" }] : [], sends: [], opens: [] };
+      const effects: RuleEffect[] = [];
+      if (given.input.result === "refused") effects.push({ effect: "state", item: job.id, state: "refused" }, { effect: "value", item: job.id, slot: "reason", value: body["reason"]! });
+      else if (selected === true) {
+        // One active entry root retains the validated closure from the signed
+        // install. Existing activation is reused; no second member act and no
+        // redundant activation of every child definition are needed.
+        const held = given.state.page("definition", ["active"], null, 16).items.some(item => item.values["digest"] === job.values["definition"]);
+        if (!held) {
+          const installer = job.parties["installer"];
+          if (!isMemberRef(installer)) throw Error("installation retains its original member");
+          effects.push({ effect: "open", item: given.resolved.self, type: "definition", state: "active" },
+            { effect: "party", item: given.resolved.self, slot: "activator", member: installer },
+            { effect: "value", item: given.resolved.self, slot: "digest", value: job.values["definition"]! },
+            { effect: "value", item: given.resolved.self, slot: "name", value: job.values["definitionName"]! });
+        }
+        effects.push({ effect: "value", item: job.id, slot: "phase", value: "grants" });
+      }
+      return { effects, sends: [], opens: [] };
     },
   } },
 };

@@ -51,7 +51,13 @@ test("install admission retains signed semantics, requires authority and exact a
   expect(outcome(seq, "confirmed", { ...answer, release: d("d") }).result).not.toBe("write");
   expect(r.item(seq).values["phase"]).toBe("admission");
   expect(outcome(seq, "confirmed", answer).result).toBe("write");
-  expect(r.item(seq)).toMatchObject({ state: "pending", values: { phase: "activation" } });
+  expect(r.item(seq)).toMatchObject({ state: "pending", values: { phase: "grants" } });
+  expect(r.state.page("definition", ["active"], null, 16).items).toMatchObject([{ values: { digest: packet.package.semantic.entry }, parties: { activator: keys.rita.member } }]);
+  expect(r.act(keys.rita, "install-application", { fields: { ...fields, roles: [] } as never }, { values }).result).toBe("write");
+  const second = r.head.seq;
+  expect(outcome(second, "confirmed", answer).result).toBe("write");
+  expect(r.item(second).values["roles"]).toEqual([]);
+  expect(r.state.page("definition", ["active"], null, 16).items).toHaveLength(1);
   expect(r.replay().snapshot()).toEqual(r.state.snapshot());
 });
 

@@ -25,7 +25,7 @@ test("the host resolves only four exact isolated objects with no credentials or 
         return new Response(concat(packet("# service=git-upload-pack\n"), utf8.encode("0000"), packet(`${f.commit} HEAD\0shallow filter allow-reachable-sha1-in-want object-format=sha1\n`), utf8.encode("0000")), { headers: { "content-type": "application/x-git-upload-pack-advertisement" } });
       }
       expect(request.method).toBe("POST"); expect(request.url).toBe("https://git.example/packages.git/git-upload-pack");
-      const body = new TextDecoder("utf-8", { fatal: true }).decode(await request.arrayBuffer()), wanted = /want ([0-9a-f]{40}) shallow filter\n/.exec(body)![1]!;
+      const body = new TextDecoder("utf-8", { fatal: true, ignoreBOM: false }).decode(await request.arrayBuffer()), wanted = /want ([0-9a-f]{40}) shallow filter\n/.exec(body)![1]!;
       expect(body).toContain("deepen 1\n"); expect(body).toContain("filter tree:0\n"); expect(body).not.toContain("have "); expect(body).not.toContain("ofs-delta");
       wants.push(wanted); const object = f.objects.get(wanted)!;
       const pack = await buildPack([{ id: objectId(wanted, "fixture"), type: object.type as RawGitObject["type"], data: object.data! }], { maxBytes: 4 * 1024 * 1024 });

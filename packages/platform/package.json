@@ -8,7 +8,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./membership-actions": "./src/membership-actions.ts",
-    "./testing": "./test/support.ts"
+    "./testing": "./test/support.ts",
+    "./application-install": "./src/application-install.ts"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.test.json",

@@ -269,3 +269,36 @@ exit 0); Platform source/test and Client source typechecks pass. Initial test
 runs caught a wrong fixture action and an incorrect owner-shape assertion;
 the final expectations use the actual declared action and native owner pin.
 This preparation has not run the full gate or requested Source review.
+
+
+## Admission and activation continuation
+
+A confirmed admission now opens one active root-definition record in the same
+native outcome, using the original installer's member and the checked name
+and digest. It reuses an already active root and advances to the grant phase.
+The original install has already retained the root and complete closure.
+No extra member act or activation of each child is invented. The strengthened
+native witness passes (`39d575`, two cases), including a second install with
+no selected default roles and reuse of the existing activation. Native empty
+lists do not satisfy a required slot; making the fixed selection slot optional
+allows the explicit empty selection to remain an empty list.
+
+`packages/scope/src/applications/outside.ts` supplies the trusted admission
+port for the new rules owner and exact operation. Its initial send resolves
+the original Git path, admits the package, stores it immutably, and returns
+exact identities and a digest of the operator trust list. Unsupported formats
+and permanent admission errors get bounded refusal codes. Transient failures
+return no answer and remain pending. Raw error text never enters evidence.
+Recovery rechecks Git provenance and reads existing admitted content, with
+no put. Missing cache content stays pending; request `4077145f` still governs
+the continuation needed if a process stopped before its first cache write.
+
+Two direct-port cases pass in workerd (`cb259e` / session `18242` to
+`cc3477`, exit 0), with real local R2, native in-memory admission and a labelled
+Git object stand-in. A new port instance recovers exact content with a bucket
+whose put throws; a cached release cannot stand in for an absent commit.
+SHA-256 refuses before any network call; transient reads remain pending.
+These direct calls do not prove the runtime's restart driver. Scope source
+and test typechecks pass. The test-only HTTP peer's TextDecoder now explicitly
+sets both narrow constructor options; this fixes its test typecheck without
+changing transport behavior. No complete gate or Source review is claimed.
