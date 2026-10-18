@@ -95,6 +95,33 @@ implementation choice does not change native scope persistence. A production
 private bucket/binding and generic route remain part of the reviewed install
 head before planner provisioning/deployment.
 
+## Resolution orchestration checkpoint
+
+`applications/resolve.ts` parses the immutable address, refuses an unlisted
+release before opening a transport, walks the exact Git blob, checks the
+signed release/native support, closes the source and then stores admitted
+bytes. A cached package never substitutes for resolving the requested URI.
+The transport receives the exact parsed format, commit and path. There is
+no branch/tag fallback. Transport and close failures are reported without
+raw transport details.
+
+Both focused cases pass (`4ac325` / session `44207` to `b5d242`, exit 0),
+with real signatures/native validation and local R2. Git objects and their
+transport are explicitly in memory; the real Git-object-store witnesses
+remain separate. The cases distinguish a changed URI despite an existing
+cache entry, wrong file bytes, no network for unlisted/malformed requests,
+source closing and no store write on failure. This adds no actual host Git
+transport or claim about either format's network support.
+
+Scope now declares its existing client workspace dependency at runtime,
+where host admission/resolution uses it. The lock changes only that one
+workspace record; no package key, version, resolution or integrity changes.
+All 13 local workspace links and 106 installed versions match. Audit
+`/tmp/artroom-m1-install-client-runtime-dependency-20261018.json` precedes
+refreshing this private view's ignored lock stamp. The lock SHA-256 is
+`bf2d909d256e00845edf6fdaad6eb67a5f54305aac42bb8baa9c927567f23295`.
+No package was installed and the developer view remains unchanged.
+
 ## Host fetch decision pending
 
 Request `9640b02a` asks the planner to settle one concrete transport gap.
