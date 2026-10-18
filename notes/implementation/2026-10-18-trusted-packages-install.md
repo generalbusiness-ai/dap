@@ -3,8 +3,10 @@
 Work in progress under Source child `873c84041d9259870f42ace3dc8235a59e9c3d17`
 and promise `d299657b6432ac7182563dedf27166c9c241e128`, within M1 `eca1c7ee`.
 Planner decisions `c643756e` and `866c7ae7` govern the implementation.
-The developer half stays frozen at `6aa1e6f0` for its independent review.
-This worktree has a separate dependency view and does not change that head.
+The developer half passed review at `4928fccc`, landed as Main `bfa02edd`,
+and passed the separate Main audit `10f6249c`. Publication request `56d563c8`
+is with planner. This install worktree incorporates that Main and has its own
+dependency view. Its native install flow remains unfinished.
 
 ## Completed preparation
 
@@ -217,3 +219,53 @@ No final install gate, Source review, room installation, arbitrary-package
 isolation, upgrade, npm publication, provider/archive/device acceptance or
 deployment is claimed. Planner owns publication and the host deployment
 under Hugh's existing authorization.
+
+
+## Public transport and native admission record
+
+Two unauthenticated public GitHub probes completed without remote mutation.
+The first read the repository advertisement and confirmed shallow/filter and
+reachable SHA-1 support within the transport limits. The second used this
+candidate's Web transport from Node to read the exact 632-byte blob at
+`9c32a3843feb68af4119c34c2afbf10c06222ee9`,
+`examples/grow/check/dap.application.json`. Six independently isolated object
+reads made twelve successful HTTP requests. Its SHA-256 was
+`9d204bdade6a0935537e06b73af34ed6ea076e07afe20040b34557bb1162ae78`,
+matching the local Git blob. This proves the public object walk, not package
+admission, a deployed Worker, or a completed native installation. Logs and
+JSON results are `/tmp/artroom-m1-github-capabilities-20261018.*` and
+`/tmp/artroom-m1-github-object-walk-20261018.*`. The object walk's original
+session `61493` closed with exit 0; the Node deprecation warning remains in
+its log.
+
+Draft `platform:rules@5` records one signed install with its original URI,
+exact signed release/semantic proof, selected roles and genesis values. Its
+pure guard also validates and retains the actual native definition values.
+A bounded read outcome records refusal or advances the pending phase to
+activation. Unknown or mismatched answers cannot advance it. No fresh room
+factory selects this version yet; activation, grant delivery, child creation
+and real runtime recovery are still owed. Planner request `4077145f` asks
+for the bounded resume policy after a definitive subordinate refusal.
+
+The new client `./application` entry exposes portable package codecs without
+browser-key imports. `Signer` moved to a type-only module and stays exported
+from its original entry. Platform's runtime client edge changes only its
+existing workspace lock record. The private audit
+`/tmp/artroom-m1-install-platform-runtime-dependency-20261018.json`
+(SHA-256 `85cac4f4919484105cee39636900fecd3a7f9dfb5eefe039c3c474c74dba114d`)
+verified 13 local workspace links and 106 installed versions, no changed
+package keys, versions, resolutions or integrity data, and zero installs.
+Its verified lock hash is
+`3e016bd5adba8024b3ee5395bdb6cc152b58fdd32de03eea6bf13128cc6b263b`.
+
+The native in-memory admission witness passes two cases (`5f7ffc`, exit 0),
+using real judges and rules with labelled registrar/membership fixtures and
+scripted host answers. It checks retained proof, missing authority/values,
+altered proof, exact answer identities, bounded refusal and refold equality.
+It does not show a retry driver or real membership grants. The existing
+rules-scope witness passes with its unsupported-version sentinel moved to 6.
+The affected client package/intent witnesses pass sixteen cases (`6bdd02`,
+exit 0); Platform source/test and Client source typechecks pass. Initial test
+runs caught a wrong fixture action and an incorrect owner-shape assertion;
+the final expectations use the actual declared action and native owner pin.
+This preparation has not run the full gate or requested Source review.

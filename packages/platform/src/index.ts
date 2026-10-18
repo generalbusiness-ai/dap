@@ -1,3 +1,4 @@
+import { APPLICATION_INSTALL_RULES, applicationInstallRulesScope, applicationInstallRules } from "./application-install.ts";
 import { INVITATION_KEY_COHORT, directory9, directoryRules9, membership6, membershipRules6 } from "./invitation-key.ts";
 export { INVITATION_KEY_COHORT, directory9, directoryRules9, membership6, membershipRules6 } from "./invitation-key.ts";
 /**
@@ -165,6 +166,7 @@ const VERSION_DATA: Readonly<Record<string, Platform>> = {
   "platform:membership@2": { data: membership, rules: membershipRules, observed: (state, asked) => standingOf(state, asked, MEMBERSHIP) },
   "platform:rules@1": { data: rulesScope, rules: rulesScopeRules, observed: (state, asked) => rulesAnswer(state, asked, RULES_SCOPE_1), observedValues: rulesObservedValues, revised: PUBLISH, membership: rulesMembership },
   "platform:rules@2": { data: rulesScope2, rules: rulesScopeRules, observed: (state, asked) => rulesAnswer(state, asked, RULES_SCOPE), observedValues: rulesObservedValues, revised: PUBLISH, membership: rulesMembership },
+  [APPLICATION_INSTALL_RULES]: { data: applicationInstallRulesScope, rules: applicationInstallRules, observed: (state, asked) => rulesAnswer(state, asked, APPLICATION_INSTALL_RULES), observedValues: rulesObservedValues, revised: PUBLISH, membership: rulesMembership },
   "platform:rules@4": { data: rulesScope4, rules: rulesScopeRules3, observed: (state, asked) => rulesAnswer(state, asked, "platform:rules@4"), observedValues: rulesObservedValues, revised: PUBLISH, membership: rulesMembership },
   "platform:destination@1": { data: destination, rules: destinationRules, membership: destinationMembership, rulesScope: destinationRulesScope },
   "platform:destination@2": { data: destination2, rules: destinationRules2, membership: destinationMembership, rulesScope: destinationRulesScope },

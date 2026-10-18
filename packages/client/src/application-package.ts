@@ -2,7 +2,7 @@
  * closure, never native definition admission, installation or screen isolation. */
 import type { DeclaredDefinition, Digest } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, definitionDigest, digestBytes, isDigest, isKeyId, isRecord, parseStrict, parseStrictBytes, unb64url, utf8, verify } from "@generalbusiness/artroom-bytes";
-import type { Signer } from "./intent.ts";
+import type { Signer } from "./signer.ts";
 import { applicationJson } from "./application-json.ts";
 import { APPLICATION_PACKAGE_LIMITS, ApplicationPackageError, type ApplicationCreation, type ApplicationDefinition, type ApplicationIds, type ApplicationPackage, type ApplicationPackageInput, type ApplicationPackageLimits, type ApplicationPresentation, type ApplicationRelease, type ApplicationReleaseProof, type ApplicationSemantics, type PackedApplication } from "./application-types.ts";
 export * from "./application-types.ts";
