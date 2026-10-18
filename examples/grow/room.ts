@@ -5,8 +5,9 @@ import { deviceForms, deviceNotFailed } from "./device.ts";
 import { zoneForms } from "./zone.ts";
 import { workForms } from "./work.ts";
 import { wateringForms } from "./watering.ts";
+import { ROOM, SITE } from "./names.ts";
 
-export const ROOM = "grow-room";
+export { ROOM } from "./names.ts";
 const act = (body: Pick<ActType, "step" | "on" | "grant"> & Partial<ActType>): ActType => ({ also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [], ...body });
 const fixed = { fixed: true, required: true } as const, optional = { fixed: false, required: false } as const;
 const party = { ...optional, list: false, author: false };
@@ -45,9 +46,22 @@ const heaterProposal: Guard = { reason: "invalid-heater-proposal", anyOf: [
 
 export const room: DeclaredDefinition = {
   format: "artroom-definition-1", name: ROOM, profile: { name: "restricted", version: 1 }, capabilities: [], genesis: "establish",
-  items: { room: { many: false, max: 1, initial: "open", states: { open: { final: false } }, parties: {}, refs: {}, values: { label: { ...fixed, of: { type: "text", max: 80 } } } }, zone: zone.item, device: device.item, alert, incident, ...work.items, ...watering.items },
+  items: { room: { many: false, max: 1, initial: "open", states: { open: { final: false } }, parties: {}, refs: {
+    site: { fixed: true, required: false, to: { type: "scope", kind: "directory" } }, siteRoom: { fixed: true, required: false, to: { type: "fact", under: SITE, kind: ["create-room"] } }, lastSiteReport: { ...optional, to: fact(["report-site"]) },
+  }, values: { label: { ...fixed, of: { type: "text", max: 80 } } } }, zone: zone.item, device: device.item, alert, incident, ...work.items, ...watering.items },
   acts: {
-    establish: act({ step: "open", on: "room", grant: "grow.configure", fields: { label: { type: "text", max: 80, required: true } }, effects: [{ value: { slot: "label", from: { field: "label" } } }] }),
+    establish: act({ step: "open", on: "room", grant: "grow.configure", fields: { label: { type: "text", max: 80, required: true }, site: { type: "scope", kind: "directory", required: false }, siteRoom: { type: "fact", under: SITE, kind: ["create-room"], required: false } },
+      guards: [{ anyOf: [
+        [eq({ field: "site" }, { none: true }), eq({ field: "siteRoom" }, { none: true })],
+        [{ differs: { a: { field: "site" }, b: { none: true } } }, { differs: { a: { field: "siteRoom" }, b: { none: true } } }],
+      ] }, { fact: { field: "siteRoom" }, ifPresent: true }, { equals: { a: { field: "siteRoom", part: "scope" }, b: { field: "site" } }, ifPresent: true }],
+      effects: [{ value: { slot: "label", from: { field: "label" } } }, { ref: { slot: "site", from: { field: "site" } } }, { ref: { slot: "siteRoom", from: { field: "siteRoom" } } }],
+    }),
+    "report-site": act({ step: "transition", on: "room", grant: "grow.sense", fields: { openAlerts: { type: "int", min: 0, max: 4, required: true } },
+      guards: [live("on", ["open"]), { set: "site" }, { set: "siteRoom" }, { count: { type: "alert", states: ["open", "held", "authorized"], min: { field: "openAlerts" }, max: { field: "openAlerts" } }, reason: "wrong-alert-count" }],
+      effects: [{ ref: { slot: "lastSiteReport", from: "self" } }],
+      sends: [{ relate: { to: { slot: "site" }, name: "room-summary", item: { item: "on" }, state: "reported", detail: { room: { slot: "siteRoom" }, openAlerts: { field: "openAlerts" } }, result: {} } }],
+    }),
     ...zone.acts, ...device.acts, ...work.acts, ...watering.acts,
     "bind-zone-devices": act({ step: "transition", on: "zone", grant: "grow.configure",
       fields: { vent: { type: "item", of: "device", required: true }, fan: { type: "item", of: "device", required: true }, heater: { type: "item", of: "device", required: true } },

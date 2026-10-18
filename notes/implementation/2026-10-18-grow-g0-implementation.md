@@ -309,10 +309,71 @@ and explicit scripted per-actor grants. Grow typecheck passes
 the full gate remains reserved for the completed submission. Dependencies
 and lockfile are unchanged; no package installation was performed.
 
+## Site, presence and room-summary checkpoint
+
+`site.ts` is the second application definition. The site uses native
+directory creation; its three room rows each make a native lane creation
+request for the exact native digest of `room.ts`. A pending row becomes
+active only after the child's actual applied result, and stores that
+child's scope from the verified sender. Refusal/conflict makes it failed.
+The child's actual confirmation activates it. This is a declaration and an
+in-memory native exchange, not an installed multi-scope package, enrollment
+or a hosted birth. M2a still supplies the application's hosted scope work.
+
+Room genesis may carry a site and its exact create-room fact together.
+Standalone room fixtures omit both. The fact is verified and must belong to
+the named site. A wire item reference expands to its opening fact: it must
+not be misread as a bare integer in another scope.
+
+Sensors take `report-site` on the room row, with a claimed open-alert count.
+An exact native range-count guard counts open, held and authorized alerts.
+It refuses a wrong count and sends a relation to the site. The site admits
+it only from that registered row's actual room scope, under the room
+definition name. The relation's native monotonic revisions supersede an
+older update delivered later. The stored count is unknown until a report;
+it is the last reported snapshot, not an atomic cross-scope counter. A
+later alert change needs another report. The record keeps that report fact.
+
+Arrive and leave are tender-only signed comments and write no items.
+`presence.ts` reads accepted site entries in journal order and derives
+each signing member's latest location. Moving to another room replaces the
+old location; leaving the old room afterwards does not erase the new one.
+One tender's leave does not erase another tender. The controller named by
+a delegated grant is not substituted for the signing member. This small
+projection is for the site journal; it is not the future host read tool.
+
+Three focused cases pass (`fe771c`), including three native child births,
+results/confirmations, exact definition closure, independent presence,
+sender binding, count refusal and out-of-order relation delivery. The
+wrong-sender case uses alternate declared sender data that deliberately
+addresses row 1: its creation and source send are judged normally. No entry,
+message or state row is inserted by hand to fake that proof.
+
+The first run (`80031b`) failed because the declaration used a raw hash
+instead of the native domain-separated definition digest. The next run
+(`92e30c`, diagnosed by `331f80`) failed because the opening reference
+on the wire was declared as an integer. After correcting that fact type,
+both cases reached replay but lacked the consumer's retained foreign entry
+bytes (`158e43`, diagnosed by `55c607`). The fixture now retains the
+exact entries named by each native `uses`, verifying both original entry
+hash and content digest. The fixed run `da3603` passes. All these earlier
+failures remain failures. No native digest, judge, transport or replay rule
+was changed.
+
+Three hand controls distinguish and restore source: registered sender
+(`174f74`/`de1f4f`), exact count (`6d3ebb`/`c70c15`) and leaving
+only the named current room (`6b5726`/`af2dac`). Each normal run passes
+three cases, then one intended assertion fails under the respective fault;
+each control exits 0. Logs use `/tmp/artroom-g0-control-site-`.
+All eighteen Grow cases pass together (`2d2628`/`b44b25`), and typecheck
+passes (`e59a28`). Multi-scope replay now reads the actual retained foreign
+entries and every scope's declaration/prepared inputs, with explicit
+as-recorded fixture authority. Dependencies and native kernels are unchanged.
+
 ## Remaining G0 work
 
-The site assembly, presence and the complete combined
-fault scenario remain due. M1's `dap check` now exists on its separate
+The complete combined fault scenario and final package/scenario witness
+remain due. M1's `dap check` now exists on its separate
 unlanded developer branch; G0's final package/scenario witness depends on
 that reviewed public path, without copying unlanded M1 implementation into
 this Source. No G0 gate or Source submission has run yet. Gate runs once on
