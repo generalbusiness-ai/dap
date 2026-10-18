@@ -78,6 +78,8 @@ export type { Extent, ExtentClass, ExtentJudged, ExtentsAsked, ExtentsJudged, Ho
  */
 export interface Platform {
   readonly data: PlatformData;
+  /** Host-owned idempotent preparation; never generic mutation recovery. */
+  readonly hostPreparationKinds?: readonly string[];
   /** This exact version locates a declaration in its retained native texts. */
   readonly declaredText?: (state: Pick<StateView, "page">, digest: Digest) => Digest | null;
   readonly rules: Rules;
@@ -178,7 +180,7 @@ const VERSION_DATA: Readonly<Record<string, Platform>> = {
   "platform:membership@2": { data: membership, rules: membershipRules, observed: (state, asked) => standingOf(state, asked, MEMBERSHIP) },
   "platform:rules@1": { data: rulesScope, rules: rulesScopeRules, observed: (state, asked) => rulesAnswer(state, asked, RULES_SCOPE_1), observedValues: rulesObservedValues, revised: PUBLISH, membership: rulesMembership },
   "platform:rules@2": { data: rulesScope2, rules: rulesScopeRules, observed: (state, asked) => rulesAnswer(state, asked, RULES_SCOPE), observedValues: rulesObservedValues, revised: PUBLISH, membership: rulesMembership },
-  [APPLICATION_INSTALL_RULES]: { data: applicationInstallRulesScope, rules: applicationInstallRules, declaredText: (state, digest) => installDefinitionText(state, digest, "definition"), observed: (state, asked) => rulesAnswer(state, asked, APPLICATION_INSTALL_RULES), observedValues: rulesObservedValues, revised: PUBLISH, membership: rulesMembership },
+  [APPLICATION_INSTALL_RULES]: { data: applicationInstallRulesScope, rules: applicationInstallRules, hostPreparationKinds: ["fetch-application"], declaredText: (state, digest) => installDefinitionText(state, digest, "definition"), observed: (state, asked) => rulesAnswer(state, asked, APPLICATION_INSTALL_RULES), observedValues: rulesObservedValues, revised: PUBLISH, membership: rulesMembership },
   "platform:rules@4": { data: rulesScope4, rules: rulesScopeRules3, observed: (state, asked) => rulesAnswer(state, asked, "platform:rules@4"), observedValues: rulesObservedValues, revised: PUBLISH, membership: rulesMembership },
   "platform:destination@1": { data: destination, rules: destinationRules, membership: destinationMembership, rulesScope: destinationRulesScope },
   "platform:destination@2": { data: destination2, rules: destinationRules2, membership: destinationMembership, rulesScope: destinationRulesScope },

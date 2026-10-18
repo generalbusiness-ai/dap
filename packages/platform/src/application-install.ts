@@ -1,7 +1,7 @@
-/** M1 install journal preparation. The new rules pin records the one member
- * intent and host admission. Activation/grants/creation continuation is still
- * under construction; this pin is not selected by a room factory yet. */
-import type { DeclaredDefinition, FieldValue, PlatformData } from "@generalbusiness/dap-contract";
+/** One signed install records fetch, admission, activation, grants and
+ * Directory-owned creation. The opt-in cohort selects this native rules pin;
+ * fresh-room CLI selection is still under construction. */
+import type { DeclaredDefinition, Evidence, FieldValue, PlatformData } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isMemberRef, isRecord, isScopeRef, parseStrict, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
 import { readApplicationReleaseProof, readApplicationReleaseUri, type ApplicationReleaseProof } from "@generalbusiness/artroom-client/application";
@@ -16,11 +16,11 @@ import { INSTALL_ADDITIONS_BYTES, INSTALL_DEFINITION_BYTES, INSTALL_DEFINITIONS,
 export { APPLICATION_INSTALL_RULES } from "./application-install-wire.ts";
 export const APPLICATION_SEMANTIC_VALUE = { domain: "dap-application-semantics-1", max: PROPOSED_BOUNDS.definitionBytes } as const;
 export const APPLICATION_RELEASE_VALUE = { domain: "dap-application-release-1", max: 4096 } as const;
-export const APPLICATION_INSTALL_REFUSALS = ["unsupported-object-format", "untrusted-release", "unsupported-host", "unsupported-definition", "package-invalid", "package-too-large", "source-refused"] as const;
+export const APPLICATION_INSTALL_REFUSALS = ["unsupported-object-format", "untrusted-release", "unsupported-host", "unsupported-definition", "package-invalid", "package-too-large", "source-refused", "content-not-retained"] as const;
 const roles = { type: "list", max: 5, of: { type: "enum", of: ["admin", "maintainer", "member", "agent", "checker"] } } as const;
 const fixed = { fixed: true, required: true } as const;
 const digest = { type: "digest" } as const;
-const phase = { type: "enum", of: ["admission", "activation", "grants", "creation"] } as const;
+const phase = { type: "enum", of: ["fetch", "admission", "activation", "grants", "creation"] } as const;
 
 export const applicationInstallRulesScope: PlatformData = {
   ...rulesScope3,
@@ -36,7 +36,7 @@ export const applicationInstallRulesScope: PlatformData = {
       presentation: { ...fixed, of: digest }, definition: { ...fixed, of: digest }, publisher: { ...fixed, of: { type: "text", max: 64 } },
       additions: { ...fixed, of: { type: "text", max: INSTALL_ADDITIONS_BYTES } },
       declarations: { ...fixed, of: installDeclarationsType }, genesis: { ...fixed, of: { type: "text", max: 16 * 1024 } },
-      phase: { fixed: false, required: true, of: phase, default: "admission" },
+      phase: { fixed: false, required: true, of: phase, default: "fetch" },
       reason: { fixed: false, required: false, of: { type: "text", max: 64 } },
     },
   } },
@@ -52,7 +52,7 @@ export const applicationInstallRulesScope: PlatformData = {
       { party: { slot: "installer", from: { signer: true } } },
       ...["uri", "release", "semantic"].map(slot => ({ value: { slot, from: { field: slot } } })),
       { code: "application-install-identities", row: "M1" },
-      { code: "open-application-admission", row: "M1" },
+      { code: "open-application-fetch", row: "M1" },
     ], sends: [], attention: [],
   } },
   receives: { ...rulesScope3.receives,
@@ -81,7 +81,7 @@ export const applicationInstallRulesScope: PlatformData = {
         { code: "application-creation-matches", row: "M1" }], effects: [{ code: "application-keep-creation", row: "M1" }], sends: [], attention: [],
     },
   },
-  outcomes: { ...rulesScope3.outcomes, "admit-application": { code: "application-admission", row: "M1", send: { code: "application-stage-definitions", row: "M1", result: { refused: [{ code: "application-grants-route-refused", row: "M1" }] } } } },
+  outcomes: { ...rulesScope3.outcomes, "fetch-application": { code: "application-fetch", row: "M1" }, "admit-application": { code: "application-admission", row: "M1", send: { code: "application-stage-definitions", row: "M1", result: { refused: [{ code: "application-grants-route-refused", row: "M1" }] } } } },
 };
 
 /** The existing value domains give this pure rule only retained, hashed input.
@@ -116,8 +116,17 @@ function initialFields(given: RuleGiven, checked: ApplicationReleaseProof): { fi
   return admitted ? { fields: admitted, needsDestination: destination !== undefined } : null;
 }
 function installation(given: RuleGiven, id: string): Item | null {
-  const seq = Number(id.split(":")[0]), item = given.state.item(seq);
-  return Number.isSafeInteger(seq) && item?.type === "installation" ? item : null;
+  const seq = Number(id.split(":")[0]);
+  if (!Number.isSafeInteger(seq)) return null;
+  const item = given.state.item(seq); if (item?.type === "installation") return item;
+  const origin = given.own(seq)?.entry.input;
+  if (origin?.type !== "outcome" || origin.kind !== "fetch-application" || origin.result !== "confirmed") return null;
+  const first = given.state.item(Number(origin.operation.split(":")[0]));
+  return first?.type === "installation" ? first : null;
+}
+function activationAvailable(given: RuleGiven, job: Item): boolean {
+  const definitions = given.state.page("definition", ["active"], null, 16).items;
+  return definitions.some(item => item.values["digest"] === job.values["definition"]) || definitions.length < 16;
 }
 function rootName(job: Item): string {
   const roots = job.values["declarations"];
@@ -129,6 +138,15 @@ function matchingGrantFields(given: RuleGiven, job: Item | undefined, phases: re
   return job?.state === "pending" && phases.includes(String(job.values["phase"]))
     && ["definition", "release", "semantic", "additions"].every(key => given.resolved.fields[key] === job.values[key]);
 }
+function applicationHostAnswer(result: "confirmed" | "refused" | "unknown", evidence: Evidence, given: RuleGiven): boolean {
+  if (result === "unknown" || evidence.basis !== "read" || given.input.type !== "outcome") return false;
+  const job = installation(given, given.input.operation), body = evidence.body;
+  if (!job || !isRecord(body) || body["uri"] !== job.values["uri"] || body["release"] !== job.values["release"]) return false;
+  if (result === "refused") return Object.keys(body).sort().join() === "reason,release,uri" && (APPLICATION_INSTALL_REFUSALS as readonly unknown[]).includes(body["reason"]);
+  return Object.keys(body).sort().join() === "policy,presentation,publisher,release,semantic,uri" && isDigest(body["policy"])
+    && body["semantic"] === job.values["semantic"] && body["presentation"] === job.values["presentation"] && body["publisher"] === job.values["publisher"];
+}
+
 const invalid = { holds: false, name: "invalid-application-package", code: "bad-field" } as const;
 
 export const applicationInstallRules: Rules = {
@@ -162,8 +180,8 @@ export const applicationInstallRules: Rules = {
       { effect: "value", item: given.resolved.self, slot: "publisher", value: checked.release.manifest.publisher },
     ];
   } },
-  "open-application-admission": { place: "effect", most: 2, run: given => [
-    { effect: "operation", k: 0, owner: pinnedBy(given), kind: "admit-application", attempts: 1 },
+  "open-application-fetch": { place: "effect", most: 2, run: given => [
+    { effect: "operation", k: 0, owner: pinnedBy(given), kind: "fetch-application", attempts: 1 },
     { effect: "attempt", operation: { k: 0 }, attempt: 1, result: "opened", selected: null },
   ] },
   "application-context-matches": { place: "guard", refusals: ["invalid-install-context"], run: given => {
@@ -221,6 +239,7 @@ export const applicationInstallRules: Rules = {
     const job = installation(given, given.input.operation);
     const directory = given.state.page("rules", ["current"], null, 1).items[0]?.refs["directory"];
     if (!job || !isScopeRef(directory)) throw Error("install retains its room directory");
+    if (!activationAvailable(given, job)) return null;
     return { to: directory, message: { class: "request", type: "tell", body: { message: "application-stage", fields: {
       name: rootName(job), declarations: job.values["declarations"],
       ...Object.fromEntries((job.values["declarations"] as unknown as { text: string }[]).map((part, index) => [`definitionText${index}`, part.text])),
@@ -243,19 +262,26 @@ export const applicationInstallRules: Rules = {
     if (!job || job.state !== "pending") return [];
     return [{ effect: "state", item: job.id, state: "refused" }, { effect: "value", item: job.id, slot: "reason", value: "install-route-refused" }];
   } },
+  "application-fetch": { place: "outcome", rules: {
+    selects: true, read: true,
+    // One admission attempt reserves its first and possible late outcome.
+    // Its closure is zero; this fetch outcome reserves those two entries.
+    closure: 2, most: { effects: 3, requests: 0, operations: 1 }, retries: () => false,
+    holds: (given, operation) => { const job = installation(given, operation.id); return job?.state === "pending" && job.values["phase"] === "fetch"; },
+    wellFormed: applicationHostAnswer, unknown: () => null,
+    derives: (given, operation, selected) => {
+      const job = installation(given, operation.id);
+      if (!job || given.input.type !== "outcome") throw Error("fetch belongs to one original install");
+      if (given.input.result === "refused") return { effects: [{ effect: "state", item: job.id, state: "refused" }, { effect: "value", item: job.id, slot: "reason", value: (given.input.evidence.body as Record<string, FieldValue>)["reason"]! }], sends: [], opens: [] };
+      return selected === true ? { effects: [{ effect: "value", item: job.id, slot: "phase", value: "admission" }], sends: [], opens: [{ owner: pinnedBy(given), kind: "admit-application", attempts: 1 }] } : { effects: [], sends: [], opens: [] };
+    },
+  } },
   "application-admission": { place: "outcome", rules: {
     selects: true, read: true, closure: 0, most: { effects: 6, requests: 1, operations: 0 }, retries: () => false,
     holds: (given, operation) => { const job = installation(given, operation.id); return job?.state === "pending" && job.values["phase"] === "admission"; },
     // The existing driver's safe-read recovery may complete a marked attempt.
     // No answer stays visibly pending; no fabricated unknown native fact.
-    wellFormed: (result, evidence, given) => {
-      if (result === "unknown" || evidence.basis !== "read" || given.input.type !== "outcome") return false;
-      const job = installation(given, given.input.operation), body = evidence.body;
-      if (!job || !isRecord(body) || body["uri"] !== job.values["uri"] || body["release"] !== job.values["release"]) return false;
-      if (result === "refused") return Object.keys(body).sort().join() === "reason,release,uri" && (APPLICATION_INSTALL_REFUSALS as readonly unknown[]).includes(body["reason"]);
-      return Object.keys(body).sort().join() === "policy,presentation,publisher,release,semantic,uri" && isDigest(body["policy"])
-        && body["semantic"] === job.values["semantic"] && body["presentation"] === job.values["presentation"] && body["publisher"] === job.values["publisher"];
-    },
+    wellFormed: applicationHostAnswer,
     unknown: (state, operation) => { const job = state.item(Number(operation.id.split(":")[0])); return { uri: job?.values["uri"] ?? null, release: job?.values["release"] ?? null }; },
     derives: (given, operation, selected) => {
       const job = installation(given, operation.id); if (!job || given.input.type !== "outcome") throw Error("admission belongs to an install job");
@@ -263,6 +289,7 @@ export const applicationInstallRules: Rules = {
       const effects: RuleEffect[] = [];
       if (given.input.result === "refused") effects.push({ effect: "state", item: job.id, state: "refused" }, { effect: "value", item: job.id, slot: "reason", value: body["reason"]! });
       else if (selected === true) {
+        if (!activationAvailable(given, job)) return { effects: [{ effect: "value", item: job.id, slot: "phase", value: "activation" }, { effect: "state", item: job.id, state: "refused" }, { effect: "value", item: job.id, slot: "reason", value: "definitions-full" }], sends: [], opens: [] };
         // One active entry root retains the validated closure from the signed
         // install. Existing activation is reused; no second member act and no
         // redundant activation of every child definition are needed.

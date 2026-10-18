@@ -541,3 +541,48 @@ the existing generic safe-read recovery guarantee will remain distinct from
 that explicitly permitted host preparation. CLI/MCP install, new-cohort browser
 joining, legacy-host removal and full browser verification are still owed.
 There has been no complete gate, Source submission or checker review.
+
+
+## Separate fetch preparation and read-only admission
+
+Decision `9075d42e` is implemented in this preparation. The native phase order
+is fetch, admission, activation, grants, then creation. Only a confirmed fetch
+opens admission. Fetch resolves the original immutable URI and stores the
+verified packet under its release CID before answering. A lost fetch answer
+or a crash before the first put may resume that host-owned, idempotent work.
+Admission and its recovery read stored content only; they make no Git request
+or content-store write. Missing stored content is a final admission refusal.
+
+The operation driver has a separate `hostPreparation` port. The exact pinned
+native catalog must allow the operation kind before that port can run. Only
+rules5's `fetch-application` is allowed. Generic `recovery.read` keeps its
+existing safe-read guarantee. Recovery preserves the original durable send
+mark and signed install; it neither calls `send` again nor asks a member to
+sign a continuation. A definitive refusal stays final.
+
+The existing native Worker witness now covers a pre-put interruption, a lost
+post-put reply and a lost admission reply. All four successful Counter/Lending
+cases retain one install signature, one fetch send, one admission send and
+one content put. A deliberately overbroad host-preparation port cannot
+resume admission. The focused driver run passed seven cases across three
+files (`f634ea`, session `61980`, terminal `8e6c9c`, exit 0). Direct port and
+configuration cases pass (`d06a47`, session `68902`, terminal `f897ae`,
+three cases, exit 0).
+
+The Worker file also records final unsupported-format and untrusted-release
+fetch refusals before network, activation, grants or birth. Those cases and
+the four successful installs passed together (`aab56c`, session `1944`,
+terminal `86f36a`, six cases, exit 0). Full definition capacity is a final
+activation refusal instead of an unrecordable outcome; six pure platform
+cases pass (`7b4efc`, exit 0).
+
+A later child-genesis refusal retains the earlier active definition and
+selected native grant, records a final creation refusal, serves no screen,
+and introduces no compensating member act. Rules and Directory replay
+consistent with grants proven. The focused case passed (`38527c`, session
+`61549`, terminal `ec36d9`, exit 0); its log is
+`/tmp/artroom-m1-late-child-refusal-20261018.log`. An earlier run's terminal
+output was unavailable after context recovery, so this one case was rerun
+with a captured log. Scope source/test typechecking passes. The completed
+install still owes SDK/CLI/MCP flow, fresh-room selection, browser joining,
+legacy-host removal, its complete gate and Source review.

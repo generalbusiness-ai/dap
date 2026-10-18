@@ -6,13 +6,14 @@ import { readApplicationTrust } from "./admission.ts";
 import type { ApplicationBindings } from "./bindings.ts";
 import { ApplicationContentStore } from "./content.ts";
 import { applicationHttpSource } from "./http-source.ts";
-import { acceptsApplicationAdmission, applicationAdmissionRequest, applicationOutside } from "./outside.ts";
+import { acceptsApplicationOperation, applicationOperationRequest, applicationOutside } from "./outside.ts";
 export function applicationHostOutside(env: ApplicationBindings, bounds: Bounds = PROPOSED_BOUNDS, send?: (request: Request) => Promise<Response>): Outside {
-  const unavailable: Outside = { accepts: acceptsApplicationAdmission, send: async request => {
-    const fields = applicationAdmissionRequest(request);
+  const unavailable: Outside = { accepts: acceptsApplicationOperation, send: async request => {
+    const fields = applicationOperationRequest(request);
     return fields ? { result: "refused", evidence: { basis: "read", body: { ...fields, reason: "unsupported-host" } } } : null;
   } };
-  unavailable.recovery = { accepts: unavailable.accepts, read: unavailable.send };
+  unavailable.recovery = { accepts: (owner, kind) => acceptsApplicationOperation(owner, kind) && kind === "admit-application", read: unavailable.send };
+  unavailable.hostPreparation = { accepts: (owner, kind) => acceptsApplicationOperation(owner, kind) && kind === "fetch-application", resume: unavailable.send };
   try {
     const trust = readApplicationTrust(env.APPLICATION_TRUST);
     if (!env.APPLICATION_CONTENT) return unavailable;

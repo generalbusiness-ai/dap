@@ -49,21 +49,25 @@ test("install admission retains signed semantics, requires authority and exact a
   const written = r.act(keys.rita, "install-application", { fields: fields as never }, { values });
   expect(written.result).toBe("write");
   const seq = r.head.seq;
-  expect(r.item(seq)).toMatchObject({ state: "pending", values: { phase: "admission", release: packet.ids.release, definition: packet.package.semantic.entry } });
-  expect(r.state.operation(`${seq}:0`)).toMatchObject({ kind: "admit-application", owner: APPLICATION_INSTALL_RULES });
+  expect(r.item(seq)).toMatchObject({ state: "pending", values: { phase: "fetch", release: packet.ids.release, definition: packet.package.semantic.entry } });
+  expect(r.state.operation(`${seq}:0`)).toMatchObject({ kind: "fetch-application", owner: APPLICATION_INSTALL_RULES });
   expect(written.result === "write" ? written.draft.values : []).toHaveLength(2);
   const answer = { uri: fields.uri, ...packet.ids, publisher: packet.package.release.manifest.publisher, policy: d("c") };
   expect(outcome(seq, "unknown", { uri: fields.uri, release: fields.release }, "none").result).not.toBe("write");
   expect(outcome(seq, "confirmed", answer, "own-answer").result).not.toBe("write");
   expect(outcome(seq, "confirmed", { ...answer, release: d("d") }).result).not.toBe("write");
-  expect(r.item(seq).values["phase"]).toBe("admission");
+  expect(r.item(seq).values["phase"]).toBe("fetch");
   const accepted = outcome(seq, "confirmed", answer);
   expect(accepted.result, JSON.stringify(accepted)).toBe("write");
+  expect(r.item(seq).values["phase"]).toBe("admission");
+  const admission = r.head.seq;
+  expect(outcome(admission, "confirmed", answer).result).toBe("write");
   expect(r.item(seq)).toMatchObject({ state: "pending", values: { phase: "activation" } });
   expect(r.state.page("definition", ["active"], null, 16).items).toMatchObject([{ values: { digest: packet.package.semantic.entry }, parties: { activator: keys.rita.member } }]);
   expect(r.act(keys.rita, "install-application", { fields: { ...fields, roles: [] } as never }, { values }).result).toBe("write");
   const second = r.head.seq;
   expect(outcome(second, "confirmed", answer).result).toBe("write");
+  expect(outcome(r.head.seq, "confirmed", answer).result).toBe("write");
   expect(r.item(second).values["additions"]).toBe("{}");
   expect(r.state.page("definition", ["active"], null, 16).items).toHaveLength(1);
   expect(r.replay().snapshot()).toEqual(r.state.snapshot());
@@ -113,7 +117,8 @@ test.each([false, true])("checked native grant route stages exact custody before
   if (full) expect(M.act(installer, "set-actions", { on: 0, expected: { on: M.item(0).revision }, fields: { role: "member", actions: Array.from({ length: 64 }, (_, index) => `test.action${index}`) } }, { membership: M.at }).result).toBe("write");
   expect(A.act(installer, "install-application", { fields }, { values, texts, membership: M.at }).result).toBe("write");
   const job = A.head.seq;
-  const accepted = A.outcome(`${job}:0`, { uri: fields.uri, ...packet.ids, publisher: packet.package.release.manifest.publisher, policy: d("c") });
+  const stored = A.outcome(`${job}:0`, { uri: fields.uri, ...packet.ids, publisher: packet.package.release.manifest.publisher, policy: d("c") });
+  const accepted = A.outcome(`${stored}:0`, { uri: fields.uri, ...packet.ids, publisher: packet.package.release.manifest.publisher, policy: d("c") });
   A.texts = texts;
   send(D, A, accepted);
   const staged = D.head.seq;
@@ -141,4 +146,25 @@ test.each([false, true])("checked native grant route stages exact custody before
   expect(M.item(0).values["adminActions"]).not.toContain("counting.fulfill");
   expect(A.replay().snapshot()).toEqual(A.state.snapshot());
   expect(M.replay().snapshot()).toEqual(M.state.snapshot());
+});
+
+
+// A known local definition limit is a terminal recorded refusal, not an
+// outcome that stays unjudged forever or emits a subordinate grant request.
+test("a full active-definition catalog refuses activation without opening more work", async () => {
+  const { r, fields, values, packet, outcome } = await fixture();
+  for (let index = 0; index < 16; index++) {
+    const declaration = JSON.parse(canonicalize(countingCommitments).replaceAll("counting-commitments", `capacity${index}`)) as typeof countingCommitments;
+    const digest = definitionDigest(declaration);
+    const activated = r.act(keys.rita, "activate", { fields: { digest, name: declaration.name } }, { values: [canonicalize(declaration)] });
+    expect(activated.result, JSON.stringify(activated)).toBe("write");
+  }
+  expect(r.act(keys.rita, "install-application", { fields: fields as never }, { values }).result).toBe("write");
+  const job = r.head.seq, body = { uri: fields.uri, ...packet.ids, publisher: packet.package.release.manifest.publisher, policy: d("c") };
+  expect(outcome(job, "confirmed", body).result).toBe("write");
+  expect(outcome(r.head.seq, "confirmed", body).result).toBe("write");
+  expect(r.item(job)).toMatchObject({ state: "refused", values: { phase: "activation", reason: "definitions-full" } });
+  expect(r.last.sends).toEqual([]);
+  expect(r.state.page("definition", ["active"], null, 16).items).toHaveLength(16);
+  expect(r.replay().snapshot()).toEqual(r.state.snapshot());
 });

@@ -5,6 +5,8 @@ import { env } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
+import { clockOf, judgeOutcome } from "@generalbusiness/dap-derive";
+import { platform } from "@generalbusiness/dap-platform";
 import { keys, membership } from "@generalbusiness/dap-derive/testing";
 import { Rulebook } from "../../platform/test/support-rules.ts";
 import { APPLICATION_INSTALL_RULES } from "@generalbusiness/dap-platform/application-install";
@@ -21,32 +23,43 @@ async function fixture(format: "sha1" | "sha256" = "sha1") {
   const texts = (digest: string) => { const part = f.packet.package.semantic.definitions.find(part => textDigest(part.bytes) === digest); return part ? utf8(part.bytes).length : undefined; };
   const judged = r.act(keys.rita, "install-application", { fields }, { values, texts });
   expect(judged.result, JSON.stringify(judged)).toBe("write");
-  const request: EffectRequest = { scope: r.at, owner: APPLICATION_INSTALL_RULES, kind: "admit-application", operation: `${r.head.seq}:0`, attempt: 1, origin: r.entries[r.head.seq]! };
+  const request: EffectRequest = { scope: r.at, owner: APPLICATION_INSTALL_RULES, kind: "fetch-application", operation: `${r.head.seq}:0`, attempt: 1, origin: r.entries[r.head.seq]! };
   let puts = 0;
   const store = new ApplicationContentStore({ get: env.APPLICATION_CONTENT.get.bind(env.APPLICATION_CONTENT), put: async (...args: Parameters<R2Bucket["put"]>) => { puts++; return env.APPLICATION_CONTENT.put(...args); } }, f.trust, PROPOSED_BOUNDS);
   const port = applicationOutside({ trust: f.trust, bounds: PROPOSED_BOUNDS, store, open: f.open });
-  return { f, request, port, puts: () => puts };
+  const admission = (answer: NonNullable<Awaited<ReturnType<typeof port.send>>>): EffectRequest => {
+    const judged = judgeOutcome(r.state, r.definition, { type: "outcome", operation: request.operation, attempt: 1, result: answer.result, evidence: answer.evidence },
+      { clock: clockOf(r.state, r.now), bounds: r.bounds, platform: { named: APPLICATION_INSTALL_RULES, rules: platform(APPLICATION_INSTALL_RULES)!.rules }, own: r.own });
+    expect(judged.result, JSON.stringify(judged)).toBe("write");
+    if (judged.result !== "write") throw Error("TEST native fetch must confirm stored bytes");
+    r.seal(judged.draft);
+    return { ...request, kind: "admit-application", operation: `${r.head.seq}:0`, origin: r.entries[r.head.seq]! };
+  };
+  return { f, request, port, admission, puts: () => puts };
 }
 // Invariant: native admission checks the original immutable path before any
-// cache write, and recovery can only read exact admitted bytes already stored.
+// cache write; the separate admission recovery only reads bytes already stored.
 test("admission port confirms exact provenance and recovers cached content without another write", async () => {
-  const { f, request, port, puts } = await fixture();
+  const { f, request, port, admission, puts } = await fixture();
   try {
     expect(await port.recovery!.read(request)).toBeNull();
-    expect(puts()).toBe(0); expect(f.opened).toHaveLength(1);
+    expect(puts()).toBe(0); expect(f.opened).toHaveLength(0);
     const answer = await port.send(request);
     expect(answer).toMatchObject({ result: "confirmed", evidence: { basis: "read", body: { uri: f.uri, ...f.packet.ids, publisher: f.packet.package.release.manifest.publisher } } });
     expect(puts()).toBe(1);
+    const admitted = admission(answer!);
+    const admissionAnswer = await port.send(admitted);
+    expect(admissionAnswer).toEqual(answer);
     const freshPort = applicationOutside({ trust: f.trust, bounds: PROPOSED_BOUNDS, store: new ApplicationContentStore({ get: env.APPLICATION_CONTENT.get.bind(env.APPLICATION_CONTENT), put: async () => { throw Error("TEST recovery must never put"); } }, f.trust, PROPOSED_BOUNDS), open: f.open });
-    expect(await freshPort.recovery!.read(request)).toEqual(answer);
-    expect(f.opened).toHaveLength(3); expect(f.closed()).toBe(3);
+    expect(await freshPort.recovery!.read(admitted)).toEqual(admissionAnswer);
+    expect(f.opened).toHaveLength(1); expect(f.closed()).toBe(1);
     // Existing cache content does not turn an absent original commit into
     // confirmed provenance. The original entry here is a negative control.
     const changed = structuredClone(request);
     const input = changed.origin.entry.input;
     if (input.type !== "act") throw Error("TEST install act required");
     input.signed.intent.fields["uri"] = f.uri.replace(f.commit, "f".repeat(40));
-    expect(await freshPort.recovery!.read(changed)).toMatchObject({ result: "refused", evidence: { body: { reason: "source-refused" } } });
+    expect(await freshPort.hostPreparation!.resume(changed)).toMatchObject({ result: "refused", evidence: { body: { reason: "source-refused" } } });
     expect(puts()).toBe(1);
   } finally { await env.APPLICATION_CONTENT.delete(f.key); }
 });

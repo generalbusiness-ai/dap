@@ -404,7 +404,7 @@ export function outsideOf(given: OutsideGiven, sql: Pick<SqlStorage, "exec">, en
     return NO_OUTSIDE;
   };
   const selected = (owner: string, kind: string): Outside => {
-    if (owner === "platform:rules@5" && kind === "admit-application") return wiring("application", [env.APPLICATION_CONTENT, env.APPLICATION_TRUST], () => applicationHostOutside(env, PROPOSED_BOUNDS, fetch));
+    if (owner === "platform:rules@5" && ["fetch-application", "admit-application"].includes(kind)) return wiring("application", [env.APPLICATION_CONTENT, env.APPLICATION_TRUST], () => applicationHostOutside(env, PROPOSED_BOUNDS, fetch));
     if (owner === "platform:directory@11" && kind === "announce-application") return announcement;
     return pick();
   };
@@ -413,6 +413,10 @@ export function outsideOf(given: OutsideGiven, sql: Pick<SqlStorage, "exec">, en
     accepts: (owner, kind) => selected(owner, kind).accepts(owner, kind),
     send: (request) => selected(request.owner, request.kind).send(request),
     judged: (at, sealed) => pick().judged?.(at, sealed),
+    hostPreparation: {
+      accepts: (owner, kind) => selected(owner, kind).hostPreparation?.accepts(owner, kind) ?? false,
+      resume: request => selected(request.owner, request.kind).hostPreparation?.resume(request) ?? Promise.resolve(null),
+    },
     recovery: {
       accepts: (owner, kind) => selected(owner, kind).recovery?.accepts(owner, kind) ?? false,
       read: (request) => selected(request.owner, request.kind).recovery?.read(request) ?? Promise.resolve(null),
