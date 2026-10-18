@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2608d34caa3daa5234a166fa8391f6aef9720ae5","text":"Merge retired a covered predecessor; the successor is at examples/lending/dap.application.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:280a5c12ba32607a865a029958c77ac64652f10d","text":"Merge retired a covered predecessor; the successor is at packages/cli/package.json."}
