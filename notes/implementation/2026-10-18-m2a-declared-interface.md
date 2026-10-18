@@ -139,6 +139,27 @@ admission and transport, authorized projection reads and browser/MCP use
 remain owed. Child-scope projections still require checked birth provenance
 in the later several-scope integration.
 
+Host admission now dispatches by bounded packet version to one strict codec,
+then checks exact operator release/publisher trust and whole native support.
+For v2 it admits each control's `when` under restricted@1 before any store
+write. The private content store, original fetch/admission operations and
+generic static route carry either explicit packet version. Screen-context
+v1 stays unchanged: its routing metadata format is independent of packet
+format and needs no new field for these declarations.
+
+The first focused Workerd run passes all ten cases in admission, content,
+outside operations and the new v2 host witness (`54621`, terminal `d0b9a7`,
+exit 0). The new case uses real local R2 for create/readback through a fresh
+store instance; unsupported `$now()` syntax refuses before a write. Removing
+restricted expression admission makes the intended assertion fail
+(`43482`, terminal `0f58f3`, source restored). Logs are
+`/tmp/artroom-m2a-first-host-focus-20261018.log` and
+`/tmp/artroom-m2a-host-when-control-20261018.log`. The guarded pool preparation
+verified pinned 0.22.0 bytes in this private COW namespace and copied nothing.
+Outer focused run: 3.75 s wall, 2.95 s user, 0.41 s system, on the shared
+arm64 Mac with unmeasured competing load and a warm dependency view. This
+is a focused pass, not the owed final gate or native v2 runtime install.
+
 It does not yet read a journal, authorize a viewer, install a package, or
 render a view. Those remain implementation work.
 

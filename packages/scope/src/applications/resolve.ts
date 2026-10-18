@@ -1,8 +1,9 @@
 /** Host orchestration only: exact Git address and blob, signed release and
  * native admission, then immutable private storage. No native installation
  * or HTTP route is created here. A cached release never proves another URI. */
+import type { AnyPackedApplication } from "@generalbusiness/artroom-bytes/application-v2";
 import type { Bounds, Digest } from "@generalbusiness/dap-contract";
-import { readApplicationReleaseUri, type ApplicationReleaseUri, type PackedApplication } from "@generalbusiness/artroom-client";
+import { readApplicationReleaseUri, type ApplicationReleaseUri } from "@generalbusiness/artroom-client";
 import { readApplicationGitBlob, type ApplicationGitSource } from "@generalbusiness/artroom-git";
 import { APPLICATION_HOST_PACKAGE_BYTES, ApplicationAdmissionError, readTrustedApplication, type ApplicationTrust } from "./admission.ts";
 import type { ApplicationContentStore } from "./content.ts";
@@ -13,7 +14,7 @@ export class ApplicationReleaseError extends Error {
   constructor(readonly reason: "unavailable" | "unsupported-object-format" = "unavailable") { super("application-release-" + reason); }
 }
 export async function resolveTrustedApplication(uri: unknown, release: Digest, trust: readonly ApplicationTrust[], bounds: Bounds,
-  open: OpenApplicationSource): Promise<PackedApplication> {
+  open: OpenApplicationSource): Promise<AnyPackedApplication> {
   const address = readApplicationReleaseUri(uri);
   // Planner decision 0d973184: the grammar retains SHA-256, but this M1 host
   // has only the reviewed SHA-1 smart-HTTP transport. Refuse before opening
@@ -33,7 +34,7 @@ export async function resolveTrustedApplication(uri: unknown, release: Digest, t
   }
 }
 export async function resolveAndStoreApplication(uri: unknown, release: Digest, trust: readonly ApplicationTrust[], bounds: Bounds,
-  open: OpenApplicationSource, store: ApplicationContentStore): Promise<PackedApplication> {
+  open: OpenApplicationSource, store: ApplicationContentStore): Promise<AnyPackedApplication> {
   const packet = await resolveTrustedApplication(uri, release, trust, bounds, open);
   return store.put(packet.bytes, release);
 }

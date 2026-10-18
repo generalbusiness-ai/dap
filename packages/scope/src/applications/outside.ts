@@ -1,11 +1,13 @@
 /** Native fetch prepares the private immutable cache, with explicit host-only
  * resumption. The separate admission phase and its recovery are safe reads.
  * Neither phase repeats an application or provider mutation. */
+import type { AnyPackedApplication } from "@generalbusiness/artroom-bytes/application-v2";
 import type { Bounds, Digest } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, isDigest, isRecord, utf8 } from "@generalbusiness/artroom-bytes";
-import { ApplicationPackageError, type PackedApplication } from "@generalbusiness/artroom-client/application";
+import { ApplicationPackageError } from "@generalbusiness/artroom-client/application";
 import { ApplicationGitError } from "@generalbusiness/artroom-git";
 import { APPLICATION_INSTALL_RULES } from "@generalbusiness/dap-platform/application-install";
+import { DECLARED_APPLICATION_RULES } from "@generalbusiness/dap-platform";
 import type { EffectAnswer, EffectRequest, Outside } from "../operations.ts";
 import { ApplicationAdmissionError, type ApplicationTrust } from "./admission.ts";
 import { ApplicationContentError, type ApplicationContentStore } from "./content.ts";
@@ -20,9 +22,9 @@ function reason(error: unknown): Refusal | null {
   if (error instanceof ApplicationContentError) return error.reason === "unavailable" ? null : error.reason === "too-large" ? "package-too-large" : "package-invalid";
   return null;
 }
-export const acceptsApplicationOperation: Outside["accepts"] = (owner, kind) => owner === APPLICATION_INSTALL_RULES && ["fetch-application", "admit-application"].includes(kind);
-const prepares: Outside["accepts"] = (owner, kind) => owner === APPLICATION_INSTALL_RULES && kind === "fetch-application";
-const admits: Outside["accepts"] = (owner, kind) => owner === APPLICATION_INSTALL_RULES && kind === "admit-application";
+export const acceptsApplicationOperation: Outside["accepts"] = (owner, kind) => (owner === APPLICATION_INSTALL_RULES || owner === DECLARED_APPLICATION_RULES) && ["fetch-application", "admit-application"].includes(kind);
+const prepares: Outside["accepts"] = (owner, kind) => acceptsApplicationOperation(owner, kind) && kind === "fetch-application";
+const admits: Outside["accepts"] = (owner, kind) => acceptsApplicationOperation(owner, kind) && kind === "admit-application";
 export function applicationOperationRequest(request: EffectRequest): { uri: string; release: Digest } | null {
   const input = request.origin.entry.input;
   if (!acceptsApplicationOperation(request.owner, request.kind) || request.attempt !== 1 || request.operation !== `${request.origin.entry.seq}:0`
@@ -34,7 +36,7 @@ export function applicationOperationRequest(request: EffectRequest): { uri: stri
 export function applicationOutside(options: { trust: readonly ApplicationTrust[]; bounds: Bounds; store: ApplicationContentStore; open: OpenApplicationSource }): Outside {
   const trust = options.trust.map(row => ({ ...row })), bounds = { ...options.bounds };
   const policy = digestBytes(utf8("dap-application-trust-1\n" + canonicalize(trust)));
-  const confirmed = (uri: string, packet: PackedApplication): EffectAnswer => ({ result: "confirmed", evidence: { basis: "read", body: {
+  const confirmed = (uri: string, packet: AnyPackedApplication): EffectAnswer => ({ result: "confirmed", evidence: { basis: "read", body: {
     uri, ...packet.ids, publisher: packet.package.release.manifest.publisher, policy,
   } } });
   const refused = (fields: { uri: string; release: Digest }, code: Refusal): EffectAnswer => ({ result: "refused", evidence: { basis: "read", body: { ...fields, reason: code } } });

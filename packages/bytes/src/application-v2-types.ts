@@ -1,6 +1,6 @@
 /** M2a package wire version. Legacy v1 stays a separate strict reader. */
 import type { Base64Url } from "@generalbusiness/dap-contract";
-import type { ApplicationIds, ApplicationManifest, ApplicationPresentation, ApplicationSemantics } from "./application-types.ts";
+import type { ApplicationIds, ApplicationManifest, ApplicationPresentation, ApplicationSemantics, PackedApplication } from "./application-types.ts";
 import type { ApplicationReadProjection } from "./application-projection-types.ts";
 import type { ApplicationViews } from "./application-view.ts";
 export interface ApplicationSemantics2 extends Omit<ApplicationSemantics, "v" | "projections"> {
@@ -23,6 +23,9 @@ export interface ApplicationPackage2 {
 }
 export interface ApplicationReleaseProof2 { readonly semantic: ApplicationSemantics2; readonly release: ApplicationRelease2; readonly ids: ApplicationIds }
 export interface PackedApplication2 { readonly bytes: Uint8Array; readonly ids: ApplicationIds; readonly package: ApplicationPackage2 }
+/** Host-side content handling may support both explicit codecs. Native
+ * versions still select their one proof reader, never this union. */
+export type AnyPackedApplication = PackedApplication | PackedApplication2;
 export interface ApplicationPackageInput2 {
   readonly name: string;
   readonly version: string;
