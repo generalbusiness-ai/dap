@@ -32,8 +32,9 @@ export async function runApplicationDevelopment(argv: readonly string[], cwd = p
 const BODY_BYTES = 1024 * 1024;
 const READ_STATUS: Record<ReadRefusal, number> = { "not-found": 404, "wrong-incarnation": 409, forbidden: 403, "scope-provisional": 409,
   "unsupported-definition": 501, "history-unavailable": 503, "too-large": 413, unavailable: 503, "sessions-unavailable": 503, "clock-behind": 503 };
-const RELOAD = 'const source=new EventSource("/__dap/events");const status=document.createElement("aside");status.textContent="Local TEST preview; no room installation";status.style.cssText="position:fixed;bottom:0;left:0;right:0;padding:.4rem;background:#fff5cc;color:#222;font:12px system-ui;z-index:2147483647";document.body.append(status);source.onopen=()=>{status.textContent="Local TEST preview; live reload connected";};source.onerror=()=>{status.textContent="Live reload disconnected; local TEST preview retained";};source.onmessage=event=>{const data=JSON.parse(event.data);if(data.type==="reload")location.reload();if(data.type==="error")status.textContent="Build failed; previous preview retained. Native writes are paused.";};';
+const RELOAD = 'const source=new EventSource("/__dap/events");const status=document.createElement("aside");status.textContent="Local TEST preview; no room installation";status.style.cssText="position:fixed;bottom:0;left:0;right:0;padding:.4rem;background:#fff5cc;color:#222;font:12px system-ui;z-index:2147483647";document.body.append(status);source.onopen=()=>{status.textContent="Local TEST preview; live reload connected";};source.onerror=()=>{status.textContent="Live reload disconnected; local TEST preview retained";};source.onmessage=event=>{const data=JSON.parse(event.data);if(data.type==="reload")location.replace(data.preview);if(data.type==="error")status.textContent="Build failed; previous preview retained. Native writes are paused.";};';
 const PANEL = '<!doctype html><html lang="en"><meta charset="utf-8"><title>Local application fixture</title><style>body{font:1rem system-ui;margin:2rem}pre{white-space:pre-wrap;overflow-wrap:anywhere}iframe{width:100%;height:32rem;border:1px solid #aaa}</style><h1>Local application fixture</h1><p>Explicit public TEST actors and open fixture reads. No room enrollment, provider calls or durable host state.</p><button id="read">Read state</button> <button id="replay">Replay</button><pre id="result"></pre><iframe title="Application preview" src="/"></iframe><script type="module">const result=document.querySelector("#result");const read=async()=>{const meta=await(await fetch("/__dap/meta")).json();const state=await(await fetch("/v1/scopes/"+encodeURIComponent(meta.scope.scope))).json();result.textContent=JSON.stringify({meta,state},null,2);};document.querySelector("#read").onclick=read;document.querySelector("#replay").onclick=async()=>{result.textContent=JSON.stringify(await(await fetch("/__dap/replay")).json(),null,2);};void read();</script></html>';
+const previewPath = (packet: PackedApplication): string => "/" + packet.package.presentation.entry.split("/").map(encodeURIComponent).join("/");
 interface Loaded { packet: PackedApplication; session: ApplicationDevelopmentSession; scenario: string; scenarioBytes: string; logical: number; wall: number }
 export interface ApplicationDevelopmentServer {
   readonly origin: string;
@@ -48,7 +49,7 @@ export async function startApplicationDevelopment(directory: string, options: { 
   let queue: Promise<unknown> = Promise.resolve(), watcher: FSWatcher | undefined, timer: ReturnType<typeof setTimeout> | undefined;
   const clients = new Set<ServerResponse>();
   const owned = <T>(work: () => Promise<T>): Promise<T> => { const next = queue.then(work, work); queue = next.then(() => {}, () => {}); return next; };
-  const announce = (type: string, reset = false) => { const data = `data: ${JSON.stringify({ type, revision, reset })}\n\n`; for (const client of clients) client.write(data); };
+  const announce = (type: string, reset = false) => { const data = `data: ${JSON.stringify({ type, revision, reset, preview: loaded ? previewPath(loaded.packet) : null })}\n\n`; for (const client of clients) client.write(data); };
   async function rebuild(): Promise<void> {
     if (closed) return;
     try {
@@ -123,7 +124,8 @@ export async function startApplicationDevelopment(directory: string, options: { 
     }
     if (request.method !== "GET") { json(response, 405, { error: "method-not-allowed" }); return; }
     if (url.pathname === "/favicon.ico") { response.writeHead(204); response.end(); return; }
-    const path = url.pathname === "/" ? live.packet.package.presentation.entry : decodeURIComponent(url.pathname.slice(1));
+    if (url.pathname === "/") { response.writeHead(302, { location: previewPath(live.packet), "cache-control": "no-store" }); response.end(); return; }
+    const path = decodeURIComponent(url.pathname.slice(1));
     const asset = live.packet.package.presentation.assets.find(asset => asset.path === path);
     if (!asset) { json(response, 404, { error: "not-found" }); return; }
     let bytes = Buffer.from(asset.bytes, "base64url");
