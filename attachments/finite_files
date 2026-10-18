@@ -1,0 +1,415 @@
+{
+  "format": "artroom-a2-finite-evidence-1",
+  "head": "f6e94550ecbde2f60042e9a74f75680e7000d995",
+  "tree": "3aef23a0e5e7e206ef6897ff9ec45ce19b067a8b",
+  "primary": "f16de0a6ce5d86459425d972f60db17e6012ebe7",
+  "gate": "d45a34441433c2fcc8d7830e5f1c3f1949b55540",
+  "grant": {
+    "actor": "builder",
+    "recipient": "checker",
+    "purpose": "Read exactly these finite owned files for A2 evidence review; no adjacent files, helper/dependency trees, remotes, real-room histories, or directory traversal are granted."
+  },
+  "provenance": {
+    "finalGate": {
+      "session": 93960,
+      "initial": "beb503",
+      "terminal": "fd771e",
+      "exit": 0,
+      "cleanHead": true,
+      "sourceChangesDuringRun": false,
+      "vitest": {
+        "filesPassed": 338,
+        "filesSkipped": 1,
+        "passed": 1700,
+        "skipped": 3
+      },
+      "node": 31,
+      "counting": 55,
+      "typecheck": {
+        "elapsed": 7.5,
+        "cpu": 27.8
+      },
+      "test": {
+        "elapsed": 452.2,
+        "cpu": 587.6
+      }
+    },
+    "sandboxStartup": {
+      "session": 3559,
+      "initial": "515dd9",
+      "terminal": "1acef7",
+      "exit": 1,
+      "typecheckExit": 0,
+      "testPhaseSeconds": 0.8,
+      "reason": "Vitest could not start: listen EPERM 127.0.0.1; no tests ran"
+    },
+    "focus": {
+      "composition": {
+        "initial": "cce586",
+        "session": 34494,
+        "terminal": "9a4f32",
+        "passed": 19,
+        "qualification": "Before additional detached text witness; final gate includes all seven clone cases"
+      },
+      "git": {
+        "initial": "6610d8",
+        "session": 59616,
+        "terminal": "5e4cc6",
+        "passed": 24
+      },
+      "textRepair": {
+        "initial": "13e6d6",
+        "session": 75518,
+        "terminal": "c8f70c",
+        "passed": 2,
+        "skippedByFilter": 5
+      },
+      "boundaries": {
+        "initial": "4588c8",
+        "session": 21835,
+        "terminal": "3e033e",
+        "passed": 11
+      }
+    },
+    "controls": {
+      "receipt": {
+        "initial": "b11e00",
+        "session": 54367,
+        "terminal": "770f11",
+        "normalPass": 7,
+        "faultPass": 6,
+        "faultAssertionFail": 1,
+        "result": "distinguishes; restored"
+      },
+      "releaseExemptions": {
+        "terminal": "5a3e9b",
+        "normalPass": 1,
+        "faultAssertionFail": 1,
+        "result": "distinguishes; restored"
+      }
+    },
+    "sourcePublication": {
+      "initial": "032c10",
+      "session": 49459,
+      "terminal": "4117d2",
+      "exit": 0,
+      "paths": 35
+    },
+    "dependencies": {
+      "originalLock": "a3dd5689f33c5181b5ff48553fbb3c45b44abf96720ba9935eed40853a3b09bc",
+      "newLock": "dcab76fb639e98cad2f40ed1ddbc207ffa626e0bfed51e655f18dbe7a1f1b485",
+      "onlyDelta": "Existing Git workspace link added as Replay development dependency",
+      "physicalWorkspaceLinksChecked": 13,
+      "packagesInstalled": 0,
+      "qualification": "Delta/stamp/link validation logs only; this grant grants no dependency tree. Current lock is immutable Git Source."
+    },
+    "scratch": {
+      "qualification": "Supplementary scratch clone/HTTP probes predate the final head; final permanent Git-source witnesses and gate are authoritative for f6e. Scripts reference exact fixture clones; naming a clone path does not grant its tree. Failed launch logs retained."
+    },
+    "machine": {
+      "os": "macOS27.0.1",
+      "architecture": "arm64",
+      "startLoad": "not captured",
+      "logicalCPUs": "not claimed; post-run sysctl probe denied"
+    },
+    "warnings": "Four existing Git HTTP Content-Type warnings retained; no wider stability claim."
+  },
+  "files": [
+    {
+      "path": "/tmp/artroom-archive-a2-gate-local-servers-20261018.log",
+      "physical": "/private/tmp/artroom-archive-a2-gate-local-servers-20261018.log",
+      "uid": 501,
+      "links": 1,
+      "bytes": 525,
+      "sha256": "3e46d41cbf4caf990d997338d8f787fa903bf9dc50fca20e40dfeb7e97a925ca"
+    },
+    {
+      "path": "/tmp/artroom-archive-a2-gate-20261018.log",
+      "physical": "/private/tmp/artroom-archive-a2-gate-20261018.log",
+      "uid": 501,
+      "links": 1,
+      "bytes": 1934,
+      "sha256": "4561a5129a00e06b4e8a7675dfe02104f7caca392eda9b1cc4b95a25ca5737af"
+    },
+    {
+      "path": "/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.TJgRDACPlY/whitespace.log",
+      "physical": "/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.TJgRDACPlY/whitespace.log",
+      "uid": 501,
+      "links": 1,
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.TJgRDACPlY/whitespace.time",
+      "physical": "/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.TJgRDACPlY/whitespace.time",
+      "uid": 501,
+      "links": 1,
+      "bytes": 29,
+      "sha256": "e321fd66e43908c3ec255c752ac518d47c383da51140731add2e65b0adc7930d"
+    },
+    {
+      "path": "/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.TJgRDACPlY/typecheck.log",
+      "physical": "/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.TJgRDACPlY/typecheck.log",
+      "uid": 501,
+      "links": 1,
+      "bytes": 1852,
+      "sha256": "fa291270dfa75f1100f09326d1982d415ab701fd2994aa17952ff5a421bb1855"
+    },
+    {
+      "path": "/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.TJgRDACPlY/typecheck.time",
+      "physical": "/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.TJgRDACPlY/typecheck.time",
+      "uid": 501,
+      "links": 1,
+      "bytes": 30,
+      "sha256": "72bcb800f53add302e44ebb977a339cf91da7067f8d5c62683dbf31b21a4c22d"
+    },
+    {
+      "path": "/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.TJgRDACPlY/test.log",
+      "physical": "/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.TJgRDACPlY/test.log",
+      "uid": 501,
+      "links": 1,
+      "bytes": 18303,
+      "sha256": "6932a6dc2e57a4018f81b059d553384fde4f05005519b639f62d5584b1bde08a"
+    },
+    {
+      "path": "/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.TJgRDACPlY/test.time",
+      "physical": "/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.TJgRDACPlY/test.time",
+      "uid": 501,
+      "links": 1,
+      "bytes": 34,
+      "sha256": "1491c06b3b95cdaa2e3e7c2f3eb009839ceda08f0f2b7f1cbc66464f6da7fd2a"
+    },
+    {
+      "path": "/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.k2LooECaqr/whitespace.log",
+      "physical": "/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.k2LooECaqr/whitespace.log",
+      "uid": 501,
+      "links": 1,
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.k2LooECaqr/whitespace.time",
+      "physical": "/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.k2LooECaqr/whitespace.time",
+      "uid": 501,
+      "links": 1,
+      "bytes": 29,
+      "sha256": "b19caaf7f42fccf27d8c76a198f52fea0f91edf4f9fc11246dfb0c794d708d58"
+    },
+    {
+      "path": "/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.k2LooECaqr/typecheck.log",
+      "physical": "/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.k2LooECaqr/typecheck.log",
+      "uid": 501,
+      "links": 1,
+      "bytes": 1852,
+      "sha256": "fa291270dfa75f1100f09326d1982d415ab701fd2994aa17952ff5a421bb1855"
+    },
+    {
+      "path": "/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.k2LooECaqr/typecheck.time",
+      "physical": "/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.k2LooECaqr/typecheck.time",
+      "uid": 501,
+      "links": 1,
+      "bytes": 30,
+      "sha256": "04e582a03798936f441f58cc41202ea4fb22bf9c05392238d2c91bf322e4fd49"
+    },
+    {
+      "path": "/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.k2LooECaqr/test.log",
+      "physical": "/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.k2LooECaqr/test.log",
+      "uid": 501,
+      "links": 1,
+      "bytes": 1386,
+      "sha256": "1ce891fed458379fc266f94618bdb3bc428d7efacef52b56b2f974cab36688d8"
+    },
+    {
+      "path": "/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.k2LooECaqr/test.time",
+      "physical": "/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.k2LooECaqr/test.time",
+      "uid": 501,
+      "links": 1,
+      "bytes": 29,
+      "sha256": "15ec185615df6f808b6327dc8a92487ce90e3b87dd4d35c7f843f8b980211ec0"
+    },
+    {
+      "path": "/tmp/artroom-archive-a2-composition-focused-final-20261018.log",
+      "physical": "/private/tmp/artroom-archive-a2-composition-focused-final-20261018.log",
+      "uid": 501,
+      "links": 1,
+      "bytes": 29518,
+      "sha256": "9a46c343e8e004ae9370d068e8e3c1d86e1e76e691bfc52dd6bd52054307b38e"
+    },
+    {
+      "path": "/tmp/artroom-archive-a2-erasable-reader-focused-20261018.log",
+      "physical": "/private/tmp/artroom-archive-a2-erasable-reader-focused-20261018.log",
+      "uid": 501,
+      "links": 1,
+      "bytes": 92691,
+      "sha256": "f4efe400450bb51b1661664a0f336bfb62cb547bb807f7486a87b5910e8c62bc"
+    },
+    {
+      "path": "/tmp/artroom-archive-a2-detached-text-focused-repair-20261018.log",
+      "physical": "/private/tmp/artroom-archive-a2-detached-text-focused-repair-20261018.log",
+      "uid": 501,
+      "links": 1,
+      "bytes": 1542,
+      "sha256": "bd493689ec2206ab6f1ab22db2a6799f0cfa3c7b4d5acd8eb376b4f99f5436ca"
+    },
+    {
+      "path": "/tmp/artroom-archive-a2-detached-text-focused-20261018.log",
+      "physical": "/private/tmp/artroom-archive-a2-detached-text-focused-20261018.log",
+      "uid": 501,
+      "links": 1,
+      "bytes": 2721,
+      "sha256": "6c1618375c3ea3f40facee163180a4d007f2153ef25928ab6ff6d34d298e2db0"
+    },
+    {
+      "path": "/tmp/artroom-archive-a2-detached-text-diagnosis-20261018.log",
+      "physical": "/private/tmp/artroom-archive-a2-detached-text-diagnosis-20261018.log",
+      "uid": 501,
+      "links": 1,
+      "bytes": 3929,
+      "sha256": "13120978b1b643d5b2635b39b220a8f8be1eb233d1de03ee955aaf6d6abbbd96"
+    },
+    {
+      "path": "/tmp/artroom-archive-a2-composition-all-typechecks-20261018.log",
+      "physical": "/private/tmp/artroom-archive-a2-composition-all-typechecks-20261018.log",
+      "uid": 501,
+      "links": 1,
+      "bytes": 139,
+      "sha256": "55c28149fc027c2c115d4c5e2bb18fc38bc91eef8f53dc01d45631c98a952899"
+    },
+    {
+      "path": "/tmp/artroom-archive-a2-text-port-typecheck-20261018.log",
+      "physical": "/private/tmp/artroom-archive-a2-text-port-typecheck-20261018.log",
+      "uid": 501,
+      "links": 1,
+      "bytes": 139,
+      "sha256": "55c28149fc027c2c115d4c5e2bb18fc38bc91eef8f53dc01d45631c98a952899"
+    },
+    {
+      "path": "/tmp/artroom-archive-a2-tracked-boundaries-final-20261018.log",
+      "physical": "/private/tmp/artroom-archive-a2-tracked-boundaries-final-20261018.log",
+      "uid": 501,
+      "links": 1,
+      "bytes": 1240,
+      "sha256": "1885a5fd9bd261b618837e411bbac2e8fc73b0db7f6758cd65678377a050326d"
+    },
+    {
+      "path": "/tmp/artroom-archive-a2-receipt-control-20261018.log",
+      "physical": "/private/tmp/artroom-archive-a2-receipt-control-20261018.log",
+      "uid": 501,
+      "links": 1,
+      "bytes": 2227,
+      "sha256": "722327092ed816efa376eeead619ff92e881ec053fda83e26f81806548473daa"
+    },
+    {
+      "path": "/tmp/artroom-archive-a2-release-exclusion-control-20261018.log",
+      "physical": "/private/tmp/artroom-archive-a2-release-exclusion-control-20261018.log",
+      "uid": 501,
+      "links": 1,
+      "bytes": 530,
+      "sha256": "c5ef0d826e631067f8d65b5cd32923fd9e1d298e2cf252efc408f4f0e3a27f2f"
+    },
+    {
+      "path": "/tmp/artroom-archive-a2-dependency-view-delta-20261018.log",
+      "physical": "/private/tmp/artroom-archive-a2-dependency-view-delta-20261018.log",
+      "uid": 501,
+      "links": 1,
+      "bytes": 307,
+      "sha256": "01788db7f36e0b67a8d4c8ef5fe57c6783ada34bf0969a0d82520e399aec4c52"
+    },
+    {
+      "path": "/tmp/artroom-archive-a2-dependency-view-adopted-20261018.log",
+      "physical": "/private/tmp/artroom-archive-a2-dependency-view-adopted-20261018.log",
+      "uid": 501,
+      "links": 1,
+      "bytes": 126,
+      "sha256": "7cdbefc66707ac28cd9691d222094249a7875a8132c660aacdaa783307ecec57"
+    },
+    {
+      "path": "/tmp/artroom-archive-a2-dependency-lock-before-20261018.json",
+      "physical": "/private/tmp/artroom-archive-a2-dependency-lock-before-20261018.json",
+      "uid": 501,
+      "links": 1,
+      "bytes": 133997,
+      "sha256": "a3dd5689f33c5181b5ff48553fbb3c45b44abf96720ba9935eed40853a3b09bc"
+    },
+    {
+      "path": "/tmp/artroom-archive-a2-source-publication-20261018.log",
+      "physical": "/private/tmp/artroom-archive-a2-source-publication-20261018.log",
+      "uid": 501,
+      "links": 1,
+      "bytes": 3664,
+      "sha256": "61789acbc20a31f18138bf3da83dc2d3d3a308acb52b8c3a366132d4fc6e9f0a"
+    },
+    {
+      "path": "/tmp/artroom-archive-a2-portable-clone-probe-20261018.mjs",
+      "physical": "/private/tmp/artroom-archive-a2-portable-clone-probe-20261018.mjs",
+      "uid": 501,
+      "links": 1,
+      "bytes": 2308,
+      "sha256": "b22f160ef449098b67b889a1f25f24efc9f144ade5936bbc1b64b677298f6d22"
+    },
+    {
+      "path": "/tmp/artroom-archive-a2-portable-clone-probe-20261018.json",
+      "physical": "/private/tmp/artroom-archive-a2-portable-clone-probe-20261018.json",
+      "uid": 501,
+      "links": 1,
+      "bytes": 20557,
+      "sha256": "7cb00851c305c643cb3b96dca12f80d227f99a6f29d8d0812f0f10cc6cdde81d"
+    },
+    {
+      "path": "/tmp/artroom-archive-a2-portable-clone-probe-20261018.log",
+      "physical": "/private/tmp/artroom-archive-a2-portable-clone-probe-20261018.log",
+      "uid": 501,
+      "links": 1,
+      "bytes": 1154,
+      "sha256": "c17d6f73c107837c0c3a248bc009dd1cdc395e5a4492a6f674403c22571651bf"
+    },
+    {
+      "path": "/tmp/artroom-archive-a2-portable-clone-probe-repair-20261018.log",
+      "physical": "/private/tmp/artroom-archive-a2-portable-clone-probe-repair-20261018.log",
+      "uid": 501,
+      "links": 1,
+      "bytes": 49,
+      "sha256": "b115efdadb05b10b3544958cc3e6c8ec518efece772878f4aadee80cc49bcc81"
+    },
+    {
+      "path": "/tmp/artroom-archive-a2-portable-clone-probe-tsx-20261018.log",
+      "physical": "/private/tmp/artroom-archive-a2-portable-clone-probe-tsx-20261018.log",
+      "uid": 501,
+      "links": 1,
+      "bytes": 930,
+      "sha256": "51e4d6b58b7a63afed091d81b9560040cd28b6a687ec57d2391b2e9e3485f5b1"
+    },
+    {
+      "path": "/tmp/artroom-archive-a2-portable-clone-probe-import-20261018.log",
+      "physical": "/private/tmp/artroom-archive-a2-portable-clone-probe-import-20261018.log",
+      "uid": 501,
+      "links": 1,
+      "bytes": 1005,
+      "sha256": "73bef6bbb1cf5ec961164299c4091790acb6c46d7b24332cab0ac2de2df7901d"
+    },
+    {
+      "path": "/tmp/artroom-archive-a2-http-baseline-20261018.mjs",
+      "physical": "/private/tmp/artroom-archive-a2-http-baseline-20261018.mjs",
+      "uid": 501,
+      "links": 1,
+      "bytes": 2567,
+      "sha256": "0d4a8e93ff97e8007395e3eab746dbfed679142b942eddb3ebc0f8ff81f55a9c"
+    },
+    {
+      "path": "/tmp/artroom-archive-a2-http-baseline-20261018.json",
+      "physical": "/private/tmp/artroom-archive-a2-http-baseline-20261018.json",
+      "uid": 501,
+      "links": 1,
+      "bytes": 9878,
+      "sha256": "f2aeedf491cd9f9ef77e0b2a2b6d3f422f2385771904cf91e75d24d3e4e8ae99"
+    },
+    {
+      "path": "/tmp/artroom-archive-a2-fixture-clones-20261018.json",
+      "physical": "/private/tmp/artroom-archive-a2-fixture-clones-20261018.json",
+      "uid": 501,
+      "links": 1,
+      "bytes": 19530,
+      "sha256": "7be98b5f50ce309c31c0dd156b4f350c5903cbe702e209df73089927e8360c2e"
+    }
+  ]
+}
