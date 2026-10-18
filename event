@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5326434e37ee8dc04331f11daa0fd21e367329a2","text":"Merge retired a covered predecessor; the successor is at packages/git/src/journal-layout.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:53ab02efe7ebc09be8e861c824167e6c70b8aa45","text":"Merge retired a covered predecessor; the successor is at scripts/public-release.json."}
