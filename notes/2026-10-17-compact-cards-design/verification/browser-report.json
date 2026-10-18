@@ -3,10 +3,11 @@
   "browserPlugin": "Browser plugin not available",
   "qualification": "Static examples only: no MCP, host, service, signing, or real write",
   "inputs": {
-    "../build.py": "5ad46acec1d9c3eab125b11ea9b66b76e543e9353c7823092ec59bdba0750791",
-    "cards.css": "4bf1913eaf1e2548f889b334429e5ec87181051aaecfaf247e14c97a8d491956",
+    "../build.py": "54fd1414bc6c976cdf009cff43b9086c265cc9c508aaf7263c22c5226bc442b4",
+    "../verification/browser.mjs": "e3ee4a9b71c739a4f3a152faa81d7ee0d97bbf84cbb7fddfaeb8744d3c842b10",
+    "cards.css": "a110fc8bfacf684c3f959845e26d6dccba7df5710119c648d3d8e1b0ae928d40",
     "preview.js": "c5b5901e97506b3007d895bfd63840ccec7a20405ee7602837078eea842ef635",
-    "manifest.json": "7e59a078c0bfd1189d5cbfe922c13d706cc8b0e0cd9a87b68f3375cfb9b31872",
+    "manifest.json": "c79dbbe8d653f67d66462881290e9cd1b4911243abdca906c39125672567a54c",
     "carousel-question-light.html": "715ef11204dfd619a7de335493a85bb9d78adda73d7a3859a5ddb85b77b2ddb3",
     "carousel-change-light.html": "b18ab21a85a70ec8e61dacf6ff47fea26d1309209247c918b9118774365523e3",
     "carousel-failed-light.html": "fe59d30ef5385787526386e82540ded630f0a9daa0ecb36dfe11c35e9192e6b2",
@@ -23,7 +24,8 @@
     "work-interface-light.html": "64c2ff40820da662b24c79dba611a33aa2f0211d871262fe446a1c85ff2574e4",
     "work-offered-interface-light.html": "4ef63f54df3c178899ea44225e72d51344baec9a330aafdc215f9e16b71bc07c",
     "work-storage-light.html": "0ee6132f0da09e83b40865c65916110fa298826884bd88f3776e054cd99b4afc",
-    "work-offered-storage-light.html": "3858b9bb6dd91a2c13db365c2d63e10461f2cef17043a47747b3ed590eeaa6f7",
+    "work-offered-storage-light.html": "e4617f501e72cc4146109adef566ae1aa6c5712350ec0b025a9f32739ac8d156",
+    "work-storage-original-accepted-light.html": "35cc6e15149d374eb13d7df726c21d0a05deca6c7ae7267862889f471b967d2f",
     "work-revised-light.html": "be6668bcc644e500fad696e58bf6ae4345c7be799f76f9e5896060f6d933efa0",
     "work-original-offer-light.html": "56b65dfb85a02ba95e31bf4aeda4376505ca78a37e6a99e90c10539b746f1b19",
     "work-original-accepted-light.html": "6735c59e07bda30554a2b70fa0cef5a975272226514f766de785cbb2f78269b5",
@@ -79,7 +81,8 @@
     "work-interface-dark.html": "f8440e9e8a2f5bd5ebc7d6cc43a57307a4cbdc3aa366f8824e5f10be34957df7",
     "work-offered-interface-dark.html": "201b957149bbcc879576fb46bd4a8f080d8b3cb73c67d5a006cd7ae0ff332c43",
     "work-storage-dark.html": "0c15fbe130643ed51c68bc64ca2c23a743286d295c4cbb0c01f04aca42599f59",
-    "work-offered-storage-dark.html": "70a7b7c5707e1235a3bc4d897211968952de26f49c02e6c7b8212973e136ed5b",
+    "work-offered-storage-dark.html": "99706aa3a4746ff57f64af07c4084f92f12ec49bc7394e642319cb583eb1c7f7",
+    "work-storage-original-accepted-dark.html": "c6450c278969f645a954890908df565f54fe765e5f881a9dbef2e286b752ea3f",
     "work-revised-dark.html": "d818800f0f0184460d6e432ec3a1fe6a73bc76c9c6c8615efe072bf7091c593a",
     "work-original-offer-dark.html": "878f6c31d599823594052fa85f152efb0efc598e830691ffc4a4e87f48af51dd",
     "work-original-accepted-dark.html": "a5fa49d5039c03b8177e1f9115735345f2b9394439a001188b71aebe97f0cf15",
@@ -338,7 +341,7 @@
         {
           "text": "Read current work conditions",
           "height": 44,
-          "width": 200.609375,
+          "width": 216.609375,
           "href": "work-before-revision-light.html"
         }
       ],
@@ -501,7 +504,7 @@
         {
           "text": "Read the later acceptance",
           "height": 44,
-          "width": 179.203125,
+          "width": 195.203125,
           "href": "work-accepted-light.html"
         }
       ],
@@ -538,7 +541,7 @@
       "width": 592,
       "status": 200,
       "title": "Offer recorded · static card design",
-      "text": 224,
+      "text": 229,
       "overflow": false,
       "height": 289,
       "targets": [
@@ -549,10 +552,29 @@
           "href": "http://127.0.0.1:63462/notes/2026-10-17-compact-cards-design/examples/carousel-storage-light.html?restore=1"
         },
         {
-          "text": "Read the later acceptance",
+          "text": "Read the earlier v1 acceptance",
           "height": 44,
-          "width": 179.203125,
-          "href": "work-accepted-light.html"
+          "width": 226,
+          "href": "work-storage-original-accepted-light.html"
+        }
+      ],
+      "broken": [],
+      "small": []
+    },
+    {
+      "path": "work-storage-original-accepted-light.html",
+      "width": 592,
+      "status": 200,
+      "title": "Storage original acceptance · static card design",
+      "text": 223,
+      "overflow": false,
+      "height": 219,
+      "targets": [
+        {
+          "text": "‹ Back",
+          "height": 44,
+          "width": 52.171875,
+          "href": "http://127.0.0.1:63462/notes/2026-10-17-compact-cards-design/examples/work-offered-storage-light.html?restore=1"
         }
       ],
       "broken": [],
@@ -576,13 +598,13 @@
         {
           "text": "Interface work",
           "height": 44,
-          "width": 98.265625,
+          "width": 114.265625,
           "href": "work-interface-light.html"
         },
         {
           "text": "Storage work",
           "height": 44,
-          "width": 90.921875,
+          "width": 106.921875,
           "href": "work-storage-light.html"
         }
       ],
@@ -651,7 +673,7 @@
         {
           "text": "Read the proposed change",
           "height": 44,
-          "width": 184.640625,
+          "width": 200.640625,
           "href": "change-review-light.html"
         }
       ],
@@ -676,7 +698,7 @@
         {
           "text": "Diff",
           "height": 44,
-          "width": 24.53125,
+          "width": 44,
           "href": "diff-light.html"
         },
         {
@@ -713,7 +735,7 @@
         {
           "text": "Diff",
           "height": 44,
-          "width": 24.53125,
+          "width": 44,
           "href": "diff-light.html"
         },
         {
@@ -744,7 +766,7 @@
         {
           "text": "Diff",
           "height": 44,
-          "width": 24.53125,
+          "width": 44,
           "href": "diff-failed-light.html"
         },
         {
@@ -882,19 +904,19 @@
         {
           "text": "File",
           "height": 44,
-          "width": 23.71875,
+          "width": 44,
           "href": "file-light.html"
         },
         {
           "text": "Diff",
           "height": 44,
-          "width": 24.53125,
+          "width": 44,
           "href": "diff12-light.html"
         },
         {
           "text": "Compare versions 1 and 2",
           "height": 44,
-          "width": 176.65625,
+          "width": 192.65625,
           "href": "interdiff-light.html"
         }
       ],
@@ -1286,7 +1308,7 @@
         {
           "text": "Read the change",
           "height": 44,
-          "width": 115.375,
+          "width": 131.375,
           "href": "change12-review-light.html"
         }
       ],
@@ -1349,7 +1371,7 @@
         {
           "text": "Diff",
           "height": 44,
-          "width": 24.53125,
+          "width": 44,
           "href": "diff-light.html"
         }
       ],
@@ -1710,7 +1732,7 @@
         {
           "text": "Read current work conditions",
           "height": 44,
-          "width": 200.609375,
+          "width": 216.609375,
           "href": "work-before-revision-dark.html"
         }
       ],
@@ -1873,7 +1895,7 @@
         {
           "text": "Read the later acceptance",
           "height": 44,
-          "width": 179.203125,
+          "width": 195.203125,
           "href": "work-accepted-dark.html"
         }
       ],
@@ -1910,7 +1932,7 @@
       "width": 592,
       "status": 200,
       "title": "Offer recorded · static card design",
-      "text": 224,
+      "text": 229,
       "overflow": false,
       "height": 289,
       "targets": [
@@ -1921,10 +1943,29 @@
           "href": "http://127.0.0.1:63462/notes/2026-10-17-compact-cards-design/examples/carousel-storage-dark.html?restore=1"
         },
         {
-          "text": "Read the later acceptance",
+          "text": "Read the earlier v1 acceptance",
           "height": 44,
-          "width": 179.203125,
-          "href": "work-accepted-dark.html"
+          "width": 226,
+          "href": "work-storage-original-accepted-dark.html"
+        }
+      ],
+      "broken": [],
+      "small": []
+    },
+    {
+      "path": "work-storage-original-accepted-dark.html",
+      "width": 592,
+      "status": 200,
+      "title": "Storage original acceptance · static card design",
+      "text": 223,
+      "overflow": false,
+      "height": 219,
+      "targets": [
+        {
+          "text": "‹ Back",
+          "height": 44,
+          "width": 52.171875,
+          "href": "http://127.0.0.1:63462/notes/2026-10-17-compact-cards-design/examples/work-offered-storage-dark.html?restore=1"
         }
       ],
       "broken": [],
@@ -1948,13 +1989,13 @@
         {
           "text": "Interface work",
           "height": 44,
-          "width": 98.265625,
+          "width": 114.265625,
           "href": "work-interface-dark.html"
         },
         {
           "text": "Storage work",
           "height": 44,
-          "width": 90.921875,
+          "width": 106.921875,
           "href": "work-storage-dark.html"
         }
       ],
@@ -2023,7 +2064,7 @@
         {
           "text": "Read the proposed change",
           "height": 44,
-          "width": 184.640625,
+          "width": 200.640625,
           "href": "change-review-dark.html"
         }
       ],
@@ -2048,7 +2089,7 @@
         {
           "text": "Diff",
           "height": 44,
-          "width": 24.53125,
+          "width": 44,
           "href": "diff-dark.html"
         },
         {
@@ -2085,7 +2126,7 @@
         {
           "text": "Diff",
           "height": 44,
-          "width": 24.53125,
+          "width": 44,
           "href": "diff-dark.html"
         },
         {
@@ -2116,7 +2157,7 @@
         {
           "text": "Diff",
           "height": 44,
-          "width": 24.53125,
+          "width": 44,
           "href": "diff-failed-dark.html"
         },
         {
@@ -2254,19 +2295,19 @@
         {
           "text": "File",
           "height": 44,
-          "width": 23.71875,
+          "width": 44,
           "href": "file-dark.html"
         },
         {
           "text": "Diff",
           "height": 44,
-          "width": 24.53125,
+          "width": 44,
           "href": "diff12-dark.html"
         },
         {
           "text": "Compare versions 1 and 2",
           "height": 44,
-          "width": 176.65625,
+          "width": 192.65625,
           "href": "interdiff-dark.html"
         }
       ],
@@ -2658,7 +2699,7 @@
         {
           "text": "Read the change",
           "height": 44,
-          "width": 115.375,
+          "width": 131.375,
           "href": "change12-review-dark.html"
         }
       ],
@@ -2721,7 +2762,7 @@
         {
           "text": "Diff",
           "height": 44,
-          "width": 24.53125,
+          "width": 44,
           "href": "diff-dark.html"
         }
       ],
@@ -3082,7 +3123,7 @@
         {
           "text": "Read current work conditions",
           "height": 44,
-          "width": 200.609375,
+          "width": 216.609375,
           "href": "work-before-revision-light.html"
         }
       ],
@@ -3245,7 +3286,7 @@
         {
           "text": "Read the later acceptance",
           "height": 44,
-          "width": 179.203125,
+          "width": 195.203125,
           "href": "work-accepted-light.html"
         }
       ],
@@ -3282,7 +3323,7 @@
       "width": 390,
       "status": 200,
       "title": "Offer recorded · static card design",
-      "text": 224,
+      "text": 229,
       "overflow": false,
       "height": 289,
       "targets": [
@@ -3293,10 +3334,29 @@
           "href": "http://127.0.0.1:63462/notes/2026-10-17-compact-cards-design/examples/carousel-storage-light.html?restore=1"
         },
         {
-          "text": "Read the later acceptance",
+          "text": "Read the earlier v1 acceptance",
           "height": 44,
-          "width": 179.203125,
-          "href": "work-accepted-light.html"
+          "width": 226,
+          "href": "work-storage-original-accepted-light.html"
+        }
+      ],
+      "broken": [],
+      "small": []
+    },
+    {
+      "path": "work-storage-original-accepted-light.html",
+      "width": 390,
+      "status": 200,
+      "title": "Storage original acceptance · static card design",
+      "text": 223,
+      "overflow": false,
+      "height": 293,
+      "targets": [
+        {
+          "text": "‹ Back",
+          "height": 44,
+          "width": 52.171875,
+          "href": "http://127.0.0.1:63462/notes/2026-10-17-compact-cards-design/examples/work-offered-storage-light.html?restore=1"
         }
       ],
       "broken": [],
@@ -3320,13 +3380,13 @@
         {
           "text": "Interface work",
           "height": 44,
-          "width": 98.265625,
+          "width": 114.265625,
           "href": "work-interface-light.html"
         },
         {
           "text": "Storage work",
           "height": 44,
-          "width": 90.921875,
+          "width": 106.921875,
           "href": "work-storage-light.html"
         }
       ],
@@ -3395,7 +3455,7 @@
         {
           "text": "Read the proposed change",
           "height": 44,
-          "width": 184.640625,
+          "width": 200.640625,
           "href": "change-review-light.html"
         }
       ],
@@ -3420,7 +3480,7 @@
         {
           "text": "Diff",
           "height": 44,
-          "width": 24.53125,
+          "width": 44,
           "href": "diff-light.html"
         },
         {
@@ -3457,7 +3517,7 @@
         {
           "text": "Diff",
           "height": 44,
-          "width": 24.53125,
+          "width": 44,
           "href": "diff-light.html"
         },
         {
@@ -3488,7 +3548,7 @@
         {
           "text": "Diff",
           "height": 44,
-          "width": 24.53125,
+          "width": 44,
           "href": "diff-failed-light.html"
         },
         {
@@ -3626,19 +3686,19 @@
         {
           "text": "File",
           "height": 44,
-          "width": 23.71875,
+          "width": 44,
           "href": "file-light.html"
         },
         {
           "text": "Diff",
           "height": 44,
-          "width": 24.53125,
+          "width": 44,
           "href": "diff12-light.html"
         },
         {
           "text": "Compare versions 1 and 2",
           "height": 44,
-          "width": 176.65625,
+          "width": 192.65625,
           "href": "interdiff-light.html"
         }
       ],
@@ -4030,7 +4090,7 @@
         {
           "text": "Read the change",
           "height": 44,
-          "width": 115.375,
+          "width": 131.375,
           "href": "change12-review-light.html"
         }
       ],
@@ -4093,7 +4153,7 @@
         {
           "text": "Diff",
           "height": 44,
-          "width": 24.53125,
+          "width": 44,
           "href": "diff-light.html"
         }
       ],
@@ -4454,7 +4514,7 @@
         {
           "text": "Read current work conditions",
           "height": 44,
-          "width": 200.609375,
+          "width": 216.609375,
           "href": "work-before-revision-dark.html"
         }
       ],
@@ -4617,7 +4677,7 @@
         {
           "text": "Read the later acceptance",
           "height": 44,
-          "width": 179.203125,
+          "width": 195.203125,
           "href": "work-accepted-dark.html"
         }
       ],
@@ -4654,7 +4714,7 @@
       "width": 390,
       "status": 200,
       "title": "Offer recorded · static card design",
-      "text": 224,
+      "text": 229,
       "overflow": false,
       "height": 289,
       "targets": [
@@ -4665,10 +4725,29 @@
           "href": "http://127.0.0.1:63462/notes/2026-10-17-compact-cards-design/examples/carousel-storage-dark.html?restore=1"
         },
         {
-          "text": "Read the later acceptance",
+          "text": "Read the earlier v1 acceptance",
           "height": 44,
-          "width": 179.203125,
-          "href": "work-accepted-dark.html"
+          "width": 226,
+          "href": "work-storage-original-accepted-dark.html"
+        }
+      ],
+      "broken": [],
+      "small": []
+    },
+    {
+      "path": "work-storage-original-accepted-dark.html",
+      "width": 390,
+      "status": 200,
+      "title": "Storage original acceptance · static card design",
+      "text": 223,
+      "overflow": false,
+      "height": 293,
+      "targets": [
+        {
+          "text": "‹ Back",
+          "height": 44,
+          "width": 52.171875,
+          "href": "http://127.0.0.1:63462/notes/2026-10-17-compact-cards-design/examples/work-offered-storage-dark.html?restore=1"
         }
       ],
       "broken": [],
@@ -4692,13 +4771,13 @@
         {
           "text": "Interface work",
           "height": 44,
-          "width": 98.265625,
+          "width": 114.265625,
           "href": "work-interface-dark.html"
         },
         {
           "text": "Storage work",
           "height": 44,
-          "width": 90.921875,
+          "width": 106.921875,
           "href": "work-storage-dark.html"
         }
       ],
@@ -4767,7 +4846,7 @@
         {
           "text": "Read the proposed change",
           "height": 44,
-          "width": 184.640625,
+          "width": 200.640625,
           "href": "change-review-dark.html"
         }
       ],
@@ -4792,7 +4871,7 @@
         {
           "text": "Diff",
           "height": 44,
-          "width": 24.53125,
+          "width": 44,
           "href": "diff-dark.html"
         },
         {
@@ -4829,7 +4908,7 @@
         {
           "text": "Diff",
           "height": 44,
-          "width": 24.53125,
+          "width": 44,
           "href": "diff-dark.html"
         },
         {
@@ -4860,7 +4939,7 @@
         {
           "text": "Diff",
           "height": 44,
-          "width": 24.53125,
+          "width": 44,
           "href": "diff-failed-dark.html"
         },
         {
@@ -4998,19 +5077,19 @@
         {
           "text": "File",
           "height": 44,
-          "width": 23.71875,
+          "width": 44,
           "href": "file-dark.html"
         },
         {
           "text": "Diff",
           "height": 44,
-          "width": 24.53125,
+          "width": 44,
           "href": "diff12-dark.html"
         },
         {
           "text": "Compare versions 1 and 2",
           "height": 44,
-          "width": 176.65625,
+          "width": 192.65625,
           "href": "interdiff-dark.html"
         }
       ],
@@ -5402,7 +5481,7 @@
         {
           "text": "Read the change",
           "height": 44,
-          "width": 115.375,
+          "width": 131.375,
           "href": "change12-review-dark.html"
         }
       ],
@@ -5465,7 +5544,7 @@
         {
           "text": "Diff",
           "height": 44,
-          "width": 24.53125,
+          "width": 44,
           "href": "diff-dark.html"
         }
       ],
@@ -5826,7 +5905,7 @@
         {
           "text": "Read current work conditions",
           "height": 44,
-          "width": 200.609375,
+          "width": 216.609375,
           "href": "work-before-revision-light.html"
         }
       ],
@@ -5989,7 +6068,7 @@
         {
           "text": "Read the later acceptance",
           "height": 44,
-          "width": 179.203125,
+          "width": 195.203125,
           "href": "work-accepted-light.html"
         }
       ],
@@ -6026,7 +6105,7 @@
       "width": 320,
       "status": 200,
       "title": "Offer recorded · static card design",
-      "text": 224,
+      "text": 229,
       "overflow": false,
       "height": 312,
       "targets": [
@@ -6037,10 +6116,29 @@
           "href": "http://127.0.0.1:63462/notes/2026-10-17-compact-cards-design/examples/carousel-storage-light.html?restore=1"
         },
         {
-          "text": "Read the later acceptance",
+          "text": "Read the earlier v1 acceptance",
           "height": 44,
-          "width": 179.203125,
-          "href": "work-accepted-light.html"
+          "width": 226,
+          "href": "work-storage-original-accepted-light.html"
+        }
+      ],
+      "broken": [],
+      "small": []
+    },
+    {
+      "path": "work-storage-original-accepted-light.html",
+      "width": 320,
+      "status": 200,
+      "title": "Storage original acceptance · static card design",
+      "text": 223,
+      "overflow": false,
+      "height": 336,
+      "targets": [
+        {
+          "text": "‹ Back",
+          "height": 44,
+          "width": 52.171875,
+          "href": "http://127.0.0.1:63462/notes/2026-10-17-compact-cards-design/examples/work-offered-storage-light.html?restore=1"
         }
       ],
       "broken": [],
@@ -6064,13 +6162,13 @@
         {
           "text": "Interface work",
           "height": 44,
-          "width": 98.265625,
+          "width": 114.265625,
           "href": "work-interface-light.html"
         },
         {
           "text": "Storage work",
           "height": 44,
-          "width": 90.921875,
+          "width": 106.921875,
           "href": "work-storage-light.html"
         }
       ],
@@ -6139,7 +6237,7 @@
         {
           "text": "Read the proposed change",
           "height": 44,
-          "width": 184.640625,
+          "width": 200.640625,
           "href": "change-review-light.html"
         }
       ],
@@ -6164,7 +6262,7 @@
         {
           "text": "Diff",
           "height": 44,
-          "width": 24.53125,
+          "width": 44,
           "href": "diff-light.html"
         },
         {
@@ -6201,7 +6299,7 @@
         {
           "text": "Diff",
           "height": 44,
-          "width": 24.53125,
+          "width": 44,
           "href": "diff-light.html"
         },
         {
@@ -6232,7 +6330,7 @@
         {
           "text": "Diff",
           "height": 44,
-          "width": 24.53125,
+          "width": 44,
           "href": "diff-failed-light.html"
         },
         {
@@ -6359,7 +6457,7 @@
       "title": "Compare Change 12 versions · static card design",
       "text": 166,
       "overflow": false,
-      "height": 329,
+      "height": 381,
       "targets": [
         {
           "text": "‹ Back",
@@ -6370,19 +6468,19 @@
         {
           "text": "File",
           "height": 44,
-          "width": 23.71875,
+          "width": 44,
           "href": "file-light.html"
         },
         {
           "text": "Diff",
           "height": 44,
-          "width": 24.53125,
+          "width": 44,
           "href": "diff12-light.html"
         },
         {
           "text": "Compare versions 1 and 2",
           "height": 44,
-          "width": 176.65625,
+          "width": 192.65625,
           "href": "interdiff-light.html"
         }
       ],
@@ -6774,7 +6872,7 @@
         {
           "text": "Read the change",
           "height": 44,
-          "width": 115.375,
+          "width": 131.375,
           "href": "change12-review-light.html"
         }
       ],
@@ -6837,7 +6935,7 @@
         {
           "text": "Diff",
           "height": 44,
-          "width": 24.53125,
+          "width": 44,
           "href": "diff-light.html"
         }
       ],
@@ -7198,7 +7296,7 @@
         {
           "text": "Read current work conditions",
           "height": 44,
-          "width": 200.609375,
+          "width": 216.609375,
           "href": "work-before-revision-dark.html"
         }
       ],
@@ -7361,7 +7459,7 @@
         {
           "text": "Read the later acceptance",
           "height": 44,
-          "width": 179.203125,
+          "width": 195.203125,
           "href": "work-accepted-dark.html"
         }
       ],
@@ -7398,7 +7496,7 @@
       "width": 320,
       "status": 200,
       "title": "Offer recorded · static card design",
-      "text": 224,
+      "text": 229,
       "overflow": false,
       "height": 312,
       "targets": [
@@ -7409,10 +7507,29 @@
           "href": "http://127.0.0.1:63462/notes/2026-10-17-compact-cards-design/examples/carousel-storage-dark.html?restore=1"
         },
         {
-          "text": "Read the later acceptance",
+          "text": "Read the earlier v1 acceptance",
           "height": 44,
-          "width": 179.203125,
-          "href": "work-accepted-dark.html"
+          "width": 226,
+          "href": "work-storage-original-accepted-dark.html"
+        }
+      ],
+      "broken": [],
+      "small": []
+    },
+    {
+      "path": "work-storage-original-accepted-dark.html",
+      "width": 320,
+      "status": 200,
+      "title": "Storage original acceptance · static card design",
+      "text": 223,
+      "overflow": false,
+      "height": 336,
+      "targets": [
+        {
+          "text": "‹ Back",
+          "height": 44,
+          "width": 52.171875,
+          "href": "http://127.0.0.1:63462/notes/2026-10-17-compact-cards-design/examples/work-offered-storage-dark.html?restore=1"
         }
       ],
       "broken": [],
@@ -7436,13 +7553,13 @@
         {
           "text": "Interface work",
           "height": 44,
-          "width": 98.265625,
+          "width": 114.265625,
           "href": "work-interface-dark.html"
         },
         {
           "text": "Storage work",
           "height": 44,
-          "width": 90.921875,
+          "width": 106.921875,
           "href": "work-storage-dark.html"
         }
       ],
@@ -7511,7 +7628,7 @@
         {
           "text": "Read the proposed change",
           "height": 44,
-          "width": 184.640625,
+          "width": 200.640625,
           "href": "change-review-dark.html"
         }
       ],
@@ -7536,7 +7653,7 @@
         {
           "text": "Diff",
           "height": 44,
-          "width": 24.53125,
+          "width": 44,
           "href": "diff-dark.html"
         },
         {
@@ -7573,7 +7690,7 @@
         {
           "text": "Diff",
           "height": 44,
-          "width": 24.53125,
+          "width": 44,
           "href": "diff-dark.html"
         },
         {
@@ -7604,7 +7721,7 @@
         {
           "text": "Diff",
           "height": 44,
-          "width": 24.53125,
+          "width": 44,
           "href": "diff-failed-dark.html"
         },
         {
@@ -7731,7 +7848,7 @@
       "title": "Compare Change 12 versions · static card design",
       "text": 166,
       "overflow": false,
-      "height": 329,
+      "height": 381,
       "targets": [
         {
           "text": "‹ Back",
@@ -7742,19 +7859,19 @@
         {
           "text": "File",
           "height": 44,
-          "width": 23.71875,
+          "width": 44,
           "href": "file-dark.html"
         },
         {
           "text": "Diff",
           "height": 44,
-          "width": 24.53125,
+          "width": 44,
           "href": "diff12-dark.html"
         },
         {
           "text": "Compare versions 1 and 2",
           "height": 44,
-          "width": 176.65625,
+          "width": 192.65625,
           "href": "interdiff-dark.html"
         }
       ],
@@ -8146,7 +8263,7 @@
         {
           "text": "Read the change",
           "height": 44,
-          "width": 115.375,
+          "width": 131.375,
           "href": "change12-review-dark.html"
         }
       ],
@@ -8209,7 +8326,7 @@
         {
           "text": "Diff",
           "height": 44,
-          "width": 24.53125,
+          "width": 44,
           "href": "diff-dark.html"
         }
       ],
@@ -8370,6 +8487,14 @@
     },
     {
       "kind": "unknown-failed-subject-updates-completeness",
+      "pass": true
+    },
+    {
+      "kind": "intended-cutoffs-versus-actual-read-and-presented-coverage",
+      "pass": true
+    },
+    {
+      "kind": "offeree-offer-acceptance-identity",
       "pass": true
     },
     {

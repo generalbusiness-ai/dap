@@ -3,11 +3,11 @@ import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import {createHash} from 'node:crypto';
 const root='/tmp/artroom-builder-compact-cards-design-20261017/notes/2026-10-17-compact-cards-design/examples';
-const out='/tmp/artroom-compact-cards-reviewed-browser-20261017';
+const out='/tmp/artroom-compact-cards-r1-browser-20261018';
 await mkdir(out);
 const manifest=JSON.parse(await readFile(root+'/manifest.json','utf8'));
 const base='http://127.0.0.1:63462/notes/2026-10-17-compact-cards-design/examples/';
-const inputs={};for(const file of ['../build.py','cards.css','preview.js','manifest.json',...manifest.pages.map(p=>p.path)])inputs[file]=createHash('sha256').update(await readFile(root+'/'+file)).digest('hex');
+const inputs={};for(const file of ['../build.py','../verification/browser.mjs','cards.css','preview.js','manifest.json',...manifest.pages.map(p=>p.path)])inputs[file]=createHash('sha256').update(await readFile(root+'/'+file)).digest('hex');
 const browser=await chromium.launch({executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',headless:true});
 const results={browser:browser.version(),browserPlugin:'Browser plugin not available',qualification:'Static examples only: no MCP, host, service, signing, or real write',inputs,pages:[],errors:[]};
 try{
@@ -15,7 +15,7 @@ for(const width of [592,390,320]){
  const context=await browser.newContext({viewport:{width,height:900}});
  const page=await context.newPage();
  page.on('pageerror',e=>results.errors.push(String(e)));
- page.on('console',m=>{if(m.type()==='error')results.errors.push(m.text())});
+ page.on('console',m=>{if(['error','warning'].includes(m.type()))results.errors.push(m.text())});
  await context.route('**/*',r=>new URL(r.request().url()).origin===new URL(base).origin?r.continue():r.abort());
  for(const item of manifest.pages){
   const response=await page.goto(base+item.path);
@@ -25,7 +25,7 @@ for(const width of [592,390,320]){
    return{title:document.title,text:root.textContent.trim().length,overflow:document.documentElement.scrollWidth>innerWidth,height:window.designHeight,targets};
   });
   const broken=metrics.targets.filter(t=>t.href&&!existsSync(root+'/'+new URL(t.href,base).pathname.split('/').at(-1)));
-  const small=metrics.targets.filter(t=>t.height<43.9);
+  const small=metrics.targets.filter(t=>t.height<44||t.width<44);
   results.pages.push({path:item.path,width,status:response.status(),...metrics,broken,small});
   if(width!==320&&['carousel-question','question','change-failed','updates','diff','receipt-question'].includes(item.key))await page.screenshot({path:out+'/'+item.key+'-'+item.theme+'-'+width+'.png',fullPage:true});
  }
@@ -83,6 +83,29 @@ assert(await p.locator('[data-static-act]').count()===1,'Updates have one act');
 await p.goto(base+'updates-incomplete-light.html');
 assert(await p.locator('[data-static-act]').count()===0,'Incomplete ranges cannot be marked reviewed');
 results.flows.push({kind:'unknown-failed-subject-updates-completeness',pass:true});
+const incomplete=manifest.pages.find(item=>item.key==='updates-incomplete'&&item.theme==='light').context;
+const summary=manifest.pages.find(item=>item.key==='carousel-updates'&&item.theme==='light').context;
+const missingScope=manifest.catchupScopes.change9.scope;
+assert(incomplete.intendedReviewCutoffs.length===3,'Incomplete view keeps all intended cutoffs');
+assert(incomplete.entryPositionsRead.length===2&&!incomplete.entryPositionsRead.some(range=>range.scope===missingScope),'Missing entry is outside actual read coverage');
+assert(incomplete.presentedEntryPositions.length===2&&!incomplete.presentedEntryPositions.some(range=>range.scope===missingScope),'Missing entry is outside presented coverage');
+assert(incomplete.unavailableEntryPositions[0].after===8&&incomplete.unavailableEntryPositions[0].through===9,'Unavailable range is explicit');
+assert(summary.entryPositionsRead.length===0&&summary.presentedEntryPositions.length===0,'Summary claims no entry bodies read or presented');
+assert(summary.intendedReviewCutoffs.length===3,'Summary distinguishes intended cutoffs');
+assert(await p.locator('.event').count()===6,'Incomplete screen actually presents only six entries');
+results.flows.push({kind:'intended-cutoffs-versus-actual-read-and-presented-coverage',pass:true});
+await p.goto(base+'work-offered-storage-light.html');
+await p.getByRole('link',{name:'Read the earlier v1 acceptance',exact:true}).click();
+assert(await p.locator('[data-content-root]').getAttribute('data-subject')==='commitment-storage','Storage offer keeps its own offeree');
+const storage=await p.locator('[data-content-root]').textContent();
+assert(storage.includes('224')&&storage.includes('222')&&!storage.includes('253'),'Storage acceptance names its own v1 offer, not Interface acceptance');
+await p.locator('.back').click();
+assert((await p.locator('[data-content-root]').getAttribute('data-revision')).includes('252'),'Back restores Storage v2 offer 252');
+await p.goto(base+'work-offered-interface-light.html');
+await p.getByRole('link',{name:'Read the later acceptance',exact:true}).click();
+assert(await p.locator('[data-content-root]').getAttribute('data-subject')==='commitment-interface','Interface offer keeps its own offeree');
+assert((await p.locator('[data-content-root]').textContent()).includes('253'),'Interface keeps acceptance 253');
+results.flows.push({kind:'offeree-offer-acceptance-identity',pass:true});
 for(const key of ['question','change-review','interdiff','updates','receipt-question']){
  await p.goto(base+key+'-dark.html');
  await p.addStyleTag({content:'html { font-size: 30px !important; }'});

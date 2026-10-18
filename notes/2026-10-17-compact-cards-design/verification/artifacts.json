@@ -1,18 +1,20 @@
 {
   "kind": "static-design-evidence",
   "sha256": {
+    "storage-acceptance-light-390.png": "39153c64a66b2019ff83398b523252d3a0211370784740ce1193c4f2e1880b6c",
     "receipt-question-light-592.png": "240428c72900c1c14bdaba437a5a73e0604caf611859056e1a6ce0c01321572e",
     "accessibility.mjs": "cbd7f5d18b61bd58b05e154eba2bc51467a850f411974f0badd59d3d5c2ef68f",
-    "change-failed-light-592.png": "083d1bd41cde68c02252e0b90da13e5e1e9fe9ef5735234dd897d61a5a573adc",
+    "change-failed-light-592.png": "80e21e21bfd39ba2817de05fb85bc27e0f20986d87f57c785e250052f91c9c5f",
     "diff-light-592.png": "487807ad9cf87617dbca9de3b48048b9c1d7cc775d78ed023c04e9a70f444076",
-    "browser.mjs": "4f8e5160828899a85ea3d80645cac5584368b99bcfc0184a21939808319c1602",
+    "browser.mjs": "e3ee4a9b71c739a4f3a152faa81d7ee0d97bbf84cbb7fddfaeb8744d3c842b10",
     "question-dark-390.png": "0547e6e96da92ae2a2ad9146003bbb1fea7e9054cd621c58aa13f278c48ba61d",
     "interdiff-200pct-dark-390.png": "e1058d1a8849501793f5999b7c0bf4b949b3baf907393a81888c6edf375bab19",
     "updates-dark-390.png": "68b16c27f0c5b96da30ed90c49b07d8ddd00b85704063ca200bb5cb9e206f94d",
+    "review-corrections.json": "d55fca79db22e44bbaf4598e368f52e245fa6fa8836deeed81dbf939fde27131",
     "long-title-light-320.png": "4edca6705461a7d42ac4d81aabb288052dfe7bad7f408905696c8b3699bd703d",
-    "browser-report.json": "e356d3f8ca89089481f1ab46e8ca29da40f06aabb8114bf63ef0a8de5bfe6b45",
+    "browser-report.json": "b969b29baedd0f495e9f388d303c0a67243bdd8d44b0b74919161e9f8cc346e3",
     "carousel-focus-dark-320.png": "90678ac3925044be47915eaaa865dbe9e9f15eca3b23cd85ec3295d85a7d01bd",
-    "input-continuity.json": "d11afabd30c188f8b2f1d30765c326ef8404a2a45a62c3fafe8349b84321e852",
+    "storage-offer-light-390.png": "7a3f1cb800fd91a6775279e04b8bc0c8fd9765e1d747bfc6de618d4e5e3c04f8",
     "accessibility-report.json": "2f037947c3f4fe70e6d5c189b7d1d115a25b526fe6a0c634c6be96620e18bb6d",
     "carousel-question-light-592.png": "08f630d7c74f3b9230fedfe04b2d99b88600b37db7dc3a416fc08568886559bb"
   }

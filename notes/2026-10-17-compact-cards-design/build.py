@@ -80,7 +80,9 @@ for i,(short,name) in enumerate([('interface','Interface agent'),('storage','Sto
 
 for name, short, entry in [('Interface agent', 'interface', 251), ('Storage agent', 'storage', 252)]:
     page('work-'+short, 'Offer current conditions', actor(name) + '<h1>'+('Button and empty list' if short == 'interface' else 'Storage and history')+'</h1><p>Old commitment: conditions v1 · accepted.</p><h2>Current conditions v2</h2>'+terms2+actions(link('work-offered-'+short, 'Offer conditions v2', True, 'offer-v2')), back='carousel-'+short, subject='commitment-'+short, revision='conditions v2 · entry 250', acts=['offer-v2-to-'+short], settles='Make a new offer to '+name)
-    page('work-offered-'+short, 'Offer recorded', actor(name)+f'<h1>Conditions v2 offered</h1><p>Ari made the new offer · entry {entry}.</p><p>The v1 commitment is still accepted. Only {E(name)} can accept this new offer.</p><div class="read-links">'+read('work-accepted', 'Read the later acceptance')+'</div>', back='carousel-'+short, subject='commitment-'+short, revision=f'offer {entry} · conditions v2', waiting=name, settles='The named offeree accepts conditions v2')
+    acceptance = read('work-accepted', 'Read the later acceptance') if short == 'interface' else read('work-storage-original-accepted', 'Read the earlier v1 acceptance')
+    page('work-offered-'+short, 'Offer recorded', actor(name)+f'<h1>Conditions v2 offered</h1><p>Ari made the new offer · entry {entry}.</p><p>The v1 commitment is still accepted. Only {E(name)} can accept this new offer.</p><div class="read-links">'+acceptance+'</div>', back='carousel-'+short, subject='commitment-'+short, revision=f'offer {entry} · conditions v2', waiting=name, settles='The named offeree accepts conditions v2')
+page('work-storage-original-accepted', 'Storage original acceptance', actor('Storage agent')+'<h1>Conditions v1 accepted</h1><p>Storage acceptance entry 224 names Storage offer 222.</p><p>This earlier acceptance does not accept the new v2 offer at entry 252.</p>', back='work-offered-storage', subject='commitment-storage', revision='acceptance 224 · offer 222 · conditions v1')
 page('work-revised', 'Revised work conditions', actor('Ari', 'person')+'<h1>Clear completed</h1><h2>Conditions v2 · entry 250</h2>'+terms2+'<p class="notice">Changing these conditions did not revise either accepted v1 commitment.</p><div class="read-links">'+read('work-interface', 'Interface work')+read('work-storage', 'Storage work')+'</div>', subject='clear-completed', revision='conditions v2 · entry 250')
 page('work-original-offer', 'Accept the original offer', actor('Interface agent')+'<h1>Button and empty list</h1><h2>Conditions v1 · entry 220</h2>'+terms1+'<p>Ari offered these conditions to Interface agent · entry 221.</p>'+actions(link('work-original-accepted', 'Accept conditions v1', True, 'accept-v1')), subject='commitment-interface', revision='offer 221 · conditions v1', waiting='Interface agent', acts=['accept-v1-as-interface'], settles='Interface agent accepts its offer', active_actor='Interface agent')
 page('work-original-accepted', 'Original acceptance', actor('Interface agent')+'<h1>Conditions v1 accepted</h1><p>Acceptance entry 223 names offer 221.</p>', subject='commitment-interface', revision='acceptance 223 · conditions v1')
@@ -165,7 +167,8 @@ PAGES['question-approved']['content'] = PAGES['question-approved']['content'].re
 PAGES['decision-recorded']['content'] = PAGES['decision-recorded']['content'].replace('carousel-question-THEME.html','carousel-refreshed-change-THEME.html')
 for key in ['receipt-question','receipt-context-pending']:
     PAGES[key]['back']='carousel-question-approved'
-for data in PAGES.values():
+review_cutoffs = [{'scope':v['scope'],'inc':v['inc'],'after':v['before'],'through':v['through']} for v in SCOPES.values()]
+for key, data in PAGES.items():
     subject=data['subject']
     which = 'issue' if subject=='q7' or subject=='clear-completed' or subject.startswith('commitment-') else 'change18' if subject=='change18' else 'change9' if subject=='change9' else None
     if data['title']=='Delivered work':
@@ -180,10 +183,24 @@ for data in PAGES.values():
         if subject=='q7':
             through=247 if 'decision 247' in data['revision'] else 246 if '246' in data['revision'] else 245
         elif which=='issue':
-            through=255 if 'acceptance 253' in data['revision'] else 253 if '253' in data['revision'] else 252 if '252' in data['revision'] else 251 if '251' in data['revision'] else 223 if '223' in data['revision'] else 221 if '221' in data['revision'] else 250 if 'v2' in data['revision'] else 247
-        data['context']['entryPositionsRead']=[{'scope':source['scope'],'inc':source['inc'],'through':through}]
+            through=255 if 'acceptance 253' in data['revision'] else 253 if '253' in data['revision'] else 252 if '252' in data['revision'] else 251 if '251' in data['revision'] else 224 if '224' in data['revision'] else 223 if '223' in data['revision'] else 221 if '221' in data['revision'] else 250 if 'v2' in data['revision'] else 247
+        # A projection at a head is not evidence that its journal bodies
+        # were read or presented. Only update-detail screens claim ranges.
+        data['context']['projectionReadAt']={'scope':source['scope'],'inc':source['inc'],'seq':through}
+        data['context']['presentedEntryPositions']=[]
     elif subject=='review-cut':
-        data['context']['entryPositionsRead']=[{'scope':v['scope'],'inc':v['inc'],'after':v['before'],'through':v['through']} for v in SCOPES.values()]
+        data['context']['intendedReviewCutoffs']=review_cutoffs
+        data['context']['presentedEntryPositions']=[]
+        if key in ['updates','updates-incomplete']:
+            actual = review_cutoffs if key == 'updates' else review_cutoffs[:2]
+            data['context']['entryPositionsRead']=actual
+            data['context']['presentedEntryPositions']=actual
+            if key == 'updates-incomplete':
+                data['context']['unavailableEntryPositions']=[review_cutoffs[2]]
+        elif key == 'updates-reviewed':
+            data['context']['recordedReviewPoints']=[{'scope':v['scope'],'inc':v['inc'],'seq':v['through']} for v in SCOPES.values()]
+        else:
+            data['context']['coverage']='Summary only; entry bodies have not been read or presented.'
     else:
         data['context']['entryPositionQualification']='No scope-position fixture was supplied for this standalone state.'
 

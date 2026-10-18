@@ -110,15 +110,15 @@
       "context": {
         "item": "q7",
         "revision": "text v2",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 245
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Approve question text v2, or ask for a revision."
+        "settlesBy": "Approve question text v2, or ask for a revision.",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 245
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -136,15 +136,15 @@
       "context": {
         "item": "change18",
         "revision": "version 2",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
-            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
-            "through": 18
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Review Change 18 version 2; checks passed."
+        "settlesBy": "Review Change 18 version 2; checks passed.",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -183,15 +183,15 @@
       "context": {
         "item": "change9",
         "revision": "version 1",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
-            "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
-            "through": 9
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Check the original publication request for Change 9."
+        "settlesBy": "Check the original publication request for Change 9.",
+        "projectionReadAt": {
+          "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+          "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+          "seq": 9
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -209,7 +209,10 @@
       "context": {
         "item": "review-cut",
         "revision": "240→245 · 17→18 · 8→9",
-        "entryPositionsRead": [
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Three scopes have updates since your last review.",
+        "intendedReviewCutoffs": [
           {
             "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
             "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
@@ -229,8 +232,8 @@
             "through": 9
           }
         ],
-        "waitingOn": "Ari",
-        "settlesBy": "Three scopes have updates since your last review."
+        "presentedEntryPositions": [],
+        "coverage": "Summary only; entry bodies have not been read or presented."
       },
       "receipt": null,
       "back": "carousel-question",
@@ -250,15 +253,15 @@
       "context": {
         "item": "q7",
         "revision": "text v2 · entry 245",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 245
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Approve q7 text v2, or request revision"
+        "settlesBy": "Approve q7 text v2, or request revision",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 245
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -278,15 +281,15 @@
       "context": {
         "item": "q7",
         "revision": "text v2 · approval 246",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 246
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Record a decision on approved text v2"
+        "settlesBy": "Record a decision on approved text v2",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 246
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -304,15 +307,15 @@
       "context": {
         "item": "q7",
         "revision": "decision 247",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 247
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": null,
-        "settlesBy": "Settled decision"
+        "settlesBy": "Settled decision",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 247
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -330,15 +333,15 @@
       "context": {
         "item": "q7",
         "revision": "text v1 · superseded",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 245
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Open the current revision"
+        "settlesBy": "Open the current revision",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 245
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -356,15 +359,15 @@
       "context": {
         "item": "q7",
         "revision": "text v2",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 245
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Send an edited request from the composer"
+        "settlesBy": "Send an edited request from the composer",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 245
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -384,15 +387,15 @@
       "context": {
         "item": "clear-completed",
         "revision": "conditions v1 · decision 247",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 247
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Record conditions v2 separately"
+        "settlesBy": "Record conditions v2 separately",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 247
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -410,15 +413,15 @@
       "context": {
         "item": "commitment-interface",
         "revision": "conditions v2 · entry 250",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 250
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Offer v2 to Interface agent"
+        "settlesBy": "Offer v2 to Interface agent",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 250
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -436,15 +439,15 @@
       "context": {
         "item": "commitment-storage",
         "revision": "conditions v2 · entry 250",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 250
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Offer v2 to Storage agent"
+        "settlesBy": "Offer v2 to Storage agent",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 250
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -464,15 +467,15 @@
       "context": {
         "item": "commitment-interface",
         "revision": "conditions v2 · entry 250",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 250
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Make a new offer to Interface agent"
+        "settlesBy": "Make a new offer to Interface agent",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 250
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-interface",
@@ -490,15 +493,15 @@
       "context": {
         "item": "commitment-interface",
         "revision": "offer 251 · conditions v2",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 251
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Interface agent",
-        "settlesBy": "The named offeree accepts conditions v2"
+        "settlesBy": "The named offeree accepts conditions v2",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 251
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-interface",
@@ -518,15 +521,15 @@
       "context": {
         "item": "commitment-storage",
         "revision": "conditions v2 · entry 250",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 250
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Make a new offer to Storage agent"
+        "settlesBy": "Make a new offer to Storage agent",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 250
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-storage",
@@ -544,15 +547,15 @@
       "context": {
         "item": "commitment-storage",
         "revision": "offer 252 · conditions v2",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 252
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Storage agent",
-        "settlesBy": "The named offeree accepts conditions v2"
+        "settlesBy": "The named offeree accepts conditions v2",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 252
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-storage",
@@ -560,6 +563,32 @@
       "key": "work-offered-storage",
       "theme": "light",
       "path": "work-offered-storage-light.html"
+    },
+    {
+      "title": "Storage original acceptance",
+      "mode": "full",
+      "subject": "commitment-storage",
+      "revision": "acceptance 224 · offer 222 · conditions v1",
+      "acts": [],
+      "context": {
+        "item": "commitment-storage",
+        "revision": "acceptance 224 · offer 222 · conditions v1",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read only",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 224
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "work-offered-storage",
+      "activeActor": "Ari",
+      "key": "work-storage-original-accepted",
+      "theme": "light",
+      "path": "work-storage-original-accepted-light.html"
     },
     {
       "title": "Revised work conditions",
@@ -570,15 +599,15 @@
       "context": {
         "item": "clear-completed",
         "revision": "conditions v2 · entry 250",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 250
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Read only"
+        "settlesBy": "Read only",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 250
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -598,15 +627,15 @@
       "context": {
         "item": "commitment-interface",
         "revision": "offer 221 · conditions v1",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 221
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Interface agent",
-        "settlesBy": "Interface agent accepts its offer"
+        "settlesBy": "Interface agent accepts its offer",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 221
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -624,15 +653,15 @@
       "context": {
         "item": "commitment-interface",
         "revision": "acceptance 223 · conditions v1",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 223
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Read only"
+        "settlesBy": "Read only",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 223
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -650,15 +679,15 @@
       "context": {
         "item": "commitment-interface",
         "revision": "acceptance 253 · conditions v2",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 255
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Read only"
+        "settlesBy": "Read only",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 255
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -678,15 +707,15 @@
       "context": {
         "item": "change18",
         "revision": "version 2 · entry 18",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
-            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
-            "through": 18
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Review the exact version 2 integration"
+        "settlesBy": "Review the exact version 2 integration",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-change",
@@ -706,15 +735,15 @@
       "context": {
         "item": "change18",
         "revision": "version 2 · approved",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
-            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
-            "through": 18
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Publish the approved integration under its current conditions"
+        "settlesBy": "Publish the approved integration under its current conditions",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-change",
@@ -755,15 +784,15 @@
       "context": {
         "item": "change9",
         "revision": "version 1 · request 9",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
-            "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
-            "through": 9
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Recover the outcome of original request 9"
+        "settlesBy": "Recover the outcome of original request 9",
+        "projectionReadAt": {
+          "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+          "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+          "seq": 9
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-unknown",
@@ -783,15 +812,15 @@
       "context": {
         "item": "change9",
         "revision": "version 1 · request 9",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
-            "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
-            "through": 9
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Recover the outcome of original request 9"
+        "settlesBy": "Recover the outcome of original request 9",
+        "projectionReadAt": {
+          "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+          "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+          "seq": 9
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-unknown",
@@ -809,15 +838,15 @@
       "context": {
         "item": "change18",
         "revision": "version 1 · superseded",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
-            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
-            "through": 18
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Read the current version"
+        "settlesBy": "Read the current version",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-change",
@@ -835,15 +864,15 @@
       "context": {
         "item": "change18",
         "revision": "version 2",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
-            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
-            "through": 18
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Read only"
+        "settlesBy": "Read only",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "change-review",
@@ -903,15 +932,15 @@
       "context": {
         "item": "change18",
         "revision": "version 2 · exact endpoints",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
-            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
-            "through": 18
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Read only"
+        "settlesBy": "Read only",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "change-review",
@@ -1013,15 +1042,15 @@
       "context": {
         "item": "change18",
         "revision": "version 2 · exact endpoints unavailable",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
-            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
-            "through": 18
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Read only"
+        "settlesBy": "Read only",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "change-review",
@@ -1039,15 +1068,15 @@
       "context": {
         "item": "change18",
         "revision": "version 2 · incomplete excerpt",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
-            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
-            "through": 18
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Read only"
+        "settlesBy": "Read only",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "change-review",
@@ -1088,7 +1117,47 @@
           }
         ],
         "waitingOn": "Ari",
-        "settlesBy": "Advance only the three displayed scope/incarnation review positions"
+        "settlesBy": "Advance only the three displayed scope/incarnation review positions",
+        "intendedReviewCutoffs": [
+          {
+            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+            "after": 240,
+            "through": 245
+          },
+          {
+            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+            "after": 17,
+            "through": 18
+          },
+          {
+            "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+            "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+            "after": 8,
+            "through": 9
+          }
+        ],
+        "presentedEntryPositions": [
+          {
+            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+            "after": 240,
+            "through": 245
+          },
+          {
+            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+            "after": 17,
+            "through": 18
+          },
+          {
+            "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+            "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+            "after": 8,
+            "through": 9
+          }
+        ]
       },
       "receipt": null,
       "back": "carousel-updates",
@@ -1118,34 +1187,11 @@
             "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
             "after": 17,
             "through": 18
-          },
-          {
-            "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
-            "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
-            "after": 8,
-            "through": 9
           }
         ],
         "waitingOn": "Ari",
-        "settlesBy": "Load every entry before marking reviewed"
-      },
-      "receipt": null,
-      "back": "carousel-updates",
-      "activeActor": "Ari",
-      "key": "updates-incomplete",
-      "theme": "light",
-      "path": "updates-incomplete-light.html"
-    },
-    {
-      "title": "Review points saved",
-      "mode": "full",
-      "subject": "review-cut",
-      "revision": "exact displayed ranges",
-      "acts": [],
-      "context": {
-        "item": "review-cut",
-        "revision": "exact displayed ranges",
-        "entryPositionsRead": [
+        "settlesBy": "Load every entry before marking reviewed",
+        "intendedReviewCutoffs": [
           {
             "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
             "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
@@ -1165,8 +1211,86 @@
             "through": 9
           }
         ],
+        "presentedEntryPositions": [
+          {
+            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+            "after": 240,
+            "through": 245
+          },
+          {
+            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+            "after": 17,
+            "through": 18
+          }
+        ],
+        "unavailableEntryPositions": [
+          {
+            "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+            "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+            "after": 8,
+            "through": 9
+          }
+        ]
+      },
+      "receipt": null,
+      "back": "carousel-updates",
+      "activeActor": "Ari",
+      "key": "updates-incomplete",
+      "theme": "light",
+      "path": "updates-incomplete-light.html"
+    },
+    {
+      "title": "Review points saved",
+      "mode": "full",
+      "subject": "review-cut",
+      "revision": "exact displayed ranges",
+      "acts": [],
+      "context": {
+        "item": "review-cut",
+        "revision": "exact displayed ranges",
+        "entryPositionsRead": [],
         "waitingOn": null,
-        "settlesBy": "Read only"
+        "settlesBy": "Read only",
+        "intendedReviewCutoffs": [
+          {
+            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+            "after": 240,
+            "through": 245
+          },
+          {
+            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+            "after": 17,
+            "through": 18
+          },
+          {
+            "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+            "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+            "after": 8,
+            "through": 9
+          }
+        ],
+        "presentedEntryPositions": [],
+        "recordedReviewPoints": [
+          {
+            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+            "seq": 245
+          },
+          {
+            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+            "seq": 18
+          },
+          {
+            "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+            "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+            "seq": 9
+          }
+        ]
       },
       "receipt": null,
       "back": "carousel-updates",
@@ -1184,16 +1308,16 @@
       "context": {
         "item": "q7",
         "revision": "text v2 · approval 246",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 246
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
         "settlesBy": "Record the decision on approved q7 text v2",
-        "receipt": "Approved question q7 text v2 · entry 246"
+        "receipt": "Approved question q7 text v2 · entry 246",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 246
+        },
+        "presentedEntryPositions": []
       },
       "receipt": "Approved question q7 text v2 · entry 246",
       "back": "carousel-question-approved",
@@ -1235,16 +1359,16 @@
       "context": {
         "item": "q7",
         "revision": "text v2 · approval 246",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 246
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
         "settlesBy": "Update receipt context without repeating approval",
-        "receipt": "Approved question q7 text v2 · entry 246"
+        "receipt": "Approved question q7 text v2 · entry 246",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 246
+        },
+        "presentedEntryPositions": []
       },
       "receipt": "Approved question q7 text v2 · entry 246",
       "back": "carousel-question-approved",
@@ -1367,15 +1491,15 @@
       "context": {
         "item": "q7",
         "revision": "text v2",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 245
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "The requested person approves the exact text"
+        "settlesBy": "The requested person approves the exact text",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 245
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -1393,15 +1517,15 @@
       "context": {
         "item": "q7",
         "revision": "text v2",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 245
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "The requested person approves the exact text"
+        "settlesBy": "The requested person approves the exact text",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 245
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -1419,15 +1543,15 @@
       "context": {
         "item": "change18",
         "revision": "version 2 · checker unknown",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
-            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
-            "through": 18
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Read a checker result for the exact integration"
+        "settlesBy": "Read a checker result for the exact integration",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-change",
@@ -1445,15 +1569,15 @@
       "context": {
         "item": "q7",
         "revision": "text v2 · approval 246",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 246
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Record the decision on approved text v2"
+        "settlesBy": "Record the decision on approved text v2",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 246
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -1471,15 +1595,15 @@
       "context": {
         "item": "change18",
         "revision": "version 2",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
-            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
-            "through": 18
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Review Change 18 version 2; checks passed."
+        "settlesBy": "Review Change 18 version 2; checks passed.",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -1518,15 +1642,15 @@
       "context": {
         "item": "change9",
         "revision": "version 1",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
-            "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
-            "through": 9
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Check the original publication request for Change 9."
+        "settlesBy": "Check the original publication request for Change 9.",
+        "projectionReadAt": {
+          "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+          "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+          "seq": 9
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -1544,7 +1668,10 @@
       "context": {
         "item": "review-cut",
         "revision": "240→245 · 17→18 · 8→9",
-        "entryPositionsRead": [
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Three scopes have updates since your last review.",
+        "intendedReviewCutoffs": [
           {
             "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
             "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
@@ -1564,8 +1691,8 @@
             "through": 9
           }
         ],
-        "waitingOn": "Ari",
-        "settlesBy": "Three scopes have updates since your last review."
+        "presentedEntryPositions": [],
+        "coverage": "Summary only; entry bodies have not been read or presented."
       },
       "receipt": null,
       "back": "carousel-question",
@@ -1583,15 +1710,15 @@
       "context": {
         "item": "q7",
         "revision": "text v2",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 245
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Approve question text v2, or ask for a revision."
+        "settlesBy": "Approve question text v2, or ask for a revision.",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 245
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -1609,15 +1736,15 @@
       "context": {
         "item": "change18",
         "revision": "version 2",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
-            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
-            "through": 18
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Review Change 18 version 2; checks passed."
+        "settlesBy": "Review Change 18 version 2; checks passed.",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -1656,15 +1783,15 @@
       "context": {
         "item": "change9",
         "revision": "version 1",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
-            "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
-            "through": 9
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Check the original publication request for Change 9."
+        "settlesBy": "Check the original publication request for Change 9.",
+        "projectionReadAt": {
+          "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+          "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+          "seq": 9
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -1682,7 +1809,10 @@
       "context": {
         "item": "review-cut",
         "revision": "240→245 · 17→18 · 8→9",
-        "entryPositionsRead": [
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Three scopes have updates since your last review.",
+        "intendedReviewCutoffs": [
           {
             "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
             "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
@@ -1702,8 +1832,8 @@
             "through": 9
           }
         ],
-        "waitingOn": "Ari",
-        "settlesBy": "Three scopes have updates since your last review."
+        "presentedEntryPositions": [],
+        "coverage": "Summary only; entry bodies have not been read or presented."
       },
       "receipt": null,
       "back": "carousel-question",
@@ -1723,15 +1853,15 @@
       "context": {
         "item": "q7",
         "revision": "text v2 · entry 245",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 245
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Approve q7 text v2, or request revision"
+        "settlesBy": "Approve q7 text v2, or request revision",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 245
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -1751,15 +1881,15 @@
       "context": {
         "item": "q7",
         "revision": "text v2 · approval 246",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 246
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Record a decision on approved text v2"
+        "settlesBy": "Record a decision on approved text v2",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 246
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -1777,15 +1907,15 @@
       "context": {
         "item": "q7",
         "revision": "decision 247",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 247
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": null,
-        "settlesBy": "Settled decision"
+        "settlesBy": "Settled decision",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 247
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -1803,15 +1933,15 @@
       "context": {
         "item": "q7",
         "revision": "text v1 · superseded",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 245
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Open the current revision"
+        "settlesBy": "Open the current revision",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 245
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -1829,15 +1959,15 @@
       "context": {
         "item": "q7",
         "revision": "text v2",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 245
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Send an edited request from the composer"
+        "settlesBy": "Send an edited request from the composer",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 245
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -1857,15 +1987,15 @@
       "context": {
         "item": "clear-completed",
         "revision": "conditions v1 · decision 247",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 247
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Record conditions v2 separately"
+        "settlesBy": "Record conditions v2 separately",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 247
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -1883,15 +2013,15 @@
       "context": {
         "item": "commitment-interface",
         "revision": "conditions v2 · entry 250",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 250
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Offer v2 to Interface agent"
+        "settlesBy": "Offer v2 to Interface agent",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 250
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -1909,15 +2039,15 @@
       "context": {
         "item": "commitment-storage",
         "revision": "conditions v2 · entry 250",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 250
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Offer v2 to Storage agent"
+        "settlesBy": "Offer v2 to Storage agent",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 250
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -1937,15 +2067,15 @@
       "context": {
         "item": "commitment-interface",
         "revision": "conditions v2 · entry 250",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 250
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Make a new offer to Interface agent"
+        "settlesBy": "Make a new offer to Interface agent",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 250
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-interface",
@@ -1963,15 +2093,15 @@
       "context": {
         "item": "commitment-interface",
         "revision": "offer 251 · conditions v2",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 251
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Interface agent",
-        "settlesBy": "The named offeree accepts conditions v2"
+        "settlesBy": "The named offeree accepts conditions v2",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 251
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-interface",
@@ -1991,15 +2121,15 @@
       "context": {
         "item": "commitment-storage",
         "revision": "conditions v2 · entry 250",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 250
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Make a new offer to Storage agent"
+        "settlesBy": "Make a new offer to Storage agent",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 250
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-storage",
@@ -2017,15 +2147,15 @@
       "context": {
         "item": "commitment-storage",
         "revision": "offer 252 · conditions v2",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 252
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Storage agent",
-        "settlesBy": "The named offeree accepts conditions v2"
+        "settlesBy": "The named offeree accepts conditions v2",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 252
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-storage",
@@ -2033,6 +2163,32 @@
       "key": "work-offered-storage",
       "theme": "dark",
       "path": "work-offered-storage-dark.html"
+    },
+    {
+      "title": "Storage original acceptance",
+      "mode": "full",
+      "subject": "commitment-storage",
+      "revision": "acceptance 224 · offer 222 · conditions v1",
+      "acts": [],
+      "context": {
+        "item": "commitment-storage",
+        "revision": "acceptance 224 · offer 222 · conditions v1",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read only",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 224
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "work-offered-storage",
+      "activeActor": "Ari",
+      "key": "work-storage-original-accepted",
+      "theme": "dark",
+      "path": "work-storage-original-accepted-dark.html"
     },
     {
       "title": "Revised work conditions",
@@ -2043,15 +2199,15 @@
       "context": {
         "item": "clear-completed",
         "revision": "conditions v2 · entry 250",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 250
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Read only"
+        "settlesBy": "Read only",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 250
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -2071,15 +2227,15 @@
       "context": {
         "item": "commitment-interface",
         "revision": "offer 221 · conditions v1",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 221
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Interface agent",
-        "settlesBy": "Interface agent accepts its offer"
+        "settlesBy": "Interface agent accepts its offer",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 221
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -2097,15 +2253,15 @@
       "context": {
         "item": "commitment-interface",
         "revision": "acceptance 223 · conditions v1",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 223
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Read only"
+        "settlesBy": "Read only",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 223
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -2123,15 +2279,15 @@
       "context": {
         "item": "commitment-interface",
         "revision": "acceptance 253 · conditions v2",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 255
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Read only"
+        "settlesBy": "Read only",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 255
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -2151,15 +2307,15 @@
       "context": {
         "item": "change18",
         "revision": "version 2 · entry 18",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
-            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
-            "through": 18
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Review the exact version 2 integration"
+        "settlesBy": "Review the exact version 2 integration",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-change",
@@ -2179,15 +2335,15 @@
       "context": {
         "item": "change18",
         "revision": "version 2 · approved",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
-            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
-            "through": 18
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Publish the approved integration under its current conditions"
+        "settlesBy": "Publish the approved integration under its current conditions",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-change",
@@ -2228,15 +2384,15 @@
       "context": {
         "item": "change9",
         "revision": "version 1 · request 9",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
-            "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
-            "through": 9
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Recover the outcome of original request 9"
+        "settlesBy": "Recover the outcome of original request 9",
+        "projectionReadAt": {
+          "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+          "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+          "seq": 9
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-unknown",
@@ -2256,15 +2412,15 @@
       "context": {
         "item": "change9",
         "revision": "version 1 · request 9",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
-            "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
-            "through": 9
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Recover the outcome of original request 9"
+        "settlesBy": "Recover the outcome of original request 9",
+        "projectionReadAt": {
+          "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+          "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+          "seq": 9
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-unknown",
@@ -2282,15 +2438,15 @@
       "context": {
         "item": "change18",
         "revision": "version 1 · superseded",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
-            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
-            "through": 18
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Read the current version"
+        "settlesBy": "Read the current version",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-change",
@@ -2308,15 +2464,15 @@
       "context": {
         "item": "change18",
         "revision": "version 2",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
-            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
-            "through": 18
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Read only"
+        "settlesBy": "Read only",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "change-review",
@@ -2376,15 +2532,15 @@
       "context": {
         "item": "change18",
         "revision": "version 2 · exact endpoints",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
-            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
-            "through": 18
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Read only"
+        "settlesBy": "Read only",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "change-review",
@@ -2486,15 +2642,15 @@
       "context": {
         "item": "change18",
         "revision": "version 2 · exact endpoints unavailable",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
-            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
-            "through": 18
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Read only"
+        "settlesBy": "Read only",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "change-review",
@@ -2512,15 +2668,15 @@
       "context": {
         "item": "change18",
         "revision": "version 2 · incomplete excerpt",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
-            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
-            "through": 18
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Read only"
+        "settlesBy": "Read only",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "change-review",
@@ -2561,7 +2717,47 @@
           }
         ],
         "waitingOn": "Ari",
-        "settlesBy": "Advance only the three displayed scope/incarnation review positions"
+        "settlesBy": "Advance only the three displayed scope/incarnation review positions",
+        "intendedReviewCutoffs": [
+          {
+            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+            "after": 240,
+            "through": 245
+          },
+          {
+            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+            "after": 17,
+            "through": 18
+          },
+          {
+            "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+            "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+            "after": 8,
+            "through": 9
+          }
+        ],
+        "presentedEntryPositions": [
+          {
+            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+            "after": 240,
+            "through": 245
+          },
+          {
+            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+            "after": 17,
+            "through": 18
+          },
+          {
+            "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+            "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+            "after": 8,
+            "through": 9
+          }
+        ]
       },
       "receipt": null,
       "back": "carousel-updates",
@@ -2591,34 +2787,11 @@
             "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
             "after": 17,
             "through": 18
-          },
-          {
-            "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
-            "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
-            "after": 8,
-            "through": 9
           }
         ],
         "waitingOn": "Ari",
-        "settlesBy": "Load every entry before marking reviewed"
-      },
-      "receipt": null,
-      "back": "carousel-updates",
-      "activeActor": "Ari",
-      "key": "updates-incomplete",
-      "theme": "dark",
-      "path": "updates-incomplete-dark.html"
-    },
-    {
-      "title": "Review points saved",
-      "mode": "full",
-      "subject": "review-cut",
-      "revision": "exact displayed ranges",
-      "acts": [],
-      "context": {
-        "item": "review-cut",
-        "revision": "exact displayed ranges",
-        "entryPositionsRead": [
+        "settlesBy": "Load every entry before marking reviewed",
+        "intendedReviewCutoffs": [
           {
             "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
             "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
@@ -2638,8 +2811,86 @@
             "through": 9
           }
         ],
+        "presentedEntryPositions": [
+          {
+            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+            "after": 240,
+            "through": 245
+          },
+          {
+            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+            "after": 17,
+            "through": 18
+          }
+        ],
+        "unavailableEntryPositions": [
+          {
+            "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+            "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+            "after": 8,
+            "through": 9
+          }
+        ]
+      },
+      "receipt": null,
+      "back": "carousel-updates",
+      "activeActor": "Ari",
+      "key": "updates-incomplete",
+      "theme": "dark",
+      "path": "updates-incomplete-dark.html"
+    },
+    {
+      "title": "Review points saved",
+      "mode": "full",
+      "subject": "review-cut",
+      "revision": "exact displayed ranges",
+      "acts": [],
+      "context": {
+        "item": "review-cut",
+        "revision": "exact displayed ranges",
+        "entryPositionsRead": [],
         "waitingOn": null,
-        "settlesBy": "Read only"
+        "settlesBy": "Read only",
+        "intendedReviewCutoffs": [
+          {
+            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+            "after": 240,
+            "through": 245
+          },
+          {
+            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+            "after": 17,
+            "through": 18
+          },
+          {
+            "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+            "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+            "after": 8,
+            "through": 9
+          }
+        ],
+        "presentedEntryPositions": [],
+        "recordedReviewPoints": [
+          {
+            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+            "seq": 245
+          },
+          {
+            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+            "seq": 18
+          },
+          {
+            "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+            "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+            "seq": 9
+          }
+        ]
       },
       "receipt": null,
       "back": "carousel-updates",
@@ -2657,16 +2908,16 @@
       "context": {
         "item": "q7",
         "revision": "text v2 · approval 246",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 246
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
         "settlesBy": "Record the decision on approved q7 text v2",
-        "receipt": "Approved question q7 text v2 · entry 246"
+        "receipt": "Approved question q7 text v2 · entry 246",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 246
+        },
+        "presentedEntryPositions": []
       },
       "receipt": "Approved question q7 text v2 · entry 246",
       "back": "carousel-question-approved",
@@ -2708,16 +2959,16 @@
       "context": {
         "item": "q7",
         "revision": "text v2 · approval 246",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 246
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
         "settlesBy": "Update receipt context without repeating approval",
-        "receipt": "Approved question q7 text v2 · entry 246"
+        "receipt": "Approved question q7 text v2 · entry 246",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 246
+        },
+        "presentedEntryPositions": []
       },
       "receipt": "Approved question q7 text v2 · entry 246",
       "back": "carousel-question-approved",
@@ -2840,15 +3091,15 @@
       "context": {
         "item": "q7",
         "revision": "text v2",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 245
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "The requested person approves the exact text"
+        "settlesBy": "The requested person approves the exact text",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 245
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -2866,15 +3117,15 @@
       "context": {
         "item": "q7",
         "revision": "text v2",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 245
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "The requested person approves the exact text"
+        "settlesBy": "The requested person approves the exact text",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 245
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -2892,15 +3143,15 @@
       "context": {
         "item": "change18",
         "revision": "version 2 · checker unknown",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
-            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
-            "through": 18
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Read a checker result for the exact integration"
+        "settlesBy": "Read a checker result for the exact integration",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-change",
@@ -2918,15 +3169,15 @@
       "context": {
         "item": "q7",
         "revision": "text v2 · approval 246",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
-            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
-            "through": 246
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Record the decision on approved text v2"
+        "settlesBy": "Record the decision on approved text v2",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 246
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -2944,15 +3195,15 @@
       "context": {
         "item": "change18",
         "revision": "version 2",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
-            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
-            "through": 18
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Review Change 18 version 2; checks passed."
+        "settlesBy": "Review Change 18 version 2; checks passed.",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -2991,15 +3242,15 @@
       "context": {
         "item": "change9",
         "revision": "version 1",
-        "entryPositionsRead": [
-          {
-            "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
-            "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
-            "through": 9
-          }
-        ],
+        "entryPositionsRead": [],
         "waitingOn": "Ari",
-        "settlesBy": "Check the original publication request for Change 9."
+        "settlesBy": "Check the original publication request for Change 9.",
+        "projectionReadAt": {
+          "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+          "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+          "seq": 9
+        },
+        "presentedEntryPositions": []
       },
       "receipt": null,
       "back": "carousel-question",
@@ -3017,7 +3268,10 @@
       "context": {
         "item": "review-cut",
         "revision": "240→245 · 17→18 · 8→9",
-        "entryPositionsRead": [
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Three scopes have updates since your last review.",
+        "intendedReviewCutoffs": [
           {
             "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
             "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
@@ -3037,8 +3291,8 @@
             "through": 9
           }
         ],
-        "waitingOn": "Ari",
-        "settlesBy": "Three scopes have updates since your last review."
+        "presentedEntryPositions": [],
+        "coverage": "Summary only; entry bodies have not been read or presented."
       },
       "receipt": null,
       "back": "carousel-question",

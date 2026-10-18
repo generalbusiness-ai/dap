@@ -1,13 +1,16 @@
 # Compact journey cards in the AI app
 
 Design revision for review, 17 October 2026. Request `a9551a6d`, guidance
-`5eeea1be`, clarification `f89c614b`, promise `3710cde8`; base Main
+`5eeea1be`, clarification `f89c614b`; design-only child `bc635338`,
+promise `87dee083`; base Main
 `95959b92`. This packet revises
 the presentation in the [landed journey design](2026-10-17-journey-views-design.md).
 Its facts and distinctions still apply. The examples are fictional. This
-packet contains concepts, 56 static states in two themes, an interaction
+packet contains concepts, 57 static states in two themes, an interaction
 specification and browser evidence. Checker review and planner read are
-still required. Runtime resources and the kit remain future work.
+still required. Full parent `a9551a6d` and its promise `3710cde8` remain
+open for the runtime resources, kit and S2 acceptance. Landing this design
+child closes none of those runtime obligations.
 
 The card shows one thing that needs the person. Clicking its title opens
 its detail in full screen. An act advances the card in place and records
@@ -115,6 +118,12 @@ private or delivering either intact to the view.
 Navigation updates context quietly through `ui/update-model-context` with
 the item, exact displayed revision, entry positions read, who it waits on,
 what settles it, and available navigation. It starts no chat reply.
+The context distinguishes a projection read point from journal entries
+actually read and presented. Intended review cutoffs are a separate field.
+A summary card claims no entry bodies; an incomplete update detail claims
+only its six available entries, with Change 9 entry 9 explicitly missing.
+The incomplete example offers no review act. Static links write no review
+point, including the complete example's Mark reviewed link.
 It includes no title, body, diff, actor details or full update history.
 For example: **Question q7, text v2 is open. Back is available.** An act
 receipt can disclose its short outcome and exact subject/version; it does
@@ -221,6 +230,11 @@ The added failed-check example, Change 23, is also synthetic. It uses
 `test/storage.test.ts`; its two failures remove approval from that screen.
 This identifier is a design fixture, not a local Git object.
 
+Storage's v2 offer is entry 252. Its linked earlier v1 acceptance is entry
+224 and names Storage offer 222; it does not accept the new offer. The
+fixture supplies no later Storage acceptance. Interface's v2 acceptance
+253 remains linked only to Interface's offer path.
+
 ## Static examples and browser evidence
 
 The [concept directory](2026-10-17-compact-cards-design/concepts/) contains
@@ -254,26 +268,31 @@ publication recovery, failed-check draft identity, complete update ranges,
 receipt-context retry, and disabled stale or unauthorized acts.
 
 The Browser plugin was not available. Existing Playwright 1.63.0 and an
-isolated headless Chrome checked 112 pages at viewport widths 592, 390
-and 320: 336 combinations. The first width gives the chat surface 560 px
+isolated headless Chrome checked 114 pages at viewport widths 592, 390
+and 320: 342 combinations. The first width gives the chat surface 560 px
 after its outer insets. Page identities match, content is present, links
-resolve, console errors are absent, and there is no horizontal overflow
-or control below the 44 px target. The dedicated card root measures
+resolve, warning/error consoles are empty, and there is no horizontal
+overflow. All 654 measured controls meet both 44 px dimensions. The
+dedicated card root measures
 204 px for the initial carousel, 364 px for phone question detail, and
 259 px for its receipt. The return to the carousel measures 204 px again.
 
 Five detail/receipt states fit at 200% text. A focused 320 px check covers
 keyboard focus and a separately labelled long-title/controller stress
 fixture. The sampled title, summary and controller text has a minimum
-contrast ratio of 5.65:1. Its warning/error console is empty. The retry
+contrast ratio of 5.65:1. Those samples precede the review repairs; their
+palette and typography are unchanged. The retry
 snapshot retains approval entry 246 and offers only a receipt update.
 
 [Browser evidence](2026-10-17-compact-cards-design/verification/browser-report.json),
 [focused accessibility evidence](2026-10-17-compact-cards-design/verification/accessibility-report.json)
 and selected screenshots are retained with the exact harnesses and file
-hashes. A later annotation marks an unavailable settlement position as
-missing; the [input continuity proof](2026-10-17-compact-cards-design/verification/input-continuity.json)
-checks that every rendered HTML, CSS and JavaScript input is unchanged.
+hashes. The current browser report seals all rendered inputs and its
+harness. [Review corrections](2026-10-17-compact-cards-design/verification/review-corrections.json)
+record F1–F3 from review `5f8906d5`: accurate coverage context, Storage's
+own acceptance link, and both target dimensions. The earlier report at
+`85ee5778` checked only height; 36 of its 648 targets were too narrow.
+That pass is superseded and establishes no 44×44 result.
 Model-context objects in the manifest are design data. Missing standalone
 scope positions remain explicit; they are not made-up journal evidence.
 

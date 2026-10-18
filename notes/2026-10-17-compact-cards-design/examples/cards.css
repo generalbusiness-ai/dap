@@ -78,7 +78,7 @@ h3 { font-size: 1rem; font-weight: 600; margin-top: 16px; }
 .check { color: var(--good); }
 .failed { color: var(--danger); }
 .read-links { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 16px; }
-.read-links a { min-height: 44px; display: inline-flex; align-items: center; }
+.read-links a { min-height: 44px; min-width: 44px; padding-inline: 8px; display: inline-flex; align-items: center; justify-content: center; }
 .event { border-top: 1px solid var(--line); padding: 16px 0 4px; }
 .event .actor { margin: 0 0 8px; }
 .event .meta { margin-bottom: 6px; }
