@@ -1,6 +1,6 @@
 /** Real loopback HTTP, native SQLite/reads/acts/replay and existing esbuild.
  * Explicit public TEST grants and open local reads are not native enrollment. */
-import { mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, realpath, rename, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawn } from "node:child_process";
@@ -83,7 +83,8 @@ test("presentation rebuilds keep native history while changed scenario or semant
 
 test.skipIf(process.platform === "win32")("the actual dev bin bypasses custody and closes its owned process group", async () => {
   const parent = await realpath(await mkdtemp(join(tmpdir(), "dap-dev-bin-"))), directory = await newApplicationDirectory(join(parent, "notes"));
-  const child = spawn(process.execPath, [fileURLToPath(new URL("../bin/dap.js", import.meta.url)), "dev", directory, "--port", "0"], {
+  await rename(join(directory, "dap.application.json"), join(directory, "preview.json"));
+  const child = spawn(process.execPath, [fileURLToPath(new URL("../bin/dap.js", import.meta.url)), "dev", directory, "--config", "preview.json", "--port", "0"], {
     cwd: parent, env: { ...process.env, DAP_HOME: "", ARTROOM_HOME: "" }, detached: true, stdio: ["ignore", "pipe", "pipe"],
   });
   let stdout = "", stderr = "";

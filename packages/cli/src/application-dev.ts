@@ -10,15 +10,15 @@ import { prepareApplicationDirectory, readApplicationScenario } from "./applicat
 import { openApplicationScenario, type ApplicationDevelopmentSession } from "./application-scenarios.ts";
 import { parse } from "./line.ts";
 
-export const DEV_USAGE = "dap dev [<directory>] [--port <loopback-port>] [--scenario <listed-file>]";
+export const DEV_USAGE = "dap dev [<directory>] [--config <relative-file>] [--port <loopback-port>] [--scenario <listed-file>]";
 /** The long-lived Node command owns its output and closes on either signal. */
 export async function runApplicationDevelopment(argv: readonly string[], cwd = process.cwd()): Promise<number> {
   const args = parse(argv), portText = args?.flags.get("port")?.[0];
-  if (!args || args.words[0] !== "dev" || args.words.length > 2 || [...args.flags].some(([key, values]) => !["port", "scenario"].includes(key) || values.length !== 1 || values[0] === "") || portText !== undefined && (!/^(?:0|[1-9][0-9]{0,4})$/.test(portText) || Number(portText) > 65535)) {
+  if (!args || args.words[0] !== "dev" || args.words.length > 2 || [...args.flags].some(([key, values]) => !["port", "scenario", "config"].includes(key) || values.length !== 1 || (values[0] === "" || values[0]!.startsWith("--"))) || portText !== undefined && (!/^(?:0|[1-9][0-9]{0,4})$/.test(portText) || Number(portText) > 65535)) {
     process.stderr.write(DEV_USAGE + "\n"); return 2;
   }
   let server: ApplicationDevelopmentServer;
-  try { server = await startApplicationDevelopment(resolve(cwd, args.words[1] ?? "."), { ...(portText === undefined ? {} : { port: Number(portText) }), ...(args.flags.has("scenario") ? { scenario: args.flags.get("scenario")![0]! } : {}) }); }
+  try { server = await startApplicationDevelopment(resolve(cwd, args.words[1] ?? "."), { ...(args.flags.has("config") ? { config: args.flags.get("config")![0]! } : {}), ...(portText === undefined ? {} : { port: Number(portText) }), ...(args.flags.has("scenario") ? { scenario: args.flags.get("scenario")![0]! } : {}) }); }
   catch { process.stderr.write("The local development host could not start. Check package sources, the listed scenario and loopback port.\n"); return 1; }
   let stop = () => {};
   const stopped = new Promise<void>(resolve => { stop = resolve; });
@@ -41,7 +41,7 @@ export interface ApplicationDevelopmentServer {
   rebuild(): Promise<void>;
   close(): Promise<void>;
 }
-export async function startApplicationDevelopment(directory: string, options: { port?: number; scenario?: string; watch?: boolean } = {}): Promise<ApplicationDevelopmentServer> {
+export async function startApplicationDevelopment(directory: string, options: { config?: string; port?: number; scenario?: string; watch?: boolean } = {}): Promise<ApplicationDevelopmentServer> {
   const port = options.port ?? 5173;
   if (!Number.isInteger(port) || port < 0 || port > 65535) throw new Error("Choose a valid loopback port.");
   let loaded: Loaded | undefined, origin = "", closed = false, error: string | null = null, revision = 0;
@@ -52,7 +52,7 @@ export async function startApplicationDevelopment(directory: string, options: { 
   async function rebuild(): Promise<void> {
     if (closed) return;
     try {
-      const prepared = await prepareApplicationDirectory(directory, secretSigner(new Uint8Array(32).fill(254)));
+      const prepared = await prepareApplicationDirectory(directory, secretSigner(new Uint8Array(32).fill(254)), options);
       const scenario = options.scenario ?? prepared.scenarios[0];
       if (!scenario || !prepared.scenarios.includes(scenario)) throw new Error("Select a listed local scenario.");
       const input = await readApplicationScenario(prepared.root, scenario), bytes = canonicalize(input);

@@ -53,10 +53,10 @@ async function readSource(root: string, path: string, most: number): Promise<Uin
   } finally { await file.close(); }
 }
 
-async function source(directory: string): Promise<{ input: ApplicationPackageInput; root: string; scenarios: readonly string[] }> {
+async function source(directory: string, configPath: string): Promise<{ input: ApplicationPackageInput; root: string; scenarios: readonly string[] }> {
   const root = await realpath(directory);
   if (!(await lstat(root)).isDirectory()) return refuse("The application root must be a directory.");
-  const config = object(parseStrictBytes(await readSource(root, "dap.application.json", LIMITS.metadataBytes)), "capabilities,definitions,entry,host,name,predecessor,presentation,projections,roles,v,version", ["scenarios"]);
+  const config = object(parseStrictBytes(await readSource(root, pathOf(configPath), LIMITS.metadataBytes)), "capabilities,definitions,entry,host,name,predecessor,presentation,projections,roles,v,version", ["scenarios"]);
   const givenScenarios = Object.hasOwn(config, "scenarios") ? config["scenarios"] : [];
   if (!Array.isArray(givenScenarios) || givenScenarios.length > 32) return refuse("List at most 32 local scenario files.");
   const scenarios = givenScenarios.map(pathOf);
@@ -109,8 +109,8 @@ async function source(directory: string): Promise<{ input: ApplicationPackageInp
 
 /** Local check/dev can prepare exactly the same package without publishing an
  * output. Scenario files are developer inputs and never change package ids. */
-export async function prepareApplicationDirectory(directory: string, signer: Signer): Promise<{ packet: PackedApplication; root: string; scenarios: readonly string[] }> {
-  const prepared = await source(directory);
+export async function prepareApplicationDirectory(directory: string, signer: Signer, options: { config?: string } = {}): Promise<{ packet: PackedApplication; root: string; scenarios: readonly string[] }> {
+  const prepared = await source(directory, options.config ?? "dap.application.json");
   return { packet: await packApplication(prepared.input, signer), root: prepared.root, scenarios: prepared.scenarios };
 }
 export async function readApplicationScenario(root: string, path: string): Promise<unknown> {
@@ -135,8 +135,8 @@ async function publish(path: string, bytes: Uint8Array): Promise<void> {
 
 /** No output is published until every source, native definition and package
  * signature has passed. A package URI can be assigned after this file is committed. */
-export async function packDirectory(directory: string, output: string, signer: Signer): Promise<PackedApplication> {
-  const { packet: packed } = await prepareApplicationDirectory(directory, signer);
+export async function packDirectory(directory: string, output: string, signer: Signer, options: { config?: string } = {}): Promise<PackedApplication> {
+  const { packet: packed } = await prepareApplicationDirectory(directory, signer, options);
   await publish(resolve(output), packed.bytes);
   return packed;
 }

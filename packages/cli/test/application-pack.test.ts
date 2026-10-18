@@ -91,6 +91,29 @@ test("real Counter and Lending native declarations pack reproducibly into exact 
   }
 });
 
+// Invariant: selecting a config changes only source selection; all paths stay
+// relative to the chosen root and cannot follow a config symlink.
+test("explicit config selection keeps root confinement and the same package identity", async () => {
+  const f = await fixture();
+  try {
+    const first = (await prepareApplicationDirectory(f.root, signer)).packet;
+    await mkdir(join(f.root, "configs"));
+    await writeFile(join(f.root, "configs/lending.json"), JSON.stringify(f.config));
+    await writeFile(join(f.root, "dap.application.json"), "invalid default config");
+    expect((await prepareApplicationDirectory(f.root, signer, { config: "configs/lending.json" })).packet.bytes).toEqual(first.bytes);
+    const store = memoryStore(); await store.keep("operator", secret);
+    expect((await packCommand(store, ["pack", "--config", "configs/lending.json"], f.root)).code).toBe(0);
+    await writeFile(join(f.root, "standard.json"), JSON.stringify(standardScenario()));
+    await writeFile(join(f.root, "configs/lending.json"), JSON.stringify({ ...f.config, scenarios: ["standard.json"] }));
+    expect((await checkCommand(["check", "--config", "configs/lending.json"], f.root)).code).toBe(0);
+    await symlink("configs/lending.json", join(f.root, "config-link.json"));
+    for (const config of ["../outside.json", "/absolute.json", "configs/../lending.json", "config-link.json"]) {
+      expect(await refused(() => prepareApplicationDirectory(f.root, signer, { config }))).toBeInstanceOf(ApplicationSourceError);
+    }
+    for (const argv of [["check", "--config"], ["check", "--config", "one", "--config", "two"]]) expect((await checkCommand(argv, f.root)).code).toBe(2);
+  } finally { await f.cleanup(); }
+});
+
 test("native form and restricted rule admission precede every publisher signature", async () => {
   const f = await fixture(); let calls = 0;
   const counted: Signer = { key: signer.key, sign: bytes => { calls++; return signer.sign(bytes); } };
