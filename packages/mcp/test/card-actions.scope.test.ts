@@ -67,6 +67,9 @@ test("server-retained card actions keep displayed revisions and custody across d
     expect(pair.map((answer) => (answer["result"] as { structuredContent: Record<string, unknown> }).structuredContent["answer"])).toEqual(["accepted", "accepted"]);
     expect(rita.signedIntents.length).toBe(signatures + 1);
     expect(rita.signedIntents.at(-1)!.expected).toEqual(fresh.context.identity!.at);
+    const receipt = (pair[0]!["display"] as Display).receipt!;
+    expect(receipt).toMatch(/^policy rules-0 [0-9]+: accepted/);
+    expect(receipt).not.toContain(fresh.card!.identity.subject.scope);
 
     // Refresh to a new display cut, then supersede the instance. Unconsumed controls refuse; old receipts still read.
     const refreshed = (await read({ cut: fresh.cut, page: "item", refresh: true }))["display"] as Display;

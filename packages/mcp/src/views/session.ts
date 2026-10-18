@@ -22,6 +22,20 @@ const MAX_INSTANCES = 128;
 const PAGES = new Set<PageKind>(["summary", "item", "diff", "updates"]);
 const finite = (value: number) => Number.isSafeInteger(value) && value >= 0;
 
+function receiptLine(card: Card, result: CallResult): string {
+  const answer = result.structuredContent;
+  const reason = [answer["reason"], answer["name"]].filter((value): value is string => typeof value === "string").join(", ");
+  const uncertain = answer["answer"] === "unknown" || answer["answer"] === "unavailable" || answer["error"] === "transport" || answer["error"] === "custody";
+  let outcome: string;
+  if (uncertain) outcome = "outcome unknown; check the original request";
+  else if (answer["answer"] === "accepted") {
+    const fact = answer["fact"] as { seq?: unknown } | undefined;
+    outcome = `accepted${typeof fact?.seq === "number" ? ` (entry ${fact.seq})` : ""}`;
+  } else if (typeof answer["answer"] === "string") outcome = `${answer["answer"]}${reason ? ` (${reason})` : ""}`;
+  else outcome = "the act could not be confirmed; refresh the card";
+  return `${card.identity.kind} ${card.identity.item} ${card.identity.revision}: ${outcome}.`.replace(/\s+/g, " ").slice(0, 512);
+}
+
 function mergeRanges(ranges: EntryRange[]): EntryRange[] {
   const sorted = ranges.map((range) => ({ ...range })).sort((a, b) => a.scope.localeCompare(b.scope) || a.from - b.from);
   const out: EntryRange[] = [];
@@ -163,8 +177,10 @@ export class ViewSessions {
     this.#admit(instance, cut);
     if (instance.busy) throw new ViewError("busy", "The card has an operation in progress. Retry its read.");
     if (!action) throw new ViewError("shape", "The displayed card offers no such act.");
-    if (instance.dispatches.size >= 32) throw new ViewError("busy", "This card retains its maximum of 32 act outcomes. Open a new card; no new act was sent.");
     const card = instance.projection.card!;
+    if (action.purpose !== "check-original" && instance.dispatches.size >= 32) throw new ViewError("busy", "This card retains its maximum of 32 act outcomes. Open a new card; no new act was sent.");
+    // Reserve room before dispatch; checking an already retained original needs no new slot.
+    if (!instance.pending.has(this.#itemKey(card)) && instance.pending.size >= 32) throw new ViewError("busy", "This card retains its maximum of 32 unresolved requests. Check those originals before another dispatch.");
     const args = structuredClone(action.args);
     // Use only server-retained input; neither a browser revision nor an arbitrary tool name can retarget this dispatch.
     if (action.purpose === "check-original") {
@@ -179,9 +195,9 @@ export class ViewSessions {
     try {
       const result = await dispatch;
       const answer = result.structuredContent;
-      instance.receipt = `${card.identity.kind} ${card.identity.item}, revision ${card.identity.revision}: ${String(answer["sentence"] ?? answer["message"] ?? answer["answer"] ?? "The act returned an outcome.")}`.replace(/\s+/g, " ").slice(0, 512);
+      instance.receipt = receiptLine(card, result);
       const itemKey = this.#itemKey(card);
-      if (answer["answer"] === "unknown" || answer["error"] === "custody" || answer["error"] === "transport") {
+      if (answer["answer"] === "unknown" || answer["answer"] === "unavailable" || answer["error"] === "custody" || answer["error"] === "transport") {
         const original = { id: `check-${cut}`, label: "Check original request", purpose: "check-original" as const, kind: "", args: { target: args["target"] ?? args["scope"], idempotencyKey: args["idempotencyKey"] } };
         instance.pending.set(itemKey, original);
         card.unresolvedOriginal = true;

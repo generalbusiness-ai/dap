@@ -154,8 +154,9 @@ readable receipts and lose their write controls.
 
 ## Runtime state and evidence
 
-The service retains at most 128 view instances and 32 act outcomes per
-instance. A new opening supersedes the previous instance for that screen.
+The service retains at most 128 view instances, 32 write outcomes per
+instance and 32 unresolved original requests per instance. A new opening
+supersedes the previous instance for that screen.
 The browser submits only its view key, display cut and action ID. The
 server retains the native kind, fields, captured revisions and custody key.
 It checks instance and display cut both before dispatch and again at
@@ -164,6 +165,16 @@ A lost reply offers only settlement of its original request. An old view's
 cached receipt stays readable; a server read or refusal marks its controls
 inactive. Restarted or unknown instances refuse dispatch. This mounted-view
 state is bounded memory, not durable custody or additional authority.
+
+The displayed receipt is a short item/version/outcome line, with a native
+entry position when available. It omits the opaque scope and custody keys.
+The full native response and envelope remain under the existing custody.
+An unavailable outcome also retains its original check. A full view refuses
+another write before dispatch but still admits checks of its retained
+originals. A focused interface test fills all 32 slots, refuses the next
+write and settles an existing original without a new dispatch. The test
+failed before the cache repair and passes after it; its scope and custody
+answers are explicit doubles, not a native or provider witness.
 
 The native card witness passes stale model and app actions through real
 scopes, counts actual intent-domain signing calls, and checks duplicate,
@@ -230,6 +241,24 @@ the selected scratch directory. Its report names the actual Chrome version.
 The final frozen-head capture and gate are recorded separately as Gitseq
 evidence after this note is committed. This is a pre-freeze statement, not
 a claim that either pending run has passed.
+
+### First gate and repair
+
+The first frozen head, `21296fda`, completed its 24-case browser capture.
+Its gate failed: two tests failed, 1,674 passed and three were skipped.
+The failures were the derived MCP reference and the unfamiliar application's
+exact schema property list, both stale after adding optional `at`. Node
+and generated Counting stages were not reached. Evidence `8726870b`
+retains that failed gate; it is not a pass for this repair.
+
+The repair regenerates the generic Markdown schema blocks and complete
+admin tool JSON from the existing derivation, documents captured revisions,
+and updates the exact property witness. Focused reference/resource checks
+pass eight cases, and unfamiliar-application/card checks pass two native
+cases. The phone receipt is shortened and the cache settlement boundary
+is repaired as described above. The repaired-head browser capture and
+single gate remain due when this note is committed; their later terminal
+evidence names the exact repaired head. No unchanged whole suite was rerun.
 
 The parent remains open. Actual journey-lane projections, package installation,
 provider operations and desktop AI-app acceptance are separate obligations.

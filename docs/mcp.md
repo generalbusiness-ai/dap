@@ -210,6 +210,7 @@ fields under `fields`, so a field named like a control never collides:
 | `on` | The local ID of the item the act is on, for an act on an existing item. |
 | `idempotencyKey` | Required. 1 to 128 bytes of UTF-8, chosen by the caller. One key is one meaning. |
 | `resubmit` | Send a refused envelope again, deliberately. |
+| `at` | Optional captured revisions, keyed by exactly the act's bound subjects (`on` and the `also` aliases). Omit it to read current revisions. |
 | `fields` | The act's fields, as the description lists them. A member is `@handle`. |
 | `texts` | Detached texts, when a field gives a text's digest in place of the text. Only for acts with a detached text. |
 | `presented` | The facts the act presents, by name. Only for acts that present one. |
@@ -226,6 +227,14 @@ act names from the same fields with those defaults applied, and with a
 fact of the target scope read as its entry's position, as the scope reads
 it. So an item a default selects, or one a local fact selects, is expected
 like one the caller named by its ID. The intent carries the fact as given.
+
+When `at` is present, the server checks its shape and subject coverage,
+then signs those captured numbers unchanged. The native scope refuses a
+revision that has moved. The server does not silently refresh it. An
+explicit captured set is part of the custody meaning: another set under
+the same key conflicts. A repeated call with the original set returns its
+kept envelope even after the current state moves. Omission preserves the
+existing fresh-read behavior and custody meaning.
 
 An error the server finds itself (a shape, a target, custody, a read) is
 `error`, `message` and `next`. A fragment of what the caller gave, such as
@@ -719,6 +728,15 @@ Asks the scope that owns a resource for one step of a capability. With kind: for
         "type": "integer",
         "minimum": 0
       },
+      "at": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
+      },
       "fields": {
         "type": "object"
       },
@@ -1202,6 +1220,15 @@ Signs one act of a scope by its native kind, under the same custody and binding 
       "on": {
         "type": "integer",
         "minimum": 0
+      },
+      "at": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
       },
       "fields": {
         "type": "object"
@@ -1841,3 +1868,35 @@ one job; `--generic` replaces the act tools with the pair.
 Observed run of `packages/mcp/test/room.scope.test.ts` on the real test
 Worker, in both modes: the creator's subscribed client was told of 7 list
 changes (3 while creating the room), and the second member's of 4.
+
+## Compact cards
+
+An embedding application can supply `ServerPort.views`, a trusted
+`ViewSource` projection adapter. It reads through the MCP service's normal
+authenticated tools. The generic kit then lists four opening tools:
+`view_needs_you`, `view_work`, `view_decision` and `view_change`.
+Their text exposes screen, identity, exact revision and counts. It remains
+useful in a host without MCP Apps. The `view_read` and `view_act` tools
+return card details to the app; the host enforces their app-only visibility.
+Native scope authorization still applies to reads and signed acts.
+
+Both wire revisions serve four single-file HTML resources under
+`ui://dap/`. Each resource read checks package bytes against its declared
+digest and preserves the package CSP and permissions. The browser boots
+from the standard complete tool-input notification and obtains its data
+through the app-only tool. The opening result need not carry private data.
+Hosts without the MCP Apps capability get the text tool surface, and
+paging cursors are bound to the capability profile.
+
+The server retains each display's native action input. The browser sends
+only its view key, display cut and action ID. Duplicate dispatch returns
+its first outcome. Instance and cut are checked again at signing admission,
+after asynchronous reads. A superseded or unknown instance refuses a new
+act. A lost or unavailable outcome offers only its original request check,
+using the retained custody key. Full native responses remain under custody;
+the card receipt shows item, version and outcome.
+
+The generic kit supplies the carousel, detail, diff, updates and receipt
+screens. Journey projections, package installation and desktop-host
+registration are separate work. The implementation boundary and fixture
+browser command are in the [card-kit note](../notes/implementation/2026-10-18-compact-card-kit.md).
