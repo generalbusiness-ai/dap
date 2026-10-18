@@ -8,8 +8,8 @@ import { fileURLToPath } from "node:url";
 import { expect, test } from "vitest";
 import { b64url } from "@generalbusiness/artroom-bytes";
 import { APPLICATION_PACKAGE_LIMITS as LIMITS, readApplicationPackage, secretSigner, type Signer } from "@generalbusiness/artroom-client";
-import { ApplicationSourceError, packDirectory } from "../src/application-files.ts";
-import { packCommand } from "../src/application-command.ts";
+import { ApplicationSourceError, packDirectory, prepareApplicationDirectory } from "../src/application-files.ts";
+import { checkCommand, packCommand } from "../src/application-command.ts";
 import { memoryStore } from "../src/store.ts";
 import { fileStore } from "../src/files.ts";
 
@@ -46,6 +46,8 @@ test("real Counter and Lending native declarations pack reproducibly into exact 
       expect((await stat(f.output)).mode & 0o777).toBe(0o600);
       const repeated = await packDirectory(f.root, join(f.root, "repeat.dap.json"), signer);
       expect(repeated.bytes).toEqual(packed.bytes);
+      await writeFile(join(f.root, "dap.application.json"), JSON.stringify({ ...f.config, scenarios: ["developer-only.json"] }));
+      expect((await prepareApplicationDirectory(f.root, signer)).packet.ids).toEqual(packed.ids);
       const exists = await refused(() => packDirectory(f.root, f.output, signer));
       expect((exists as NodeJS.ErrnoException).code).toBe("EEXIST");
       expect(new Uint8Array(await readFile(f.output))).toEqual(bytes);
@@ -126,5 +128,52 @@ test("the actual dap bin packs from an external working directory without room c
     expect(result.stdout.trim().split("\n")).toEqual([`Package: ${f.output}`, `Semantic: ${packed.ids.semantic}`, `Presentation: ${packed.ids.presentation}`, `Release: ${packed.ids.release}`, `Publisher: ${signer.key}`]);
     expect(result.stdout + result.stderr).not.toContain(b64url(secret));
     expect(await fileStore(home).config()).toBeNull();
+  } finally { await f.cleanup(); }
+});
+
+function standardScenario(): any {
+  return { v: 1, name: "lending-standard", time: "2026-10-18T12:00:00Z", actors: {
+    writer: { seed: "23".repeat(32), member: "@writer", actions: ["lending.member"] },
+  }, founding: { actor: "writer", fields: { opener: { $member: "writer" }, destination: { $reference: "destination" } } }, steps: [
+    { act: { actor: "writer", kind: "donate", expected: { library: { $revision: 0 } }, fields: { name: "Pot", description: "Copper", page: "shelf/0123456789abcdef.md", content: "A signed page" } }, expect: { answer: "accepted" }, save: "donation" },
+    { retry: "donation", expect: { answer: "accepted" } },
+    { assert: { item: 1, state: "available", values: { name: "Pot" } } },
+    { act: { actor: "writer", kind: "cancel", on: 1, expected: { on: { $revision: 1 }, library: { $revision: 0 } }, fields: { reason: "Lost", content: "A signed page" } }, expect: { answer: "refused", reason: "unauthorized" } },
+  ] };
+}
+
+test("the actual dap check requires scenarios and native replay without reading CLI key custody", async () => {
+  const f = await fixture();
+  try {
+    expect(await checkCommand(["check"], f.root)).toMatchObject({ code: 1, lines: [expect.stringContaining("No local scenarios")] });
+    const config = { ...f.config, scenarios: ["standard.json"] };
+    await writeFile(join(f.root, "dap.application.json"), JSON.stringify(config));
+    await writeFile(join(f.root, "standard.json"), JSON.stringify(standardScenario()));
+    const bin = fileURLToPath(new URL("../bin/dap.js", import.meta.url));
+    // These custody values would fail configDir; local check must not consult it.
+    const result = spawnSync(process.execPath, [bin, "check"], { cwd: f.root, env: { ...process.env, DAP_HOME: "", ARTROOM_HOME: "" }, encoding: "utf8", timeout: 30_000 });
+    expect(result.error).toBeUndefined(); expect(result.status).toBe(0);
+    expect(result.stdout).toContain("Scenario lending-standard: 4 steps passed; native replay consistent through 1.");
+    expect(result.stdout).toContain("explicit scripted TEST grants");
+    expect(result.stdout).toContain("Declared capability requirements: none.");
+    expect(result.stdout).not.toContain("Release:"); expect(await readdir(f.root)).not.toContain("application.dap.json");
+    await writeFile(join(f.root, "dap.application.json"), JSON.stringify({ ...config, capabilities: [{ name: "git-read@1", bounds: { paths: ["shelf/"] } }] }));
+    const audited = await checkCommand(["check"], f.root);
+    expect(audited.code).toBe(0); expect(audited.lines).toContain('Requested git-read@1 bounds: {"paths":["shelf/"]}');
+    for (const argv of [["check", "a", "b"], ["check", "--unknown"]]) expect((await checkCommand(argv, f.root)).code).toBe(2);
+  } finally { await f.cleanup(); }
+});
+
+test("dap check fails on a wrong expected result, a missing scenario or an invalid scenario list", async () => {
+  const f = await fixture();
+  try {
+    const config = { ...f.config, scenarios: ["standard.json"] };
+    await writeFile(join(f.root, "dap.application.json"), JSON.stringify(config));
+    expect(await checkCommand(["check"], f.root)).toMatchObject({ code: 1, lines: [expect.stringContaining("missing")] });
+    const input = standardScenario(); input.steps[0].expect = { answer: "refused", reason: "unauthorized" };
+    await writeFile(join(f.root, "standard.json"), JSON.stringify(input));
+    expect(await checkCommand(["check"], f.root)).toMatchObject({ code: 1, lines: [expect.stringContaining("step 1: Expected refused")] });
+    await writeFile(join(f.root, "dap.application.json"), JSON.stringify({ ...config, scenarios: null }));
+    expect(await checkCommand(["check"], f.root)).toMatchObject({ code: 1, lines: ["List at most 32 local scenario files."] });
   } finally { await f.cleanup(); }
 });

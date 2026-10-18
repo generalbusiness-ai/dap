@@ -11,10 +11,15 @@ import { configDir, ConfigDirectoryError } from "./config-dir.ts";
 import { nodeGit } from "./git.ts";
 import { command } from "./line.ts";
 import { mcp } from "./mcp.ts";
-import { packCommand } from "./application-command.ts";
+import { checkCommand, packCommand } from "./application-command.ts";
 
 /** The command under Node. Returns the exit code. */
 export async function main(argv: readonly string[]): Promise<number> {
+  if (argv[0] === "check") {
+    const outcome = await checkCommand(argv);
+    (outcome.code === 0 ? process.stdout : process.stderr).write(`${outcome.lines.join("\n")}\n`);
+    return outcome.code;
+  }
   const read = async (path: string): Promise<Uint8Array | null> => { try { return new Uint8Array(await readFile(path)); } catch { return null; } };
   let home: string;
   try { home = configDir(); }

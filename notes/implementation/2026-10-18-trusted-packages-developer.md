@@ -1,9 +1,9 @@
-# M1 developer half: browser kit and package format checkpoints
+# M1 developer half checkpoints
 
 Work in progress under Source child `4735dfeed42d310099ea91521ed3998b74628c20`
 and promise `8fb3e144c5ccd8dcc151d673ad89d57380a7bbca`, within M1
-`eca1c7ee` / `7ff6cd96`. The developer half remains open. This checkpoint
-does not complete the developer half, install, kit or submitted Source.
+`eca1c7ee` / `7ff6cd96`. The developer half remains open. These checkpoints
+do not complete install or the browser kit, and are not a submitted Source.
 
 The worktree includes reviewed Main
 `fd198c724a53a1f86ee1270fe477ab1d505f4b3f` and the M1 preparation note.
@@ -141,8 +141,8 @@ is checked before a fixed-size descriptor read and JSON/base64 work, with
 metadata checked afterwards. These checks detect ordinary concurrent edits;
 they do not promise hostile-filesystem isolation or a whole-directory snapshot.
 Current native validation uses `PROPOSED_BOUNDS`; installation still validates
-under the host's actual bounds. There is no browser bundle or scenario command
-in this pack checkpoint yet.
+under the host's actual bounds. A browser bundle is still due; the scenario
+layer below now connects this pack preparation to `check`.
 
 Five focused filesystem/CLI cases pass (`a1212a`, exit 0), including both
 real Counter and Lending declaration files, repeated exact package bytes,
@@ -221,8 +221,9 @@ Production port defaults keep transport absent and outside effects closed.
 Lending sends remain journalled without a destination/Git publication; foreign
 dependencies unavailable to this single-scope adapter are not fabricated.
 This is not Durable Object eviction/restart, hosted durability, cross-scope
-delivery, device ownership or browser evidence. No `dap check` or `dap dev`
-success command has been exposed before the scenario layer exists.
+delivery, device ownership or browser evidence. The runner foundation at
+`051a57701` exposed no check/dev command. The scenario layer below now
+connects it to `check`; dev remains due.
 
 The initial three focused native/SQLite cases pass (`e41123`), and the final
 four-case file passes with a real due timer (`a58d70`). It covers Counter
@@ -246,17 +247,83 @@ The private Node adapter has been exercised on Node 26.12.0. Node's
 [SQLite module history](https://nodejs.org/api/sqlite.html) puts unflagged
 availability at 22.13.0 (23.4.0 in the 23 series); it also distinguishes the
 older Buffer bindings from general typed-array bindings added in 22.14.0.
-The adapter uses Buffer for a binary binding. When the scenario/dev commands
-are exposed, they must load this adapter lazily with a clear supported-runtime
-check so existing CLI commands retain their Node 22.0.0 launcher contract.
+The adapter uses Buffer for a binary binding. The scenario layer below loads
+it lazily with a supported-runtime check; dev must follow the same rule so
+existing CLI commands retain their Node 22.0.0 launcher contract.
 No older-Node local runtime witness is claimed here.
 The four local native cases still pass after the Buffer binding adjustment
 (`715d63`, exit 0).
 
+## Declarative scenarios and check
+
+`dap check [directory]` now prepares the same package in memory with an
+internal public TEST publisher, validates its native definitions, prints
+semantic/presentation pins, runs every listed scenario, and requires native
+replay in replay mode to be consistent. It prints each requested capability
+and its exact canonical declared bounds. This audit lists requests; native
+host admission and screen-code review are separate. No TEST release id is
+presented as a publishable release. Check writes no package and does not read
+the CLI config directory, operator key or existing room setup.
+
+The source config may list at most 32 distinct `scenarios` paths. Each is
+captured with the existing regular-file/path checks and 64 KiB pre-read bound.
+Source metadata now also checks the leaf with `lstat` before opening; the
+descriptor's no-follow/type/size/metadata checks remain. Scenario paths are
+developer inputs, outside package identity: adding one leaves all three ids
+unchanged, and `pack` does not require developer test files to be present.
+Check refuses an absent or empty scenario list, missing files or an invalid
+list rather than reporting an empty test run as success.
+
+Scenario version 1 has `name`, native `time`, explicit `actors`, `founding`
+and 1–256 `steps`. Each of 1–16 actors has a public TEST seed (64 lowercase
+hex digits), member handle and at most 64 distinct action names. No role or
+wildcard supplies actions. Seeds are never printed and held copies are cleared.
+The parsed JSON is owned before asynchronous signing/imports. The local scope
+receives owned actor/action copies as well. These are the scripted grants and
+unjudged references described above, not enrollment or authority freshness.
+
+Steps are `act` with an exact accepted/refused expectation, optional `save`,
+`retry` of those retained signed bytes, monotonic `advance`, or `assert` of
+an item's state, revision or named value/party/ref slots. Empty assertions,
+unknown fields and unrecognized step types fail. Fields can explicitly name
+`$member`, existing `$scope: self`, `$revision` of a local item, or labelled
+`$reference` membership/destination stand-ins. Resolved values have a finite
+10,000-node/32-depth allowance per step. No scenario JavaScript or application
+server module is loaded. Scenario/step errors identify the failing position.
+
+Only the local scenario path dynamically imports the Node SQLite adapter,
+after the unflagged-runtime check. Ordinary pack/room commands still have no
+SQLite import. Tests exercise the version boundary predicate; an actual
+Node 22.0.0 run of these new commands is not yet evidence. Current actual-bin
+and runtime witnesses use Node 26.12.0.
+
+The final combined scenario/pack/actual-bin run passes 11 cases in two files
+(`746d31`/`0f87fd`, exit 0). After the explicit leaf metadata check, its seven
+filesystem/pack/check cases still pass (`7a76fe`/`6cb716`, exit 0). The initial
+scenario-only run (`8a25af`) passes three cases and the first combined run
+(`a2c3ef`/`b59bfc`) passes ten; the added input-ownership case makes four
+scenario cases and eleven combined. The actual `dap check` runs from
+an external directory even with custody variables that would make configDir
+fail; a real Lending scenario donates, retries, asserts and refuses an
+unauthorized cancellation, then replays. The source fixtures are real native
+Counter/Lending declarations with labelled static fixture pages, not converted
+production screens. Requested extra capability bounds are printed without
+executing an external effect.
+
+Three one-line controls distinguish and restore source: final replay-mode/
+consistency guard (`601d8d`/`cb3d0f`), owned expectations before an await
+(`2ce061`/`cba2e7`), and exact native answer comparison (`309d99`/`ac4c11`).
+Each exits 0 with four normal passes and one intended assertion failure.
+The verifier-report fault test is explicitly scripted (mismatch or integrity
+mode); the underlying native replay also has the genuine altered-byte and
+missing-retained-input witnesses above. CLI test/source typecheck passes
+(`baa9ca`). Evidence uses `/tmp/artroom-m1-check-` and
+`/tmp/artroom-m1-scenario-`. No full M1 gate has run.
+
 ## Remaining developer work
 
 Shared browser joining, storage and request custody; browser bundling;
-new/dev/check; Counter/Lending package
+new/dev; Counter/Lending package
 conversion; and the matching browser evidence remain due. Generated
 application asset modules have not been rebuilt for this source checkpoint;
 the complete package conversion will replace their host composition.

@@ -12,7 +12,10 @@ import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 
 export class ApplicationSourceError extends Error {}
 const refuse = (message: string): never => { throw new ApplicationSourceError(message); };
-const object = (value: unknown, keys: string): Record<string, unknown> => isRecord(value) && Object.keys(value).sort().join() === keys ? value : refuse("Unexpected application source fields.");
+const object = (value: unknown, keys: string, optional: readonly string[] = []): Record<string, unknown> => {
+  const required = keys.split(","), allowed = new Set([...required, ...optional]);
+  return isRecord(value) && required.every(key => Object.hasOwn(value, key)) && Object.keys(value).every(key => allowed.has(key)) ? value : refuse("Unexpected application source fields.");
+};
 function pathOf(value: unknown): string {
   if (typeof value !== "string" || value.length > 512 || !/^[A-Za-z0-9._/-]+$/.test(value) || value.split("/").some(part => part === "" || part === "." || part === "..")) return refuse("Source paths must be relative file paths without dot segments.");
   return value;
@@ -30,6 +33,8 @@ async function readSource(root: string, path: string, most: number): Promise<Uin
     const stat = await lstat(directory);
     if (!stat.isDirectory() || stat.isSymbolicLink()) return refuse(`Source directory is not a regular directory: ${path}.`);
   }
+  const leaf = await lstat(join(root, path));
+  if (!leaf.isFile() || leaf.isSymbolicLink()) return refuse(`Source file is not regular: ${path}.`);
   const file = await open(join(root, path), constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
   try {
     const before = await file.stat();
@@ -47,10 +52,14 @@ async function readSource(root: string, path: string, most: number): Promise<Uin
   } finally { await file.close(); }
 }
 
-async function source(directory: string): Promise<ApplicationPackageInput> {
+async function source(directory: string): Promise<{ input: ApplicationPackageInput; root: string; scenarios: readonly string[] }> {
   const root = await realpath(directory);
   if (!(await lstat(root)).isDirectory()) return refuse("The application root must be a directory.");
-  const config = object(parseStrictBytes(await readSource(root, "dap.application.json", LIMITS.metadataBytes)), "capabilities,definitions,entry,host,name,predecessor,presentation,projections,roles,v,version");
+  const config = object(parseStrictBytes(await readSource(root, "dap.application.json", LIMITS.metadataBytes)), "capabilities,definitions,entry,host,name,predecessor,presentation,projections,roles,v,version", ["scenarios"]);
+  const givenScenarios = Object.hasOwn(config, "scenarios") ? config["scenarios"] : [];
+  if (!Array.isArray(givenScenarios) || givenScenarios.length > 32) return refuse("List at most 32 local scenario files.");
+  const scenarios = givenScenarios.map(pathOf);
+  if (new Set(scenarios).size !== scenarios.length) return refuse("List each local scenario once.");
   if (config["v"] !== 1 || typeof config["name"] !== "string" || typeof config["version"] !== "string") return refuse("Expected application source version 1, name and version.");
   const entry = pathOf(config["entry"]), files = config["definitions"];
   if (!Array.isArray(files) || files.length < 1 || files.length > LIMITS.definitions) return refuse("The application must list between 1 and 17 definition files.");
@@ -78,11 +87,22 @@ async function source(directory: string): Promise<ApplicationPackageInput> {
   }
   // Untrusted descriptive fields cross this single typed boundary only to the
   // codec, which validates the entire owned value before asking a key to sign.
-  return {
+  const input = {
     name: config["name"], version: config["version"],
     semantic: { v: 1, entry: definitions[paths.indexOf(entry)]!.id, definitions, host: config["host"], projections: config["projections"], capabilities: config["capabilities"], roles: config["roles"], predecessor: config["predecessor"] },
     presentation: { v: 1, entry: presentation["entry"], assets, descriptions: presentation["descriptions"] },
   } as ApplicationPackageInput;
+  return { input, root, scenarios };
+}
+
+/** Local check/dev can prepare exactly the same package without publishing an
+ * output. Scenario files are developer inputs and never change package ids. */
+export async function prepareApplicationDirectory(directory: string, signer: Signer): Promise<{ packet: PackedApplication; root: string; scenarios: readonly string[] }> {
+  const prepared = await source(directory);
+  return { packet: await packApplication(prepared.input, signer), root: prepared.root, scenarios: prepared.scenarios };
+}
+export async function readApplicationScenario(root: string, path: string): Promise<unknown> {
+  return parseStrictBytes(await readSource(root, path, LIMITS.metadataBytes));
 }
 
 /** Publish complete bytes without replacing any existing output, including a
@@ -104,8 +124,7 @@ async function publish(path: string, bytes: Uint8Array): Promise<void> {
 /** No output is published until every source, native definition and package
  * signature has passed. A package URI can be assigned after this file is committed. */
 export async function packDirectory(directory: string, output: string, signer: Signer): Promise<PackedApplication> {
-  const input = await source(directory);
-  const packed = await packApplication(input, signer);
+  const { packet: packed } = await prepareApplicationDirectory(directory, signer);
   await publish(resolve(output), packed.bytes);
   return packed;
 }
