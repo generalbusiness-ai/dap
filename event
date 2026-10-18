@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a013d29d390cd5dfe618518b94539cc9a80ca64b","text":"Merge retired a covered predecessor; the successor is at apps/counter/browser-build/counting.js."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a287d39b4f2e4deb0b27bc2fe4d7af00ba417c62","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/forms-ledger.test.ts."}
