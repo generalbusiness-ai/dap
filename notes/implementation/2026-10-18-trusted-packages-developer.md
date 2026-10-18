@@ -855,6 +855,27 @@ Scratch harness: `/tmp/artroom-m1-new-browser-20261018.mjs`. Results and
 PNGs: `/tmp/artroom-m1-new-browser-20261018/`. Generated project:
 `/private/tmp/artroom-m1-new-browser-source-wSmekE/notes-preview`.
 
+## Checked development session preparation
+
+The developer branch now contains foundation F1's meaningful-scenario
+requirement. `openApplicationScenario` uses the same scenario executor and
+transfers its native scope only after expected behavior and consistent
+replay succeed. Its caller owns closing that scope. Ordinary check still
+closes it in finally. The returned actor metadata names the explicit public
+TEST seeds, actions and principal relationships. No operator key or
+production authority is introduced.
+
+All ten owning scenario cases pass (`dc5a9f`/`48247f`). The added case submits
+one further signed native reset, replays through its new head, closes the
+scope and confirms later access refuses. A vacuous retained session still
+refuses. The first new test had an await inside a synchronous callback and
+failed to parse/typecheck (`f2ff5e`, `f44129`); moving preparation outside
+that callback corrects the test. The selected principal-metadata witness
+then passes (`aec62f`), with production and test typechecks (`a1f664`).
+This prepares scope ownership for the dev host. It does not start a server,
+add routes, provide live reload or complete dev. Foundation's separate
+corrected candidate remains frozen for its gate and fresh review.
+
 ## Remaining developer work
 
 Dev, Counter/Lending package conversion, and the matching browser
