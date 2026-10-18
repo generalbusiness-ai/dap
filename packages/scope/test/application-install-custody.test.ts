@@ -105,7 +105,7 @@ test.each(installations)("$name: one signed native install settles through Direc
         },
       };
       const args = { uri: f.uri, release: f.packet.ids.release, roles: ["admin", "member"], values: parseStrict(specimen.values), idempotencyKey: key };
-      installedService = new McpService(port);
+      installedService = new McpService({ ...port, mode: specimen.application === "Lending" ? "generic" : "default" });
       let result;
       if (specimen.application === "Counter") {
         const local = cliStore(); await local.keep("operator", rita.secret);

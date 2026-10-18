@@ -80,7 +80,7 @@ describe("every activity is reachable, and every act renders", () => {
     const tools = new Set([...generic, ...bindingsOf(inventory, WORDS).filter((b) => listed(b, inventory)).map((b) => actTool(b, inventory, "default").name)]);
     for (const row of rows) {
       const cells = row.split(" | ");
-      const named = [...(cells[1] ?? "").matchAll(/`([a-z][a-z0-9.-]*(?:@[0-9a-f]+)?)`/g)].map((m) => m[1]!).filter((n) => !n.startsWith("artroom") && !n.startsWith("git"));
+      const named = [...(cells[1] ?? "").matchAll(/`([a-z][a-z0-9_.-]*(?:@[0-9a-f]+)?)`/g)].map((m) => m[1]!).filter((n) => !n.startsWith("artroom") && !n.startsWith("git"));
       for (const name of named) expect(tools.has(name) || /@/.test(name), `${cells[0]} names ${name}`).toBe(true);
     }
   });

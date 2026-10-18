@@ -3,7 +3,7 @@ import type { DeclaredDefinition, PlatformDefinition, Seed } from "@generalbusin
 import { definitionDigest } from "@generalbusiness/artroom-bytes";
 import type { PlatformRule, RuleGiven } from "@generalbusiness/dap-derive";
 import { d } from "@generalbusiness/dap-derive/testing";
-import { INVITATION_KEY_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, PARTITION_COHORT, COUNTING_COHORT, DEMO_REGISTER, FIRST_ACTIONS_OF, NEWEST, ROLE_LISTS, ROLE_TABLE_OF, VERSIONS, WEB_DEMO_COHORT, WEB_DEMO_REGISTER, directorySeed, platform, versionOf, type Role } from "../src/index.ts";
+import { TRUSTED_APPLICATION_COHORT, INVITATION_KEY_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, PARTITION_COHORT, COUNTING_COHORT, DEMO_REGISTER, FIRST_ACTIONS_OF, NEWEST, ROLE_LISTS, ROLE_TABLE_OF, VERSIONS, WEB_DEMO_COHORT, WEB_DEMO_REGISTER, directorySeed, platform, versionOf, type Role } from "../src/index.ts";
 import { rita } from "./support-creation.ts";
 
 // The planner's decision of 2026-10-07: a changed definition carries a new version; a scope pins its version at its genesis and is
@@ -20,6 +20,13 @@ import { rita } from "./support-creation.ts";
 // Evidence: /tmp/artroom-cohort25-generation-one/result.json
 // SHA-256: e2a2052d23705690ec4b884786f453718875f6505d515fdda88a20191eb64269.
 const DIGESTS: Readonly<Record<string, string>> = {
+  // Observed and whole-catalog validated in the retained M1 install generation.
+  // /tmp/artroom-m1-install-complete-catalog-validation-20261018.json
+  "platform:destination@7": "sha256:f29353b2ca1f551ab6a7d622bbd57aa6dfc7fc3748358ce709ccee728e4c15df",
+  "platform:register@12": "sha256:4f85c4f4ad35ffc3580cba3fc3ec17f29b59cfc9ccb9eee84b7ad355125926d6",
+  "platform:directory@11": "sha256:f64674c37dfb21f8ea227cd3a4a4fb405cf4d5924474d6e6cf6e4bf2dc90f012",
+  "platform:membership@7": "sha256:d4116e2df6279198064322d076f3c2b61766aacad9c9feb706fcc2d2e1dfb658",
+  "platform:rules@5": "sha256:dea9ba41b154e86334b5770f83fee666b8b37d535cc3ca705adf66cca28ec954",
   // Observed from the exact complete catalog in the retained first focused
   // catalog run, not computed from the same values as the expected result.
   "platform:register@11": "sha256:4f85c4f4ad35ffc3580cba3fc3ec17f29b59cfc9ccb9eee84b7ad355125926d6",
@@ -70,9 +77,9 @@ test("every shipped version resolves to its own data, pinned by digest, and vers
   expect(digests["platform:rules@4"]).not.toBe(DIGESTS["platform:rules@3"]);
   expect(["platform:rules@1", "platform:rules@2", "platform:rules@3"].map(named => platform(named)!.data.items["rules"]!.values["ownerMayReview"]!.default)).toEqual([false, false, false]);
   for (const named of Object.keys(DIGESTS)) expect(platform(named)).toBe(VERSIONS[named]);
-  expect(["platform:destination@7", "platform:destination@0", "platform:destination@02", "platform:destination", "platform:task@1", "toString"].map(platform)).toEqual(Array(6).fill(null));
+  expect(["platform:destination@8", "platform:destination@0", "platform:destination@02", "platform:destination", "platform:task@1", "toString"].map(platform)).toEqual(Array(6).fill(null));
   // Explicit application and demo pins do not replace the existing default cohort.
-  const supporting = new Set<string>([PARTITION_COHORT.register, PARTITION_COHORT.directory, PARTITION_COHORT.partition, PARTITION_COHORT.destination, ...Object.values(INVITATION_KEY_COHORT).filter(pin => pin !== "platform:inbox@1" && pin !== "platform:destination@2"), FILE_PUBLICATION_COHORT.register, FILE_PUBLICATION_COHORT.directory, FILE_PUBLICATION_COHORT.destination, APPLICATION_COHORT.register, APPLICATION_COHORT.directory, APPLICATION_COHORT.membership, APPLICATION_COHORT.rules, COUNTING_COHORT.register, COUNTING_COHORT.directory, COUNTING_COHORT.membership, "platform:rules@4", "platform:destination@5", DEMO_REGISTER, WEB_DEMO_REGISTER, WEB_DEMO_COHORT.directory]);
+  const supporting = new Set<string>([...Object.values(TRUSTED_APPLICATION_COHORT).filter(pin => pin !== "platform:inbox@1"), PARTITION_COHORT.register, PARTITION_COHORT.directory, PARTITION_COHORT.partition, PARTITION_COHORT.destination, ...Object.values(INVITATION_KEY_COHORT).filter(pin => pin !== "platform:inbox@1" && pin !== "platform:destination@2"), FILE_PUBLICATION_COHORT.register, FILE_PUBLICATION_COHORT.directory, FILE_PUBLICATION_COHORT.destination, APPLICATION_COHORT.register, APPLICATION_COHORT.directory, APPLICATION_COHORT.membership, APPLICATION_COHORT.rules, COUNTING_COHORT.register, COUNTING_COHORT.directory, COUNTING_COHORT.membership, "platform:rules@4", "platform:destination@5", DEMO_REGISTER, WEB_DEMO_REGISTER, WEB_DEMO_COHORT.directory]);
   const highest = Object.keys(VERSIONS).filter((named) => !supporting.has(named)).reduce<Record<string, number>>((most, named) => ({ ...most, [named.slice(0, named.lastIndexOf("@"))]: Math.max(most[named.slice(0, named.lastIndexOf("@"))] ?? 0, versionOf(named as PlatformDefinition)) }), {});
   expect(Object.fromEntries(Object.entries(NEWEST).map(([name, named]) => [name, versionOf(named)]))).toEqual(highest);
   // Version 2 adds the act `read-token` and its operation `mint-read` to the destination, and nothing to version 1.

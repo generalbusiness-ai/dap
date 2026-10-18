@@ -216,6 +216,37 @@ platform and MCP Git dependency audits under `/tmp/`. The current ignored
 install stamp is `da215ee29515f420c6d5955b8df55dd40d8c77b0aa34878b4252a94eab91f298`.
 The frozen developer checkout and root dependency view are untouched.
 
-A complete gate, finite Source evidence, independent review, native landing,
-sealed receipt and Main audit are still due. Planner owns publication and any
-authorized Cloudflare provisioning or deployment after that review.
+The first gate stopped on two trailing blank lines before typechecks or
+tests. The next stopped at Page's typecheck when the new CLI adapter pulled
+server dependencies into browser consumers. Both corrections are retained in
+Git and their raw logs. The corrected full run at `09a839ac` completed all
+Vitest projects: 1,820 passed, eight failed, and three skipped. Those eight
+failures identified the new pins missing from golden observations, old
+Destination7 unsupported-version controls, missing MCP reference and command
+table rows, and stale generated Page bytes. No other test failed. The chained
+Node checks did not run because Vitest failed. Original raw logs are in
+`/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.hovmUhKREC`.
+
+The complete 41-definition catalog was separately generated and validated in
+`/tmp/artroom-m1-install-complete-catalog-validation-20261018.json`. This is
+an observation for golden pin literals, not a gate result. The next unknown
+Destination version remains refused. The existing supersession witness now
+also exercises Destination7. Generated MCP schemas and Page bytes are updated.
+The package inventory rows use the actual native install witness rather than
+the older room's factory recipe. Lending runs that native tool in generic
+mode, while Counter covers default mode and CLI-to-MCP recovery. The metric
+name allowlist includes both fixed application tools; the existing concurrent
+observation witness checks their separate read counts and retained phases.
+
+All 21 affected Node cases pass (`43196`, terminal `3d4f3b`, exit 0).
+Eight selected native cases pass (`48126`, terminal `9692c4`, exit 0),
+including the two older W1 recipe modes, Directory-owned install scenarios,
+and Destination's exact-version host check. Seven unchanged cases in those
+selected files are explicitly skipped by the focused title filter. Logs are
+`/tmp/artroom-m1-install-integration-node-20261018.log` and
+`/tmp/artroom-m1-install-integration-native-20261018.log`.
+
+A complete gate on the corrected submitted head, finite Source evidence,
+independent review, native landing, sealed receipt and Main audit remain due.
+Planner owns publication and any authorized Cloudflare provisioning or
+deployment after that review.

@@ -252,6 +252,82 @@
       }
     },
     {
+      "name": "install_application",
+      "description": "Install an operator-trusted package in this room by immutable Git URI and independent expected release. Select default roles explicitly; values are the application genesis fields. Keeps one signed native envelope under idempotencyKey before submission. Repeating the same key and meaning retains that envelope. Acceptance records the install request; application_installation reads its pending, active or final refused result. The host fetches the URI independently.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "uri": {
+            "type": "string",
+            "maxLength": 4096
+          },
+          "release": {
+            "type": "string"
+          },
+          "roles": {
+            "type": "array",
+            "maxItems": 5,
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "admin",
+                "maintainer",
+                "member",
+                "agent",
+                "checker"
+              ]
+            }
+          },
+          "values": {
+            "type": "object"
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "description": "Your key for this one meaning, 1 to 128 bytes. Keep it."
+          }
+        },
+        "required": [
+          "uri",
+          "release",
+          "roles",
+          "values",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "application_installation",
+      "description": "Read one native installation in the configured room, including its recorded phase and final refusal reason. Earlier committed activation and grants can remain after a later refusal. Active results include the exact generic screen address. This read signs no install or continuation and changes no native state.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "item": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "item"
+        ],
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
       "name": "prepare",
       "description": "Asks the scope that owns a resource for one step of a capability. With kind: for the intent an act will submit later under the same idempotencyKey; resource: the scope asked, which may differ from target; then the act's own target, kind, on, fields, texts, presented and values. Without kind: a step with no act, such as hold@1's instance, whose own intent (kind capability:step, with fields) goes to the resource. Returns the resource's answer for that step, never an act's receipt.",
       "inputSchema": {

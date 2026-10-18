@@ -11,7 +11,8 @@ import { created } from "./support/story.ts";
 type Mode = "default" | "generic";
 interface Ran { calls: string[]; n: number; answers: string[] }
 
-/** Server recipes exclude the explicit MCP gaps and local file commands. */
+/** Legacy room recipes exclude explicit gaps, local file commands and the
+ * trusted-application rows witnessed on real new-cohort scopes elsewhere. */
 function inventoryRows(): { activity: string; cells: Record<Mode, string> }[] {
   const at = DOC.indexOf("## The W1 inventory");
   const table = DOC.slice(at, DOC.indexOf("\n## ", at + 5));
@@ -29,11 +30,16 @@ function inventoryRows(): { activity: string; cells: Record<Mode, string> }[] {
     { activity: "`dap new <directory>` (local command)", cells: { default: "Creates local template files with public TEST scenarios; no MCP tool", generic: "Local only" } },
     { activity: "`dap pack [<directory>]` (local command)", cells: { default: "Local files and an existing named publisher key; no MCP tool", generic: "Local only" } },
   ]);
-  return rows.filter((r) => !gaps.includes(r) && !local.includes(r));
+  const applications = rows.filter(r => r.activity.endsWith("(trusted-application room)"));
+  expect(applications).toEqual([
+    { activity: "`dap install <git+https-uri>` (trusted-application room)", cells: { default: "`install_application` with URI, release, selected roles, genesis values and the retained request key: 1", generic: "`install_application`: 1" } },
+    { activity: "`dap application <install-item>` (trusted-application room)", cells: { default: "`application_installation` with the recorded item: 1", generic: "`application_installation`: 1" } },
+  ]);
+  return rows.filter((r) => !gaps.includes(r) && !local.includes(r) && !applications.includes(r));
 }
 /** The tools a cell names in order, consecutive repeats once, and its count: a number, or a number plus n. */
 function recipeOf(cell: string): { tools: string[]; count: { k: number; n: boolean } } {
-  const tools = [...cell.matchAll(/`([a-z][a-z0-9.-]*(?:@[0-9a-f]+)?)`/g)].map((m) => m[1]!).filter((n) => !n.startsWith("artroom") && !n.startsWith("git") && n !== "n");
+  const tools = [...cell.matchAll(/`([a-z][a-z0-9_.-]*(?:@[0-9a-f]+)?)`/g)].map((m) => m[1]!).filter((n) => !n.startsWith("artroom") && !n.startsWith("git") && n !== "n");
   const counts = [...cell.matchAll(/: (\d+)( \+ n)?(?: and Git)?/g)];
   const last = counts.at(-1);
   return { tools: tools.filter((t, i) => t !== tools[i - 1]), count: { k: Number(last?.[1] ?? NaN), n: last?.[2] !== undefined } };
