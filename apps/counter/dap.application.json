@@ -1,7 +1,7 @@
 {
-  "v": 1,
+  "v": 2,
   "name": "ai.generalbusiness.counter",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "entry": "apps/counter/commitments.json",
   "definitions": [
     "apps/counter/commitments.json"
@@ -13,7 +13,361 @@
     ]
   },
   "capabilities": [],
-  "projections": {},
+  "projections": {
+    "state": {
+      "v": 1,
+      "definition": "apps/counter/commitments.json",
+      "revision": "revision",
+      "sources": {
+        "board": {
+          "item": "board",
+          "read": "many",
+          "states": [
+            "finished",
+            "open",
+            "paused"
+          ],
+          "limit": 1,
+          "fields": {
+            "generation": {
+              "from": {
+                "kind": "value",
+                "name": "generation"
+              },
+              "of": {
+                "max": 1000000,
+                "min": 0,
+                "type": "int"
+              },
+              "nullable": false
+            },
+            "lastNumber": {
+              "from": {
+                "kind": "value",
+                "name": "lastNumber"
+              },
+              "of": {
+                "max": 100,
+                "min": 0,
+                "type": "int"
+              },
+              "nullable": false
+            },
+            "serial": {
+              "from": {
+                "kind": "value",
+                "name": "serial"
+              },
+              "of": {
+                "max": 1000000,
+                "min": 0,
+                "type": "int"
+              },
+              "nullable": false
+            },
+            "target": {
+              "from": {
+                "kind": "value",
+                "name": "target"
+              },
+              "of": {
+                "max": 100,
+                "min": 1,
+                "type": "int"
+              },
+              "nullable": false
+            },
+            "until": {
+              "from": {
+                "kind": "value",
+                "name": "until"
+              },
+              "of": {
+                "type": "time"
+              },
+              "nullable": true
+            },
+            "lastFulfilledAt": {
+              "from": {
+                "kind": "ref",
+                "name": "lastFulfilledAt"
+              },
+              "of": {
+                "kind": [
+                  "fulfill"
+                ],
+                "type": "fact",
+                "under": "counting-commitments"
+              },
+              "nullable": true
+            },
+            "pledge": {
+              "from": {
+                "kind": "ref",
+                "name": "pledge"
+              },
+              "of": {
+                "of": "promise",
+                "type": "item"
+              },
+              "nullable": true
+            },
+            "controller": {
+              "from": {
+                "kind": "party",
+                "name": "controller"
+              },
+              "of": {
+                "type": "member"
+              },
+              "nullable": false
+            },
+            "lastSpeaker": {
+              "from": {
+                "kind": "party",
+                "name": "lastSpeaker"
+              },
+              "of": {
+                "type": "member"
+              },
+              "nullable": true
+            }
+          }
+        },
+        "configuration": {
+          "item": "configuration",
+          "read": "many",
+          "states": [
+            "ready"
+          ],
+          "limit": 1,
+          "fields": {
+            "target": {
+              "from": {
+                "kind": "value",
+                "name": "target"
+              },
+              "of": {
+                "max": 100,
+                "min": 1,
+                "type": "int"
+              },
+              "nullable": false
+            },
+            "controller": {
+              "from": {
+                "kind": "party",
+                "name": "controller"
+              },
+              "of": {
+                "type": "member"
+              },
+              "nullable": false
+            }
+          }
+        },
+        "participant": {
+          "item": "participant",
+          "read": "many",
+          "states": [
+            "active",
+            "inactive",
+            "removed"
+          ],
+          "limit": 100,
+          "fields": {
+            "agent": {
+              "from": {
+                "kind": "party",
+                "name": "agent"
+              },
+              "of": {
+                "type": "member"
+              },
+              "nullable": false
+            }
+          }
+        },
+        "promise": {
+          "item": "promise",
+          "read": "many",
+          "states": [
+            "cancelled",
+            "expired",
+            "failed",
+            "fulfilled",
+            "pledged"
+          ],
+          "limit": 100,
+          "fields": {
+            "basis": {
+              "from": {
+                "kind": "value",
+                "name": "basis"
+              },
+              "of": {
+                "max": 16,
+                "of": {
+                  "of": {
+                    "id": {
+                      "of": "participant",
+                      "required": true,
+                      "type": "item"
+                    },
+                    "member": {
+                      "required": true,
+                      "type": "member"
+                    }
+                  },
+                  "type": "record"
+                },
+                "type": "list"
+              },
+              "nullable": false
+            },
+            "generation": {
+              "from": {
+                "kind": "value",
+                "name": "generation"
+              },
+              "of": {
+                "max": 1000000,
+                "min": 0,
+                "type": "int"
+              },
+              "nullable": false
+            },
+            "n": {
+              "from": {
+                "kind": "value",
+                "name": "n"
+              },
+              "of": {
+                "max": 100,
+                "min": 1,
+                "type": "int"
+              },
+              "nullable": false
+            },
+            "reason": {
+              "from": {
+                "kind": "value",
+                "name": "reason"
+              },
+              "of": {
+                "of": [
+                  "media-error",
+                  "process-error",
+                  "cancelled",
+                  "interrupted",
+                  "speech-uncertain"
+                ],
+                "type": "enum"
+              },
+              "nullable": true
+            },
+            "serial": {
+              "from": {
+                "kind": "value",
+                "name": "serial"
+              },
+              "of": {
+                "max": 1000000,
+                "min": 1,
+                "type": "int"
+              },
+              "nullable": false
+            },
+            "until": {
+              "from": {
+                "kind": "value",
+                "name": "until"
+              },
+              "of": {
+                "type": "time"
+              },
+              "nullable": false
+            },
+            "admittedAt": {
+              "from": {
+                "kind": "ref",
+                "name": "admittedAt"
+              },
+              "of": {
+                "kind": [
+                  "commit"
+                ],
+                "type": "fact",
+                "under": "counting-commitments"
+              },
+              "nullable": false
+            },
+            "participant": {
+              "from": {
+                "kind": "ref",
+                "name": "participant"
+              },
+              "of": {
+                "of": "participant",
+                "type": "item"
+              },
+              "nullable": false
+            },
+            "agent": {
+              "from": {
+                "kind": "party",
+                "name": "agent"
+              },
+              "of": {
+                "type": "member"
+              },
+              "nullable": false
+            }
+          }
+        }
+      }
+    },
+    "activity": {
+      "v": 1,
+      "definition": "apps/counter/commitments.json",
+      "revision": "revision",
+      "sources": {
+        "events": {
+          "read": "entries",
+          "acts": [
+            "activate",
+            "cancel",
+            "commit",
+            "deactivate",
+            "fail",
+            "force-deactivate",
+            "fulfill",
+            "initialize",
+            "participate",
+            "pause",
+            "remove-participant",
+            "reset",
+            "start"
+          ],
+          "window": 100,
+          "limit": 100,
+          "latestBy": null,
+          "fields": {
+            "actor": {
+              "from": {
+                "kind": "signer",
+                "name": "member"
+              },
+              "of": {
+                "type": "member"
+              },
+              "nullable": true
+            }
+          }
+        }
+      }
+    }
+  },
   "roles": {
     "admin": [
       "counting.control",
@@ -128,6 +482,103 @@
       "entry": "apps/counter/browser/main.ts",
       "html": "apps/counter/browser/application.html",
       "script": "counter.js"
+    },
+    "resources": {},
+    "views": {
+      "board": {
+        "revision": "revision",
+        "actor": "lastSpeaker",
+        "summary": null,
+        "acts": [
+          {
+            "act": "pause",
+            "label": "Pause",
+            "needs": "counting.control",
+            "when": "state = 'open' and pledge = null"
+          },
+          {
+            "act": "start",
+            "label": "Start",
+            "needs": "counting.control",
+            "when": "state = 'paused' and pledge = null"
+          }
+        ],
+        "waiting": {},
+        "refresh": 2000,
+        "display": "inline",
+        "back": null,
+        "kind": "card",
+        "projection": "state",
+        "item": "board",
+        "title": "state",
+        "facts": [
+          "lastNumber",
+          "target",
+          "generation",
+          "serial",
+          "until"
+        ],
+        "context": "board {id} v{revision}",
+        "fallback": "board {id}: {state}"
+      },
+      "participants": {
+        "revision": "revision",
+        "actor": "agent",
+        "summary": null,
+        "acts": [],
+        "waiting": {},
+        "refresh": 2000,
+        "display": "inline",
+        "back": null,
+        "kind": "carousel",
+        "projection": "state",
+        "item": "participant",
+        "title": "agent",
+        "facts": [
+          "state"
+        ],
+        "context": "participant {id} v{revision}",
+        "fallback": "participant {id}: {state}"
+      },
+      "promise": {
+        "revision": "revision",
+        "actor": "agent",
+        "summary": null,
+        "acts": [],
+        "waiting": {},
+        "refresh": 2000,
+        "display": "fullscreen",
+        "back": "board",
+        "kind": "record",
+        "projection": "state",
+        "item": "promise",
+        "title": "n",
+        "facts": [
+          "state",
+          "until"
+        ],
+        "context": "promise {id} v{revision}",
+        "fallback": "promise {id}: {state}"
+      },
+      "activity": {
+        "revision": "revision",
+        "actor": "actor",
+        "summary": null,
+        "acts": [],
+        "waiting": {},
+        "refresh": 2000,
+        "display": "fullscreen",
+        "back": "board",
+        "kind": "log",
+        "projection": "activity",
+        "item": "events",
+        "title": "type",
+        "facts": [
+          "time"
+        ],
+        "context": "Recent entry {id}: {type}",
+        "fallback": "Recent entry {id}: {type}"
+      }
     }
   },
   "scenarios": [

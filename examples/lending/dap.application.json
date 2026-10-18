@@ -1,7 +1,7 @@
 {
-  "v": 1,
+  "v": 2,
   "name": "ai.generalbusiness.lending",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "entry": "examples/lending/definition.json",
   "definitions": [
     "examples/lending/definition.json"
@@ -13,7 +13,154 @@
     ]
   },
   "capabilities": [],
-  "projections": {},
+  "projections": {
+    "state": {
+      "v": 1,
+      "definition": "examples/lending/definition.json",
+      "revision": "revision",
+      "sources": {
+        "library": {
+          "item": "library",
+          "read": "many",
+          "states": [
+            "open"
+          ],
+          "limit": 1,
+          "fields": {
+            "destination": {
+              "from": {
+                "kind": "ref",
+                "name": "destination"
+              },
+              "of": {
+                "kind": "destination",
+                "type": "scope"
+              },
+              "nullable": false
+            },
+            "founder": {
+              "from": {
+                "kind": "party",
+                "name": "founder"
+              },
+              "of": {
+                "type": "member"
+              },
+              "nullable": false
+            }
+          }
+        },
+        "thing": {
+          "item": "thing",
+          "read": "many",
+          "states": [
+            "available",
+            "gone",
+            "lent"
+          ],
+          "limit": 100,
+          "fields": {
+            "description": {
+              "from": {
+                "kind": "value",
+                "name": "description"
+              },
+              "of": {
+                "max": 1000,
+                "type": "text"
+              },
+              "nullable": false
+            },
+            "name": {
+              "from": {
+                "kind": "value",
+                "name": "name"
+              },
+              "of": {
+                "max": 80,
+                "type": "text"
+              },
+              "nullable": false
+            },
+            "page": {
+              "from": {
+                "kind": "value",
+                "name": "page"
+              },
+              "of": {
+                "max": 1024,
+                "type": "text"
+              },
+              "nullable": false
+            },
+            "reason": {
+              "from": {
+                "kind": "value",
+                "name": "reason"
+              },
+              "of": {
+                "max": 280,
+                "type": "text"
+              },
+              "nullable": true
+            },
+            "borrower": {
+              "from": {
+                "kind": "party",
+                "name": "borrower"
+              },
+              "of": {
+                "type": "member"
+              },
+              "nullable": true
+            },
+            "donor": {
+              "from": {
+                "kind": "party",
+                "name": "donor"
+              },
+              "of": {
+                "type": "member"
+              },
+              "nullable": false
+            }
+          }
+        }
+      }
+    },
+    "activity": {
+      "v": 1,
+      "definition": "examples/lending/definition.json",
+      "revision": "revision",
+      "sources": {
+        "events": {
+          "read": "entries",
+          "acts": [
+            "borrow",
+            "cancel",
+            "donate",
+            "publish",
+            "return"
+          ],
+          "window": 100,
+          "limit": 100,
+          "latestBy": null,
+          "fields": {
+            "actor": {
+              "from": {
+                "kind": "signer",
+                "name": "member"
+              },
+              "of": {
+                "type": "member"
+              },
+              "nullable": true
+            }
+          }
+        }
+      }
+    }
+  },
   "roles": {
     "admin": [
       "lending.member",
@@ -116,6 +263,69 @@
       "entry": "examples/lending/browser/main.ts",
       "html": "examples/lending/browser/application.html",
       "script": "lending.js"
+    },
+    "resources": {},
+    "views": {
+      "shelf": {
+        "revision": "revision",
+        "actor": "donor",
+        "summary": null,
+        "acts": [],
+        "waiting": {},
+        "refresh": 2000,
+        "display": "inline",
+        "back": null,
+        "kind": "carousel",
+        "projection": "state",
+        "item": "thing",
+        "title": "name",
+        "facts": [
+          "state",
+          "description"
+        ],
+        "context": "thing {id} v{revision}",
+        "fallback": "thing {id}: {state}"
+      },
+      "thing": {
+        "revision": "revision",
+        "actor": "borrower",
+        "summary": null,
+        "acts": [],
+        "waiting": {},
+        "refresh": 2000,
+        "display": "fullscreen",
+        "back": "shelf",
+        "kind": "record",
+        "projection": "state",
+        "item": "thing",
+        "title": "name",
+        "facts": [
+          "state",
+          "description",
+          "reason"
+        ],
+        "context": "thing {id} v{revision}",
+        "fallback": "thing {id}: {state}"
+      },
+      "activity": {
+        "revision": "revision",
+        "actor": "actor",
+        "summary": null,
+        "acts": [],
+        "waiting": {},
+        "refresh": 2000,
+        "display": "fullscreen",
+        "back": "shelf",
+        "kind": "log",
+        "projection": "activity",
+        "item": "events",
+        "title": "type",
+        "facts": [
+          "time"
+        ],
+        "context": "Recent entry {id}: {type}",
+        "fallback": "Recent entry {id}: {type}"
+      }
     }
   },
   "scenarios": [

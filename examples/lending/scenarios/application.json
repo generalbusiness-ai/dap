@@ -36,6 +36,23 @@
   },
   "steps": [
     {
+      "projection": {
+        "name": "state",
+        "sources": {
+          "library": [
+            {
+              "id": 0,
+              "state": "open"
+            }
+          ],
+          "thing": []
+        },
+        "at": {
+          "seq": 0
+        }
+      }
+    },
+    {
       "act": {
         "actor": "member",
         "kind": "donate",
@@ -215,6 +232,64 @@
         "state": "gone",
         "values": {
           "reason": "Retired fixture"
+        }
+      }
+    },
+    {
+      "projection": {
+        "name": "state",
+        "sources": {
+          "library": [
+            {
+              "id": 0,
+              "state": "open"
+            }
+          ],
+          "thing": [
+            {
+              "id": 1,
+              "state": "gone",
+              "fields": {
+                "name": "Copper pot",
+                "reason": "Retired fixture"
+              }
+            }
+          ]
+        },
+        "at": {
+          "seq": 4
+        }
+      }
+    },
+    {
+      "projection": {
+        "name": "activity",
+        "at": {
+          "seq": 4
+        },
+        "sources": {
+          "events": [
+            {
+              "id": 1,
+              "type": "donate",
+              "state": "sealed"
+            },
+            {
+              "id": 2,
+              "type": "borrow",
+              "state": "sealed"
+            },
+            {
+              "id": 3,
+              "type": "return",
+              "state": "sealed"
+            },
+            {
+              "id": 4,
+              "type": "cancel",
+              "state": "sealed"
+            }
+          ]
         }
       }
     }

@@ -487,6 +487,37 @@ Several-scope birth remains the parent task's separate acceptance. No hostile
 package containment, presentation update, device command or deployment is
 claimed.
 
+### Maintained Counter and Lending declarations
+
+The maintained package configs now use v2 with explicit item reads and
+bounded recent activity. Their `state` projections select each native slot
+under its original name and type, including retained final rows. Their
+`activity` projections declare the last 100 entries and the non-genesis act
+kinds. Counter declares its board, participant carousel, promise record and
+activity log. Its field-free Start/Pause controls use the native action and
+selected state/ref conditions. Lending declares a shelf carousel, thing
+record and activity log. Its native acts need publication content, so these
+compact views offer no undisclosed field input or fabricated content.
+
+The local scenarios check the complete initial and final item sources and
+the expected activity entries at the actual journal head. Counter passes
+18 steps and replay through 10; Lending passes 14 and replay through 4. Each
+checks three projections. The maintained-package witness passes (`86279`,
+terminal `3912a6`). The initial run stopped at its old step-count assertion;
+the expected count now includes the new projection assertions. A manually
+authored Lending final reason was corrected to its actual scenario value
+before that package's run.
+
+Both real CLI commands pass from the repository root:
+`node packages/cli/bin/dap.js check --config apps/counter/dap.application.json`
+and the corresponding `examples/lending/dap.application.json` command. Logs:
+`/tmp/artroom-m2a-counter-declared-check-20261018.log` and
+`/tmp/artroom-m2a-lending-declared-check-20261018.log`. These use SQLite and
+native local replay with explicit TEST grants and external effects disabled.
+They prove no installed-session authority, browser migration or deployment.
+The existing browser adapters still use their old reads; their conversion
+remains owed. No final gate, review or delivery is claimed.
+
 ### Each declared control captures its own native subjects
 
 Grow's Hold binds the alert alone. Authorize also binds its heater. The

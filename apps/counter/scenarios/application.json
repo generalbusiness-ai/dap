@@ -44,6 +44,28 @@
   },
   "steps": [
     {
+      "projection": {
+        "name": "state",
+        "sources": {
+          "configuration": [
+            {
+              "id": 0,
+              "state": "ready",
+              "fields": {
+                "target": 2
+              }
+            }
+          ],
+          "board": [],
+          "participant": [],
+          "promise": []
+        },
+        "at": {
+          "seq": 0
+        }
+      }
+    },
+    {
       "act": {
         "actor": "admin",
         "kind": "initialize",
@@ -334,6 +356,116 @@
           "lastSpeaker": {
             "$member": "bob"
           }
+        }
+      }
+    },
+    {
+      "projection": {
+        "name": "state",
+        "sources": {
+          "configuration": [
+            {
+              "id": 0,
+              "state": "ready",
+              "fields": {
+                "target": 2
+              }
+            }
+          ],
+          "board": [
+            {
+              "id": 1,
+              "state": "finished",
+              "fields": {
+                "lastNumber": 2
+              }
+            }
+          ],
+          "participant": [
+            {
+              "id": 2,
+              "state": "active"
+            },
+            {
+              "id": 4,
+              "state": "active"
+            }
+          ],
+          "promise": [
+            {
+              "id": 7,
+              "state": "fulfilled"
+            },
+            {
+              "id": 9,
+              "state": "fulfilled"
+            }
+          ]
+        },
+        "at": {
+          "seq": 10
+        }
+      }
+    },
+    {
+      "projection": {
+        "name": "activity",
+        "at": {
+          "seq": 10
+        },
+        "sources": {
+          "events": [
+            {
+              "id": 1,
+              "type": "initialize",
+              "state": "sealed"
+            },
+            {
+              "id": 2,
+              "type": "participate",
+              "state": "sealed"
+            },
+            {
+              "id": 3,
+              "type": "activate",
+              "state": "sealed"
+            },
+            {
+              "id": 4,
+              "type": "participate",
+              "state": "sealed"
+            },
+            {
+              "id": 5,
+              "type": "activate",
+              "state": "sealed"
+            },
+            {
+              "id": 6,
+              "type": "start",
+              "state": "sealed"
+            },
+            {
+              "id": 7,
+              "type": "commit",
+              "state": "sealed"
+            },
+            {
+              "id": 8,
+              "type": "fulfill",
+              "state": "sealed"
+            },
+            {
+              "id": 9,
+              "type": "commit",
+              "state": "sealed"
+            },
+            {
+              "id": 10,
+              "type": "fulfill",
+              "state": "sealed"
+            }
+          ]
         }
       }
     }

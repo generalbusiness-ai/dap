@@ -12,11 +12,13 @@ import { runApplicationScenario } from "../src/application-scenarios.ts";
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 test("maintained Counter and Lending packages bind their current browser definition and own all screen resources", async () => {
   for (const [config, pin, steps, through] of [
-    ["apps/counter/dap.application.json", COUNTING_COMMITMENTS_DEFINITION, 15, 10],
-    ["examples/lending/dap.application.json", LENDING_DEFINITION, 11, 4],
+    ["apps/counter/dap.application.json", COUNTING_COMMITMENTS_DEFINITION, 18, 10],
+    ["examples/lending/dap.application.json", LENDING_DEFINITION, 14, 4],
   ] as const) {
     const prepared = await prepareApplicationDirectory(root, secretSigner(new Uint8Array(32).fill(254)), { config });
     const packet = prepared.packet;
+    expect(packet.package.v).toBe(2);
+    expect(Object.keys(packet.package.semantic.projections)).toEqual(["activity", "state"]);
     expect(packet.package.semantic.entry).toBe(pin);
     expect(packet.package.semantic.definitions.map(definition => definition.id)).toEqual([pin]);
     expect(packet.package.semantic.roles["agent"]).not.toContain(config.startsWith("apps/") ? "counting.control" : "lending.staff");
@@ -38,6 +40,7 @@ test("maintained Counter and Lending packages bind their current browser definit
     expect(prepared.scenarios).toHaveLength(1);
     const result = await runApplicationScenario(packet, await readApplicationScenario(prepared.root, prepared.scenarios[0]!));
     expect(result.steps).toBe(steps); expect(result.replay.report).toMatchObject({ result: "consistent", target: { seq: through } });
+    expect(result.projectionChecks).toBe(3);
     expect(result.ownerRecords).toEqual([]);
   }
 });
