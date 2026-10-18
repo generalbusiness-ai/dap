@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/cli/package.json","body":{"commit":"feccbbcfef618ed560e441a7711ce80941b57c22","path":"packages/cli/package.json"}}
+{"kind":"artifact","text":"Merge published the current artifact at packages/cli/src/application-command.ts","body":{"commit":"feccbbcfef618ed560e441a7711ce80941b57c22","path":"packages/cli/src/application-command.ts"}}
