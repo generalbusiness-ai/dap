@@ -448,13 +448,42 @@ It records both clean code heads/trees and verifies ten native judge, genesis,
 guard, rule, fixture, Core, SQLite, turn and replay paths byte-exact with
 reviewed Main `bb3d3062`. There is no copied M1 implementation in G0.
 
+## Maintained standard-check input
+
+`examples/grow/check/` now keeps the config, labelled static fixture page,
+site scenario and room fault scenario. `examples/grow/prepare-check.ts`
+writes a new private directory with those files and canonical native JSON
+generated from the maintained `site.ts` and `room.ts` declarations. There is
+no second hand-maintained copy of either native definition. An explicit
+destination must not exist. Existing files are never replaced.
+
+From the repository root, the preparation command is
+`node --import tsx --disable-warning=DEP0205 examples/grow/prepare-check.ts`.
+The CLI's existing pinned loader supplies tsx. No package is installed.
+The command prints the new directory. That directory is input for the
+reviewed public `dap check` once the M1 foundation lands.
+
+Preparation and the Grow typecheck pass (`36c6ff`). Formatting keeps one
+room step per line and stays within the scenario allowance: 38,915 bytes
+for 199 steps. The site has seven steps. A focused comparison (`69b4e7`)
+shows both generated declarations and every scenario value equal to the
+retained private bridge. Reusing the output directory refuses with EEXIST
+and preserves a marker. This compares prepared data only. It does not claim
+a new native execution or a public check result.
+
+Prepared output is
+`/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/dap-grow-check-1XdNRb`.
+Its preparation log is `/tmp/artroom-g0-maintained-prepare-formatted-20261018.log`.
+No test process remains live against this Grow source. The independently
+frozen M1 foundation gate uses its own worktree and dependency links.
+
 ## Remaining G0 work
 
-The checked declarative fixture must become the package's maintained scenario
-data and run through reviewed public M1. M1's `dap check` remains on its
-separate unlanded developer branch; its browser kit, new/dev and real
-Counter/Lending conversion are still in progress. G0's final witness depends
-on that reviewed public path. No G0 gate or Source submission has run yet.
+The maintained declarative fixture must run through reviewed public M1.
+M1's `dap check` remains on its separate unlanded foundation head. The broad
+developer half's new/dev, bundler and real Counter/Lending conversion remain
+open. G0's final witness depends on the reviewed public check path.
+No G0 gate or Source submission has run yet.
 Gate runs once on
 the completed submitted head before independent review and local landing.
 This is not G0 acceptance, a host install, a native device owner, a real
