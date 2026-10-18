@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/implementation/2026-10-18-archive-fixture-milestone.md","body":{"commit":"fd198c724a53a1f86ee1270fe477ab1d505f4b3f","path":"notes/implementation/2026-10-18-archive-fixture-milestone.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:484d2bdbd8c057f5238edd6a604d4531a77832e1","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-18-archive-fixture-milestone.md."}
