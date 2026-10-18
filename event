@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fd28227e10306788287b5818da3372477e734c6f","text":"Merge retired a covered predecessor; the successor is at apps/counter/scenarios/application.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fd2fef8fdfdca4999bfb273009355a3ac7c47ec1","text":"Merge retired a covered predecessor; the successor is at packages/cli/test/application-new.test.ts."}
