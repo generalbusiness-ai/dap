@@ -1,6 +1,6 @@
 /** Session-authorized declared application read wire. No field here grants
  * authority or changes the native definition pinned by a scope. */
-import type { Digest, ScopeRef } from "./scope.ts";
+import type { Digest, FactRef, ScopeRef, Timestamp } from "./scope.ts";
 import type { Head } from "./result.ts";
 import type { FieldValue } from "./intent.ts";
 export const APPLICATION_PROJECTION_WIRE_BOUNDS = Object.freeze({ queryBytes: 4096, encodedChars: 5462, urlBytes: 8192, sessionChars: 4104,
@@ -13,7 +13,7 @@ export interface ApplicationProjectionQuery {
   readonly projection: string;
   readonly items: Readonly<Record<string, number>>;
 }
-export interface ApplicationProjectionRow {
+interface ApplicationProjectionRowFields {
   readonly id: number;
   readonly type: string;
   readonly state: string;
@@ -21,6 +21,11 @@ export interface ApplicationProjectionRow {
   /** Complete returned data, including nested field values, is frozen. */
   readonly fields: Readonly<Record<string, FieldValue | null>>;
 }
+/** A journal seq is a display identity/revision, never a signable item
+ * revision. A journal row always carries both its explicit fact and time. */
+export type ApplicationProjectionRow = ApplicationProjectionRowFields & (
+  { readonly entry?: never; readonly time?: never } | { readonly entry: Readonly<FactRef>; readonly time: Timestamp }
+);
 export interface ApplicationProjectionData {
   readonly v: 1;
   readonly projection: Digest;

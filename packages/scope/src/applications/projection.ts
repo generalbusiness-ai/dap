@@ -4,7 +4,7 @@ import { APPLICATION_PROJECTION_WIRE_BOUNDS as B, type ApplicationProjectionRefu
 import { canonicalize, isDigest, isRecord, isScopeRef, parseStrict } from "@generalbusiness/artroom-bytes";
 import { applicationJson } from "@generalbusiness/artroom-bytes/application";
 import { timeMs } from "@generalbusiness/dap-derive";
-import { applicationProjectionQueryDigest, ApplicationProjectionError, bindApplicationProjection, readApplicationProjectionQuery } from "@generalbusiness/artroom-bytes/application-v2";
+import { applicationProjectionQueryDigest, ApplicationProjectionError, bindApplicationProjection, isApplicationJournalSource, readApplicationProjectionQuery } from "@generalbusiness/artroom-bytes/application-v2";
 import { ItemQueryBudget } from "../item-query-budget.ts";
 import { PreparationFlights, type PreparationRun } from "../preparation-flight.ts";
 import { preparedSessionRefusal, type QueryVisibility, type SessionPreparation } from "../session-preparation.ts";
@@ -60,12 +60,15 @@ export class ApplicationProjections {
         || !isScopeRef(installed["membership"]) || canonicalize(installed["scope"]) !== canonicalize(frame.scope.at)
         || canonicalize(installed["directory"]) !== canonicalize(query.directory) || canonicalize(installed["membership"]) !== canonicalize(prepared.membership)) return no("query-not-ready");
       const projection = bindApplicationProjection(metadata["projection"], definition.declared);
-      let live = false, hasFinal = false;
-      for (const source of Object.values(projection.sources)) for (const state of source.states) {
-        if (definition.declared.items[source.item]!.states[state]!.final) hasFinal = true; else live = true;
+      let live = false, hasFinal = false, history = false;
+      for (const source of Object.values(projection.sources)) {
+        if (isApplicationJournalSource(source)) { history = true; continue; }
+        for (const state of source.states) {
+          if (definition.declared.items[source.item]!.states[state]!.final) hasFinal = true; else live = true;
+        }
       }
       const visibility: QueryVisibility = live && hasFinal ? "mixed" : hasFinal ? "final" : live ? "live" : "empty";
-      const guard = () => preparedSessionRefusal(c, frame, reader, visibility, prepared.membership, prepared.resolvedBirth);
+      const guard = () => preparedSessionRefusal(c, frame, reader, visibility, prepared.membership, prepared.resolvedBirth, history);
       if (!frame.current() || !run.active()) return no("unavailable");
       const denied = guard(); if (denied !== null) return no(denied);
       const projected = applicationProjectionData(c.sql, frame, projection, query.items, run.active);

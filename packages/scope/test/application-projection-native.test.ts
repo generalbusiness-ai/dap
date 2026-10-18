@@ -6,13 +6,13 @@ import { env, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { canonicalize, isSeed, scopeIdOf } from "@generalbusiness/artroom-bytes";
 import { encodeApplicationProjectionQuery, readApplicationProjectionReply } from "@generalbusiness/artroom-bytes/application-v2";
-import { DOMAINS, PROPOSED_BOUNDS, type ApplicationProjectionQuery, type ScopeRef } from "@generalbusiness/dap-contract";
+import { DOMAINS, ITEM_QUERY_BOUNDS, PROPOSED_BOUNDS, type ApplicationProjectionQuery, type ScopeRef } from "@generalbusiness/dap-contract";
 import { DECLARED_APPLICATION_COHORT as C } from "@generalbusiness/dap-platform";
 import { requestSession, sessionRequest, ScopeHandle, httpTransport, bindingTransport, secretSigner, signedApplicationInstall, ApplicationPackageError, type ServiceBinding } from "@generalbusiness/artroom-client";
 import { McpService, memoryStore as custodyStore, type ServerPort } from "@generalbusiness/dap-mcp";
 import nativeWorker from "../../../apps/room/worker.ts";
 import { outsideOf as hostOutside } from "../src/worker.ts";
-import { applicationCounterPacket2 } from "./support/application-v2-fixture.ts";
+import { applicationCounterJournalPacket2 } from "./support/application-v2-fixture.ts";
 import { applicationResolverFixture } from "./support/application-fixture.ts";
 import { applicationHttpPeer } from "./support/application-http-peer.ts";
 import { sessionRoom } from "./support/session-room.ts";
@@ -28,12 +28,12 @@ import { sessionReferencesIn } from "../src/namespace.ts";
 import { ApplicationProjections } from "../src/applications/projection.ts";
 import { applicationDeclarationsIn } from "../src/applications/projection-source.ts";
 import { SqliteStore, type SqlValue } from "../src/sqlite.ts";
-import type { Sessions } from "../src/sessions.ts";
+import { authenticateSession, mintSession, readerOf, type Sessions } from "../src/sessions.ts";
 
 test("native installed projection reads exact journal state and survives R2 deletion and eviction", async () => {
   const room = await sessionRoom(C.register), { life, R, D, children } = room, [M, A, G] = children;
   if (!M || !A || !G) throw Error("The native cohort needs its three siblings.");
-  const packet = await applicationCounterPacket2("state = 'open'", "native"), f = await applicationResolverFixture("sha1", undefined, {}, undefined, packet);
+  const packet = await applicationCounterJournalPacket2("state = 'open'", "native"), f = await applicationResolverFixture("sha1", undefined, {}, undefined, packet);
   const peer = applicationHttpPeer(f), bindings = { SCOPES: env.PLATFORM, APPLICATION_CONTENT: env.APPLICATION_CONTENT, APPLICATION_TRUST: JSON.stringify(f.trust) };
   try {
     const seat = await life.wait(() => M.did(rita, "seat", { expected: { roster: 1 } }));
@@ -70,6 +70,7 @@ test("native installed projection reads exact journal state and survives R2 dele
     const session = await life.owner.required(() => requestSession("https://scopes.test", M.name, asked, { fetch: routed }));
     expect(session.ok).toBe(true); if (!session.ok) return;
     const query: ApplicationProjectionQuery = { v: 1, scope: await life.wait(() => app.at()), directory: await life.wait(() => D.at()), install: job, projection: "board", items: {} };
+    const activityQuery = { ...query, projection: "activity" };
     const metadata = await life.wait(() => (A.object as unknown as { applicationProjectionDeclaration(directory: ScopeRef, item: number, name: string): Promise<unknown> }).applicationProjectionDeclaration(query.directory, job, "board"));
     expect(metadata).toMatchObject({ projection: packet.package.semantic.projections["board"] });
     expect(await life.wait(() => (D.object as unknown as { applicationRoom(): Promise<unknown> }).applicationRoom())).toEqual({ directory: query.directory, rules: await life.wait(() => A.at()) });
@@ -82,12 +83,34 @@ test("native installed projection reads exact journal state and survives R2 dele
     });
     expect(await read(query, null)).toMatchObject({ status: 403, value: { ok: false, reason: "forbidden" } });
     expect(await read()).toMatchObject({ status: 409, value: { ok: false, reason: "incomplete" } });
+    const emptyActivity = await read(activityQuery);
+    expect(emptyActivity.value).toMatchObject({ ok: true, value: { sources: { events: [] } } });
+    if (!emptyActivity.value?.ok) throw Error("An empty recent journal selection must be readable.");
+    const emptyViews = new McpService({ ...port, custody: custodyStore(), declaredViews: { bytes: packet.bytes, release: packet.ids.release, item: job } });
+    const emptyOpening = await life.wait(() => emptyViews.call("view_activity", { view: "empty-activity" }));
+    expect(emptyOpening.structuredContent).toMatchObject({ status: "empty", identity: null });
+    expect(emptyOpening.content[0]!.text).toContain("no matching entries in its recent window");
+    expect(emptyOpening.structuredContent).not.toHaveProperty("data");
+    expect((await life.wait(() => emptyViews.call("view_read", { view: "empty-activity" }))).structuredContent).toMatchObject({ display: {
+      status: "empty", data: emptyActivity.value.value, context: { projection: [{ scope: app.name, ...emptyActivity.value.value.at }], entriesRead: [] },
+    } });
     await life.wait(() => app.did(rita, "initialize", { expected: { configuration: 1 } }));
     const first = await read();
     expect(first.status, first.raw).toBe(200); expect(first.value?.ok).toBe(true); if (!first.value?.ok) return;
     expect(first.value.value.sources["board"]).toMatchObject([{ type: "board", state: "paused", revision: 1, fields: { lastNumber: 0 } }]);
     expect(first.value.value.at).toEqual((await life.wait(() => app.summary())).at);
     expect(first.raw).toBe(canonicalize(first.value));
+    const activity = await read(activityQuery);
+    expect(activity.status, activity.raw).toBe(200);
+    expect(activity.value).toMatchObject({ ok: true, value: { at: first.value.value.at, sources: { events: [{ type: "initialize", state: "sealed", fields: { actor: { membership } } }] } } });
+    if (!activity.value?.ok) throw Error("The native activity projection must be readable.");
+    expect(activity.value.value.sources["events"]![0]!.entry).toEqual({ at: query.scope, seq: first.value.value.at.seq, hash: first.value.value.at.hash });
+    // Local issuer fixture removes only history from the actual issued claims.
+    const actual = authenticateSession(() => room.sessions, session.session.reader());
+    if (!("claims" in actual)) throw Error("The original native-issued session must open.");
+    expect(activity.value.value.sources["events"]![0]!.fields["actor"]).toEqual({ membership, member: actual.claims.member });
+    const noHistory = readerOf(mintSession(room.sessions, { ...actual.claims, reads: actual.claims.reads.filter(read => read !== "history") }));
+    expect(await read(activityQuery, noHistory)).toMatchObject({ status: 403, value: { ok: false, reason: "forbidden" } });
     const mcpRead = await life.wait(() => mcp.reads.projection(membership, query));
     expect(canonicalize(mcpRead)).toBe(first.raw);
     expect((await life.wait(() => mcp.call("application_installation", { item: job }))).structuredContent).toMatchObject({ item: job, state: "active", scope: query.scope });
@@ -98,6 +121,7 @@ test("native installed projection reads exact journal state and survives R2 dele
       expect(bytes).toBe(first.raw);
       const value = await life.owner.required(() => new ScopeHandle(transport, app.name, session.session.reader()).applicationProjection(query));
       expect(value).toEqual(first.value);
+      expect(await life.owner.required(() => transport.applicationProjection(app.name, session.session.reader(), encodeApplicationProjectionQuery(activityQuery)!))).toBe(activity.raw);
     }
     expect(await read({ ...query, install: job + 100 })).toMatchObject({ status: 409, value: { ok: false, reason: "query-not-ready" } });
     const ads = peer.ads(); await env.APPLICATION_CONTENT.delete(f.key);
@@ -107,25 +131,29 @@ test("native installed projection reads exact journal state and survives R2 dele
     // session-configuration loss is scripted; it changes no roster or key.
     const finalAuthority = await life.wait(() => runInDurableObject(app.object, async (_instance, state) => {
       const results = [];
-      for (const fault of [false, true]) {
+      for (const kind of ["board", "activity"]) for (const fault of kind === "board" ? ["none", "sessions"] : ["none", "sessions", "oversize"]) {
         const raw = { exec: (sql: string, ...args: SqlValue[]) => state.storage.sql.exec(sql, ...args), transaction: <T>(work: () => T) => state.storage.transactionSync(work) };
         const store = new SqliteStore(raw), core = new Scope(app.name, store, production(), PROPOSED_BOUNDS);
         let sessions: Sessions | null = room.sessions, bodies = 0;
         const sql = { exec(text: string, ...args: SqlValue[]) {
           const cursor = raw.exec(text, ...args);
-          if (text.startsWith("SELECT record FROM item")) { bodies++; if (fault) sessions = null; }
+          if (fault === "oversize" && text.startsWith("SELECT seq,hash,time,size FROM entry WHERE")) {
+            const rows = cursor.toArray();
+            return { toArray: () => rows.map((row, i) => i === 0 ? { ...row, size: ITEM_QUERY_BOUNDS.payloadBytes + 1 } : row) };
+          }
+          if (text.startsWith(kind === "board" ? "SELECT record FROM item" : "SELECT bytes FROM entry WHERE seq=? AND hash=?")) { bodies++; if (fault === "sessions") sessions = null; }
           return cursor;
         } };
         const preparation = new ReadPreparation(sql, { policy: () => "projection-authority-test-v1", declared: bytes => core.validate(bytes), platform: named => core.platform(named) });
         const sessionPreparation = new SessionPreparation(preparation, () => sessions, net.clock, sessionReferencesIn(env.PLATFORM));
         const owner = new ApplicationProjections({ name: app.name, sql, sessions: () => sessions, clock: net.clock, sessionPreparation,
           flights: new PreparationFlights(), source: applicationDeclarationsIn(env.PLATFORM) });
-        results.push({ fault, result: await owner.read(encodeApplicationProjectionQuery(query), session.session.reader()), bodies });
+        results.push({ kind, fault, result: await owner.read(encodeApplicationProjectionQuery({ ...query, projection: kind }), session.session.reader()), bodies });
       }
       return results;
     }));
-    expect(finalAuthority.map(row => row.result.ok ? "ok" : row.result.reason)).toEqual(["ok", "sessions-unavailable"]);
-    expect(finalAuthority.map(row => row.bodies)).toEqual([1, 1]);
+    expect(finalAuthority.map(row => row.result.ok ? "ok" : row.result.reason)).toEqual(["ok", "sessions-unavailable", "ok", "sessions-unavailable", "too-large"]);
+    expect(finalAuthority.map(row => row.bodies)).toEqual([1, 1, first.value.value.at.seq + 1, first.value.value.at.seq + 1, 0]);
     const board = first.value.value.sources["board"]![0]!;
     await life.wait(() => app.did(rita, "reset", { on: board.id, expected: { on: board.revision }, fields: { generation: 1 } }));
     const updated = await read(); expect(updated.status, updated.raw).toBe(200); if (!updated.value?.ok) return;
@@ -140,6 +168,15 @@ test("native installed projection reads exact journal state and survives R2 dele
     expect((await life.wait(() => views.call("view_board", { view: "paused" }))).isError).toBe(false);
     const paused = await life.wait(() => views.call("view_read", { view: "paused" }));
     expect(paused.structuredContent).toMatchObject({ display: { card: { declared: { data: updated.value.value } } } });
+    const currentActivity = await read(activityQuery);
+    if (!currentActivity.value?.ok) throw Error("The updated activity projection must be readable.");
+    expect((await life.wait(() => views.call("view_activity", { view: "activity" }))).isError).toBe(false);
+    expect((await life.wait(() => views.call("view_read", { view: "activity" }))).structuredContent).toMatchObject({ display: {
+      query: { page: "item" }, card: { identity: { kind: "entry", at: {} }, actions: [], declared: { kind: "log", data: currentActivity.value.value } },
+      context: { entriesRead: [], reviewIntended: [] },
+    } });
+    expect((await life.wait(() => views.call("view_act", { view: "activity", cut: 0, action: "pause" }))).structuredContent).toMatchObject({ error: "view", reason: "shape" });
+    expect(viewSignatures).toBe(0);
     const start = async () => {
       const current = (await read()).value;
       if (!current?.ok) throw Error("The board must be readable before the native control.");

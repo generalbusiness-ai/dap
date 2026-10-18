@@ -22,13 +22,30 @@ export async function applicationCounterPacket2(when = "state = 'open'", version
 }
 
 /** Same native definition, with declared card/record navigation. */
-export async function applicationCounterNavigationPacket2() {
-  const packet = await applicationCounterPacket2(), board = packet.package.presentation.views["board"]!;
+export async function applicationCounterNavigationPacket2(journal = false) {
+  const packet = journal ? await applicationCounterJournalPacket2() : await applicationCounterPacket2(), board = packet.package.presentation.views["board"]!;
   if (board.kind === "surface") throw Error("The fixture needs an item view.");
   const { creates: _creates, ...semantic } = packet.package.semantic;
   const { semantic: _semantic, ...presentation } = packet.package.presentation;
   return packApplication2({ name: "test.declared-navigation", version: "1", semantic, presentation: { ...presentation, views: {
-    board: { ...board, back: "record" }, record: { ...board, kind: "record", display: "fullscreen", back: "board" },
+    ...presentation.views, board: { ...board, back: "record" }, record: { ...board, kind: "record", display: "fullscreen", back: "board" },
   } } }, signer);
+}
+
+/** Real native activity read, with a readonly declared entry log. */
+export async function applicationCounterJournalPacket2(when = "state = 'open'", version = "1") {
+  const packet = await applicationCounterPacket2(when, version);
+  const { creates: _creates, ...semantic } = packet.package.semantic;
+  const { semantic: _semantic, ...presentation } = packet.package.presentation;
+  return packApplication2({ name: "test.declared-journal", version, semantic: { ...semantic, projections: { ...semantic.projections,
+    activity: readApplicationProjection({ v: 1, definition: semantic.entry, revision: "revision", sources: { events: {
+      read: "entries", acts: ["initialize", "pause", "reset", "start"], window: 32, limit: 32, latestBy: null, fields: {
+        actor: { from: { kind: "signer", name: "member" }, of: { type: "member" }, nullable: true },
+      },
+    } } }),
+  } }, presentation: { ...presentation, views: { ...presentation.views, activity: {
+    kind: "log", projection: "activity", item: "events", revision: "revision", title: "type", summary: null, actor: "actor", facts: ["time"], acts: [],
+    context: "Entry {id}: {type}", fallback: "Entry {id}: {type}", waiting: {}, refresh: 2000, display: "fullscreen", back: "board",
+  } } } }, signer);
 }
 

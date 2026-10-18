@@ -4,7 +4,7 @@ import type { DeclaredDefinition, FieldType } from "@generalbusiness/dap-contrac
 import { canonicalize, definitionDigest, parseStrict } from "./index.ts";
 import { applicationJson } from "./application-json.ts";
 import { APPLICATION_PACKAGE_LIMITS } from "./application-types.ts";
-import { ApplicationProjectionError, readApplicationProjection, type ApplicationReadProjection } from "./application-projection.ts";
+import { ApplicationProjectionError, isApplicationJournalSource, readApplicationProjection, type ApplicationReadProjection } from "./application-projection.ts";
 
 /** Both arguments are owned before inspection. The definition must also pass
  * the native validator at admission; this check adds the projection binding.
@@ -16,6 +16,23 @@ export function bindApplicationProjection(value: unknown, definition: DeclaredDe
     const owned = parseStrict(applicationJson(definition, APPLICATION_PACKAGE_LIMITS.definitionBytes)) as DeclaredDefinition;
     if (definitionDigest(owned) !== projection.definition) return fail();
     for (const source of Object.values(projection.sources)) {
+      if (isApplicationJournalSource(source)) {
+        for (const kind of source.acts) {
+          const act = Object.hasOwn(owned.acts, kind) ? owned.acts[kind] : undefined;
+          if (!act || kind === owned.genesis) return fail();
+          for (const field of Object.values(source.fields)) {
+            if (field.from.kind === "signer") {
+              if (!field.nullable || canonicalize(field.of) !== canonicalize({ type: "member" })) return fail();
+              continue;
+            }
+            const slot = Object.hasOwn(act.fields, field.from.name) ? act.fields[field.from.name] : undefined;
+            if (!slot) return fail();
+            const { required, default: _default, ...type } = slot;
+            if (type.type === "text" && type.detached || field.nullable !== !required || canonicalize(field.of) !== canonicalize(type)) return fail();
+          }
+        }
+        continue;
+      }
       const item = Object.hasOwn(owned.items, source.item) ? owned.items[source.item] : undefined;
       if (!item || source.states.some(state => !Object.hasOwn(item.states, state))) return fail();
       for (const field of Object.values(source.fields)) {

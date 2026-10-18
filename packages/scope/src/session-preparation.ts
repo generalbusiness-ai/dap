@@ -23,14 +23,14 @@ const refused = (reason: Extract<SessionPreparationResult, { ok: false }>["reaso
 export function preparedSessionAllows(config: { sessions(): Sessions | null; clock: Clock }, frame: PreparedRead, reader: unknown, visibility: QueryVisibility, membership: ScopeRef, resolvedBirth = false): boolean {
   return preparedSessionRefusal(config, frame, reader, visibility, membership, resolvedBirth) === null;
 }
-export function preparedSessionRefusal(config: { sessions(): Sessions | null; clock: Clock }, frame: PreparedRead, reader: unknown, visibility: QueryVisibility, membership: ScopeRef, resolvedBirth = false): "unavailable" | "forbidden" | "sessions-unavailable" | "clock-behind" | null {
+export function preparedSessionRefusal(config: { sessions(): Sessions | null; clock: Clock }, frame: PreparedRead, reader: unknown, visibility: QueryVisibility, membership: ScopeRef, resolvedBirth = false, history = false): "unavailable" | "forbidden" | "sessions-unavailable" | "clock-behind" | null {
   if (!frame.budget.available) return "unavailable";
   const fresh = authenticateSession(() => config.sessions(), reader);
   if (!("claims" in fresh)) return fresh.refused || "forbidden";
   if (!same(fresh.claims.membership, membership)) return "forbidden";
   const clock = sessionClock(config, frame.scope, fresh.claims);
   if (clock !== null) return clock === "clock-behind" ? clock : "forbidden";
-  return sessionAllowsVisibility(fresh.claims.reads, visibility) && (!resolvedBirth || fresh.claims.reads.includes("summary")) ? null : "forbidden";
+  return sessionAllowsVisibility(fresh.claims.reads, visibility) && (!resolvedBirth || fresh.claims.reads.includes("summary")) && (!history || fresh.claims.reads.includes("history")) ? null : "forbidden";
 }
 
 const freeze = (value: unknown): void => { if (value && typeof value === "object") { for (const child of Object.values(value)) freeze(child); Object.freeze(value); } };

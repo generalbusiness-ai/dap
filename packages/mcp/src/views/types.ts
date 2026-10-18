@@ -1,5 +1,5 @@
 import type { PresentationPackage, ViewKind } from "./resources.ts";
-import type { ApplicationProjectionData, FieldValue } from "@generalbusiness/dap-contract";
+import type { ApplicationProjectionData, FactRef, FieldValue } from "@generalbusiness/dap-contract";
 import type { ApplicationView } from "@generalbusiness/artroom-bytes/application-v2";
 
 export type PageKind = "summary" | "item" | "diff" | "updates";
@@ -46,12 +46,14 @@ export interface Card {
   /** Generic declared presentation; all data stays on the app-only path. */
   declared?: {
     kind: ApplicationView["kind"];
+    source: string;
     context: string;
     actor: FieldValue | null;
     refresh: number;
     display: "inline" | "fullscreen";
     back: string | null;
     data: ApplicationProjectionData;
+    log?: readonly { entry: Readonly<FactRef>; time: string; title: string; summary: string; facts: readonly string[] }[];
     resource?: string;
     opens?: Readonly<Record<string, string>>;
   };
@@ -70,6 +72,8 @@ export interface Projection {
   card?: Card;
   /** Useful fallback when no card is available. */
   fallback: string;
+  /** Empty declared views still retain their exact native data and head. */
+  data?: ApplicationProjectionData;
 }
 /** A trusted application's projection adapter. Reads use the service's normal authenticated tool path. */
 export interface ViewSource {
@@ -108,6 +112,7 @@ export interface Display {
   count: number;
   card?: Omit<Card, "actions"> & { actions: Pick<CardAction, "id" | "label" | "purpose">[] };
   fallback: string;
+  data?: ApplicationProjectionData;
   context: CardContext;
   receipt?: string;
 }

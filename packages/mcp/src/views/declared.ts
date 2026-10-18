@@ -3,7 +3,7 @@
 import type { ApplicationProjectionQuery, ApplicationProjectionRead, ApplicationProjectionRow, Digest, FieldValue } from "@generalbusiness/dap-contract";
 import { canonicalize } from "@generalbusiness/artroom-bytes";
 import type { ApplicationInstallation } from "@generalbusiness/artroom-bytes/application";
-import { applicationProjectionId, readApplicationPackage2, type ApplicationView, type PackedApplication2 } from "@generalbusiness/artroom-bytes/application-v2";
+import { applicationProjectionId, isApplicationJournalSource, readApplicationPackage2, type ApplicationView, type PackedApplication2 } from "@generalbusiness/artroom-bytes/application-v2";
 import { admit, evaluate, RuleEvalError } from "@generalbusiness/dap-derive/rule";
 import { ViewError } from "./session.ts";
 import type { Card, CardAction, Projection, ViewQuery, ViewSource } from "./types.ts";
@@ -17,7 +17,7 @@ export interface DeclaredViewPort {
   actions(): Promise<readonly string[]>;
 }
 const text = (value: unknown): string => value === null || value === undefined ? "" : typeof value === "string" ? value : canonicalize(value);
-const input = (row: ApplicationProjectionRow): Record<string, FieldValue | null> => ({ ...row.fields, id: row.id, type: row.type, state: row.state, revision: row.revision });
+const input = (row: ApplicationProjectionRow): Record<string, FieldValue | null> => ({ ...row.fields, id: row.id, type: row.type, state: row.state, revision: row.revision, ...(row.entry ? { time: row.time! } : {}) });
 const template = (source: string, row: ApplicationProjectionRow, waiting: string): string => {
   const values = { ...input(row), waiting };
   return source.replace(/\{([^{}]+)\}/g, (_whole, key: string) => text(Object.hasOwn(values, key) ? values[key as keyof typeof values] : null));
@@ -53,10 +53,11 @@ export class DeclaredViewSource implements ViewSource {
     if (reply.value.projection !== applicationProjectionId(projection) || canonicalize(reply.value.scope) !== canonicalize(install.scope)) throw new ViewError("unavailable", "The read does not name this declared projection and scope.");
     const rows = reply.value.sources[view.item];
     if (!rows) throw new ViewError("unavailable", "The read omitted the declared item source.");
+    if (rows.some(row => isApplicationJournalSource(projection.sources[view.item]!) !== !!row.entry)) throw new ViewError("unavailable", "The read confused journal entries with native items.");
     return { view, install, reply, rows };
   }
   async #allowed(view: ApplicationView, row: ApplicationProjectionRow): Promise<CardAction[]> {
-    if (view.kind === "surface") return [];
+    if (view.kind === "surface" || !view.acts.length) return [];
     const held = await this.port.actions(), actions: CardAction[] = [];
     for (const control of view.acts) {
       if (!held.includes(control.needs)) continue;
@@ -69,18 +70,24 @@ export class DeclaredViewSource implements ViewSource {
   }
   async read(query: ViewQuery): Promise<Projection> {
     const { view, install, reply, rows } = await this.#read(query);
-    if (!rows.length) return { status: "empty", position: 0, count: 0, fallback: "This declared view has no matching items." };
+    if (!rows.length) return { status: "empty", position: 0, count: 0, data: reply.value,
+      fallback: view.kind === "log" ? "This declared log has no matching entries in its recent window." : "This declared view has no matching items." };
     if (!Number.isSafeInteger(query.position) || query.position < 0 || query.position >= rows.length) throw new ViewError("shape", "The declared view position is outside its complete projection.");
     const row = rows[query.position]!, values = input(row), waiting = Object.hasOwn(view.waiting, row.state) ? template(view.waiting[row.state]!, row, "") : "";
     const fallback = template(view.fallback, row, waiting), actions = await this.#allowed(view, row);
     for (const action of actions) action.args = { target: install.scope.scope, on: row.id, at: { on: row.revision }, digest: install.definition };
     const card: Card = {
-      identity: { item: String(row.id), kind: row.type, revision: String(row.revision), subject: { scope: install.scope.scope, item: row.id }, at: { on: row.revision } },
+      identity: { item: String(row.id), kind: row.entry ? "entry" : row.type, revision: String(row.revision), subject: { scope: install.scope.scope, ...(row.entry ? {} : { item: row.id }) }, at: row.entry ? {} : { on: row.revision } },
       title: view.kind === "surface" ? query.screen : text(values[view.title]), summary: view.kind === "surface" || view.summary === null ? "" : text(values[view.summary]),
       reasons: view.kind === "surface" ? [] : view.facts.map(name => `${name}: ${text(values[name])}`),
       projection: [{ scope: install.scope.scope, ...reply.value.at }], reviewIntended: [], unavailable: [], waitsOn: waiting ? [waiting] : [], settles: [], actions, fallback,
-      declared: { kind: view.kind, context: template(view.context, row, waiting), actor: view.kind === "surface" || view.actor === null ? null : values[view.actor] ?? null,
+      declared: { kind: view.kind, source: view.item, context: template(view.context, row, waiting), actor: view.kind === "surface" || view.actor === null ? null : values[view.actor] ?? null,
         refresh: view.refresh, display: view.display, back: view.back, data: reply.value,
+        ...(view.kind === "log" ? { log: rows.map(row => {
+          if (!row.entry || !row.time) throw new ViewError("unavailable", "A log needs explicit sealed entry facts.");
+          const values = input(row);
+          return { entry: row.entry, time: row.time, title: text(values[view.title]), summary: view.summary === null ? "" : text(values[view.summary]), facts: view.facts.filter(name => name !== "time").map(name => `${name}: ${text(values[name])}`) };
+        }) } : {}),
         ...(view.kind === "surface" ? { resource: view.resource, opens: view.opens } : {}) },
     };
     return { status: "ready", position: query.position, count: rows.length, card, fallback };

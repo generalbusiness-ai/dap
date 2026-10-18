@@ -5,6 +5,7 @@ import { isRecord, parseStrict } from "./index.ts";
 import { applicationJson } from "./application-json.ts";
 import { APPLICATION_PACKAGE_LIMITS, type ApplicationDefinition } from "./application-types.ts";
 import { bindApplicationProjection } from "./application-projection-binding.ts";
+import { isApplicationJournalSource } from "./application-projection-types.ts";
 import type { ApplicationReadProjection } from "./application-projection-types.ts";
 import { applicationViewTemplateFields, ApplicationViewError, readApplicationViews, type ApplicationViews } from "./application-view.ts";
 
@@ -23,14 +24,16 @@ export function bindApplicationViews(value: unknown, projections: Readonly<Recor
       const definition = parseStrict(part.bytes) as DeclaredDefinition;
       const bound = bindApplicationProjection(projection, definition);
       if (!Object.hasOwn(bound.sources, view.item)) return fail();
-      const source = bound.sources[view.item]!, item = definition.items[source.item]!;
-      const fields = new Set(["id", "type", "state", "revision", ...Object.keys(source.fields)]);
+      const source = bound.sources[view.item]!, journal = isApplicationJournalSource(source);
+      const item = journal ? null : definition.items[source.item]!;
+      if (view.kind === "log" && !journal || journal && view.acts.length) return fail();
+      const fields = new Set(["id", "type", "state", "revision", ...(journal ? ["time"] : []), ...Object.keys(source.fields)]);
       const template = (text: string, waiting: boolean) => {
         if (applicationViewTemplateFields(text).some(name => !fields.has(name) && !(waiting && name === "waiting"))) return fail();
       };
       template(view.context, true); template(view.fallback, true);
       for (const [state, text] of Object.entries(view.waiting)) {
-        if (!Object.hasOwn(item.states, state)) return fail();
+        if (item ? !Object.hasOwn(item.states, state) : state !== "sealed") return fail();
         template(text, false);
       }
       if (view.back !== null && !Object.hasOwn(views, view.back)) return fail();
@@ -41,7 +44,7 @@ export function bindApplicationViews(value: unknown, projections: Readonly<Recor
         if (view.actor !== null && (!Object.hasOwn(source.fields, view.actor) || source.fields[view.actor]!.of.type !== "member")) return fail();
         for (const offered of view.acts) {
           const act = Object.hasOwn(definition.acts, offered.act) ? definition.acts[offered.act] : undefined;
-          if (!act || act.on !== source.item || act.grant !== offered.needs || !isRecord(act.fields)) return fail();
+          if (isApplicationJournalSource(source) || !act || act.on !== source.item || act.grant !== offered.needs || !isRecord(act.fields)) return fail();
           // Compact controls have no field editor or undisclosed arguments.
           if (Object.values(act.fields).some(field => field.required && !Object.hasOwn(field, "default"))) return fail();
         }

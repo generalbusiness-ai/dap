@@ -8,6 +8,8 @@ import { applicationJson } from "./application-json.ts";
 import { ApplicationPackageError } from "./application-types.ts";
 import { bindApplicationProjection } from "./application-projection-binding.ts";
 import { APPLICATION_PROJECTION_LIMITS as B, ApplicationProjectionError, applicationProjectionId, readApplicationProjection, type ApplicationProjectionData, type ApplicationProjectionRow, type ApplicationReadProjection } from "./application-projection.ts";
+import { isApplicationJournalSource } from "./application-projection-types.ts";
+import { projectApplicationJournalRead } from "./application-journal-projection.ts";
 
 const fail = (reason: ApplicationProjectionError["reason"] = "invalid"): never => { throw new ApplicationProjectionError(reason); };
 const own = (value: unknown, most: number): unknown => {
@@ -28,6 +30,7 @@ export function applicationProjectionQueries(projection: ApplicationReadProjecti
   if (Object.keys(selected).sort().join() !== explicit.join()) return fail();
   const queries: Record<string, ItemQuery> = {};
   for (const [name, source] of Object.entries(checked.sources)) {
+    if (isApplicationJournalSource(source)) continue;
     const given = selected[name];
     const query: ItemQuery = { v: 1, scope: ownedScope, type: source.item, states: source.states,
       ids: source.read === "item" ? [given as number] : null, limit: source.limit, cursor: null };
@@ -41,13 +44,21 @@ export function applicationProjectionQueries(projection: ApplicationReadProjecti
  * A truncated page never becomes a successful partial projection. Retained
  * final rows are supplied by the query, rather than omitted via Summary. */
 export function projectApplicationQueryReads(value: unknown, definition: DeclaredDefinition, scope: ScopeRef,
-  items: Readonly<Record<string, number>>, replies: unknown): ApplicationProjectionData {
+  items: Readonly<Record<string, number>>, replies: unknown, journals: Readonly<Record<string, unknown>> = {}): ApplicationProjectionData {
   const projection = bindApplicationProjection(value, definition), queries = applicationProjectionQueries(projection, scope, items);
   const owned = own(replies, ITEM_QUERY_BOUNDS.payloadBytes * B.sources + B.metadataBytes);
   if (!isRecord(owned) || Object.keys(owned).sort().join() !== Object.keys(queries).sort().join()) return fail();
   let at: Head | null = null;
   const sources: Record<string, ApplicationProjectionRow[]> = {};
+  const journalNames = Object.entries(projection.sources).filter(([, source]) => isApplicationJournalSource(source)).map(([name]) => name).sort();
+  const journalReads = own(journals, (2 * B.resultBytes + B.metadataBytes) * B.sources);
+  if (!isRecord(journalReads) || Object.keys(journalReads).sort().join() !== journalNames.join()) return fail();
   for (const [name, source] of Object.entries(projection.sources)) {
+    if (isApplicationJournalSource(source)) {
+      const result = projectApplicationJournalRead(source, definition, scope, journalReads[name]);
+      if (at !== null && canonicalize(at) !== canonicalize(result.at)) return fail("stale");
+      at = result.at; sources[name] = result.rows; continue;
+    }
     const reply = owned[name];
     if (!itemQueryReadFor(reply, queries[name]!)) return fail();
     if (!reply.ok) return fail("unavailable");

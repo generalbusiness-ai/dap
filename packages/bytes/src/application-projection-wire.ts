@@ -1,7 +1,8 @@
 /** Canonical bounded projection requests/replies. These forms authenticate
  * no viewer; a native read owner owes authorization and coverage. */
 import { APPLICATION_PROJECTION_REFUSALS, APPLICATION_PROJECTION_WIRE_BOUNDS as B, type ApplicationProjectionData, type ApplicationProjectionQuery, type ApplicationProjectionRead } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, digestBytes, isDigest, isFieldValue, isHead, isRecord, isScopeRef, parseStrict, parseStrictBytes, unb64url, utf8 } from "./index.ts";
+import { b64url, canonicalize, digestBytes, isDigest, isFactRef, isFieldValue, isHead, isRecord, isScopeRef, parseStrict, parseStrictBytes, unb64url, utf8 } from "./index.ts";
+import { timeMs } from "./ids.ts";
 import type { Digest } from "@generalbusiness/dap-contract";
 import { applicationJson } from "./application-json.ts";
 const whole = (value: unknown): value is number => typeof value === "number" && Number.isSafeInteger(value) && value >= 0 && !Object.is(value, -0);
@@ -39,8 +40,12 @@ function data(value: unknown): value is ApplicationProjectionData {
     || !isHead(value["at"]) || !isScopeRef(value["scope"]) || !isRecord(value["sources"])) return false;
   const sources = Object.entries(value["sources"]);
   return sources.length > 0 && sources.length <= B.sources && sources.every(([key, rows]) => name(key) && Array.isArray(rows) && rows.length <= B.rows
-    && rows.every((row: unknown, i: number) => isRecord(row) && only(row, "fields,id,revision,state,type") && whole(row["id"]) && whole(row["revision"])
-      && typeof row["type"] === "string" && name(row["type"]) && name(row["state"]) && (i === 0 || rows[i - 1].id < row["id"])
+    && rows.every((row: unknown, i: number) => isRecord(row) && whole(row["id"]) && whole(row["revision"])
+      && (Object.hasOwn(row, "entry") ? only(row, "entry,fields,id,revision,state,time,type") && isFactRef(row["entry"])
+        && row["entry"].seq === row["id"] && row["revision"] === row["id"] && row["state"] === "sealed" && timeMs(row["time"]) !== null
+        && canonicalize(row["entry"].at) === canonicalize(value["scope"]) && projectionName(row["type"])
+        : only(row, "fields,id,revision,state,type") && name(row["type"]) && name(row["state"]))
+      && (i === 0 || rows[i - 1].id < row["id"])
       && isRecord(row["fields"]) && Object.keys(row["fields"]).length <= B.fields
       && Object.entries(row["fields"]).every(([key, field]) => name(key) && (field === null || isFieldValue(field)))));
 }

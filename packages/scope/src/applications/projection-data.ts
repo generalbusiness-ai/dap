@@ -3,7 +3,8 @@
  * caller's. No retry lives here. */
 import type { ApplicationProjectionData, ApplicationProjectionRefusal } from "@generalbusiness/dap-contract";
 import { parseStrict } from "@generalbusiness/artroom-bytes";
-import { applicationProjectionQueries, projectApplicationQueryReads, type ApplicationReadProjection } from "@generalbusiness/artroom-bytes/application-v2";
+import { applicationProjectionQueries, isApplicationJournalSource, projectApplicationQueryReads, type ApplicationReadProjection } from "@generalbusiness/artroom-bytes/application-v2";
+import { applicationProjectionJournal } from "./projection-journal.ts";
 import { ItemQueryBudget } from "../item-query-budget.ts";
 import { itemQueryPage } from "../item-query-page.ts";
 import type { PreparedRead } from "../read-preparation.ts";
@@ -18,7 +19,8 @@ export function applicationProjectionData(sql: Pick<Sql, "exec">, frame: Pick<Pr
   catch { return { ok: false, reason: "invalid-query" }; }
   // Reserve one unchanged native page allowance per source, once, at most
   // eight. No continuation, reset, top-up, retry or borrowing.
-  const pages = Object.entries(queries).map(([name, query]) => ({ name, query, budget: new ItemQueryBudget("session", active) }));
+  const budgets = Object.fromEntries(Object.keys(projection.sources).map(name => [name, new ItemQueryBudget("session", active)]));
+  const pages = Object.entries(queries).map(([name, query]) => ({ name, query, budget: budgets[name]! }));
   const replies: Record<string, unknown> = {};
   for (const page of pages) {
     const answer = itemQueryPage(page.budget.sql("page", sql), frame, page.query, () => page.budget.available, {
@@ -28,5 +30,11 @@ export function applicationProjectionData(sql: Pick<Sql, "exec">, frame: Pick<Pr
     if (!answer.ok) return { ok: false, reason: answer.reason === "row-too-large" || answer.reason === "too-large" ? "too-large" : "unavailable" };
     replies[page.name] = parseStrict(answer.serialized);
   }
-  return { ok: true, value: projectApplicationQueryReads(projection, definition.declared, frame.scope.at, items, replies) };
+  const journals: Record<string, unknown> = {};
+  for (const [name, source] of Object.entries(projection.sources)) if (isApplicationJournalSource(source)) {
+    const read = applicationProjectionJournal(sql, frame, source, budgets[name]!);
+    if (!read.ok) return read;
+    journals[name] = read.value;
+  }
+  return { ok: true, value: projectApplicationQueryReads(projection, definition.declared, frame.scope.at, items, replies, journals) };
 }

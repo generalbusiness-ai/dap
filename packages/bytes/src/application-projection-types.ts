@@ -15,7 +15,7 @@ export interface ApplicationProjectionField {
   readonly of: ProjectionFieldType;
   readonly nullable: boolean;
 }
-export interface ApplicationProjectionSource {
+export interface ApplicationItemProjectionSource {
   /** The native item type. `item` uses an explicit requested item ID; `one`
    * requires a unique matching row; `many` requires the complete bounded set. */
   readonly item: string;
@@ -25,6 +25,23 @@ export interface ApplicationProjectionSource {
   /** id, type, state and revision are native metadata, never field aliases. */
   readonly fields: Readonly<Record<string, ApplicationProjectionField>>;
 }
+export interface ApplicationJournalProjectionSource {
+  /** Filter only within the last window native entries at the captured head. */
+  readonly read: "entries" | "latest-entry";
+  readonly acts: readonly string[];
+  readonly window: number;
+  readonly limit: number;
+  /** Select the last entry per non-null selected field, or all matching
+   * entries when null. latest-entry requires null and limit 1. */
+  readonly latestBy: string | null;
+  readonly fields: Readonly<Record<string, {
+    readonly from: { readonly kind: "field" | "signer"; readonly name: string };
+    readonly of: ProjectionFieldType;
+    readonly nullable: boolean;
+  }>>;
+}
+export type ApplicationProjectionSource = ApplicationItemProjectionSource | ApplicationJournalProjectionSource;
+export const isApplicationJournalSource = (source: ApplicationProjectionSource): source is ApplicationJournalProjectionSource => source.read === "entries" || source.read === "latest-entry";
 export interface ApplicationReadProjection {
   readonly v: 1;
   readonly definition: Digest;

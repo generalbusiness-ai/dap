@@ -108,6 +108,37 @@ try {
     report.cases.push({ label: 'legacy-context-retry-390', signatures: state.signed.length, receiptContext: true, chat: proof.chat });
     await page.close();
   }
+  {
+    const page = await browser.newPage({ viewport: { width: 422, height: 1000 } }), errors = [];
+    page.on('pageerror', error => errors.push(String(error)));
+    await page.goto(host.url + '/?fixture=declared&screen=activity');
+    const app = page.frameLocator('#frame').frameLocator('iframe');
+    await app.getByRole('heading', { name: 'Recent entries', exact: true }).waitFor();
+    await page.waitForFunction(() => window.proof.mode === 'fullscreen' && window.proof.contexts.length > 0);
+    await app.locator('html[data-mode="fullscreen"]').waitFor({ state: 'attached' });
+    await contained(app);
+    assert.equal(await app.locator('.projected-entry').count(), 2);
+    await app.getByRole('heading', { name: 'Entry 4: initialize', exact: true }).waitFor();
+    await app.getByRole('heading', { name: 'Entry 5: reset', exact: true }).waitFor();
+    assert.equal(await app.getByRole('button', { name: 'Pause', exact: true }).count(), 0);
+    assert.equal(await app.getByRole('button', { name: 'Mark reviewed', exact: true }).count(), 0);
+    const context = await page.evaluate(() => window.proof.contexts.at(-1).structuredContent);
+    assert.deepEqual(context.entriesRead, []); assert.deepEqual(context.reviewIntended, []);
+    assert.equal(context.identity.kind, 'entry'); assert.deepEqual(context.identity.at, {});
+    assert.ok(!Object.hasOwn(context.identity.subject, 'item'));
+    const denied = await page.evaluate(async () => {
+      const rpc = async (name, args) => (await fetch('/rpc', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({
+        instance: window.proof.config.id, actor: 'app', request: { jsonrpc: '2.0', id: 900, method: 'tools/call', params: { name, arguments: args } },
+      }) })).json();
+      const read = await rpc('view_read', { view: window.proof.config.id });
+      return rpc('view_act', { view: window.proof.config.id, cut: read.result.structuredContent.display.cut, action: 'pause' });
+    });
+    assert.equal(denied.result.structuredContent.reason, 'shape');
+    assert.deepEqual(errors, []);
+    await page.screenshot({ path: join(out, 'declared-log-390.png') });
+    report.cases.push({ label: 'declared-log-390', entries: 2, readonlyRefusal: 'shape', fullEntryReviewClaim: false });
+    await page.close();
+  }
   await writeFile(join(out, 'report.json'), JSON.stringify(report, null, 2));
   console.log(JSON.stringify(report));
 } finally { await browser?.close(); await host.close(); }

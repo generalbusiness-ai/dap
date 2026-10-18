@@ -126,7 +126,7 @@ export class ViewSessions {
     const entries = query.page === "summary" ? [] : ranges(card?.entries ?? []);
     const context: CardContext = {
       screen: query.screen, page: query.page, status: projection.status, identity: card ? this.#identity(card) : null,
-      projection: card?.projection.map(({ scope, seq, hash }) => ({ scope, seq, hash })) ?? [],
+      projection: card?.projection.map(({ scope, seq, hash }) => ({ scope, seq, hash })) ?? (projection.data ? [{ scope: projection.data.scope.scope, ...projection.data.at }] : []),
       entriesRead: entries, presented: entries.map((range) => ({ ...range })),
       reviewIntended: query.page === "updates" ? structuredClone(card?.reviewIntended ?? []) : [],
       unavailable: structuredClone(card?.unavailable ?? []), waitsOn: [...(card?.waitsOn ?? [])], settles: [...(card?.settles ?? [])],
@@ -136,6 +136,7 @@ export class ViewSessions {
     };
     return structuredClone({ view: instance.key, cut: instance.cut, active: this.#active(instance), query, status: projection.status, position: projection.position, count: projection.count,
       ...(card ? { card: { ...card, actions: card.actions.map(({ id, label, purpose }) => ({ id, label, purpose })) } } : {}), fallback: projection.fallback, context,
+      ...(projection.data ? { data: projection.data } : {}),
       ...(instance.receipt ? { receipt: instance.receipt } : {}) });
   }
   display(key: string) { return this.#display(this.#instance(key)); }

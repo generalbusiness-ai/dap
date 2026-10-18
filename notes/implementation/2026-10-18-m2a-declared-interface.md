@@ -405,6 +405,76 @@ The three-case refresh-only run is retained under
 `1a3c18`). Same pinned browser and scripted native-port boundaries apply.
 Browser typecheck passes and the kit resources were regenerated.
 
+The declared reader now also has explicit journal sources: `entries` and
+`latest-entry`. Each names native acts, a fixed recent window of at most
+100 native entries, selected typed fields, a result limit, and optional
+latest-by-field grouping. That is a complete recent selection, not the
+whole journal prefix or an unbounded presence history. Grouping with an
+unknown/null key refuses; a truncated window or result never succeeds.
+Fields bind to each named act's actual schema; defaults follow the native
+declaration. The optional signer-member field comes from the recorded
+grant's subject. Detached text remains outside this inline read form.
+
+The synchronous owner reads bounded metadata and the aggregate byte count
+before any journal body, then requires exact stored lengths for each body.
+It spends one unchanged native page allowance per source. The pure projector
+checks contiguous window coverage, canonical entry bytes, hashes, links and
+the captured head before selecting fields. Item and journal sources share
+one head and the same final frame/session guard. Journal sources also require
+history permission at the pre-body and final guards; the added guard
+parameter defaults false for existing item-query callers. There is no new
+peer, retry, continuation, provider call or storage write.
+
+Journal rows explicitly carry their fact/time. Their seq is a display
+identity/revision, not an item revision a view may sign. Log views bind only
+to journal sources and cannot declare acts. The generic kit renders selected
+entry fields and offers no item control. It does not claim full original
+entries were presented or reviewed. Empty declared views retain their exact
+native data/head on the app-only path while their opening stays fallback and
+identity only.
+
+The pure journal and affected read/view cases pass (`7fbbeb`, six cases),
+including latest grouping, immutable facts, missing entries, wrong hashes/
+heads, row limits and schema drift. The strengthened wire/package focus
+passes (`6d979f`, three files/six cases). Logs:
+`/tmp/artroom-m2a-journal-codec-first-20261018.log`,
+`/tmp/artroom-m2a-journal-codec-wire-20261018.log`, and
+`/tmp/artroom-m2a-journal-package-compatibility-20261018.log`.
+
+The real native witness now installs the package with a journal declaration,
+reads actual initialize/reset entries and their recorded member, and checks
+the same canonical reply across native HTTP and SDK service binding. Its
+declared log carries the same current data, refuses Pause before signing,
+and retains empty data/head before initialization. The local issuer fixture
+removes only history from the actual issued claims for its refusal control.
+Post-body session loss refuses for both item and journal reads. Oversized
+journal metadata refuses before any journal body (zero body reads). This
+case and affected session preparation pass (`70917`, terminal `3a40e2`,
+exit 0), two files/two cases. Log:
+`/tmp/artroom-m2a-journal-native-session-compatibility-20261018.log`.
+Outer cost: 3.85 s wall, 4.05 s user, 0.46 s system on the shared arm64 Mac,
+warm dependency view, overlapping short codec tests; other load unmeasured.
+The first native run (`96339`, terminal `f269b7`) caught a witness assumption:
+the native confirmation precedes initialize, so its seq is not hard-coded 1.
+Using the actual captured head passes (`59361`, terminal `6d279d`).
+
+Removing the added history-permission guard makes the intended 403 refusal
+return data instead (`65577`, terminal `402c19`, guard restored). Log:
+`/tmp/artroom-m2a-journal-history-control-20261018.log`. This is one named
+control, not a mutation sweep. The source/test typechecks pass.
+
+Five targeted browser cases pass (`58447`, terminal `acca3b`, exit 0), adding
+a two-entry readonly log to the prior card/record/refresh/receipt checks.
+It shows explicit entry facts, refuses an item-action request and reports no
+full-entry review claim. The final log screenshot was visually inspected.
+Report/captures: `/tmp/artroom-m2a-journal-log-browser-corrected-20261018/`.
+The first browser attempt (`69881`, terminal `496772`) found a test helper
+that replaced the view map and dropped the new log; it now preserves it.
+Same cached pinned browser and scripted native-port boundaries apply; the
+native behavior is the separate Workerd evidence above. No final gate,
+maintained package migration, full surface/carousel witness or M2a delivery
+is claimed.
+
 The following acceptance remains owed: complete generic kinds and navigation,
 Grow alert/grid declarations, Counter/Lending migration, their named native
 witnesses and paired controls, the final gate, review and landing. Shared

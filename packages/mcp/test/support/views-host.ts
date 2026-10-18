@@ -60,12 +60,15 @@ function fixture(mode: string) {
 /** Pure declared-view browser fixture. Native projection, install and role
  * answers are scripted; the real native controls have a separate witness. */
 async function declaredFixture() {
-  const base = fixture("empty"), packet = await applicationCounterNavigationPacket2(), scope = { ...base.scope.rules, kind: "lane" as const };
+  const base = fixture("empty"), packet = await applicationCounterNavigationPacket2(true), scope = { ...base.scope.rules, kind: "lane" as const };
   const source = new DeclaredViewSource(packet.bytes, packet.ids.release, {
     installation: async () => ({ scope, directory: { ...scope, kind: "directory" }, rules: { ...scope, kind: "rules" },
       membership: { ...scope, kind: "membership" }, destination: { ...scope, kind: "destination" }, item: 7, definition: packet.package.semantic.entry, ids: packet.ids }),
     actions: async () => [],
-    projection: async query => ({ ok: true, query: applicationProjectionQueryDigest(query)!, value: { v: 1, scope,
+    projection: async query => query.projection === "activity" ? ({ ok: true, query: applicationProjectionQueryDigest(query)!, value: { v: 1, scope,
+      projection: applicationProjectionId(packet.package.semantic.projections["activity"]!), at: { seq: 5, hash: `sha256:${"b".repeat(64)}` },
+      sources: { events: [4, 5].map(seq => ({ id: seq, revision: seq, type: seq === 4 ? "initialize" : "reset", state: "sealed", time: "2026-10-18T12:00:00Z",
+        entry: { at: scope, seq, hash: `sha256:${(seq === 4 ? "a" : "b").repeat(64)}` }, fields: { actor: null } })) } } }) : ({ ok: true, query: applicationProjectionQueryDigest(query)!, value: { v: 1, scope,
       projection: applicationProjectionId(packet.package.semantic.projections["board"]!), at: { seq: 1, hash: `sha256:${"a".repeat(64)}` },
       sources: { board: [{ id: 2, type: "board", state: "open", revision: 1, fields: { lastNumber: 42 } }] } } }),
   });

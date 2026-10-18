@@ -202,7 +202,7 @@ function render() {
     title.dataset["focus"] = "title";
     title.onclick = (event) => { event.preventDefault(); if (!busy) void open().catch(showError); };
     heading.append(title);
-  } else heading.textContent = card.title;
+  } else heading.textContent = card.declared?.kind === "log" ? "Recent entries" : card.title;
   article.append(heading);
   if (card.actor) {
     const actor = node("p", undefined, `actor ${card.actor.kind}`);
@@ -213,12 +213,19 @@ function render() {
   }
   if (card.declared?.actor !== null && card.declared?.actor !== undefined) article.append(node("p", `Member ${JSON.stringify(card.declared.actor)}`, "actor"));
   article.append(node("p", card.summary, "summary"));
-  if (card.reasons.length) {
+  if (card.reasons.length && card.declared?.kind !== "log") {
     const reasons = node("ul", undefined, "reasons");
     for (const reason of card.reasons) reasons.append(node("li", reason));
     article.append(reasons);
   }
   if (!summary) {
+    for (const row of card.declared?.log ?? []) {
+      const section = node("section", undefined, "entry projected-entry");
+      section.append(node("h2", `Entry ${row.entry.seq}: ${row.title}`), node("p", row.time, "muted"));
+      if (row.summary) section.append(node("p", row.summary));
+      for (const fact of row.facts) section.append(node("p", fact));
+      article.append(section);
+    }
     if (card.body) article.append(node(display.query.page === "diff" ? "pre" : "p", card.body, display.query.page === "diff" ? "diff" : "body"));
     for (const entry of card.entries ?? []) {
       const section = node("section", undefined, "entry");

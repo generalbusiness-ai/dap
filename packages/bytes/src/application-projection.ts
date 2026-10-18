@@ -71,6 +71,22 @@ export function readApplicationProjection(value: unknown): ApplicationReadProjec
   if (body["v"] !== 1 || !isDigest(body["definition"]) || body["revision"] !== "revision") return fail();
   const budget = { left: B.typeNodes };
   for (const given of Object.values(record(body["sources"], B.sources))) {
+    if (isRecord(given) && (given["read"] === "entries" || given["read"] === "latest-entry")) {
+      const source = object(given, "acts,fields,latestBy,limit,read,window");
+      names(source["acts"], 32, true); integer(source["window"], 1, B.rows);
+      integer(source["limit"], 1, source["read"] === "latest-entry" ? 1 : B.rows);
+      const fields = record(source["fields"], B.fields, 0);
+      for (const [alias, given] of Object.entries(fields)) {
+        if (META.has(alias) || alias === "time") return fail();
+        const field = object(given, "from,nullable,of"), from = object(field["from"], "kind,name");
+        if (typeof field["nullable"] !== "boolean" || from["kind"] !== "field" && from["kind"] !== "signer") return fail();
+        name(from["name"]);
+        if (from["kind"] === "signer" && from["name"] !== "member") return fail();
+        fieldType(field["of"], budget);
+      }
+      if (source["latestBy"] !== null && (source["read"] === "latest-entry" || typeof source["latestBy"] !== "string" || !Object.hasOwn(fields, source["latestBy"]))) return fail();
+      continue;
+    }
     const source = object(given, "fields,item,limit,read,states"); name(source["item"]); names(source["states"], 16, true);
     if (typeof source["read"] !== "string" || !["item", "one", "many"].includes(source["read"])) return fail();
     integer(source["limit"], 1, source["read"] === "many" ? B.rows : 1);
