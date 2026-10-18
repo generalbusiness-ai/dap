@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c8829c0e20c0e6b76a864910101df2b97e14a44d","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-18-grow-g0-implementation.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e39a72a7b3ab57d65870e709f3e51e8555c1cbac","text":"Merge retired a covered predecessor; the successor is at examples/grow/check/fault-scenario.json."}
