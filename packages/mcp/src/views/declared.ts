@@ -30,6 +30,10 @@ export class DeclaredViewSource implements ViewSource {
     return { resources: this.screens.map(({ name, resource }) => ({ ...PRESENTATION.resources[0]!, uri: resource, name,
       description: `Declared ${this.packet.package.presentation.views[name]!.kind} view. Private data is read separately through app-only tools.` })) };
   }
+  initialPage(screen: string) {
+    const view = this.#view({ screen, page: "summary", position: 0 });
+    return view.kind === "record" || view.kind === "log" ? "item" as const : "summary" as const;
+  }
   constructor(bytes: Uint8Array, release: Digest, readonly port: DeclaredViewPort) {
     this.packet = readApplicationPackage2(bytes, release, { bytes: 4 * 1024 * 1024 });
     for (const view of Object.values(this.packet.package.presentation.views)) for (const control of view.acts) admit(control.when);

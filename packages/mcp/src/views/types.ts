@@ -76,6 +76,7 @@ export interface ViewSource {
   readonly declared?: boolean;
   readonly screens?: readonly { name: string; resource: string }[];
   readonly presentation?: PresentationPackage;
+  initialPage?(screen: ViewKind): PageKind;
   read(query: ViewQuery, access: { call(name: string, args: Record<string, unknown>): Promise<{ structuredContent: Record<string, unknown>; isError: boolean }> }): Promise<Projection>;
   /** A declared source repeats its current when/needs check before signing. */
   admit?(query: ViewQuery, card: Card, action: CardAction): Promise<void>;

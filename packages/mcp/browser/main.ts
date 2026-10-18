@@ -98,8 +98,28 @@ async function open() {
   await read({ page: display.card.detailPage ?? "item" });
   notice = modeNotice; render();
 }
+async function declaredMode() {
+  const requested = display?.card?.declared?.display;
+  if (!requested || bridge.context.displayMode === requested) return;
+  try { if (await bridge.displayMode(requested) !== requested) notice = "The host kept the previous display mode."; }
+  catch (error) { notice = error instanceof Error ? error.message : String(error); }
+  render();
+}
+async function openDeclared(screen: string, items?: Readonly<Record<string, number>>) {
+  if (busy || !alive) return;
+  const key = crypto.randomUUID();
+  busy = true; notice = ""; render();
+  try {
+    const opening = await bridge.tool(`view_${screen.replaceAll("-", "_").replaceAll(".", "_")}`, { view: key, ...(items ? { items } : {}) });
+    if (opening["view"] !== key) throw Error("The declared opening did not retain its view key.");
+    view = key; display = null;
+  } finally { busy = false; render(); }
+  await read();
+  await declaredMode();
+}
 async function back() {
   if (!display) return;
+  if (display.card?.declared?.back) return openDeclared(display.card.declared.back);
   const target = display.query.page === "diff" ? returnPage : "summary";
   notice = "";
   if (target === "summary") {
@@ -225,6 +245,7 @@ function render() {
 }
 function keyboard(event: KeyboardEvent) {
   if (!display || busy || display.query.page !== "summary" || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+  if (display.card?.declared && display.card.declared.kind !== "carousel") return;
   const position = display.position + (event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0);
   if (position === display.position || position < 0 || position >= display.count) return;
   event.preventDefault(); void read({ position, page: "summary" }).catch(showError);
@@ -270,4 +291,5 @@ void (async () => {
   if (typeof input["view"] !== "string") throw new Error("The opening tool input has no view key. Open this card again.");
   view = input["view"];
   await read();
+  await declaredMode();
 })().catch(showError);

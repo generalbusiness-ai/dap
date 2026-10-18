@@ -4,14 +4,14 @@ import { expect, test } from "vitest";
 import type { ScopeRef } from "@generalbusiness/dap-contract";
 import type { ApplicationInstallation } from "@generalbusiness/artroom-bytes/application";
 import { applicationProjectionId, applicationProjectionQueryDigest } from "@generalbusiness/artroom-bytes/application-v2";
-import { applicationCounterPacket2 } from "../../scope/test/support/application-v2-fixture.ts";
+import { applicationCounterPacket2, applicationCounterNavigationPacket2 } from "../../scope/test/support/application-v2-fixture.ts";
 import { DeclaredViewSource } from "../src/views/declared.ts";
 import { ViewSessions } from "../src/views/session.ts";
 import type { CallResult } from "../src/service.ts";
 const scope: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "lane" };
 
-async function fixture() {
-  const packet = await applicationCounterPacket2();
+async function fixture(navigation = false) {
+  const packet = navigation ? await applicationCounterNavigationPacket2() : await applicationCounterPacket2();
   let installation: ApplicationInstallation | null = { scope, directory: { ...scope, kind: "directory" }, membership: { ...scope, kind: "membership" },
     rules: { ...scope, kind: "rules" }, destination: { ...scope, kind: "destination" }, definition: packet.package.semantic.entry, ids: packet.ids, item: 7 };
   let actions = ["counting.control"], state = "open", revision = 1;
@@ -68,4 +68,14 @@ test("the host repeats current revision and held-action checks before a new enve
     expect((await f.sessions.act("current", current.cut, "pause")).result.structuredContent["answer"]).toBe("accepted");
     expect(f.signed()).toBe(1);
   }
+});
+
+test("a declared record opens directly in detail with its declared Back target", async () => {
+  const f = await fixture(true), opening = await f.sessions.open("record", "record");
+  expect(opening.text).toBe("Board 2: open board 2, revision 1.");
+  expect(JSON.stringify(opening)).not.toContain("lastNumber");
+  const display = await f.sessions.read("record");
+  expect(display.query.page).toBe("item");
+  expect(display.card?.declared).toMatchObject({ kind: "record", display: "fullscreen", back: "board" });
+  expect(display.card?.actions.map(action => action.id)).toEqual(["pause"]);
 });

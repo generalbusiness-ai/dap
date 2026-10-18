@@ -9,7 +9,7 @@ import { secretSigner } from "@generalbusiness/artroom-client";
 import { firstExtents } from "@generalbusiness/dap-platform";
 import { LEGACY, MODERN, McpService, Wire, memoryStore, newSession, type Card, type Message, type ResourcePolicy, type ViewSource } from "../../src/index.ts";
 import { StandIn, SERVICE } from "./standin.ts";
-import { applicationCounterPacket2 } from "../../../scope/test/support/application-v2-fixture.ts";
+import { applicationCounterNavigationPacket2 } from "../../../scope/test/support/application-v2-fixture.ts";
 import { applicationProjectionId, applicationProjectionQueryDigest } from "@generalbusiness/artroom-bytes/application-v2";
 import { DeclaredViewSource } from "../../src/views/declared.ts";
 
@@ -60,7 +60,7 @@ function fixture(mode: string) {
 /** Pure declared-view browser fixture. Native projection, install and role
  * answers are scripted; the real native controls have a separate witness. */
 async function declaredFixture() {
-  const base = fixture("empty"), packet = await applicationCounterPacket2(), scope = { ...base.scope.rules, kind: "lane" as const };
+  const base = fixture("empty"), packet = await applicationCounterNavigationPacket2(), scope = { ...base.scope.rules, kind: "lane" as const };
   const source = new DeclaredViewSource(packet.bytes, packet.ids.release, {
     installation: async () => ({ scope, directory: { ...scope, kind: "directory" }, rules: { ...scope, kind: "rules" },
       membership: { ...scope, kind: "membership" }, destination: { ...scope, kind: "destination" }, item: 7, definition: packet.package.semantic.entry, ids: packet.ids }),

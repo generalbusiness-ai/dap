@@ -21,3 +21,14 @@ export async function applicationCounterPacket2(when = "state = 'open'", version
   } } }, signer);
 }
 
+/** Same native definition, with declared card/record navigation. */
+export async function applicationCounterNavigationPacket2() {
+  const packet = await applicationCounterPacket2(), board = packet.package.presentation.views["board"]!;
+  if (board.kind === "surface") throw Error("The fixture needs an item view.");
+  const { creates: _creates, ...semantic } = packet.package.semantic;
+  const { semantic: _semantic, ...presentation } = packet.package.presentation;
+  return packApplication2({ name: "test.declared-navigation", version: "1", semantic, presentation: { ...presentation, views: {
+    board: { ...board, back: "record" }, record: { ...board, kind: "record", display: "fullscreen", back: "board" },
+  } } }, signer);
+}
+

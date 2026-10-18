@@ -364,6 +364,33 @@ view. The focused CLI run overlapped; other competing load was unmeasured.
 CLI source/test and Scope test typechecks pass. These are focused preparation
 checks, not the final gate, complete maintained packages or M2a delivery.
 
+Declared records now open directly in detail. The browser uses the declared
+display mode on both initial mounting and in-package navigation, and Back
+opens the declared target as a new retained view. Native revisions, current
+when/needs admission and old receipt retention remain the existing host's
+responsibility. Arrow keys navigate declared carousels only. The new record
+case and affected mounted-view/resource cases pass (`a4d692`, three files,
+seven cases), with MCP test/browser typechecks and regenerated kit resources.
+Log: `/tmp/artroom-m2a-declared-record-focus-20261018.log`.
+
+Targeted browser navigation passes (`41834`, terminal `48fa58`, exit 0):
+card/detail → full-screen record → inline card at inner widths 320 and 592,
+plus a directly opened full-screen record at 390 that returns to its declared
+card. Actual inner viewport containment, app-only host denial and quiet
+context remain checked; no actor is invented for a null actor declaration.
+The final report and five captures are under
+`/tmp/artroom-m2a-declared-record-browser-final-20261018/`; the record captures
+were visually inspected. The earlier two-case navigation pass is retained
+under `/tmp/artroom-m2a-declared-navigation-browser-20261018/` (`52820`,
+terminal `56013d`). These use the same pinned cached browser and labelled
+native-port fixtures as the prior card evidence, not a deployed room.
+
+The Grow note also derives presence and log/grid data from comment entries.
+The current declared reader selects native item/fold rows; that does not
+stand for an entry log. Builder flagged this M2a/G1 boundary to planner while
+continuing independent view work. A bounded journal-entry source, complete
+carousel/surface rendering and the maintained package migration remain owed.
+
 The following acceptance remains owed: complete generic kinds and navigation,
 Grow alert/grid declarations, Counter/Lending migration, their named native
 witnesses and paired controls, the final gate, review and landing. Shared
