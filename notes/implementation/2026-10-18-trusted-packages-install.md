@@ -734,3 +734,13 @@ metadata/delivery stand-in, not a successful native enrollment witness.
 The captured Counter form exposed an undersized inline textarea; the next
 preparation styles it as a full-width control and clarifies its connection
 heading. Rendered verification follows that correction.
+
+
+The corrected form passes the same rendered flow at `1845d76c5` (`56421d`,
+session `66905`, terminal `9f840c`, exit 0). Four screenshots and the bounded
+request record are under `/tmp/artroom-m1-installed-browser-20261018/`. Both
+screens refuse a wrong-room invitation before native transport. Inspection
+also found that Lending's verified-seat handoff could leave its in-memory
+snapshot behind the committed store. The preparation now reads that exact
+handoff before completing discovery; live native browser verification is
+still owed for the successful connection.

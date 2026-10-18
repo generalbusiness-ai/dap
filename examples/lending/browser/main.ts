@@ -128,9 +128,17 @@ async function seated(device: DeviceKey, seat: Seat, expectedEpoch = epoch): Pro
     await open(next);
   });
 }
-function joined(device: DeviceKey, outcome: JoinOutcome | null, expectedEpoch = epoch): Promise<void> | void {
+async function joined(device: DeviceKey, outcome: JoinOutcome | null, expectedEpoch = epoch): Promise<void> {
   if (expectedEpoch !== epoch) return;
   if (outcome === null) return;
+  if (outcome.status === "joined" && screen) {
+    const handed = await remembered.load();
+    if (expectedEpoch !== epoch) return;
+    if (!handed?.seat || handed.device.publicKey !== device.publicKey || canonicalize(handed.seat) !== canonicalize(outcome.seat)) {
+      notice = { kind: "plain", text: "The original verified seat is kept. Reload to recover this browser's connection." }; return;
+    }
+    memory = handed;
+  }
   if (outcome.status === "joined") { notice = { kind: "plain", text: "Your join was recorded. Confirming your membership…" }; keptJoin = null; return seated(device, outcome.seat, expectedEpoch); }
   notice = { kind: outcome.status === "refused" ? "refusal" : "plain", text: outcome.reason };
   if (outcome.status === "refused") keptJoin = null;
