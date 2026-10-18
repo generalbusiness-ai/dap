@@ -1445,9 +1445,10 @@ refused when the server starts.
 
 Every command of the command line and every action of the page, with the
 tool calls that perform it in each launch mode and the count of calls.
-The public item query is not yet available through MCP. Its marked gap
-row has no execution recipe; all other rows remain covered.
-`packages/mcp/test/recipes.scope.test.ts` runs every recipe row through the server
+The public item query and operational status are not yet available through
+MCP. Their marked gap rows have no execution recipe. The local package
+commands operate on files outside MCP and have no server recipe.
+`packages/mcp/test/recipes.scope.test.ts` runs every server recipe row through the server
 on the real test Worker, with complete arguments, in the default and
 `--generic` modes, and checks that the tools called are the ones the row
 names, in order, as many times as it counts. In `--generic` mode, `actions`
@@ -1457,6 +1458,8 @@ works; the count given is the default recipe's.
 
 | Activity | Default | --generic | --generic=add |
 |---|---|---|---|
+| `dap check [<directory>]` (local command) | Local files and native scenarios with explicit TEST authority; no MCP tool | Local only | Local only |
+| `dap pack [<directory>]` (local command) | Local files and an existing named publisher key; no MCP tool | Local only | Local only |
 | `dap install <base-url>`, `--plan`, `--planned` | `create` with `platform:register@3` (or the cohort's register), kind install, the host, namespace, policy and creator keys: 1. The signed intent is kept before it is sent, which is what --plan keeps; after a lost reply, settle adds 1 | `create`: 1 | 1 |
 | `dap create <name>` | `room.create` on the register with the branch, the creator's handle and a recovery key, `wait` with the entry for the created directory and its children, `room.seat`, `room.first-key` with the seat's entry, `wait` for the inbox: 5 | `actions` on the register, `act`, `wait`, `actions` on membership, `act` seat, `act` first-key, `wait`: 7 | 5 |
 | Page: Create room | the same calls as `dap create`: `room.create`, `wait`, `room.seat`, `room.first-key`, `wait`: 5 | the same calls as `dap create`: 7 | 5 |
