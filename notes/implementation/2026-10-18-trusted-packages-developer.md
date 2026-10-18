@@ -666,10 +666,104 @@ browser and follows its server to terminal 143 before returning. No process,
 gate, publication, trusted install, native HTTP admission, deployment or
 production-screen acceptance is claimed here.
 
+## Counter's strict journal and first dispatch
+
+The shared client now supplies the version 2 strict request-attempt journal
+and first-dispatch implementation used by Counter. Counter's adapters fix the
+allowed kinds to its pinned declaration. The generic factory owns a bounded
+kind list, so caller mutation cannot widen it. Native-shaped grants remain
+inputs for the scope to judge; this private wire format admits no side input
+and never strips a restored field to manufacture another request.
+
+The eight-attempt/64 KiB limits, original envelope/context keys, exact body,
+closed refusal record and terminal-mark rules are preserved. An in-flight,
+unknown or legacy attempt is recovered only by reads. Only a committed
+prepared attempt can mint the one-use first-dispatch closure. The response
+must match the original route, no redirect, content type and native answer's
+HTTP status. Check cannot dispatch even a prepared request. A cached recorded
+tag remains unresolved without matching receipt confirmation. These are
+client custody rules, not signed native receipts.
+
+Counter keeps its audio/completion-specific checks, fixed act selection,
+identity admission, native gateway, epoch store and existing storage schema.
+The full device identity still enters the same canonical context key.
+It does not adopt Lending's simpler retained-request format or reinterpret
+its records. These application-specific records are deliberately preserved,
+as the preparation note requires. Native judging and replay are unchanged.
+
+The first Counter witness (`f43b43`, exit 1) stopped at its dependency-view
+preflight; no test ran. The private COW view still had Main's lock stamp
+before the CLI scope dependency was reclassified to runtime. Audit
+`0c6023` proves that is the only changed lock record: all package keys,
+versions, resolutions and integrities are unchanged, all thirteen workspace
+links resolve inside this checkout, and 106 installed package versions match.
+The ignored stamp was updated only after that audit; nothing was installed
+or fetched. Evidence:
+`/tmp/artroom-m1-dependency-view-refresh-20261018.json`.
+Old lock SHA-256 is
+`dcab76fb639e98cad2f40ed1ddbc207ffa626e0bfed51e655f18dbe7a1f1b485`;
+current is
+`ed12433a060184658871364ca486c6a04c66ee77ed79cd722a899de9b78d97eb`.
+
+The first client production typecheck exposed a missing DOM declaration for
+structuredClone. The shared dispatcher now names that same native operation
+through its narrow platform interface, without adding DOM/Workers types.
+Production typecheck passes (`4d4cc4`). Counter's actual owning Node
+witness then passes all 55 cases once (`9f9fd0`/`1b3b24`), including
+response correlation, restore, unknown outcomes, exact first resume,
+concurrent custody, audio markers and terminal archive fences. Retained
+bundles/metafile evidence is
+`/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/artroom-counting-node-JPFhPw`.
+Service/history/transport/audio dependencies in those cases remain labelled
+stand-ins, not a native enrollment or provider witness.
+
+The new generic journal case uses actual signatures on labelled stand-in
+addresses and a non-Counter borrow kind. It checks the owned kind policy,
+scope/incarnation binding, exact wire body and recorded-tag confirmation.
+A live caller-list control distinguishes one intended assertion and restores
+source (`94bf57`, exit 0). Two selected Node controls rebuild the current
+source with the pinned existing esbuild 0.28.1: read-only Check dispatch
+(`fa9486`) and accepting a response from another route (`74bd00`).
+Each runs only its named case, with one normal pass and one intended assertion
+failure, then restores source after the terminal subprocess. The whole
+55-case component suite was not repeated for those controls.
+Logs use `/tmp/artroom-m1-control-strict-`; selected outputs are
+`/tmp/artroom-m1-strict-readonly-Ea3QCm` and
+`/tmp/artroom-m1-strict-route-3w8tuJ`.
+
+### Counter epoch browser witness
+
+Two same-origin temporary browser pages use actual IndexedDB, Web Locks and
+WebCrypto, with notification delivery disabled. Forget rotates the durable
+epoch and removes credentials while leaving the exact opaque pending marker.
+The stale page cannot save, make a fresh act or authenticate a read session:
+the fixture's act/session signing, submit and speech counters stay zero.
+These counters do not include the key's local admission challenge.
+Reimporting the same TEST key does not renew the stale lease. Explicit
+remount does, and the fresh lease makes one signed session request to the
+scripted backend, which deliberately refuses it. Removing Web Locks causes
+save, activity and Forget to fail closed.
+
+The initial fixture run (`4c6573`, exit 1) tried to seed the raw pending
+store before initializing its schema. Correcting only the fixture order
+passes (`9e00bd`/`8a4f40`); the strengthened fresh-session control
+also passes (`7d5f92`/`3ca0e3`, exit 0). No application fix or native
+admission is implied. The final run uses cached Playwright 1.63.0, Chromium
+153.0.8010.12 and localhost, because the Browser plugin is absent.
+URL/title, no overlay, console health, interactions, desktop 960 by 720 and
+mobile 390 by 844 screenshots pass and are inspected. Dispatch/speech
+counters, pending marker and session answer are explicitly scripted.
+
+Results and PNGs are under `/tmp/artroom-m1-counter-epoch-20261018/`;
+scratch `counter.html` and `check-counter.mjs` are under
+`/tmp/artroom-m1-browser-slots-20261018/`. The orchestrator closes browser
+and server, following terminal server exit 143. There is no live fixture
+process. No new dependency, native rule, gate, Source review, publication,
+host install or deployment accompanied this extraction.
+
 ## Remaining developer work
 
-Counter integration and storage/custody migration; generic browser bundling;
-new/dev; Counter/Lending package
+Generic browser bundling; new/dev; Counter/Lending package
 conversion; and the matching browser evidence remain due. Generated
 application asset modules have not been rebuilt for this source checkpoint;
 the complete package conversion will replace their host composition.
