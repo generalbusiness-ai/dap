@@ -266,4 +266,22 @@ Builder performs no deployment. Planner publishes reviewed Main and workroom
 state and may deploy under the user's authorization. npm publication remains
 held.
 
+### Source-boundary check repair
+
+The repaired head `eaa6e67a` passed all 334 Vitest files and 1,677 cases;
+one file and three cases were skipped. Its Node stage passed 28 cases and
+failed one source-boundary check. Generated Counting was not reached.
+The failing rule accepted only flat `./file` imports and rejected every
+`../` spelling, including valid imports within the new server subdirectory.
+
+The check now uses the existing module-specifier parser and resolves each
+relative import to a tracked file within `packages/mcp/src`. Its allowed
+package list remains the same. Focused Node checks pass nine cases,
+including internal nested imports and refusal of test, browser, other
+package and package-parent escapes. This changes the check, not the MCP
+runtime. Runtime, browser, fixture and native-witness files remain byte
+identical to `eaa6e67a`; the 24-case browser evidence carries by that exact
+identity. The final-head gate remains due when this note is committed.
+Both earlier failed gates remain failed evidence, not reconstructed passes.
+
 Protocol reference: [MCP Apps, stable 2026-01-26](https://github.com/modelcontextprotocol/ext-apps/blob/main/specification/2026-01-26/apps.mdx).
