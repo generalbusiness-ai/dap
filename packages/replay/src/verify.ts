@@ -1667,7 +1667,7 @@ class Verifier {
         // The address is the one the sender wrote: the source entry's send at that ordinal.
         const to = source?.entry.sends.find((send) => send.n === input.n)?.to;
         if (!source || to === undefined) throw mismatch("the source entry holds no send at that ordinal");
-        if (["platform:destination@4", "platform:destination@5", "platform:destination@6"].includes(run.named ?? "") && input.message.class === "request" && input.message.type === "tell"
+        if (["platform:destination@4", "platform:destination@5", "platform:destination@6", "platform:destination@7"].includes(run.named ?? "") && input.message.class === "request" && input.message.type === "tell"
           && isObject(input.message.body) && input.message.body["message"] === "publish-file") {
           const directory = state.page("branch", ["empty", "ready"], null, 1).items[0]?.refs["directory"];
           if (!isScopeRef(directory) || !run.at) throw mismatch("the destination records no full Directory reference");
@@ -1737,7 +1737,7 @@ class Verifier {
         // `unsupported-definition` at that entry, and never `consistent`.
         if (!owners?.rules(owner, kind)) throw new Stop("unsupported-definition", `entry ${entry.seq} is an outcome, and this replay has no rules of the owner of its operation`, where);
         const valueOwner = owners.rules(owner, kind);
-        const publication = ["platform:destination@4", "platform:destination@5", "platform:destination@6"].includes(run.named ?? "") && operation ? valueOwner?.publicationOrigin?.(state, operation, reading.own!) : null;
+        const publication = ["platform:destination@4", "platform:destination@5", "platform:destination@6", "platform:destination@7"].includes(run.named ?? "") && operation ? valueOwner?.publicationOrigin?.(state, operation, reading.own!) : null;
         if (publication === false) throw mismatch("the operation has malformed publication provenance");
         if (publication && publication.mode === "application") await this.#applicationOrigin(publication.from, publication.directory, publication.destination, where, depth, identity?.mode === "partition-v1" ? identity.evidence : undefined);
         else if (publication && identity?.mode === "partition-v1") await this.#applicationOrigin(publication.from, publication.directory, publication.destination, where, depth, identity.evidence, "change");

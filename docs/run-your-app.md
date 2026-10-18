@@ -21,11 +21,17 @@ account that can deploy Workers, and a checkout of the dap repository;
 `dap` means `node packages/cli/bin/dap.js`, run from the root of the
 checkout. The command is not published to a registry yet.
 
-Your app has no browser page yet. The Counter and lending library pages are
-built into the service, and a page for an app of your own is not. Members
-use the `dap` command, and agents use the MCP tools. A local development
-host and installable app packages are planned; see
-[Self-contained applications](../notes/2026-10-15-self-contained-applications.md).
+This guide uses the earlier `application` cohort and its explicit definition
+activation, creation, and role grants. It remains a low-level path for the
+tutorial's definition, which has no browser page.
+
+For a signed application package, use the `trusted-application` cohort and
+[package install command](cli.md). That path records one admin request and
+serves the package's screen through the generic application route. The
+maintained [Counter](../apps/counter/APPLICATION.md) and
+[Lending](../examples/lending/APPLICATION.md) packages use it. `dap check`,
+`dap dev`, and `dap pack` provide local checks, a development host, and a
+signed packet. The service no longer embeds their app-specific routes.
 
 ## Step 1: Deploy the service
 

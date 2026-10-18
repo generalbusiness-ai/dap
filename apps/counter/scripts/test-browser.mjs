@@ -21,7 +21,20 @@ for(const name of readdirSync(resolve(root,"node_modules"))){if(name.startsWith(
 const names=["client","voice-controller","app","device-key"];
 const entries=names.map(name=>resolve(root,`apps/counter/browser/${name}.test.ts`));
 const output=realpathSync(await mkdtemp(resolve(tmpdir(),"artroom-counting-node-")));
-const aliases=Object.fromEntries(["client","bytes","contract"].map(name=>[`@generalbusiness/${name === "contract" ? "dap" : "artroom"}-${name}`,resolve(root,`packages/${name}/src/index.ts`)]));
+// Use every owned runtime export so a package root alias cannot turn a
+// valid subpath into index.ts/<subpath>. Metafile ownership checks still apply.
+const aliases={};
+for(const name of ["client","bytes","contract"]){
+  const directory=resolve(root,`packages/${name}`),pkg=JSON.parse(await readFile(resolve(directory,"package.json"),"utf8"));
+  const expected=`@generalbusiness/${name === "contract" ? "dap" : "artroom"}-${name}`;
+  if(pkg.name!==expected)throw new Error("Counting witness workspace name differs from its source.");
+  for(const [entry,target]of Object.entries(pkg.exports)){
+    if(typeof target!=="string")continue; // types-only entries do not enter a runtime bundle
+    const path=realpathSync(resolve(directory,target));
+    if(!inside(directory,path)||entry!=="."&&!entry.startsWith("./"))throw new Error("Counting witness export is outside its workspace source.");
+    aliases[expected+(entry==="."?"":entry.slice(1))]=path;
+  }
+}
 const result=await build({entryPoints:entries,absWorkingDir:root,bundle:true,platform:"node",format:"esm",outdir:output,outExtension:{".js":".mjs"},alias:aliases,metafile:true,write:true,logLevel:"silent"});
 const meta=JSON.stringify(result.metafile);if(Buffer.byteLength(meta)>4*1024*1024)throw new Error("Counting witness metafile exceeds its bound.");
 await writeFile(resolve(output,"metafile.json"),meta);

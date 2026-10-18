@@ -1,3 +1,4 @@
+// Historical service configuration; not the generic M1 deployment target.
 // The lending library's deployment of the scope Worker: Worker dap-lending at https://dap-lending.inguz.workers.dev, with its own
 // Durable Object namespace and Artifacts namespace. ARTIFACTS_CONFIG names the register of the library's room, created after the
 // first deployment (examples/lending/runbook.md). Deploy from apps/room with

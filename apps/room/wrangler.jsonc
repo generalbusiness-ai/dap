@@ -39,6 +39,9 @@
   "observability": { "enabled": true, "head_sampling_rate": 1, "logs": { "enabled": true, "head_sampling_rate": 1, "invocation_logs": false } },
   "analytics_engine_datasets": [{ "binding": "METRICS", "dataset": "artroom_metrics_v1" }],
   "version_metadata": { "binding": "VERSION_METADATA" },
+  // Private content only. The operator provisions this bucket; no public R2 route.
+  "r2_buckets": [{ "binding": "APPLICATION_CONTENT", "bucket_name": "artroom-application-content" }],
+  // APPLICATION_TRUST is an operator-set exact release/publisher JSON list.
   "durable_objects": {
     "bindings": [
       { "name": "SCOPES", "class_name": "DeployedScope" },

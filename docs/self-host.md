@@ -171,30 +171,30 @@ and authorize the GitHub App before installation. Follow the
 GitHub needs separate repository-creation credentials; an Artifacts binding
 needs no external Git credential.
 
-## Run the Counter
+## Install a maintained application
 
-**Run status:** Counter setup and enrollment were not exercised in this rehearsal.
+Counter and Lending are signed application packages. The Worker serves their
+screens through the generic `/applications/<directory>/<install-item>/<presentation>/`
+route. The old `/counting/` and `/lending/` routes are retired.
 
-The same scope Worker serves `/counting/`. A second Worker is optional if
-its data needs a separate namespace. Deploying its page alone does not create
-or authorize the Counting application. Follow
-[Counter setup](../apps/counter/browser/startup.md) for the explicit
-Counting cohort, native factory, membership grants, and device enrollment.
+Create a separate room with `--cohort trusted-application` in the planned
+install flow above. The room in this rehearsal keeps its historical pins;
+there is no automatic cohort migration. The operator must configure the
+[private application content bucket and exact release trust](deploy.md#trusted-application-packages)
+before an application can be installed.
 
-## Run the lending library
+Check and pack the maintained [Counter](../apps/counter/APPLICATION.md) or
+[Lending](../examples/lending/APPLICATION.md) source. Commit the signed packet
+to an HTTPS Git repository, then use the package-install command in
+[the CLI reference](cli.md). Keep the request key and its original arguments.
+Use `dap application <install-item>` to read pending, active, or refused state.
+Open the screen URL from an active result and enroll each device with its own
+private invitation. Existing membership and application grants still decide
+what that device can do.
 
-**Run status:** the library was not exercised in this rehearsal. Its own
-[runbook](../examples/lending/runbook.md) ran on the project's library
-deployment on 14 October 2026.
-
-The same scope Worker serves the library's member interface at
-`/lending/`. The library needs a room of the `application-publication`
-cohort, which the room above is not: plan it with `install --plan ...
---cohort application-publication`. The project gives the library its own Worker and Artifacts
-namespace ([its deployment](deploy.md#the-lending-librarys-deployment)).
-Follow the [runbook](../examples/lending/runbook.md) to activate the
-definition, establish the library, give the roles their actions, and
-invite members with `dap invite --keep`.
+The [14 October Lending runbook](../examples/lending/runbook.md) records the
+earlier application-publication deployment. It is historical acceptance
+evidence, not the setup procedure for the generic package route.
 
 ## Deploy the homepage
 

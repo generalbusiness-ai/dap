@@ -10,15 +10,11 @@
  */
 
 import { DOMAINS, PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Base64Url, FieldValue, Intent, KeyId, ScopeRef, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
+import type { FieldValue, Intent, ScopeRef, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
 import { b64url, canonicalBytes, domainBytes, keyIdOf, keyIdOfSecret, parseStrictBytes, sign } from "@generalbusiness/artroom-bytes";
 
-/** Signs bytes as one Ed25519 key. It gives out the key's ID and signatures, and never the private key. */
-export interface Signer {
-  readonly key: KeyId;
-  /** The signature over `bytes`, as unpadded base64url of its 64 bytes. */
-  sign(bytes: Uint8Array): Base64Url | Promise<Base64Url>;
-}
+import type { Signer } from "./signer.ts";
+export type { Signer } from "./signer.ts";
 
 /** A signer over a 32-byte Ed25519 secret the caller already holds, as a key file or a test does. */
 export function secretSigner(secret: Uint8Array): Signer {

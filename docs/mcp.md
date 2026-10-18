@@ -362,7 +362,8 @@ The point has no index, nine blobs and six doubles:
 
 The fixed names are `list`, `room`, `inspect`, `create`, `join`, `prepare`,
 `items`, `steps`, `step`, `record`, `sends`, `text`, `wait`, `settle`,
-`credential`, `actions`, `act` and hosted `enrol`. Act tool names derived
+`credential`, `actions`, `act`, `install_application`,
+`application_installation`, and hosted `enrol`. Act tool names derived
 from declarations are outside this first map. Their events are dropped
 and counted as invalid fields; their names are not copied or redacted.
 The tools continue to run normally.
@@ -414,6 +415,26 @@ presence. The deployment check excludes this map when judging scope
 turn coverage.
 
 ## Tool reference
+
+### Install a trusted application package
+
+In a room created with `--cohort trusted-application`, `install_application`
+records one native admin request. Its arguments are `uri`, `release`, `roles`,
+`values`, and `idempotencyKey`. The URI names a regular Git blob at an exact
+commit. The operator must trust that exact release and publisher. Each
+selected role receives only its signed package defaults; omitted roles
+receive no new grants. Existing grants remain.
+
+CLI and MCP share persistent request custody. After a lost reply, use the
+same key and arguments to read or resume the original envelope. Changed
+arguments under that key refuse. A definitive native refusal is final.
+
+Acceptance records the request, not completion. Use
+`application_installation` with its `item` to read pending, active, or refused
+state, the phase, and any reason. An active result includes its exact screen
+URL. A late refusal can leave earlier activation and grants in force.
+Neither tool returns signing keys, sessions, or the application's private
+items. See [the CLI reference](cli.md) for URI spelling and transport limits.
 
 ### The generic tools
 
@@ -1326,6 +1347,92 @@ Signs one act of a scope by its native kind, under the same custody and binding 
 }
 ```
 
+### `install_application`
+
+Install an operator-trusted package in this room by immutable Git URI and independent expected release. Select default roles explicitly; values are the application genesis fields. Keeps one signed native envelope under idempotencyKey before submission. Repeating the same key and meaning retains that envelope. Acceptance records the install request; application_installation reads its pending, active or final refused result. The host fetches the URI independently.
+
+```json
+{
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "uri": {
+        "type": "string",
+        "maxLength": 4096
+      },
+      "release": {
+        "type": "string"
+      },
+      "roles": {
+        "type": "array",
+        "maxItems": 5,
+        "uniqueItems": true,
+        "items": {
+          "enum": [
+            "admin",
+            "maintainer",
+            "member",
+            "agent",
+            "checker"
+          ]
+        }
+      },
+      "values": {
+        "type": "object"
+      },
+      "idempotencyKey": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128,
+        "description": "Your key for this one meaning, 1 to 128 bytes. Keep it."
+      }
+    },
+    "required": [
+      "uri",
+      "release",
+      "roles",
+      "values",
+      "idempotencyKey"
+    ],
+    "additionalProperties": false
+  },
+  "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": true,
+    "idempotentHint": true,
+    "openWorldHint": true
+  }
+}
+```
+
+### `application_installation`
+
+Read one native installation in the configured room, including its recorded phase and final refusal reason. Earlier committed activation and grants can remain after a later refusal. Active results include the exact generic screen address. This read signs no install or continuation and changes no native state.
+
+```json
+{
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "item": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "required": [
+      "item"
+    ],
+    "additionalProperties": false
+  },
+  "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
+  }
+}
+```
+
 ### The act tools of the demo room
 
 The act tools that `tools/list` sends to an admin of the demo room: the six
@@ -1448,9 +1555,13 @@ tool calls that perform it in each launch mode and the count of calls.
 The public item query and operational status are not yet available through
 MCP. Their marked gap rows have no execution recipe. The local package
 commands operate on files outside MCP and have no server recipe.
-`packages/mcp/test/recipes.scope.test.ts` runs every server recipe row through the server
+The two trusted-application rows are exercised by
+`packages/scope/test/application-install-custody.test.ts` on the new native
+cohort, including CLI-to-MCP original-request recovery and the default and
+generic launch modes. The older room recipes in
+`packages/mcp/test/recipes.scope.test.ts` run the remaining server rows
 on the real test Worker, with complete arguments, in the default and
-`--generic` modes, and checks that the tools called are the ones the row
+`--generic` modes, and check that the tools called are the ones the row
 names, in order, as many times as it counts. In `--generic` mode, `actions`
 is called once per scope within one activity, and its result serves every
 later `act` on that scope. `--generic=add` lists both, so either recipe
@@ -1462,6 +1573,8 @@ works; the count given is the default recipe's.
 | `dap dev [<directory>]` (local command) | Local loopback preview with explicit TEST scenarios; no MCP tool | Local only | Local only |
 | `dap new <directory>` (local command) | Creates local template files with public TEST scenarios; no MCP tool | Local only | Local only |
 | `dap pack [<directory>]` (local command) | Local files and an existing named publisher key; no MCP tool | Local only | Local only |
+| `dap install <git+https-uri>` (trusted-application room) | `install_application` with URI, release, selected roles, genesis values and the retained request key: 1 | `install_application`: 1 | 1 |
+| `dap application <install-item>` (trusted-application room) | `application_installation` with the recorded item: 1 | `application_installation`: 1 | 1 |
 | `dap install <base-url>`, `--plan`, `--planned` | `create` with `platform:register@3` (or the cohort's register), kind install, the host, namespace, policy and creator keys: 1. The signed intent is kept before it is sent, which is what --plan keeps; after a lost reply, settle adds 1 | `create`: 1 | 1 |
 | `dap create <name>` | `room.create` on the register with the branch, the creator's handle and a recovery key, `wait` with the entry for the created directory and its children, `room.seat`, `room.first-key` with the seat's entry, `wait` for the inbox: 5 | `actions` on the register, `act`, `wait`, `actions` on membership, `act` seat, `act` first-key, `wait`: 7 | 5 |
 | Page: Create room | the same calls as `dap create`: `room.create`, `wait`, `room.seat`, `room.first-key`, `wait`: 5 | the same calls as `dap create`: 7 | 5 |

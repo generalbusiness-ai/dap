@@ -5,11 +5,11 @@ import type { Entry, Receipt, ScopeKind, ScopeRef, SignedIntent } from "@general
 import { b64url, canonicalize, entryHash, intentDigest, keyIdOfSecret, newIncarnation, scopeIdOf, textDigest, utf8, verifyInvitationProof, verifySignedIntent } from "@generalbusiness/artroom-bytes";
 import { browserJoining, generateBrowserDeviceKey, readBrowserInvitation, storedWebCryptoSigner, type BrowserJoinStore, type BrowserKeptJoin, type Fetch, type InvitationLink } from "../src/index.ts";
 const origin = "https://browser.test", start = Date.parse("2026-10-18T12:00:00Z"), seed = new Uint8Array(32).fill(66);
-type Version = "platform:membership@4" | "platform:membership@6";
+type Version = "platform:membership@4" | "platform:membership@6" | "platform:membership@7";
 const reference = (kind: ScopeKind): ScopeRef => ({ scope: scopeIdOf({ v: 1, kind, definition: textDigest("TEST browser joining " + kind), creator: null, cause: textDigest("TEST browser joining address"), ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(2)), kind });
 function invitation(definition: Version): InvitationLink {
   return { v: 1, service: origin, repository: { directory: reference("directory"), membership: reference("membership"), rules: reference("rules").scope, destination: reference("destination").scope },
-    invitation: 1, secret: definition === "platform:membership@6" ? b64url(seed) : "PUBLIC TEST legacy invitation", handle: "@browser", definition };
+    invitation: 1, secret: definition !== "platform:membership@4" ? b64url(seed) : "PUBLIC TEST legacy invitation", handle: "@browser", definition };
 }
 const linkText = (link: InvitationLink) => "artroom-invite:" + b64url(utf8(JSON.stringify(link)));
 async function fixture(definition: Version = "platform:membership@6") {
@@ -54,12 +54,12 @@ async function fixture(definition: Version = "platform:membership@6") {
 }
 
 test("a kept browser join recovers by reads and checks its original receipt, member and exact recorded signature", async () => {
-  for (const version of ["platform:membership@4", "platform:membership@6"] as const) {
+  for (const version of ["platform:membership@4", "platform:membership@6", "platform:membership@7"] as const) {
     const f = await fixture(version);
     expect(await f.api.join(f.link, f.seat)).toMatchObject({ status: "unknown" });
     expect(f.posts).toHaveLength(1); expect(f.calls.slice(0, 3)).toEqual(["save prepared", "save inflight", "post"]);
     const held = f.kept()!; expect(held.kept.phase).toBe("unknown"); expect(verifySignedIntent(f.posts[0]!)).toBe(true);
-    if (version === "platform:membership@6") {
+    if (version !== "platform:membership@4") {
       expect(Object.hasOwn(f.posts[0]!.intent.fields, "secret")).toBe(false);
       expect(verifyInvitationProof(keyIdOfSecret(seed), f.posts[0]!.intent.fields["proof"], f.seat.membership, 1, f.key)).toBe(true);
     } else expect(f.posts[0]!.intent.fields["secret"]).toBe(f.link.secret);

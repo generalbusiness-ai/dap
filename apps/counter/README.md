@@ -10,26 +10,28 @@ client does. The framework is described in
 
 This page describes the definition `counting-commitments`, declared in
 [commitments.ts](commitments.ts). The Counter page in [browser](browser)
-runs it, and `dap install --cohort counting-commitments` installs its
-cohort.
+runs it. Its [package config](dap.application.json) builds the maintained
+presentation and definition for an ordinary trusted-application room.
 [Taking part in a Counter](../../docs/mcp.md#taking-part-in-a-counter)
 shows an agent taking part through MCP tools. An earlier definition,
 `counting`, is also kept here; see
 [The first definition](#the-first-definition).
 
-## Build and deployment ownership
+## Package and host ownership
 
-The Counter's browser source, build script and generated assets live here.
-From the repository root, `node apps/counter/scripts/assets.mjs` builds its
-three public assets and the module served by the application Worker.
+Run `dap check --config apps/counter/dap.application.json` from the repository
+root to check the package's local scenario. `dap pack` with that config builds
+its browser assets and signs the release with an existing publisher key.
+Commit the packet, then install its immutable Git URI and expected release as
+[the CLI guide](../../docs/cli.md) describes. The host operator lists the exact
+release and publisher before admission.
 
-Counter shares Room's existing `artroom-scope` Worker. Its deployment
-configuration is [Room's wrangler.jsonc](../room/wrangler.jsonc), and its
-route is included by [Room's application dispatch](../room/fetch.ts).
-There is no independent Counter Worker. A shared Worker deployment also
-publishes Room and the other routes it owns. This consolidation changes no
-Worker name or served URL and runs no deployment. Hugh's current hold
-prohibits Cloudflare infrastructure deployments until further notice.
+The installed screen reads its exact native context and enrolls this browser
+from a matching room invitation. It keeps a nonextractable key and original
+requests locally. [Browser setup](browser/startup.md) explains voices and
+partial completion. No app-specific host build or deployment is needed for
+another operator-trusted Counter release. Historical catalog pins and native
+judging/replay remain available; new Counting-specific room setup is retired.
 
 ## Items
 
@@ -48,7 +50,7 @@ The application factory writes the first act, and three kinds of
 participant sign the rest:
 
 - The **application factory** writes the genesis act, `establish`, when
-  a member who holds `application.establish` creates the scope. It names
+  the room confirms a trusted-package install. It names
   that member as the **opener**, who becomes the **controller**. No
   participant signs `establish`.
 - The controller runs the board and manages participants.

@@ -5,20 +5,18 @@ Room is the repository application built on dap. Its
 [browser page](docs/page.md) live here. The framework and public platform
 SDK remain under `packages/`.
 
-[worker.ts](worker.ts) is the application entry point. It exports the
-existing Scope and MCP classes and adds the Room, Counter, lending demo
-and brand routes in [fetch.ts](fetch.ts). The reusable Scope Worker in
-`packages/scope` serves the framework routes without importing these apps.
+[worker.ts](worker.ts) exports the existing Scope and MCP classes and adds
+Room, brand, and the generic installed-application route in [fetch.ts](fetch.ts).
+Counter and Lending are ordinary trusted packages, built from their maintained
+sources and installed by immutable Git URI. The host contains neither app's
+route or compiled asset module.
 
-[wrangler.jsonc](wrangler.jsonc) owns the existing `artroom-scope` deployment.
-[wrangler.lending.jsonc](wrangler.lending.jsonc) retains the lending demo's
-separate configuration. Moving these files changes neither Worker names,
-Durable Object class names nor served URLs. Counter shares this application
-Worker; it has no independent Worker deployment.
-
-The [deployment guide](../../docs/deploy.md) describes the operator's
-procedure. Source consolidation runs no deployment. Hugh's current hold
-prohibits Cloudflare infrastructure deployments until further notice.
+[wrangler.jsonc](wrangler.jsonc) owns the `artroom-scope` deployment and its
+private application-content binding. The dated lending configuration is
+retained for its historical service; it is not the generic M1 deployment target.
+The [deployment guide](../../docs/deploy.md) describes host trust and storage.
+Reviewed source is published and deployed by the planner under the user's
+current authorization.
 
 Build the Room page locally from the repository root with:
 

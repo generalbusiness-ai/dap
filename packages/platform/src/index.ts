@@ -1,3 +1,10 @@
+export { applicationRoom, applicationInstallation } from "./application-install-reader.ts";
+import { TRUSTED_APPLICATION_COHORT, installDefinitionText } from "./application-install-wire.ts";
+import { membership7, membershipRules7 } from "./application-install-grants.ts";
+import { directory11, directoryRules11 } from "./application-install-creation.ts";
+export { applicationAnnouncement, APPLICATION_ANNOUNCEMENT_OWNER } from "./application-install-creation.ts";
+export { TRUSTED_APPLICATION_COHORT, INSTALL_DEFINITION_BYTES, INSTALL_SEMANTIC_BYTES } from "./application-install-wire.ts";
+import { APPLICATION_INSTALL_RULES, applicationInstallRulesScope, applicationInstallRules } from "./application-install.ts";
 import { INVITATION_KEY_COHORT, directory9, directoryRules9, membership6, membershipRules6 } from "./invitation-key.ts";
 export { INVITATION_KEY_COHORT, directory9, directoryRules9, membership6, membershipRules6 } from "./invitation-key.ts";
 /**
@@ -23,8 +30,8 @@ export { PARTITION_COHORT, directory10, directoryRules10, directoryPartition1, d
 import { PARTITION_IDENTITY_POLICY } from "./partition-provenance.ts";
 export { PARTITION_IDENTITY_POLICY, PARTITION_IDENTITY_BOUNDS, partitionReceiverPolicy, partitionSourceName, partitionCreationPolicy, partitionDeclaredCreationPolicy, partitionNativeCreationPolicy, partitionPublicationOrigin, partitionProducerName, type PartitionCreationSelection, type PartitionCreation, type PartitionCreationPolicy, type PartitionNativeFrame, type PartitionReceiverLineage, type PartitionReceiverPolicy } from "./partition-provenance.ts";
 
-import type { ObservationRequest, PlatformData, PlatformDefinition } from "@generalbusiness/dap-contract";
-import { sourceName, applicationPublicationOrigin } from "./publishing-provenance.ts";
+import type { Digest, ObservationRequest, PlatformData, PlatformDefinition } from "@generalbusiness/dap-contract";
+import { sourceName, applicationPublicationOrigin, installedApplicationPublicationOrigin } from "./publishing-provenance.ts";
 import { destination, destination2, destination3, destination4, destination5, destination6, destinationMembership, destinationRules, destinationRules2, destinationRules3, destinationRules4, destinationRules5, destinationRules6, destinationRulesScope } from "./destination.ts";
 import { inbox, inboxRules } from "./inbox.ts";
 import { MEMBERSHIP, MEMBERSHIP_1, membership, membership5, membershipRules, standingOf } from "./membership.ts";
@@ -45,7 +52,7 @@ export { COLLECT_MOST, DESTINATION, DESTINATION_1, DESTINATION_5, DESTINATION_AT
 export { initialCommitObjects, readmeText, receiptObjects, receiptRef, importRef, type Readme, type DestinationObject, type DestinationCommit, type ObjectFormat } from "./destination-objects.ts";
 export { EDIT_PATH_BYTES, editCommit, editObjects, editPath, editTree, manifestCommit } from "./destination-objects.ts";
 export { PROPOSE_FILE, fileOf, sourcesOf, manifestFiles } from "./destination-reading.ts";
-export { sourceName, applicationPublicationOrigin, publishingLaneOrigin, publishingLaneAffiliation, PUBLISHING_LANE_DIGESTS, ISSUE_LANE_DIGESTS } from "./publishing-provenance.ts";
+export { sourceName, installedApplicationPublicationOrigin, applicationPublicationOrigin, publishingLaneOrigin, publishingLaneAffiliation, PUBLISHING_LANE_DIGESTS, ISSUE_LANE_DIGESTS } from "./publishing-provenance.ts";
 export { filePublicationCause, filePublicationCurrent, newestFilePublication, fileSupersededOutcome, destinationPublicationAt } from "./destination.ts";
 export { filePublicationCommit, fileReceiptObjects, fileReceiptRef, type FilePublicationCause } from "./destination-objects.ts";
 export type { LaneRead } from "./destination.ts";
@@ -71,6 +78,10 @@ export type { Extent, ExtentClass, ExtentJudged, ExtentsAsked, ExtentsJudged, Ho
  */
 export interface Platform {
   readonly data: PlatformData;
+  /** Host-owned idempotent preparation; never generic mutation recovery. */
+  readonly hostPreparationKinds?: readonly string[];
+  /** This exact version locates a declaration in its retained native texts. */
+  readonly declaredText?: (state: Pick<StateView, "page">, digest: Digest) => Digest | null;
   readonly rules: Rules;
   readonly sourceName?: typeof sourceName;
   readonly receiverIdentity?: typeof PARTITION_IDENTITY_POLICY;
@@ -134,6 +145,10 @@ export interface Platform {
  * cannot run.
  */
 const VERSION_DATA: Readonly<Record<string, Platform>> = {
+  [TRUSTED_APPLICATION_COHORT.destination]: { data: destination4, rules: destinationRules4, membership: destinationMembership, rulesScope: destinationRulesScope, applicationPublicationOrigin: installedApplicationPublicationOrigin },
+  [TRUSTED_APPLICATION_COHORT.register]: { data: register, rules: registerRules },
+  [TRUSTED_APPLICATION_COHORT.directory]: { data: directory11, rules: directoryRules11, declaredText: (state, digest) => installDefinitionText(state, digest, "application-catalog"), membership: directoryMembership, rulesScope: directoryRulesScope },
+  [TRUSTED_APPLICATION_COHORT.membership]: { data: membership7, rules: membershipRules7, observed: (state, asked) => standingOf(state, asked, TRUSTED_APPLICATION_COHORT.membership) },
   [PARTITION_COHORT.register]: { data: register, rules: registerRules },
   [PARTITION_COHORT.directory]: { data: directory10, rules: directoryRules10, membership: directoryMembership, rulesScope: directoryRulesScope },
   [PARTITION_COHORT.partition]: { data: directoryPartition1, rules: directoryPartitionRules1, membership: directoryMembership, rulesScope: directoryRulesScope },
@@ -165,6 +180,7 @@ const VERSION_DATA: Readonly<Record<string, Platform>> = {
   "platform:membership@2": { data: membership, rules: membershipRules, observed: (state, asked) => standingOf(state, asked, MEMBERSHIP) },
   "platform:rules@1": { data: rulesScope, rules: rulesScopeRules, observed: (state, asked) => rulesAnswer(state, asked, RULES_SCOPE_1), observedValues: rulesObservedValues, revised: PUBLISH, membership: rulesMembership },
   "platform:rules@2": { data: rulesScope2, rules: rulesScopeRules, observed: (state, asked) => rulesAnswer(state, asked, RULES_SCOPE), observedValues: rulesObservedValues, revised: PUBLISH, membership: rulesMembership },
+  [APPLICATION_INSTALL_RULES]: { data: applicationInstallRulesScope, rules: applicationInstallRules, hostPreparationKinds: ["fetch-application"], declaredText: (state, digest) => installDefinitionText(state, digest, "definition"), observed: (state, asked) => rulesAnswer(state, asked, APPLICATION_INSTALL_RULES), observedValues: rulesObservedValues, revised: PUBLISH, membership: rulesMembership },
   "platform:rules@4": { data: rulesScope4, rules: rulesScopeRules3, observed: (state, asked) => rulesAnswer(state, asked, "platform:rules@4"), observedValues: rulesObservedValues, revised: PUBLISH, membership: rulesMembership },
   "platform:destination@1": { data: destination, rules: destinationRules, membership: destinationMembership, rulesScope: destinationRulesScope },
   "platform:destination@2": { data: destination2, rules: destinationRules2, membership: destinationMembership, rulesScope: destinationRulesScope },

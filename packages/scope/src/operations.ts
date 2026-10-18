@@ -29,7 +29,9 @@
  * is another attempt, which an entry opens (section 4.3, item 2), or another
  * operation. A trusted recovery port may repeat a safe read or retrieve
  * this attempt's retained reply while no outcome can be written; it never
- * repeats the outside mutation or clears its durable send mark.
+ * repeats the outside mutation or clears its durable send mark. A separate
+ * exact native catalog allowance can resume the host's own idempotent
+ * content preparation through `hostPreparation`, without calling send again.
  *
  * Nothing here runs inside a storage transaction. A pass runs after a
  * commit and from the object's alarm.
@@ -37,7 +39,7 @@
 
 import type { Bounds, CapabilityName, DecisiveEvidence, Entry, Evidence, FactRef, FactUse, KeyId, OperationId, PlatformDefinition, RetainedInput, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
 import type { ReceiverReads } from "./receiver-reads.ts";
-import { canonicalize, isEvidence, isOperationId, isRetainedInput, parseStrict, retainedValueKey, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isEvidence, isPlatformDefinition, isOperationId, isRetainedInput, parseStrict, retainedValueKey, utf8 } from "@generalbusiness/artroom-bytes";
 import { clockOf, recordedOutcome, evidenceValues, isEntryOf, valueDigest, settleOutcome, snapshotInput, snapshotRead, timeMs, timeOf, type Clock as Reading, type Fetched, type Operation, type OutcomeOffered, type Owners } from "@generalbusiness/dap-derive";
 import { applicationPublicationOrigin, publishingLaneOrigin } from "@generalbusiness/dap-platform";
 import { ownOf, valuesOf, type Scope } from "./core.ts";
@@ -120,6 +122,13 @@ export interface Outside {
   send(request: EffectRequest): Promise<EffectAnswer | null>;
   late?(deliver: LateAnswers): void;
   judged?(at: { scope: ScopeRef; operation: OperationId; attempt: number }, sealed: Sealed | null): void;
+  /** Explicit native host preparation, separate from safe-read recovery.
+   * Only a pinned platform catalog's allowlisted kinds may resume here.
+   * M1 uses this for idempotent private CID storage, never provider writes. */
+  hostPreparation?: {
+    accepts(owner: CapabilityName | PlatformDefinition, kind: string): boolean;
+    resume(request: EffectRequest): Promise<EffectAnswer | null>;
+  };
   /**
    * Trusted recovery for an already marked attempt with no recorded outcome.
    * `read` may repeat only a safe host read or retrieve that same attempt's
@@ -194,6 +203,7 @@ export class Operations {
   readonly #store: Store;
   readonly #outside: Outside;
   readonly #resolver: Resolver;
+  readonly #definitions: Ports["definitions"] | undefined;
   readonly #owners: Owners | undefined;
   readonly #clock: Clock;
   readonly #wakes: Wakes;
@@ -249,12 +259,13 @@ export class Operations {
   readonly #conflict: ((operation: OperationId, attempt: number, seq: number) => void) | undefined;
 
   /** `owners`: the rules of the owners this runtime has code for. With none, no outcome can be judged, so nothing is sent. */
-  constructor(scope: Scope, store: Store, ports: Pick<Ports, "outside" | "clock" | "owners" | "diagnoses" | "resolver">, wakes: Wakes, bounds: Bounds, conflict?: (operation: OperationId, attempt: number, seq: number) => void) {
+  constructor(scope: Scope, store: Store, ports: Pick<Ports, "outside" | "clock" | "owners" | "diagnoses" | "resolver"> & Partial<Pick<Ports, "definitions">>, wakes: Wakes, bounds: Bounds, conflict?: (operation: OperationId, attempt: number, seq: number) => void) {
     this.#conflict = conflict;
     this.#scope = scope;
     this.#store = store;
     this.#outside = ports.outside;
     this.#resolver = ports.resolver;
+    this.#definitions = ports.definitions;
     this.#owners = ports.owners ?? undefined;
     this.#clock = ports.clock;
     this.#wakes = wakes;
@@ -295,7 +306,7 @@ export class Operations {
       const read = await within(() => this.#resolver.read(asked.from, this.#bounds.fetchSeconds, true), this.#bounds.fetchSeconds);
       if (read === LATE || read === null || !("entry" in read) || !isEntryOf(read.entry, asked.from)) return false;
       return asked.mode === "application"
-        ? applicationPublicationOrigin(asked.from, asked.directory, asked.destination, read.origin ?? []) === true
+        ? (operation.owner === "platform:destination@7" ? this.#definitions?.platform("platform:destination@7")?.applicationPublicationOrigin : applicationPublicationOrigin)?.(asked.from, asked.directory, asked.destination, read.origin ?? []) === true
         : read.under === "change" && publishingLaneOrigin(asked.from, asked.directory, asked.destination, read.origin ?? []);
     } catch { return false; }
   }
@@ -520,11 +531,15 @@ export class Operations {
     return this.#wakes.set();
   }
 
-  /** A bound recovery read, only for a runnable owner; never marks or sends. */
+  /** Resume marked work without clearing its mark or calling send again.
+   * Host preparation needs a separate exact native catalog allowance. */
   #recovery(row: Sending): { request: EffectRequest; read: () => Promise<EffectAnswer | null> } | null {
     const operation = this.#store.operation(row.operation);
     try {
-      const recovery = this.#outside.recovery;
+      const preparation = this.#outside.hostPreparation;
+      const allowed = operation && isPlatformDefinition(operation.owner) && this.#definitions?.platform(operation.owner)?.hostPreparationKinds?.includes(operation.kind) === true;
+      const recovery = allowed && preparation?.accepts(operation.owner, operation.kind)
+        ? { accepts: () => true, read: (request: EffectRequest) => preparation.resume(request) } : this.#outside.recovery;
       const scope = this.#store.scope();
       const origin = this.#store.stored(Number(row.operation.split(":")[0]));
       if (!operation || !scope || !origin || !this.#scope.pinned()?.definition || !this.#scope.owners()?.rules(operation.owner, operation.kind) || !recovery?.accepts(operation.owner, operation.kind)) return null;

@@ -12,7 +12,7 @@ describe("closed MCP operational observations", () => {
     const send = observedFetch(async () => ({ status: 200, body: null }));
     let release!: () => void;
     const held = new Promise<void>(r => { release = r; });
-    const first = metrics.call("steps", async () => {
+    const first = metrics.call("install_application", async () => {
       await send("https://fixture.invalid/v1/scopes/x/history");
       await send("https://fixture.invalid/v1/scopes/x/items/merge?cursor=3");
       await send("https://fixture.invalid/v1/scopes/x/query-items?q=fixture");
@@ -24,10 +24,10 @@ describe("closed MCP operational observations", () => {
       return "first";
     }, () => good);
     await Promise.resolve();
-    expect(await metrics.call("room", async () => { await send("https://fixture.invalid/v1/scopes/x/sessions", { method: "POST" }); return "second"; }, () => good)).toBe("second");
+    expect(await metrics.call("application_installation", async () => { await send("https://fixture.invalid/v1/scopes/x/sessions", { method: "POST" }); return "second"; }, () => good)).toBe("second");
     release(); expect(await first).toBe("first");
     const calls = points.filter(p => p.blobs[0] === "tool-call");
-    expect(calls.map(p => [p.blobs[3], p.doubles[2], p.doubles[3]])).toEqual([["room", 1, 0], ["steps", 5, 3]]);
+    expect(calls.map(p => [p.blobs[3], p.doubles[2], p.doubles[3]])).toEqual([["application_installation", 1, 0], ["install_application", 5, 3]]);
     expect(points.filter(p => p.blobs[0] === "custody").map(p => p.blobs[5])).toEqual(["prepared", "sent"]);
     expect(points.every(p => p.blobs[8] === MCP_METRIC_SCHEMA)).toBe(true);
   });

@@ -159,33 +159,45 @@ The scope Worker serves the room's page at `/page/` from
 page package's build writes ([The page](../apps/room/docs/page.md)). Deploying the Worker
 deploys the page; it needs no binding, setting or secret of its own.
 
-The same Worker serves the lending library's member interface at
-`/lending/`, from `examples/lending/worker/assets.ts`, which
-`examples/lending/scripts/assets.mjs` writes. Like the page, it needs no
-binding, setting or secret of its own. Serving it does not create a
-library: a room creates one with its application factory, as the
-library's [runbook](../examples/lending/runbook.md) describes.
+## Trusted application screens
 
-## The lending library's deployment
+The host serves installed packages at
+`/applications/<directory>/<install-item>/<encoded-presentation-id>/`.
+Counter and Lending are maintained packages; the host contains neither
+app's route or compiled assets. A new operator-trusted release needs a
+committed packet and native room install, without a host redeployment.
 
-The project's library runs on its own deployment of the scope Worker,
-`dap-lending`, at <https://dap-lending.inguz.workers.dev>. Its
-configuration is `apps/room/wrangler.lending.jsonc`: its own
-Durable Object namespace, the Artifacts namespace `dap-lending`, and an
-`ARTIFACTS_CONFIG` that names the library room's register. Deploy it from
-`apps/room`:
+Bind the private R2 bucket `artroom-application-content` as
+`APPLICATION_CONTENT`, as `apps/room/wrangler.jsonc` declares. The operator
+provisions that bucket before the reviewed host deployment and leaves its
+public access disabled. The Worker owns CID-keyed immutable content. It
+exposes no bucket upload, list, delete, or arbitrary-key route.
 
-```sh
-npx -y wrangler@4.147.0 deploy --config wrangler.lending.jsonc
+Set `APPLICATION_TRUST` to nonsecret JSON rows with exactly `release` and
+`publisher`, using the expected release and publisher printed by `dap pack`:
+
+```json
+[{"release":"sha256:<64 lowercase hex>","publisher":"key_<publisher public key>"}]
 ```
 
-Set `DEPLOYMENT` and `SESSION_SECRET` for it as for any deployment, from
-standard input. `dap install --plan` needs the service's address and
-prints the register's ID, so the first deployment has no
-`ARTIFACTS_CONFIG`. Set it to that register and deploy again before the
-room is created. The [runbook](../examples/lending/runbook.md) gives the
-whole order, and its rehearsal section records the run of
-14 October 2026.
+A missing setting admits nothing; malformed or ambiguous rows refuse as a
+whole. The host checks the complete signed packet and exact publisher before
+storing it. A screen request also checks current trust and its active native
+installation. Revoked trust stops screen delivery. This same-origin route
+is not isolation for arbitrary packages: only operator-listed trusted
+releases enter. The current host Git transport explicitly refuses SHA-256
+repositories before network; it does not fall back to another source.
+
+`DEPLOYMENT` must be the same value used by native read sessions. The screen
+context carries that deployment and exact room references; it grants no
+membership authority. [The CLI guide](cli.md) covers generic room selection,
+URI install, requested default grants, and progress/refusal reads.
+
+The dated `apps/room/wrangler.lending.jsonc` and the library
+[runbook](../examples/lending/runbook.md) preserve earlier service provisioning.
+They are not the generic M1 deployment target. The planner publishes reviewed
+Main and makes the reviewed generic host deployment under the user's current
+authorization. Builder's local checks and dry runs create no Cloudflare resource.
 
 ## The homepage
 

@@ -134,7 +134,7 @@ export class Deliveries {
     const receiving = this.#scope.pinned();
     const reserve = receiving && isPlatformDefinition(receiving.named) && platformName(receiving.named) === "platform:destination"
       && message.class === "request" && message.type === "tell" && isObject(message.body) && message.body["message"] === "reserve";
-    const file = ["platform:destination@4", "platform:destination@5", "platform:destination@6"].includes(receiving?.named ?? "") && message.class === "request" && message.type === "tell"
+    const file = ["platform:destination@4", "platform:destination@5", "platform:destination@6", "platform:destination@7"].includes(receiving?.named ?? "") && message.class === "request" && message.type === "tell"
       && isObject(message.body) && message.body["message"] === "publish-file";
     const known = store.decided(from.at, from.seq, delivered.n) !== null;
     const creates = message.class === "request" && message.type === "create" && !isScopeRef(delivered.to);
@@ -185,7 +185,8 @@ export class Deliveries {
       const directory = store.page("branch", ["empty", "ready"], null, 1).items[0]?.refs["directory"];
       const destination = store.scope()?.at;
       if (!isScopeRef(directory) || !destination) return retry("dependency-unavailable");
-      const native = reader?.mode === "partition-v1" ? await reader.publication(from, directory, destination, "application") : applicationPublicationOrigin(from, directory, destination, read.origin ?? []);
+      const policy = pinned?.platform?.named === "platform:destination@7" ? this.#ports.definitions.platform("platform:destination@7")?.applicationPublicationOrigin : applicationPublicationOrigin;
+      const native = reader?.mode === "partition-v1" ? await reader.publication(from, directory, destination, "application") : policy?.(from, directory, destination, read.origin ?? []) ?? null;
       if (native === null) return retry("dependency-unavailable");
       if (!native) return UNVERIFIED;
     }

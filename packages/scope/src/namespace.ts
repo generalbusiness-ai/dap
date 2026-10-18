@@ -19,9 +19,9 @@
  */
 
 import type { Digest, Entry, FactRef, ObservationRequest, ObservedScope, RoutingRefusal, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isFactRef, isKeyId, isMemberId, isPlatformDefinition, isScopeId, parseStrict, scopeIdOf, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, definitionDigest, textDigest, isDigest, isFactRef, isKeyId, isMemberId, isPlatformDefinition, isScopeId, parseStrict, scopeIdOf, utf8 } from "@generalbusiness/artroom-bytes";
 import { isEntryOf, isObject, isScopeRef, type Delivered, type Fetched, type ScopeState } from "@generalbusiness/dap-derive";
-import { isOf, platform, sourceName } from "@generalbusiness/dap-platform";
+import { INSTALL_DEFINITION_BYTES, isOf, platform, sourceName } from "@generalbusiness/dap-platform";
 import type { Membership } from "./authority.ts";
 import type { Pinned } from "./core.ts";
 import type { Definitions, Delivery, Resolver, SentTexts, Transport } from "./ports.ts";
@@ -161,8 +161,23 @@ export function sourced(store: Store, pinned: Pinned | null, seq: number, origin
  * that digest. The bytes are immutable and the reader checks their digest,
  * so the answer says nothing else about this scope.
  */
-export function declaredBy(store: Store, digest: Digest): string | null {
-  return typeof digest === "string" ? (store.retained("definition", digest)?.bytes ?? null) : null;
+export function declaredBy(store: Store, digest: Digest, named?: string): string | null {
+  if (!isDigest(digest)) return null;
+  const direct = store.retained("definition", digest)?.bytes;
+  if (direct !== undefined) return direct;
+  // Only an explicitly versioned native locator can select a retained text.
+  // The immutable bytes remain in this creator's custody; this is no remote
+  // read, cache lookup or fallback to another scope's present state.
+  const text = named === undefined ? null : platform(named)?.declaredText?.(store, digest);
+  if (!text) return null;
+  const kept = store.retained("text", text);
+  if (!kept || kept.bytes.length > INSTALL_DEFINITION_BYTES * 6 + 2) return null;
+  try {
+    const raw = parseStrict(kept.bytes);
+    if (typeof raw !== "string" || utf8(raw).length > INSTALL_DEFINITION_BYTES || textDigest(raw) !== text) return null;
+    const body = parseStrict(raw);
+    return canonicalize(body) === raw && definitionDigest(body as import("@generalbusiness/dap-contract").DeclaredDefinition) === digest ? raw : null;
+  } catch { return null; }
 }
 
 /**

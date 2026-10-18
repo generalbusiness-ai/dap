@@ -72,13 +72,16 @@ test("the platform package depends only on contract, bytes and derive, and only 
 // The git package is the one place that touches a Git repository or a Git host (I3 plan, section 3.1). It depends only on contract and
 // bytes. The runtime and the checker service name it. The platform package may name it in its tests only, where the host stand-in runs
 // the same table of sends as the real repository does: no rule of a platform definition reads a repository.
+// M1 preparation permits one explicit public immutable reader import. The
+// server's other modules and broad Git/provider/Node entry points stay closed.
+const applicationGitUsers = new Set(["packages/mcp/package.json", "packages/mcp/src/service.ts"]);
 const replayGitUsers = new Set(["packages/replay/src/git.ts", "packages/replay/test/archive-git.test.ts", "packages/replay/test/archive-git-fixture.ts", "packages/replay/package.json"]);
 test("Git keeps its lower-layer dependencies; Replay names it only at its exact development boundaries", () => {
   assert.ok(files.includes("packages/git/package.json"), "the git package was listed");
   const source = (f) => packagePath(f).startsWith("packages/") && !f.endsWith(".md");
   const inside = files.filter((f) => source(f) && packagePath(f).startsWith("packages/git/"));
   assert.deepEqual(inside.filter((f) => /(?:artroom|dap)-(derive|platform|scope|replay|client|lanes|checkers)/.test(text(f))), []);
-  const named = files.filter((f) => source(f) && !replayGitUsers.has(f) && !/^packages\/(git|scope|checkers)\/|^packages\/platform\/test\//.test(packagePath(f)));
+  const named = files.filter((f) => source(f) && !replayGitUsers.has(f) && !applicationGitUsers.has(f) && !/^packages\/(git|scope|checkers)\/|^packages\/platform\/test\//.test(packagePath(f)));
   assert.deepEqual(named.filter((f) => /artroom-git/.test(text(f))), []);
   const replay = JSON.parse(text("packages/replay/package.json"));
   assert.equal(replay.dependencies?.["@generalbusiness/artroom-git"], undefined);
@@ -141,6 +144,7 @@ test("the checkers package depends only on contract, bytes and git, and no packa
 // the platform and the derivation, and never a lane definition, an example, the page, the checker service or the runtime. Its
 // tests may run the runtime's test Worker and read the lanes and examples, as the page's do.
 function mcpImportAllowed(file, specifier) {
+  if (file === "packages/mcp/src/service.ts" && specifier === "@generalbusiness/artroom-git/application") return true;
   if (specifier.startsWith("./") || specifier.startsWith("../")) {
     const target = normalize(join(dirname(file), specifier));
     return target.startsWith("packages/mcp/src/") && /\.(ts|json)$/.test(target) && files.includes(target);
@@ -152,20 +156,25 @@ function mcpImportAllowed(file, specifier) {
 // Invariant: a nested server module may reach its own tracked source, but never a test, browser entry or another package.
 test("MCP relative imports stay inside tracked server source", () => {
   assert.equal(mcpImportAllowed("packages/mcp/src/service.ts", "./views/session.ts"), true);
+  assert.equal(mcpImportAllowed("packages/mcp/src/service.ts", "@generalbusiness/artroom-git/application"), true);
+  assert.equal(mcpImportAllowed("packages/mcp/src/views/session.ts", "@generalbusiness/artroom-git/application"), false);
+  for (const specifier of ["@generalbusiness/artroom-git", "@generalbusiness/artroom-git/node", "@generalbusiness/artroom-git/http", "@generalbusiness/artroom-git/github", "@generalbusiness/artroom-git/application/../node"]) {
+    assert.equal(mcpImportAllowed("packages/mcp/src/service.ts", specifier), false, specifier);
+  }
   assert.equal(mcpImportAllowed("packages/mcp/src/views/session.ts", "../custody.ts"), true);
   for (const specifier of ["../../test/support/room.ts", "../../browser/main.ts", "../../../scope/src/object.ts", "/tmp/other.ts", "@generalbusiness/dap-lanes", "@generalbusiness/artroom-client/../scope"]) {
     assert.equal(mcpImportAllowed("packages/mcp/src/views/session.ts", specifier), false, specifier);
   }
 });
 
-test("the MCP server's source imports only contract, bytes, client, platform and derive", () => {
+test("the MCP server imports its lower layers and the exact public application Git reader only", () => {
   assert.ok(files.includes("packages/mcp/package.json"), "the mcp package was listed");
   const inside = files.filter((f) => packagePath(f).startsWith("packages/mcp/src/") && f.endsWith(".ts"));
   assert.ok(inside.length > 5, "the server's source was listed");
   assert.deepEqual(inside.flatMap((file) => moduleSpecifierSpans(text(file)).filter(({ value }) => !mcpImportAllowed(file, value)).map(({ value }) => `${file}: ${value}`)), []);
-  assert.deepEqual(inside.filter((f) => /(?:artroom|dap)-(lanes|page|checkers|scope|replay|git)|examples\//.test(text(f))), []);
+  assert.deepEqual(inside.filter((f) => /(?:artroom|dap)-(lanes|page|checkers|scope|replay)|examples\//.test(text(f))), []);
   const mcp = JSON.parse(text("packages/mcp/package.json") || "{}");
-  assert.deepEqual(Object.keys(mcp.dependencies ?? {}).filter((d) => !/^@generalbusiness\/(artroom-(bytes|client)|dap-(contract|platform|derive))$/.test(d)), []);
+  assert.deepEqual(Object.keys(mcp.dependencies ?? {}).filter((d) => d !== "@generalbusiness/artroom-git" && !/^@generalbusiness\/(artroom-(bytes|client)|dap-(contract|platform|derive))$/.test(d)), []);
 });
 
 // Invariant: reusable runtime modules never require application source or page assets.

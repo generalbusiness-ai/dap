@@ -2,14 +2,14 @@ import { expect, test } from "vitest";
 import type { PlatformDefinition, Receipt, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, intentDigest, newIncarnation, scopeIdOf, textDigest, timeMs } from "@generalbusiness/artroom-bytes";
 import type { Fetch } from "@generalbusiness/artroom-client";
-import { INVITATION_KEY_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, COUNTING_COHORT } from "@generalbusiness/dap-platform";
+import { INVITATION_KEY_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, TRUSTED_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { command, install, installPlanned, memoryStore, planInstall, type Config, type Context, type Store } from "../src/index.ts";
 
 const SERVICE = "https://cohort.test";
-const COHORT = "counting-commitments" as const;
+const COHORT = "trusted-application" as const;
 const COHORTS = [
   { name: "invitation-key", definition: INVITATION_KEY_COHORT.register, other: COHORT },
-  { name: COHORT, definition: COUNTING_COHORT.register, other: "application" },
+  { name: COHORT, definition: TRUSTED_APPLICATION_COHORT.register, other: "application" },
   { name: "application-publication", definition: FILE_PUBLICATION_COHORT.register, other: COHORT },
   { name: "application", definition: APPLICATION_COHORT.register, other: COHORT },
 ] as const;
@@ -38,7 +38,7 @@ function scenario(fault: "none" | "reply" | "save" = "none") {
       const body = String(init?.body);
       const request = JSON.parse(body) as { creation: SignedIntent; definition: PlatformDefinition };
       const kept = (await store.config())!;
-      if (request.definition === INVITATION_KEY_COHORT.register || request.definition === COUNTING_COHORT.register || request.definition === APPLICATION_COHORT.register || request.definition === FILE_PUBLICATION_COHORT.register) {
+      if (request.definition === INVITATION_KEY_COHORT.register || request.definition === TRUSTED_APPLICATION_COHORT.register || request.definition === APPLICATION_COHORT.register || request.definition === FILE_PUBLICATION_COHORT.register) {
         expect(kept.plan?.attempted).toMatch(/^sha256:/);
         expect(canonicalize(kept.plan?.["founding"])).toBe(canonicalize(request.creation));
         expect(kept.plan?.definition).toBe(request.definition);
@@ -58,11 +58,20 @@ function scenario(fault: "none" | "reply" | "save" = "none") {
 
 test("closed cohort selection preserves legacy defaults and refuses retained binding conflicts without replacing custody", async () => {
   const bad = scenario();
-  for (const args of [["install", SERVICE, "--cohort"], ["install", SERVICE, "--cohort", "latest"], ["install", SERVICE, "--cohort", ""], ["install", SERVICE, "--cohort", COHORT, "--cohort", COHORT], ["install", SERVICE, "--cohort", "application", "--cohort", COHORT]]) {
+  for (const args of [["install", SERVICE, "--cohort"], ["install", SERVICE, "--cohort", "latest"], ["install", SERVICE, "--cohort", "counting-commitments"], ["install", SERVICE, "--cohort", ""], ["install", SERVICE, "--cohort", COHORT, "--cohort", COHORT], ["install", SERVICE, "--cohort", "application", "--cohort", COHORT]]) {
     expect((await command(bad.ctx, args)).code).toBe(2);
   }
   expect((await install(bad.ctx, SERVICE, { cohort: "latest" as never })).code).toBe(2);
   expect([bad.metrics(), bad.bodies, await bad.store.config()]).toEqual([{ saves: 0, keyReads: 0, keyWrites: 0 }, [], null]);
+  // A well-shaped retained Counter plan still cannot create a new room.
+  const retired = scenario();
+  expect((await planInstall(retired.ctx, SERVICE, { cohort: COHORT })).code).toBe(0);
+  const configured = (await retired.store.config())!, founding = configured.plan!["founding"];
+  const retiredPlan = { ...configured.plan!, definition: "platform:register@6" as const, register: scopeIdOf({ v: 1, kind: "register", definition: "platform:register@6", creator: null, cause: intentDigest(founding.intent), ordinal: 0 }) };
+  await retired.store.save({ ...configured, plan: retiredPlan });
+  const retiredMetrics = retired.metrics();
+  expect(await installPlanned(retired.ctx)).toMatchObject({ code: 1, lines: [expect.stringMatching(/^Refused: retired-cohort/)] });
+  expect([retired.metrics(), retired.bodies, (await retired.store.config())!.plan]).toEqual([retiredMetrics, [], retiredPlan]);
   const legacy = scenario();
   expect((await command(legacy.ctx, ["install", "--plan", SERVICE])).code).toBe(0);
   const legacyPlan = (await legacy.store.config())!.plan!;
@@ -118,7 +127,7 @@ test("closed cohort selection preserves legacy defaults and refuses retained bin
     ]) {
       const refused = await command(expired.ctx, args);
       expect(refused.code).toBe(1);
-      expect(refused.lines[0]).toContain(`For a new ${name === "counting-commitments" ? "Counting" : name} plan, set DAP_HOME to a separate empty directory`);
+      expect(refused.lines[0]).toContain(`For a new ${name} plan, set DAP_HOME to a separate empty directory`);
       expect(refused.lines[0]).toContain("If ARTROOM_HOME is set, unset it or set it to that same new directory");
       expect(refused.lines[0]).toContain("different directories refuse before configuration is read");
       expect(refused.lines[0]).not.toContain("Plan again");
@@ -171,4 +180,21 @@ test("selected delivery requires exact plan and attempt readback and recovers th
     expect((await install(changed.ctx, SERVICE, { cohort: name })).code).toBe(1);
     expect(changed.bodies).toEqual([]);
   }
+});
+
+
+// Invariant: application options cannot fall through into register creation
+// or signing when the URI/options or persistent custody are unavailable.
+test("application install syntax and custody failures never create a register", async () => {
+  const s = scenario(), uri = `git+https://packages.test/apps.git/@${"a".repeat(40)}/counter.dap.json`, release = `sha256:${"b".repeat(64)}`;
+  for (const args of [
+    ["install", uri], ["install", uri, "--release", release],
+    ["install", uri, "--release", release, "--release", release, "--request", "counter-1"],
+    ["install", uri, "--release", release, "--request", "counter-1", "--cohort", COHORT],
+    ["install", uri, "--release", release, "--request", "counter-1", "--values", "{"],
+    ["install", SERVICE, "--release", release, "--request", "counter-1"],
+    ["application", "01"], ["application", "-1"],
+  ]) expect((await command(s.ctx, args)).code).toBe(2);
+  expect(await command(s.ctx, ["install", uri, "--release", release, "--request", "counter-1"])).toMatchObject({ code: 1, lines: [expect.stringContaining("Persistent application request custody")] });
+  expect([s.metrics(), s.bodies, await s.store.config()]).toEqual([{ saves: 0, keyReads: 0, keyWrites: 0 }, [], null]);
 });

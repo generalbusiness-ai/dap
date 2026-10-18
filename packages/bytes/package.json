@@ -7,7 +7,10 @@
   "sideEffects": false,
   "exports": {
     ".": "./src/index.ts",
-    "./web": { "types": "./src/web.d.ts" }
+    "./web": {
+      "types": "./src/web.d.ts"
+    },
+    "./application": "./src/application.ts"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.test.json",

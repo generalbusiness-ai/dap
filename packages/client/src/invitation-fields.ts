@@ -1,11 +1,11 @@
 /** Exact cohort selection for private invitation handoff and public redemption. */
-import { INVITATION_KEY_MEMBERSHIP } from "@generalbusiness/dap-contract";
+import { INVITATION_KEY_MEMBERSHIPS } from "@generalbusiness/dap-contract";
 import type { FieldValue, KeyId, ScopeRef } from "@generalbusiness/dap-contract";
 import { b64url, isRecord, isSignature, keyIdOfSecret, signInvitationProof, textDigest, unb64url } from "@generalbusiness/artroom-bytes";
 
-export { INVITATION_KEY_MEMBERSHIP } from "@generalbusiness/dap-contract";
+export { INVITATION_KEY_MEMBERSHIP, INVITATION_KEY_MEMBERSHIPS } from "@generalbusiness/dap-contract";
 const LEGACY = new Set(["platform:membership@1", "platform:membership@2", "platform:membership@4", "platform:membership@5"]);
-export const usesInvitationKey = (definition: unknown): boolean => definition === INVITATION_KEY_MEMBERSHIP;
+export const usesInvitationKey = (definition: unknown): boolean => (INVITATION_KEY_MEMBERSHIPS as readonly unknown[]).includes(definition);
 function privateSeed(secret: string): Uint8Array {
   const seed = unb64url(secret);
   if (!seed || seed.length !== 32 || b64url(seed) !== secret) throw new Error("Invalid private invitation seed.");

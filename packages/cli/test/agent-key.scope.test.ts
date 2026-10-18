@@ -1,12 +1,12 @@
 /**
- * Tagged agent-key issuance and enrolment on the current application cohorts (request 53850986): the Counting cohort, whose
- * membership is pinned to platform:membership@5, and the application cohort, pinned to platform:membership@4. The command's
+ * Tagged agent-key issuance and enrolment on the current application cohorts (request 53850986): the trusted application cohort, whose
+ * membership is pinned to platform:membership@7, and the application cohort, pinned to platform:membership@4. The command's
  * functions run over the Worker's real routes on real scopes of the namespace PLATFORM, with the real read sessions under a
  * TEST SECRET; the Git host and the scheduler are STAND-INs, as in story.scope.test.ts.
  *
- * Witnesses: issuance and enrolment of two separate agent configurations with real membership@5 receipts and the agent role's
+ * Witnesses: issuance and enrolment of two separate agent configurations with real membership@7 receipts and the agent role's
  * acts; the same on membership@4, with a kept person invitation whose answer is lost, checked and joined; and three refusals: an invitation whose pin names another definition than the membership's
- * receipt, a counting invitation presented to the library's membership, and an issuance by an admin who names another member
+ * receipt, a trusted application invitation presented to the library's membership, and an issuance by an admin who names another member
  * as the controller. No link is relabelled into acceptance, no directory allowlist is widened, no person is substituted, and no
  * key is transplanted between rooms.
  */
@@ -14,7 +14,7 @@ import { describe, expect, test } from "vitest";
 import type { Digest, Item, OperationId, Read, Receipt, ScopeRef, Seed, SignedIntent } from "@generalbusiness/dap-contract";
 import { b64url, scopeIdOf } from "@generalbusiness/artroom-bytes";
 import { AGENT_KEY_LINK, agentKeyInvitationOf, encodeAgentKeyInvitation, type AgentKeyInvitation, type Fetch } from "@generalbusiness/artroom-client";
-import { APPLICATION_COHORT, COUNTING_COHORT, repositoryName } from "@generalbusiness/dap-platform";
+import { APPLICATION_COHORT, TRUSTED_APPLICATION_COHORT, repositoryName } from "@generalbusiness/dap-platform";
 import { beginSessionFixture } from "../../scope/test/session-settings.ts";
 import { Platform, routed } from "../../scope/test/repository.ts";
 import { outsideOf } from "../../scope/test/outside.ts";
@@ -25,8 +25,8 @@ const SERVICE = "https://scopes.test";
 /** The test's own reader, which the command never presents. */
 const reader = "a test reader";
 
-describe("tagged agent-key enrolment on the Counting and application cohorts, over the Worker's routes on real scopes", () => {
-  test("membership@5: two agents enrolled with real receipts and the agent role's acts; membership@4: one more, and a kept person invitation checked after a lost answer and joined; a relabelled pin, a link presented to another room and a foreign controller are each refused with nothing replaced", async () => {
+describe("tagged agent-key enrolment on the trusted application and historical application cohorts, over the Worker's routes on real scopes", () => {
+  test("membership@7: two agents enrolled with real receipts and the agent role's acts; membership@4: one more, and a kept person invitation checked after a lost answer and joined; a relabelled pin, a link presented to another room and a foreign controller are each refused with nothing replaced", async () => {
     const owner = beginSessionFixture({ secret: b64url(crypto.getRandomValues(new Uint8Array(32))), sessions: true, inspector: reader });
     const lifetime = nativeFixtureLifetime(owner);
     try { await story(lifetime); } finally { lifetime.release(); }
@@ -83,7 +83,7 @@ async function story(lifetime: Lifetime): Promise<void> {
   const run = async (who: Context, ...argv: string[]): Promise<Outcome> => lifetime.wait(() => command(who, argv));
 
   /** A room of one cohort, created by its admin through the command: install with the cohort, wire the host stand-in, create. */
-  const create = async (admin: Context, cohort: "counting-commitments" | "application", namespace: string, name: string, handle: string) => {
+  const create = async (admin: Context, cohort: "trusted-application" | "application", namespace: string, name: string, handle: string) => {
     const installed = await run(admin, "install", SERVICE, "--host", "git.example", "--namespace", namespace, "--cohort", cohort);
     expect(installed.code, installed.lines.join("\n")).toBe(0);
     const R = node((await admin.store.config())!.register!.scope);
@@ -169,15 +169,15 @@ async function story(lifetime: Lifetime): Promise<void> {
     return { member, key: String(key.values["id"]) };
   };
 
-  // ---- The Counting cohort: membership@5. Two agents, each its own configuration and key.
+  // ---- The trusted application cohort: membership@7. Two agents, each its own configuration and key.
   const rita = person();
-  const counter = await create(rita, "counting-commitments", "artroom", "counter", "@rita");
-  expect([(await counter.M.summary()).value.definition, COUNTING_COHORT.membership]).toEqual(["platform:membership@5", "platform:membership@5"]);
-  expect((await node(counter.repository.directory.scope).summary()).value.definition).toBe(COUNTING_COHORT.directory);
+  const counter = await create(rita, "trusted-application", "artroom", "counter", "@rita");
+  expect([(await counter.M.summary()).value.definition, TRUSTED_APPLICATION_COHORT.membership]).toEqual(["platform:membership@7", "platform:membership@7"]);
+  expect((await node(counter.repository.directory.scope).summary()).value.definition).toBe(TRUSTED_APPLICATION_COHORT.directory);
   const bots = [person(), person()];
   const links = [await link(rita, counter.membership, "@bot1", "@rita"), await link(rita, counter.membership, "@bot2", "@rita")];
-  const first = await enrol(counter, bots[0]!, links[0]!, "@bot1", "platform:membership@5");
-  const second = await enrol(counter, bots[1]!, links[1]!, "@bot2", "platform:membership@5");
+  const first = await enrol(counter, bots[0]!, links[0]!, "@bot1", "platform:membership@7");
+  const second = await enrol(counter, bots[1]!, links[1]!, "@bot2", "platform:membership@7");
   expect(first.key).not.toBe(second.key);
   expect(first.member.id).not.toBe(second.member.id);
   // No line printed to either agent holds its signing key or the link's secret.
@@ -271,16 +271,16 @@ async function story(lifetime: Lifetime): Promise<void> {
   // does not take it up. The exact original is retained unverified; nothing is replaced.
   const spare = await link(rita, counter.membership, "@bot4", "@rita");
   const mislabelled = person();
-  const wrongPin = await run(mislabelled, "join", relabel(spare, { definition: "platform:membership@4" }));
-  expect(wrongPin).toEqual({ code: 1, lines: ["The invitation names platform:membership@4, and the membership's receipt names platform:membership@5. The exact original enrolment is retained unverified; nothing was replaced."] });
+  const wrongPin = await run(mislabelled, "join", relabel(spare, { definition: "platform:membership@6" }));
+  expect(wrongPin).toEqual({ code: 1, lines: ["The invitation names platform:membership@6, and the membership's receipt names platform:membership@7. The exact original enrolment is retained unverified; nothing was replaced."] });
   const mislabelledConfig = (await mislabelled.store.config())!;
   expect([mislabelledConfig.repository, mislabelledConfig.handle, mislabelledConfig.join?.accepted]).toEqual([undefined, undefined, undefined]);
   // The same link, relabelled, checked again: the same refusal, and nothing further is sent.
   const headAfterWrongPin = (await counter.M.summary()).at;
-  expect(await withoutActSubmission(() => lifetime.wait(() => enrolAgentKey(mislabelled, relabel(spare, { definition: "platform:membership@4" }), { mode: "check" })))).toEqual(wrongPin);
+  expect(await withoutActSubmission(() => lifetime.wait(() => enrolAgentKey(mislabelled, relabel(spare, { definition: "platform:membership@6" }), { mode: "check" })))).toEqual(wrongPin);
   expect((await counter.M.summary()).at).toEqual(headAfterWrongPin);
 
-  // A counting invitation presented to the library's membership: the library refuses the enrol natively, since it holds no such
+  // A trusted application invitation presented to the library's membership: the library refuses the enrol natively, since it holds no such
   // invitation, and the receiving configuration keeps the refusal, not a repository.
   const presentedElsewhere = person();
   const libraryHead = (await library.M.summary()).at;
@@ -292,14 +292,14 @@ async function story(lifetime: Lifetime): Promise<void> {
   expect(await withoutActSubmission(() => run(presentedElsewhere, "join", retarget(spare, library, { definition: "platform:membership@4" })))).toEqual({ code: 1, lines: [expect.stringMatching(/^The original agent enrollment was refused: .*\. Nothing was replaced\.$/)] });
   expect((await library.M.summary()).at).toEqual(libraryHead);
 
-  // A key of one room presented as an invitation of the other: the library membership refuses a counting agent's enrol too, under
-  // the counting room's own link with its pin. The counting room's head is untouched by either.
+  // A key of one room presented as an invitation of the other: the library membership refuses a trusted application agent's enrol too, under
+  // the trusted application's room own link with its pin. The trusted application's room head is untouched by either.
   const counterHead = (await counter.M.summary()).at;
   const transplanted = await run(person(), "join", retarget(spare, library));
   expect(transplanted.code).toBe(1);
   expect([(await counter.M.summary()).at, (await library.M.summary()).at]).toEqual([counterHead, libraryHead]);
 
-  // What the relabelled link did consume: the counting membership admitted that enrol natively, under its own definition, so
+  // What the relabelled link did consume: the trusted application membership admitted that enrol natively, under its own definition, so
   // @bot4's key is active there, and no configuration holds it. Only the link's holder can relabel a private link, and the
   // issuer's pin was read from the membership itself, so a mismatch is the holder's own doing; the configuration never takes
   // up an enrolment under a definition the link did not name.

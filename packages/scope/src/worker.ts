@@ -1,3 +1,7 @@
+import { applicationPage } from "./applications/route.ts";
+import { applicationHostOutside } from "./applications/wiring.ts";
+import { applicationAnnouncementOutside } from "./applications/announce.ts";
+import type { ApplicationBindings } from "./applications/bindings.ts";
 import { health } from "./health.ts";
 /**
  * The Worker (scope contract, sections 2.3, 7.1 and 9.1): the routes of a
@@ -101,7 +105,7 @@ import type { MetricPoint } from "./metrics.ts";
  * the operator sets it, and no file of this repository holds one.
  * `DEPLOYMENT` is the deployment's name, which a session's token names.
  */
-export interface Env extends GitHubBindings, ArtifactsBindings, MetricEnvironment { SCOPES: DurableObjectNamespace; SESSION_SECRET?: string; DEPLOYMENT?: string }
+export interface Env extends GitHubBindings, ArtifactsBindings, ApplicationBindings, MetricEnvironment { SCOPES: DurableObjectNamespace; SESSION_SECRET?: string; DEPLOYMENT?: string }
 /** The two namespaces of the hosted MCP endpoint (`McpRegistry`, `McpAgent`): one registry per repository, one object per agent. */
 export interface McpEnv extends Env { REGISTRIES: DurableObjectNamespace; AGENTS: DurableObjectNamespace }
 
@@ -381,7 +385,7 @@ async function routedRequest(request: Request, binding: Binding): Promise<Respon
  * or that records none, gets `NO_OUTSIDE`. Each wiring still checks its own
  * authority.
  */
-export function outsideOf(given: OutsideGiven, sql: Pick<SqlStorage, "exec">, env: GitHubBindings & ArtifactsBindings, fetch?: (request: Request) => Promise<Response>, snapshotReader?: import("./destination-host.ts").SnapshotReader): Outside {
+export function outsideOf(given: OutsideGiven, sql: Pick<SqlStorage, "exec">, env: GitHubBindings & ArtifactsBindings & ApplicationBindings, fetch?: (request: Request) => Promise<Response>, snapshotReader?: import("./destination-host.ts").SnapshotReader): Outside {
   // The settings are read from the environment at every call, and a host's wiring is made again only when one of its values
   // changed. So a setting that appears in this object's life takes effect at its next call, with no restart.
   const wired = new Map<string, { values: readonly unknown[]; outside: Outside }>();
@@ -392,20 +396,30 @@ export function outsideOf(given: OutsideGiven, sql: Pick<SqlStorage, "exec">, en
     wired.set(host, { values, outside });
     return outside;
   };
+  const announcement = applicationAnnouncementOutside(given);
   const pick = (): Outside => {
     const host = recordedHost(given);
     if (host === "github.com" && env.GITHUB_APP_CONFIG) return wiring(host, [env.GITHUB_APP_CONFIG, env.GITHUB_APP_PRIVATE_KEY, env.GITHUB_CREATION_TOKEN, env.GITHUB_READ_TOKEN, env.GITHUB_CLEANUP_TOKENS, env.DEMO_START_CONFIG, env.DEPLOYMENT], () => gitHubOutside(given, sql, env, fetch, snapshotReader));
     if (host === ARTIFACTS_HOST && env.ARTIFACTS_CONFIG) return wiring(host, [env.ARTIFACTS_CONFIG, env.ARTIFACTS_NAMESPACE, env.ARTIFACTS], () => artifactsOutside(given, sql, env, fetch, snapshotReader));
     return NO_OUTSIDE;
   };
+  const selected = (owner: string, kind: string): Outside => {
+    if (owner === "platform:rules@5" && ["fetch-application", "admit-application"].includes(kind)) return wiring("application", [env.APPLICATION_CONTENT, env.APPLICATION_TRUST], () => applicationHostOutside(env, PROPOSED_BOUNDS, fetch));
+    if (owner === "platform:directory@11" && kind === "announce-application") return announcement;
+    return pick();
+  };
   return {
     snapshot: (asked) => pick().snapshot?.(asked) ?? Promise.resolve(null),
-    accepts: (owner, kind) => pick().accepts(owner, kind),
-    send: (request) => pick().send(request),
+    accepts: (owner, kind) => selected(owner, kind).accepts(owner, kind),
+    send: (request) => selected(request.owner, request.kind).send(request),
     judged: (at, sealed) => pick().judged?.(at, sealed),
+    hostPreparation: {
+      accepts: (owner, kind) => selected(owner, kind).hostPreparation?.accepts(owner, kind) ?? false,
+      resume: request => selected(request.owner, request.kind).hostPreparation?.resume(request) ?? Promise.resolve(null),
+    },
     recovery: {
-      accepts: (owner, kind) => pick().recovery?.accepts(owner, kind) ?? false,
-      read: (request) => pick().recovery?.read(request) ?? Promise.resolve(null),
+      accepts: (owner, kind) => selected(owner, kind).recovery?.accepts(owner, kind) ?? false,
+      read: (request) => selected(request.owner, request.kind).recovery?.read(request) ?? Promise.resolve(null),
     },
     replies: (limit) => pick().replies?.(limit) ?? { answers: [], more: false },
     credential: (handle, key) => pick().credential?.(handle, key) ?? null,
@@ -507,7 +521,8 @@ export default {
     const healthy = await health(request, env);
     if (healthy) return healthy;
     const hosted = await mcpRoute(request, env);
-    return hosted ?? (isSite(request) ? site(request, env) : route(request, env.SCOPES));
+    const application = hosted ? null : await applicationPage(request, env);
+    return hosted ?? application ?? (isSite(request) ? site(request, env) : route(request, env.SCOPES));
     });
   },
 };
