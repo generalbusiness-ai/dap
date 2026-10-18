@@ -6,7 +6,7 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { resolve, relative, isAbsolute, basename } from "node:path";
 import { tmpdir } from "node:os";
-import { spawnSync } from "node:child_process";
+import { runNodeWitness } from "./node-witness.mjs";
 const root=realpathSync(fileURLToPath(new URL("../../../",import.meta.url)));
 const inside=(base,path)=>{const part=relative(base,path);return part===""||!part.startsWith("..")&&!isAbsolute(part);};
 const lock=await readFile(resolve(root,"package-lock.json"));
@@ -37,6 +37,6 @@ const files=outputs.map(([name,info])=>{const path=realpathSync(resolve(root,nam
 if(new Set(files.map(path=>basename(path))).size!==names.length||new Set(outputs.map(([,info])=>info.entryPoint)).size!==names.length)throw new Error("Duplicate Counting witness output.");
 
 await writeFile(resolve(output,"source.json"),JSON.stringify({root,entries,outputs:files}));
-const run=spawnSync(process.execPath,["--test",...files],{cwd:root,stdio:"inherit",env:Object.fromEntries(Object.entries(process.env).filter(([name])=>name!=="NODE_PATH"&&name!=="NODE_OPTIONS"))});
+const run=await runNodeWitness(files,{cwd:root});
 console.log(`Counting Node witness evidence: ${output}`);
-process.exitCode=run.status??1;
+process.exitCode=run.code;
