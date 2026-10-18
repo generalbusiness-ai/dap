@@ -285,3 +285,32 @@ identity. The final-head gate remains due when this note is committed.
 Both earlier failed gates remain failed evidence, not reconstructed passes.
 
 Protocol reference: [MCP Apps, stable 2026-01-26](https://github.com/modelcontextprotocol/ext-apps/blob/main/specification/2026-01-26/apps.mdx).
+
+### Actor identity repair after review
+
+Checker report `312f8b21` requested one change at `e787dce7`: the agent
+and checker marks were reversed from the approved design. The generic
+renderer now uses a circle for a person, a square for an agent and an
+outlined diamond for a checker. Names, role text and the agent's
+controller remain beside their decorative, aria-hidden marks.
+
+The browser matrix now checks all three rendered identities in each of
+its six light/dark and 592/390/320 px cases. It retains the exact marks,
+names, roles and controller text in the report. All 24 browser cases
+passed with the rebuilt four HTML resources, including those 18 actor
+projections, with no page, console or host protocol errors. The resource
+checks passed three cases. The retained agent and checker captures show
+the repaired shapes; these remain fixture-host witnesses, not desktop
+AI-app acceptance.
+
+The first restricted browser invocation exited 13 at host startup with
+an unsettled top-level await and ran no assertions. The separately
+authorized loopback/Chrome invocation exited 0. Its launch log retains
+the DEP0205 warning. No general startup or harness cure is inferred.
+
+The prior `e787dce7` gate subsequently passed under evidence `823af770`:
+334 Vitest files and 1,677 cases passed, one file and three cases were
+skipped, and 30 Node plus 55 Counting cases passed. That closes only
+that head's earlier pending gate language. A new final-head gate remains
+due for this repair; earlier failed gates, browser attempts and checker
+findings remain their recorded outcomes.

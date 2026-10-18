@@ -35,6 +35,16 @@ async function stable(page,app){
 }
 async function click(page,app,locator){await stable(page,app);await locator.click();await stable(page,app)}
 
+// The approved identities remain visible text plus a decorative shape; an agent also names its controller.
+async function actorMark(app,kind,mark,text){
+  const actor=app.locator('.actor');
+  assert.equal(await actor.getAttribute('class'),'actor '+kind);
+  assert.equal(await actor.locator('span').textContent(),mark);
+  assert.equal(await actor.locator('span').getAttribute('aria-hidden'),'true');
+  assert.equal(await actor.textContent(),mark+' '+text);
+  return {kind,mark,text};
+}
+
 async function verify(page,app,errors,label){
   const measure=await metrics(app);assert.equal(measure.overflow,false,label+' overflow');
   for(const control of measure.controls){assert.ok(control.width>=43.9&&control.height>=43.9,label+' target '+JSON.stringify(control))}
@@ -46,9 +56,11 @@ try{
   browser=await chromium.launch({executablePath:process.env.CHROMIUM,headless:true}); report.browser=browser.version();
   for(const theme of ['light','dark'])for(const width of [592,390,320]){
     const {page,app,errors}=await opened({theme,wire:width===320?'legacy':'modern'},width),label=theme+'-'+width;
+    const actorMarks=[await actorMark(app,'person','●','Rita · person')];
     await app.getByRole('link',{name:'Choose the first milestone'}).focus();
     await app.getByRole('link',{name:'Choose the first milestone'}).press('ArrowRight');
     await app.getByRole('link',{name:'Review the working terms'}).waitFor();
+    actorMarks.push(await actorMark(app,'agent','■','Builder · controlled by Rita · agent'));
     assert.equal((await metrics(app)).focus,'Review the working terms');
     await click(page,app,app.getByRole('link',{name:'Review the working terms'}));
     await app.getByRole('button',{name:'Accept',exact:true}).waitFor();
@@ -62,12 +74,13 @@ try{
     await page.screenshot({path:out+'/'+label+'-carousel.png'});
     await click(page,app,app.getByRole('link',{name:'Review the working terms'}));await click(page,app,app.getByRole('button',{name:'Accept',exact:true}));
     await app.getByRole('link',{name:'Review the proposed change'}).waitFor();
+    actorMarks.push(await actorMark(app,'checker','◇','Checker · checker'));
     await page.waitForFunction(()=>window.proof.mode==='inline'&&window.proof.contexts.at(-1)?.structuredContent.page==='summary');
     const evidence=await verify(page,app,errors,label);assert.equal(evidence.measure.width,width);assert.deepEqual(evidence.proof.chat,[]);
     assert.ok(Math.max(...evidence.proof.sizes.map(s=>s.height))>evidence.proof.sizes.at(-1).height+200,'grow/shrink');
     const state=await page.evaluate(async()=>fetch('/proof?instance='+window.proof.config.id).then(r=>r.json()));assert.equal(state.signed.length,1);
     await page.screenshot({path:out+'/'+label+'-receipt.png'});
-    report.cases.push({label,measure:evidence.measure,sizes:evidence.proof.sizes,chat:evidence.proof.chat,signatures:state.signed.length});await page.close();
+    report.cases.push({label,measure:evidence.measure,sizes:evidence.proof.sizes,chat:evidence.proof.chat,signatures:state.signed.length,actorMarks});await page.close();
   }
   for(const fixture of ['updates','incomplete','checks-failed','loss','empty','denied','absent','unavailable']){
     const {page,app,errors}=await opened({fixture,theme:'dark'},390);

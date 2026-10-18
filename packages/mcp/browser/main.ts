@@ -171,7 +171,7 @@ function render() {
   } else heading.textContent = card.title;
   article.append(heading);
   const actor = node("p", undefined, `actor ${card.actor.kind}`);
-  const mark = card.actor.kind === "person" ? "●" : card.actor.kind === "agent" ? "◇" : "▣";
+  const mark = card.actor.kind === "person" ? "●" : card.actor.kind === "agent" ? "■" : "◇";
   const glyph = node("span", mark); glyph.setAttribute("aria-hidden", "true");
   actor.append(glyph, document.createTextNode(` ${card.actor.name}${card.actor.controller ? ` · controlled by ${card.actor.controller}` : ""} · ${card.actor.kind}`));
   article.append(actor, node("p", card.summary, "summary"));
