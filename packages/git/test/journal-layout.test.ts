@@ -22,6 +22,7 @@ function complete(result: JournalLayoutResult): JournalArchive {
 test("a cumulative selected prefix gives deterministic complete archive trees in both Git formats, with explicit text omissions and no later or bookkeeping bytes", async () => {
   for (const format of formats) {
     const fixture = syntheticJournal(3), calls: string[] = [], input = selectedInput(fixture, calls);
+    expect([JSON.parse(fixture.bodies[0]!).input.kind, fixture.at.kind]).toEqual(["install", "register"]);
     const first = complete(await buildJournalArchive({ format, ...described(fixture), input, parent: null }));
     const shuffled = structuredClone(fixture);
     shuffled.description.entries.reverse(); shuffled.description.objects.reverse();

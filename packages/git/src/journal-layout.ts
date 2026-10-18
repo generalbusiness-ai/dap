@@ -65,7 +65,7 @@ async function selectedEntries(selection: JournalSelection, input: JournalInputS
     catch { return refuseJournal("input-mismatch", where); }
     if (!isEntry(entry) || entry.seq !== descriptor.seq || !sameJournalScope(entry.at, selection.at) || entryHash(entry) !== descriptor.hash || entry.prev !== (rows.at(-1)?.descriptor.hash ?? null)) return refuseJournal("input-mismatch", where);
     if (descriptor.seq === 0) {
-      if (entry.input.type !== "genesis" || scopeIdOf(entry.input.seed) !== entry.at.scope || entry.input.seed.kind !== entry.at.kind || entry.input.kind !== entry.at.kind || entry.input.inc !== entry.at.inc) return refuseJournal("input-mismatch", where);
+      if (entry.input.type !== "genesis" || scopeIdOf(entry.input.seed) !== entry.at.scope || entry.input.seed.kind !== entry.at.kind || entry.input.inc !== entry.at.inc) return refuseJournal("input-mismatch", where);
     } else if (entry.input.type === "genesis") return refuseJournal("input-mismatch", where);
     work.check(); rows.push({ descriptor, entry, bytes });
   }
