@@ -180,8 +180,71 @@ or exit is claimed.
 
 ## Remaining G0 work
 
-The full room and site assembly, alert/hold/
-authorization/closure, benches/probes/tasks/watering/presence and the complete
+## Room and climate-incident foundation
+
+`examples/grow/room.ts` now composes zones and devices with alerts and
+incidents. A device is commissioned into exactly one zone, with at most one
+active device of each kind per zone. Device bindings check both kind and
+zone. The four-zone fixture commissions twelve devices through native acts.
+These are definition data, not a host setup cohort or a running device owner.
+
+An alert needs a recorded out-of-band zone and vents/fans at their command
+limits or reported unavailable. It names the zone and heater and records its
+raising member and first entry. Another active alert for the same zone is
+refused. `open-incident` is an explicit climate act over that exact local
+raise fact: today's forms cannot open both rows in one act. It records a
+single incident for that alert and its first entry. No row is inserted into
+folded state by fixture code.
+
+Hold and authorization need `grow.heat`. Hold lasts 60 seconds and expires
+to a new open revision. Authorization uses the stored proposal, current alert
+and heater revisions, the heater kind, reported-error refusal and configured
+limits. It writes the target in that same operator-signed act; it adds no
+grant. The sensor report stays independent, including a late on report beside
+the already-commanded off target.
+
+Implementation choice: `propose-restoration` reopens the same authorized
+alert after a recorded healthy vent report, keeping its incident and first
+entry. Its fixed proposal is heater on at full level; it commands nothing.
+Another operator authorization is required and remains subject to the same
+heater guards. This supplies the story's second card without a new incident
+or a recovering state. `close-incident` needs the raising member, the correct
+open incident, an in-band zone, and an observe summary recorded after the
+alert's raise. It closes both rows and records the exact last entry. A cool
+comment queued before the alert cannot establish later recovery.
+
+Four room cases now pass, and all ten Grow cases pass together
+(`24fe7d`/`03e604`, exit 0). Typecheck passes (`8e22a8`). The climate thread
+walks initial in-band refusal, insufficient-agent-work refusal, vent error,
+fan trip, cross-draft, alert and incident, hold/expiry, stale refusal, heater
+cut, separate labelled heater outcomes and reports, recovery, restored
+cross-draft, restoration proposal/authorization and closure. Fan 2 remains
+reported in error for maintenance. Native replay is consistent. Other cases
+cover duplicate kinds, wrong-zone binding, errored/disabled heater refusal,
+climate authority, an unknown vent report, duplicate incident and old recovery
+evidence. The tender/task and watering threads are still due.
+
+The first room run (`06b747`, exit 1) had one failure: JSONata subjects for
+named items use keys `also.vent`, `also.fan`, and so on. Quoted full keys fixed
+those expressions. The next run (`ee9e87`, exit 1) found the supposed stale
+signature had expired exactly at hold expiry. A valid 300-second signed
+lifetime made the intended revision check reachable (`86720a`, exit 1,
+because the test still expected the informal word stale). The fixture now
+asserts the actual native `revision-moved` reason (`188a1a`, exit 0).
+The initial typecheck's unused import was removed. These failed attempts are
+retained; no native reason, lifetime check, alias or judging rule changed.
+
+Four targeted controls distinguish and restore source: escalation eligibility
+(`e7ef33`/`2c9b0f`), authorization's device-error check (`9fc6cc`/`8d79dd`),
+authorization's level limit (`d99c61`/`c1e65c`) and recovery evidence
+(`5aaae6`/`85cddb`). Each exits 0 with four normal room passes and one intended
+assertion failure. Evidence logs use `/tmp/artroom-g0-room-`. Device-error
+guards are shared as data with explicit subjects, so operator authorization
+does not bypass the guard used by direct device commands.
+
+## Remaining G0 work
+
+The site assembly, benches/probes/tasks/watering/presence and the complete
 fault scenario remain due. M1's `dap check` now exists on its separate
 unlanded developer branch; G0's final package/scenario witness depends on
 that reviewed public path, without copying unlanded M1 implementation into

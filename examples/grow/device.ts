@@ -1,7 +1,7 @@
 /** G0 device declarations, composed into the room later. Targets and reports
  * have separate writers. Command outcomes belong only to the separately
  * labelled scenario owner until the commissioned G5a native form exists. */
-import type { ActType, Guard, ItemType } from "@generalbusiness/dap-contract";
+import type { ActType, Guard, ItemType, Subject } from "@generalbusiness/dap-contract";
 
 const act = (body: Pick<ActType, "step" | "on" | "grant"> & Partial<ActType>): ActType => ({ also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [], ...body });
 const level = { type: "int", min: 0, max: 100 } as const;
@@ -16,8 +16,9 @@ function validTarget(kind: string, minimum: string, maximum: string): string {
   return `(((${kind} = 'vent') and fields.target in ['open', 'closed']) or ((${kind} in ['fan', 'heater']) and fields.target in ['on', 'off'])) and ((fields.target in ['closed', 'off'] and fields.level = 0) or (fields.target in ['open', 'on'] and fields.level >= 1 and fields.level >= ${minimum} and fields.level <= ${maximum} and (${kind} != 'heater' or fields.level = 100)))`;
 }
 
+export const deviceNotFailed = (of: Subject): Guard => ({ reason: "device-error", anyOf: [[{ of, unset: "reported" }], [{ of, differs: { a: { slot: "reported" }, b: { const: "error" } } }]] });
 export function deviceForms(under: string, additionalTargetActs: readonly string[] = []): { item: ItemType; acts: Record<string, ActType>; rules: Record<string, string> } {
-  const notFailed: Guard = { reason: "device-error", anyOf: [[{ unset: "reported" }], [{ differs: { a: { slot: "reported" }, b: { const: "error" } } }]] };
+  const notFailed = deviceNotFailed("on");
   const command = (kind: "vent" | "fan" | "heater", grant: string): ActType => act({
     step: "transition", on: "device", grant,
     fields: { target: { ...targets, required: true }, level: { ...level, required: true } },
