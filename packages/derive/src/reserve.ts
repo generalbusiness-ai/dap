@@ -24,7 +24,8 @@
  *   it can start (`ValidDefinition.pending`). A copy of a relationship in a
  *   state that its handler declares with `settles: { copy }` reserves the
  *   same (`ValidDefinition.pendingCopies`);
- * - a provisional scope: the entry that records its confirmation;
+ * - a provisional scope: the entry that records its confirmation, and
+ *   for whole-scope capacity the creator-result entry it retains;
  * - an operation that is not settled (row 5; authority note, section 5.8):
  *   2 entries for each attempt that has no outcome or may still be opened,
  *   its first outcome and its late answer, and 1 for each attempt whose
@@ -137,6 +138,10 @@ export function reserved(view: StateView, definition: ValidDefinition, head: Inp
     const entries = checked(amount.entries + checked(more.entries));
     amount = checkedAmount({ ...sum(amount, more), entries });
   };
+  // Confirmation records its creator's result as a retained foreign
+  // source, in addition to its own journal entry. Both writers are bounded
+  // by the accepted entry maximum; the source adds bytes, not an entry.
+  if (whole && scope.status === "provisional") add({ ...NOTHING, bytes: definition.pendingWorkAmounts.entry.bytes });
   for (const [type, states] of Object.entries(definition.deadlines)) {
     for (const [state, chain] of Object.entries(states)) {
       if (whole) { naturalAmount(definition.pendingWorkAmounts.deadlines[type]![state]!); continue; }

@@ -8,8 +8,10 @@ review outcomes belong to the Gitseq artifacts for this request.
 
 This note describes the current implementation. Development checkpoints
 and their individual test logs remain in Git history through `1d5297fe`.
-They establish no independent approval or landing. The final gate remains
-unresolved; exact-head checker review is also required before landing.
+They establish no independent approval or landing. Source `f254698d`
+passed its gate, then checker report `bae974e5` requested one reservation
+repair. The repaired head needs its own gate and exact-head review before
+landing. Exact outcomes remain in the Gitseq artifacts.
 
 ## Admission and compatibility
 
@@ -88,6 +90,14 @@ invent item, record or request maxima for an undeclared future form.
 The actual handoff is admitted in all five dimensions when it arrives.
 A stronger full-handoff guarantee needs a separately declared form.
 
+An opted-in provisional scope reserves its confirmation's own journal
+entry and the foreign creator-result entry that confirmation retains.
+Each uses the accepted entry writer maximum. The source adds bytes, not
+a second journal-entry count. Confirmation transfers those bytes to Used;
+the existing closing checkpoint remains reserved. Runtime and Replay use
+this term in the same traversal. Omitted-capacity scopes keep their old
+entry-only confirmation term.
+
 ## Retained producers and journey inventory
 
 Entry reservations use the existing `entryBytes` stand-in. Result entries
@@ -109,7 +119,7 @@ snapshot. Supplying one is outside this stop point.
 
 | Room family | Reached retained producers and existing maxima |
 | --- | --- |
-| Every scope | Journal entries use `entryBytes`; foreign facts, presented facts and delivery sources use the accepted local entry ceiling and `usesPerEntry`. Birth declarations and named children use `definitionBytes` and `namedDefinitions`. |
+| Every scope | Journal entries use `entryBytes`; foreign facts, presented facts and delivery sources use the accepted local entry ceiling and `usesPerEntry`. A provisional confirmation retains one creator-result source at that same writer maximum, beside its journal bytes. Birth declarations and named children use `definitionBytes` and `namedDefinitions`. |
 | Issue and change | Detached bodies, report summaries, verdicts and comments declare raw text maxima of 65536. Both reach hold and Git-read work; their ancestry snapshot has no writer maximum and prevents opt-in. Neither declares evaluator expressions. |
 | Membership | Foreign-entry fields and inline entry data. Membership@6 has no detached text, value place, outcome evidence or retained observation-value declaration. |
 | Rules | Foreign entries; check configuration declares 32768 canonical bytes. Rules@4 activation declares a 262144-byte definition value and 16 dependency value places. Named declaration closure is checked separately. |
@@ -160,6 +170,7 @@ separately. No mutation sweep or repeated whole suite is part of this work.
 | Actual settlement, diagnoses, late results and checkpoint rearming | Derive `forms-settles`, `platform-request-amounts`; native Scope `capacity-platform-requests`, `turn`. |
 | Native pin item/request closures, writer-size refusal and real child results | Derive `receiver-pins`; native Scope `capacity-receiver-pins`. |
 | Birth closure, missing dependency retry, deduplication and repeated receipts | Derive/Replay `child-definitions`, `genesis-bodies`; native Scope `capacity-child-definitions`, `capacity-genesis-bodies`. |
+| Provisional confirmation source, equality and funded closing checkpoint | Native Scope `capacity-confirmation`: actual parent/child entries, one-byte-under birth rollback, eviction, source charged once, repeat, HTTP Replay and omitted-capacity counterpart. |
 | Historical byte gaps, recovery and invalidated consumers | Replay `capacity`, `recovered-bytes`, `genesis-bodies`, `text-refusals`; native Scope `capacity-recovered`, `capacity-receiver-pins`. |
 
 Native witnesses use the real Durable Object, SQLite transaction,
@@ -214,3 +225,22 @@ its .time sibling; stage logs are in the gate's reported temporary
 directory. Focused repair evidence uses /tmp/artroom-capacity-gate-.
 The passing repair runs are terminal. Temporary validation diagnostics
 were removed before those checks.
+
+The `f254698d` gate subsequently completed: 1668 Vitest cases passed,
+three skipped, with Node25 and Counting55 passes (Gitseq `33e30708`). It
+still logged the cross-object timeout-handler diagnostic, then advanced
+to completion. Quiet output and a busy workerd did not establish a hang
+in the earlier terminated run. Neither run identifies that diagnostic's
+cause or completes the broader harness-stability work.
+
+Checker report `bae974e5` found that the provisional confirmation term
+omitted its retained creator-result source. A new native two-scope
+regression at the old term reproduced `scope-full`, naming `scopeBytes`,
+when the already owed confirmation arrived after eviction at the admitted
+equality budget. Adding the source maximum to the shared term makes both
+new native cases pass, including confirmation, source deduplication,
+funded checkpoint, one-byte-under rollback and HTTP Replay. The legacy
+counterpart still creates, confirms and checkpoints with `scopeBytes: 0`.
+The fixture uses real judgments, SQLite and native peer proof APIs;
+declarations, authority, clocks and direct delivery wiring are fixtures.
+No entry or proof body is fabricated, and no outside provider runs.
