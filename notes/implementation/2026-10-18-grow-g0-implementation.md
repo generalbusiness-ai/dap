@@ -178,8 +178,6 @@ G0 source/tests are unchanged from code checkpoint `34883d72b`, tree
 repeated for that documentation merge. No unprovided planner process handle
 or exit is claimed.
 
-## Remaining G0 work
-
 ## Room and climate-incident foundation
 
 `examples/grow/room.ts` now composes zones and devices with alerts and
