@@ -214,6 +214,26 @@ restored). Logs are `/tmp/artroom-m2a-projection-final-authority-20261018.log`
 and `/tmp/artroom-m2a-projection-final-authority-control-20261018.log`.
 The loss is a local configuration fixture; no actual roster or key changes.
 
+The SDK now exposes the same session-only declared read. HTTP retains the
+canonical reply bytes; service-binding RPC carries primitive canonical
+text. Both consumers enforce the byte bound and whole request digest,
+including incarnation, install item and item selections. ScopeHandle owns
+and freezes the decoded reply. Its signed-read decorator forwards this
+operation without inventing a signed read. Transport errors omit peer text.
+The fixed operational route/method lists include application-projection.
+
+The new transport cases and affected item-query/signed-read cases pass
+(`1b6c6b`, three files, eight cases). They check request mismatches, byte
+caps, cancellation, finite deadlines, late replies and session forwarding.
+The strengthened real native witness checks SDK HTTP and a real Worker
+ScopeService binding against the direct route's exact canonical bytes.
+It and affected metrics cases pass (`74379`, terminal `d15981`, exit 0),
+two files, eight cases. Log:
+`/tmp/artroom-m2a-projection-sdk-native-20261018.log`. Outer cost: 2.87 s
+wall, 3.10 s user, 0.40 s system on the shared arm64 Mac, warm dependency
+view, competing load unmeasured. Source/test typechecks pass. This remains
+focused preparation, not the final gate or shared MCP/kit acceptance.
+
 The following acceptance remains owed: shared host/MCP/kit projection bytes
 and revision, presentation declarations and generic kinds, model-facing
 fallback and identity with view-only data, current-revision and held-action

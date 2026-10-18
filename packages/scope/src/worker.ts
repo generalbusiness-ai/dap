@@ -214,6 +214,11 @@ export function api(binding: Binding, address: string | null = null): Api {
       const result = await at(scope)?.queryItems(encoded, reader);
       return result?.ok ? readItemQueryReply(utf8(result.serialized)) ?? { ok: false, reason: "unavailable" } : result ?? { ok: false, reason: "invalid-query" };
     },
+    async applicationProjection(scope: string, reader: unknown, encoded: string): Promise<string> {
+      if (typeof reader !== "string" || reader.length > APPLICATION_PROJECTION_WIRE_BOUNDS.sessionChars || reader.startsWith("Signed ")) return '{"ok":false,"reason":"forbidden"}';
+      const result = await at(scope)?.applicationProjection(encoded, reader);
+      return result?.ok ? result.serialized : JSON.stringify(result ?? { ok: false, reason: "invalid-query" });
+    },
     async history(scope: string, reader: unknown, cursor?: Cursor): Promise<Read<readonly Sealed[]>> { return (await at(scope)?.history(reader, cursor)) ?? MISSING; },
     async entry(scope: string, reader: unknown, seq: number): Promise<Read<Sealed>> { return (await at(scope)?.entry(reader, seq)) ?? MISSING; },
     async outbox(scope: string, reader: unknown, cursor?: Cursor): Promise<Read<readonly OutboxItem[]>> { return (await at(scope)?.outbox(reader, cursor)) ?? MISSING; },
@@ -524,6 +529,7 @@ export class ScopeService<E extends Env = Env> extends WorkerEntrypoint<E> imple
   summary(scope: string, reader: unknown): Promise<Read<Summary>> { return api(this.scopes()).summary(scope, reader); }
   items(scope: string, reader: unknown, type: string, cursor?: Cursor): Promise<Read<readonly Item[]>> { return api(this.scopes()).items(scope, reader, type, cursor); }
   queryItems(scope: string, reader: unknown, encoded: string): Promise<ItemQueryRead> { return api(this.scopes()).queryItems(scope, reader, encoded); }
+  applicationProjection(scope: string, reader: unknown, encoded: string): Promise<string> { return api(this.scopes()).applicationProjection(scope, reader, encoded); }
   history(scope: string, reader: unknown, cursor?: Cursor): Promise<Read<readonly Sealed[]>> { return api(this.scopes()).history(scope, reader, cursor); }
   entry(scope: string, reader: unknown, seq: number): Promise<Read<Sealed>> { return api(this.scopes()).entry(scope, reader, seq); }
   outbox(scope: string, reader: unknown, cursor?: Cursor): Promise<Read<readonly OutboxItem[]>> { return api(this.scopes()).outbox(scope, reader, cursor); }

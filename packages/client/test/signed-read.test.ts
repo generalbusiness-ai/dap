@@ -64,6 +64,7 @@ test("a transport with signed reads signs summary, history, entry, log and retai
     settle = this.#http.settle;
     summary = this.#http.summary;
     items = this.#http.items;
+    applicationProjection(...args: Parameters<Transport["applicationProjection"]>) { return this.#http.applicationProjection(...args); }
     queryItems(...args: Parameters<Transport["queryItems"]>) { return this.#http.queryItems(...args); }
     history = this.#http.history;
     entry = this.#http.entry;

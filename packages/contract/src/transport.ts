@@ -75,6 +75,9 @@ export interface ScopeApi {
   items(scope: string, reader: unknown, type: string, cursor?: Cursor): Promise<Read<readonly Item[]>>;
   /** One bounded selection page. The encoded query is decoded only by its scope owner. */
   queryItems(scope: string, reader: unknown, encoded: string): Promise<ItemQueryRead>;
+  /** Session-only declared projection. The canonical JSON reply stays a
+   * primitive across RPC; consumers check it against the encoded request. */
+  applicationProjection(scope: string, reader: unknown, encoded: string): Promise<string>;
   history(scope: string, reader: unknown, cursor?: Cursor): Promise<Read<readonly Sealed[]>>;
   entry(scope: string, reader: unknown, seq: number): Promise<Read<Sealed>>;
   outbox(scope: string, reader: unknown, cursor?: Cursor): Promise<Read<readonly OutboxItem[]>>;

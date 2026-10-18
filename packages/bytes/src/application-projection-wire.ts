@@ -60,3 +60,8 @@ export function readApplicationProjectionReply(bytes: Uint8Array, query?: Applic
     applicationJson(value, B.resultBytes); freeze(value); return value;
   } catch { return null; }
 }
+/** RPC carries canonical text. Cap characters before allocating UTF-8 bytes;
+ * the byte reader then enforces the exact byte cap and request binding. */
+export function readApplicationProjectionReplyText(value: unknown, query?: ApplicationProjectionQuery): ApplicationProjectionRead | null {
+  return typeof value === "string" && value.length <= B.resultBytes ? readApplicationProjectionReply(utf8(value), query) : null;
+}

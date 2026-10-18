@@ -8,7 +8,7 @@ import { canonicalize, isSeed, scopeIdOf, textDigest } from "@generalbusiness/ar
 import { encodeApplicationProjectionQuery, readApplicationProjectionReply } from "@generalbusiness/artroom-bytes/application-v2";
 import { PROPOSED_BOUNDS, type ApplicationProjectionQuery, type ScopeRef } from "@generalbusiness/dap-contract";
 import { DECLARED_APPLICATION_COHORT as C } from "@generalbusiness/dap-platform";
-import { requestSession, sessionRequest } from "@generalbusiness/artroom-client";
+import { requestSession, sessionRequest, ScopeHandle, httpTransport, bindingTransport, type ServiceBinding } from "@generalbusiness/artroom-client";
 import nativeWorker from "../../../apps/room/worker.ts";
 import { outsideOf as hostOutside } from "../src/worker.ts";
 import { applicationCounterPacket2 } from "./support/application-v2-fixture.ts";
@@ -76,6 +76,14 @@ test("native installed projection reads exact journal state and survives R2 dele
     expect(first.value.value.sources["board"]).toMatchObject([{ type: "board", state: "paused", revision: 1, fields: { lastNumber: 0 } }]);
     expect(first.value.value.at).toEqual((await life.wait(() => app.summary())).at);
     expect(first.raw).toBe(canonicalize(first.value));
+    const http = httpTransport("https://scopes.test", { fetch: (url, init) => nativeWorker.fetch(new Request(url, init), bindings) });
+    const binding = bindingTransport(env.PLATFORM_API as unknown as ServiceBinding);
+    for (const transport of [http, binding]) {
+      const bytes = await life.owner.required(() => transport.applicationProjection(app.name, session.session.reader(), encodeApplicationProjectionQuery(query)!));
+      expect(bytes).toBe(first.raw);
+      const value = await life.owner.required(() => new ScopeHandle(transport, app.name, session.session.reader()).applicationProjection(query));
+      expect(value).toEqual(first.value);
+    }
     expect(await read({ ...query, install: job + 100 })).toMatchObject({ status: 409, value: { ok: false, reason: "query-not-ready" } });
     const ads = peer.ads(); await env.APPLICATION_CONTENT.delete(f.key);
     await life.wait(() => A.restart()); await life.wait(() => app.restart());

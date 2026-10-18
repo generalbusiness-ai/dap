@@ -19,6 +19,9 @@
     ]
   },
   "r2_buckets": [{ "binding": "APPLICATION_CONTENT", "bucket_name": "application-content-test" }],
-  "services": [{ "binding": "API", "service": "artroom-scope-test", "entrypoint": "NetService" }],
+  "services": [
+    { "binding": "API", "service": "artroom-scope-test", "entrypoint": "NetService" },
+    { "binding": "PLATFORM_API", "service": "artroom-scope-test", "entrypoint": "PlatformService" }
+  ],
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["TestScope", "MetricControlScope", "ScopeObject", "NetScope", "PlatformScope", "PlatformMcpRegistry", "PlatformMcpAgent"] }]
 }

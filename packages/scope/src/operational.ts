@@ -9,9 +9,9 @@ import { Metrics, type Metric, type MetricBinding } from "./metrics.ts";
 export interface MetricEnvironment { METRICS?: MetricBinding; DEPLOYMENT?: string; VERSION_METADATA?: { id: string } }
 export interface OperationalIdentity { request: string | null; trace: string | null }
 /** Internal RPC surface only. It cannot name a driver, operator or authority method. */
-export const OBSERVED_METHODS = ["create", "submit", "prepare", "settle", "summary", "items", "queryItems", "history", "entry", "outbox", "outboxItem", "log", "retained", "session", "stream", "incidents", "waiting", "requests", "credential", "reservationSnapshot"] as const;
+export const OBSERVED_METHODS = ["create", "submit", "prepare", "settle", "summary", "items", "queryItems", "applicationProjection", "history", "entry", "outbox", "outboxItem", "log", "retained", "session", "stream", "incidents", "waiting", "requests", "credential", "reservationSnapshot"] as const;
 export type ObservedMethod = typeof OBSERVED_METHODS[number];
-export const operationPlace = (method: ObservedMethod): string => ({ submit: "acts", prepare: "preparations", entry: "entries", session: "sessions", queryItems: "query-items", reservationSnapshot: "reservation-snapshot" } as Partial<Record<ObservedMethod, string>>)[method] ?? method;
+export const operationPlace = (method: ObservedMethod): string => ({ submit: "acts", prepare: "preparations", entry: "entries", session: "sessions", queryItems: "query-items", applicationProjection: "application-projection", reservationSnapshot: "reservation-snapshot" } as Partial<Record<ObservedMethod, string>>)[method] ?? method;
 interface Invocation {
   metrics: Metrics;
   users: number;
@@ -92,7 +92,7 @@ function location(request: Request): { place: string; scope: string | null } {
     let scope: string | null = null;
     try { const decoded = decodeURIComponent(parts[3]); if (isScopeId(decoded)) scope = decoded; } catch { /* invalid name, no free text */ }
     const route = parts[4] || "summary";
-    const place = route === "outbox" && parts[5] ? "outboxItem" : ["acts", "preparations", "settle", "summary", "items", "query-items", "reservation-snapshot", "history", "entries", "outbox", "log", "retained", "sessions", "stream", "incidents", "waiting", "requests", "credential"].includes(route) ? route : "other";
+    const place = route === "outbox" && parts[5] ? "outboxItem" : ["acts", "preparations", "settle", "summary", "items", "query-items", "application-projection", "reservation-snapshot", "history", "entries", "outbox", "log", "retained", "sessions", "stream", "incidents", "waiting", "requests", "credential"].includes(route) ? route : "other";
     return { place, scope };
   }
   if (parts[1] === "health" && parts.length === 2) return { place: "health", scope: null };
