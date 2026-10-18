@@ -3,11 +3,13 @@
  * fixture authority are explicit; no caller anchor supplies a dependency. */
 import { PROPOSED_BOUNDS, type Digest, type PlatformData, type RetainedInput, type Seed } from "@generalbusiness/dap-contract";
 import { canonicalize, intentDigest, newIncarnation, scopeIdOf, signIntent, textDigest } from "@generalbusiness/artroom-bytes";
-import { clockOf, judgeGenesis, settleOutcome, valueDigest, type Judgment, type OutcomeRule } from "@generalbusiness/dap-derive";
-import { created, keys, Ledger, membership, notesDefinition, T0, t } from "@generalbusiness/dap-derive/testing";
+import { RETIRE_ACTION, actionOf, clockOf, judgeGenesis, settleOutcome, valueDigest, type Judgment, type OutcomeRule } from "@generalbusiness/dap-derive";
+import { created, deskDefinition, grantOf, keys, Ledger, membership, notesDefinition, T0, t, variant, type Actor } from "@generalbusiness/dap-derive/testing";
+import { C, cap, clean, snapshots, staging } from "../../derive/test/fixtures-hold.ts";
 import { gateRules, gateWith } from "../../derive/test/fixtures-marks.ts";
 import type { MemoryScope, Options } from "../src/index.ts";
 import { served } from "./world.ts";
+import { Lane } from "./staging.ts";
 
 export interface ArchiveFixture {
   readonly name: string;
@@ -66,4 +68,34 @@ export function outcomeValueFixture(): ArchiveFixture {
   written(ledger, outcome);
   return { name: "outcome-value", scopes: [{ ...served(ledger, [ledger]), retained: [required] }], required,
     options: { mode: "replay", scope: ledger.at.scope, head: ledger.head, grants: "as-recorded", platform: name => name === named ? { data: definition.declared as PlatformData, rules, membership: () => membership } : null } };
+}
+
+/** The final check outcome first names its staged-ref snapshot. Creation
+ * and confirmation have complete judged parent histories. Authority and
+ * host replies remain explicit stand-ins; the ancestry walk is unproved. */
+export function outcomeSnapshotFixture(): ArchiveFixture {
+  const factory = variant(deskDefinition.declared, data => {
+    for (const send of data.acts["open-issue"]!.sends) if ("create" in send) send.create.definition = staging.digest;
+  });
+  const parent = created(factory);
+  parent.did(keys.rita, "open-issue", { fields: { title: "archive staging fixture" } });
+  class ClosedLane extends Lane {
+    override proof(who: Actor) {
+      return grantOf(who, this.at, [...Object.values(this.definition.declared.acts).flatMap(act => actionOf(act) ?? []), RETIRE_ACTION]);
+    }
+  }
+  const ledger = new ClosedLane(parent), commit = C("a");
+  ledger.prepare(keys.una, "instance", { hold: ledger.hold, task: { ...ledger.at, kind: "task" }, instance: "archive-fixture-instance" });
+  const signed = ledger.intent(keys.una, "report", { expected: { commitment: ledger.item(ledger.commitment).revision }, fields: { commitment: ledger.commitment, commit } });
+  const stage = ledger.asked(signed, "stage");
+  const live = ledger.outcome(ledger.opened(stage.seq, "stage"), "confirmed", {}, "read");
+  const record = clean(ledger.at, commit, 1);
+  ledger.outcome(ledger.opened(live.seq, "check"), "confirmed", { record }, "own-answer");
+  const bytes = snapshots.get(record.snapshot.digest);
+  if (bytes === undefined) throw new Error("Archive fixture snapshot was not retained");
+  const required: RetainedInput = { kind: "snapshot", digest: record.snapshot.digest, bytes };
+  const all = [ledger, parent];
+  const scope = served(ledger, all);
+  return { name: "outcome-snapshot", scopes: [{ ...scope, retained: [...scope.retained!, required] }, served(parent, all)], required,
+    options: { mode: "replay", scope: ledger.at.scope, head: ledger.head, grants: "as-recorded", capabilities: cap, owners: cap } };
 }
