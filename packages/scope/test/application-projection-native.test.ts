@@ -4,11 +4,12 @@
  * provider, deployed host, arbitrary package containment or browser runs. */
 import { env, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
-import { canonicalize, isSeed, scopeIdOf, textDigest } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isSeed, scopeIdOf } from "@generalbusiness/artroom-bytes";
 import { encodeApplicationProjectionQuery, readApplicationProjectionReply } from "@generalbusiness/artroom-bytes/application-v2";
 import { PROPOSED_BOUNDS, type ApplicationProjectionQuery, type ScopeRef } from "@generalbusiness/dap-contract";
 import { DECLARED_APPLICATION_COHORT as C } from "@generalbusiness/dap-platform";
-import { requestSession, sessionRequest, ScopeHandle, httpTransport, bindingTransport, type ServiceBinding } from "@generalbusiness/artroom-client";
+import { requestSession, sessionRequest, ScopeHandle, httpTransport, bindingTransport, secretSigner, signedApplicationInstall, ApplicationPackageError, type ServiceBinding } from "@generalbusiness/artroom-client";
+import { McpService, memoryStore as custodyStore } from "@generalbusiness/dap-mcp";
 import nativeWorker from "../../../apps/room/worker.ts";
 import { outsideOf as hostOutside } from "../src/worker.ts";
 import { applicationCounterPacket2 } from "./support/application-v2-fixture.ts";
@@ -41,13 +42,23 @@ test("native installed projection reads exact journal state and survives R2 dele
       life.outside(node.name, (given, sql) => hostOutside(given, sql, bindings, peer.fetch));
       await life.wait(() => node.restart());
     }
-    const signed = await life.wait(() => A.intent(rita, "install-application", { fields: {
-      uri: f.uri, release: packet.ids.release, semantic: packet.ids.semantic, roles: ["admin", "member"], values: '{"target":7}',
-      ...Object.fromEntries(packet.package.semantic.definitions.map((part, i) => [`definitionText${i}`, textDigest(part.bytes)])),
-    } }));
-    const accepted = await life.wait(() => A.stub.submit(signed, [], { values: [canonicalize(packet.package.semantic), canonicalize(packet.package.release)], texts: packet.package.semantic.definitions.map(part => part.bytes) }));
-    expect(accepted.answer).toBe("accepted"); if (accepted.answer !== "accepted") return;
-    const job = accepted.receipt.fact.seq;
+    const membership = await life.wait(() => M.at()), directory = await life.wait(() => D.at());
+    const selection = { rules: await life.wait(() => A.at()), uri: f.uri, release: packet.ids.release, roles: ["admin", "member"] as const, values: { target: 7 } };
+    // The existing SDK install keeps its v1 codec strict.
+    await expect(signedApplicationInstall(secretSigner(rita.secret), packet.bytes, selection, { now: life.now() })).rejects.toBeInstanceOf(ApplicationPackageError);
+    const mcp = new McpService({ service: "https://scopes.test", signer: secretSigner(rita.secret), custody: custodyStore(), now: life.now,
+      config: { read: async () => ({ service: "https://scopes.test", repository: { directory, membership, rules: A.name, destination: G.name } }),
+        addRoot: async () => { throw Error("Native installs are discovered through Directory."); } },
+      applicationFetch: peer.fetch, fetch: (url, init) => life.wait(() => routed(url, init)),
+    });
+    const args = { uri: f.uri, release: packet.ids.release, roles: ["admin", "member"], values: { target: 7 }, idempotencyKey: "TEST-native-v2-install" };
+    const accepted = await life.wait(() => mcp.call("install_application", args));
+    expect(accepted.isError, JSON.stringify(accepted.structuredContent)).toBe(false);
+    expect(accepted.structuredContent).toMatchObject({ answer: "accepted", phase: "recorded" });
+    const job = Number(accepted.structuredContent["item"]);
+    const installAds = peer.ads();
+    expect((await life.wait(() => mcp.call("install_application", args))).structuredContent).toMatchObject({ item: job, retained: true });
+    expect(peer.ads()).toBe(installAds);
     await effectFixture([A], life.wait); await dispatchFixture([R, D, M, A, G], life.wait);
     const create = (await life.wait(() => D.entries())).flatMap(entry => entry.sends).find(send => isSeed(send.to) && send.to.kind === "lane");
     expect(create).toBeDefined(); if (!create || !isSeed(create.to)) return;
@@ -76,6 +87,9 @@ test("native installed projection reads exact journal state and survives R2 dele
     expect(first.value.value.sources["board"]).toMatchObject([{ type: "board", state: "paused", revision: 1, fields: { lastNumber: 0 } }]);
     expect(first.value.value.at).toEqual((await life.wait(() => app.summary())).at);
     expect(first.raw).toBe(canonicalize(first.value));
+    const mcpRead = await life.wait(() => mcp.reads.projection(membership, query));
+    expect(canonicalize(mcpRead)).toBe(first.raw);
+    expect((await life.wait(() => mcp.call("application_installation", { item: job }))).structuredContent).toMatchObject({ item: job, state: "active", scope: query.scope });
     const http = httpTransport("https://scopes.test", { fetch: (url, init) => nativeWorker.fetch(new Request(url, init), bindings) });
     const binding = bindingTransport(env.PLATFORM_API as unknown as ServiceBinding);
     for (const transport of [http, binding]) {

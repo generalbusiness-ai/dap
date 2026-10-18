@@ -234,6 +234,26 @@ wall, 3.10 s user, 0.40 s system on the shared arm64 Mac, warm dependency
 view, competing load unmeasured. Source/test typechecks pass. This remains
 focused preparation, not the final gate or shared MCP/kit acceptance.
 
+MCP installation now selects the strict package codec from the actual exact
+Directory/Rules cohort. Directory11/Rules5 still use only v1; Directory12/
+Rules6 use only v2. The SDK has a separate signedApplicationInstall2 entry;
+the original entry still refuses v2. Both prepare the same bounded install
+envelope after their own codec succeeds. CLI's persistent install path uses
+this same MCP implementation. MCP's projection reader requires a session
+and returns a refusal without signed fallback or implicit retry.
+
+The real v2 witness now installs through MCP custody rather than a manually
+assembled native request. Repeating its key retains the original without
+another Git read, and application_installation reports the actual active
+scope. Its MCP read has exactly the same canonical projection bytes as the
+direct/SDK reads. The strengthened witness and affected v1 custody/recovery
+cases pass (`15775`, terminal `cb5da6`, exit 0), two files, eight cases.
+Log: `/tmp/artroom-m2a-projection-mcp-install-20261018.log`. Outer cost:
+7.03 s wall, 7.27 s user, 0.86 s system, shared arm64 Mac with warm dependency
+view and unmeasured competing load. Client, MCP and Scope test typechecks
+pass. Generic rendered views, current control authority and kit acceptance
+remain owed; no final gate or review submission yet.
+
 The following acceptance remains owed: shared host/MCP/kit projection bytes
 and revision, presentation declarations and generic kinds, model-facing
 fallback and identity with view-only data, current-revision and held-action
