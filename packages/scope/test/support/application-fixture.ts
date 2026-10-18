@@ -1,6 +1,6 @@
 /** Public TEST package and in-memory Git-object transport, not a remote. */
 import { env } from "cloudflare:test";
-import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type DeclaredDefinition } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, hex } from "@generalbusiness/artroom-bytes";
 import { packApplication, secretSigner, type ApplicationReleaseUri } from "@generalbusiness/artroom-client";
 import type { ApplicationGitObject } from "@generalbusiness/artroom-git";
@@ -9,9 +9,9 @@ import { readApplicationTrust } from "../../src/applications/admission.ts";
 import { ApplicationContentStore, applicationReleaseKey } from "../../src/applications/content.ts";
 import type { OpenApplicationSource } from "../../src/applications/resolve.ts";
 const signer = secretSigner(new Uint8Array(32).fill(64)), utf8 = new TextEncoder();
-export async function applicationResolverFixture(format: "sha1" | "sha256", bytes?: Uint8Array, roles: Readonly<Record<string, readonly string[]>> = {}) {
-  const definition = definitionDigest(countingCommitments), packet = await packApplication({ name: "test.example.resolve", version: format, semantic: { v: 1, entry: definition,
-    definitions: [{ id: definition, bytes: canonicalize(countingCommitments) }], host: { execution: "recorded-do", profiles: ["restricted@1"] }, roles, projections: {}, capabilities: [], predecessor: null },
+export async function applicationResolverFixture(format: "sha1" | "sha256", bytes?: Uint8Array, roles: Readonly<Record<string, readonly string[]>> = {}, declared: DeclaredDefinition = countingCommitments) {
+  const definition = definitionDigest(declared), packet = await packApplication({ name: "test.example.resolve", version: format, semantic: { v: 1, entry: definition,
+    definitions: [{ id: definition, bytes: canonicalize(declared) }], host: { execution: "recorded-do", profiles: ["restricted@1"] }, roles, projections: {}, capabilities: [], predecessor: null },
     presentation: { v: 1, entry: "index.html", assets: [{ path: "index.html", mediaType: "text/html", bytes: "VEVTVA" }], descriptions: {} } }, signer);
   const objects = new Map<string, ApplicationGitObject>();
   const add = async (type: string, data: Uint8Array) => {

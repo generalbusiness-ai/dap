@@ -445,3 +445,45 @@ claimed by this witness. Lending's publication-origin support for the new
 Directory handler remains to be implemented under a new destination pin;
 historical destination4 admission will not be widened. The complete install
 half still has no full gate, Source submission or checker review.
+
+
+## Installed application publication, new destination pin
+
+The opt-in cohort now selects destination7, with destination4's data and
+file-publication rules and a new immutable factory-origin policy. It accepts
+the actual directory11 application-create handler, its native delivery cause,
+and the Directory genesis's exact Rules5, Membership7 and destination7
+sibling seeds. Genesis fields and destination injection must match the
+recorded request. Missing immutable proof waits; wrong room, destination or
+factory refuses. Destination4 keeps its original signed-act factory policy.
+Destination7 does not adopt the separate D1 standing-record contract of 5/6.
+
+Runtime publication admission and before-send readiness choose destination7's
+supplied origin policy. The existing exact-pin file-publication paths in the
+host, Site receipt selection and verifier include the new pin. No historical
+pin's data, policy function or branch condition changes. When serving origin
+proof, the native source also authenticates the Directory handler's creator
+and carries its Directory genesis; a retained alias alone is insufficient.
+
+The expanded Worker witness passes two cases (`a1a460` / session `78582`
+to `1a959b`, exit 0), covering current Counter and Lending. Both retain the
+lost-answer recovery, exact text custody, altered-text refusal and single
+install signature. Counter initializes with the selected native admin action.
+Lending receives the actual destination reference, admits the authorized
+admin's donation, refuses an unauthorized key, and the real destination7
+records its file-publication request. The content is explicitly signed
+fixture text, with no assertion of screen/state agreement or provider write.
+Full replay through HTTP reports consistent with grants proven for Rules,
+Directory, application and destination in each case.
+
+The actual creation proof passes the new policy and fails destination4's
+policy. Removing Directory's birth yields missing proof; wrong room
+incarnation and destination scope refuse. This actual-source witness first
+passed at `c242b7` / session `47810` to `65cfc2`. Historical source-name cases
+pass (`d96de4`, five cases); the real historical application-publication
+witness passes (`f7399e` / session `9546` to `2322a5`, one case), retaining
+its old factory, own-room check, restart, Git stand-in and Site selection.
+Platform, Scope and Replay source/test typechecks pass. The first typecheck
+runs caught missing imports and a request-union narrowing; corrected source
+passes without weakening the origin checks. No complete gate or Source
+review has run for this install preparation.

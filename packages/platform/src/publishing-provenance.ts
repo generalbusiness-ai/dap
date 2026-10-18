@@ -1,6 +1,6 @@
 /** Native identities are established by immutable creation facts, not declared names. */
 import type { Digest, FactRef, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, intentDigest, isDigest, isPlatformDefinition, isSeed, platformName, scopeIdOf, verifySignedIntent } from "@generalbusiness/artroom-bytes";
+import { canonicalize, deliveryCauseDigest, intentDigest, isMemberRef, messageDigest, parseStrict, isDigest, isPlatformDefinition, isSeed, platformName, scopeIdOf, verifySignedIntent } from "@generalbusiness/artroom-bytes";
 import { isEntryOf, isFactRef, isObject, isScopeRef, sentBy, type Fetched } from "@generalbusiness/dap-derive";
 
 export const PUBLISHING_LANE_DIGESTS = [
@@ -144,5 +144,45 @@ export function applicationPublicationOrigin(from: FactRef, directory: ScopeRef,
     const fields = body["fields"];
     if ("destination" in fields && !same(fields["destination"], destination)) return false;
     return sentBy(creator.entry, { from: born.source, n: born.n, to: seed, message: born.message });
+  } catch { return false; }
+}
+
+/** M1's new Directory handler factory. Destination7 alone adopts this policy;
+ * destination4 keeps its original signed-act factory boundary. */
+export function installedApplicationPublicationOrigin(from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly Fetched[]): boolean | null {
+  try {
+    const genesis = facts.find(copy => copy.fact.seq === 0 && same(copy.fact.at, from.at));
+    if (!genesis) return null;
+    if (!isEntryOf(genesis.entry, genesis.fact) || genesis.entry.input.type !== "genesis") return false;
+    const born = genesis.entry.input, seed = born.seed;
+    if (!isSeed(seed) || !isDigest(seed.definition) || !isFactRef(born.source) || born.n === null || !born.message
+      || born.message.class !== "request" || born.message.type !== "create" || born.decision !== "applied"
+      || from.at.kind !== "lane" || seed.kind !== "lane" || seed.ordinal !== 0 || born.inc !== from.at.inc || scopeIdOf(seed) !== from.at.scope
+      || directory.kind !== "directory" || destination.kind !== "destination" || !same(seed.creator, directory) || !same(born.source.at, directory)) return false;
+    const creator = facts.find(copy => same(copy.fact, born.source));
+    const first = facts.find(copy => copy.fact.seq === 0 && same(copy.fact.at, directory));
+    if (!creator || !first) return null;
+    if (creator.under !== "platform:directory" || first.under !== "platform:directory" || !isEntryOf(creator.entry, creator.fact) || !isEntryOf(first.entry, first.fact)
+      || creator.entry.input.type !== "delivery" || first.entry.input.type !== "genesis") return false;
+    const office = first.entry.input, made = creator.entry.input;
+    if (!isSeed(office.seed) || office.seed.definition !== "platform:directory@11" || office.seed.kind !== "directory" || office.decision !== "applied"
+      || office.inc !== directory.inc || scopeIdOf(office.seed) !== directory.scope || made.message.class !== "request" || made.message.type !== "tell"
+      || !("decision" in made) || made.decision !== "applied" || made.from.at.kind !== "rules" || !isObject(made.message.body) || made.message.body["message"] !== "application-create"
+      || !isObject(made.message.body["fields"])) return false;
+    const sibling = (kind: "rules" | "membership" | "destination", pin: string, at: ScopeRef) => first.entry.sends.some(send => isSeed(send.to)
+      && send.to.kind === kind && send.to.definition === pin && same(send.to.creator, directory) && scopeIdOf(send.to) === at.scope);
+    if (!sibling("rules", "platform:rules@5", made.from.at) || !sibling("destination", "platform:destination@7", destination)) return false;
+    const requested = made.message.body["fields"];
+    if (requested["definition"] !== seed.definition || !isMemberRef(requested["installer"]) || typeof requested["genesis"] !== "string"
+      || typeof requested["needsDestination"] !== "boolean" || deliveryCauseDigest({ v: 1, from: made.from, n: made.n, message: messageDigest(made.message) }) !== seed.cause) return false;
+    if (!sibling("membership", "platform:membership@7", requested["installer"].membership)) return false;
+    const body = born.message.body;
+    if (!isObject(body) || !same(body["directory"], directory) || !same(body["membership"], requested["installer"].membership)
+      || !same(body["creationContext"], { v: 1 }) || !isObject(body["fields"])) return false;
+    const fields = parseStrict(requested["genesis"]);
+    if (!isObject(fields) || canonicalize(fields) !== requested["genesis"] || Object.hasOwn(fields, "destination")
+      || Object.hasOwn(fields, "opener") && !same(fields["opener"], requested["installer"])) return false;
+    const expected = { ...fields, ...(requested["needsDestination"] ? { destination } : {}) };
+    return same(body["fields"], expected) && sentBy(creator.entry, { from: born.source, n: born.n, to: seed, message: born.message });
   } catch { return false; }
 }

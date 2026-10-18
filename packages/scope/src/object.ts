@@ -33,7 +33,7 @@ import { DurableObject } from "cloudflare:workers";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { SessionAnswer } from "@generalbusiness/dap-contract";
 import type { Answer, Beside, Bounds, Cursor, DeclaredDefinition, Digest, OutboxId, Entry, Grant, Input, LogPage, OperationId, PlatformDefinition, Read, RetainedInput, ScopeId, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalize, digestBytes, isHead, isScopeId, isScopeRef, retainedReadArgument, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isRecord, digestBytes, isHead, isScopeId, isScopeRef, retainedReadArgument, utf8 } from "@generalbusiness/artroom-bytes";
 import { isEntryOf, timeMs, timeOf, type Item } from "@generalbusiness/dap-derive";
 import { sourceName } from "@generalbusiness/dap-platform";
 import type { ScopeState } from "@generalbusiness/dap-derive";
@@ -410,8 +410,10 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     const name = pinned.definition?.declared.name;
     // A retained historical name is not authority. Authenticate the creator
     // through its current native pin before exposing a reserved lane identity.
-    const application = origin && proof[0]?.entry.input.type === "genesis"
-      && proof[1]?.entry.input.type === "act" && proof[1].entry.input.signed.intent.kind === "establish-application";
+    const creatorInput = proof[1]?.entry.input;
+    const application = origin && proof[0]?.entry.input.type === "genesis" && (creatorInput?.type === "act" && creatorInput.signed.intent.kind === "establish-application"
+      || creatorInput?.type === "delivery" && creatorInput.message.class === "request" && creatorInput.message.type === "tell"
+        && isRecord(creatorInput.message.body) && creatorInput.message.body["message"] === "application-create");
     if (name !== undefined && (sourceName(pinned.named, name) === null || application) && proof[1]) {
       const creator = proof[1];
       if (creator.fact.at.scope === this.#name) return null;

@@ -1,14 +1,18 @@
 /** Real native room scopes, production member authority, SQLite commits,
  * operation driver, eviction/recovery, detached-text transport and local R2.
  * Repository creation, Git objects, clock and read-session inspector are
- * explicit fixtures. Counter native birth is real; no screen or hosted route
+ * explicit fixtures. Native births and Lending publication admission are real; no screen or hosted route
  * is exercised here. */
+import type { Fetched } from "@generalbusiness/dap-derive";
+import type { Sourced } from "../src/namespace.ts";
+import { lending } from "../../../examples/lending/definition.ts";
+import { countingCommitments } from "../../../apps/counter/commitments.ts";
 import { env } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Digest } from "@generalbusiness/dap-contract";
-import { canonicalize, isSeed, scopeIdOf, textDigest } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isSeed, parseStrict, scopeIdOf, textDigest } from "@generalbusiness/artroom-bytes";
 import { httpSource, verify } from "@generalbusiness/artroom-replay";
-import { TRUSTED_APPLICATION_COHORT as C, platform } from "@generalbusiness/dap-platform";
+import { TRUSTED_APPLICATION_COHORT as C, applicationPublicationOrigin, installedApplicationPublicationOrigin, platform } from "@generalbusiness/dap-platform";
 import { applicationAnnouncementOutside } from "../src/applications/announce.ts";
 import { applicationOutside } from "../src/applications/outside.ts";
 import { applicationResolverFixture } from "./support/application-fixture.ts";
@@ -17,11 +21,15 @@ import { dispatchFixture, driveFixture, effectFixture } from "./support/native-f
 import { reader } from "./support.ts";
 import { rita, sam, routed } from "./repository.ts";
 
-test("one signed native install recovers admission, retains declarations and creates its native Counter through Directory", async () => {
+const installations = [
+  { name: "Counter", declaration: countingCommitments, roles: { admin: ["counting.control"], member: ["counting.fulfill"] }, values: '{"target":7}' },
+  { name: "Lending", declaration: lending, roles: { admin: ["lending.member", "lending.staff"], member: ["lending.member"] }, values: '{}' },
+] as const;
+test.each(installations)("$name: one signed native install recovers admission and creates its native application through Directory", async specimen => {
   const room = await sessionRoom(C.register), { life, R, D, children } = room;
   const [M, A, G] = children;
   if (!M || !A || !G) throw Error("The native room must confirm all three siblings.");
-  const f = await applicationResolverFixture("sha1", undefined, { admin: ["counting.control"], member: ["counting.fulfill"] });
+  const f = await applicationResolverFixture("sha1", undefined, specimen.roles, specimen.declaration);
   let sends = 0, recoveries = 0;
   try {
     const seat = await life.wait(() => M.did(rita, "seat", { expected: { roster: 1 } }));
@@ -40,10 +48,10 @@ test("one signed native install recovers admission, retains declarations and cre
     life.setHold(envelope => envelope.from.at.scope === A.name);
     const declarations = f.packet.package.semantic.definitions;
     const fields = {
-      uri: f.uri, release: f.packet.ids.release, semantic: f.packet.ids.semantic, roles: ["admin", "member"], values: '{"target":7}',
+      uri: f.uri, release: f.packet.ids.release, semantic: f.packet.ids.semantic, roles: ["admin", "member"], values: specimen.values,
       ...Object.fromEntries(declarations.map((part, index) => [`definitionText${index}`, textDigest(part.bytes)])),
     };
-    const changed = declarations[0]!.bytes.replace('"counting-commitments"', '"TEST changed definition"');
+    const changed = declarations[0]!.bytes + "\n";
     const refused = await life.wait(() => A.intent(rita, "install-application", { fields: { ...fields, definitionText0: textDigest(changed) } }));
     expect(await life.wait(() => A.stub.submit(refused, [], { values: [canonicalize(f.packet.package.semantic), canonicalize(f.packet.package.release)], texts: [changed] }))).toMatchObject({ answer: "refused", reason: "bad-field" });
     expect(sends).toBe(0); expect(f.opened).toEqual([]);
@@ -75,11 +83,20 @@ test("one signed native install recovers admission, retains declarations and cre
     expect((await life.wait(() => C.summary())).value).toMatchObject({ status: "active", definition: f.packet.package.semantic.entry });
     const completed = await life.wait(() => A.item(job));
     expect(completed).toMatchObject({ state: "active", refs: { scope: await life.wait(() => C.at()) } });
-    const configuration = await life.wait(() => C.expected({ configuration: 0 }));
-    expect(await life.wait(() => C.act(sam, "initialize", { expected: configuration }))).toMatchObject({ answer: "refused" });
-    await life.wait(() => C.did(rita, "initialize", { expected: configuration }));
-    expect((await life.wait(() => C.summary())).value.items.find(item => item.type === "board")).toMatchObject({ state: "paused", values: { target: 7 } });
-    expect((await life.wait(() => M.item(0))).values["memberActions"]).toContain("counting.fulfill");
+    if (specimen.name === "Counter") {
+      const configuration = await life.wait(() => C.expected({ configuration: 0 }));
+      expect(await life.wait(() => C.act(sam, "initialize", { expected: configuration }))).toMatchObject({ answer: "refused" });
+      await life.wait(() => C.did(rita, "initialize", { expected: configuration }));
+      expect((await life.wait(() => C.summary())).value.items.find(item => item.type === "board")).toMatchObject({ state: "paused", values: { target: 7 } });
+    } else {
+      expect((await life.wait(() => C.item(0))).refs["destination"]).toEqual(await life.wait(() => G.at()));
+      const donation = { expected: await life.wait(() => C.expected({ library: 0 })), fields: { name: "TEST pot", description: "Native install witness", page: "shelf/0000000000000001.md", content: "TEST signed page text; screen agreement is not asserted." } };
+      expect(await life.wait(() => C.act(sam, "donate", donation))).toMatchObject({ answer: "refused" });
+      await life.wait(() => C.did(rita, "donate", donation));
+      await dispatchFixture([C, G], life.wait);
+      expect((await life.wait(() => G.summary())).value.items.find(item => item.type === "file-publication")).toMatchObject({ values: { path: donation.fields.page } });
+    }
+    expect((await life.wait(() => M.item(0))).values["memberActions"]).toContain(specimen.roles.member[0]);
     expect(await declared(D, f.packet.package.semantic.entry)).toBe(declarations[0]!.bytes);
     await life.wait(() => D.restart());
     expect(await declared(D, f.packet.package.semantic.entry)).toBe(declarations[0]!.bytes);
@@ -88,8 +105,18 @@ test("one signed native install recovers admission, retains declarations and cre
     expect(original).toHaveLength(1);
     expect(original[0]!.input).toMatchObject({ type: "act", signed });
     expect(history.filter(entry => entry.input.type === "outcome")).toHaveLength(1);
+    const current = (await life.wait(() => C.summary())).at;
+    const provenance = await life.wait(() => (C.object as unknown as { source(seq: number, origin: boolean): Promise<Sourced> }).source(current.seq, true));
+    const facts: Fetched[] = provenance.origin!.map(copy => ({ fact: copy.fact, entry: parseStrict(copy.bytes) as Fetched["entry"], under: copy.under }));
+    const from = { at: await life.wait(() => C.at()), seq: current.seq, hash: current.hash };
+    const directory = await life.wait(() => D.at()), destination = await life.wait(() => G.at());
+    expect(installedApplicationPublicationOrigin(from, directory, destination, facts)).toBe(true);
+    expect(applicationPublicationOrigin(from, directory, destination, facts)).toBe(false);
+    expect(installedApplicationPublicationOrigin(from, directory, destination, facts.slice(0, 2))).toBeNull();
+    expect(installedApplicationPublicationOrigin(from, { ...directory, inc: destination.inc }, destination, facts)).toBe(false);
+    expect(installedApplicationPublicationOrigin(from, directory, { ...destination, scope: directory.scope }, facts)).toBe(false);
     const source = httpSource("https://scopes.test", { reader, fetch: (url, init) => life.wait(() => routed(url, init)) });
-    for (const node of [A, D, C]) {
+    for (const node of [A, D, C, G]) {
       const head = (await life.wait(() => node.summary())).at;
       const replay = await life.wait(() => verify(source, { mode: "replay", platform, grants: "proven", scope: node.name, head }));
       expect([replay.report.result, replay.why], node.name).toEqual(["consistent", null]);

@@ -4,7 +4,7 @@ import { isActions, type Role } from "./membership.ts";
 export const APPLICATION_INSTALL_RULES = "platform:rules@5" as const;
 export const TRUSTED_APPLICATION_COHORT = {
   register: "platform:register@12", directory: "platform:directory@11", membership: "platform:membership@7",
-  rules: APPLICATION_INSTALL_RULES, destination: "platform:destination@4", inbox: "platform:inbox@1",
+  rules: APPLICATION_INSTALL_RULES, destination: "platform:destination@7", inbox: "platform:inbox@1",
 } as const;
 export const INSTALL_ADDITIONS_BYTES = 48 * 1024;
 export const INSTALL_ROLE_NAMES = ["admin", "maintainer", "member", "agent", "checker"] as const;

@@ -194,6 +194,7 @@ export class Operations {
   readonly #store: Store;
   readonly #outside: Outside;
   readonly #resolver: Resolver;
+  readonly #definitions: Ports["definitions"] | undefined;
   readonly #owners: Owners | undefined;
   readonly #clock: Clock;
   readonly #wakes: Wakes;
@@ -249,12 +250,13 @@ export class Operations {
   readonly #conflict: ((operation: OperationId, attempt: number, seq: number) => void) | undefined;
 
   /** `owners`: the rules of the owners this runtime has code for. With none, no outcome can be judged, so nothing is sent. */
-  constructor(scope: Scope, store: Store, ports: Pick<Ports, "outside" | "clock" | "owners" | "diagnoses" | "resolver">, wakes: Wakes, bounds: Bounds, conflict?: (operation: OperationId, attempt: number, seq: number) => void) {
+  constructor(scope: Scope, store: Store, ports: Pick<Ports, "outside" | "clock" | "owners" | "diagnoses" | "resolver"> & Partial<Pick<Ports, "definitions">>, wakes: Wakes, bounds: Bounds, conflict?: (operation: OperationId, attempt: number, seq: number) => void) {
     this.#conflict = conflict;
     this.#scope = scope;
     this.#store = store;
     this.#outside = ports.outside;
     this.#resolver = ports.resolver;
+    this.#definitions = ports.definitions;
     this.#owners = ports.owners ?? undefined;
     this.#clock = ports.clock;
     this.#wakes = wakes;
@@ -295,7 +297,7 @@ export class Operations {
       const read = await within(() => this.#resolver.read(asked.from, this.#bounds.fetchSeconds, true), this.#bounds.fetchSeconds);
       if (read === LATE || read === null || !("entry" in read) || !isEntryOf(read.entry, asked.from)) return false;
       return asked.mode === "application"
-        ? applicationPublicationOrigin(asked.from, asked.directory, asked.destination, read.origin ?? []) === true
+        ? (operation.owner === "platform:destination@7" ? this.#definitions?.platform("platform:destination@7")?.applicationPublicationOrigin : applicationPublicationOrigin)?.(asked.from, asked.directory, asked.destination, read.origin ?? []) === true
         : read.under === "change" && publishingLaneOrigin(asked.from, asked.directory, asked.destination, read.origin ?? []);
     } catch { return false; }
   }
