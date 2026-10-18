@@ -15,8 +15,8 @@ export interface DeviceKey { publicKey: KeyId; pair: CryptoKeyPair }
 export async function newDeviceKey(): Promise<DeviceKey> { return await generateBrowserDeviceKey() as DeviceKey; }
 export function deviceSigner(device: DeviceKey): Signer { return storedWebCryptoSigner(device.publicKey, device.pair.privateKey); }
 export const readInvitation = (text: string, origin: string) => readBrowserInvitation(text, { origin, membershipDefinition: ROOM_MEMBERSHIP });
-export function joining(device: DeviceKey, options: Omit<BrowserJoiningOptions, "origin" | "membershipDefinition">): BrowserJoining {
-  return browserJoining(deviceSigner(device), { ...options, origin: location.origin, membershipDefinition: ROOM_MEMBERSHIP });
+export function joining(device: DeviceKey, options: Omit<BrowserJoiningOptions, "membershipDefinition">): BrowserJoining {
+  return browserJoining(deviceSigner(device), { ...options, membershipDefinition: ROOM_MEMBERSHIP });
 }
 
 export type DiscoveryResult = { ok: true; identity: LendingIdentity } | { ok: false; reason: string };

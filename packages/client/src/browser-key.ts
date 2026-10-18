@@ -5,6 +5,10 @@ import { b64url, isKeyId, keyIdOf, verify } from "@generalbusiness/artroom-bytes
 import type { Signer } from "./intent.ts";
 
 const unavailable = (): never => { throw new Error("A browser-held non-extractable Ed25519 signing key is required."); };
+// Some runtimes expose mutable own metadata rather than native getters.
+// Only keys made by this module's exact generateKey call have a trusted
+// fallback. Restored or supplied keys still require native accessors.
+const generatedPrivateKeys = new WeakSet<object>();
 /** Opaque native key objects are structured-cloneable by the platform. The
  * client needs no DOM/Workers type library and exports no private bytes. */
 export interface BrowserDeviceKey { readonly publicKey: KeyId; readonly pair: { readonly publicKey: unknown; readonly privateKey: unknown } }
@@ -16,6 +20,8 @@ export async function generateBrowserDeviceKey(): Promise<BrowserDeviceKey> {
     exportKey(format: "raw", key: unknown): Promise<ArrayBuffer>;
   };
   const pair = await subtle.generateKey({ name: "Ed25519" }, false, ["sign", "verify"]);
+  if (typeof pair.privateKey !== "object" || pair.privateKey === null) return unavailable();
+  generatedPrivateKeys.add(pair.privateKey);
   const publicKey = keyIdOf(new Uint8Array(await subtle.exportKey("raw", pair.publicKey)));
   storedWebCryptoSigner(publicKey, pair.privateKey);
   return { publicKey, pair };
@@ -25,7 +31,16 @@ export async function generateBrowserDeviceKey(): Promise<BrowserDeviceKey> {
 function attribute(key: unknown, name: string): unknown {
   if (typeof CryptoKey === "undefined") return unavailable();
   const getter = Object.getOwnPropertyDescriptor(CryptoKey.prototype, name)?.get;
-  if (!getter) return unavailable();
+  if (!getter) {
+    if (typeof key !== "object" || key === null || !generatedPrivateKeys.has(key)) return unavailable();
+    switch (name) {
+      case "type": return "private";
+      case "extractable": return false;
+      case "algorithm": return { name: "Ed25519" };
+      case "usages": return ["sign"];
+      default: return unavailable();
+    }
+  }
   try { return getter.call(key); } catch { return unavailable(); }
 }
 

@@ -59,6 +59,14 @@ checks the public-key binding. Storage owns values before awaiting a write.
 Joining binds the original invitation, membership version, signed request,
 accepted receipt and resulting session member.
 
+Browsers admit stored keys through native metadata getters. Workerd lacks
+those getters and exposes mutable own metadata. Its fallback admits only
+the exact private key returned by this module's non-extractable generation
+call, tracked privately by object identity. Restored and supplied keys still
+require native getters. The fallback does not trust copied metadata.
+Lending's joining adapter takes an explicit origin. Its page supplies the
+browser origin, while the native scope witness supplies its TEST service.
+
 Counter fixes its own allowed acts and preserves its version 2 journal,
 epoch store, credentials, audio markers and context identity. Check and
 unknown attempts only read. A committed prepared attempt can dispatch once.
@@ -106,6 +114,23 @@ or installed. Both asset builders pass. Their regeneration commands are
 The gate and review reports attach to the completed commit through Gitseq.
 They identify its exact head and tree. This document does not claim an
 unrun gate or approval.
+
+Two preparation gates stopped before tests. The first found two trailing
+blank lines. The next found an ambient browser `location` in Lending's
+adapter during the scope's Node compilation. Explicit origin fixes that
+dependency. The focused native Lending witness then exposed workerd's
+metadata difference. A temporary diagnostic read public descriptors only.
+The generated-key fallback above fixes that difference without trusting
+own metadata. The native Lending witness, scope typechecks and all three
+key cases pass. A selected control that removes the provenance guard fails
+its intended assertion, then restores source. Raw records use
+`/tmp/artroom-m1-foundation-`.
+
+Fresh browser checks after these fixes pass both legacy and proof invitation
+flows, with no console errors. Their new fixture and results are
+`/tmp/artroom-m1-foundation-browser-20261018/` and
+`/tmp/artroom-m1-foundation-browser-results-20261018/`. Earlier evidence
+inventories remain unchanged. The new browser and server are closed.
 
 ## Remaining M1 work
 
