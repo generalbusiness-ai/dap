@@ -77,7 +77,7 @@ export function mountCountingStage(root:HTMLElement,options:CountingStageOptions
     rememberCandidate(candidate,result);
     commandOutcome=result.status;command=result.status==="recorded"?"dap.":result.reason??"The original request remains unresolved.";
     commandBusy=false;observeVoice();wake();render();
-    if(!fresh)observation?.refresh();
+    if(!fresh&&!(result.status==="blocked"&&"refreshing" in result&&result.refreshing))observation?.refresh();
     claim();return result;
   };
   const claim=()=>{
@@ -99,6 +99,15 @@ export function mountCountingStage(root:HTMLElement,options:CountingStageOptions
     if(joinBusy||!device?.current())return;
     const at=epoch,attempt=++joinEpoch;joinBusy=true;joinReason=undefined;selectedVoiceId=voiceId;options.selectVoice?.(voiceId);render();
     const alive=()=>current(at)&&attempt===joinEpoch;
+    const joinControl=async(kind:"participate"|"activate")=>{
+      const first=await controls(kind);
+      // A refreshing snapshot can invalidate preparation while private
+      // custody is being read. Only this still-unsent case waits and tries
+      // preparation once more; recorded/unknown/refused requests never do.
+      if(first?.status!=="blocked"||!("refreshing" in first)||!first.refreshing||!("definitelyUnsent" in first)||!first.definitelyUnsent)return first;
+      if(!alive()||!await waitFresh(at,attempt))return first;
+      return controls(kind);
+    };
     const stop=(reason:string)=>{if(!alive())return;joined=false;voice?.disarm();release();refuse(reason);};
     try{
       if(!usableVoice(voiceId)){stop("the selected English (US) voice is unavailable. Choose a usable voice.");return;}
@@ -106,8 +115,8 @@ export function mountCountingStage(root:HTMLElement,options:CountingStageOptions
       if(!custodyAvailable()){stop("private voice or original-request custody is unavailable. Check the retained request.");return;}
       if(!releaseRunner){const acquired=await runner.acquire(device!.identity);if(!alive()){acquired?.();return;}if(!acquired){stop("this identity is running in another tab, or browser locking is unavailable.");return;}releaseRunner=acquired;}
       let own=ownedParticipant(view!,device!.identity);
-      if(!own){const result=await controls("participate");if(!alive())return;if(result?.status!=="recorded"){stop(`participation was not confirmed. ${result?.reason??"Check the original request."}`);return;}if(!await waitFresh(at,attempt,snapshot=>!!ownedParticipant(snapshot,device!.identity))){stop("participation was recorded, but its fresh record is unavailable.");return;}own=ownedParticipant(view!,device!.identity);}
-      if(own?.state==="inactive"){const result=await controls("activate");if(!alive())return;if(result?.status!=="recorded"){stop(`participation remains recorded, but activation was not confirmed. ${result?.reason??"Check the original request."}`);return;}if(!await waitFresh(at,attempt,snapshot=>ownedParticipant(snapshot,device!.identity)?.state==="active")){stop("activation was recorded, but its fresh record is unavailable.");return;}}
+      if(!own){const result=await joinControl("participate");if(!alive())return;if(result?.status!=="recorded"){stop(`participation was not confirmed. ${result?.reason??"Check the original request."}`);return;}if(!await waitFresh(at,attempt,snapshot=>!!ownedParticipant(snapshot,device!.identity))){stop("participation was recorded, but its fresh record is unavailable.");return;}own=ownedParticipant(view!,device!.identity);}
+      if(own?.state==="inactive"){const result=await joinControl("activate");if(!alive())return;if(result?.status!=="recorded"){stop(`participation remains recorded, but activation was not confirmed. ${result?.reason??"Check the original request."}`);return;}if(!await waitFresh(at,attempt,snapshot=>ownedParticipant(snapshot,device!.identity)?.state==="active")){stop("activation was recorded, but its fresh record is unavailable.");return;}}
       if(!alive())return;
       if(ownedParticipant(view!,device!.identity)?.state!=="active"||!usableVoice(voiceId)||!custodyAvailable()){stop("the active participant, usable voice or private custody changed. Earlier acts remain recorded.");return;}
       observeVoice();

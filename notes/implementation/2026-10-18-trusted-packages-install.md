@@ -744,3 +744,29 @@ also found that Lending's verified-seat handoff could leave its in-memory
 snapshot behind the committed store. The preparation now reads that exact
 handoff before completing discovery; live native browser verification is
 still owed for the successful connection.
+
+
+## Live native browser verification in progress
+
+A private loopback bridge under `/tmp/artroom-m1-browser-harness-20261018/`
+forwards genuine Chromium requests, signatures and streamed native heads to
+real workerd scopes. Packets are prepared outside Vite by the Node compiler
+from a clean source head. The actual native room installs the full maintained
+Counter and Lending packets; Git objects, repository host, clock and
+scheduler remain explicit fixtures. This harness is not yet passing.
+
+The live check confirmed a generated browser key's actual Membership7 join
+and Counter participation. It first caught two harness mistakes: metadata's
+deployment differed from the test Worker's session deployment, then the
+bridge waited for the native NDJSON head stream as a finite response. Both
+were corrected in the scratch harness. With those corrected, it exposed a
+Counter join race: an intermediate current snapshot could be invalidated by
+a queued refresh while private custody was read before activation.
+
+The gateway now distinguishes that definitely-unsent, refreshing preparation
+from other blocked candidates. Join waits for the current snapshot and may
+prepare it once more. That local refusal no longer adds a redundant refresh.
+Native recorded, refused and unknown outcomes keep their existing custody
+and dispatch rules. The Counter typecheck and all 55 owning Node cases pass
+(`d3f4fa`, session `60835`, terminal `4faba2`, exit 0). The live browser
+check must run against the new packet before this correction is accepted.
