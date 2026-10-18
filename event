@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:dd9e82120566ad57b64898a78e93891af3d8d3be","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-16-archive-inventory-reconciliation.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:df0b7274eda9b3f0dd591f9c48b5099360ef33d8","text":"Merge retired a covered predecessor; the successor is at packages/replay/test/staging.ts."}
