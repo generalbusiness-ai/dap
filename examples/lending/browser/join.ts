@@ -1,159 +1,22 @@
-/**
- * Joining the room from a browser with an invitation, and finding the room's
- * lending scope. Requirement 1 of notes/2026-10-13-lending-library.md, section 6.
- *
- * The device key is made by WebCrypto and cannot be read out. The join is one
- * signed act to the room's membership, under the same custody as a lending act
- * (custody.ts): kept before it is sent, ordinary recovery by a read, and
- * explicit Continue with the original envelope. The kept join holds the invitation's secret, as the signed act does;
- * it stays in this origin's private storage and is cleared once the join is settled.
- */
-import type { KeyId, MemberId, Receipt, ScopeRef, Summary } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, intentDigest, timeMs, timeOf } from "@generalbusiness/artroom-bytes";
-import { ScopeHandle, httpTransport, invitationOf, requestSession, signedIntent, signerSessionRequest, wellFormedInvitation,
-  storedWebCryptoSigner, generateBrowserDeviceKey, type Fetch, type InvitationLink, type Signer } from "@generalbusiness/artroom-client";
+/** Lending-specific browser joining and library discovery. Shared client
+ * joining owns exact request custody; this adapter keeps the historical
+ * membership pin and the application's own discovery/identity validation. */
+import type { KeyId, ScopeRef, Summary } from "@generalbusiness/dap-contract";
+import { b64url, canonicalize, timeOf } from "@generalbusiness/artroom-bytes";
+import { ScopeHandle, httpTransport, requestSession, signerSessionRequest, storedWebCryptoSigner, generateBrowserDeviceKey,
+  browserJoining, readBrowserInvitation, type BrowserJoining, type BrowserJoiningOptions, type Fetch, type Signer } from "@generalbusiness/artroom-client";
 import { LENDING_DEFINITION } from "../pin.ts";
 import { memberForKey } from "./model.ts";
-import { advance, envelopeKey, validKept, type Binding, type CustodyLock, type Envelope, type Kept, type KeptStore, type LendingIdentity, type Ports } from "./custody.ts";
-
-/** The membership version of the application cohort, which the lending room uses. */
+import type { LendingIdentity } from "./custody.ts";
+import type { BrowserJoinSeat as Seat } from "@generalbusiness/artroom-client";
+export type { BrowserJoinSeat as Seat, BrowserInvitation as Invited, BrowserKeptJoin as KeptJoin, BrowserJoinStore as JoinStore, BrowserJoinOutcome as JoinOutcome, BrowserJoining as Joining } from "@generalbusiness/artroom-client";
 export const ROOM_MEMBERSHIP = "platform:membership@4";
-
-/** A device key that WebCrypto holds. `pair` can be stored in IndexedDB as it is; its private half is not extractable. */
 export interface DeviceKey { publicKey: KeyId; pair: CryptoKeyPair }
-export async function newDeviceKey(): Promise<DeviceKey> {
-  // The browser supplies the concrete platform types for the SDK's opaque
-  // native key objects. Identity and storage admission still happen here.
-  return await generateBrowserDeviceKey() as DeviceKey;
-}
-export function deviceSigner(device: DeviceKey): Signer {
-  return storedWebCryptoSigner(device.publicKey, device.pair.privateKey);
-}
-
-/** The seat an invitation offers: the room's scopes and the handle. No secret is in it. */
-export interface Seat { origin: string; directory: ScopeRef; membership: ScopeRef; handle: MemberId }
-export type Invited = { ok: true; link: InvitationLink; seat: Seat } | { ok: false; reason: string };
-
-/** Read an invitation link for this service. A link for another service, another membership version or with a part missing is refused. */
-export function readInvitation(text: string, origin: string): Invited {
-  const typed = text.trim();
-  if (typed.length > 16 * 1024) return { ok: false, reason: "That is too long to be an invitation." };
-  const link = invitationOf(typed);
-  if (!link || !wellFormedInvitation(link)) return { ok: false, reason: "That is not an invitation link." };
-  let service: string;
-  try { service = new URL(link.service).origin; } catch { return { ok: false, reason: "The invitation names no service." }; }
-  if (service !== origin) return { ok: false, reason: "This invitation is for another service." };
-  if (link.definition !== ROOM_MEMBERSHIP) return { ok: false, reason: "This invitation is for a room this library cannot join." };
-  // Membership judges the handle. Here it only has to be one short word that starts with @.
-  if (!/^@\S{1,63}$/.test(link.handle)) return { ok: false, reason: "The invitation's handle is not a handle." };
-  return { ok: true, link, seat: { origin, directory: link.repository.directory, membership: link.repository.membership, handle: link.handle as MemberId } };
-}
-
-/** A join kept with the seat it is for, so that a reload can show and settle it. */
-export interface KeptJoin { v: 1; seat: Seat; kept: Kept }
-export interface JoinStore { load(): Promise<unknown>; save(value: KeptJoin): Promise<void>; clear(): Promise<void> }
-export type JoinOutcome =
-  | { status: "joined"; seat: Seat }
-  | { status: "refused"; reason: string }
-  | { status: "unknown"; reason: string; seat?: Seat }
-  | { status: "nothing-sent"; reason: string };
-
-const joinBinding = (seat: Seat, key: KeyId): Binding => ({ scope: seat.membership, publicKey: key, kinds: ["join"] });
-const validJoin = (value: unknown, key: KeyId): value is KeptJoin => {
-  const held = value as KeptJoin | null;
-  try {
-    return !!held && held.v === 1 && !!held.seat && typeof held.seat.origin === "string" && typeof held.seat.handle === "string"
-      && validKept(held.kept, joinBinding(held.seat, key));
-  } catch { return false; }
-};
-const refusalWords = (reason: string): string =>
-  `${reason === "guard-failed" ? "The room did not accept this invitation. It may be used, ended or mistyped." : reason === "unauthorized" ? "The room does not allow this join." : "The room refused the join."} (${reason})`;
-
-export interface Joining {
-  /** Sign the join once, keep it, then send it. Refused while an earlier join is kept. */
-  join(link: InvitationLink, seat: Seat): Promise<JoinOutcome>;
-  /** The seat of the kept join, or null. */
-  pending(): Promise<Seat | null>;
-  /** Check submits no new join act. Reading its recorded entry may first
-   * sign and send read-session authentication. */
-  check(): Promise<JoinOutcome | null>;
-  /** Explicit Continue sends the kept join, without signing another one. */
-  continueOriginal(): Promise<JoinOutcome | null>;
-}
-
-export function joining(device: DeviceKey, options: { lock: CustodyLock; store: JoinStore; current?: () => boolean; now?: () => number; fetch?: Fetch; actFetch?: Fetch }): Joining {
-  const signer = deviceSigner(device), now = options.now ?? (() => Date.now()), usable = options.current ?? (() => true);
-  const current = () => { if (!usable()) throw new Error("This join context is no longer current."); };
-  const transport = (origin: string, fetch?: Fetch) => httpTransport(origin, fetch ? { fetch } : {});
-  const ports = (seat: Seat): Ports => {
-    // A person who has not joined has no read session. Settlement by the exact signed request needs none.
-    const reads = new ScopeHandle(transport(seat.origin, options.fetch), seat.membership.scope, null);
-    return {
-      current: usable,
-      post: (envelope) => new ScopeHandle(transport(seat.origin, options.actFetch ?? options.fetch), seat.membership.scope, null).submit(envelope.signed, envelope.grants, envelope.beside),
-      recorded: async (receipt: Receipt, envelope: Envelope) => {
-        if (receipt.definition !== ROOM_MEMBERSHIP || receipt.intent !== intentDigest(envelope.signed.intent) || canonicalize(receipt.fact.at) !== canonicalize(seat.membership)) return false;
-        // Reading the recorded entry needs a session. If the join took effect, this device is a member
-        // and the room gives its key one; if the room gives none, the join is not verified.
-        const asked = await signerSessionRequest(seat.membership, signer, timeOf(now() + 60_000), b64url(crypto.getRandomValues(new Uint8Array(16))));
-        const session = await requestSession(seat.origin, seat.membership.scope, asked, options.fetch ? { fetch: options.fetch } : {});
-        if (!session.ok) return false;
-        const followed = await new ScopeHandle(transport(seat.origin, options.fetch), seat.membership.scope, session.session.reader()).followReceipt(receipt);
-        return followed.ok && followed.entry.input.type === "act" && canonicalize(followed.entry.input.signed) === canonicalize(envelope.signed);
-      },
-      settle: async (envelope) => { const answer = await reads.settle(envelope.signed); return answer.ok ? answer.value : null; },
-    };
-  };
-  const inner = (held: KeptJoin): KeptStore => ({ load: async () => { const now = await options.store.load(); return validJoin(now, device.publicKey) ? now.kept : null; },
-    save: (kept) => options.store.save({ v: 1, seat: held.seat, kept }), clear: () => options.store.clear() });
-  const conclude = async (held: KeptJoin, readOnly: boolean, continueOriginal = false): Promise<JoinOutcome> => {
-    current();
-    const settled = await advance(inner(held), joinBinding(held.seat, device.publicKey), ports(held.seat), held.kept.envelope, readOnly, continueOriginal);
-    current();
-    if (settled.status === "unknown") return { status: "unknown", seat: held.seat, reason: "No answer came back that could be trusted. The original join is kept. Check it; do not use the invitation again." };
-    const latest = await options.store.load(); current();
-    if (!validJoin(latest, device.publicKey) || envelopeKey(latest.kept.envelope) !== envelopeKey(held.kept.envelope) || latest.kept.phase !== settled.status)
-      return { status: "unknown", seat: held.seat, reason: "The original join is kept. Check it." };
-    // Settled: the invitation's secret leaves this browser with the kept join.
-    await options.store.clear(); current();
-    return settled.status === "recorded" ? { status: "joined", seat: held.seat } : { status: "refused", reason: refusalWords(settled.reason) };
-  };
-  return {
-    join(link, seat) {
-      return options.lock.run(async (): Promise<JoinOutcome> => {
-        current();
-        if ((await options.store.load() ?? null) !== null) return { status: "nothing-sent", reason: "An earlier join is kept. Check it first." };
-        current();
-        let held: KeptJoin;
-        try {
-          const signed = await signedIntent(signer, { to: seat.membership, kind: "join", fields: { invitation: link.invitation, secret: link.secret }, expected: {} }, { now: now() }); current();
-          held = { v: 1, seat, kept: { v: 1, kind: "join", envelope: { signed, grants: [], beside: {} }, phase: "prepared" } };
-          if (!validJoin(held, device.publicKey)) throw new Error("not a join of this device");
-          await options.store.save(held); current();
-        } catch { return { status: "nothing-sent", reason: "The join could not be signed and kept. Nothing was sent." }; }
-        return conclude(held, false);
-      });
-    },
-    continueOriginal() {
-      return options.lock.run(async () => {
-        current(); const held = await options.store.load(); current();
-        if ((held ?? null) === null) return null;
-        if (!validJoin(held, device.publicKey)) return { status: "unknown" as const, reason: "The kept join cannot be read. It stays in this browser." };
-        const deadline = timeMs(held.kept.envelope.signed.intent.notAfter);
-        if (deadline === null || now() > deadline) return { status: "unknown" as const, seat: held.seat, reason: "The original join's deadline has passed. Check it; nothing was sent." };
-        return conclude(held, false, true);
-      });
-    },
-    async pending() { const held = await options.store.load(); return validJoin(held, device.publicKey) ? held.seat : null; },
-    check() {
-      return options.lock.run(async () => {
-        current(); const held = await options.store.load(); current();
-        if ((held ?? null) === null) return null;
-        if (!validJoin(held, device.publicKey)) return { status: "unknown" as const, reason: "The kept join cannot be read. It stays in this browser." };
-        return conclude(held, true);
-      });
-    },
-  };
+export async function newDeviceKey(): Promise<DeviceKey> { return await generateBrowserDeviceKey() as DeviceKey; }
+export function deviceSigner(device: DeviceKey): Signer { return storedWebCryptoSigner(device.publicKey, device.pair.privateKey); }
+export const readInvitation = (text: string, origin: string) => readBrowserInvitation(text, { origin, membershipDefinition: ROOM_MEMBERSHIP });
+export function joining(device: DeviceKey, options: Omit<BrowserJoiningOptions, "origin" | "membershipDefinition">): BrowserJoining {
+  return browserJoining(deviceSigner(device), { ...options, origin: location.origin, membershipDefinition: ROOM_MEMBERSHIP });
 }
 
 export type DiscoveryResult = { ok: true; identity: LendingIdentity } | { ok: false; reason: string };

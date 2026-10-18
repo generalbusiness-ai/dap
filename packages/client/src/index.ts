@@ -19,6 +19,9 @@ export * from "./invitation-fields.ts";
 export * from "./item-query.ts";
 export * from "./directory.ts";
 export * from "./browser-storage.ts";
+export { browserJoining, readBrowserInvitation } from "./browser-joining.ts";
+export type { Seat as BrowserJoinSeat, InvitationContext as BrowserInvitationContext, Invited as BrowserInvitation, KeptJoin as BrowserKeptJoin,
+  JoinStore as BrowserJoinStore, JoinOutcome as BrowserJoinOutcome, Joining as BrowserJoining, JoiningOptions as BrowserJoiningOptions } from "./browser-joining.ts";
 export { advance as advanceKeptRequest, validKept as validKeptRequest, envelopeKey as keptEnvelopeKey, KEPT_BYTES as KEPT_REQUEST_BYTES } from "./request-custody.ts";
 export type { Binding as RequestBinding, Phase as KeptRequestPhase, Envelope as KeptEnvelope, Kept as KeptRequest, KeptStore as KeptRequestStore,
   CustodyLock as RequestCustodyLock, Settled as KeptRequestSettled, Ports as KeptRequestPorts } from "./request-custody.ts";

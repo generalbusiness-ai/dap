@@ -578,10 +578,98 @@ Harness, result, control log and PNGs are under
 and followed to terminal exit 143 (`ada233`); no dev server or browser
 remains live. No gate, publication, install or deployment ran.
 
+## Shared browser joining
+
+`browserJoining` and `readBrowserInvitation` now live in the client.
+The caller supplies the exact service origin and membership version, signer,
+private store, lock and current-context guard. The origin must be canonical
+and the invitation must name that root service and configured version.
+Signing owns the invitation and seat before waiting for the lock/store,
+and refuses a mismatch between them. Kept joins must have the exact expected
+seat, signing key, scope, kind and cohort's redemption-field shape.
+Malformed custody stays untouched.
+
+The client uses the existing invitation-field helper: known legacy cohorts
+retain their original secret-bearing fields; membership 6 signs the
+key-bound proof and keeps no invitation seed in the signed join. No native
+invitation or membership rule changes. A held join is saved before submit;
+Check only settles/reads it, while Continue can submit only the same original
+unexpired bytes. At its exact expiry the client sends nothing. A verified
+terminal mark is read back before custody is cleared.
+
+An acceptance must match the configured membership version, exact membership
+scope/incarnation and signed intent digest. Read-session authentication uses
+the device signer and must name the offered member. Following the receipt
+recomputes the entry hash and compares the exact original signed join.
+Read credentials stay in memory. The shared join does not discover an
+application, manufacture a grant or supply native enrollment evidence.
+
+Lending delegates to this client but keeps membership 4 and its existing
+library discovery/identity checks. Root service-path validation now refuses
+an invitation carrying an unsupported prefix instead of silently sending
+to a stripped origin. Its kept storage shape and slot are unchanged.
+The generic caller may explicitly choose the newer proof cohort; Lending
+itself has not silently changed cohorts.
+
+Three new client cases pass (`9dc9e3`): actual device/proof signatures,
+lost reply and read-only recovery, exact original Continue, failed durable
+save, exact expiry, wrong receipt version/session member, mutated caller
+input, mismatched invitation/seat and malformed custody. Backend entries,
+session answers, storage and locks are explicitly scripted. These are
+client checks, not a native admission or remote identity witness.
+
+Four hand controls each have three normal passes, then one intended
+assertion failure, with source restored and exit 0: receipt version
+(`9d4199`/`4543c8`), session member (`b05ca3`/`4b8937`), expired
+Continue (`f9f71f`/`f59725`) and owned caller input
+(`5a171f`/`0ae6b6`). Logs use
+`/tmp/artroom-m1-control-joining-`.
+The final affected run passes eleven cases in four client/Lending files
+(`1c816f`), with client and browser typechecks
+(`3582d5`, `28bcf2`). The pinned existing browser bundler produces
+the expected three Lending files in memory (`4e9564`): HTML 472 bytes,
+JavaScript 122,386 and CSS 2,377. It writes no generated asset module yet.
+
+### Joining browser witness
+
+The flow is: mount, join with a lost reply, reload, Check, then Continue the
+original join. Both the actual Lending legacy adapter and the shared proof
+path pass in fresh Chromium profiles (`711d35`/`ab3a65`, then the
+final screenshot run `eff4e4`/`ae5ab2`, exit 0). Real browser device
+keys and IndexedDB survive reload, and actual intent/proof signatures verify.
+Check makes zero submit calls; Continue makes one call with the original
+envelope hash; matching custody clears only after the verified response.
+Backend entries, session and submit answers remain scripted.
+
+The Browser plugin is absent. The run uses the same cached Playwright 1.63.0,
+Chromium 153.0.8010.12 and localhost-only fixture as above, without installing
+anything. URL/title, meaningful content, no framework overlay, console health
+and interactions pass. Desktop 960 by 720 and mobile 390 by 844 screenshots
+are inspected. The first mobile fixture clipped its long diagnostic hash;
+the scratch fixture now wraps it, and both viewports assert no horizontal
+overflow. This changes no production layout.
+
+The initial browser run `b1c9ed` and diagnostic `3d0ef0` fail the
+page-identity check: Vite returned 403 because the scratch allow list named
+`/tmp` while that HTML resolved through `/private/tmp`. The separate
+joining server now allows the canonical paths for the same two directories,
+preserving the original storage witness's server file. No application fix
+was needed, and neither failed attempt is a pass.
+
+Joining results and four final images are under
+`/tmp/artroom-m1-browser-joining-20261018/`. Retained scratch files
+`join.html`, `join-fixture.js`, `server-joining.mjs` and
+`check-joining.mjs` are under
+`/tmp/artroom-m1-browser-slots-20261018/`; logs use
+`/tmp/artroom-m1-browser-joining-`. The orchestrator closes the temporary
+browser and follows its server to terminal 143 before returning. No process,
+gate, publication, trusted install, native HTTP admission, deployment or
+production-screen acceptance is claimed here.
+
 ## Remaining developer work
 
-Shared browser joining and Counter storage/custody migration; browser
-bundling; new/dev; Counter/Lending package
+Counter integration and storage/custody migration; generic browser bundling;
+new/dev; Counter/Lending package
 conversion; and the matching browser evidence remain due. Generated
 application asset modules have not been rebuilt for this source checkpoint;
 the complete package conversion will replace their host composition.
