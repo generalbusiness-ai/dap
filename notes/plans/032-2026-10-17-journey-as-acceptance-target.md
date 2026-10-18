@@ -30,6 +30,11 @@ experience).
 
 ## 2. Order
 
+*Changed on 18 October 2026 by
+[plan 033](033-2026-10-18-grow-room-demo.md): after section 2a, the grow
+room is built as the demo before section 2b, and M1 moves from section 2c
+into that line. Section 2b resumes at J3.*
+
 ### 2a. Finish and stop
 
 - **Archive, to "clone, disconnect, verify to a cutoff".** The internal
