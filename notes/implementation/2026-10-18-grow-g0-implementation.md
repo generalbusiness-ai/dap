@@ -370,10 +370,46 @@ passes (`e59a28`). Multi-scope replay now reads the actual retained foreign
 entries and every scope's declaration/prepared inputs, with explicit
 as-recorded fixture authority. Dependencies and native kernels are unchanged.
 
+## Combined native fault history
+
+The existing four-zone climate case now runs inside Room A of an actually
+judged three-room site fixture. Room A commissions four zones, twelve devices
+and 100 distinct bench cells, with exactly 25 benches per zone. No rows,
+genesis entries or confirmations are fabricated. The other two rooms have
+their own native histories; they are not simulated by a second label on A.
+
+The day tender arrives and probes C4. After the vent fault, fan trip and
+cross-draft, the incident's alert is reported to the site with count 1.
+The tender takes its repair task. While the operator holds the alert, a D4
+probe records high EC and the irrigation member asks the head grower for
+early watering. The one room history contains the held alert, taken task and
+asked watering request together. Hold expiry still refuses the original
+signed authorization by its moved revision. The operator's current act cuts
+the heater, while the head grower approves the independent fixed watering
+amount and the irrigation member records fulfillment.
+
+The task report leaves the vent in reported error until the sensors'
+separate healthy report. The original late heater-on observation, cooling,
+cross-draft restoration, new restoration proposal, operator authorization and
+exact incident closure remain. Count 0 then reaches the site, and the tender
+leaves. C4 and D4 become stale at their own actual probe deadlines. Eight
+separately labelled non-native owner records cite eight distinct accepted
+target-command facts, including the vent owner's refusal. They are outside
+the journal, device state and native operation protocol.
+
+The four room cases pass (`c2a519`/`7a76ee`, then the strengthened
+25-benches-per-zone assertion in `6cc562`/`30e4da`, exit 0).
+Typecheck passes (`05f261`). Every actual site/room history replays
+consistently from canonical entries, exact retained foreign bytes and actual
+prepared-rule inputs under explicit as-recorded fixture authority. This
+extends the existing full climate witness rather than creating another
+parallel version of that same story. The application definitions are
+unchanged from the preceding eighteen-case site checkpoint.
+
 ## Remaining G0 work
 
-The complete combined fault scenario and final package/scenario witness
-remain due. M1's `dap check` now exists on its separate
+The final declarative package/scenario witness remains due. M1's
+`dap check` now exists on its separate
 unlanded developer branch; G0's final package/scenario witness depends on
 that reviewed public path, without copying unlanded M1 implementation into
 this Source. No G0 gate or Source submission has run yet. Gate runs once on
