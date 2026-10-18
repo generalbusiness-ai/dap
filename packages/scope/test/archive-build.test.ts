@@ -3,21 +3,14 @@
  * no host, token, adapter send or production export admission is claimed. */
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Input, SendForm } from "@generalbusiness/dap-contract";
-import { variant } from "@generalbusiness/dap-derive/testing";
 import type { JournalArchive, JournalFormat } from "@generalbusiness/artroom-git/journal";
 import { planArchive, rebuildArchive } from "../src/archive-build.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
 import { ArchiveBudget } from "../src/archive-budget.ts";
-import type { ArchivePolicyRegistry } from "../src/archive-inventory.ts";
 import type { Sql } from "../src/sqlite.ts";
-import { at, create, definition, rita, una, type Lane } from "./support.ts";
+import { at, create, rita, una, type Lane } from "./support.ts";
+import { archiveDefinition as base, archivePolicies as policies, archiveRepository as repository, archiveSql as sqlOf } from "./support/archive.ts";
 
-const base = variant(definition.declared, data => { data.acts["link"]!.sends = data.acts["link"]!.sends.filter((send: SendForm) => !("create" in send)); });
-const variants: readonly Input["type"][] = ["genesis", "act", "delivery", "timed", "diagnosis", "outcome", "preparation", "checkpoint"];
-const policies: ArchivePolicyRegistry = new Map([[base.digest, { review: "TEST STAND-IN: explicit fixture inline classes, never a production certificate", entryTypes: new Set(variants), support: { named: base.digest, definition: base, owners: new Map(), records: new Map(), preparations: new Map() } }]]);
-const repository = { host: "fixture-host", namespace: "fixture-room", name: "archive-fixture", id: "fixture-repository" };
-const sqlOf = (state: DurableObjectState): Sql => ({ exec: (query, ...args) => state.storage.sql.exec(query, ...args), transaction: action => state.storage.transactionSync(action) });
 async function first(lane: Lane, format: JournalFormat) {
   const through = await lane.head();
   const planned = await lane.inside(state => planArchive(sqlOf(state), { at: lane.at, through, bounds: PROPOSED_BOUNDS, policies, format, parent: null, markedAt: at(0) }, new ArchiveBudget()));

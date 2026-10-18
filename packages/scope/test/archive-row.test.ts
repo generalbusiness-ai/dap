@@ -58,3 +58,24 @@ test("refuses an oversized or corrupt native row before using it", async () => {
   await lane.inside(state => { state.storage.sql.exec("UPDATE meta SET v = ? WHERE k = 'archive-row-1'", '{"v":1,"v":1}'); });
   await expect(rows(lane, store => store.load())).rejects.toThrow("archive-row-unavailable");
 });
+
+// Invariant: retry scheduling never replaces the marked bytes, new turns do
+// not shorten its backoff, and a persisted stop cannot silently restart.
+test("persists retries and stops with a small wake index", async () => {
+  const lane = await create(), head = await lane.head();
+  const mark: ArchiveMark = { commit: "a".repeat(40), parent: null, through: head, manifest: canonicalize({ fixture: "metadata only" }), markedAt: at(0) };
+  await rows(lane, store => { store.target(repository, "sha1"); store.mark(mark); store.attempt(at(30)); store.signal(at(1)); });
+  await lane.restart();
+  expect(await rows(lane, store => store.wake())).toBe(at(30));
+  expect(await rows(lane, store => store.load())).toMatchObject({ pending: mark, attempts: 1, next: at(30), stopped: null });
+  const calls = await lane.inside(state => {
+    const queries: unknown[][] = [], store = new ArchiveRows({ exec(query, ...args) { queries.push([query, ...args]); return state.storage.sql.exec(query, ...args); }, transaction: action => state.storage.transactionSync(action) }, lane.at);
+    expect(store.wake()).toBe(at(30)); return queries;
+  });
+  expect(calls).toHaveLength(1); expect(calls[0]?.[1]).toBe("archive-wake-1");
+  await rows(lane, store => { store.stop("conflict"); store.signal(at(60)); });
+  await lane.restart();
+  expect(await rows(lane, store => store.wake())).toBeNull();
+  expect(await rows(lane, store => store.load())).toMatchObject({ pending: mark, stopped: { reason: "conflict" } });
+  await expect(rows(lane, store => store.confirm(mark.commit))).rejects.toThrow("archive-row-stopped");
+});
