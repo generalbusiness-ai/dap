@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:20daef59bbd8d1d37a037614df503b966705108a","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-18-trusted-packages-developer.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2bbe26ece4918de2143a3db21b4a7a93fa97054e","text":"Merge retired a covered predecessor; the successor is at apps/counter/src/counting-assets.ts."}
