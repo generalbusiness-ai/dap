@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2e300f212581da8523cbb680eb7c10bcd0de79c0","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-18-counting-node-deadlines.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3603621f67310ffb9df251ea5560b923bd3ad306","text":"Merge retired a covered predecessor; the successor is at apps/counter/scripts/node-witness.mjs."}
