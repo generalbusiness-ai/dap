@@ -3,6 +3,8 @@
 import type { ActType, DeclaredDefinition, Guard, ItemType, Subject } from "@generalbusiness/dap-contract";
 import { deviceForms, deviceNotFailed } from "./device.ts";
 import { zoneForms } from "./zone.ts";
+import { workForms } from "./work.ts";
+import { wateringForms } from "./watering.ts";
 
 export const ROOM = "grow-room";
 const act = (body: Pick<ActType, "step" | "on" | "grant"> & Partial<ActType>): ActType => ({ also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [], ...body });
@@ -12,6 +14,8 @@ const eq = (a: import("@generalbusiness/dap-contract").Operand, b: import("@gene
 const live = (of: Subject, states: readonly string[]): Guard => ({ of, state: states });
 const fact = (kinds: readonly string[]) => ({ type: "fact", under: ROOM, kind: kinds } as const);
 const zone = zoneForms(ROOM), device = deviceForms(ROOM, ["authorize"]);
+const work = workForms(ROOM);
+const watering = wateringForms(ROOM);
 device.item.refs["zone"] = { ...fixed, to: { type: "item", of: "zone" } };
 const commission = device.acts["commission-device"]!;
 commission.fields["zone"] = { type: "item", of: "zone", required: true };
@@ -41,10 +45,10 @@ const heaterProposal: Guard = { reason: "invalid-heater-proposal", anyOf: [
 
 export const room: DeclaredDefinition = {
   format: "artroom-definition-1", name: ROOM, profile: { name: "restricted", version: 1 }, capabilities: [], genesis: "establish",
-  items: { room: { many: false, max: 1, initial: "open", states: { open: { final: false } }, parties: {}, refs: {}, values: { label: { ...fixed, of: { type: "text", max: 80 } } } }, zone: zone.item, device: device.item, alert, incident },
+  items: { room: { many: false, max: 1, initial: "open", states: { open: { final: false } }, parties: {}, refs: {}, values: { label: { ...fixed, of: { type: "text", max: 80 } } } }, zone: zone.item, device: device.item, alert, incident, ...work.items, ...watering.items },
   acts: {
     establish: act({ step: "open", on: "room", grant: "grow.configure", fields: { label: { type: "text", max: 80, required: true } }, effects: [{ value: { slot: "label", from: { field: "label" } } }] }),
-    ...zone.acts, ...device.acts,
+    ...zone.acts, ...device.acts, ...work.acts, ...watering.acts,
     "bind-zone-devices": act({ step: "transition", on: "zone", grant: "grow.configure",
       fields: { vent: { type: "item", of: "device", required: true }, fan: { type: "item", of: "device", required: true }, heater: { type: "item", of: "device", required: true } },
       also: Object.fromEntries(["vent", "fan", "heater"].map(kind => [kind, { item: "device", by: kind }])),
@@ -85,8 +89,8 @@ export const room: DeclaredDefinition = {
     }),
   },
   receives: {},
-  timed: { "hold-expired": { on: "alert", states: ["held"], deadline: "holdUntil", effects: [{ state: "open" }, { party: { slot: "heldBy", from: null } }, { value: { slot: "holdUntil", from: null } }], attention: [] } },
-  rules: { ...zone.rules, ...device.rules,
+  timed: { ...work.timed, "hold-expired": { on: "alert", states: ["held"], deadline: "holdUntil", effects: [{ state: "open" }, { party: { slot: "heldBy", from: null } }, { value: { slot: "holdUntil", from: null } }], attention: [] } },
+  rules: { ...zone.rules, ...device.rules, ...work.rules, ...watering.rules,
     "climate-exhausted": "(subjects.`also.vent`.values.reported = 'error' or subjects.`also.vent`.values.level >= subjects.`also.vent`.values.maxLevel) and (subjects.`also.fan`.values.reported = 'error' or subjects.`also.fan`.values.level >= subjects.`also.fan`.values.maxLevel)",
     "authorized-target": "(subjects.on.values.target = 'off' and subjects.on.values.level = 0) or (subjects.on.values.target = 'on' and subjects.on.values.level = 100 and subjects.`also.heater`.values.minLevel <= 100 and subjects.`also.heater`.values.maxLevel >= 100)",
     "recovery-evidence": "subjects.`also.zone`.refs.summary > subjects.on.refs.first",

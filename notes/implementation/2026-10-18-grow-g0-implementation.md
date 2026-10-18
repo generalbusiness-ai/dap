@@ -240,9 +240,78 @@ assertion failure. Evidence logs use `/tmp/artroom-g0-room-`. Device-error
 guards are shared as data with explicit subjects, so operator authorization
 does not bypass the guard used by direct device commands.
 
+## Bench, maintenance and watering checkpoint
+
+`work.ts` adds up to 100 bench cells, with unique row/column addresses,
+explicit zone references and no initial invented probe. Moisture is percent;
+EC is integer microsiemens/cm (2100 means 2.1 mS/cm); pH is in hundredths;
+height is millimetres. Insects and bounded text notes are optional. Every
+supplied reading keeps its own actual probe reference. An EC-only update
+preserves the old moisture/pH values and their references; zero is a reading.
+The bench's latest probe starts the native 48-hour stale deadline. Individual
+measurement ages remain separate even when another measurement refreshes the
+bench. Unprobed benches start stale and have no scheduled deadline.
+
+Maintenance tasks name an active alert and a device from its zone. A tender
+takes the offered task; only that tender can record its completion report.
+The report changes no device observation. A separate sensors act records the
+device's later observed state. These are text reports; photo custody is due
+later. The report's signer and exact entry remain available in native history.
+
+`watering.ts` records member statements of watering work. An operator
+configures one room policy, and the head grower can change it. Scheduled
+watering needs a policy, an amount within its cap, and native after/before
+guards. Both time endpoints are excluded: this checkpoint deliberately uses
+the existing strict native guards. This is an absolute configured window,
+not an invented recurring scheduler or cumulative consumption budget.
+
+An exception records an exact accepted probe fact, its bench and that bench's
+zone, together with the requested amount and reason. Another room's probe or
+another bench's reading is refused. The head grower approves or declines;
+the irrigation member can record fulfillment only after approval. The
+approved amount stays fixed. Done and declined records are native final
+items and cannot be fulfilled again. The chemical `apply` act is a
+head-grower comment and changes no items. Neither act operates a pump or
+handles chemicals; no outside-effect owner is introduced.
+
+Text-only probes, task reports and exception reasons must start with a
+non-whitespace character. The caller can trim text before signing. This
+bounded wire choice uses the admitted length/contains/substring functions:
+`$trim` and a range expression were refused by the existing rule profile in
+failed probes `bf403a` and `41234a`. The native profile was not extended.
+The admitted prefix expression was checked separately (`c7b4fd`, exit 0).
+Numeric probes may also carry an optional note, including an empty one.
+
+Three work cases pass (`7a98a1`). The first watering run `e863ca` had
+one test failure because it expected guard-failed for a native final item.
+Its earlier syntax error is retained in
+`/tmp/artroom-g0-watering-initial-typecheck-20261018.log`. The corrected
+watering run `24d4a8` passes two cases. Typecheck then exposed a nonexistent
+fixture items property: the comment test now compares actual
+`state.all().items` snapshots, rather than two absent properties. The
+probe-bound watering refinement passes (`8178e4`), including the final
+same-room/bench/zone and authority cases in later control normal runs.
+No failed run is counted as a pass.
+
+Seven hand-written controls distinguish and restore source, each with one
+intended assertion failure after a passing normal run: empty probe
+(`092866`/`c1545a`), task performer (`e6725e`/`011850`), stale deadline
+(`d6f6a0`/`2031df`), closing-time guard (`6cf371`/`141637`), watering
+amount (`9bb667`/`509fcb`), approval before fulfillment
+(`b91c4f`/`22e1ee`), and probe-to-bench binding
+(`e70a74`/`52f146`). Each control exits 0. Logs use
+`/tmp/artroom-g0-control-` and retain the exact injected change's assertion.
+
+All fifteen Grow cases pass through the root project
+(`690afb`/`8418ce`, exit 0), with native replay of accepted histories
+and explicit scripted per-actor grants. Grow typecheck passes
+(`7e7830`, exit 0). These focused checks cover this source checkpoint;
+the full gate remains reserved for the completed submission. Dependencies
+and lockfile are unchanged; no package installation was performed.
+
 ## Remaining G0 work
 
-The site assembly, benches/probes/tasks/watering/presence and the complete
+The site assembly, presence and the complete combined
 fault scenario remain due. M1's `dap check` now exists on its separate
 unlanded developer branch; G0's final package/scenario witness depends on
 that reviewed public path, without copying unlanded M1 implementation into
