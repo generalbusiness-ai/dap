@@ -1,28 +1,34 @@
 /** Real native room scopes, production member authority, SQLite commits,
  * operation driver, eviction/recovery, detached-text transport and local R2.
  * Repository creation, Git objects, clock and read-session inspector are
- * explicit fixtures. This stops before child creation: not a full install. */
+ * explicit fixtures. Counter native birth is real; no screen or hosted route
+ * is exercised here. */
 import { env } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Digest } from "@generalbusiness/dap-contract";
-import { canonicalize, textDigest } from "@generalbusiness/artroom-bytes";
-import { TRUSTED_APPLICATION_COHORT as C } from "@generalbusiness/dap-platform";
+import { canonicalize, isSeed, scopeIdOf, textDigest } from "@generalbusiness/artroom-bytes";
+import { httpSource, verify } from "@generalbusiness/artroom-replay";
+import { TRUSTED_APPLICATION_COHORT as C, platform } from "@generalbusiness/dap-platform";
+import { applicationAnnouncementOutside } from "../src/applications/announce.ts";
 import { applicationOutside } from "../src/applications/outside.ts";
 import { applicationResolverFixture } from "./support/application-fixture.ts";
 import { sessionRoom } from "./support/session-room.ts";
-import { dispatchFixture, effectFixture } from "./support/native-fixture-lifetime.ts";
-import { rita } from "./repository.ts";
+import { dispatchFixture, driveFixture, effectFixture } from "./support/native-fixture-lifetime.ts";
+import { reader } from "./support.ts";
+import { rita, sam, routed } from "./repository.ts";
 
-test("one signed native install recovers a lost admission answer and hands exact retained declarations to Directory", async () => {
+test("one signed native install recovers admission, retains declarations and creates its native Counter through Directory", async () => {
   const room = await sessionRoom(C.register), { life, R, D, children } = room;
   const [M, A, G] = children;
   if (!M || !A || !G) throw Error("The native room must confirm all three siblings.");
-  const f = await applicationResolverFixture("sha1", undefined, { member: ["counting.fulfill"] });
+  const f = await applicationResolverFixture("sha1", undefined, { admin: ["counting.control"], member: ["counting.fulfill"] });
   let sends = 0, recoveries = 0;
   try {
     const seat = await life.wait(() => M.did(rita, "seat", { expected: { roster: 1 } }));
     const expected = await life.wait(() => M.expected({ roster: 0, member: seat }));
     await life.wait(() => M.did(rita, "first-key", { fields: { member: seat }, expected }));
+    life.outside(D.name, given => applicationAnnouncementOutside(given));
+    await life.wait(() => D.restart());
     life.wire(A.name, () => {
       const port = applicationOutside({ trust: f.trust, bounds: PROPOSED_BOUNDS, store: f.store, open: f.open });
       return { outside: { accepts: port.accepts,
@@ -34,7 +40,7 @@ test("one signed native install recovers a lost admission answer and hands exact
     life.setHold(envelope => envelope.from.at.scope === A.name);
     const declarations = f.packet.package.semantic.definitions;
     const fields = {
-      uri: f.uri, release: f.packet.ids.release, semantic: f.packet.ids.semantic, roles: ["member"], values: '{"target":7}',
+      uri: f.uri, release: f.packet.ids.release, semantic: f.packet.ids.semantic, roles: ["admin", "member"], values: '{"target":7}',
       ...Object.fromEntries(declarations.map((part, index) => [`definitionText${index}`, textDigest(part.bytes)])),
     };
     const changed = declarations[0]!.bytes.replace('"counting-commitments"', '"TEST changed definition"');
@@ -62,7 +68,17 @@ test("one signed native install recovers a lost admission answer and hands exact
     life.setHold(() => false);
     life.advance(PROPOSED_BOUNDS.drainRetrySeconds * 1000);
     await dispatchFixture([R, D, M, A, G], life.wait);
-    expect((await life.wait(() => A.item(job))).values["phase"]).toBe("creation");
+    const creation = (await life.wait(() => D.entries())).flatMap(entry => entry.sends).find(send => send.message.class === "request" && send.message.type === "create" && isSeed(send.to) && send.to.kind === "lane");
+    if (!creation || !isSeed(creation.to)) throw Error("Directory must record the actual child creation.");
+    const C = life.platform(scopeIdOf(creation.to));
+    await driveFixture([R, D, M, A, G, C], life.wait);
+    expect((await life.wait(() => C.summary())).value).toMatchObject({ status: "active", definition: f.packet.package.semantic.entry });
+    const completed = await life.wait(() => A.item(job));
+    expect(completed).toMatchObject({ state: "active", refs: { scope: await life.wait(() => C.at()) } });
+    const configuration = await life.wait(() => C.expected({ configuration: 0 }));
+    expect(await life.wait(() => C.act(sam, "initialize", { expected: configuration }))).toMatchObject({ answer: "refused" });
+    await life.wait(() => C.did(rita, "initialize", { expected: configuration }));
+    expect((await life.wait(() => C.summary())).value.items.find(item => item.type === "board")).toMatchObject({ state: "paused", values: { target: 7 } });
     expect((await life.wait(() => M.item(0))).values["memberActions"]).toContain("counting.fulfill");
     expect(await declared(D, f.packet.package.semantic.entry)).toBe(declarations[0]!.bytes);
     await life.wait(() => D.restart());
@@ -72,5 +88,11 @@ test("one signed native install recovers a lost admission answer and hands exact
     expect(original).toHaveLength(1);
     expect(original[0]!.input).toMatchObject({ type: "act", signed });
     expect(history.filter(entry => entry.input.type === "outcome")).toHaveLength(1);
+    const source = httpSource("https://scopes.test", { reader, fetch: (url, init) => life.wait(() => routed(url, init)) });
+    for (const node of [A, D, C]) {
+      const head = (await life.wait(() => node.summary())).at;
+      const replay = await life.wait(() => verify(source, { mode: "replay", platform, grants: "proven", scope: node.name, head }));
+      expect([replay.report.result, replay.why], node.name).toEqual(["consistent", null]);
+    }
   } finally { await env.APPLICATION_CONTENT.delete(f.key); life.release(); }
 }, 30_000);

@@ -409,3 +409,39 @@ clock and the read-session inspector remain explicit fixtures. This stops
 before child creation and is not a complete-install or full replay-verifier
 claim. Five strengthened in-memory native cases pass (`f546cf`); Platform
 and Scope source/test typechecks pass. No full gate or Source review yet.
+
+
+## Directory-owned native child birth
+
+Directory now creates the installed root after the exact Membership grant
+answer. It uses its retained catalog, the original installer and checked
+genesis fields, and its actual Directory, Membership and destination refs.
+The creation seed uses the native delivery cause. Rules does not create the
+child. A child result records created, refused or conflict on Directory's
+application item. That clause opens one bounded announcement operation.
+The host port for it reads only Directory's own journal, and the pinned
+outcome checks the same body before sending the final native notice to Rules.
+There is no outside mutation, fabricated member act or extra signature in
+that bridge. A completed install stays a live active record, bounded by the
+installation type's maximum; a definitive refusal is final.
+
+The real Worker witness now completes native Counter birth and confirmation.
+It passed at `0343ce` / session `54085` to `263641`, exit 0. The strengthened
+witness passed at `59a494` / session `3370` to `815b2c`, exit 0: selected admin
+control and member fulfill defaults are installed; the original admin can
+initialize Counter, while an unauthorized key is refused; the board retains
+target 7. The full verifier, through the real HTTP history route, reports
+consistent for Rules, Directory and Counter with grants proven. This is full
+replay, distinct from the earlier in-memory refold checks. Exactly one
+original signed install and one admission outcome remain in Rules history.
+Native byte custody and the lost-answer/eviction assertions remain in that
+same witness. Platform's five focused cases pass (`7dd50a`); Platform and
+Scope source/test typechecks pass.
+
+Repository creation, remote Git objects, the clock and the read inspector
+remain explicit test fixtures. No browser, generic package route, production
+store binding, MCP install tool, CLI install command or deployed host is
+claimed by this witness. Lending's publication-origin support for the new
+Directory handler remains to be implemented under a new destination pin;
+historical destination4 admission will not be widened. The complete install
+half still has no full gate, Source submission or checker review.

@@ -1,5 +1,7 @@
 import { TRUSTED_APPLICATION_COHORT, installDefinitionText } from "./application-install-wire.ts";
-import { directory11, directoryRules11, membership7, membershipRules7 } from "./application-install-grants.ts";
+import { membership7, membershipRules7 } from "./application-install-grants.ts";
+import { directory11, directoryRules11 } from "./application-install-creation.ts";
+export { applicationAnnouncement, APPLICATION_ANNOUNCEMENT_OWNER } from "./application-install-creation.ts";
 export { TRUSTED_APPLICATION_COHORT, INSTALL_DEFINITION_BYTES, INSTALL_SEMANTIC_BYTES } from "./application-install-wire.ts";
 import { APPLICATION_INSTALL_RULES, applicationInstallRulesScope, applicationInstallRules } from "./application-install.ts";
 import { INVITATION_KEY_COHORT, directory9, directoryRules9, membership6, membershipRules6 } from "./invitation-key.ts";

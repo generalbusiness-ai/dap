@@ -8,6 +8,7 @@ import { readApplicationReleaseProof, readApplicationReleaseUri, type Applicatio
 import { validateDefinition, type GuardRule, type Item, type RuleGiven, type RuleEffect, type Rules } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { rulesScope3, rulesScopeRules3 } from "./rules-scope.ts";
+import { applicationResultFields } from "./application-install-creation.ts";
 import { applicationValues } from "./application.ts";
 import { pinnedBy } from "./versions.ts";
 
@@ -25,7 +26,7 @@ export const applicationInstallRulesScope: PlatformData = {
   ...rulesScope3,
   items: { ...rulesScope3.items, definition: { ...rulesScope3.items["definition"]!, values: { ...rulesScope3.items["definition"]!.values, declarations: { fixed: true, required: false, of: installDeclarationsType } } }, installation: {
     many: true, max: 64, initial: "pending",
-    states: { pending: { final: false }, active: { final: true }, refused: { final: true } },
+    states: { pending: { final: false }, active: { final: false }, refused: { final: true } },
     parties: { installer: { ...fixed, list: false, author: true } },
     refs: { scope: { fixed: false, required: false, to: { type: "scope", kind: "lane" } },
       membership: { fixed: false, required: false, to: { type: "scope", kind: "membership" } },
@@ -70,7 +71,14 @@ export const applicationInstallRulesScope: PlatformData = {
       fields: { ...installGrantFields, job: { type: "item", of: "installation", required: true },
         result: { type: "enum", of: ["confirmed", "refused"], required: true }, reason: { type: "enum", of: ["granted", "role-actions-full"], required: true } },
       guards: [{ code: "application-grants-match", row: "M1" }],
-      effects: [{ code: "application-keep-grants", row: "M1" }], sends: [], attention: [],
+      effects: [{ code: "application-keep-grants", row: "M1" }], sends: [{ code: "application-request-creation", row: "M1", result: { refused: [{ code: "application-grants-route-refused", row: "M1" }] } }], attention: [],
+    },
+    "application-install-result": {
+      message: "application-install-result", class: "tell", from: { kind: "directory", under: "platform:directory" }, opens: null,
+      also: { installation: { item: "installation", by: "job" }, rules: { item: "rules", one: true } },
+      fields: { ...applicationResultFields, job: { type: "item", of: "installation", required: true } },
+      guards: [{ equals: { a: { sender: true }, b: { slot: "directory", of: "also.rules" } }, reason: "not-the-directory" },
+        { code: "application-creation-matches", row: "M1" }], effects: [{ code: "application-keep-creation", row: "M1" }], sends: [], attention: [],
     },
   },
   outcomes: { ...rulesScope3.outcomes, "admit-application": { code: "application-admission", row: "M1", send: { code: "application-stage-definitions", row: "M1", result: { refused: [{ code: "application-grants-route-refused", row: "M1" }] } } } },
@@ -187,6 +195,27 @@ export const applicationInstallRules: Rules = {
     return given.resolved.fields["result"] === "confirmed" ? [{ effect: "value", item: job.id, slot: "phase", value: "creation" }]
       : [{ effect: "state", item: job.id, state: "refused" }, { effect: "value", item: job.id, slot: "reason", value: "role-actions-full" }];
   } },
+  "application-request-creation": { place: "send", run: given => {
+    if (given.resolved.fields["result"] !== "confirmed") return null;
+    const job = given.resolved.subjects.get("also.installation");
+    const directory = given.state.page("rules", ["current"], null, 1).items[0]?.refs["directory"], installer = job?.parties["installer"];
+    if (!job || !isScopeRef(directory) || !isMemberRef(installer)) throw Error("original checked install authority required");
+    return { to: directory, message: { class: "request", type: "tell", body: { message: "application-create", fields: {
+      job: job.id, definition: job.values["definition"], release: job.values["release"], semantic: job.values["semantic"], presentation: job.values["presentation"],
+      installer, genesis: job.values["genesis"], needsDestination: job.values["needsDestination"],
+    } } } };
+  } },
+  "application-creation-matches": { place: "guard", refusals: ["invalid-application-result"], run: given => {
+    const job = given.resolved.subjects.get("also.installation"), fields = given.resolved.fields;
+    const matches = job?.state === "pending" && job.values["phase"] === "creation" && ["definition", "release", "semantic", "presentation"].every(key => fields[key] === job.values[key]);
+    const created = fields["result"] === "created", scope = fields["scope"];
+    return matches && (created ? isScopeRef(scope) && scope.kind === "lane" : scope === undefined) ? { holds: true } : { holds: false, name: "invalid-application-result" };
+  } },
+  "application-keep-creation": { place: "effect", most: 2, run: given => {
+    const job = given.resolved.subjects.get("also.installation")!;
+    return given.resolved.fields["result"] === "created" ? [{ effect: "ref", item: job.id, slot: "scope", to: given.resolved.fields["scope"]! }, { effect: "state", item: job.id, state: "active" }]
+      : [{ effect: "state", item: job.id, state: "refused" }, { effect: "value", item: job.id, slot: "reason", value: `application-creation-${String(given.resolved.fields["result"])}` }];
+  } },
   "application-stage-definitions": { place: "send", run: given => {
     if (given.input.type !== "outcome" || given.input.result !== "confirmed" || given.resolved.outcome?.selected !== true) return null;
     const job = installation(given, given.input.operation);
@@ -212,7 +241,7 @@ export const applicationInstallRules: Rules = {
     const delivered = original?.type === "delivery" && original.message.class === "request" && isRecord(original.message.body) && isRecord(original.message.body["fields"]) ? original.message.body["fields"]["job"] : null;
     const job = original?.type === "outcome" ? installation(given, original.operation) : typeof delivered === "number" ? given.state.item(delivered) : null;
     if (!job || job.state !== "pending") return [];
-    return [{ effect: "state", item: job.id, state: "refused" }, { effect: "value", item: job.id, slot: "reason", value: "grant-route-refused" }];
+    return [{ effect: "state", item: job.id, state: "refused" }, { effect: "value", item: job.id, slot: "reason", value: "install-route-refused" }];
   } },
   "application-admission": { place: "outcome", rules: {
     selects: true, read: true, closure: 0, most: { effects: 6, requests: 1, operations: 0 }, retries: () => false,
