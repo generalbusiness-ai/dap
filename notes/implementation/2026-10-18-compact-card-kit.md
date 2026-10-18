@@ -1,14 +1,17 @@
-# Compact-card kit: preparation
+# Compact-card kit: implementation
 
 This is preparation for request `a9551a6d`, promise `3710cde8`, and
 clarification `f89c614b`. The design child `bc635338` is landed on Main
-`df806354`; its approval does not establish runtime behavior. Capacity
-Source `f254698d` is with checker. Runtime implementation follows capacity.
+`df806354`; its approval does not establish runtime behavior. Reviewed
+capacity and the bounded Counting witness are now incorporated locally
+through Main `6ce62bd2`. This branch carries both.
 
 The current reference is
 [the compact-card design](../2026-10-17-compact-cards-design.md).
 The prototype is a behavior reference, not an implementation to copy.
-This checkpoint adds no runtime code and claims no passing kit witness.
+The captured-revision prerequisite is implemented below. Resources, the
+browser bridge and screens are still being built. No complete kit or
+desktop-host acceptance is claimed.
 
 ## Boundaries
 
@@ -77,9 +80,8 @@ dispatch. A disabled button alone establishes none of these properties.
 Lost replies use existing custody and settlement, retaining the original
 envelope; a view refresh or context retry must never sign a successor.
 
-Current `McpService.#perform` derives `expectedOf` from a fresh summary.
-It accepts no captured revision input, and custody's meaning excludes
-one. Planner report `c3079e3c`, answering routing request `c5a9acd0`,
+Previously, `McpService.#perform` always derived `expectedOf` from a fresh
+summary. Planner report `c3079e3c`, answering routing request `c5a9acd0`,
 brings forward only optional `at` input from S6 for the S2 model-act
 witness. Omission keeps the existing fresh-summary behavior. A present
 `at` names exactly the expected subjects with their displayed revisions;
@@ -95,6 +97,34 @@ envelope, even after the current state moves; check new-envelope coverage
 inside the existing custody build path. The witness must distinguish
 native stale refusal from a service that silently refreshes or rejects
 the revision before signing. Full S6 views and J1 remain separate work.
+
+The optional `at` input is now in the declared, generic and preparation
+act paths. It is copied and checked before custody computes the meaning.
+Subject coverage is checked only when custody builds a new envelope.
+Explicit revisions are part of the meaning and carried-byte accounting;
+omission preserves the previous meaning bytes. The native scope remains
+the only judge of whether the revision has moved.
+
+Focused evidence on this development branch:
+
+- `captured-revisions.scope.test.ts` passes against real native scopes:
+  stale captured input is signed unchanged and refused `revision-moved`;
+  fresh input succeeds; duplicate and settlement calls sign and submit
+  nothing; a changed revision under the same key conflicts. Seven malformed
+  or incorrectly covered sets sign nothing. The room helper labels its
+  external host, scheduler and clock fixtures.
+- Shape, description and budget checks pass: 32 cases, one skipped.
+  The subject witness covers `on`, `one`, `by`, `via`, an unresolved
+  subject, a rule-selected subject and a prototype-like alias.
+- All three MCP TypeScript configurations pass.
+
+The first two native runs failed because the new test assumed error
+fields that this service does not return. Correcting the assertions to
+its existing `message` field produced the passing run. Logs are
+`/tmp/artroom-card-at-native-focused{,2,3}-20261018.log` and
+`/tmp/artroom-card-at-shape-describe-focused-20261018.log`.
+These checks do not yet prove that browser context matches the display.
+The full gate and review remain due after the kit implementation.
 
 After acceptance, keep a one-line receipt while loading the next card.
 Record it in model context. If reporting fails, retry the notification,
