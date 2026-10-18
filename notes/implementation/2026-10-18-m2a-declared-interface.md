@@ -3,7 +3,10 @@
 Preparation under Source child `823817ed` and promise `63dc4e4e`, within
 M2a `b6aaa3ce` and parent promise `9ebca0a5`. The preparation began at
 M1's frozen candidate `432dab40` and now incorporates audited Main
-`29ccc2fd`, including the separately approved N1 link correction. M1's
+`29ccc2fd`, including the separately approved N1 link correction, plus
+published Main `32b32fc2`'s sprint report. That later Main changes only
+`notes/reports/2026-10-18-sprint-report.md`; runtime/test bytes are unchanged.
+M1's
 three code children are landed and audited. Provider error 10042 still
 prevents the required hosting deployment until the operator enables object
 storage. Planner reconciled M1 as delivered through supersession `88029e7f`
