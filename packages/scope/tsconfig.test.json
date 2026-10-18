@@ -5,5 +5,5 @@
     "types": ["@cloudflare/workers-types", "@cloudflare/vitest-pool-workers/types", "node"]
   },
   "include": ["src", "test", "vitest*.config.ts"],
-  "exclude": ["test/support/local-clone-setup.ts", "test/support/local-clone-child.ts"]
+  "exclude": ["test/support/local-clone-setup.ts", "test/support/local-clone-child.ts", "test/support/maintained-applications-setup.ts", "test/support/maintained-applications-child.ts"]
 }

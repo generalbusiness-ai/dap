@@ -836,3 +836,63 @@ visually inspected. Earlier images exposed wrapped narrow cell labels caused
 by the default border width; explicit thin borders and small coordinate labels
 fix that. The browser plugin is unavailable, so this uses the recorded cached
 Playwright fallback, with no dependency installation. MCP test typecheck passes.
+The final empty-only check also disables the empty select, labels the absent
+zones and waits for the host's completed resize before capture (`42351`). Log:
+`/tmp/artroom-m2a-grow-grid-browser-empty-corrected-20261018.log`.
+
+### Complete maintained native packages and Lending page
+
+The native package witness now captures both actual maintained source configs,
+including their complete bundled browser/assets, under the public TEST key254.
+A fixed Node child performs source capture because Vite's setup runner does
+not implement the browser compiler's `import.meta.resolve`. It writes nothing
+to the checkout and installs nothing. Worker tests independently decode the
+expected release, then install through the actual MCP/Rules6/Directory12/
+Membership7 cohort, resolver, private local R2 and factory. The original small
+TEST packet remains a separate authority/control fixture.
+
+Both maintained packets reach active native installations. Their declared
+state agrees across SDK and MCP view reads. The production Counter gateway
+authenticates through the real membership, opens the real native head stream
+and receives its paused board through the declared state adapter. No app
+Summary/history route is supplied. The original observation is cancelled and
+awaited before fixture release. Counter's focused case passes (`93490`, terminal
+`25113f`): `/tmp/artroom-m2a-maintained-counter-native-cleanup-20261018.log`.
+Lending's case also passes: donation, borrowing, cancellation, retained gone
+revision3/reason, exact subject labels and released original-request custody
+through real issued sessions. Its pass is in the two-case diagnostic run
+`4152`, whose Counter case then failed on the test's normal `refreshing` state;
+that assertion has since been corrected. The final gate still owes the
+combined file's result at the submitted head.
+
+Earlier setup attempts are not acceptance evidence. They exposed a mismatched
+fixture deployment label, cleanup that called a leased clock outside its
+frame, the new whole-package case's default five-second test timeout, and
+Workerd Request's rejection of `redirect:error`. The new case has an explicit
+30-second deadline. The direct-route head adapter checks that the browser port
+requests `error`, then constructs its non-following Worker Request with
+`manual`. Production browser redirects, native/session checks and SDK read
+deadlines are unchanged. Native HTTP, storage and authority are real; Git host,
+package peer, clock, scheduler and private browser stores remain fixtures. This
+is not a browser/provider/deployment test. Scope test and separate Node capture
+typechecks pass.
+
+The actual maintained Lending bundle also runs in Chromium at390/960, with a
+real generated nonextractable WebCrypto key and IndexedDB slot. This browser
+case scripts all room/install/session/projection ports; it claims rendered
+behavior only. The page shows retained gone items and recent cancel/borrow
+labels, refreshes head20 to21, preserves an unsubmitted donation draft and has
+no horizontal overflow or unexpected console errors. It makes four declared
+reads across the two cases, zero app Summary reads and zero act submissions.
+Published-page404 is the deliberate absent-publication fixture and is shown
+as unavailable. Final full-page images were visually inspected. Log:
+`/tmp/artroom-m2a-lending-browser-corrected-20261018.log`; runner:
+`/tmp/artroom-m2a-lending-browser-20261018.mjs`; captures:
+`/tmp/artroom-m2a-lending-browser-corrected-20261018/`. The first browser attempt
+used a singular scripted session path; the corrected fixture uses the SDK's
+actual `/sessions` route. Same cached browser fallback applies.
+
+The Source child's implementation is ready for its final gate and exact-head
+review. Parent several-scope birth/ownership remains separate, as do G1's full
+Grow view set, hostile presentation isolation, device commands and provider
+deployment. No M2a parent completion or hosted acceptance is claimed.
