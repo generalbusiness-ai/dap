@@ -18,5 +18,8 @@ export * from "./invitation-fields.ts";
 
 export * from "./item-query.ts";
 export * from "./directory.ts";
+export { advance as advanceKeptRequest, validKept as validKeptRequest, envelopeKey as keptEnvelopeKey, KEPT_BYTES as KEPT_REQUEST_BYTES } from "./request-custody.ts";
+export type { Binding as RequestBinding, Phase as KeptRequestPhase, Envelope as KeptEnvelope, Kept as KeptRequest, KeptStore as KeptRequestStore,
+  CustodyLock as RequestCustodyLock, Settled as KeptRequestSettled, Ports as KeptRequestPorts } from "./request-custody.ts";
 
 export type { OperationalApi, OperationalIncident, IncidentReference, RequestCorrelation, RequestCorrelations } from "./operational.ts";

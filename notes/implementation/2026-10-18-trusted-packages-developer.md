@@ -454,6 +454,41 @@ the intended grant assertion (`79cd96`/`4e8dd0`; see
 The normal run has eight passes and the fault one intended assertion failure;
 source is restored. No native authority or attribution implementation changed.
 
+## Shared request custody
+
+The client now exports Lending's existing request-custody protocol as
+`advanceKeptRequest`, `validKeptRequest`, `keptEnvelopeKey` and their
+request/store/port types. Lending's custody file keeps its local identity,
+allowed act names and compatibility exports, and delegates to that shared
+implementation. The moved phase/validation/advance code is unchanged apart
+from its application-specific comment. It signs nothing, clears nothing
+and admits no grants, detached text or presented facts in a kept envelope.
+
+The caller still supplies its private slot, lock, current-context check and
+trusted submit/receipt/settlement ports. The protocol commits inflight before
+an authorized send, checks an accepted receipt against the scope's recorded
+request, and preserves the original envelope across unknown outcomes.
+Ordinary recovery is read-only. Explicit Continue can resend only the kept
+envelope. Scope, key and allowed kinds remain bound by the validator.
+This extraction does not supply browser storage, joining or transport
+admission, and does not replace Counter's separate stricter attempt journal.
+Those migrations remain due.
+
+The existing five Lending custody cases and one publication case pass
+(`702ef7`, exit 0). Client and Lending browser source typechecks pass
+(`b723d3`, `49d0c1`). They use actual signatures and explicitly scripted
+storage/submit/record ports, not native HTTP, browser persistence or enrollment.
+Three hand controls restore source and distinguish the required behavior:
+skipping the committed inflight mark (`a46587`/`282222`, two intended
+assertions), recovery that posts without Continue (`77d1f9`/`7fc98c`,
+one), and accepting another signing key (`01e409`/`f6edf6`, one).
+Each has five normal passes and exits 0. Logs use
+`/tmp/artroom-m1-shared-custody-` and
+`/tmp/artroom-m1-control-shared-custody-`.
+No package, lockfile or native runtime changed; no install or gate ran.
+Generated application assets will be rebuilt with the complete package
+conversion and its rendered browser evidence.
+
 ## Remaining developer work
 
 Shared browser joining, storage and request custody; browser bundling;
