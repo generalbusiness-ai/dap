@@ -188,11 +188,23 @@ The Browser plugin is unavailable. Cached Playwright 1.63.0 and Chromium
 are present, with no framework overlay, horizontal overflow, JavaScript error,
 or unexpected console error. Lending's two expected unpublished-page 404s
 leave an explicit unavailable read while its actual publication is queued.
-Four screenshots and 75 sanitized request records are under
-`/tmp/artroom-m1-live-browser-20261018/`. The finite harness sources are in
-`/tmp/artroom-m1-browser-harness-20261018/`; raw logs and the packet manifest
-are retained. Speech playback, external provider writes and deployment are
-not proved. A final rendered run through Room after cleanup remains due.
+The final run through Room after cleanup passes at
+`4c176f88ac3230087c5fe895d0c3e9b151ef9656` (`82016`, terminal `454be0`, exit
+0). Four screenshots and 75 sanitized request records are under
+`/tmp/artroom-m1-live-browser-20261018/`, with log
+`/tmp/artroom-m1-live-browser-final-20261018.log`. Earlier passing artifacts
+are retained separately under `/tmp/artroom-m1-live-browser-4a9298acc-20261018/`.
+The finite harness sources are in `/tmp/artroom-m1-browser-harness-20261018/`.
+The packet manifest names the exact source head. Speech playback, external
+provider writes and deployment are not proved.
+
+The local Room build also passes with the existing locked Wrangler 4.124.0
+(`51197`, terminal `2f19a5`, exit 0). Its dry-run lists the private
+`APPLICATION_CONTENT` binding. All 283 bundle inputs exclude Counter and
+Lending browser modules and their retired asset routes. Output and source map
+are under `/tmp/artroom-m1-room-dry-run-20261018/`, with log
+`/tmp/artroom-m1-room-dry-run-20261018.log`. This checks configuration and
+bundling without deploying or provisioning resources.
 
 The install dependency namespace is a private filesystem COW copy: 13 local
 first-party links, 106 verified installed versions, zero package installs.
