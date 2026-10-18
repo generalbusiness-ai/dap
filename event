@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/replay/tsconfig.node.json","body":{"commit":"0e63ba9296fc5392510fa14a626c1294efe2450a","path":"packages/replay/tsconfig.node.json"}}
+{"kind":"artifact","text":"Merge published the current artifact at packages/replay/tsconfig.test.json","body":{"commit":"0e63ba9296fc5392510fa14a626c1294efe2450a","path":"packages/replay/tsconfig.test.json"}}
