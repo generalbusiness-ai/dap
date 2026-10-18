@@ -38,6 +38,7 @@ test("binding follows the exact definition, state, slot kind, type and optionali
   refuse(p => { p.sources.alerts.item = "missing"; });
   refuse(p => { p.sources.alerts.states = ["missing"]; });
   refuse(p => { p.sources.alerts.fields.text.from.name = "missing"; });
+  refuse(p => { p.sources.alerts.fields.actor.from.name = "constructor"; p.sources.alerts.fields.actor.nullable = true; });
   refuse(p => { p.sources.alerts.fields.text.from.kind = "ref"; });
   refuse(p => { p.sources.alerts.fields.text.of.max = 2048; });
   refuse(p => { p.sources.alerts.fields.watchers.of.max = 5; });

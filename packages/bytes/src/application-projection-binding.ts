@@ -16,22 +16,22 @@ export function bindApplicationProjection(value: unknown, definition: DeclaredDe
     const owned = parseStrict(applicationJson(definition, APPLICATION_PACKAGE_LIMITS.definitionBytes)) as DeclaredDefinition;
     if (definitionDigest(owned) !== projection.definition) return fail();
     for (const source of Object.values(projection.sources)) {
-      const item = owned.items[source.item];
+      const item = Object.hasOwn(owned.items, source.item) ? owned.items[source.item] : undefined;
       if (!item || source.states.some(state => !Object.hasOwn(item.states, state))) return fail();
       for (const field of Object.values(source.fields)) {
         const { kind, name } = field.from;
         let type: FieldType, required: boolean;
         if (kind === "party") {
-          const slot = item.parties[name];
+          const slot = Object.hasOwn(item.parties, name) ? item.parties[name] : undefined;
           if (!slot) return fail();
           type = slot.list ? { type: "list", of: { type: "member" }, max: slot.max ?? 64 } : { type: "member" };
           required = slot.required;
         } else if (kind === "ref") {
-          const slot = item.refs[name];
+          const slot = Object.hasOwn(item.refs, name) ? item.refs[name] : undefined;
           if (!slot) return fail();
           type = slot.to; required = slot.required;
         } else {
-          const slot = item.values[name];
+          const slot = Object.hasOwn(item.values, name) ? item.values[name] : undefined;
           if (!slot || slot.of.type === "text" && slot.of.detached) return fail();
           type = slot.of; required = slot.required;
         }

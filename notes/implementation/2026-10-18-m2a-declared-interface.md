@@ -37,8 +37,23 @@ field-type comparison makes the intended assertion fail at the widened text
 bound (`57eade`); the source was restored. This is a focused control, not a
 mutation sweep or a runtime acceptance claim.
 
-It does not yet bind fields to a native schema, read any journal, authorize a
-viewer, install a package, or render a view. Those remain implementation work.
+The pure reader now derives only the declaration's native item queries,
+requires explicit IDs for item reads, and accepts only complete query
+replies at one identical native head. Final items come from retained-item
+queries, not the live-only summary. It returns declared fields plus native
+id, type, state and revision, owns and freezes the data, and bounds its result.
+Two owning read cases pass (`022ee0`); removing the completeness refusal
+makes the intended assertion fail (`d5fd10`, source restored). Source/test
+typechecks pass after avoiding an unbounded TypeScript mapped expansion of
+the recursive FieldValue type; returned values are still frozen at runtime.
+The initial typecheck failure (`788198`) is retained as preparation history.
+Schema binding also checks own slot names, including a constructor-name
+negative case (`1cac12`). These replies are scripted native envelopes. No
+read route, authorization, MCP, kit, installation or runtime witness is
+claimed by this preparation.
+
+It does not yet read a journal, authorize a viewer, install a package, or
+render a view. Those remain implementation work.
 
 The following acceptance remains owed: shared host/MCP/kit projection bytes
 and revision, presentation declarations and generic kinds, model-facing
