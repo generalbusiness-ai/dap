@@ -1,10 +1,13 @@
 # M2a declared projections and generic views
 
 Preparation under Source child `823817ed` and promise `63dc4e4e`, within
-M2a `b6aaa3ce` and parent promise `9ebca0a5`. M1 install review `b21d8603`
-remains with checker at frozen `432dab40`. This separate checkout starts
-from that code as a preparation base. Delivery waits for completed M1 and
-reconciliation against its actual audited Main.
+M2a `b6aaa3ce` and parent promise `9ebca0a5`. The preparation began at
+M1's frozen candidate `432dab40` and now incorporates audited Main
+`29ccc2fd`, including the separately approved N1 link correction. M1's
+three code children are landed and audited. Parent reconciliation
+`0345dc57` remains with planner; provider error 10042 still prevents the
+required hosting deployment until the operator enables object storage.
+This preparation claims no hosted acceptance or M2a delivery.
 
 The private dependency namespace is an APFS COW copy. Its 13 first-party
 links resolve inside this checkout, and all 106 installed versions match the
@@ -51,6 +54,24 @@ Schema binding also checks own slot names, including a constructor-name
 negative case (`1cac12`). These replies are scripted native envelopes. No
 read route, authorization, MCP, kit, installation or runtime witness is
 claimed by this preparation.
+
+The strict v1 package validators are now an internal shared module. Their
+10,052-byte bodies are identical after removing internal export labels
+(`2911ec`, SHA-256 `51b96b0212a82f8de2d4cbe1866c4649645489199137c5436da61bce84adf198`).
+All nine owning legacy package cases pass (`a798fc`) and the source
+typecheck passes. This prepares reuse for a separate versioned codec; it
+does not admit nonempty projections through the legacy reader.
+
+The view parser prepares the five generic kinds, explicit row identity,
+field mappings, bounded plain-text templates, up to two controls, refresh,
+display/back, and read-only surfaces with declared links. Schema binding
+requires selected fields, actual native acts and their exact required
+action. Compact controls cannot supply undisclosed required fields.
+Two owning cases pass (`907652`) and source/test typechecks pass. Removing
+the required-action comparison makes the intended assertion fail
+(`6e5fee`, source restored). These checks do not admit/evaluate `when`,
+authorize a current viewer, render a resource or sign anything; the real
+host still owes those boundaries and their native witnesses.
 
 It does not yet read a journal, authorize a viewer, install a package, or
 render a view. Those remain implementation work.
