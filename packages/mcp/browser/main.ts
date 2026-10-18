@@ -11,6 +11,7 @@ let notice = "";
 let contextError = "";
 let pendingContext: Display["context"] | null = null;
 let sendingContext = false;
+let reportedContext = "";
 let returnPage: PageKind = "summary";
 let alive = true;
 let connected = false;
@@ -57,10 +58,13 @@ async function reportContext() {
     while (pendingContext && alive) {
       const context = pendingContext;
       pendingContext = null;
+      const encoded = JSON.stringify(context);
+      if (encoded === reportedContext) { contextError = ""; continue; }
       const identity = context.identity;
       const line = `${context.note ? `${context.note} ` : ""}${identity ? `${identity.kind} ${identity.item}, revision ${identity.revision}` : `${context.screen}: ${context.status}`}. ${context.navigation.join(", ") || "No navigation"}.${context.receipt ? ` ${context.receipt}` : ""}`;
       try {
         await bridge.request("ui/update-model-context", { content: [{ type: "text", text: line }], structuredContent: context });
+        reportedContext = encoded;
         contextError = "";
       } catch (error) {
         pendingContext ??= context;

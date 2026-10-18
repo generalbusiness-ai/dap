@@ -81,11 +81,31 @@ try {
     assert.equal(await app.getByRole('link').count(), 0);
     assert.equal(await app.getByRole('button', { name: /Back/ }).count(), 1);
     await page.screenshot({ path: join(out, 'declared-direct-record-390.png') });
+    await page.waitForFunction(() => window.proof.calls.some(call => call.name === 'view_read' && call.arguments.refresh === true));
+    assert.equal(await page.evaluate(() => window.proof.contexts.length), 1, 'an unchanged declared refresh does not repeat model context');
     await app.getByRole('button', { name: /Back/ }).click();
     await app.getByRole('link', { name: 'open', exact: true }).waitFor();
     await page.waitForFunction(() => window.proof.mode === 'inline' && window.proof.contexts.at(-1)?.structuredContent.screen === 'board');
     assert.deepEqual(errors, []);
-    report.cases.push({ label: 'direct-record-390', navigation: ['record', 'board'], initialDisplay: 'fullscreen', backDisplay: 'inline' });
+    report.cases.push({ label: 'direct-record-390', navigation: ['record', 'board'], initialDisplay: 'fullscreen', backDisplay: 'inline', refreshObserved: true, unchangedContextRepeated: false });
+    await page.close();
+  }
+  {
+    const page = await browser.newPage({ viewport: { width: 422, height: 1000 } }), errors = [];
+    page.on('pageerror', error => errors.push(String(error)));
+    await page.goto(host.url + '/?deny=1&context-fail=1');
+    const app = page.frameLocator('#frame').frameLocator('iframe');
+    await app.getByRole('link', { name: 'Choose the first milestone', exact: true }).click();
+    await app.getByRole('button', { name: 'Accept', exact: true }).waitFor();
+    await contained(app);
+    await app.getByRole('button', { name: 'Accept', exact: true }).click();
+    await app.getByRole('link', { name: 'Review the working terms', exact: true }).waitFor();
+    await page.waitForFunction(() => window.proof.contexts.some(context => context.structuredContent.receipt));
+    const proof = await page.evaluate(() => window.proof);
+    const state = await page.evaluate(async () => fetch('/proof?instance=' + window.proof.config.id).then(response => response.json()));
+    assert.equal(state.signed.length, 1, 'context reporting retains the original intent');
+    assert.deepEqual(proof.chat, []); assert.deepEqual(proof.errors, []); assert.deepEqual(errors, []);
+    report.cases.push({ label: 'legacy-context-retry-390', signatures: state.signed.length, receiptContext: true, chat: proof.chat });
     await page.close();
   }
   await writeFile(join(out, 'report.json'), JSON.stringify(report, null, 2));

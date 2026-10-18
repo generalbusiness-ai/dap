@@ -391,6 +391,20 @@ stand for an entry log. Builder flagged this M2a/G1 boundary to planner while
 continuing independent view work. A bounded journal-entry source, complete
 carousel/surface rendering and the maintained package migration remain owed.
 
+The declared refresh timer now has an explicit browser check. An unchanged
+refresh still reads the view but does not repeat the same successful model
+context. Failed context reporting remains pending for retry; a later receipt
+or navigation context is different and still reports. Four targeted browser
+cases pass (`83860`, terminal `1573ab`, exit 0): the two navigation widths,
+the direct 390 record with observed refresh, and the affected legacy receipt/
+context-retry path. That legacy path retains exactly one signed intent and
+no chat message. Report/captures are under
+`/tmp/artroom-m2a-declared-refresh-compatibility-browser-20261018/`.
+The three-case refresh-only run is retained under
+`/tmp/artroom-m2a-declared-refresh-browser-20261018/` (`74095`, terminal
+`1a3c18`). Same pinned browser and scripted native-port boundaries apply.
+Browser typecheck passes and the kit resources were regenerated.
+
 The following acceptance remains owed: complete generic kinds and navigation,
 Grow alert/grid declarations, Counter/Lending migration, their named native
 witnesses and paired controls, the final gate, review and landing. Shared
