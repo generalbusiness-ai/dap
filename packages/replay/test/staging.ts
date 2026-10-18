@@ -28,7 +28,7 @@ import type { Digest, Entry, Evidence, FieldValue, Grant, MemberId, MemberObserv
 import { canonicalize, factRefOf, intentDigest, newIncarnation, scopeIdOf, signIntent, textDigest } from "@generalbusiness/artroom-bytes";
 import { RETIRE_ACTION, actionOf, clockOf, grantFrom, judgeDelivery, judgeGenesis, judgePreparation, settleOutcome, valueDigest } from "@generalbusiness/dap-derive";
 import type { OutcomeRule, PlatformRules, Source } from "@generalbusiness/dap-derive";
-import { Ledger, T0, d, directory, keys, membership, t, type Actor, type Context } from "@generalbusiness/dap-derive/testing";
+import { Ledger, T0, creation, d, deliver, directory, keys, membership, t, type Actor, type Context } from "@generalbusiness/dap-derive/testing";
 import { cap, snapshots, staging } from "../../derive/test/fixtures-hold.ts";
 import { gateRules, gateWith } from "../../derive/test/fixtures-marks.ts";
 import type { Anchor, Coded, MemoryScope } from "../src/index.ts";
@@ -68,25 +68,35 @@ export class Lane extends Ledger {
   readonly foreign: Source[] = [];
   #reads = 0;
 
-  constructor() {
+  /** A2 supplies a judged parent whose last entry creates this lane; the legacy fixture keeps its labelled hand-made creator. */
+  constructor(parent?: Ledger) {
     super(staging);
-    // STAND-IN: the directory's act that creates the lane, and its entry that confirms it, are made by hand.
-    const by = (seq: number, input: Entry["input"], sends: Entry["sends"]): Source => {
-      const source: Source = { entry: { v: 1, at: directory, seq, prev: d("0"), time: T0, clamped: false, epoch: 0, input, uses: [], prepared: [], effects: [], sends }, under: "desk" };
-      this.foreign.push(source);
-      return source;
-    };
-    const opening = signIntent({ v: 1, to: directory, actor: keys.rita.key, kind: "open-lane", on: null, expected: {}, fields: {}, idempotencyKey: "lane", notAfter: t(60) }, keys.rita.secret);
-    const seed: Seed = { v: 1, kind: "lane", definition: staging.digest, creator: directory, cause: intentDigest(opening.intent), ordinal: 0 };
-    const message = { class: "request", type: "create", body: { fields: { opener: keys.rita.member, title: "work" }, directory, membership } } as const;
-    const asked = by(17, { type: "act", signed: opening, authority: [], presented: {} }, [{ n: 0, to: seed, message }]);
-    const creation = { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(9)), to: seed, from: factRefOf(asked.entry), n: 0, message };
-    this.seal(written(judgeGenesis(this.state, staging, creation, { clock: clockOf(this.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: asked, capabilities: cap })).draft);
-    const result = this.last.sends[0]!.message;
-    const confirm = { class: "control", type: "confirm", genesis: this.fact(0) } as const;
-    const confirmed = by(18, { type: "delivery", from: this.fact(0), n: 0, message: result, clause: "applied" } as Entry["input"], [{ n: 0, to: this.at, message: confirm }]);
-    const arrival = { to: this.at, from: factRefOf(confirmed.entry), n: 0, message: confirm };
-    this.seal(written(judgeDelivery(this.state, staging, arrival, { clock: clockOf(this.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], own: this.own, source: confirmed, origin: null, capabilities: cap })).draft);
+    if (parent) {
+      const birth = creation(parent, parent.head.seq, 0, 9);
+      this.foreign.push(birth.source);
+      this.seal(written(judgeGenesis(this.state, staging, birth.asked, { clock: clockOf(this.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: birth.source, capabilities: cap })).draft);
+      written(deliver(parent, this, 0));
+      this.foreign.push({ entry: parent.last, under: parent.under });
+      written(deliver(this, parent, parent.head.seq));
+    } else {
+      // STAND-IN: the directory's act that creates the lane, and its entry that confirms it, are made by hand.
+      const by = (seq: number, input: Entry["input"], sends: Entry["sends"]): Source => {
+        const source: Source = { entry: { v: 1, at: directory, seq, prev: d("0"), time: T0, clamped: false, epoch: 0, input, uses: [], prepared: [], effects: [], sends }, under: "desk" };
+        this.foreign.push(source);
+        return source;
+      };
+      const opening = signIntent({ v: 1, to: directory, actor: keys.rita.key, kind: "open-lane", on: null, expected: {}, fields: {}, idempotencyKey: "lane", notAfter: t(60) }, keys.rita.secret);
+      const seed: Seed = { v: 1, kind: "lane", definition: staging.digest, creator: directory, cause: intentDigest(opening.intent), ordinal: 0 };
+      const message = { class: "request", type: "create", body: { fields: { opener: keys.rita.member, title: "work" }, directory, membership } } as const;
+      const asked = by(17, { type: "act", signed: opening, authority: [], presented: {} }, [{ n: 0, to: seed, message }]);
+      const creation = { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(9)), to: seed, from: factRefOf(asked.entry), n: 0, message };
+      this.seal(written(judgeGenesis(this.state, staging, creation, { clock: clockOf(this.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: asked, capabilities: cap })).draft);
+      const result = this.last.sends[0]!.message;
+      const confirm = { class: "control", type: "confirm", genesis: this.fact(0) } as const;
+      const confirmed = by(18, { type: "delivery", from: this.fact(0), n: 0, message: result, clause: "applied" } as Entry["input"], [{ n: 0, to: this.at, message: confirm }]);
+      const arrival = { to: this.at, from: factRefOf(confirmed.entry), n: 0, message: confirm };
+      this.seal(written(judgeDelivery(this.state, staging, arrival, { clock: clockOf(this.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], own: this.own, source: confirmed, origin: null, capabilities: cap })).draft);
+    }
 
     this.did(keys.rita, "offer", { expected: { intent: 1 }, fields: { intent: 0 } });
     this.did(keys.rita, "assign", { on: this.commitment, expected: { on: 1 }, fields: { performer: keys.una.member } });
@@ -138,7 +148,7 @@ export class Lane extends Ledger {
   }
   /** The anchors of the STAND-INS: the directory's two entries, and the one head of membership. */
   anchors(): Anchor[] {
-    return [...this.foreign.map(({ entry }) => ({ scope: directory.scope, seq: entry.seq, hash: factRefOf(entry).hash })), { scope: membership.scope, ...STANDING }];
+    return [...this.foreign.map(({ entry }) => ({ scope: entry.at.scope, seq: entry.seq, hash: factRefOf(entry).hash })), { scope: membership.scope, ...STANDING }];
   }
 }
 

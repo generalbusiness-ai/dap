@@ -153,3 +153,7 @@ incomplete. Then make precisely that immutable child's bytes available.
 The same cutoff can now complete without reading later entries, scanning
 store inventory, or selecting an unrelated later input. This is a design
 counterexample, not an executed archive witness.
+
+## Historical witness gap
+
+No admitted historical canonical F1 genesis or `closes:merged` send is available. This milestone uses reviewed fixtures. A4/A5 still owe real-history evidence under configured admission and consent (decision `72d94bf9`).

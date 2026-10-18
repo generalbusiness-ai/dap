@@ -20,7 +20,8 @@ export function syntheticJournal(count = 1, incarnation = 1, salt = 1) {
   for (let seq = 0; seq < count; seq++) {
     const entry: Entry = {
       v: 1, at, seq, prev: entries.at(-1)?.hash ?? null, time: timeOf(1_700_000_000_900 + seq * 1000), clamped: false, epoch: 0,
-      input: seq === 0 ? { type: "genesis", seed, inc: at.inc, kind: at.kind, "founding": signIntent(intent, secret), source: null, n: null, message: null, decision: "applied" }
+      // Genesis records the act's kind; the seed and ScopeRef hold the separate scope kind.
+      input: seq === 0 ? { type: "genesis", seed, inc: at.inc, kind: intent.kind, "founding": signIntent(intent, secret), source: null, n: null, message: null, decision: "applied" }
         : seq === 1 ? { type: "outcome", operation: "0:0", attempt: 0, owner: "platform:destination@1", kind: "TEST outcome", result: "confirmed", evidence: { basis: "own-answer", body: { test: true } } }
         : { type: "checkpoint", through: seq - 1, state: digestBytes(utf8("TEST state")) },
       uses: [], prepared: [], effects: [], sends: [],

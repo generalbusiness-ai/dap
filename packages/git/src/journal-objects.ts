@@ -67,7 +67,9 @@ const secondsOf = (n: number): number => Number.isSafeInteger(n) && n >= 0 && !O
  * before copying/hashing; only identical objects deduplicate in the result. */
 export class JournalObjects {
   readonly #objects = new Map<string, JournalObject>();
-  constructor(readonly format: JournalFormat, readonly work: JournalWork) { journalFormat(format); }
+  readonly format: JournalFormat;
+  readonly work: JournalWork;
+  constructor(format: JournalFormat, work: JournalWork) { journalFormat(format); this.format = format; this.work = work; }
   #reserve(type: JournalObjectType, size: number): void {
     this.work.size(size);
     const header = `${type} ${size}\0`;
@@ -136,7 +138,10 @@ export class JournalObjects {
 /** Reads exact named objects, with a metadata probe before reserving body
  * work. The same original native budget fences both awaited calls. */
 export class JournalObjectReader {
-  constructor(readonly format: JournalFormat, readonly source: JournalObjectSource, readonly work: JournalWork) { journalFormat(format); }
+  readonly format: JournalFormat;
+  readonly source: JournalObjectSource;
+  readonly work: JournalWork;
+  constructor(format: JournalFormat, source: JournalObjectSource, work: JournalWork) { journalFormat(format); this.format = format; this.source = source; this.work = work; }
   async read(id: string, type: JournalObjectType, maximum = this.work.limits.objectBytes): Promise<Uint8Array> {
     journalId(this.format, id);
     this.work.maximumSize(maximum);

@@ -1771,6 +1771,8 @@ archive, and a stopped archive. It derives no judgment.
 (`packages/replay/src/source.ts`) over a local clone. `verify` and the
 judges do not change.
 
+The repository command includes the Node clone composition; the public portable package excludes that composition and its Git source export.
+
 ```
 artroom-replay --git <clone> <scope ID> [--mode integrity|replay]
     [--head <seq>:<hash>] [--texts <directory>] [--json]

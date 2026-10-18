@@ -72,13 +72,54 @@ test("the platform package depends only on contract, bytes and derive, and only 
 // The git package is the one place that touches a Git repository or a Git host (I3 plan, section 3.1). It depends only on contract and
 // bytes. The runtime and the checker service name it. The platform package may name it in its tests only, where the host stand-in runs
 // the same table of sends as the real repository does: no rule of a platform definition reads a repository.
-test("the git package depends only on contract and bytes, and only scope, checkers and the platform's tests name it", () => {
+const replayGitUsers = new Set(["packages/replay/src/git.ts", "packages/replay/test/archive-git.test.ts", "packages/replay/test/archive-git-fixture.ts", "packages/replay/package.json"]);
+test("Git keeps its lower-layer dependencies; Replay names it only at its exact development boundaries", () => {
   assert.ok(files.includes("packages/git/package.json"), "the git package was listed");
   const source = (f) => packagePath(f).startsWith("packages/") && !f.endsWith(".md");
   const inside = files.filter((f) => source(f) && packagePath(f).startsWith("packages/git/"));
   assert.deepEqual(inside.filter((f) => /(?:artroom|dap)-(derive|platform|scope|replay|client|lanes|checkers)/.test(text(f))), []);
-  const named = files.filter((f) => source(f) && !/^packages\/(git|scope|checkers)\/|^packages\/platform\/test\//.test(packagePath(f)));
+  const named = files.filter((f) => source(f) && !replayGitUsers.has(f) && !/^packages\/(git|scope|checkers)\/|^packages\/platform\/test\//.test(packagePath(f)));
   assert.deepEqual(named.filter((f) => /artroom-git/.test(text(f))), []);
+  const replay = JSON.parse(text("packages/replay/package.json"));
+  assert.equal(replay.dependencies?.["@generalbusiness/artroom-git"], undefined);
+  assert.equal(replay.devDependencies?.["@generalbusiness/artroom-git"], replay.version);
+});
+
+const nodeReplayInputs = new Set(["packages/replay/src/git.ts", "packages/replay/src/bin.ts"]);
+const edgeTarget = (file, specifier) => specifier.startsWith(".") ? normalize(join(dirname(file), specifier)) : specifier;
+function portableReplayImport(file, specifier) {
+  if (specifier.startsWith(".")) {
+    const target = edgeTarget(file, specifier);
+    return target.startsWith("packages/replay/src/") && target.endsWith(".ts") && !nodeReplayInputs.has(target);
+  }
+  return /^@generalbusiness\/(?:artroom-bytes|dap-(?:contract|derive))(?:\/[^.][^\n]*)?$/.test(specifier)
+    && !specifier.split("/").some(part => part === "." || part === "..");
+}
+function archiveEdgeAllowed(file, specifier) {
+  const target = edgeTarget(file, specifier);
+  if (file.startsWith("packages/git/")) return !/^(?:packages\/replay\/|@generalbusiness\/(?:artroom|dap)-replay(?:\/|$))/.test(target);
+  if (file.startsWith("packages/replay/src/") && !nodeReplayInputs.has(file)) return portableReplayImport(file, specifier);
+  if (file.startsWith("packages/replay/") && /^(?:packages\/git\/|@generalbusiness\/artroom-git(?:\/|$))/.test(target)) return replayGitUsers.has(file);
+  return true;
+}
+
+// Invariant: type imports, re-exports, dynamic imports and relative paths
+// cannot introduce a Git cycle or hide Node behind a portable Replay module.
+test("archive Node exceptions are exact and preserve portable and Git dependency directions", () => {
+  const portable = "packages/replay/src/archive.ts";
+  assert.equal(archiveEdgeAllowed(portable, "./verify.ts"), true);
+  assert.equal(archiveEdgeAllowed("packages/replay/src/git.ts", "@generalbusiness/artroom-git/journal-reader"), true);
+  for (const specifier of ["node:fs", "fs", "@generalbusiness/artroom-git", "../../git/src/journal-reader.ts", "./git.ts", "./bin.ts"]) {
+    for (const body of [`import type { X } from '${specifier}';`, `export * from '${specifier}';`, `const load = () => import('${specifier}');`]) {
+      const refs = moduleSpecifierSpans(body); assert.equal(refs.length, 1);
+      assert.equal(archiveEdgeAllowed(portable, refs[0].value), false, body);
+    }
+  }
+  for (const specifier of ["@generalbusiness/artroom-replay", "../../replay/src/archive.ts"]) assert.equal(archiveEdgeAllowed("packages/git/src/journal-reader.ts", specifier), false);
+  assert.equal(archiveEdgeAllowed("packages/replay/test/unlisted.test.ts", "../../git/src/journal-reader.ts"), false);
+  assert.equal(archiveEdgeAllowed("packages/replay/src/extra-node.ts", "node:fs"), false);
+  const governed = files.filter(file => /^packages\/(?:git|replay)\/.*\.ts$/.test(file));
+  assert.deepEqual(governed.flatMap(file => moduleSpecifierSpans(text(file)).filter(({ value }) => !archiveEdgeAllowed(file, value)).map(({ value }) => `${file}: ${value}`)), []);
 });
 
 // The checkers package is the checker service: a separate service with its own key, and not a scope (I3 plan, section 3.1). It
