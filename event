@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:04b5f4382a14f777f111a5943beed178cba175ec","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/capability/hold.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:04d23e324a7851a1e9274537e265b24fd24cb212","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-17-capacity-guarantees.md."}
