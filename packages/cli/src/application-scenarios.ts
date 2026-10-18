@@ -99,9 +99,11 @@ export async function runApplicationScenario(packet: PackedApplication, value: u
       nodes = 0;
       try {
         const step = dictionary(steps[index], 3);
-        if (Object.hasOwn(step, "act")) {
-          object(step, ["act", "expect"], ["save"]);
-          const ask = object(step["act"], ["actor", "kind"], ["on", "fields", "expected"]);
+        if (Object.hasOwn(step, "act") || Object.hasOwn(step, "sign")) {
+          const deferred = Object.hasOwn(step, "sign");
+          if (deferred) object(step, ["sign", "save"]);
+          else object(step, ["act", "expect"], ["save"]);
+          const ask = object(step[deferred ? "sign" : "act"], ["actor", "kind"], ["on", "fields", "expected"]);
           if (typeof ask["kind"] !== "string" || !/^[A-Za-z][A-Za-z0-9_.-]{0,127}$/.test(ask["kind"])) return fail("Expected an act name.");
           const expectedRevisions = resolve(dictionary(Object.hasOwn(ask, "expected") ? ask["expected"] : {}, 64)) as Record<string, number>;
           if (Object.values(expectedRevisions).some(value => !Number.isSafeInteger(value) || value < 0)) return fail("Expected revisions must be nonnegative native revisions.");
@@ -112,6 +114,9 @@ export async function runApplicationScenario(packet: PackedApplication, value: u
           if (Object.hasOwn(step, "save")) {
             const name = label(step["save"]); if (saved.has(name)) return fail("A saved request name is already used."); saved.set(name, signed);
           }
+          // Signing alone is no admission or receipt. A later retry submits
+          // these exact bytes, with their original revisions and lifetime.
+          if (deferred) continue;
           const answer = await scope.submit(signed); expected(answer, step["expect"]);
           if (Object.hasOwn(step, "save") && answer.answer === "accepted") accepted.set(label(step["save"]), parseStrict(canonicalize(answer.receipt.fact)) as FactRef);
         } else if (Object.hasOwn(step, "retry")) {
@@ -143,7 +148,7 @@ export async function runApplicationScenario(packet: PackedApplication, value: u
           const key = canonicalize(command);
           if (recorded.has(key)) return fail("The scenario owner already recorded this command."); recorded.add(key);
           ownerRecords.push({ label: "non-native-scenario-owner", owner, command: parseStrict(key) as FactRef, outcome });
-        } else return fail("Expected act, retry, advance, assert or owner-record.");
+        } else return fail("Expected act, sign, retry, advance, assert or owner-record.");
       } catch (error) {
         if (error instanceof ApplicationScenarioError || error instanceof runtime.LocalApplicationError) throw new ApplicationScenarioError(`${name}, step ${index + 1}: ${error.message}`);
         throw error;

@@ -2,7 +2,7 @@
  * deliberately faulted, to show the scenario cannot hide failed replay. */
 import { readFile } from "node:fs/promises";
 import { expect, test, vi } from "vitest";
-import type { DeclaredDefinition, FactRef, FieldValue } from "@generalbusiness/dap-contract";
+import type { DeclaredDefinition, FactRef, FieldValue, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest } from "@generalbusiness/artroom-bytes";
 import { packApplication, secretSigner } from "@generalbusiness/artroom-client";
 import { LocalApplicationScope } from "../src/application-local.ts";
@@ -40,6 +40,36 @@ test("data scenarios judge explicit grants, reuse saved signatures, assert nativ
   const first = await runApplicationScenario(await packet(), scenario());
   expect(first).toMatchObject({ name: "counter-standard", steps: 8, authority: "scripted-test-grants", replay: { why: null, report: { mode: "replay", result: "consistent", target: { seq: 2 } } } });
   expect(first.replay.report.trusts.join(" ")).toContain("authority");
+});
+
+test("signing without submitting preserves old revisions and expiry for a later native judgment", async () => {
+  const packed = await packet(), input = scenario(), submit = LocalApplicationScope.prototype.submit, reset: SignedIntent[] = [];
+  input.steps.push(
+    { sign: { actor: "controller", kind: "reset", on: 1, expected: { on: { $revision: 1 } }, fields: { generation: 1 } }, save: "old-reset" },
+    { assert: { item: 1, revision: 1, values: { generation: 0 } } },
+    { act: { actor: "controller", kind: "reset", on: 1, expected: { on: { $revision: 1 } }, fields: { generation: 1 } }, expect: { answer: "accepted" } },
+    { advance: "2026-10-18T12:02:00Z" },
+    { retry: "old-reset", expect: { answer: "refused", reason: "revision-moved" } },
+    { assert: { item: 1, revision: 2, values: { generation: 1 } } },
+  );
+  const spy = vi.spyOn(LocalApplicationScope.prototype, "submit").mockImplementation(async function (this: LocalApplicationScope, signed, beside) {
+    if (signed.intent.kind === "reset") reset.push(structuredClone(signed));
+    return submit.call(this, signed, beside);
+  });
+  try {
+    const result = await runApplicationScenario(packed, input).then(result => result, error => error);
+    expect(reset).toHaveLength(2); expect(reset[1]!.intent.expected).toEqual({ on: 1 });
+    expect(reset[1]!.intent.notAfter).toBe(reset[0]!.intent.notAfter);
+    expect(reset[1]!.intent.idempotencyKey).not.toBe(reset[0]!.intent.idempotencyKey);
+    expect(result).toMatchObject({ steps: 14, ownerRecords: [], replay: { why: null, report: { result: "consistent", target: { seq: 3 } } } });
+  } finally { spy.mockRestore(); }
+  const expired = scenario();
+  expired.steps.push(
+    { sign: { actor: "controller", kind: "reset", on: 1, expected: { on: { $revision: 1 } }, fields: { generation: 1 } }, save: "expired-reset" },
+    { advance: "2026-10-18T13:00:00Z" },
+    { retry: "expired-reset", expect: { answer: "refused", reason: "expired" } },
+  );
+  expect(await runApplicationScenario(packed, expired).then(result => result.replay.report.target.seq, error => error)).toBe(2);
 });
 
 test("a running scenario owns its expected results before signing awaits or caller edits", async () => {
@@ -94,6 +124,10 @@ test("scenario typos, empty assertions, wrong outcomes, malformed actors and mis
     value => { value.steps = [{ assert: { item: 0, values: {} } }]; },
     value => { value.steps = [{ assert: { item: 0, value: { target: 10 } } }]; },
     value => { value.steps = [{ retry: "missing", expect: { answer: "accepted" } }]; },
+    value => { value.steps = [{ sign: { actor: "controller", kind: "initialize" } }]; },
+    value => { value.steps = [{ sign: { actor: "controller", kind: "initialize" }, save: "later", expect: { answer: "accepted" } }]; },
+    value => { value.steps.push({ sign: { actor: "controller", kind: "initialize" }, save: "initialize" }); },
+    value => { value.steps.push({ sign: { actor: "controller", kind: "initialize" }, save: "unsubmitted" }, { "owner-record": { owner: "simulator", command: { $fact: "unsubmitted" }, outcome: "confirmed" } }); },
     value => { value.steps = [{ script: "return true" }]; },
     value => { value.steps[0].act.expected.configuration = { $revision: 99 }; },
     value => { value.steps[0].act.fields = null; },

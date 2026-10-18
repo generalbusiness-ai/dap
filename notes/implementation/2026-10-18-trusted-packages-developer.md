@@ -363,6 +363,43 @@ for a missing accepted receipt (`d8b7be`/`eecd64`), and admitting a duplicate
 owner outcome (see `/tmp/artroom-m1-scenario-owner-duplicate-control-20261018.log`).
 Both exit 0. No repeated full gate or publication accompanied this bridge.
 
+## Retaining a signature before submission
+
+A `sign` step now requires `save` and accepts the same bounded actor,
+kind, local item, fields and expected revisions as `act`. It signs and
+retains the request without submitting it, admitting it or creating a fact.
+A later `retry` submits exactly those original signed bytes. It preserves
+their expected revisions, idempotency key and expiry; it does not resolve
+revisions again or renew a signature. The ordinary SDK's five-minute
+lifetime remains unchanged. This is needed for G0's authorization signed
+before a hold, submitted after the alert revision changes.
+
+The native Counter/SQLite case signs reset, checks that no reset occurred,
+then submits a separate reset before the saved request. The latter refuses
+with the native revision-moved reason and writes no new entry. A second
+request submitted after its original expiry refuses expired. Both actual
+histories replay consistently. Unknown/duplicate save names and extra step
+fields refuse; an unsubmitted signature cannot supply an accepted fact or
+scenario-owner record.
+
+The seven scenario cases pass (`0862e1`/`84e3a1`). Production/test
+typechecks pass (`e6890e`, `34b659`). The initial invocation
+`2e03d2` found no tests because it used the package config from the wrong
+root; it is not a test pass.
+
+Two targeted controls distinguish and restore source, each with seven normal
+passes and one intended assertion failure: admitting a phantom accepted fact
+for a sign-only step (`334b4a`/`f1c393`), and re-signing a transition
+at retry time (`d02d35`/`724b43`). The latter fails on the changed
+notAfter value, before a renewed request can be mistaken for retained bytes.
+An earlier broader retry fault (`ede906`/`ad2ef3`) also broke an
+initialize retry before reaching the retained transition. Although the
+control tool exited 0, that failure is not counted as the deferred-signature
+witness; the narrowed control above reaches the intended assertion.
+Logs use `/tmp/artroom-m1-deferred-sign-` and
+`/tmp/artroom-m1-control-deferred-`. No native signature, lifetime,
+idempotency, revision or replay behavior changed.
+
 ## Remaining developer work
 
 Shared browser joining, storage and request custody; browser bundling;
