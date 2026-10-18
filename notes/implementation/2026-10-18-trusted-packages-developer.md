@@ -761,12 +761,68 @@ and server, following terminal server exit 143. There is no live fixture
 process. No new dependency, native rule, gate, Source review, publication,
 host install or deployment accompanied this extraction.
 
+## Generic browser compilation checkpoint
+
+Developer work continues from foundation candidate
+`325e2763cd3e2029efac1bc77de5000e60e362c3` in a separate worktree.
+The foundation stays frozen for its gate and review. This checkpoint is
+part of the still-open developer request, not an addition to that candidate.
+
+The source presentation may now include
+`browser: { entry, html, script }`. Entry and html are source-relative files.
+Script is a simple public JavaScript filename. The HTML contains exactly one
+module script for that entry. The generic compiler bundles the entry and its
+CSS with the CLI's pinned esbuild. It rewrites the HTML to those public files,
+then supplies the same signed package codec as static presentations use.
+The compiled files share the public HTML's directory. Additional declared
+static assets remain supported. Duplicate paths and all existing portable
+asset allowances still apply.
+
+Compilation writes no output into the checkout. It uses a fixed browser
+configuration and runs no application plugin or build script. The shared
+client resolves from the installed CLI. Other imports and dependencies are
+the trusted author's local build inputs, not an isolated filesystem or an
+atomic source snapshot. This is a developer compiler, not hostile screen
+admission or a substitute for host limits.
+
+Eight owning pack cases pass (`8ca8d6`/`0e1513`), including the new actual
+TypeScript/CSS/client bundle from an external temporary source directory.
+Repeated packages have the same bytes. A CSS-only edit changes presentation
+and release while preserving semantic identity. Existing source files and
+directory contents remain unchanged, and an unsafe output filename refuses
+without publishing. CLI production and test typechecks pass (`c1257f`).
+A selected missing-stylesheet-link control fails its intended assertion and
+restores source after the terminal subprocess (`0f43ac`). Logs use
+`/tmp/artroom-m1-browser-bundle-`.
+
+The same generic helper builds both actual public Counter and Lending entries
+(`f8db86`). All three files of each match the existing application builder
+byte for byte. Counter is 468 HTML, 162,368 JavaScript and 12,049 CSS bytes.
+Lending is 472 HTML, 122,712 JavaScript and 2,377 CSS bytes. This reuses the
+same source and outputs already subject to foundation browser evidence.
+It is compiler equivalence, not completed application package conversion,
+new browser acceptance or a room install.
+
+Esbuild 0.28.1 is now an explicit CLI runtime dependency. The lock adds that
+dependency and removes development-only flags from its existing record and
+26 optional platform records. No package key, version, resolution or
+integrity changes. All thirteen workspace links remain inside this separate
+worktree, and 106 installed versions match. Audit
+`/tmp/artroom-m1-browser-bundle-dependency-view-20261018.json` records the
+metadata change before the ignored dependency stamp was refreshed. Current
+lock SHA-256 is
+`68985f4a1a57919e15eed71764a49cb564b025b3f28f5404f1676a6841f8cca9`.
+Nothing was installed or fetched. No full gate or Source review is claimed
+for this continuing developer checkpoint.
+
 ## Remaining developer work
 
-Generic browser bundling; new/dev; Counter/Lending package
-conversion; and the matching browser evidence remain due. Generated
-application asset modules have not been rebuilt for this source checkpoint;
-the complete package conversion will replace their host composition.
-No full gate has run for M1. It runs once at the completed submitted head,
-followed by exact-head independent review. Nothing here is deployed,
+New/dev, Counter/Lending package conversion, and the matching browser
+evidence remain due. Existing public asset modules come from the foundation
+candidate. Compiler equivalence above leaves those assets unchanged.
+The complete package conversion will replace their host composition.
+The continuing developer half has no final gate or Source submission.
+Foundation gate attempts are recorded separately in its review primary.
+Each completed submitted head requires a gate and exact-head independent
+review. Nothing here is deployed,
 published, installed into a room, or accepted as the M1 milestone.

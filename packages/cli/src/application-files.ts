@@ -9,6 +9,7 @@ import { b64url, canonicalize, isRecord, parseStrictBytes } from "@generalbusine
 import { APPLICATION_PACKAGE_LIMITS as LIMITS, packApplication, type ApplicationDefinition, type ApplicationPackageInput, type PackedApplication, type Signer } from "@generalbusiness/artroom-client";
 import { validateDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
+import { bundleApplicationBrowser } from "./application-browser.ts";
 
 export class ApplicationSourceError extends Error {}
 const refuse = (message: string): never => { throw new ApplicationSourceError(message); };
@@ -74,10 +75,21 @@ async function source(directory: string): Promise<{ input: ApplicationPackageInp
     if (!checked.ok) return refuse(`Invalid native definition ${path}: ${checked.problems.slice(0, 3).map(problem => `${problem.path}: ${problem.message}`.slice(0, 256)).join("; ")}.`);
     definitions.push({ id: checked.definition.digest, bytes: canonicalize(checked.definition.declared) });
   }
-  const presentation = object(config["presentation"], "assets,descriptions,entry");
+  const presentation = object(config["presentation"], "assets,descriptions,entry", ["browser"]);
   if (!Array.isArray(presentation["assets"]) || presentation["assets"].length > LIMITS.assets) return refuse("The presentation must list at most 64 assets.");
   const assets = [];
   let total = 0;
+  if (Object.hasOwn(presentation, "browser")) {
+    const browser = object(presentation["browser"], "entry,html,script");
+    const built = await bundleApplicationBrowser(root, pathOf(presentation["entry"]), {
+      entry: pathOf(browser["entry"]), html: pathOf(browser["html"]), script: pathOf(browser["script"]),
+    }, (path, most) => readSource(root, path, most));
+    for (const asset of built) {
+      total += asset.bytes.length;
+      assets.push({ path: asset.path, mediaType: asset.mediaType, bytes: b64url(asset.bytes) });
+    }
+    if (built.length + presentation["assets"].length > LIMITS.assets) return refuse("The presentation has too many built and static assets.");
+  }
   for (const given of presentation["assets"]) {
     const asset = object(given, "file,mediaType,path");
     if (typeof asset["path"] !== "string" || typeof asset["mediaType"] !== "string") return refuse("Each asset needs its presentation path and media type.");

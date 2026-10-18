@@ -34,6 +34,37 @@ async function refused(work: () => Promise<unknown>): Promise<unknown> {
   return work().then(() => "accepted", error => error);
 }
 
+test("a trusted author's browser entry builds through pack without generated checkout files", async () => {
+  const f = await fixture();
+  try {
+    const html = '<!doctype html><head><title>Local browser source</title></head><body><script type="module" src="./main.ts"></script></body>';
+    await writeFile(join(f.root, "screen/index.html"), html);
+    await writeFile(join(f.root, "screen/main.ts"), 'import { browserPrivateSlots } from "@generalbusiness/artroom-client"; import "./main.css"; document.body.textContent = String(typeof browserPrivateSlots);');
+    await writeFile(join(f.root, "screen/main.css"), "body { color: red; }");
+    const config = { ...f.config, presentation: { ...f.config.presentation, entry: "view/index.html", assets: [], browser: { entry: "screen/main.ts", html: "screen/index.html", script: "application.js" } } };
+    const save = () => writeFile(join(f.root, "dap.application.json"), JSON.stringify(config));
+    await save();
+    const before = await readdir(f.root);
+    const first = (await prepareApplicationDirectory(f.root, signer)).packet;
+    expect(await readdir(f.root)).toEqual(before);
+    expect(await readFile(join(f.root, "screen/index.html"), "utf8")).toBe(html);
+    const assets = Object.fromEntries(first.package.presentation.assets.map(asset => [asset.path, Buffer.from(asset.bytes, "base64url").toString("utf8")]));
+    expect(Object.keys(assets).sort()).toEqual(["view/application.css", "view/application.js", "view/index.html"]);
+    expect(assets["view/index.html"]).toContain('<script type="module" src="./application.js"></script>');
+    expect(assets["view/index.html"]).toContain('<link rel="stylesheet" href="./application.css">');
+    expect(assets["view/application.js"]).not.toContain("@generalbusiness/artroom-client");
+    expect((await prepareApplicationDirectory(f.root, signer)).packet.bytes).toEqual(first.bytes);
+    await writeFile(join(f.root, "screen/main.css"), "body { color: blue; }");
+    const changed = (await prepareApplicationDirectory(f.root, signer)).packet;
+    expect(changed.ids.semantic).toBe(first.ids.semantic);
+    expect(changed.ids.presentation).not.toBe(first.ids.presentation);
+    expect(changed.ids.release).not.toBe(first.ids.release);
+    config.presentation.browser.script = "../outside.js"; await save();
+    expect(await refused(() => packDirectory(f.root, f.output, signer))).toBeInstanceOf(Error);
+    expect(await readdir(f.root)).not.toContain("application.dap.json");
+  } finally { await f.cleanup(); }
+});
+
 test("real Counter and Lending native declarations pack reproducibly into exact signed bytes", async () => {
   for (const kind of ["counter", "lending"] as const) {
     const f = await fixture(kind);
