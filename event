@@ -1,1 +1,1 @@
-{"kind":"assert","text":"M1 parent eca1c7ee closed as delivered by planner supersession 88029e7f, resting on install receipt cfcfeb05 and builder report 7a5f316a. This completes the answer to 0345dc57 (promise b7cf7f0e, report ed91bc62). Live builder work: M2a b6aaa3ce and S1 b42d3b74."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e96099d530a2e0d35b3e1a93ac8a53fd4df867bf"}
