@@ -94,9 +94,7 @@ copy of the owned A3 view, with all thirteen workspace links rebound and
 verified within this checkout and the lock bytes matched. Its audit is
 `/tmp/artroom-g0-dependency-view-20261018.log`.
 
-## Remaining G0 work
-
-### Zone evidence foundation
+## Zone evidence foundation
 
 `examples/grow/zone.ts` now provides the room's recorded zone data and acts.
 Temperature values use integer centidegrees Celsius; a zone represents 25
@@ -148,8 +146,39 @@ consistency (`32c91f`/`cd48c6`). Each exits 0. The count-coherence refinement
 adds only necessary bounds from the recorded extrema, without claiming raw
 sample verification. Evidence logs use `/tmp/artroom-g0-zone-`.
 
-The zone fragment has not yet been connected to the full room or checked
-through M1's private actual CLI; that cross-branch witness is the next check.
+The zone fragment has not yet been connected to the full room. A cross-private-
+branch actual CLI witness now passes (`6f9348`, exit 0): M1 at `12ccfa380`
+checks G0's zone data at `a800ac829`, which includes the audited Plan033 Main
+`bb3d3062`. Five declarative steps commission a zone, record an observe
+comment, cite its accepted `$fact` in report-zone, assert the recorded state
+and retry the same signed report. Native Core/SQLite replay is consistent
+through sequence 3. The fixture uses public TEST actors and a labelled static
+page, with invalid custody environment variables to witness that check reads
+no operator custody. It writes no release package.
+
+The retained bridge project is
+`/tmp/artroom-g0-zone-m1-bridge-20261018-pfPU1Y`; the harness is
+`/tmp/artroom-g0-zone-m1-bridge-20261018.mjs`. Its result and exact eight-file
+inventory are `/tmp/artroom-g0-zone-m1-bridge-result-20261018.json` and
+`/tmp/artroom-g0-zone-m1-bridge-proof-20261018.json`. The parent loader's
+DEP0205 deprecation warning is retained in the result; the actual CLI's
+stderr is empty. Ten native judge/rule/fixture/Core/SQLite/turn/replay paths
+are verified byte-exact with reviewed Main in both branches. This is an
+integration witness for unlanded development code, not public Main CLI
+availability, a hosted room/lane birth or full G0 acceptance.
+
+Plan033 sealed receipt `d28318c4`, planner publication survey `db10e8d7` and
+checker audit `1ffa6555` were read in full. The audited Main is
+`bb3d3062abce958f03f9c9aba7335c4891880940`, tree
+`238bd4db23ea33c357a37aaf5bf28296b83ddc5a`, preserving the separately approved
+fixture milestone note. Its three documentation changes were merged privately
+into this branch at `a800ac829`, tree `c4fcefce466febd4288e59e60405466545ec875b`.
+G0 source/tests are unchanged from code checkpoint `34883d72b`, tree
+`18d22f462a51c01264da50bd4b174806146498b6`; no unchanged suite or gate was
+repeated for that documentation merge. No unprovided planner process handle
+or exit is claimed.
+
+## Remaining G0 work
 
 The full room and site assembly, alert/hold/
 authorization/closure, benches/probes/tasks/watering/presence and the complete
