@@ -4,7 +4,7 @@
 import { env } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize } from "@generalbusiness/artroom-bytes";
+import { canonicalize, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
 import { keys, membership } from "@generalbusiness/dap-derive/testing";
 import { Rulebook } from "../../platform/test/support-rules.ts";
 import { APPLICATION_INSTALL_RULES } from "@generalbusiness/dap-platform/application-install";
@@ -15,9 +15,10 @@ import { applicationResolverFixture } from "./support/application-fixture.ts";
 
 async function fixture(format: "sha1" | "sha256" = "sha1") {
   const f = await applicationResolverFixture(format), r = new Rulebook(true, membership.scope, APPLICATION_INSTALL_RULES);
-  const fields = { uri: f.uri, release: f.packet.ids.release, semantic: f.packet.ids.semantic, roles: [], values: "{}" };
-  const values = [canonicalize(f.packet.package.semantic), canonicalize(f.packet.package.release), ...f.packet.package.semantic.definitions.map(part => part.bytes)];
-  const judged = r.act(keys.rita, "install-application", { fields }, { values });
+  const fields = { definitionText0: textDigest(f.packet.package.semantic.definitions[0]!.bytes), uri: f.uri, release: f.packet.ids.release, semantic: f.packet.ids.semantic, roles: [], values: '{"target":7}' };
+  const values = [canonicalize(f.packet.package.semantic), canonicalize(f.packet.package.release)];
+  const texts = (digest: string) => { const part = f.packet.package.semantic.definitions.find(part => textDigest(part.bytes) === digest); return part ? utf8(part.bytes).length : undefined; };
+  const judged = r.act(keys.rita, "install-application", { fields }, { values, texts });
   expect(judged.result, JSON.stringify(judged)).toBe("write");
   const request: EffectRequest = { scope: r.at, owner: APPLICATION_INSTALL_RULES, kind: "admit-application", operation: `${r.head.seq}:0`, attempt: 1, origin: r.entries[r.head.seq]! };
   let puts = 0;

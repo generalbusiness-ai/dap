@@ -357,3 +357,55 @@ and verified equal to their remote refs. G0's parent now closes by planner
 supersession `57185c8a` without a duplicate landing; M1 stays open until its
 install child has landed and been audited. Queued M2a request `b6aaa3ce`
 waits for the M1 install delivery.
+
+
+## Native custody and real restart witness
+
+The planned custody correction is now implemented. The signed install names
+up to 17 ordinary detached declaration texts. The proof guard checks each
+text digest against the canonical bytes in the signed semantic body, rejects
+extra texts, and validates every definition whole. The only JSON value places
+are the signed semantic and release values, so Core's input bound now matches
+the real submission. Native text retention carries the declarations from
+Rules to Directory before the grant request can leave Rules.
+
+The host profile permits at most 64 KiB per declaration and 256 KiB for the
+semantic proof, alongside the existing 4 MiB complete packet allowance. These
+are host admission limits, below the portable codec's limits. Directory
+retains a bounded catalog of sixteen roots, each with at most seventeen exact
+digest/text bindings. A pure locator exists only on rules5 and directory11.
+The scope's declaration reader checks the retained text and definition hashes
+and canonical bytes before returning it. Historical direct-definition reads
+keep their existing path. There is no remote or content-cache fallback in
+that reader and no change to a native judge or replay primitive.
+
+The native sequence is now admission, activation and checked declaration
+staging, Directory context, then the selected role additions. This makes
+context precede the grant request. The prior artificial early-reply fixture
+is replaced with the reachable ordered sequence. Original user genesis
+fields are validated before any grant. The signer is injected as opener;
+Directory will inject its actual destination later. No placeholder scope
+reference is treated as authority. The checked genesis fields remain in the
+native install record. Missing or malformed required genesis values refuse.
+
+The real workerd witness passes, first at `d6efeb` / session `55462` to
+`8472b9`, then with the paired altered-text control at `081015` / session
+`88761` to `b85f1a` (five cases over three changed files), and after genesis
+validation at `66a81d` / session `90689` to `f146f8` (three cases over two
+changed files). It creates actual register12/directory11/membership7/rules5
+scopes, seats the real admin, submits one signed install with two value
+places and detached texts, loses the successful admission answer, evicts
+Rules, and recovers the already marked attempt without a second send.
+The altered text is refused before any host/Git call. A first fixture run
+used an obsolete member revision; reading the actual expected revisions
+corrects setup without weakening the native revision checks.
+
+After recovery, the witness removes its private packet fixture, releases the
+native stage delivery and checks that Directory serves the exact declaration
+from retained native text even after Directory eviction. The real Membership
+adds the selected member action, and Rules reaches creation with exactly one
+install act and one admission outcome. Repository creation, Git objects,
+clock and the read-session inspector remain explicit fixtures. This stops
+before child creation and is not a complete-install or full replay-verifier
+claim. Five strengthened in-memory native cases pass (`f546cf`); Platform
+and Scope source/test typechecks pass. No full gate or Source review yet.

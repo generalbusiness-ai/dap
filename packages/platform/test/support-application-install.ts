@@ -11,6 +11,7 @@ import { platform, repositoryName, TRUSTED_APPLICATION_COHORT as C } from "../sr
 import { installing } from "./support-creation.ts";
 export class InstallNode extends Ledger {
   readonly authority;
+  texts: (digest: string) => number | undefined = () => undefined;
   constructor(readonly named: PlatformDefinition) {
     const supplied = platform(named)!;
     const checked = validateDefinition(supplied.data, PROPOSED_BOUNDS, RULE_PROFILES, { platform: true });
@@ -36,7 +37,7 @@ export function installGraph() {
   const allFacts = () => nodes.flatMap(node => node.entries.map(({ entry }, seq) => ({ fact: node.fact(seq), entry, under: node.under })));
   const send = (to: InstallNode, from: InstallNode, seq: number, n = 0, write = true) => {
     const { delivered, source } = sent(from, seq, n);
-    const judged = judgeDelivery(to.state, to.definition, delivered, { ...arriving(to, delivered, source, allFacts()), platform: to.authority });
+    const judged = judgeDelivery(to.state, to.definition, delivered, { ...arriving(to, delivered, source, allFacts()), platform: to.authority, texts: from.texts });
     if (write) to.take(judged);
     return judged;
   };

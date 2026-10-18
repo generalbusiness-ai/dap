@@ -22,6 +22,31 @@ export function readInstallAdditions(raw: unknown): InstallAdditions | null {
 }
 export const installGrantFields = {
   job: { type: "int", min: 0, max: Number.MAX_SAFE_INTEGER, required: true },
-  release: { type: "digest", required: true }, semantic: { type: "digest", required: true },
+  definition: { type: "digest", required: true }, release: { type: "digest", required: true }, semantic: { type: "digest", required: true },
   additions: { type: "text", max: INSTALL_ADDITIONS_BYTES, required: true },
 } as const;
+
+/** Existing detached-text inputs hold each declaration in native custody.
+ * The host profile lowers individual declarations to the native text bound. */
+export const INSTALL_DEFINITIONS = 17;
+export const INSTALL_DEFINITION_BYTES = 64 * 1024;
+export const INSTALL_SEMANTIC_BYTES = 256 * 1024;
+export const installDefinitionTextFields = Object.fromEntries(Array.from({ length: INSTALL_DEFINITIONS }, (_, index) => [
+  `definitionText${index}`, { type: "text" as const, max: INSTALL_DEFINITION_BYTES, detached: true as const, required: false },
+]));
+export const installDeclarationsType = { type: "list", max: INSTALL_DEFINITIONS, of: { type: "record", of: {
+  name: { type: "text", max: 64, required: true }, digest: { type: "digest", required: true }, text: { type: "digest", required: true },
+} } } as const;
+
+/** Pure, bounded locator for declaration texts retained by a new native
+ * install version. Historical versions expose no such locator. */
+export function installDefinitionText(state: Pick<import("@generalbusiness/dap-derive").StateView, "page">, digest: import("@generalbusiness/dap-contract").Digest,
+  itemType: "definition" | "application-catalog"): import("@generalbusiness/dap-contract").Digest | null {
+  const states = itemType === "definition" ? ["active"] : ["retained"];
+  for (const item of state.page(itemType, states, null, 16).items) {
+    const list = item.values["declarations"];
+    if (!Array.isArray(list) || list.length > INSTALL_DEFINITIONS) continue;
+    for (const part of list) if (isRecord(part) && part["digest"] === digest && typeof part["text"] === "string" && /^sha256:[0-9a-f]{64}$/.test(part["text"])) return part["text"] as import("@generalbusiness/dap-contract").Digest;
+  }
+  return null;
+}

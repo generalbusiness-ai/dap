@@ -476,7 +476,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   sitePublication(directory: unknown, repository: unknown) { return sitePublication(this.#store, this.#scope.pinned()?.named, directory, repository); }
   sitePublishedCommit(directory: unknown, repository: unknown, commit: unknown) { return sitePublishedCommit(this.#store, this.#scope.pinned()?.named, directory, repository, commit); }
   /** The bytes of one declaration this scope retains, for a child that is about to write its genesis (sections 7.2 and 9.2). */
-  declared(digest: Digest): string | null { this.#first(); return declaredBy(this.#store, digest); }
+  declared(digest: Digest): string | null { this.#first(); return declaredBy(this.#store, digest, this.#scope.pinned()?.named); }
   /** A detached text that a send of this scope's entry at `seq` names, for the scope that received that send (section 6.2). */
   text(seq: number, digest: Digest): string | null { this.#first(); return sentText(this.#store, seq, digest); }
 

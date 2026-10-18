@@ -2,9 +2,10 @@
  * exact release/publisher trust and native host support; it creates no scope,
  * grant, installation or content-store entry. It is no screen isolation. */
 import type { Bounds, Digest, KeyId } from "@generalbusiness/dap-contract";
-import { isDigest, isKeyId, isRecord, parseStrict, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isDigest, isKeyId, isRecord, parseStrict, utf8 } from "@generalbusiness/artroom-bytes";
 import { readApplicationPackage, type PackedApplication } from "@generalbusiness/artroom-client";
 import { validateDefinition } from "@generalbusiness/dap-derive";
+import { INSTALL_DEFINITION_BYTES, INSTALL_SEMANTIC_BYTES } from "@generalbusiness/dap-platform";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 
 /** This host's finite packet allowance, below the portable 16 MiB codec
@@ -40,7 +41,9 @@ export function readTrustedApplication(bytes: Uint8Array, release: Digest, trust
   // capability-bound enforcement. Native sends to the room destination remain
   // the existing runtime's factory/delivery work, not a new declared capability.
   if (packet.package.semantic.host.execution !== "recorded-do" || packet.package.semantic.host.profiles.some(profile => profile !== "restricted@1") || packet.package.semantic.capabilities.length > 0) return fail("unsupported-host");
+  if (utf8(canonicalize(packet.package.semantic)).length > INSTALL_SEMANTIC_BYTES) return fail("unsupported-definition");
   for (const part of packet.package.semantic.definitions) {
+    if (utf8(part.bytes).length > INSTALL_DEFINITION_BYTES) return fail("unsupported-definition");
     const checked = validateDefinition(parseStrict(part.bytes), bounds, RULE_PROFILES);
     if (!checked.ok || checked.definition.digest !== part.id) return fail("unsupported-definition");
   }

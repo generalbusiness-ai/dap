@@ -9,9 +9,9 @@ import { readApplicationTrust } from "../../src/applications/admission.ts";
 import { ApplicationContentStore, applicationReleaseKey } from "../../src/applications/content.ts";
 import type { OpenApplicationSource } from "../../src/applications/resolve.ts";
 const signer = secretSigner(new Uint8Array(32).fill(64)), utf8 = new TextEncoder();
-export async function applicationResolverFixture(format: "sha1" | "sha256", bytes?: Uint8Array) {
+export async function applicationResolverFixture(format: "sha1" | "sha256", bytes?: Uint8Array, roles: Readonly<Record<string, readonly string[]>> = {}) {
   const definition = definitionDigest(countingCommitments), packet = await packApplication({ name: "test.example.resolve", version: format, semantic: { v: 1, entry: definition,
-    definitions: [{ id: definition, bytes: canonicalize(countingCommitments) }], host: { execution: "recorded-do", profiles: ["restricted@1"] }, roles: {}, projections: {}, capabilities: [], predecessor: null },
+    definitions: [{ id: definition, bytes: canonicalize(countingCommitments) }], host: { execution: "recorded-do", profiles: ["restricted@1"] }, roles, projections: {}, capabilities: [], predecessor: null },
     presentation: { v: 1, entry: "index.html", assets: [{ path: "index.html", mediaType: "text/html", bytes: "VEVTVA" }], descriptions: {} } }, signer);
   const objects = new Map<string, ApplicationGitObject>();
   const add = async (type: string, data: Uint8Array) => {
