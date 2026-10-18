@@ -37,3 +37,5 @@ export type { Binding as RequestBinding, Phase as KeptRequestPhase, Envelope as 
 export type { OperationalApi, OperationalIncident, IncidentReference, RequestCorrelation, RequestCorrelations } from "./operational.ts";
 
 export * from "./application-route.ts";
+
+export * from "./application-install.ts";

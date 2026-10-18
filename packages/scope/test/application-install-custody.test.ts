@@ -14,6 +14,7 @@ import { canonicalize, isSeed, parseStrict, scopeIdOf, textDigest } from "@gener
 import { httpSource, verify } from "@generalbusiness/artroom-replay";
 import { TRUSTED_APPLICATION_COHORT as C, applicationPublicationOrigin, installedApplicationPublicationOrigin, platform } from "@generalbusiness/dap-platform";
 import { applicationScreenPath, readApplicationScreenAddress, readApplicationScreenContext } from "@generalbusiness/artroom-client/application";
+import { secretSigner, signedApplicationInstall } from "@generalbusiness/artroom-client";
 import nativeWorker, { outsideOf as hostOutside } from "../src/worker.ts";
 import { applicationHttpPeer } from "./support/application-http-peer.ts";
 import { applicationResolverFixture } from "./support/application-fixture.ts";
@@ -83,8 +84,10 @@ test.each(installations)("$name: one signed native install settles through Direc
     const refused = await life.wait(() => A.intent(rita, "install-application", { fields: { ...fields, definitionText0: textDigest(changed) } }));
     expect(await life.wait(() => A.stub.submit(refused, [], { values: [canonicalize(f.packet.package.semantic), canonicalize(f.packet.package.release)], texts: [changed] }))).toMatchObject({ answer: "refused", reason: "bad-field" });
     expect(fetchSends).toBe(0); expect(peer.ads()).toBe(0); expect(peer.wants).toEqual([]);
-    const signed = await life.wait(() => A.intent(rita, "install-application", { fields }));
-    const answer = await life.wait(() => A.stub.submit(signed, [], { values: [canonicalize(f.packet.package.semantic), canonicalize(f.packet.package.release)], texts: declarations.map(part => part.bytes) }));
+    const rulesAt = await life.wait(() => A.at());
+    const envelope = await life.wait(() => signedApplicationInstall(secretSigner(rita.secret), f.packet.bytes, { rules: rulesAt, uri: f.uri, release: f.packet.ids.release, roles: ["admin", "member"], values: parseStrict(specimen.values) as Record<string, import("@generalbusiness/dap-contract").FieldValue> }, { now: life.now() }));
+    const { signed } = envelope;
+    const answer = await life.wait(() => A.stub.submit(signed, [], envelope.beside));
     expect(answer).toMatchObject({ answer: "accepted" });
     if (answer.answer !== "accepted") throw Error("Original signed install must be recorded.");
     const job = answer.receipt.fact.seq;

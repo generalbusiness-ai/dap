@@ -586,3 +586,22 @@ output was unavailable after context recovery, so this one case was rerun
 with a captured log. Scope source/test typechecking passes. The completed
 install still owes SDK/CLI/MCP flow, fresh-room selection, browser joining,
 legacy-host removal, its complete gate and Source review.
+
+
+## SDK install envelope
+
+`signedApplicationInstall` verifies owned package bytes against an independent
+expected release, validates the immutable URI and explicit role selection,
+and asks for one member signature. It carries the semantic and signed release
+values plus detached definition texts beside that intent. Screen bytes are
+excluded. Inputs are owned before the signer awaits; malformed bytes, URI,
+roles and accessor inputs fail before signing. The caller keeps this exact
+envelope for submission and settlement. No host trust or native judgment is
+implied by client preparation.
+
+Nine package/SDK cases pass (`9044b9`, exit 0). The existing native recovery
+witness now submits SDK-created envelopes for both maintained definitions;
+all seven cases pass (`4dae5f`, session `78517`, terminal `c963e5`, exit 0).
+The captured log is `/tmp/artroom-m1-sdk-native-install-20261018.log`. Client
+and Scope test typechecks pass. CLI/MCP install and browser integration remain
+under this open Source child.

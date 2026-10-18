@@ -3,8 +3,8 @@
  * are separate obligations of check and the host-side slice. */
 import { expect, test } from "vitest";
 import type { DeclaredDefinition } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, definitionDigest, utf8 } from "@generalbusiness/artroom-bytes";
-import { ApplicationPackageError, packApplication, readApplicationPackage, readApplicationReleaseProof, secretSigner, type ApplicationDefinition, type ApplicationPackageInput, type PackedApplication } from "../src/index.ts";
+import { b64url, canonicalize, definitionDigest, newIncarnation, scopeIdOf, textDigest, utf8, verifySignedIntent } from "@generalbusiness/artroom-bytes";
+import { ApplicationPackageError, packApplication, readApplicationPackage, readApplicationReleaseProof, secretSigner, signedApplicationInstall, type ApplicationDefinition, type ApplicationPackageInput, type PackedApplication } from "../src/index.ts";
 
 const signer = secretSigner(new Uint8Array(32).fill(7));
 type Mutable<T> = T extends readonly (infer V)[] ? Mutable<V>[] : T extends object ? { -readonly [K in keyof T]: Mutable<T[K]> } : T;
@@ -144,4 +144,42 @@ test("an install proof verifies exact semantics and signed release without prese
   let invoked = 0;
   const getter = Object.defineProperty({ ...packet.package.semantic }, "roles", { enumerable: true, get() { invoked++; return {}; } });
   refusal(() => readApplicationReleaseProof(getter, signed, packet.ids.release)); expect(invoked).toBe(0);
+});
+
+
+// Invariant: the SDK signs one owned native envelope with exact proof/text
+// custody and explicit role selection, before any transport or host admission.
+test("native install signing owns inputs and excludes screen bytes from its retry envelope", async () => {
+  const packet = await packApplication(input(), signer), bytes = packet.bytes.slice();
+  const options = { rules: { scope: scopeIdOf({ v: 1, kind: "rules", definition: `sha256:${"a".repeat(64)}`, creator: null, cause: `sha256:${"b".repeat(64)}`, ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(1)), kind: "rules" }, uri: `git+https://example.test/project.git/@${"c".repeat(40)}/application.dap.json`, release: packet.ids.release, roles: ["member"], values: { title: "Original" } } as any;
+  const rules = structuredClone(options.rules);
+  let calls = 0, release!: () => void;
+  const held = new Promise<void>(resolve => { release = resolve; });
+  const pending = signedApplicationInstall({ key: signer.key, sign: async value => { calls++; await held; return signer.sign(value); } }, bytes, options, { now: 1_790_000_000_000 });
+  options.roles.push("admin"); options.values.title = "Changed"; options.rules.scope = "d".repeat(64); bytes.fill(0);
+  release(); const envelope = await pending;
+  expect(calls).toBe(1); expect(verifySignedIntent(envelope.signed)).toBe(true);
+  expect(envelope.signed.intent).toMatchObject({ to: rules, kind: "install-application", fields: { roles: ["member"], values: '{"title":"Original"}', release: packet.ids.release, semantic: packet.ids.semantic } });
+  expect(envelope.beside.values).toEqual([canonicalize(packet.package.semantic), canonicalize(packet.package.release)]);
+  expect(envelope.beside.texts).toEqual(packet.package.semantic.definitions.map(part => part.bytes));
+  for (const [index, text] of envelope.beside.texts!.entries()) expect(envelope.signed.intent.fields[`definitionText${index}`]).toBe(textDigest(text));
+  expect(envelope.ids).toEqual(packet.ids); expect(envelope.beside).not.toHaveProperty("presentation");
+  expect(canonicalize(envelope)).not.toContain("export const value = 1");
+});
+
+test("invalid package, URI, role selection and accessor inputs never ask the install key to sign", async () => {
+  const packet = await packApplication(input(), signer);
+  const options = { rules: { scope: scopeIdOf({ v: 1, kind: "rules", definition: `sha256:${"a".repeat(64)}`, creator: null, cause: `sha256:${"b".repeat(64)}`, ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(1)), kind: "rules" }, uri: `git+https://example.test/project.git/@${"c".repeat(40)}/application.dap.json`, release: packet.ids.release, roles: [], values: {} } as any;
+  let calls = 0, getters = 0; const key = { key: signer.key, sign: async (bytes: Uint8Array) => { calls++; return signer.sign(bytes); } };
+  for (const [bytes, altered] of [
+    [changed(packet, value => { value.presentation.assets[0].bytes = ""; }), options],
+    [packet.bytes, { ...options, release: `sha256:${"0".repeat(64)}` }],
+    [packet.bytes, { ...options, uri: options.uri.replace("c".repeat(40), "main") }],
+    [packet.bytes, { ...options, roles: ["admin", "admin"] }],
+    [packet.bytes, { ...options, roles: ["owner"] }],
+    [packet.bytes, Object.defineProperty({ ...options }, "values", { enumerable: true, get() { getters++; return {}; } })],
+  ] as const) await expect(signedApplicationInstall(key, bytes, altered)).rejects.toBeInstanceOf(ApplicationPackageError);
+  expect(calls).toBe(0); expect(getters).toBe(0);
+  const explicitNone = await signedApplicationInstall(key, packet.bytes, options);
+  expect(explicitNone.signed.intent.fields["roles"]).toEqual([]); expect(calls).toBe(1);
 });
