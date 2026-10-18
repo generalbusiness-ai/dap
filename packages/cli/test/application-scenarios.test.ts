@@ -47,9 +47,22 @@ function scenario(): any {
 const refused = (work: () => Promise<unknown>): Promise<unknown> => work().then(() => "accepted", error => error);
 
 test("data scenarios judge explicit grants, reuse saved signatures, assert native state and require replay", async () => {
-  const first = await runApplicationScenario(await packet(), scenario());
-  expect(first).toMatchObject({ name: "counter-standard", steps: 8, authority: "scripted-test-grants", replay: { why: null, report: { mode: "replay", result: "consistent", target: { seq: 2 } } } });
-  expect(first.replay.report.trusts.join(" ")).toContain("authority");
+  const input = scenario(); input.actors.agent.principal = "controller"; input.actors.outsider.principal = "controller";
+  const submit = LocalApplicationScope.prototype.submit; let authority: unknown;
+  const spy = vi.spyOn(LocalApplicationScope.prototype, "submit").mockImplementation(async function (this: LocalApplicationScope, signed, beside) {
+    const answer = await submit.call(this, signed, beside);
+    if (signed.intent.kind === "join" && answer.answer === "accepted") {
+      const page = await this.source.page(this.at.scope, answer.receipt.fact.seq, { entries: 1, bytes: 65536 });
+      if (page.ok) authority = JSON.parse(page.page.entries[0]!.bytes).input.authority;
+    }
+    return answer;
+  });
+  try {
+    const first = await runApplicationScenario(await packet(), input);
+    expect(first).toMatchObject({ name: "counter-standard", steps: 8, authority: "scripted-test-grants", replay: { why: null, report: { mode: "replay", result: "consistent", target: { seq: 2 } } } });
+    expect(first.replay.report.trusts.join(" ")).toContain("authority");
+    expect(authority).toMatchObject([{ subject: { member: "@agent" }, principal: { member: "@controller" }, actions: ["counting.join"] }]);
+  } finally { spy.mockRestore(); }
 });
 
 test("a scenario selects only a verified closure definition as its explicit local root", async () => {
@@ -156,6 +169,8 @@ test("scenario typos, empty assertions, wrong outcomes, malformed actors and mis
     value => { value.steps[0].expect = { answer: "refused" }; },
     value => { value.actors.agent.seed = value.actors.controller.seed; },
     value => { value.actors.agent.actions = ["counting.join", "counting.join"]; },
+    value => { value.actors.agent.principal = "missing"; },
+    value => { value.actors.agent.principal = null; },
     value => { value.founding.fields.opener = { $member: "missing" }; },
     value => { value.steps = []; },
     value => { value.steps = Array.from({ length: 257 }, () => ({ assert: { item: 0, values: { target: 10 } } })); },

@@ -31,7 +31,7 @@ export function supportsLocalSqlite(version: string): boolean {
 function reference(kind: ScopeKind): ScopeRef {
   return { scope: scopeIdOf({ v: 1, kind, definition: `sha256:${"0".repeat(64)}`, creator: null, cause: `sha256:${"1".repeat(64)}`, ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(2)), kind };
 }
-interface Actor { signer: Signer; member: MemberRef; actions: string[] }
+interface Actor { signer: Signer; member: MemberRef; actions: string[]; principal: string | null }
 export interface ScenarioOwnerRecord { readonly label: "non-native-scenario-owner"; readonly owner: string; readonly command: FactRef; readonly outcome: "confirmed" | "refused" | "unknown" }
 export interface ApplicationScenarioResult { readonly name: string; readonly definition: Digest; readonly steps: number; readonly replay: Verification; readonly authority: "scripted-test-grants"; readonly ownerRecords: readonly ScenarioOwnerRecord[] }
 
@@ -52,7 +52,7 @@ export async function runApplicationScenario(packet: PackedApplication, value: u
   let scope: LocalApplicationScope | null = null;
   try {
     for (const [name, actor] of Object.entries(given)) {
-      label(name); const body = object(actor, ["seed", "member", "actions"]);
+      label(name); const body = object(actor, ["seed", "member", "actions"], ["principal"]);
       if (typeof body["seed"] !== "string" || !/^[0-9a-f]{64}$/.test(body["seed"])) return fail("Each scenario actor needs an explicit public TEST seed (64 lowercase hex digits).");
       if (typeof body["member"] !== "string" || !/^@[a-z][a-z0-9-]{0,31}$/.test(body["member"])) return fail("Each TEST actor needs an explicit member handle.");
       const actions = body["actions"];
@@ -60,9 +60,10 @@ export async function runApplicationScenario(packet: PackedApplication, value: u
       const seed = Uint8Array.from(body["seed"].match(/../g)!, byte => Number.parseInt(byte, 16)); seeds.push(seed);
       const signer = secretSigner(seed);
       if (keys.has(signer.key)) return fail("TEST actor keys must be distinct."); keys.add(signer.key);
-      actors.set(name, { signer, member: { membership: reference("membership"), member: body["member"] as MemberId }, actions: [...actions] });
+      actors.set(name, { signer, member: { membership: reference("membership"), member: body["member"] as MemberId }, actions: [...actions], principal: Object.hasOwn(body, "principal") ? label(body["principal"]) : null });
     }
     const actor = (name: unknown): Actor => actors.get(label(name)) ?? fail("The scenario names an unknown TEST actor.");
+    for (const who of actors.values()) if (who.principal !== null) actor(who.principal);
     let nodes = 0;
     const resolve = (value: unknown, depth = 0): unknown => {
       if (++nodes > 10_000 || depth > 32) return fail("Scenario values exceed their node/depth allowance.");
@@ -87,7 +88,7 @@ export async function runApplicationScenario(packet: PackedApplication, value: u
     const founding = object(scenario["founding"], ["actor", "fields"]);
     const signed = await signedIntent(actor(founding["actor"]).signer, { to: null, kind: "found", fields: fields(founding["fields"]) }, { now: timeMs(time)! });
     const runtime = await import("./application-local.ts");
-    const held: LocalActor[] = [...actors.values()].map(actor => ({ key: actor.signer.key, member: actor.member, actions: actor.actions }));
+    const held: LocalActor[] = [...actors.values()].map(who => ({ key: who.signer.key, member: who.member, actions: who.actions, principal: who.principal === null ? null : actor(who.principal).member }));
     scope = await runtime.LocalApplicationScope.found(packet, signed, held, time, definition).catch(error => {
       if (error instanceof runtime.LocalApplicationError) return fail(`${name}: ${error.message}`);
       throw error;

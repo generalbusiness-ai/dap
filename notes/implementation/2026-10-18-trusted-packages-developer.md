@@ -428,6 +428,32 @@ the intended assertion and restores source (`5b52e9`/`43c2fb`; see
 No native seed, closure, genesis, judge or replay
 implementation changed. No gate or publication ran.
 
+## Explicit TEST principals
+
+Scenario actors may name another explicitly listed TEST actor as their
+`principal`. Omission means no principal. The scenario runner resolves the
+named member into its scripted grant; it adds no actions from the principal
+and does not infer a role or membership delegation. Unknown names, null and
+malformed labels refuse. This lets the Grow scenario name each simulated
+agent's controller while preserving the stated fixture-authority boundary.
+
+The existing native Counter case now reads its accepted join entry through
+the actual SQLite history source and checks the recorded grant: subject is
+the agent, principal is the named controller, and actions remain only
+counting.join. An outsider with the same principal and no actions is still
+refused. Replay remains consistent with authority explicitly trusted.
+
+The first control attempt (`d4c4a2`/`44c100`, exit 2) had no passing
+baseline. Its diagnostic run (`69f020`/`df63ff`, exit 1) exposed a
+mistaken fixture expectation: Counter's participant agent party has
+`author: false`, so its item attribution remains empty. The corrected
+witness reads the native recorded grant instead of changing that application
+or native attribution behavior. Removing the principal now distinguishes
+the intended grant assertion (`79cd96`/`4e8dd0`; see
+`/tmp/artroom-m1-control-scenario-principal-fixed-20261018.log`).
+The normal run has eight passes and the fault one intended assertion failure;
+source is restored. No native authority or attribution implementation changed.
+
 ## Remaining developer work
 
 Shared browser joining, storage and request custody; browser bundling;
