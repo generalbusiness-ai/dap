@@ -32,7 +32,8 @@ export async function applicationCounterNavigationPacket2(journal = false) {
       participants: { item: "participant", read: "many", states: ["active", "inactive", "removed"], limit: 16, fields: {} },
     } }),
   } }, presentation: { ...presentation, views: {
-    ...presentation.views, board: { ...board, back: "record" }, record: { ...board, kind: "record", display: "fullscreen", back: "board" },
+    ...presentation.views, board: { ...board, back: "detail-record" }, record: { ...board, kind: "record", display: "fullscreen", back: "board" },
+    "detail-record": { ...board, kind: "record", display: "fullscreen", back: "board" },
     people: { ...board, kind: "carousel", projection: "people", item: "participants", title: "id", summary: "state", facts: ["revision"], acts: [], back: null,
       context: "Participant {id} v{revision}", fallback: "Participant {id}: {state}" },
   } } }, signer);

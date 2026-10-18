@@ -542,3 +542,22 @@ Report and captures: `/tmp/artroom-m2a-declared-carousel-browser-20261018/`.
 The MCP source/test typecheck passes. The generated resources are unchanged.
 Surface rendering, cross-view selection mapping and maintained application
 migration remain owed, along with the final gate, review and landing.
+
+### Opening names do not replace mounted-view operations
+
+The browser and host now share `viewToolName`. Simple declared names such
+as `board` retain `view_board`. Reserved, punctuated and long names use a
+bounded readable prefix and a digest of the exact spelling. Consequently
+`alpha-beta`, `alpha.beta`, `alpha_beta`, `read`, `act` and a 128-character
+name produce separate opening tools without replacing `view_read` or
+`view_act`. Legacy journey names retain their existing mapping.
+
+The actual tool boundary opens each case under its exact declared screen.
+Eight focused cases pass across declared views and package-checked resources
+(`4288`, terminal `7953fe`). Browser/test typechecks pass. The browser also
+navigates to the punctuated `detail-record` screen and back through the same
+shared mapping at both widths. Seven targeted cases pass (`75732`, terminal
+`c98c7a`), with the final record captures visually inspected. Report:
+`/tmp/artroom-m2a-declared-tool-names-browser-20261018/`. The resources were
+regenerated from their actual browser inputs. No final gate or delivery is
+claimed.

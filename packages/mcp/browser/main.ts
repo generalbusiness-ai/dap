@@ -1,5 +1,6 @@
 import { AppBridge, AppToolError } from "./bridge.ts";
 import type { Display, PageKind } from "../src/views/types.ts";
+import { viewToolName } from "../src/views/names.ts";
 import "./style.css";
 
 const root = document.querySelector<HTMLElement>("#card-root")!;
@@ -114,7 +115,7 @@ async function openDeclared(screen: string, items?: Readonly<Record<string, numb
   const key = crypto.randomUUID();
   busy = true; notice = ""; render();
   try {
-    const opening = await bridge.tool(`view_${screen.replaceAll("-", "_").replaceAll(".", "_")}`, { view: key, ...(items ? { items } : {}) });
+    const opening = await bridge.tool(viewToolName(screen, true), { view: key, ...(items ? { items } : {}) });
     if (opening["view"] !== key) throw Error("The declared opening did not retain its view key.");
     view = key; display = null;
   } finally { busy = false; render(); }

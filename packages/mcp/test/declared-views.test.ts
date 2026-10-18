@@ -9,6 +9,8 @@ import { applicationCounterPacket2, applicationCounterNavigationPacket2 } from "
 import { DeclaredViewSource } from "../src/views/declared.ts";
 import { ViewSessions } from "../src/views/session.ts";
 import type { CallResult } from "../src/service.ts";
+import { viewTools } from "../src/views/tools.ts";
+import { viewToolName } from "../src/views/names.ts";
 const scope: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "lane" };
 
 async function fixture(navigation = false) {
@@ -135,4 +137,25 @@ test("declared controls capture different subject sets and repeat secondary revi
   present = false;
   const incomplete = await source.read({ screen: "board", page: "item", position: 0 });
   expect(incomplete.card?.actions.map(action => action.id)).toEqual(["pause"]);
+});
+
+// Invariant: lawful punctuation, long names and read/act never shadow a
+// mounted-view operation or another view's opening.
+test("declared opening tool names preserve exact names without reserved-name collisions", async () => {
+  const names = ["alpha-beta", "alpha.beta", "alpha_beta", "read", "act", "A".repeat(128), "board"];
+  const screens = names.map(name => ({ name, resource: `ui://fixture/${name}` }));
+  const sessions = new ViewSessions({ declared: true, read: async query => ({ status: "empty", count: 0, position: 0, fallback: query.screen }) },
+    { call: async () => { throw Error("No read adapter."); } }, async () => { throw Error("No act."); }, async () => { throw Error("No original."); });
+  const tools = viewTools(sessions, screens), openings = names.map(name => viewToolName(name, true));
+  expect(new Set(openings).size).toBe(names.length);
+  expect(openings.every(name => /^[A-Za-z0-9_-]{1,128}$/.test(name) && name !== "view_read" && name !== "view_act")).toBe(true);
+  expect(viewToolName("board", true)).toBe("view_board");
+  expect(viewToolName("needs-you")).toBe("view_needs_you");
+  for (const [index, name] of names.entries()) {
+    const opened = await tools[openings[index]!]!.run({ view: `opening-${index}` });
+    expect(opened.structuredContent["screen"]).toBe(name);
+    expect(opened.content[0]!.text).toBe(name);
+  }
+  expect(tools["view_read"]?.tool._meta?.["ui"]).toEqual({ visibility: ["app"] });
+  expect(tools["view_act"]?.tool._meta?.["ui"]).toEqual({ visibility: ["app"] });
 });

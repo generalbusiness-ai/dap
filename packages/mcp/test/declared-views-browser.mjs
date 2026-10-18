@@ -54,7 +54,7 @@ try {
     assert.equal(proof.contexts.at(-1).structuredContent.note, 'Board 2 v1');
     await page.screenshot({ path: join(out, `declared-${width}.png`) });
     await app.getByRole('button', { name: /Back/ }).click();
-    await page.waitForFunction(() => window.proof.mode === 'fullscreen' && window.proof.contexts.at(-1)?.structuredContent.screen === 'record');
+    await page.waitForFunction(() => window.proof.mode === 'fullscreen' && window.proof.contexts.at(-1)?.structuredContent.screen === 'detail-record');
     await app.getByRole('heading', { name: 'open', exact: true }).waitFor();
     assert.equal(await app.getByRole('link').count(), 0, 'record opens directly in detail');
     await contained(app);
@@ -64,7 +64,7 @@ try {
     await page.waitForFunction(() => window.proof.mode === 'inline' && window.proof.contexts.at(-1)?.structuredContent.screen === 'board');
     await contained(app);
     const navigation = await page.evaluate(() => window.proof.contexts.map(context => context.structuredContent.screen));
-    assert.ok(navigation.includes('record'));
+    assert.ok(navigation.includes('detail-record'));
     assert.deepEqual(errors, []);
     report.cases.push({ width, measured, contextCount: navigation.length, appOnlyDenial: denial.error.code, navigation });
     await page.close();

@@ -3,6 +3,7 @@ import type { CallResult } from "../service.ts";
 import { VIEW_KINDS } from "./resources.ts";
 import { ViewError, type ViewSessions } from "./session.ts";
 import type { PageKind } from "./types.ts";
+import { viewToolName } from "./names.ts";
 
 type Args = Record<string, unknown>;
 const key = { type: "string", minLength: 1, maxLength: 128 };
@@ -50,7 +51,7 @@ export function viewTools(sessions: ViewSessions, screens?: readonly { name: str
     };
   };
   for (const { name: screen, resource } of screens ?? VIEW_KINDS.map(name => ({ name, resource: `ui://dap/${name}` }))) {
-    const name = `view_${screen.replaceAll("-", "_").replaceAll(".", "_")}`;
+    const name = viewToolName(screen, screens !== undefined);
     if (Object.hasOwn(tools, name) || name === "view_read" || name === "view_act") throw new Error("Declared view tool names collide.");
     add(name, `Open ${screen} as a compact card. Choose and keep a view key for this opening. The tool text exposes only ${screens ? "the declared fallback and identity" : "identity, exact revision, screen and counts"}. Private card details are fetched separately by the app. Without views, use inspect and the ordinary read tools for the named subject.`, { view: key, subject: { type: "string", maxLength: 256 }, ...(screens ? { items: { type: "object", maxProperties: 8, propertyNames: { pattern: "^[A-Za-z][A-Za-z0-9_-]{0,63}$" }, additionalProperties: { type: "integer", minimum: 0 } } } : {}) }, ["view"], false, resource, async (args) => {
       const subject = args["subject"] === undefined ? undefined : string(args, "subject");
