@@ -489,10 +489,99 @@ No package, lockfile or native runtime changed; no install or gate ran.
 Generated application assets will be rebuilt with the complete package
 conversion and its rendered browser evidence.
 
+## Shared device generation and private browser slots
+
+The client now generates a native non-extractable Ed25519 device pair through
+`generateBrowserDeviceKey`, returning its public name and opaque native key
+objects. It exports only the raw public key while deriving that name, then
+admits the private key through the existing stored-key signer. It stores,
+enrolls and sends nothing. Lending delegates generation to it while keeping
+its concrete DOM types and its existing identity/key/storage checks.
+
+`browserPrivateSlots` supplies bounded host-owned database, store and lock
+names, IndexedDB transaction commits and Web Locks serialization. It owns a
+save's structured-cloneable value before waiting for the database to open.
+Write failures abort the transaction. Callers still validate identities and
+values, choose namespaces and hold the lock around read/compare/write
+sequences. Lending preserves its existing database/store/lock names and slot
+keys, so existing records need no migration. Its remembered device, kept join
+and act stores now delegate to these shared primitives. Session tokens are
+not added to storage.
+
+These are trusted-host primitives, not a presentation isolation boundary.
+Counter's separate epoch store and stricter attempt journal remain unchanged.
+The new SDK module declares only the narrow browser operations it uses, so
+the client still requires no DOM or Workers type library. Public consumers
+see opaque native keys; Lending adapts these to its existing browser types.
+The initial opaque-key type alias broke one browser witness's DOM metadata
+read (`c2ed1c`, exit 1). Keeping the app's concrete adapter fixes the
+typecheck without weakening native key admission.
+
+Two actual Node WebCrypto cases pass (`1b830f`, then
+`a43481`, exit 0): generated/restored keys sign original bytes, the public
+binding verifies, private export refuses, and forged/extractable/mismatched
+stored keys refuse. A generation control changing non-extractable to
+extractable distinguishes the intended assertion and restores source
+(`d95693`, exit 0). Client source/test and Lending browser typechecks pass
+(`791a44`, `781e96`, `a887c4`, `6a77b5`, `e546ed`,
+`125961`). No dependency or lockfile changed and no package was installed.
+
+### Native browser witness
+
+The flow is: mount a device, lose a submit reply, reload, read/check the
+kept request, serialize two tabs, then Continue the exact original request.
+This uses the existing Lending storage witness through the real current
+source, plus a direct caller-mutation check on the shared slots.
+
+The Browser plugin and its browser skill are absent. Following the frontend
+testing skill, the run uses cached, pinned Playwright 1.63.0 and Chromium
+153.0.8010.12 in a fresh temporary profile, against
+`http://127.0.0.1:5197/`. The scratch fixture and screenshots are outside
+the repository. The first sandboxed server bind failed EPERM (`c0ed74`);
+the sandboxed browser launch failed macOS bootstrap (`d0928d`). The
+local-only server and temporary test browser then ran with the required
+execution permission. Neither failure is a browser pass.
+
+The first actual browser run passes (`2c26a3`/`dd2391`). A final
+normal run also passes (`d6ce77`, exit 0), with matching output under
+`/tmp/artroom-m1-browser-slots-20261018/normal/`:
+
+| Check | Result |
+|---|---|
+| Intended URL/title and meaningful content | Pass |
+| Framework overlay and relevant console errors | None |
+| Desktop 960 by 720 and mobile 390 by 844 screenshots | Inspected |
+| Actual IndexedDB key save/reload | Same public key; private key non-extractable |
+| Actual retained-envelope reload | Same hash and valid signature |
+| Check after reload | Unknown, zero submits |
+| Two tabs using the same Web Lock | Second waits until release |
+| Explicit Continue | One submit of the original envelope |
+| Caller mutation while save opens the database | Stored original value |
+
+Transport, lost-reply and recorded-receipt answers are explicitly scripted.
+This proves the browser primitives and retained-envelope flow, not native
+HTTP acceptance, enrollment, a live room or production screens.
+
+A targeted browser control removes the owned input copy. The native browser
+assertion then sees changed instead of original (`61c558`/`021a11`,
+control exit 0), and the server/browser close before the source is restored.
+The original baseline was the preceding successful browser run. The scratch
+harness initially reused screenshot paths between normal and control runs;
+the final normal run above puts its matching screenshots/result hashes in a
+separate directory. Earlier overwritten screenshots are not its evidence.
+The normal images show the lost-reply state and the saved-original value;
+they are fixture UI, not proposed application design.
+
+Harness, result, control log and PNGs are under
+`/tmp/artroom-m1-browser-slots-20261018/`; terminal logs use
+`/tmp/artroom-m1-browser-slots-`. Final server handle 64409 was stopped
+and followed to terminal exit 143 (`ada233`); no dev server or browser
+remains live. No gate, publication, install or deployment ran.
+
 ## Remaining developer work
 
-Shared browser joining, storage and request custody; browser bundling;
-new/dev; Counter/Lending package
+Shared browser joining and Counter storage/custody migration; browser
+bundling; new/dev; Counter/Lending package
 conversion; and the matching browser evidence remain due. Generated
 application asset modules have not been rebuilt for this source checkpoint;
 the complete package conversion will replace their host composition.

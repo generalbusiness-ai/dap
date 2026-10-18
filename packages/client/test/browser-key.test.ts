@@ -3,7 +3,7 @@
 import { webcrypto } from "node:crypto";
 import { expect, test } from "vitest";
 import { keyIdOf, verify } from "@generalbusiness/artroom-bytes";
-import { signedIntent, storedWebCryptoSigner } from "../src/index.ts";
+import { generateBrowserDeviceKey, signedIntent, storedWebCryptoSigner } from "../src/index.ts";
 
 async function key(extractable = false) {
   const pair = await webcrypto.subtle.generateKey("Ed25519", extractable, ["sign", "verify"]);
@@ -15,7 +15,10 @@ async function key(extractable = false) {
 // A restored native non-extractable key signs existing intent bytes; the
 // public API gives out only its public name and signing operation.
 test("a structured-cloned stored key signs the original bytes under its actual public name", async () => {
-  const held = await key(), restored = structuredClone(held.pair.privateKey);
+  const generated = await generateBrowserDeviceKey().then(value => ({ ok: true, value } as const), () => ({ ok: false } as const));
+  expect(generated.ok).toBe(true);
+  if (!generated.ok) return;
+  const held = generated.value, restored = structuredClone(held.pair.privateKey);
   const signer = storedWebCryptoSigner(held.publicKey, restored);
   expect(Object.keys(signer)).toEqual(["key", "sign"]);
   const bytes = new TextEncoder().encode("original stored-key message"), original = new Uint8Array(bytes);
@@ -25,7 +28,7 @@ test("a structured-cloned stored key signs the original bytes under its actual p
   expect(verify(held.publicKey, signature, bytes)).toBe(false);
   const signed = await signedIntent(signer, { to: null, kind: "found" }, { now: 0 });
   expect(signed.intent.actor).toBe(held.publicKey);
-  await expect(webcrypto.subtle.exportKey("pkcs8", restored)).rejects.toThrow();
+  await expect(webcrypto.subtle.exportKey("pkcs8", restored as never)).rejects.toThrow();
 });
 
 // Plausible corrupt storage and metadata shadows must not turn an extractable

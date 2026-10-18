@@ -9,9 +9,9 @@
  * it stays in this origin's private storage and is cleared once the join is settled.
  */
 import type { KeyId, MemberId, Receipt, ScopeRef, Summary } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, intentDigest, keyIdOf, timeMs, timeOf } from "@generalbusiness/artroom-bytes";
+import { b64url, canonicalize, intentDigest, timeMs, timeOf } from "@generalbusiness/artroom-bytes";
 import { ScopeHandle, httpTransport, invitationOf, requestSession, signedIntent, signerSessionRequest, wellFormedInvitation,
-  storedWebCryptoSigner, type Fetch, type InvitationLink, type Signer } from "@generalbusiness/artroom-client";
+  storedWebCryptoSigner, generateBrowserDeviceKey, type Fetch, type InvitationLink, type Signer } from "@generalbusiness/artroom-client";
 import { LENDING_DEFINITION } from "../pin.ts";
 import { memberForKey } from "./model.ts";
 import { advance, envelopeKey, validKept, type Binding, type CustodyLock, type Envelope, type Kept, type KeptStore, type LendingIdentity, type Ports } from "./custody.ts";
@@ -21,15 +21,10 @@ export const ROOM_MEMBERSHIP = "platform:membership@4";
 
 /** A device key that WebCrypto holds. `pair` can be stored in IndexedDB as it is; its private half is not extractable. */
 export interface DeviceKey { publicKey: KeyId; pair: CryptoKeyPair }
-/** The WebCrypto calls used here, in this file's own terms, so that it reads the same under every runtime's types. */
-interface Subtle {
-  generateKey(algorithm: { name: string }, extractable: boolean, usages: readonly string[]): Promise<unknown>;
-  exportKey(format: "raw", key: unknown): Promise<ArrayBuffer>;
-}
-const subtle = (): Subtle => crypto.subtle as unknown as Subtle;
 export async function newDeviceKey(): Promise<DeviceKey> {
-  const pair = await subtle().generateKey({ name: "Ed25519" }, false, ["sign", "verify"]) as CryptoKeyPair;
-  return { publicKey: keyIdOf(new Uint8Array(await subtle().exportKey("raw", pair.publicKey))), pair };
+  // The browser supplies the concrete platform types for the SDK's opaque
+  // native key objects. Identity and storage admission still happen here.
+  return await generateBrowserDeviceKey() as DeviceKey;
 }
 export function deviceSigner(device: DeviceKey): Signer {
   return storedWebCryptoSigner(device.publicKey, device.pair.privateKey);

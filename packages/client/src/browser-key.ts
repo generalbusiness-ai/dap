@@ -1,10 +1,25 @@
 /** A signer over an existing browser-held key, including one restored from
  * IndexedDB. The application still owns scope, member and epoch validation. */
 import type { KeyId } from "@generalbusiness/dap-contract";
-import { b64url, isKeyId, verify } from "@generalbusiness/artroom-bytes";
+import { b64url, isKeyId, keyIdOf, verify } from "@generalbusiness/artroom-bytes";
 import type { Signer } from "./intent.ts";
 
 const unavailable = (): never => { throw new Error("A browser-held non-extractable Ed25519 signing key is required."); };
+/** Opaque native key objects are structured-cloneable by the platform. The
+ * client needs no DOM/Workers type library and exports no private bytes. */
+export interface BrowserDeviceKey { readonly publicKey: KeyId; readonly pair: { readonly publicKey: unknown; readonly privateKey: unknown } }
+/** Generate a device key locally. Storage, admission and identity binding
+ * belong to the caller; this operation performs no network or enrollment. */
+export async function generateBrowserDeviceKey(): Promise<BrowserDeviceKey> {
+  const subtle = crypto.subtle as {
+    generateKey(algorithm: { name: string }, extractable: boolean, usages: readonly string[]): Promise<{ publicKey: unknown; privateKey: unknown }>;
+    exportKey(format: "raw", key: unknown): Promise<ArrayBuffer>;
+  };
+  const pair = await subtle.generateKey({ name: "Ed25519" }, false, ["sign", "verify"]);
+  const publicKey = keyIdOf(new Uint8Array(await subtle.exportKey("raw", pair.publicKey)));
+  storedWebCryptoSigner(publicKey, pair.privateKey);
+  return { publicKey, pair };
+}
 /** Use native accessors so an own property cannot disguise an extractable
  * key. The native getter also rejects plain objects that copy key metadata. */
 function attribute(key: unknown, name: string): unknown {
