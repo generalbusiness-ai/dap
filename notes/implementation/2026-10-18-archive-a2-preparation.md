@@ -43,6 +43,54 @@ replay must instead ship in the public SDK now, the publication boundary
 needs a separate decision; an unpublished runtime dependency is not an
 acceptable substitute.
 
+## Concrete API and failure proposal
+
+Checker consultations `85143d73` and `f2b69d75` support the boundary above,
+subject to planner disposition. The proposed paths are:
+
+| Path | Responsibility |
+|---|---|
+| `packages/git/src/journal-reader.ts` | A bounded, explicit-format archive reader over the A1 object port and parsers; no replay import. |
+| `packages/git/src/journal-local.ts` | Node-only, read-only local Git plumbing with bounded output and process lifetime; no clone path checkout or lazy network fetch. |
+| `packages/replay/src/archive.ts` | Portable `ArchiveReadPort`, `archiveSource` and `verifyArchive` adaptation and result types; no Git or Node import. |
+| `packages/replay/src/git.ts` | Source-only Node composition exposing `gitSource(directory)` through a precisely excluded `./git` source export. |
+| `packages/replay/src/bin.ts` | Supplies the Node composition to the portable command's injected archive/file ports. |
+
+Only replay's `src/git.ts` and existing `src/bin.ts` are proposed Node-only
+production inputs. Any further helper needs an explicit named exclusion;
+there is no directory-wide exception. Git-owned Node code stays in Git's
+Node subpath. The portable root must not reach either Node entry through
+imports, types, exports or generated declarations.
+
+The archive read port opens a scope at a resolved commit and returns its
+validated layout descriptor or a typed archive failure. Its pages and
+retained inputs implement `HistorySource`. An absent foreign ref remains
+a real absent dependency, not a corrupt entry or service fallback.
+
+`verifyArchive` first checks the archive structure, then calls the native
+verifier without changing its judges. Its result distinguishes an archive
+failure from a completed native `Verification`. Structural corruption is
+`mismatch`; unsafe forms are refused. Unavailable reads, deadlines and
+work limits retain those meanings. Before native verification returns,
+an archive failure contains its actual scope/commit/object read location
+where known, and no invented native target, hash, coverage or report.
+Successful adaptation retains the real native result and coverage;
+incomplete ancestry stays incomplete. Clone provenance qualifies the
+transport-specific trust text. A source-selected head is `archive-head`,
+even when passed internally to the verifier as its expected head. A
+caller head or receipt remains a separate pin.
+
+Receipt membership follows successful integrity and continuity checks
+through the resolved archive head, then compares the receipt's own
+scope, incarnation, position and hash. A later corrupt archive entry
+cannot be bypassed by a matching earlier receipt. A receipt past a valid
+archive head is behind. Text and receipt file inputs use separate bounded
+caller-selected file ports; archive tree paths never reach those ports.
+
+Planner disposition is still requested for this API and result boundary,
+as well as the package exclusions. No dependent implementation is made
+by this preparation.
+
 ## A2 implementation and review boundary
 
 The source child will implement the clone source and the `--git`,
