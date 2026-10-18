@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at package.json","body":{"commit":"6ce62bd2a105b6e4d1f0f1eab0f96e7ce936d8eb","path":"package.json"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2e300f212581da8523cbb680eb7c10bcd0de79c0","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-18-counting-node-deadlines.md."}
