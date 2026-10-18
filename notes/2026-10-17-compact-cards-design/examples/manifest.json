@@ -1,0 +1,3305 @@
+{
+  "kind": "static-compact-card-design",
+  "noLiveActs": true,
+  "browserPlugin": "not available",
+  "themes": [
+    "light",
+    "dark"
+  ],
+  "commits": {
+    "Base": "8475e1beda99cd9b32d3617f1fb255664090fbe0",
+    "Version 1 source": "94e6b0427e0779b4cd686d3c46ec196cf105aacc",
+    "Version 2 source": "569c9aeed9e74b4d803f874cfbfbd90a9218c24d",
+    "Version 1 integration": "62a6aced9f5b9e2473d33960fb336721de14582f",
+    "Version 2 integration": "6ef56437b0cf81a1d95c2a00b7c539d1856e0fdf",
+    "Change 9 integration": "1faf54e188a46dd8edeb5ead4adb7f9fbee10fb4",
+    "Change 18 integration": "d664779063515feb27b0532f708970d1c4f68008",
+    "Change 18 source": "edc3a252bcf84cdd0fb28ea459bf6419106ea223"
+  },
+  "catchupScopes": {
+    "issue": {
+      "label": "Clear completed",
+      "kind": "lane",
+      "before": 240,
+      "through": 245,
+      "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+      "inc": "in_hobiscq4kjbb5w4yhyd6keckga"
+    },
+    "change18": {
+      "label": "Improve empty-list message · Change 18",
+      "kind": "change",
+      "before": 17,
+      "through": 18,
+      "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+      "inc": "in_mdlqzgk2pjphrbnepwlt4r547m"
+    },
+    "change9": {
+      "label": "Keyboard focus fix · Change 9",
+      "kind": "change",
+      "before": 8,
+      "through": 9,
+      "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+      "inc": "in_u2d4j74sz2k53oohl6urjt4uhi"
+    }
+  },
+  "catchupEntries": [
+    {
+      "scope": "issue",
+      "entry": 241,
+      "actor": "Interface agent",
+      "kind": "agent",
+      "happened": "Reported progress on the Clear completed button.",
+      "subject": "Interface work"
+    },
+    {
+      "scope": "issue",
+      "entry": 242,
+      "actor": "Storage agent",
+      "kind": "agent",
+      "happened": "Asked that earlier tasks stay recoverable after clearing.",
+      "subject": "History question · comment"
+    },
+    {
+      "scope": "issue",
+      "entry": 243,
+      "actor": "Storage agent",
+      "kind": "agent",
+      "happened": "Blocked storage work on the history decision.",
+      "subject": "Storage work · block"
+    },
+    {
+      "scope": "issue",
+      "entry": 244,
+      "actor": "Ari",
+      "kind": "person",
+      "happened": "Asked to compare keeping history with permanent deletion.",
+      "subject": "History question · comment"
+    },
+    {
+      "scope": "issue",
+      "entry": 245,
+      "actor": "Storage agent",
+      "kind": "agent",
+      "happened": "Revised the proposal to keep completed tasks in history.",
+      "subject": "History question · text v2"
+    },
+    {
+      "scope": "change18",
+      "entry": 18,
+      "actor": "Interface agent",
+      "kind": "agent",
+      "happened": "Proposed version 2 of the empty-list message.",
+      "subject": "Change 18 · version 2"
+    },
+    {
+      "scope": "change9",
+      "entry": 9,
+      "actor": "Ari",
+      "kind": "person",
+      "happened": "Requested publication of Keyboard focus fix version 1.",
+      "subject": "Change 9 · version 1"
+    }
+  ],
+  "pages": [
+    {
+      "title": "Keep completed tasks in history?",
+      "mode": "inline",
+      "subject": "q7",
+      "revision": "text v2",
+      "acts": [],
+      "context": {
+        "item": "q7",
+        "revision": "text v2",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Approve question text v2, or ask for a revision.",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 245
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "carousel-question",
+      "theme": "light",
+      "path": "carousel-question-light.html"
+    },
+    {
+      "title": "Improve empty-list message",
+      "mode": "inline",
+      "subject": "change18",
+      "revision": "version 2",
+      "acts": [],
+      "context": {
+        "item": "change18",
+        "revision": "version 2",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Review Change 18 version 2; checks passed.",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "carousel-change",
+      "theme": "light",
+      "path": "carousel-change-light.html"
+    },
+    {
+      "title": "Keep task history",
+      "mode": "inline",
+      "subject": "change23",
+      "revision": "version 1",
+      "acts": [],
+      "context": {
+        "item": "change23",
+        "revision": "version 1",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Change 23 has two failed checks.",
+        "entryPositionQualification": "No scope-position fixture was supplied for this standalone state."
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "carousel-failed",
+      "theme": "light",
+      "path": "carousel-failed-light.html"
+    },
+    {
+      "title": "Keyboard focus fix",
+      "mode": "inline",
+      "subject": "change9",
+      "revision": "version 1",
+      "acts": [],
+      "context": {
+        "item": "change9",
+        "revision": "version 1",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Check the original publication request for Change 9.",
+        "projectionReadAt": {
+          "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+          "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+          "seq": 9
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "carousel-unknown",
+      "theme": "light",
+      "path": "carousel-unknown-light.html"
+    },
+    {
+      "title": "7 new entries",
+      "mode": "inline",
+      "subject": "review-cut",
+      "revision": "240→245 · 17→18 · 8→9",
+      "acts": [],
+      "context": {
+        "item": "review-cut",
+        "revision": "240→245 · 17→18 · 8→9",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Three scopes have updates since your last review.",
+        "intendedReviewCutoffs": [
+          {
+            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+            "after": 240,
+            "through": 245
+          },
+          {
+            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+            "after": 17,
+            "through": 18
+          },
+          {
+            "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+            "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+            "after": 8,
+            "through": 9
+          }
+        ],
+        "presentedEntryPositions": [],
+        "coverage": "Summary only; entry bodies have not been read or presented."
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "carousel-updates",
+      "theme": "light",
+      "path": "carousel-updates-light.html"
+    },
+    {
+      "title": "Review question text",
+      "mode": "full",
+      "subject": "q7",
+      "revision": "text v2 · entry 245",
+      "acts": [
+        "approve-text-v2"
+      ],
+      "context": {
+        "item": "q7",
+        "revision": "text v2 · entry 245",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Approve q7 text v2, or request revision",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 245
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "question",
+      "theme": "light",
+      "path": "question-light.html"
+    },
+    {
+      "title": "Record the decision",
+      "mode": "full",
+      "subject": "q7",
+      "revision": "text v2 · approval 246",
+      "acts": [
+        "record-decision-q7-v2"
+      ],
+      "context": {
+        "item": "q7",
+        "revision": "text v2 · approval 246",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Record a decision on approved text v2",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 246
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "question-approved",
+      "theme": "light",
+      "path": "question-approved-light.html"
+    },
+    {
+      "title": "Decision recorded",
+      "mode": "full",
+      "subject": "q7",
+      "revision": "decision 247",
+      "acts": [],
+      "context": {
+        "item": "q7",
+        "revision": "decision 247",
+        "entryPositionsRead": [],
+        "waitingOn": null,
+        "settlesBy": "Settled decision",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 247
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "decision-recorded",
+      "theme": "light",
+      "path": "decision-recorded-light.html"
+    },
+    {
+      "title": "Old question instance",
+      "mode": "full",
+      "subject": "q7",
+      "revision": "text v1 · superseded",
+      "acts": [],
+      "context": {
+        "item": "q7",
+        "revision": "text v1 · superseded",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Open the current revision",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 245
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "question-stale",
+      "theme": "light",
+      "path": "question-stale-light.html"
+    },
+    {
+      "title": "Revision request draft",
+      "mode": "full",
+      "subject": "q7",
+      "revision": "text v2",
+      "acts": [],
+      "context": {
+        "item": "q7",
+        "revision": "text v2",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Send an edited request from the composer",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 245
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "composer-revision",
+      "theme": "light",
+      "path": "composer-revision-light.html"
+    },
+    {
+      "title": "Revise work conditions",
+      "mode": "full",
+      "subject": "clear-completed",
+      "revision": "conditions v1 · decision 247",
+      "acts": [
+        "revise-conditions"
+      ],
+      "context": {
+        "item": "clear-completed",
+        "revision": "conditions v1 · decision 247",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Record conditions v2 separately",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 247
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "work-before-revision",
+      "theme": "light",
+      "path": "work-before-revision-light.html"
+    },
+    {
+      "title": "Offer current conditions",
+      "mode": "inline",
+      "subject": "commitment-interface",
+      "revision": "conditions v2 · entry 250",
+      "acts": [],
+      "context": {
+        "item": "commitment-interface",
+        "revision": "conditions v2 · entry 250",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Offer v2 to Interface agent",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 250
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "carousel-interface",
+      "theme": "light",
+      "path": "carousel-interface-light.html"
+    },
+    {
+      "title": "Offer current conditions",
+      "mode": "inline",
+      "subject": "commitment-storage",
+      "revision": "conditions v2 · entry 250",
+      "acts": [],
+      "context": {
+        "item": "commitment-storage",
+        "revision": "conditions v2 · entry 250",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Offer v2 to Storage agent",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 250
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "carousel-storage",
+      "theme": "light",
+      "path": "carousel-storage-light.html"
+    },
+    {
+      "title": "Offer current conditions",
+      "mode": "full",
+      "subject": "commitment-interface",
+      "revision": "conditions v2 · entry 250",
+      "acts": [
+        "offer-v2-to-interface"
+      ],
+      "context": {
+        "item": "commitment-interface",
+        "revision": "conditions v2 · entry 250",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Make a new offer to Interface agent",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 250
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-interface",
+      "activeActor": "Ari",
+      "key": "work-interface",
+      "theme": "light",
+      "path": "work-interface-light.html"
+    },
+    {
+      "title": "Offer recorded",
+      "mode": "full",
+      "subject": "commitment-interface",
+      "revision": "offer 251 · conditions v2",
+      "acts": [],
+      "context": {
+        "item": "commitment-interface",
+        "revision": "offer 251 · conditions v2",
+        "entryPositionsRead": [],
+        "waitingOn": "Interface agent",
+        "settlesBy": "The named offeree accepts conditions v2",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 251
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-interface",
+      "activeActor": "Ari",
+      "key": "work-offered-interface",
+      "theme": "light",
+      "path": "work-offered-interface-light.html"
+    },
+    {
+      "title": "Offer current conditions",
+      "mode": "full",
+      "subject": "commitment-storage",
+      "revision": "conditions v2 · entry 250",
+      "acts": [
+        "offer-v2-to-storage"
+      ],
+      "context": {
+        "item": "commitment-storage",
+        "revision": "conditions v2 · entry 250",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Make a new offer to Storage agent",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 250
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-storage",
+      "activeActor": "Ari",
+      "key": "work-storage",
+      "theme": "light",
+      "path": "work-storage-light.html"
+    },
+    {
+      "title": "Offer recorded",
+      "mode": "full",
+      "subject": "commitment-storage",
+      "revision": "offer 252 · conditions v2",
+      "acts": [],
+      "context": {
+        "item": "commitment-storage",
+        "revision": "offer 252 · conditions v2",
+        "entryPositionsRead": [],
+        "waitingOn": "Storage agent",
+        "settlesBy": "The named offeree accepts conditions v2",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 252
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-storage",
+      "activeActor": "Ari",
+      "key": "work-offered-storage",
+      "theme": "light",
+      "path": "work-offered-storage-light.html"
+    },
+    {
+      "title": "Storage original acceptance",
+      "mode": "full",
+      "subject": "commitment-storage",
+      "revision": "acceptance 224 · offer 222 · conditions v1",
+      "acts": [],
+      "context": {
+        "item": "commitment-storage",
+        "revision": "acceptance 224 · offer 222 · conditions v1",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read only",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 224
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "work-offered-storage",
+      "activeActor": "Ari",
+      "key": "work-storage-original-accepted",
+      "theme": "light",
+      "path": "work-storage-original-accepted-light.html"
+    },
+    {
+      "title": "Revised work conditions",
+      "mode": "full",
+      "subject": "clear-completed",
+      "revision": "conditions v2 · entry 250",
+      "acts": [],
+      "context": {
+        "item": "clear-completed",
+        "revision": "conditions v2 · entry 250",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read only",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 250
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "work-revised",
+      "theme": "light",
+      "path": "work-revised-light.html"
+    },
+    {
+      "title": "Accept the original offer",
+      "mode": "full",
+      "subject": "commitment-interface",
+      "revision": "offer 221 · conditions v1",
+      "acts": [
+        "accept-v1-as-interface"
+      ],
+      "context": {
+        "item": "commitment-interface",
+        "revision": "offer 221 · conditions v1",
+        "entryPositionsRead": [],
+        "waitingOn": "Interface agent",
+        "settlesBy": "Interface agent accepts its offer",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 221
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Interface agent",
+      "key": "work-original-offer",
+      "theme": "light",
+      "path": "work-original-offer-light.html"
+    },
+    {
+      "title": "Original acceptance",
+      "mode": "full",
+      "subject": "commitment-interface",
+      "revision": "acceptance 223 · conditions v1",
+      "acts": [],
+      "context": {
+        "item": "commitment-interface",
+        "revision": "acceptance 223 · conditions v1",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read only",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 223
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "work-original-accepted",
+      "theme": "light",
+      "path": "work-original-accepted-light.html"
+    },
+    {
+      "title": "Revised offer accepted",
+      "mode": "full",
+      "subject": "commitment-interface",
+      "revision": "acceptance 253 · conditions v2",
+      "acts": [],
+      "context": {
+        "item": "commitment-interface",
+        "revision": "acceptance 253 · conditions v2",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read only",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 255
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "work-accepted",
+      "theme": "light",
+      "path": "work-accepted-light.html"
+    },
+    {
+      "title": "Review Change 18",
+      "mode": "full",
+      "subject": "change18",
+      "revision": "version 2 · entry 18",
+      "acts": [
+        "approve-change18-v2"
+      ],
+      "context": {
+        "item": "change18",
+        "revision": "version 2 · entry 18",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Review the exact version 2 integration",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-change",
+      "activeActor": "Ari",
+      "key": "change-review",
+      "theme": "light",
+      "path": "change-review-light.html"
+    },
+    {
+      "title": "Approved Change 18",
+      "mode": "full",
+      "subject": "change18",
+      "revision": "version 2 · approved",
+      "acts": [
+        "publish-change18-v2"
+      ],
+      "context": {
+        "item": "change18",
+        "revision": "version 2 · approved",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Publish the approved integration under its current conditions",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-change",
+      "activeActor": "Ari",
+      "key": "change-approved",
+      "theme": "light",
+      "path": "change-approved-light.html"
+    },
+    {
+      "title": "Failed checks",
+      "mode": "full",
+      "subject": "change23",
+      "revision": "version 1",
+      "acts": [],
+      "context": {
+        "item": "change23",
+        "revision": "version 1",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Request changes; approval is unavailable",
+        "entryPositionQualification": "No scope-position fixture was supplied for this standalone state."
+      },
+      "receipt": null,
+      "back": "carousel-failed",
+      "activeActor": "Ari",
+      "key": "change-failed",
+      "theme": "light",
+      "path": "change-failed-light.html"
+    },
+    {
+      "title": "Unknown publication outcome",
+      "mode": "full",
+      "subject": "change9",
+      "revision": "version 1 · request 9",
+      "acts": [
+        "check-original-request9"
+      ],
+      "context": {
+        "item": "change9",
+        "revision": "version 1 · request 9",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Recover the outcome of original request 9",
+        "projectionReadAt": {
+          "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+          "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+          "seq": 9
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-unknown",
+      "activeActor": "Ari",
+      "key": "change-unknown",
+      "theme": "light",
+      "path": "change-unknown-light.html"
+    },
+    {
+      "title": "Original request unavailable",
+      "mode": "full",
+      "subject": "change9",
+      "revision": "version 1 · request 9",
+      "acts": [
+        "check-original-request9"
+      ],
+      "context": {
+        "item": "change9",
+        "revision": "version 1 · request 9",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Recover the outcome of original request 9",
+        "projectionReadAt": {
+          "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+          "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+          "seq": 9
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-unknown",
+      "activeActor": "Ari",
+      "key": "change-unavailable",
+      "theme": "light",
+      "path": "change-unavailable-light.html"
+    },
+    {
+      "title": "Superseded change instance",
+      "mode": "full",
+      "subject": "change18",
+      "revision": "version 1 · superseded",
+      "acts": [],
+      "context": {
+        "item": "change18",
+        "revision": "version 1 · superseded",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read the current version",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-change",
+      "activeActor": "Ari",
+      "key": "change-stale",
+      "theme": "light",
+      "path": "change-stale-light.html"
+    },
+    {
+      "title": "Changes request draft",
+      "mode": "full",
+      "subject": "change18",
+      "revision": "version 2",
+      "acts": [],
+      "context": {
+        "item": "change18",
+        "revision": "version 2",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read only",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "change-review",
+      "activeActor": "Ari",
+      "key": "composer-changes",
+      "theme": "light",
+      "path": "composer-changes-light.html"
+    },
+    {
+      "title": "Failed change request draft",
+      "mode": "full",
+      "subject": "change23",
+      "revision": "version 1",
+      "acts": [],
+      "context": {
+        "item": "change23",
+        "revision": "version 1",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read only",
+        "entryPositionQualification": "No scope-position fixture was supplied for this standalone state."
+      },
+      "receipt": null,
+      "back": "change-failed",
+      "activeActor": "Ari",
+      "key": "composer-changes-failed",
+      "theme": "light",
+      "path": "composer-changes-failed-light.html"
+    },
+    {
+      "title": "Compare Change 12 versions",
+      "mode": "full",
+      "subject": "change12",
+      "revision": "version 2",
+      "acts": [],
+      "context": {
+        "item": "change12",
+        "revision": "version 2",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read only",
+        "entryPositionQualification": "No scope-position fixture was supplied for this standalone state."
+      },
+      "receipt": null,
+      "back": "carousel-change",
+      "activeActor": "Ari",
+      "key": "change12-review",
+      "theme": "light",
+      "path": "change12-review-light.html"
+    },
+    {
+      "title": "Change 18 diff",
+      "mode": "full",
+      "subject": "change18",
+      "revision": "version 2 · exact endpoints",
+      "acts": [],
+      "context": {
+        "item": "change18",
+        "revision": "version 2 · exact endpoints",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read only",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "change-review",
+      "activeActor": "Ari",
+      "key": "diff",
+      "theme": "light",
+      "path": "diff-light.html"
+    },
+    {
+      "title": "Change 12 version comparison",
+      "mode": "full",
+      "subject": "change12",
+      "revision": "versions 1 → 2 · exact endpoints",
+      "acts": [],
+      "context": {
+        "item": "change12",
+        "revision": "versions 1 → 2 · exact endpoints",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read only",
+        "entryPositionQualification": "No scope-position fixture was supplied for this standalone state."
+      },
+      "receipt": null,
+      "back": "change12-review",
+      "activeActor": "Ari",
+      "key": "interdiff",
+      "theme": "light",
+      "path": "interdiff-light.html"
+    },
+    {
+      "title": "Change 12 diff",
+      "mode": "full",
+      "subject": "change12",
+      "revision": "version 2 · exact endpoints",
+      "acts": [],
+      "context": {
+        "item": "change12",
+        "revision": "version 2 · exact endpoints",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read only",
+        "entryPositionQualification": "No scope-position fixture was supplied for this standalone state."
+      },
+      "receipt": null,
+      "back": "change12-review",
+      "activeActor": "Ari",
+      "key": "diff12",
+      "theme": "light",
+      "path": "diff12-light.html"
+    },
+    {
+      "title": "Change 12 pinned file excerpt",
+      "mode": "full",
+      "subject": "change12",
+      "revision": "version 2 · pinned file excerpt",
+      "acts": [],
+      "context": {
+        "item": "change12",
+        "revision": "version 2 · pinned file excerpt",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read only",
+        "entryPositionQualification": "No scope-position fixture was supplied for this standalone state."
+      },
+      "receipt": null,
+      "back": "change12-review",
+      "activeActor": "Ari",
+      "key": "file",
+      "theme": "light",
+      "path": "file-light.html"
+    },
+    {
+      "title": "Change 23 diff",
+      "mode": "full",
+      "subject": "change23",
+      "revision": "version 1",
+      "acts": [],
+      "context": {
+        "item": "change23",
+        "revision": "version 1",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read only",
+        "entryPositionQualification": "No scope-position fixture was supplied for this standalone state."
+      },
+      "receipt": null,
+      "back": "change-failed",
+      "activeActor": "Ari",
+      "key": "diff-failed",
+      "theme": "light",
+      "path": "diff-failed-light.html"
+    },
+    {
+      "title": "Unavailable diff",
+      "mode": "full",
+      "subject": "change18",
+      "revision": "version 2 · exact endpoints unavailable",
+      "acts": [],
+      "context": {
+        "item": "change18",
+        "revision": "version 2 · exact endpoints unavailable",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read only",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "change-review",
+      "activeActor": "Ari",
+      "key": "diff-unavailable",
+      "theme": "light",
+      "path": "diff-unavailable-light.html"
+    },
+    {
+      "title": "Incomplete diff",
+      "mode": "full",
+      "subject": "change18",
+      "revision": "version 2 · incomplete excerpt",
+      "acts": [],
+      "context": {
+        "item": "change18",
+        "revision": "version 2 · incomplete excerpt",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read only",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "change-review",
+      "activeActor": "Ari",
+      "key": "diff-truncated",
+      "theme": "light",
+      "path": "diff-truncated-light.html"
+    },
+    {
+      "title": "Updates since review",
+      "mode": "full",
+      "subject": "review-cut",
+      "revision": "Exact review cut",
+      "acts": [
+        "mark-exact-ranges-reviewed"
+      ],
+      "context": {
+        "item": "review-cut",
+        "revision": "Exact review cut",
+        "entryPositionsRead": [
+          {
+            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+            "after": 240,
+            "through": 245
+          },
+          {
+            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+            "after": 17,
+            "through": 18
+          },
+          {
+            "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+            "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+            "after": 8,
+            "through": 9
+          }
+        ],
+        "waitingOn": "Ari",
+        "settlesBy": "Advance only the three displayed scope/incarnation review positions",
+        "intendedReviewCutoffs": [
+          {
+            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+            "after": 240,
+            "through": 245
+          },
+          {
+            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+            "after": 17,
+            "through": 18
+          },
+          {
+            "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+            "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+            "after": 8,
+            "through": 9
+          }
+        ],
+        "presentedEntryPositions": [
+          {
+            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+            "after": 240,
+            "through": 245
+          },
+          {
+            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+            "after": 17,
+            "through": 18
+          },
+          {
+            "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+            "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+            "after": 8,
+            "through": 9
+          }
+        ]
+      },
+      "receipt": null,
+      "back": "carousel-updates",
+      "activeActor": "Ari",
+      "key": "updates",
+      "theme": "light",
+      "path": "updates-light.html"
+    },
+    {
+      "title": "Incomplete updates",
+      "mode": "full",
+      "subject": "review-cut",
+      "revision": "incomplete review cut",
+      "acts": [],
+      "context": {
+        "item": "review-cut",
+        "revision": "incomplete review cut",
+        "entryPositionsRead": [
+          {
+            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+            "after": 240,
+            "through": 245
+          },
+          {
+            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+            "after": 17,
+            "through": 18
+          }
+        ],
+        "waitingOn": "Ari",
+        "settlesBy": "Load every entry before marking reviewed",
+        "intendedReviewCutoffs": [
+          {
+            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+            "after": 240,
+            "through": 245
+          },
+          {
+            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+            "after": 17,
+            "through": 18
+          },
+          {
+            "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+            "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+            "after": 8,
+            "through": 9
+          }
+        ],
+        "presentedEntryPositions": [
+          {
+            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+            "after": 240,
+            "through": 245
+          },
+          {
+            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+            "after": 17,
+            "through": 18
+          }
+        ],
+        "unavailableEntryPositions": [
+          {
+            "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+            "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+            "after": 8,
+            "through": 9
+          }
+        ]
+      },
+      "receipt": null,
+      "back": "carousel-updates",
+      "activeActor": "Ari",
+      "key": "updates-incomplete",
+      "theme": "light",
+      "path": "updates-incomplete-light.html"
+    },
+    {
+      "title": "Review points saved",
+      "mode": "full",
+      "subject": "review-cut",
+      "revision": "exact displayed ranges",
+      "acts": [],
+      "context": {
+        "item": "review-cut",
+        "revision": "exact displayed ranges",
+        "entryPositionsRead": [],
+        "waitingOn": null,
+        "settlesBy": "Read only",
+        "intendedReviewCutoffs": [
+          {
+            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+            "after": 240,
+            "through": 245
+          },
+          {
+            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+            "after": 17,
+            "through": 18
+          },
+          {
+            "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+            "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+            "after": 8,
+            "through": 9
+          }
+        ],
+        "presentedEntryPositions": [],
+        "recordedReviewPoints": [
+          {
+            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+            "seq": 245
+          },
+          {
+            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+            "seq": 18
+          },
+          {
+            "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+            "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+            "seq": 9
+          }
+        ]
+      },
+      "receipt": null,
+      "back": "carousel-updates",
+      "activeActor": "Ari",
+      "key": "updates-reviewed",
+      "theme": "light",
+      "path": "updates-reviewed-light.html"
+    },
+    {
+      "title": "Question text approved",
+      "mode": "inline",
+      "subject": "q7",
+      "revision": "text v2 · approval 246",
+      "acts": [],
+      "context": {
+        "item": "q7",
+        "revision": "text v2 · approval 246",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Record the decision on approved q7 text v2",
+        "receipt": "Approved question q7 text v2 · entry 246",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 246
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": "Approved question q7 text v2 · entry 246",
+      "back": "carousel-question-approved",
+      "activeActor": "Ari",
+      "key": "receipt-question",
+      "theme": "light",
+      "path": "receipt-question-light.html"
+    },
+    {
+      "title": "Publication receipt",
+      "mode": "inline",
+      "subject": "change23",
+      "revision": "version 1",
+      "acts": [],
+      "context": {
+        "item": "change23",
+        "revision": "version 1",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Review the failed checks",
+        "receipt": "Published Change 18 version 2",
+        "entryPositionQualification": "No scope-position fixture was supplied for this standalone state."
+      },
+      "receipt": "Published Change 18 version 2",
+      "back": "carousel-change",
+      "activeActor": "Ari",
+      "key": "receipt-published",
+      "theme": "light",
+      "path": "receipt-published-light.html"
+    },
+    {
+      "title": "Receipt context pending",
+      "mode": "inline",
+      "subject": "q7",
+      "revision": "text v2 · approval 246",
+      "acts": [
+        "retry-context-only"
+      ],
+      "context": {
+        "item": "q7",
+        "revision": "text v2 · approval 246",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Update receipt context without repeating approval",
+        "receipt": "Approved question q7 text v2 · entry 246",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 246
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": "Approved question q7 text v2 · entry 246",
+      "back": "carousel-question-approved",
+      "activeActor": "Ari",
+      "key": "receipt-context-pending",
+      "theme": "light",
+      "path": "receipt-context-pending-light.html"
+    },
+    {
+      "title": "Nothing needs you",
+      "mode": "inline",
+      "subject": "empty",
+      "revision": "",
+      "acts": [],
+      "context": {
+        "item": "empty",
+        "revision": "",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read only",
+        "entryPositionQualification": "No scope-position fixture was supplied for this standalone state."
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "empty",
+      "theme": "light",
+      "path": "empty-light.html"
+    },
+    {
+      "title": "Loading your items…",
+      "mode": "inline",
+      "subject": "loading",
+      "revision": "",
+      "acts": [],
+      "context": {
+        "item": "loading",
+        "revision": "",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read only",
+        "entryPositionQualification": "No scope-position fixture was supplied for this standalone state."
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "loading",
+      "theme": "light",
+      "path": "loading-light.html"
+    },
+    {
+      "title": "Items unavailable",
+      "mode": "inline",
+      "subject": "unavailable",
+      "revision": "",
+      "acts": [],
+      "context": {
+        "item": "unavailable",
+        "revision": "",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read only",
+        "entryPositionQualification": "No scope-position fixture was supplied for this standalone state."
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "unavailable",
+      "theme": "light",
+      "path": "unavailable-light.html"
+    },
+    {
+      "title": "Some items are unavailable",
+      "mode": "inline",
+      "subject": "partial",
+      "revision": "",
+      "acts": [],
+      "context": {
+        "item": "partial",
+        "revision": "",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read only",
+        "entryPositionQualification": "No scope-position fixture was supplied for this standalone state."
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "partial",
+      "theme": "light",
+      "path": "partial-light.html"
+    },
+    {
+      "title": "Delivered work",
+      "mode": "full",
+      "subject": "commitment-interface",
+      "revision": "conditions v2 · delivered",
+      "acts": [],
+      "context": {
+        "item": "commitment-interface",
+        "revision": "conditions v2 · delivered",
+        "entryPositionsRead": [],
+        "waitingOn": null,
+        "settlesBy": "Settled work",
+        "entryPositionQualification": "No scope-position fixture was supplied for this standalone state."
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "work-settled",
+      "theme": "light",
+      "path": "work-settled-light.html"
+    },
+    {
+      "title": "Agent approval refused",
+      "mode": "full",
+      "subject": "q7",
+      "revision": "text v2",
+      "acts": [],
+      "context": {
+        "item": "q7",
+        "revision": "text v2",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "The requested person approves the exact text",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 245
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Interface agent",
+      "key": "question-agent-refused",
+      "theme": "light",
+      "path": "question-agent-refused-light.html"
+    },
+    {
+      "title": "Approval not requested",
+      "mode": "full",
+      "subject": "q7",
+      "revision": "text v2",
+      "acts": [],
+      "context": {
+        "item": "q7",
+        "revision": "text v2",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "The requested person approves the exact text",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 245
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Rin",
+      "key": "question-unrequested",
+      "theme": "light",
+      "path": "question-unrequested-light.html"
+    },
+    {
+      "title": "Checker result unavailable",
+      "mode": "full",
+      "subject": "change18",
+      "revision": "version 2 · checker unknown",
+      "acts": [],
+      "context": {
+        "item": "change18",
+        "revision": "version 2 · checker unknown",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read a checker result for the exact integration",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-change",
+      "activeActor": "Ari",
+      "key": "change-no-checks",
+      "theme": "light",
+      "path": "change-no-checks-light.html"
+    },
+    {
+      "title": "Approved question needs a decision",
+      "mode": "inline",
+      "subject": "q7",
+      "revision": "text v2 · approval 246",
+      "acts": [],
+      "context": {
+        "item": "q7",
+        "revision": "text v2 · approval 246",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Record the decision on approved text v2",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 246
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "carousel-question-approved",
+      "theme": "light",
+      "path": "carousel-question-approved-light.html"
+    },
+    {
+      "title": "Improve empty-list message",
+      "mode": "inline",
+      "subject": "change18",
+      "revision": "version 2",
+      "acts": [],
+      "context": {
+        "item": "change18",
+        "revision": "version 2",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Review Change 18 version 2; checks passed.",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "carousel-refreshed-change",
+      "theme": "light",
+      "path": "carousel-refreshed-change-light.html"
+    },
+    {
+      "title": "Keep task history",
+      "mode": "inline",
+      "subject": "change23",
+      "revision": "version 1",
+      "acts": [],
+      "context": {
+        "item": "change23",
+        "revision": "version 1",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Change 23 has two failed checks.",
+        "entryPositionQualification": "No scope-position fixture was supplied for this standalone state."
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "carousel-refreshed-failed",
+      "theme": "light",
+      "path": "carousel-refreshed-failed-light.html"
+    },
+    {
+      "title": "Keyboard focus fix",
+      "mode": "inline",
+      "subject": "change9",
+      "revision": "version 1",
+      "acts": [],
+      "context": {
+        "item": "change9",
+        "revision": "version 1",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Check the original publication request for Change 9.",
+        "projectionReadAt": {
+          "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+          "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+          "seq": 9
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "carousel-refreshed-unknown",
+      "theme": "light",
+      "path": "carousel-refreshed-unknown-light.html"
+    },
+    {
+      "title": "7 new entries",
+      "mode": "inline",
+      "subject": "review-cut",
+      "revision": "240→245 · 17→18 · 8→9",
+      "acts": [],
+      "context": {
+        "item": "review-cut",
+        "revision": "240→245 · 17→18 · 8→9",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Three scopes have updates since your last review.",
+        "intendedReviewCutoffs": [
+          {
+            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+            "after": 240,
+            "through": 245
+          },
+          {
+            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+            "after": 17,
+            "through": 18
+          },
+          {
+            "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+            "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+            "after": 8,
+            "through": 9
+          }
+        ],
+        "presentedEntryPositions": [],
+        "coverage": "Summary only; entry bodies have not been read or presented."
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "carousel-refreshed-updates",
+      "theme": "light",
+      "path": "carousel-refreshed-updates-light.html"
+    },
+    {
+      "title": "Keep completed tasks in history?",
+      "mode": "inline",
+      "subject": "q7",
+      "revision": "text v2",
+      "acts": [],
+      "context": {
+        "item": "q7",
+        "revision": "text v2",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Approve question text v2, or ask for a revision.",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 245
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "carousel-question",
+      "theme": "dark",
+      "path": "carousel-question-dark.html"
+    },
+    {
+      "title": "Improve empty-list message",
+      "mode": "inline",
+      "subject": "change18",
+      "revision": "version 2",
+      "acts": [],
+      "context": {
+        "item": "change18",
+        "revision": "version 2",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Review Change 18 version 2; checks passed.",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "carousel-change",
+      "theme": "dark",
+      "path": "carousel-change-dark.html"
+    },
+    {
+      "title": "Keep task history",
+      "mode": "inline",
+      "subject": "change23",
+      "revision": "version 1",
+      "acts": [],
+      "context": {
+        "item": "change23",
+        "revision": "version 1",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Change 23 has two failed checks.",
+        "entryPositionQualification": "No scope-position fixture was supplied for this standalone state."
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "carousel-failed",
+      "theme": "dark",
+      "path": "carousel-failed-dark.html"
+    },
+    {
+      "title": "Keyboard focus fix",
+      "mode": "inline",
+      "subject": "change9",
+      "revision": "version 1",
+      "acts": [],
+      "context": {
+        "item": "change9",
+        "revision": "version 1",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Check the original publication request for Change 9.",
+        "projectionReadAt": {
+          "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+          "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+          "seq": 9
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "carousel-unknown",
+      "theme": "dark",
+      "path": "carousel-unknown-dark.html"
+    },
+    {
+      "title": "7 new entries",
+      "mode": "inline",
+      "subject": "review-cut",
+      "revision": "240→245 · 17→18 · 8→9",
+      "acts": [],
+      "context": {
+        "item": "review-cut",
+        "revision": "240→245 · 17→18 · 8→9",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Three scopes have updates since your last review.",
+        "intendedReviewCutoffs": [
+          {
+            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+            "after": 240,
+            "through": 245
+          },
+          {
+            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+            "after": 17,
+            "through": 18
+          },
+          {
+            "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+            "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+            "after": 8,
+            "through": 9
+          }
+        ],
+        "presentedEntryPositions": [],
+        "coverage": "Summary only; entry bodies have not been read or presented."
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "carousel-updates",
+      "theme": "dark",
+      "path": "carousel-updates-dark.html"
+    },
+    {
+      "title": "Review question text",
+      "mode": "full",
+      "subject": "q7",
+      "revision": "text v2 · entry 245",
+      "acts": [
+        "approve-text-v2"
+      ],
+      "context": {
+        "item": "q7",
+        "revision": "text v2 · entry 245",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Approve q7 text v2, or request revision",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 245
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "question",
+      "theme": "dark",
+      "path": "question-dark.html"
+    },
+    {
+      "title": "Record the decision",
+      "mode": "full",
+      "subject": "q7",
+      "revision": "text v2 · approval 246",
+      "acts": [
+        "record-decision-q7-v2"
+      ],
+      "context": {
+        "item": "q7",
+        "revision": "text v2 · approval 246",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Record a decision on approved text v2",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 246
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "question-approved",
+      "theme": "dark",
+      "path": "question-approved-dark.html"
+    },
+    {
+      "title": "Decision recorded",
+      "mode": "full",
+      "subject": "q7",
+      "revision": "decision 247",
+      "acts": [],
+      "context": {
+        "item": "q7",
+        "revision": "decision 247",
+        "entryPositionsRead": [],
+        "waitingOn": null,
+        "settlesBy": "Settled decision",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 247
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "decision-recorded",
+      "theme": "dark",
+      "path": "decision-recorded-dark.html"
+    },
+    {
+      "title": "Old question instance",
+      "mode": "full",
+      "subject": "q7",
+      "revision": "text v1 · superseded",
+      "acts": [],
+      "context": {
+        "item": "q7",
+        "revision": "text v1 · superseded",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Open the current revision",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 245
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "question-stale",
+      "theme": "dark",
+      "path": "question-stale-dark.html"
+    },
+    {
+      "title": "Revision request draft",
+      "mode": "full",
+      "subject": "q7",
+      "revision": "text v2",
+      "acts": [],
+      "context": {
+        "item": "q7",
+        "revision": "text v2",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Send an edited request from the composer",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 245
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "composer-revision",
+      "theme": "dark",
+      "path": "composer-revision-dark.html"
+    },
+    {
+      "title": "Revise work conditions",
+      "mode": "full",
+      "subject": "clear-completed",
+      "revision": "conditions v1 · decision 247",
+      "acts": [
+        "revise-conditions"
+      ],
+      "context": {
+        "item": "clear-completed",
+        "revision": "conditions v1 · decision 247",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Record conditions v2 separately",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 247
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "work-before-revision",
+      "theme": "dark",
+      "path": "work-before-revision-dark.html"
+    },
+    {
+      "title": "Offer current conditions",
+      "mode": "inline",
+      "subject": "commitment-interface",
+      "revision": "conditions v2 · entry 250",
+      "acts": [],
+      "context": {
+        "item": "commitment-interface",
+        "revision": "conditions v2 · entry 250",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Offer v2 to Interface agent",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 250
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "carousel-interface",
+      "theme": "dark",
+      "path": "carousel-interface-dark.html"
+    },
+    {
+      "title": "Offer current conditions",
+      "mode": "inline",
+      "subject": "commitment-storage",
+      "revision": "conditions v2 · entry 250",
+      "acts": [],
+      "context": {
+        "item": "commitment-storage",
+        "revision": "conditions v2 · entry 250",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Offer v2 to Storage agent",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 250
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "carousel-storage",
+      "theme": "dark",
+      "path": "carousel-storage-dark.html"
+    },
+    {
+      "title": "Offer current conditions",
+      "mode": "full",
+      "subject": "commitment-interface",
+      "revision": "conditions v2 · entry 250",
+      "acts": [
+        "offer-v2-to-interface"
+      ],
+      "context": {
+        "item": "commitment-interface",
+        "revision": "conditions v2 · entry 250",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Make a new offer to Interface agent",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 250
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-interface",
+      "activeActor": "Ari",
+      "key": "work-interface",
+      "theme": "dark",
+      "path": "work-interface-dark.html"
+    },
+    {
+      "title": "Offer recorded",
+      "mode": "full",
+      "subject": "commitment-interface",
+      "revision": "offer 251 · conditions v2",
+      "acts": [],
+      "context": {
+        "item": "commitment-interface",
+        "revision": "offer 251 · conditions v2",
+        "entryPositionsRead": [],
+        "waitingOn": "Interface agent",
+        "settlesBy": "The named offeree accepts conditions v2",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 251
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-interface",
+      "activeActor": "Ari",
+      "key": "work-offered-interface",
+      "theme": "dark",
+      "path": "work-offered-interface-dark.html"
+    },
+    {
+      "title": "Offer current conditions",
+      "mode": "full",
+      "subject": "commitment-storage",
+      "revision": "conditions v2 · entry 250",
+      "acts": [
+        "offer-v2-to-storage"
+      ],
+      "context": {
+        "item": "commitment-storage",
+        "revision": "conditions v2 · entry 250",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Make a new offer to Storage agent",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 250
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-storage",
+      "activeActor": "Ari",
+      "key": "work-storage",
+      "theme": "dark",
+      "path": "work-storage-dark.html"
+    },
+    {
+      "title": "Offer recorded",
+      "mode": "full",
+      "subject": "commitment-storage",
+      "revision": "offer 252 · conditions v2",
+      "acts": [],
+      "context": {
+        "item": "commitment-storage",
+        "revision": "offer 252 · conditions v2",
+        "entryPositionsRead": [],
+        "waitingOn": "Storage agent",
+        "settlesBy": "The named offeree accepts conditions v2",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 252
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-storage",
+      "activeActor": "Ari",
+      "key": "work-offered-storage",
+      "theme": "dark",
+      "path": "work-offered-storage-dark.html"
+    },
+    {
+      "title": "Storage original acceptance",
+      "mode": "full",
+      "subject": "commitment-storage",
+      "revision": "acceptance 224 · offer 222 · conditions v1",
+      "acts": [],
+      "context": {
+        "item": "commitment-storage",
+        "revision": "acceptance 224 · offer 222 · conditions v1",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read only",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 224
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "work-offered-storage",
+      "activeActor": "Ari",
+      "key": "work-storage-original-accepted",
+      "theme": "dark",
+      "path": "work-storage-original-accepted-dark.html"
+    },
+    {
+      "title": "Revised work conditions",
+      "mode": "full",
+      "subject": "clear-completed",
+      "revision": "conditions v2 · entry 250",
+      "acts": [],
+      "context": {
+        "item": "clear-completed",
+        "revision": "conditions v2 · entry 250",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read only",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 250
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "work-revised",
+      "theme": "dark",
+      "path": "work-revised-dark.html"
+    },
+    {
+      "title": "Accept the original offer",
+      "mode": "full",
+      "subject": "commitment-interface",
+      "revision": "offer 221 · conditions v1",
+      "acts": [
+        "accept-v1-as-interface"
+      ],
+      "context": {
+        "item": "commitment-interface",
+        "revision": "offer 221 · conditions v1",
+        "entryPositionsRead": [],
+        "waitingOn": "Interface agent",
+        "settlesBy": "Interface agent accepts its offer",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 221
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Interface agent",
+      "key": "work-original-offer",
+      "theme": "dark",
+      "path": "work-original-offer-dark.html"
+    },
+    {
+      "title": "Original acceptance",
+      "mode": "full",
+      "subject": "commitment-interface",
+      "revision": "acceptance 223 · conditions v1",
+      "acts": [],
+      "context": {
+        "item": "commitment-interface",
+        "revision": "acceptance 223 · conditions v1",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read only",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 223
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "work-original-accepted",
+      "theme": "dark",
+      "path": "work-original-accepted-dark.html"
+    },
+    {
+      "title": "Revised offer accepted",
+      "mode": "full",
+      "subject": "commitment-interface",
+      "revision": "acceptance 253 · conditions v2",
+      "acts": [],
+      "context": {
+        "item": "commitment-interface",
+        "revision": "acceptance 253 · conditions v2",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read only",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 255
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "work-accepted",
+      "theme": "dark",
+      "path": "work-accepted-dark.html"
+    },
+    {
+      "title": "Review Change 18",
+      "mode": "full",
+      "subject": "change18",
+      "revision": "version 2 · entry 18",
+      "acts": [
+        "approve-change18-v2"
+      ],
+      "context": {
+        "item": "change18",
+        "revision": "version 2 · entry 18",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Review the exact version 2 integration",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-change",
+      "activeActor": "Ari",
+      "key": "change-review",
+      "theme": "dark",
+      "path": "change-review-dark.html"
+    },
+    {
+      "title": "Approved Change 18",
+      "mode": "full",
+      "subject": "change18",
+      "revision": "version 2 · approved",
+      "acts": [
+        "publish-change18-v2"
+      ],
+      "context": {
+        "item": "change18",
+        "revision": "version 2 · approved",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Publish the approved integration under its current conditions",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-change",
+      "activeActor": "Ari",
+      "key": "change-approved",
+      "theme": "dark",
+      "path": "change-approved-dark.html"
+    },
+    {
+      "title": "Failed checks",
+      "mode": "full",
+      "subject": "change23",
+      "revision": "version 1",
+      "acts": [],
+      "context": {
+        "item": "change23",
+        "revision": "version 1",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Request changes; approval is unavailable",
+        "entryPositionQualification": "No scope-position fixture was supplied for this standalone state."
+      },
+      "receipt": null,
+      "back": "carousel-failed",
+      "activeActor": "Ari",
+      "key": "change-failed",
+      "theme": "dark",
+      "path": "change-failed-dark.html"
+    },
+    {
+      "title": "Unknown publication outcome",
+      "mode": "full",
+      "subject": "change9",
+      "revision": "version 1 · request 9",
+      "acts": [
+        "check-original-request9"
+      ],
+      "context": {
+        "item": "change9",
+        "revision": "version 1 · request 9",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Recover the outcome of original request 9",
+        "projectionReadAt": {
+          "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+          "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+          "seq": 9
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-unknown",
+      "activeActor": "Ari",
+      "key": "change-unknown",
+      "theme": "dark",
+      "path": "change-unknown-dark.html"
+    },
+    {
+      "title": "Original request unavailable",
+      "mode": "full",
+      "subject": "change9",
+      "revision": "version 1 · request 9",
+      "acts": [
+        "check-original-request9"
+      ],
+      "context": {
+        "item": "change9",
+        "revision": "version 1 · request 9",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Recover the outcome of original request 9",
+        "projectionReadAt": {
+          "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+          "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+          "seq": 9
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-unknown",
+      "activeActor": "Ari",
+      "key": "change-unavailable",
+      "theme": "dark",
+      "path": "change-unavailable-dark.html"
+    },
+    {
+      "title": "Superseded change instance",
+      "mode": "full",
+      "subject": "change18",
+      "revision": "version 1 · superseded",
+      "acts": [],
+      "context": {
+        "item": "change18",
+        "revision": "version 1 · superseded",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read the current version",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-change",
+      "activeActor": "Ari",
+      "key": "change-stale",
+      "theme": "dark",
+      "path": "change-stale-dark.html"
+    },
+    {
+      "title": "Changes request draft",
+      "mode": "full",
+      "subject": "change18",
+      "revision": "version 2",
+      "acts": [],
+      "context": {
+        "item": "change18",
+        "revision": "version 2",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read only",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "change-review",
+      "activeActor": "Ari",
+      "key": "composer-changes",
+      "theme": "dark",
+      "path": "composer-changes-dark.html"
+    },
+    {
+      "title": "Failed change request draft",
+      "mode": "full",
+      "subject": "change23",
+      "revision": "version 1",
+      "acts": [],
+      "context": {
+        "item": "change23",
+        "revision": "version 1",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read only",
+        "entryPositionQualification": "No scope-position fixture was supplied for this standalone state."
+      },
+      "receipt": null,
+      "back": "change-failed",
+      "activeActor": "Ari",
+      "key": "composer-changes-failed",
+      "theme": "dark",
+      "path": "composer-changes-failed-dark.html"
+    },
+    {
+      "title": "Compare Change 12 versions",
+      "mode": "full",
+      "subject": "change12",
+      "revision": "version 2",
+      "acts": [],
+      "context": {
+        "item": "change12",
+        "revision": "version 2",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read only",
+        "entryPositionQualification": "No scope-position fixture was supplied for this standalone state."
+      },
+      "receipt": null,
+      "back": "carousel-change",
+      "activeActor": "Ari",
+      "key": "change12-review",
+      "theme": "dark",
+      "path": "change12-review-dark.html"
+    },
+    {
+      "title": "Change 18 diff",
+      "mode": "full",
+      "subject": "change18",
+      "revision": "version 2 · exact endpoints",
+      "acts": [],
+      "context": {
+        "item": "change18",
+        "revision": "version 2 · exact endpoints",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read only",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "change-review",
+      "activeActor": "Ari",
+      "key": "diff",
+      "theme": "dark",
+      "path": "diff-dark.html"
+    },
+    {
+      "title": "Change 12 version comparison",
+      "mode": "full",
+      "subject": "change12",
+      "revision": "versions 1 → 2 · exact endpoints",
+      "acts": [],
+      "context": {
+        "item": "change12",
+        "revision": "versions 1 → 2 · exact endpoints",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read only",
+        "entryPositionQualification": "No scope-position fixture was supplied for this standalone state."
+      },
+      "receipt": null,
+      "back": "change12-review",
+      "activeActor": "Ari",
+      "key": "interdiff",
+      "theme": "dark",
+      "path": "interdiff-dark.html"
+    },
+    {
+      "title": "Change 12 diff",
+      "mode": "full",
+      "subject": "change12",
+      "revision": "version 2 · exact endpoints",
+      "acts": [],
+      "context": {
+        "item": "change12",
+        "revision": "version 2 · exact endpoints",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read only",
+        "entryPositionQualification": "No scope-position fixture was supplied for this standalone state."
+      },
+      "receipt": null,
+      "back": "change12-review",
+      "activeActor": "Ari",
+      "key": "diff12",
+      "theme": "dark",
+      "path": "diff12-dark.html"
+    },
+    {
+      "title": "Change 12 pinned file excerpt",
+      "mode": "full",
+      "subject": "change12",
+      "revision": "version 2 · pinned file excerpt",
+      "acts": [],
+      "context": {
+        "item": "change12",
+        "revision": "version 2 · pinned file excerpt",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read only",
+        "entryPositionQualification": "No scope-position fixture was supplied for this standalone state."
+      },
+      "receipt": null,
+      "back": "change12-review",
+      "activeActor": "Ari",
+      "key": "file",
+      "theme": "dark",
+      "path": "file-dark.html"
+    },
+    {
+      "title": "Change 23 diff",
+      "mode": "full",
+      "subject": "change23",
+      "revision": "version 1",
+      "acts": [],
+      "context": {
+        "item": "change23",
+        "revision": "version 1",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read only",
+        "entryPositionQualification": "No scope-position fixture was supplied for this standalone state."
+      },
+      "receipt": null,
+      "back": "change-failed",
+      "activeActor": "Ari",
+      "key": "diff-failed",
+      "theme": "dark",
+      "path": "diff-failed-dark.html"
+    },
+    {
+      "title": "Unavailable diff",
+      "mode": "full",
+      "subject": "change18",
+      "revision": "version 2 · exact endpoints unavailable",
+      "acts": [],
+      "context": {
+        "item": "change18",
+        "revision": "version 2 · exact endpoints unavailable",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read only",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "change-review",
+      "activeActor": "Ari",
+      "key": "diff-unavailable",
+      "theme": "dark",
+      "path": "diff-unavailable-dark.html"
+    },
+    {
+      "title": "Incomplete diff",
+      "mode": "full",
+      "subject": "change18",
+      "revision": "version 2 · incomplete excerpt",
+      "acts": [],
+      "context": {
+        "item": "change18",
+        "revision": "version 2 · incomplete excerpt",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read only",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "change-review",
+      "activeActor": "Ari",
+      "key": "diff-truncated",
+      "theme": "dark",
+      "path": "diff-truncated-dark.html"
+    },
+    {
+      "title": "Updates since review",
+      "mode": "full",
+      "subject": "review-cut",
+      "revision": "Exact review cut",
+      "acts": [
+        "mark-exact-ranges-reviewed"
+      ],
+      "context": {
+        "item": "review-cut",
+        "revision": "Exact review cut",
+        "entryPositionsRead": [
+          {
+            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+            "after": 240,
+            "through": 245
+          },
+          {
+            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+            "after": 17,
+            "through": 18
+          },
+          {
+            "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+            "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+            "after": 8,
+            "through": 9
+          }
+        ],
+        "waitingOn": "Ari",
+        "settlesBy": "Advance only the three displayed scope/incarnation review positions",
+        "intendedReviewCutoffs": [
+          {
+            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+            "after": 240,
+            "through": 245
+          },
+          {
+            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+            "after": 17,
+            "through": 18
+          },
+          {
+            "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+            "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+            "after": 8,
+            "through": 9
+          }
+        ],
+        "presentedEntryPositions": [
+          {
+            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+            "after": 240,
+            "through": 245
+          },
+          {
+            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+            "after": 17,
+            "through": 18
+          },
+          {
+            "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+            "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+            "after": 8,
+            "through": 9
+          }
+        ]
+      },
+      "receipt": null,
+      "back": "carousel-updates",
+      "activeActor": "Ari",
+      "key": "updates",
+      "theme": "dark",
+      "path": "updates-dark.html"
+    },
+    {
+      "title": "Incomplete updates",
+      "mode": "full",
+      "subject": "review-cut",
+      "revision": "incomplete review cut",
+      "acts": [],
+      "context": {
+        "item": "review-cut",
+        "revision": "incomplete review cut",
+        "entryPositionsRead": [
+          {
+            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+            "after": 240,
+            "through": 245
+          },
+          {
+            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+            "after": 17,
+            "through": 18
+          }
+        ],
+        "waitingOn": "Ari",
+        "settlesBy": "Load every entry before marking reviewed",
+        "intendedReviewCutoffs": [
+          {
+            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+            "after": 240,
+            "through": 245
+          },
+          {
+            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+            "after": 17,
+            "through": 18
+          },
+          {
+            "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+            "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+            "after": 8,
+            "through": 9
+          }
+        ],
+        "presentedEntryPositions": [
+          {
+            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+            "after": 240,
+            "through": 245
+          },
+          {
+            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+            "after": 17,
+            "through": 18
+          }
+        ],
+        "unavailableEntryPositions": [
+          {
+            "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+            "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+            "after": 8,
+            "through": 9
+          }
+        ]
+      },
+      "receipt": null,
+      "back": "carousel-updates",
+      "activeActor": "Ari",
+      "key": "updates-incomplete",
+      "theme": "dark",
+      "path": "updates-incomplete-dark.html"
+    },
+    {
+      "title": "Review points saved",
+      "mode": "full",
+      "subject": "review-cut",
+      "revision": "exact displayed ranges",
+      "acts": [],
+      "context": {
+        "item": "review-cut",
+        "revision": "exact displayed ranges",
+        "entryPositionsRead": [],
+        "waitingOn": null,
+        "settlesBy": "Read only",
+        "intendedReviewCutoffs": [
+          {
+            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+            "after": 240,
+            "through": 245
+          },
+          {
+            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+            "after": 17,
+            "through": 18
+          },
+          {
+            "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+            "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+            "after": 8,
+            "through": 9
+          }
+        ],
+        "presentedEntryPositions": [],
+        "recordedReviewPoints": [
+          {
+            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+            "seq": 245
+          },
+          {
+            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+            "seq": 18
+          },
+          {
+            "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+            "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+            "seq": 9
+          }
+        ]
+      },
+      "receipt": null,
+      "back": "carousel-updates",
+      "activeActor": "Ari",
+      "key": "updates-reviewed",
+      "theme": "dark",
+      "path": "updates-reviewed-dark.html"
+    },
+    {
+      "title": "Question text approved",
+      "mode": "inline",
+      "subject": "q7",
+      "revision": "text v2 · approval 246",
+      "acts": [],
+      "context": {
+        "item": "q7",
+        "revision": "text v2 · approval 246",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Record the decision on approved q7 text v2",
+        "receipt": "Approved question q7 text v2 · entry 246",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 246
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": "Approved question q7 text v2 · entry 246",
+      "back": "carousel-question-approved",
+      "activeActor": "Ari",
+      "key": "receipt-question",
+      "theme": "dark",
+      "path": "receipt-question-dark.html"
+    },
+    {
+      "title": "Publication receipt",
+      "mode": "inline",
+      "subject": "change23",
+      "revision": "version 1",
+      "acts": [],
+      "context": {
+        "item": "change23",
+        "revision": "version 1",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Review the failed checks",
+        "receipt": "Published Change 18 version 2",
+        "entryPositionQualification": "No scope-position fixture was supplied for this standalone state."
+      },
+      "receipt": "Published Change 18 version 2",
+      "back": "carousel-change",
+      "activeActor": "Ari",
+      "key": "receipt-published",
+      "theme": "dark",
+      "path": "receipt-published-dark.html"
+    },
+    {
+      "title": "Receipt context pending",
+      "mode": "inline",
+      "subject": "q7",
+      "revision": "text v2 · approval 246",
+      "acts": [
+        "retry-context-only"
+      ],
+      "context": {
+        "item": "q7",
+        "revision": "text v2 · approval 246",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Update receipt context without repeating approval",
+        "receipt": "Approved question q7 text v2 · entry 246",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 246
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": "Approved question q7 text v2 · entry 246",
+      "back": "carousel-question-approved",
+      "activeActor": "Ari",
+      "key": "receipt-context-pending",
+      "theme": "dark",
+      "path": "receipt-context-pending-dark.html"
+    },
+    {
+      "title": "Nothing needs you",
+      "mode": "inline",
+      "subject": "empty",
+      "revision": "",
+      "acts": [],
+      "context": {
+        "item": "empty",
+        "revision": "",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read only",
+        "entryPositionQualification": "No scope-position fixture was supplied for this standalone state."
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "empty",
+      "theme": "dark",
+      "path": "empty-dark.html"
+    },
+    {
+      "title": "Loading your items…",
+      "mode": "inline",
+      "subject": "loading",
+      "revision": "",
+      "acts": [],
+      "context": {
+        "item": "loading",
+        "revision": "",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read only",
+        "entryPositionQualification": "No scope-position fixture was supplied for this standalone state."
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "loading",
+      "theme": "dark",
+      "path": "loading-dark.html"
+    },
+    {
+      "title": "Items unavailable",
+      "mode": "inline",
+      "subject": "unavailable",
+      "revision": "",
+      "acts": [],
+      "context": {
+        "item": "unavailable",
+        "revision": "",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read only",
+        "entryPositionQualification": "No scope-position fixture was supplied for this standalone state."
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "unavailable",
+      "theme": "dark",
+      "path": "unavailable-dark.html"
+    },
+    {
+      "title": "Some items are unavailable",
+      "mode": "inline",
+      "subject": "partial",
+      "revision": "",
+      "acts": [],
+      "context": {
+        "item": "partial",
+        "revision": "",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read only",
+        "entryPositionQualification": "No scope-position fixture was supplied for this standalone state."
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "partial",
+      "theme": "dark",
+      "path": "partial-dark.html"
+    },
+    {
+      "title": "Delivered work",
+      "mode": "full",
+      "subject": "commitment-interface",
+      "revision": "conditions v2 · delivered",
+      "acts": [],
+      "context": {
+        "item": "commitment-interface",
+        "revision": "conditions v2 · delivered",
+        "entryPositionsRead": [],
+        "waitingOn": null,
+        "settlesBy": "Settled work",
+        "entryPositionQualification": "No scope-position fixture was supplied for this standalone state."
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "work-settled",
+      "theme": "dark",
+      "path": "work-settled-dark.html"
+    },
+    {
+      "title": "Agent approval refused",
+      "mode": "full",
+      "subject": "q7",
+      "revision": "text v2",
+      "acts": [],
+      "context": {
+        "item": "q7",
+        "revision": "text v2",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "The requested person approves the exact text",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 245
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Interface agent",
+      "key": "question-agent-refused",
+      "theme": "dark",
+      "path": "question-agent-refused-dark.html"
+    },
+    {
+      "title": "Approval not requested",
+      "mode": "full",
+      "subject": "q7",
+      "revision": "text v2",
+      "acts": [],
+      "context": {
+        "item": "q7",
+        "revision": "text v2",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "The requested person approves the exact text",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 245
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Rin",
+      "key": "question-unrequested",
+      "theme": "dark",
+      "path": "question-unrequested-dark.html"
+    },
+    {
+      "title": "Checker result unavailable",
+      "mode": "full",
+      "subject": "change18",
+      "revision": "version 2 · checker unknown",
+      "acts": [],
+      "context": {
+        "item": "change18",
+        "revision": "version 2 · checker unknown",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Read a checker result for the exact integration",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-change",
+      "activeActor": "Ari",
+      "key": "change-no-checks",
+      "theme": "dark",
+      "path": "change-no-checks-dark.html"
+    },
+    {
+      "title": "Approved question needs a decision",
+      "mode": "inline",
+      "subject": "q7",
+      "revision": "text v2 · approval 246",
+      "acts": [],
+      "context": {
+        "item": "q7",
+        "revision": "text v2 · approval 246",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Record the decision on approved text v2",
+        "projectionReadAt": {
+          "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+          "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+          "seq": 246
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "carousel-question-approved",
+      "theme": "dark",
+      "path": "carousel-question-approved-dark.html"
+    },
+    {
+      "title": "Improve empty-list message",
+      "mode": "inline",
+      "subject": "change18",
+      "revision": "version 2",
+      "acts": [],
+      "context": {
+        "item": "change18",
+        "revision": "version 2",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Review Change 18 version 2; checks passed.",
+        "projectionReadAt": {
+          "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+          "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+          "seq": 18
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "carousel-refreshed-change",
+      "theme": "dark",
+      "path": "carousel-refreshed-change-dark.html"
+    },
+    {
+      "title": "Keep task history",
+      "mode": "inline",
+      "subject": "change23",
+      "revision": "version 1",
+      "acts": [],
+      "context": {
+        "item": "change23",
+        "revision": "version 1",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Change 23 has two failed checks.",
+        "entryPositionQualification": "No scope-position fixture was supplied for this standalone state."
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "carousel-refreshed-failed",
+      "theme": "dark",
+      "path": "carousel-refreshed-failed-dark.html"
+    },
+    {
+      "title": "Keyboard focus fix",
+      "mode": "inline",
+      "subject": "change9",
+      "revision": "version 1",
+      "acts": [],
+      "context": {
+        "item": "change9",
+        "revision": "version 1",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Check the original publication request for Change 9.",
+        "projectionReadAt": {
+          "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+          "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+          "seq": 9
+        },
+        "presentedEntryPositions": []
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "carousel-refreshed-unknown",
+      "theme": "dark",
+      "path": "carousel-refreshed-unknown-dark.html"
+    },
+    {
+      "title": "7 new entries",
+      "mode": "inline",
+      "subject": "review-cut",
+      "revision": "240→245 · 17→18 · 8→9",
+      "acts": [],
+      "context": {
+        "item": "review-cut",
+        "revision": "240→245 · 17→18 · 8→9",
+        "entryPositionsRead": [],
+        "waitingOn": "Ari",
+        "settlesBy": "Three scopes have updates since your last review.",
+        "intendedReviewCutoffs": [
+          {
+            "scope": "sc_4cg2kkmnl6koquptolr5kz56zklrrbbuohyxk3azok2svu3louqq",
+            "inc": "in_hobiscq4kjbb5w4yhyd6keckga",
+            "after": 240,
+            "through": 245
+          },
+          {
+            "scope": "sc_kg64zq7rjdd3d5x32lxiot5f4cpjl4dmktfy3wkgy6voqahg7jua",
+            "inc": "in_mdlqzgk2pjphrbnepwlt4r547m",
+            "after": 17,
+            "through": 18
+          },
+          {
+            "scope": "sc_ceh3forrt3l3wubtpujmvxoauw76jjt3rbrcguneqxstkmb5mmtq",
+            "inc": "in_u2d4j74sz2k53oohl6urjt4uhi",
+            "after": 8,
+            "through": 9
+          }
+        ],
+        "presentedEntryPositions": [],
+        "coverage": "Summary only; entry bodies have not been read or presented."
+      },
+      "receipt": null,
+      "back": "carousel-question",
+      "activeActor": "Ari",
+      "key": "carousel-refreshed-updates",
+      "theme": "dark",
+      "path": "carousel-refreshed-updates-dark.html"
+    }
+  ]
+}
