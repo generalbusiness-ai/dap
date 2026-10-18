@@ -2,12 +2,14 @@
  * their screen resources. Scenarios use public TEST grants, no live room or
  * destination; queued Lending publication is not a provider effect. */
 import { fileURLToPath } from "node:url";
+import { rm } from "node:fs/promises";
 import { expect, test } from "vitest";
 import { secretSigner } from "@generalbusiness/artroom-client";
 import { COUNTING_COMMITMENTS_DEFINITION } from "../../../apps/counter/commitments-pin.ts";
 import { LENDING_DEFINITION } from "../../../examples/lending/pin.ts";
 import { prepareApplicationDirectory, readApplicationScenario } from "../src/application-files.ts";
 import { runApplicationScenario } from "../src/application-scenarios.ts";
+import { prepareGrowCheck } from "../../../examples/grow/prepare-check.ts";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 test("maintained Counter and Lending packages bind their current browser definition and own all screen resources", async () => {
@@ -43,4 +45,22 @@ test("maintained Counter and Lending packages bind their current browser definit
     expect(result.projectionChecks).toBe(3);
     expect(result.ownerRecords).toEqual([]);
   }
+});
+
+// Invariant: maintained Grow reads use the actual Site/Room declarations,
+// retain the complete 100-bench fixture, and expose comment facts honestly.
+test("maintained Grow declarations check site events and the complete room grid at native local heads", async () => {
+  const root = await prepareGrowCheck();
+  try {
+    const prepared = await prepareApplicationDirectory(root, secretSigner(new Uint8Array(32).fill(254)));
+    expect(prepared.packet.package.v).toBe(2);
+    expect(prepared.packet.package.semantic.definitions).toHaveLength(2);
+    for (const [path, steps, through, owners] of [["site-scenario.json", 10, 5, 0], ["fault-scenario.json", 202, 160, 8]] as const) {
+      const result = await runApplicationScenario(prepared.packet, await readApplicationScenario(root, path));
+      expect(result.steps).toBe(steps);
+      expect(result.projectionChecks).toBe(3);
+      expect(result.replay.report).toMatchObject({ result: "consistent", target: { seq: through } });
+      expect(result.ownerRecords).toHaveLength(owners);
+    }
+  } finally { await rm(root, { recursive: true, force: true }); }
 });

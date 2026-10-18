@@ -592,3 +592,43 @@ shared mapping at both widths. Seven targeted cases pass (`75732`, terminal
 `/tmp/artroom-m2a-declared-tool-names-browser-20261018/`. The resources were
 regenerated from their actual browser inputs. No final gate or delivery is
 claimed.
+
+### Grow alert, grid and recent event declarations
+
+The maintained Grow check package now declares Site room rows, arrival/leave
+events, alert/device/zone/incident rows, and grid bench/device/zone rows.
+Its grid includes the most recent observation per recorded signer inside
+the last 100 entries, with typed sample time and zone readings. All sources
+in a projection share one native head. Alert controls bind native Hold and
+Authorize to their required action. The interpreter's per-action expected
+sets include the heater only for Authorize. The incident record selects the
+actual incident, with its first/last facts. Arrival/leave is explicitly a
+recent event log, not a complete current-presence assertion.
+
+The local Site scenario passes 10 steps through seq 5. It checks initial
+state, three pending room rows and the two signed presence comments. The
+fault scenario passes 202 steps through seq 160. It checks the empty grid,
+closed alert/incident and exact incident range, all 100 stale bench rows,
+and the latest sensor observation at seq 151. Each scenario has three
+projection checks. Eight scenario-owner records remain outside the native
+journal and replay claim. The maintained Grow witness passes (`25339`,
+terminal `0f2376`); the CLI test typecheck also passes.
+
+The real `dap check` command passed both scenarios before the last sample
+and incident assertions were strengthened. Log:
+`/tmp/artroom-m2a-grow-declared-check-compact-20261018.log`. The first attempt
+expanded the compact fault JSON beyond the source-file allowance. Keeping
+one compact step per line restores it below 64 KiB; no allowance changed.
+An initial mandatory `latest-entry` source correctly refused before the
+first observation. The declaration now groups recent observation entries
+by signer and permits an empty source. No journal-read guard changed.
+
+A diagnostic wrapper around the unchanged native SQLite projection phase
+measured the final grid at 37,858 bytes: 100 benches, 12 devices, four zones
+and one sample. It remains within the kit's existing 64 KiB projection
+bound. The wrapper ran only in its diagnostic process, with no source
+mutation. Log: `/tmp/artroom-m2a-grow-grid-sample-corrected-20261018.log`.
+This proves local typed data and replay with TEST authority. It does not
+prove Site-to-Room installation ownership, current complete presence,
+surface rendering, maintained browser migration or hosted operation. Those
+acceptance items, the final gate, review and landing remain owed.

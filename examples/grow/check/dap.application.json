@@ -22,14 +22,1589 @@
       }
     ],
     "descriptions": {},
-    "entry": "index.html"
+    "entry": "index.html",
+    "resources": {},
+    "views": {
+      "alert": {
+        "revision": "revision",
+        "refresh": 2000,
+        "display": "inline",
+        "back": null,
+        "waiting": {},
+        "acts": [
+          {
+            "act": "hold",
+            "label": "Hold",
+            "needs": "grow.heat",
+            "when": "state = 'open'"
+          },
+          {
+            "act": "authorize",
+            "label": "Authorize",
+            "needs": "grow.heat",
+            "when": "state = 'open'"
+          }
+        ],
+        "kind": "card",
+        "projection": "alerts",
+        "item": "alert",
+        "title": "text",
+        "summary": "proposal",
+        "actor": "raisedBy",
+        "facts": [
+          "state",
+          "zone",
+          "target",
+          "level",
+          "raisedTime"
+        ],
+        "context": "Alert {id} v{revision}: {state}",
+        "fallback": "Alert {id}: {text} ({state})"
+      },
+      "incident": {
+        "revision": "revision",
+        "refresh": 2000,
+        "display": "fullscreen",
+        "back": "alerts",
+        "waiting": {},
+        "acts": [],
+        "kind": "record",
+        "projection": "alerts",
+        "item": "incident",
+        "title": "state",
+        "summary": null,
+        "actor": null,
+        "facts": [
+          "alert",
+          "first",
+          "last"
+        ],
+        "context": "Incident {id} v{revision}: {state}",
+        "fallback": "Incident {id}: {state}"
+      },
+      "alerts": {
+        "revision": "revision",
+        "refresh": 2000,
+        "display": "inline",
+        "back": null,
+        "waiting": {},
+        "acts": [
+          {
+            "act": "hold",
+            "label": "Hold",
+            "needs": "grow.heat",
+            "when": "state = 'open'"
+          },
+          {
+            "act": "authorize",
+            "label": "Authorize",
+            "needs": "grow.heat",
+            "when": "state = 'open'"
+          }
+        ],
+        "kind": "carousel",
+        "projection": "alerts",
+        "item": "alert",
+        "title": "text",
+        "summary": "proposal",
+        "actor": "raisedBy",
+        "facts": [
+          "state",
+          "zone",
+          "target",
+          "level",
+          "raisedTime"
+        ],
+        "context": "Alert {id} v{revision}: {state}",
+        "fallback": "Alert {id}: {text} ({state})"
+      },
+      "rooms": {
+        "revision": "revision",
+        "refresh": 2000,
+        "display": "inline",
+        "back": null,
+        "waiting": {},
+        "acts": [],
+        "kind": "carousel",
+        "projection": "site",
+        "item": "room",
+        "title": "label",
+        "summary": "state",
+        "actor": null,
+        "facts": [
+          "openAlerts"
+        ],
+        "context": "Room {id} v{revision}",
+        "fallback": "Room {id}: {label} ({state})"
+      },
+      "presence": {
+        "revision": "revision",
+        "refresh": 2000,
+        "display": "fullscreen",
+        "back": "rooms",
+        "waiting": {},
+        "acts": [],
+        "kind": "log",
+        "projection": "presence",
+        "item": "events",
+        "title": "type",
+        "summary": null,
+        "actor": "actor",
+        "facts": [
+          "room",
+          "time"
+        ],
+        "context": "Recent presence event {id}: {type}",
+        "fallback": "Recent presence event {id}: {type}"
+      },
+      "activity": {
+        "revision": "revision",
+        "refresh": 2000,
+        "display": "fullscreen",
+        "back": "alerts",
+        "waiting": {},
+        "acts": [],
+        "kind": "log",
+        "projection": "activity",
+        "item": "events",
+        "title": "type",
+        "summary": null,
+        "actor": "actor",
+        "facts": [
+          "time"
+        ],
+        "context": "Recent incident event {id}: {type}",
+        "fallback": "Recent incident event {id}: {type}"
+      },
+      "alert-record": {
+        "revision": "revision",
+        "refresh": 2000,
+        "display": "fullscreen",
+        "back": "alerts",
+        "waiting": {},
+        "acts": [
+          {
+            "act": "hold",
+            "label": "Hold",
+            "needs": "grow.heat",
+            "when": "state = 'open'"
+          },
+          {
+            "act": "authorize",
+            "label": "Authorize",
+            "needs": "grow.heat",
+            "when": "state = 'open'"
+          }
+        ],
+        "kind": "record",
+        "projection": "alerts",
+        "item": "alert",
+        "title": "text",
+        "summary": "proposal",
+        "actor": "raisedBy",
+        "facts": [
+          "state",
+          "zone",
+          "target",
+          "level",
+          "raisedTime"
+        ],
+        "context": "Alert {id} v{revision}: {state}",
+        "fallback": "Alert {id}: {text} ({state})"
+      }
+    }
   },
-  "projections": {},
+  "projections": {
+    "alerts": {
+      "v": 1,
+      "definition": "room.json",
+      "revision": "revision",
+      "sources": {
+        "alert": {
+          "item": "alert",
+          "read": "many",
+          "states": [
+            "authorized",
+            "closed",
+            "held",
+            "open"
+          ],
+          "limit": 100,
+          "fields": {
+            "text": {
+              "from": {
+                "kind": "value",
+                "name": "text"
+              },
+              "of": {
+                "type": "text",
+                "max": 1024
+              },
+              "nullable": false
+            },
+            "proposal": {
+              "from": {
+                "kind": "value",
+                "name": "proposal"
+              },
+              "of": {
+                "type": "text",
+                "max": 1024
+              },
+              "nullable": false
+            },
+            "target": {
+              "from": {
+                "kind": "value",
+                "name": "target"
+              },
+              "of": {
+                "type": "enum",
+                "of": [
+                  "on",
+                  "off"
+                ]
+              },
+              "nullable": false
+            },
+            "level": {
+              "from": {
+                "kind": "value",
+                "name": "level"
+              },
+              "of": {
+                "type": "int",
+                "min": 0,
+                "max": 100
+              },
+              "nullable": false
+            },
+            "raisedTime": {
+              "from": {
+                "kind": "value",
+                "name": "raisedTime"
+              },
+              "of": {
+                "type": "time"
+              },
+              "nullable": false
+            },
+            "holdUntil": {
+              "from": {
+                "kind": "value",
+                "name": "holdUntil"
+              },
+              "of": {
+                "type": "time"
+              },
+              "nullable": true
+            },
+            "zone": {
+              "from": {
+                "kind": "ref",
+                "name": "zone"
+              },
+              "of": {
+                "type": "item",
+                "of": "zone"
+              },
+              "nullable": false
+            },
+            "heater": {
+              "from": {
+                "kind": "ref",
+                "name": "heater"
+              },
+              "of": {
+                "type": "item",
+                "of": "device"
+              },
+              "nullable": false
+            },
+            "first": {
+              "from": {
+                "kind": "ref",
+                "name": "first"
+              },
+              "of": {
+                "type": "fact",
+                "under": "grow-room",
+                "kind": [
+                  "raise-alert"
+                ]
+              },
+              "nullable": false
+            },
+            "last": {
+              "from": {
+                "kind": "ref",
+                "name": "last"
+              },
+              "of": {
+                "type": "fact",
+                "under": "grow-room",
+                "kind": [
+                  "close-incident"
+                ]
+              },
+              "nullable": true
+            },
+            "raisedBy": {
+              "from": {
+                "kind": "party",
+                "name": "raisedBy"
+              },
+              "of": {
+                "type": "member"
+              },
+              "nullable": false
+            },
+            "authorizedBy": {
+              "from": {
+                "kind": "party",
+                "name": "authorizedBy"
+              },
+              "of": {
+                "type": "member"
+              },
+              "nullable": true
+            },
+            "heldBy": {
+              "from": {
+                "kind": "party",
+                "name": "heldBy"
+              },
+              "of": {
+                "type": "member"
+              },
+              "nullable": true
+            }
+          }
+        },
+        "device": {
+          "item": "device",
+          "read": "many",
+          "states": [
+            "active"
+          ],
+          "limit": 100,
+          "fields": {
+            "kind": {
+              "from": {
+                "kind": "value",
+                "name": "kind"
+              },
+              "of": {
+                "type": "enum",
+                "of": [
+                  "vent",
+                  "fan",
+                  "heater"
+                ]
+              },
+              "nullable": false
+            },
+            "label": {
+              "from": {
+                "kind": "value",
+                "name": "label"
+              },
+              "of": {
+                "type": "text",
+                "max": 80
+              },
+              "nullable": false
+            },
+            "minLevel": {
+              "from": {
+                "kind": "value",
+                "name": "minLevel"
+              },
+              "of": {
+                "type": "int",
+                "min": 0,
+                "max": 100
+              },
+              "nullable": false
+            },
+            "maxLevel": {
+              "from": {
+                "kind": "value",
+                "name": "maxLevel"
+              },
+              "of": {
+                "type": "int",
+                "min": 0,
+                "max": 100
+              },
+              "nullable": false
+            },
+            "target": {
+              "from": {
+                "kind": "value",
+                "name": "target"
+              },
+              "of": {
+                "type": "enum",
+                "of": [
+                  "open",
+                  "closed",
+                  "on",
+                  "off"
+                ]
+              },
+              "nullable": false
+            },
+            "level": {
+              "from": {
+                "kind": "value",
+                "name": "level"
+              },
+              "of": {
+                "type": "int",
+                "min": 0,
+                "max": 100
+              },
+              "nullable": false
+            },
+            "reported": {
+              "from": {
+                "kind": "value",
+                "name": "reported"
+              },
+              "of": {
+                "type": "enum",
+                "of": [
+                  "open",
+                  "closed",
+                  "on",
+                  "off",
+                  "error"
+                ]
+              },
+              "nullable": true
+            },
+            "reportedLevel": {
+              "from": {
+                "kind": "value",
+                "name": "reportedLevel"
+              },
+              "of": {
+                "type": "int",
+                "min": 0,
+                "max": 100
+              },
+              "nullable": true
+            },
+            "description": {
+              "from": {
+                "kind": "value",
+                "name": "description"
+              },
+              "of": {
+                "type": "text",
+                "max": 1024
+              },
+              "nullable": true
+            },
+            "reportedTime": {
+              "from": {
+                "kind": "value",
+                "name": "reportedTime"
+              },
+              "of": {
+                "type": "time"
+              },
+              "nullable": true
+            },
+            "targetAt": {
+              "from": {
+                "kind": "ref",
+                "name": "targetAt"
+              },
+              "of": {
+                "type": "fact",
+                "under": "grow-room",
+                "kind": [
+                  "commission-device",
+                  "set-vent",
+                  "set-fan",
+                  "set-heater",
+                  "authorize"
+                ]
+              },
+              "nullable": false
+            },
+            "reportedAt": {
+              "from": {
+                "kind": "ref",
+                "name": "reportedAt"
+              },
+              "of": {
+                "type": "fact",
+                "under": "grow-room",
+                "kind": [
+                  "report-device"
+                ]
+              },
+              "nullable": true
+            },
+            "zone": {
+              "from": {
+                "kind": "ref",
+                "name": "zone"
+              },
+              "of": {
+                "type": "item",
+                "of": "zone"
+              },
+              "nullable": false
+            }
+          }
+        },
+        "zone": {
+          "item": "zone",
+          "read": "many",
+          "states": [
+            "in-band",
+            "out-of-band",
+            "unobserved"
+          ],
+          "limit": 100,
+          "fields": {
+            "label": {
+              "from": {
+                "kind": "value",
+                "name": "label"
+              },
+              "of": {
+                "type": "text",
+                "max": 80
+              },
+              "nullable": false
+            },
+            "setpoint": {
+              "from": {
+                "kind": "value",
+                "name": "setpoint"
+              },
+              "of": {
+                "type": "int",
+                "min": -4000,
+                "max": 8000
+              },
+              "nullable": false
+            },
+            "band": {
+              "from": {
+                "kind": "value",
+                "name": "band"
+              },
+              "of": {
+                "type": "int",
+                "min": 1,
+                "max": 2000
+              },
+              "nullable": false
+            },
+            "min": {
+              "from": {
+                "kind": "value",
+                "name": "min"
+              },
+              "of": {
+                "type": "int",
+                "min": -4000,
+                "max": 8000
+              },
+              "nullable": true
+            },
+            "max": {
+              "from": {
+                "kind": "value",
+                "name": "max"
+              },
+              "of": {
+                "type": "int",
+                "min": -4000,
+                "max": 8000
+              },
+              "nullable": true
+            },
+            "mean": {
+              "from": {
+                "kind": "value",
+                "name": "mean"
+              },
+              "of": {
+                "type": "int",
+                "min": -4000,
+                "max": 8000
+              },
+              "nullable": true
+            },
+            "inBand": {
+              "from": {
+                "kind": "value",
+                "name": "inBand"
+              },
+              "of": {
+                "type": "int",
+                "min": 0,
+                "max": 25
+              },
+              "nullable": true
+            },
+            "summaryTime": {
+              "from": {
+                "kind": "value",
+                "name": "summaryTime"
+              },
+              "of": {
+                "type": "time"
+              },
+              "nullable": true
+            },
+            "summary": {
+              "from": {
+                "kind": "ref",
+                "name": "summary"
+              },
+              "of": {
+                "type": "fact",
+                "under": "grow-room",
+                "kind": [
+                  "observe"
+                ]
+              },
+              "nullable": true
+            },
+            "vent": {
+              "from": {
+                "kind": "ref",
+                "name": "vent"
+              },
+              "of": {
+                "type": "item",
+                "of": "device"
+              },
+              "nullable": true
+            },
+            "fan": {
+              "from": {
+                "kind": "ref",
+                "name": "fan"
+              },
+              "of": {
+                "type": "item",
+                "of": "device"
+              },
+              "nullable": true
+            },
+            "heater": {
+              "from": {
+                "kind": "ref",
+                "name": "heater"
+              },
+              "of": {
+                "type": "item",
+                "of": "device"
+              },
+              "nullable": true
+            }
+          }
+        },
+        "incident": {
+          "item": "incident",
+          "read": "many",
+          "states": [
+            "closed",
+            "open"
+          ],
+          "limit": 100,
+          "fields": {
+            "alert": {
+              "from": {
+                "kind": "ref",
+                "name": "alert"
+              },
+              "of": {
+                "type": "item",
+                "of": "alert"
+              },
+              "nullable": false
+            },
+            "first": {
+              "from": {
+                "kind": "ref",
+                "name": "first"
+              },
+              "of": {
+                "type": "fact",
+                "under": "grow-room",
+                "kind": [
+                  "raise-alert"
+                ]
+              },
+              "nullable": false
+            },
+            "last": {
+              "from": {
+                "kind": "ref",
+                "name": "last"
+              },
+              "of": {
+                "type": "fact",
+                "under": "grow-room",
+                "kind": [
+                  "close-incident"
+                ]
+              },
+              "nullable": true
+            }
+          }
+        }
+      }
+    },
+    "grid": {
+      "v": 1,
+      "definition": "room.json",
+      "revision": "revision",
+      "sources": {
+        "bench": {
+          "item": "bench",
+          "read": "many",
+          "states": [
+            "fresh",
+            "stale"
+          ],
+          "limit": 100,
+          "fields": {
+            "label": {
+              "from": {
+                "kind": "value",
+                "name": "label"
+              },
+              "of": {
+                "type": "text",
+                "max": 80
+              },
+              "nullable": false
+            },
+            "row": {
+              "from": {
+                "kind": "value",
+                "name": "row"
+              },
+              "of": {
+                "type": "enum",
+                "of": [
+                  "A",
+                  "B",
+                  "C",
+                  "D",
+                  "E",
+                  "F",
+                  "G",
+                  "H",
+                  "I",
+                  "J"
+                ]
+              },
+              "nullable": false
+            },
+            "column": {
+              "from": {
+                "kind": "value",
+                "name": "column"
+              },
+              "of": {
+                "type": "int",
+                "min": 1,
+                "max": 10
+              },
+              "nullable": false
+            },
+            "moisture": {
+              "from": {
+                "kind": "value",
+                "name": "moisture"
+              },
+              "of": {
+                "type": "int",
+                "min": 0,
+                "max": 100
+              },
+              "nullable": true
+            },
+            "ec": {
+              "from": {
+                "kind": "value",
+                "name": "ec"
+              },
+              "of": {
+                "type": "int",
+                "min": 0,
+                "max": 10000
+              },
+              "nullable": true
+            },
+            "ph": {
+              "from": {
+                "kind": "value",
+                "name": "ph"
+              },
+              "of": {
+                "type": "int",
+                "min": 0,
+                "max": 1400
+              },
+              "nullable": true
+            },
+            "height": {
+              "from": {
+                "kind": "value",
+                "name": "height"
+              },
+              "of": {
+                "type": "int",
+                "min": 0,
+                "max": 5000
+              },
+              "nullable": true
+            },
+            "insects": {
+              "from": {
+                "kind": "value",
+                "name": "insects"
+              },
+              "of": {
+                "type": "int",
+                "min": 0,
+                "max": 10000
+              },
+              "nullable": true
+            },
+            "note": {
+              "from": {
+                "kind": "value",
+                "name": "note"
+              },
+              "of": {
+                "type": "text",
+                "max": 1024
+              },
+              "nullable": true
+            },
+            "probeTime": {
+              "from": {
+                "kind": "value",
+                "name": "probeTime"
+              },
+              "of": {
+                "type": "time"
+              },
+              "nullable": true
+            },
+            "staleAt": {
+              "from": {
+                "kind": "value",
+                "name": "staleAt"
+              },
+              "of": {
+                "type": "time"
+              },
+              "nullable": true
+            },
+            "zone": {
+              "from": {
+                "kind": "ref",
+                "name": "zone"
+              },
+              "of": {
+                "type": "item",
+                "of": "zone"
+              },
+              "nullable": false
+            },
+            "lastProbe": {
+              "from": {
+                "kind": "ref",
+                "name": "lastProbe"
+              },
+              "of": {
+                "type": "fact",
+                "under": "grow-room",
+                "kind": [
+                  "probe"
+                ]
+              },
+              "nullable": true
+            },
+            "moistureAt": {
+              "from": {
+                "kind": "ref",
+                "name": "moistureAt"
+              },
+              "of": {
+                "type": "fact",
+                "under": "grow-room",
+                "kind": [
+                  "probe"
+                ]
+              },
+              "nullable": true
+            },
+            "ecAt": {
+              "from": {
+                "kind": "ref",
+                "name": "ecAt"
+              },
+              "of": {
+                "type": "fact",
+                "under": "grow-room",
+                "kind": [
+                  "probe"
+                ]
+              },
+              "nullable": true
+            },
+            "phAt": {
+              "from": {
+                "kind": "ref",
+                "name": "phAt"
+              },
+              "of": {
+                "type": "fact",
+                "under": "grow-room",
+                "kind": [
+                  "probe"
+                ]
+              },
+              "nullable": true
+            },
+            "heightAt": {
+              "from": {
+                "kind": "ref",
+                "name": "heightAt"
+              },
+              "of": {
+                "type": "fact",
+                "under": "grow-room",
+                "kind": [
+                  "probe"
+                ]
+              },
+              "nullable": true
+            },
+            "insectsAt": {
+              "from": {
+                "kind": "ref",
+                "name": "insectsAt"
+              },
+              "of": {
+                "type": "fact",
+                "under": "grow-room",
+                "kind": [
+                  "probe"
+                ]
+              },
+              "nullable": true
+            },
+            "noteAt": {
+              "from": {
+                "kind": "ref",
+                "name": "noteAt"
+              },
+              "of": {
+                "type": "fact",
+                "under": "grow-room",
+                "kind": [
+                  "probe"
+                ]
+              },
+              "nullable": true
+            }
+          }
+        },
+        "zone": {
+          "item": "zone",
+          "read": "many",
+          "states": [
+            "in-band",
+            "out-of-band",
+            "unobserved"
+          ],
+          "limit": 100,
+          "fields": {
+            "label": {
+              "from": {
+                "kind": "value",
+                "name": "label"
+              },
+              "of": {
+                "type": "text",
+                "max": 80
+              },
+              "nullable": false
+            },
+            "setpoint": {
+              "from": {
+                "kind": "value",
+                "name": "setpoint"
+              },
+              "of": {
+                "type": "int",
+                "min": -4000,
+                "max": 8000
+              },
+              "nullable": false
+            },
+            "band": {
+              "from": {
+                "kind": "value",
+                "name": "band"
+              },
+              "of": {
+                "type": "int",
+                "min": 1,
+                "max": 2000
+              },
+              "nullable": false
+            },
+            "min": {
+              "from": {
+                "kind": "value",
+                "name": "min"
+              },
+              "of": {
+                "type": "int",
+                "min": -4000,
+                "max": 8000
+              },
+              "nullable": true
+            },
+            "max": {
+              "from": {
+                "kind": "value",
+                "name": "max"
+              },
+              "of": {
+                "type": "int",
+                "min": -4000,
+                "max": 8000
+              },
+              "nullable": true
+            },
+            "mean": {
+              "from": {
+                "kind": "value",
+                "name": "mean"
+              },
+              "of": {
+                "type": "int",
+                "min": -4000,
+                "max": 8000
+              },
+              "nullable": true
+            },
+            "inBand": {
+              "from": {
+                "kind": "value",
+                "name": "inBand"
+              },
+              "of": {
+                "type": "int",
+                "min": 0,
+                "max": 25
+              },
+              "nullable": true
+            },
+            "summaryTime": {
+              "from": {
+                "kind": "value",
+                "name": "summaryTime"
+              },
+              "of": {
+                "type": "time"
+              },
+              "nullable": true
+            },
+            "summary": {
+              "from": {
+                "kind": "ref",
+                "name": "summary"
+              },
+              "of": {
+                "type": "fact",
+                "under": "grow-room",
+                "kind": [
+                  "observe"
+                ]
+              },
+              "nullable": true
+            },
+            "vent": {
+              "from": {
+                "kind": "ref",
+                "name": "vent"
+              },
+              "of": {
+                "type": "item",
+                "of": "device"
+              },
+              "nullable": true
+            },
+            "fan": {
+              "from": {
+                "kind": "ref",
+                "name": "fan"
+              },
+              "of": {
+                "type": "item",
+                "of": "device"
+              },
+              "nullable": true
+            },
+            "heater": {
+              "from": {
+                "kind": "ref",
+                "name": "heater"
+              },
+              "of": {
+                "type": "item",
+                "of": "device"
+              },
+              "nullable": true
+            }
+          }
+        },
+        "device": {
+          "item": "device",
+          "read": "many",
+          "states": [
+            "active"
+          ],
+          "limit": 100,
+          "fields": {
+            "kind": {
+              "from": {
+                "kind": "value",
+                "name": "kind"
+              },
+              "of": {
+                "type": "enum",
+                "of": [
+                  "vent",
+                  "fan",
+                  "heater"
+                ]
+              },
+              "nullable": false
+            },
+            "label": {
+              "from": {
+                "kind": "value",
+                "name": "label"
+              },
+              "of": {
+                "type": "text",
+                "max": 80
+              },
+              "nullable": false
+            },
+            "minLevel": {
+              "from": {
+                "kind": "value",
+                "name": "minLevel"
+              },
+              "of": {
+                "type": "int",
+                "min": 0,
+                "max": 100
+              },
+              "nullable": false
+            },
+            "maxLevel": {
+              "from": {
+                "kind": "value",
+                "name": "maxLevel"
+              },
+              "of": {
+                "type": "int",
+                "min": 0,
+                "max": 100
+              },
+              "nullable": false
+            },
+            "target": {
+              "from": {
+                "kind": "value",
+                "name": "target"
+              },
+              "of": {
+                "type": "enum",
+                "of": [
+                  "open",
+                  "closed",
+                  "on",
+                  "off"
+                ]
+              },
+              "nullable": false
+            },
+            "level": {
+              "from": {
+                "kind": "value",
+                "name": "level"
+              },
+              "of": {
+                "type": "int",
+                "min": 0,
+                "max": 100
+              },
+              "nullable": false
+            },
+            "reported": {
+              "from": {
+                "kind": "value",
+                "name": "reported"
+              },
+              "of": {
+                "type": "enum",
+                "of": [
+                  "open",
+                  "closed",
+                  "on",
+                  "off",
+                  "error"
+                ]
+              },
+              "nullable": true
+            },
+            "reportedLevel": {
+              "from": {
+                "kind": "value",
+                "name": "reportedLevel"
+              },
+              "of": {
+                "type": "int",
+                "min": 0,
+                "max": 100
+              },
+              "nullable": true
+            },
+            "description": {
+              "from": {
+                "kind": "value",
+                "name": "description"
+              },
+              "of": {
+                "type": "text",
+                "max": 1024
+              },
+              "nullable": true
+            },
+            "reportedTime": {
+              "from": {
+                "kind": "value",
+                "name": "reportedTime"
+              },
+              "of": {
+                "type": "time"
+              },
+              "nullable": true
+            },
+            "targetAt": {
+              "from": {
+                "kind": "ref",
+                "name": "targetAt"
+              },
+              "of": {
+                "type": "fact",
+                "under": "grow-room",
+                "kind": [
+                  "commission-device",
+                  "set-vent",
+                  "set-fan",
+                  "set-heater",
+                  "authorize"
+                ]
+              },
+              "nullable": false
+            },
+            "reportedAt": {
+              "from": {
+                "kind": "ref",
+                "name": "reportedAt"
+              },
+              "of": {
+                "type": "fact",
+                "under": "grow-room",
+                "kind": [
+                  "report-device"
+                ]
+              },
+              "nullable": true
+            },
+            "zone": {
+              "from": {
+                "kind": "ref",
+                "name": "zone"
+              },
+              "of": {
+                "type": "item",
+                "of": "zone"
+              },
+              "nullable": false
+            }
+          }
+        },
+        "samples": {
+          "read": "entries",
+          "acts": [
+            "observe"
+          ],
+          "window": 100,
+          "limit": 100,
+          "latestBy": "actor",
+          "fields": {
+            "sampledAt": {
+              "from": {
+                "kind": "field",
+                "name": "sampledAt"
+              },
+              "of": {
+                "type": "time"
+              },
+              "nullable": false
+            },
+            "zones": {
+              "from": {
+                "kind": "field",
+                "name": "zones"
+              },
+              "of": {
+                "type": "list",
+                "max": 4,
+                "of": {
+                  "type": "record",
+                  "of": {
+                    "zone": {
+                      "type": "item",
+                      "of": "zone",
+                      "required": true
+                    },
+                    "min": {
+                      "type": "int",
+                      "min": -4000,
+                      "max": 8000,
+                      "required": true
+                    },
+                    "max": {
+                      "type": "int",
+                      "min": -4000,
+                      "max": 8000,
+                      "required": true
+                    },
+                    "mean": {
+                      "type": "int",
+                      "min": -4000,
+                      "max": 8000,
+                      "required": true
+                    },
+                    "inBand": {
+                      "type": "int",
+                      "min": 0,
+                      "max": 25,
+                      "required": true
+                    }
+                  }
+                }
+              },
+              "nullable": false
+            },
+            "actor": {
+              "from": {
+                "kind": "signer",
+                "name": "member"
+              },
+              "of": {
+                "type": "member"
+              },
+              "nullable": true
+            }
+          }
+        }
+      }
+    },
+    "site": {
+      "v": 1,
+      "definition": "site.json",
+      "revision": "revision",
+      "sources": {
+        "site": {
+          "item": "site",
+          "read": "many",
+          "states": [
+            "open"
+          ],
+          "limit": 1,
+          "fields": {
+            "label": {
+              "from": {
+                "kind": "value",
+                "name": "label"
+              },
+              "of": {
+                "type": "text",
+                "max": 80
+              },
+              "nullable": false
+            }
+          }
+        },
+        "room": {
+          "item": "room",
+          "read": "many",
+          "states": [
+            "active",
+            "failed",
+            "pending"
+          ],
+          "limit": 100,
+          "fields": {
+            "label": {
+              "from": {
+                "kind": "value",
+                "name": "label"
+              },
+              "of": {
+                "type": "text",
+                "max": 80
+              },
+              "nullable": false
+            },
+            "openAlerts": {
+              "from": {
+                "kind": "value",
+                "name": "openAlerts"
+              },
+              "of": {
+                "type": "int",
+                "min": 0,
+                "max": 4
+              },
+              "nullable": true
+            },
+            "scope": {
+              "from": {
+                "kind": "ref",
+                "name": "scope"
+              },
+              "of": {
+                "type": "scope",
+                "kind": "lane"
+              },
+              "nullable": true
+            },
+            "summaryAt": {
+              "from": {
+                "kind": "ref",
+                "name": "summaryAt"
+              },
+              "of": {
+                "type": "fact",
+                "under": "grow-room",
+                "kind": [
+                  "report-site"
+                ]
+              },
+              "nullable": true
+            }
+          }
+        }
+      }
+    },
+    "presence": {
+      "v": 1,
+      "definition": "site.json",
+      "revision": "revision",
+      "sources": {
+        "events": {
+          "read": "entries",
+          "acts": [
+            "arrive",
+            "leave"
+          ],
+          "window": 100,
+          "limit": 100,
+          "latestBy": null,
+          "fields": {
+            "actor": {
+              "from": {
+                "kind": "signer",
+                "name": "member"
+              },
+              "of": {
+                "type": "member"
+              },
+              "nullable": true
+            },
+            "room": {
+              "from": {
+                "kind": "field",
+                "name": "room"
+              },
+              "of": {
+                "type": "item",
+                "of": "room"
+              },
+              "nullable": false
+            }
+          }
+        }
+      }
+    },
+    "activity": {
+      "v": 1,
+      "definition": "room.json",
+      "revision": "revision",
+      "sources": {
+        "events": {
+          "read": "entries",
+          "acts": [
+            "authorize",
+            "close-incident",
+            "hold",
+            "open-incident",
+            "propose-restoration",
+            "raise-alert"
+          ],
+          "window": 100,
+          "limit": 100,
+          "latestBy": null,
+          "fields": {
+            "actor": {
+              "from": {
+                "kind": "signer",
+                "name": "member"
+              },
+              "of": {
+                "type": "member"
+              },
+              "nullable": true
+            }
+          }
+        }
+      }
+    }
+  },
   "roles": {},
   "scenarios": [
     "site-scenario.json",
     "fault-scenario.json"
   ],
-  "v": 1,
-  "version": "0.1.0"
+  "v": 2,
+  "version": "0.2.0"
 }
