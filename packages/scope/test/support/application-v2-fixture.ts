@@ -86,4 +86,3 @@ export async function applicationCounterJournalPacket2(when = "state = 'open'", 
     context: "Recent activity overview", fallback: "Recent activity overview", waiting: {}, refresh: 2000, display: "inline", back: "board" },
   } } }, signer);
 }
-
