@@ -16,8 +16,12 @@ import type { ApplicationDevelopmentActor } from "../src/application-scenarios.t
 interface Metadata { scope: ScopeRef; time: string; actors: ApplicationDevelopmentActor[]; authority: string; error: string | null; ids: { semantic: string; presentation: string }; revision: number }
 const meta = async (server: ApplicationDevelopmentServer): Promise<Metadata> => (await fetch(server.origin + "/__dap/meta")).json() as Promise<Metadata>;
 const actor = (data: Metadata, name = "alice") => secretSigner(new Uint8Array(Buffer.from(data.actors.find(actor => actor.name === name)!.seed, "hex")));
-async function fixture() {
+async function fixture(entry = "index.html") {
   const parent = await realpath(await mkdtemp(join(tmpdir(), "dap-dev-"))), directory = await newApplicationDirectory(join(parent, "notes"));
+  if (entry !== "index.html") {
+    const path = join(directory, "dap.application.json"), config = JSON.parse(await readFile(path, "utf8"));
+    config.presentation.entry = entry; await writeFile(path, JSON.stringify(config));
+  }
   try { return { parent, directory, server: await startApplicationDevelopment(directory, { port: 0, watch: false }) }; }
   catch (cause) { await rm(parent, { recursive: true, force: true }); throw cause; }
 }
@@ -49,8 +53,23 @@ test("loopback native SDK requests use only explicit TEST authority and preserve
 });
 
 test("presentation rebuilds keep native history while changed scenario or semantics restart the fixture", async () => {
-  const f = await fixture();
+  const f = await fixture("screens/index.html");
   try {
+    // The default preview and the inspection iframe must follow the canonical
+    // entry URL, so relative packaged script/CSS resolve at every directory.
+    const navigation = async (expected: string) => {
+      const root = await fetch(f.server.origin + "/", { redirect: "manual" });
+      expect(root.status).toBe(302); expect(root.headers.get("location")).toBe(expected);
+      const panel = await (await fetch(f.server.origin + "/__dap/")).text();
+      const frame = /<iframe[^>]*src="([^"]+)"/.exec(panel)![1]!;
+      const preview = await fetch(new URL(frame, f.server.origin));
+      expect(preview.url).toBe(f.server.origin + expected); expect(preview.status).toBe(200);
+      const html = await preview.text(), resources = [...html.matchAll(/(?:src|href)="([^"]+)"/g)].map(match => new URL(match[1]!, preview.url));
+      expect(resources.some(url => url.pathname.endsWith("/application.js"))).toBe(true);
+      expect(resources.some(url => url.pathname.endsWith("/application.css"))).toBe(true);
+      for (const resource of resources) expect((await fetch(resource)).status, resource.href).toBe(200);
+    };
+    await navigation("/screens/index.html");
     const initial = await meta(f.server), handle = new ScopeHandle(httpTransport(f.server.origin), initial.scope.scope, null);
     const signed = await signedIntent(actor(initial), { to: initial.scope, kind: "add", fields: { text: "Keep through a screen edit." } }, { now: Date.parse(initial.time) });
     const accepted = await handle.submit(signed); expect(accepted.answer).toBe("accepted");
@@ -58,6 +77,10 @@ test("presentation rebuilds keep native history while changed scenario or semant
     await f.server.rebuild(); const screen = await meta(f.server);
     expect(screen.scope).toEqual(initial.scope); expect(screen.ids.semantic).toBe(initial.ids.semantic);
     expect(screen.ids.presentation).not.toBe(initial.ids.presentation);
+    const pathOfConfig = join(f.directory, "dap.application.json"), moved = JSON.parse(await readFile(pathOfConfig, "utf8"));
+    moved.presentation.entry = "moved/view.html"; await writeFile(pathOfConfig, JSON.stringify(moved));
+    await f.server.rebuild(); await navigation("/moved/view.html");
+    expect((await meta(f.server)).scope).toEqual(initial.scope);
     expect(await handle.settle(signed)).toMatchObject({ ok: true });
     const config = await readFile(join(f.directory, "dap.application.json"));
     await writeFile(join(f.directory, "dap.application.json"), "invalid JSON");

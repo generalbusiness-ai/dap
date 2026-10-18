@@ -202,3 +202,29 @@ provider publication, archive admission, arbitrary-package isolation, upgrade,
 production operations or deployment. Historical register/directory/membership
 pins and replay support remain; active host composition is removed only in
 the install half.
+
+## Review repair: canonical preview navigation
+
+The complete review `3e6838cd` of `6aa1e6f0` requested one change, F1.
+The default preview served a nested entry's HTML at `/`, so the browser
+resolved its relative JS/CSS at the wrong directory. The panel iframe used
+the same broken default. No other blocking finding was reported. The report
+was read in full and ratified; the first completed gate remains passing
+historical evidence, not a gate for the repair.
+
+The root now redirects to the package entry's canonical path, without changing
+signed package bytes. Both the default preview and the panel follow it.
+SSE reload names the current canonical entry, so moving that entry during a
+presentation rebuild preserves working navigation as well as native history.
+The injected service URLs stay absolute on the dev origin.
+
+The owning existing presentation-rebuild witness now starts at a nested entry,
+follows root and iframe navigation, resolves its packaged script/CSS and live
+script, moves the entry to another directory, and checks resources again.
+Its original native-history, settlement, failed-build and semantic/scenario
+restart assertions remain. The new witness first fails at the intended root
+response assertion (`2dd69b` / session `10217` to `8654b3`, exit 1), then passes
+after repair (`4dc329` / session `39185` to `5776dd`, exit 0). CLI source/test
+typechecks pass. Fresh Chromium and revised-head gate results are recorded
+with the Source's accompanying assert and finite evidence; this note does
+not predeclare either result.
