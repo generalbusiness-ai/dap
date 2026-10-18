@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c760c9b29bd551d044408a0255585063793d5c8f","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/destination-host.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c823238777e4b40a8f6f438aa200fc9cd6d627df","text":"Merge retired a covered predecessor; the successor is at packages/scope/wrangler.test.jsonc."}
