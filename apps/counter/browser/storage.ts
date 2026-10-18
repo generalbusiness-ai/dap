@@ -13,13 +13,13 @@ function originLock<T>(work: () => Promise<T>): Promise<T> {
   return navigator.locks.request(ORIGIN_LOCK, work);
 }
 /** A mounted capability retains its original epoch. Notifications cannot renew it. */
-export function browserLock(identity:ActorIdentity, epoch?:string):CustodyLock {
+export function browserLock(identity:ActorIdentity, epoch?:string, installed?:string):CustodyLock {
   const binding = canonicalize(structuredClone(identity));
   return {run: work => originLock(async () => {
     if (!validEpoch(epoch)) throw custodyError();
     const held = await deviceTransaction<{epoch:unknown;record:unknown}>("readonly", () => true, (store, done) => {
-      const read = store.get("epoch"); read.onsuccess = () => {
-        const row = store.get("current"); row.onsuccess = () => done({epoch:read.result,record:row.result});
+      const read = store.get(installed ? installed + ":epoch" : "epoch"); read.onsuccess = () => {
+        const row = store.get(installed ? installed + ":current" : "current"); row.onsuccess = () => done({epoch:read.result,record:row.result});
       };
     });
     const row = held.record as DeviceRecord | undefined;
@@ -133,12 +133,13 @@ function checkedChoice(choice: DeviceChoice | undefined, devices: SavedDevice[])
   if (choice === undefined) return;
   if (!choice || Object.keys(choice).length !== 2 || !Object.hasOwn(choice, "publicKey") || !Object.hasOwn(choice, "voiceId") || !devices.some(d => d.binding.publicKey === choice.publicKey) || typeof choice.voiceId !== "string" || !choice.voiceId || choice.voiceId.length > 512) throw custodyError();
 }
-export function privateDeviceStore() {
+export function privateDeviceStore(installed?: string) {
+  const epochKey = installed ? installed + ":epoch" : "epoch", currentKey = installed ? installed + ":current" : "current";
   return {
     load(current: () => boolean = () => true): Promise<SavedDevices> {
       return originLock(async () => {
         const held = await deviceTransaction<{epoch:unknown;record:unknown}>("readonly",current,(store,done) => {
-          const read=store.get("epoch");read.onsuccess=()=>{const row=store.get("current");row.onsuccess=()=>done({epoch:read.result,record:row.result});};
+          const read=store.get(epochKey);read.onsuccess=()=>{const row=store.get(currentKey);row.onsuccess=()=>done({epoch:read.result,record:row.result});};
         });
         const record=held.record;
         if (held.epoch !== undefined && !validEpoch(held.epoch)) throw custodyError();
@@ -154,7 +155,7 @@ export function privateDeviceStore() {
         if (!current()) throw custodyError();
         const epoch=held.epoch===undefined?crypto.randomUUID():held.epoch;
         if (held.epoch===undefined) await deviceTransaction<void>("readwrite",current,(store,done,check)=>{
-          const read=store.get("epoch");read.onsuccess=()=>{try{check();if(read.result!==undefined)throw custodyError();store.put(epoch,"epoch");if(record!==undefined)store.put({v:2,epoch,devices,...(choice?{choice}:{})},"current");done(undefined);}catch{try{store.transaction.abort();}catch{/* Already terminal. */}}};
+          const read=store.get(epochKey);read.onsuccess=()=>{try{check();if(read.result!==undefined)throw custodyError();store.put(epoch,epochKey);if(record!==undefined)store.put({v:2,epoch,devices,...(choice?{choice}:{})},currentKey);done(undefined);}catch{try{store.transaction.abort();}catch{/* Already terminal. */}}};
         });
         return {epoch,devices,...(choice?{choice}:{})};
       });
@@ -167,7 +168,7 @@ export function privateDeviceStore() {
         if(!validEpoch(epoch)||!current())throw custodyError();
         await checkedDevices(snapshot);checkedChoice(selected,snapshot);
         await deviceTransaction<void>("readwrite",current,(store,done,check)=>{
-          const read=store.get("epoch");read.onsuccess=()=>{try{check();if(read.result!==epoch)throw custodyError();store.put({v:2,epoch,devices:snapshot,...(selected?{choice:selected}:{})},"current");done(undefined);}catch{try{store.transaction.abort();}catch{/* Already terminal. */}}};
+          const read=store.get(epochKey);read.onsuccess=()=>{try{check();if(read.result!==epoch)throw custodyError();store.put({v:2,epoch,devices:snapshot,...(selected?{choice:selected}:{})},currentKey);done(undefined);}catch{try{store.transaction.abort();}catch{/* Already terminal. */}}};
         });
       });
     },
@@ -175,7 +176,7 @@ export function privateDeviceStore() {
       return originLock(async()=>{
         const epoch=crypto.randomUUID();
         await deviceTransaction<void>("readwrite",()=>true,(store,done)=>{
-          store.put(epoch,"epoch");store.delete("current");done(undefined);
+          store.put(epoch,epochKey);store.delete(currentKey);done(undefined);
         });
       });
     },

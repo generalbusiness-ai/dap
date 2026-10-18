@@ -687,3 +687,38 @@ three selected cases). Source and owning test typechecks pass. Browser bodies
 remain literal TEST bytes in this witness. Maintained browser connection,
 private bucket configuration, legacy-host removal, complete gate and Source
 review remain owed. No deployment or remote provider write is claimed.
+
+
+## Maintained browser connection preparation
+
+The shared SDK now loads bounded context from the exact generic page address,
+with no credential or redirect. Outside that route it returns no context; a
+generic route with unavailable or mismatched context fails closed. Invitation
+reading binds the exact Directory, Membership, Rules and destination of this
+installation. The resulting device identity routes native sessions and acts
+and grants no authority. The expanded owning context cases pass (`6ad4a4`,
+two cases), including wrong-room invitations, wrong membership pin, oversized
+metadata, and mismatched seat binding.
+
+Lending selects Membership7 only from the installed context and discovers
+the exact installed application among the room's created scopes. Its private
+key, remembered seat and kept join use slots for the native incarnation. A
+verified join saves its seat before clearing terminal custody, so an
+interrupted UI handoff can be recovered. The historical Membership4 path
+remains available outside the generic route.
+
+Counter's installed path adds native invitation enrollment with a generated
+nonextractable browser key, retained original join, Check and Continue. It
+then uses the existing identity/voice and counting controls. Context changes
+fence asynchronous enrollment. Private device and epoch slots are separated
+by native incarnation, and a verified seat is retained before the join is
+cleared. Forget refuses while an original enrollment remains pending. Legacy
+demo import stays in the maintained browser's historical path, hidden for
+installed screens; it is not an active host route.
+
+Client and both browser typechecks pass. The existing Counter Node witnesses
+pass all 55 cases (`300d84`, session `23340`, terminal `623b86`, exit 0), with
+log `/tmp/artroom-m1-installed-counter-node-20261018.log`. This checkpoint
+has not yet been tested in a rendered browser; browser entry, real private
+storage and native enrollment integration remain verification obligations.
+No full gate, Source review, Main landing or deployment is claimed.
