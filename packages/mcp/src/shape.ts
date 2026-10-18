@@ -123,6 +123,29 @@ export function needsOn(act: ActLike): boolean {
   return act.step === "transition" || (act.step === "comment" && act.on !== null);
 }
 
+/** Copy captured revisions before custody computes the meaning. Omission keeps the existing fresh-read behavior. */
+export function shapeAt(given: unknown): Record<string, number> | undefined {
+  if (given === undefined) return undefined;
+  if (!isRecord(given)) throw new Unshaped("at", "is not an object", "subject names and captured nonnegative safe-integer revisions");
+  const out: Record<string, number> = {};
+  for (const [name, revision] of Object.entries(given)) {
+    if (typeof revision !== "number" || !Number.isSafeInteger(revision) || revision < 0) {
+      throw new Unshaped(`at.${clip(name)}`, "is not a nonnegative safe integer", "the revision displayed for this subject");
+    }
+    put(out, name, revision);
+  }
+  return out;
+}
+
+/** Check coverage only when building a new envelope; a custody re-report retains its original subjects and revisions. */
+export function capturedExpected(at: Record<string, number> | undefined, fresh: Record<string, number>): Record<string, number> {
+  if (at === undefined) return fresh;
+  if (Object.keys(at).length !== Object.keys(fresh).length || Object.keys(at).some((name) => !Object.hasOwn(fresh, name))) {
+    throw new Unshaped("at", "does not name exactly the act's bound subjects", Object.keys(fresh).sort().join(", ") || "no bound subjects: {}");
+  }
+  return at;
+}
+
 /**
  * The revision of each item the act names, as the summary has it now: the
  * item it is on, the one item of a type, and an item a field names. A name

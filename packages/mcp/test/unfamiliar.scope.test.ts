@@ -25,7 +25,7 @@ test("an unfamiliar application, created by the room and driven through the same
     const plant = tools.find((t) => t.name === "garden.plant")!;
     expect(tools.map((t) => t.name)).toEqual(expect.arrayContaining(["garden.plant", "garden.tend", "garden.harvest"]));
     expect(plant.description).toBe("plant: opens a bed; needs issue.comment, which your role (admin) holds. Fields: crop (required): text up to 64 bytes. note: text up to 4096 bytes, kept apart from the entry: give the text itself, or its digest with the text in texts. rows (required): a list of up to 8, each text up to 32 bytes. Guards: no two elements of the act's rows are the same (rows-repeat).");
-    expect(Object.keys((plant.inputSchema["properties"] as Record<string, unknown>))).toEqual(["target", "idempotencyKey", "resubmit", "fields", "texts"]);
+    expect(Object.keys((plant.inputSchema["properties"] as Record<string, unknown>))).toEqual(["target", "idempotencyKey", "resubmit", "at", "fields", "texts"]);
     const harvest = tools.find((t) => t.name === "garden.harvest")!;
     expect(Object.keys((harvest.inputSchema["properties"] as Record<string, unknown>))).toContain("presented");
 

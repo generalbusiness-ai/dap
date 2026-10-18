@@ -99,14 +99,30 @@ test("the checkers package depends only on contract, bytes and git, and no packa
 // The MCP server derives every tool from definitions as data (plan 031): its source imports the contract, the bytes, the client,
 // the platform and the derivation, and never a lane definition, an example, the page, the checker service or the runtime. Its
 // tests may run the runtime's test Worker and read the lanes and examples, as the page's do.
+function mcpImportAllowed(file, specifier) {
+  if (specifier.startsWith("./") || specifier.startsWith("../")) {
+    const target = normalize(join(dirname(file), specifier));
+    return target.startsWith("packages/mcp/src/") && /\.(ts|json)$/.test(target) && files.includes(target);
+  }
+  return /^(@generalbusiness\/(artroom-(bytes|client)|dap-(contract|platform|derive))(\/.*)?|node:[a-z_/]+)$/.test(specifier)
+    && !specifier.split("/").some(part => part === "." || part === "..");
+}
+
+// Invariant: a nested server module may reach its own tracked source, but never a test, browser entry or another package.
+test("MCP relative imports stay inside tracked server source", () => {
+  assert.equal(mcpImportAllowed("packages/mcp/src/service.ts", "./views/session.ts"), true);
+  assert.equal(mcpImportAllowed("packages/mcp/src/views/session.ts", "../custody.ts"), true);
+  for (const specifier of ["../../test/support/room.ts", "../../browser/main.ts", "../../../scope/src/object.ts", "/tmp/other.ts", "@generalbusiness/dap-lanes", "@generalbusiness/artroom-client/../scope"]) {
+    assert.equal(mcpImportAllowed("packages/mcp/src/views/session.ts", specifier), false, specifier);
+  }
+});
+
 test("the MCP server's source imports only contract, bytes, client, platform and derive", () => {
   assert.ok(files.includes("packages/mcp/package.json"), "the mcp package was listed");
   const inside = files.filter((f) => packagePath(f).startsWith("packages/mcp/src/") && f.endsWith(".ts"));
   assert.ok(inside.length > 5, "the server's source was listed");
-  const named = (f) => [...text(f).matchAll(/from\s+["']([^"']+)["']|import\(\s*["']([^"']+)["']\s*\)/g)].map((m) => m[1] ?? m[2]);
-  const allowed = /^(@generalbusiness\/(artroom-(bytes|client)|dap-(contract|platform|derive))(\/.*)?|node:[a-z_/]+|\.\/[\w.-]+)$/;
-  assert.deepEqual(inside.flatMap((f) => named(f).filter((m) => !allowed.test(m)).map((m) => `${f}: ${m}`)), []);
-  assert.deepEqual(inside.filter((f) => /(?:artroom|dap)-(lanes|page|checkers|scope|replay|git)|examples\/|\.\.\//.test(text(f))), []);
+  assert.deepEqual(inside.flatMap((file) => moduleSpecifierSpans(text(file)).filter(({ value }) => !mcpImportAllowed(file, value)).map(({ value }) => `${file}: ${value}`)), []);
+  assert.deepEqual(inside.filter((f) => /(?:artroom|dap)-(lanes|page|checkers|scope|replay|git)|examples\//.test(text(f))), []);
   const mcp = JSON.parse(text("packages/mcp/package.json") || "{}");
   assert.deepEqual(Object.keys(mcp.dependencies ?? {}).filter((d) => !/^@generalbusiness\/(artroom-(bytes|client)|dap-(contract|platform|derive))$/.test(d)), []);
 });

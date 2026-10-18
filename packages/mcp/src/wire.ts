@@ -27,6 +27,7 @@
 import type { Digest } from "@generalbusiness/dap-contract";
 import { utf8 } from "@generalbusiness/artroom-bytes";
 import { INSTRUCTIONS, ListRestart, SERVER_NAME, SERVER_VERSION, type McpService } from "./service.ts";
+import { supportsViews } from "./views/tools.ts";
 
 export const LEGACY = "2025-11-25";
 export const MODERN = "2026-07-28";
@@ -212,7 +213,7 @@ export class Wire {
         if (utf8(JSON.stringify(capabilities)).length > CAPABILITIES_MOST) return error(id, -32602, `The client's capabilities exceed ${CAPABILITIES_MOST} bytes.`);
         session.capabilities = capabilities;
         try { await this.hooks.changed?.(session); } catch (thrown) { if ((thrown as Error).name === "SessionFull" || /No room for another session/.test(String((thrown as Error).message))) return error(id, SESSION_FULL, "No room for another session."); throw thrown; }
-        return reply(id, { protocolVersion: session.version, capabilities: { tools: { listChanged: true } }, serverInfo: SERVER_INFO, instructions: INSTRUCTIONS });
+        return reply(id, { protocolVersion: session.version, capabilities: { tools: { listChanged: true }, resources: {} }, serverInfo: SERVER_INFO, instructions: INSTRUCTIONS });
       }
       case "notifications/initialized": {
         // The durable row is written with the prospective state first; the live session changes only once that succeeded. The
@@ -233,18 +234,20 @@ export class Wire {
         const initialized = session.initialized || (!notification && session.version !== null);
         const persist = this.hooks.changed;
         if (!persist) session.initialized = initialized;
-        const page = await this.service.page(params["cursor"]);
+        const page = await this.service.page(params["cursor"], supportsViews(session.capabilities));
         // The listed generation is durable: the row is written with the prospective value before the response is emitted, and
         // the live marker moves only once that write succeeded, so a failed write leaves live and durable truth the same.
-        if (persist) await persist(session, { initialized, listed: page.generation });
+        if (persist) await persist(session, { initialized, listed: page.catalogueGeneration ?? page.generation });
         session.initialized = initialized;
-        session.listed = page.generation;
+        session.listed = page.catalogueGeneration ?? page.generation;
         return reply(id, { tools: page.tools, ...(page.nextCursor ? { nextCursor: page.nextCursor } : {}) });
       }
       case "tools/call": {
         const result = await this.service.call(String(params["name"]), params["arguments"]);
         return reply(id, result);
       }
+      case "resources/list": return reply(id, this.service.resources.list());
+      case "resources/read": return reply(id, this.service.resources.read(String(params["uri"])));
       default: return notification ? null : error(id, -32601, `Method not found: ${clip(m.method)}`);
     }
   }
@@ -265,12 +268,14 @@ export class Wire {
     const complete = (result: Record<string, unknown>): Message => reply(id, { ...result, ...MODERN_ADDED });
     switch (m.method) {
       case "server/discover":
-        return complete({ supportedVersions: [MODERN, LEGACY], capabilities: { tools: { listChanged: true } }, instructions: INSTRUCTIONS, ttlMs: 0, cacheScope: "private" });
+        return complete({ supportedVersions: [MODERN, LEGACY], capabilities: { tools: { listChanged: true }, resources: {} }, instructions: INSTRUCTIONS, ttlMs: 0, cacheScope: "private" });
       case "tools/list": {
-        const page = await this.service.page(params["cursor"]);
+        const page = await this.service.page(params["cursor"], supportsViews(meta[CAPABILITIES_META]));
         return complete({ tools: page.tools, ...(page.nextCursor ? { nextCursor: page.nextCursor } : {}), ttlMs: TOOLS_TTL_MS, cacheScope: "private" });
       }
       case "tools/call": return complete({ ...(await this.service.call(String(params["name"]), params["arguments"])) });
+      case "resources/list": return complete({ ...this.service.resources.list(), ttlMs: TOOLS_TTL_MS, cacheScope: "private" });
+      case "resources/read": return complete({ ...this.service.resources.read(String(params["uri"])) });
       case "subscriptions/listen": {
         const asked = isRecord(params["notifications"]) ? params["notifications"] : {};
         const tools = asked["toolsListChanged"] === true;

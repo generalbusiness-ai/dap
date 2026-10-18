@@ -492,6 +492,8 @@ function presentedSchema(act: ActLike): Schema {
 }
 
 /** The controls of an act tool, at the top level; the declared fields under `fields`, so no field can collide with a control. */
+export const AT_INPUT = { type: "object", additionalProperties: { type: "integer", minimum: 0, maximum: Number.MAX_SAFE_INTEGER }, description: "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides." };
+
 export function actInputSchema(act: ActLike, setting: Setting, target: "required" | "optional"): Schema {
   const beside = besideOf(act);
   const fields = Object.entries(act.fields);
@@ -500,6 +502,7 @@ export function actInputSchema(act: ActLike, setting: Setting, target: "required
     ...(onOf(act) === "required" ? { on: { type: "integer", minimum: 0, description: `The local ID of the ${act.on ?? "item"} this act is on.` } } : {}),
     idempotencyKey: { type: "string", minLength: 1, maxLength: 128, description: "Your key for this one meaning, 1 to 128 bytes. Keep it: settle with it after a lost reply." },
     resubmit: { type: "boolean", description: "Send a refused envelope again, deliberately. The default is false." },
+    at: AT_INPUT,
     fields: { type: "object", properties: Object.fromEntries(fields.map(([n, f]) => [n, schemaOf(f, setting)])), required: fields.filter(([, f]) => f.required).map(([n]) => n), additionalProperties: false },
     ...(beside.texts ? { texts: { type: "array", items: { type: "string" }, description: "Detached texts whose digests the fields name." } } : {}),
     ...(beside.presented ? { presented: presentedSchema(act) } : {}),

@@ -19,15 +19,20 @@ import { TransportError, invitationOf, readCredential, signedIntent, wellFormedI
 import { platform } from "@generalbusiness/dap-platform";
 import { ACT_OUTPUT, actTool, bindingsOf, declarationDigest, describedOf, generationOf, listed, selected, type Binding, type Held, type Inventory, type Mode, type Tool } from "./catalogue.ts";
 import { Custody, CustodyError, Lost, meaningOf, validKey, type CustodyRecord, type CustodyStore, type Envelope, type Identity } from "./custody.ts";
-import { describeAct, grantAction, onOf, schemaOf, type DefinitionLike } from "./describe.ts";
+import { AT_INPUT, describeAct, grantAction, onOf, schemaOf, type DefinitionLike } from "./describe.ts";
 import { answered, clip, finding, type Finding } from "./errors.ts";
 import { Kept, definitionOf, readInventory, readPartitionIndexes, type ConfigPort, type McpConfig, type Read_, type Root } from "./inventory.ts";
 import { KIB, bytesOf, cursorOf, fromCursor, pageBy, sliceText } from "./paging.ts";
 import { Reads } from "./reads.ts";
 import { Recent } from "./recent.ts";
-import { Unshaped, effectiveFields, expectedOf, needsOn, shapeFields, shapePresented, valuePlaces } from "./shape.ts";
+import { Unshaped, capturedExpected, effectiveFields, expectedOf, needsOn, shapeAt, shapeFields, shapePresented, valuePlaces } from "./shape.ts";
 import { WORDS, type Words } from "./words.ts";
 import { McpMetrics, observedFetch, type McpMetricOptions } from "./metrics.ts";
+import { ViewResources, type PresentationPackage } from "./views/resources.ts";
+import { PRESENTATION } from "./views/generated.ts";
+import { ViewSessions } from "./views/session.ts";
+import { toolsForHost, viewTools } from "./views/tools.ts";
+import type { ViewSource } from "./views/types.ts";
 
 export interface ServerPort {
   /** The scope service's base URL. */
@@ -51,6 +56,10 @@ export interface ServerPort {
   listPageBytes?: number;
   /** The timer of the watch. The default is `setInterval`. */
   every?: (ms: number, run: () => void) => () => void;
+  /** Package resource bytes and policy. Omission serves the built-in journey resources. */
+  presentation?: PresentationPackage;
+  /** An application's authenticated card projection. The generic kit contains no lane projection. */
+  views?: ViewSource;
 }
 
 /** A tool's answer, as `tools/call` sends it: structured content with an object root, and its text. */
@@ -164,6 +173,7 @@ export class McpService {
   #service: string;
   readonly kept = new Kept();
   readonly custody: Custody;
+  readonly resources: ViewResources;
   readonly mode: Mode;
   readonly words: Words;
   readonly #port: ServerPort;
@@ -195,7 +205,9 @@ export class McpService {
     this.#service = port.service;
     this.#reads = this.#readsOf(port.service);
     this.custody = new Custody(port.custody, () => timeOf(now()));
-    this.#generic = this.#genericTools();
+    this.resources = new ViewResources(port.presentation ?? PRESENTATION);
+    const views = port.views ? new ViewSessions(port.views, { call: (name, args) => this.call(name, args) }, (kind, args, admit) => this.#viewPerform(kind, args, admit), (args) => this.call("settle", args)) : null;
+    this.#generic = { ...this.#genericTools(), ...(views ? viewTools(views) : {}) };
   }
 
   get key(): string { return this.#port.signer.key; }
@@ -211,7 +223,8 @@ export class McpService {
     const config = await this.#port.config.read();
     const read = await readInventory(this.reads, this.kept, config);
     const bindings = bindingsOf(read.inventory, this.words);
-    const generation = generationOf(bindings, read.inventory, { mode: this.mode, tools: this.#tools, words: this.words });
+    const baseGeneration = generationOf(bindings, read.inventory, { mode: this.mode, tools: this.#tools, words: this.words });
+    const generation = digestBytes(utf8(canonicalize({ tools: baseGeneration, presentation: this.resources.generation, views: !!this.#port.views })));
     const memberships = new Map<string, ScopeRef>();
     if (config.repository) memberships.set(config.repository.membership.scope, config.repository.membership);
     for (const root of config.roots ?? []) if (root.membership) memberships.set(root.membership.scope, root.membership);
@@ -243,19 +256,21 @@ export class McpService {
   #invalidate(): void { this.#stale = true; void this.check(); }
 
   /** One page of `tools/list`: at most 256 KiB, a cursor bound to the generation, and a restart for a cursor of another one. */
-  page(cursor?: unknown): Promise<{ tools: Tool[]; nextCursor?: string; generation: Digest }> {
-    return this.#metrics.list(() => this.#page(cursor), error => error instanceof ListRestart ? { end: "refused", reason: "restart" } : error instanceof TransportError ? { end: "unavailable", reason: "transport" } : { end: "error", reason: "exception" });
+  page(cursor?: unknown, ui?: boolean): Promise<{ tools: Tool[]; nextCursor?: string; generation: Digest; catalogueGeneration?: Digest }> {
+    return this.#metrics.list(() => this.#page(cursor, ui), error => error instanceof ListRestart ? { end: "refused", reason: "restart" } : error instanceof TransportError ? { end: "unavailable", reason: "transport" } : { end: "error", reason: "exception" });
   }
-  async #page(cursor?: unknown): Promise<{ tools: Tool[]; nextCursor?: string; generation: Digest }> {
+  async #page(cursor?: unknown, ui?: boolean): Promise<{ tools: Tool[]; nextCursor?: string; generation: Digest; catalogueGeneration?: Digest }> {
     const s = await this.snapshot();
+    const generation = this.#port.views && ui !== undefined ? digestBytes(utf8(canonicalize({ generation: s.generation, ui }))) : s.generation;
+    const tools = ui === undefined ? s.tools : toolsForHost(s.tools, ui);
     let from = 0;
     if (cursor !== undefined && cursor !== null) {
       const at = fromCursor<{ g: string; i: number }>(cursor);
-      if (!at || at.g !== s.generation || !Number.isSafeInteger(at.i) || at.i < 0 || at.i > s.tools.length) throw new ListRestart();
+      if (!at || at.g !== generation || !Number.isSafeInteger(at.i) || at.i < 0 || at.i > tools.length) throw new ListRestart();
       from = at.i;
     }
-    const { page, next } = pageBy(s.tools, from, this.#port.listPageBytes ?? LIST_PAGE_BYTES);
-    return { tools: page, ...(next !== null ? { nextCursor: cursorOf({ g: s.generation, i: next }) } : {}), generation: s.generation };
+    const { page, next } = pageBy(tools, from, this.#port.listPageBytes ?? LIST_PAGE_BYTES);
+    return { tools: page, ...(next !== null ? { nextCursor: cursorOf({ g: generation, i: next }) } : {}), generation, ...(generation === s.generation ? {} : { catalogueGeneration: s.generation }) };
   }
 
   // ---------------------------------------------------------------- telling subscribed clients
@@ -308,12 +323,19 @@ export class McpService {
       const binding = this.mode === "generic" ? null : s.bindings.find((b) => b.name === name) ?? null;
       if (!binding) return failed({ error: "unknown-tool", name });
       return await this.#perform(binding, given, binding.kind);
-    } catch (error) {
-      if (error instanceof Stop) return error.result;
-      if (error instanceof CustodyError) return failed({ error: "custody", state: error.why.held, key: String(given["idempotencyKey"] ?? ""), scope: String(given["target"] ?? given["scope"] ?? ""), ...("keys" in error.why ? { keys: error.why.keys } : {}), ...("recorded" in error.why ? { recorded: error.why.recorded } : {}), ...("bytes" in error.why ? { bytes: error.why.bytes } : {}), ...("reason" in error.why && error.why.reason === "budget" ? { reason: "budget" } : {}), ...("stale" in error.why && error.why.stale ? { stale: error.why.stale } : {}), ...("answer" in error.why ? { answer: error.why.answer } : {}), ...("step" in error.why && error.why.step ? { step: error.why.step } : {}) });
-      if (error instanceof TransportError) return failed({ error: "transport", scope: String(given["target"] ?? given["scope"] ?? "the scope"), submitted: false });
-      throw error;
-    }
+    } catch (error) { return this.#failure(error, given); }
+  }
+
+  #failure(error: unknown, given: Args): CallResult {
+    if (error instanceof Stop) return error.result;
+    if (error instanceof CustodyError) return failed({ error: "custody", state: error.why.held, key: String(given["idempotencyKey"] ?? ""), scope: String(given["target"] ?? given["scope"] ?? ""), ...("keys" in error.why ? { keys: error.why.keys } : {}), ...("recorded" in error.why ? { recorded: error.why.recorded } : {}), ...("bytes" in error.why ? { bytes: error.why.bytes } : {}), ...("reason" in error.why && error.why.reason === "budget" ? { reason: "budget" } : {}), ...("stale" in error.why && error.why.stale ? { stale: error.why.stale } : {}), ...("answer" in error.why ? { answer: error.why.answer } : {}), ...("step" in error.why && error.why.step ? { step: error.why.step } : {}) });
+    if (error instanceof TransportError) return failed({ error: "transport", scope: String(given["target"] ?? given["scope"] ?? "the scope"), submitted: false });
+    throw error;
+  }
+
+  async #viewPerform(kind: string, args: Args, admit: () => void): Promise<CallResult> {
+    try { return await this.#perform(null, args, kind, undefined, admit); }
+    catch (error) { return this.#failure(error, args); }
   }
 
   // ---------------------------------------------------------------- scopes and targets
@@ -382,7 +404,7 @@ export class McpService {
 
   // ---------------------------------------------------------------- an act, under custody
 
-  async #perform(binding: Binding | null, args: Args, kind: string, preparing?: { resource: unknown; capability: string; step: string }): Promise<CallResult> {
+  async #perform(binding: Binding | null, args: Args, kind: string, preparing?: { resource: unknown; capability: string; step: string }, admit?: () => void): Promise<CallResult> {
     const key = args["idempotencyKey"];
     if (!validKey(key)) return failed({ error: "shape", field: "idempotencyKey", what: "is missing, or not 1 to 128 bytes of UTF-8", declared: "a key you choose and keep" });
     const s = await this.#current();
@@ -415,15 +437,23 @@ export class McpService {
     const textsGiven = Array.isArray(args["texts"]) ? args["texts"].filter((t): t is string => typeof t === "string") : [];
     const valuesGiven = Array.isArray(args["values"]) ? args["values"].filter((v): v is string => typeof v === "string") : [];
     const presentedGiven = isRecord(args["presented"]) ? args["presented"] : undefined;
-    const meaning = meaningOf({ kind, on, fields: fieldsGiven, texts: textsGiven.map(textDigest).sort(), values: valuesGiven.map((v) => digestBytes(utf8(v))).sort(), presented: presentedGiven ?? {} });
+    let at: Record<string, number> | undefined;
+    try { at = shapeAt(args["at"]); }
+    catch (error) {
+      if (error instanceof Unshaped) return failed({ error: "shape", field: error.field, what: error.what, declared: error.declared });
+      throw error;
+    }
+    const meaning = meaningOf({ kind, on, fields: fieldsGiven, texts: textsGiven.map(textDigest).sort(), values: valuesGiven.map((v) => digestBytes(utf8(v))).sort(), presented: presentedGiven ?? {}, ...(at === undefined ? {} : { at }) });
     const identity: Identity = { service: this.#service, membership, signer: this.#port.signer.key, target: summary.scope, key: key as string };
     const items = summary.items;
     const build = async (): Promise<{ binding: CustodyRecord["binding"]; envelope: Envelope }> => {
       let shaped: { fields: Record<string, FieldValue>; texts: string[] };
       let presented: ReturnType<typeof shapePresented>;
+      let expected: Record<string, number>;
       try {
         shaped = shapeFields(act, fieldsGiven, textsGiven, membership);
         presented = shapePresented(act, presentedGiven);
+        expected = capturedExpected(at, expectedOf(act, items, on as number | null, effectiveFields(act, shaped.fields, summary.scope)));
       } catch (error) {
         if (error instanceof Unshaped) return stop({ error: "shape", field: error.field, what: error.what, declared: error.declared });
         throw error;
@@ -435,7 +465,7 @@ export class McpService {
       }
       // The subjects are resolved from the fields the scope will read, defaults applied and local facts as their seq; the intent
       // signs the fields as given.
-      const expected = expectedOf(act, items, on as number | null, effectiveFields(act, shaped.fields, summary.scope));
+      admit?.();
       const signed = await signedIntent(this.#port.signer, { to: summary.scope, kind, on: on as number | null, fields: shaped.fields, expected }, { idempotencyKey: key as string, now: this.#now() });
       const beside: Beside = { ...(shaped.texts.length > 0 ? { texts: shaped.texts } : {}), ...(Object.keys(presented).length > 0 ? { presented } : {}), ...(values.length > 0 ? { values } : {}) };
       return { binding: { definition: definition.name, kind, declaration, pinned: summary.definition }, envelope: { signed, beside } };
@@ -444,7 +474,7 @@ export class McpService {
     const guards = describeAct(definition, kind, act, { standing: "unknown" }, { pinned: summary.definition }, { definition: definition.name, kind, declaration, digests: [summary.definition] }, "").guards;
     const notAfter = timeOf(this.#now() + PROPOSED_BOUNDS.intentLifetimeSeconds * 1000);
     // What the envelope will carry, for custody's byte bound before anything is signed.
-    const carried = bytesOf({ fields: fieldsGiven, texts: textsGiven, values: valuesGiven, presented: presentedGiven ?? {} });
+    const carried = bytesOf({ fields: fieldsGiven, texts: textsGiven, values: valuesGiven, presented: presentedGiven ?? {}, ...(at === undefined ? {} : { at }) });
     if (preparing) {
       const record = await this.custody.keep(identity, meaning, build, notAfter, carried);
       const resource = await this.#scope(s, preparing.resource);
@@ -507,7 +537,7 @@ export class McpService {
       tool("join", "Joins a room with an invitation link from dap invite (artroom-invite:...), as dap join does: signs membership's join with this server's key, keeps the exact request under custody before sending it, and on acceptance records the room in your configuration, so its tools are listed. After a lost reply, call again with the same link and idempotencyKey: the same request is sent again, never a new one. The link is private: this tool's result never repeats it. Legacy membership records the invitation secret in the join entry, visible through authorized history reads. The invitation-key cohort records a proof bound to this membership, invitation and joining key; its private invitation seed stays out of the entry.",
         { link: { type: "string", description: "The invitation link, artroom-invite:..." }, idempotencyKey: keyArg }, ["link", "idempotencyKey"], WRITE, (a) => this.#join(a), ACT_OUTPUT),
       tool("prepare", "Asks the scope that owns a resource for one step of a capability. With kind: for the intent an act will submit later under the same idempotencyKey; resource: the scope asked, which may differ from target; then the act's own target, kind, on, fields, texts, presented and values. Without kind: a step with no act, such as hold@1's instance, whose own intent (kind capability:step, with fields) goes to the resource. Returns the resource's answer for that step, never an act's receipt.",
-        { resource: scopeArg, capability: { type: "string" }, step: { type: "string" }, target: scopeArg, kind: { type: "string" }, on: { type: "integer", minimum: 0 }, fields: { type: "object" }, texts: { type: "array", items: { type: "string" } }, presented: { type: "object" }, values: { type: "array", items: { type: "string" } }, idempotencyKey: keyArg },
+        { resource: scopeArg, capability: { type: "string" }, step: { type: "string" }, target: scopeArg, kind: { type: "string" }, on: { type: "integer", minimum: 0 }, at: AT_INPUT, fields: { type: "object" }, texts: { type: "array", items: { type: "string" } }, presented: { type: "object" }, values: { type: "array", items: { type: "string" } }, idempotencyKey: keyArg },
         ["resource", "capability", "step", "idempotencyKey"], WRITE, (a) => this.#prepare(a)),
       tool("items", "A page of one item type of a scope, in one of two traversals, each with its own cursor: the live items, from the scope's summary (the default); or, with final: true, the retained final items. The cursor is not checked against its traversal: to continue, call again with the same scope, type and final flag.",
         { scope: scopeArg, type: { type: "string" }, final: { type: "boolean", description: "true: the traversal of the retained final items, separate from the live one; the default is the live items" }, cursor: { type: "string" } }, ["scope", "type"], READ, (a) => this.#items(a)),
@@ -530,7 +560,7 @@ export class McpService {
       tool("actions", "The acts of one scope, as act tools would describe them: each kind with its derived description, input schema, binding and the definition digest to give to act. For a host that lists few tools.",
         { scope: scopeArg, cursor: { type: "string" } }, ["scope"], READ, (a) => this.#actions(a)),
       tool("act", "Signs one act of a scope by its native kind, under the same custody and binding checks as an act tool. digest: the definition digest actions gave; fields as actions describes; idempotencyKey required.",
-        { target: scopeArg, kind: { type: "string" }, digest: { type: "string" }, on: { type: "integer", minimum: 0 }, fields: { type: "object" }, texts: { type: "array", items: { type: "string" } }, presented: { type: "object" }, values: { type: "array", items: { type: "string" } }, idempotencyKey: keyArg, resubmit: { type: "boolean" } },
+        { target: scopeArg, kind: { type: "string" }, digest: { type: "string" }, on: { type: "integer", minimum: 0 }, at: AT_INPUT, fields: { type: "object" }, texts: { type: "array", items: { type: "string" } }, presented: { type: "object" }, values: { type: "array", items: { type: "string" } }, idempotencyKey: keyArg, resubmit: { type: "boolean" } },
         ["target", "kind", "digest", "idempotencyKey"], WRITE, (a) => (typeof a["kind"] === "string" ? this.#perform(null, a, a["kind"]) : Promise.resolve(failed({ error: "shape", field: "kind", what: "is missing", declared: "a native act kind" }))), ACT_OUTPUT),
     ]);
   }
