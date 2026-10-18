@@ -49,6 +49,10 @@ import { observeCleanup } from "./verify-cleanup.ts";
 import { statusReport } from "./status-report.ts";
 
 export interface Context {
+  /** Persistent custody shared by CLI application installs and MCP. */
+  applicationCustody?: import("@generalbusiness/dap-mcp").CustodyStore;
+  /** Public Git transport only, separate from authenticated native reads. */
+  applicationFetch?: (request: Request) => Promise<Response>;
   store: Store;
   /** Replaces the runtime's `fetch`: a test passes the Worker's routes. */
   fetch?: Fetch;

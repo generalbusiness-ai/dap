@@ -27,7 +27,7 @@ import type { McpMetricOptions } from "../../src/metrics.ts";
 
 export const SERVICE = "https://scopes.test";
 /** The generic tools in --generic=add mode, in the order the list sends them. */
-export const GENERIC = ["room", "inspect", "create", "join", "prepare", "items", "steps", "step", "record", "sends", "text", "wait", "settle", "credential", "actions", "act"];
+export const GENERIC = ["room", "inspect", "create", "join", "install_application", "application_installation", "prepare", "items", "steps", "step", "record", "sends", "text", "wait", "settle", "credential", "actions", "act"];
 
 /** What a story calls a person: their key, their configuration, and their MCP service. */
 export interface Agent {

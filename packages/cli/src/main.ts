@@ -5,6 +5,8 @@
  * error otherwise; the exit code is the command's.
  */
 
+import { join } from "node:path";
+import { fileStore as mcpCustodyStore } from "@generalbusiness/dap-mcp/node";
 import { readFile } from "node:fs/promises";
 import { fileStore } from "./files.ts";
 import { configDir, ConfigDirectoryError } from "./config-dir.ts";
@@ -30,7 +32,7 @@ export async function main(argv: readonly string[]): Promise<number> {
     process.stderr.write(`${error.message}\n`);
     return 2;
   }
-  const ctx = { store: fileStore(home), git: nodeGit(), read };
+  const ctx = { store: fileStore(home), git: nodeGit(), read, applicationCustody: mcpCustodyStore(join(home, "private", "mcp-custody")) };
   // The MCP server runs until its input ends; its own output is the protocol, so it prints only on failure.
   const outcome = argv[0] === "pack" ? await packCommand(ctx.store, argv) : argv[0] === "mcp" ? await mcp(ctx, home, argv.slice(1)) : await command(ctx, argv);
   if (argv[0] === "mcp" && outcome.lines.length === 0) return outcome.code;

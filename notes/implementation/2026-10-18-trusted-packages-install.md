@@ -636,3 +636,54 @@ corrected real-room witness passes (`fb912f`, session `24871`, terminal
 `/tmp/artroom-m1-agent-key-native-20261018.log`. Platform, Scope and CLI source
 and owning test typechecks pass. Maintained browser connection and the
 complete CLI/MCP install flow remain owed.
+
+
+## Shared CLI and MCP install custody
+
+The bounded public HTTPS object reader now belongs to the Git package. Scope
+keeps its host adapter and independent native fetch. MCP adds the existing
+Git workspace as a direct runtime dependency. The independently rebound
+installed view was checked against all 106 installed versions and 13 local
+first-party links, with zero installs. Only the MCP workspace lock record
+changed. Audit `/tmp/artroom-m1-install-mcp-git-dependency-20261018.json` has
+SHA-256 `9a18052f00cac117b3eeaa3a429e2781df4d5f17fd799a396245d4f6e1aa814f`;
+the matching ignored lock stamp is
+`da215ee29515f420c6d5955b8df55dd40d8c77b0aa34878b4252a94eab91f298`.
+
+MCP's `install_application` reads the actual Directory11 and Rules5 siblings,
+resolves the immutable URI, prepares the SDK envelope, and retains it in its
+existing persistent custody before submission. The build runs only for a new
+request identity. Repeated or conflicting meanings under a key cannot fetch
+or sign a replacement. Native acceptance is checked against the exact
+retained signature and receipt entry. The host still fetches and admits the
+URI itself. Public Git requests use a distinct unauthenticated transport.
+
+`application_installation` reads one exact native item through a bounded
+query, including final refusals. Its result names state, phase, reason and
+the exact screen address only when active. No definitions, genesis values,
+credential or application item data are included.
+
+The CLI overloads `dap install` only for `git+` URIs, requiring an independent
+`--release` and retained `--request` key. `--role` selects defaults, and
+`--values` supplies genesis JSON. `dap application <item>` reads progress.
+Node uses the same `private/mcp-custody/` store as MCP; contexts without
+persistent custody refuse before signing. Application options cannot fall
+through into register creation. `docs/cli.md` describes this flow and its
+final-refusal and partial-effect semantics.
+
+The owning real native witness now drives Counter through CLI invocation,
+a lost accepted reply, a fresh CLI invocation, then MCP inspection over the
+same custody. Lending uses MCP directly. Both reach native active state and
+exact generic routes. The late child refusal also passes through CLI/MCP and
+remains final at creation, with prior grants visible. Retained/conflicting
+calls make no new Git fetch. All seven cases pass (`3132cb`, session `73191`,
+terminal `ca104e`, exit 0), captured in
+`/tmp/artroom-m1-cli-mcp-native-install-20261018.log`. The preceding shared Git
+transport/native run passed nine cases in two files (`50ebbb`, session
+`40617`, terminal `a2da37`). SDK ownership checks pass (`28749d`, two cases),
+CLI syntax/custody/selection checks pass (`331e09`, three cases), and MCP
+list/cursor/paging bounds pass (`3a9760`, session `77088`, terminal `52dbdb`,
+three selected cases). Source and owning test typechecks pass. Browser bodies
+remain literal TEST bytes in this witness. Maintained browser connection,
+private bucket configuration, legacy-host removal, complete gate and Source
+review remain owed. No deployment or remote provider write is claimed.

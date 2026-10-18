@@ -1,7 +1,7 @@
 import { invitationRedemptionFields } from "@generalbusiness/artroom-client";
 /**
- * One MCP service for every dap application (plan 031). It lists fourteen
- * generic tools that never change, and one act tool per act declaration of
+ * One MCP service for every dap application (plan 031). It lists
+ * generic tools, and one act tool per act declaration of
  * each definition the inventory holds, listed for the caller's standing.
  * In `--generic` mode the act tools are replaced by `actions` and `act`;
  * in `--generic=add` mode both are listed.
@@ -14,9 +14,10 @@ import { invitationRedemptionFields } from "@generalbusiness/artroom-client";
 
 import type { Answer, Beside, DeclaredDefinition, Digest, Entry, FieldValue, Item, PlatformDefinition, Read, Receipt, ScopeId, ScopeRef, Seed, Summary } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, digestBytes, intentDigest, isDigest, isPlatformDefinition, isScopeId, isScopeRef, parseStrict, scopeIdOf, textDigest, timeOf, utf8 } from "@generalbusiness/artroom-bytes";
-import { TransportError, invitationOf, readCredential, signedIntent, wellFormedInvitation, type Fetch, type Signer } from "@generalbusiness/artroom-client";
-import { platform } from "@generalbusiness/dap-platform";
+import { canonicalize, definitionDigest, digestBytes, intentDigest, isDigest, isPlatformDefinition, isScopeId, isScopeRef, isReceipt, entryHash, parseStrict, scopeIdOf, textDigest, timeOf, utf8 } from "@generalbusiness/artroom-bytes";
+import { TransportError, ScopeHandle, ApplicationPackageError, applicationScreenPath, readApplicationInstallOptions, readApplicationReleaseUri, signedApplicationInstall, invitationOf, readCredential, signedIntent, wellFormedInvitation, type Fetch, type Signer } from "@generalbusiness/artroom-client";
+import { TRUSTED_APPLICATION_COHORT, platform } from "@generalbusiness/dap-platform";
+import { ApplicationHttpError, applicationGitHttpSource, readApplicationGitBlob } from "@generalbusiness/artroom-git";
 import { ACT_OUTPUT, actTool, bindingsOf, declarationDigest, describedOf, generationOf, listed, selected, type Binding, type Held, type Inventory, type Mode, type Tool } from "./catalogue.ts";
 import { Custody, CustodyError, Lost, meaningOf, validKey, type CustodyRecord, type CustodyStore, type Envelope, type Identity } from "./custody.ts";
 import { AT_INPUT, describeAct, grantAction, onOf, schemaOf, type DefinitionLike } from "./describe.ts";
@@ -41,6 +42,8 @@ export interface ServerPort {
   fetch?: Fetch;
   /** The key the server signs with: a person's device key or an agent key, from `ARTROOM_HOME`. */
   signer: Signer;
+  /** Public Git transport only; separate from authenticated native reads. */
+  applicationFetch?: (request: Request) => Promise<Response>;
   config: ConfigPort;
   custody: CustodyStore;
   /** Operational observations only; absent or failed reporting does not own a result. */
@@ -536,6 +539,11 @@ export class McpService {
         ["definition", "kind", "idempotencyKey"], WRITE, (a) => this.#create(a), ACT_OUTPUT),
       tool("join", "Joins a room with an invitation link from dap invite (artroom-invite:...), as dap join does: signs membership's join with this server's key, keeps the exact request under custody before sending it, and on acceptance records the room in your configuration, so its tools are listed. After a lost reply, call again with the same link and idempotencyKey: the same request is sent again, never a new one. The link is private: this tool's result never repeats it. Legacy membership records the invitation secret in the join entry, visible through authorized history reads. The invitation-key cohort records a proof bound to this membership, invitation and joining key; its private invitation seed stays out of the entry.",
         { link: { type: "string", description: "The invitation link, artroom-invite:..." }, idempotencyKey: keyArg }, ["link", "idempotencyKey"], WRITE, (a) => this.#join(a), ACT_OUTPUT),
+      tool("install_application", "Install an operator-trusted package in this room by immutable Git URI and independent expected release. Select default roles explicitly; values are the application genesis fields. Keeps one signed native envelope under idempotencyKey before submission. Repeating the same key and meaning retains that envelope. Acceptance records the install request; application_installation reads its pending, active or final refused result. The host fetches the URI independently.",
+        { uri: { type: "string", maxLength: 4096 }, release: { type: "string" }, roles: { type: "array", maxItems: 5, uniqueItems: true, items: { enum: ["admin", "maintainer", "member", "agent", "checker"] } }, values: { type: "object" }, idempotencyKey: keyArg },
+        ["uri", "release", "roles", "values", "idempotencyKey"], { ...WRITE, openWorldHint: true }, a => this.#installApplication(a)),
+      tool("application_installation", "Read one native installation in the configured room, including its recorded phase and final refusal reason. Earlier committed activation and grants can remain after a later refusal. Active results include the exact generic screen address. This read signs no install or continuation and changes no native state.",
+        { item: { type: "integer", minimum: 0 } }, ["item"], READ, a => this.#applicationInstallation(a)),
       tool("prepare", "Asks the scope that owns a resource for one step of a capability. With kind: for the intent an act will submit later under the same idempotencyKey; resource: the scope asked, which may differ from target; then the act's own target, kind, on, fields, texts, presented and values. Without kind: a step with no act, such as hold@1's instance, whose own intent (kind capability:step, with fields) goes to the resource. Returns the resource's answer for that step, never an act's receipt.",
         { resource: scopeArg, capability: { type: "string" }, step: { type: "string" }, target: scopeArg, kind: { type: "string" }, on: { type: "integer", minimum: 0 }, at: AT_INPUT, fields: { type: "object" }, texts: { type: "array", items: { type: "string" } }, presented: { type: "object" }, values: { type: "array", items: { type: "string" } }, idempotencyKey: keyArg },
         ["resource", "capability", "step", "idempotencyKey"], WRITE, (a) => this.#prepare(a)),
@@ -891,6 +899,76 @@ export class McpService {
    * version and its scope. On acceptance, the entry is read and checked against the request kept, its inbox found, and the
    * room recorded in the configuration; the list is derived again on the next call.
    */
+  /** The actual generic room and exact Rules sibling, never a caller alias. */
+  async #applicationRoom(): Promise<{ directory: ScopeRef; membership: ScopeRef; rules: ScopeRef }> {
+    const config = await this.#port.config.read(), repository = config.repository;
+    if (!repository || config.service !== this.#service) return stop({ error: "target", what: "configure a trusted-application room before installing" });
+    const { summary: directory } = await this.#summary(repository.directory.scope, repository.membership);
+    const row = directory.items.find(item => item.type === "repository" && item.state === "open"), rules = row?.refs["rules"], destination = row?.refs["destination"];
+    if (directory.status !== "active" || directory.definition !== TRUSTED_APPLICATION_COHORT.directory || canonicalize(directory.scope) !== canonicalize(repository.directory)
+      || !row || canonicalize(row.refs["membership"]) !== canonicalize(repository.membership)
+      || !isScopeRef(rules) || rules.kind !== "rules" || rules.scope !== repository.rules
+      || !isScopeRef(destination) || destination.kind !== "destination" || destination.scope !== repository.destination) return stop({ error: "target", what: "the configured room does not match its exact generic native siblings" });
+    const { summary } = await this.#summary(rules.scope, repository.membership);
+    if (summary.status !== "active" || summary.definition !== TRUSTED_APPLICATION_COHORT.rules || canonicalize(summary.scope) !== canonicalize(rules)) return stop({ error: "target", what: "the actual Rules sibling does not support native application installation" });
+    return { directory: directory.scope, membership: repository.membership, rules };
+  }
+
+  async #installApplication(args: Args): Promise<CallResult> {
+    const key = args["idempotencyKey"];
+    if (!validKey(key)) return failed({ error: "shape", field: "idempotencyKey", what: "is missing or invalid", declared: "a key you choose and keep" });
+    const room = await this.#applicationRoom();
+    let selected: ReturnType<typeof readApplicationInstallOptions>;
+    try { selected = readApplicationInstallOptions({ rules: room.rules, uri: args["uri"], release: args["release"], roles: args["roles"], values: args["values"] }); }
+    catch { return failed({ error: "shape", field: "installation", what: "needs an immutable Git URI, expected release, explicit unique roles and bounded genesis values", declared: "the install_application input" }); }
+    const identity: Identity = { service: this.#service, membership: room.membership, signer: this.#port.signer.key, target: room.rules, key: key as string };
+    const meaning = meaningOf(selected), pin = TRUSTED_APPLICATION_COHORT.rules;
+    const build = async () => {
+      const address = readApplicationReleaseUri(selected.uri);
+      const source = applicationGitHttpSource(address, { blobBytes: 4 * 1024 * 1024, ...(this.#port.applicationFetch ? { send: this.#port.applicationFetch } : {}) });
+      try {
+        const bytes = await readApplicationGitBlob(address, source.source, 4 * 1024 * 1024);
+        const prepared = await signedApplicationInstall(this.#port.signer, bytes, selected, { idempotencyKey: key as string, now: this.#now() });
+        return { binding: { definition: "platform:rules", kind: "install-application", declaration: declarationDigest(platform(pin)!.data as unknown as DefinitionLike, "install-application", pin), pinned: pin }, envelope: { signed: prepared.signed, beside: prepared.beside } };
+      } finally { await source.close(); }
+    };
+    let kept;
+    try {
+      kept = await this.custody.send(identity, meaning, build, async envelope => {
+        try { return await this.#reads.transport.submit(room.rules.scope, envelope.signed, [], envelope.beside); }
+        catch (error) { if (error instanceof TransportError) throw new Lost(); throw error; }
+      }, { notAfter: timeOf(this.#now() + PROPOSED_BOUNDS.intentLifetimeSeconds * 1000), bytes: 768 * KIB });
+    } catch (error) {
+      if (error instanceof CustodyError) throw error;
+      return failed({ error: "target", what: error instanceof ApplicationHttpError && error.reason === "unsupported-object-format" ? "the public HTTPS Git transport does not support SHA-256 repositories; nothing was submitted" : error instanceof ApplicationPackageError ? "package bytes do not match the expected signed release or install bounds; nothing was submitted" : "the exact Git package could not be prepared; nothing was submitted" });
+    }
+    if ("lost" in kept) return failed({ error: "transport", scope: room.rules.scope, submitted: true });
+    if (kept.answer.answer !== "accepted") return ok({ ...projectAnswer(kept.answer), retained: kept.retained, phase: kept.record.phase });
+    const receipt = kept.answer.receipt;
+    if (!isReceipt(receipt) || receipt.definition !== pin || receipt.intent !== intentDigest(kept.record.envelope.signed.intent) || canonicalize(receipt.fact.at) !== canonicalize(room.rules)) return failed({ error: "target", what: "the install acknowledgement does not match the retained native request" });
+    const read = await this.#reads.read(room.membership, (t, r) => t.entry(room.rules.scope, r, receipt.fact.seq));
+    if (!read.ok || !read.complete || read.next !== undefined || read.value.hash !== receipt.fact.hash || entryHash(read.value.entry) !== receipt.fact.hash
+      || canonicalize(read.value.entry.at) !== canonicalize(room.rules) || read.value.entry.seq !== receipt.fact.seq || read.value.entry.input.type !== "act"
+      || canonicalize(read.value.entry.input.signed) !== canonicalize(kept.record.envelope.signed)) return failed({ error: "target", what: "the install receipt's native entry is unavailable or does not hold the exact retained request" });
+    this.#invalidate();
+    return ok({ answer: "accepted", fact: receipt.fact, item: receipt.fact.seq, retained: kept.retained, phase: "recorded", next: "Read application_installation with this item. Native acceptance records the request; installation may still be pending or refused." });
+  }
+
+  async #applicationInstallation(args: Args): Promise<CallResult> {
+    const item = args["item"];
+    if (typeof item !== "number" || !Number.isSafeInteger(item) || item < 0) return failed({ error: "shape", field: "item", what: "is not a native install item", declared: "a nonnegative integer" });
+    const room = await this.#applicationRoom();
+    const read = await this.#reads.read(room.membership, (t, r) => new ScopeHandle(t, room.rules.scope, r).queryItems({ v: 1, scope: room.rules, type: "installation", states: ["active", "pending", "refused"], ids: [item], limit: 1, cursor: null }));
+    if (!read.ok) return failed({ error: "target", what: `the bounded installation read refused: ${read.reason}` });
+    const row = read.value.items[0];
+    if (!read.complete || read.next !== undefined || !row || row.id !== item || row.type !== "installation") return failed({ error: "target", what: "that installation is unavailable in this exact room" });
+    const presentation = row.values["presentation"];
+    return ok({ rules: room.rules, at: read.at, item, state: row.state, phase: row.values["phase"], reason: row.values["reason"] ?? null,
+      uri: row.values["uri"], release: row.values["release"], semantic: row.values["semantic"], presentation,
+      scope: row.refs["scope"] ?? null,
+      screen: row.state === "active" && isDigest(presentation) ? this.#service + applicationScreenPath(room.directory.scope, item, presentation) : null });
+  }
+
   async #join(args: Args): Promise<CallResult> {
     const key = args["idempotencyKey"];
     if (!validKey(key)) return failed({ error: "shape", field: "idempotencyKey", what: "is missing, or not 1 to 128 bytes of UTF-8", declared: "a key you choose and keep" });

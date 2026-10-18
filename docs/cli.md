@@ -64,7 +64,7 @@ authorization to install a register remains unimplemented.
 The examples are from one run of the test in
 `packages/cli/test/story.scope.test.ts`, with long IDs cut short.
 
-**`dap install <base-url> [--host <git-host>] [--namespace <name>] [--cohort application|application-publication|counting-commitments|invitation-key]`**
+**`dap install <base-url> [--host <git-host>] [--namespace <name>] [--cohort application|application-publication|trusted-application|invitation-key]`**
 creates the register with an `install` intent, signed by a new operator
 key, which is also the one creator key. The host defaults to `github.com`
 and the namespace to `artroom`. For the demo's host, the hosting's own Git
@@ -76,7 +76,7 @@ Installed: register sc_hinqqbm4....
 The operator key key_baqzbaDy... is kept in the config directory, readable only by you. It is the one founder key.
 ```
 
-**`dap install --plan <base-url> [--host <git-host>] [--namespace <name>] [--cohort application|application-publication|counting-commitments|invitation-key]`**
+**`dap install --plan <base-url> [--host <git-host>] [--namespace <name>] [--cohort application|application-publication|trusted-application|invitation-key]`**
 signs the same `install` intent and creates nothing. A register's ID is a
 function of its seed, and the seed of the intent and the register's
 version alone, so the command prints the ID that the install will create,
@@ -84,7 +84,7 @@ and the seed's time: the intent's `notAfter`, 14 minutes ahead, until
 which it can be created. It keeps the signed intent, the version and the
 ID in the config. This creation intent carries no invitation credential;
 the register's genesis records it and its signature. Only a definitely unsent legacy plan may
-be replaced. A selected application or Counting plan always retains its
+be replaced. A selected application or trusted-application plan always retains its
 original envelope, version, register and deadline, including when planning
 is repeated.
 
@@ -93,14 +93,14 @@ Planned: register sc_4kq2v7..., under platform:register@2, on host artifacts, na
 Set registerScope to sc_4kq2v7... in the Worker's host setting, then run dap install --planned before 2026-10-08T09:14:00Z.
 ```
 
-**`dap install --planned [--cohort application|application-publication|counting-commitments|invitation-key]`** creates the planned register, with the kept
+**`dap install --planned [--cohort application|application-publication|trusted-application|invitation-key]`** creates the planned register, with the kept
 intent and no other argument. Before anything is sent it checks the plan:
 a plan whose ID is not the one its intent and version make, or whose
 version is not supported by the installed catalog, is refused as
 `plan-mismatch`; a plan whose time is over is refused as `plan-expired`.
 An expired plan that was never attempted sends nothing. A definitely
 unsent legacy plan can be planned again in the same config. A selected
-application or Counting plan cannot: keep that original config directory unchanged and
+application or trusted-application plan cannot: keep that original config directory unchanged and
 use a separate empty `DAP_HOME` directory for a new plan. Use that same
 new directory for every later command, and configure the host's
 `registerScope` with the new plan's ID before installing. Do not copy over
@@ -108,7 +108,7 @@ or delete the original config or keys.
 
 For example, set `DAP_HOME` to a new private directory, then run
 `dap install --plan <base-url> --cohort <cohort> --host <host>
---namespace <namespace>`, using `application`, `application-publication`, `counting-commitments` or `invitation-key`
+--namespace <namespace>`, using `application`, `application-publication`, `trusted-application` or `invitation-key`
 for `<cohort>`. After configuring the new register ID,
 run `dap install --planned --cohort <cohort>` with the same
 `DAP_HOME`. This creates separate custody and a new operator key; it
@@ -131,7 +131,7 @@ Installed: register sc_4kq2v7..., under platform:register@2, as planned.
 Omitting `--cohort` keeps the legacy default. `--cohort application` selects
 `APPLICATION_COHORT`: register@5, directory@5, membership@4, rules@3,
 destination@2 and inbox@1, each with the `platform:` prefix.
-`--cohort counting-commitments` retains its separate register@6,
+`--cohort trusted-application` retains its separate register@6,
 directory@6 and membership@5 lineage. `--cohort application-publication`
 selects `FILE_PUBLICATION_COHORT`: register@9, directory@8, membership@4,
 rules@3, destination@4 and inbox@1. `--cohort invitation-key` selects
@@ -209,6 +209,45 @@ An initial tool-hash guard typo stopped before any build; that outcome is
 retained. The native application case was unchanged and was not repeated.
 The corrected Counter parent remains intact. A new ordinary gate and
 an independent review of the code are still required for this follow-up.
+
+**`dap install <git+https-uri> --release <release-id> --request <kept-key> [--role <default-role> ...] [--values <genesis-JSON>]`**
+records one application install in a room created with
+`--cohort trusted-application`. The caller needs the native
+`application.install` action. The package must be a regular Git blob at an
+exact commit, and its release and publisher must be listed by the host
+operator. The host fetches and verifies that URI independently.
+
+The URI has this spelling:
+`git+https://<lowercase-host>/<repository>.git/@<full-commit>/<encoded-tree-path>`.
+Use the expected release printed by `dap pack`; commit the resulting packet
+before installing it. The current public HTTPS reader supports SHA-1 Git
+repositories. SHA-256 commit spelling is retained by the URI codec but is
+unsupported by this transport. Local checks and package signatures use their
+own content identities.
+
+Each `--role` selects that role's defaults from the signed package. The
+roles are `admin`, `maintainer`, `member`, `agent`, and `checker`. Omission
+selects no default grants. Existing grants remain. `--values` is a JSON object
+of application genesis fields; its default is `{}`.
+
+Choose a request key and keep the exact command. CLI and MCP share persistent
+custody in the config directory's `private/mcp-custody/`. A lost reply is
+uncertain; repeating the original key and arguments uses the retained signed
+envelope. Changing the meaning under that key refuses. The command does not
+renew an expired original or sign a continuation. A definitive native refusal
+requires a new ordinary request if you choose to try again.
+
+Acceptance records the install request. It does not mean all subordinate
+steps have completed. The output names its item for
+**`dap application <install-item>`**, which reads the recorded pending, active,
+or refused state and phase. An active result includes the exact screen URL.
+A later refusal can leave earlier activation and grants in force. The install
+records no rollback; ordinary authorized acts can change those effects.
+
+The equivalent MCP tools are `install_application` (with `uri`, `release`,
+`roles`, `values`, and `idempotencyKey`) and `application_installation`
+(with `item`). Existing `settle` also reads the retained envelope by its key
+and Rules target.
 
 **`dap create <name> [--handle @you] [--branch main] [--again]`**
 

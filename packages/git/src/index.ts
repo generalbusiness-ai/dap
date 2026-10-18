@@ -27,3 +27,5 @@ export { FILE_MODES, SNAPSHOT_BOUNDS, SNAPSHOT_IDENTITY, snapshotCommit, snapsho
 export type { BuiltObject, FileMode, SnapshotBounds, SnapshotCommit, SnapshotFile } from "./snapshot.ts";
 
 export * from "./application-blob.ts";
+
+export * from "./application-http.ts";

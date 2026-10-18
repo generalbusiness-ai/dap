@@ -3,6 +3,9 @@
  * Repository creation, Git objects, clock and read-session inspector are
  * explicit fixtures. Native births, Lending publication admission and generic
  * screen routing run through the production code; screen bytes are TEST text. */
+import { command, memoryStore as cliStore, type Context } from "../../cli/src/index.ts";
+import type { SignedIntent } from "@generalbusiness/dap-contract";
+import { McpService, memoryStore as custodyStore, type ServerPort } from "@generalbusiness/dap-mcp";
 import type { Fetched } from "@generalbusiness/dap-derive";
 import type { Sourced } from "../src/namespace.ts";
 import { lending } from "../../../examples/lending/definition.ts";
@@ -25,11 +28,11 @@ import { rita, sam, routed } from "./repository.ts";
 
 const refusesAtBirth = { ...countingCommitments, acts: { ...countingCommitments.acts, establish: { ...countingCommitments.acts["establish"]!, guards: [{ rule: "install-refusal" }] } }, rules: { ...countingCommitments.rules, "install-refusal": "false" } };
 const installations = [
-  { name: "Counter: reply lost after put", application: "Counter", loss: "after-put", declaration: countingCommitments, roles: { admin: ["counting.control"], member: ["counting.fulfill"] }, values: '{"target":7}' },
+  { name: "Counter: reply lost after put", mcp: true, application: "Counter", loss: "after-put", declaration: countingCommitments, roles: { admin: ["counting.control"], member: ["counting.fulfill"] }, values: '{"target":7}' },
   { name: "Counter: interrupted before put", application: "Counter", loss: "before-put", declaration: countingCommitments, roles: { admin: ["counting.control"], member: ["counting.fulfill"] }, values: '{"target":7}' },
   { name: "Counter: admission reply lost", application: "Counter", loss: "admission", declaration: countingCommitments, roles: { admin: ["counting.control"], member: ["counting.fulfill"] }, values: '{"target":7}' },
-  { name: "Counter: child refuses after grants", application: "Counter", loss: "after-put", refusesAtBirth: true, declaration: refusesAtBirth, roles: { admin: ["counting.control"], member: ["counting.fulfill"] }, values: '{"target":7}' },
-  { name: "Lending: reply lost after put", application: "Lending", loss: "after-put", declaration: lending, roles: { admin: ["lending.member", "lending.staff"], member: ["lending.member"] }, values: '{}' },
+  { name: "Counter: child refuses after grants", mcp: true, application: "Counter", loss: "after-put", refusesAtBirth: true, declaration: refusesAtBirth, roles: { admin: ["counting.control"], member: ["counting.fulfill"] }, values: '{"target":7}' },
+  { name: "Lending: reply lost after put", mcp: true, application: "Lending", loss: "after-put", declaration: lending, roles: { admin: ["lending.member", "lending.staff"], member: ["lending.member"] }, values: '{}' },
 ] as const;
 test.each(installations)("$name: one signed native install settles through Directory", async specimen => {
   const room = await sessionRoom(C.register), { life, R, D, children } = room;
@@ -85,12 +88,55 @@ test.each(installations)("$name: one signed native install settles through Direc
     expect(await life.wait(() => A.stub.submit(refused, [], { values: [canonicalize(f.packet.package.semantic), canonicalize(f.packet.package.release)], texts: [changed] }))).toMatchObject({ answer: "refused", reason: "bad-field" });
     expect(fetchSends).toBe(0); expect(peer.ads()).toBe(0); expect(peer.wants).toEqual([]);
     const rulesAt = await life.wait(() => A.at());
-    const envelope = await life.wait(() => signedApplicationInstall(secretSigner(rita.secret), f.packet.bytes, { rules: rulesAt, uri: f.uri, release: f.packet.ids.release, roles: ["admin", "member"], values: parseStrict(specimen.values) as Record<string, import("@generalbusiness/dap-contract").FieldValue> }, { now: life.now() }));
-    const { signed } = envelope;
-    const answer = await life.wait(() => A.stub.submit(signed, [], envelope.beside));
-    expect(answer).toMatchObject({ answer: "accepted" });
-    if (answer.answer !== "accepted") throw Error("Original signed install must be recorded.");
-    const job = answer.receipt.fact.seq;
+    let signed: SignedIntent, job: number, installedService: McpService | undefined, cli: Context | undefined;
+    if ("mcp" in specimen) {
+      const membership = await life.wait(() => M.at()), directory = await life.wait(() => D.at());
+      const store = custodyStore(), key = "TEST-native-install";
+      let lose = specimen.application === "Counter";
+      const port: ServerPort = { service: "https://scopes.test", signer: secretSigner(rita.secret), custody: store, now: life.now,
+        config: { read: async () => ({ service: "https://scopes.test", repository: { directory, membership, rules: A.name, destination: G.name } }), addRoot: async () => { throw Error("TEST installs discover through Directory"); } },
+        applicationFetch: peer.fetch,
+        fetch: async (url, init) => {
+          const response = await life.wait(() => routed(url, init));
+          if (lose && new URL(url).pathname.endsWith("/acts")) { lose = false; await response.body?.cancel(); throw Error("TEST lost accepted MCP install reply"); }
+          return response;
+        },
+      };
+      const args = { uri: f.uri, release: f.packet.ids.release, roles: ["admin", "member"], values: parseStrict(specimen.values), idempotencyKey: key };
+      installedService = new McpService(port);
+      let result;
+      if (specimen.application === "Counter") {
+        const local = cliStore(); await local.keep("operator", rita.secret);
+        await local.save({ v: 1, service: port.service, key: "operator", repository: { directory, membership, rules: A.name, destination: G.name } });
+        cli = { store: local, fetch: port.fetch!, now: life.now, applicationCustody: store, applicationFetch: peer.fetch };
+        const argv = ["install", f.uri, "--release", f.packet.ids.release, "--request", key, "--role", "admin", "--role", "member", "--values", specimen.values];
+        const uncertain = await life.wait(() => command(cli!, argv));
+        expect(uncertain.code, uncertain.lines.join("\n")).toBe(1); expect(lose).toBe(false);
+        const restored = { ...cli! }; // another CLI invocation, same durable custody
+        expect(await life.wait(() => command(restored, argv))).toMatchObject({ code: 0, lines: [expect.stringMatching(/^Install request recorded:/), expect.any(String), expect.any(String)] });
+        installedService = new McpService(port);
+        result = await life.wait(() => installedService!.call("install_application", args));
+      } else result = await life.wait(() => installedService!.call("install_application", args));
+      expect(result.isError, JSON.stringify(result.structuredContent)).toBe(false);
+      expect(result.structuredContent).toMatchObject({ answer: "accepted", phase: "recorded" });
+      job = Number(result.structuredContent["item"]);
+      const kept = await installedService.custody.find({ service: port.service, membership, signer: rita.key, target: rulesAt, key });
+      if (!kept) throw Error("MCP must retain the exact envelope before submission.");
+      signed = kept.envelope.signed;
+      const reads = peer.ads();
+      expect((await life.wait(() => installedService!.call("install_application", args))).structuredContent).toMatchObject({ answer: "accepted", item: job, retained: true });
+      expect((await life.wait(() => installedService!.call("install_application", { ...args, roles: [] }))).isError).toBe(true);
+      expect(peer.ads()).toBe(reads); // retained/conflicting requests never refetch
+      expect((await life.wait(() => installedService!.call("application_installation", { item: job }))).structuredContent).toMatchObject({ item: job, state: "pending", phase: "fetch", screen: null });
+      if (cli) expect(await life.wait(() => command(cli!, ["application", String(job)]))).toMatchObject({ code: 0, lines: [`Application install ${job}: pending (fetch).`] });
+    } else {
+      const envelope = await life.wait(() => signedApplicationInstall(secretSigner(rita.secret), f.packet.bytes, { rules: rulesAt, uri: f.uri, release: f.packet.ids.release, roles: ["admin", "member"], values: parseStrict(specimen.values) as Record<string, import("@generalbusiness/dap-contract").FieldValue> }, { now: life.now() }));
+      signed = envelope.signed;
+      const answer = await life.wait(() => A.stub.submit(signed, [], envelope.beside));
+      expect(answer).toMatchObject({ answer: "accepted" });
+      if (answer.answer !== "accepted") throw Error("Original signed install must be recorded.");
+      job = answer.receipt.fact.seq;
+    }
     await effectFixture([A], life.wait);
     expect(fetchSends).toBe(1);
     expect((await life.wait(() => A.item(job))).values["phase"]).toBe(specimen.loss === "admission" ? "admission" : "fetch");
@@ -114,6 +160,8 @@ test.each(installations)("$name: one signed native install settles through Direc
     const C = life.platform(scopeIdOf(creation.to));
     await driveFixture([R, D, M, A, G, C], life.wait);
     if ("refusesAtBirth" in specimen) {
+      expect((await life.wait(() => installedService!.call("application_installation", { item: job }))).structuredContent).toMatchObject({ item: job, state: "refused", phase: "creation", reason: "application-creation-refused", screen: null });
+      expect(await life.wait(() => command(cli!, ["application", String(job)]))).toMatchObject({ code: 1, lines: [`Application install ${job}: refused (creation).`, expect.stringContaining("application-creation-refused")] });
       const final = await life.wait(() => (A.object as unknown as { items(reader: unknown, type: string): Promise<unknown> }).items(reader, "installation"));
       expect(final).toMatchObject({ ok: true, value: [{ id: job, state: "refused", values: { phase: "creation", reason: "application-creation-refused" } }] });
       expect((await life.wait(() => M.item(0))).values["adminActions"]).toContain("counting.control");
@@ -133,6 +181,8 @@ test.each(installations)("$name: one signed native install settles through Direc
       return;
     }
     expect((await life.wait(() => C.summary())).value).toMatchObject({ status: "active", definition: f.packet.package.semantic.entry });
+    if (installedService) expect((await life.wait(() => installedService!.call("application_installation", { item: job }))).structuredContent).toMatchObject({ item: job, state: "active", scope: await life.wait(() => C.at()), screen: "https://scopes.test" + applicationScreenPath(D.name, job, f.packet.ids.presentation) });
+    if (cli) expect(await life.wait(() => command(cli!, ["application", String(job)]))).toMatchObject({ code: 0, lines: [`Application install ${job}: active (creation).`, "Screen: https://scopes.test" + applicationScreenPath(D.name, job, f.packet.ids.presentation)] });
     const completed = await life.wait(() => A.item(job));
     expect(completed).toMatchObject({ state: "active", refs: { scope: await life.wait(() => C.at()) } });
     if (specimen.application === "Counter") {

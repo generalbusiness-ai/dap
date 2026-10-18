@@ -1,7 +1,7 @@
 /** One native application-install envelope. Keep it unchanged for submission
  * and settlement; host fetch/admission remains a separate authority. */
 import type { Beside, Digest, FieldValue, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
-import { isRecord, isScopeRef, parseStrict, textDigest } from "@generalbusiness/artroom-bytes";
+import { isDigest, isRecord, isScopeRef, parseStrict, textDigest } from "@generalbusiness/artroom-bytes";
 import { applicationJson } from "./application-json.ts";
 import { readApplicationPackage } from "./application-package.ts";
 import { readApplicationReleaseUri } from "./application-uri.ts";
@@ -26,17 +26,23 @@ export interface SignedApplicationInstall {
 const roles: readonly string[] = ["admin", "maintainer", "member", "agent", "checker"];
 const invalid = (): never => { throw new ApplicationPackageError("invalid"); };
 
+/** An owned, bounded install selection, before network or signing. */
+export function readApplicationInstallOptions(value: unknown): ApplicationInstallOptions {
+  const owned = parseStrict(applicationJson(value, 32 * 1024)) as unknown as ApplicationInstallOptions;
+  if (!isRecord(owned) || Object.keys(owned).sort().join() !== "release,roles,rules,uri,values"
+    || !isDigest(owned.release) || !isScopeRef(owned.rules) || owned.rules.kind !== "rules"
+    || !Array.isArray(owned.roles) || owned.roles.length > 5 || new Set(owned.roles).size !== owned.roles.length
+    || owned.roles.some(role => !roles.includes(role)) || !isRecord(owned.values)) return invalid();
+  try { readApplicationReleaseUri(owned.uri); } catch { return invalid(); }
+  return owned;
+}
+
 /** Verify owned package bytes and bounded inputs before asking for one
  * signature. Beside holds semantic/release values and declaration texts;
  * screen bytes never enter this native request. This checks no host trust,
  * native grant, current revision or application genesis guard. */
 export async function signedApplicationInstall(signer: Signer, bytes: Uint8Array, options: ApplicationInstallOptions, signing: Signing = {}): Promise<SignedApplicationInstall> {
-  const owned = parseStrict(applicationJson(options, 32 * 1024)) as unknown as ApplicationInstallOptions;
-  if (!isRecord(owned) || Object.keys(owned).sort().join() !== "release,roles,rules,uri,values"
-    || !isScopeRef(owned.rules) || owned.rules.kind !== "rules"
-    || !Array.isArray(owned.roles) || owned.roles.length > 5 || new Set(owned.roles).size !== owned.roles.length
-    || owned.roles.some(role => !roles.includes(role)) || !isRecord(owned.values)) return invalid();
-  try { readApplicationReleaseUri(owned.uri); } catch { return invalid(); }
+  const owned = readApplicationInstallOptions(options);
   const packet = readApplicationPackage(bytes, owned.release, { bytes: 4 * 1024 * 1024, definitionBytes: 64 * 1024 });
   const semantic = applicationJson(packet.package.semantic, 256 * 1024), release = applicationJson(packet.package.release, 4096);
   const values = applicationJson(owned.values, 16 * 1024);

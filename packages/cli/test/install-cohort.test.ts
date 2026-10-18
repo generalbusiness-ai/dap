@@ -181,3 +181,20 @@ test("selected delivery requires exact plan and attempt readback and recovers th
     expect(changed.bodies).toEqual([]);
   }
 });
+
+
+// Invariant: application options cannot fall through into register creation
+// or signing when the URI/options or persistent custody are unavailable.
+test("application install syntax and custody failures never create a register", async () => {
+  const s = scenario(), uri = `git+https://packages.test/apps.git/@${"a".repeat(40)}/counter.dap.json`, release = `sha256:${"b".repeat(64)}`;
+  for (const args of [
+    ["install", uri], ["install", uri, "--release", release],
+    ["install", uri, "--release", release, "--release", release, "--request", "counter-1"],
+    ["install", uri, "--release", release, "--request", "counter-1", "--cohort", COHORT],
+    ["install", uri, "--release", release, "--request", "counter-1", "--values", "{"],
+    ["install", SERVICE, "--release", release, "--request", "counter-1"],
+    ["application", "01"], ["application", "-1"],
+  ]) expect((await command(s.ctx, args)).code).toBe(2);
+  expect(await command(s.ctx, ["install", uri, "--release", release, "--request", "counter-1"])).toMatchObject({ code: 1, lines: [expect.stringContaining("Persistent application request custody")] });
+  expect([s.metrics(), s.bodies, await s.store.config()]).toEqual([{ saves: 0, keyReads: 0, keyWrites: 0 }, [], null]);
+});
