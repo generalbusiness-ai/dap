@@ -125,6 +125,93 @@
               "nullable": false
             }
           }
+        },
+        "events": {
+          "read": "entries",
+          "acts": [
+            "borrow",
+            "donate",
+            "return"
+          ],
+          "window": 100,
+          "limit": 100,
+          "latestBy": null,
+          "fields": {
+            "actor": {
+              "from": {
+                "kind": "signer",
+                "name": "member"
+              },
+              "of": {
+                "type": "member"
+              },
+              "nullable": true
+            }
+          }
+        },
+        "cancellations": {
+          "read": "entries",
+          "acts": [
+            "cancel"
+          ],
+          "window": 100,
+          "limit": 100,
+          "latestBy": null,
+          "fields": {
+            "actor": {
+              "from": {
+                "kind": "signer",
+                "name": "member"
+              },
+              "of": {
+                "type": "member"
+              },
+              "nullable": true
+            },
+            "reason": {
+              "from": {
+                "kind": "field",
+                "name": "reason"
+              },
+              "of": {
+                "type": "text",
+                "max": 280
+              },
+              "nullable": false
+            }
+          }
+        },
+        "publications": {
+          "read": "entries",
+          "acts": [
+            "publish"
+          ],
+          "window": 100,
+          "limit": 100,
+          "latestBy": null,
+          "fields": {
+            "actor": {
+              "from": {
+                "kind": "signer",
+                "name": "member"
+              },
+              "of": {
+                "type": "member"
+              },
+              "nullable": true
+            },
+            "thing": {
+              "from": {
+                "kind": "field",
+                "name": "thing"
+              },
+              "of": {
+                "type": "item",
+                "of": "thing"
+              },
+              "nullable": false
+            }
+          }
         }
       }
     },

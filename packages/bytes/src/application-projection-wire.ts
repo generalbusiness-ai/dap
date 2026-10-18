@@ -41,7 +41,8 @@ function data(value: unknown): value is ApplicationProjectionData {
   const sources = Object.entries(value["sources"]);
   return sources.length > 0 && sources.length <= B.sources && sources.every(([key, rows]) => name(key) && Array.isArray(rows) && rows.length <= B.rows
     && rows.every((row: unknown, i: number) => isRecord(row) && whole(row["id"]) && whole(row["revision"])
-      && (Object.hasOwn(row, "entry") ? only(row, "entry,fields,id,revision,state,time,type") && isFactRef(row["entry"])
+      && (Object.hasOwn(row, "entry") ? only(row, "entry,fields,id,on,revision,state,time,type") && isFactRef(row["entry"])
+        && (row["on"] === null || whole(row["on"]))
         && row["entry"].seq === row["id"] && row["revision"] === row["id"] && row["state"] === "sealed" && timeMs(row["time"]) !== null
         && canonicalize(row["entry"].at) === canonicalize(value["scope"]) && projectionName(row["type"])
         : only(row, "fields,id,revision,state,type") && name(row["type"]) && name(row["state"]))

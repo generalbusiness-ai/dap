@@ -24,7 +24,8 @@ interface ApplicationProjectionRowFields {
 /** A journal seq is a display identity/revision, never a signable item
  * revision. A journal row always carries both its explicit fact and time. */
 export type ApplicationProjectionRow = ApplicationProjectionRowFields & (
-  { readonly entry?: never; readonly time?: never } | { readonly entry: Readonly<FactRef>; readonly time: Timestamp }
+  { readonly entry?: never; readonly time?: never; readonly on?: never }
+  | { readonly entry: Readonly<FactRef>; readonly time: Timestamp; /** The recorded intent's subject, not an expected item revision. */ readonly on: number | null }
 );
 export interface ApplicationProjectionData {
   readonly v: 1;

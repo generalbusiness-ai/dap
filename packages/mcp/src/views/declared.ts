@@ -20,7 +20,7 @@ export interface DeclaredViewPort {
   actions(): Promise<readonly string[]>;
 }
 const text = (value: unknown): string => value === null || value === undefined ? "" : typeof value === "string" ? value : canonicalize(value);
-const input = (row: ApplicationProjectionRow): Record<string, FieldValue | null> => ({ ...row.fields, id: row.id, type: row.type, state: row.state, revision: row.revision, ...(row.entry ? { time: row.time! } : {}) });
+const input = (row: ApplicationProjectionRow): Record<string, FieldValue | null> => ({ ...row.fields, id: row.id, type: row.type, state: row.state, revision: row.revision, ...(row.entry ? { time: row.time!, on: row.on! } : {}) });
 const template = (source: string, row: ApplicationProjectionRow, waiting: string): string => {
   const values = { ...input(row), waiting };
   return source.replace(/\{([^{}]+)\}/g, (_whole, key: string) => text(Object.hasOwn(values, key) ? values[key as keyof typeof values] : null));

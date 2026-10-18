@@ -2,7 +2,27 @@ import { expect, test } from "vitest";
 import { type Entry, type Summary } from "@generalbusiness/dap-contract";
 import { grantOf, keys, type Ledger } from "@generalbusiness/dap-derive/testing";
 import { donation, make as makeLedger, submit } from "../test-support.ts";
-import { actsFor, journalRows, lendingView, memberForKey, membershipActions, offeredActs, propose, refusalWords } from "./model.ts";
+import { actsFor, journalRows, lendingView, lendingProjectionView, lendingProjectionActivity, memberForKey, membershipActions, offeredActs, propose, refusalWords } from "./model.ts";
+import { canonicalize, itemQueryArgument, itemQueryDigest } from "@generalbusiness/artroom-bytes";
+import { applicationProjectionQueries, isApplicationJournalSource, projectApplicationQueryReads } from "@generalbusiness/artroom-bytes/application-v2";
+import { lending } from "../definition.ts";
+import { lendingStateProjection } from "./projection.ts";
+
+/** Fold-derived query replies are STAND-INS for native read ownership. */
+function projected(s: Ledger) {
+  const at = { seq: s.last.seq, hash: s.entries.at(-1)!.hash };
+  const queries = applicationProjectionQueries(lendingStateProjection, s.at, {});
+  const replies = Object.fromEntries(Object.entries(queries).map(([name, query]) => [name, {
+    ok: true, at, complete: true, value: { v: 1, scope: s.at, query: itemQueryDigest(query), argument: itemQueryArgument(query),
+      items: s.state.page(query.type, query.states, null, query.limit).items.map(item => s.item(item.id)) },
+  }]));
+  const journals = Object.fromEntries(Object.entries(lendingStateProjection.sources).filter(([, source]) => isApplicationJournalSource(source)).map(([name, source]) => {
+    if (!isApplicationJournalSource(source)) throw Error("Expected a journal source.");
+    return [name, { scope: s.at, at, entries: s.entries.filter(sealed => sealed.entry.seq >= Math.max(0, at.seq - source.window + 1))
+      .map(sealed => ({ seq: sealed.entry.seq, hash: sealed.hash, bytes: canonicalize(sealed.entry) })) }];
+  }));
+  return projectApplicationQueryReads(lendingStateProjection, lending, s.at, {}, replies, journals);
+}
 
 // A STAND-IN for a complete authenticated membership summary, not a native authority observation.
 const roster = (role: "member" | "admin"): Summary => ({
@@ -79,6 +99,14 @@ test("the view lists every thing in order, live from the summary and gone from t
     `Big pot (thing ${big!.id}): Nasruddin says the pot died`, `Big pot (thing ${big!.id})`,
   ]);
   expect(rows.find((row) => row.kind === "cancel")).toMatchObject({ signer: "@rita" });
+  // The production adapter retains the gone thing's actual revision and
+  // selected activity facts without reconstructing a whole record or Summary.
+  const data = projected(s), declared = lendingProjectionView(data);
+  expect(declared.things.map(({ id, revision, state, reason }) => ({ id, revision, state, reason })))
+    .toEqual(view().things.map(({ id, revision, state, reason }) => ({ id, revision, state, reason })));
+  expect(declared.things.every(thing => !Object.hasOwn(thing, "seq"))).toBe(true);
+  expect(lendingProjectionActivity(data, declared).map(({ seq, kind, signer, what }) => ({ seq, kind, signer, what }))).toEqual(rows);
+  expect(propose(declared, "publish", { thing: big!.id })).toEqual(propose(view(), "publish", { thing: big!.id }));
   // A partial journal cannot supply the donation name; keep the ID explicit.
   expect(journalRows(retained.slice(-2)).map((row) => row.what)).toEqual([
     `Unknown thing ${big!.id}: Nasruddin says the pot died`, `Unknown thing ${big!.id}`,

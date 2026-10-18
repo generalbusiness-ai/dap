@@ -77,7 +77,7 @@ export function readApplicationProjection(value: unknown): ApplicationReadProjec
       integer(source["limit"], 1, source["read"] === "latest-entry" ? 1 : B.rows);
       const fields = record(source["fields"], B.fields, 0);
       for (const [alias, given] of Object.entries(fields)) {
-        if (META.has(alias) || alias === "time") return fail();
+        if (META.has(alias) || alias === "time" || alias === "on") return fail();
         const field = object(given, "from,nullable,of"), from = object(field["from"], "kind,name");
         if (typeof field["nullable"] !== "boolean" || from["kind"] !== "field" && from["kind"] !== "signer") return fail();
         name(from["name"]);

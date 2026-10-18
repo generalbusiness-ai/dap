@@ -11,11 +11,12 @@ const common = { also: {}, fields: {}, guards: [], effects: [], sends: [], atten
 const definition: DeclaredDefinition = {
   format: "artroom-definition-1", name: "journal-fixture", profile: { name: "restricted", version: 1 }, capabilities: [], genesis: "establish",
   items: { root: { many: false, max: 1, initial: "open", states: { open: { final: false } }, parties: {}, refs: {}, values: {} } },
-  acts: { establish: { ...common, step: "open", on: "root", grant: "journal.write" }, observe: { ...common, step: "comment", on: null, grant: "journal.write",
+  acts: { establish: { ...common, step: "open", on: "root", grant: "journal.write" }, note: { ...common, step: "comment", on: "root", grant: "journal.write",
+    fields: { room: { type: "int", min: 0, max: 10, required: true } } }, observe: { ...common, step: "comment", on: null, grant: "journal.write",
     fields: { room: { type: "int", min: 0, max: 10, required: true } } } }, receives: {}, timed: {}, rules: {},
 };
 const projection = () => ({ v: 1, definition: definitionDigest(definition), revision: "revision", sources: { log: {
-  read: "entries", acts: ["observe"], window: 2, limit: 2, latestBy: null as string | null, fields: {
+  read: "entries", acts: ["note", "observe"], window: 2, limit: 2, latestBy: null as string | null, fields: {
     room: { from: { kind: "field", name: "room" }, of: { type: "int", min: 0, max: 10 }, nullable: false },
     actor: { from: { kind: "signer", name: "member" }, of: { type: "member" }, nullable: true },
   },
@@ -25,7 +26,7 @@ function journal() {
   let prev = textDigest("PUBLIC TEST prefix outside the declared tail");
   for (const seq of [4, 5]) {
     const entry: Entry = { v: 1, at: scope, seq, prev, time: "2026-10-18T12:00:00Z", clamped: false, epoch: 0, uses: [], prepared: [], effects: [], sends: [],
-      input: { type: "act", signed: signIntent({ v: 1, to: scope, actor: keyIdOfSecret(secret), kind: "observe", on: null, expected: {}, fields: { room: 1 },
+      input: { type: "act", signed: signIntent({ v: 1, to: scope, actor: keyIdOfSecret(secret), kind: seq === 4 ? "observe" : "note", on: seq === 4 ? null : 1, expected: {}, fields: { room: 1 },
         idempotencyKey: `PUBLIC-TEST-${seq}`, notAfter: "2026-10-18T12:01:00Z" }, secret), authority: [], presented: {} } };
     prev = entryHash(entry); entries.push({ seq, hash: prev, bytes: canonicalize(entry) });
   }
@@ -35,14 +36,14 @@ test("a declared complete tail retains exact entry facts, fields and latest sele
   const declaration = bindApplicationProjection(projection(), definition), read = journal();
   const data = projectApplicationQueryReads(declaration, definition, scope, {}, {}, { log: read });
   expect(data.at).toEqual(read.at);
-  expect(data.sources["log"]!.map(row => ({ id: row.id, type: row.type, fields: row.fields, entry: row.entry, time: row.time }))).toEqual(read.entries.map(row => ({
-    id: row.seq, type: "observe", fields: { room: 1, actor: null }, entry: { at: scope, seq: row.seq, hash: row.hash }, time: "2026-10-18T12:00:00Z",
+  expect(data.sources["log"]!.map(row => ({ id: row.id, type: row.type, fields: row.fields, entry: row.entry, time: row.time, on: row.on }))).toEqual(read.entries.map(row => ({
+    id: row.seq, type: row.seq === 4 ? "observe" : "note", fields: { room: 1, actor: null }, entry: { at: scope, seq: row.seq, hash: row.hash }, time: "2026-10-18T12:00:00Z", on: row.seq === 4 ? null : 1,
   })));
   expect(Object.isFrozen(data.sources["log"]![0]!.entry)).toBe(true);
   const query = { v: 1 as const, scope, directory, install: 7, projection: "activity", items: {} }, good = { ok: true, query: applicationProjectionQueryDigest(query), value: data };
   expect(readApplicationProjectionReply(utf8(canonicalize(good)), query)).toEqual(good);
   const row = data.sources["log"]![0]!;
-  for (const changed of [{ ...row, entry: { ...row.entry!, seq: row.id + 1 } }, { ...row, state: "open" }, { ...row, time: "yesterday" }]) {
+  for (const changed of [{ ...row, entry: { ...row.entry!, seq: row.id + 1 } }, { ...row, state: "open" }, { ...row, time: "yesterday" }, { ...row, on: -1 }, { ...row, on: "2" }]) {
     expect(readApplicationProjectionReply(utf8(canonicalize({ ...good, value: { ...data, sources: { log: [changed] } } })), query)).toBeNull();
   }
   const latest = projection(); latest.sources.log.latestBy = "room";

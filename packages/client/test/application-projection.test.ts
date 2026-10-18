@@ -3,7 +3,7 @@ import { expect, test, vi } from "vitest";
 import { APPLICATION_PROJECTION_WIRE_BOUNDS as B, type ApplicationProjectionQuery, type ApplicationProjectionRead, type ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, textDigest } from "@generalbusiness/artroom-bytes";
 import { applicationProjectionId, applicationProjectionQueryDigest, encodeApplicationProjectionQuery, readApplicationProjection } from "@generalbusiness/artroom-bytes/application-v2";
-import { ScopeHandle, TransportError, applicationItemSnapshot, completeApplicationItems, bindingTransport, httpTransport, signedReads, type Fetch, type ServiceBinding, type Transport } from "../src/index.ts";
+import { ScopeHandle, TransportError, applicationItemSnapshot, completeApplicationItems, completeApplicationProjection, bindingTransport, httpTransport, signedReads, type Fetch, type ServiceBinding, type Transport } from "../src/index.ts";
 
 const scope: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "lane" };
 const query: ApplicationProjectionQuery = { v: 1, scope, directory: { ...scope, kind: "directory" }, install: 7, projection: "board", items: { board: 2 } };
@@ -100,6 +100,9 @@ test("declared item observations resolve aliases and merge identical subjects wi
     value: { scope, definition: declaration.definition, at: data.at, value: snapshot } });
   expect(completeApplicationItems({ ok: false, reason: "incomplete" }, declaration)).toEqual({ ok: false, reason: "unavailable" });
   expect(completeApplicationItems({ ok: false, reason: "forbidden" }, declaration)).toEqual({ ok: false, reason: "forbidden" });
+  const raw = completeApplicationProjection({ ...good, value: data }, declaration);
+  expect(raw.ok && raw.value.value).toBe(data);
+  expect(completeApplicationProjection({ ok: false, reason: "incomplete" }, declaration)).toEqual({ ok: false, reason: "unavailable" });
   expect(() => applicationItemSnapshot(declaration, { ...data, projection: textDigest("another declaration") })).toThrow("does not match");
   const changed = structuredClone(data); changed.sources.selected[0]!.revision = 2;
   expect(() => applicationItemSnapshot(declaration, changed)).toThrow("does not match");

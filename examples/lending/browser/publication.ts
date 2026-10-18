@@ -1,7 +1,7 @@
 /** Read-only page evidence. A match concerns rendered text at one observed published commit, never the push's outcome. */
 import { expectedPage, type PageText, type ScopePointer, type Thing } from "../shelf.ts";
 export type PublishedPage = { status:"matches"|"differs"; commit:string; url:string } | {status:"unreadable"; reason:string};
-export async function readPage(origin: string, directory: string, thing: Thing, scope: ScopePointer, signal?: AbortSignal): Promise<PublishedPage> {
+export async function readPage(origin: string, directory: string, thing: Omit<Thing,"seq">, scope: ScopePointer, signal?: AbortSignal): Promise<PublishedPage> {
  const base = `${origin}/site/${encodeURIComponent(directory)}/`;
  try {
   const response=await fetch(`${base}HEAD/${thing.page.split("/").map(encodeURIComponent).join("/")}`,{cache:"no-store",redirect:"error",...(signal ? {signal} : {})});

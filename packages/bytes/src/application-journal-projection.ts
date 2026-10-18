@@ -48,7 +48,7 @@ export function projectApplicationJournalRead(source: ApplicationJournalProjecti
       }
     }
     selected.push({ id: entry.seq, type: intent.kind, state: "sealed", revision: entry.seq, fields,
-      entry: { at: scope, seq: entry.seq, hash: row["hash"] }, time: entry.time });
+      entry: { at: scope, seq: entry.seq, hash: row["hash"] }, time: entry.time, on: intent.on });
   }
   if (previous !== at.hash) return fail("stale");
   let rows = selected;

@@ -9,10 +9,9 @@ import "./style.css";
 import { applicationDeviceIdentity, loadApplicationScreenContext } from "@generalbusiness/artroom-client";
 import { LENDING_DEFINITION } from "../pin.ts";
 import { canonicalize } from "@generalbusiness/artroom-bytes";
-import type { Entry } from "@generalbusiness/dap-contract";
 import { lendingGateway, type ActOutcome, type LendingGateway, type LendingState, type Pending } from "./client.ts";
 import { deviceSigner, findLending, joining, newDeviceKey, readInvitation, type DeviceKey, type JoinOutcome, type Seat } from "./join.ts";
-import { offeredActs, journalRows, type LendingAct, type LendingView, type ShownThing } from "./model.ts";
+import { offeredActs, type LendingAct, type LendingActivityRow, type LendingView, type ShownThing } from "./model.ts";
 import { shelfPage } from "../shelf.ts";
 import { readPage, type PublishedPage } from "./publication.ts";
 import { lendingStorage, type Remembered } from "./storage.ts";
@@ -104,7 +103,7 @@ async function open(next: Remembered): Promise<void> {
   if (timer !== undefined) clearInterval(timer);
   if (!next.identity) return;
   const at = epoch;
-  gateway = lendingGateway(next.identity, deviceSigner(next.device), { current: () => at === epoch, lock: browserLock, store: actStore(next.identity) });
+  gateway = lendingGateway(next.identity, deviceSigner(next.device), { current: () => at === epoch, lock: browserLock, store: actStore(next.identity), ...(screen?{application:screen}:{}) });
   await look();
   if (at !== epoch) return;
   timer = window.setInterval(() => { if (!busy && document.visibilityState === "visible") void look(); }, 15_000);
@@ -215,9 +214,9 @@ function drawThing(thing: ShownThing, view: LendingView): Node {
   return card;
 }
 
-function drawRecord(entries: readonly Entry[]): Node {
+function drawRecord(rows: readonly LendingActivityRow[]): Node {
   const body = h("tbody");
-  for (const row of journalRows(entries)) {
+  for (const row of rows) {
     const what = h("td");
     what.textContent = row.what;
     body.append(h("tr", {}, h("td", {}, String(row.seq)), h("td", {}, row.kind), h("td", {}, row.signer), what));
@@ -241,8 +240,8 @@ function drawLibrary(seat: Seat): Node[] {
   if (gone.length) nodes.push(h("h2", {}, `Gone (${gone.length})`), ...gone.map((thing) => drawThing(thing, view)));
   nodes.push(h("h2", {}, "The published shelf"), h("p", {}, h("a", { href: `/site/${encodeURIComponent(seat.directory.scope)}/HEAD/shelf/` }, "Open the published shelf"),
     ". It is public. A page there can be behind this list."));
-  if (state.status === "current") nodes.push(h("h2", {}, "The record (for members)"),
-    h("p", { class: "muted" }, `Every act that took effect, in order, up to entry ${view.record.seq}. A refused act is not in it.`), drawRecord(state.entries));
+  if (state.status === "current") nodes.push(h("h2", {}, "Recent recorded activity"),
+    h("p", { class: "muted" }, `Selected acts in the last 100 journal entries at native head ${view.record.seq}. Earlier entries are outside this window.`), drawRecord(state.activity));
   nodes.push(h("p", {}, button("Look again", () => void work(look), true), " ", button("Forget this browser's seat", () => void work(async () => {
     if (kept || keptJoin) { notice = { kind: "plain", text: "A request is kept. Check it before forgetting this seat." }; return; }
     const at = epoch, previous = rememberedContext(memory);

@@ -77,7 +77,7 @@ async function declaredFixture() {
       sources: { participants: [11, 12, 13].map(id => ({ id, type: "participant", state: "active", revision: 1, fields: {} })) },
     } }) : query.projection === "activity" ? ({ ok: true, query: applicationProjectionQueryDigest(query)!, value: { v: 1, scope,
       projection: applicationProjectionId(packet.package.semantic.projections["activity"]!), at: { seq: 5, hash: `sha256:${"b".repeat(64)}` },
-      sources: { events: [4, 5].map(seq => ({ id: seq, revision: seq, type: seq === 4 ? "initialize" : "reset", state: "sealed", time: "2026-10-18T12:00:00Z",
+      sources: { events: [4, 5].map(seq => ({ id: seq, revision: seq, type: seq === 4 ? "initialize" : "reset", state: "sealed", on: seq === 4 ? null : 2, time: "2026-10-18T12:00:00Z",
         entry: { at: scope, seq, hash: `sha256:${(seq === 4 ? "a" : "b").repeat(64)}` }, fields: { actor: null } })) } } }) : ({ ok: true, query: applicationProjectionQueryDigest(query)!, value: { v: 1, scope,
       projection: applicationProjectionId(packet.package.semantic.projections["board"]!), at: { seq: 1, hash: `sha256:${"a".repeat(64)}` },
       sources: { board: [{ id: 2, type: "board", state: "open", revision: 1, fields: { lastNumber: 42 } }] } } }),

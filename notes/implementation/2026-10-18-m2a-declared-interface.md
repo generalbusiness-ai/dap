@@ -766,3 +766,40 @@ The convenience harness attempts were inconclusive at their unchanged
 baseline; only the direct before/after run is semantic evidence. CLI
 source/test/scope typechecks pass. The final gate, review, delivery and
 deployment remain unclaimed.
+
+### Lending reads and native journal subjects
+
+Journal projection rows now retain the signed intent's native `on`, including
+null. This is an activity subject, never an expected item revision. The codec
+requires a nonnegative integer or null, and item rows still have no journal
+metadata. The existing complete-tail witness covers both forms and malformed
+subjects. No platform definition or protocol-v1 package body changes.
+
+The maintained Lending `state` projection selects retained library/things and
+three disjoint recent activity sources at one native head. The browser uses
+the SDK's shared projection observation/item adapter. It no longer reads an
+application Summary or walks the whole record for its list. Gone things keep
+their retained revision and reason; they gain no fabricated last-change seq.
+Membership standing remains a separate authenticated platform read. Activity
+labels use immutable retained names plus selected subject/reason/thing fields
+and native entry facts/time. The UI states the 100-entry window explicitly.
+Historical pure complete-record helpers remain for archive/model cases.
+
+The existing native M4 Lending scenario passes (`84704`, terminal `869c7e`):
+`/tmp/artroom-m2a-lending-native-declared-adapter-20261018.log`. Its projection
+route is now an explicit test-only stand-in over real session-authorized item
+queries and history. M4 has no v2 installation ownership record. This preserves
+the case's real membership, invitations, refusals, publication sends, custody,
+lost replies, restart, replay and item-bound coverage without claiming that
+the stand-in proves package installation or native projection authorization.
+The production gateway has no such adapter or Summary fallback.
+
+Fourteen focused codec, SDK, Lending model and maintained-package checks pass
+(`81630`, terminal `fb4aea`), including agreement with the historical complete
+model and exact publication proposals. Log:
+`/tmp/artroom-m2a-lending-projection-focused-20261018.log`. The strengthened
+SDK observation case also passes (four cases in its file):
+`/tmp/artroom-m2a-raw-projection-observation-20261018.log`. Lending browser,
+model/test, scope-test and MCP-test typechecks pass. A maintained native v2
+installation/browser witness, Grow grid resource, final gate and review remain
+owed; these preparations make none of those claims.

@@ -49,3 +49,12 @@ export function completeApplicationItems(read: ApplicationProjectionRead, declar
   const value = applicationItemSnapshot(declaration, read.value);
   return { ok: true, at: value.at, complete: true, value: { scope: value.scope, definition: value.definition, at: value.at, value } };
 }
+
+/** Observe the complete native data, including journal facts, without
+ * turning those facts into full entries or synthesizing a Summary reply. */
+export function completeApplicationProjection(read: ApplicationProjectionRead, declaration: ApplicationReadProjection): Read<CompleteSnapshot<ApplicationProjectionData>> {
+  const checked = completeApplicationItems(read, declaration);
+  if (!checked.ok) return checked;
+  if (!read.ok) throw Error("A refused native projection has no observation.");
+  return { ...checked, value: { ...checked.value, value: read.value } };
+}

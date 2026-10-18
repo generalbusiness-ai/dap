@@ -27,7 +27,7 @@ export function bindApplicationViews(value: unknown, projections: Readonly<Recor
       const source = bound.sources[view.item]!, journal = isApplicationJournalSource(source);
       const item = journal ? null : definition.items[source.item]!;
       if (view.kind === "log" && !journal || journal && view.acts.length) return fail();
-      const fields = new Set(["id", "type", "state", "revision", ...(journal ? ["time"] : []), ...Object.keys(source.fields)]);
+      const fields = new Set(["id", "type", "state", "revision", ...(journal ? ["time", "on"] : []), ...Object.keys(source.fields)]);
       const template = (text: string, waiting: boolean) => {
         if (applicationViewTemplateFields(text).some(name => !fields.has(name) && !(waiting && name === "waiting"))) return fail();
       };
