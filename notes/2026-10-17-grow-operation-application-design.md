@@ -91,6 +91,10 @@ Three guards carry the rest of the story:
 
 - `set-device` reads the device's kind. A heater needs `grow.heat`; the
   guard refuses the climate agent even though it holds `grow.climate`.
+- A device in the `error` state refuses `set-device`, and the refusal
+  quotes the description the sensors wrote. `error` is the one state for
+  every failure; the description says which. The definition does not
+  enumerate failure modes.
 - `raise-alert` needs the zone out of band and the agent's own devices at
   their limits. An agent cannot ask a person to do its work for it.
 - `authorize` and `hold` name the alert's revision. An authorization of
@@ -133,7 +137,7 @@ across the site.
 ### The fault
 
 Vent 2 in room A reads closed with no response to its command. The sensors
-record it. Zone 2 starts to warm. The climate agent raises fan 2 to full;
+record the device as in error, with that description. Zone 2 starts to warm. The climate agent raises fan 2 to full;
 the fan trips; the agent opens vents 1 and 4 to full for a cross-draft.
 Each of these is an entry, marked as within its authority. The grid shows
 zone 2 turning amber, then red, with its row highlighted and its devices
@@ -144,9 +148,10 @@ limits, the agent raises an alert. Two different cards reach two different
 people:
 
 - **The operator** sees the alert at the top of the grid card: "Zone 2 is
-  at 27.4° and rising: vent 2 is stuck closed and fan 2 has tripped. Cut
-  heater 2 and hold it off until zone 2 is back in band. Heaters are
-  outside my authority." Two acts, Authorize and Hold 60 s, and a link
+  at 27.4° and rising: vent 2 reads closed and does not respond, and fan 2
+  has stopped on an overcurrent trip. Cut heater 2 and hold it off until
+  zone 2 is back in band. Heaters are outside my authority." The two
+  device facts are the sensors' own descriptions, quoted. Two acts, Authorize and Hold 60 s, and a link
   that hands the question to the model in the chat. The model's context
   says what is open and who it waits on.
 - **The day tender**, who is in room A, sees a task in her carousel:
@@ -199,8 +204,8 @@ The first was one card that advanced in place through a software task:
 asked, working, question, review, landed. The second was the grow room of
 section 2 with one zone, a fault on a timer, the agent's own acts, an alert
 with Authorize and Hold, a zone screen with a sparkline and two acts, a
-stuck vent that refused, recovery, and a closed incident with its entry
-range.
+vent in error that refused a command, recovery, and a closed incident with
+its entry range.
 
 What held in both:
 
@@ -233,8 +238,9 @@ tasks and watering requests. Two scopes share no storage, so a room's
 incident never waits on another room.
 
 **Items.** `zone` (band, setpoint, state in or out of band; refs to its
-devices), `device` (kind; state `open`, `closed`, `stuck`, `on`, `off`,
-`tripped`; level), `bench` (last probe values and the entry that recorded
+devices), `device` (kind; state `open`, `closed`, `on`, `off` or `error`;
+level; and, in `error`, the description the sensors wrote, such as
+"commanded open, reads closed, no response"), `bench` (last probe values and the entry that recorded
 them), `alert` (states `open`, `held`, `authorized`, `closed`; parties: the
 agent that raised it and the member who authorized; values: text,
 proposal, revision), `incident` (refs to its alert and its first and last
@@ -265,7 +271,7 @@ declares and the admin grants at install.
 **Scenarios.** The fault story of section 4 is the package's first
 scenario: readings, the agent's acts, the alert, a hold, an authorization,
 recovery and closure, with the refusals of a stale authorization and of a
-command to a stuck vent. `dap check` runs and replays it. The simulated
+command to a device in error. `dap check` runs and replays it. The simulated
 room from the prototype becomes that scenario's source of readings.
 
 ### 6.2 The views, described generically
