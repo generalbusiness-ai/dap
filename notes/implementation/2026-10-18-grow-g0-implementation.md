@@ -96,7 +96,62 @@ verified within this checkout and the lock bytes matched. Its audit is
 
 ## Remaining G0 work
 
-The full room and site, zones and exact summary references, alert/hold/
+### Zone evidence foundation
+
+`examples/grow/zone.ts` now provides the room's recorded zone data and acts.
+Temperature values use integer centidegrees Celsius; a zone represents 25
+cells. `observe` remains a guard/effect/send-free comment with one room-level
+list of up to four zone summaries and the sensors' sample time. Periodic
+summaries have a 300-second cadence; the fixture records an additional summary
+when it needs exact threshold evidence between periodic observations. Raw
+samples are not journal entries.
+
+`report-zone` is sensors-only. It verifies an actual `observe` fact from this
+same scope, copies that entry's exact summary list and sample time, selects
+the named zone once, and checks the supplied statistics against it. Min/mean/
+max and in-band counts must be coherent: the extrema themselves rule out
+impossible counts, although these remain sensor claims rather than a proof
+from all raw samples. Old entry references and backdated sample times cannot
+replace a later accepted classification. A same-band periodic summary stays
+a comment rather than producing another classification transition.
+
+Implementation choice: a zone starts `unobserved`, with empty statistics.
+Operator `set-band` also invalidates its old classification to `unobserved`
+while preserving the old evidence. This introduces no recovering state or
+recovery timer. Only a subsequent sensors report writes `in-band` or
+`out-of-band`. This avoids inventing an initial observation or presenting an
+old band's classification as valid under a changed band. The same last
+summary can be explicitly reclassified after invalidation, but an older one
+cannot displace it. These checks establish provenance and ordering, not a
+maximum-age policy, trusted sensor clock or physical accuracy.
+
+Four zone cases and the two existing device cases pass together (`c5a7dc`,
+exit 0); Grow typecheck passes (`26aaf6`). The common native fixture runner
+now retains actual prepared inputs for both fragments, still with explicit
+per-key scripted grants and as-recorded authority replay. A second actual
+fixture scope supplies the cross-room negative case; identical local zone
+numbers do not make its observation evidence for this room.
+
+The first combined run (`8db506`, exit 1) passed the device cases but failed
+the three initial zone cases. Diagnostic `80f1fe` identified the named
+zone-evidence guard: inside a JSONata filter, `subjects` was looked up on the
+element instead of at the root. Binding the zone id before filtering fixes
+the expression (`f58c58`, three passes). The later provenance run passes six
+cases (`240356`), and the final count-coherence run passes four zone cases
+(`9b8243`). No native evaluator/judge behavior changed.
+
+Five targeted controls distinguish and restore source, each with four normal
+zone passes and one intended assertion failure: same-room guard
+(`7cc87e`/`5e6c5d`), exact summary bytes (`a50b7e`/`8c27e5`), evidence order
+(`560357`/`4127cb`), band crossing (`c83ff6`/`6d8504`) and statistic/evidence
+consistency (`32c91f`/`cd48c6`). Each exits 0. The count-coherence refinement
+adds only necessary bounds from the recorded extrema, without claiming raw
+sample verification. Evidence logs use `/tmp/artroom-g0-zone-`.
+
+The zone fragment has not yet been connected to the full room or checked
+through M1's private actual CLI; that cross-branch witness is the next check.
+
+The full room and site assembly, alert/hold/
 authorization/closure, benches/probes/tasks/watering/presence and the complete
 fault scenario remain due. M1's `dap check` now exists on its separate
 unlanded developer branch; G0's final package/scenario witness depends on

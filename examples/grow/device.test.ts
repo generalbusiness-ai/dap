@@ -2,48 +2,18 @@
  * Grants and the separate scenario-owner outcomes are explicit stand-ins;
  * no native membership, device, transport or operation owner is witnessed. */
 import { expect, test } from "vitest";
-import { PROPOSED_BOUNDS, type DeclaredDefinition, type Digest, type RetainedInput } from "@generalbusiness/dap-contract";
-import { canonicalBytes, canonicalize, digestBytes } from "@generalbusiness/artroom-bytes";
-import { prepareRules, validateDefinition } from "@generalbusiness/dap-derive";
-import { evaluateRules, RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
-import { created, grantOf, keys, valid, type Actor, type Ledger, type Over } from "@generalbusiness/dap-derive/testing";
-import { MemorySource, verify } from "@generalbusiness/artroom-replay";
+import type { DeclaredDefinition } from "@generalbusiness/dap-contract";
 import { deviceForms } from "./device.ts";
+import { nativeScenario, on, operator, climate, sensors, devicePermissions, replay, submit, type Ledger } from "./test-support.ts";
 
 const under = "grow-device-fixture", forms = deviceForms(under);
 const definition: DeclaredDefinition = { format: "artroom-definition-1", name: under, profile: { name: "restricted", version: 1 }, capabilities: [], genesis: "establish",
   items: { root: { many: false, max: 1, states: { open: { final: false } }, initial: "open", parties: {}, refs: {}, values: {} }, device: forms.item },
   acts: { establish: { step: "open", on: "root", grant: "grow.configure", also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [] }, ...forms.acts }, receives: {}, timed: {}, rules: forms.rules };
-const operator = keys.paul, climate = keys.una, sensors: Actor = { ...keys.vic, principal: operator.member };
-const permissions = [[operator, ["grow.configure", "grow.climate", "grow.heat"]], [climate, ["grow.climate"]], [sensors, ["grow.sense"]]] as const;
-const retained = new WeakMap<Ledger, Map<Digest, RetainedInput>>();
-function make(): Ledger {
-  const checked = validateDefinition(definition, PROPOSED_BOUNDS, RULE_PROFILES);
-  expect(checked.ok ? [] : checked.problems).toEqual([]);
-  const ledger = created(valid(checked), {});
-  retained.set(ledger, new Map());
-  ledger.grants = () => permissions.map(([who, actions]) => ({ grant: grantOf(who, ledger.at, actions), current: true }));
-  return ledger;
-}
-async function submit(ledger: Ledger, who: Actor, kind: string, over: Over = {}) {
-  const signed = ledger.intent(who, kind, over), context = ledger.context();
-  const inputs = prepareRules(ledger.state, ledger.definition, { act: signed, context }), prepared = await evaluateRules(inputs);
-  const result = ledger.submit(signed, { prepared });
-  if (result.result === "write") for (const input of inputs) {
-    const digest = digestBytes(canonicalBytes(input.input));
-    if (result.draft.prepared.some(prepared => prepared.input === digest)) retained.get(ledger)!.set(digest, { kind: "rule", digest, bytes: canonicalize(input.input) });
-  }
-  return result;
-}
-const on = (ledger: Ledger, id: number, fields: Record<string, import("@generalbusiness/dap-contract").FieldValue>): Over => ({ on: id, expected: { on: ledger.item(id).revision }, fields });
+const make = (): Ledger => nativeScenario(definition, devicePermissions);
 async function commission(ledger: Ledger, kind: "vent" | "heater", maxLevel = 100): Promise<number> {
   expect(await submit(ledger, operator, "commission-device", { fields: { kind, label: `${kind} 2`, minLevel: 0, maxLevel, target: kind === "vent" ? "closed" : "off", level: 0 } })).toMatchObject({ result: "write" });
   return ledger.last.seq;
-}
-async function replay(ledger: Ledger) {
-  const source = new MemorySource([{ scope: ledger.at, entries: ledger.entries.map(({ entry, hash }) => ({ seq: entry.seq, hash, bytes: canonicalize(entry) })),
-    retained: [{ kind: "definition", digest: ledger.definition.digest, bytes: canonicalize(definition) }, ...retained.get(ledger)!.values()] }]);
-  return verify(source, { mode: "replay", scope: ledger.at.scope, grants: "as-recorded", bounds: PROPOSED_BOUNDS });
 }
 
 test("device target, sensor report and scenario-owner outcome keep separate writers and exact evidence", async () => {
