@@ -514,11 +514,13 @@ grow-operation application is built next as the public demo, ahead of the
 journey's S slices: M1 (trusted packages) and G0 (definitions and the
 fault scenario) together, then M2a (declared projections, the generic
 interface, several scopes in one package), the views on the kit (G1),
-probes from the chat (G2), routing (G3), the hosted room with its
-homepage page (G5), and the record and archive (G4). The journey resumes
-at J3 and the evidence-rules slice. Decisions: the simulator is the
-device-command owner for the demo; probes are text; routing uses the
-carousel only; the homepage link opens a page, not a live grid.
+probes from the chat (G2), routing (G3), the native device-command
+record (G5a), the hosted room with its homepage page (G5), the archive
+enablement of the demo room, and the record and archive (G4). The
+journey resumes at J3 and the evidence-rules slice. Decisions: the
+simulator is the device-command owner for the demo; probes are text;
+routing uses the carousel only; the homepage link opens a page, not a
+live grid; archiving the demo room is its own gate.
 
 ## Other original planning reports
 
