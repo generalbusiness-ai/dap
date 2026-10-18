@@ -119,5 +119,38 @@ witnesses, archive-token prefix boundary, Mark/reset rebuild and lost
 push reconciliation remain owed. A4, A5, real-history disclosures,
 progress and G1 remain outside this milestone.
 
-No runtime source, tests, gate, provider calls, deployment or publication
-were performed for this preparation note.
+The initial preparation commits ran no tests, gate, provider calls,
+deployment or publication. They made no runtime source change.
+
+## Independent fixture preparation
+
+The test-only `packages/replay/test/archive-fixtures.ts` now constructs
+the four required cutoff histories with derive's judges:
+
+| Fixture | Target cutoff | Required retained input | In-memory replay |
+|---|---:|---|---|
+| Declared genesis | 0 | The genesis's declaration | consistent |
+| Outcome evidence value | 2 | The value first named by the final outcome | consistent |
+| Outcome staged refs | 8 | The snapshot first named by the final check outcome | incomplete: ancestry walk unproved |
+| Observing delivery | 3 | The value first named by the final delivery's rules observation | consistent |
+
+Each check supplies no anchor and ends at its stated cutoff. Removing
+exactly the required input makes replay incomplete for that missing
+input. The snapshot's intact case reaches entry 8 and reports the
+unproved ancestry walk, rather than a missing input. Its actual parent
+creation and confirmation histories are present. The observing case
+includes its sender, rules scope and rules creator histories.
+
+These are judged in-memory fixtures, with explicitly recorded test
+authority and labelled owner/host/read stand-ins. They establish no
+native storage, privacy admission, real-room export, clone or CLI result.
+The existing staging helper accepts a judged parent for this fixture;
+its default hand-made creator remains labelled. Its 53 existing replay
+regression cases passed. The final four-fixture scratch checks and
+Replay test typecheck passed. No gate has run for the A2 candidate.
+
+Two initial fixture setup attempts failed before replay: the snapshot
+variant received a validated definition instead of its declaration, and
+the rules observation request omitted its target scope. Type checks
+also rejected those calls. Both calls were corrected before the final
+four-fixture check; those earlier attempts remain failures.

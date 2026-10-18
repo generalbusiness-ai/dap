@@ -3,10 +3,13 @@
  * fixture authority are explicit; no caller anchor supplies a dependency. */
 import { PROPOSED_BOUNDS, type Digest, type PlatformData, type RetainedInput, type Seed } from "@generalbusiness/dap-contract";
 import { canonicalize, intentDigest, newIncarnation, scopeIdOf, signIntent, textDigest } from "@generalbusiness/artroom-bytes";
-import { RETIRE_ACTION, actionOf, clockOf, judgeGenesis, settleOutcome, valueDigest, type Judgment, type OutcomeRule } from "@generalbusiness/dap-derive";
-import { created, deskDefinition, grantOf, keys, Ledger, membership, notesDefinition, T0, t, variant, type Actor } from "@generalbusiness/dap-derive/testing";
+import { RETIRE_ACTION, actionOf, clockOf, contentStates, judgeDelivery, judgeGenesis, settleOutcome, valueDigest, type Judgment, type OutcomeRule } from "@generalbusiness/dap-derive";
+import { arriving, created, deskDefinition, deliver, grantOf, keys, Ledger, membership, notesDefinition, sent, T0, t, variant, type Actor } from "@generalbusiness/dap-derive/testing";
 import { C, cap, clean, snapshots, staging } from "../../derive/test/fixtures-hold.ts";
 import { gateRules, gateWith } from "../../derive/test/fixtures-marks.ts";
+import { weigherWith } from "../../derive/test/fixtures-observes.ts";
+import { RULES_EXTENTS_VALUE, RULES_SCOPE, platform as nativePlatform, rulesAnswer, rulesObservedValues } from "../../platform/src/index.ts";
+import { Rulebook } from "../../platform/test/support-rules.ts";
 import type { MemoryScope, Options } from "../src/index.ts";
 import { served } from "./world.ts";
 import { Lane } from "./staging.ts";
@@ -98,4 +101,46 @@ export function outcomeSnapshotFixture(): ArchiveFixture {
   const scope = served(ledger, all);
   return { name: "outcome-snapshot", scopes: [{ ...scope, retained: [...scope.retained!, required] }, served(parent, all)], required,
     options: { mode: "replay", scope: ledger.at.scope, head: ledger.head, grants: "as-recorded", capabilities: cap, owners: cap } };
+}
+
+/** A result delivery first retains a rules observation's value. Sender,
+ * rules and creator journals are all judged, not caller anchors. The read
+ * itself and fixture authority remain stated trusts. */
+export function observingDeliveryFixture(): ArchiveFixture {
+  const rulebook = new Rulebook();
+  const peerDefinition = variant(notesDefinition.declared, data => {
+    data.receives.ask = { message: "ask", class: "tell", from: { kind: "directory" }, opens: null, fields: {}, also: {}, guards: [], effects: [], sends: [], attention: [] };
+  });
+  const peer = created(peerDefinition, {}, "archive-observation-peer");
+  const definition = weigherWith(data => {
+    for (const key of Object.keys(data.acts)) if (!["establish", "point", "go"].includes(key)) delete data.acts[key];
+    data.outcomes = {}; data.rules = {};
+    data.items.desk.refs.peer.to.kind = "directory";
+    data.acts.point.fields.peer.kind = "directory";
+    data.acts.go.sends[0].tell.observes.applied[0].retains = [RULES_EXTENTS_VALUE];
+  });
+  const named = "platform:task@1" as const, rules = {}, platform = { named, rules };
+  const ledger = new Ledger(definition);
+  const creation = signIntent({ v: 1, to: null, actor: keys.rita.key, kind: "found", on: null, expected: {}, fields: { opener: keys.rita.member }, idempotencyKey: "archive-observing-delivery", notAfter: t(60) }, keys.rita.secret);
+  const seed: Seed = { v: 1, kind: "directory", definition: named, creator: null, cause: intentDigest(creation.intent), ordinal: 0 };
+  written(ledger, judgeGenesis(ledger.state, definition, { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(72)), seed, creation }, { clock: clockOf(ledger.state, T0), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source: null, platform }));
+  for (const [kind, fields] of [["point", { peer: peer.at }], ["go", {}]] as const) {
+    const act = ledger.act(keys.rita, kind, { on: 0, expected: { on: ledger.item(0).revision }, fields }, { platform, membership });
+    if (act.result !== "write") throw new Error(`Archive observing act failed: ${JSON.stringify(act)}`);
+  }
+  const delivered = deliver(peer, ledger, ledger.head.seq);
+  if (delivered.result !== "write") throw new Error(`Archive peer failed: ${JSON.stringify(delivered)}`);
+  const observation = rulesAnswer(rulebook.state, { of: rulebook.at, asked: "rules" }, RULES_SCOPE);
+  const body = rulesObservedValues(rulebook.state, { of: rulebook.at, asked: "rules" })[0];
+  if (!observation || observation.content.asked !== "rules" || !observation.content.extents || !body) throw new Error("Archive rules value is absent");
+  const required: RetainedInput = { kind: "value", domain: body.domain, digest: observation.content.extents, bytes: body.bytes };
+  const answer = sent(peer, peer.head.seq);
+  written(ledger, judgeDelivery(ledger.state, definition, answer.delivered, {
+    ...arriving(ledger, answer.delivered, answer.source), platform,
+    observed: [{ observation: { ...observation, at: T0 }, read: { run: "archive-observing-read", n: 1 }, use: "fresh", prior: null }], values: [required.bytes],
+    observing: { membership, rules: rulebook.at, content: name => { const supplied = nativePlatform(name); return supplied ? contentStates(supplied.data) : null; } },
+  }));
+  const all = [ledger, peer, rulebook, rulebook.registrar], target = served(ledger, all);
+  return { name: "observing-delivery", scopes: [{ ...target, retained: [...target.retained!, required] }, ...all.slice(1).map(scope => served(scope, all))], required,
+    options: { mode: "replay", scope: ledger.at.scope, head: ledger.head, grants: "as-recorded", platform: name => name === named ? { data: definition.declared as PlatformData, rules, membership: () => membership, rulesScope: () => rulebook.at } : nativePlatform(name) } };
 }
