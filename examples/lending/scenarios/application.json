@@ -1,0 +1,222 @@
+{
+  "v": 1,
+  "name": "lending-package",
+  "time": "2026-10-18T12:00:00Z",
+  "actors": {
+    "member": {
+      "seed": "2222222222222222222222222222222222222222222222222222222222222222",
+      "member": "@member",
+      "actions": [
+        "lending.member"
+      ]
+    },
+    "staff": {
+      "seed": "2323232323232323232323232323232323232323232323232323232323232323",
+      "member": "@staff",
+      "actions": [
+        "lending.staff"
+      ]
+    },
+    "visitor": {
+      "seed": "2424242424242424242424242424242424242424242424242424242424242424",
+      "member": "@visitor",
+      "actions": []
+    }
+  },
+  "founding": {
+    "actor": "member",
+    "fields": {
+      "opener": {
+        "$member": "member"
+      },
+      "destination": {
+        "$reference": "destination"
+      }
+    }
+  },
+  "steps": [
+    {
+      "act": {
+        "actor": "member",
+        "kind": "donate",
+        "expected": {
+          "library": {
+            "$revision": 0
+          }
+        },
+        "fields": {
+          "name": "Copper pot",
+          "description": "A maintained package fixture",
+          "page": "shelf/0123456789abcdef.md",
+          "content": "A signed fixture page"
+        }
+      },
+      "expect": {
+        "answer": "accepted"
+      },
+      "save": "donation"
+    },
+    {
+      "retry": "donation",
+      "expect": {
+        "answer": "accepted"
+      }
+    },
+    {
+      "act": {
+        "actor": "visitor",
+        "kind": "borrow",
+        "on": 1,
+        "expected": {
+          "on": {
+            "$revision": 1
+          },
+          "library": {
+            "$revision": 0
+          }
+        },
+        "fields": {
+          "content": "No membership"
+        }
+      },
+      "expect": {
+        "answer": "refused",
+        "reason": "unauthorized"
+      }
+    },
+    {
+      "act": {
+        "actor": "member",
+        "kind": "borrow",
+        "on": 1,
+        "expected": {
+          "on": {
+            "$revision": 1
+          },
+          "library": {
+            "$revision": 0
+          }
+        },
+        "fields": {
+          "content": "Borrowed in the local fixture"
+        }
+      },
+      "expect": {
+        "answer": "accepted"
+      }
+    },
+    {
+      "assert": {
+        "item": 1,
+        "state": "lent",
+        "parties": {
+          "borrower": {
+            "$member": "member"
+          }
+        }
+      }
+    },
+    {
+      "act": {
+        "actor": "member",
+        "kind": "cancel",
+        "on": 1,
+        "expected": {
+          "on": {
+            "$revision": 1
+          },
+          "library": {
+            "$revision": 0
+          }
+        },
+        "fields": {
+          "reason": "No staff grant",
+          "content": "Refused"
+        }
+      },
+      "expect": {
+        "answer": "refused",
+        "reason": "unauthorized"
+      }
+    },
+    {
+      "act": {
+        "actor": "member",
+        "kind": "return",
+        "on": 1,
+        "expected": {
+          "on": {
+            "$revision": 1
+          },
+          "library": {
+            "$revision": 0
+          }
+        },
+        "fields": {
+          "content": "Returned in the local fixture"
+        }
+      },
+      "expect": {
+        "answer": "accepted"
+      }
+    },
+    {
+      "assert": {
+        "item": 1,
+        "state": "available"
+      }
+    },
+    {
+      "act": {
+        "actor": "member",
+        "kind": "donate",
+        "expected": {
+          "library": {
+            "$revision": 0
+          }
+        },
+        "fields": {
+          "name": "Unsafe path",
+          "description": "Must refuse",
+          "page": "README.md",
+          "content": "No write outside shelf"
+        }
+      },
+      "expect": {
+        "answer": "refused",
+        "reason": "guard-failed"
+      }
+    },
+    {
+      "act": {
+        "actor": "staff",
+        "kind": "cancel",
+        "on": 1,
+        "expected": {
+          "on": {
+            "$revision": 1
+          },
+          "library": {
+            "$revision": 0
+          }
+        },
+        "fields": {
+          "reason": "Retired fixture",
+          "content": "Closed in the local fixture"
+        }
+      },
+      "expect": {
+        "answer": "accepted"
+      }
+    },
+    {
+      "assert": {
+        "item": 1,
+        "state": "gone",
+        "values": {
+          "reason": "Retired fixture"
+        }
+      }
+    }
+  ]
+}

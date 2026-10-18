@@ -1,0 +1,136 @@
+{
+  "v": 1,
+  "name": "ai.generalbusiness.counter",
+  "version": "0.1.0",
+  "entry": "apps/counter/commitments.json",
+  "definitions": [
+    "apps/counter/commitments.json"
+  ],
+  "host": {
+    "execution": "recorded-do",
+    "profiles": [
+      "restricted@1"
+    ]
+  },
+  "capabilities": [],
+  "projections": {},
+  "roles": {
+    "admin": [
+      "counting.control",
+      "counting.activity",
+      "counting.commit",
+      "counting.fail",
+      "counting.fulfill",
+      "counting.participate"
+    ],
+    "member": [
+      "counting.activity",
+      "counting.commit",
+      "counting.fail",
+      "counting.fulfill",
+      "counting.participate"
+    ],
+    "agent": [
+      "counting.activity",
+      "counting.commit",
+      "counting.fail",
+      "counting.fulfill",
+      "counting.participate"
+    ]
+  },
+  "predecessor": null,
+  "presentation": {
+    "entry": "index.html",
+    "assets": [
+      {
+        "path": "brand/fonts.css",
+        "file": "brand/fonts.css",
+        "mediaType": "text/css; charset=utf-8"
+      },
+      {
+        "path": "brand/favicon.svg",
+        "file": "brand/dist/favicon.svg",
+        "mediaType": "image/svg+xml"
+      },
+      {
+        "path": "brand/favicon.ico",
+        "file": "brand/dist/favicon.ico",
+        "mediaType": "image/vnd.microsoft.icon"
+      },
+      {
+        "path": "brand/dap-wordmark.svg",
+        "file": "brand/dap-wordmark-green.svg",
+        "mediaType": "image/svg+xml"
+      },
+      {
+        "path": "brand/dap-wordmark-white.svg",
+        "file": "brand/dist/dap-wordmark-white.svg",
+        "mediaType": "image/svg+xml"
+      },
+      {
+        "path": "brand/fonts/LICENSE-OpenRunde.txt",
+        "file": "brand/fonts/LICENSE-OpenRunde.txt",
+        "mediaType": "text/plain; charset=utf-8"
+      },
+      {
+        "path": "brand/fonts/LICENSE-Teletype33.txt",
+        "file": "brand/fonts/LICENSE-Teletype33.txt",
+        "mediaType": "text/plain; charset=utf-8"
+      },
+      {
+        "path": "brand/fonts/LICENSE-SometypeMono.txt",
+        "file": "brand/fonts/LICENSE-SometypeMono.txt",
+        "mediaType": "text/plain; charset=utf-8"
+      },
+      {
+        "path": "brand/fonts/OpenRunde-Regular.woff2",
+        "file": "brand/fonts/OpenRunde-Regular.woff2",
+        "mediaType": "font/woff2"
+      },
+      {
+        "path": "brand/fonts/OpenRunde-Medium.woff2",
+        "file": "brand/fonts/OpenRunde-Medium.woff2",
+        "mediaType": "font/woff2"
+      },
+      {
+        "path": "brand/fonts/OpenRunde-Semibold.woff2",
+        "file": "brand/fonts/OpenRunde-Semibold.woff2",
+        "mediaType": "font/woff2"
+      },
+      {
+        "path": "brand/fonts/OpenRunde-Bold.woff2",
+        "file": "brand/fonts/OpenRunde-Bold.woff2",
+        "mediaType": "font/woff2"
+      },
+      {
+        "path": "brand/fonts/SometypeMono-Regular.woff2",
+        "file": "brand/fonts/SometypeMono-Regular.woff2",
+        "mediaType": "font/woff2"
+      },
+      {
+        "path": "brand/fonts/SometypeMono-Medium.woff2",
+        "file": "brand/fonts/SometypeMono-Medium.woff2",
+        "mediaType": "font/woff2"
+      },
+      {
+        "path": "brand/fonts/Teletype33-Narrow.ttf",
+        "file": "brand/fonts/Teletype33-Narrow.ttf",
+        "mediaType": "font/ttf"
+      },
+      {
+        "path": "brand/fonts/Teletype33.ttf",
+        "file": "brand/fonts/Teletype33.ttf",
+        "mediaType": "font/ttf"
+      }
+    ],
+    "descriptions": {},
+    "browser": {
+      "entry": "apps/counter/browser/main.ts",
+      "html": "apps/counter/browser/application.html",
+      "script": "counter.js"
+    }
+  },
+  "scenarios": [
+    "apps/counter/scenarios/application.json"
+  ]
+}

@@ -5,7 +5,7 @@ import { COUNTING_ASSETS } from "../src/counting-assets.ts";
 
 // The production Worker entry serves static generated files without a scope binding.
 // This witnesses route/security behavior, not browser startup, native counting or speech.
-test("the Worker serves only the three public Counting assets under one same-origin policy and refuses URL credentials before static dispatch", async () => {
+test("the Worker serves the public Counting assets and listed package-relative wordmarks with their same-origin policies and refuses URL credentials before static dispatch", async () => {
   const request = (path: string, method = "GET", headers?: HeadersInit) => new Request(`https://scopes.test${path}`, { method, ...(headers ? {headers} : {}) });
   const get = (path: string, method = "GET", headers?: HeadersInit) => worker.fetch(request(path, method, headers), {} as Env);
   const policy = "default-src 'none'; script-src 'self'; connect-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'";
@@ -21,6 +21,12 @@ test("the Worker serves only the three public Counting assets under one same-ori
     expect(response.status).toBe(200);checkHeaders(response, asset.type);expect(await response.text()).toBe(asset.body);
     const head = await get(`/counting/${name}`, "HEAD");expect(head.status).toBe(200);checkHeaders(head, asset.type);expect(await head.text()).toBe("");
   }
+  const localMark = await get("/counting/brand/dap-wordmark.svg"), sharedMark = await get("/brand/dap-wordmark.svg");
+  expect(localMark.status).toBe(200); expect(await localMark.text()).toBe(await sharedMark.text());
+  expect(localMark.headers.get("content-type")).toBe("image/svg+xml");
+  const localHead = await get("/counting/brand/dap-wordmark-white.svg", "HEAD");
+  expect(localHead.status).toBe(200); expect(await localHead.text()).toBe("");
+  expect((await get("/counting/brand/keys.json")).status).toBe(404);
   // Neither a harmless display query nor credentials held in headers become public response data.
   const html = await get("/counting/?display=STATIC-REQUEST-SENTINEL", "GET", { authorization: "Bearer STATIC-HEADER-SENTINEL", cookie: "private=STATIC-COOKIE-SENTINEL" });
   expect(await html.text()).toBe(COUNTING_ASSETS["index.html"].body);checkHeaders(html, COUNTING_ASSETS["index.html"].type);
