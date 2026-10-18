@@ -79,10 +79,22 @@ envelope; a view refresh or context retry must never sign a successor.
 
 Current `McpService.#perform` derives `expectedOf` from a fresh summary.
 It accepts no captured revision input, and custody's meaning excludes
-one. The MVP plan assigns optional `at` input to S6. Routing request
-`c5a9acd0` asks to bring forward only that prerequisite for the mandatory
-S2 model-act witness. Its disposition is required before that change;
-this note grants no expansion to full S6 or J1.
+one. Planner report `c3079e3c`, answering routing request `c5a9acd0`,
+brings forward only optional `at` input from S6 for the S2 model-act
+witness. Omission keeps the existing fresh-summary behavior. A present
+`at` names exactly the expected subjects with their displayed revisions;
+missing, extra or malformed subjects refuse before signing with a named
+reason. The signed `expected` set keeps those captured numbers. The
+scope's own check refuses a stale revision; the service adds no second
+judgment and substitutes no fresh revision.
+
+Include explicit `at` in custody's meaning while preserving the meaning
+bytes of omitted-input requests. Reusing a key with another captured set
+must conflict. Re-reporting a kept request must retain its original
+envelope, even after the current state moves; check new-envelope coverage
+inside the existing custody build path. The witness must distinguish
+native stale refusal from a service that silently refreshes or rejects
+the revision before signing. Full S6 views and J1 remain separate work.
 
 After acceptance, keep a one-line receipt while loading the next card.
 Record it in model context. If reporting fails, retry the notification,
