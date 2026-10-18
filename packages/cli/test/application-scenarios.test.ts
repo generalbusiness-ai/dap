@@ -50,6 +50,7 @@ function scenario(): any {
 }
 const refused = (work: () => Promise<unknown>): Promise<unknown> => work().then(() => "accepted", error => error);
 
+// Six separately launched CLI processes share this finite functional-test budget.
 test("the actual check bin refuses vacuous scenarios and preserves explicit answer and state witnesses", async () => {
   const root = await realpath(await mkdtemp(join(tmpdir(), "dap-scenario-check-")));
   const packed = await packet(), bin = fileURLToPath(new URL("../bin/dap.js", import.meta.url));
@@ -78,7 +79,7 @@ test("the actual check bin refuses vacuous scenarios and preserves explicit answ
       }
     }
   } finally { await rm(root, { recursive: true, force: true }); }
-});
+}, 30_000);
 
 test("data scenarios judge explicit grants, reuse saved signatures, assert native state and require replay", async () => {
   const input = scenario(); input.actors.agent.principal = "controller"; input.actors.outsider.principal = "controller";

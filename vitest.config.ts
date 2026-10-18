@@ -57,6 +57,10 @@ export default defineConfig({
         extends: "./examples/lending/vitest.config.ts",
         test: { name: "lending", root: "./examples/lending", sequence: { groupOrder: 0 } },
       },
+      {
+        extends: "./examples/grow/vitest.config.ts",
+        test: { name: "grow", root: "./examples/grow", sequence: { groupOrder: 0 } },
+      },
     ],
   },
 });
