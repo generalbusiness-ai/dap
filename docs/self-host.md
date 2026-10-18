@@ -180,7 +180,7 @@ route. The old `/counting/` and `/lending/` routes are retired.
 Create a separate room with `--cohort trusted-application` in the planned
 install flow above. The room in this rehearsal keeps its historical pins;
 there is no automatic cohort migration. The operator must configure the
-[private application content bucket and exact release trust](deploy.md#trusted-application-packages)
+[private application content bucket and exact release trust](deploy.md#trusted-application-screens)
 before an application can be installed.
 
 Check and pack the maintained [Counter](../apps/counter/APPLICATION.md) or
