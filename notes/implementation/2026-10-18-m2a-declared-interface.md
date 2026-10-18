@@ -87,10 +87,25 @@ The cross-version witness includes a correctly signed v1 proof with
 nonempty projections, so its refusal is not explained by an invalid
 signature or a v2 envelope. Removing the strict legacy empty-projection
 check makes that intended assertion fail (`125c34`, source restored).
-No public export, native v2 install, operator trust, host route or viewer
-authorization is enabled by this preparation yet. The next integration
-must select a new native pin and retain its exact semantic proof; it must
-not change historical judgment by switching the old native reader.
+The explicit lower-layer `application-v2` export and new native Rules6 pin
+are now prepared. The in-memory native admission witness passes (`571086`,
+strengthened `cc18e1`): v2 proof/definition bytes are retained under the v2
+domains, the fetch operation is owned by Rules6, and folding agrees. Rules5
+refuses v2 while its valid v1 control still passes; Rules6 refuses v1 and
+missing declaration texts. Registrar, grants and text availability are
+fixtures. No runtime store or driver participates. A correctly signed
+package with a schema that names an unknown native state refuses; removing
+whole-definition validation makes the intended assertion fail (`70b30c`,
+source restored).
+
+Generation of the complete 42-entry catalog validates every body and its
+rule table; all 41 earlier body digests are unchanged (`f8a7fe`). Evidence
+is `/tmp/artroom-m2a-first-catalog-validation-20261018.json`, SHA-256
+`c01f0709dd38a0ce0f97903e538ae06c81c78db3d612af7c76144aa105487aa3`.
+The updated catalog witness and native proof witness pass together
+(`4fcfce`), with source/test typechecks. The default cohort is unchanged.
+The new full cohort, host storage/admission, native read route and viewer
+authorization are still owed; none is enabled by the wire export alone.
 
 It does not yet read a journal, authorize a viewer, install a package, or
 render a view. Those remain implementation work.

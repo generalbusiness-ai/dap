@@ -5,6 +5,8 @@ import { directory11, directoryRules11 } from "./application-install-creation.ts
 export { applicationAnnouncement, APPLICATION_ANNOUNCEMENT_OWNER } from "./application-install-creation.ts";
 export { TRUSTED_APPLICATION_COHORT, INSTALL_DEFINITION_BYTES, INSTALL_SEMANTIC_BYTES } from "./application-install-wire.ts";
 import { APPLICATION_INSTALL_RULES, applicationInstallRulesScope, applicationInstallRules } from "./application-install.ts";
+import { DECLARED_APPLICATION_RULES, applicationInstallRulesScope2, applicationInstallRules2 } from "./application-install-v2.ts";
+export { DECLARED_APPLICATION_RULES } from "./application-install-v2.ts";
 import { INVITATION_KEY_COHORT, directory9, directoryRules9, membership6, membershipRules6 } from "./invitation-key.ts";
 export { INVITATION_KEY_COHORT, directory9, directoryRules9, membership6, membershipRules6 } from "./invitation-key.ts";
 /**
@@ -145,6 +147,7 @@ export interface Platform {
  * cannot run.
  */
 const VERSION_DATA: Readonly<Record<string, Platform>> = {
+  [DECLARED_APPLICATION_RULES]: { data: applicationInstallRulesScope2, rules: applicationInstallRules2, hostPreparationKinds: ["fetch-application"], declaredText: (state, digest) => installDefinitionText(state, digest, "definition"), observed: (state, asked) => rulesAnswer(state, asked, DECLARED_APPLICATION_RULES), observedValues: rulesObservedValues, revised: PUBLISH, membership: rulesMembership },
   [TRUSTED_APPLICATION_COHORT.destination]: { data: destination4, rules: destinationRules4, membership: destinationMembership, rulesScope: destinationRulesScope, applicationPublicationOrigin: installedApplicationPublicationOrigin },
   [TRUSTED_APPLICATION_COHORT.register]: { data: register, rules: registerRules },
   [TRUSTED_APPLICATION_COHORT.directory]: { data: directory11, rules: directoryRules11, declaredText: (state, digest) => installDefinitionText(state, digest, "application-catalog"), membership: directoryMembership, rulesScope: directoryRulesScope },
