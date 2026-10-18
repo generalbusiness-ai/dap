@@ -11,7 +11,7 @@ import { created } from "./support/story.ts";
 type Mode = "default" | "generic";
 interface Ran { calls: string[]; n: number; answers: string[] }
 
-/** W1 recipes, excluding only these two explicit, documented MCP gaps. */
+/** Server recipes exclude the explicit MCP gaps and local file commands. */
 function inventoryRows(): { activity: string; cells: Record<Mode, string> }[] {
   const at = DOC.indexOf("## The W1 inventory");
   const table = DOC.slice(at, DOC.indexOf("\n## ", at + 5));
@@ -22,7 +22,12 @@ function inventoryRows(): { activity: string; cells: Record<Mode, string> }[] {
     { activity: "`dap items <scope> --query <canonical-item-query-JSON>` (MCP gap: public item query)", cells: { default: "Unavailable in MCP; use the SDK, CLI or Page query surface", generic: "Unavailable in MCP" } },
     { activity: "`dap status [<scope>] [--request <16-hex-id>]` (MCP gap: operational status)", cells: { default: "Unavailable in MCP; use the CLI or SDK operational reads", generic: "Unavailable in MCP" } },
   ]);
-  return rows.filter((r) => !gaps.includes(r));
+  const local = rows.filter((r) => r.activity.endsWith("(local command)"));
+  expect(local).toEqual([
+    { activity: "`dap check [<directory>]` (local command)", cells: { default: "Local files and native scenarios with explicit TEST authority; no MCP tool", generic: "Local only" } },
+    { activity: "`dap pack [<directory>]` (local command)", cells: { default: "Local files and an existing named publisher key; no MCP tool", generic: "Local only" } },
+  ]);
+  return rows.filter((r) => !gaps.includes(r) && !local.includes(r));
 }
 /** The tools a cell names in order, consecutive repeats once, and its count: a number, or a number plus n. */
 function recipeOf(cell: string): { tools: string[]; count: { k: number; n: boolean } } {

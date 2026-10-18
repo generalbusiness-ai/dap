@@ -132,6 +132,18 @@ flows, with no console errors. Their new fixture and results are
 `/tmp/artroom-m1-foundation-browser-results-20261018/`. Earlier evidence
 inventories remain unchanged. The new browser and server are closed.
 
+The next preparation gate passed whitespace and typecheck, then completed
+with two failed and 1,759 passed tests, plus three skipped tests. Its log is
+`/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.QFviIeM8Wt`.
+The CLI file witness expected install-first help. The W1 inventory lacked
+the two new commands. Help retains its established order. `docs/mcp.md`
+now marks pack and check as local commands without MCP tools. Server recipe
+coverage excludes that exact finite set and preserves its existing gaps.
+The focused CLI cases pass two tests, MCP inventory passes five, and both
+native server recipes pass (`615fda`, `5a3ceb`, `56a6cf`/`40bd3a`).
+The initial package-only recipe invocation selected no tests and is not a
+pass. The completed gate still needs a passing result on the corrected head.
+
 ## Remaining M1 work
 
 Generic browser bundling, `new`, `dev`, real Counter and Lending package
