@@ -7,7 +7,7 @@ import { canonicalize, definitionDigest } from "@generalbusiness/artroom-bytes";
 import { packApplication, secretSigner, type ApplicationPackageInput } from "@generalbusiness/artroom-client";
 import { countingCommitments } from "../../../apps/counter/commitments.ts";
 import { lending } from "../../../examples/lending/definition.ts";
-import { ApplicationAdmissionError, readApplicationTrust, readTrustedApplication } from "../src/applications/admission.ts";
+import { APPLICATION_HOST_PACKAGE_BYTES, ApplicationAdmissionError, readApplicationTrust, readTrustedApplication } from "../src/applications/admission.ts";
 const signer = secretSigner(new Uint8Array(32).fill(61));
 const input = (definition: DeclaredDefinition): ApplicationPackageInput => ({ name: "test.example.admission", version: "1", semantic: {
   v: 1, entry: definitionDigest(definition), definitions: [{ id: definitionDigest(definition), bytes: canonicalize(definition) }], host: { execution: "recorded-do", profiles: ["restricted@1"] }, roles: {}, projections: {}, predecessor: null, capabilities: [],
@@ -32,6 +32,7 @@ test("both current application definitions admit only under their exact release 
 test("invalid trust and a trusted but unsupported package refuse without partial admission", async () => {
   const packet = await packApplication(input(lending), signer), row = { release: packet.ids.release, publisher: signer.key };
   expect(readApplicationTrust(undefined)).toEqual([]);
+  expect(() => readTrustedApplication(new Uint8Array(APPLICATION_HOST_PACKAGE_BYTES + 1), packet.ids.release, readApplicationTrust(JSON.stringify([row])), PROPOSED_BOUNDS)).toThrow("application-package-limit");
   for (const setting of ["not JSON", "null", "{}", JSON.stringify([row, row]), JSON.stringify([{ ...row, extra: true }]), JSON.stringify([{ ...row, publisher: "not-a-key" }]), JSON.stringify(Array.from({ length: 129 }, () => row)), " ".repeat(64 * 1024 + 1)]) expect(() => readApplicationTrust(setting)).toThrow(ApplicationAdmissionError);
   const base = input(lending), unsupported = { ...base, semantic: { ...base.semantic, host: { ...base.semantic.host, profiles: ["restricted@1", "unknown@1"] } } };
   const other = await packApplication(unsupported, signer), trust = readApplicationTrust(JSON.stringify([{ release: other.ids.release, publisher: signer.key }]));

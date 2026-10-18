@@ -138,15 +138,56 @@ pre-serialization limits and getter refusal. Client source/test typechecks
 pass. It prepares the native install rule; no native operation, grant or scope
 is created yet.
 
-## Host fetch decision pending
+## Confirmed host fetch boundary
 
-Request `9640b02a` asks the planner to settle one concrete transport gap.
-The existing Worker-compatible `SmartHttpSource` is explicitly SHA-1-only;
-Node native Git supports both formats. The format-neutral reader above does
-not add a network transport. The choice is whether M1 must add SHA-256 host
-transport now or explicitly refuse that format without fetching/fallback.
-A CLI upload alone would not independently establish the URI-to-commit
-binding at the host; no such substitution is made.
+Planner report `0d973184`, read in full and ratified, resolves request
+`9640b02a`. The host itself resolves the URI over smart HTTP. A CLI upload
+cannot substitute for the URI-to-commit binding. The host fetches only the
+bounded exact objects needed for the regular file and checks the expected
+release and operator-listed publisher before admission.
+
+The URI grammar retains both 40- and 64-hex commits. M1's host explicitly
+refuses SHA-256 as `unsupported-object-format` before any network call, with
+no retry in another format or downgrade. Native rules must record the refusal
+against the original install act and URI; that native wiring remains due.
+The Node CLI may support both formats for local checking. Local acceptance
+of SHA-256 is not host admission. Host SHA-256 smart-HTTP support is a separate
+later slice, outside M1 and plan 033.
+
+The host resolution helper enforces that refusal before opening a source or
+accessing storage. The updated three-case witness passes (`da0134` / session
+`77460` to `f89f51`, exit 0). It preserves SHA-1 exact/cache refusal checks
+and proves no source opens or bytes are stored for a valid SHA-256 address.
+
+## Isolated smart-HTTP checkpoint
+
+`applications/http-source.ts` uses the reviewed `SmartHttpSource` in explicit
+one-object mode. Each object has a fresh isolated source, so previous objects
+do not build an additional transport cache. Requests use shallow/filter and
+only exact wants; a peer that lacks those capabilities refuses. There is no
+full-closure fallback, subprocess, redirect following or credential supply.
+One ten-second deadline covers the source's complete object walk.
+
+This host now has an explicit 4 MiB packet allowance, below the portable
+codec's 16 MiB ceiling. The current maintained Counter/Lending packets fit.
+The same limit precedes Git blob reading, package parsing and stored-body
+reading. Per-object wire overhead is 64 KiB; the transport's existing
+conservative payload allowance is 80 MiB. These are stated caller allowances,
+not an adopted scope quota or measured total heap. Commit, tree, total-tree
+and path limits remain the reader's earlier bounds. Private R2 still avoids
+splitting a packet into SQL rows.
+
+The affected four files pass 11 focused cases (`20c47b` / session `81346`
+to `8d8142`, exit 0), covering host bounds, admission, immutable local R2,
+resolution and smart-HTTP. The HTTP peer is explicitly scripted and emits
+real Git packs with the portable writer; this is not a remote-repository or
+provider witness. It observes exactly four isolated object requests, explicit
+shallow/filter, no credentials and no closure fallback. Unsupported isolated
+capabilities and redirects refuse before storage. Scope source/test checks
+pass. Four content-type warnings from the fixture's `.text()` call are
+retained in that run. Explicit UTF-8 decoding of its binary request body
+preserves both owning tests with no warnings (`e81957` / session `82848`
+to `644029`, exit 0); no warning filter was added.
 
 ## Remaining implementation
 

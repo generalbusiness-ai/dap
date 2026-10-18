@@ -5,9 +5,9 @@ import { env } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest } from "@generalbusiness/artroom-bytes";
-import { APPLICATION_PACKAGE_LIMITS, packApplication, secretSigner } from "@generalbusiness/artroom-client";
+import { packApplication, secretSigner } from "@generalbusiness/artroom-client";
 import { countingCommitments } from "../../../apps/counter/commitments.ts";
-import { readApplicationTrust } from "../src/applications/admission.ts";
+import { APPLICATION_HOST_PACKAGE_BYTES, readApplicationTrust } from "../src/applications/admission.ts";
 import { ApplicationContentStore, applicationReleaseKey } from "../src/applications/content.ts";
 const signer = secretSigner(new Uint8Array(32).fill(63));
 async function fixture(version: string) {
@@ -68,7 +68,7 @@ test("untrusted writes leave no object; corrupt stored bytes are refused without
 test("oversized stored metadata cancels its body before any read", async () => {
   const f = await fixture("oversized"); let read = false, cancelled = false;
   // Explicit metadata/body stand-in for the pre-read boundary, not provider R2.
-  const object = { size: APPLICATION_PACKAGE_LIMITS.bytes + 1, body: { cancel: async () => { cancelled = true; }, getReader: () => { read = true; throw Error("must not read"); } } } as unknown as R2ObjectBody;
+  const object = { size: APPLICATION_HOST_PACKAGE_BYTES + 1, body: { cancel: async () => { cancelled = true; }, getReader: () => { read = true; throw Error("must not read"); } } } as unknown as R2ObjectBody;
   const bucket = { get: async () => object, put: async () => { throw Error("must not write"); } } as unknown as Pick<R2Bucket, "get" | "put">;
   await expect(new ApplicationContentStore(bucket, f.trust, PROPOSED_BOUNDS).get(f.packet.ids.release)).rejects.toThrow("application-content-too-large");
   expect(read).toBe(false); expect(cancelled).toBe(true);

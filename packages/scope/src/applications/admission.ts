@@ -7,6 +7,9 @@ import { readApplicationPackage, type PackedApplication } from "@generalbusiness
 import { validateDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 
+/** This host's finite packet allowance, below the portable 16 MiB codec
+ * ceiling. Current maintained packets fit; it is not an adopted scope quota. */
+export const APPLICATION_HOST_PACKAGE_BYTES = 4 * 1024 * 1024;
 export interface ApplicationTrust { readonly release: Digest; readonly publisher: KeyId }
 export class ApplicationAdmissionError extends Error {
   constructor(readonly reason: "invalid-trust" | "untrusted-release" | "unsupported-host" | "unsupported-definition") { super("application-" + reason); }
@@ -31,7 +34,7 @@ export function readApplicationTrust(setting: string | undefined): readonly Appl
 export function readTrustedApplication(bytes: Uint8Array, release: Digest, trust: readonly ApplicationTrust[], bounds: Bounds): PackedApplication {
   const allowed = trust.find(row => row.release === release);
   if (!allowed) return fail("untrusted-release");
-  const packet = readApplicationPackage(bytes, release);
+  const packet = readApplicationPackage(bytes, release, { bytes: APPLICATION_HOST_PACKAGE_BYTES });
   if (packet.package.release.manifest.publisher !== allowed.publisher) return fail("untrusted-release");
   // M1 adds trusted ordinary definitions, not arbitrary capability code or M2's
   // capability-bound enforcement. Native sends to the room destination remain

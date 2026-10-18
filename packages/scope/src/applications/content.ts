@@ -2,8 +2,8 @@
  * arbitrary object key. It creates no native installation or authority. */
 import type { Bounds, Digest } from "@generalbusiness/dap-contract";
 import { isDigest } from "@generalbusiness/artroom-bytes";
-import { APPLICATION_PACKAGE_LIMITS, type PackedApplication } from "@generalbusiness/artroom-client";
-import { ApplicationAdmissionError, readTrustedApplication, type ApplicationTrust } from "./admission.ts";
+import type { PackedApplication } from "@generalbusiness/artroom-client";
+import { APPLICATION_HOST_PACKAGE_BYTES, ApplicationAdmissionError, readTrustedApplication, type ApplicationTrust } from "./admission.ts";
 
 export class ApplicationContentError extends Error {
   constructor(readonly reason: "invalid-id" | "too-large" | "corrupt" | "unavailable") { super("application-content-" + reason); }
@@ -26,7 +26,7 @@ export class ApplicationContentStore {
     let object: R2ObjectBody | null;
     try { object = await this.#bucket.get(key); } catch { return fail("unavailable"); }
     if (object === null) return null;
-    const most = APPLICATION_PACKAGE_LIMITS.bytes;
+    const most = APPLICATION_HOST_PACKAGE_BYTES;
     if (!Number.isSafeInteger(object.size) || object.size < 0 || object.size > most) { await object.body.cancel().catch(() => undefined); return fail("too-large"); }
     const reader = object.body.getReader(), chunks: Uint8Array[] = []; let size = 0;
     try {
