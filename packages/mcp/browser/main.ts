@@ -1,6 +1,7 @@
 import { AppBridge, AppToolError } from "./bridge.ts";
 import type { Display, PageKind } from "../src/views/types.ts";
 import { viewToolName } from "../src/views/names.ts";
+import { SurfacePanels } from "./surface.ts";
 import "./style.css";
 
 const root = document.querySelector<HTMLElement>("#card-root")!;
@@ -18,10 +19,12 @@ let alive = true;
 let connected = false;
 let focusKey: string | null = null;
 let refreshTimer = 0;
+const surfaces = new SurfacePanels();
+const surfaceOf = () => display?.card?.declared?.surface ?? display?.surface;
 
 function scheduleRefresh() {
   window.clearTimeout(refreshTimer);
-  const interval = display?.card?.declared?.refresh;
+  const interval = display?.card?.declared?.refresh ?? display?.surface?.refresh;
   if (alive && display?.active && interval) refreshTimer = window.setTimeout(() => {
     if (busy) scheduleRefresh(); else void read({ refresh: true }).catch(showError);
   }, interval);
@@ -104,7 +107,7 @@ async function open() {
   notice = modeNotice; render();
 }
 async function declaredMode() {
-  const requested = display?.card?.declared?.display;
+  const requested = display?.card?.declared?.display ?? display?.surface?.display;
   if (!requested || bridge.context.displayMode === requested) return;
   try { if (await bridge.displayMode(requested) !== requested) notice = "The host kept the previous display mode."; }
   catch (error) { notice = error instanceof Error ? error.message : String(error); }
@@ -124,7 +127,8 @@ async function openDeclared(screen: string, items?: Readonly<Record<string, numb
 }
 async function back() {
   if (!display) return;
-  if (display.card?.declared?.back) return openDeclared(display.card.declared.back);
+  const declaredBack = display.card?.declared?.back ?? display.surface?.back;
+  if (declaredBack) return openDeclared(declaredBack);
   const target = display.query.page === "diff" ? returnPage : "summary";
   notice = "";
   if (target === "summary") {
@@ -186,6 +190,17 @@ function render() {
   if (!summary) {
     const nav = node("nav"); nav.setAttribute("aria-label", "Card navigation");
     nav.append(button("← Back", back, "quiet")); root.append(nav);
+  }
+  const surface = surfaceOf(), data = card?.declared?.data ?? display.data;
+  if (surface && data) {
+    try {
+      const panel = surfaces.show(surface, data, async (name, items) => {
+        if (!busy && alive && display?.active) await openDeclared(surface.opens[name]!, items);
+      }, () => alive && !!display?.active && surfaceOf()?.screen === surface.screen);
+      panel.inert = busy || !display.active;
+      root.append(panel);
+    } catch (error) { root.append(node("p", error instanceof Error ? error.message : "The declared surface is unavailable.", "notice")); }
+    return;
   }
   if (!card) {
     root.append(node("p", display.fallback || display.status, "empty"));
@@ -290,6 +305,7 @@ bridge.on((method) => {
 });
 function close() {
   window.clearTimeout(refreshTimer);
+  surfaces.close();
   alive = false; connected = false; cancelAnimationFrame(frame); resize.disconnect();
   window.removeEventListener("keydown", keyboard); window.removeEventListener("resize", measure);
   document.fonts.removeEventListener("loadingdone", measure); bridge.close();

@@ -141,6 +141,7 @@ export class ViewSessions {
     return structuredClone({ view: instance.key, cut: instance.cut, active: this.#active(instance), query, status: projection.status, position: projection.position, count: projection.count,
       ...(card ? { card: { ...card, actions: card.actions.map(({ id, label, purpose }) => ({ id, label, purpose })) } } : {}), fallback: projection.fallback, context,
       ...(projection.data ? { data: projection.data } : {}),
+      ...(projection.surface ? { surface: projection.surface } : {}),
       ...(instance.receipt ? { receipt: instance.receipt } : {}) });
   }
   display(key: string) { return this.#display(this.#instance(key)); }

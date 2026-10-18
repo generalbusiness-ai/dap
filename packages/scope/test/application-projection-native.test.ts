@@ -94,6 +94,13 @@ test("native installed projection reads exact journal state and survives R2 dele
     expect((await life.wait(() => emptyViews.call("view_read", { view: "empty-activity" }))).structuredContent).toMatchObject({ display: {
       status: "empty", data: emptyActivity.value.value, context: { projection: [{ scope: app.name, ...emptyActivity.value.value.at }], entriesRead: [] },
     } });
+    const emptySurface = await life.wait(() => emptyViews.call("view_overview", { view: "empty-overview" }));
+    expect(emptySurface.structuredContent).toMatchObject({ status: "empty", identity: null });
+    expect(emptySurface.structuredContent).not.toHaveProperty("surface");
+    expect((await life.wait(() => emptyViews.call("view_read", { view: "empty-overview" }))).structuredContent).toMatchObject({ display: {
+      status: "empty", data: emptyActivity.value.value, surface: { resource: "ui://fixture/activity", opens: {} },
+      context: { projection: [{ scope: app.name, ...emptyActivity.value.value.at }], entriesRead: [] },
+    } });
     await life.wait(() => app.did(rita, "initialize", { expected: { configuration: 1 } }));
     const first = await read();
     expect(first.status, first.raw).toBe(200); expect(first.value?.ok).toBe(true); if (!first.value?.ok) return;
@@ -176,6 +183,13 @@ test("native installed projection reads exact journal state and survives R2 dele
       context: { entriesRead: [], reviewIntended: [] },
     } });
     expect((await life.wait(() => views.call("view_act", { view: "activity", cut: 0, action: "pause" }))).structuredContent).toMatchObject({ error: "view", reason: "shape" });
+    expect((await life.wait(() => views.call("view_overview", { view: "overview" }))).isError).toBe(false);
+    expect((await life.wait(() => views.call("view_read", { view: "overview" }))).structuredContent).toMatchObject({ display: {
+      query: { page: "item" }, card: { identity: { kind: "scope", revision: String(currentActivity.value.value.at.seq), at: {} }, actions: [],
+        declared: { kind: "surface", data: currentActivity.value.value, surface: { resource: "ui://fixture/activity", opens: {} } } },
+      context: { entriesRead: [], reviewIntended: [] },
+    } });
+    expect((await life.wait(() => views.call("view_act", { view: "overview", cut: 0, action: "pause" }))).structuredContent).toMatchObject({ error: "view", reason: "shape" });
     expect(viewSignatures).toBe(0);
     const start = async () => {
       const current = (await read()).value;

@@ -23,6 +23,16 @@ export interface CardAction {
   kind: string;
   args: Record<string, unknown>;
 }
+/** Public package HTML, kept separate from the private native data it renders. */
+export interface DeclaredSurface {
+  screen: string;
+  resource: string;
+  html: string;
+  opens: Readonly<Record<string, string>>;
+  refresh: number;
+  display: "inline" | "fullscreen";
+  back: string | null;
+}
 export interface Card {
   identity: CardIdentity;
   title: string;
@@ -57,6 +67,7 @@ export interface Card {
     log?: readonly { entry: Readonly<FactRef>; time: string; title: string; summary: string; facts: readonly string[] }[];
     resource?: string;
     opens?: Readonly<Record<string, string>>;
+    surface?: DeclaredSurface;
   };
 }
 export interface ViewQuery {
@@ -75,6 +86,7 @@ export interface Projection {
   fallback: string;
   /** Empty declared views still retain their exact native data and head. */
   data?: ApplicationProjectionData;
+  surface?: DeclaredSurface;
 }
 /** A trusted application's projection adapter. Reads use the service's normal authenticated tool path. */
 export interface ViewSource {
@@ -114,6 +126,7 @@ export interface Display {
   card?: Omit<Card, "actions"> & { actions: Pick<CardAction, "id" | "label" | "purpose">[] };
   fallback: string;
   data?: ApplicationProjectionData;
+  surface?: DeclaredSurface;
   context: CardContext;
   receipt?: string;
 }

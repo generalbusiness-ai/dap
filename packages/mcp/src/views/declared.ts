@@ -1,12 +1,12 @@
 /** The generic host interpreter for a verified declared presentation. It
  * runs no package code. Its ports are native reads, not application adapters. */
 import type { ApplicationProjectionData, ApplicationProjectionQuery, ApplicationProjectionRead, ApplicationProjectionRow, Digest, FieldValue, Item, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, parseStrict } from "@generalbusiness/artroom-bytes";
+import { canonicalize, parseStrict, unb64url } from "@generalbusiness/artroom-bytes";
 import type { ApplicationInstallation } from "@generalbusiness/artroom-bytes/application";
 import { applicationProjectionId, isApplicationJournalSource, readApplicationPackage2, type ApplicationView, type PackedApplication2 } from "@generalbusiness/artroom-bytes/application-v2";
 import { admit, evaluate, RuleEvalError } from "@generalbusiness/dap-derive/rule";
 import { ViewError } from "./session.ts";
-import type { Card, CardAction, Projection, ViewQuery, ViewSource } from "./types.ts";
+import type { Card, CardAction, DeclaredSurface, Projection, ViewQuery, ViewSource } from "./types.ts";
 import { PRESENTATION } from "./generated.ts";
 import type { DefinitionLike } from "../describe.ts";
 import { effectiveFields, expectedOf } from "../shape.ts";
@@ -34,7 +34,7 @@ export class DeclaredViewSource implements ViewSource {
   }
   initialPage(screen: string) {
     const view = this.#view({ screen, page: "summary", position: 0 });
-    return view.kind === "record" || view.kind === "log" ? "item" as const : "summary" as const;
+    return view.kind === "record" || view.kind === "log" || view.kind === "surface" ? "item" as const : "summary" as const;
   }
   constructor(bytes: Uint8Array, release: Digest, readonly port: DeclaredViewPort) {
     this.packet = readApplicationPackage2(bytes, release, { bytes: 4 * 1024 * 1024 });
@@ -44,6 +44,15 @@ export class DeclaredViewSource implements ViewSource {
     const views = this.packet.package.presentation.views;
     if (!Object.hasOwn(views, query.screen)) throw new ViewError("shape", "This package declares no such view.");
     return views[query.screen]!;
+  }
+  #surface(screen: string, view: ApplicationView): DeclaredSurface | undefined {
+    if (view.kind !== "surface") return undefined;
+    const path = this.packet.package.presentation.resources[view.resource]!;
+    const asset = this.packet.package.presentation.assets.find(asset => asset.path === path)!;
+    const bytes = unb64url(asset.bytes);
+    if (!bytes) throw new ViewError("unavailable", "The declared surface bytes are unavailable.");
+    return { screen, resource: view.resource, html: new TextDecoder("utf-8", { fatal: true, ignoreBOM: false }).decode(bytes),
+      opens: view.opens, refresh: view.refresh, display: view.display, back: view.back };
   }
   async #read(query: ViewQuery) {
     const view = this.#view(query), install = await this.port.installation();
@@ -103,13 +112,16 @@ export class DeclaredViewSource implements ViewSource {
   }
   async read(query: ViewQuery): Promise<Projection> {
     const { view, install, reply, rows } = await this.#read(query);
+    const surface = this.#surface(query.screen, view);
     if (!rows.length) return { status: "empty", position: 0, count: 0, data: reply.value,
+      ...(surface ? { surface } : {}),
       fallback: view.kind === "log" ? "This declared log has no matching entries in its recent window." : "This declared view has no matching items." };
     if (!Number.isSafeInteger(query.position) || query.position < 0 || query.position >= rows.length) throw new ViewError("shape", "The declared view position is outside its complete projection.");
     const row = rows[query.position]!, values = input(row), waiting = Object.hasOwn(view.waiting, row.state) ? template(view.waiting[row.state]!, row, "") : "";
     const fallback = template(view.fallback, row, waiting), actions = await this.#allowed(view, row, reply.value, install.scope, install.definition);
     const card: Card = {
-      identity: { item: String(row.id), kind: row.entry ? "entry" : row.type, revision: String(row.revision), subject: { scope: install.scope.scope, ...(row.entry ? {} : { item: row.id }) }, at: row.entry ? {} : { on: row.revision } },
+      identity: surface ? { item: install.scope.scope, kind: "scope", revision: String(reply.value.at.seq), subject: { scope: install.scope.scope }, at: {} }
+        : { item: String(row.id), kind: row.entry ? "entry" : row.type, revision: String(row.revision), subject: { scope: install.scope.scope, ...(row.entry ? {} : { item: row.id }) }, at: row.entry ? {} : { on: row.revision } },
       title: view.kind === "surface" ? query.screen : text(values[view.title]), summary: view.kind === "surface" || view.summary === null ? "" : text(values[view.summary]),
       reasons: view.kind === "surface" ? [] : view.facts.map(name => `${name}: ${text(values[name])}`),
       projection: [{ scope: install.scope.scope, ...reply.value.at }], reviewIntended: [], unavailable: [], waitsOn: waiting ? [waiting] : [], settles: [], actions, fallback,
@@ -120,7 +132,7 @@ export class DeclaredViewSource implements ViewSource {
           const values = input(row);
           return { entry: row.entry, time: row.time, title: text(values[view.title]), summary: view.summary === null ? "" : text(values[view.summary]), facts: view.facts.filter(name => name !== "time").map(name => `${name}: ${text(values[name])}`) };
         }) } : {}),
-        ...(view.kind === "surface" ? { resource: view.resource, opens: view.opens } : {}) },
+        ...(surface ? { resource: surface.resource, opens: surface.opens, surface } : {}) },
     };
     return { status: "ready", position: query.position, count: rows.length, card, fallback };
   }

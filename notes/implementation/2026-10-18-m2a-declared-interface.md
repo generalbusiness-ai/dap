@@ -632,3 +632,51 @@ This proves local typed data and replay with TEST authority. It does not
 prove Site-to-Room installation ownership, current complete presence,
 surface rendering, maintained browser migration or hosted operation. Those
 acceptance items, the final gate, review and landing remain owed.
+
+### Trusted browser surfaces and declared opens
+
+The generic kit now mounts a declared HTML resource in a browser shadow
+root. During its classic inline-script initialization, `window.dapSurface`
+provides the root, one native-data callback, a teardown signal and named
+opens. The initialization property is then removed. No signer, token or
+arbitrary tool callback is supplied. This runs trusted package code in the
+kit's browser realm; it makes no hostile-code containment claim.
+
+The host decodes the verified package asset and supplies it only with the
+app's display data. A populated surface identifies its native scope/head
+with an empty expected-item set. Empty surfaces retain native data/head and
+refresh metadata without inventing an item. Native data/context reporting,
+display mode and opening dispatch stay in the kit. Mounted resources retain
+their local selection across navigation, with bounded retention and abort
+on teardown. Script initialization failures show an error and omit partial
+content. Reference: [Declared application views](../../docs/application-views.md).
+
+Four rendered cases pass (`11777`, terminal `10fe7b`). At 320 and 592 pixels,
+the three-cell resource opens participant 12 through its declared record
+mapping and retains that selection on Back. Undeclared opens and calls from
+the inactive surface refuse; zero act signatures result. Both actual inner
+viewports contain the surface without horizontal overflow. Separate cases
+show empty data at native head 13, refresh without repeated context, and a
+broken initialization with no partial surface or retained global slot.
+All four final captures were visually inspected. Report:
+`/tmp/artroom-m2a-declared-surface-browser-final-20261018/`. The first capture
+found an awkward narrow label/empty-state wrap; the fixture now uses a
+two-column narrow grid and a full-width empty message. This remains a
+scripted native-port rendering witness in the same cached pinned browser.
+
+One focused stale-open fault control passes (`87934`, terminal `310c9c`).
+The original 320-pixel flow passes. Removing only the current-surface check
+and rebuilding changes the intended refusal to `opened`, failing the exact
+assertion. Source and generated resource bytes are restored in `finally`.
+Log: `/tmp/artroom-m2a-surface-current-control-20261018.log`.
+
+The actual native install/session/SQLite witness also reads empty and
+populated activity surfaces, keeps the same native data/head as the other
+readers and refuses Pause through the surface (`40602`, terminal `9040b1`).
+Log: `/tmp/artroom-m2a-surface-native-20261018.log`. This proves native read
+and host shape behavior; its HTML is not executed in Workerd. Eight Node
+cases for declared views/resources pass (`30531`, terminal `39d561`).
+Browser/source/test/scope typechecks pass. Resources were regenerated from
+the actual browser code. No final gate, maintained browser migration,
+several-scope install ownership, Grow rendered journey or deployment is
+claimed. Review and landing remain owed.
