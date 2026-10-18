@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:cde28325fcc67cbf3b0a78e1b080caf454fb534a","text":"Merge retired a covered predecessor; the successor is at apps/counter/browser/application.html."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d31782a0b47e1468f9abefee1de1f45ef7ca4c36","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/application-scenarios.ts."}
