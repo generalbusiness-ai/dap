@@ -105,7 +105,7 @@ const listen = (server: Server): Promise<string> => new Promise((resolve) => ser
 const stop = (server: Server): Promise<void> => new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
 
 /** Two loopback origins, a cross-origin sandbox proxy and the real single-file app behind package-derived CSP. */
-export async function startViewsHost() {
+export async function startViewsHost(options: { declared?: (base: ReturnType<typeof fixture>) => Promise<ReturnType<typeof fixture>> } = {}) {
   const instances = new Map<string, ReturnType<typeof fixture> & { wire: Wire; session: ReturnType<typeof newSession>; version: string }>();
   let hostOrigin = "", sandboxOrigin = "";
   const host = createServer((request, response) => { void (async () => {
@@ -137,7 +137,7 @@ export async function startViewsHost() {
     }
     if (url.pathname !== "/") { response.writeHead(404); response.end(); return; }
     if (instances.size >= 128) return json(response, { error: "Fixture host full" }, 429);
-    const id = crypto.randomUUID(), mode = url.searchParams.get("fixture") ?? "normal", demo = mode === "declared" ? await declaredFixture() : fixture(mode), wire = new Wire(demo.service), session = newSession(null);
+    const id = crypto.randomUUID(), mode = url.searchParams.get("fixture") ?? "normal", demo = mode === "declared" ? await (options.declared ? options.declared(fixture("empty")) : declaredFixture()) : fixture(mode), wire = new Wire(demo.service), session = newSession(null);
     const version = url.searchParams.get("wire") === "legacy" ? LEGACY : MODERN;
     instances.set(id, { ...demo, wire, session, version });
     if (version === LEGACY) {

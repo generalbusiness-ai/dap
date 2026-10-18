@@ -803,3 +803,36 @@ SDK observation case also passes (four cases in its file):
 model/test, scope-test and MCP-test typechecks pass. A maintained native v2
 installation/browser witness, Grow grid resource, final gate and review remain
 owed; these preparations make none of those claims.
+
+### Grow grid through the trusted surface
+
+Grow's check package now owns `grid.html`, a declared `grid` surface, a named
+`bench` opening and a readonly `bench-record`. The grid receives only declared
+native data. Moisture, EC and pH controls change its local layer; labels and
+stripes distinguish missing readings, and dashed borders distinguish stale
+benches. The 100 cells are a picture rather than tiny action targets. A native
+select and full-size button open a bench record through the declared binding.
+Returning retains the selected bench and metric. This is the first bounded
+grid resource, not the full G1 overview/zone/tender/incident experience.
+
+The maintained Grow declaration/scenario case passes (`59802`, terminal
+`fc2428`): `/tmp/artroom-m2a-grow-grid-resource-check-20261018.log`. Both local
+native scenarios still replay and check their projections. A separate browser
+run opens the completed fault scenario in genuine local Core/SQLite, then
+records a TEST day-tender probe of C4: moisture31, EC2100, pH590. Head161 has
+100 benches; C4 is fresh while99 remain stale. The local projection producer
+supplies the actual grid and selected record to the production MCP view source
+and kit. Installation/session ports are explicit stand-ins. No multi-scope
+installation, production ownership or hosted authority is inferred from this.
+
+Chromium153.0.8010.12 / pinned Playwright1.63.0 pass at320/592: all100 cells,
+EC2.1 conversion, C4 record, Back with metric/selection retained, no page
+overflow, no console errors, no model data dump and zero act signatures. The
+empty390 case retains native head0 and disables the record opening. Log:
+`/tmp/artroom-m2a-grow-grid-browser-complete-20261018.log`; scratch runner:
+`/tmp/artroom-m2a-grow-grid-browser-20261018.mjs`; captures:
+`/tmp/artroom-m2a-grow-grid-browser-complete-20261018/`. Final images were
+visually inspected. Earlier images exposed wrapped narrow cell labels caused
+by the default border width; explicit thin borders and small coordinate labels
+fix that. The browser plugin is unavailable, so this uses the recorded cached
+Playwright fallback, with no dependency installation. MCP test typecheck passes.

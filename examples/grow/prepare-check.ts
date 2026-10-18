@@ -18,7 +18,7 @@ export async function prepareGrowCheck(destination?: string): Promise<string> {
   for (const [name, definition] of [["site.json", site], ["room.json", room]] as const) {
     await writeFile(join(root, name), canonicalize(definition), { flag: "wx", mode: 0o600 });
   }
-  for (const name of ["dap.application.json", "site-scenario.json", "fault-scenario.json", "index.html"]) {
+  for (const name of ["dap.application.json", "site-scenario.json", "fault-scenario.json", "index.html", "grid.html"]) {
     const bytes = await readFile(new URL(`./check/${name}`, import.meta.url));
     await writeFile(join(root, name), bytes, { flag: "wx", mode: 0o600 });
   }

@@ -19,11 +19,18 @@
         "file": "index.html",
         "mediaType": "text/html; charset=utf-8",
         "path": "index.html"
+      },
+      {
+        "file": "grid.html",
+        "path": "grid.html",
+        "mediaType": "text/html; charset=utf-8"
       }
     ],
     "descriptions": {},
     "entry": "index.html",
-    "resources": {},
+    "resources": {
+      "ui://grow/bench-grid": "grid.html"
+    },
     "views": {
       "alert": {
         "revision": "revision",
@@ -211,6 +218,52 @@
         ],
         "context": "Alert {id} v{revision}: {state}",
         "fallback": "Alert {id}: {text} ({state})"
+      },
+      "grid": {
+        "kind": "surface",
+        "projection": "grid",
+        "item": "bench",
+        "revision": "revision",
+        "resource": "ui://grow/bench-grid",
+        "opens": {
+          "bench": "bench-record"
+        },
+        "acts": [],
+        "context": "Bench grid at the native room head",
+        "fallback": "Bench grid. Open a bench record for selected readings and its revision.",
+        "waiting": {},
+        "refresh": 2000,
+        "display": "fullscreen",
+        "back": null
+      },
+      "bench-record": {
+        "kind": "record",
+        "projection": "bench",
+        "item": "bench",
+        "revision": "revision",
+        "title": "label",
+        "summary": "state",
+        "actor": null,
+        "facts": [
+          "row",
+          "column",
+          "moisture",
+          "ec",
+          "ph",
+          "height",
+          "insects",
+          "note",
+          "probeTime",
+          "staleAt",
+          "lastProbe"
+        ],
+        "acts": [],
+        "context": "Bench {id} v{revision}: {state}",
+        "fallback": "Bench {id}: {label} ({state})",
+        "waiting": {},
+        "refresh": 2000,
+        "display": "fullscreen",
+        "back": "grid"
       }
     }
   },
@@ -1592,6 +1645,269 @@
               },
               "of": {
                 "type": "member"
+              },
+              "nullable": true
+            }
+          }
+        }
+      }
+    },
+    "bench": {
+      "v": 1,
+      "definition": "room.json",
+      "revision": "revision",
+      "sources": {
+        "bench": {
+          "item": "bench",
+          "read": "item",
+          "states": [
+            "fresh",
+            "stale"
+          ],
+          "limit": 1,
+          "fields": {
+            "label": {
+              "from": {
+                "kind": "value",
+                "name": "label"
+              },
+              "of": {
+                "type": "text",
+                "max": 80
+              },
+              "nullable": false
+            },
+            "row": {
+              "from": {
+                "kind": "value",
+                "name": "row"
+              },
+              "of": {
+                "type": "enum",
+                "of": [
+                  "A",
+                  "B",
+                  "C",
+                  "D",
+                  "E",
+                  "F",
+                  "G",
+                  "H",
+                  "I",
+                  "J"
+                ]
+              },
+              "nullable": false
+            },
+            "column": {
+              "from": {
+                "kind": "value",
+                "name": "column"
+              },
+              "of": {
+                "type": "int",
+                "min": 1,
+                "max": 10
+              },
+              "nullable": false
+            },
+            "moisture": {
+              "from": {
+                "kind": "value",
+                "name": "moisture"
+              },
+              "of": {
+                "type": "int",
+                "min": 0,
+                "max": 100
+              },
+              "nullable": true
+            },
+            "ec": {
+              "from": {
+                "kind": "value",
+                "name": "ec"
+              },
+              "of": {
+                "type": "int",
+                "min": 0,
+                "max": 10000
+              },
+              "nullable": true
+            },
+            "ph": {
+              "from": {
+                "kind": "value",
+                "name": "ph"
+              },
+              "of": {
+                "type": "int",
+                "min": 0,
+                "max": 1400
+              },
+              "nullable": true
+            },
+            "height": {
+              "from": {
+                "kind": "value",
+                "name": "height"
+              },
+              "of": {
+                "type": "int",
+                "min": 0,
+                "max": 5000
+              },
+              "nullable": true
+            },
+            "insects": {
+              "from": {
+                "kind": "value",
+                "name": "insects"
+              },
+              "of": {
+                "type": "int",
+                "min": 0,
+                "max": 10000
+              },
+              "nullable": true
+            },
+            "note": {
+              "from": {
+                "kind": "value",
+                "name": "note"
+              },
+              "of": {
+                "type": "text",
+                "max": 1024
+              },
+              "nullable": true
+            },
+            "probeTime": {
+              "from": {
+                "kind": "value",
+                "name": "probeTime"
+              },
+              "of": {
+                "type": "time"
+              },
+              "nullable": true
+            },
+            "staleAt": {
+              "from": {
+                "kind": "value",
+                "name": "staleAt"
+              },
+              "of": {
+                "type": "time"
+              },
+              "nullable": true
+            },
+            "zone": {
+              "from": {
+                "kind": "ref",
+                "name": "zone"
+              },
+              "of": {
+                "type": "item",
+                "of": "zone"
+              },
+              "nullable": false
+            },
+            "lastProbe": {
+              "from": {
+                "kind": "ref",
+                "name": "lastProbe"
+              },
+              "of": {
+                "type": "fact",
+                "under": "grow-room",
+                "kind": [
+                  "probe"
+                ]
+              },
+              "nullable": true
+            },
+            "moistureAt": {
+              "from": {
+                "kind": "ref",
+                "name": "moistureAt"
+              },
+              "of": {
+                "type": "fact",
+                "under": "grow-room",
+                "kind": [
+                  "probe"
+                ]
+              },
+              "nullable": true
+            },
+            "ecAt": {
+              "from": {
+                "kind": "ref",
+                "name": "ecAt"
+              },
+              "of": {
+                "type": "fact",
+                "under": "grow-room",
+                "kind": [
+                  "probe"
+                ]
+              },
+              "nullable": true
+            },
+            "phAt": {
+              "from": {
+                "kind": "ref",
+                "name": "phAt"
+              },
+              "of": {
+                "type": "fact",
+                "under": "grow-room",
+                "kind": [
+                  "probe"
+                ]
+              },
+              "nullable": true
+            },
+            "heightAt": {
+              "from": {
+                "kind": "ref",
+                "name": "heightAt"
+              },
+              "of": {
+                "type": "fact",
+                "under": "grow-room",
+                "kind": [
+                  "probe"
+                ]
+              },
+              "nullable": true
+            },
+            "insectsAt": {
+              "from": {
+                "kind": "ref",
+                "name": "insectsAt"
+              },
+              "of": {
+                "type": "fact",
+                "under": "grow-room",
+                "kind": [
+                  "probe"
+                ]
+              },
+              "nullable": true
+            },
+            "noteAt": {
+              "from": {
+                "kind": "ref",
+                "name": "noteAt"
+              },
+              "of": {
+                "type": "fact",
+                "under": "grow-room",
+                "kind": [
+                  "probe"
+                ]
               },
               "nullable": true
             }
