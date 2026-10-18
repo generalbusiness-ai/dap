@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4232d522350b6495324196988775257c264202a0","text":"Merge retired a covered predecessor; the successor is at package-lock.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:42e918eff785b97c4652faef8515bf4914f82183","text":"Merge retired a covered predecessor; the successor is at examples/lending/browser/join.ts."}
