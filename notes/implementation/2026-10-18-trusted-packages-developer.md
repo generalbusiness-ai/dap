@@ -333,6 +333,36 @@ missing-retained-input witnesses above. CLI test/source typecheck passes
 
 ## Remaining developer work
 
+The standard scenario layer now also resolves `$fact` only from an actual
+accepted receipt saved by `act` or `retry`. Missing names, refused requests
+and arbitrary fact objects cannot supply one. This lets a recorded summary
+be cited by a later native act without a fabricated head or receipt.
+
+An explicit `owner-record` step holds a labelled non-native scenario-owner
+outcome (`confirmed`, `refused` or `unknown`) beside such an accepted request.
+It changes no native state, writes no entry, executes no effect and is outside
+the native replay claim. Each command fact gets at most one scenario record.
+The CLI prints that boundary and count separately. This is the G0 boundary
+settled by `e72e4e83`; it supplies no G5a native operation, reservation,
+freshness proof or owner signature. A declaration can record intent while the
+scenario owner supplies fictional outcomes; neither is evidence of a device.
+
+Thirteen focused scenario/pack/bin cases pass (`fa1bf1`/`2f4992`, exit 0),
+with test/source typecheck (`a64ad1`). The fact test uses a clearly labelled
+Counter fixture augmented by a typed citation comment: a tap of the real
+native submit sees exactly the accepted initialize receipt in that comment,
+and the saved citation fact in the owner record. Native replay stays at
+sequence 3 after the side record and retry. The actual Lending check bin now
+has five scenario steps and one explicitly non-native record; replay remains
+through sequence 1. These are additional local format witnesses, not changes
+to the production Counter/Lending declarations or completed package conversion.
+
+Two focused controls restore source and distinguish one intended assertion
+each, with six normal scenario cases: falling back to the current native head
+for a missing accepted receipt (`d8b7be`/`eecd64`), and admitting a duplicate
+owner outcome (see `/tmp/artroom-m1-scenario-owner-duplicate-control-20261018.log`).
+Both exit 0. No repeated full gate or publication accompanied this bridge.
+
 Shared browser joining, storage and request custody; browser bundling;
 new/dev; Counter/Lending package
 conversion; and the matching browser evidence remain due. Generated

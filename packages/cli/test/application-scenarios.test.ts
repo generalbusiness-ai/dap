@@ -2,14 +2,17 @@
  * deliberately faulted, to show the scenario cannot hide failed replay. */
 import { readFile } from "node:fs/promises";
 import { expect, test, vi } from "vitest";
-import type { DeclaredDefinition } from "@generalbusiness/dap-contract";
+import type { DeclaredDefinition, FactRef, FieldValue } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest } from "@generalbusiness/artroom-bytes";
 import { packApplication, secretSigner } from "@generalbusiness/artroom-client";
 import { LocalApplicationScope } from "../src/application-local.ts";
 import { ApplicationScenarioError, runApplicationScenario, supportsLocalSqlite } from "../src/application-scenarios.ts";
 
-async function packet() {
+async function packet(withCitation = false) {
   const declaration: DeclaredDefinition = JSON.parse(await readFile(new URL("../../../apps/counter/definition.json", import.meta.url), "utf8"));
+  // This one fixture augments the real Counter with a comment that carries a
+  // typed local fact; it is not a proposed Counter application change.
+  if (withCitation) declaration.acts["cite"] = { step: "comment", on: null, grant: "counting.control", also: {}, fields: { source: { type: "fact", kind: ["initialize"], under: declaration.name, required: true } }, guards: [], effects: [], sends: [], attention: [] };
   const id = definitionDigest(declaration);
   return packApplication({ name: "ai.generalbusiness.counter", version: "0.1.0", semantic: {
     v: 1, entry: id, definitions: [{ id, bytes: canonicalize(declaration) }], host: { execution: "recorded-do", profiles: ["restricted@1"] }, capabilities: [], roles: {}, projections: {}, predecessor: null,
@@ -44,6 +47,43 @@ test("a running scenario owns its expected results before signing awaits or call
   input.steps[0].expect = { answer: "refused", reason: "unauthorized" };
   const outcome = await pending.then(() => "passed", error => error instanceof ApplicationScenarioError ? "refused" : "unexpected error");
   expect(outcome).toBe("passed");
+});
+
+test("saved facts come from accepted native receipts and owner records stay outside the journal", async () => {
+  const input = scenario();
+  input.steps.push({ act: { actor: "controller", kind: "cite", fields: { source: { $fact: "initialize" } } }, expect: { answer: "accepted" }, save: "citation" },
+    { "owner-record": { owner: "simulator", command: { $fact: "citation" }, outcome: "unknown" } },
+    { retry: "citation", expect: { answer: "accepted" } });
+  const submit = LocalApplicationScope.prototype.submit;
+  let initialized: FactRef | undefined, cited: FactRef | undefined, source: FieldValue | undefined;
+  const spy = vi.spyOn(LocalApplicationScope.prototype, "submit").mockImplementation(async function (this: LocalApplicationScope, signed, beside) {
+    const answer = await submit.call(this, signed, beside);
+    if (answer.answer === "accepted" && signed.intent.kind === "initialize") initialized = answer.receipt.fact;
+    if (answer.answer === "accepted" && signed.intent.kind === "cite") { cited = answer.receipt.fact; source = signed.intent.fields["source"]; }
+    return answer;
+  });
+  try {
+    const result = await runApplicationScenario(await packet(true), input);
+    expect(source).toEqual(initialized); expect(cited).toBeDefined();
+    expect(result.ownerRecords).toEqual([{ label: "non-native-scenario-owner", owner: "simulator", command: cited, outcome: "unknown" }]);
+    expect(result.replay.report.target.seq).toBe(3); expect(result.replay.report.result).toBe("consistent");
+  } finally { spy.mockRestore(); }
+});
+
+test("unaccepted or invented facts and duplicate scenario-owner outcomes cannot pass", async () => {
+  const packed = await packet(true);
+  const record = { "owner-record": { owner: "simulator", command: { $fact: "initialize" }, outcome: "confirmed" } };
+  for (const extra of [
+    [{ "owner-record": { ...record["owner-record"], command: { $fact: "missing" } } }],
+    [{ "owner-record": { ...record["owner-record"], command: { at: {}, seq: 1, hash: "invented" } } }],
+    [{ "owner-record": { ...record["owner-record"], outcome: "success" } }],
+    [record, record],
+    [{ act: { actor: "outsider", kind: "join" }, expect: { answer: "refused", reason: "unauthorized" }, save: "denied" }, { "owner-record": { ...record["owner-record"], command: { $fact: "denied" } } }],
+    [{ act: { actor: "controller", kind: "cite", fields: { source: { $fact: "missing" } } }, expect: { answer: "accepted" } }],
+  ]) {
+    const input = scenario(); input.steps.push(...extra);
+    expect(await refused(() => runApplicationScenario(packed, input))).toBeInstanceOf(ApplicationScenarioError);
+  }
 });
 
 test("scenario typos, empty assertions, wrong outcomes, malformed actors and missing references cannot pass", async () => {

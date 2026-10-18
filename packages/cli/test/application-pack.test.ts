@@ -139,6 +139,7 @@ function standardScenario(): any {
     { retry: "donation", expect: { answer: "accepted" } },
     { assert: { item: 1, state: "available", values: { name: "Pot" } } },
     { act: { actor: "writer", kind: "cancel", on: 1, expected: { on: { $revision: 1 }, library: { $revision: 0 } }, fields: { reason: "Lost", content: "A signed page" } }, expect: { answer: "refused", reason: "unauthorized" } },
+    { "owner-record": { owner: "simulator", command: { $fact: "donation" }, outcome: "unknown" } },
   ] };
 }
 
@@ -153,7 +154,8 @@ test("the actual dap check requires scenarios and native replay without reading 
     // These custody values would fail configDir; local check must not consult it.
     const result = spawnSync(process.execPath, [bin, "check"], { cwd: f.root, env: { ...process.env, DAP_HOME: "", ARTROOM_HOME: "" }, encoding: "utf8", timeout: 30_000 });
     expect(result.error).toBeUndefined(); expect(result.status).toBe(0);
-    expect(result.stdout).toContain("Scenario lending-standard: 4 steps passed; native replay consistent through 1.");
+    expect(result.stdout).toContain("Scenario lending-standard: 5 steps passed; native replay consistent through 1.");
+    expect(result.stdout).toContain("Non-native scenario-owner records: 1; outside the journal and native replay claim.");
     expect(result.stdout).toContain("explicit scripted TEST grants");
     expect(result.stdout).toContain("Declared capability requirements: none.");
     expect(result.stdout).not.toContain("Release:"); expect(await readdir(f.root)).not.toContain("application.dap.json");

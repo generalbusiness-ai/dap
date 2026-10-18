@@ -1,6 +1,6 @@
 /** Declarative local scenarios. No scenario module or application server code
  * is imported. TEST keys and authority are local stand-ins, stated in reports. */
-import type { Answer, FieldValue, MemberId, MemberRef, ScopeKind, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
+import type { Answer, FactRef, FieldValue, MemberId, MemberRef, ScopeKind, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, isRecord, newIncarnation, parseStrict, scopeIdOf } from "@generalbusiness/artroom-bytes";
 import { secretSigner, signedIntent, type Asked, type PackedApplication, type Signer } from "@generalbusiness/artroom-client";
 import { timeMs } from "@generalbusiness/dap-derive";
@@ -32,7 +32,8 @@ function reference(kind: ScopeKind): ScopeRef {
   return { scope: scopeIdOf({ v: 1, kind, definition: `sha256:${"0".repeat(64)}`, creator: null, cause: `sha256:${"1".repeat(64)}`, ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(2)), kind };
 }
 interface Actor { signer: Signer; member: MemberRef; actions: string[] }
-export interface ApplicationScenarioResult { readonly name: string; readonly steps: number; readonly replay: Verification; readonly authority: "scripted-test-grants" }
+export interface ScenarioOwnerRecord { readonly label: "non-native-scenario-owner"; readonly owner: string; readonly command: FactRef; readonly outcome: "confirmed" | "refused" | "unknown" }
+export interface ApplicationScenarioResult { readonly name: string; readonly steps: number; readonly replay: Verification; readonly authority: "scripted-test-grants"; readonly ownerRecords: readonly ScenarioOwnerRecord[] }
 
 export async function runApplicationScenario(packet: PackedApplication, value: unknown): Promise<ApplicationScenarioResult> {
   if (!supportsLocalSqlite(process.versions.node)) return fail("Local scenarios require unflagged Node SQLite: Node 22.13+, 23.4+, or 24+. Other CLI commands retain Node 22.0 support.");
@@ -44,6 +45,7 @@ export async function runApplicationScenario(packet: PackedApplication, value: u
   const given = dictionary(scenario["actors"], 16), steps = scenario["steps"];
   if (Object.keys(given).length === 0 || !Array.isArray(steps) || steps.length < 1 || steps.length > 256) return fail("Choose 1–16 TEST actors and 1–256 scenario steps.");
   const actors = new Map<string, Actor>(), seeds: Uint8Array[] = [], keys = new Set<string>();
+  const accepted = new Map<string, FactRef>(), ownerRecords: ScenarioOwnerRecord[] = [], recorded = new Set<string>();
   let scope: LocalApplicationScope | null = null;
   try {
     for (const [name, actor] of Object.entries(given)) {
@@ -65,6 +67,7 @@ export async function runApplicationScenario(packet: PackedApplication, value: u
       if (!isRecord(value)) return value;
       if (Object.keys(value).length === 1) {
         if (Object.hasOwn(value, "$member")) return actor(value["$member"]).member;
+        if (Object.hasOwn(value, "$fact")) return accepted.get(label(value["$fact"])) ?? fail("The saved request has no accepted native fact.");
         if (Object.hasOwn(value, "$scope")) return value["$scope"] === "self" && scope ? scope.at : fail("Only an existing local self scope can be named.");
         if (Object.hasOwn(value, "$reference")) {
           const kind = value["$reference"];
@@ -109,10 +112,13 @@ export async function runApplicationScenario(packet: PackedApplication, value: u
           if (Object.hasOwn(step, "save")) {
             const name = label(step["save"]); if (saved.has(name)) return fail("A saved request name is already used."); saved.set(name, signed);
           }
-          expected(await scope.submit(signed), step["expect"]);
+          const answer = await scope.submit(signed); expected(answer, step["expect"]);
+          if (Object.hasOwn(step, "save") && answer.answer === "accepted") accepted.set(label(step["save"]), parseStrict(canonicalize(answer.receipt.fact)) as FactRef);
         } else if (Object.hasOwn(step, "retry")) {
           object(step, ["retry", "expect"]); const signed = saved.get(label(step["retry"]));
-          if (!signed) return fail("A retry names no saved signed request."); expected(await scope.submit(signed), step["expect"]);
+          if (!signed) return fail("A retry names no saved signed request.");
+          const answer = await scope.submit(signed); expected(answer, step["expect"]);
+          if (answer.answer === "accepted") accepted.set(label(step["retry"]), parseStrict(canonicalize(answer.receipt.fact)) as FactRef);
         } else if (Object.hasOwn(step, "advance")) {
           object(step, ["advance"]); time = timestamp(step["advance"]); await scope.advance(time);
         } else if (Object.hasOwn(step, "assert")) {
@@ -125,7 +131,19 @@ export async function runApplicationScenario(packet: PackedApplication, value: u
           for (const key of ["values", "parties", "refs"] as const) if (Object.hasOwn(wanted, key)) for (const [slot, wantedValue] of Object.entries(dictionary(wanted[key], 64))) {
             if (!Object.hasOwn(item[key], slot) || canonicalize(item[key][slot]) !== canonicalize(resolve(wantedValue))) return fail(`Item ${id} has an unexpected ${key}.${slot}.`);
           }
-        } else return fail("Expected act, retry, advance or assert.");
+        } else if (Object.hasOwn(step, "owner-record")) {
+          object(step, ["owner-record"]);
+          const record = object(step["owner-record"], ["owner", "command", "outcome"]), owner = label(record["owner"]);
+          // Only a saved accepted receipt may be recorded. An arbitrary fact,
+          // refused request or head statement cannot stand in for a command.
+          const reference = object(record["command"], ["$fact"]), command = accepted.get(label(reference["$fact"]));
+          if (!command) return fail("The owner record names no accepted native request.");
+          const outcome = record["outcome"];
+          if (outcome !== "confirmed" && outcome !== "refused" && outcome !== "unknown") return fail("Expected a labelled scenario-owner outcome.");
+          const key = canonicalize(command);
+          if (recorded.has(key)) return fail("The scenario owner already recorded this command."); recorded.add(key);
+          ownerRecords.push({ label: "non-native-scenario-owner", owner, command: parseStrict(key) as FactRef, outcome });
+        } else return fail("Expected act, retry, advance, assert or owner-record.");
       } catch (error) {
         if (error instanceof ApplicationScenarioError || error instanceof runtime.LocalApplicationError) throw new ApplicationScenarioError(`${name}, step ${index + 1}: ${error.message}`);
         throw error;
@@ -133,6 +151,6 @@ export async function runApplicationScenario(packet: PackedApplication, value: u
     }
     const replay = await scope.replay();
     if (replay.report.mode !== "replay" || replay.report.result !== "consistent") return fail(`${name}: native replay ${replay.report.result}.`);
-    return { name, steps: steps.length, replay, authority: "scripted-test-grants" };
+    return { name, steps: steps.length, replay, authority: "scripted-test-grants", ownerRecords };
   } finally { try { scope?.close(); } finally { for (const seed of seeds) seed.fill(0); } }
 }
