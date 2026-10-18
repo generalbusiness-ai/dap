@@ -1,6 +1,6 @@
 /** Declarative local scenarios. No scenario module or application server code
  * is imported. TEST keys and authority are local stand-ins, stated in reports. */
-import type { Answer, FactRef, FieldValue, MemberId, MemberRef, ScopeKind, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
+import type { Answer, Digest, FactRef, FieldValue, MemberId, MemberRef, ScopeKind, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, isRecord, newIncarnation, parseStrict, scopeIdOf } from "@generalbusiness/artroom-bytes";
 import { secretSigner, signedIntent, type Asked, type PackedApplication, type Signer } from "@generalbusiness/artroom-client";
 import { timeMs } from "@generalbusiness/dap-derive";
@@ -33,15 +33,18 @@ function reference(kind: ScopeKind): ScopeRef {
 }
 interface Actor { signer: Signer; member: MemberRef; actions: string[] }
 export interface ScenarioOwnerRecord { readonly label: "non-native-scenario-owner"; readonly owner: string; readonly command: FactRef; readonly outcome: "confirmed" | "refused" | "unknown" }
-export interface ApplicationScenarioResult { readonly name: string; readonly steps: number; readonly replay: Verification; readonly authority: "scripted-test-grants"; readonly ownerRecords: readonly ScenarioOwnerRecord[] }
+export interface ApplicationScenarioResult { readonly name: string; readonly definition: Digest; readonly steps: number; readonly replay: Verification; readonly authority: "scripted-test-grants"; readonly ownerRecords: readonly ScenarioOwnerRecord[] }
 
 export async function runApplicationScenario(packet: PackedApplication, value: unknown): Promise<ApplicationScenarioResult> {
   if (!supportsLocalSqlite(process.versions.node)) return fail("Local scenarios require unflagged Node SQLite: Node 22.13+, 23.4+, or 24+. Other CLI commands retain Node 22.0 support.");
   // The caller supplies bounded, strict JSON from readApplicationScenario.
   // Own that parsed value before signing/import awaits or caller edits.
-  const scenario = object(parseStrict(canonicalize(value)), ["v", "name", "time", "actors", "founding", "steps"]);
+  const scenario = object(parseStrict(canonicalize(value)), ["v", "name", "time", "actors", "founding", "steps"], ["definition"]);
   if (scenario["v"] !== 1) return fail("Expected scenario version 1.");
   const name = label(scenario["name"]); let time = timestamp(scenario["time"]);
+  const selected = Object.hasOwn(scenario, "definition") ? scenario["definition"] : packet.package.semantic.entry;
+  if (typeof selected !== "string" || !packet.package.semantic.definitions.some(part => part.id === selected)) return fail("Select a local definition from the verified package closure.");
+  const definition = selected as Digest;
   const given = dictionary(scenario["actors"], 16), steps = scenario["steps"];
   if (Object.keys(given).length === 0 || !Array.isArray(steps) || steps.length < 1 || steps.length > 256) return fail("Choose 1–16 TEST actors and 1–256 scenario steps.");
   const actors = new Map<string, Actor>(), seeds: Uint8Array[] = [], keys = new Set<string>();
@@ -85,7 +88,7 @@ export async function runApplicationScenario(packet: PackedApplication, value: u
     const signed = await signedIntent(actor(founding["actor"]).signer, { to: null, kind: "found", fields: fields(founding["fields"]) }, { now: timeMs(time)! });
     const runtime = await import("./application-local.ts");
     const held: LocalActor[] = [...actors.values()].map(actor => ({ key: actor.signer.key, member: actor.member, actions: actor.actions }));
-    scope = await runtime.LocalApplicationScope.found(packet, signed, held, time).catch(error => {
+    scope = await runtime.LocalApplicationScope.found(packet, signed, held, time, definition).catch(error => {
       if (error instanceof runtime.LocalApplicationError) return fail(`${name}: ${error.message}`);
       throw error;
     });
@@ -156,6 +159,6 @@ export async function runApplicationScenario(packet: PackedApplication, value: u
     }
     const replay = await scope.replay();
     if (replay.report.mode !== "replay" || replay.report.result !== "consistent") return fail(`${name}: native replay ${replay.report.result}.`);
-    return { name, steps: steps.length, replay, authority: "scripted-test-grants", ownerRecords };
+    return { name, definition, steps: steps.length, replay, authority: "scripted-test-grants", ownerRecords };
   } finally { try { scope?.close(); } finally { for (const seed of seeds) seed.fill(0); } }
 }

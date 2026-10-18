@@ -8,14 +8,24 @@ import { packApplication, secretSigner } from "@generalbusiness/artroom-client";
 import { LocalApplicationScope } from "../src/application-local.ts";
 import { ApplicationScenarioError, runApplicationScenario, supportsLocalSqlite } from "../src/application-scenarios.ts";
 
-async function packet(withCitation = false) {
+async function packet(withCitation = false, withParent = false) {
   const declaration: DeclaredDefinition = JSON.parse(await readFile(new URL("../../../apps/counter/definition.json", import.meta.url), "utf8"));
   // This one fixture augments the real Counter with a comment that carries a
   // typed local fact; it is not a proposed Counter application change.
   if (withCitation) declaration.acts["cite"] = { step: "comment", on: null, grant: "counting.control", also: {}, fields: { source: { type: "fact", kind: ["initialize"], under: declaration.name, required: true } }, guards: [], effects: [], sends: [], attention: [] };
   const id = definitionDigest(declaration);
+  const parent: DeclaredDefinition = {
+    format: "artroom-definition-1", name: "parent-fixture", profile: { name: "restricted", version: 1 }, capabilities: [], genesis: "establish",
+    items: { root: { many: false, max: 1, initial: "open", states: { open: { final: false } }, parties: {}, refs: {}, values: {} } },
+    acts: {
+      establish: { step: "open", on: "root", grant: "fixture.create", also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [] },
+      spawn: { step: "transition", on: "root", grant: "fixture.create", also: {}, fields: {}, guards: [], effects: [], attention: [],
+        sends: [{ create: { kind: "lane", definition: id, fields: { opener: { signer: true }, target: { const: 10 } }, result: {} } }] },
+    }, receives: {}, timed: {}, rules: {},
+  };
+  const parentId = definitionDigest(parent);
   return packApplication({ name: "ai.generalbusiness.counter", version: "0.1.0", semantic: {
-    v: 1, entry: id, definitions: [{ id, bytes: canonicalize(declaration) }], host: { execution: "recorded-do", profiles: ["restricted@1"] }, capabilities: [], roles: {}, projections: {}, predecessor: null,
+    v: 1, entry: withParent ? parentId : id, definitions: [{ id, bytes: canonicalize(declaration) }, ...(withParent ? [{ id: parentId, bytes: canonicalize(parent) }] : [])], host: { execution: "recorded-do", profiles: ["restricted@1"] }, capabilities: [], roles: {}, projections: {}, predecessor: null,
   }, presentation: { v: 1, entry: "index.html", assets: [{ path: "index.html", mediaType: "text/html", bytes: "" }], descriptions: {} } }, secretSigner(new Uint8Array(32).fill(41)));
 }
 function scenario(): any {
@@ -40,6 +50,18 @@ test("data scenarios judge explicit grants, reuse saved signatures, assert nativ
   const first = await runApplicationScenario(await packet(), scenario());
   expect(first).toMatchObject({ name: "counter-standard", steps: 8, authority: "scripted-test-grants", replay: { why: null, report: { mode: "replay", result: "consistent", target: { seq: 2 } } } });
   expect(first.replay.report.trusts.join(" ")).toContain("authority");
+});
+
+test("a scenario selects only a verified closure definition as its explicit local root", async () => {
+  const packed = await packet(false, true), counter = packed.package.semantic.definitions.find(part => part.id !== packed.package.semantic.entry)!.id;
+  const input = scenario(); input.definition = counter;
+  const result = await runApplicationScenario(packed, input).then(result => result, error => error);
+  expect(result).toMatchObject({ definition: counter, replay: { why: null, report: { result: "consistent", target: { seq: 2 } } } });
+  expect(await refused(() => runApplicationScenario(packed, scenario()))).toBeInstanceOf(ApplicationScenarioError);
+  for (const definition of [null, {}, "latest", `sha256:${"f".repeat(64)}`]) {
+    const bad = scenario(); bad.definition = definition;
+    expect(await refused(() => runApplicationScenario(packed, bad))).toBeInstanceOf(ApplicationScenarioError);
+  }
 });
 
 test("signing without submitting preserves old revisions and expiry for a later native judgment", async () => {

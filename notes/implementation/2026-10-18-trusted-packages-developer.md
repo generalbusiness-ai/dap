@@ -400,6 +400,34 @@ Logs use `/tmp/artroom-m1-deferred-sign-` and
 `/tmp/artroom-m1-control-deferred-`. No native signature, lifetime,
 idempotency, revision or replay behavior changed.
 
+## Selecting a local definition within the package
+
+A scenario may now name an explicit `definition` digest already inside
+the package's verified definition closure. Omission selects the package
+entry. The local runner rechecks the signed package bytes and refuses a
+selection outside that closure before constructing its SQLite scope.
+It uses the selected definition's native digest in the actual root seed and
+genesis. The result and CLI output name that local root definition.
+
+This permits G0's one package to retain site as its entry while checking a
+room's own scenario. Each run is still one scripted local directory root.
+It does not deliver child requests, create a native multi-scope host,
+replace M2a, or make the separately judged G0 multi-scope fixture a hosted
+application. The definition selection is developer scenario data and changes
+no package identity.
+
+Nineteen focused scenario/local/pack/bin cases pass
+(`dee125`/`0c279c`, exit 0); test/source typecheck passes
+(`420566`). The selected-root case packages the real Counter beneath a
+small explicitly labelled parent fixture and runs Counter's native scenario
+against its selected digest. Omitting that selection cannot accidentally
+run Counter beneath the parent; null, malformed, floating and absent digests
+are refused. A one-line control that ignores the selected root distinguishes
+the intended assertion and restores source (`5b52e9`/`43c2fb`; see
+`/tmp/artroom-m1-control-selected-root-20261018.log` for the assertion).
+No native seed, closure, genesis, judge or replay
+implementation changed. No gate or publication ran.
+
 ## Remaining developer work
 
 Shared browser joining, storage and request custody; browser bundling;

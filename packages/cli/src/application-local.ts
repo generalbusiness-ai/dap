@@ -76,16 +76,20 @@ export class LocalApplicationScope {
 
   /** The root's actual genesis is judged from this retained signed founding.
    * No handmade genesis, activation entry or folded application state is used. */
-  static async found(packet: PackedApplication, founding: SignedIntent, actors: readonly LocalActor[], now: Timestamp): Promise<LocalApplicationScope> {
+  static async found(packet: PackedApplication, founding: SignedIntent, actors: readonly LocalActor[], now: Timestamp, selected?: Digest): Promise<LocalApplicationScope> {
     if (timeMs(now) === null || new Set(actors.map(actor => actor.key)).size !== actors.length) throw new LocalApplicationError("Choose a valid local time and distinct explicit actor keys.");
     const owned = readApplicationPackage(packet.bytes, packet.ids.release);
-    const name = scopeIdOf({ v: 1, kind: "directory", definition: owned.package.semantic.entry,
+    // Developer scenarios may select a definition already inside the verified
+    // closure. This is still a scripted single root, not child transport.
+    const root = selected ?? owned.package.semantic.entry;
+    const entryPart = owned.package.semantic.definitions.find(part => part.id === root);
+    if (!entryPart) throw new LocalApplicationError("The selected local definition is outside the verified package closure.");
+    const name = scopeIdOf({ v: 1, kind: "directory", definition: root,
       creator: null, cause: intentDigest(founding.intent), ordinal: 0 });
     const scope = new LocalApplicationScope(name, actors, now);
     try {
       const definitions = owned.package.semantic.definitions.map(part => parseStrict(part.bytes) as import("@generalbusiness/dap-contract").DeclaredDefinition);
-      const entry = definitions.find((_definition, index) => owned.package.semantic.definitions[index]!.id === owned.package.semantic.entry);
-      if (!entry) throw new LocalApplicationError("The local entry definition is absent.");
+      const entry = parseStrict(entryPart.bytes) as import("@generalbusiness/dap-contract").DeclaredDefinition;
       const answer = await scope.#core.create(founding, entry, definitions);
       if (answer.answer !== "accepted") throw new LocalApplicationError(`Local founding ${answer.answer}: ${answer.reason}.`);
       return scope;
