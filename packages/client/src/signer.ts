@@ -6,4 +6,3 @@ export interface Signer {
   /** The signature over `bytes`, as unpadded base64url of its 64 bytes. */
   sign(bytes: Uint8Array): Base64Url | Promise<Base64Url>;
 }
-

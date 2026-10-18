@@ -32,4 +32,3 @@ export async function applicationResolverFixture(format: "sha1" | "sha256", byte
   };
   return { packet, uri, commit, objects, trust, open, opened, closed: () => closed, key: applicationReleaseKey(packet.ids.release), store: new ApplicationContentStore(env.APPLICATION_CONTENT, trust, PROPOSED_BOUNDS) };
 }
-
