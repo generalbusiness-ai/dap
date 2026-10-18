@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/platform/package.json","body":{"commit":"ad39fdf16dcb4fc5b6f961107757349a5ea323e7","path":"packages/platform/package.json"}}
+{"kind":"artifact","text":"Merge published the current artifact at packages/platform/src/application-install-creation.ts","body":{"commit":"ad39fdf16dcb4fc5b6f961107757349a5ea323e7","path":"packages/platform/src/application-install-creation.ts"}}
