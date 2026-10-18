@@ -123,6 +123,59 @@ submitted for this checkpoint.
 
 ## Git release address proposal
 
+The Node-only `dap pack [directory] [--out file] [--publisher key-name]`
+now reads `dap.application.json`, checks each listed native declaration with
+`validateDefinition` and `RULE_PROFILES`, and writes a signed package through
+an existing named key (default `operator`). It creates no key or room config,
+and publishes complete bytes with an exclusive hard link; an existing file
+or symlink is not replaced. Temporary/output files are owner-only. Printed
+lines contain the file and public identities; a held key copy is cleared.
+
+The source config names its entry definition file, complete definition list,
+host requirements, projections, capabilities, roles, predecessor, and a
+presentation with entry, descriptions and `{path, file, mediaType}` assets.
+Source JSON may have ordinary whitespace; packaged native bytes are canonical.
+Source paths stay below the explicitly chosen root without dot segments.
+Directory symlinks, leaf symlinks and non-regular files are refused. File size
+is checked before a fixed-size descriptor read and JSON/base64 work, with
+metadata checked afterwards. These checks detect ordinary concurrent edits;
+they do not promise hostile-filesystem isolation or a whole-directory snapshot.
+Current native validation uses `PROPOSED_BOUNDS`; installation still validates
+under the host's actual bounds. There is no browser bundle or scenario command
+in this pack checkpoint yet.
+
+Five focused filesystem/CLI cases pass (`a1212a`, exit 0), including both
+real Counter and Lending declaration files, repeated exact package bytes,
+file/symlink output preservation, pre-sign native rule refusal, path and
+source allowances, key custody, extra-role refusal and the actual `dap` bin
+from an external working directory with a TEST key and no room config.
+The first run (`6c00e0`, exit 1) found a fixture's `/var` versus `/private/var`
+alias mismatch; resolving its temporary root corrected the assertion.
+Production typecheck passes (`c5e1b3`), as does the final CLI test typecheck
+(`22dcb1`). No tool installation or manifest/lock change was needed.
+
+Native-rule admission (`7d4780`/`49d33f`) and pre-read source allowance
+(`e69a5e`/`4d5196`) controls each exit 0: normal runs pass five cases, and
+the fault fails one intended assertion. Source is restored. The allowance
+fault reaches the portable codec's later limit instead of the filesystem
+refusal, distinguishing the earlier boundary. The first native control
+(`ddb03a`, exit 2) selected Node's runner because the CLI package's test script
+contains both runners; it is inconclusive. The corrected invocation uses the
+client package's Vitest runner with explicit CLI root/config and this one file.
+
+A retained local pack example is
+`/tmp/artroom-m1-pack-example-20261018/application.dap.json` (6,417 bytes).
+It contains the real Lending definition and a labelled static fixture page,
+signed by the public TEST seed of 32 bytes all equal to 23. This is a pack
+format witness, not the converted Lending screen, a trusted release or an
+installation. Its output is recorded in
+`/tmp/artroom-m1-pack-example-output-20261018.json`:
+
+- Semantic: `sha256:fb39c9f3f2acac8abf44f49de60b7a244068e7d54df11f8684d65053f7c601fd`.
+- Presentation: `sha256:3920d45cb70638480a53682b2c6340e2da71efa8a1f7c64e13456704f3781418`.
+- Release: `sha256:5e4a2a6d52ded4ecc881e55c2fcba21cdb63914261013f526e832baed9c5be2b`.
+- Publisher: `key_Md6-VdN8cidosTcTHKpghwgLLgtguUvXhdFFdc-kmLw`.
+
 Proposed spelling: `git+https://<host>/<repository>.git/@<full-commit>/<path>`.
 The commit is lowercase full SHA-1 or SHA-256. Repository and tree-path
 segments use canonical percent encoding; queries, fragments, credentials,
@@ -141,8 +194,8 @@ planner confirmation, not an existing resolver or published release.
 
 ## Remaining developer work
 
-Shared browser joining, storage and request custody; filesystem pack and
-native declaration checks; new/dev/check; Counter/Lending package
+Shared browser joining, storage and request custody; browser bundling;
+new/dev/check; Counter/Lending package
 conversion; and the matching browser evidence remain due. Generated
 application asset modules have not been rebuilt for this source checkpoint;
 the complete package conversion will replace their host composition.
