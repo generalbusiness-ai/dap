@@ -406,13 +406,56 @@ extends the existing full climate witness rather than creating another
 parallel version of that same story. The application definitions are
 unchanged from the preceding eighteen-case site checkpoint.
 
+## Full private M1 package and declarative scenario bridge
+
+The committed G0 code at `08d2445d6` now passes the actual M1 check bin at
+`7a1d04bc4`. The retained fixture package contains both exact native
+definitions, with site as the package entry and room in its create closure.
+The site scenario has seven steps; the room scenario explicitly selects that
+room definition and has 199 steps. It commissions all 100 benches, records
+the concurrent fault/task/watering story, submits the authorization signed
+before the hold, and asserts the original moved-revision refusal, separate
+device evidence, exact incident range and independent stale deadlines.
+Agents name their explicit TEST controllers. The eight simulated owner
+outcomes remain separately labelled side records.
+
+The actual command exits 0 (`ac35f6`/`1f5c49`): both definitions validate,
+and native Core/Node SQLite replay is consistent through sequence 5 for the
+site fixture and 160 for the room fault. The fault input is 37,887 bytes,
+within M1's existing 64 KiB/256-step allowances. The process runs in an
+external scratch directory with invalid empty custody variables; it reads
+no operator setup or key and writes no release package.
+
+Semantic id:
+`sha256:c000fdac0decf912cd03f37e087638f59e7bf1c6821c9566c4fce04f599d3245`.
+Presentation id:
+`sha256:923b11ed38f7771ba6a010b18e61a69f46367194f00c0e4b77171000fdbbba9c`.
+The presentation is a labelled static fixture page, with no production
+screen claim. The site root's creation sends stay queued in M1's single-root
+adapter; actual native child births/delivery/confirmation remain the separate
+G0 fixture witness above. This is not a public Main CLI, trusted install,
+M2a, enrollment, hosted room, device owner, real sensor, archive admission or
+deployment witness.
+
+The harness is `/tmp/artroom-g0-full-m1-bridge-20261018.mjs`; the retained
+project is `/tmp/artroom-g0-full-m1-bridge-20261018-Y8yXRM`. Result log:
+`/tmp/artroom-g0-full-m1-bridge-result-20261018.log`. Actual CLI stderr is
+empty. The parent loader's DEP0205 deprecation warning remains in the log.
+The exact eight-file, 81,354-byte inventory is
+`/tmp/artroom-g0-full-m1-bridge-proof-20261018.json`, SHA-256
+`27089d602e76908a7602fe07de79d8a54d0802a5639661d9ee3a9acee859e156`.
+It records both clean code heads/trees and verifies ten native judge, genesis,
+guard, rule, fixture, Core, SQLite, turn and replay paths byte-exact with
+reviewed Main `bb3d3062`. There is no copied M1 implementation in G0.
+
 ## Remaining G0 work
 
-The final declarative package/scenario witness remains due. M1's
-`dap check` now exists on its separate
-unlanded developer branch; G0's final package/scenario witness depends on
-that reviewed public path, without copying unlanded M1 implementation into
-this Source. No G0 gate or Source submission has run yet. Gate runs once on
+The checked declarative fixture must become the package's maintained scenario
+data and run through reviewed public M1. M1's `dap check` remains on its
+separate unlanded developer branch; its browser kit, new/dev and real
+Counter/Lending conversion are still in progress. G0's final witness depends
+on that reviewed public path. No G0 gate or Source submission has run yet.
+Gate runs once on
 the completed submitted head before independent review and local landing.
 This is not G0 acceptance, a host install, a native device owner, a real
 sensor/device, photo custody, production archive admission or a deployment.
