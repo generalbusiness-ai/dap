@@ -15,6 +15,7 @@ import { SmartHttpGit, type RawGitObject, type SmartHttpOptions } from "@general
 import { SmartHttpSource } from "@generalbusiness/artroom-git/http-read";
 import type { DestinationBinding, DestinationInspection, DestinationProvider, DestinationRepository } from "./destination-host.ts";
 import type { RegisterProvider } from "./register-host.ts";
+import { fixtureArchiveProvider, type FixtureArchivePorts } from "./archive-host.ts";
 
 export interface GitHubProviderOptions {
   app: GitHubAppOptions;
@@ -72,6 +73,18 @@ export class GitHubProvider implements RegisterProvider, DestinationProvider {
 
   /** Deployment/bootstrap must establish the configured installation account. */
   validateInstallation(): Promise<void> { return this.#app.validateInstallation(); }
+
+  /** No production archive mint: callers must supply explicit fixture ports. */
+  fixtureArchive(ports: FixtureArchivePorts) {
+    return fixtureArchiveProvider(ports, {
+      transport: (repository, plaintext) => ({ ...this.#transport(this.#remote(repository)), ...(plaintext === undefined ? {} : { authorization: gitAuthorization(plaintext) }) }),
+      identity: async (repository, plaintext, allowed) => {
+        if (!allowed()) return bad();
+        await requireGitHubRepositoryIdentity((name, token) => this.#app.repository(name, token), repository, plaintext);
+        if (!allowed()) return bad();
+      },
+    });
+  }
 
   async createRepository(name: string): Promise<unknown> {
     const configured = this.#options.creation;
@@ -191,7 +204,8 @@ export class GitHubProvider implements RegisterProvider, DestinationProvider {
  * read-back, is "accepted". An applied ref cannot settle a lost or incomplete
  * own answer. Nothing is retried.
  */
-export async function sendOnce(request: Parameters<DestinationProvider["send"]>[0], transport: SmartHttpOptions, readBack: () => Promise<string | null>): Promise<unknown> {
+type GitSend = Omit<Parameters<DestinationProvider["send"]>[0], "repository" | "binding" | "token"> & Partial<Pick<Parameters<DestinationProvider["send"]>[0], "repository" | "binding" | "token">>;
+export async function sendOnce(request: GitSend, transport: SmartHttpOptions, readBack: () => Promise<string | null>): Promise<unknown> {
   const bounds = transport.bounds ?? READ_BOUNDS;
   // Capture references and reject the whole allowance before copying any
   // body. The owned copies still precede the first asynchronous read.
@@ -200,7 +214,7 @@ export async function sendOnce(request: Parameters<DestinationProvider["send"]>[
   let bytes = 0;
   for (const object of request.objects) {
     const { id, kind: type, body: data } = object;
-    if (ids.has(id) || data.length > transport.maxBytes - bytes) return bad();
+    if (ids.size >= bounds.closureObjects || ids.has(id) || data.length > transport.maxBytes - bytes) return bad();
     ids.add(id); bytes += data.length;
     pending.push({ id, type, data });
   }

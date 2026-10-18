@@ -168,6 +168,18 @@ export class ArchiveRows {
     return value as { pending: boolean; stopped: boolean; next: Timestamp | null };
   }
   wake(budget = new ArchiveBudget()): Timestamp | null { const wake = this.#wake(budget); return wake?.stopped ? null : wake?.next ?? null; }
+  /** Persist a pre-Mark retry before a target or parent lookup can await.
+   * The pending flag protects this backoff from new entry notifications;
+   * it does not introduce a second commit or selection. */
+  defer(at: Timestamp, budget = new ArchiveBudget()): void {
+    this.#sql.transaction(() => {
+      if (timeMs(at) === null) return refuse("unavailable");
+      if (this.#wake(budget)?.stopped) return;
+      budget.spend({ calls: 1, inputWork: 4096 }); budget.check();
+      this.#sql.exec("INSERT INTO meta (k, v) VALUES (?, ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v", WAKE, canonicalize({ pending: true, stopped: false, next: at })).toArray();
+      budget.check();
+    });
+  }
   clearWake(budget = new ArchiveBudget()): void {
     budget.spend({ calls: 1, inputWork: 4096 }); budget.check();
     this.#sql.exec("INSERT INTO meta (k, v) VALUES (?, ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v", WAKE, canonicalize({ pending: false, stopped: false, next: null })).toArray();
