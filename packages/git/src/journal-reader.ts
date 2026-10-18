@@ -15,11 +15,15 @@ export interface JournalReadBudget extends JournalBudget {
   /** Reserve physical object body bytes before asking the port to load them. */
   bytes(size: number): void;
   scope(): void;
+  /** Node plumbing uses the original deadline for the actual child process. */
+  remainingMilliseconds?(): number;
 }
 export interface JournalReadRepository {
   format(budget: JournalReadBudget): Promise<JournalFormat>;
   resolve(ref: string, budget: JournalReadBudget): Promise<string | null>;
   object(id: string, limit: number, budget: JournalReadBudget): ReturnType<JournalObjectSource["object"]>;
+  /** Await already-started owned I/O; starts no new read. */
+  settle?(): Promise<void>;
 }
 export interface JournalReadLocation { readonly scope: ScopeId; readonly ref?: string; readonly commit?: string; readonly object?: string; readonly path?: string }
 export type JournalReadOutcome = "mismatch" | "refused" | "unavailable" | "timeout" | "limit" | "not-found";
