@@ -65,14 +65,35 @@ test("SDK module references preserve genuine imports and rewrite declarations wi
     assert.equal(publicBytes.dependencies["@noble/curves"], "2.4.0");
     assert.throws(() => publishManifest(platform, { ...platformManifest, name: "@generalbusiness/artroom-platform" }, "0.1.0-dev.2"), /unsupported-source-manifest/);
     assert.throws(() => publishManifest(platform, { ...platformManifest, exports: { ...platformManifest.exports, "./private": "./src/private.ts" } }, "0.1.0-dev.2"), /unsupported-source-manifest/);
-    assert.deepEqual(productionInputs(replay, ["packages/replay/src/index.ts", "packages/replay/src/bin.ts"]), { names: ["packages/replay/src/index.ts"], omitted: ["packages/replay/src/bin.ts"] });
+    const replayManifest = JSON.parse(readFileSync(new URL("packages/replay/package.json", root), "utf8"));
+    const publicReplay = publishManifest(replay, replayManifest, "0.1.0-dev.2");
+    assert.deepEqual(Object.keys(publicReplay.exports), ["."]);
+    assert.equal(publicReplay.dependencies["@generalbusiness/artroom-git"], undefined);
+    assert.equal(publicReplay.devDependencies, undefined);
+    assert.throws(() => publishManifest({ ...replay, excludedSourceExports: { ...replay.excludedSourceExports, "./extra": "./src/extra.ts" } }, replayManifest, "0.1.0-dev.2"), /source-export-exclusions/);
+    assert.throws(() => publishManifest(replay, { ...replayManifest, dependencies: { ...replayManifest.dependencies, "@generalbusiness/artroom-git": replayManifest.version } }, "0.1.0-dev.2"), /unsupported-source-dependencies/);
+    assert.deepEqual(productionInputs(replay, ["packages/replay/src/index.ts", "packages/replay/src/bin.ts", "packages/replay/src/git.ts"]), { names: ["packages/replay/src/index.ts"], omitted: ["packages/replay/src/bin.ts", "packages/replay/src/git.ts"] });
     assert.throws(() => productionInputs({ ...replay, excludedInputs: ["src/index.ts"] }, ["packages/replay/src/index.ts", "packages/replay/src/bin.ts"]), /source-input-exclusions/);
     const stage = join(dir, "production"); mkdirSync(join(stage, "dist/src"), { recursive: true });
     writeFileSync(join(stage, "package.json"), JSON.stringify({ name: "@generalbusiness/dap-replay", version: "0.1.0-dev.2", type: "module", exports: { ".": { types: "./dist/src/index.d.ts", default: "./dist/src/index.js" } } }));
     writeFileSync(join(stage, "dist/src/index.js"), "export {};\n"); writeFileSync(join(stage, "dist/src/index.d.ts"), "export {};\n");
     assert.equal(outputClosure(stage, replay, "0.1.0-dev.2").length, 3);
-    writeFileSync(join(stage, "dist/src/bin.js"), "process.exitCode = 0;\n");
-    assert.throws(() => outputClosure(stage, replay, "0.1.0-dev.2"), /excluded-output/);
+    for (const name of ["bin.js", "bin.d.ts", "git.js", "git.d.ts"]) {
+      const file = join(stage, "dist/src", name);
+      writeFileSync(file, "export {};\n");
+      assert.throws(() => outputClosure(stage, replay, "0.1.0-dev.2"), /excluded-output/);
+      rmSync(file);
+    }
+    for (const ref of ["node:fs", "@generalbusiness/artroom-git/journal-reader"]) {
+      for (const body of [`import '${ref}';`, `export * from '${ref}';`, `const load = () => import('${ref}');`]) {
+        writeFileSync(join(stage, "dist/src/index.js"), body);
+        assert.throws(() => outputClosure(stage, replay, "0.1.0-dev.2"), /bare-output-closure/);
+      }
+      writeFileSync(join(stage, "dist/src/index.js"), "export {};\n");
+      writeFileSync(join(stage, "dist/src/index.d.ts"), `import type { X } from '${ref}';`);
+      assert.throws(() => outputClosure(stage, replay, "0.1.0-dev.2"), /bare-output-closure/);
+      writeFileSync(join(stage, "dist/src/index.d.ts"), "export {};\n");
+    }
     const jsonataInput = "/owned/node_modules/jsonata/jsonata.js";
     const synthetic = { path: "<runtime>", kind: "import-statement", external: true };
     assert.equal(browserRuntimeEdge(jsonataInput, synthetic, jsonataInput), true);

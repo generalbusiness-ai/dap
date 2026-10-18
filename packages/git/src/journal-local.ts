@@ -13,7 +13,9 @@ const OBJECT_BYTES = 8 * 1024 * 1024;
 const CACHED_METADATA = 8192;
 const decoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 export class JournalLocalFailure extends Error {
-  constructor(readonly reason: "limit" | "timeout" | "unavailable", readonly step: string) { super(`journal-local-${step}-${reason}`); }
+  readonly reason: "limit" | "timeout" | "unavailable";
+  readonly step: string;
+  constructor(reason: "limit" | "timeout" | "unavailable", step: string) { super(`journal-local-${step}-${reason}`); this.reason = reason; this.step = step; }
 }
 export interface JournalLocalOptions {
   /** Trusted tool path, never read from clone metadata. Defaults to git on PATH. */
@@ -30,7 +32,9 @@ class LocalJournal implements JournalReadRepository {
   readonly #program: string;
   readonly #milliseconds: number;
   readonly #environment: Record<string, string>;
-  constructor(readonly directory: string, options: JournalLocalOptions) {
+  readonly directory: string;
+  constructor(directory: string, options: JournalLocalOptions) {
+    this.directory = directory;
     this.#program = options.program ?? "git";
     this.#milliseconds = options.commandMilliseconds ?? 10_000;
     if (!Number.isSafeInteger(this.#milliseconds) || this.#milliseconds < 1 || this.#milliseconds > 30_000) throw new JournalLocalFailure("limit", "configuration");

@@ -1,7 +1,7 @@
 /** Portable archive adaptation. The trusted read port owns object parsing
  * and I/O. This module imports neither Git nor Node and changes no judge. */
 import { DOMAINS, type Digest, type FactRef, type Head, type RetainedInput, type ScopeId, type ScopeRef } from "@generalbusiness/dap-contract";
-import { isDigest, isEntry, isFactRef, isScopeId, rawRetainedJSON, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isDigest, isEntry, isFactRef, isScopeId, rawRetainedJSON, utf8 } from "@generalbusiness/artroom-bytes";
 import { PAGE_ENTRIES, PAGE_REPLY_BYTES, READ_SECONDS, RETAINED_REPLY_BYTES, type Allow, type HistorySource, type Page, type Stored, type Unread } from "./source.ts";
 import { LIMITS, SourceError, TRUSTS, verify, type Limits, type Options, type Verification } from "./verify.ts";
 
@@ -33,8 +33,9 @@ export interface ArchiveReadPort {
   settle?(): Promise<void>;
 }
 export interface ArchiveTextPort {
-  /** Digest only: no path from an archive is passed to this caller-selected port. */
-  read(digest: Digest, most: number, work: ArchiveReadWork): Promise<{ ok: true; bytes: string } | Unread>;
+  /** Raw decoded text, by digest only. The adapter supplies the native JSON
+   * string representation. No archive path reaches this caller-selected port. */
+  read(digest: Digest, most: number, work: ArchiveReadWork): Promise<{ ok: true; text: string } | Unread>;
   settle?(): Promise<void>;
 }
 export interface ArchiveSourceOptions { readonly seconds?: number; readonly limits?: Partial<Limits>; readonly texts?: ArchiveTextPort }
@@ -47,7 +48,8 @@ export type ArchiveVerification =
   | { readonly kind: "verification"; readonly archive: ArchiveDescriptor; readonly verification: Verification; readonly integrity?: Verification; readonly receipt?: ArchiveReceipt; readonly read: ArchiveReadStats };
 
 class Stopped extends Error {
-  constructor(readonly reason: "limit" | "timeout" | "unavailable") { super(`archive-${reason}`); }
+  readonly reason: "limit" | "timeout" | "unavailable";
+  constructor(reason: "limit" | "timeout" | "unavailable") { super(`archive-${reason}`); this.reason = reason; }
 }
 const natural = (value: number): boolean => Number.isSafeInteger(value) && value >= 0 && !Object.is(value, -0);
 const costKeys: readonly (keyof ArchiveCost)[] = ["entries", "attempts", "nodes", "calls", "metadata", "inputWork"];
@@ -59,7 +61,9 @@ class Work implements ArchiveReadWork {
   readonly #ceilings: ArchiveCost;
   #bytes = 0;
   #scopes = 0;
-  constructor(readonly limits: Limits, seconds?: number) {
+  readonly limits: Limits;
+  constructor(limits: Limits, seconds?: number) {
+    this.limits = limits;
     for (const value of Object.values(limits)) if (!natural(value)) throw new Stopped("limit");
     // HTTP bounds one read by READ_SECONDS. Clone validation has at most
     // this many scope reads, plus its own finite per-process deadlines.
@@ -115,7 +119,10 @@ function readFailure(error: unknown, scope: ScopeId): ArchiveFailure {
 class Session implements HistorySource {
   readonly #opened = new Map<ScopeId, Promise<ArchiveRead>>();
   failure: ArchiveFailure | null = null;
-  constructor(readonly port: ArchiveReadPort, readonly work: Work, readonly texts?: ArchiveTextPort) {}
+  readonly port: ArchiveReadPort;
+  readonly work: Work;
+  readonly texts: ArchiveTextPort | undefined;
+  constructor(port: ArchiveReadPort, work: Work, texts?: ArchiveTextPort) { this.port = port; this.work = work; this.texts = texts; }
   async open(scope: ScopeId): Promise<ArchiveRead> {
     if (this.failure) return this.failure;
     let pending = this.#opened.get(scope);
@@ -156,7 +163,9 @@ class Session implements HistorySource {
     if (!input && this.texts && (kind === "text" || kind === "value" && domain === DOMAINS.text)) {
       const supplied = await this.work.wait(() => this.texts!.read(digest, maximum, this.work));
       if (!supplied.ok) return supplied;
-      input = { kind, digest, bytes: supplied.bytes, ...(kind === "value" ? { domain: domain! } : {}) };
+      if (typeof supplied.text !== "string" || supplied.text.length > maximum) return unread("too-large");
+      this.work.spend({ inputWork: supplied.text.length * 8 });
+      input = { kind, digest, bytes: canonicalize(supplied.text), ...(kind === "value" ? { domain: domain! } : {}) };
     }
     if (!input) return unread("not-found");
     this.work.spend({ inputWork: input.bytes.length * 3 });
@@ -193,7 +202,8 @@ function receiptResult(fact: FactRef, archive: ArchiveData, integrity: Verificat
 export class ArchiveSource implements HistorySource {
   #direct: Session | null = null;
   readonly #options: ArchiveSourceOptions;
-  constructor(readonly port: ArchiveReadPort, options: ArchiveSourceOptions = {}) { this.#options = { ...options, ...(options.limits ? { limits: { ...options.limits } } : {}) }; }
+  readonly port: ArchiveReadPort;
+  constructor(port: ArchiveReadPort, options: ArchiveSourceOptions = {}) { this.port = port; this.#options = { ...options, ...(options.limits ? { limits: { ...options.limits } } : {}) }; }
   #session(limits?: Partial<Limits>): Session { return new Session(this.port, new Work({ ...LIMITS, ...this.#options.limits, ...limits }, this.#options.seconds), this.#options.texts); }
   #default(): Session { return this.#direct ??= this.#session(); }
   page(scope: ScopeId, from: number, allow: Allow): ReturnType<HistorySource["page"]> { return this.#default().page(scope, from, allow); }

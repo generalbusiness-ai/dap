@@ -23,6 +23,7 @@ The library runs under Node and under Workers.
 | `verify` | `verify(source, options, tally?)`: a `Verification`, which is the report and, in words, what was found. `tally`, a `Tally`, when it is given, counts the work of the replay over what it has already checked: a test counts work with it, and never times it. `Options`: the mode, the target scope ID, a known head, anchors, limits, bounds, `capabilities`: the rules of the capability versions the caller has code for; and `platform`: the data and the rules of the platform definitions the caller has code for, by name and version. This package has none of its own. A history under a platform definition is derived with those rules, and the report then lists `platformCode(named)` under `trusts`. `LIMITS`, `TRUSTS`, `SourceError`. |
 | `report` | `Report`, the contract's type, and `render(report, why?)`: the report in plain English. |
 | `cli` | `main(argv, io)`: the command, with no process state. `src/bin.ts` runs it under Node. |
+| `archive` | Portable `archiveSource(port)` and `verifyArchive(source, options)`. The trusted read port owns bounded object parsing and I/O; the wrapper preserves the native verifier's report and qualifies archive provenance. |
 
 ## Two modes
 
@@ -286,15 +287,52 @@ is taken with that anchor rather than derived from source history.
 ```
 artroom-replay <service URL> <scope ID> [--mode integrity|replay]
     [--head <seq>:<hash>] [--anchor <scope>:<seq>:<hash>]... [--json]
+artroom-replay --git <clone> [<scope ID>] [--mode integrity|replay]
+    [--head <seq>:<hash>] [--anchor <scope>:<seq>:<hash>]...
+    [--texts <directory>] [--receipt <file>] [--json]
 ```
 
 The default mode is `replay`. It prints the report in plain English, or
 with `--json` as `{ report, why }`.
 
+The clone command reads committed objects under each scope's
+`refs/artroom/journal/<scope ID>` ref. It starts no service read, checkout,
+fetch or recorded operation. It checks the entire archived prefix and
+canonical layout before native verification. The default head is the
+resolved archive's head and carries `archive-head` trust; `--head` is a
+separate caller pin. A missing foreign ref keeps the native missing
+dependency diagnosis. A snapshot can remain incomplete when its ancestry
+walk is unproved.
+
+`--receipt` selects a regular JSON file of at most 64 KiB with a native
+`fact` member. Its scope is used when no scope argument is given. After
+integrity and continuity through the full archive head, the wrapper reports
+the receipt as `archived`, `behind`, `mismatch` or `unverified`. A receipt is
+a caller's position pin; this check makes no authorization claim.
+`--texts` selects a separate directory of detached UTF-8 text files named
+`<64 lowercase digest hex digits>.txt`. Each text must match its digest.
+These files are bounded regular files; symlink leaves are refused. Archive
+tree paths never become filesystem paths.
+
+Clone JSON has `kind: "verification"`, an `archive` descriptor and the
+actual native `verification`, with optional `integrity` and `receipt`
+results. An unread or structurally invalid archive has
+`kind: "archive-failure"`, a typed reason and read location. It has no
+invented native target or coverage. `read.objectBytes` counts reserved
+object-body and caller-text buffers, not total process output or heap.
+Metadata and work counters are bounded separately. Limits and one original
+deadline are shared across the traversal. Owned local I/O is drained
+before a deadline outcome returns.
+
+The repository-only `./git` export supplies `gitSource(directory)`,
+`archiveTexts(directory)` and `readArchiveReceipt(file)` for Node. Git is
+only a development dependency of Replay. The public six-package portable
+SDK excludes that export, its Node composition and the command wrapper.
+
 | Exit code | Means |
 |---|---|
-| 0 | Consistent. |
-| 1 | Not consistent: mismatch, missing dependency, incomplete or unsupported definition. |
+| 0 | Consistent, and any supplied receipt is archived. |
+| 1 | Not consistent: mismatch, missing dependency, incomplete or unsupported definition; or the receipt is behind, mismatched or unverified. |
 | 2 | The command was not understood, or the target's history could not be read: it is not there, a read ran past its deadline, or a limit stopped the first read. |
 
 The command sends no reader credential.

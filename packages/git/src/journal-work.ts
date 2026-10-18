@@ -30,7 +30,9 @@ export const JOURNAL_LAYOUT_LIMITS = Object.freeze({
 export type JournalLayoutLimits = { -readonly [K in keyof typeof JOURNAL_LAYOUT_LIMITS]: number };
 export type JournalLayoutReason = "limit" | "timeout" | "unavailable" | "format" | "object-id" | "missing-object" | "object-mismatch" | "tree" | "commit" | "timestamp" | "manifest" | "input" | "missing-input" | "input-mismatch" | "parent";
 export class JournalLayoutRefusal extends Error {
-  constructor(readonly reason: JournalLayoutReason, readonly where?: string) { super(`journal-layout-${reason}`); }
+  readonly reason: JournalLayoutReason;
+  readonly where: string | undefined;
+  constructor(reason: JournalLayoutReason, where?: string) { super(`journal-layout-${reason}`); this.reason = reason; this.where = where; }
 }
 export function refuseJournal(reason: JournalLayoutReason, where?: string): never { throw new JournalLayoutRefusal(reason, where); }
 const natural = (n: number): boolean => Number.isSafeInteger(n) && n >= 0 && !Object.is(n, -0);
@@ -43,7 +45,9 @@ export class JournalWork {
   readonly limits: Readonly<JournalLayoutLimits>;
   #stopped = false;
   readonly used: JournalLayoutLimits = { objects: 0, trees: 0, files: 0, names: 0, depth: 0, objectBytes: 0, outputWork: 0 };
-  constructor(readonly budget: JournalBudget, limits: Partial<JournalLayoutLimits> = {}) {
+  readonly budget: JournalBudget;
+  constructor(budget: JournalBudget, limits: Partial<JournalLayoutLimits> = {}) {
+    this.budget = budget;
     if (Object.keys(limits).some(k => !Object.hasOwn(JOURNAL_LAYOUT_LIMITS, k))) refuseJournal("limit");
     const chosen = { ...JOURNAL_LAYOUT_LIMITS, ...limits };
     for (const k of keys) if (!natural(chosen[k]) || chosen[k] > JOURNAL_LAYOUT_LIMITS[k]) refuseJournal("limit");

@@ -39,7 +39,8 @@ export interface ReadJournal {
 }
 export type JournalReadResult = { readonly ok: true; readonly archive: ReadJournal } | JournalReadFailure;
 class InvalidArchive extends Error {
-  constructor(readonly result: JournalReadOutcome, message: string) { super(message); }
+  readonly result: JournalReadOutcome;
+  constructor(result: JournalReadOutcome, message: string) { super(message); this.result = result; }
 }
 function mismatch(why: string): never { throw new InvalidArchive("mismatch", why); }
 function refused(why: string): never { throw new InvalidArchive("refused", why); }
