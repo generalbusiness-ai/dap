@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/replay/package.json","body":{"commit":"0e63ba9296fc5392510fa14a626c1294efe2450a","path":"packages/replay/package.json"}}
+{"kind":"artifact","text":"Merge published the current artifact at packages/replay/src/archive.ts","body":{"commit":"0e63ba9296fc5392510fa14a626c1294efe2450a","path":"packages/replay/src/archive.ts"}}
