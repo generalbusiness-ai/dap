@@ -13,6 +13,7 @@ export const USAGE = [
   "  dap install --plan <base-url> [--host <git-host>] [--namespace <name>] [--cohort application|application-publication|counting-commitments|invitation-key]",
   "  dap install --planned [--cohort application|application-publication|counting-commitments|invitation-key]",
   "  dap check [<directory>]",
+  "  dap new <directory>",
   "  dap pack [<directory>] [--out <file>] [--publisher <existing-key-name>]",
   "  dap create <name> [--handle @you] [--branch main] [--again]",
   "  dap invite <@member> --role <role> [--hours 24] [--keep]",

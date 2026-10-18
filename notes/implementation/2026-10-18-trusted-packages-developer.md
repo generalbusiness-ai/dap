@@ -815,9 +815,49 @@ lock SHA-256 is
 Nothing was installed or fetched. No full gate or Source review is claimed
 for this continuing developer checkpoint.
 
+## New application template checkpoint
+
+`dap new <directory>` now writes a source template without opening config
+or operator custody. The basename supplies a short lowercase example name.
+The parent must exist, and an existing directory or symlink is refused.
+Files and directories are private by default. A filesystem failure can
+leave the newly created partial directory, which the command reports.
+
+The template supplies a native bounded notes definition, source config,
+browser entry with CSS, README and a five-step declarative scenario.
+The logical name uses the example domain `test.example` for the author to
+change. Explicit public TEST actors show author-only completion and refusal
+without a grant. The browser starter creates or reuses a non-extractable
+local key under the shared storage lock. It joins no membership and submits
+no native act. Application forms and host binding remain author work.
+
+The actual bin is launched outside the repository with empty custody paths.
+It creates the project, then that same bin checks native behavior and replay.
+Both owning cases pass (`5fb581`/`116369`), including existing-file and
+symlink preservation. CLI production/test typechecks pass (`adceca`).
+The MCP inventory passes five cases (`658b8a`), and both native server
+recipes pass (`cefaa1`/`32964a`). The exact local-only command set now
+includes new. No local command is represented as an MCP execution recipe.
+An author-guard control (`6f458b`/`ce7db9`) removes only that guard. The
+actual generated project's native check then detects Bob's wrongly accepted
+completion at step two. The intended assertion fails, and source is restored
+after the terminal subprocess. Logs use `/tmp/artroom-m1-new-`.
+
+The generated, compiled HTML/JS/CSS runs in cached Playwright 1.63.0 and
+Chromium 153.0.8010.12 because the Browser plugin is absent. The fresh
+profile verifies native IndexedDB/key metadata, private non-extractability
+and reuse after reload. URL, title, content, overlay and console checks pass.
+Desktop 960 by 720 and mobile 390 by 844 screenshots are inspected. No
+native act request is made (`4f48ad`, exit 0). The browser and loopback
+server close before return. This is a browser starter witness, not a native
+browser act, enrollment, package install, provider or deployment.
+Scratch harness: `/tmp/artroom-m1-new-browser-20261018.mjs`. Results and
+PNGs: `/tmp/artroom-m1-new-browser-20261018/`. Generated project:
+`/private/tmp/artroom-m1-new-browser-source-wSmekE/notes-preview`.
+
 ## Remaining developer work
 
-New/dev, Counter/Lending package conversion, and the matching browser
+Dev, Counter/Lending package conversion, and the matching browser
 evidence remain due. Existing public asset modules come from the foundation
 candidate. Compiler equivalence above leaves those assets unchanged.
 The complete package conversion will replace their host composition.

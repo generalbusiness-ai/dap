@@ -7,9 +7,22 @@ import type { Store } from "./store.ts";
 import { parse } from "./line.ts";
 import { ApplicationSourceError, packDirectory, prepareApplicationDirectory, readApplicationScenario } from "./application-files.ts";
 import { ApplicationScenarioError, runApplicationScenario } from "./application-scenarios.ts";
+import { newApplicationDirectory } from "./application-new.ts";
 
 export const PACK_USAGE = "dap pack [<directory>] [--out <file>] [--publisher <existing-key-name>]";
 export const CHECK_USAGE = "dap check [<directory>]";
+export const NEW_USAGE = "dap new <directory>";
+/** Local files only. A new application needs no config or operator key. */
+export async function newCommand(argv: readonly string[], cwd = process.cwd()): Promise<Outcome> {
+  if (argv.length !== 2 || argv[0] !== "new" || !argv[1] || argv[1].startsWith("--")) return { code: 2, lines: [NEW_USAGE] };
+  try {
+    const directory = await newApplicationDirectory(resolve(cwd, argv[1]));
+    return { code: 0, lines: [`Application: ${directory}`, "Next: run dap check in that directory.", "Scenario authority uses public TEST actors. The browser starter joins no room."] };
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "EEXIST") return { code: 1, lines: ["The application directory already exists; choose a new directory."] };
+    return { code: 1, lines: ["Could not create the application. Use a new lowercase directory name under an existing writable parent; partial files may remain."] };
+  }
+}
 /** Uses only public TEST publisher/actor keys, never a config directory or an
  * operator key. It prepares bytes in memory and writes no package output. */
 export async function checkCommand(argv: readonly string[], cwd = process.cwd()): Promise<Outcome> {
