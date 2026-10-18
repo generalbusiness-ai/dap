@@ -284,6 +284,15 @@
             "type": "integer",
             "minimum": 0
           },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
+          },
           "fields": {
             "type": "object"
           },
@@ -690,6 +699,15 @@
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
           },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
+          },
           "fields": {
             "type": "object",
             "properties": {},
@@ -800,6 +818,15 @@
           "resubmit": {
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
+          },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
           },
           "fields": {
             "type": "object",
@@ -912,6 +939,15 @@
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
           },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
+          },
           "fields": {
             "type": "object",
             "properties": {},
@@ -1017,6 +1053,15 @@
           "resubmit": {
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
+          },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
           },
           "fields": {
             "type": "object",
@@ -1168,6 +1213,15 @@
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
           },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
+          },
           "fields": {
             "type": "object",
             "properties": {
@@ -1314,6 +1368,15 @@
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
           },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
+          },
           "fields": {
             "type": "object",
             "properties": {
@@ -1446,6 +1509,15 @@
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
           },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
+          },
           "fields": {
             "type": "object",
             "properties": {
@@ -1577,6 +1649,15 @@
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
           },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
+          },
           "fields": {
             "type": "object",
             "properties": {
@@ -1704,6 +1785,15 @@
           "resubmit": {
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
+          },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
           },
           "fields": {
             "type": "object",
@@ -1834,6 +1924,15 @@
           "resubmit": {
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
+          },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
           },
           "fields": {
             "type": "object",
@@ -1970,6 +2069,15 @@
           "resubmit": {
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
+          },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
           },
           "fields": {
             "type": "object",
@@ -2251,6 +2359,15 @@
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
           },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
+          },
           "fields": {
             "type": "object",
             "properties": {},
@@ -2362,6 +2479,15 @@
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
           },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
+          },
           "fields": {
             "type": "object",
             "properties": {},
@@ -2467,6 +2593,15 @@
           "resubmit": {
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
+          },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
           },
           "fields": {
             "type": "object",
@@ -2598,6 +2733,15 @@
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
           },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
+          },
           "fields": {
             "type": "object",
             "properties": {
@@ -2722,6 +2866,15 @@
           "resubmit": {
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
+          },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
           },
           "fields": {
             "type": "object",
@@ -2876,6 +3029,15 @@
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
           },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
+          },
           "fields": {
             "type": "object",
             "properties": {
@@ -2994,6 +3156,15 @@
           "resubmit": {
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
+          },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
           },
           "fields": {
             "type": "object",
@@ -3119,6 +3290,15 @@
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
           },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
+          },
           "fields": {
             "type": "object",
             "properties": {},
@@ -3229,6 +3409,15 @@
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
           },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
+          },
           "fields": {
             "type": "object",
             "properties": {},
@@ -3338,6 +3527,15 @@
           "resubmit": {
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
+          },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
           },
           "fields": {
             "type": "object",
@@ -3468,6 +3666,15 @@
           "resubmit": {
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
+          },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
           },
           "fields": {
             "type": "object",
@@ -3604,6 +3811,15 @@
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
           },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
+          },
           "fields": {
             "type": "object",
             "properties": {
@@ -3723,6 +3939,15 @@
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
           },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
+          },
           "fields": {
             "type": "object",
             "properties": {
@@ -3836,6 +4061,15 @@
           "resubmit": {
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
+          },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
           },
           "fields": {
             "type": "object",
@@ -3981,6 +4215,15 @@
           "resubmit": {
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
+          },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
           },
           "fields": {
             "type": "object",
@@ -4134,6 +4377,15 @@
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
           },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
+          },
           "fields": {
             "type": "object",
             "properties": {
@@ -4256,6 +4508,15 @@
           "resubmit": {
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
+          },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
           },
           "fields": {
             "type": "object",
@@ -4419,6 +4680,15 @@
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
           },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
+          },
           "fields": {
             "type": "object",
             "properties": {
@@ -4546,6 +4816,15 @@
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
           },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
+          },
           "fields": {
             "type": "object",
             "properties": {},
@@ -4656,6 +4935,15 @@
           "resubmit": {
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
+          },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
           },
           "fields": {
             "type": "object",
@@ -4776,6 +5064,15 @@
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
           },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
+          },
           "fields": {
             "type": "object",
             "properties": {
@@ -4894,6 +5191,15 @@
           "resubmit": {
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
+          },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
           },
           "fields": {
             "type": "object",
@@ -5032,6 +5338,15 @@
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
           },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
+          },
           "fields": {
             "type": "object",
             "properties": {
@@ -5152,6 +5467,15 @@
           "resubmit": {
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
+          },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
           },
           "fields": {
             "type": "object",
@@ -5275,6 +5599,15 @@
           "resubmit": {
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
+          },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
           },
           "fields": {
             "type": "object",
@@ -5412,6 +5745,15 @@
           "resubmit": {
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
+          },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
           },
           "fields": {
             "type": "object",
@@ -5552,6 +5894,15 @@
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
           },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
+          },
           "fields": {
             "type": "object",
             "properties": {},
@@ -5661,6 +6012,15 @@
           "resubmit": {
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
+          },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
           },
           "fields": {
             "type": "object",
@@ -5784,6 +6144,15 @@
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
           },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
+          },
           "fields": {
             "type": "object",
             "properties": {},
@@ -5894,6 +6263,15 @@
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
           },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
+          },
           "fields": {
             "type": "object",
             "properties": {},
@@ -6003,6 +6381,15 @@
           "resubmit": {
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
+          },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
           },
           "fields": {
             "type": "object",
@@ -6128,6 +6515,15 @@
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
           },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
+          },
           "fields": {
             "type": "object",
             "properties": {
@@ -6247,6 +6643,15 @@
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
           },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
+          },
           "fields": {
             "type": "object",
             "properties": {},
@@ -6356,6 +6761,15 @@
           "resubmit": {
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
+          },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
           },
           "fields": {
             "type": "object",
@@ -6476,6 +6890,15 @@
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
           },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
+          },
           "fields": {
             "type": "object",
             "properties": {},
@@ -6580,6 +7003,15 @@
           "resubmit": {
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
+          },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
           },
           "fields": {
             "type": "object",
@@ -6716,6 +7148,15 @@
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
           },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
+          },
           "fields": {
             "type": "object",
             "properties": {
@@ -6836,6 +7277,15 @@
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
           },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
+          },
           "fields": {
             "type": "object",
             "properties": {
@@ -6948,6 +7398,15 @@
           "resubmit": {
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
+          },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
           },
           "fields": {
             "type": "object",
@@ -7073,6 +7532,15 @@
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
           },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
+          },
           "fields": {
             "type": "object",
             "properties": {
@@ -7187,6 +7655,15 @@
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
           },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
+          },
           "fields": {
             "type": "object",
             "properties": {},
@@ -7290,6 +7767,15 @@
           "resubmit": {
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
+          },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
           },
           "fields": {
             "type": "object",
@@ -7416,6 +7902,15 @@
           "resubmit": {
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
+          },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
           },
           "fields": {
             "type": "object",
@@ -7547,6 +8042,15 @@
           "resubmit": {
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
+          },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
           },
           "fields": {
             "type": "object",
@@ -7733,6 +8237,15 @@
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
           },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
+          },
           "fields": {
             "type": "object",
             "properties": {},
@@ -7837,6 +8350,15 @@
           "resubmit": {
             "type": "boolean",
             "description": "Send a refused envelope again, deliberately. The default is false."
+          },
+          "at": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "description": "Captured revisions keyed by exactly the act's bound subjects (on and also aliases). Omit to read current revisions. A stale captured revision is signed unchanged and the scope decides."
           },
           "fields": {
             "type": "object",

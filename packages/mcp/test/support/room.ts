@@ -13,7 +13,7 @@
  * | The clock | The scripted clock of the namespaces. |
  */
 import { expect } from "vitest";
-import type { ScopeId } from "@generalbusiness/dap-contract";
+import { DOMAINS, type Intent, type ScopeId } from "@generalbusiness/dap-contract";
 import { b64url, keyIdOfSecret, scopeIdOf } from "@generalbusiness/artroom-bytes";
 import { secretSigner, type Fetch } from "@generalbusiness/artroom-client";
 import { ownHost } from "../../../scope/test/hosts.ts";
@@ -22,7 +22,7 @@ import { beginSessionFixture } from "../../../scope/test/session-settings.ts";
 import { reader } from "../../../scope/test/support.ts";
 import { driveFixture, nativeFixtureLifetime } from "../../../scope/test/support/native-fixture-lifetime.ts";
 import { Host } from "../../../../apps/room/lanes/test/support/graph.ts";
-import { McpService, memoryStore, type CallResult, type McpConfig, type Mode, type Root } from "../../src/index.ts";
+import { McpService, memoryStore, type CallResult, type McpConfig, type Mode, type Root, type ViewSource } from "../../src/index.ts";
 import type { McpMetricOptions } from "../../src/metrics.ts";
 
 export const SERVICE = "https://scopes.test";
@@ -50,11 +50,13 @@ export interface Agent {
   requests: string[];
   /** Every tool this agent called, in order, by name. */
   calls: string[];
+  /** Intent-domain signing calls only, apart from the credentials signed for reads. */
+  signedIntents: Intent[];
 }
 
 export interface Room {
   /** `share`: use this configuration object itself, as two connections of one `ARTROOM_HOME` share one config file. */
-  agent(name: string, options?: { mode?: Mode; config?: McpConfig; share?: boolean; secret?: Uint8Array; subscribe?: boolean; tools?: string[]; listPageBytes?: number; metrics?: McpMetricOptions }): Agent;
+  agent(name: string, options?: { mode?: Mode; config?: McpConfig; share?: boolean; secret?: Uint8Array; subscribe?: boolean; tools?: string[]; listPageBytes?: number; metrics?: McpMetricOptions; views?: ViewSource; beforeFetch?: (url: string) => Promise<void> }): Agent;
   pause(waiting?: readonly string[]): Promise<void>;
   wait<T>(action: () => Promise<T>): Promise<T>;
   active(): void;
@@ -122,11 +124,19 @@ export function mcpRoom(): Room {
       const key = options.secret ?? crypto.getRandomValues(new Uint8Array(32));
       const config: McpConfig = options.config ? (options.share ? options.config : structuredClone(options.config)) : { service: SERVICE };
       const requests: string[] = [];
-      const counted: Fetch = (url, init) => { requests.push(`${init?.method ?? "GET"} ${new URL(url).pathname}`); return fetch(url, init); };
+      const signedIntents: Intent[] = [];
+      const signer = secretSigner(key);
+      const counted: Fetch = async (url, init) => { requests.push(`${init?.method ?? "GET"} ${new URL(url).pathname}`); await options.beforeFetch?.(url); return fetch(url, init); };
       const service = new McpService({
-        service: config.service, fetch: counted, signer: secretSigner(key), custody: memoryStore(), mode: options.mode ?? "default", ...(options.tools ? { tools: options.tools } : {}),
+        service: config.service, fetch: counted, signer: { key: signer.key, sign: (bytes) => {
+          const text = new TextDecoder().decode(bytes);
+          const prefix = `${DOMAINS.intent}\n`;
+          if (text.startsWith(prefix)) signedIntents.push(JSON.parse(text.slice(prefix.length)) as Intent);
+          return signer.sign(bytes);
+        } }, custody: memoryStore(), mode: options.mode ?? "default", ...(options.tools ? { tools: options.tools } : {}),
         ...(options.listPageBytes ? { listPageBytes: options.listPageBytes } : {}),
         ...(options.metrics ? { metrics: options.metrics } : {}),
+        ...(options.views ? { views: options.views } : {}),
         now: lifetime.now, pause: (waiting) => pause(waiting),
         every: () => () => {},
         config: {
@@ -137,7 +147,7 @@ export function mcpRoom(): Room {
         },
       });
       const agent: Agent = {
-        name, key: keyIdOfSecret(key), secret: key, config, service, told: 0, requests, calls: [],
+        name, key: keyIdOfSecret(key), secret: key, config, service, told: 0, requests, calls: [], signedIntents,
         call: (tool, args = {}) => { agent.calls.push(tool); return wait(() => service.call(tool, args)); },
         ok: async (tool, args = {}) => {
           agent.calls.push(tool);

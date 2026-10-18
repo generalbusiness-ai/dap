@@ -11,7 +11,7 @@
     "./node": "./src/node.ts"
   },
   "scripts": {
-    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.test.json && tsc -p tsconfig.scope.json",
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.test.json && tsc -p tsconfig.scope.json && tsc -p tsconfig.browser.json",
     "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
