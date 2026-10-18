@@ -266,6 +266,16 @@ with Authorize and Hold, a zone screen with a sparkline and two acts, a
 vent in error that refused a command, recovery, and a closed incident with
 its entry range.
 
+A capture of the second prototype inside the desktop AI app, in its dark
+theme. Above the card, the model's reply narrates the situation and
+defers to the card: it says the heater cut is the next step, that the
+person can approve the alert in the card or ask the model to do it, and
+that the vent and the fan still need someone in person. Below it, the
+card carries the alert, the live grid and the zone rows. The handoff
+link's label is masked because it names the host:
+
+![The prototype inside a chat app in the dark theme: the model's reply above a live grid card whose alert block offers Authorize and Hold, with the north-east zone hot and its row marked vent error and fan error](2026-10-17-grow-operation-application-design/renders/prototype-in-chat-dark.png)
+
 What held in both:
 
 - The card was the primary place to act, and the chat worked equally well.
