@@ -487,3 +487,57 @@ Platform, Scope and Replay source/test typechecks pass. The first typecheck
 runs caught missing imports and a request-union narrowing; corrected source
 passes without weakening the origin checks. No complete gate or Source
 review has run for this install preparation.
+
+
+## Generic screen route and production wiring preparation
+
+The generic route is `/applications/<directory-id>/<install-item>/<encoded-presentation-id>/`.
+It redirects to the signed presentation's exact entry, including nested paths,
+and serves only named assets of that presentation. The reserved `_/context`
+suffix supplies owned, bounded native routing metadata, with no application
+item data, key, grant or read session. Canonical SDK address/context readers
+bind that metadata to this page's room, install, presentation and origin.
+The two SDK cases pass (`181c50`); caller mutation and getters cannot change
+or execute while the owned context is read.
+
+Two bounded native RPC reads check the actual directory11 Rules reference
+and the active rules5 install. The route then checks current operator trust
+and the exact release, semantic, presentation and root definition identities
+against the stored signed packet. Wrong room, install, presentation, revoked
+trust, unknown asset and uploads refuse. HEAD and conditional reads are
+supported. Packet loads coalesce and cache at most two entries per bucket;
+this is a cache bound, not a measured total Worker-memory allowance. Every
+request still checks the active native binding and trust. No same-origin or
+CSP isolation claim is made.
+
+Production Worker dispatch and apps/room dispatch now include this generic
+route. The existing application-specific dispatch is not removed yet.
+The native outside wiring selects the new admission and Directory result
+ports independently of Git provider setup. Missing bucket or malformed whole
+trust configuration yields bounded unsupported-host refusal before transport;
+missing trust admits nothing. Production R2 configuration and operational
+setup are still to be completed, without a deployment by builder.
+
+The real Counter/Lending witness now uses production outside selection and
+the actual Web smart-HTTP transport against a scripted upload-pack peer
+that emits real one-object Git packs. It uses the production Worker fetch
+entry for the screen requests. Four selected cases pass (`e33593` / session
+`45033` to `b10887`, exit 0): both complete native installs/routes/replays and
+the two transport cases. The preceding direct-route witness passed two cases
+(`de75e3` / session `48977` to `4f8d97`). Screen and metadata requests leave
+all four native journal heads unchanged. Signed screen bytes in this fixture
+are the literal TEST body; complete maintained browser assets remain a
+separate verification obligation. No remote provider or deployment is used.
+
+Planner decision `9075d42e` is read and adopted. Pre-admission refusals have
+no grants or application birth. A later refusal records its phase and reason,
+with earlier committed effects still visible and in force; there is no
+compensation, automatic retry, fabricated authority or continuation after a
+definitive refusal. The required next correction separates host fetch/store
+preparation from admission: the fetch phase may resume its idempotent private
+store put under host authority after a pre-put crash. Admission begins only
+once content is stored. This split is not implemented in this checkpoint;
+the existing generic safe-read recovery guarantee will remain distinct from
+that explicitly permitted host preparation. CLI/MCP install, new-cohort browser
+joining, legacy-host removal and full browser verification are still owed.
+There has been no complete gate, Source submission or checker review.

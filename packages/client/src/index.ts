@@ -35,3 +35,5 @@ export type { Binding as RequestBinding, Phase as KeptRequestPhase, Envelope as 
   CustodyLock as RequestCustodyLock, Settled as KeptRequestSettled, Ports as KeptRequestPorts } from "./request-custody.ts";
 
 export type { OperationalApi, OperationalIncident, IncidentReference, RequestCorrelation, RequestCorrelations } from "./operational.ts";
+
+export * from "./application-route.ts";

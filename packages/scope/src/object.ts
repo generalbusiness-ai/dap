@@ -1,3 +1,4 @@
+import { applicationRoom, applicationInstallation } from "@generalbusiness/dap-platform";
 /**
  * One scope as one Durable Object (scope contract, section 2.3): the object
  * named by the scope's ID in the one scope namespace, with SQLite storage.
@@ -478,6 +479,15 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   sitePublication(directory: unknown, repository: unknown) { return sitePublication(this.#store, this.#scope.pinned()?.named, directory, repository); }
   sitePublishedCommit(directory: unknown, repository: unknown, commit: unknown) { return sitePublishedCommit(this.#store, this.#scope.pinned()?.named, directory, repository, commit); }
   /** The bytes of one declaration this scope retains, for a child that is about to write its genesis (sections 7.2 and 9.2). */
+  /** Native, read-only routing metadata; no public scope-data bypass. */
+  applicationRoom() {
+    this.#first(); const pinned = this.#scope.pinned();
+    return pinned?.definition ? applicationRoom(this.#store, pinned.named) : null;
+  }
+  applicationInstallation(directory: import("@generalbusiness/dap-contract").ScopeRef, item: number) {
+    this.#first(); const pinned = this.#scope.pinned();
+    return pinned?.definition ? applicationInstallation(this.#store, pinned.named, directory, item) : null;
+  }
   declared(digest: Digest): string | null { this.#first(); return declaredBy(this.#store, digest, this.#scope.pinned()?.named); }
   /** A detached text that a send of this scope's entry at `seq` names, for the scope that received that send (section 6.2). */
   text(seq: number, digest: Digest): string | null { this.#first(); return sentText(this.#store, seq, digest); }

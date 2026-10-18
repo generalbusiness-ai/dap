@@ -20,22 +20,24 @@ function reason(error: unknown): Refusal | null {
   if (error instanceof ApplicationContentError) return error.reason === "unavailable" ? null : error.reason === "too-large" ? "package-too-large" : "package-invalid";
   return null;
 }
-export function applicationOutside(options: { trust: readonly ApplicationTrust[]; bounds: Bounds; store: ApplicationContentStore; open: OpenApplicationSource }): Outside {
-  const trust = options.trust.map(row => ({ ...row })), bounds = { ...options.bounds };
-  const policy = digestBytes(utf8("dap-application-trust-1\n" + canonicalize(trust)));
-  const accepts: Outside["accepts"] = (owner, kind) => owner === APPLICATION_INSTALL_RULES && kind === "admit-application";
-  const requestFields = (request: EffectRequest): { uri: string; release: Digest } | null => {
+export const acceptsApplicationAdmission: Outside["accepts"] = (owner, kind) => owner === APPLICATION_INSTALL_RULES && kind === "admit-application";
+export function applicationAdmissionRequest(request: EffectRequest): { uri: string; release: Digest } | null {
     const input = request.origin.entry.input;
-    if (!accepts(request.owner, request.kind) || request.attempt !== 1 || request.operation !== `${request.origin.entry.seq}:0`
+    if (!acceptsApplicationAdmission(request.owner, request.kind) || request.attempt !== 1 || request.operation !== `${request.origin.entry.seq}:0`
       || canonicalize(request.scope) !== canonicalize(request.origin.entry.at) || input.type !== "act" || input.signed.intent.kind !== "install-application") return null;
     const fields = input.signed.intent.fields;
     return typeof fields["uri"] === "string" && isDigest(fields["release"]) ? { uri: fields["uri"], release: fields["release"] } : null;
-  };
+
+}
+export function applicationOutside(options: { trust: readonly ApplicationTrust[]; bounds: Bounds; store: ApplicationContentStore; open: OpenApplicationSource }): Outside {
+  const trust = options.trust.map(row => ({ ...row })), bounds = { ...options.bounds };
+  const policy = digestBytes(utf8("dap-application-trust-1\n" + canonicalize(trust)));
+  const accepts = acceptsApplicationAdmission;
   const confirmed = (uri: string, packet: PackedApplication): EffectAnswer => ({ result: "confirmed", evidence: { basis: "read", body: {
     uri, ...packet.ids, publisher: packet.package.release.manifest.publisher, policy,
   } } });
   const run = async (request: EffectRequest, recover: boolean): Promise<EffectAnswer | null> => {
-    const fields = requestFields(request); if (!fields) return null;
+    const fields = applicationAdmissionRequest(request); if (!fields) return null;
     try {
       if (!recover) return confirmed(fields.uri, await resolveAndStoreApplication(fields.uri, fields.release, trust, bounds, options.open, options.store));
       // Cache presence alone is not URI provenance. Recheck the immutable Git

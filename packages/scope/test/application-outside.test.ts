@@ -8,6 +8,7 @@ import { canonicalize, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
 import { keys, membership } from "@generalbusiness/dap-derive/testing";
 import { Rulebook } from "../../platform/test/support-rules.ts";
 import { APPLICATION_INSTALL_RULES } from "@generalbusiness/dap-platform/application-install";
+import { applicationHostOutside } from "../src/applications/wiring.ts";
 import { applicationOutside } from "../src/applications/outside.ts";
 import { ApplicationContentStore } from "../src/applications/content.ts";
 import type { EffectRequest } from "../src/operations.ts";
@@ -62,4 +63,17 @@ test("admission port records unsupported format without network and leaves trans
     expect(await unavailable.send(sha1.request)).toBeNull();
     expect(await env.APPLICATION_CONTENT.head(sha1.f.key)).toBeNull();
   } finally { await env.APPLICATION_CONTENT.delete(sha1.f.key); }
+});
+
+
+// Missing or malformed operator configuration must not initiate even the
+// bounded public Git transport; a later ordinary install can use fixed config.
+test("host wiring refuses absent storage and invalid whole trust settings before network", async () => {
+  const { f, request } = await fixture(); let calls = 0;
+  const send = async () => { calls++; throw Error("TEST configuration must refuse before transport"); };
+  for (const setting of [{ APPLICATION_TRUST: JSON.stringify(f.trust) }, { APPLICATION_CONTENT: env.APPLICATION_CONTENT, APPLICATION_TRUST: "not JSON" }]) {
+    const port = applicationHostOutside(setting, PROPOSED_BOUNDS, send);
+    expect(await port.send(request)).toMatchObject({ result: "refused", evidence: { basis: "read", body: { reason: "unsupported-host" } } });
+  }
+  expect(calls).toBe(0);
 });

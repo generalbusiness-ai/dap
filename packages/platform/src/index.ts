@@ -1,3 +1,4 @@
+export { applicationRoom, applicationInstallation } from "./application-install-reader.ts";
 import { TRUSTED_APPLICATION_COHORT, installDefinitionText } from "./application-install-wire.ts";
 import { membership7, membershipRules7 } from "./application-install-grants.ts";
 import { directory11, directoryRules11 } from "./application-install-creation.ts";

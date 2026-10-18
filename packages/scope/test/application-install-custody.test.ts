@@ -13,8 +13,9 @@ import { PROPOSED_BOUNDS, type Digest } from "@generalbusiness/dap-contract";
 import { canonicalize, isSeed, parseStrict, scopeIdOf, textDigest } from "@generalbusiness/artroom-bytes";
 import { httpSource, verify } from "@generalbusiness/artroom-replay";
 import { TRUSTED_APPLICATION_COHORT as C, applicationPublicationOrigin, installedApplicationPublicationOrigin, platform } from "@generalbusiness/dap-platform";
-import { applicationAnnouncementOutside } from "../src/applications/announce.ts";
-import { applicationOutside } from "../src/applications/outside.ts";
+import { applicationScreenPath, readApplicationScreenAddress, readApplicationScreenContext } from "@generalbusiness/artroom-client/application";
+import nativeWorker, { outsideOf as hostOutside } from "../src/worker.ts";
+import { applicationHttpPeer } from "./support/application-http-peer.ts";
 import { applicationResolverFixture } from "./support/application-fixture.ts";
 import { sessionRoom } from "./support/session-room.ts";
 import { dispatchFixture, driveFixture, effectFixture } from "./support/native-fixture-lifetime.ts";
@@ -30,19 +31,20 @@ test.each(installations)("$name: one signed native install recovers admission an
   const [M, A, G] = children;
   if (!M || !A || !G) throw Error("The native room must confirm all three siblings.");
   const f = await applicationResolverFixture("sha1", undefined, specimen.roles, specimen.declaration);
+  const peer = applicationHttpPeer(f), bindings = { APPLICATION_CONTENT: env.APPLICATION_CONTENT, APPLICATION_TRUST: JSON.stringify(f.trust) };
   let sends = 0, recoveries = 0;
   try {
     const seat = await life.wait(() => M.did(rita, "seat", { expected: { roster: 1 } }));
     const expected = await life.wait(() => M.expected({ roster: 0, member: seat }));
     await life.wait(() => M.did(rita, "first-key", { fields: { member: seat }, expected }));
-    life.outside(D.name, given => applicationAnnouncementOutside(given));
+    life.outside(D.name, (given, sql) => hostOutside(given, sql, bindings, peer.fetch));
     await life.wait(() => D.restart());
-    life.wire(A.name, () => {
-      const port = applicationOutside({ trust: f.trust, bounds: PROPOSED_BOUNDS, store: f.store, open: f.open });
-      return { outside: { accepts: port.accepts,
+    life.outside(A.name, (given, sql) => {
+      const port = hostOutside(given, sql, bindings, peer.fetch);
+      return { accepts: port.accepts,
         send: async request => { sends++; await port.send(request); return null; }, // TEST lost successful answer
         recovery: { accepts: port.recovery!.accepts, read: async request => { recoveries++; return port.recovery!.read(request); } },
-      } };
+      };
     });
     await life.wait(() => A.restart());
     life.setHold(envelope => envelope.from.at.scope === A.name);
@@ -54,7 +56,7 @@ test.each(installations)("$name: one signed native install recovers admission an
     const changed = declarations[0]!.bytes + "\n";
     const refused = await life.wait(() => A.intent(rita, "install-application", { fields: { ...fields, definitionText0: textDigest(changed) } }));
     expect(await life.wait(() => A.stub.submit(refused, [], { values: [canonicalize(f.packet.package.semantic), canonicalize(f.packet.package.release)], texts: [changed] }))).toMatchObject({ answer: "refused", reason: "bad-field" });
-    expect(sends).toBe(0); expect(f.opened).toEqual([]);
+    expect(sends).toBe(0); expect(peer.ads()).toBe(0); expect(peer.wants).toEqual([]);
     const signed = await life.wait(() => A.intent(rita, "install-application", { fields }));
     const answer = await life.wait(() => A.stub.submit(signed, [], { values: [canonicalize(f.packet.package.semantic), canonicalize(f.packet.package.release)], texts: declarations.map(part => part.bytes) }));
     expect(answer).toMatchObject({ answer: "accepted" });
@@ -115,6 +117,27 @@ test.each(installations)("$name: one signed native install recovers admission an
     expect(installedApplicationPublicationOrigin(from, directory, destination, facts.slice(0, 2))).toBeNull();
     expect(installedApplicationPublicationOrigin(from, { ...directory, inc: destination.inc }, destination, facts)).toBe(false);
     expect(installedApplicationPublicationOrigin(from, directory, { ...destination, scope: directory.scope }, facts)).toBe(false);
+    await f.store.put(f.packet.bytes, f.packet.ids.release);
+    const screenEnv = { SCOPES: env.PLATFORM, APPLICATION_CONTENT: env.APPLICATION_CONTENT, APPLICATION_TRUST: JSON.stringify(f.trust), DEPLOYMENT: "native-install-screen-test" };
+    const base = applicationScreenPath(D.name, job, f.packet.ids.presentation), screen = (path: string, init?: RequestInit) => nativeWorker.fetch(new Request("https://scopes.test" + path, init), screenEnv);
+    const routedHeads = await Promise.all([A, D, C, G].map(node => life.wait(() => node.summary()).then(summary => summary.at)));
+    expect((await screen(base))!.headers.get("location")).toBe(base + "index.html");
+    const html = (await screen(base + "index.html"))!;
+    expect([html.status, html.headers.get("content-type"), await html.text()]).toEqual([200, "text/html", "TEST"]);
+    expect((await screen(base + "index.html", { headers: { "if-none-match": html.headers.get("etag")! } }))!.status).toBe(304);
+    const headOnly = (await screen(base + "index.html", { method: "HEAD" }))!;
+    expect([headOnly.status, headOnly.headers.get("content-length"), await headOnly.text()]).toEqual([200, "4", ""]);
+    expect((await screen(base + "missing.html"))!.status).toBe(404);
+    expect((await screen(base + "index.html", { method: "POST", body: "TEST cannot upload screen bytes" }))!.status).toBe(405);
+    const metadata = (await screen(base + "_/context"))!;
+    expect(metadata.status).toBe(200);
+    const bound = readApplicationScreenContext(await metadata.json(), readApplicationScreenAddress(base)!, "https://scopes.test");
+    expect(bound).toMatchObject({ scope: await life.wait(() => C.at()), directory, destination, ids: f.packet.ids, membershipDefinition: "platform:membership@7" });
+    expect((await screen(applicationScreenPath(D.name, job + 1000, f.packet.ids.presentation)))!.status).toBe(404);
+    expect((await screen(applicationScreenPath(R.name, job, f.packet.ids.presentation)))!.status).toBe(404);
+    expect((await screen(applicationScreenPath(D.name, job, `sha256:${"f".repeat(64)}`)))!.status).toBe(404);
+    expect((await nativeWorker.fetch(new Request("https://scopes.test" + base + "index.html"), { ...screenEnv, APPLICATION_TRUST: "[]" }))!.status).toBe(404);
+    expect(await Promise.all([A, D, C, G].map(node => life.wait(() => node.summary()).then(summary => summary.at)))).toEqual(routedHeads);
     const source = httpSource("https://scopes.test", { reader, fetch: (url, init) => life.wait(() => routed(url, init)) });
     for (const node of [A, D, C, G]) {
       const head = (await life.wait(() => node.summary())).at;
