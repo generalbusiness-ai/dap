@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:5d582b9520be2daa1ee0649deacdb7af07ec74be","text":"Merge retired a covered predecessor; the successor is at vitest.config.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:601334e76c606370f0133139be13cae5b489a1c7","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-18-grow-g0-preparation.md."}
