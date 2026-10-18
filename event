@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:33cde9e8fce76ba6e91a347117b4ea3c1f7ada39","text":"Merge retired a covered predecessor; the successor is at apps/counter/browser/device-key.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3f0389d0caeba2aeeb0c2aed514d8149e8c1af36","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/application-local.ts."}
