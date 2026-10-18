@@ -12,7 +12,7 @@ full and ratified by `ac3497ec57ea5367d8e40f8c5f4a0a37a666c0be`.
 It confirms the developer/install split, historical Counter support, one
 recorded admin install with resumable checked deliveries, exact release/key
 trust and a private content store with an installation-bound route. The URI
-spelling below still needs confirmation before an install entry carries it.
+spelling below is now confirmed by the later planner decision.
 
 ## Shared stored-key signer
 
@@ -121,7 +121,7 @@ source: bypassing the publisher signature check accepts a mismatched signer
 use the `/tmp/artroom-m1-package-` prefix. No full M1 gate or Source has been
 submitted for this checkpoint.
 
-## Git release address proposal
+## Confirmed Git release address
 
 The Node-only `dap pack [directory] [--out file] [--publisher key-name]`
 now reads `dap.application.json`, checks each listed native declaration with
@@ -176,21 +176,32 @@ installation. Its output is recorded in
 - Release: `sha256:5e4a2a6d52ded4ecc881e55c2fcba21cdb63914261013f526e832baed9c5be2b`.
 - Publisher: `key_Md6-VdN8cidosTcTHKpghwgLLgtguUvXhdFFdc-kmLw`.
 
-Proposed spelling: `git+https://<host>/<repository>.git/@<full-commit>/<path>`.
+Confirmed spelling: `git+https://<host>/<repository>.git/@<full-commit>/<path>`.
 The commit is lowercase full SHA-1 or SHA-256. Repository and tree-path
 segments use canonical percent encoding; queries, fragments, credentials,
-floating refs, empty segments and dot segments are refused. The expected
+floating refs, empty segments and dot segments are refused. The host is
+lowercase; the repository spelling ends in `.git` without a trailing slash.
+The full commit's 40/64-digit length selects the fetched object format.
+The expected
 release id accompanies this URI separately. No URI is put inside its own
 manifest or Git commit.
 
 Resolution removes `git+` and the `/@<commit>/<path>` suffix to obtain the
 HTTPS Git remote, then reads that exact commit's regular blob at that tree
-path and checks the expected package/release id. A missing or unsupported
-object is a refusal, never a branch/tag/latest fallback. An installer records
+path and checks the expected package/release id. Symlinks, submodules and
+out-of-grammar paths are refused; the byte bound precedes parsing. A missing
+or unsupported object is a refusal, never a branch/tag/latest fallback.
+An installer records
 the URI only after that resolution and the operator's exact release/key
 trust checks. The developer pack reports content ids and its output file;
-a URI can name that file after it is committed. This is a proposal pending
-planner confirmation, not an existing resolver or published release.
+a URI can name that file after it is committed. Request `739aac5e` received
+full planner disposition `866c7ae716eb22ec472e3f4ea3006817ea1da602`, read in
+full and ratified by `f0f35bf76e8dbf76553868118127a5c30d4e3131`. Install's
+future CLI takes the URI and expected release id as separate arguments,
+such as `--release`; its URI already contains `@`. The applications note's
+earlier command sketch is left unchanged until the install half lands, as
+directed. This confirms the format; a resolver and published release remain
+due. The retained pack example remains a public TEST/static-page fixture.
 
 ## Local native runner checkpoint
 
