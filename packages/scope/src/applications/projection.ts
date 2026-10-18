@@ -4,16 +4,15 @@ import { APPLICATION_PROJECTION_WIRE_BOUNDS as B, type ApplicationProjectionRefu
 import { canonicalize, isDigest, isRecord, isScopeRef, parseStrict } from "@generalbusiness/artroom-bytes";
 import { applicationJson } from "@generalbusiness/artroom-bytes/application";
 import { timeMs } from "@generalbusiness/dap-derive";
-import { applicationProjectionQueries, applicationProjectionQueryDigest, ApplicationProjectionError, bindApplicationProjection,
-  projectApplicationQueryReads, readApplicationProjectionQuery } from "@generalbusiness/artroom-bytes/application-v2";
+import { applicationProjectionQueryDigest, ApplicationProjectionError, bindApplicationProjection, readApplicationProjectionQuery } from "@generalbusiness/artroom-bytes/application-v2";
 import { ItemQueryBudget } from "../item-query-budget.ts";
-import { itemQueryPage } from "../item-query-page.ts";
 import { PreparationFlights, type PreparationRun } from "../preparation-flight.ts";
 import { preparedSessionRefusal, type QueryVisibility, type SessionPreparation } from "../session-preparation.ts";
 import { authenticateSession, type Sessions } from "../sessions.ts";
 import type { Clock } from "../ports.ts";
 import type { Sql } from "../sqlite.ts";
 import { APPLICATION_DECLARATION_BYTES, type ApplicationDeclarationSource } from "./projection-source.ts";
+import { applicationProjectionData } from "./projection-data.ts";
 export type NativeApplicationProjection = { ok: true; serialized: string } | { ok: false; reason: ApplicationProjectionRefusal };
 const no = (reason: ApplicationProjectionRefusal): NativeApplicationProjection => ({ ok: false, reason });
 export interface ApplicationProjectionConfig {
@@ -69,23 +68,9 @@ export class ApplicationProjections {
       const guard = () => preparedSessionRefusal(c, frame, reader, visibility, prepared.membership, prepared.resolvedBirth);
       if (!frame.current() || !run.active()) return no("unavailable");
       const denied = guard(); if (denied !== null) return no(denied);
-      let queries;
-      try { queries = applicationProjectionQueries(projection, query.scope, query.items); }
-      catch { return no("invalid-query"); }
-      // Reserve one independent native page allowance per declared source,
-      // once, at most eight. No continuation, reset, top-up or borrowing.
-      const pages = Object.entries(queries).map(([name, query]) => ({ name, query, budget: new ItemQueryBudget("session", run.active) }));
-      const replies: Record<string, unknown> = {};
-      for (const page of pages) {
-        const answer = itemQueryPage(page.budget.sql("page", c.sql), frame, page.query, () => page.budget.available, {
-          candidates: (candidates, metadata) => page.budget.spend("page", { candidates, metadata }),
-          bodies: (bodies, payloadBytes) => page.budget.spend("page", { bodies, payloadBytes }),
-        });
-        if (!answer.ok) return no(answer.reason === "row-too-large" || answer.reason === "too-large" ? "too-large" : "unavailable");
-        replies[page.name] = parseStrict(answer.serialized);
-      }
-      const value = projectApplicationQueryReads(projection, definition.declared, query.scope, query.items, replies);
-      const serialized = applicationJson({ ok: true, query: applicationProjectionQueryDigest(query), value }, B.resultBytes);
+      const projected = applicationProjectionData(c.sql, frame, projection, query.items, run.active);
+      if (!projected.ok) return no(projected.reason);
+      const serialized = applicationJson({ ok: true, query: applicationProjectionQueryDigest(query), value: projected.value }, B.resultBytes);
       if (!run.active() || !preparation.available || !frame.current() || !run.active()) return no("unavailable");
       // LAST authority check: no storage, support callback, await or write follows.
       const final = guard(); return final === null ? { ok: true, serialized } : no(final);

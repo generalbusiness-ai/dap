@@ -1,14 +1,15 @@
 /** Development-only local scope: genuine native Core + SqliteStore, with
  * explicit scripted authority. No enrollment/freshness proof, dispatcher,
  * provider call, hosted durability or screen isolation is claimed here. */
+import { bindApplicationProjection, ApplicationProjectionError, readApplicationPackage2, type AnyPackedApplication, type ApplicationReadProjection } from "@generalbusiness/artroom-bytes/application-v2";
 import { DatabaseSync } from "node:sqlite";
-import type { Answer, Beside, Digest, FreshnessProof, Grant, KeyId, MemberRef, ScopeId, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
+import type { Answer, ApplicationProjectionData, Beside, Digest, FreshnessProof, Grant, KeyId, MemberRef, ScopeId, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
 import { HISTORY_PAGE_ENTRIES, PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize, intentDigest, parseStrict, scopeIdOf, utf8 } from "@generalbusiness/artroom-bytes";
-import { readApplicationPackage, type PackedApplication } from "@generalbusiness/artroom-client";
+import { readApplicationPackage } from "@generalbusiness/artroom-client";
 import { timeMs, type StateView } from "@generalbusiness/dap-derive";
 import { verify, type HistorySource, type Verification } from "@generalbusiness/artroom-replay";
-import { CAPABILITY_CODE, Reads, Scope, SqliteStore, production, type Ports, type Sql, type SqlValue } from "@generalbusiness/artroom-scope/runtime";
+import { CAPABILITY_CODE, Reads, ReadPreparation, applicationProjectionData, Scope, SqliteStore, production, type Ports, type Sql, type SqlValue } from "@generalbusiness/artroom-scope/runtime";
 
 /** An explicit scenario/development grant list. It is never inferred from all
  * app actions, an app role, an HTTP caller or a production membership store. */
@@ -57,6 +58,7 @@ export class LocalApplicationScope {
   readonly #core: Scope;
   #now: Timestamp;
   #closed = false;
+  #projections: Readonly<Record<string, ApplicationReadProjection>> | null = null;
 
   private constructor(name: ScopeId, actors: readonly LocalActor[], now: Timestamp) {
     this.#now = now;
@@ -76,9 +78,9 @@ export class LocalApplicationScope {
 
   /** The root's actual genesis is judged from this retained signed founding.
    * No handmade genesis, activation entry or folded application state is used. */
-  static async found(packet: PackedApplication, founding: SignedIntent, actors: readonly LocalActor[], now: Timestamp, selected?: Digest): Promise<LocalApplicationScope> {
+  static async found(packet: AnyPackedApplication, founding: SignedIntent, actors: readonly LocalActor[], now: Timestamp, selected?: Digest): Promise<LocalApplicationScope> {
     if (timeMs(now) === null || new Set(actors.map(actor => actor.key)).size !== actors.length) throw new LocalApplicationError("Choose a valid local time and distinct explicit actor keys.");
-    const owned = readApplicationPackage(packet.bytes, packet.ids.release);
+    const owned = packet.package.v === 2 ? readApplicationPackage2(packet.bytes, packet.ids.release) : readApplicationPackage(packet.bytes, packet.ids.release);
     // Developer scenarios may select a definition already inside the verified
     // closure. This is still a scripted single root, not child transport.
     const root = selected ?? owned.package.semantic.entry;
@@ -87,6 +89,7 @@ export class LocalApplicationScope {
     const name = scopeIdOf({ v: 1, kind: "directory", definition: root,
       creator: null, cause: intentDigest(founding.intent), ordinal: 0 });
     const scope = new LocalApplicationScope(name, actors, now);
+    if (owned.package.v === 2) scope.#projections = owned.package.semantic.projections;
     try {
       const definitions = owned.package.semantic.definitions.map(part => parseStrict(part.bytes) as import("@generalbusiness/dap-contract").DeclaredDefinition);
       const entry = parseStrict(entryPart.bytes) as import("@generalbusiness/dap-contract").DeclaredDefinition;
@@ -100,6 +103,24 @@ export class LocalApplicationScope {
   get at() { this.#open(); return this.#store.scope()!.at; }
   /** Explicit whole-fixture TEST reads. No membership/session proof is claimed. */
   developmentReads(): Reads { this.#open(); return new Reads(this.#store, () => this.#core.pinned(), { allows: () => true }); }
+  /** Explicit TEST read access, using the host's same bounded synchronous
+   * projection phase over actual native SQLite. No session proof is claimed. */
+  developmentProjection(name: string, items: Readonly<Record<string, number>> = {}): ApplicationProjectionData {
+    this.#open();
+    if (!this.#projections || !Object.hasOwn(this.#projections, name)) throw new LocalApplicationError("This local package declares no such projection.");
+    const preparation = new ReadPreparation(this.#sql, { policy: () => "local-application-projection-v1", declared: bytes => this.#core.validate(bytes), platform: named => this.#core.platform(named) });
+    const frame = preparation.capture();
+    if (!frame?.pinned.definition) throw new LocalApplicationError("The local native projection frame is unavailable.");
+    try {
+      const projection = bindApplicationProjection(this.#projections[name]!, frame.pinned.definition.declared);
+      const result = applicationProjectionData(this.#sql, frame, projection, items, () => !this.#closed);
+      if (!result.ok || !frame.current()) throw new LocalApplicationError(`The local native projection refused: ${result.ok ? "stale" : result.reason}.`);
+      return result.value;
+    } catch (error) {
+      if (error instanceof ApplicationProjectionError) throw new LocalApplicationError(`The local native projection refused: ${error.reason}.`);
+      throw error;
+    }
+  }
   settle(signed: SignedIntent) { this.#open(); return this.#core.settle(signed); }
   async submit(signed: SignedIntent, beside: Beside = {}): Promise<Answer> { this.#open(); return this.#core.submit(signed, [], beside); }
   async advance(now: Timestamp): Promise<void> {

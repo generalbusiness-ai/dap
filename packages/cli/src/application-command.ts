@@ -37,6 +37,7 @@ export async function checkCommand(argv: readonly string[], cwd = process.cwd())
       const result = await runApplicationScenario(prepared.packet, await readApplicationScenario(prepared.root, path));
       lines.push(`Local root definition: ${result.definition}; scripted directory fixture, without child transport.`);
       lines.push(`Scenario ${result.name}: ${result.steps} steps passed; native replay consistent through ${result.replay.report.target.seq}.`);
+      if (result.projectionChecks) lines.push(`Declared projection checks: ${result.projectionChecks} passed at native journal heads.`);
       if (result.ownerRecords.length) lines.push(`Non-native scenario-owner records: ${result.ownerRecords.length}; outside the journal and native replay claim.`);
     }
     const requested = prepared.packet.package.semantic.capabilities;

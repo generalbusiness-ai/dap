@@ -319,6 +319,51 @@ declared back/opens navigation, complete maintained Counter/Lending packages,
 Grow alert/grid declarations and several-scope birth remain implementation
 work. The final gate, exact-head review and landing have not started.
 
+The local authoring commands now dispatch explicit source v1 and v2 to their
+separate strict packers. V1 source fields and its portable decoder remain
+strict. V2 requires views/resources and can name a projection definition by
+one of the source files already captured for that package. The source loader
+replaces only those listed paths with their exact validated definition digest;
+it performs no extra file read or fallback. The portable v2 codec then checks
+schema binding, closure, views, identities and signature. Local scenarios and
+development can retain either verified packet version. No maintained package
+has changed version yet.
+
+Local projection assertions use actual native SQLite and the same bounded
+synchronous page/projection phase as the hosted owner. That phase was
+extracted without moving authentication, metadata peers, binding, final
+freshness or the final authority guard out of their owners. Each declared
+source still reserves one unchanged native page allowance, without retry or
+continuation. The local owner explicitly grants TEST read access and claims
+no native session or room install. It binds to its actual captured definition
+before pages and checks the native frame again afterward.
+
+A scenario projection assertion names the declaration and explicit item
+selections, checks complete source row counts, selected row identities and
+fields, and optionally the journal head. Missing sources, wrong row counts
+or wrong fields fail the scenario. Nonempty projection assertions count as
+behavioral checks; the native replay must still finish consistent. `dap check`
+reports their count. The new v2 source witness packs exact file bytes, checks
+the original v1 reader still refuses them, runs a real native local initialize
+and declared projection, distinguishes wrong field/count expectations, and
+passes through checkCommand. Unknown definition paths and v1 configs with v2
+fields refuse. The focused pack/local cases pass (`85909`, terminal `d20adb`,
+14 cases), then affected pack/scenario cases pass (`18330`, terminal `38d9d1`,
+two files/20 cases). The final strengthened v2/check case passes (`752d26`, one
+selected case; nine others not rerun). Logs:
+`/tmp/artroom-m2a-declared-cli-pack-local-20261018.log`,
+`/tmp/artroom-m2a-declared-cli-projections-20261018.log`, and
+`/tmp/artroom-m2a-declared-cli-check-final-20261018.log`.
+
+The real native projection/SDK/MCP/view-control witness passes after the
+shared phase extraction (`3980`, terminal `8582c1`, exit 0), including the
+post-body final session loss and actual role-action loss controls. Log:
+`/tmp/artroom-m2a-shared-projection-phase-native-20261018.log`. Outer cost:
+3.65 s wall, 3.91 s user, 0.47 s system on the shared arm64 Mac, warm dependency
+view. The focused CLI run overlapped; other competing load was unmeasured.
+CLI source/test and Scope test typechecks pass. These are focused preparation
+checks, not the final gate, complete maintained packages or M2a delivery.
+
 The following acceptance remains owed: complete generic kinds and navigation,
 Grow alert/grid declarations, Counter/Lending migration, their named native
 witnesses and paired controls, the final gate, review and landing. Shared

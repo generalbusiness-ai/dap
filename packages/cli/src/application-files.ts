@@ -6,7 +6,8 @@ import { randomUUID } from "node:crypto";
 import { basename, dirname, join, resolve } from "node:path";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, isRecord, parseStrictBytes } from "@generalbusiness/artroom-bytes";
-import { APPLICATION_PACKAGE_LIMITS as LIMITS, packApplication, type ApplicationDefinition, type ApplicationPackageInput, type PackedApplication, type Signer } from "@generalbusiness/artroom-client";
+import { APPLICATION_PACKAGE_LIMITS as LIMITS, packApplication, type ApplicationDefinition, type ApplicationPackageInput, type Signer } from "@generalbusiness/artroom-client";
+import { packApplication2, type ApplicationPackageInput2, type AnyPackedApplication } from "@generalbusiness/artroom-bytes/application-v2";
 import { validateDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { bundleApplicationBrowser } from "./application-browser.ts";
@@ -53,7 +54,7 @@ async function readSource(root: string, path: string, most: number): Promise<Uin
   } finally { await file.close(); }
 }
 
-async function source(directory: string, configPath: string): Promise<{ input: ApplicationPackageInput; root: string; scenarios: readonly string[] }> {
+async function source(directory: string, configPath: string): Promise<{ input: ApplicationPackageInput | ApplicationPackageInput2; root: string; scenarios: readonly string[] }> {
   const root = await realpath(directory);
   if (!(await lstat(root)).isDirectory()) return refuse("The application root must be a directory.");
   const config = object(parseStrictBytes(await readSource(root, pathOf(configPath), LIMITS.metadataBytes)), "capabilities,definitions,entry,host,name,predecessor,presentation,projections,roles,v,version", ["scenarios"]);
@@ -61,7 +62,8 @@ async function source(directory: string, configPath: string): Promise<{ input: A
   if (!Array.isArray(givenScenarios) || givenScenarios.length > 32) return refuse("List at most 32 local scenario files.");
   const scenarios = givenScenarios.map(pathOf);
   if (new Set(scenarios).size !== scenarios.length) return refuse("List each local scenario once.");
-  if (config["v"] !== 1 || typeof config["name"] !== "string" || typeof config["version"] !== "string") return refuse("Expected application source version 1, name and version.");
+  const version = config["v"];
+  if ((version !== 1 && version !== 2) || typeof config["name"] !== "string" || typeof config["version"] !== "string") return refuse("Expected application source version 1 or 2, name and version.");
   const entry = pathOf(config["entry"]), files = config["definitions"];
   if (!Array.isArray(files) || files.length < 1 || files.length > LIMITS.definitions) return refuse("The application must list between 1 and 17 definition files.");
   const paths = files.map(pathOf);
@@ -75,7 +77,7 @@ async function source(directory: string, configPath: string): Promise<{ input: A
     if (!checked.ok) return refuse(`Invalid native definition ${path}: ${checked.problems.slice(0, 3).map(problem => `${problem.path}: ${problem.message}`.slice(0, 256)).join("; ")}.`);
     definitions.push({ id: checked.definition.digest, bytes: canonicalize(checked.definition.declared) });
   }
-  const presentation = object(config["presentation"], "assets,descriptions,entry", ["browser"]);
+  const presentation = object(config["presentation"], version === 2 ? "assets,descriptions,entry,resources,views" : "assets,descriptions,entry", ["browser"]);
   if (!Array.isArray(presentation["assets"]) || presentation["assets"].length > LIMITS.assets) return refuse("The presentation must list at most 64 assets.");
   const assets = [];
   let total = 0;
@@ -99,19 +101,29 @@ async function source(directory: string, configPath: string): Promise<{ input: A
   }
   // Untrusted descriptive fields cross this single typed boundary only to the
   // codec, which validates the entire owned value before asking a key to sign.
+  // A local projection may name a definition's listed source path. Resolve
+  // only those already captured files; portable v2 still validates the exact
+  // resulting digest, declaration schema and view bindings before signing.
+  const given = config["projections"];
+  const projections = version === 2 && isRecord(given) ? Object.fromEntries(Object.entries(given).map(([name, projection]) => {
+    if (!isRecord(projection)) return [name, projection];
+    const index = typeof projection["definition"] === "string" ? paths.indexOf(projection["definition"]) : -1;
+    return [name, index < 0 ? projection : { ...projection, definition: definitions[index]!.id }];
+  })) : given;
   const input = {
     name: config["name"], version: config["version"],
-    semantic: { v: 1, entry: definitions[paths.indexOf(entry)]!.id, definitions, host: config["host"], projections: config["projections"], capabilities: config["capabilities"], roles: config["roles"], predecessor: config["predecessor"] },
-    presentation: { v: 1, entry: presentation["entry"], assets, descriptions: presentation["descriptions"] },
-  } as ApplicationPackageInput;
+    semantic: { v: version, entry: definitions[paths.indexOf(entry)]!.id, definitions, host: config["host"], projections, capabilities: config["capabilities"], roles: config["roles"], predecessor: config["predecessor"] },
+    presentation: { v: version, entry: presentation["entry"], assets, descriptions: presentation["descriptions"], ...(version === 2 ? { views: presentation["views"], resources: presentation["resources"] } : {}) },
+  } as ApplicationPackageInput | ApplicationPackageInput2;
   return { input, root, scenarios };
 }
 
 /** Local check/dev can prepare exactly the same package without publishing an
  * output. Scenario files are developer inputs and never change package ids. */
-export async function prepareApplicationDirectory(directory: string, signer: Signer, options: { config?: string } = {}): Promise<{ packet: PackedApplication; root: string; scenarios: readonly string[] }> {
+export async function prepareApplicationDirectory(directory: string, signer: Signer, options: { config?: string } = {}): Promise<{ packet: AnyPackedApplication; root: string; scenarios: readonly string[] }> {
   const prepared = await source(directory, options.config ?? "dap.application.json");
-  return { packet: await packApplication(prepared.input, signer), root: prepared.root, scenarios: prepared.scenarios };
+  const packet = prepared.input.semantic.v === 2 ? await packApplication2(prepared.input as ApplicationPackageInput2, signer) : await packApplication(prepared.input as ApplicationPackageInput, signer);
+  return { packet, root: prepared.root, scenarios: prepared.scenarios };
 }
 export async function readApplicationScenario(root: string, path: string): Promise<unknown> {
   return parseStrictBytes(await readSource(root, path, LIMITS.metadataBytes));
@@ -135,7 +147,7 @@ async function publish(path: string, bytes: Uint8Array): Promise<void> {
 
 /** No output is published until every source, native definition and package
  * signature has passed. A package URI can be assigned after this file is committed. */
-export async function packDirectory(directory: string, output: string, signer: Signer, options: { config?: string } = {}): Promise<PackedApplication> {
+export async function packDirectory(directory: string, output: string, signer: Signer, options: { config?: string } = {}): Promise<AnyPackedApplication> {
   const { packet: packed } = await prepareApplicationDirectory(directory, signer, options);
   await publish(resolve(output), packed.bytes);
   return packed;
