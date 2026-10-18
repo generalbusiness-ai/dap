@@ -8,9 +8,9 @@ import { fileURLToPath } from "node:url";
 import { expect, test, vi } from "vitest";
 import type { DeclaredDefinition, FactRef, FieldValue, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest } from "@generalbusiness/artroom-bytes";
-import { packApplication, secretSigner } from "@generalbusiness/artroom-client";
+import { packApplication, secretSigner, signedIntent } from "@generalbusiness/artroom-client";
 import { LocalApplicationScope } from "../src/application-local.ts";
-import { ApplicationScenarioError, runApplicationScenario, supportsLocalSqlite } from "../src/application-scenarios.ts";
+import { ApplicationScenarioError, openApplicationScenario, runApplicationScenario, supportsLocalSqlite } from "../src/application-scenarios.ts";
 
 async function packet(withCitation = false, withParent = false) {
   const declaration: DeclaredDefinition = JSON.parse(await readFile(new URL("../../../apps/counter/definition.json", import.meta.url), "utf8"));
@@ -49,6 +49,25 @@ function scenario(): any {
   ] };
 }
 const refused = (work: () => Promise<unknown>): Promise<unknown> => work().then(() => "accepted", error => error);
+
+test("a checked development session retains its native scope until its owner closes it", async () => {
+  const packed = await packet(), input = scenario(); input.actors.agent.principal = "controller";
+  const session = await openApplicationScenario(packed, input);
+  try {
+    expect(session.result.replay.report).toMatchObject({ result: "consistent", target: { seq: 2 } });
+    expect(session.time).toBe("2026-10-18T12:01:00Z");
+    const actor = session.actors.find(actor => actor.name === "controller")!;
+    expect(actor.actions).toEqual(["counting.control"]);
+    expect(session.actors.find(actor => actor.name === "agent")).toMatchObject({ actions: ["counting.join"], principal: { member: "@controller" } });
+    const signer = secretSigner(new Uint8Array(Buffer.from(actor.seed, "hex")));
+    const signed = await signedIntent(signer, { to: session.scope.at, kind: "reset", on: 1, expected: { on: session.scope.state.item(1)!.revision }, fields: { generation: 1 } }, { now: Date.parse(session.time) });
+    expect(await session.scope.submit(signed)).toMatchObject({ answer: "accepted" });
+    expect((await session.scope.replay()).report).toMatchObject({ result: "consistent", target: { seq: 3 } });
+  } finally { session.scope.close(); }
+  expect(() => session.scope.state).toThrow("closed");
+  const empty = scenario(); empty.steps = [{ advance: "2026-10-18T12:01:00Z" }];
+  expect(await refused(() => openApplicationScenario(packed, empty))).toBeInstanceOf(ApplicationScenarioError);
+});
 
 // Six separately launched CLI processes share this finite functional-test budget.
 test("the actual check bin refuses vacuous scenarios and preserves explicit answer and state witnesses", async () => {

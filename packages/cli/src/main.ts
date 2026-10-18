@@ -11,12 +11,14 @@ import { configDir, ConfigDirectoryError } from "./config-dir.ts";
 import { nodeGit } from "./git.ts";
 import { command } from "./line.ts";
 import { mcp } from "./mcp.ts";
-import { checkCommand, packCommand } from "./application-command.ts";
+import { checkCommand, newCommand, packCommand } from "./application-command.ts";
+import { runApplicationDevelopment } from "./application-dev.ts";
 
 /** The command under Node. Returns the exit code. */
 export async function main(argv: readonly string[]): Promise<number> {
-  if (argv[0] === "check") {
-    const outcome = await checkCommand(argv);
+  if (argv[0] === "dev") return runApplicationDevelopment(argv);
+  if (argv[0] === "check" || argv[0] === "new") {
+    const outcome = argv[0] === "new" ? await newCommand(argv) : await checkCommand(argv);
     (outcome.code === 0 ? process.stdout : process.stderr).write(`${outcome.lines.join("\n")}\n`);
     return outcome.code;
   }

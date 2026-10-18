@@ -34,8 +34,22 @@ function reference(kind: ScopeKind): ScopeRef {
 interface Actor { signer: Signer; member: MemberRef; actions: string[]; principal: string | null }
 export interface ScenarioOwnerRecord { readonly label: "non-native-scenario-owner"; readonly owner: string; readonly command: FactRef; readonly outcome: "confirmed" | "refused" | "unknown" }
 export interface ApplicationScenarioResult { readonly name: string; readonly definition: Digest; readonly steps: number; readonly replay: Verification; readonly authority: "scripted-test-grants"; readonly ownerRecords: readonly ScenarioOwnerRecord[] }
+export interface ApplicationDevelopmentActor extends LocalActor { readonly name: string; readonly seed: string }
+export interface ApplicationDevelopmentSession { readonly result: ApplicationScenarioResult; readonly scope: LocalApplicationScope; readonly time: string; readonly actors: readonly ApplicationDevelopmentActor[] }
 
 export async function runApplicationScenario(packet: PackedApplication, value: unknown): Promise<ApplicationScenarioResult> {
+  return executeScenario(packet, value);
+}
+/** A caller that opens a development session owns closing its native scope.
+ * Only explicit public TEST actors are exposed, never operator custody. */
+export async function openApplicationScenario(packet: PackedApplication, value: unknown): Promise<ApplicationDevelopmentSession> {
+  let session: Omit<ApplicationDevelopmentSession, "result"> | undefined;
+  const result = await executeScenario(packet, value, (scope, time, actors) => { session = { scope, time, actors }; });
+  if (!session) throw new ApplicationScenarioError("The local scenario did not open a session.");
+  return { ...session, result };
+}
+async function executeScenario(packet: PackedApplication, value: unknown,
+  retain?: (scope: LocalApplicationScope, time: string, actors: readonly ApplicationDevelopmentActor[]) => void): Promise<ApplicationScenarioResult> {
   if (!supportsLocalSqlite(process.versions.node)) return fail("Local scenarios require unflagged Node SQLite: Node 22.13+, 23.4+, or 24+. Other CLI commands retain Node 22.0 support.");
   // The caller supplies bounded, strict JSON from readApplicationScenario.
   // Own that parsed value before signing/import awaits or caller edits.
@@ -164,6 +178,11 @@ export async function runApplicationScenario(packet: PackedApplication, value: u
     if (!checkedBehavior) return fail("Each scenario needs an expected act or retry answer, or a nonempty state assertion.");
     const replay = await scope.replay();
     if (replay.report.mode !== "replay" || replay.report.result !== "consistent") return fail(`${name}: native replay ${replay.report.result}.`);
-    return { name, definition, steps: steps.length, replay, authority: "scripted-test-grants", ownerRecords };
+    const result: ApplicationScenarioResult = { name, definition, steps: steps.length, replay, authority: "scripted-test-grants", ownerRecords };
+    if (retain) {
+      retain(scope, time, [...actors].map(([name, who]) => ({ name, seed: (given[name] as Record<string, unknown>)["seed"] as string, key: who.signer.key, member: who.member, actions: [...who.actions], principal: who.principal === null ? null : actor(who.principal).member })));
+      scope = null;
+    }
+    return result;
   } finally { try { scope?.close(); } finally { for (const seed of seeds) seed.fill(0); } }
 }

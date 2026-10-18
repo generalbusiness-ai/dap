@@ -8,7 +8,7 @@ import { canonicalize, intentDigest, parseStrict, scopeIdOf, utf8 } from "@gener
 import { readApplicationPackage, type PackedApplication } from "@generalbusiness/artroom-client";
 import { timeMs, type StateView } from "@generalbusiness/dap-derive";
 import { verify, type HistorySource, type Verification } from "@generalbusiness/artroom-replay";
-import { CAPABILITY_CODE, Scope, SqliteStore, production, type Ports, type Sql, type SqlValue } from "@generalbusiness/artroom-scope/runtime";
+import { CAPABILITY_CODE, Reads, Scope, SqliteStore, production, type Ports, type Sql, type SqlValue } from "@generalbusiness/artroom-scope/runtime";
 
 /** An explicit scenario/development grant list. It is never inferred from all
  * app actions, an app role, an HTTP caller or a production membership store. */
@@ -98,6 +98,9 @@ export class LocalApplicationScope {
 
   get state(): StateView { this.#open(); return this.#store; }
   get at() { this.#open(); return this.#store.scope()!.at; }
+  /** Explicit whole-fixture TEST reads. No membership/session proof is claimed. */
+  developmentReads(): Reads { this.#open(); return new Reads(this.#store, () => this.#core.pinned(), { allows: () => true }); }
+  settle(signed: SignedIntent) { this.#open(); return this.#core.settle(signed); }
   async submit(signed: SignedIntent, beside: Beside = {}): Promise<Answer> { this.#open(); return this.#core.submit(signed, [], beside); }
   async advance(now: Timestamp): Promise<void> {
     this.#open();

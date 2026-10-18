@@ -1,0 +1,341 @@
+{
+  "v": 1,
+  "name": "counter-package",
+  "time": "2026-10-18T12:00:00Z",
+  "actors": {
+    "admin": {
+      "seed": "1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f",
+      "member": "@admin",
+      "actions": [
+        "counting.control"
+      ]
+    },
+    "alice": {
+      "seed": "2020202020202020202020202020202020202020202020202020202020202020",
+      "member": "@alice",
+      "actions": [
+        "counting.activity",
+        "counting.commit",
+        "counting.fail",
+        "counting.fulfill",
+        "counting.participate"
+      ]
+    },
+    "bob": {
+      "seed": "2121212121212121212121212121212121212121212121212121212121212121",
+      "member": "@bob",
+      "actions": [
+        "counting.activity",
+        "counting.commit",
+        "counting.fail",
+        "counting.fulfill",
+        "counting.participate"
+      ]
+    }
+  },
+  "founding": {
+    "actor": "admin",
+    "fields": {
+      "opener": {
+        "$member": "admin"
+      },
+      "target": 2
+    }
+  },
+  "steps": [
+    {
+      "act": {
+        "actor": "admin",
+        "kind": "initialize",
+        "expected": {
+          "configuration": {
+            "$revision": 0
+          }
+        }
+      },
+      "expect": {
+        "answer": "accepted"
+      }
+    },
+    {
+      "act": {
+        "actor": "alice",
+        "kind": "participate"
+      },
+      "expect": {
+        "answer": "accepted"
+      }
+    },
+    {
+      "act": {
+        "actor": "alice",
+        "kind": "activate",
+        "on": 2,
+        "expected": {
+          "on": {
+            "$revision": 2
+          }
+        }
+      },
+      "expect": {
+        "answer": "accepted"
+      }
+    },
+    {
+      "act": {
+        "actor": "bob",
+        "kind": "participate"
+      },
+      "expect": {
+        "answer": "accepted"
+      }
+    },
+    {
+      "act": {
+        "actor": "bob",
+        "kind": "activate",
+        "on": 4,
+        "expected": {
+          "on": {
+            "$revision": 4
+          }
+        }
+      },
+      "expect": {
+        "answer": "accepted"
+      }
+    },
+    {
+      "act": {
+        "actor": "admin",
+        "kind": "start",
+        "on": 1,
+        "expected": {
+          "on": {
+            "$revision": 1
+          }
+        }
+      },
+      "expect": {
+        "answer": "accepted"
+      }
+    },
+    {
+      "act": {
+        "actor": "alice",
+        "kind": "commit",
+        "expected": {
+          "board": {
+            "$revision": 1
+          },
+          "participant": {
+            "$revision": 2
+          }
+        },
+        "fields": {
+          "participant": 2,
+          "basis": [
+            {
+              "id": 2,
+              "member": {
+                "$member": "alice"
+              }
+            },
+            {
+              "id": 4,
+              "member": {
+                "$member": "bob"
+              }
+            }
+          ],
+          "generation": 0,
+          "n": 1,
+          "serial": 1
+        }
+      },
+      "expect": {
+        "answer": "accepted"
+      },
+      "save": "first-pledge"
+    },
+    {
+      "retry": "first-pledge",
+      "expect": {
+        "answer": "accepted"
+      }
+    },
+    {
+      "act": {
+        "actor": "bob",
+        "kind": "fulfill",
+        "on": 7,
+        "expected": {
+          "on": {
+            "$revision": 7
+          },
+          "board": {
+            "$revision": 1
+          }
+        },
+        "fields": {
+          "generation": 0,
+          "n": 1,
+          "serial": 1
+        }
+      },
+      "expect": {
+        "answer": "refused",
+        "reason": "guard-failed"
+      }
+    },
+    {
+      "act": {
+        "actor": "alice",
+        "kind": "fulfill",
+        "on": 7,
+        "expected": {
+          "on": {
+            "$revision": 7
+          },
+          "board": {
+            "$revision": 1
+          }
+        },
+        "fields": {
+          "generation": 0,
+          "n": 1,
+          "serial": 1
+        }
+      },
+      "expect": {
+        "answer": "accepted"
+      }
+    },
+    {
+      "assert": {
+        "item": 1,
+        "state": "open",
+        "values": {
+          "lastNumber": 1
+        },
+        "parties": {
+          "lastSpeaker": {
+            "$member": "alice"
+          }
+        }
+      }
+    },
+    {
+      "act": {
+        "actor": "alice",
+        "kind": "commit",
+        "expected": {
+          "board": {
+            "$revision": 1
+          },
+          "participant": {
+            "$revision": 2
+          }
+        },
+        "fields": {
+          "participant": 2,
+          "basis": [
+            {
+              "id": 2,
+              "member": {
+                "$member": "alice"
+              }
+            },
+            {
+              "id": 4,
+              "member": {
+                "$member": "bob"
+              }
+            }
+          ],
+          "generation": 0,
+          "n": 2,
+          "serial": 2
+        }
+      },
+      "expect": {
+        "answer": "refused",
+        "reason": "guard-failed"
+      }
+    },
+    {
+      "act": {
+        "actor": "bob",
+        "kind": "commit",
+        "expected": {
+          "board": {
+            "$revision": 1
+          },
+          "participant": {
+            "$revision": 4
+          }
+        },
+        "fields": {
+          "participant": 4,
+          "basis": [
+            {
+              "id": 2,
+              "member": {
+                "$member": "alice"
+              }
+            },
+            {
+              "id": 4,
+              "member": {
+                "$member": "bob"
+              }
+            }
+          ],
+          "generation": 0,
+          "n": 2,
+          "serial": 2
+        }
+      },
+      "expect": {
+        "answer": "accepted"
+      }
+    },
+    {
+      "act": {
+        "actor": "bob",
+        "kind": "fulfill",
+        "on": 9,
+        "expected": {
+          "on": {
+            "$revision": 9
+          },
+          "board": {
+            "$revision": 1
+          }
+        },
+        "fields": {
+          "generation": 0,
+          "n": 2,
+          "serial": 2
+        }
+      },
+      "expect": {
+        "answer": "accepted"
+      }
+    },
+    {
+      "assert": {
+        "item": 1,
+        "state": "finished",
+        "values": {
+          "lastNumber": 2
+        },
+        "parties": {
+          "lastSpeaker": {
+            "$member": "bob"
+          }
+        }
+      }
+    }
+  ]
+}

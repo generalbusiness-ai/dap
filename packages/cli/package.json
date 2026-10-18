@@ -26,6 +26,7 @@
     "@generalbusiness/dap-derive": "0.1.0-dev.1",
     "@generalbusiness/dap-mcp": "0.1.0-dev.1",
     "@generalbusiness/dap-platform": "0.1.0-dev.1",
+    "esbuild": "0.28.1",
     "tsx": "4.21.0"
   },
   "devDependencies": {

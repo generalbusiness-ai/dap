@@ -34,6 +34,37 @@ async function refused(work: () => Promise<unknown>): Promise<unknown> {
   return work().then(() => "accepted", error => error);
 }
 
+test("a trusted author's browser entry builds through pack without generated checkout files", async () => {
+  const f = await fixture();
+  try {
+    const html = '<!doctype html><head><title>Local browser source</title></head><body><script type="module" src="./main.ts"></script></body>';
+    await writeFile(join(f.root, "screen/index.html"), html);
+    await writeFile(join(f.root, "screen/main.ts"), 'import { browserPrivateSlots } from "@generalbusiness/artroom-client"; import "./main.css"; document.body.textContent = String(typeof browserPrivateSlots);');
+    await writeFile(join(f.root, "screen/main.css"), "body { color: red; }");
+    const config = { ...f.config, presentation: { ...f.config.presentation, entry: "view/index.html", assets: [], browser: { entry: "screen/main.ts", html: "screen/index.html", script: "application.js" } } };
+    const save = () => writeFile(join(f.root, "dap.application.json"), JSON.stringify(config));
+    await save();
+    const before = await readdir(f.root);
+    const first = (await prepareApplicationDirectory(f.root, signer)).packet;
+    expect(await readdir(f.root)).toEqual(before);
+    expect(await readFile(join(f.root, "screen/index.html"), "utf8")).toBe(html);
+    const assets = Object.fromEntries(first.package.presentation.assets.map(asset => [asset.path, Buffer.from(asset.bytes, "base64url").toString("utf8")]));
+    expect(Object.keys(assets).sort()).toEqual(["view/application.css", "view/application.js", "view/index.html"]);
+    expect(assets["view/index.html"]).toContain('<script type="module" src="./application.js"></script>');
+    expect(assets["view/index.html"]).toContain('<link rel="stylesheet" href="./application.css">');
+    expect(assets["view/application.js"]).not.toContain("@generalbusiness/artroom-client");
+    expect((await prepareApplicationDirectory(f.root, signer)).packet.bytes).toEqual(first.bytes);
+    await writeFile(join(f.root, "screen/main.css"), "body { color: blue; }");
+    const changed = (await prepareApplicationDirectory(f.root, signer)).packet;
+    expect(changed.ids.semantic).toBe(first.ids.semantic);
+    expect(changed.ids.presentation).not.toBe(first.ids.presentation);
+    expect(changed.ids.release).not.toBe(first.ids.release);
+    config.presentation.browser.script = "../outside.js"; await save();
+    expect(await refused(() => packDirectory(f.root, f.output, signer))).toBeInstanceOf(Error);
+    expect(await readdir(f.root)).not.toContain("application.dap.json");
+  } finally { await f.cleanup(); }
+});
+
 test("real Counter and Lending native declarations pack reproducibly into exact signed bytes", async () => {
   for (const kind of ["counter", "lending"] as const) {
     const f = await fixture(kind);
@@ -58,6 +89,29 @@ test("real Counter and Lending native declarations pack reproducibly into exact 
       expect(await readFile(join(f.root, "screen/index.html"), "utf8")).toBe("<!doctype html><title>Package fixture</title>");
     } finally { await f.cleanup(); }
   }
+});
+
+// Invariant: selecting a config changes only source selection; all paths stay
+// relative to the chosen root and cannot follow a config symlink.
+test("explicit config selection keeps root confinement and the same package identity", async () => {
+  const f = await fixture();
+  try {
+    const first = (await prepareApplicationDirectory(f.root, signer)).packet;
+    await mkdir(join(f.root, "configs"));
+    await writeFile(join(f.root, "configs/lending.json"), JSON.stringify(f.config));
+    await writeFile(join(f.root, "dap.application.json"), "invalid default config");
+    expect((await prepareApplicationDirectory(f.root, signer, { config: "configs/lending.json" })).packet.bytes).toEqual(first.bytes);
+    const store = memoryStore(); await store.keep("operator", secret);
+    expect((await packCommand(store, ["pack", "--config", "configs/lending.json"], f.root)).code).toBe(0);
+    await writeFile(join(f.root, "standard.json"), JSON.stringify(standardScenario()));
+    await writeFile(join(f.root, "configs/lending.json"), JSON.stringify({ ...f.config, scenarios: ["standard.json"] }));
+    expect((await checkCommand(["check", "--config", "configs/lending.json"], f.root)).code).toBe(0);
+    await symlink("configs/lending.json", join(f.root, "config-link.json"));
+    for (const config of ["../outside.json", "/absolute.json", "configs/../lending.json", "config-link.json"]) {
+      expect(await refused(() => prepareApplicationDirectory(f.root, signer, { config }))).toBeInstanceOf(ApplicationSourceError);
+    }
+    for (const argv of [["check", "--config"], ["check", "--config", "one", "--config", "two"]]) expect((await checkCommand(argv, f.root)).code).toBe(2);
+  } finally { await f.cleanup(); }
 });
 
 test("native form and restricted rule admission precede every publisher signature", async () => {

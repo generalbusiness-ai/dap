@@ -25,6 +25,8 @@ function inventoryRows(): { activity: string; cells: Record<Mode, string> }[] {
   const local = rows.filter((r) => r.activity.endsWith("(local command)"));
   expect(local).toEqual([
     { activity: "`dap check [<directory>]` (local command)", cells: { default: "Local files and native scenarios with explicit TEST authority; no MCP tool", generic: "Local only" } },
+    { activity: "`dap dev [<directory>]` (local command)", cells: { default: "Local loopback preview with explicit TEST scenarios; no MCP tool", generic: "Local only" } },
+    { activity: "`dap new <directory>` (local command)", cells: { default: "Creates local template files with public TEST scenarios; no MCP tool", generic: "Local only" } },
     { activity: "`dap pack [<directory>]` (local command)", cells: { default: "Local files and an existing named publisher key; no MCP tool", generic: "Local only" } },
   ]);
   return rows.filter((r) => !gaps.includes(r) && !local.includes(r));

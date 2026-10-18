@@ -9,6 +9,7 @@ import { b64url, canonicalize, isRecord, parseStrictBytes } from "@generalbusine
 import { APPLICATION_PACKAGE_LIMITS as LIMITS, packApplication, type ApplicationDefinition, type ApplicationPackageInput, type PackedApplication, type Signer } from "@generalbusiness/artroom-client";
 import { validateDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
+import { bundleApplicationBrowser } from "./application-browser.ts";
 
 export class ApplicationSourceError extends Error {}
 const refuse = (message: string): never => { throw new ApplicationSourceError(message); };
@@ -52,10 +53,10 @@ async function readSource(root: string, path: string, most: number): Promise<Uin
   } finally { await file.close(); }
 }
 
-async function source(directory: string): Promise<{ input: ApplicationPackageInput; root: string; scenarios: readonly string[] }> {
+async function source(directory: string, configPath: string): Promise<{ input: ApplicationPackageInput; root: string; scenarios: readonly string[] }> {
   const root = await realpath(directory);
   if (!(await lstat(root)).isDirectory()) return refuse("The application root must be a directory.");
-  const config = object(parseStrictBytes(await readSource(root, "dap.application.json", LIMITS.metadataBytes)), "capabilities,definitions,entry,host,name,predecessor,presentation,projections,roles,v,version", ["scenarios"]);
+  const config = object(parseStrictBytes(await readSource(root, pathOf(configPath), LIMITS.metadataBytes)), "capabilities,definitions,entry,host,name,predecessor,presentation,projections,roles,v,version", ["scenarios"]);
   const givenScenarios = Object.hasOwn(config, "scenarios") ? config["scenarios"] : [];
   if (!Array.isArray(givenScenarios) || givenScenarios.length > 32) return refuse("List at most 32 local scenario files.");
   const scenarios = givenScenarios.map(pathOf);
@@ -74,10 +75,21 @@ async function source(directory: string): Promise<{ input: ApplicationPackageInp
     if (!checked.ok) return refuse(`Invalid native definition ${path}: ${checked.problems.slice(0, 3).map(problem => `${problem.path}: ${problem.message}`.slice(0, 256)).join("; ")}.`);
     definitions.push({ id: checked.definition.digest, bytes: canonicalize(checked.definition.declared) });
   }
-  const presentation = object(config["presentation"], "assets,descriptions,entry");
+  const presentation = object(config["presentation"], "assets,descriptions,entry", ["browser"]);
   if (!Array.isArray(presentation["assets"]) || presentation["assets"].length > LIMITS.assets) return refuse("The presentation must list at most 64 assets.");
   const assets = [];
   let total = 0;
+  if (Object.hasOwn(presentation, "browser")) {
+    const browser = object(presentation["browser"], "entry,html,script");
+    const built = await bundleApplicationBrowser(root, pathOf(presentation["entry"]), {
+      entry: pathOf(browser["entry"]), html: pathOf(browser["html"]), script: pathOf(browser["script"]),
+    }, (path, most) => readSource(root, path, most));
+    for (const asset of built) {
+      total += asset.bytes.length;
+      assets.push({ path: asset.path, mediaType: asset.mediaType, bytes: b64url(asset.bytes) });
+    }
+    if (built.length + presentation["assets"].length > LIMITS.assets) return refuse("The presentation has too many built and static assets.");
+  }
   for (const given of presentation["assets"]) {
     const asset = object(given, "file,mediaType,path");
     if (typeof asset["path"] !== "string" || typeof asset["mediaType"] !== "string") return refuse("Each asset needs its presentation path and media type.");
@@ -97,8 +109,8 @@ async function source(directory: string): Promise<{ input: ApplicationPackageInp
 
 /** Local check/dev can prepare exactly the same package without publishing an
  * output. Scenario files are developer inputs and never change package ids. */
-export async function prepareApplicationDirectory(directory: string, signer: Signer): Promise<{ packet: PackedApplication; root: string; scenarios: readonly string[] }> {
-  const prepared = await source(directory);
+export async function prepareApplicationDirectory(directory: string, signer: Signer, options: { config?: string } = {}): Promise<{ packet: PackedApplication; root: string; scenarios: readonly string[] }> {
+  const prepared = await source(directory, options.config ?? "dap.application.json");
   return { packet: await packApplication(prepared.input, signer), root: prepared.root, scenarios: prepared.scenarios };
 }
 export async function readApplicationScenario(root: string, path: string): Promise<unknown> {
@@ -123,8 +135,8 @@ async function publish(path: string, bytes: Uint8Array): Promise<void> {
 
 /** No output is published until every source, native definition and package
  * signature has passed. A package URI can be assigned after this file is committed. */
-export async function packDirectory(directory: string, output: string, signer: Signer): Promise<PackedApplication> {
-  const { packet: packed } = await prepareApplicationDirectory(directory, signer);
+export async function packDirectory(directory: string, output: string, signer: Signer, options: { config?: string } = {}): Promise<PackedApplication> {
+  const { packet: packed } = await prepareApplicationDirectory(directory, signer, options);
   await publish(resolve(output), packed.bytes);
   return packed;
 }

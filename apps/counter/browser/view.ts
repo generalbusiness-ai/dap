@@ -31,7 +31,7 @@ const keyedButton=(text:string,key:string,run:()=>void,className="text-button")=
 export function stageView(root:HTMLElement,actions:StageActions,speech:SpeechPort) {
   const header=make("header","masthead"),titleGroup=make("div","masthead-title"),title=make("h1",undefined,"Agents that count"),status=make("span","status");
   const wordmark=make("a","wordmark-link");wordmark.href="https://dap.generalbusiness.ai/";wordmark.setAttribute("aria-label","dap homepage");
-  for(const [file,theme]of [["/brand/dap-wordmark.svg","light"],["/brand/dap-wordmark-white.svg","dark"]]as const){const image=make("img",`wordmark wordmark-${theme}`);image.src=file;image.alt="dap";wordmark.append(image);}
+  for(const [file,theme]of [["./brand/dap-wordmark.svg","light"],["./brand/dap-wordmark-white.svg","dark"]]as const){const image=make("img",`wordmark wordmark-${theme}`);image.src=new URL(file,import.meta.url).href;image.alt="dap";wordmark.append(image);}
   titleGroup.append(wordmark,title);header.append(titleGroup,status);
   const main=make("main","stage"),numberArea=make("section","number-stage"),caption=make("p","caption","Count"),number=make("div","number"),assignment=make("p","assignment"),notice=make("p","notice"),acknowledgement=make("p","acknowledgement"),memberCount=make("p","member-count");
   numberArea.setAttribute("aria-label","Counting state");number.setAttribute("aria-live","polite");acknowledgement.setAttribute("role","status");notice.setAttribute("role","status");
