@@ -16,17 +16,24 @@ type Binding = Pick<DurableObjectNamespace, "get" | "idFromName">;
 const POLICY = "default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'self'; form-action 'self'";
 const json = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json", "cache-control": "no-store", "x-content-type-options": "nosniff" } });
 /** Two immutable packet entries per bucket. Concurrent reads of one release
- * share a load. This is a cache bound, not a measured Worker heap allowance. */
-const packets = new WeakMap<R2Bucket, Map<string, Promise<PackedApplication | null>>>();
+ * share a load. Pending loads count toward the two entries; a third distinct
+ * release waits for a later request. This is not a measured heap allowance. */
+interface CachedPacket { load: Promise<PackedApplication | null>; settled: boolean }
+const packets = new WeakMap<R2Bucket, Map<string, CachedPacket>>();
 async function packetOf(bucket: R2Bucket, setting: string | undefined, trust: readonly ApplicationTrust[], release: ApplicationInstallation["ids"]["release"]) {
   let cache = packets.get(bucket); if (!cache) packets.set(bucket, (cache = new Map()));
   const key = `${release}\n${setting ?? ""}`, held = cache.get(key);
-  if (held) { cache.delete(key); cache.set(key, held); return held; }
-  while (cache.size >= 2) cache.delete(cache.keys().next().value!);
+  if (held) { cache.delete(key); cache.set(key, held); return held.load; }
+  while (cache.size >= 2) {
+    const reusable = [...cache].find(([, entry]) => entry.settled);
+    if (!reusable) return null;
+    cache.delete(reusable[0]);
+  }
   const loaded = new ApplicationContentStore(bucket, trust, PROPOSED_BOUNDS).get(release);
-  cache.set(key, loaded);
-  try { const packet = await loaded; if (packet === null && cache.get(key) === loaded) cache.delete(key); return packet; }
-  catch (error) { if (cache.get(key) === loaded) cache.delete(key); throw error; }
+  const entry: CachedPacket = { load: loaded, settled: false }; cache.set(key, entry);
+  try { const packet = await loaded; if (packet === null && cache.get(key) === entry) cache.delete(key); return packet; }
+  catch (error) { if (cache.get(key) === entry) cache.delete(key); throw error; }
+  finally { entry.settled = true; }
 }
 export function isApplicationPage(request: Request): boolean { return new URL(request.url).pathname.startsWith("/applications/"); }
 async function screenResponse(request: Request, env: ApplicationBindings & { SCOPES: Binding; DEPLOYMENT?: string }): Promise<Response | null> {

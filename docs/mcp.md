@@ -415,6 +415,26 @@ turn coverage.
 
 ## Tool reference
 
+### Install a trusted application package
+
+In a room created with `--cohort trusted-application`, `install_application`
+records one native admin request. Its arguments are `uri`, `release`, `roles`,
+`values`, and `idempotencyKey`. The URI names a regular Git blob at an exact
+commit. The operator must trust that exact release and publisher. Each
+selected role receives only its signed package defaults; omitted roles
+receive no new grants. Existing grants remain.
+
+CLI and MCP share persistent request custody. After a lost reply, use the
+same key and arguments to read or resume the original envelope. Changed
+arguments under that key refuse. A definitive native refusal is final.
+
+Acceptance records the request, not completion. Use
+`application_installation` with its `item` to read pending, active, or refused
+state, the phase, and any reason. An active result includes its exact screen
+URL. A late refusal can leave earlier activation and grants in force.
+Neither tool returns signing keys, sessions, or the application's private
+items. See [the CLI reference](cli.md) for URI spelling and transport limits.
+
 ### The generic tools
 
 These are the generic tools as `tools/list` sends them in

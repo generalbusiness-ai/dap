@@ -1,73 +1,48 @@
 # Counting commitments: deployed stage and device setup
 
-This stage targets C1 `counting-commitments`, pin
-`sha256:b55824346382d9b158be4cadd9d098008f8129147fba772537778e2f738d5271`,
-and the explicit M1 cohort register@6, directory@6, membership@5, rules@3,
-destination@2 and inbox@1. The old C0 declaration and pin remain shipped;
-this stage does not migrate old applications or private scope journals.
+This stage targets `counting-commitments`, pin
+`sha256:b55824346382d9b158be4cadd9d098008f8129147fba772537778e2f738d5271`.
+The [package config](../dap.application.json) builds its browser assets from
+source. The host serves them under the room, install item, and exact signed
+presentation at `/applications/<directory>/<item>/<presentation>/`.
 
-The production Worker serves `/counting/`, `/counting/counting.js` and
-`/counting/counting.css` on the same origin as its native scope API. Build
-its three public assets before compiling or deploying the Worker:
+## Install and connect
 
-```sh
-node apps/counter/scripts/assets.mjs
-```
+Create a generic room with `--cohort trusted-application`. Pack and commit
+the maintained package, have the host operator list its exact release and
+publisher, then run the Git-URI install from [the CLI guide](../../../docs/cli.md).
+The install records the selected default grants, activates the declaration,
+and creates the Counter through the room's Directory. Pending and refused
+phases remain visible. Earlier committed effects can remain after a later
+refusal; an install is not a transaction across scopes.
 
-The builder writes `apps/counter/browser-build/` and the committed
-`apps/counter/src/counting-assets.ts`. The asset witness compares a fresh
-write-free build with the committed module. The deployment includes no fake
-preview, keys, sessions or recorded fixture data. `preview.html` remains an
-explicit local fake transport/session/scope/speech/clock QA surface. It is
-not served by the production route and proves no native or audible outcome.
+Open the printed screen address. **Connect this device** reads the exact
+installed context. Paste a matching Membership7 invitation and select
+**Enroll this browser**. The browser generates and retains a nonextractable
+Ed25519 key and the exact join before sending it. **Check enrollment** reads
+its original result; **Continue enrollment** sends that same original. A
+wrong-room invitation refuses before native transport.
 
-## Establish and enroll before connecting
+Choose an available English (US) voice, then select **Join count**. This
+records participation and activates your own participant before arming the
+voice. The controller initializes the paused board and separately starts it.
+The native scope admits each commitment under its fairness and grant rules.
+A reload restores this browser's key and original requests, without replaying
+speech or automatically rearming it. Private device and join slots are bound
+to the native application incarnation. Session credentials stay in memory.
+API nonextractability does not provide origin isolation or prevent trusted
+same-origin code from using the key.
 
-The operator uses the explicit Counting cohort for install planning, then
-pins the actual register in the configured Git host, installs the retained
-plan and establishes the actual C1 application through the native factory.
-The activated declaration, complete closure, native creator's opener,
-membership and application full references must be verified. The factory
-supplies no counting domain grant by implication. Configure the fourteen
-C1 acts under the actual membership policy, with controller and agent grants
-separate. Preserve ordinary pending install/enrollment envelopes.
+## Historical setup
 
-Each runner uses its own independently enrolled member/device key. An agent
-member is added as kind `agent`, then receives an agent-key invitation and
-its native enrollment; a person with a role named agent is not equivalent.
-The application controller initializes the paused board. Participation is
-initially inactive; a device chooses a usable voice and activates. Start
-opens claims without selecting a speaker. Eligible active devices may commit
-the next number; native fairness and the complete ordered active basis
-choose which single pledge is admitted, not a browser round robin.
-
-Hugh authorized remembered demo signing keys on 11 October 2026 at 21:15
-Eastern. Import one JSON file with `v: 1` and an `identities` list containing
-Ada, Beau and Cleo. Each entry has `name`, `binding` and a base64url `seed`.
-The seed-containing file is private. Existing separate public-binding and
-32-byte or base64url key files remain accepted through Setup help.
-
-Import verifies each public key, imports its seed immediately as a
-non-extractable WebCrypto Ed25519 signing key, and clears mutable input and
-key buffers. Origin-private IndexedDB keeps only CryptoKey objects and
-closed public bindings, in a separate devices store. Remember my choice
-keeps the chosen identity and voice. Returning reconnects that identity
-without arming sound or joining automatically. API nonextractability
-prevents key export; it does not guarantee encrypted or hardware storage
-or prevent malicious same-origin code from using the key. Immutable JSON
-strings cannot be securely erased. No seed or session token belongs in a
-URL, log, screenshot, IndexedDB or shared Page Settings.
-
-Forget this device disconnects and clears remembered credentials and
-choice, including notification to other mounted Counter tabs. It leaves
-pending commands, audio starts and original reports intact. Exact reimport
-can recover those records; Forget never makes their outcomes known.
-The public binding has origin, deployment, full lane scope,
-application definition, full membership, complete MemberRef, publicKey and
-cohort `{directory:"platform:directory@6",membership:"platform:membership@5",
-rules:"platform:rules@3",destination:"platform:destination@2"}`. Use actual
-native output, never symbolic identifiers. Production Connect requires the
-current origin. An authenticated read is not an act grant.
+The register6/directory6/membership5/rules3/destination2 cohort and its native
+judging/replay support remain for recorded histories. New room setup through
+that application-specific cohort is retired. The host no longer serves the
+old `/counting/` route or a compiled Counter asset module. Outside the generic
+route, the maintained browser can still read a historical demo bundle or
+matching public binding and enrolled key through its legacy import controls.
+Those controls are hidden on an installed screen. `preview.html` remains an
+explicit local fake transport/session/scope/speech/clock surface.
 
 ## Pledge, audio and fulfillment are different events
 

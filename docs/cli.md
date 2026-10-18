@@ -131,8 +131,10 @@ Installed: register sc_4kq2v7..., under platform:register@2, as planned.
 Omitting `--cohort` keeps the legacy default. `--cohort application` selects
 `APPLICATION_COHORT`: register@5, directory@5, membership@4, rules@3,
 destination@2 and inbox@1, each with the `platform:` prefix.
-`--cohort trusted-application` retains its separate register@6,
-directory@6 and membership@5 lineage. `--cohort application-publication`
+`--cohort trusted-application` selects `TRUSTED_APPLICATION_COHORT`:
+register@12, directory@11, membership@7, rules@5, destination@7 and inbox@1.
+The retired register@6, directory@6 and membership@5 cohort remains readable;
+new installs cannot select it. `--cohort application-publication`
 selects `FILE_PUBLICATION_COHORT`: register@9, directory@8, membership@4,
 rules@3, destination@4 and inbox@1. `--cohort invitation-key` selects
 register@10, directory@9, membership@6, rules@3, destination@2 and inbox@1.
