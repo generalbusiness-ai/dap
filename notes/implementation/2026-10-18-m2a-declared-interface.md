@@ -7,7 +7,10 @@ M1's frozen candidate `432dab40` and now incorporates audited Main
 three code children are landed and audited. Parent reconciliation
 `0345dc57` remains with planner; provider error 10042 still prevents the
 required hosting deployment until the operator enables object storage.
-This preparation claims no hosted acceptance or M2a delivery.
+Planner has now reconciled M1 as delivered through supersession `88029e7f`
+and report `ed91bc62`; its published N1 report is `e96099d5`. Both requested
+reports were read and ratified. This head still claims no hosted acceptance
+or M2a delivery.
 
 The private dependency namespace is an APFS COW copy. Its 13 first-party
 links resolve inside this checkout, and all 106 installed versions match the
@@ -160,8 +163,47 @@ Outer focused run: 3.75 s wall, 2.95 s user, 0.41 s system, on the shared
 arm64 Mac with unmeasured competing load and a warm dependency view. This
 is a focused pass, not the owed final gate or native v2 runtime install.
 
-It does not yet read a journal, authorize a viewer, install a package, or
-render a view. Those remain implementation work.
+The native session-only projection read is now connected through the Room
+HTTP entry point. The bounded canonical request binds scope incarnation,
+directory, install item, projection name and explicit item selections; the
+reply binds that whole request by digest. Two owning wire cases pass
+(`1eb41c`), with source/test typechecks. The read owner authenticates before
+metadata peers, uses one deadline, captures one supported journal head,
+checks complete declared native item queries, and repeats final session
+authority after its last storage/support phase. Each of at most eight
+sources reserves one unchanged native page allowance once. It neither
+continues a truncated page nor retries a changed head.
+
+Metadata uses two bounded canonical-byte native RPCs. A late RPC retains
+the original preparation flight until its underlying task settles; there
+is no second timer that releases unresolved work. The initial real witness
+(`87028d`) refused `query-not-ready`; the two diagnostic runs (`4e0d24`,
+`1cbfe8`) located the object RPC reply failing strict JSON ownership. The
+protocol now sends canonical bytes, checks their byte/canonical bounds,
+and obtains the Directory reference from the recorded native row rather
+than carrying the caller's object into its result. Temporary diagnostics
+were removed; strict JSON ownership was not weakened.
+
+The corrected real Workerd witness passes (`61764`, terminal `9e0911`,
+exit 0): one real Native v2 install, exact selected roles and native birth,
+a real Membership7-issued session, an honest incomplete result before the
+Counter board exists, then canonical projection data from SQLite. The read
+survives deleting the R2 packet and restarting Rules/application objects,
+without more Git requests. A native reset advances the returned item/head
+revision. Git and repository host, clock, scheduler and setup inspector
+remain labelled fixtures; no browser or provider runs. Raw log is
+`/tmp/artroom-m2a-native-projection-bytes-20261018.log`.
+
+The affected v1 native custody/recovery cases, v2 host case and this native
+projection case pass together (`81050`, terminal `19b343`, exit 0): three
+files, nine cases, log `/tmp/artroom-m2a-native-compatibility-focus-20261018.log`.
+Outer cost is 7.17 s wall, 7.38 s user and 0.92 s system on the same shared
+arm64 Mac, warm dependency view, competing load unmeasured. Source/test
+typechecks pass. This is focused compatibility evidence, not the final gate.
+
+The native read and single-scope install now have the focused witnesses
+above. Generic rendering, current control authority, shared MCP/kit use
+and the maintained complete packages remain implementation work.
 
 The following acceptance remains owed: shared host/MCP/kit projection bytes
 and revision, presentation declarations and generic kinds, model-facing

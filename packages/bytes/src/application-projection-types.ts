@@ -1,7 +1,8 @@
 /** Declared item projections. This syntax neither authorizes a read nor
  * changes a native definition. M1 packages still admit empty projections only. */
-import type { Digest, FieldType, FieldValue, Head, ScopeRef } from "@generalbusiness/dap-contract";
+import type { Digest, FieldType } from "@generalbusiness/dap-contract";
 import type { ApplicationDefinition, ApplicationInstallation } from "./application-types.ts";
+export type { ApplicationProjectionData, ApplicationProjectionRow } from "@generalbusiness/dap-contract";
 
 type Immutable<T> = T extends object ? { readonly [K in keyof T]: Immutable<T[K]> } : T;
 export type ProjectionFieldType = Immutable<FieldType>;
@@ -29,21 +30,6 @@ export interface ApplicationReadProjection {
   readonly definition: Digest;
   readonly sources: Readonly<Record<string, ApplicationProjectionSource>>;
   readonly revision: "revision";
-}
-export interface ApplicationProjectionRow {
-  readonly id: number;
-  readonly type: string;
-  readonly state: string;
-  readonly revision: number;
-  /** Complete returned data, including nested field values, is frozen. */
-  readonly fields: Readonly<Record<string, FieldValue | null>>;
-}
-export interface ApplicationProjectionData {
-  readonly v: 1;
-  readonly projection: Digest;
-  readonly scope: Immutable<ScopeRef>;
-  readonly at: Immutable<Head>;
-  readonly sources: Readonly<Record<string, readonly ApplicationProjectionRow[]>>;
 }
 /** Native retained declaration metadata, without any application item data. */
 export interface ApplicationProjectionDeclaration {

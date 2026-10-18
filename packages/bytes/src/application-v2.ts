@@ -3,5 +3,6 @@ export * from "./application-package-v2.ts";
 export * from "./application-projection.ts";
 export * from "./application-projection-binding.ts";
 export * from "./application-projection-read.ts";
+export * from "./application-projection-wire.ts";
 export * from "./application-view.ts";
 export * from "./application-view-binding.ts";

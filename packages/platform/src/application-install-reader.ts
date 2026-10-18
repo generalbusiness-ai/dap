@@ -17,11 +17,11 @@ export function applicationInstallation(state: StateView, named: string, directo
   if ((named !== C.rules && named !== C2.rules) || scope?.status !== "active" || scope.at.kind !== "rules" || !isScopeRef(directory) || directory.kind !== "directory"
     || !Number.isSafeInteger(item) || item < 0 || item > scope.head.seq) return null;
   const room = state.page("rules", ["current"], null, 1).items[0], job = state.item(item);
-  if (!room || canonicalize(room.refs["directory"]) !== canonicalize(directory) || job?.type !== "installation" || job.state !== "active") return null;
+  if (!room || !isScopeRef(room.refs["directory"]) || canonicalize(room.refs["directory"]) !== canonicalize(directory) || job?.type !== "installation" || job.state !== "active") return null;
   const membership = job.refs["membership"], destination = job.refs["destination"], application = job.refs["scope"];
   if (!isScopeRef(membership) || membership.kind !== "membership" || membership.scope !== room.values["membership"] || !isScopeRef(destination)
     || destination.kind !== "destination" || !isScopeRef(application) || application.kind !== "lane"
     || !["definition", "release", "semantic", "presentation"].every(key => isDigest(job.values[key]))) return null;
-  return { directory, rules: scope.at, membership, destination, scope: application, item, definition: job.values["definition"] as Digest,
+  return { directory: room.refs["directory"], rules: scope.at, membership, destination, scope: application, item, definition: job.values["definition"] as Digest,
     ids: { release: job.values["release"] as Digest, semantic: job.values["semantic"] as Digest, presentation: job.values["presentation"] as Digest } };
 }

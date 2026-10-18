@@ -9,6 +9,7 @@ export type * from "./observes.ts";
 export * from "./capability.ts";
 export * from "./read.ts";
 export * from "./item-query.ts";
+export * from "./application-projection.ts";
 export type * from "./report.ts";
 export type * from "./result.ts";
 export type * from "./transport.ts";

@@ -92,6 +92,10 @@ import { ARTIFACTS_HOST, artifactsOutside, type ArtifactsBindings } from "./arti
 import { recordedHost } from "./host-wiring.ts";
 import { NO_OUTSIDE, type Outside } from "./operations.ts";
 import type { NativeItemQuery } from "./item-queries.ts";
+import { APPLICATION_PROJECTION_WIRE_BOUNDS, type ApplicationProjectionRefusal } from "@generalbusiness/dap-contract";
+import type { NativeApplicationProjection } from "./applications/projection.ts";
+import { applicationDeclarationsIn } from "./applications/projection-source.ts";
+import { applicationProjectionWire } from "./applications/projection-wire.ts";
 import { admittedRequestUrl, itemQueryWire } from "./item-query-wire.ts";
 import { isSite, site } from "./site/route.ts";
 import { requestQuery, type RequestPage } from "./request-index.ts";
@@ -126,6 +130,7 @@ interface Remote {
   log(reader: unknown, cursor?: Cursor): Promise<Read<LogPage>>;
   retained(reader: unknown, kind: RetainedInput["kind"], digest: Digest, domain?: string): Promise<Read<RetainedInput>>;
   queryItems(encoded: unknown, reader: unknown): Promise<NativeItemQuery>;
+  applicationProjection(encoded: unknown, reader: unknown): Promise<NativeApplicationProjection>;
   session(asked: unknown): Promise<SessionAnswer>;
   stream(reader: unknown): Promise<Opened | StreamRefusal>;
   release(id: string): Promise<void>;
@@ -289,6 +294,14 @@ const QUERY_STATUS: Record<ItemQueryRefusal, number> = {
 function queryResponse(result: NativeItemQuery): Response {
   return new Response(result.ok ? result.serialized : JSON.stringify(result), { status: result.ok ? 200 : QUERY_STATUS[result.reason], headers: { "content-type": "application/json", "cache-control": "no-store" } });
 }
+const PROJECTION_STATUS: Record<ApplicationProjectionRefusal, number> = {
+  "invalid-query": 400, forbidden: 403, unavailable: 503, incomplete: 409, stale: 409, "too-large": 413,
+  "query-not-ready": 409, "clock-behind": 503, "sessions-unavailable": 503, "wrong-scope": 409,
+};
+function projectionResponse(result: NativeApplicationProjection): Response {
+  return new Response(result.ok ? result.serialized : JSON.stringify(result), { status: result.ok ? 200 : PROJECTION_STATUS[result.reason],
+    headers: { "content-type": "application/json", "cache-control": "no-store" } });
+}
 
 /** One request to the routes in the table above. */
 export async function route(request: Request, binding: Binding, env: MetricEnvironment = {}): Promise<Response> {
@@ -312,6 +325,13 @@ async function routedRequest(request: Request, binding: Binding): Promise<Respon
   if (what === "retained" ? which === undefined || last === undefined : last !== undefined) return json(404, { error: "not-found" });
   if ((what === "sessions" || what === "stream" || what === "incidents" || what === "requests") && (scope === undefined || which !== undefined)) return json(404, { error: "not-found" });
   const reader = request.headers.get("authorization");
+  if (what === "application-projection") {
+    const wire = applicationProjectionWire(request, scope ?? "");
+    if (!wire.ok) return projectionResponse(wire);
+    if (typeof reader !== "string" || reader.length > APPLICATION_PROJECTION_WIRE_BOUNDS.sessionChars || reader.startsWith("Signed ")) return projectionResponse({ ok: false, reason: "forbidden" });
+    const object = binding.get(binding.idFromName(scope!)) as Remote;
+    return projectionResponse(await object.applicationProjection(wire.encoded, reader));
+  }
   if (what === "query-items") {
     const wire = itemQueryWire(request, scope ?? "");
     if (!wire.ok) return queryResponse(wire);
@@ -432,12 +452,12 @@ export function outsideOf(given: OutsideGiven, sql: Pick<SqlStorage, "exec">, en
  * accepts a session only for the membership scope that the scope itself
  * records: the reference that its authority reads, with its incarnation (`fixedMembership`).
  */
-export function sessionWiring(sessions: () => Sessions | null, binding?: Binding, fetchSeconds = PROPOSED_BOUNDS.fetchSeconds): Required<Pick<Wiring, "readers" | "sessions">> & Pick<Wiring, "sessionReferenceSource"> {
+export function sessionWiring(sessions: () => Sessions | null, binding?: Binding, fetchSeconds = PROPOSED_BOUNDS.fetchSeconds): Required<Pick<Wiring, "readers" | "sessions">> & Pick<Wiring, "sessionReferenceSource" | "applicationDeclarationSource"> {
   return {
     readers: (given) => sessionReaders({
       sessions, clock: given.clock, scope: given.scope, membership: (scope) => fixedMembership(given, scope),
       ...(binding ? { membershipPreparation: repositorySessionMembership(given, (directory, reader) => within(() => (binding.get(binding.idFromName(directory.scope)) as Remote).summary(reader), fetchSeconds)) } : {}),
-    }), sessions, ...(binding ? { sessionReferenceSource: sessionReferencesIn(binding) } : {}),
+    }), sessions, ...(binding ? { sessionReferenceSource: sessionReferencesIn(binding), applicationDeclarationSource: applicationDeclarationsIn(binding) } : {}),
   };
 }
 
