@@ -3,7 +3,8 @@ import type { Digest } from "@generalbusiness/dap-contract";
 import { sandboxDomain } from "./hosts.ts";
 
 export const VIEW_KINDS = ["needs-you", "work", "decision", "change"] as const;
-export type ViewKind = typeof VIEW_KINDS[number];
+/** The built-in journeys and bounded names from a verified declaration. */
+export type ViewKind = string;
 export const APP_MIME = "text/html;profile=mcp-app";
 
 export interface ResourcePolicy {

@@ -15,6 +15,15 @@ let returnPage: PageKind = "summary";
 let alive = true;
 let connected = false;
 let focusKey: string | null = null;
+let refreshTimer = 0;
+
+function scheduleRefresh() {
+  window.clearTimeout(refreshTimer);
+  const interval = display?.card?.declared?.refresh;
+  if (alive && display?.active && interval) refreshTimer = window.setTimeout(() => {
+    if (busy) scheduleRefresh(); else void read({ refresh: true }).catch(showError);
+  }, interval);
+}
 
 function node<K extends keyof HTMLElementTagNameMap>(tag: K, text?: string, className?: string): HTMLElementTagNameMap[K] {
   const element = document.createElement(tag);
@@ -49,7 +58,7 @@ async function reportContext() {
       const context = pendingContext;
       pendingContext = null;
       const identity = context.identity;
-      const line = `${identity ? `${identity.kind} ${identity.item}, revision ${identity.revision}` : `${context.screen}: ${context.status}`}. ${context.navigation.join(", ") || "No navigation"}.${context.receipt ? ` ${context.receipt}` : ""}`;
+      const line = `${context.note ? `${context.note} ` : ""}${identity ? `${identity.kind} ${identity.item}, revision ${identity.revision}` : `${context.screen}: ${context.status}`}. ${context.navigation.join(", ") || "No navigation"}.${context.receipt ? ` ${context.receipt}` : ""}`;
       try {
         await bridge.request("ui/update-model-context", { content: [{ type: "text", text: line }], structuredContent: context });
         contextError = "";
@@ -68,6 +77,7 @@ function accept(data: Record<string, unknown>) {
   display = value as Display;
   if (previousPage !== undefined && previousPage !== display.query.page) focusKey = display.query.page === "summary" ? "title" : "button:← Back";
   updateContext();
+  scheduleRefresh();
 }
 async function read(move?: { page?: PageKind; position?: number; refresh?: boolean }) {
   if (busy || !alive) return;
@@ -81,8 +91,8 @@ async function open() {
   if (!display?.card) return;
   returnPage = "summary";
   try {
-    const mode = await bridge.displayMode("fullscreen");
-    notice = mode === "fullscreen" ? "" : "Full screen was not granted. Detail remains inside this card.";
+    const requested = display.card.declared?.display ?? "fullscreen", mode = await bridge.displayMode(requested);
+    notice = mode === requested ? "" : requested === "fullscreen" ? "Full screen was not granted. Detail remains inside this card." : "The host kept full screen open.";
   } catch (error) { notice = `${error instanceof Error ? error.message : String(error)} Detail remains inside this card.`; }
   const modeNotice = notice;
   await read({ page: display.card.detailPage ?? "item" });
@@ -170,11 +180,15 @@ function render() {
     heading.append(title);
   } else heading.textContent = card.title;
   article.append(heading);
-  const actor = node("p", undefined, `actor ${card.actor.kind}`);
-  const mark = card.actor.kind === "person" ? "●" : card.actor.kind === "agent" ? "■" : "◇";
-  const glyph = node("span", mark); glyph.setAttribute("aria-hidden", "true");
-  actor.append(glyph, document.createTextNode(` ${card.actor.name}${card.actor.controller ? ` · controlled by ${card.actor.controller}` : ""} · ${card.actor.kind}`));
-  article.append(actor, node("p", card.summary, "summary"));
+  if (card.actor) {
+    const actor = node("p", undefined, `actor ${card.actor.kind}`);
+    const mark = card.actor.kind === "person" ? "●" : card.actor.kind === "agent" ? "■" : "◇";
+    const glyph = node("span", mark); glyph.setAttribute("aria-hidden", "true");
+    actor.append(glyph, document.createTextNode(` ${card.actor.name}${card.actor.controller ? ` · controlled by ${card.actor.controller}` : ""} · ${card.actor.kind}`));
+    article.append(actor);
+  }
+  if (card.declared?.actor !== null && card.declared?.actor !== undefined) article.append(node("p", `Member ${JSON.stringify(card.declared.actor)}`, "actor"));
+  article.append(node("p", card.summary, "summary"));
   if (card.reasons.length) {
     const reasons = node("ul", undefined, "reasons");
     for (const reason of card.reasons) reasons.append(node("li", reason));
@@ -189,14 +203,14 @@ function render() {
     if (card.unavailable.length) article.append(node("p", `Unavailable: ${card.unavailable.map((range) => `${range.scope} entries ${range.from}–${range.to}`).join("; ")}.`, "notice"));
   }
   root.append(article);
-  if (summary) {
+  if (summary && (!card.declared || card.declared.kind === "carousel")) {
     const nav = node("nav", undefined, "carousel"); nav.setAttribute("aria-label", "Carousel");
     const previous = button("‹", () => read({ position: display!.position - 1, page: "summary" }), "quiet arrow");
     previous.setAttribute("aria-label", "Previous item"); previous.disabled ||= display.position === 0;
     const next = button("›", () => read({ position: display!.position + 1, page: "summary" }), "quiet arrow");
     next.setAttribute("aria-label", "Next item"); next.disabled ||= display.position + 1 >= display.count;
     nav.append(previous, node("span", `${display.position + 1} / ${display.count}`, "position"), next); root.append(nav);
-  } else if (display.query.page !== "diff") {
+  } else if (!summary && display.query.page !== "diff") {
     const actions = node("div", undefined, "actions");
     for (const action of card.actions) {
       const control = button(action.label, () => act(action.id));
@@ -242,6 +256,7 @@ bridge.on((method) => {
   }
 });
 function close() {
+  window.clearTimeout(refreshTimer);
   alive = false; connected = false; cancelAnimationFrame(frame); resize.disconnect();
   window.removeEventListener("keydown", keyboard); window.removeEventListener("resize", measure);
   document.fonts.removeEventListener("loadingdone", measure); bridge.close();

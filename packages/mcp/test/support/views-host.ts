@@ -9,6 +9,9 @@ import { secretSigner } from "@generalbusiness/artroom-client";
 import { firstExtents } from "@generalbusiness/dap-platform";
 import { LEGACY, MODERN, McpService, Wire, memoryStore, newSession, type Card, type Message, type ResourcePolicy, type ViewSource } from "../../src/index.ts";
 import { StandIn, SERVICE } from "./standin.ts";
+import { applicationCounterPacket2 } from "../../../scope/test/support/application-v2-fixture.ts";
+import { applicationProjectionId, applicationProjectionQueryDigest } from "@generalbusiness/artroom-bytes/application-v2";
+import { DeclaredViewSource } from "../../src/views/declared.ts";
 
 const fields = { approvals: 0, ownerMayReview: false, checks: [], labels: [], extents: firstExtents({ approvals: 0, checks: [] }) };
 function fixture(mode: string) {
@@ -52,6 +55,24 @@ function fixture(mode: string) {
     },
   });
   return { service, signed, scope, complete: (item: string) => completed.add(Number(item.slice(1)) - 7) };
+}
+
+/** Pure declared-view browser fixture. Native projection, install and role
+ * answers are scripted; the real native controls have a separate witness. */
+async function declaredFixture() {
+  const base = fixture("empty"), packet = await applicationCounterPacket2(), scope = { ...base.scope.rules, kind: "lane" as const };
+  const source = new DeclaredViewSource(packet.bytes, packet.ids.release, {
+    installation: async () => ({ scope, directory: { ...scope, kind: "directory" }, rules: { ...scope, kind: "rules" },
+      membership: { ...scope, kind: "membership" }, destination: { ...scope, kind: "destination" }, item: 7, definition: packet.package.semantic.entry, ids: packet.ids }),
+    actions: async () => [],
+    projection: async query => ({ ok: true, query: applicationProjectionQueryDigest(query)!, value: { v: 1, scope,
+      projection: applicationProjectionId(packet.package.semantic.projections["board"]!), at: { seq: 1, hash: `sha256:${"a".repeat(64)}` },
+      sources: { board: [{ id: 2, type: "board", state: "open", revision: 1, fields: { lastNumber: 42 } }] } } }),
+  });
+  const signer = secretSigner(new Uint8Array(32).fill(17));
+  const service = new McpService({ service: SERVICE, signer, custody: memoryStore(), views: source, fetch: base.scope.fetch,
+    config: { read: async () => base.scope.config(), addRoot: async () => {} } });
+  return { ...base, service };
 }
 
 function policy(ui: ResourcePolicy): string {
@@ -103,7 +124,7 @@ export async function startViewsHost() {
     }
     if (url.pathname !== "/") { response.writeHead(404); response.end(); return; }
     if (instances.size >= 128) return json(response, { error: "Fixture host full" }, 429);
-    const id = crypto.randomUUID(), demo = fixture(url.searchParams.get("fixture") ?? "normal"), wire = new Wire(demo.service), session = newSession(null);
+    const id = crypto.randomUUID(), mode = url.searchParams.get("fixture") ?? "normal", demo = mode === "declared" ? await declaredFixture() : fixture(mode), wire = new Wire(demo.service), session = newSession(null);
     const version = url.searchParams.get("wire") === "legacy" ? LEGACY : MODERN;
     instances.set(id, { ...demo, wire, session, version });
     if (version === LEGACY) {
@@ -143,7 +164,9 @@ void(async()=>{input={view:config.id,subject:config.screen};const opened=await r
       return;
     }
     if (url.pathname === "/app") {
-      const resource = instance.service.resources.read(`ui://dap/${url.searchParams.get("screen")}`).contents[0]!;
+      const uri = instance.service.resources.list().resources.find(resource => resource.uri.endsWith(`/${url.searchParams.get("screen")}`))?.uri;
+      if (!uri) return json(response, { error: "Unknown fixture resource" }, 404);
+      const resource = instance.service.resources.read(uri).contents[0]!;
       response.writeHead(200, { "content-type": "text/html", "content-security-policy": policy(resource._meta.ui) });
       response.end(resource.text); return;
     }

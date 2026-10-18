@@ -1,4 +1,6 @@
-import type { ViewKind } from "./resources.ts";
+import type { PresentationPackage, ViewKind } from "./resources.ts";
+import type { ApplicationProjectionData, FieldValue } from "@generalbusiness/dap-contract";
+import type { ApplicationView } from "@generalbusiness/artroom-bytes/application-v2";
 
 export type PageKind = "summary" | "item" | "diff" | "updates";
 export interface EntryRange { scope: string; from: number; to: number }
@@ -24,7 +26,7 @@ export interface Card {
   identity: CardIdentity;
   title: string;
   summary: string;
-  actor: ActorChip;
+  actor?: ActorChip;
   reasons: string[];
   /** Plain text, rendered without HTML. */
   body?: string;
@@ -41,12 +43,25 @@ export interface Card {
   diffAvailable?: boolean;
   detailPage?: "item" | "updates";
   fallback: string;
+  /** Generic declared presentation; all data stays on the app-only path. */
+  declared?: {
+    kind: ApplicationView["kind"];
+    context: string;
+    actor: FieldValue | null;
+    refresh: number;
+    display: "inline" | "fullscreen";
+    back: string | null;
+    data: ApplicationProjectionData;
+    resource?: string;
+    opens?: Readonly<Record<string, string>>;
+  };
 }
 export interface ViewQuery {
   screen: ViewKind;
   subject?: string;
   position: number;
   page: PageKind;
+  items?: Readonly<Record<string, number>>;
 }
 export interface Projection {
   status: "ready" | "empty" | "unavailable" | "denied" | "absent" | "incomplete" | "stale";
@@ -58,7 +73,12 @@ export interface Projection {
 }
 /** A trusted application's projection adapter. Reads use the service's normal authenticated tool path. */
 export interface ViewSource {
+  readonly declared?: boolean;
+  readonly screens?: readonly { name: string; resource: string }[];
+  readonly presentation?: PresentationPackage;
   read(query: ViewQuery, access: { call(name: string, args: Record<string, unknown>): Promise<{ structuredContent: Record<string, unknown>; isError: boolean }> }): Promise<Projection>;
+  /** A declared source repeats its current when/needs check before signing. */
+  admit?(query: ViewQuery, card: Card, action: CardAction): Promise<void>;
 }
 export interface CardContext {
   screen: ViewKind;
@@ -73,6 +93,7 @@ export interface CardContext {
   waitsOn: string[];
   settles: string[];
   navigation: string[];
+  note?: string;
   receipt?: string;
 }
 /** App data excludes executable action inputs: only opaque action IDs and labels cross to the browser. */

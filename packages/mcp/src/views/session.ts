@@ -57,7 +57,7 @@ function checked(projection: Projection, query: ViewQuery): Projection {
     if (card.actions.length > 2) throw new ViewError("unavailable", "A card may offer at most two acts.");
     if (new Set(card.actions.map((act) => act.id)).size !== card.actions.length) throw new ViewError("unavailable", "Card act IDs must be distinct.");
     shapeAt(card.identity.at);
-    if (card.actor.kind === "agent" && !card.actor.controller) throw new ViewError("unavailable", "The agent projection does not name its controller.");
+    if (card.actor?.kind === "agent" && !card.actor.controller) throw new ViewError("unavailable", "The agent projection does not name its controller.");
     for (const entry of card.entries ?? []) if (!finite(entry.seq)) throw new ViewError("unavailable", "An entry position is malformed.");
     for (const point of card.projection) if (!finite(point.seq)) throw new ViewError("unavailable", "A projection read point is malformed.");
     for (const range of [...card.reviewIntended, ...card.unavailable]) if (!finite(range.from) || !finite(range.to) || range.from > range.to) throw new ViewError("unavailable", "An entry range is malformed.");
@@ -80,7 +80,7 @@ function checked(projection: Projection, query: ViewQuery): Projection {
 export class ViewSessions {
   readonly #instances = new Map<string, Instance>();
   readonly #current = new Map<ViewKind, string>();
-  constructor(readonly source: ViewSource, readonly access: Parameters<ViewSource["read"]>[1], readonly perform: (kind: string, args: Record<string, unknown>, admit: () => void) => Promise<CallResult>, readonly settle: (args: Record<string, unknown>) => Promise<CallResult>) {}
+  constructor(readonly source: ViewSource, readonly access: Parameters<ViewSource["read"]>[1], readonly perform: (kind: string, args: Record<string, unknown>, admit: () => void | Promise<void>) => Promise<CallResult>, readonly settle: (args: Record<string, unknown>) => Promise<CallResult>) {}
   #instance(key: string): Instance {
     const instance = this.#instances.get(key);
     if (!instance) throw new ViewError("absent", "This view is no longer retained. Open it again; no act was sent.");
@@ -91,15 +91,15 @@ export class ViewSessions {
     if (!this.#active(instance)) throw new ViewError("superseded", "A newer card replaced this one. Its receipts remain readable; no new act was sent.");
     if (instance.cut !== cut) throw new ViewError("stale", "The displayed card changed. Read it again; no new act was sent.");
   }
-  async open(key: string, screen: ViewKind, subject?: string) {
+  async open(key: string, screen: ViewKind, subject?: string, items?: Readonly<Record<string, number>>) {
     if (!validKey(key)) throw new ViewError("shape", "Choose a view key of 1 to 128 UTF-8 bytes.");
     const old = this.#instances.get(key);
     if (old) {
-      if (old.query.screen !== screen || old.query.subject !== subject) throw new ViewError("shape", "This view key already names another opening.");
+      if (old.query.screen !== screen || old.query.subject !== subject || canonicalize(old.query.items ?? {}) !== canonicalize(items ?? {})) throw new ViewError("shape", "This view key already names another opening.");
       return this.opening(old);
     }
     if (this.#instances.size >= MAX_INSTANCES) throw new ViewError("busy", "This connection retains its maximum of 128 views. Start a new connection.");
-    const query: ViewQuery = { screen, position: 0, page: "summary", ...(subject === undefined ? {} : { subject }) };
+    const query: ViewQuery = { screen, position: 0, page: "summary", ...(subject === undefined ? {} : { subject }), ...(items === undefined ? {} : { items: structuredClone(items) }) };
     const instance: Instance = { key, query, cut: 0, projection: { status: "unavailable", count: 0, position: 0, fallback: "Loading the card." }, busy: true, dispatches: new Map(), pending: new Map() };
     this.#instances.set(key, instance);
     this.#current.set(screen, key);
@@ -111,7 +111,8 @@ export class ViewSessions {
   private opening(instance: Instance) {
     const { card, status, count } = instance.projection;
     const identity = card ? this.#identity(card) : null;
-    const text = `${instance.query.screen}: ${status}${identity ? `; ${identity.kind} ${identity.item}, revision ${identity.revision}` : ""}. ${count} item${count === 1 ? "" : "s"}. Use the card's arrows and title, or inspect the subject with the normal read tools.`;
+    const text = this.source.declared ? `${instance.projection.fallback}${identity ? ` ${identity.kind} ${identity.item}, revision ${identity.revision}.` : ""}`
+      : `${instance.query.screen}: ${status}${identity ? `; ${identity.kind} ${identity.item}, revision ${identity.revision}` : ""}. ${count} item${count === 1 ? "" : "s"}. Use the card's arrows and title, or inspect the subject with the normal read tools.`;
     return { view: instance.key, screen: instance.query.screen, status, identity, count, text };
   }
   #identity(card: Card) {
@@ -130,6 +131,7 @@ export class ViewSessions {
       reviewIntended: query.page === "updates" ? structuredClone(card?.reviewIntended ?? []) : [],
       unavailable: structuredClone(card?.unavailable ?? []), waitsOn: [...(card?.waitsOn ?? [])], settles: [...(card?.settles ?? [])],
       navigation: query.page === "summary" ? [...(projection.position > 0 ? ["previous"] : []), ...(projection.position + 1 < projection.count ? ["next"] : []), ...(card ? ["open"] : [])] : ["back", ...(card?.diffAvailable && query.page === "item" ? ["diff"] : [])],
+      ...(card?.declared ? { note: card.declared.context } : {}),
       ...(instance.receipt ? { receipt: instance.receipt } : {}),
     };
     return structuredClone({ view: instance.key, cut: instance.cut, active: this.#active(instance), query, status: projection.status, position: projection.position, count: projection.count,
@@ -190,7 +192,10 @@ export class ViewSessions {
       args["idempotencyKey"] = `view-${crypto.randomUUID()}`;
     }
     instance.busy = true;
-    const dispatch = action.purpose === "check-original" ? this.settle(args) : this.perform(action.kind, args, () => this.#admit(instance, cut));
+    const dispatch = action.purpose === "check-original" ? this.settle(args) : this.perform(action.kind, args, () => {
+      this.#admit(instance, cut);
+      return this.source.admit?.(instance.query, card, action).then(() => this.#admit(instance, cut));
+    });
     if (action.purpose !== "check-original") instance.dispatches.set(dispatchKey, dispatch);
     try {
       const result = await dispatch;

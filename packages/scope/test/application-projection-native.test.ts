@@ -6,10 +6,10 @@ import { env, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { canonicalize, isSeed, scopeIdOf } from "@generalbusiness/artroom-bytes";
 import { encodeApplicationProjectionQuery, readApplicationProjectionReply } from "@generalbusiness/artroom-bytes/application-v2";
-import { PROPOSED_BOUNDS, type ApplicationProjectionQuery, type ScopeRef } from "@generalbusiness/dap-contract";
+import { DOMAINS, PROPOSED_BOUNDS, type ApplicationProjectionQuery, type ScopeRef } from "@generalbusiness/dap-contract";
 import { DECLARED_APPLICATION_COHORT as C } from "@generalbusiness/dap-platform";
 import { requestSession, sessionRequest, ScopeHandle, httpTransport, bindingTransport, secretSigner, signedApplicationInstall, ApplicationPackageError, type ServiceBinding } from "@generalbusiness/artroom-client";
-import { McpService, memoryStore as custodyStore } from "@generalbusiness/dap-mcp";
+import { McpService, memoryStore as custodyStore, type ServerPort } from "@generalbusiness/dap-mcp";
 import nativeWorker from "../../../apps/room/worker.ts";
 import { outsideOf as hostOutside } from "../src/worker.ts";
 import { applicationCounterPacket2 } from "./support/application-v2-fixture.ts";
@@ -46,11 +46,12 @@ test("native installed projection reads exact journal state and survives R2 dele
     const selection = { rules: await life.wait(() => A.at()), uri: f.uri, release: packet.ids.release, roles: ["admin", "member"] as const, values: { target: 7 } };
     // The existing SDK install keeps its v1 codec strict.
     await expect(signedApplicationInstall(secretSigner(rita.secret), packet.bytes, selection, { now: life.now() })).rejects.toBeInstanceOf(ApplicationPackageError);
-    const mcp = new McpService({ service: "https://scopes.test", signer: secretSigner(rita.secret), custody: custodyStore(), now: life.now,
+    const port: ServerPort = { service: "https://scopes.test", signer: secretSigner(rita.secret), custody: custodyStore(), now: life.now,
       config: { read: async () => ({ service: "https://scopes.test", repository: { directory, membership, rules: A.name, destination: G.name } }),
         addRoot: async () => { throw Error("Native installs are discovered through Directory."); } },
       applicationFetch: peer.fetch, fetch: (url, init) => life.wait(() => routed(url, init)),
-    });
+    };
+    const mcp = new McpService(port);
     const args = { uri: f.uri, release: packet.ids.release, roles: ["admin", "member"], values: { target: 7 }, idempotencyKey: "TEST-native-v2-install" };
     const accepted = await life.wait(() => mcp.call("install_application", args));
     expect(accepted.isError, JSON.stringify(accepted.structuredContent)).toBe(false);
@@ -131,5 +132,43 @@ test("native installed projection reads exact journal state and survives R2 dele
     expect(updated.value.value.sources["board"]![0]!.revision).toBe(board.revision + 1);
     expect(updated.value.value.at).not.toEqual(first.value.value.at);
     expect((await life.wait(() => A.entries())).filter(entry => entry.input.type === "act" && entry.input.signed.intent.kind === "install-application")).toHaveLength(1);
+    let viewSignatures = 0;
+    const signer = secretSigner(rita.secret);
+    const views = new McpService({ ...port, custody: custodyStore(), declaredViews: { bytes: packet.bytes, release: packet.ids.release, item: job },
+      signer: { key: signer.key, sign: bytes => { if (new TextDecoder().decode(bytes).startsWith(`${DOMAINS.intent}\n`)) viewSignatures++; return signer.sign(bytes); } },
+    });
+    expect((await life.wait(() => views.call("view_board", { view: "paused" }))).isError).toBe(false);
+    const paused = await life.wait(() => views.call("view_read", { view: "paused" }));
+    expect(paused.structuredContent).toMatchObject({ display: { card: { declared: { data: updated.value.value } } } });
+    const start = async () => {
+      const current = (await read()).value;
+      if (!current?.ok) throw Error("The board must be readable before the native control.");
+      await life.wait(() => app.did(rita, "start", { on: board.id, expected: { on: current.value.sources["board"]![0]!.revision } }));
+    };
+    const open = async (view: string) => {
+      const opening = await life.wait(() => views.call("view_board", { view }));
+      expect(opening.isError, JSON.stringify(opening.structuredContent)).toBe(false);
+      expect(JSON.stringify(opening)).not.toContain("lastNumber");
+      const detail = await life.wait(() => views.call("view_read", { view, cut: 0, page: "item" }));
+      expect(detail.structuredContent).toMatchObject({ display: { cut: 1, card: { actions: [{ id: "pause" }] } } });
+    };
+    await start(); await open("stale");
+    const opened = (await read()).value; if (!opened?.ok) throw Error("Expected open board.");
+    await life.wait(() => app.did(rita, "pause", { on: board.id, expected: { on: opened.value.sources["board"]![0]!.revision } }));
+    expect((await life.wait(() => views.call("view_act", { view: "stale", cut: 1, action: "pause" }))).structuredContent).toMatchObject({ error: "view", reason: "stale" });
+    expect(viewSignatures).toBe(0);
+    await start(); await open("current");
+    expect((await life.wait(() => views.call("view_act", { view: "current", cut: 1, action: "pause" }))).structuredContent).toMatchObject({ result: { structuredContent: { answer: "accepted" } } });
+    expect(viewSignatures).toBe(1);
+    await start(); await open("role-loss");
+    const roster = await life.wait(() => M.item(0)), actions = roster.values["adminActions"] as readonly string[];
+    await life.wait(() => M.did(rita, "set-actions", { on: 0, expected: { on: roster.revision }, fields: { role: "admin", actions: actions.filter(action => action !== "counting.control") } }));
+    expect((await life.wait(() => views.call("view_act", { view: "role-loss", cut: 1, action: "pause" }))).structuredContent).toMatchObject({ error: "view", reason: "stale" });
+    expect(viewSignatures).toBe(1);
+    const changedRoster = await life.wait(() => M.item(0));
+    await life.wait(() => M.did(rita, "set-actions", { on: 0, expected: { on: changedRoster.revision }, fields: { role: "admin", actions } }));
+    await open("role-restored");
+    expect((await life.wait(() => views.call("view_act", { view: "role-restored", cut: 1, action: "pause" }))).structuredContent).toMatchObject({ result: { structuredContent: { answer: "accepted" } } });
+    expect(viewSignatures).toBe(2);
   } finally { await env.APPLICATION_CONTENT.delete(f.key); life.release(); }
 }, 30_000);

@@ -254,11 +254,76 @@ view and unmeasured competing load. Client, MCP and Scope test typechecks
 pass. Generic rendered views, current control authority and kit acceptance
 remain owed; no final gate or review submission yet.
 
-The following acceptance remains owed: shared host/MCP/kit projection bytes
-and revision, presentation declarations and generic kinds, model-facing
-fallback and identity with view-only data, current-revision and held-action
-enforcement, Grow alert/grid declarations, Counter/Lending migration, named
-native witnesses and paired controls, the final gate, review and landing.
+The generic declared-view source now owns a verified v2 packet and rechecks
+its exact active native install before reading. It derives fields, facts,
+fallback, waiting text, identity and at most two controls from declarations.
+MCP exposes a tool per declared view and a separate app-only display read.
+The model-facing opening contains the declared fallback and identity. The
+app receives the original native projection data and head inside its display.
+The kit accepts an omitted actor, uses the declared display mode and refresh
+interval, and reports the declared context separately from private fields.
+Declared resources use distinct ui://dap/declared/ names with the generic
+kit's checked resource bytes; no package read adapter executes in the host.
+
+The signing-admission callback can now await the declared source's fresh
+native read and current role actions inside the custody build. It rejects a
+changed item incarnation/revision or a no-longer-offered when/needs control
+before a new intent signature. Native expected revisions and actual grants
+still judge submission. The real installed Counter fixture now checks stale
+item and actual Membership7 action-list loss, then passing restored/current
+controls. Both negatives sign no new intent. This case and the existing card
+custody/supersession witness pass (`28934`, terminal `6fe95a`, exit 0), two
+files/two cases; log
+`/tmp/artroom-m2a-declared-view-native-compatibility-20261018.log`.
+Outer cost: 3.81 s wall, 4.13 s user, 0.52 s system on the shared arm64 Mac,
+warm dependency view, competing load unmeasured.
+
+Removing current held-action filtering distinguishes the native negative:
+it signs a request which Native refuses unauthorized instead of the required
+pre-signing view refusal (`43595`, terminal `f81f6b`, production restored).
+Log: `/tmp/artroom-m2a-declared-view-needs-control-20261018.log`.
+Bypassing when evaluation exposes Pause in the paused fixture and fails its
+intended assertion (`af8ca3`, restored); log
+`/tmp/artroom-m2a-declared-view-when-control-corrected-20261018.log`.
+The first attempt at that control had a malformed inline test comment and
+failed transformation (`6750a9`); it is not semantic control evidence.
+
+The new pure declared-view cases and affected mounted-view/resource cases
+pass (`18e481`), three files/six cases. They use labelled native-port fixtures;
+the actual authority/control witness is the Workerd case above. MCP source,
+test, browser and native-story typechecks pass. The existing pinned derive
+dependency moves from development to production in MCP's manifest and lock
+metadata because the generic host now evaluates restricted@1 expressions.
+Its version and installed bytes are unchanged; no install ran. Generic kit
+resources were regenerated from the production browser inputs.
+
+Two targeted browser cases pass at actual inner widths 320 and 592, using
+cached Playwright 1.63.0 and Chromium 153.0.8010.12 because the Browser plugin
+is unavailable (`51927`, terminal `3aca9c`, exit 0). Both keep the card inside
+the actual resized inner viewport, show no horizontal overflow or invented
+actor, retain the declared inline mode, and keep projection fields out of
+the model context. The fixture host refuses model access to the app-only
+read. This is that host's visibility check, not new native authority. The
+native install/projection/role ports in this browser fixture are scripted;
+real Native behavior is covered separately above. The final report and two
+visually inspected PNGs are under
+`/tmp/artroom-m2a-declared-card-browser-final-20261018/`.
+An earlier capture (`46098`, terminal `8fec94`) caught the wide screenshot
+before nested resize finished. The strengthened check waits for the actual
+inner viewport to contain the card. Node's DEP0205 loader warning is retained;
+the browser reports no page or console errors. No provider or deployment ran.
+
+This is a declared-card integration, not completion of the five-kind
+renderer or automatic package discovery. Carousel/record/log/surface display,
+declared back/opens navigation, complete maintained Counter/Lending packages,
+Grow alert/grid declarations and several-scope birth remain implementation
+work. The final gate, exact-head review and landing have not started.
+
+The following acceptance remains owed: complete generic kinds and navigation,
+Grow alert/grid declarations, Counter/Lending migration, their named native
+witnesses and paired controls, the final gate, review and landing. Shared
+host/SDK/MCP/kit data and current control checks have the focused Counter
+fixture evidence above; the complete maintained packages still owe them.
 Several-scope birth remains the parent task's separate acceptance. No hostile
 package containment, presentation update, device command or deployment is
 claimed.
