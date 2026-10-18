@@ -16,7 +16,7 @@ html, body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.45
 .card { border: 1px solid var(--line); padding: 12px 14px; background: var(--bg); }
 .card h2 { font-size: 17px; line-height: 1.3; margin: 4px 0 8px; font-weight: 650; letter-spacing: -.01em; }
 .card h2 .tag { font-weight: 400; margin-left: 6px; }
-.top { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); }
+.top { display: flex; align-items: center; gap: 10px; min-height: 28px; font-size: 13px; color: var(--muted); }
 .top .tag { margin-left: auto; }
 .tag { font: 12px/1.4 ui-monospace, monospace; color: var(--muted); }
 .who { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
@@ -25,12 +25,12 @@ html, body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.45
 .mk.person { border-radius: 50%; }
 .mk.checker { background: transparent; border: 1.5px solid var(--accent); width: 8px; height: 8px; transform: rotate(45deg); margin: 0 1px; }
 .acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; align-items: center; }
-.b { display: inline-flex; align-items: center; justify-content: center; font: 600 14px/1 system-ui, sans-serif; min-height: 36px; padding: 0 14px; border: 1px solid var(--accent); background: transparent; color: var(--accent); cursor: pointer; }
+.b { display: inline-flex; align-items: center; justify-content: center; font: 600 14px/1 system-ui, sans-serif; min-height: 44px; min-width: 44px; padding: 0 16px; border: 1px solid var(--accent); background: transparent; color: var(--accent); cursor: pointer; }
 .b.p { background: var(--action); color: var(--action-text); border-color: var(--action); clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%); }
 :root[data-theme="dark"] .b.p { color: #fff; }
 .b:disabled { opacity: .45; cursor: default; }
-.ask { margin-left: auto; font: 13px/1 system-ui, sans-serif; color: var(--muted); background: none; border: 0; padding: 6px 0; cursor: pointer; text-decoration: underline; text-underline-offset: .18em; }
-.back { color: var(--accent); text-decoration: none; font-weight: 600; }
+.ask { margin-left: auto; display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; font: 13px/1 system-ui, sans-serif; color: var(--muted); background: none; border: 0; padding: 0 4px; cursor: pointer; text-decoration: underline; text-underline-offset: .18em; }
+.back { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; padding: 0 4px 0 0; color: var(--accent); text-decoration: none; font-weight: 600; }
 .tabs { display: flex; gap: 14px; margin: 8px 0 6px; font-size: 13px; color: var(--muted); }
 .tabs .on { color: var(--fg); font-weight: 600; border-bottom: 2px solid var(--accent); }
 .room { display: flex; gap: 16px; align-items: flex-start; }
@@ -43,6 +43,7 @@ html, body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.45
 .cols span:first-child { width: 12px; }
 .row { margin-top: 2px; }
 .cell { display: block; width: 22px; height: 22px; border-radius: 2px; flex: none; }
+/* The cells are a picture; a zone's row is the target that opens it. */
 .cell.zr { margin-right: 4px; }
 .cell.zb { margin-bottom: 4px; }
 .cell.out { outline: 1.5px solid var(--danger); outline-offset: -1.5px; }
@@ -53,9 +54,9 @@ html, body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.45
 .stats b { font-size: 20px; }
 .muted { color: var(--muted); }
 .zones, .rooms { list-style: none; margin: 0; padding: 0; font-size: 13px; }
-.zones li, .rooms li { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; padding: 6px 0; border-top: 1px solid var(--line); }
+.zones li, .rooms li { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; padding: 2px 0; border-top: 1px solid var(--line); }
 .zones li.hot, .rooms li.hot { border-left: 3px solid var(--danger); padding-left: 6px; }
-.zones a, .rooms a { color: var(--fg); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
+.zones a, .rooms a { color: var(--fg); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; min-width: 44px; padding-right: 4px; }
 .zones a::after, .rooms a::after { content: " ›"; color: var(--accent); }
 .t { font: 600 13px/1.4 ui-monospace, monospace; }
 .dev { color: var(--muted); font: 12px/1.4 ui-monospace, monospace; }
@@ -66,21 +67,21 @@ html, body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.45
 .alert .at { margin: 0; font-weight: 600; }
 .alert .ap { margin: 4px 0 0; font-size: 14px; }
 .warn { color: var(--danger); }
-.act-line { display: flex; align-items: center; gap: 8px; margin: 10px 0 0; font-size: 14px; color: var(--muted); }
+.act-line { display: flex; align-items: center; gap: 8px; margin: 4px 0 0; font-size: 14px; color: var(--muted); }
 .pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
-.log-link { margin-left: auto; color: var(--accent); text-decoration: none; font-size: 13px; }
+.log-link { margin-left: auto; display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; padding: 0 4px; color: var(--accent); text-decoration: none; font-size: 13px; }
 .facts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 6px 0; font-size: 14px; }
 .spark { display: block; margin: 6px 0; overflow: visible; }
 .spark .bandfill { fill: var(--added); }
 .spark .line { fill: none; stroke: var(--accent); stroke-width: 1.5; }
 .spark .dot { fill: var(--accent); }
 .rules { font-size: 13px; color: var(--muted); margin: 6px 0 0; }
-.slide h2 { margin: 6px 0 4px; }
-a.open { color: var(--fg); text-decoration: none; }
+.slide h2 { margin: 2px 0 0; }
+a.open { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; color: var(--fg); text-decoration: none; }
 a.open::after { content: " ›"; color: var(--accent); }
 .sum { margin: 0; color: var(--muted); font-size: 14px; }
 .hint { margin: 10px 0 0; font-size: 13px; color: var(--muted); }
 .pager { display: flex; align-items: center; gap: 10px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
-.pager .b.nav { width: 40px; height: 36px; font: 600 22px/1 system-ui, sans-serif; padding: 0 0 3px; }
+.pager .b.nav { width: 44px; height: 44px; min-width: 44px; font: 600 22px/1 system-ui, sans-serif; padding: 0 0 3px; }
 .pager .count { font: 12px/1 ui-monospace, monospace; color: var(--muted); margin-left: auto; }
 @media (max-width: 420px) { .room { flex-direction: column; } }

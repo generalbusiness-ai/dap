@@ -103,23 +103,36 @@ authorization entry grants it nothing. "Restore heater 2?" later in the
 story is the same shape: the agent proposes, the operator's `authorize`
 commands.
 
-A device item's state is the commanded state, not the physical one.
+A device item holds three facts, and no act writes more than one of
+them. Its **target** is the commanded state, written by `set-vent`,
+`set-fan`, `set-heater` and `authorize`. Its **reported** state is what
+the sensors last observed, written by `report-device`; it is `error`,
+with the sensors' description, while the device is failing. Its
+**outcome** is the device-command owner's answer to the last command,
+`confirmed`, `refused` or `unknown`, recorded by that capability's
+operation record rather than by a member's act. A command never writes
+the reported state, an observation never writes the target, and a
+reported `error` keeps the last target. So a late observation of heater 2
+on, after the operator has commanded it off, is recorded beside the
+target and is not a command. The error guard reads the reported state.
+
 Commanding a device is an outside effect. The package declares a bounded
-device-command capability whose owner sends each command at most once and
-records `confirmed`, `refused` or `unknown`, as the platform's
+device-command capability whose owner sends each target at most once and
+records the outcome, as the platform's
 [operation driver](../packages/scope/src/operations.ts) does for its own
 sends. That owner is not designed here; it is a prerequisite (section 7,
 open question 6). The sensors' next `report-device` is the evidence of
-what the device did. A successful transition never stands for a physical
-change, and an unknown outcome stays unknown, as the application guide's
+what the device did. A written target never stands for a physical change,
+and an unknown outcome stays unknown, as the application guide's
 outside-effect rule says.
 
 Three guards carry the rest of the story:
 
-- A device in the `error` state refuses `set-vent`, `set-fan` and
-  `set-heater`, and the refusal quotes the description the sensors wrote.
-  `error` is the one state for every failure; the description says which.
-  The definition does not enumerate failure modes.
+- A device whose reported state is `error` refuses `set-vent`, `set-fan`
+  and `set-heater`, and the refusal quotes the description the sensors
+  wrote. `error` is the one reported state for every failure; the
+  description says which. The definition does not enumerate failure
+  modes.
 - `raise-alert` needs the zone out of band and the agent's own devices at
   their limits. An agent cannot ask a person to do its work for it.
 - `authorize` and `hold` name the alert's revision. An authorization of
@@ -145,7 +158,9 @@ The grid card is a heatmap of the hundred cells, a legend with the band,
 the count in band with min, mean and max, and one row per zone with its
 mean and its three devices. A line under the grid shows what the climate
 agent is doing, or that all zones are in band. The card refreshes itself.
-Clicking a cell or a zone row opens the zone: a sparkline of its recent
+The cells are a picture, not targets: ten targets of the kit's 44 px size
+do not fit across a chat card, so a zone's row is the way in. Clicking a
+zone row opens the zone: a sparkline of its recent
 readings against the band, its devices, the two authority rules that
 apply, and two acts, which for the operator are heater on or off and vent
 open or closed. Back returns to the grid.
@@ -184,9 +199,10 @@ people:
   walks over, frees the jammed vane, and reports it. The report carries a
   photo, kept in the room's custody. The sensors then record vent 2 open.
 
-The operator authorizes, which is the heater command, signed by the
-operator: one entry. The device owner records the command's outcome, and
-the sensors report heater 2 off: two more entries. The zone cools. The agent returns vents 1
+The operator authorizes, which writes heater 2's target `off`, signed by
+the operator: one entry. The device-command owner records the command's
+outcome, and the sensors report heater 2 off, which now matches its
+target: two more entries. The zone cools. The agent returns vents 1
 and 4 to normal, and, because vent 2 is free again, asks once more: "Vent
 2 is responding. Restore heater 2?" That too needs the operator, so it is
 one more card with two acts. When every cell of zone 2 is in band the
@@ -239,7 +255,7 @@ the row and column labels, the legend and the zone rows are below it:
 
 ![Room A's grid card with the alert block at the top, the north-east zone hot, the zone rows and the legend](2026-10-17-grow-operation-application-design/renders/grid-alert-light.png)
 
-Zone 2 opened from the grid, in the dark theme: the sparkline against
+Zone 2 opened from its row, in the dark theme: the sparkline against
 the band, the device states, the two rules, and the two acts, with the
 vent act disabled while the vent is in error:
 
@@ -307,9 +323,11 @@ tasks and watering requests. Two scopes share no storage, so a room's
 incident never waits on another room.
 
 **Items.** `zone` (band, setpoint, state in or out of band; refs to its
-devices), `device` (kind; state `open`, `closed`, `on`, `off` or `error`;
-level; and, in `error`, the description the sensors wrote, such as
-"commanded open, reads closed, no response"), `bench` (last probe values and the entry that recorded
+devices), `device` (kind; three facts as section 3 defines them: the
+target `open`, `closed`, `on` or `off` with its level; the reported
+state, the same values or `error` with the sensors' description, such as
+"commanded open, reads closed, no response"; and the outcome of the last
+command), `bench` (last probe values and the entry that recorded
 them), `alert` (states `open`, `held`, `authorized`, `closed`; parties: the
 agent that raised it and the member who authorized; values: text,
 proposal, revision), `incident` (refs to its alert and its first and last
@@ -326,11 +344,13 @@ named "section 6.4"; [the ten terms](../docs/manual/ten-terms.md),
 "Step"). So `observe` records a reading summary in its input and nothing
 more, and the `grid` projection derives the latest readings from those
 entries. `report-device` is a guarded transition on the device item,
-signed by the sensors, that sets the reported state and, for `error`, the
-description. `set-vent`, `set-fan` and `set-heater` are transitions on the
-device item that set its commanded state. `raise-alert` opens an alert;
-`authorize`, `hold` and `close-incident` transition it, and `authorize`
-names the heater item as well. `probe` transitions a bench; `take-task`
+signed by the sensors, that writes the reported state only and, for
+`error`, the description. `set-vent`, `set-fan` and `set-heater` are
+transitions on the device item that write the target only. The outcome is
+written by the device-command capability's operation record, not by an
+act. `raise-alert` opens an alert; `authorize`, `hold` and
+`close-incident` transition it, and `authorize` names the heater item as
+well, writing its target. `probe` transitions a bench; `take-task`
 and `report-task` transition a task. `arrive` and `leave` are comment-form
 acts on the site scope, and the presence projection derives who is where
 from them.

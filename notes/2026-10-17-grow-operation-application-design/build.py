@@ -79,7 +79,7 @@ def grid(cs: list[float], theme: str, labels: bool = True) -> str:
             t = cs[i]
             out = " out" if (t < SET - BAND or t > SET + BAND) else ""
             cls = "cell" + (" zr" if c == 4 else "") + (" zb" if r == 4 else "") + out
-            row += f'<a class="{cls}" href="zone-{theme}.html" style="background:{colour(t, theme)}" title="{ROWS[r]}{c + 1} · {t:.1f}°" aria-label="{ROWS[r]}{c + 1} {t:.1f}°"></a>'
+            row += f'<span class="{cls}" style="background:{colour(t, theme)}" title="{ROWS[r]}{c + 1} · {t:.1f}°" role="img" aria-label="{ROWS[r]}{c + 1} {t:.1f}°"></span>'
         rows.append(f'<div class="row">{row}</div>')
     return f'<div class="grid">{head}{"".join(rows)}</div>'
 
@@ -187,8 +187,8 @@ def tender_task(theme: str) -> str:
 
 
 def tender_bench(theme: str) -> str:
-    return (f'<div class="slide">{who("Room sensors", "checker")}<h2><a class="open" href="#">Bench C4</a></h2>'
-            f'<p class="sum">moisture 31% · EC 2.1 · pH 5.9 · probed 2 days ago</p></div>'
+    return (f'<div class="slide">{who("Theo", "person")}<h2><a class="open" href="#">Bench C4</a></h2>'
+            f'<p class="sum">moisture 31% · EC 2.1 · pH 5.9 · Theo probed it 2 days ago</p></div>'
             f'<p class="hint">Type the new probe in the chat.</p>'
             f'<div class="pager"><button class="b nav" aria-label="Previous">‹</button><span class="count">2 / 4</span><button class="b nav" aria-label="Next">›</button></div>')
 
