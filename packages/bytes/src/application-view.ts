@@ -48,6 +48,11 @@ const fail = (reason: ApplicationViewError["reason"] = "invalid"): never => { th
 const name = (value: unknown): string => typeof value === "string" && /^[A-Za-z][A-Za-z0-9_.-]{0,127}$/.test(value) ? value : fail();
 const text = (value: unknown, max: number): string => typeof value === "string" && value.length > 0 && value.length <= max && utf8(value).length <= max ? value : fail();
 const only = (value: unknown, keys: string): Record<string, unknown> => isRecord(value) && Object.keys(value).sort().join() === keys ? value : fail();
+export function isApplicationViewResource(value: unknown): value is string {
+  return typeof value === "string" && value.length <= 256
+    && /^ui:\/\/[A-Za-z0-9][A-Za-z0-9._-]{0,63}(?:\/[A-Za-z0-9][A-Za-z0-9._-]{0,63})+$/.test(value)
+    && !value.slice(5).split("/").some(part => part === "." || part === "..");
+}
 const dict = (value: unknown, most: number): Record<string, unknown> => {
   if (!isRecord(value)) return fail();
   const keys = Object.keys(value); if (keys.length > most) return fail("limit");
@@ -95,9 +100,7 @@ export function readApplicationViews(value: unknown): ApplicationViews {
       name(act["needs"]); text(act["label"], 80); text(act["when"], B.expressionBytes);
     }
     if (view["kind"] === "surface") {
-      const resource = text(view["resource"], 256);
-      if (acts.length || !/^ui:\/\/[A-Za-z0-9][A-Za-z0-9._-]{0,63}(?:\/[A-Za-z0-9][A-Za-z0-9._-]{0,63})+$/.test(resource)
-        || resource.slice(5).split("/").some(part => part === "." || part === "..")) return fail();
+      if (acts.length || !isApplicationViewResource(view["resource"])) return fail();
       for (const target of Object.values(dict(view["opens"], 16))) name(target);
     } else {
       if (typeof view["kind"] !== "string" || !["card", "carousel", "record", "log"].includes(view["kind"])) return fail();

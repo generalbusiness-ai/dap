@@ -73,6 +73,25 @@ the required-action comparison makes the intended assertion fail
 authorize a current viewer, render a resource or sign anything; the real
 host still owes those boundaries and their native witnesses.
 
+The separate v2 codec now carries a projection for each definition, binds
+views to those projections, and maps surface resource URIs to exact HTML
+assets. It uses explicit v2 wire/domain versions for semantics, presentation,
+manifest, release and signature. Legacy readers and native Rules5 still
+call only the strict v1 entry points. Two owning codec cases pass
+(`4e5558`, then strengthened `acd7b9` and error-boundary update `db4fe2`),
+with source/test typechecks. Projection changes alter semantic identity;
+view-only changes preserve it and alter presentation identity. Release
+proofs verify without pretending to carry screen assets.
+
+The cross-version witness includes a correctly signed v1 proof with
+nonempty projections, so its refusal is not explained by an invalid
+signature or a v2 envelope. Removing the strict legacy empty-projection
+check makes that intended assertion fail (`125c34`, source restored).
+No public export, native v2 install, operator trust, host route or viewer
+authorization is enabled by this preparation yet. The next integration
+must select a new native pin and retain its exact semantic proof; it must
+not change historical judgment by switching the old native reader.
+
 It does not yet read a journal, authorize a viewer, install a package, or
 render a view. Those remain implementation work.
 
