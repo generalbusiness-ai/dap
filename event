@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at apps/counter/browser/vite.config.ts","body":{"commit":"ad39fdf16dcb4fc5b6f961107757349a5ea323e7","path":"apps/counter/browser/vite.config.ts"}}
+{"kind":"artifact","text":"Merge published the current artifact at apps/counter/scripts/test-browser.mjs","body":{"commit":"ad39fdf16dcb4fc5b6f961107757349a5ea323e7","path":"apps/counter/scripts/test-browser.mjs"}}
