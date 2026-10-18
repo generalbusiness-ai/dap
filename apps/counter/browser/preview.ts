@@ -6,6 +6,7 @@ import { canonicalize, entryHash, factRefOf, intentDigest, keyIdOfSecret, newInc
 import { secretSigner, type Fetch, type HeadStreamFetch } from "@generalbusiness/artroom-client";
 import { COUNTING_COMMITMENTS_DEFINITION as COUNTING_DEFINITION } from "../commitments-pin.ts";
 import { nativeGateway } from "./client.ts";
+import { scriptedCounterProjection } from "./projection-fixture.ts";
 import { mountCountingStage } from "./app.ts";
 import { privateCommandStore, privatePendingStore } from "./storage.ts";
 import type { ActorIdentity, CustodyLock, SpeechPort } from "./voice-controller.ts";
@@ -31,7 +32,8 @@ const fakeFetch:Fetch=async(url,init)=>{
   if(path.endsWith("/sessions")){const request=JSON.parse(init?.body??"{}").request as {actor:string};const i=keys.findIndex(k=>keyIdOfSecret(k)===request.actor);return i<0?Response.json({ok:false,reason:"unauthorized"}):Response.json({ok:true,token:"FAKE session only",session:{v:1,deployment:DEPLOYMENT,membership:M,member:members[i]!.member,key:request.actor,reads:["summary","entry","retained"],ends:new Date(Date.now()+60_000).toISOString()}});}
   if(path.endsWith("/settle")){settles++;const signed=JSON.parse(init?.body??"{}").signed as SignedIntent;const receipt=receipts.get(canonicalize(signed));return receipt?read(receipt):Response.json({ok:false,reason:"not-found"});}
   if(path.includes("/entries/")){const entry=entries.get(Number(path.split("/").at(-1)));return entry?read({entry,hash:entryHash(entry)}):Response.json({ok:false,reason:"not-found"});}
-  if(!path.endsWith("/acts"))return read(structuredClone(summary()));
+  if(path.endsWith("/application-projection"))return new Response(scriptedCounterProjection(new URL(url).searchParams.get("p")!,summary(),head()),{headers:{"content-type":"application/json"}});
+  if(!path.endsWith("/acts"))throw Error(`The FAKE Counter preview does not provide this read: ${path}`);
   posts++;const signed=JSON.parse(init?.body??"{}").signed as SignedIntent;const i=keys.findIndex(k=>keyIdOfSecret(k)===signed.intent.actor),actor=members[i];if(!actor)return Response.json({answer:"refused",reason:"unauthorized",judgedAt:head()});
   const f=signed.intent.fields,kind=signed.intent.kind;
   // Script only expected source-QA paths; this is NOT native guard/admission proof.
@@ -53,7 +55,7 @@ const speech:SpeechPort={voices:()=>[{id:"fake-1",name:"Fake voice 1 · en-US"},
 const identity:ActorIdentity={origin:ORIGIN,deployment:DEPLOYMENT,scope:S,definition:COUNTING_DEFINITION,membership:M,member:members[0]!,publicKey:keyIdOfSecret(keys[0]!)};
 // SCRIPTED preview lock; no mounted real credential or durable lease claim.
 const previewLock:CustodyLock={run:async work=>work()};
-const store=privatePendingStore(identity),lock=previewLock,commands=privateCommandStore(identity),gateway=nativeGateway(identity,secretSigner(keys[0]!),{current:()=>active,lock,voiceStore:store,commandStore:commands,fetch:fakeFetch,headFetch:fakeHeads,actFetch:async(url,init)=>{const response=await fakeFetch(url,{...init,signal:init.signal as never});return{status:response.status,body:response.body,headers:new Headers({"content-type":"application/json"}),url,redirected:false};}});
+const store=privatePendingStore(identity),lock=previewLock,commands=privateCommandStore(identity),gateway=nativeGateway(identity,secretSigner(keys[0]!),{application:{scope:S,directory:reference("directory","directory"),item:7,definition:COUNTING_DEFINITION},current:()=>active,lock,voiceStore:store,commandStore:commands,fetch:fakeFetch,headFetch:fakeHeads,actFetch:async(url,init)=>{const response=await fakeFetch(url,{...init,signal:init.signal as never});return{status:response.status,body:response.body,headers:new Headers({"content-type":"application/json"}),url,redirected:false};}});
 const app=mountCountingStage(document.querySelector<HTMLElement>("#counting")!,{speech,connect:()=>{},fake:true,now:()=>NOW});
 // The Vite preview reads source assets; installed packets carry their own brand/ files.
 const lightMark=document.querySelector<HTMLImageElement>(".wordmark-light"),darkMark=document.querySelector<HTMLImageElement>(".wordmark-dark");

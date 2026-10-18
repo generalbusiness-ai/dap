@@ -680,3 +680,51 @@ Browser/source/test/scope typechecks pass. Resources were regenerated from
 the actual browser code. No final gate, maintained browser migration,
 several-scope install ownership, Grow rendered journey or deployment is
 claimed. Review and landing remain owed.
+
+### Shared item selection and Counter browser reads
+
+The SDK now adapts a validated declared read to explicit selected item
+fields. It resolves aliases through the declaration, merges agreeing rows
+and preserves native revisions. It creates no `opened`, `attributed`,
+Summary status, time or count fields. A declaration mismatch, conflicting
+subject or missing selected field refuses. MCP control subject resolution
+uses the same adapter. One focused declaration-ID fault control
+distinguishes the mismatch refusal; production code is restored. Log:
+`/tmp/artroom-m2a-item-selection-declaration-control-20261018.log`.
+
+The maintained Counter browser imports the package's actual declaration,
+binds its captured definition pin and requests `state` under the installed
+Directory/item/scope binding. Its application Summary read and fallback are
+removed. Its model accepts selected item fields and calls that input a
+snapshot. Observation uses the returned native head through the existing
+stream/freshness contract. Without installation metadata the observation
+reports unavailable. Signing, submission and custody retain their existing
+paths; the installed screen passes its actual context to the adapter.
+
+All 55 Counter source/custody cases pass (`4767`, terminal `f43da2`). Evidence:
+`/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/artroom-counting-node-FT3luW`.
+These are bundled Node cases with stand-in DOM/transport/speech, not a new
+rendered or native-install claim. The fake service uses the shared pure
+projection producer and rejects Summary routes. Its earlier fixtures omitted
+unset refs; they now supply selected nullable slots as null. The first run
+therefore timed out in three setup cases and reached the original 120 s
+driver bound. Its original handle ended before edits. The corrected single
+case passes before the 55-case run; no deadline or production guard changed.
+
+The first driver attempt stopped before collection on the stale dependency
+stamp. The existing private view was re-audited: all 106 installed versions
+and 13 local workspace links match the current lock. The only lock delta
+from its captured basis moves the same MCP derive dependency from dev to
+runtime. The metadata stamp was then adopted, with zero installs and no
+package/lock edit. Audit:
+`/tmp/artroom-m2a-dependency-metadata-adoption-20261018.json`, SHA-256
+`9d64f928a6631a7cc32e1d3be7a0648db60d6b2c1b7d4c158ff00003e1f61cd4`.
+This is resolution/version adoption, not a new tarball-integrity audit.
+
+Nine focused SDK/MCP cases pass (`35825`, terminal `e43f37`). The existing
+actual native install/projection/control witness passes after MCP adopts
+the shared selector (`86458`, terminal `b59875`). Counter, client and MCP
+typechecks pass. Lending's browser read conversion, explicit CLI selection
+for the new cohort, the actual Grow grid resource, complete maintained
+package native witnesses and parent several-scope ownership remain owed.
+No final gate, review, delivery or deployment is claimed.

@@ -1,6 +1,7 @@
 /** Proposals are convenience inputs. The native C1 declaration still checks authority and admission. */
 import type { FieldValue, MemberRef, ScopeRef, Summary } from "@generalbusiness/dap-contract";
 import { canonicalize, isMemberRef, timeMs } from "@generalbusiness/artroom-bytes";
+import type { ProjectedItem } from "@generalbusiness/artroom-client";
 import { countingCommitments } from "../commitments.ts";
 import { COUNTING_COMMITMENTS_DEFINITION } from "../commitments-pin.ts";
 import type { ActorIdentity, Completion, TurnToken } from "./voice-controller.ts";
@@ -19,8 +20,10 @@ export interface Board {
   /** These display values come only from the current linked promise, never a scheduler. */
   number: number|null; speaker: MemberRef|null; until: number|null;
 }
+/** Selected native item fields; this is not a Summary protocol reply. */
+export type CountingRead = Pick<Summary,"scope"|"definition"> & { readonly items:readonly ProjectedItem[];readonly status?:Summary["status"] };
 export interface CountingView {
-  summary: Summary; configuration: {id:number;revision:number;target:number;controller:MemberRef};
+  snapshot: CountingRead; configuration: {id:number;revision:number;target:number;controller:MemberRef};
   board: Board|null; participants: Participant[]; pledge: Pledge|null;
   /** May remain live briefly after the board's earlier expiry entry has cleared its link. */
   pendingPromise: Pledge|null;
@@ -37,19 +40,19 @@ const requiredMember = (v:unknown):MemberRef => member(v)??invalid();
 const instant = (v:unknown):number => timeMs(v)??invalid();
 const ref = (v:unknown):number|null => v==null?null:numeric(v);
 
-export function countingView(summary:Summary,scope:ScopeRef):CountingView {
-  if(!same(summary.scope,scope)||summary.definition!==COUNTING_COMMITMENTS_DEFINITION||summary.status!=="active")throw new Error("This is not the configured counting scope and pin.");
-  const configurations=summary.items.filter(i=>i.type==="configuration"),boards=summary.items.filter(i=>i.type==="board");
-  if(configurations.length!==1||boards.length>1||new Set(summary.items.map(i=>i.id)).size!==summary.items.length)invalid();
+export function countingView(snapshot:CountingRead,scope:ScopeRef):CountingView {
+  if(!same(snapshot.scope,scope)||snapshot.definition!==COUNTING_COMMITMENTS_DEFINITION||("status"in snapshot&&snapshot.status!=="active"))throw new Error("This is not the configured counting scope and pin.");
+  const configurations=snapshot.items.filter(i=>i.type==="configuration"),boards=snapshot.items.filter(i=>i.type==="board");
+  if(configurations.length!==1||boards.length>1||new Set(snapshot.items.map(i=>i.id)).size!==snapshot.items.length)invalid();
   const c=configurations[0]!,controller=requiredMember(c.parties["controller"]),target=numeric(c.values["target"],1,100);
   if(c.state!=="ready")invalid();
-  const participants=summary.items.filter(i=>i.type==="participant").map(i=>{
+  const participants=snapshot.items.filter(i=>i.type==="participant").map(i=>{
     if(!["inactive","active","removed"].includes(i.state))invalid();
     return{id:numeric(i.id),revision:numeric(i.revision),member:requiredMember(i.parties["agent"]),state:i.state as Participant["state"]};
   }).sort((a,b)=>a.id-b.id);
   const live=participants.filter(p=>p.state!=="removed");
   if(live.length>16||new Set(live.map(p=>canonicalize(p.member))).size!==live.length)invalid();
-  const pending=summary.items.filter(i=>i.type==="promise"&&i.state==="pledged");if(pending.length>1)invalid();
+  const pending=snapshot.items.filter(i=>i.type==="promise"&&i.state==="pledged");if(pending.length>1)invalid();
   let pendingPromise:Pledge|null=null;
   if(pending.length){
     const p=pending[0]!,raw=p.values["basis"];if(!Array.isArray(raw)||!raw.length||raw.length>16)invalid();
@@ -77,9 +80,9 @@ export function countingView(summary:Summary,scope:ScopeRef):CountingView {
     }
     if(board.state==="finished"&&board.lastNumber!==target)invalid();
   }else if(pendingPromise)invalid();
-  return{summary,configuration:{id:numeric(c.id),revision:numeric(c.revision),target,controller},board,participants,pledge,pendingPromise};
+  return{snapshot,configuration:{id:numeric(c.id),revision:numeric(c.revision),target,controller},board,participants,pledge,pendingPromise};
 }
-const matchesIdentity=(view:CountingView,actor:ActorIdentity):boolean=>actor.definition===COUNTING_COMMITMENTS_DEFINITION&&same(actor.scope,view.summary.scope)&&same(actor.member.membership,actor.membership);
+const matchesIdentity=(view:CountingView,actor:ActorIdentity):boolean=>actor.definition===COUNTING_COMMITMENTS_DEFINITION&&same(actor.scope,view.snapshot.scope)&&same(actor.member.membership,actor.membership);
 export function ownedParticipant(view:CountingView,actor:ActorIdentity):Participant|undefined{return view.participants.find(p=>p.state!=="removed"&&same(p.member,actor.member));}
 export function controllerOf(view:CountingView,actor:ActorIdentity):boolean{return same(view.configuration.controller,actor.member);}
 /** Eligibility is a convenience hint; grants, signer and fairness are still checked natively. */
@@ -136,9 +139,9 @@ export function proposal(view:CountingView,actor:ActorIdentity,kind:Control,comp
     }
   }
   const expected:Record<string,number>={},act=countingCommitments.acts[kind]!;
-  if(act.step==="transition"&&on!==null){const i=view.summary.items.find(i=>i.id===on);if(!i)unavailable("The selected item is unavailable.");expected["on"]=i.revision;}
+  if(act.step==="transition"&&on!==null){const i=view.snapshot.items.find(i=>i.id===on);if(!i)unavailable("The selected item is unavailable.");expected["on"]=i.revision;}
   for(const [name,rule]of Object.entries(act.also)){
-    const selected="one"in rule?view.summary.items.find(i=>i.type===rule.item):"by"in rule?view.summary.items.find(i=>i.id===fields[rule.by]):undefined;
+    const selected="one"in rule?view.snapshot.items.find(i=>i.type===rule.item):"by"in rule?view.snapshot.items.find(i=>i.id===fields[rule.by]):undefined;
     if(!selected)unavailable("A required counting item is unavailable.");expected[name]=selected.revision;
   }
   return{kind,on,fields,expected};

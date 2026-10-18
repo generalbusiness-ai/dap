@@ -57,7 +57,7 @@ test("Roster removal leaves the identity-owned original Check report reachable w
   try{
     await app.attach({identity,speech,gateway,store:{load:async()=>held,save:async p=>{held=p;},clear:async()=>{held=null;}},lock:{run:async work=>work()},current:()=>true});
     const summary={scope,status:"active",definition:COUNTING_DEFINITION,time:"2099-01-01T00:00:00Z",counts:[],items:[]} as Summary;
-    const view:CountingView={summary,configuration:{id:0,revision:1,target:3,controller:member},board:{id:1,revision:1,state:"paused",target:3,generation:0,serial:2,lastNumber:0,number:null,speaker:null,lastSpeaker:null,until:null,pledge:null,lastFulfilledAt:null},participants:[{id:2,revision:1,member,state:"active"}],pledge:null,pendingPromise:null};
+    const view:CountingView={snapshot:summary,configuration:{id:0,revision:1,target:3,controller:member},board:{id:1,revision:1,state:"paused",target:3,generation:0,serial:2,lastNumber:0,number:null,speaker:null,lastSpeaker:null,until:null,pledge:null,lastFulfilledAt:null},participants:[{id:2,revision:1,member,state:"active"}],pledge:null,pendingPromise:null};
     const state={status:"current",snapshot:{value:summary}} as unknown as ObservationState<Summary>;
     publish!(state,view);const button=elements(root).find(e=>e.textContent==="Check report")!;assert.equal(button.hidden,false);
     publish!(state,{...view,participants:[]});assert.equal(elements(root).find(e=>e.textContent==="Check report"),button);assert.equal(button.hidden,false);assert.equal(button.disabled,false);
@@ -87,7 +87,7 @@ test("Explicit Resume command fences active playback before dispatch and display
   try{
     await app.attach({identity,speech,gateway,store:{load:async()=>null,loadStart:async()=>audioStart,saveStart:async marker=>{audioStart=structuredClone(marker);},archiveStart:async marker=>{assert.equal(audioResolved,true);assert.deepEqual(marker,audioStart);archivedStarts.push(structuredClone(marker));audioStart=null;},save:async()=>{throw new Error("no new report expected");},clear:async()=>{}},lock:{run:async work=>work()},current:()=>true});
     const summary={scope,status:"active",definition:COUNTING_DEFINITION,time:"2099-01-01T00:00:00Z",counts:[],items:[]} as Summary;
-    const view:CountingView={summary,configuration:{id:0,revision:1,target:3,controller:member},board:{id:1,revision:1,state:"open",target:3,generation:0,serial:1,lastNumber:0,number:1,speaker:member,lastSpeaker:null,until:10_000,pledge:3,lastFulfilledAt:null},participants:[{id:2,revision:1,member,state:"active"}],pledge:{id:3,revision:1,state:"pledged" as const,member,participant:2,admittedAt:3,generation:0,serial:1,n:1,until:10000,basis:[{id:2,member}]},pendingPromise:{id:3,revision:1,state:"pledged" as const,member,participant:2,admittedAt:3,generation:0,serial:1,n:1,until:10000,basis:[{id:2,member}]}};
+    const view:CountingView={snapshot:summary,configuration:{id:0,revision:1,target:3,controller:member},board:{id:1,revision:1,state:"open",target:3,generation:0,serial:1,lastNumber:0,number:1,speaker:member,lastSpeaker:null,until:10_000,pledge:3,lastFulfilledAt:null},participants:[{id:2,revision:1,member,state:"active"}],pledge:{id:3,revision:1,state:"pledged" as const,member,participant:2,admittedAt:3,generation:0,serial:1,n:1,until:10000,basis:[{id:2,member}]},pendingPromise:{id:3,revision:1,state:"pledged" as const,member,participant:2,admittedAt:3,generation:0,serial:1,n:1,until:10000,basis:[{id:2,member}]}};
     // Production gateway restoration with bounded corrupt memory payloads;
     // observation, DOM and speech remain fake. Each original remains intact.
     const intent:PreparedEnvelope["signed"]["intent"]={v:1,to:scope,actor:identity.publicKey,kind:"pause",on:1,expected:{on:1},fields:{},idempotencyKey:"FAKE malformed command",notAfter:"2099-01-01T00:00:00Z"};
@@ -201,7 +201,7 @@ async function journeyFixture() {
   const scope=ref("lane"),membership=ref("membership"),member={membership,member:"@ada" as const};
   const identity:ActorIdentity={origin:"https://fake-join.test",deployment:"FAKE",scope,membership,member,definition:COUNTING_DEFINITION,publicKey:keyIdOfSecret(secret)};
   const summary={scope,status:"active",definition:COUNTING_DEFINITION,time:"2099-01-01T00:00:00Z",counts:[],items:[]} as Summary;
-  let view:CountingView={summary,configuration:{id:0,revision:1,target:3,controller:member},board:{id:1,revision:1,state:"paused",target:3,generation:0,serial:0,lastNumber:0,lastSpeaker:null,number:null,speaker:null,until:null,pledge:null,lastFulfilledAt:null},participants:[],pledge:null,pendingPromise:null};
+  let view:CountingView={snapshot:summary,configuration:{id:0,revision:1,target:3,controller:member},board:{id:1,revision:1,state:"paused",target:3,generation:0,serial:0,lastNumber:0,lastSpeaker:null,number:null,speaker:null,until:null,pledge:null,lastFulfilledAt:null},participants:[],pledge:null,pendingPromise:null};
   let publish:((state:ObservationState<Summary>,view?:CountingView)=>void)|undefined,head=0,owns=true,leaseAvailable=true,pending:string|null=null;
   let commandResult:"recorded"|"refused"|"unknown"|"blocked"|"unsent"="recorded",speechAvailable=true,plays=0,releases=0;
   let beforeReply:(()=>void)|undefined,replyObservation=true;

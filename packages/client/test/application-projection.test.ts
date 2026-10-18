@@ -1,9 +1,9 @@
 /** Transport fixtures test byte/request ownership, not native authorization. */
 import { expect, test, vi } from "vitest";
 import { APPLICATION_PROJECTION_WIRE_BOUNDS as B, type ApplicationProjectionQuery, type ApplicationProjectionRead, type ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize } from "@generalbusiness/artroom-bytes";
-import { applicationProjectionQueryDigest, encodeApplicationProjectionQuery } from "@generalbusiness/artroom-bytes/application-v2";
-import { ScopeHandle, TransportError, bindingTransport, httpTransport, signedReads, type Fetch, type ServiceBinding, type Transport } from "../src/index.ts";
+import { canonicalize, textDigest } from "@generalbusiness/artroom-bytes";
+import { applicationProjectionId, applicationProjectionQueryDigest, encodeApplicationProjectionQuery, readApplicationProjection } from "@generalbusiness/artroom-bytes/application-v2";
+import { ScopeHandle, TransportError, applicationItemSnapshot, completeApplicationItems, bindingTransport, httpTransport, signedReads, type Fetch, type ServiceBinding, type Transport } from "../src/index.ts";
 
 const scope: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "lane" };
 const query: ApplicationProjectionQuery = { v: 1, scope, directory: { ...scope, kind: "directory" }, install: 7, projection: "board", items: { board: 2 } };
@@ -73,4 +73,36 @@ test("HTTP, binding and custom handle projections have finite deadlines and neve
     expect(abort?.aborted).toBe(true);
     finish(canonicalize(good)); await vi.advanceTimersByTimeAsync(0);
   } finally { vi.useRealTimers(); }
+});
+
+// Invariant: model/custody adapters retain only selected native slot fields
+// and exact revisions, with no fabricated full Item or Summary read.
+test("declared item observations resolve aliases and merge identical subjects without inventing read fields", () => {
+  const fields = {
+    number: { from: { kind: "value", name: "lastNumber" }, of: { type: "int", min: 0, max: 100 }, nullable: false },
+    writer: { from: { kind: "party", name: "controller" }, of: { type: "member" }, nullable: false },
+    linked: { from: { kind: "ref", name: "pledge" }, of: { type: "item", of: "promise" }, nullable: true },
+  };
+  const declaration = readApplicationProjection({ v: 1, definition: textDigest("PUBLIC TEST selected definition"), revision: "revision", sources: {
+    board: { item: "board", read: "many", states: ["open"], limit: 1, fields },
+    selected: { item: "board", read: "item", states: ["open"], limit: 1, fields: { number: fields.number } },
+  } });
+  const writer = { membership: { ...scope, kind: "membership" as const }, member: "@ada" as const };
+  const data = { ...good.value, projection: applicationProjectionId(declaration), sources: {
+    board: [{ id: 2, type: "board", state: "open", revision: 1, fields: { number: 4, writer, linked: null } }],
+    selected: [{ id: 2, type: "board", state: "open", revision: 1, fields: { number: 4 } }],
+  } };
+  const snapshot = applicationItemSnapshot(declaration, data);
+  expect(snapshot.items).toEqual([{ id: 2, type: "board", state: "open", revision: 1, values: { lastNumber: 4 }, refs: { pledge: null }, parties: { controller: writer } }]);
+  expect(snapshot).not.toHaveProperty("status"); expect(snapshot).not.toHaveProperty("time"); expect(snapshot).not.toHaveProperty("counts");
+  expect(snapshot.items[0]).not.toHaveProperty("opened"); expect(snapshot.items[0]).not.toHaveProperty("attributed");
+  expect(completeApplicationItems({ ...good, value: data }, declaration)).toEqual({ ok: true, at: data.at, complete: true,
+    value: { scope, definition: declaration.definition, at: data.at, value: snapshot } });
+  expect(completeApplicationItems({ ok: false, reason: "incomplete" }, declaration)).toEqual({ ok: false, reason: "unavailable" });
+  expect(completeApplicationItems({ ok: false, reason: "forbidden" }, declaration)).toEqual({ ok: false, reason: "forbidden" });
+  expect(() => applicationItemSnapshot(declaration, { ...data, projection: textDigest("another declaration") })).toThrow("does not match");
+  const changed = structuredClone(data); changed.sources.selected[0]!.revision = 2;
+  expect(() => applicationItemSnapshot(declaration, changed)).toThrow("does not match");
+  const absent = structuredClone(data); delete (absent.sources.board[0]!.fields as Partial<typeof data.sources.board[0]["fields"]>).writer;
+  expect(() => applicationItemSnapshot(declaration, absent)).toThrow("does not match");
 });

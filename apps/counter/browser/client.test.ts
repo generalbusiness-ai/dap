@@ -7,6 +7,7 @@ import { secretSigner, type Fetch, type HeadStreamFetch } from "@generalbusiness
 import { COUNTING_COMMITMENTS_DEFINITION } from "../commitments-pin.ts";
 import { assignedTurn, canCommit, countingView, proposal } from "./model.ts";
 import { nativeGateway, type CommandStore } from "./client.ts";
+import { scriptedCounterProjection } from "./projection-fixture.ts";
 import { activeAttempt, markActive, type DispatchPhase } from "./journal.ts";
 import { attemptDispatcher } from "./dispatcher.ts";
 import type { ActorIdentity } from "./voice-controller.ts";
@@ -26,6 +27,7 @@ async function fixture(joined=true) {
   const fake:Fetch=async(url,init)=>{
     const path=new URL(url).pathname;
     if(path.endsWith("/sessions")){const request=JSON.parse(init?.body??"{}").request;return Response.json({ok:true,token:"FAKE token",session:{v:1,deployment:identity.deployment,membership,member:member.member,key:identity.publicKey,reads:["summary","entry"],ends:request.notAfter}});}
+    if(path.endsWith("/application-projection"))return new Response(scriptedCounterProjection(new URL(url).searchParams.get("p")!,summary,head),{headers:{"content-type":"application/json"}});
     if(path.endsWith("/acts")){
       posts++;assert.ok(held?.journal,"custody must exist before POST");assert.equal(activeAttempt(held.journal).phase,"inflight");const submitted=JSON.parse(init?.body??"{}");assert.equal(canonicalize(submitted.signed),canonicalize(held.envelope.signed));
       // Scripted accepted history can later contradict an untrusted or lost response. It is NOT native admission proof.
@@ -35,13 +37,14 @@ async function fixture(joined=true) {
     }
     if(path.endsWith("/settle")){settles++;return settleAccepted&&receipt?Response.json({ok:true,at:head,complete:true,value:receipt}):Response.json({ok:false,reason:"not-found"});}
     if(path.includes("/entries/"))return entry?Response.json({ok:true,at:head,complete:true,value:{entry,hash:entryHash(entry)}}):Response.json({ok:false,reason:"not-found"});
-    return Response.json({ok:true,at:head,complete:true,value:summary});
+    throw Error(`The FAKE Counter service does not provide this read: ${path}`);
   };
   const stream:HeadStreamFetch=async(url,init)=>{assert.equal(init.redirect,"error");return{status:200,url,redirected:false,headers:new Headers({"content-type":"application/x-ndjson"}),body:new ReadableStream<Uint8Array>({start(c){c.enqueue(new TextEncoder().encode(JSON.stringify({at:head})+"\n"));}})};};
   const connect=async()=>{
-    const gateway=nativeGateway(identity,secretSigner(secret),{current:()=>true,lock,voiceStore:{load:async()=>null,save:async()=>{throw new Error("unused fake voice");},clear:async()=>{}},commandStore:commands,fetch:fake,headFetch:stream,
+    const gateway=nativeGateway(identity,secretSigner(secret),{application:{scope,directory:ref("directory"),item:7,definition},current:()=>true,lock,voiceStore:{load:async()=>null,save:async()=>{throw new Error("unused fake voice");},clear:async()=>{}},commandStore:commands,fetch:fake,headFetch:stream,
       actFetch:async(url,init)=>{assert.equal(init.redirect,"error");const response=await fake(url,{...init,signal:init.signal as never});return{status:metadata==="wrong-status"?200:response.status,body:response.body,headers:new Headers({"content-type":metadata==="wrong-media"?"text/html":"application/json"}),url:metadata==="wrong-url"?url+"/different":url,redirected:metadata==="redirected"};}});
-    await new Promise<void>((resolve,reject)=>gateway.observe(state=>{if(state.status==="current")resolve();else if(["error","forbidden","unsupported"].includes(state.status))reject(new Error(`Fake gateway setup ${state.status}`));}));return gateway;
+    try{await new Promise<void>((resolve,reject)=>gateway.observe(state=>{if(state.status==="current")resolve();else if(["error","forbidden","unsupported","unavailable","expired"].includes(state.status))reject(new Error(`Fake gateway setup ${state.status}: ${"reason"in state?state.reason:""}`));}));}
+    catch(error){gateway.dispose();throw error;}return gateway;
   };
   return{identity,gateway:await connect(),connect,counters:()=>({posts,settles,saves,clears}),retained:()=>held?canonicalize(held):null,record:()=>held,snapshots,mode:(value:string)=>{metadata=value;},lose:()=>{reply="lost";},fail:(phase?:DispatchPhase)=>{failPhase=phase;},writeThenFail:()=>{failAfterWrite=true;},race:(value:"before-post"|"before-reply")=>{race=value;},acceptSettlement:()=>{settleAccepted=true;},restore:(record:NonNullable<typeof held>)=>{held=structuredClone(record);},corrupt:(change:(record:NonNullable<typeof held>)=>NonNullable<typeof held>)=>{assert.ok(held,"corruption needs actual retained custody");held=change(held);},legacy:()=>{if(held)held={kind:held.kind,envelope:held.envelope};}};
 }
@@ -177,7 +180,7 @@ test("C1 claims use the complete active roster without assigning a speaker, and 
   const view=countingView(summary,scope);
   assert.equal(view.participants.length,16);
   const newcomer=actor({membership,member:"@new"});assert.throws(()=>proposal(view,newcomer,"participate"),/roster is full/);
-  const removed=countingView({...summary,counts:[["participant","removed",1]],items:[configuration,board,...roster.filter(p=>p.id!==20)]},scope);
+  const removed=countingView({...summary,items:[configuration,board,...roster.map(p=>p.id===20?{...p,state:"removed"}:p)]},scope);
   assert.deepEqual(proposal(removed,newcomer,"participate"),{kind:"participate",on:null,fields:{},expected:{}});
   assert.equal(assignedTurn(view,actor(cy)),undefined);assert.equal(canCommit(view,actor(ada)),false);assert.equal(canCommit(view,actor(cy)),true);assert.equal(canCommit(view,actor(bea)),false);
   assert.deepEqual(proposal(view,actor(cy),"commit"),{kind:"commit",on:null,fields:{participant:5,generation:2,serial:5,n:2,basis:[{id:2,member:ada},{id:5,member:cy}]},expected:{board:2,participant:6}});

@@ -1,6 +1,7 @@
 /** The generic host interpreter for a verified declared presentation. It
  * runs no package code. Its ports are native reads, not application adapters. */
-import type { ApplicationProjectionData, ApplicationProjectionQuery, ApplicationProjectionRead, ApplicationProjectionRow, Digest, FieldValue, Item, ScopeRef } from "@generalbusiness/dap-contract";
+import type { ApplicationProjectionData, ApplicationProjectionQuery, ApplicationProjectionRead, ApplicationProjectionRow, Digest, FieldValue, ScopeRef } from "@generalbusiness/dap-contract";
+import { applicationItemSnapshot } from "@generalbusiness/artroom-client";
 import { canonicalize, parseStrict, unb64url } from "@generalbusiness/artroom-bytes";
 import type { ApplicationInstallation } from "@generalbusiness/artroom-bytes/application";
 import { applicationProjectionId, isApplicationJournalSource, readApplicationPackage2, type ApplicationView, type PackedApplication2 } from "@generalbusiness/artroom-bytes/application-v2";
@@ -73,24 +74,8 @@ export class DeclaredViewSource implements ViewSource {
     const projection = this.packet.package.semantic.projections[view.projection]!;
     const part = this.packet.package.semantic.definitions.find(part => part.id === projection.definition)!;
     const definition = parseStrict(part.bytes) as DefinitionLike, declaration = definition.acts[act]!;
-    const items = new Map<number, Pick<Item, "id" | "type" | "revision" | "refs">>();
-    for (const [name, source] of Object.entries(projection.sources)) {
-      if (isApplicationJournalSource(source)) continue;
-      for (const selected of data.sources[name] ?? []) {
-        if (selected.entry || selected.type !== source.item) throw new ViewError("unavailable", "A subject source does not contain its declared native item type.");
-        const prior = items.get(selected.id);
-        if (prior && (prior.type !== selected.type || prior.revision !== selected.revision)) throw new ViewError("unavailable", "The projection disagrees about a native subject.");
-        const refs = { ...prior?.refs };
-        for (const [alias, field] of Object.entries(source.fields)) if (field.from.kind === "ref") {
-          const value = selected.fields[alias];
-          if (value === undefined) throw new ViewError("unavailable", "A subject source omitted a selected ref.");
-          if (Object.hasOwn(refs, field.from.name) && canonicalize(refs[field.from.name]) !== canonicalize(value)) throw new ViewError("unavailable", "The projection disagrees about a native ref.");
-          Object.defineProperty(refs, field.from.name, { value, enumerable: true, configurable: true });
-        }
-        items.set(selected.id, { id: selected.id, type: selected.type, revision: selected.revision, refs });
-      }
-    }
-    const expected = expectedOf(declaration, [...items.values()], row.id, effectiveFields(declaration, {}, data.scope));
+    const items = applicationItemSnapshot(projection, data).items;
+    const expected = expectedOf(declaration, items, row.id, effectiveFields(declaration, {}, data.scope));
     // An absent secondary row is not permission to sign an incomplete set.
     const names = Object.entries(declaration.also).filter(([, rule]) => rule["code"] === undefined).map(([name]) => name);
     if (declaration.step === "transition") names.push("on");
