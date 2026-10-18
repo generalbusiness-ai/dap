@@ -722,3 +722,15 @@ log `/tmp/artroom-m1-installed-counter-node-20261018.log`. This checkpoint
 has not yet been tested in a rendered browser; browser entry, real private
 storage and native enrollment integration remain verification obligations.
 No full gate, Source review, Main landing or deployment is claimed.
+
+
+The first rendered pass at `8cace2bdf` loaded both complete maintained packets
+at generic addresses, reached connection controls, and refused a wrong-room
+invitation before any native request. Cached Playwright 1.63.0 and Chromium
+153.0.8010.12 used fresh contexts at 1280×800 and 390×844. The Browser plugin
+is unavailable. There were no console errors, missing assets, blank pages,
+framework overlays or horizontal overflow. This was explicitly a static
+metadata/delivery stand-in, not a successful native enrollment witness.
+The captured Counter form exposed an undersized inline textarea; the next
+preparation styles it as a full-width control and clarifies its connection
+heading. Rendered verification follows that correction.
