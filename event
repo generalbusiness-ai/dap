@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e6902f44324c999ae65c0bf66512e6aa76c42f4b","text":"Merge retired a covered predecessor; the successor is at packages/replay/src/cli.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e78497c07c58a52ce7f8f608fda29a45990e0a11","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-09-shared-language-volatile-acts.md."}
