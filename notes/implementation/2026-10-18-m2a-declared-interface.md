@@ -27,6 +27,16 @@ exit 0), with source and test typechecks. They distinguish caller mutation,
 unknown syntax, metadata shadowing, invalid read bounds and getter access.
 The raw result is `/tmp/artroom-m2a-projection-codec-20261018.log`.
 
+The next preparation binds the declaration to the exact native definition
+digest, item states, slot kinds, full field types and required/optional
+status. Party lists retain their declared member bound. Detached text is
+not an inline value and this first binding refuses it. Native whole-definition
+validation and read authorization remain separate requirements. Two owning
+binding cases pass (`6823b1`), and source/test typechecks pass. Removing the
+field-type comparison makes the intended assertion fail at the widened text
+bound (`57eade`); the source was restored. This is a focused control, not a
+mutation sweep or a runtime acceptance claim.
+
 It does not yet bind fields to a native schema, read any journal, authorize a
 viewer, install a package, or render a view. Those remain implementation work.
 
