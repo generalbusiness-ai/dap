@@ -14,7 +14,8 @@
     "./archive-policy": "./src/archive-policy.ts",
     "./journal-reader": "./src/journal-reader.ts",
     "./journal-local": "./src/journal-local.ts",
-    "./journal": "./src/journal.ts"
+    "./journal": "./src/journal.ts",
+    "./application": "./src/application.ts"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.test.json",

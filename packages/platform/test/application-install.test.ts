@@ -2,9 +2,8 @@
  * authority are fixtures; admission answers below are scripted, with no Git,
  * storage, retry driver, or hosted install running in this witness. */
 import { expect, test } from "vitest";
-import { canonicalize, definitionDigest, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
-import { packApplication } from "@generalbusiness/artroom-client/application";
-import { secretSigner } from "@generalbusiness/artroom-client";
+import { canonicalize, definitionDigest, textDigest, utf8, keyIdOfSecret, sign } from "@generalbusiness/artroom-bytes";
+import { packApplication } from "@generalbusiness/artroom-bytes/application";
 import { clockOf, judgeOutcome, runnable, validateDefinition } from "@generalbusiness/dap-derive";
 import { d, keys, membership } from "@generalbusiness/dap-derive/testing";
 import { countingCommitments } from "../../../apps/counter/commitments.ts";
@@ -20,7 +19,7 @@ async function fixture() {
     v: 1, entry: id, definitions: [{ id, bytes: canonicalize(countingCommitments) }],
     host: { execution: "recorded-do", profiles: ["restricted@1"] }, capabilities: [],
     roles: { member: ["counting.fulfill"] }, projections: {}, predecessor: null,
-  }, presentation: { v: 1, entry: "index.html", assets: [{ path: "index.html", mediaType: "text/html", bytes: "VEVTVA" }], descriptions: {} } }, secretSigner(new Uint8Array(32).fill(64)));
+  }, presentation: { v: 1, entry: "index.html", assets: [{ path: "index.html", mediaType: "text/html", bytes: "VEVTVA" }], descriptions: {} } }, { key: keyIdOfSecret(new Uint8Array(32).fill(64)), sign: bytes => sign(new Uint8Array(32).fill(64), bytes) });
   const declarationText = canonicalize(countingCommitments);
   const texts = (digest: string) => digest === textDigest(declarationText) ? utf8(declarationText).length : undefined;
   class TextRulebook extends Rulebook {

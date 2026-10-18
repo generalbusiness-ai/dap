@@ -147,6 +147,20 @@ checks use the new exact cohort while preserving historical versions.
 Neither package declaration nor screen metadata grants authority. Only the
 explicitly selected signed defaults are added to existing role grants.
 
+## Layer boundaries
+
+The canonical package, bounded JSON, signature port, immutable URI and routing
+wire types live in the pure `bytes/application` entry. The client keeps its
+existing exported names. Native platform rules read that lower-layer codec
+and still perform whole-definition validation themselves. The platform has
+no client, browser or transport dependency.
+
+MCP's service alone may import `git/application`, which exports the bounded
+public immutable object reader and HTTPS transport. The architecture guard
+allows that exact file and subpath. Other server modules, the broad Git
+entry, Node, provider credentials and push modules remain refused. The
+existing guard witnesses both the permitted read and the refused edges.
+
 ## Verification and boundaries
 
 Focused tests exercise strict URI spelling, actual local SHA-1 and SHA-256
@@ -212,8 +226,11 @@ bundling without deploying or provisioning resources.
 The install dependency namespace is a private filesystem COW copy: 13 local
 first-party links, 106 verified installed versions, zero package installs.
 Reviewed runtime dependency edges are recorded in the finite client,
-platform and MCP Git dependency audits under `/tmp/`. The current ignored
-install stamp is `da215ee29515f420c6d5955b8df55dd40d8c77b0aa34878b4252a94eab91f298`.
+platform and MCP Git dependency audits under `/tmp/`. The platform-to-client edge was then removed with the codec move. The
+read-only audit `/tmp/artroom-m1-wire-layer-dependency-view-20261018.json`
+checks the same 13 local links and 106 installed versions, unchanged package
+keys and resolutions, and zero installs. The current ignored install stamp
+is `c6407f32d6fee42d134008f8644064c0426c435968a60c67353cf7fe7a0268bb`.
 The frozen developer checkout and root dependency view are untouched.
 
 The first gate stopped on two trailing blank lines before typechecks or
@@ -245,6 +262,23 @@ and Destination's exact-version host check. Seven unchanged cases in those
 selected files are explicitly skipped by the focused title filter. Logs are
 `/tmp/artroom-m1-install-integration-node-20261018.log` and
 `/tmp/artroom-m1-install-integration-native-20261018.log`.
+
+The next full run at `95946691` passed all 1,829 Vitest cases in 368 files,
+with one file and three cases skipped. Its chained Node checks passed 28 and
+failed three architecture checks: the new platform-to-client codec edge,
+the MCP Git dependency, and the broad MCP Git import. The Counter Node body
+was not reached. Original raw logs are retained at
+`/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.juxPrOXJo1`.
+
+The layer correction above removes the platform edge and narrows MCP to the
+explicit immutable reader. All ten architecture checks pass (`79668`,
+terminal `eca340`, exit 0), including the exact permitted and refused import
+controls. All 22 selected codec, pin, native-rule and Page cases pass
+(`63385`, terminal `188965`, exit 0), and all nine native install and transport
+cases pass (`77314`, terminal `447e9f`, exit 0). The complete typecheck also
+passes. Logs use the `/tmp/artroom-m1-wire-layer-` prefix. Page assets rebuild
+from the corrected shared codec; no application or provider rights were
+added by that move.
 
 A complete gate on the corrected submitted head, finite Source evidence,
 independent review, native landing, sealed receipt and Main audit remain due.

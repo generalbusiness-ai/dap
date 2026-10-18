@@ -17,7 +17,7 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, digestBytes, intentDigest, isDigest, isPlatformDefinition, isScopeId, isScopeRef, isReceipt, entryHash, parseStrict, scopeIdOf, textDigest, timeOf, utf8 } from "@generalbusiness/artroom-bytes";
 import { TransportError, ScopeHandle, ApplicationPackageError, applicationScreenPath, readApplicationInstallOptions, readApplicationReleaseUri, signedApplicationInstall, invitationOf, readCredential, signedIntent, wellFormedInvitation, type Fetch, type Signer } from "@generalbusiness/artroom-client";
 import { TRUSTED_APPLICATION_COHORT, platform } from "@generalbusiness/dap-platform";
-import { ApplicationHttpError, applicationGitHttpSource, readApplicationGitBlob } from "@generalbusiness/artroom-git";
+import { ApplicationHttpError, applicationGitHttpSource, readApplicationGitBlob } from "@generalbusiness/artroom-git/application";
 import { ACT_OUTPUT, actTool, bindingsOf, declarationDigest, describedOf, generationOf, listed, selected, type Binding, type Held, type Inventory, type Mode, type Tool } from "./catalogue.ts";
 import { Custody, CustodyError, Lost, meaningOf, validKey, type CustodyRecord, type CustodyStore, type Envelope, type Identity } from "./custody.ts";
 import { AT_INPUT, describeAct, grantAction, onOf, schemaOf, type DefinitionLike } from "./describe.ts";

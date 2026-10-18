@@ -3,7 +3,7 @@
 import type { Digest, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isScopeRef } from "@generalbusiness/artroom-bytes";
 import type { StateView } from "@generalbusiness/dap-derive";
-import type { ApplicationInstallation, ApplicationRoom } from "@generalbusiness/artroom-client/application";
+import type { ApplicationInstallation, ApplicationRoom } from "@generalbusiness/artroom-bytes/application";
 import { TRUSTED_APPLICATION_COHORT as C } from "./application-install-wire.ts";
 export function applicationRoom(state: StateView, named: string): ApplicationRoom | null {
   const scope = state.scope();
