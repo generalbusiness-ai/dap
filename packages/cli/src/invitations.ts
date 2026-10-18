@@ -1,5 +1,5 @@
 import { invitationIssueFields, invitationRedemptionFields } from "@generalbusiness/artroom-client";
-import { INVITATION_KEY_COHORT, TRUSTED_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
+import { INVITATION_KEY_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 /** Retained invitation creation and explicitly tagged true-agent enrollment.
  * Store.private holds secrets/envelopes; public config holds only exact pointers.
  * Callers serialize one Store and fence their captured Page context. */
@@ -53,7 +53,7 @@ const DIRECTORIES_OF: Readonly<Record<AgentKeyMembership, readonly string[]>> = 
   "platform:membership@4": [APPLICATION_COHORT.directory, FILE_PUBLICATION_COHORT.directory],
   "platform:membership@5": [COUNTING_COHORT.directory],
   "platform:membership@6": [INVITATION_KEY_COHORT.directory],
-  "platform:membership@7": [TRUSTED_APPLICATION_COHORT.directory],
+  "platform:membership@7": [TRUSTED_APPLICATION_COHORT.directory, DECLARED_APPLICATION_COHORT.directory],
 };
 const pinOf = (issue: Pick<Issue, "definition">): AgentKeyMembership => issue.definition ?? "platform:membership@2";
 const closed = (value: unknown, required: string[], optional: string[] = []): value is Record<string, unknown> => isRecord(value) && required.every(k => Object.hasOwn(value, k)) && Object.keys(value).every(k => required.includes(k) || optional.includes(k));

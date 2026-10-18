@@ -728,3 +728,41 @@ typechecks pass. Lending's browser read conversion, explicit CLI selection
 for the new cohort, the actual Grow grid resource, complete maintained
 package native witnesses and parent several-scope ownership remain owed.
 No final gate, review, delivery or deployment is claimed.
+
+### Explicit CLI cohort for declared application packages
+
+`dap install --cohort declared-application` now selects Register13 and the
+exact Directory12/Membership7/Rules6/Destination8 siblings. Omission keeps
+the legacy default; `trusted-application` keeps its M1 pins. The new choice
+uses the same retained planned-install custody, including attempted markers,
+expiry, immutable request reuse and mismatch refusals. Its expired-plan
+message names the actual selected cohort. CLI usage/setup and Counter's
+startup reference now distinguish the v1 and v2 cohorts.
+
+Membership7 invitations accept Directory11 and Directory12 as two explicit
+cohort pairs. Directory13 remains refused before connecting the retained
+agent, with no new act submission. Ten focused CLI cases pass (`92350`,
+terminal `5c4325`), including both Membership7 pairs and existing plan-loss
+and binding controls. Earlier runs caught the wrong expired-plan label and
+a test counter captured before a preceding retained retry. Both assertions
+are corrected; no deadline or production refusal was relaxed.
+
+The new native case creates the cohort through the actual CLI/Worker routes,
+checks all five exact native pins, then issues and enrolls a Membership7 agent
+through Directory12 with real receipts, read sessions and role reads. It
+passes (`65208`, terminal `38110e`). Its Git host/scheduler/clock remain the
+existing labelled fixtures. Log:
+`/tmp/artroom-m2a-declared-cohort-cli-native-20261018.log`. The earlier native
+agent story remains unchanged and was not repeated in this focused run.
+This is room/enrollment setup evidence, not an application-package install.
+
+One exact-pair fault control distinguishes: adding Directory13 to the table
+changes the required refusal to success in the unchanged Directory12 case.
+The direct pinned Vitest before/after reports each contain one selected
+case; the assertion fails with the change and source is restored in
+`finally` (`68090`, terminal `513cc2`). Log:
+`/tmp/artroom-m2a-declared-cohort-future-pin-control-direct-20261018.log`.
+The convenience harness attempts were inconclusive at their unchanged
+baseline; only the direct before/after run is semantic evidence. CLI
+source/test/scope typechecks pass. The final gate, review, delivery and
+deployment remain unclaimed.

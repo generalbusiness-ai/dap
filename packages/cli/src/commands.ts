@@ -36,7 +36,7 @@ import {
   type Fetch, type Session, type CreationOffer, type ReadSigning, type Signing, type Transport,
 } from "@generalbusiness/artroom-client";
 import { TOKENS_FLOOR, capabilitiesOf, gitRead, holdCapability } from "@generalbusiness/dap-derive";
-import { APPLICATION_COHORT, FILE_PUBLICATION_COHORT, COUNTING_COHORT, TRUSTED_APPLICATION_COHORT, DIRECTORY_OF, SIBLINGS_OF, READ_TOKEN_HOURS, NEWEST, ROLE_LISTS, platform, type Role } from "@generalbusiness/dap-platform";
+import { APPLICATION_COHORT, FILE_PUBLICATION_COHORT, COUNTING_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, DIRECTORY_OF, SIBLINGS_OF, READ_TOKEN_HOURS, NEWEST, ROLE_LISTS, platform, type Role } from "@generalbusiness/dap-platform";
 import { SourceError, httpSource, render, verify as replay, type HistorySource } from "@generalbusiness/artroom-replay";
 import { enrolAgentKey } from "./invitations.ts";
 import { AGENT_KEY_LINK } from "@generalbusiness/artroom-client";
@@ -368,13 +368,14 @@ async function createdBy(handle: ScopeHandle, seq: number): Promise<{ n: number;
 // ---------------------------------------------------------------- the commands
 
 /** Explicit selection only; omission retains the installed default cohort. */
-export type InstallCohort = "application" | "application-publication" | "trusted-application" | "invitation-key";
+export type InstallCohort = "application" | "application-publication" | "trusted-application" | "declared-application" | "invitation-key";
 export interface InstallOptions { host?: string; namespace?: string; cohort?: InstallCohort }
 const INSTALL_COHORTS: Readonly<Record<InstallCohort, PlatformDefinition>> = {
   "invitation-key": INVITATION_KEY_COHORT.register,
   application: APPLICATION_COHORT.register,
   "application-publication": FILE_PUBLICATION_COHORT.register,
   "trusted-application": TRUSTED_APPLICATION_COHORT.register,
+  "declared-application": DECLARED_APPLICATION_COHORT.register,
 };
 function selectedRegister(cohort: unknown): PlatformDefinition | undefined {
   if (cohort === undefined) return undefined;
@@ -382,10 +383,11 @@ function selectedRegister(cohort: unknown): PlatformDefinition | undefined {
   if (cohort === "application-publication") return INSTALL_COHORTS["application-publication"];
   if (cohort === "application") return INSTALL_COHORTS.application;
   if (cohort === "trusted-application") return INSTALL_COHORTS["trusted-application"];
-  return stop(usage("--cohort takes exactly application, application-publication, trusted-application or invitation-key; nothing was signed or sent."));
+  if (cohort === "declared-application") return INSTALL_COHORTS["declared-application"];
+  return stop(usage("--cohort takes exactly application, application-publication, trusted-application, declared-application or invitation-key; nothing was signed or sent."));
 }
 const selectedPlan = (definition: PlatformDefinition): boolean =>
-  definition === APPLICATION_COHORT.register || definition === FILE_PUBLICATION_COHORT.register || definition === TRUSTED_APPLICATION_COHORT.register || definition === INVITATION_KEY_COHORT.register;
+  definition === APPLICATION_COHORT.register || definition === FILE_PUBLICATION_COHORT.register || definition === TRUSTED_APPLICATION_COHORT.register || definition === DECLARED_APPLICATION_COHORT.register || definition === INVITATION_KEY_COHORT.register;
 
 /** Ordinary installs keep their legacy path; selected installs use exact planned custody. */
 export function install(ctx: Context, service: string, options: InstallOptions = {}): Promise<Outcome> {
@@ -549,7 +551,7 @@ async function executePlannedInstall(ctx: Context, cohort?: InstallCohort, expec
   const attempt = installAttemptOf(plan);
   if (plan.attempted !== undefined && plan.attempted !== attempt) return failed("Refused: plan-mismatch. The attempted marker belongs to another service, operator, envelope, version or register. The pending plan is kept; nothing was sent.");
   if (plan.attempted === undefined && now >= timeMs(plan["founding"].intent.notAfter)!) {
-    const label = plan.definition === APPLICATION_COHORT.register ? "application" : plan.definition === FILE_PUBLICATION_COHORT.register ? "application-publication" : plan.definition === INVITATION_KEY_COHORT.register ? "invitation-key" : "trusted-application";
+    const label = plan.definition === APPLICATION_COHORT.register ? "application" : plan.definition === FILE_PUBLICATION_COHORT.register ? "application-publication" : plan.definition === INVITATION_KEY_COHORT.register ? "invitation-key" : plan.definition === DECLARED_APPLICATION_COHORT.register ? "declared-application" : "trusted-application";
     return failed(`Refused: plan-expired. The planned install could be created until ${plan["founding"].intent.notAfter}. ${strictCustody
       ? `No request was sent by this run. Keep this original config directory unchanged. For a new ${label} plan, set DAP_HOME to a separate empty directory. If ARTROOM_HOME is set, unset it or set it to that same new directory; different directories refuse before configuration is read. Configure the host with that new plan's register ID before installing.`
       : "Nothing was sent. Plan again, and set the new register ID."}`);

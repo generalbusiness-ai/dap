@@ -8,7 +8,7 @@ export function applicationCommands(ctx: Context, custody: CustodyStore, applica
 }
 async function call(ctx: Context, custody: CustodyStore, applicationFetch: ((request: Request) => Promise<Response>) | undefined, name: string, args: Record<string, unknown>): Promise<Outcome> {
   const config = await ctx.store.config();
-  if (!config?.repository) return { code: 2, lines: ["Configure a trusted-application room before installing a package."] };
+  if (!config?.repository) return { code: 2, lines: ["Configure a trusted-application or declared-application room before installing a package."] };
   const kept = await ctx.store.secret(config.key);
   if (!kept) return { code: 1, lines: ["The configured signing key is unavailable; nothing was signed or sent."] };
   const secret = kept.slice();
