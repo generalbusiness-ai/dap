@@ -192,6 +192,56 @@ trust checks. The developer pack reports content ids and its output file;
 a URI can name that file after it is committed. This is a proposal pending
 planner confirmation, not an existing resolver or published release.
 
+## Local native runner checkpoint
+
+The next local checkpoint supplies `LocalApplicationScope` for the forthcoming
+scenario/dev commands. It uses the existing native `Scope` commit code and
+`SqliteStore` over Node's in-memory SQLite. A narrow `scope/runtime` entry
+exports these pieces without importing the Cloudflare object class. Native
+judge, fold, rule, timer, identity and replay implementations are unchanged.
+The CLI's existing workspace scope dependency moves from development to
+runtime in its manifest and matching lock entry. No resolved version changes,
+download, install or tool probe is involved.
+
+A root is created by a retained signed `found` intent and the real native
+genesis judge. It uses the local root-directory convention already used by
+the application declaration tests, not a hosted install or a manufactured
+child genesis/confirmation. Submit and advance call the native commit/alarm
+methods; replay calls the native verifier against actual stored journal and
+retained bytes. The source bounds each page's row count and reports its bytes.
+The SQL adapter runs the owned schema statements and transactions; the whole
+database is private to this development session and is discarded on close.
+
+Actors and action lists are explicit, owned copies. This is scripted local
+authority: null freshness proofs and synthetic membership/issued references
+are labelled stand-ins, never native enrollment or production authorization.
+Replay uses the verifier's existing `as-recorded` mode and lists authority
+among its trusts. No app role or all-actions default widens the supplied list.
+Production port defaults keep transport absent and outside effects closed.
+Lending sends remain journalled without a destination/Git publication; foreign
+dependencies unavailable to this single-scope adapter are not fabricated.
+This is not Durable Object eviction/restart, hosted durability, cross-scope
+delivery, device ownership or browser evidence. No `dap check` or `dap dev`
+success command has been exposed before the scenario layer exists.
+
+The initial three focused native/SQLite cases pass (`e41123`), and the final
+four-case file passes with a real due timer (`a58d70`). It covers Counter
+founding, initialization, joining, exact retries without a new entry, refusal
+after caller-owned actions change, Lending restricted-rule refusal and queued
+send, native replay, altered-history refusal, missing retained definitions,
+closed scope access and deadline behavior. The first clock fixture was refused
+as unsupported (`df3bfc`); the explicit native validation diagnostic (`08a49f`)
+identified the existing prohibition on a timed genesis item. The corrected
+fixture opens an untimed root and schedules a timed item through an ordinary
+judged act. No native rule was relaxed.
+
+Actor-copy (`73271a`/`52165a`) and due-turn (`8769bb`/`0d3b78`) controls both
+exit 0, each with four normal passes and one intended fault assertion.
+Removing the copy lets a caller widen the held grant; skipping the alarm turn
+leaves a due item waiting. Sources are restored. Scope production typecheck
+passes (`c3e8fc`); final CLI test/production-source typecheck passes (`f22cf5`).
+Evidence logs use `/tmp/artroom-m1-local-`.
+
 ## Remaining developer work
 
 Shared browser joining, storage and request custody; browser bundling;
