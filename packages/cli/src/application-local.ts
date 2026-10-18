@@ -129,4 +129,3 @@ export class LocalApplicationScope {
   close(): void { if (!this.#closed) { this.#closed = true; this.#sql.close(); } }
   #open(): void { if (this.#closed) throw new LocalApplicationError("The local application scope is closed."); }
 }
-
