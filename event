@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:262e95d1e26d6a4d0218c7e254f22fc2c9db47d1","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/object.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:27800ada8e5e3912d61da986cc06943cdf6898b6","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/artifacts-host.ts."}
