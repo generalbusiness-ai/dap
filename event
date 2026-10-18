@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:720f53816b46253ce7c70ffb978b59b0099f6b77","text":"Merge retired a covered predecessor; the successor is at packages/mcp/scripts/views.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7ec897664c670ba567e9c145ffeb3232d2702954","text":"Merge retired a covered predecessor; the successor is at docs/mcp-tools.json."}
