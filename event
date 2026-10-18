@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at package.json","body":{"commit":"9c32a3843feb68af4119c34c2afbf10c06222ee9","path":"package.json"}}
+{"kind":"artifact","text":"Merge published the current artifact at packages/cli/test/application-scenarios.test.ts","body":{"commit":"9c32a3843feb68af4119c34c2afbf10c06222ee9","path":"packages/cli/test/application-scenarios.test.ts"}}
