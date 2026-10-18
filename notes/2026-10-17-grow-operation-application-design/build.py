@@ -112,7 +112,7 @@ def page(name: str, theme: str, width: int, body: str, title: str) -> None:
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>dap design · {esc(title)} · {theme}</title>
 <link rel="stylesheet" href="grow-mockups.css"></head>
-<body><main class="chat" style="width:{width}px">{body}</main></body></html>
+<body><main class="chat" style="max-width:{width}px">{body}</main></body></html>
 """
     (HERE / f"{name}-{theme}.html").write_text(doc)
 
