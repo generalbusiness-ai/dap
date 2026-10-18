@@ -511,6 +511,27 @@ The [G0 review primary](2026-10-18-grow-g0-review.md) describes the completed
 data boundary and the remaining production milestones. The earlier sections
 retain their historical checkpoint limits rather than changing those records.
 
+## Functional witness time budgets
+
+The first completed G0 gate (`1cedb0`/`83719` through terminal `51894a`)
+fails at head `69f3c4c6b41003f5c165a0474986d5059950d1d6`.
+Install is skipped, whitespace/typecheck pass, and all eighteen Grow cases
+pass. Two other tests time out at five seconds: the CLI's six-command
+scenario witness and Git's two-format validated-parent archive witness.
+The test phase records 1,778 passed, two failed and three skipped tests.
+The Node and Counter follow-on commands do not run after that failure.
+Raw logs are
+`/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.SzwZXKXn4F`.
+
+Only those two functional test budgets change to thirty seconds. No assertion,
+fixture, child-command limit or native archive limit changes. Both selected
+witnesses pass (`aef1e2`/`9e076f`, `0c4d0d`/`71b0a3`), with the owning
+test typechecks (`b11036`). Logs are `/tmp/artroom-g0-cli-budget-20261018.log`
+and `/tmp/artroom-g0-git-budget-20261018.log`. Git reports that confstr cannot
+read its Darwin temp directory and falls back to `/tmp`; that warning remains.
+This permits bounded subprocess work under the harness. It is no performance
+measurement or runtime stability cure. Production package source remains Main's.
+
 ## Remaining G0 review work
 
 The public Main check path now passes the maintained input. G0 still needs

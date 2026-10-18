@@ -7,8 +7,9 @@ outcomes separately labelled until G5a supplies the native command protocol.
 
 The code includes reviewed Main
 `feccbbcfef618ed560e441a7711ce80941b57c22`, tree
-`b5a0a28f1b0809bf5b090689761ff5557f3c5998`. All package source remains
-Main's. G0 adds application data, fixtures and test wiring. It changes no
+`b5a0a28f1b0809bf5b090689761ff5557f3c5998`. Production package source remains
+Main's. G0 adds application data, fixtures and test wiring, plus the two
+test budgets described below. It changes no
 native judge, grant protocol, capability implementation or replay rule.
 The [implementation record](2026-10-18-grow-g0-implementation.md) retains
 the focused runs, failed attempts, controls and earlier private bridge.
@@ -77,6 +78,17 @@ tests are unchanged from `08d2445d`; maintained scenario data and preparation
 are added afterwards. One-line controls and their intended assertions are
 recorded beside each checkpoint. The final required gate is reported through
 Gitseq at the completed submitted head.
+
+The first G0 gate passes typecheck and all eighteen Grow cases, but fails
+two functional I/O witnesses at the default five-second timeout. One runs
+six separate CLI commands. The other validates and extends an archive in
+both Git object formats. Both now have explicit thirty-second per-test
+budgets. Assertions, fixtures, CLI child limits and archive resource limits
+are unchanged. These are harness budgets, not runtime or latency contracts.
+Each selected witness passes (`aef1e2`/`9e076f`, `0c4d0d`/`71b0a3`), with
+both owning test typechecks (`b11036`). The Git run's temp-directory warning
+and fallback to `/tmp` remain in its raw log. The failed gate remains evidence
+of a failure, and the revised head requires its own gate.
 
 ## Maintained input passes the landed Main CLI
 
