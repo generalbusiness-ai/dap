@@ -45,6 +45,7 @@ import { JoinLimits, isJoin, type LimitConfig } from "./limits.ts";
 import { Operations, type Outside } from "./operations.ts";
 import { OperatorRecord, sendAgain, type Incident, type Resent } from "./operator.ts";
 import { Dispatcher, Wakes } from "./outbox.ts";
+import { ArchiveDriver, type FixtureArchiveDriverOptions } from "./archive-driver.ts";
 import { GenesisProofs, type ProofTimer } from "./genesis-proof.ts";
 import { EXACT_PROOF_RECEIVER_BOUNDS, ProofBytes } from "./proof-bytes.ts";
 import { PreparationFlights } from "./preparation-flight.ts";
@@ -109,9 +110,13 @@ export interface Wiring {
   limits?: LimitConfig;
   /** Optional passive internal diagnostic; deployed wiring leaves it absent. */
   signedReadObserver?: SignedReadObserver;
+  /** Fixture milestone only. Absent from all deployed/default wiring. A0b
+   * admission, policy ownership and production configuration remain due. */
+  fixtureArchive?: Omit<FixtureArchiveDriverOptions, "sql" | "current" | "clock" | "bounds">;
 }
 
 export class ScopeObject<Env = unknown> extends DurableObject<Env> {
+  readonly #archive: ArchiveDriver | null;
   readonly #name: ScopeId | null;
   readonly #store: SqliteStore;
   readonly #readSql: Pick<Sql, "exec">;
@@ -165,7 +170,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     const alarm: Alarm = { set: (at) => (at === null ? ctx.storage.deleteAlarm() : ctx.storage.setAlarm(timeMs(at)!)) };
     const given: Ports = { ...production(), alarm, ...wiring.ports };
     // The one alarm serves the earliest deadline, the next attempt of an outside operation and, with a transport, the next dispatch.
-    const wakes = new Wakes(store, given.alarm, given.transport !== null);
+    const wakes = new Wakes(store, given.alarm, given.transport !== null, wiring.fixtureArchive ? () => this.#archive?.wake() ?? null : undefined);
     this.#wakes = wakes;
     // The authority of a deployed scope reads this scope's own genesis entry, for the membership scope that it records.
     const genesis = (): Extract<Input, { type: "genesis" }> | null => {
@@ -230,11 +235,20 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     this.#resolver = ports.resolver;
     this.#record = record;
     this.#streams = new Streams(ports.readers, () => store.scope()?.head ?? null);
+    this.#archive = wiring.fixtureArchive ? new ArchiveDriver({
+      ...wiring.fixtureArchive, sql: { ...this.#readSql, transaction: closure => ctx.storage.transactionSync(closure) },
+      current: () => store.scope(), clock: () => ports.clock.read(), bounds,
+    }) : null;
     // Every commit that seals an entry is followed at once, whoever asked for its turn: a pass in the background and a late answer
     // of an outside operation write their entries in no caller's request, and nothing guarantees an alarm after the last of them.
     this.#scope.turns.measureWith(() => this.#context("dispatch"));
     this.#scope.turns.onSealed(() => {
       this.#operations.committed();
+      if (this.#archive) {
+        this.#archive.committed();
+        try { this.ctx.waitUntil(Promise.resolve(wakes.set()).catch(() => undefined)); }
+        catch { /* Archive scheduling cannot refuse a sealed native entry. */ }
+      }
       this.#followed();
     });
     this.#limits = new JoinLimits(wiring.limits);
@@ -530,6 +544,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
       await this.#scope.alarm();
       await this.dispatch();
       await this.effect();
+      await this.#archive?.run();
       this.#followed();
     } finally { await this.#wakes.set(); }
     });

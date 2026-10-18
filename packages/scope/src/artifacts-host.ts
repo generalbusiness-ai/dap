@@ -17,6 +17,7 @@ import { SmartHttpSource } from "@generalbusiness/artroom-git/http-read";
 import type { DestinationBinding, DestinationInspection, DestinationProvider, DestinationRepository } from "./destination-host.ts";
 import { deleteRefOnce, inspectGit, sendOnce, type DestinationRefDeletion } from "./github-host.ts";
 import type { RegisterProvider } from "./register-host.ts";
+import { fixtureArchiveProvider, type FixtureArchivePorts } from "./archive-host.ts";
 
 /** A repository handle of the binding: the parts this port uses. */
 export interface ArtifactsRepository {
@@ -98,6 +99,20 @@ export class ArtifactsProvider implements RegisterProvider, DestinationProvider 
     if (!repositoryName(options.namespace) || !/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/.test(options.service) || !Number.isSafeInteger(options.maxBytes) || options.maxBytes < 32) bad();
     this.#options = { ...options };
     this.#bounds = { ...(options.bounds ?? READ_BOUNDS) };
+  }
+
+  /** No binding token creation: archive credentials are fixture stand-ins. */
+  fixtureArchive(ports: FixtureArchivePorts) {
+    return fixtureArchiveProvider(ports, {
+      transport: (repository, plaintext) => ({ ...this.#transport(this.#remote(repository)), ...(plaintext === undefined ? {} : { authorization: `Bearer ${plaintextOf(plaintext)}` }) }),
+      identity: async (repository, _plaintext, allowed) => {
+        if (!allowed()) return bad();
+        const handle = await this.#options.binding.get(repository.name);
+        if (!allowed()) return bad();
+        const info = await handle.info();
+        if (!allowed() || own(info, "remote") !== this.#remote(repository)) return bad();
+      },
+    });
   }
 
   /** One create. Its write token is revoked at once; if that is not confirmed, the answer names the token's handle, which the register owes. */

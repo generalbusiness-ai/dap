@@ -77,4 +77,6 @@ export class ArchiveBudget {
     finally { if (timer !== undefined) clearTimeout(timer); }
   }
   admitted(): ArchiveCost { return { ...this.#used }; }
+  /** A subordinate native read can only spend the original remaining time. */
+  remaining(): number { this.check(); return Math.max(0, Math.floor(this.#until - this.#last)); }
 }

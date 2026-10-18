@@ -47,12 +47,16 @@ export { ScopeObject };
 export const metricBindings = new Map<string, MetricEnvironment>();
 /** Test ports for byte-equal native worlds in different physical namespaces. */
 export const metricWiring = new Map<string, () => Partial<NonNullable<Wiring["ports"]>>>();
+/** Explicit archive fixture wiring, absent unless a witness supplies it.
+ * The map survives object eviction; it is not production configuration. */
+export const fixtureArchiveWiring = new Map<string, NonNullable<Wiring["fixtureArchive"]>>();
 
 export class TestScope extends ScopeObject {
   protected override metricEnvironment(): MetricEnvironment { return metricBindings.get(this.ctx.id.toString()) ?? super.metricEnvironment(); }
   protected override wiring(name: string | undefined): Wiring {
     const c = controls(name ?? "");
-    return { ports: { ...testPorts(c), outside: outsideOf(name ?? ""), owners, ...wired.get(name ?? "")?.(), ...metricWiring.get(this.ctx.id.toString())?.() }, bounds: c.bounds, reads: c.reads };
+    const fixtureArchive = fixtureArchiveWiring.get(name ?? "");
+    return { ports: { ...testPorts(c), outside: outsideOf(name ?? ""), owners, ...wired.get(name ?? "")?.(), ...metricWiring.get(this.ctx.id.toString())?.() }, bounds: c.bounds, reads: c.reads, ...(fixtureArchive ? { fixtureArchive } : {}) };
   }
 }
 /** Same native code in a second local namespace for byte equality controls. */
