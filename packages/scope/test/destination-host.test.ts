@@ -311,8 +311,10 @@ test("D1 production host inspects automatic files and reads the current fenced c
     expect(fileHost.recovery.accepts("platform:destination@6", "file-judge")).toBe(true);
     expect(fileHost.accepts("platform:destination@7", "file-judge")).toBe(true);
     expect(fileHost.recovery.accepts("platform:destination@7", "file-judge")).toBe(true);
-    expect(fileHost.accepts("platform:destination@8", "file-judge")).toBe(false);
-    expect(fileHost.recovery.accepts("platform:destination@8", "file-judge")).toBe(false);
+    expect(fileHost.accepts("platform:destination@8", "file-judge")).toBe(true);
+    expect(fileHost.recovery.accepts("platform:destination@8", "file-judge")).toBe(true);
+    expect(fileHost.accepts("platform:destination@9", "file-judge")).toBe(false);
+    expect(fileHost.recovery.accepts("platform:destination@9", "file-judge")).toBe(false);
     expect(await fileHost.send(file.request(fileJudge))).toMatchObject({ result: "confirmed", evidence: { body: { head: HEAD, present: false, tree: null } } });
     expect(await fileHost.recovery.read(file.request(fileJudge))).toMatchObject({ result: "confirmed", evidence: { body: { head: HEAD, present: false } } });
     expect(file.provider.calls.map(call => call.kind)).toEqual(["ref", "objects", "ref", "objects"]);

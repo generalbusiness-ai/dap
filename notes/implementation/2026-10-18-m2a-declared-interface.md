@@ -896,3 +896,29 @@ The Source child's implementation is ready for its final gate and exact-head
 review. Parent several-scope birth/ownership remains separate, as do G1's full
 Grow view set, hostile presentation isolation, device commands and provider
 deployment. No M2a parent completion or hosted acceptance is claimed.
+
+### Final gate findings and corrections
+
+The first gate at695fe5e91 stopped at whitespace before typecheck/tests; its
+extra fixture EOF line is removed in7336aa3f2. The gate at7336aa3f2 then passed
+all typechecks and completed the whole Vitest run:377 files/1,856 cases passed,
+four files/seven assertions failed, one file/three cases skipped. All new
+native application/maintained-package cases passed. Test step cost:489.9s
+elapsed,663.3s CPU on the shared arm64 Mac; competing load was not measured.
+Its original process71593 is terminal at65a873, exit1. Log:
+`/tmp/artroom-m2a-source-gate-corrected-20261018.log`; raw gate directory:
+`/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.KQYtYs6Mhu/`.
+The chained Node and Counter commands did not run after Vitest's failure.
+
+All seven assertions have concrete corrections. The generated Room page module
+was stale after shared CLI/SDK imports changed; the package's documented build
+regenerates it, with no page-source change. Rules6 and Destination8 are now
+explicitly supported pins, so old negative assertions for them move to Rules7
+and Destination9. The file-supersession witness also gains Destination8's
+positive case, and both the host and recovery checks retain a literal refused
+Destination9. Production definitions, guards, quotas and deadlines do not
+change. The eight selected corrected cases pass across all four owning files
+(`71868`, terminal `73e4d3`), with17 unrelated cases unrun:
+`/tmp/artroom-m2a-gate-corrections-focused-20261018.log`. Page generation log:
+`/tmp/artroom-m2a-page-resource-regeneration-20261018.log`. The new exact-head
+gate and independent review remain owed after these corrections.
