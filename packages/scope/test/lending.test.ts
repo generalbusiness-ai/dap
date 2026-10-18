@@ -335,7 +335,7 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
     let joinSlot: string | null = null, joinPosts = 0, loseJoin = true;
     const joinStore: JoinStore = { load: async () => joinSlot === null ? null : JSON.parse(joinSlot) as KeptJoin, save: async (value) => { joinSlot = JSON.stringify(value); }, clear: async () => { joinSlot = null; } };
     const serial = { run: <T>(work: () => Promise<T>): Promise<T> => work() };
-    const door = () => joining(device, { lock: serial, store: joinStore, now: clock, fetch,
+    const door = () => joining(device, { origin: SERVICE, lock: serial, store: joinStore, now: clock, fetch,
       actFetch: async (url, init) => { joinPosts++; const response = await fetch(url, init); if (loseJoin) throw new Error("the reply was lost"); return response; } });
     const membersBefore = (await M.summary()).at;
     expect(await door().join(read.link, read.seat)).toMatchObject({ status: "unknown", seat: { handle: "@visitor" } });
@@ -355,7 +355,7 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
     expect([joinPosts, joinSlot, await joinsOf(device.publicKey)]).toEqual([2, null, 1]);
     // A used invitation is refused in plain words, and nothing stays kept.
     const second = await newDeviceKey();
-    expect(await joining(second, { lock: serial, store: joinStore, now: clock, fetch }).join(read.link, read.seat)).toMatchObject({ status: "refused" });
+    expect(await joining(second, { origin: SERVICE, lock: serial, store: joinStore, now: clock, fetch }).join(read.link, read.seat)).toMatchObject({ status: "refused" });
     expect([joinSlot, await joinsOf(second.publicKey)]).toEqual([null, 0]);
     // The advertised handle is not identity evidence. The visitor's own
     // authenticated membership read must still identify this key as @visitor.

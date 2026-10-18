@@ -131,7 +131,7 @@ function joined(device: DeviceKey, outcome: JoinOutcome | null, expectedEpoch = 
   if (outcome.status === "unknown" && outcome.seat) keptJoin = outcome.seat;
 }
 function joinFor(device: DeviceKey, expectedEpoch = epoch) {
-  return joining(device, { lock: browserLock, store: joinStore, current: () => expectedEpoch === epoch });
+  return joining(device, { origin: location.origin, lock: browserLock, store: joinStore, current: () => expectedEpoch === epoch });
 }
 /** The device key of this browser, made on first need and remembered before it is used. */
 async function device(): Promise<DeviceKey> {
@@ -273,7 +273,7 @@ function draw(): void {
 void (async () => {
   try {
     memory = await remembered.load();
-    if (memory) { keptJoin = await joining(memory.device, { lock: browserLock, store: joinStore }).pending(); if (memory.seat) await open(memory); }
+    if (memory) { keptJoin = await joining(memory.device, { origin: location.origin, lock: browserLock, store: joinStore }).pending(); if (memory.seat) await open(memory); }
   } catch (error) { notice = { kind: "plain", text: error instanceof Error ? error.message : "This browser's private storage is unavailable." }; }
   draw();
 })();

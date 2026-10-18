@@ -44,3 +44,22 @@ test("stored-key admission rejects extractable, forged and mismatched keys", asy
   const outcome = await Promise.resolve(mismatched.sign(new Uint8Array(32))).then(() => "unexpected signature", error => error instanceof Error ? error.message : "unexpected error");
   expect(outcome).toBe("The stored key does not match its public binding.");
 });
+
+// Workerd's actual generated-key path is covered by the Lending scope witness.
+// This constructor stand-in isolates its missing-getter boundary on Node.
+test("without native metadata getters only keys generated here are admitted", async () => {
+  const outside = await key(), held = await generateBrowserDeviceKey();
+  const original = Object.getOwnPropertyDescriptor(globalThis, "CryptoKey");
+  try {
+    Object.defineProperty(globalThis, "CryptoKey", { value: class {}, configurable: true });
+    expect(() => storedWebCryptoSigner(outside.publicKey, outside.pair.privateKey)).toThrow(/non-extractable/);
+    expect(() => storedWebCryptoSigner(held.publicKey, structuredClone(held.pair.privateKey))).toThrow(/non-extractable/);
+    expect(() => storedWebCryptoSigner(held.publicKey, { type: "private", extractable: false, algorithm: { name: "Ed25519" }, usages: ["sign"] })).toThrow(/non-extractable/);
+    const bytes = new TextEncoder().encode("module-generated key only");
+    const signature = await storedWebCryptoSigner(held.publicKey, held.pair.privateKey).sign(bytes);
+    expect(verify(held.publicKey, signature, bytes)).toBe(true);
+  } finally {
+    if (original) Object.defineProperty(globalThis, "CryptoKey", original);
+    else Reflect.deleteProperty(globalThis, "CryptoKey");
+  }
+});

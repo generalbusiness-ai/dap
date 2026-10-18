@@ -149,4 +149,3 @@ export function browserJoining(signer: Signer, options: JoiningOptions): Joining
     },
   };
 }
-

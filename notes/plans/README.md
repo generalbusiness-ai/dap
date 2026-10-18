@@ -505,6 +505,23 @@ holds; the smallest attention loop). Hosted Counter agents and M1 run in
 parallel. A bounded real working sprint is the exit test. Carrying review
 approvals waits until that sprint has measured re-review cost.
 
+## The grow room as the demo
+
+[033: The grow room as the demo](033-2026-10-18-grow-room-demo.md)
+is a sequencing plan dated 2026-10-18. It commissions nothing. After the
+archive milestone of plan 032 (A2 and A3, fixture-only), the
+grow-operation application is built next as the public demo, ahead of the
+journey's S slices: M1 (trusted packages) and G0 (definitions and the
+fault scenario) together, then M2a (declared projections, the generic
+interface, several scopes in one package), the views on the kit (G1),
+probes from the chat (G2), routing (G3), the native device-command
+record (G5a), the hosted room with its homepage page (G5), the archive
+enablement of the demo room, and the record and archive (G4). The
+journey resumes at J3 and the evidence-rules slice. Decisions: the
+simulator is the device-command owner for the demo; probes are text;
+routing uses the carousel only; the homepage link opens a page, not a
+live grid; archiving the demo room is its own gate.
+
 ## Other original planning reports
 
 Two original reports still owe independent review and source integration.
