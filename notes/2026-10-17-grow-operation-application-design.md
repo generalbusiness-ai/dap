@@ -510,8 +510,10 @@ that fails to arrive is recorded as missing, not filled in.
 
 ## 7. Order and slices
 
-This application follows the journey. It needs the S2 card kit, which the
-journey builds, and from the applications note both M1, which makes a
+This application was written to follow the journey. Plan 033, of 18
+October 2026, builds it first, as the demo, after the archive milestone,
+with M1 ahead of it. It needs the card kit, which landed on 18 October,
+and from the applications note both M1, which makes a
 trusted package installable, and M2, which adds declared projections, the
 generic interface, several scopes in one package, bounded capabilities
 and presentation-only updates (applications note, section 7, "M2. A
@@ -519,9 +521,10 @@ complete application from any publisher", at main `df806354`). Section 6
 uses all five, including `present`. Two prerequisites belong to no
 milestone and need their own design: the device-command owner of section
 3, and custody for a report's evidence (open question 4). None of this is
-pulled into S2 or M1 by this note, and it does not reorder
-[plan 032](plans/032-2026-10-17-journey-as-acceptance-target.md). Each
-slice says what it needs:
+pulled into S2 or M1 by this note. Plan 033 reorders
+[plan 032](plans/032-2026-10-17-journey-as-acceptance-target.md) so that
+this application comes before the journey's slices. Each slice says what
+it needs:
 
 - **G0. Definition and scenario.** The `site` and `room` definitions of
   section 6.1 with their actions, guards and timed rules; the fault story
