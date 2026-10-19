@@ -277,3 +277,19 @@ All originals are closed. No second whole gate has run. This correction
 is saved clean while newly issued second G3 request `8614ac1e` takes
 priority. S2a still needs later actual Main, final review of these changes,
 a corrected gate, and its own exact-head Source review.
+
+## Cohort coordination with G5a
+
+Planner report `9192ef3fce43017abb91864c0f87cb76de8a5be9` keeps the saved
+S2a reservations Register 14/15, Directory 13/14, Membership 8, Rules 7/8
+and Destination 9/10. G5a reserves Register 16, Directory 15, Membership 9,
+Rules 9 and Destination 11 above them. An unused reservation remains
+reserved to a later head and is never reassigned; gaps are allowed.
+Neither task renumbers the other's IDs or changes a shipped pin's data or
+meaning. The active pin table must reject duplicate IDs.
+
+G5a may land before S2a. This changes no S2a source or validation result:
+the corrected S2a source still needs a final gate and exact-head approval.
+Durable G3 lands first, followed by G5a; S2a and S2b are required before
+the demo-room archive slice. This coordination is not an S2a gate pass,
+review, landing or installed-application export claim.
