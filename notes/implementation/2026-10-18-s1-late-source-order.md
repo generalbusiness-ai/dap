@@ -222,5 +222,24 @@ pass together, three files / four cases, in
 `/tmp/artroom-s1-settlement-native-assets-20261018.log`. The Page bundle was
 regenerated for the changed shared validator. The paired record-effect
 control is also terminal and restored, with its intended assertion failure.
-The correction's final gate is next; the previous two attempts below remain
-historical costs and do not count as testing this changed runtime.
+The correction's gate passed at `b34a9f38f4b3937f70a5117be2e5811195e1764b`,
+tree `9440138222a548547f63aa8d2db7df1212c08a44`: 388 test files / 1,876
+cases passed, one file / three cases skipped, plus the 31-case and 55-case
+Node checks. Typecheck took 8.1 seconds elapsed / 31.1 CPU; tests took
+486.6 elapsed / 657.3 CPU. The outer gate took 494.91 elapsed / 688.61 CPU
+(592.13 user + 96.48 system). The original process ended with exit 0 before
+this note changed. No code, tests or dependencies changed after that gate.
+
+Evidence: `/tmp/artroom-s1-settlement-gate-20261018.log`,
+`/tmp/artroom-s1-settlement-gate-outer-20261018.time`,
+`/tmp/artroom-s1-settlement-gate-preparation-20261018.json`, and raw gate
+files in `/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.8MqkpHfsvX/`.
+Counting Node artifacts are in the same temporary root under
+`artroom-counting-node-v8mQul/`. The shared macOS 27.0.1 arm64 machine had
+starting load averages 2.10 / 1.64 / 1.73. This private COW dependency view
+was warm from focused checks and had no earlier full gate; independent
+late-handler work shared the machine. These are measured attempt costs,
+not exclusive CPU, heap measurements or total edit-to-review costs. The
+previous two attempts remain historical costs and do not count as testing
+this changed runtime. This evidence-only note commit does not rerun the
+unchanged code and tests, per `docs/testing.md`.
