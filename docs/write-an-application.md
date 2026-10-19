@@ -33,8 +33,18 @@ A definition without `level` uses recorded durability: the runtime commits
 its journal before answering with a receipt. You can declare that requirement
 explicitly with `level: { name: "recorded", version: 1 }`. The explicit member
 changes the definition's bytes and digest. It does not change an existing
-scope's pin. Live and Archived levels are not supported yet. Their declarations
+scope's pin. Live and Sequenced levels are not supported yet. Their declarations
 are refused as `unsupported-definition`, without creating a recorded fallback.
+
+An archive is a separate binding of the room. A signed application package
+can require it with `host.requires: ["archive"]`. The installer refuses that
+package with `archive-unavailable` when the Directory has no archive binding,
+before adding roles or creating the application. The claim can set
+`archive: "journal"`; an admin can set it later with `bind-archive`. A new
+install request can then succeed; retrying the original request keeps its
+recorded refusal. A binding does not prove that any journal has been exported.
+The archive engine still requires its reviewed policy and host configuration;
+the current engine runs under fixture-only admission.
 
 ## Declare the item types
 

@@ -116,7 +116,25 @@ refused it. The typed record keeps twelve, and owning install checks pass.
 All attempts remain in the named `artroom-s2-*` logs. These are focused
 checks and diagnoses, not a full gate or measured total edit cost.
 
-## Outstanding archive acceptance
+## S2a and S2b split
+
+Planner report `75060e2dfa0486ed2e8942c26035ddee8016c412`, adopted by
+`cca3b5c4f6540fd78134f6e33e9a43478187d9e8`, splits this work:
+
+- S2a is this head: the claim or later Directory binding, bind-archive,
+  the signed manifest requirement, install refusal before grants in an
+  unbound room, install after binding, and target resolution reading the
+  binding. Archive evidence is restricted to the existing fixture engine
+  and its A2/A3 qualifications. A scripted target or a fixture allowlist
+  is not platform archive acceptance.
+- S2b is child request `c8c6ff6b6277fd103c30f80d0b76fd40a60ca8bb`:
+  foreign-source privacy metadata and the reviewed policy configuration
+  path. Its witness must archive an installed application's scopes,
+  including late-bound genesis 0, before plan 033 slice 9. It has not been
+  implemented here. Production admission and consent remain outside both
+  slices, with their existing A0b owner.
+
+The following records the acceptance gap that led to the split.
 
 Question `82d8576f`, corrected by `5e090acb`, asks the planner how to stage
 the required platform/application export witness against A0b's outstanding
@@ -129,10 +147,39 @@ No new export certificate, privacy exception or production wiring was
 invented. The comment about legacy Membership exclusion is a policy
 description, not a guard in `readArchivePin`, which is generic metadata.
 
-Full S2 is not complete. Native archive export from genesis and its actual
-definition/dependency closure remains acceptance work, as do the final
-documents, regenerated Page bundle and one gate before exact-head review.
-The current deployment/provider hold is not changed by this local work.
+Full S2 is not complete. Native archive export from genesis with its actual
+foreign definition/dependency closure belongs to S2b. S2a still needs its
+own final gate and exact-head review. Planner has the user's current
+authorization to deploy as needed; this local work performs no deployment.
+
+## Integration with reviewed G3 Main
+
+Merge `e199a47d7` incorporates actual Main
+`426504d89b3140e5b3f769c546e846529cf9f8c3`. The one test-file conflict is
+resolved by retaining both the archive-requirement witness and the reviewed
+late-child closure witness. The five focused byte/platform/native files
+pass ten cases in `/tmp/artroom-s2-g3-merge-owning-20261019.log`; original
+process 88200 closed with exit zero. Scope's three, platform's two and
+bytes' two compiler targets pass in
+`/tmp/artroom-s2-g3-merge-types-20261019.log` (process 7785 closed zero).
+
+The existing native install witness now also feeds its actual installed
+application's birth into archive prefix and privacy metadata classification.
+The birth has genuine foreign uses. An explicit TEST pin allowlist reaches
+that cutoff; it is no policy certificate and enables no export. Classification
+refuses `unsupported-foreign-copy` before any entry or retained-body fetch.
+The unchanged native replay assertions still pass. Evidence is
+`/tmp/artroom-s2-native-birth-cutoff-20261019.log`, one case, original
+process 81558 closed with exit zero. The earlier standalone archive driver
+fixtures remain engine evidence for scopes without foreign sources; no
+installed application export is claimed here.
+
+The Page assets were regenerated after the native declaration changes:
+`/tmp/artroom-s2-page-build-20261019.log` records the build. Its owning
+asset check passes in `/tmp/artroom-s2-page-assets-20261019.log`. User docs
+now distinguish the room binding from durability and describe the signed
+requirement, asynchronous refusal and new request after binding. No install,
+lockfile change, gate, publication or deployment is inferred from these checks.
 
 Dependencies are another private APFS COW view from idle G1, with 106
 checked versions / 13 internal relative workspace links and zero installs.

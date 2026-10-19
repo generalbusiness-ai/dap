@@ -237,6 +237,13 @@ roles are `admin`, `maintainer`, `member`, `agent`, and `checker`. Omission
 selects no default grants. Existing grants remain. `--values` is a JSON object
 of application genesis fields; its default is `{}`.
 
+A package whose signed host requirements include `archive` needs the room's
+Directory binding `archive: "journal"`. Without it, installation ends with
+`archive-unavailable` before granting roles or creating the application.
+An admin may set the binding at claim or later with `bind-archive`. Submit
+a new install request after binding; the original request retains its refusal.
+The binding is configuration, not an archive export receipt.
+
 Choose a request key and keep the exact command. CLI and MCP share persistent
 custody in the config directory's `private/mcp-custody/`. A lost reply is
 uncertain; repeating the original key and arguments uses the retained signed

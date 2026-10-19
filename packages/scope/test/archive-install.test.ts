@@ -1,10 +1,12 @@
 /** Actual native room/authority/install/R2/judgments and SQLite. The Git
  * HTTP peer and hosting trust/configuration are explicit TEST fixtures.
  * This proves binding admission, not archive export or a live provider. */
-import { env } from "cloudflare:test";
+import { env, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
-import { isSeed, scopeIdOf } from "@generalbusiness/artroom-bytes";
+import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
+import { isSeed, parseStrict, scopeIdOf } from "@generalbusiness/artroom-bytes";
 import { TRUSTED_APPLICATION_COHORT as C, platform } from "@generalbusiness/dap-platform";
+import { validateDefinition } from "@generalbusiness/dap-derive";
 import { httpSource, verify } from "@generalbusiness/artroom-replay";
 import { secretSigner, signedApplicationInstall } from "@generalbusiness/artroom-client";
 import { outsideOf as hostOutside } from "../src/worker.ts";
@@ -14,6 +16,9 @@ import { sessionRoom } from "./support/session-room.ts";
 import { dispatchFixture, driveFixture, effectFixture } from "./support/native-fixture-lifetime.ts";
 import { rita, routed } from "./repository.ts";
 import { reader } from "./support.ts";
+import { ArchiveBudget } from "../src/archive-budget.ts";
+import { archivePrefixMetadata } from "../src/archive-prefix.ts";
+import { archivePrivacyMetadata } from "../src/archive-privacy.ts";
 
 test("a native install requiring archive refuses an unbound room before grants, then succeeds after binding", async () => {
   const room = await sessionRoom(C.register), { life, R, D, children } = room;
@@ -55,7 +60,31 @@ test("a native install requiring archive refuses an unbound room before grants, 
     const application = life.platform(scopeIdOf(seed));
     await driveFixture([R, D, M, A, G, application], life.wait);
     expect(await A.item(accepted)).toMatchObject({ state: "active" });
-    expect((await application.entries())[0]).toMatchObject({ input: { type: "genesis", decision: "applied" } });
+    const birth = (await application.entries())[0]!;
+    expect(birth).toMatchObject({ input: { type: "genesis", decision: "applied" } });
+    expect(birth.uses.length).toBeGreaterThan(0);
+    // S2a's binding does not bypass the existing foreign-source cutoff.
+    // This explicit TEST pin allowlist reaches metadata classification;
+    // it is no reviewed policy certificate or permission to export bodies.
+    const declared = validateDefinition(parseStrict(f.packet.package.semantic.definitions[0]!.bytes), PROPOSED_BOUNDS);
+    if (!declared.ok) return expect.fail("the installed TEST application must have a valid declaration");
+    const scope = await application.at(), through = (await application.summary()).at;
+    const privacy = await life.wait(() => runInDurableObject(application.object, (_instance, state) => {
+      const forbidden: string[] = [], budget = new ArchiveBudget();
+      const sql = { exec(query: string, ...args: (string | number | null | ArrayBuffer)[]) {
+        if (/SELECT (?:\*|bytes)|FROM retained_/.test(query)) { forbidden.push(query); throw new Error("archive body fetch blocked by witness"); }
+        return state.storage.sql.exec(query, ...args);
+      } };
+      let reason = "admitted";
+      try {
+        const prefix = archivePrefixMetadata(sql, scope, through, PROPOSED_BOUNDS, budget, new Set([declared.definition.digest]));
+        expect(prefix.positions[0]?.seq).toBe(0);
+        archivePrivacyMetadata(sql, prefix, { named: declared.definition.digest, definition: declared.definition,
+          owners: new Map(), records: new Map(), preparations: new Map() }, budget);
+      } catch (error) { reason = (error as { reason?: string }).reason ?? String(error); }
+      return { reason, forbidden };
+    }));
+    expect(privacy).toEqual({ reason: "unsupported-foreign-copy", forbidden: [] });
     for (const node of [A, D, application]) {
       const head = (await node.summary()).at;
       const replay = await life.wait(() => verify(httpSource("https://scopes.test", { reader, fetch: (url, init) => life.wait(() => routed(url, init)) }), { mode: "replay", platform, grants: "proven", scope: node.name, head }));
