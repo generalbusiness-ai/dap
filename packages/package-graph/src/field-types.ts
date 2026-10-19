@@ -23,4 +23,3 @@ export function fieldAssignable(from: FieldType, to: FieldType): boolean {
     default: return from.type === to.type;
   }
 }
-

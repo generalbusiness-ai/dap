@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { b64url, canonicalize, definitionDigest, fitsFieldType, sign, utf8 } from "@generalbusiness/artroom-bytes";
+import { b64url, canonicalize, definitionDigest, digestBytes, fitsFieldType, sign, utf8, verify } from "@generalbusiness/artroom-bytes";
 import { ApplicationPackageValidationError, packApplication2, readApplicationProjection, type ApplicationPackageInput2 } from "@generalbusiness/artroom-bytes/application-v2";
 import { PROPOSED_BOUNDS, type DeclaredDefinition, type Digest } from "@generalbusiness/dap-contract";
 import { checkPackageGraph, emptyPackageComposition, type PackageGraphInput } from "@generalbusiness/artroom-package-graph";
@@ -40,7 +40,71 @@ function grow(change: (site: DeclaredDefinition, room: DeclaredDefinition) => vo
     roles: { operator: [...new Set([parent, child].flatMap(definition => Object.values(definition.acts).map(act => act.grant)))] },
   };
 }
-test("Grow's three retained child slots prove three lifetime relation keys, rather than live maxima alone", () => {
+// All variants pass native whole-definition validation first. The backup
+// opening makes the aliases reachable without adding a second child creator.
+function lifetimeVariants(): { name: string; input: PackageGraphInput }[] {
+  const backup = (parent: DeclaredDefinition) => {
+    const opening = parent.acts["create-room"]!;
+    parent.acts["open-backup-slot"] = { ...structuredClone(opening), sends: [] };
+  };
+  const birthKinds = (child: DeclaredDefinition, kinds: string[]) => {
+    const field = child.acts["establish"]!.fields["siteRoom"]!;
+    if (field.type !== "fact") return expect.fail("Grow siteRoom must be a fact.");
+    field.kind = kinds;
+    const slot = child.items["room"]!.refs["siteRoom"]!.to;
+    if (slot.type !== "fact") return expect.fail("Grow siteRoom slot must be a fact.");
+    slot.kind = kinds;
+  };
+  return [
+    { name: "retiring a confirmed backing slot", input: grow(parent => {
+      parent.acts["retire"] = { step: "transition", on: "room", grant: "grow.configure", fields: {}, also: {},
+        guards: [{ state: ["active"] }], effects: [{ state: "failed" }], sends: [], attention: [] };
+    }) },
+    { name: "repeated creation from the singleton Site", input: grow((parent, child) => {
+      backup(parent); birthKinds(child, ["open-backup-slot"]);
+      const creator = parent.acts["create-room"]!;
+      creator.step = "transition"; creator.on = "site"; creator.effects = [];
+      creator.fields["slot"] = { type: "item", of: "room", required: true };
+      creator.also = { slot: { item: "room", by: "slot" } };
+      const send = creator.sends[0]!;
+      if (!("create" in send)) return expect.fail("Grow requires its creation.");
+      send.create.fields["siteRoom"] = { item: "also.slot" };
+      for (const [name, effects] of Object.entries(send.create.result)) send.create.result[name as keyof typeof send.create.result] = effects.map(effect => ({ ...effect, of: "also.slot" }));
+    }) },
+    { name: "refusal also frees a previous confirmed slot", input: grow((parent, child) => {
+      backup(parent); birthKinds(child, ["create-room", "open-backup-slot"]);
+      const creator = parent.acts["create-room"]!;
+      creator.fields["previous"] = { type: "item", of: "room", required: true };
+      creator.also = { previous: { item: "room", by: "previous" } };
+      const send = creator.sends[0]!;
+      if ("create" in send) send.create.result.refused = [{ state: "failed" }, { of: "also.previous", state: "failed" }];
+    }) },
+    { name: "recyclable related items", input: grow((_parent, child) => { child.items["room"]!.states["ended"] = { final: true }; }) },
+    { name: "a creation conflict frees its backing slot", input: grow(parent => {
+      const send = parent.acts["create-room"]!.sends[0]!;
+      if ("create" in send) send.create.result.conflict = [{ state: "failed" }];
+    }) },
+  ];
+}
+
+// Deliberately unchecked TEST producer: this tests hostile signed input at
+// the byte boundary, independently of pack's refusal before signing. The
+// literal topology has exactly one Site -> Room creation edge in every case.
+function signedGrowWire(input: PackageGraphInput) {
+  expect(input.definitions).toHaveLength(2);
+  const source = packageInput(input), semantic = { ...source.semantic, creates: [{ from: input.entry, to: input.definitions[1]!.id }] };
+  const domain = (tag: string, value: unknown) => utf8(`${tag}\n${canonicalize(value)}`);
+  const semanticId = digestBytes(domain("dap-application-semantics-2", semantic));
+  const presentation = { ...source.presentation, semantic: semanticId };
+  const manifest = { v: 2, name: source.name, version: source.version, publisher: keys.rita.key,
+    semantic: semanticId, presentation: digestBytes(domain("dap-application-presentation-2", presentation)) };
+  const signedBytes = domain("dap-application-release-signature-2", manifest), sig = sign(keys.rita.secret, signedBytes);
+  expect(verify(keys.rita.key, sig, signedBytes)).toBe(true);
+  const release = { manifest, sig };
+  return { bytes: utf8(canonicalize({ v: 2, semantic, presentation, release })), release: digestBytes(domain("dap-application-release-2", release)) };
+}
+
+test("Grow's three retained child slots prove three lifetime relation keys, rather than live maxima alone", async () => {
   const input = grow(), checked = checkPackageGraph(input);
   expect(checked.findings).toEqual([]);
   expect(checked.instances).toEqual([{ definition: input.entry, maximum: 1 }, { definition: input.definitions[1]!.id, maximum: 3 }]);
@@ -65,6 +129,19 @@ test("Grow's three retained child slots prove three lifetime relation keys, rath
   expect(conflicted.findings.map(finding => finding.reason)).toEqual(["fan-in-unproved"]);
   const recyclable = checkPackageGraph(grow((_parent, child) => { child.items["room"]!.states["ended"] = { final: true }; }));
   expect(recyclable.findings.map(finding => finding.reason)).toEqual(["fan-in-unproved"]);
+  const validWire = signedGrowWire(input);
+  expect(validatePackage(validWire.bytes, PROPOSED_BOUNDS, RULE_PROFILES, {}, validWire.release)).toMatchObject({ ok: true, kind: "graph" });
+  for (const variant of lifetimeVariants()) {
+    expect(checkPackageGraph(variant.input).findings.map(finding => finding.reason), variant.name).toEqual(["fan-in-unproved"]);
+    let signatures = 0;
+    const packed = packApplication2(packageInput(variant.input), { key: keys.rita.key, sign: bytes => { signatures++; return sign(keys.rita.secret, bytes); } });
+    await expect(packed, variant.name).rejects.toMatchObject({ findings: [expect.objectContaining({ reason: "fan-in-unproved" })] });
+    expect(signatures, variant.name).toBe(0);
+    const hostile = signedGrowWire(variant.input);
+    expect(validatePackage(hostile.bytes, PROPOSED_BOUNDS, RULE_PROFILES, {}, hostile.release), variant.name).toMatchObject({
+      ok: false, kind: "codec", reason: "invalid", findings: [expect.objectContaining({ reason: "fan-in-unproved" })],
+    });
+  }
 });
 
 test("Grow endpoints stay bound to the declared child and creator rather than signer-selected peers", () => {

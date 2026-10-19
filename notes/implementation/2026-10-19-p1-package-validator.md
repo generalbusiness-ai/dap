@@ -256,3 +256,41 @@ The native owned-scope regression now passes its one case in
 `/tmp/artroom-p1-owned-scopes-codec-regression-covered-20261019.log`, after
 the maintained package preparation corrections. These are focused passes,
 not P1's final gate or a claim that its remaining work is done.
+
+
+## Complete lifetime variants at the byte boundary
+
+Main's reviewed documentation-only landing `a93b6359` is incorporated in
+merge `3bb9e945`. P1 still has no gate, review or completion. The approved
+staging table explicitly gives P2 the cycle edges carrying `late` and
+`spacing`; P1's structural state-condition witness remains its current slice.
+
+The existing lifetime case now covers all five named negative variants after
+native whole-definition validation: a retire act, repeated creation from the
+singleton Site, a refusal that also frees a previous confirmed slot,
+recyclable related items, and creation conflict freeing its backing slot.
+The alias variants include a separate no-send opening for a reachable initial
+backing slot; that opening adds no second child creator. The child's birth
+field and retained reference list the matching opening kinds. An initial
+fixture changed only the field, so native validation correctly refused its
+assignment to the narrower slot; that failed log remains
+`/tmp/artroom-p1-lifetime-matrix-initial-20261019.log`.
+
+Each negative is refused `fan-in-unproved` by the component and by packing
+before any signer call. A deliberately unchecked TEST producer separately
+constructs canonical v2 bytes using the literal one-edge Site → Room topology,
+independently verifies its real signature, and submits those bytes to the
+public validator. The positive package passes; all five correctly signed
+negative envelopes refuse with the structured finding. This is adversarial
+input to byte validation, not an installation or live authority witness.
+Eight cases pass in
+`/tmp/artroom-p1-lifetime-matrix-signed-bytes-20261019.log` and the owning test
+compiler passes in `...lifetime-matrix-signed-type-20261019.log`.
+
+`/tmp/artroom-p1-transition-creator-control-20261019.log` disables the one
+opening-row requirement. Seven cases pass; the unchanged lifetime case fails
+by assertion because repeated creation from the singleton Site is admitted.
+The control restores the source. Ordinary whitespace inspection also caught
+extra EOF blank lines in the two extracted shared guards; removing them
+changes no behavior. This checkpoint still does not cover the separate
+pre-failure relation-order witness or the complete P1 refusal matrix.
