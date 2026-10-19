@@ -1,6 +1,6 @@
 # Application packages, their checks, and the builder room
 
-18 October 2026, draft 6. Design note for review. Section 15 lists what
+18 October 2026, draft 7. Design note for review. Section 15 lists what
 changed after each checker review.
 
 This note makes application authoring in dap easier to do and easier to
@@ -161,27 +161,36 @@ instances with three rules, each over forms the runtime already has.
    key, and one child with two items adds two keys. The check proves a
    fan-in from three lifetime bounds, each either proved or refused.
 
-   *The lifetime item bound of an item type* is its `max` when the type
-   has no final state, or when each of its final states is entered only
-   by the `refused` and `conflict` clauses of a creation result in that
-   type's opening row, because an item that ends that way never relates
-   and its child never sends. Any other final state leaves the bound
-   unproved.
+   Two different things need bounding, and the same item type can bound
+   one without bounding the other. Successful child instances are
+   bounded by the creator's slots, because a child whose creation was
+   refused or conflicted never sends. Relation keys are bounded by the
+   related item's type, and an item can relate before its own creation
+   result fails it and frees its slot, so a creation-failure final state
+   bounds no keys.
+
+   *The successful-creation bound of an item type T in a creating row*
+   is T's `max` when T has no final state, or when each of its final
+   states is entered only by the `refused` and `conflict` clauses of
+   that row's creation result. Any other final state leaves it unproved.
 
    *The instance bound of a definition* is one for the root. For any
    other definition D it is proved when exactly one row in the package
    holds a `create` send naming D; that row opens an item of some type
    T, either an act with `step: "open"` on T or a handler whose `opens`
    names T, so that one run of the row opens one item and makes one
-   creation; T's lifetime item bound is proved; the row's definition C
-   has a proved instance bound; and the creation graph has no cycle
-   through D. The bound is C's bound times T's lifetime item bound. A
-   `create` send in a transition or comment row runs as often as the row
-   does and is unproved.
+   creation; T's successful-creation bound in that row is proved; the
+   row's definition C has a proved instance bound; and the creation
+   graph has no cycle through D. The bound is C's bound times T's
+   successful-creation bound. A `create` send in a transition or comment
+   row runs as often as the row does and is unproved.
 
-   *The key bound of a `relate` send* is the lifetime item bound of the
-   type of the item it relates, when that item is the row's own `on`
-   item or a named item of that type. Any other item source is unproved.
+   *The key bound of a `relate` send* is the `max` of the type of the
+   item it relates, when that item is the row's own `on` item or a named
+   item of that type and the type has no final state. A related type
+   with any final state is unproved, because an item of it can relate
+   and then end, and the next item of the type adds a key. Any other
+   item source is unproved.
 
    The fan-in of a handler is the sum, over every connected sending
    definition and each of its `relate` sends to the handler, of the
@@ -195,10 +204,11 @@ instances with three rules, each over forms the runtime already has.
    opens a `room` item (`site.ts:22`), and that type's one final state,
    `failed`, is entered only by the creation result's `refused` and
    `conflict` clauses (`site.ts:15,25`), so the room definition's
-   instance bound is three. The room's `report-site` act relates its own
-   `room` item (`room.ts:63`), a singleton type with no final state
-   (`room.ts:49`), so the key bound is one. The fan-in is three, and
-   `copies: 3` passes.
+   instance bound is three. The site's `room` type bounds nothing else:
+   it is never related. The room's `report-site` act relates the room
+   scope's own `room` item (`room.ts:63`), a singleton type with no final
+   state (`room.ts:49`), so the key bound is one. The fan-in is three,
+   and `copies: 3` passes.
 
 For an `outside` endpoint the check proves the slot's kind and, when the
 manifest names the platform definition, that it has the handler. Nothing
@@ -234,13 +244,16 @@ checks:
 
 The grow package is the worked example for the first two rows. Its
 fan-in is proved to be three (section 2, rule 3), so `copies: 3` passes
-and `copies: 2` is refused `fan-in-exceeds-copies`. Three variants are
+and `copies: 2` is refused `fan-in-exceeds-copies`. A room whose `room`
+type becomes `many: true, max: 2` with no final state has a proved key
+bound of two, so the fan-in is proved to be six: `copies: 3` is refused
+`fan-in-exceeds-copies`, and `copies: 6` passes. Three variants are
 refused `fan-in-unproved`: a site whose `room` type gains a `retire` act
 into `failed`, because a retired room frees a slot for a fourth sender;
 a site whose `create-room` becomes a transition act on its singleton
 `site` item, because it then runs as often as it is called; and a room
-whose `room` type becomes `max: 2`, because one room then relates two
-keys, unless `copies` is raised to six, which passes.
+whose related `room` type gains a final state, because a room can relate
+its item, end it, and relate the next one.
 
 "By construction" means this. The install act's guard runs the validator
 in its own turn, so no room holds a scope under a package that fails.
@@ -524,7 +537,7 @@ blocked on review.
 
 | Slice | What | Needs | Done when | Size |
 |---|---|---|---|---|
-| P1 | Package version 2 (section 2) and `validatePackage` with the P1 row of section 3's staging table, used by the codec and `dap check`, with `unsupported-form` for the rest. `ReceiveType.from.pin` in the contract, the delivery check and replay. The grow package declares its connections, rights, and order | M2a landed | Each P1 refusal has its pair on the grow package, and the projected-bound report matches a hand count. `fan-in-exceeds-copies` refuses the grow site with `copies: 2`. `fan-in-unproved` refuses a site whose `room` type gains a `retire` act, a site whose `create-room` is a transition act on its singleton, and a room whose `room` type is `max: 2` with `copies: 3`, while `copies: 6` passes that last case. `unbound-endpoint` refuses a site whose room slot is written from a signer's field, and a wrong-definition creation result. `wrong-peer` refuses a handler whose `pin` is a second digest with the declared name, and the delivery check refuses that sender `wrong-pin` while the declared peer passes. `dap check` reports findings as rows | 3 days |
+| P1 | Package version 2 (section 2) and `validatePackage` with the P1 row of section 3's staging table, used by the codec and `dap check`, with `unsupported-form` for the rest. `ReceiveType.from.pin` in the contract, the delivery check and replay. The grow package declares its connections, rights, and order | M2a landed | Each P1 refusal has its pair on the grow package, and the projected-bound report matches a hand count. `fan-in-exceeds-copies` refuses the grow site with `copies: 2`. A room whose `room` type is `many: true, max: 2` with no final state is refused `fan-in-exceeds-copies` with `copies: 3` and passes with `copies: 6`. `fan-in-unproved` refuses a site whose `room` type gains a `retire` act, a site whose `create-room` is a transition act on its singleton, and a definition that relates an item of a type with a creation-failure final state before the creation result arrives. `unbound-endpoint` refuses a site whose room slot is written from a signer's field, and a wrong-definition creation result. `wrong-peer` refuses a handler whose `pin` is a second digest with the declared name, and the delivery check refuses that sender `wrong-pin` while the declared peer passes. `dap check` reports findings as rows | 3 days |
 | P1g | The group checks of the staging table | P1, S3 | Each refusal has its pair, and `sequenced-for-nothing` has its warning witness, on the two-scope witness of the sequenced note | 1 day |
 | P2 | `spacing` (4.2) and the cycle edges that carry `spacing` or `late`: contract, validator, derive, scope, replay, tests | P1, and S1 for the `late` edge | A second delivery inside `spacing` is refused and the sender's clause fires, with fresh and boundary controls and a `clock-behind` control. A late-branch entry counts as applied. A cycle with a `spacing` edge is admitted with its computed bound. All replay | 1 day |
 | P3 | Timed rules may send (4.3) | P2 | A timed rule's `tell` is delivered with the timed entry as its cause. The drain order is unchanged. Both journals replay | 1 day |
@@ -586,7 +599,14 @@ predecessors land.
 | Q7 | Banks in groups: a member definition created several times | Not in version 2. A bank's instances would need names from their creation index, which the sequenced note's `enroll` can carry later |
 | Q8 | Whether a handler may admit an unproved fan-in on purpose, with `type-full` as the runtime backstop | Not in version 2. A declared `copies: "unbounded"` would need its own retention rule |
 
-## 15. Changes in drafts 3 to 6
+## 15. Changes in drafts 3 to 7
+
+**Draft 7**, after review c2b00734 of head 5346406f:
+
+| Finding | Where answered |
+|---|---|
+| F1, P1: a creation-failure final state bounds successful children but not the items a creator opens and relates before the failure | Section 2, rule 3: the successful-creation bound (creation-failure final states allowed) is separated from the key bound (no final state at all). The grow case keeps both. The pre-failure relation is a negative control in section 3 and P1 |
+| F2, P2: the two-key room variant is a proved fan-in of six | Section 3 and P1: `fan-in-exceeds-copies` with `copies: 3`, passing with `copies: 6`, and `fan-in-unproved` kept for the repeatable-creation and recyclable-key cases |
 
 **Draft 6**, after review 00713423 of head a73fb1de:
 
