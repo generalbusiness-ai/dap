@@ -231,7 +231,7 @@ class Scripted {
 const host = new Scripted();
 // SCRIPTED publication boundary for these renderer/HTTP witnesses. The
 // selected-publication test separately exercises actual destination records.
-const publishedScopes: Binding = {
+const publishedScopes: Binding<DurableObjectId> = {
   idFromName: (name) => env.PLATFORM.idFromName(name),
   get: (id) => {
     const object = env.PLATFORM.get(id) as unknown as import("../src/site/publication.ts").SitePublicationPeer & { siteRoom(): Promise<import("../src/namespace.ts").Sourced | null> };
@@ -486,7 +486,7 @@ test("refusals preserve machine reasons and statuses while browsers get safe Pag
   expect(await unconfigured.text()).toContain("This host does not read the repository of ");
   // SCRIPTED absence of a confirmed publication; arbitrary commits in publishedScopes
   // receive scripted proof, so they cannot represent an unpublished room.
-  const unpublishedScopes: Binding = {
+  const unpublishedScopes: Binding<DurableObjectId> = {
     idFromName: (name) => env.PLATFORM.idFromName(name),
     get: (id) => {
       const object = env.PLATFORM.get(id) as unknown as import("../src/site/publication.ts").SitePublicationPeer & { siteRoom(): Promise<import("../src/namespace.ts").Sourced | null> };

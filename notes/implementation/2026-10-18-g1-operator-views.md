@@ -334,3 +334,12 @@ log and 0.22 s outer timing remain in
 `/tmp/artroom-g1-final-gate-20261019.log` and
 `/tmp/artroom-g1-final-gate-outer-20261019.time`. The blank line is removed
 before the next code head; this is not a test-suite rerun.
+
+The next gate at `7d13589b9` passed whitespace but stopped in typecheck
+(6.9 s elapsed, 26.5 s CPU), before running tests. Two existing Site-route
+fixtures annotated their Cloudflare bindings with the default opaque ID,
+so their `get` callbacks received `unknown`. They now state
+`Binding<DurableObjectId>` explicitly. This preserves the Node adapter
+and the typed Cloudflare fixture without changing runtime behavior. Logs
+remain in `/tmp/artroom-g1-reviewed-gate-20261019.log` and raw directory
+`tmp.cKyvYFBIx2`. No whole test suite has run in either stopped attempt.
