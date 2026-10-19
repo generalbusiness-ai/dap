@@ -67,6 +67,20 @@ test("a negative apparent latency remains fresh without inventing clock toleranc
   expect(receiver.item(0).values["last"]).toBe(7);
 });
 
+test("a late relationship refusal writes no copy; an applied replacement advances the actual copy", () => {
+  for (const branch of [false, true]) {
+    const declaration = lateDefinition(branch), handler = declaration.receives["sample"]!;
+    handler.class = "relate"; handler.copies = 4; delete handler.order;
+    declaration.items["board"]!.refs["me"] = { fixed: true, required: true, to: { type: "item", of: "board" } };
+    declaration.acts["found"]!.effects = [...declaration.acts["found"]!.effects, { ref: { slot: "me", from: "self" } }];
+    declaration.acts["emit"]!.sends = [{ relate: { to: { slot: "peer" }, name: "sample", item: { slot: "me" }, state: "set", detail: { value: { field: "first" } }, result: {} } }];
+    const { sender, receiver } = sourceOrderFixture(declaration); receiver.now = t(31);
+    expect(deliver(receiver, sender, 1, 0)).toMatchObject({ result: "write", draft: { input: { decision: branch ? "applied" : "refused" } } });
+    expect(receiver.state.relation(sender.at, "sample", 0)).toEqual(branch ? expect.objectContaining({ revision: 1, state: "set" }) : null);
+    expect(receiver.item(0).values["last"]).toBe(branch ? 99 : 0);
+  }
+});
+
 test("replacement validation cannot borrow normal guards and late is a closed handler-only form", () => {
   const definition = lateDefinition(true), handler = definition.receives["sample"]!;
   definition.items["board"]!.states["done"] = { final: true };

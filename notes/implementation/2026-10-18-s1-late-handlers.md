@@ -115,3 +115,23 @@ Audit `/tmp/artroom-s1-late-dependency-view-20261018.json`, SHA-256
 `4d7e4de0d5e65175578733b3717ea4c78f2e2e4c6ffacbbb4ed6567e924dd94f`.
 These are focused checks, not a complete gate or measured total edit cost.
 Page assets must be regenerated after the shared validator is final.
+
+## Incorporation and relationship check
+
+The checkpoint `0d1c53bc7` was saved before incorporating corrected source
+candidate `e44b65e35`. The validator conflict was resolved by preserving
+both the source-order native-bound refusal and the independent late-body
+validation. Fourteen cases across the late and source-pin files passed in
+`/tmp/artroom-s1-late-source-settlement-merge-20261018.log`, then merge
+`32e23df53` was recorded. Actual audited Main `1da3f4ca` was incorporated
+by zero-file merge `9291e1fcd`; its tree stayed `b3791dada`.
+Derive, Bytes and Scope owning typechecks pass in the respective
+`/tmp/artroom-s1-late-*-type-merged-20261018.log` files.
+
+The relationship witness adds the thirteenth late case: a refused late
+update writes no copy; an applied replacement advances the actual copy.
+All thirteen pass in `/tmp/artroom-s1-late-relate-copy-20261018.log`.
+The time and platform-capacity control targets are unchanged by this test.
+Planner amendment `9ae4eb97` confirms request-only late/spacing forms;
+native reserved-receiver replacement composition remains the unanswered
+part of `df405e94`. No final gate or completion is claimed.
