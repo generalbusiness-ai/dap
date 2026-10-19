@@ -45,6 +45,7 @@ export const REFUSALS: Readonly<Record<RefusalReason, (asked: Asked, name: strin
   "fact-mismatch": () => ({ sentence: "a fact field names an entry of this scope with a hash that is not that entry's", next: "Read the entry with step and give its exact fact; sign again with a new idempotencyKey." }),
   unauthorized: (asked) => ({ sentence: `your key holds no current grant${asked.action ? ` for ${asked.action}` : ""}`, next: "Call room to see your role; ask an admin for the action." }),
   "guard-failed": () => ({ sentence: "a guard does not hold", next: HINTS.again }),
+  late: () => ({ sentence: "the message arrived after the handler's declared time limit", next: "Read the sender's recorded result; retrying the same message keeps this decision." }),
   "capability-refused": (_, name) => ({ sentence: `a capability's rule does not hold${name ? "" : ""}`, next: "Prepare the capability's step with prepare, or read the scope; then submit again." }),
   "slot-full": () => ({ sentence: "a party list would pass its bound", next: "Remove a member from that list first, or act on another item." }),
   "type-full": () => ({ sentence: "the scope holds as many live items of that type as it may", next: "Close or finish one first." }),

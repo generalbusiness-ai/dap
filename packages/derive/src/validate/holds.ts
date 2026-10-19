@@ -296,7 +296,13 @@ export function prepareReserving(d: Defining, top: Rec, reader: CapacityReader, 
     }
   };
   forms(actsWritten, "acts");
-  forms(handlersWritten, "receives");
+  const handlerBodies = Object.fromEntries(Object.entries(handlersWritten).flatMap(([name, form]) => {
+    if (!isObject(form)) return [[name, form]];
+    const late = isObject(form["late"]) ? form["late"] : null;
+    const branch = late && isObject(late["then"]) ? late["then"] : null;
+    return branch ? [[name, form], [`${name}.late.then`, { ...form, effects: branch["effects"] ?? [], sends: branch["sends"] ?? [], attention: branch["attention"] ?? [] }]] : [[name, form]];
+  }));
+  forms(handlerBodies, "receives");
   for (const most of mosts.values()) if (most.opens !== null) opened.add(most.opens);
   for (const send of sends.values()) for (const clause of send.clauses) for (const mark of clause.starts.marks) if (mark.opens !== null) opened.add(mark.opens);
 

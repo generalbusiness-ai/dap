@@ -8,7 +8,8 @@ import type { Problem, ValidDefinition } from "./validate/index.ts";
 export function creates(declared: DeclaredDefinition): Digest[] {
   const named = new Set<Digest>();
   for (const from of [...Object.values(declared.acts), ...Object.values(declared.receives)]) {
-    for (const send of from.sends) if ("create" in send && isDigest(send.create.definition)) named.add(send.create.definition);
+    const late = "late" in from ? from.late?.then?.sends ?? [] : [];
+    for (const send of [...from.sends, ...late]) if ("create" in send && isDigest(send.create.definition)) named.add(send.create.definition);
   }
   return [...named].sort(byteOrder);
 }

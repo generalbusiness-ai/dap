@@ -28,7 +28,7 @@ export interface Entry {
 
 /**
  * Why a refused delivery was refused (section 4.2): a code and, where one
- * exists, a name. The name is the `reason` that the failed guard declares.
+ * exists, a name. The name is the reason declared by the guard or late form.
  * The deciding entry records it, and its result carries the same value to
  * the sender.
  */
@@ -57,7 +57,8 @@ export type Input =
       presented: Record<string, FactRef>;       // the facts presented beside the intent, by the names the act declares (section 6.4)
       observed?: readonly ObservationUse[] }    // further observations that the judgment read (sections 4.1 and 16.1)
   | { type: "delivery"; from: FactRef; n: number; message: Request;
-      decision: "applied" | "refused" | "superseded"; reason?: Reason }
+      decision: "applied" | "refused" | "superseded"; reason?: Reason;
+      late?: { reason: string } }              // an applied replacement branch, not a refused guard
   | { type: "delivery"; from: FactRef; n: number; message: Result;
       clause: "applied" | "refused" | "superseded" | "conflict";
       observed?: readonly ObservationUse[] }    // as for an act
