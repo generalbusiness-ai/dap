@@ -2,8 +2,7 @@
 
 Current code includes the joint owned Site → Room → alert path, fixed native
 device controls, related-record navigation and bounded zone history. The
-sections below retain the development evidence in order. The final gate and
-review are still pending; earlier unfinished-boundary notes describe earlier
+sections below retain the development evidence in order. The final gate has passed; exact-head review and landing remain pending; earlier unfinished-boundary notes describe earlier
 checkpoints and are superseded by the 19 October sections.
 
 Request `2c5969dc34788e6f130e3e81e0c105f35fa5f7a5`, promise
@@ -343,3 +342,41 @@ so their `get` callbacks received `unknown`. They now state
 and the typed Cloudflare fixture without changing runtime behavior. Logs
 remain in `/tmp/artroom-g1-reviewed-gate-20261019.log` and raw directory
 `tmp.cKyvYFBIx2`. No whole test suite has run in either stopped attempt.
+
+
+## Review gate and acceptance evidence
+
+The gate passed once through the whole test suite at clean code/test head
+`8790489b0149d8318207599dbf24deb3eb4e7c83`, tree
+`f39f5c8f8ed89f28bec473bbd2a2f67b383a7db2`. Original PTY 22353 closed with
+exit 0: 394 files and 1,903 cases passed; one file and three cases skipped.
+The explicit Node checks passed 31 cases and Counting passed 55. Gate
+assertion `aad8c0c1846aa2089e0b3fce1f8a9b91d34ed138` records these facts.
+
+`/tmp/artroom-g1-final-typed-gate-20261019.log` has SHA-256
+`f59d0454d9a93a202d3419f4b81e62b7080b18085c395a525465d35fdd296d90`.
+Raw logs are in `tmp.S8fndsfHTo` under the user's temporary directory;
+Counting evidence is `artroom-counting-node-uLnyRv` there. The outer command
+measured 503.45 seconds elapsed and 701.66 seconds CPU (603.96 user plus
+97.70 system). Its phases measured typecheck 8.2/31.1 seconds and tests
+495.1/670.4 seconds elapsed/CPU. This was a warm private dependency view with
+zero installs, on shared macOS 27.0.1 arm64, 18 CPUs, initial load
+2.36/2.02/1.85. These are observed run costs, not exclusive CPU, physical
+heap bounds or total edit cost. Neither earlier stopped attempt ran a whole
+test suite. No suite is repeated for this evidence-only note update.
+
+| Required check | Witness |
+| --- | --- |
+| App-only data | Browser opening/context payloads omit projection sources; declared view reads carry them only on the app path. Existing kit boundary checks also pass in the gate. |
+| Quiet model context | Both browser widths assert no duplicate unchanged refresh context and no chat or context errors. |
+| Overview and command | The same actual Core/SQLite Site owns the Room whose grid opens the alert. MCP custody signs native authorization, then the generic record retains its accepted receipt and Back control. |
+| Stale refusal | `grow-operator.test.ts` refuses lost standing and retained stale revisions before another signature; its duplicate dispatch returns the original. `declared-views.test.ts` separately isolates secondary revision changes with explicit read/standing fixtures. |
+| Closure | Both browser widths close the same incident over entries 137–149, report zero open alerts back to the same Site and replay the Room consistently. |
+| Resize | 320/592 px witnesses keep 100 benches, check measured card overflow and actual pointer navigation after host containment. Captures expand the outer viewport only for rasterization, then restore it before interactions. |
+| Fixed controls and history | Native custody checks exact same-item heater and vent intents; series checks keep literal source values, native times and entry facts. Guard controls distinguish wrong constant types and another item's sample. |
+
+The finite review map will enumerate every granted local evidence leaf and
+stable Git snapshot. Its files, sealer, source checkout and dependency view
+freeze at sealing. Unlisted adjacent files and private dependency data are
+outside the grant. Only this note differs from the passing code/test head.
+No checker approval, native landing, publication or deployment is claimed yet.
