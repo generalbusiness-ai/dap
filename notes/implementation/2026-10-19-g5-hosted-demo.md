@@ -197,3 +197,29 @@ one pass → one unchanged boolean assertion failure → exact restore,
 `/tmp/artroom-g5-hosted-budget-control-joined-20261019.log`. Earlier control
 logs remain retained; only the joined control is distinguishing evidence.
 No whole suite or mutation sweep was run.
+
+## Signed schedule consumer prepared
+
+`simulatorRelease` uses the existing package-v2 reader to verify an exact
+expected release and signature, checks the exact expected publisher, then
+loads only the signed `simulator.json` asset with media type
+`application/json` and at most 1024 decoded bytes. The strict schedule
+reader checks the whole-minute cadence and period. No deployment trust row
+or publisher secret is stored in this Source.
+
+Its focused witness uses real package codecs/signatures, the public TEST
+publisher and temporary maintained fixture declarations. It verifies the
+prepared schedule, refuses a wrong expected publisher or release, and
+refuses an invalid schedule even when it is validly signed. This is not
+verification of the final demo packet; that packet and its actual printed
+publisher/release still need to be produced after the dependent declaration
+decisions and actual G5a integration. The initial compiler caught the
+nullable base64 decoder result, and the first witness setup incorrectly
+passed already-derived package fields into the strict pack input. Both
+preparation failures remain in their original logs and were corrected.
+The focused case and compiler then passed, logs
+`/tmp/artroom-g5-hosted-release-corrected-owning-20261019.log` and
+`/tmp/artroom-g5-hosted-release-types-final-20261019.log`. The one-line
+publisher-comparison bypass distinguishes one pass → one unchanged
+assertion failure → exact restore, retained in
+`/tmp/artroom-g5-hosted-release-publisher-control-20261019.log`.
