@@ -138,6 +138,21 @@ new key is not recovery.
 
 ### Commission through the operator's retained MCP custody
 
+Connect the operator's AI app to the existing owner-only `DAP_HOME` that
+claimed `@grow-operator`. Configure it to launch the generic MCP server
+from the reviewed checkout, using that same configuration. Set
+`GROW_OPERATOR_HOME` to the existing operator configuration directory:
+
+```sh
+DAP_HOME="${GROW_OPERATOR_HOME:?Set GROW_OPERATOR_HOME}" node packages/cli/bin/dap.js mcp --generic
+```
+
+The server signs with its retained key, so this connection acts as the same
+operator member recorded at claim and assigned to Site/Room. Verify that
+member's full reference and current key record through the authenticated
+membership reads. Keep this configuration separate from both agents and
+the head grower's custody. See [Connect an agent host](../../docs/mcp.md#connect-an-agent-host).
+
 Use the existing `actions`, `act`, `items`, `step`, `wait` and `settle` tools
 in the operator's configured MCP custody. Call `actions` for the actual
 Site/Room target and keep the returned definition digest. The generic `act`
@@ -181,8 +196,9 @@ schedule the driver until this native readback and the final installed
 integration witness are complete. No scenario fixture ID is an operational
 input.
 
-Invite the operator and head grower as people into their separate AI-app
-custodies; invite a tender as member when a visitor asks. Verify their
+Keep the operator connection above. Invite the head grower as a person into
+a separate AI-app custody; invite a tender as member when a visitor asks.
+Verify their
 admitted person keys, full membership identity and actual domain actions.
 Role updates replace whole lists: preserve the existing native actions.
 No public uninvited tender seat exists. The operator's seat and sensors key

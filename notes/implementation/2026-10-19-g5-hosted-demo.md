@@ -416,3 +416,18 @@ devices, bindings, one hundred quadrant benches and four explicit initial
 heater commands. Initial commissioning targets are not presented as command
 records. Only the later set-heater entries open command reservations. No
 provisioning command has been executed against a service.
+
+The runbook also keeps the claimed operator's existing identity when
+connecting its AI app. It now starts generic MCP against that operator's
+original owner-only `DAP_HOME` before commissioning and asks for the same
+full MemberRef/current key readback. Head grower and tender invitations
+remain separate. This removes wording that could suggest inviting a new
+operator after the fixed Site/Room operator was already assigned. The
+command uses the existing CLI's `mcp --generic` and `DAP_HOME` resolution;
+`packages/cli/src/mcp.ts` reads the retained config's key and passes that
+signer to the server, as `docs/mcp.md` states. A missing task-specific path
+variable stops the shell command before CLI startup. Source/docs were read
+to check this change; no private custody was read, no connection was
+started, and no native or hosted acceptance is claimed. This is a documents
+only clarification, with no production/test/config/asset change or new test
+run. The final integrated G5 gate and review remain pending actual G5a Main.
