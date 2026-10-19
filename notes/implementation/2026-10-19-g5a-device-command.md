@@ -2,7 +2,10 @@
 
 Request: `5aae9b0ab67909ee49118dc49d465fe881a8037a`.
 Promise: `79f23cb727ca2ae086f49764b6b8ab7a69d2f950`.
-Base: reviewed Main `2127d5c5cf5545a9983a80bad5cb54fb2c18f48b`.
+Base: reviewed Main `3ed2a08a50f31e84ea42b4f6027684e14a8cedb8`.
+Historical gate and baseline comparisons below ran on Main2127. The later
+Main adds only the approved sales-design note; receiptbcfbc8dc and its
+exact one-path Git delta were read before incorporation.
 
 G5a adds device-command@1, its bounded native install grant, Grow commands
 and owner answers, and shared runtime/replay code. Target, sensor report
