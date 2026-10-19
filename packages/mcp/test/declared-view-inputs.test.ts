@@ -116,7 +116,7 @@ test("oldest-first carousel orders missing and tied probes, then advances after 
   const f = await fixture(true); f.release();
   let display = await f.sessions.read("measure");
   expect(display.card?.identity.item).toBe("3");
-  expect(display.card?.declared?.data.sources["board"]?.map(row => row.id)).toEqual([2, 3, 4, 9]);
+  expect(display.card?.declared?.data?.sources["board"]?.map(row => row.id)).toEqual([2, 3, 4, 9]);
   const ids = [display.card!.identity.item];
   for (const position of [1, 2, 3]) { display = await f.sessions.read("measure", display.cut, { position }); ids.push(display.card!.identity.item); }
   expect(ids).toEqual(["3", "4", "9", "2"]);
