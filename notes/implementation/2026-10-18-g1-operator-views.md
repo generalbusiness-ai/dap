@@ -422,3 +422,23 @@ records them explicitly:
 `/tmp/artroom-g1-browser-refresh-dependency-view-20261019.json`, SHA-256
 `121df6b2ecc6279972aaf01d2e481155ae9a1449b7c9f91b0a9a7a1fc5b19098`.
 A gate on the correction head follows; this paragraph does not claim it passed.
+
+The correction gate passed at clean code/test head
+`1d73425b3182df2e80554015bed0e31e909d05dc`, tree
+`2790ad8938e5204b03da227f50b8e8d74b3d4fb2`. Original PTY 95855 closed exit 0:
+394 files and 1,903 cases passed, one file and three cases skipped, Node 31
+and Counting 55 passed. Assertion `36a8d4ffe2b1035c74429ecd7a6f35cf8d411095`
+records the result. Gate log
+`/tmp/artroom-g1-browser-refresh-gate-20261019.log` has SHA-256
+`ec9c4a7ed8cb9d9edf2d2b322298690f63c91b0749258a18579a42cd238e0ff1`.
+Raw logs are `tmp.DStdyuESO0`; Counting is `artroom-counting-node-607DnR`
+under the user's temporary directory.
+
+The outer correction run measured 493.29 seconds elapsed and 692.03 seconds
+CPU (593.76 user plus 98.27 system). Typecheck measured 8.8/31.8 seconds and
+tests 484.3/660.0 seconds elapsed/CPU. Initial load was 1.54/1.66/1.86 on the
+same warm shared macOS 27.0.1 arm64, 18 CPUs, zero installs, with independent
+P1 focused work concurrent. These remain observed run costs, not exclusive
+CPU, physical heap or total edit cost. Only evidence prose differs from this
+corrected passing code/test head. The original map's 608 leaves and checker
+feedback remain frozen; the correction gets its own finite map and sealer.
