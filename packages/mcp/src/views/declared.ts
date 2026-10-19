@@ -4,13 +4,14 @@ import type { ApplicationProjectionData, ApplicationProjectionQuery, Application
 import { applicationItemSnapshot } from "@generalbusiness/artroom-client";
 import { canonicalize, parseStrict, unb64url } from "@generalbusiness/artroom-bytes";
 import type { ApplicationInstallation } from "@generalbusiness/artroom-bytes/application";
-import { applicationProjectionId, isApplicationJournalSource, readApplicationPackage2, type ApplicationView, type PackedApplication2 } from "@generalbusiness/artroom-bytes/application-v2";
+import { applicationProjectionId, applicationViewFactField, isApplicationJournalSource, readApplicationPackage2, type ApplicationView, type PackedApplication2 } from "@generalbusiness/artroom-bytes/application-v2";
 import { admit, evaluate, RuleEvalError } from "@generalbusiness/dap-derive/rule";
 import { ViewError } from "./session.ts";
 import type { Card, CardAction, DeclaredSurface, Projection, ViewQuery, ViewSource } from "./types.ts";
 import { PRESENTATION } from "./generated.ts";
 import type { DefinitionLike } from "../describe.ts";
 import { effectiveFields, expectedOf } from "../shape.ts";
+import { formatFact } from "./facts.ts";
 
 export interface DeclaredViewPort {
   /** The current active native install, read under the configured membership. */
@@ -114,14 +115,14 @@ export class DeclaredViewSource implements ViewSource {
       identity: surface ? { item: scope.scope, kind: "scope", revision: String(reply.value.at.seq), subject: { scope: scope.scope }, at: {} }
         : { item: String(row.id), kind: row.entry ? "entry" : row.type, revision: String(row.revision), subject: { scope: scope.scope, ...(row.entry ? {} : { item: row.id }) }, at: row.entry ? {} : { on: row.revision } },
       title: view.kind === "surface" ? query.screen : text(values[view.title]), summary: view.kind === "surface" || view.summary === null ? "" : text(values[view.summary]),
-      reasons: view.kind === "surface" ? [] : view.facts.map(name => `${name}: ${text(values[name])}`),
+      reasons: view.kind === "surface" ? [] : view.facts.map(fact => formatFact(fact, values)),
       projection: [{ scope: scope.scope, ...reply.value.at }], reviewIntended: [], unavailable: [], waitsOn: waiting ? [waiting] : [], settles: [], actions, fallback,
       declared: { kind: view.kind, source: view.item, context: template(view.context, row, waiting), actor: view.kind === "surface" || view.actor === null ? null : values[view.actor] ?? null,
         refresh: view.refresh, display: view.display, back: view.back, backScope, data: reply.value,
         ...(view.kind === "log" ? { log: rows.map(row => {
           if (!row.entry || !row.time) throw new ViewError("unavailable", "A log needs explicit sealed entry facts.");
           const values = input(row);
-          return { entry: row.entry, time: row.time, title: text(values[view.title]), summary: view.summary === null ? "" : text(values[view.summary]), facts: view.facts.filter(name => name !== "time").map(name => `${name}: ${text(values[name])}`) };
+          return { entry: row.entry, time: row.time, title: text(values[view.title]), summary: view.summary === null ? "" : text(values[view.summary]), facts: view.facts.filter(fact => applicationViewFactField(fact) !== "time").map(fact => formatFact(fact, values)) };
         }) } : {}),
         ...(surface ? { resource: surface.resource, opens: surface.opens, surface } : {}) },
     };

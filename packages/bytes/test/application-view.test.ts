@@ -32,6 +32,16 @@ const views = () => ({ note: {
 
 // Invariant: the immutable view binds only to declared fields and native acts
 // of its own definition, using that act's actual required action.
+test("fixed-point fact descriptors bind only to selected integers with bounded decimal shifts and unique fields", () => {
+  const fact = { field: "revision", label: "Revision", scale: 0, unit: "" };
+  const declaration = (facts: unknown[]) => ({ ...views(), note: { ...views().note, facts } });
+  expect(bindApplicationViews(declaration([fact]), { "room.note": projection }, parts)["note"]).toMatchObject({ facts: [fact] });
+  for (const invalid of [{ ...fact, field: "text" }, { ...fact, scale: 7 }, { ...fact, scale: -1 }, { ...fact, scale: 0.5 }, { ...fact, unit: "x".repeat(17) }, { ...fact, label: "" }, { ...fact, extra: true }]) {
+    expect(() => bindApplicationViews(declaration([invalid]), { "room.note": projection }, parts)).toThrow(ApplicationViewError);
+  }
+  expect(() => readApplicationViews(declaration([fact, "revision"]))).toThrow(ApplicationViewError);
+});
+
 test("owned item and read-only surface views bind to their declared projection and native acts", () => {
   const input = views(), bound = bindApplicationViews(input, { "room.note": projection }, parts);
   expect(bound).toEqual(input); expect(Object.isFrozen(bound["note"]!.acts)).toBe(true);

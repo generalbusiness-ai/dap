@@ -11,6 +11,10 @@ export interface ApplicationViewAct {
   /** A restricted@1 expression over the selected row's metadata and fields. */
   readonly when: string;
 }
+/** Presentation of an integer stored in fixed-point units. Scaling is an
+ * exact decimal shift, not an expression or a change to projection data. */
+export type ApplicationViewFact = string | { readonly field: string; readonly label: string; readonly scale: number; readonly unit: string };
+export const applicationViewFactField = (fact: ApplicationViewFact): string => typeof fact === "string" ? fact : fact.field;
 interface ViewBase {
   readonly projection: string;
   /** The projection source whose row supplies identity and template fields. */
@@ -28,7 +32,7 @@ export interface ApplicationItemView extends ViewBase {
   readonly title: string;
   readonly summary: string | null;
   readonly actor: string | null;
-  readonly facts: readonly string[];
+  readonly facts: readonly ApplicationViewFact[];
   readonly acts: readonly ApplicationViewAct[];
 }
 export interface ApplicationSurfaceView extends ViewBase {
@@ -108,7 +112,14 @@ export function readApplicationViews(value: unknown): ApplicationViews {
       for (const key of ["summary", "actor"]) if (view[key] !== null) name(view[key]);
       const facts = view["facts"];
       if (!Array.isArray(facts) || facts.length > B.facts) return fail("limit");
-      facts.forEach(name); if (new Set(facts).size !== facts.length) return fail();
+      for (const fact of facts) {
+        if (typeof fact === "string") { name(fact); continue; }
+        const format = only(fact, "field,label,scale,unit");
+        name(format["field"]); text(format["label"], 80);
+        if (typeof format["scale"] !== "number" || !Number.isSafeInteger(format["scale"]) || format["scale"] < 0 || format["scale"] > 6) return fail();
+        if (typeof format["unit"] !== "string" || format["unit"].length > 16 || utf8(format["unit"]).length > 32 || format["unit"].trim() !== format["unit"]) return fail();
+      }
+      if (new Set((facts as ApplicationViewFact[]).map(applicationViewFactField)).size !== facts.length) return fail();
     }
   }
   freeze(owned); return owned as ApplicationViews;

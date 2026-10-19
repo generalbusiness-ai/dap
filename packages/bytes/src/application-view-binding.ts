@@ -7,7 +7,7 @@ import { APPLICATION_PACKAGE_LIMITS, type ApplicationDefinition } from "./applic
 import { bindApplicationProjection } from "./application-projection-binding.ts";
 import { isApplicationJournalSource } from "./application-projection-types.ts";
 import type { ApplicationReadProjection } from "./application-projection-types.ts";
-import { applicationViewTemplateFields, ApplicationViewError, readApplicationViews, type ApplicationViews } from "./application-view.ts";
+import { applicationViewFactField, applicationViewTemplateFields, ApplicationViewError, readApplicationViews, type ApplicationViews } from "./application-view.ts";
 
 export function bindApplicationViews(value: unknown, projections: Readonly<Record<string, ApplicationReadProjection>>,
   definitions: readonly ApplicationDefinition[]): ApplicationViews {
@@ -40,7 +40,9 @@ export function bindApplicationViews(value: unknown, projections: Readonly<Recor
       if (view.kind === "surface") {
         if (Object.values(view.opens).some(target => !Object.hasOwn(views, target))) return fail();
       } else {
-        for (const name of [view.title, view.summary, ...view.facts]) if (name !== null && !fields.has(name)) return fail();
+        for (const name of [view.title, view.summary, ...view.facts.map(applicationViewFactField)]) if (name !== null && !fields.has(name)) return fail();
+        for (const fact of view.facts) if (typeof fact !== "string" && fact.field !== "id" && fact.field !== "revision"
+          && source.fields[fact.field]?.of.type !== "int") return fail();
         if (view.actor !== null && (!Object.hasOwn(source.fields, view.actor) || source.fields[view.actor]!.of.type !== "member")) return fail();
         for (const offered of view.acts) {
           const act = Object.hasOwn(definition.acts, offered.act) ? definition.acts[offered.act] : undefined;

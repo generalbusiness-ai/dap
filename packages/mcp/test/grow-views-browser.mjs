@@ -21,6 +21,19 @@ const report = { browserPlugin: 'Browser plugin not available; cached pinned Pla
 async function contained(app) {
   await app.locator('#card-root').evaluate(async root => { for (let n = 0; n < 90; n++) { await new Promise(resolve => requestAnimationFrame(resolve)); if (window.innerHeight >= Math.ceil(root.getBoundingClientRect().height)) return; } throw Error('The host did not resize to its card'); });
 }
+async function capture(page, app, name) {
+  await contained(app);
+  const viewport = page.viewportSize(), height = await app.locator('#card-root').evaluate(root => Math.ceil(root.getBoundingClientRect().height));
+  // Chromium can leave off-screen nested-frame pixels unpainted in a fullPage
+  // capture. Expand only the outer capture viewport, then restore it before
+  // the next interaction. Card width and its reported content height stay fixed.
+  await page.setViewportSize({ ...viewport, height: Math.max(viewport.height, height + 80) });
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  await page.screenshot({ path: join(out, name), fullPage: true });
+  await page.setViewportSize(viewport);
+  await contained(app);
+}
 try {
   const { packet } = await prepareApplicationDirectory(root, secretSigner(new Uint8Array(32).fill(254)));
   const original = await readApplicationScenario(root, 'fault-scenario.json'), open = structuredClone(original);
@@ -41,11 +54,27 @@ try {
     await app.getByRole('heading', { name: 'Bench grid', exact: true }).waitFor();
     assert.equal(await app.locator('.bench').count(), 100);
     await app.getByText(/sensor report/, { exact: false }).first().waitFor();
-    await contained(app); await page.screenshot({ path: join(out, `grid-open-${width}.png`), fullPage: true });
+    await capture(page, app, `grid-open-${width}.png`);
     await app.getByRole('button', { name: 'Open alert', exact: true }).click();
     await app.getByRole('heading', { name: 'Zone 2 hot; vent jammed and fan tripped.', exact: true }).waitFor();
     await app.getByRole('button', { name: 'Authorize', exact: true }).waitFor(); await app.getByRole('button', { name: 'Hold 60 s', exact: true }).waitFor();
-    await contained(app); await page.screenshot({ path: join(out, `alert-${width}.png`), fullPage: true });
+    await capture(page, app, `alert-${width}.png`);
+    await app.getByRole('button', { name: /Back/ }).click(); await app.getByRole('heading', { name: 'Bench grid', exact: true }).waitFor();
+    // Busy=false does not mean the parent has applied the new height yet.
+    await contained(app);
+    const zoneButton = app.locator('#zones').getByRole('button', { name: /^Zone 2:/ });
+    const zoneBox = await zoneButton.boundingBox(); assert.ok(zoneBox);
+    await page.evaluate(y => window.scrollBy(0, y - window.innerHeight / 2), zoneBox.y);
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    const clickBox = await zoneButton.boundingBox(); assert.ok(clickBox);
+    assert.equal(await page.evaluate(box => document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2)?.tagName, clickBox), 'IFRAME');
+    await zoneButton.click(); await app.getByRole('heading', { name: 'Zone 2', exact: true }).waitFor();
+    await app.getByText('Mean: 26.5 °C', { exact: true }).waitFor();
+    await app.getByText('Minimum: 23 °C', { exact: true }).waitFor();
+    await app.getByText('Maximum: 27.4 °C', { exact: true }).waitFor();
+    await capture(page, app, `zone-${width}.png`);
+    await app.getByRole('button', { name: /Back/ }).click(); await app.getByRole('heading', { name: 'Bench grid', exact: true }).waitFor(); await contained(app); await page.evaluate(() => window.scrollTo(0, 0));
+    await app.getByRole('button', { name: 'Open alert', exact: true }).click(); await app.getByRole('button', { name: 'Authorize', exact: true }).waitFor();
     const measured = await app.locator('html').evaluate(root => ({ width: root.clientWidth, overflow: root.scrollWidth > root.clientWidth })); assert.equal(measured.width, width); assert.equal(measured.overflow, false);
     const proof = await page.evaluate(() => window.proof); assert.ok(!JSON.stringify(proof.contexts).includes('sources')); assert.deepEqual(proof.errors, []); assert.deepEqual(proof.chat, []); assert.deepEqual(errors, []);
     assert.equal(proof.calls.filter(call => call.name === 'view_act').length, 0);
@@ -56,7 +85,7 @@ try {
     assert.equal(operator.signatures(), 1); assert.equal(operator.submitted.length, 1);
     assert.equal(await app.getByRole('button', { name: /Back/ }).count(), 1, 'An accepted record retains detail and Back');
     assert.deepEqual({ target: session.scope.state.item(9).values.target, reported: session.scope.state.item(9).values.reported }, { target: 'off', reported: null });
-    await contained(app); await page.screenshot({ path: join(out, `receipt-${width}.png`), fullPage: true });
+    await capture(page, app, `receipt-${width}.png`);
     const accepted = async (name, kind, on, fields, subjects) => {
       const answer = await operator.nativeAct(name, kind, on, fields, subjects); assert.equal(answer.answer, 'accepted', JSON.stringify(answer)); return answer.receipt.fact;
     };
@@ -77,22 +106,22 @@ try {
     await app.getByRole('button', { name: /Back/ }).click(); await page.evaluate(() => window.scrollTo(0, 0));
     await app.getByText(new RegExp(`Incident 137 closed · entries 136–${closed.seq}`)).waitFor();
     await app.getByRole('button', { name: 'Open incident record', exact: true }).click(); await app.getByRole('heading', { name: 'closed', exact: true }).waitFor();
-    await contained(app); await page.screenshot({ path: join(out, `closed-same-flow-${width}.png`), fullPage: true });
+    await capture(page, app, `closed-same-flow-${width}.png`);
     assert.equal(session.scope.state.item(137).refs.first, 136); assert.equal(session.scope.state.item(137).refs.last, closed.seq);
     const replay = await session.scope.replay(); assert.equal(replay.report.result, 'consistent'); assert.equal(replay.why, null);
     const finalProof = await page.evaluate(() => window.proof); assert.ok(!JSON.stringify(finalProof.contexts).includes('sources')); assert.deepEqual(finalProof.errors, []); assert.deepEqual(finalProof.chat, []); assert.deepEqual(errors, []);
     for (let n = 1; n < finalProof.contexts.length; n++) assert.notDeepEqual(finalProof.contexts[n], finalProof.contexts[n - 1], 'Unchanged private refreshes keep model context quiet');
-    report.cases.push({ width, head: session.scope.developmentProjection('grid').at.seq, benches: 100, alertAtTop: true, sensorDescriptions: true, genericAlertControls: ['Authorize', 'Hold 60 s'], measured, operatorIntents: operator.submitted.map(signed => ({ kind: signed.intent.kind, on: signed.intent.on, expected: signed.intent.expected })), targetSeparateFromReport: true, closedIncident: { first: 136, last: closed.seq }, replay: replay.report.result });
+    report.cases.push({ width, head: session.scope.developmentProjection('grid').at.seq, benches: 100, alertAtTop: true, sensorDescriptions: true, genericAlertControls: ['Authorize', 'Hold 60 s'], zonePointerNavigationAfterResize: true, capture: 'Outer viewport temporarily expanded for nested-frame rasterization; restored to 1100 px before interactions', measured, operatorIntents: operator.submitted.map(signed => ({ kind: signed.intent.kind, on: signed.intent.on, expected: signed.intent.expected })), targetSeparateFromReport: true, closedIncident: { first: 136, last: closed.seq }, replay: replay.report.result });
     await page.close();
   }
   const previous = session; session = await openApplicationScenario(packet, original); previous.scope.close();
   const page = await browser.newPage({ viewport: { width: 422, height: 1000 } }); await page.goto(host.url + '/?fixture=declared&screen=grid');
   const app = page.frameLocator('#frame').frameLocator('iframe');
   await app.getByText(/Incident \d+ closed · entries \d+–\d+/, { exact: false }).waitFor(); await contained(app);
-  await page.screenshot({ path: join(out, 'grid-closed-390.png'), fullPage: true });
+  await capture(page, app, 'grid-closed-390.png');
   await app.getByRole('button', { name: 'Open incident record', exact: true }).click();
   await app.getByRole('heading', { name: 'closed', exact: true }).waitFor(); await contained(app);
-  await page.screenshot({ path: join(out, 'incident-390.png'), fullPage: true });
+  await capture(page, app, 'incident-390.png');
   report.cases.push({ width: 390, separateClosedScene: true, head: session.scope.developmentProjection('grid').at.seq, closedIncidentRecord: true });
   await page.close(); await writeFile(join(out, 'report.json'), JSON.stringify(report, null, 2) + '\n'); console.log(JSON.stringify(report));
 } catch (error) {

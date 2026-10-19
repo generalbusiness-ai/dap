@@ -315,18 +315,48 @@
     "summary": "state",
     "actor": null,
     "facts": [
-     "min",
-     "mean",
-     "max",
-     "inBand",
-     "setpoint",
-     "band",
+     {
+      "field": "min",
+      "label": "Minimum",
+      "scale": 2,
+      "unit": "°C"
+     },
+     {
+      "field": "mean",
+      "label": "Mean",
+      "scale": 2,
+      "unit": "°C"
+     },
+     {
+      "field": "max",
+      "label": "Maximum",
+      "scale": 2,
+      "unit": "°C"
+     },
+     {
+      "field": "inBand",
+      "label": "In band",
+      "scale": 0,
+      "unit": "benches"
+     },
+     {
+      "field": "setpoint",
+      "label": "Setpoint",
+      "scale": 2,
+      "unit": "°C"
+     },
+     {
+      "field": "band",
+      "label": "Band (±)",
+      "scale": 2,
+      "unit": "°C"
+     },
      "summaryTime"
     ],
     "revision": "revision",
     "acts": [],
-    "context": "Zone {label} v{revision}: {state}; {inBand} of 25 in band.",
-    "fallback": "Zone {label}: {state}; min {min}, mean {mean}, max {max}; {inBand} of 25 in band.",
+    "context": "Zone {label} v{revision}: {state}; {inBand} benches in band.",
+    "fallback": "Zone {label}: {state}; temperature in hundredths of a degree Celsius: min {min}, mean {mean}, max {max}; {inBand} benches in band.",
     "waiting": {},
     "refresh": 2000,
     "display": "fullscreen",
