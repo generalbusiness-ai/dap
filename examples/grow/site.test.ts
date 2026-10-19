@@ -31,21 +31,36 @@ async function setup(childDefinition = room) {
   return { launcher, parent, rooms, rows };
 }
 
-test("the site creates three native rooms and derives independent tender presence from signed comments", async () => {
+// Invariant: only a member's accepted report changes that member's durable
+// presence; unrelated reports and wrong-room/other-member attempts cannot.
+test("native Site presence keeps explicit report facts beyond the activity window", async () => {
   const { launcher, parent, rooms, rows } = await setup(), a = rows[0]!, b = rows[1]!;
   expect(await submit(parent, operator, "create-room", { fields: { label: "Room D" } })).toMatchObject({ result: "refused" });
-  const before = structuredClone(parent.state.all().items);
-  expect(await submit(parent, climate, "arrive", { fields: { room: a } })).toMatchObject({ result: "refused", reason: "unauthorized" });
-  wrote(await submit(parent, keys.rita, "arrive", { fields: { room: a } })); const arrival = parent.fact(parent.last.seq);
-  expect(sitePresence(parent.entries)).toEqual([{ member: keys.rita.member, room: a, since: arrival }]);
-  wrote(await submit(parent, keys.rita, "arrive", { fields: { room: b } })); const moved = parent.fact(parent.last.seq);
-  wrote(await submit(parent, keys.rita, "leave", { fields: { room: a } }));
-  expect(sitePresence(parent.entries)).toEqual([{ member: keys.rita.member, room: b, since: moved }]);
-  expect(parent.state.all().items).toEqual(before);
-  wrote(await submit(parent, night, "arrive", { fields: { room: a } })); const nightArrival = parent.fact(parent.last.seq);
-  wrote(await submit(parent, keys.rita, "leave", { fields: { room: b } }));
-  expect(sitePresence(parent.entries)).toEqual([{ member: night.member, room: a, since: nightArrival }]);
-  wrote(await submit(parent, night, "leave", { fields: { room: a } })); expect(sitePresence(parent.entries)).toEqual([]);
+  expect(await submit(parent, keys.rita, "provision-presence", { fields: { member: keys.rita.member } })).toMatchObject({ result: "refused", reason: "unauthorized" });
+  wrote(await submit(parent, operator, "provision-presence", { fields: { member: keys.rita.member } })); const dayId = parent.last.seq;
+  wrote(await submit(parent, operator, "provision-presence", { fields: { member: night.member } })); const nightId = parent.last.seq;
+  const initial = structuredClone(parent.item(dayId));
+  expect(initial).toMatchObject({ state: "unknown", revision: 1, parties: { member: keys.rita.member }, refs: { room: null, reportedAt: null } });
+  expect(await submit(parent, operator, "provision-presence", { fields: { member: keys.rita.member } })).toMatchObject({ result: "refused", reason: "guard-failed", name: "presence-exists" });
+  expect(parent.item(dayId)).toEqual(initial);
+  expect(await submit(parent, climate, "arrive", on(parent, dayId, { room: a }))).toMatchObject({ result: "refused", reason: "unauthorized" });
+  expect(await submit(parent, night, "arrive", on(parent, dayId, { room: a }))).toMatchObject({ result: "refused", reason: "guard-failed", name: "not-presence-member" });
+  for (let i = 0; i < 101; i++) wrote(await submit(parent, night, "arrive", on(parent, nightId, { room: a })));
+  expect(parent.item(dayId)).toEqual(initial);
+  wrote(await submit(parent, keys.rita, "arrive", on(parent, dayId, { room: a }))); const arrival = parent.fact(parent.last.seq);
+  expect(arrival.seq).toBeGreaterThan(100); expect(parent.item(dayId).revision).toBe(2);
+  expect(parent.item(dayId).refs["reportedAt"]).toBe(arrival.seq);
+  expect(sitePresence(parent.state.all().items, position => parent.fact(position))).toContainEqual({ member: keys.rita.member, room: a, since: arrival });
+  wrote(await submit(parent, keys.rita, "arrive", on(parent, dayId, { room: b }))); const moved = parent.fact(parent.last.seq);
+  const before = structuredClone(parent.item(dayId)), head = parent.head;
+  expect(await submit(parent, keys.rita, "leave", on(parent, dayId, { room: a }))).toMatchObject({ result: "refused", reason: "guard-failed", name: "wrong-presence-room" });
+  expect(parent.head).toEqual(head); expect(parent.item(dayId)).toEqual(before);
+  for (let i = 0; i < 101; i++) wrote(await submit(parent, night, "arrive", on(parent, nightId, { room: a })));
+  expect(parent.item(dayId)).toEqual(before);
+  expect(sitePresence(parent.state.all().items, position => parent.fact(position))).toContainEqual({ member: keys.rita.member, room: b, since: moved });
+  wrote(await submit(parent, keys.rita, "leave", on(parent, dayId, { room: b }))); const left = parent.fact(parent.last.seq);
+  expect(parent.item(dayId)).toMatchObject({ state: "away", refs: { room: b, reportedAt: left.seq } });
+  expect(sitePresence(parent.state.all().items, position => parent.fact(position)).map(row => row.member)).not.toContainEqual(keys.rita.member);
   for (const current of [parent, ...rooms]) { const result = await replay(current, [launcher, parent, ...rooms].filter(other => other !== current)); expect([result.report.result, result.why]).toEqual(["consistent", null]); }
 });
 
