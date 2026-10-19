@@ -4,8 +4,11 @@ K3 replaces three copies of the browser storage protocol with `custodyKind`
 in `apps/room/page/src/custody.ts`. The connection, join and Start adapters
 declare their record kind, exact storage prefix, byte bound, decoder and
 public view. Their workflows and existing test assertions are unchanged.
-The Page assets are rebuilt. The focused checks below pass; the required
-gate has not yet run.
+The Page assets are rebuilt. Its first required gate passed at code/test
+head `1e6aaa994c2a344d980746fbbcd1b5112ce2f370`, tree
+`3098ed1bb185f51160443ceab760433b5e3e36e5`: 1,927 Vitest cases passed,
+three existing cases skipped, and all 31 Node and 55 Counter cases passed.
+The reporting candidate changes only this note after that run.
 
 Request: `1c59d16cf1513df9e038327aa8be6e56e96e4306`.
 Builder promise: `c837835c8cbd0f0c90040fea1ac16b668379f532`.
@@ -51,7 +54,9 @@ are in `/tmp/artroom-k3-custody-before-20261019.json`.
 One new case reads all three records from
 `apps/room/page/test/fixtures/custody-before-k3.json`. These are exact bytes
 written by the old modules on Main, with their old public reader outputs.
-They were captured before any production source edits. The new reader
+They were captured before any production source edits. They are the first
+persisted states: a reserved connection and prepared join and Start. The
+existing unchanged cases cover later workflow states. The new reader
 returns each old public view without a write or any byte replacement.
 All secrets in this fixture are fictional test keys.
 
@@ -98,7 +103,7 @@ sender stand-in. It is retained as narrow evidence, not claimed as a direct
 no-dispatch assertion. The independent count witness replaces that claim.
 There was no sweep or whole-suite retry.
 
-## Gate preparation and evidence
+## Gate and evidence
 
 Installed dependencies are a private COW copy from the unsealed Main view,
 not hardlinks and not a sealed review view. No package was installed and no
@@ -107,10 +112,46 @@ changed this private pool0.22.0 bundle from `8d3d1150…` to `cd50d18a…`.
 The existing lock stamp matches SHA256
 `3546b5384c9245fb646c4f7c22cabde0f4351b05dfcec704d1bdeb170666361a`.
 
+Original session 59112 naturally exited zero with a clean head and tree
+before and after the run. Whitespace and typechecking passed; 400 Vitest
+files passed and one recording file skipped. The three existing skipped
+cases are the Page recorder, demo recorder and Darwin long-path MCP
+dead-reclaimer case. No whole-suite retry was run.
+
+The measured outer gate took 498.86 seconds wall time and 714.88 CPU
+seconds (615.36 user plus 99.52 system). The gate's test step took 490.4
+seconds wall and 683.0 CPU; typechecking took 8.3 and 31.7 respectively.
+These are the outer measurement and its reported steps, not summed
+independent runs. The machine was arm64 macOS 27.0.1, Darwin 27.0.0,
+18 logical CPUs; starting load averages were 1.5034, 1.2769 and 1.2998.
+Private COW dependencies and recent focused runs made caches warm or
+partly warm. Other host work was uncontrolled. A read-only K2 fixture
+survey and external review-packaging preparation ran during the gate;
+neither changed the tested source or installed dependencies.
+
+Before/after snapshots match all 2,297 tracked files, 5,498 installed
+regular files and 31 contained links. Of the 5,499 dependency-directory
+regular files, only Vitest's `results.json` output cache changed, and both
+hashes are retained. The final pretest verifies the stable `cd50d18a…`
+bundle after the earlier adoption. No install occurred.
+
+Passing raw logs retain deliberate scripted reset and SQLite retention
+faults, four Git advertisement `.text()` warnings and one unclassified
+different-Durable-Object I/O / `RefcountedCanceler` diagnostic in Vitest's
+abort path, without a case attribution. These are retained with their
+actual scope. This gate does not establish general stability; that remains
+the separate request `1d3a13e385d2b1f4b914e651e5463ba948730b2a`.
+
 External evidence uses `/tmp/artroom-k3-*20261019*`: original capture
 sources and outputs, before-counts, compiler and Page logs, both controls'
 raw JSON reports, exact restored source hashes, and pool-adoption output.
-Gate before/after snapshots will bind the clean head, tracked files, private
-dependency files and contained relative links. Gate timing will state the
-machine, load and cache limits. No passing gate, review, landing, publication
-or deployment is claimed by this preparation note.
+The original raw gate directory is
+`/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.JphKzvZl1w`;
+the retained Counter output is `artroom-counting-node-7G1rRB` in that same
+temporary parent. Gate assertion: `6139b724852efd41fc588f66cf1ac77a547ecd82`.
+The formal Source supplies a finite map and its digest. Every listed
+source, private dependency, snapshot, log, tool and sealer original freezes
+forever at publication. Reviewers read or make independent private copies;
+they never execute or edit originals. The sealer excludes its own open
+output, which can be granted separately after closure. No review approval,
+landing, publication or deployment acceptance is claimed.
