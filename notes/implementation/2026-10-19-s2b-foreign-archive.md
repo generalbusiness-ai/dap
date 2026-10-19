@@ -3,7 +3,8 @@
 Request `c8c6ff6b6277fd103c30f80d0b76fd40a60ca8bb`, promise
 `ea3d761900e434f096adbb83e46ff1af3a86fe1f`. This is preparation against
 reviewed Main `3ed2a08a50f31e84ea42b4f6027684e14a8cedb8`. There is no
-S2b implementation, dependency view, test run, gate, review or landing.
+S2b runtime implementation, test run, gate, review or landing. The private
+dependency preparation is recorded below.
 Actual reviewed G5a and S2a landings must be incorporated before final
 S2b integration. Neither unreviewed branch is imported here.
 
@@ -54,6 +55,16 @@ owned metadata and explicit provenance; it cannot become an unbounded read
 inside selection. The final choice must preserve scope/incarnation binding
 and the existing final pin/cutoff fence. No new policy certificate, request
 parameter, public read bypass or production credential is proposed here.
+
+Decision request `992b2b650b1f929274a50bc080874a0070513ddb` asks the
+planner to confirm the trusted fixture source-frame route before runtime
+implementation, or require persisted exact source-pin provenance instead.
+The proposed frame would bind full scope/incarnation to the native pin,
+declaration name and genesis fact from actual installed-scope birth/setup;
+the separate reviewed policy would cover inline classes and owner/domain
+metadata. It would add no request-controlled policy or public read bypass.
+The decision remains pending; the proposal is not an adopted policy or a
+certificate. G5a's complete review correction now takes priority.
 
 ## Verification plan
 
