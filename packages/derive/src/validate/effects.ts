@@ -48,8 +48,8 @@ export function effect(d: Defining, v: unknown, path: string, ctx: Ctx, later: b
   // Section 6.4: a timed rule's effects are total. A condition could leave its item due, and one that is not completed leaves the entry unwritten.
   if (ctx.timed && ("if" in o || "unless" in o)) bad("timed-partial", path, "a timed rule's effects take no condition");
   if (k === "capability") {
-    // Section 6.11: a capability's effect changes its own records and no item, so it needs no subject and conflicts with no
-    // other effect. A slot with no `of` is a slot of the subject it names, or of the primary item when there is one.
+    // A capability derives its own records and explicitly owned slots, so this form conflicts with no ordinary slot writer.
+    // A slot with no `of` belongs to the named subject, or the primary item.
     const named = "of" in o ? subject(d, of, at(path, "of"), ctx, false) : null;
     if ("of" in o && (named === null || named === "scope")) return null;
     capabilityEffect(d, x, p, ctx, () => (named as Type | null) ?? ctx.on ?? bad("name", p, "there is no primary item whose slot this could be"));
@@ -63,6 +63,7 @@ export function effect(d: Defining, v: unknown, path: string, ctx: Ctx, later: b
   const slot = (name: unknown, kind: Slot["kind"]): Slot | null => {
     const matched = typeof name === "string" ? s.slots.get(name) : undefined;
     if (matched?.kind !== kind) return bad("name", p, `names no ${kind} slot of ${s.name}`);
+    if (matched.capability) return bad("capability-slot-owned", p, `${matched.capability} owns ${String(name)}; an ordinary effect cannot write it`);
     // Section 6.3: a fixed slot is set by the act that opens the item and never again.
     return matched.fixed && !nascent ? bad("fixed", p, "a fixed slot is set only by the act that opens its item") : matched;
   };
@@ -246,16 +247,36 @@ function exclusive(a: Rec, b: Rec): boolean {
 export function effects(d: Defining, v: unknown, path: string, ctx: Ctx, later: boolean): void {
   const { bounds, bad, list } = d;
   const set: (Sets & { written: Rec })[] = [];
+  let commands = 0;
+  const deviceTargets = new Map<string, boolean>(), commandSubjects = new Set<string>();
   list(v, path, bounds.effects).forEach((e, i) => {
     if (d.platform && marked(e)) {
       // Section 6.1, place 5: a mark is one effect of the written list of an act, a handler or a result clause. It has no `of`,
       // `if` or `unless`. A timed rule's effects are total (section 6.4), and no rule is shown to be total, so a timed rule holds
       // none. Nothing is derived from a mark: it conflicts with no written effect, and what it can set is not counted here (the
       // contract's point R1-59).
-      if (ctx.timed) bad("timed-partial", at(path, i), "a timed rule's effects are total, so none is a mark");
+      if ([...d.types.values()].some(type => [...type.slots.values()].some(slot => slot.capability))) bad("capability-slot-owned", at(path, i), "an opaque rule effect cannot prove it avoids capability-owned slots");
+      else if (ctx.timed) bad("timed-partial", at(path, i), "a timed rule's effects are total, so none is a mark");
       // Section 17.2, "What a mark may start": the mark may state `most`. `holds.ts` reads it, wherever the mark stands.
       else mark(d, e, at(path, i), "effect", [], ["most"]);
       return;
+    }
+    if (isObject(e)) {
+      const cap = e["capability"];
+      if (isObject(cap) && cap["name"] === "device-command" && cap["do"] === "open") {
+        if (++commands > 1) bad("capability", at(path, i), "one target-writing entry opens at most one device command");
+        if ("if" in e || "unless" in e) bad("capability", at(path, i), "the command effect follows the target writes without an independent condition");
+        const device = isObject(cap["with"]) ? cap["with"]["device"] : undefined;
+        commandSubjects.add(String(isObject(device) ? (device["of"] ?? e["of"] ?? "on") : (e["of"] ?? "on")));
+      }
+      const name = String(e["of"] ?? "on"), type = name === "on" ? ctx.on : ctx.also.get(name.slice(5));
+      const value = e["value"], ref = e["ref"];
+      if (type?.slots.get("outcome")?.capability === "device-command@1" && !(name === "on" && ctx.nascent)
+        && ((isObject(value) && ["target", "level"].includes(String(value["slot"]))) || (isObject(ref) && ref["slot"] === "targetAt"))) {
+        const self = isObject(ref) && ref["slot"] === "targetAt" && ref["from"] === "self";
+        if (isObject(ref) && !self) bad("capability", at(path, i), "a command's targetAt names the entry writing its target");
+        deviceTargets.set(name, (deviceTargets.get(name) ?? false) || self);
+      }
     }
     const sets = effect(d, e, at(path, i), ctx, later);
     if (sets === null) return;
@@ -266,6 +287,7 @@ export function effects(d: Defining, v: unknown, path: string, ctx: Ctx, later: 
     if (other) bad("conflict", at(path, i), `another effect also sets ${sets.what}`);
     set.push({ ...sets, written: e as Rec });
   });
+  for (const [subject, self] of deviceTargets) if (!self || !commandSubjects.has(subject)) bad("capability", path, "a device target change writes its own targetAt and opens that subject's command");
 }
 
 /**

@@ -27,6 +27,7 @@ export * from "./prepare.ts";
 export * from "./capability/hold.ts";
 export * from "./capability/ancestry.ts";
 export * from "./capability/gitread.ts";
+export * from "./capability/device-command.ts";
 export * from "./marks.ts";
 export * from "./markers.ts";
 export * from "./binding.ts";

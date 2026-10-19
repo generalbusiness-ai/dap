@@ -292,7 +292,7 @@ export function receives(d: Defining, v: unknown, top: Rec): void {
           if (Object.hasOwn(members(v), `${name}.late.then`)) bad("handler-body-collision", at(latePath, "then"), "a real handler has the replacement body's reservation identity");
           // Match the listed capability's reserved request, as delivery does;
           // the local handler key is not part of that protocol.
-          if ([...d.capabilities.values()].some(capability => declaredBy(capability)?.reserved.some(reserved => reserved.request.class === cls && reserved.request.message === message))) {
+          if ([...d.capabilities.values()].some(capability => declaredBy(capability)?.reserved.some(reserved => reserved.request.class === "tell" && reserved.request.class === cls && reserved.request.message === message))) {
             bad("late-then-on-reserved-handler", at(latePath, "then"), "a replacement body cannot settle a capability's reserved receiver decision");
           }
           const branch = rec(late["then"], at(latePath, "then"), [], ["effects", "sends", "attention"]);

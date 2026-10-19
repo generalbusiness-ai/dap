@@ -113,10 +113,90 @@ unchanged test SHA-256
 `82124643f32b983b88c9f6947eff6ba9ad33bd17ffc55ab7c09702b18e0d9759`.
 This is one targeted control, not a mutation sweep.
 
-The capability's command records, owner preparation and slot ownership,
-reservation admission, actual native install producer and owner observation,
-archive metadata and Grow scenario integration remain to implement. No G5a
-gate, exact-head review, production grant or device execution is claimed.
+The next checkpoint implements command records, owner preparation, slot
+ownership and reserved-answer admission. Native installation and Grow
+integration are still required before the complete Source head is filed.
+
+## Command and answer checkpoint
+
+The native pure code opens one command keyed by its target-writing entry.
+It reads the authenticated grant from exact retained genesis, captures the
+bound device after ordinary target writes, and clears its previous outcome.
+The owner answer names the full local command fact. It closes that record
+once as confirmed, refused or unknown. Only the current target's answer
+sets outcome/outcomeAt; an older answer closes its own record only. Sensor
+reports can advance the device revision independently.
+
+The validator names `capability-slot-owned` for ordinary act, receive, timed
+or opaque native-rule outcome writers. Only the optional mutable outcome
+and outcomeAt pair can be capability owned. Target/level writers must also
+write their own targetAt and open the same subject's command. The native
+version declares the finite answer refusals and three derived effects at
+most for opening or answering.
+
+A scope-granted answer still requires current signing identity in the same
+membership, within its scope and validity window. It does not require the
+owner's role to contain a target-setting action or an invented answer
+permission. The trusted capability table selects this route; neither the
+intent nor a transport can select it. The recorded grant retains its actual
+role actions. Native authority and strict replay call the same grant guard.
+
+One open command reserves one bounded entry, with its full Amount. The
+answer replaces existing keys and slots and retains no separate input.
+Only a preparation naming the pending command, moving its decided count
+from zero to one and closing that exact record, spends the bound-one
+reservation. All other preparations remain new work. Whole-scope admission
+continues to enforce its ceiling for settlements too.
+
+Finite archive classification metadata names only command and answer.
+It adds no device operation owner. The owning SQLite metadata test uses a
+synthetically damaged record row, explicitly proving classification only;
+installed Grow archive/export admission remains S2b work.
+
+Evidence at this checkpoint:
+
+- Command/validator file: five passing cases in
+  `/tmp/artroom-g5a-command-reservation-20261019.log`; original 68657 closed
+  exit 0. An earlier run with the existing preparation file passed ten
+  cases together. Parent creation metadata and membership grants are
+  explicitly scripted in these pure fixtures; native installation and
+  actual Membership are not yet proved.
+- Identity guard: three passing cases, including the new scope-granted
+  current-identity table, in `current-identity-20261019.log`; original
+  39241 closed exit 0. Revocation, removed member, wrong key/incarnation,
+  scope filter, expiry, inactive controller, age and high-water checks stay.
+- Archive metadata: five passing native SQLite cases in
+  `/tmp/artroom-g5a-archive-command-metadata-20261019.log`; original 4444
+  closed exit 0. The device row is synthetic; this is no integrity or
+  replay proof.
+- Derive's two, Scope's three and Replay's three compiler targets pass in
+  the corresponding command/reservation/identity/archive type logs.
+  Initial retained failures were a ref-effect field typo, an incomplete
+  preparation union narrowing, a widened legacy effect API that broke
+  direct callers, a missing declaration-name union member, and a window
+  string used where the native Window object is required. Those were fixed.
+  A first focused invocation used the package config from the wrong root
+  and found no tests; the corrected root-project selection passed.
+
+One targeted owner control changes only the answer's full MemberRef
+comparison to a member-name comparison. The unchanged foreign-incarnation
+assertion fails because the mutant writes an answer. Exact restoration
+returns all five command cases to passing. Driver
+`/tmp/artroom-g5a-owner-control-20261019.py`, matching directory, original
+44132 closed exit 0. Its baseline is a copied preceding exact-source pass,
+not a fresh baseline execution. Source SHA-256
+`bbda040a70ee70ded921f20788c1b5c78ac14abe539fd9df7ec35606a01df9ee`;
+unchanged command-test SHA-256
+`c3a84a537d6b7db30ee83d1b0a6025c566b817b2b96497d2d4ef3c8ce7b3284d`.
+This is one targeted control, not a sweep.
+
+No G5a gate, exact-head review, production install/grant, complete strict
+replay, physical device execution or deployment is claimed. The next work
+is the new native install cohort, existing-owner observation, Grow command
+forms and fault scenario, real Core/SQLite admission and strict replay.
+The latest accepted Main is expert-note landing `2127d5c5`; its audit
+`0e776482` was read in full, including its original merge-process evidence
+limit. That later prose-only Main is not incorporated at this checkpoint.
 
 ## Acceptance evidence to collect
 
