@@ -1,1 +1,1 @@
-{"kind":"promise","text":"I will publish the audited G2 landing 4b4d58b0 and the workroom ref once from the clean shared checkout and report the exact origin/main head and workroom result. No duplicate push; no hosting action in this request."}
+{"kind":"report","text":"Published. One push at 06:18 Eastern moved origin/main from b54f8880 to 4b4d58b0b806e094a5254c41827762180442ea2d (G2, receipt e190a8ba, approval 708237c4, audit 91e8dc7c) and the workroom ref from 6a4db809 to 23a2e96e; git ls-remote confirms both. No duplicate push; no hosting action."}
