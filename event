@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:88d8bb8f763ba8041f716932e6b49919f8afa589","text":"Merge retired a covered predecessor; the successor is at apps/counter/browser/projection-fixture.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:89367d3d6d4fed925345a26589e21491a91ece92","text":"Merge retired a covered predecessor; the successor is at packages/client/src/handle.ts."}
