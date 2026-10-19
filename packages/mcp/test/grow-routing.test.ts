@@ -143,8 +143,9 @@ test("member queues route native alerts, present tender work and watering decisi
     await present("day", "arrive", roomA.id);
     const beforeCoverageLoss = await open(day, "tasks", "coverage-loss");
     for (let i = 0; i < 100; i++) await present("night", "arrive", roomB.item);
-    expect((await day.service.call("view_act", { view: "coverage-loss", cut: beforeCoverageLoss.cut, action: "take-task" })).isError).toBe(true);
+    const lostCoverage = await day.service.call("view_act", { view: "coverage-loss", cut: beforeCoverageLoss.cut, action: "take-task" });
     expect(day.signatures()).toBe(0); expect(session.scope.state.item(task.id)!.revision).toBe(task.revision);
+    expect(lostCoverage.isError).toBe(true);
     const uncovered = await open(day, "tasks", "uncovered-presence");
     expect(uncovered).toMatchObject({ status: "unavailable", count: 1, card: { identity: { item: String(task.id) }, actions: [] } });
     expect(uncovered.context.projection).toContainEqual({ scope: session.site.at.scope, ...session.site.state.scope()!.head });
