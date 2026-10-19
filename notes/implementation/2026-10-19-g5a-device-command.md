@@ -14,8 +14,9 @@ and owner outcome have separate writers. No device or provider operation
 runs. The delivery is one complete Source head. Three failed gates remain
 evidence. The fourth gate passed at the earlier code/test head. Complete
 review `5396f5ed` requested one command-ordering correction. That correction
-is implemented in a fresh view; its new required gate is pending. The
-earlier sealed candidate and evidence remain frozen forever.
+and its new required gate now pass in a fresh view; corrected exact-head
+review remains ahead. The earlier sealed candidate and evidence remain
+frozen forever.
 
 ## Command-ordering correction after complete review
 
@@ -87,7 +88,49 @@ execution. No installs or manifest/lock changes. Audit
 `4de3655896a73b507df6e76eec7e2ca6cfb7c79cc9b17f2082d945d3d5b3481e`.
 This checks copied manifests/inodes/links, not tarball integrity. Original
 processes are terminal before each source/dependency edit. The new complete
-gate and exact-head review remain required; no landing or publication yet.
+gate passes as recorded below; exact-head review remains required, with no
+landing or publication yet.
+
+## Passing gate for the command-order correction
+
+The required new whole gate passes at code/test head
+`6cb9a93379ab10e561967136735667ff1cfbbc79`, tree
+`551a64b177f391ac150215c779192fe54be2ceb9`. Original process18796
+naturally exits zero. The checkout is clean before and after, the head is
+unchanged, installation is skipped against the verified lock/stamp, and
+no source or dependency changes or related executions occur during it.
+Only this evidence note changes after that passing head; no suite is
+repeated for the note-only follow-up.
+
+The run reports 401 Vitest files passed, one file skipped; 1,939 cases
+passed and three skipped. The chained Node checks pass 31 cases and
+Counting passes 55, with no failure. Whitespace passes. Per-step full
+typecheck is 8.3 seconds elapsed / 32.0 CPU; the test step is 501.1 seconds
+elapsed / 697.6 CPU. Vitest reports 494.71 seconds.
+
+One actual `npm run gate` subprocess is also measured with Python's
+monotonic wall clock and `RUSAGE_CHILDREN` deltas: 509.6367 seconds elapsed,
+629.6444 CPU user + 100.1670 system = 729.8114 CPU seconds. Pre/post Git
+checks are excluded. This whole-process measurement is separate from
+its per-step figures and from the earlier gate's per-step-only evidence.
+The machine is shared, with focused-run/build caches warm; initial load
+averages are 2.1265, 1.6333 and 1.9917. No product latency or broad stability
+claim follows. The adopted functional scope project's 30-second framework
+budget remains explicit; all case-specific and semantic limits, Node and
+scope-denial budgets remain unchanged.
+
+Log `/tmp/artroom-g5a-order-complete-gate-20261019.log`, SHA-256
+`b44d3212969bd2f01a2e000dffc877a29e21a7548c51a77a2f29ac3596dc3801`.
+Raw directory
+`/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.yXnC8gwe2Q`;
+Counting evidence is the sibling `artroom-counting-node-e5tdSQ`.
+Closure `/tmp/artroom-g5a-order-gate-process-closure-20261019.json`,
+SHA-256 `92c0fd1662eb765148a250ca18e8de9d5cf3bb71979c2c50a48d7c7bd215b5cb`.
+The machine receipt is `/tmp/artroom-g5a-order-gate-machine-20261019.json`.
+Raw warnings and scripted fault output remain evidence; passing does not
+mean warning-free operation. All three earlier failed gates, their real
+corrections, the earlier passing gate and both checker counterexamples
+remain retained, with their own exact heads and boundaries.
 
 ## Decisions and native pins
 
