@@ -34,8 +34,9 @@ checkout's Vite caches were removed. Audit
 `006fbddb896e866cba4e405e898f1bd40b5279112913a762d90a576e0a1e8a83`.
 This is a manifest/link copy check, not a tarball-integrity claim.
 
-The focused and browser witnesses below pass. The one complete G2 code gate,
-independent exact-head review and landing are still owed. Routing,
+The focused and browser witnesses below pass. The first whole G2 gate failed
+two integration checks; its corrections and evidence are below. A complete
+gate pass, independent exact-head review and landing are still owed. Routing,
 device-owner outcomes, hosting, photos and custody remain separate work.
 
 ## Scalar declarations and native binding checkpoint
@@ -315,5 +316,34 @@ The unchanged G1 browser driver passes both320/592 px six-intent journeys and
 the separate390 px closed-incident case in
 `/tmp/artroom-g2-g1-browser-compat-20261019/`. The prior G1 evidence remains
 immutable; these are new compatibility observations in this checkout.
-All original browser processes have closed successfully. The live bridge
+All browser processes are closed; the final successful scripted/live runs
+closed with exit0. Initial failed attempts remain labelled. The live bridge
 now pauses stdin after its caller signal so it exits without an EOF prompt.
+
+## First whole-gate failure and corrections
+
+At `a7acb9a2850c3544b86bb3c44b7b1c2bed2466e6`, tree
+`d0b9873e53121c3c7796867ad8ae5d1a87d36541`, original PTY86264 closed1.
+The dependency check skipped installation and whitespace/type checks passed.
+The full Vitest phase passed395 files/1915 cases, failed2 files/2 cases and
+skipped1 file/3 cases. Chained Node and Counting phases did not run. This
+attempt is not a passing gate. Assertion
+`0204ebac6af50a68474125d7e25d2a100f5adb9f` records that result.
+
+The Page build was stale after the client projection adapter changed; the
+owned Grow test compared the new surface's `layers` projection to the old
+`grid` read. The correction regenerates Page from maintained inputs, keeps
+the original grid assertions, then adds an SDK `layers` read and exact view
+parity through the same real installation. No admission or test assertion
+was weakened. The owning cases pass separately in
+`/tmp/artroom-g2-page-assets-after-gate-20261019.log` and
+`...owned-layers-parity-after-gate-20261019.log`; the scope test compiler and
+whitespace check pass. This failure requires a new complete gate.
+
+The original failed command took494.63 elapsed/696.04 summed process CPU
+seconds (599.70 user/96.34 system). Its test phase took486.20 elapsed/664.78
+CPU seconds; typecheck8.2/31.0. This was one warm shared macOS27.0.1 arm64
+machine with18 CPUs and starting load2.07/1.81/1.73, zero installs. It is
+not exclusive CPU, physical heap or total edit cost. Log
+`/tmp/artroom-g2-gate-20261019.log`, outer time `...gate-20261019.outer.time`,
+raw logs `/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.9YLcELuT4f`.
