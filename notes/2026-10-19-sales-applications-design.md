@@ -66,11 +66,13 @@ Each application is its own package. They share a vocabulary, not code:
 - **Documents stay outside the record** until custody exists
   ([roadmap](../docs/roadmap.md#evidence-capture-and-private-custody)).
   The record keeps a link and a digest, and says so.
-- **One operation exists today**: publication to a Git destination
-  ([roadmap](../docs/roadmap.md#outside-parties-and-systems)). Sending
-  mail, posting to a channel or writing to another system is recorded as
-  the member's statement that they did it, until declared operations
-  exist.
+- **Integrations are out of scope.** Mail, calendars, sales systems and
+  channels are not built as point integrations for these applications;
+  they wait for a general design of outside operations
+  ([roadmap](../docs/roadmap.md#outside-parties-and-systems)). The one
+  operation that exists today, publication to a Git destination, is
+  used where it fits. Everything else that crosses the boundary enters
+  as a member's statement that they did it, with its source.
 
 ## 3. The prospect room
 
@@ -443,10 +445,10 @@ estimates from the grow slices.
 | C3 | The bid response: definitions in two scopes, the intake agent's decomposition and rendering, routing by domain, approvals, assembly and submission with publication | a two-sheet request of forty rows is decomposed into requirements with three rows remapped by the owner and a duplicate refused; a four-member scenario supplies six of them across three domains through asked experts, reviews them into the response, refuses an unsourced roadmap claim, grants a price, renders the answers back in the request's layout, assembles and submits, and the sealed response is published | 5 days |
 | C4 | The hosted rooms and a page for each on the homepage, after the demo-room pattern of plan 033 | a person in their AI app takes an act in each | 2 days |
 
-Named and deferred: custody for documents; private price views; declared
-operations for mail and channels; the answer library as a shared
-resource across bid rooms; the roll-up of many prospect accounts or
-bids under a site.
+Named and deferred: custody for documents; private price views; the
+buyer as a member; integrations, which wait for the general design of
+outside operations; the answer library as a shared resource across bid
+rooms; the roll-up of many prospect accounts or bids under a site.
 
 ## 8. Open questions
 
@@ -458,9 +460,10 @@ bids under a site.
 2. **The answer library's authority.** Who may supply a library answer
    outside a bid, and whether a supply in one bid refreshes the library
    automatically or by a separate act.
-3. **Mail and channels.** Whether the first operation after Git should
-   be sending mail, so that outreach and chasing leave the room as acts
-   rather than statements.
+3. **Integrations.** Out of scope for all three. Outreach, chasing,
+   posting to channels and writing to a sales system stay members'
+   statements until the general design of outside operations exists;
+   no point integration is built for one application.
 4. **The mapping's confirmation.** Whether the owner confirms every
    row the agent mapped, or only the rows the agent flagged, is a
    question of how good the decomposition is on real requests. The
