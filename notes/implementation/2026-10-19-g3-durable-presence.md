@@ -38,7 +38,7 @@ assignment. The recent-activity log may retain a bounded journal projection,
 but task routing reads no history window. No native form, signer index,
 hidden scan, device location or mixed queue is added.
 
-## Witnesses to collect
+## Required witnesses
 
 The owning witnesses must distinguish initial unknown and duplicate
 provisioning; another signer's refusal; move A to B followed by a named
@@ -48,7 +48,7 @@ more than 100 other Site reports; and an arrival whose entry position
 differs from its item's revision. The kit/browser witnesses also retain
 app-only data, quiet context, receipts, stale refusals and reciprocal
 phone/desktop resizing. Run focused checks during work and one final gate
-before exact-head review. No validation is claimed by this preparation.
+before exact-head review. Collected evidence is recorded below.
 
 ## Dependency preparation
 
@@ -142,3 +142,52 @@ and unchanged test SHA-256
 The control config is 63,217 bytes, within the unchanged source bound, so
 the failure is the routing invariant rather than package-size admission.
 This is a single policy control, not a mutation sweep.
+
+## First gate and narrow handoff witness correction
+
+The first complete gate failed at clean head
+`4d3a316441ba3eb94e6ba5f23738be07c1be2e31`, tree
+`d941c28c2030ecb70f385ffe797f5134f0ccfd72`. Type checking passed.
+Vitest reported 398 files and 1,925 cases passed, one file and one case
+failed, and one file and three cases skipped. The Node and Counting
+checks were not run after that failure. This is an actual failed gate.
+
+The existing directory-partition success-capacity witness expected the
+next generation to remain in transient creating state, but generation 4
+was already active. The correction is tracked separately by request
+`ace812abb132f2b140a090b0d252885854fdd7cf` and promise `b1bb4898`.
+It registers the actual successor from the exact Root creation entry,
+explicitly dispatches that successor, then requires its active state and
+full scope ref at that terminal boundary. The pre-dispatch snapshot still
+requires the exact generation. All 1,000 birth, handoff, standing, capacity,
+restart and final exhaustion assertions remain. No runtime code, native
+pin, test deadline, retry or sleep changes. The neighboring ordinary
+handoff witness already avoids requiring this transient state.
+
+Evidence is `/tmp/artroom-g3-durable-final-gate-20261019.log`, the matching
+outer time and machine JSON, and raw directory `tmp.64dww99zXQ` under the
+recorded system temporary root. The gate reports test exit 1; its original
+time/npm/bash processes 16390/16406/16417 were observed closed. The tool
+session ID was lost during context compaction, so a terminal-tool exit
+response is unavailable and is not claimed. No whole-suite retry was used
+to dismiss the failure.
+
+The measured pipeline took 416.03 s elapsed and 628.47 s CPU (535.02 user,
+93.45 system). Type checking took 8.5 s and 32.2 s CPU; tests took 407.3 s
+and 596.0 s CPU. Conditions: macOS 27.0.1 arm64, 18 CPUs, Node 26.12.0,
+shared load 1.96/2.93/4.87, warm private APFS COW dependencies, zero installs.
+No exclusive CPU, peak heap or total edit-cost claim is made.
+
+After the original processes closed, this candidate incorporated audited
+Main `9060775ee32c934086bca8b481c1e0d328036385`: the two approved celld
+design documents and the three approved homepage cleanup paths. Audits
+`cf6834e1` and `be8b86bc` were read in full. These are existing Main content,
+not additional G3 implementation. A corrected-head gate remains required.
+
+The focused native success-capacity case passes after that correction:
+`/tmp/artroom-g3-durable-partition-boundary-20261019.log`, original tool
+session 94988 closed exit 0. It completes all 1,000 actual births and seals,
+the 3,000 standing-entry reserve, periodic restarts and final named refusal.
+Vitest reports 124.87 s command duration, including 122.00 s test time;
+this is not a measured outer-pipeline or CPU figure. The original failed
+gate is retained, not converted into a pass by this focused result.
