@@ -7,7 +7,7 @@ Base: reviewed Main `2127d5c5cf5545a9983a80bad5cb54fb2c18f48b`.
 G5a adds device-command@1, its bounded native install grant, Grow commands
 and owner answers, and shared runtime/replay code. Target, sensor report
 and owner outcome have separate writers. No device or provider operation
-runs. The delivery is one complete Source head. The first full gate failed;
+runs. The delivery is one complete Source head. Two full gates failed;
 the corrected full gate and exact-head review remain pending.
 
 ## Decisions and native pins
@@ -206,7 +206,7 @@ Historical owner source/test SHA-256:
 `c3a84a537d6b7db30ee83d1b0a6025c566b817b2b96497d2d4ef3c8ce7b3284d`.
 Neither is a mutation sweep.
 
-## First gate and correction
+## Gate failures and corrections
 
 First gate head461c1e3fca3a0dbe9586c5488bf73456de96d648,
 tree7556440081af4621993e4986a0e5f3b044a67b30: original80923 naturally
@@ -254,6 +254,31 @@ native device/Grow witnesses then passed together at their original limits
 (95626). No test deadline or assertion was changed. Derive's two compiler
 targets and all five ownership cases also pass after the fix. The corrected
 full gate is still required before review.
+
+The exact corrected-head mixed selection then passed all eight cases with
+six unselected skips (74561, corrected-native-mixed-selection log). Its
+original limits remained. Gate554cb1bb839f3b46cb3392c785a2177cad0def8d,
+tree86d82c6e5b8b55beb6ff7307b394a24d91545b77 naturally closed89612 exit1:
+1938 passed, one failed, three skipped across402 files. All stale assets
+and eight original timeouts cleared. The prior Lending query-reply error
+did not recur. Typecheck8.4s/CPU32.2s; test481.1s/CPU678.9s. No profiling
+or source/dependency edit occurred during that gate.
+
+The remaining assertion was hosted MCP H5 at line396: an offline inventory
+change expected one reconciliation notification, but the background SSE
+reader still held zero after a fixed30ms sleep. Stream opening first awaits
+an asynchronous inventory snapshot. Positive SSE checks in that existing
+case now await the observed header or notification with its existing
+bounded until helper. Exact counts, quiet-period checks and test deadlines
+remain. No production MCP code changes. The focused case passes (11560,
+with a retained resolve-pending teardown warning); the complete owning
+hosted file passes all twelve cases (97781, hosted-observed-events-file
+log). This is a concrete synchronization correction, not a general closure
+of the separate stability request.
+
+Second gate outer log: `/tmp/artroom-g5a-corrected-complete-gate-20261019.log`.
+Raw: `/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.Ug7IT3AcXU`.
+Both failed gates remain evidence. The final corrected full gate is pending.
 
 ## Dependency preparation
 
