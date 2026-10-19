@@ -36,7 +36,8 @@ This is a manifest/link copy check, not a tarball-integrity claim.
 
 The focused and browser witnesses below pass. The first whole G2 gate failed
 two integration checks; its corrections and evidence are below. A complete
-gate pass, independent exact-head review and landing are still owed. Routing,
+gate pass is now recorded below; independent exact-head review and landing
+are still owed. Routing,
 device-owner outcomes, hosting, photos and custody remain separate work.
 
 ## Scalar declarations and native binding checkpoint
@@ -347,3 +348,71 @@ machine with18 CPUs and starting load2.07/1.81/1.73, zero installs. It is
 not exclusive CPU, physical heap or total edit cost. Log
 `/tmp/artroom-g2-gate-20261019.log`, outer time `...gate-20261019.outer.time`,
 raw logs `/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.9YLcELuT4f`.
+
+## Passing complete gate and exact-code review handoff
+
+At `1a1c4abe84ddd5736359dd2271e888e8c4b402e8`, tree
+`cceb89850edcd5392bcf2c83b66e3a3845d9aa36`, original PTY35426 closed0.
+The clean checkout skipped installation from its verified lock stamp.
+Whitespace and typecheck passed. Vitest passed397 files/1917 cases with
+1 file/3 cases skipped; Node31 and Counting55 passed. Assertion
+`aaa3c56632c8ab92f2d523cfe7d83f0149194ccd` records this corrected pass.
+The failed a7ac attempt remains failed and separately retained.
+
+Outer elapsed485.82/summed process CPU688.02 seconds (591.77user/96.25sys).
+Typecheck took8.25elapsed/31.68CPU seconds; test477.34/656.12. The warm
+shared macOS27.0.1 arm64 machine had18 CPUs, Node26.12.0 and starting
+load1.73/2.04/2.09, with no other builder test/compiler/browser process at
+the gate's start. This is not exclusive CPU, heap, provider usage or total
+edit cost. Log `/tmp/artroom-g2-final-gate-20261019.log`, SHA-256
+`9760ad4533ac68a5976bb4a8a3830394f140245bf26920cc9f45678b934c9298`;
+raw `/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.uqePaJQ5fK`.
+
+Post-gate exact-code evidence is in
+`/tmp/artroom-g2-gated-browser-20261019/` (scripted320/592) and
+`/tmp/artroom-g2-gated-live-20261019/` (separate labelled live320 observation).
+Both original processes closed0. A clean-head input manifest records all41
+changed files before those runs; every hash remained unchanged afterwards.
+One signature/entry231, nextA1, metric ages, zero-insect/later-time scouting,
+quiet context, app-only reads, resize, no overflow/errors and replay pass.
+These directories supersede the earlier observations for exact-code review;
+the earlier evidence remains historical. The live observation is not a gate.
+
+The finite map is
+`/private/tmp/artroom-g2-review-evidence-map-20261019.json`; its digest is in
+the primary artifact and review request to avoid a self-referential note.
+It includes the candidate files, gated/checkpoint Git snapshots, owned logs,
+controls, browser proof/captures, raw gate outputs, dependency manifests and
+the new sealer. Only this evidence note differs from the passing code head.
+Every listed leaf, the sealer, this source checkout and its dependency view
+freeze at sealing. No adjacent-directory, credential/custody, provider,
+push or deployment right is granted by the map. Unchanged tracked code is
+available through the exact review commit. Older frozen G1/S1/M2 views and
+sealers remain untouched.
+
+Review should name these owning boundaries:
+
+- `packages/bytes/test/application-view-parameters.test.ts`: exact scalar
+  conversion, native bounds/precision, omission and closed declarations.
+- `packages/mcp/test/declared-view-inputs.test.ts`: context-routed tools,
+  current pre-sign admission, duplicate retention and committed-unknown
+  carousel retention, with explicit scripted read/perform ports.
+- `packages/mcp/test/grow-measurements.test.ts`: actual owned Core/SQLite
+  probe/signature, old fact outside the journal window, missing metric nulls,
+  sparse EC/scouting ages, fresh layers and native replay. Install, membership,
+  session and standing lookups remain stand-ins.
+- `packages/scope/test/application-projection-native.test.ts`: production
+  read owner, exact recorded timestamp, same-item-session access/denial,
+  missing evidence, final authority and eviction. The extended Counter
+  definition is a native fixture, not a production Counter change.
+- `packages/bytes/test/application-projection-binding.test.ts`: non-fact
+  slot and foreign-under refusal. `packages/scope/test/item-query-budget.test.ts`
+  owns the unchanged budget boundary with labelled SQL stand-ins.
+- `packages/scope/test/grow-owned-scopes.test.ts`: actual installation and
+  Site-to-Room ownership, retained original grid coverage and SDK/view parity
+  for the separate declared layers source.
+- `packages/mcp/test/grow-measurements-browser.mjs`: reproducible scripted
+  text/schema/native/UI path, both widths and all three layer/navigation cases.
+
+G2 remains unreviewed and unlanded at this handoff. Planner owns later
+publication and any Cloudflare work; no builder push/deployment is claimed.
