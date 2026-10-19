@@ -10,7 +10,7 @@ import { variant } from "@generalbusiness/dap-derive/testing";
 import { outcomeValueDomains, validateDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { COUNTING_COHORT, platform } from "@generalbusiness/dap-platform";
-import { ArchiveBudget } from "../src/archive-budget.ts";
+import { ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
 import { buildJournalArchive, journalRef, JournalWork } from "@generalbusiness/artroom-git/journal";
 import { JournalObjectReader, JournalObjects } from "../../git/src/journal-objects.ts";
 import { readJournalArchive } from "@generalbusiness/artroom-git/journal-reader";
@@ -73,7 +73,7 @@ async function fixture() {
     expect(forbidden).toEqual([]);
     return { reason, positions, basis, copies, queries, cost: budget.admitted() };
   });
-  const inventory = (pins: FixtureArchiveSourcePins | undefined = sources, reviewed = policies, damageBody = false) => consumer.inside(state => {
+  const inventory = (pins: FixtureArchiveSourcePins | undefined = sources, reviewed = policies, damageBody = false, limits: Partial<ArchiveCost> = {}) => consumer.inside(state => {
     const calls: { query: string; key: unknown }[] = [];
     let damaged = false;
     const result = inventoryArchive({ exec(query, ...args) {
@@ -86,7 +86,7 @@ async function fixture() {
         state.storage.sql.exec("UPDATE retained_input SET bytes = replace(bytes, ?, ?) WHERE kind = 'entry' AND digest = ?", `"seq":${seq}`, `"seq":${seq + 1}`, args[1]!);
       }
       return state.storage.sql.exec(query, ...args);
-    }, transaction: work => state.storage.transactionSync(work) }, consumer.at, through, PROPOSED_BOUNDS, reviewed, new ArchiveBudget(), pins);
+    }, transaction: work => state.storage.transactionSync(work) }, consumer.at, through, PROPOSED_BOUNDS, reviewed, new ArchiveBudget(limits), pins);
     return { result, calls, damaged };
   });
   return { producer, consumer, birth: birth.value, uses, sources, policies, scan, inventory };
@@ -126,9 +126,12 @@ test("native inventory admits only classified direct copies and refuses a final 
   expect(bodies(incomplete.calls)).toEqual([]);
   const missing = await f.inventory(new FixtureArchiveSourcePins([], PROPOSED_BOUNDS, new ArchiveBudget()));
   expect(missing.result).toEqual({ ok: false, reason: "foreign-source-unavailable" }); expect(bodies(missing.calls)).toEqual([]);
-  const accepted = await f.inventory();
+  const accepted = await f.inventory(f.sources, f.policies, false, { nodes: 2 });
   expect(accepted.result.ok).toBe(true);
   if (!accepted.result.ok) return;
+  const short = await f.inventory(f.sources, f.policies, false, { nodes: 1 });
+  expect(short.result).toEqual({ ok: false, reason: "limit" }); expect(bodies(short.calls)).toEqual([]);
+  expect(accepted.result.inventory.cost.nodes).toBe(2); // root + one producer declaration, used twice
   expect(accepted.result.inventory.foreignSources).toEqual([{ at: f.producer.at, pin: definition.digest }]);
   expect(accepted.result.inventory.objects.map(object => object.key)).toEqual([{ kind: "definition", digest: receiver.digest }, ...f.uses.map(use => ({ kind: "entry", digest: use.content }))]);
   expect(accepted.result.inventory.objects.filter(object => object.key.kind === "entry").map(object => object.foreign)).toEqual(f.uses.map(use => ({ fact: use.fact, pin: definition.digest })));
@@ -214,7 +217,7 @@ test.each(["sha1", "sha256"] as const)("foreign copies retain their source basis
     // Component confirmation stands in for host custody, as in the owning
     // local build witness. It writes no journal entry.
     new ArchiveRows(sql, f.consumer.at).confirm(planned.mark.commit);
-    return planArchive(sql, { at: f.consumer.at, through: nextHead, bounds: PROPOSED_BOUNDS, policies: f.policies, format, parent: { id: planned.archive.commit, source: { object } }, markedAt: at(1), fixtureSources: nextSources }, new ArchiveBudget());
+    return planArchive(sql, { at: f.consumer.at, through: nextHead, bounds: PROPOSED_BOUNDS, policies: f.policies, format, parent: { id: planned.archive.commit, source: { object } }, markedAt: at(1), fixtureSources: nextSources }, new ArchiveBudget({ nodes: 2 }));
   });
   expect(extended.ok, JSON.stringify(extended)).toBe(true); if (!extended.ok) return;
   expect(extended.archive.newInterval).toEqual([through.seq + 1, nextHead.seq]);

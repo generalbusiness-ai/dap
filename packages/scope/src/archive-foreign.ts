@@ -28,7 +28,8 @@ export class ArchiveForeignMetadata {
   readonly #facts = new Map<string, Digest>();
   readonly #sources = new Map<string, Readonly<ArchiveSourceBasis>>();
   constructor(readonly sql: Pick<Sql, "exec">, readonly sources: FixtureArchiveSourcePins,
-    readonly policies: ArchivePolicyRegistry, readonly bounds: Bounds, readonly budget: ArchiveBudget) {
+    readonly policies: ArchivePolicyRegistry, readonly bounds: Bounds, readonly budget: ArchiveBudget,
+    readonly visitedDeclarations = new Set<Digest>()) {
     if (sources.fixture !== "archive-source-pins") return stop("foreign-source-unavailable");
     budget.check();
   }
@@ -38,6 +39,11 @@ export class ArchiveForeignMetadata {
     const policy = this.policies.get(pin);
     if (!policy || !policy.review || policy.review.length > 512 || policy.support.named !== pin) return stop("unsupported-archive-cohort");
     if (isDigest(pin) ? policy.support.definition.digest !== pin : policy.support.definition.declared.name !== platformName(pin)) return stop("foreign-source-mismatch");
+    // One aggregate declaration ledger includes local closures and foreign
+    // policy metadata. Another source with the same declaration adds work,
+    // but never a second allowance or a second distinct declaration node.
+    const node = policy.support.definition.digest;
+    if (!this.visitedDeclarations.has(node)) { this.budget.spend({ nodes: 1 }); this.visitedDeclarations.add(node); }
     if (canonicalize(policy.support.definition.declared) !== source.declaration) return stop("foreign-source-mismatch");
     if (!derivable(policy.support.definition, policy.support.capabilities)) return stop("unsupported-archive-cohort");
     archiveSupportMetadata(policy.support, this.budget);

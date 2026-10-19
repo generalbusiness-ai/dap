@@ -129,7 +129,7 @@ export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: 
         platformClosure = closureOf(definition.digest, definition);
         if (!platformClosure.complete) return stop("incomplete");
       }
-      const foreign = fixtureSources ? new ArchiveForeignMetadata(sql, fixtureSources, reviewed, bounds, budget) : undefined;
+      const foreign = fixtureSources ? new ArchiveForeignMetadata(sql, fixtureSources, reviewed, bounds, budget, visited) : undefined;
       const admitted = archivePrivacyMetadata(sql, prefix, { ...rootPolicy.support, definition }, budget, foreign);
       // First finish admission of ALL inline local-entry classes. A trusted
       // owner table/root certificate alone cannot authorize their bodies.

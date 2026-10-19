@@ -401,3 +401,40 @@ membership creation and the retained fact are native. Original 66352
 exit 0, one case, 189 ms tests/2.85 s overall, in
 `/tmp/artroom-s2b-foreign-legacy-owning-20261019.log`; source/test compiler
 passes in `...foreign-legacy-types...log`.
+
+## Shared declaration-node accounting
+
+Self-review found an omission in this development slice: foreign policy
+declarations spent lookup and byte work but did not spend a distinct node
+in inventory's existing aggregate declaration ledger. Inventory now shares
+its visited-digest set with foreign classification. A newly visited foreign
+declaration spends one node before declaration comparison and support
+classification; local closures and other sources using that declaration
+reuse the same distinct node. Repeated lookups and validation still spend
+their existing work. The source-map count and every pass ceiling are
+unchanged. This corrects accounting before review; it is not a Main or gate
+failure.
+
+The native case admits the receiver and producer under an exact two-node
+allowance, although it uses two copies of that producer. A one-node
+allowance refuses `limit` before any entry body. Extending to a second real
+producer of the same declaration still fits two nodes, including checked
+parent handling in both Git formats. The installed root/child readback and
+existing local inventory cases continue to pass.
+
+- Original 28804 exits 0: three files, 18 cases, 1.27 s tests/4.39 s overall,
+  `/tmp/artroom-s2b-foreign-shared-nodes-owning-20261019.log`.
+- Exact allowance witness, original 1725 exit 0: one case, 99 ms/2.91 s,
+  `...foreign-exact-nodes-owning...log`.
+- One targeted node control, original 81101 exit 0: one unchanged case
+  passes; skipping only the foreign node charge makes the actual one-node
+  refusal assertion fail with an admitted inventory. The helper restores
+  the exact source. Log: `...foreign-node-budget-control...log`.
+- Repeated declaration across two actual sources, original 95612 exit 0:
+  two cases, 273 ms/3.10 s, `...foreign-repeat-source-nodes-owning...log`.
+
+Source/test compiler passes in `...foreign-shared-nodes-types...log`.
+The unsubmitted review-conditions draft is
+`/tmp/artroom-review-s2b-draft-conditions-20261019.txt`. It grants no access
+and requests no review. Actual reviewed G5a/S2a Main, actual late directory
+binding and the final gate remain required.
