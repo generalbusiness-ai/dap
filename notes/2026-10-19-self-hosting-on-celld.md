@@ -1,7 +1,7 @@
 # Self-hosting dap on celld
 
-19 October 2026, draft 2. Design note for review. Section 12 lists what
-changed after the checker's review.
+19 October 2026, draft 3. Design note for review. Section 12 lists what
+changed after each checker review.
 
 Today dap runs only on Cloudflare: Workers, Durable Objects with SQLite,
 R2, and Cloudflare Artifacts as the git host. This note says how a
@@ -248,30 +248,47 @@ The kit treats these as rules:
   directory is on its persistent disk, and each node has a fixed
   `CELLD_NODE` name. A restart is the same node. Nothing wipes a work
   directory while the fleet is live.
-- **A node stops only gracefully.** On SIGTERM celld answers 503, lets
-  accepted requests finish, proves each cell durable, publishes its
-  snapshot, and releases the cell to a peer, within
-  `CELLD_SHUTDOWN_TOTAL_MS`, 40 seconds by default. The unit sets
-  `TimeoutStopSec` above it. A node is replaced by stopping it this way
-  first, then removing its VM, then starting the replacement with the
-  same name, and never two at once.
+- **A node stops only gracefully, and a drain is a checked outcome.** On
+  SIGTERM celld answers 503, lets accepted requests finish, proves each
+  cell durable, publishes its snapshot, and releases the cell to a peer,
+  within `CELLD_SHUTDOWN_TOTAL_MS`, 40 seconds by default. The unit sets
+  `TimeoutStopSec` above it. But the process can reach its own deadline,
+  stop with exit code 0, and leave an open log record whose acknowledged
+  tail is only on that disk, for the next process or a peer to recover.
+  So the kit never reads a clean exit as a complete handoff. A drain is
+  complete only when both hold: the stopped process's shutdown log has
+  the line `node-log close: sealed epoch`, and the node's record in the
+  bucket, `nodes/<node>.json`, is `sealed` or absent. An absent record
+  proves the session never acknowledged past the bucket, and a sealed
+  one proves recovery completed. Any other end, `open` or `recovering`,
+  a missing line, a deadline cut, a bucket that was slow or unreachable
+  at the stop, is an unknown drain: the kit keeps the VM, its work
+  directory and its name, refuses to replace or delete it, and the same
+  node restarts to recover by celld's normal path.
+- **A node is replaced only after a complete drain.** Stop it, check the
+  drain, then remove the VM, then start the replacement with the same
+  name, and never two at once.
 - **The supervisor restarts without limit and waits a lease lifetime.**
   A fenced node exits with code 3 and only a restart returns it. The
   unit sets `Restart=always`, no start limit, and `RestartSec` above
   `CELLD_TTL_MS`, 10 seconds by default.
-- **A backup is a stopped-fleet backup.** Drain every node, wait for
-  the handoffs to finish, copy the bucket, start the nodes. The copy is
-  complete to the moment of the drain, and a restore from it loses
-  everything after. With one node, which acknowledges on the bucket
-  proof, the bucket is complete at any instant up to the last
-  acknowledgement, and the stopped-fleet rule still applies before a
-  restore. The bucket's own versioning covers the bucket's loss, not the
-  tail on the disks.
+- **A backup is the stopped-fleet backup celld defines**: the bucket and
+  every node's work directory, with the node names, peer addresses and
+  directories preserved. The kit takes it in celld's order: stop
+  application traffic at the proxies and stop any deployment writer;
+  stop every node and its supervisor, so nothing restarts during the
+  copy; check every drain as above; wait for every node lease to expire;
+  copy the bucket and each work directory; start the supervisors and the
+  proxies. A restore puts both back under the same names and loses
+  everything after the backup. A copy of the bucket alone is never
+  called a backup, on one node or on two.
 
 H4 holds the kit to this: stop the owner and watch the peer recover the
-acknowledged tail, replace one VM by the procedure, take a stopped-fleet
-backup and restore it into a fresh fleet, and show that a bucket copy of
-a serving fleet is not offered as a backup.
+acknowledged tail; replace one VM by the procedure; take a stopped-fleet
+backup and restore it into a fresh fleet; and force a drain to end
+unknown, by making the bucket unreachable from the node during the stop,
+and show that `drain` reports unknown, `down` refuses to remove the VM,
+and `backup` refuses to call its copy complete.
 
 For a verifiable history apart from the service, the archive binding of
 the sequenced note's section 4 points at a git host, which may be the
@@ -291,8 +308,9 @@ The release artifact `dap-host-<version>.tar.gz` holds:
 | `Caddyfile` | The proxy: the DNS name as the one substitution, 443 to the loopback port, `CF-Connecting-IP` overwritten with the remote address |
 | `up.gcp.sh`, `up.aws.sh` | Create the parts for one cloud |
 | `deploy.sh` | `celld deploy` of `worker/` to the bucket, with the vars filled from the operator's secret source |
-| `drain.sh` | Stop one node gracefully and wait for its handoff, for a replacement or a backup |
-| `down.gcp.sh`, `down.aws.sh` | Drain both nodes, then remove every part the matching `up` made |
+| `drain.sh` | Stop one node gracefully, then check the drain by the two conditions of 4.7: the sealed-close line in the shutdown log and a sealed or absent node record in the bucket. Exits non-zero on an unknown drain and says what it found |
+| `backup.sh` | The stopped-fleet backup of 4.7, in celld's order, refusing to report a complete copy after an unknown drain |
+| `down.gcp.sh`, `down.aws.sh` | Drain both nodes, and remove the parts only when both drains are complete. An unknown drain stops the script with the VM and its disk kept |
 
 **GCP.** `up.gcp.sh` takes a project, a region and a DNS name and makes:
 one bucket with uniform access, a service account with object admin on
@@ -336,10 +354,13 @@ wrap the same binary and bucket, and the kit does not stop them.
   measures the turn on one node and on two before any number reaches a
   customer.
 - **Acknowledged writes live on node disks before they reach the
-  bucket.** The work directories persist, nodes keep their names, stops
-  are graceful, the supervisor restarts without limit after a lease
-  lifetime, and a backup is a stopped-fleet backup (4.7). A bucket copy
-  of a serving fleet is not one.
+  bucket, and a clean exit does not prove they left.** The work
+  directories persist, nodes keep their names, a drain is checked by the
+  sealed-close line and the node's bucket record, an unknown drain keeps
+  the VM, the supervisor restarts without limit after a lease lifetime,
+  and a backup is celld's stopped-fleet backup of the bucket and every
+  work directory (4.7). A bucket copy, of a serving fleet or alone, is
+  not one.
 - **The proxy owns the client address.** The join limits and the MCP
   bearer-failure limit key on `cf-connecting-ip`, which only the proxy
   may set (4.6). A deployment that exposes celld's port without the
@@ -425,7 +446,7 @@ redeploy was adopted in place within 60 seconds with no restart.
 | H1 | The celld project in the repository: `apps/room/celld/`, the direct-call change for the page and MCP routes, the qualification smoke as a script that sends the address header itself, and a CI job that runs it against `celld dev` | Now |
 | H2 | The own git host: `GitRepository`, the smart HTTP route, the `self` wiring, tokens, bounds; witnesses: the lane story over host `self`, a real `git clone` and `git push` from a laptop, a push refused `stale` | H1 |
 | H3 | The host kit and the GCP scripts with the unit, the proxy, `drain` and `down` of 4.7, the second self-host path in the docs with a measured run; witnesses: the three address witnesses of 4.6, and a node replaced by the procedure | H1, H2 |
-| H4 | Two-node fleet qualification: the grow package with a timed rule; stop the owner and watch the peer recover the acknowledged tail; a stopped-fleet backup restored into a fresh fleet; the package store's `put`, refused conditional `put`, `get` and readback; a celld version bump under its release rule; a timer in the Worker for the node's own turn time on one node and on two | H3 |
+| H4 | Two-node fleet qualification: the grow package with a timed rule; stop the owner and watch the peer recover the acknowledged tail; a node replaced by the procedure; a stopped-fleet backup restored into a fresh fleet; a drain forced to end unknown by an unreachable bucket, with `drain`, `down` and `backup` refusing as 4.7 says; the package store's `put`, refused conditional `put`, `get` and readback; a celld version bump under its release rule; a timer in the Worker for the node's own turn time on one node and on two | H3 |
 | H5 | The AWS scripts and their measured run | H3 |
 
 H1 is a day. H2 is two to three days. H3 and H5 are a day each. H4 is a
@@ -450,8 +471,10 @@ day. None of them goes ahead of the grow demo of plan 033.
 8. The proxy owns the client address, and celld's public port is
    reachable only from the proxy on its node.
 9. Node work directories persist, nodes keep their names, stops are
-   graceful, the supervisor restarts without limit after a lease
-   lifetime, and a backup is a stopped-fleet backup.
+   graceful and a drain is a checked outcome, an unknown drain keeps the
+   node, the supervisor restarts without limit after a lease lifetime,
+   and a backup is celld's stopped-fleet backup of the bucket and every
+   work directory.
 10. Not provided: moving live rooms, more than one region, an
     on-premises store, Windows.
 
@@ -465,7 +488,14 @@ day. None of them goes ahead of the grow demo of plan 033.
 | Q4 | Whether the CI job of H1 runs on every head or on heads that touch the scope package | On heads that touch `packages/scope`, `packages/mcp` or `apps/room` |
 | Q5 | The node's own turn time, single node and fleet | H4's timer |
 
-## 12. Changes in draft 2
+## 12. Changes in drafts 2 and 3
+
+Review `783a1530` of draft 2 found F2, F3 and F4 resolved and held
+approval on one part of F1.
+
+| Finding | Answer |
+|---|---|
+| F1 (P1), remaining part: a drain was inferred from a clean exit, though celld can reach its own deadline, exit 0 and leave an open log record, so the procedure could discard the only acknowledged tail or export an incomplete backup | 4.7: a drain is complete only when the shutdown log has `node-log close: sealed epoch` and the node's bucket record is sealed or absent; any other end is unknown, keeps the VM, its directory and its name, and refuses replacement, deletion and any complete-backup claim. A backup is celld's stopped-fleet backup, bucket and every work directory with names, addresses and directories preserved, taken after stopping traffic, deployment writers, nodes and supervisors and waiting for the leases to expire. Section 5's `drain`, `backup` and `down`. H4's forced unknown drain. Decision 9 |
 
 Review `9c5dadcc` of draft 1 requested four changes.
 
@@ -483,7 +513,8 @@ Review `9c5dadcc` of draft 1 requested four changes.
   [README](https://raw.githubusercontent.com/denoland/celld/v0.6.2/docs/README.md)
   (shutdown, rollout, environment variables),
   [guarantees](https://raw.githubusercontent.com/denoland/celld/v0.6.2/docs/guarantees.md)
-  (acknowledgement, recovery, the supervisor),
+  (acknowledgement, recovery, the supervisor, the node record's states,
+  and "Start a fleet with this format" for the stopped-fleet backup),
   [Cloudflare compatibility](https://raw.githubusercontent.com/denoland/celld/v0.6.2/docs/cloudflare-compat.md),
   [R2](https://raw.githubusercontent.com/denoland/celld/v0.6.2/docs/services/r2.md),
   [Durable Objects](https://celld.dev/docs/services/durable-objects/),
