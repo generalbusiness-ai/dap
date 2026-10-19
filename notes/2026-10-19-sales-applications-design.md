@@ -77,17 +77,20 @@ exchange you find is the signed one. They are the floor, not the pitch.
 ## 2. Personal agents today
 
 Three personal agents define the category this month. OpenAI's Dots
-(launched 29 September) are always-on agents with their own cloud
-computer and browser, connected to thousands of apps, running scheduled
-jobs and background research, read-only until a person authorizes a
-send or a change, messaging the person in chat when a decision is
-needed. Meta's Muse (8 September) takes a goal, plans, launches
-subagents, browses, fills forms and completes purchases, keeps working
-after the app is closed, returns for approval before sensitive actions,
-and keeps an editable memory. Hermes Agent (open source) is a persistent
-process on the person's own server with cross-session memory, skills it
-writes for itself, scheduled tasks and a gateway to the messaging apps
-the person already uses.
+([launched 29 September](https://openai.com/index/introducing-dots/))
+are always-on agents with their own cloud computer and browser,
+connected to thousands of apps, running scheduled jobs and background
+research, read-only until a person authorizes a send or a change,
+messaging the person in chat when a decision is needed, with a visible
+activity record, authorization rules the person sets and review of
+actions. Meta's Muse ([8 September](https://about.fb.com/news/2026/09/introducing-muse-personal-ai-agent/))
+takes a goal, plans, launches subagents, browses, fills forms and
+completes purchases, keeps working after the app is closed, returns for
+approval before sensitive actions, keeps an editable memory and shows
+the person an audit trail. Hermes Agent ([open source](https://hermes-agent.nousresearch.com/docs))
+is a persistent process on the person's own server with cross-session
+memory, skills it writes for itself, scheduled tasks and a gateway to
+the messaging apps the person already uses.
 
 Each of the three applications below assumes every member has one of
 these. What the room adds is not what the agent does but who it does it
@@ -96,14 +99,16 @@ for and where the result lives:
 - An agent serves one principal. The product manager's agent works for
   her, the owner's for the owner. The room is where their agents meet,
   and each person's answer stays in their words, signed by them.
-- An agent's approval is a line in a transcript that only that agent
-  holds. In the room the authority is on the act, so a discount, a
-  roadmap claim and a submission are signed by their holders at an
-  exact revision, and no agent can sign them.
-- An agent's memory is its own. The room's record is shared, exact and
-  readable by the next person after the agent has been replaced.
-- An agent's schedule is a promise to itself. The room's timed rules
-  fire for every member whether or not any agent is up.
+- An agent's approvals live in that agent's own activity record, which
+  its person can see and review. What the room proposes is different
+  in kind: the authority is on the act, so a discount, a roadmap claim
+  and a submission are signed by their holders at an exact revision, in
+  one record that every member reads and that replays without any
+  agent, and no agent can sign them.
+- An agent's memory and schedule are its own, however well kept. The
+  room proposes shared, exact facts that the next person reads after
+  the agent has been replaced, and timed rules that every member sees
+  and that fire whether or not any agent is up.
 
 What an agent alone does well: one person's work with no commitment to
 anyone else and nothing to prove later. The prospect room's research
@@ -122,22 +127,27 @@ Tribble, Conveyor, 1Up, DeepRFP and AutoRFP.ai behind them. They keep
 an answer library, draft with a model, assign questions to contributors
 and route reviews, and export into the buyer's format. They are bought
 per team at enterprise prices (one lists its entry tier at twenty
-thousand dollars a year) with onboarding measured in weeks, and they
-are a portal the contributors must go to. The room differs in where
-the work happens and who signs: each contributor answers from their
-own AI app, the expert's answer and the team's review are two
-attributed signatures, routing is a grant rather than an assignment
-list, and the agents are members. What those products do that the
-first version does not: files and custody, large matrices, formatting,
-and integrations.
+thousand dollars a year) with onboarding measured in weeks. Answering
+from chat is not new: Loopio documents experts answering in Slack and
+Teams and an agent that creates library entries from Teams
+([Loopio](https://loopio.com/), [its Copilot agent](https://support.loopio.com/hc/en-us/articles/43969095406867-What-is-the-Loopio-Copilot-Agent-for-Microsoft-365)).
+The room's difference is not where the answer is typed. It is that the
+expert's answer and the team's review are two attributed signatures in
+one journal, that who may answer which domain is a grant the record
+enforces rather than an assignment list, and that the agents are
+members of the same record rather than features of a portal. What
+those products do that the first version does not: files and custody,
+large matrices, formatting, and integrations.
 
 **Prospect room.** Solo sellers today pair a light CRM (folk, Attio,
 Zoho Bigin, a free HubSpot tier) with an agent for outreach and
-follow-up (Lindy, Relay with a human approval step, Unify) and a
-sequencing tool (Apollo, Instantly, Lemlist) ([a founder's guide](https://www.folk.app/articles/ai-crms-for-solo-founders),
+follow-up (Lindy, Unify) and a sequencing tool (Apollo, Instantly,
+Lemlist) ([a founder's guide](https://www.folk.app/articles/ai-crms-for-solo-founders),
 [a stack guide](https://www.unifygtm.com/explore/best-ai-sales-tools-solo-founders)).
-Every one of them is a database the seller maintains plus an agent that
-sends. The room keeps the prospect's words as theirs, lets the prospect
+They are a database plus an agent that sends, and the better ones fill
+the database themselves: Attio creates and enriches records and syncs
+mail and calendar ([its help pages](https://attio.com/help/reference/email-calendar/email-and-calendar-syncing)).
+The room keeps the prospect's words as theirs, lets the prospect
 accept a proposal at an exact revision from their own AI app, and makes
 the seller's assistant work inside the record rather than beside it.
 What those tools do that the first version does not: send mail and run
@@ -149,12 +159,16 @@ design of outside operations exists.
 publishes to nine channels), a work tool with approval chains (Monday,
 Notion) or an agent that drafts the whole calendar (RankYak, Velocity)
 ([a comparison](https://asana.com/resources/best-content-calendar-software),
-[another](https://planable.io/blog/content-calendar-tools/)). The room
-differs in one thing worth having: the approval is bound to the exact
-text that is published, and the publication to the site is the
-repository write dap already does. Channels beyond the site are
-recorded statements, which is less than those tools do, and the first
-version says so.
+[another](https://planable.io/blog/content-calendar-tools/)). Approval
+of exact copy is not new either: Planable locks approved content until
+an approver unapproves it, requires approval before scheduling and
+keeps version history ([its guide](https://planable.io/guides/content-approvals-in-planable/)).
+The room's difference is narrow and specific: the approval is a signed
+act in a replayable record that the owner's own agents also read, and
+the publication to the site is the repository write dap already does,
+with its outcome recorded as admission rather than assumed. Channels
+beyond the site are recorded statements, which is less than those
+tools do, and the first version says so.
 
 ## 4. What the three share
 
@@ -284,8 +298,15 @@ to requested. Assembly is complete or refused: the import confirmed
 with every row reviewed or declined with a reason, both approvals
 present and granted at current revisions, and the intake agent's
 rendering of the answers back into the buyer's layout at those
-revisions. Management signs `submit`, which seals that exact assembly
-and sends it to the bid's Git destination with `publish-file`.
+revisions. Management signs `submit`, which refuses unless the
+assembly's rendering, every answer revision and both approvals still
+match the current response: an answer supplied after assembly, or an
+approval put back to requested by it, makes the assembly stale, and a
+stale assembly is never submitted; a new assembly replaces it and the
+old one stays immutable. The guards of the longer drafts stand: one
+approval per kind, and the assigned reviewer's signature when a
+reviewer is set. Submit seals the current assembly and sends it to the
+bid's Git destination with `publish-file`.
 
 Sealing is local; publication is not, and the first version is honest
 about how far the record can see. The send's result proves admission,
@@ -394,7 +415,7 @@ estimates from the grow slices.
 |---|---|---|---|
 | C1 | The marketing calendar: definitions, scenario, views, publication to a site repository | a post planned in the room is approved, published to a test destination and admitted, with a member's check recorded by name; a refused result leaves the post refused with its reason; a late post reaches the owner's carousel; a twenty-fifth post and an oversized text are refused by name | 2 days |
 | C2 | The prospect room: definitions, scenario, views; the prospect as an invited member | an account goes from research to a proposal accepted by a member in the test host; the five-day rule reaches the owner | 2 days |
-| C3 | The bid response: definitions in two scopes, the intake agent's decomposition and rendering, routing by domain, approvals, assembly and submission | a two-sheet request of forty rows is decomposed, three rows remapped and a duplicate refused; oversized and second imports refused by name; assembly refused while a mapping is proposed, a row unresolved or an approval missing or stale; then every row reviewed or declined, six supplied by asked experts across three domains, an unsourced roadmap claim refused, both approvals granted, the answers rendered back, assembled and submitted, the submission admitted and a member's receipt check recorded by name | 5 days |
+| C3 | The bid response: definitions in two scopes, the intake agent's decomposition and rendering, routing by domain, approvals, assembly and submission | a two-sheet request of forty rows is decomposed, three rows remapped and a duplicate refused; oversized and second imports refused by name; assembly refused while a mapping is proposed, a row unresolved or an approval missing or stale, and submission of an assembly made stale by a later supply refused; then every row reviewed or declined, six supplied by asked experts across three domains, an unsourced roadmap claim refused, both approvals granted, the answers rendered back, assembled and submitted, the submission admitted and a member's receipt check recorded by name | 5 days |
 | C4 | The hosted rooms and a page for each on the homepage, after the demo-room pattern of plan 033 | a person in their AI app takes an act in each | 2 days |
 
 Named and deferred: custody for documents; private price views; the
@@ -426,10 +447,12 @@ rooms; the roll-up of many prospect accounts or bids under a site.
 
 ## Sources
 
-Personal agents, read 19 October 2026:
-[OpenAI Dots](https://www.vellum.ai/blog/official-openai-dots-breakdown),
-[Meta Muse](https://www.vellum.ai/blog/official-muse-breakdown),
-[Hermes Agent](https://www.vellum.ai/blog/official-hermes-agent-breakdown).
-Markets: the roundups linked in section 3, plus
+Personal agents, read 19 October 2026, from their makers:
+[OpenAI Dots](https://openai.com/index/introducing-dots/),
+[Meta Muse](https://about.fb.com/news/2026/09/introducing-muse-personal-ai-agent/),
+[Hermes Agent](https://hermes-agent.nousresearch.com/docs).
+Markets: the roundups and product pages linked in section 3, plus
 [a solo-founder prospecting review](https://www.crono.one/academy/ai-tools-for-sales-prospecting/)
 and [a small-team calendar review](https://storyflow.so/blog/best-content-calendar-tools-2026).
+Rankings and prices in the roundups are the vendors' own and are not
+endorsed here.
