@@ -394,7 +394,7 @@ package name was then used successfully. No dependency install was used.
 
 The delivery remains one complete Source head. Implementation and focused
 checks are complete; the full gate and exact-head review are still pending.
-The expert-note-only Main `2127d5c5` will be incorporated before the gate.
+The expert-note-only Main `2127d5c5` is incorporated before the gate.
 No G5a landing, push, deployment, physical device action or S2b archive
 export admission is claimed.
 
