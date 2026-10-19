@@ -217,7 +217,7 @@ export function acts(d: Defining, v: unknown, timed: Readonly<Record<string, unk
     // act may read, and no name of `also` that a mark binds.
     if ("observes" in o) observes(d, o["observes"], at(path, "observes"), { where: "act", ctx, selected: new Set([...named.marked, ...named.through]) });
     const pendingWork: PendingWork = { retained: { fields: [...fields.values()], presented: presented.size, source: false, observes: o["observes"] }, path, settles: "settles" in o ? settling(d, o["settles"], at(path, "settles"), ctx, null, top) : null, opens: step === "open" ? on?.name ?? null : null, mayCreateCopy: false, sets: [], requests: [] };
-    pendingWork.sets = setsOf(d, step === "open" ? on : null, () => effects(d, o["effects"], at(path, "effects"), ctx, false));
+    pendingWork.sets = setsOf(d, step === "open" ? on : null, () => effects(d, o["effects"], at(path, "effects"), ctx, false, o["guards"]));
     // A child's genesis sends the platform's one result beside what its act declares.
     entrySends(d, path, sends(d, o["sends"], at(path, "sends"), ctx, top, pendingWork.requests), attention(d, o["attention"], at(path, "attention"), ctx), name === top["genesis"] ? 1 : 0);
     d.pendingWork.push(pendingWork);

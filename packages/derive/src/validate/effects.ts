@@ -244,14 +244,15 @@ function exclusive(a: Rec, b: Rec): boolean {
 }
 
 /** The effects of one act, handler, timed rule or result clause, in the order written. */
-export function effects(d: Defining, v: unknown, path: string, ctx: Ctx, later: boolean): void {
+export function effects(d: Defining, v: unknown, path: string, ctx: Ctx, later: boolean, actGuards: unknown = []): void {
   const { bounds, bad, list } = d;
   const set: (Sets & { written: Rec })[] = [];
   // Unlisted ownership is already refused by item-slot validation. Legacy
   // definitions need none of the device-specific cross-effect scans.
   const deviceCommands = d.capabilities.get("device-command") === DEVICE_COMMAND;
   let commands = 0;
-  const deviceTargets = new Map<string, { self: boolean; last: number }>(), commandSubjects = new Map<string, number>();
+  const deviceTargets = new Map<string, { self: boolean; last: number; condition: string | null }>(), commandSubjects = new Map<string, number>();
+  const deviceFinals = new Map<string, number>();
   list(v, path, bounds.effects).forEach((e, i) => {
     if (d.platform && marked(e)) {
       // Section 6.1, place 5: a mark is one effect of the written list of an act, a handler or a result clause. It has no `of`,
@@ -270,15 +271,34 @@ export function effects(d: Defining, v: unknown, path: string, ctx: Ctx, later: 
         if (++commands > 1) bad("capability", at(path, i), "one target-writing entry opens at most one device command");
         if ("if" in e || "unless" in e) bad("capability", at(path, i), "the command effect follows the target writes without an independent condition");
         const device = isObject(cap["with"]) ? cap["with"]["device"] : undefined;
-        commandSubjects.set(String(isObject(device) ? (device["of"] ?? e["of"] ?? "on") : (e["of"] ?? "on")), i);
+        const subject = String(isObject(device) ? (device["of"] ?? e["of"] ?? "on") : (e["of"] ?? "on"));
+        commandSubjects.set(subject, i);
+        // A direct conjunct guards the actual device kind. A disjunction or
+        // a constant cannot prove that an out-of-grant target is refused.
+        const allowed = Array.isArray(actGuards) && actGuards.some(guard => {
+          const cap = isObject(guard) ? guard["capability"] : null;
+          const kind = isObject(cap) && isObject(cap["with"]) ? cap["with"]["kind"] : null;
+          return isObject(cap) && cap["name"] === "device-command" && cap["guard"] === "allowed"
+            && isObject(kind) && kind["slot"] === "kind" && Object.keys(kind).every(key => key === "slot" || key === "of")
+            && String(kind["of"] ?? (guard as Rec)["of"] ?? "on") === subject;
+        });
+        if (!allowed) bad("capability", at(path, i), "a device command needs an act guard allowing that same device's kind");
       }
       const name = String(e["of"] ?? "on"), type = name === "on" ? ctx.on : ctx.also.get(name.slice(5));
       const value = e["value"], ref = e["ref"];
+      if (type?.slots.get("outcome")?.capability === DEVICE_COMMAND && typeof e["state"] === "string" && type.states.get(e["state"])) {
+        deviceFinals.set(name, Math.min(deviceFinals.get(name) ?? i, i));
+      }
       if (type?.slots.get("outcome")?.capability === "device-command@1" && !(name === "on" && ctx.nascent)
         && ((isObject(value) && ["target", "level"].includes(String(value["slot"]))) || (isObject(ref) && ref["slot"] === "targetAt"))) {
         const self = isObject(ref) && ref["slot"] === "targetAt" && ref["from"] === "self";
         if (isObject(ref) && !self) bad("capability", at(path, i), "a command's targetAt names the entry writing its target");
-        deviceTargets.set(name, { self: (deviceTargets.get(name)?.self ?? false) || self, last: i });
+        // Effect conditions all read the pre-effect state. Identical if/unless
+        // forms therefore make the target writes and their fact atomic. Do not
+        // infer implication between independently written conditions.
+        const condition = canon([e["if"] ?? null, e["unless"] ?? null]), previous = deviceTargets.get(name);
+        if (condition === null || previous && previous.condition !== condition) bad("capability", at(path, i), "a device's target, level and targetAt writes share the same if/unless condition");
+        deviceTargets.set(name, { self: (previous?.self ?? false) || self, last: i, condition });
       }
     }
     const sets = effect(d, e, at(path, i), ctx, later);
@@ -295,6 +315,7 @@ export function effects(d: Defining, v: unknown, path: string, ctx: Ctx, later: 
   for (const [subject, target] of deviceTargets) {
     const command = commandSubjects.get(subject);
     if (!target.self || command === undefined || command <= target.last) bad("capability", path, "a device target change writes its own targetAt and opens that subject's command after all target writes");
+    if (command !== undefined && (deviceFinals.get(subject) ?? Infinity) < command) bad("capability", path, "a device command opens before any effect can make its device final");
   }
 }
 

@@ -160,18 +160,22 @@ test("a pending command reserves one bounded answer; only its actual closing pre
   expect(ownerReservations(code, unbound.s.state, definition).entries).toBe(1);
   // Conditional writes keep their original order and share one condition.
   // When skipped, open cannot borrow commission's earlier targetAt fact.
-  const conditional = structuredClone(scope);
-  conditional.acts["command"]!.effects = conditional.acts["command"]!.effects.map((effect, i) => i < 3
-    ? { ...effect, if: [{ equals: { a: { field: "level" }, b: { const: 80 } } }] } : effect);
-  const conditionalDefinition = valid(validateDefinition(conditional, PROPOSED_BOUNDS));
-  const conditionalScope = fixture(true, conditionalDefinition), conditionalID = conditionalScope.commission();
-  expect(conditionalScope.command(conditionalID, 30).result).toBe("write");
-  expect(conditionalScope.s.item(conditionalID)).toMatchObject({ values: { target: "off", level: 0 }, refs: { targetAt: conditionalID } });
-  expect(conditionalScope.s.state.recordCount(DEVICE_COMMAND, "command")).toBe(0);
-  expect(ownerReservations(code, conditionalScope.s.state, conditionalDefinition).entries).toBe(0);
-  expect(conditionalScope.command(conditionalID, 80).result).toBe("write");
-  expect(conditionalScope.s.state.record(DEVICE_COMMAND, "command", [conditionalScope.s.last.seq])).toMatchObject({ values: { target: "on", level: 80, targetAt: conditionalScope.s.last.seq } });
-  expect(ownerReservations(code, conditionalScope.s.state, conditionalDefinition).entries).toBe(1);
+  for (const condition of [
+    { if: [{ equals: { a: { field: "level" }, b: { const: 80 } } }] },
+    { unless: [{ equals: { a: { field: "level" }, b: { const: 30 } } }] },
+  ] as const) {
+    const conditional = structuredClone(scope);
+    conditional.acts["command"]!.effects = conditional.acts["command"]!.effects.map((effect, i) => i < 3 ? { ...effect, ...condition } : effect);
+    const conditionalDefinition = valid(validateDefinition(conditional, PROPOSED_BOUNDS));
+    const conditionalScope = fixture(true, conditionalDefinition), conditionalID = conditionalScope.commission();
+    expect(conditionalScope.command(conditionalID, 30).result).toBe("write");
+    expect(conditionalScope.s.item(conditionalID)).toMatchObject({ values: { target: "off", level: 0 }, refs: { targetAt: conditionalID } });
+    expect(conditionalScope.s.state.recordCount(DEVICE_COMMAND, "command")).toBe(0);
+    expect(ownerReservations(code, conditionalScope.s.state, conditionalDefinition).entries).toBe(0);
+    expect(conditionalScope.command(conditionalID, 80).result).toBe("write");
+    expect(conditionalScope.s.state.record(DEVICE_COMMAND, "command", [conditionalScope.s.last.seq])).toMatchObject({ values: { target: "on", level: 80, targetAt: conditionalScope.s.last.seq } });
+    expect(ownerReservations(code, conditionalScope.s.state, conditionalDefinition).entries).toBe(1);
+  }
   const under = valid(validateDefinition({ ...scope, capacity: { name: "whole-scope", version: 1 } }, PROPOSED_BOUNDS));
   const whole = fixture(true, under), id = whole.commission();
   expect(whole.command(id).result).toBe("write");
@@ -190,9 +194,20 @@ test("a device command follows all target writes, binds one device and opens at 
     // Both accepted-order counterexamples from checker finding F1.
     [effects[3]!, effects[0]!, effects[1]!, effects[2]!],
     [effects[2]!, effects[3]!, effects[0]!, effects[1]!],
+    // Correct order is insufficient when only the fact write can be skipped.
+    [effects[0]!, effects[1]!, { ...effects[2]!, if: [{ equals: { a: { field: "level" }, b: { const: 30 } } }] }, effects[3]!],
+    [effects[0]!, effects[1]!, { ...effects[2]!, unless: [{ equals: { a: { field: "level" }, b: { const: 80 } } }] }, effects[3]!],
+    [...effects.slice(0, 3), { state: "closed" }, effects[3]!],
     [...effects.slice(0, -1), { ...effects[3]!, if: [{ equals: { a: { field: "level" }, b: { const: 80 } } }] }],
   ]) {
     const input = { ...scope, acts: { ...scope.acts, command: { ...scope.acts["command"]!, effects: changed } } };
+    const checked = validateDefinition(input, PROPOSED_BOUNDS);
+    expect(checked.ok ? [] : checked.problems.map(problem => problem.code)).toContain("capability");
+  }
+  for (const guards of [scope.acts["command"]!.guards.filter(guard => !("capability" in guard)),
+    [{ state: ["active"] }, { capability: { name: "device-command", guard: "allowed", with: { kind: { const: "heater" } } } }],
+  ]) {
+    const input = { ...scope, acts: { ...scope.acts, command: { ...scope.acts["command"]!, guards } } };
     const checked = validateDefinition(input, PROPOSED_BOUNDS);
     expect(checked.ok ? [] : checked.problems.map(problem => problem.code)).toContain("capability");
   }

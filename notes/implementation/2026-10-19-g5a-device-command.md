@@ -13,10 +13,92 @@ and owner answers, and shared runtime/replay code. Target, sensor report
 and owner outcome have separate writers. No device or provider operation
 runs. The delivery is one complete Source head. Three failed gates remain
 evidence. The fourth gate passed at the earlier code/test head. Complete
-review `5396f5ed` requested one command-ordering correction. That correction
-and its new required gate now pass in a fresh view; corrected exact-head
-review remains ahead. The earlier sealed candidate and evidence remain
-frozen forever.
+review `5396f5ed` requested the command-ordering correction. Its gate
+passed, then complete review `0ff93247` found a residual independently
+conditional targetAt write. The current fresh revision addresses that
+finding and two additional self-checks; its new gate is pending. Earlier
+sealed candidates, dependencies and evidence remain frozen forever.
+
+## Conditional coupling correction after complete review
+
+Complete checker report `0ff93247576b4ef9fc8ca384b3f8e6ca128a0cfb`,
+adopted by `a14b9630`, confirms both prior unsafe orderings are refused.
+Its one residual F1 finding conditions only targetAt=self on level=30,
+then submits level=80. The validator accepted the target change while
+the skipped fact write left no command or answer reservation.
+
+The validator now conservatively requires all target/level/targetAt writes
+on a device to carry identical canonical `if` and `unless` forms. It does
+not try to prove implication between different conditions. Native effect
+conditions read the state before the entry's effects, so those shared
+forms execute or skip the writes together. The command remains after all
+relevant writes and has no independent condition. Existing shared `if`
+and shared `unless` cases each prove false leaves the previous target with
+zero commands/reservations, while true records the final target and one
+reserved answer. The no-install-grant path remains unchanged.
+
+Before the gate, two builder self-checks tested other silent exits of open:
+a final-state effect before the command, and an omitted kind guard while
+the granted kinds exclude the actual fan. Both reproduced missing commands.
+The same revision rejects an effect that can make that device final before
+open, and requires a direct act guard `device-command.allowed` on the
+exact device's kind slot. A constant or another subject cannot supply that
+guard. This reuses the existing capability guard and its named refusal;
+there is no new runtime action, role, provider or grant. Without an install
+grant that existing guard still admits the target and opens no command.
+The actual act's guard list is passed to the existing effect validator.
+No maintained declaration or native pin data changes.
+
+Fresh view `/tmp/artroom-builder-g5a-command-conditions-20261019` starts
+from sealed `e0363323c`. The five checker grant leaves and its manifest
+are size/hash-verified and stable-copied to
+`/tmp/artroom-g5a-conditional-checker-evidence-20261019`. Manifest SHA-256
+`d8e37d9f2bb9d1cb273bd294002db59f72aae70d8393669be1ac157e2c5b460d`;
+probe SHA-256
+`d3c80d70d40267c035f55056160534be1c3a11628c3b68094da3087320f063d7`.
+No original frozen source/dependency/evidence view or adjacent checker file
+was edited or executed.
+
+The exact checker probe reproduces one semantic failure and 17 passes
+across four files before correction (original6980 naturally exit1).
+The intermediate condition-only correction passes those 18 cases. The
+owned builder probe then adds the final-state and kind-guard cases: two
+semantic failures/four passes. After all corrections, four owning files
+pass 20 cases, including the six-case temporary probe. Finally the exact
+unchanged four-case checker probe is copied again and passes all four
+against the final code. The temporary probe is removed only after those
+processes close; its exact original and builder variant remain evidence.
+No redundant test file is added to Source. Parent metadata and identity in
+these probes are SCRIPTED; validator, capability, judges and fold are real.
+
+A single control bypasses only the conditional comparison
+`previous && previous.condition !== condition`. The unchanged owning file
+passes five cases before, then four pass and one fails by assertion, and
+source is exactly restored. Original30682 naturally exit0. The standard
+helper removes its scratch JSON on exit; the full control log is retained.
+This is no sweep or frozen baseline rerun.
+
+Derive's source/test compilers pass. The real native device install and
+Grow Site-to-Room cases pass two (original10360 naturally exit0), with
+their prior TEST repository/package/clock/scheduler/setup boundaries.
+Normal Page generation updates the embedded validator; MCP generation
+reproduces its unchanged module. The two freshness files pass four cases
+(original77636 naturally exit0). Logs have prefix
+`/tmp/artroom-g5a-conditional-`, date `20261019`, and suffixes
+`baseline-reproduction`, `corrected-owning`, `builder-selfcheck`,
+`all-coupling-owning`, `exact-checker-probe`, `guard-control`, `types`,
+`native`, `regenerate-page`, `regenerate-mcp` and `assets`.
+
+Private dependencies are an independent-inode APFS COW copy from the
+frozen order-correction view, read only. Audit
+`/tmp/artroom-g5a-conditional-dependency-view-20261019.json`, SHA-256
+`ffa88d3668d4d506a93b70fefb4f02c263f7e3b1d381de3203a090a1935b4926`,
+checks 127 package.json files including embedded metadata and 28 internal
+links (13 workspace links plus executable links), with zero installs and
+unchanged lock/stamp. Four copied Vite caches are cleared before execution.
+This is no tarball integrity claim. All originals are terminal before each
+source/dependency edit. A new original whole gate and one complete exact-head
+review remain ahead; no landing, push or deployment yet.
 
 ## Command-ordering correction after complete review
 
