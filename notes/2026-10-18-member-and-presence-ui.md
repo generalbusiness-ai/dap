@@ -1,14 +1,14 @@
 # Members and presence in the interface
 
-Draft 2, 19 October 2026. Design note for review. It sets a common
+Draft 3, 19 October 2026. Design note for review. It sets a common
 framework for showing a member anywhere in a dap interface, and for
 showing a member's presence from a recorded source now and from the live
 surface later. It fixes what the member element shows, where its data
 comes from, and how an application author gets it with little effort.
 The builder designs the element's appearance and the screens that use it,
 following the design system (section 8). Source facts cite `path:line` at
-main `4d8c878c`. Draft 2 answers F1 and F2 of the checker's review
-`868bbe12` (section 10).
+main `4d8c878c`. Draft 2 answered F1 and F2 of the checker's review
+`868bbe12`; draft 3 answers F3 and F4 of review `d273ec2d` (section 10).
 
 The presence model is the presence declaration of the
 [volatile acts note](2026-10-09-shared-language-volatile-acts.md),
@@ -87,8 +87,9 @@ Each state has one fixed expression, so every surface reads the same:
 | Here, live | A dot and the word "here" when the viewer's current subject is in the member's focus |
 | Note, live | The note, in muted type, after the status |
 | Several sessions, live | One badge, by the declaration's rule: blocked over waiting over busy over available, the union of focus, the first note. Labelled "projection" |
-| Reported, recorded | "in Room A, reported at entry N". No status, no note, no freshness, no lease. "Here" when Room A is the viewer's current subject |
-| Left, recorded | "left Room A at entry N" |
+| Reported, recorded | "in Room A, reported at entry N", where N is the entry of the item's report fact (section 5). No status, no note, no freshness, no lease. "Here" when Room A is the viewer's current subject |
+| Left, recorded | "left Room A at entry N", from the same fact |
+| Report entry unavailable, recorded | "in Room A" or "left Room A", then "report entry unavailable", when the item carries no report fact. Never an item revision shown as an entry |
 | Not reported, recorded | "no arrival reported". Never "absent" |
 | Absent, live | No badge. "Last seen" appears only when a lease end is known |
 
@@ -143,11 +144,22 @@ that removed the member, from one read of the last 100 entries of the
 membership scope filtered to `remove-member` on that member. That is the
 window the projection grammar allows
 (`packages/bytes/src/application-projection-types.ts:29-33`). Budget: one
-window read when a record screen opens, and none per element. When the
-removal is older than the window, the record reads "removal entry not in
-the last 100 entries" and keeps the handle, the kind and the state.
-Example: a member removed 5,000 entries ago shows "removed" on every
-element, and that sentence on the record.
+window read when a record screen opens, and none per element. The read
+has three outcomes, and the record keeps the handle, the kind and the
+state in all of them:
+
+- The window is complete and holds the removal: "removed at entry N".
+- The window is complete and holds no removal: "removal entry not in the
+  last 100 entries". Only a complete captured window may say this,
+  because only a complete window shows that the removal is older.
+- The read is refused, fails, or does not complete within its bounds:
+  "removal entry unavailable". No wider lookup follows.
+
+Examples: a member removed 5,000 entries ago shows "removed" on every
+element and the second sentence on the record. The same member, when the
+viewer's session may not read the membership scope's entries, shows
+"removed" on every element and "removal entry unavailable" on the
+record.
 
 **Declared views render it without a declaration.** A party field or a
 signer field renders as the member element. The view's `actor` field is
@@ -186,8 +198,20 @@ The element takes presence from one of two sources, chosen by the view.
    element's recorded layer waits for it.
 
 **What the recorded item means to the element.** The item holds the
-member and the room item. The room item's `scope` ref holds the room's
-address (`examples/grow/site.ts:16`), and that address is the subject the
+member, the room item, and the fact of the entry that last reported.
+This note requires that third slot of the second G3 head as the source
+contract for B3: a ref slot of type fact, under the site definition, of
+kinds `arrive` and `leave` (`packages/contract/src/definition.ts:70`),
+which each `arrive` and `leave` sets from the entry it writes (the `self`
+form, `packages/contract/src/definition.ts:225`). The room item already
+holds a fact ref this way, `summaryAt` (`examples/grow/site.ts:16`). N
+in every recorded expression is the entry of that fact. An item's
+revision is a count of the entries that changed it
+(`packages/derive/src/fold.ts:164-165`), not an entry position: an item
+opened at entry 8 and moved at entry 108 has revision 2, and neither 8
+nor 2 names the report. The element never shows a revision as an entry.
+The room item's `scope` ref holds the room's address
+(`examples/grow/site.ts:16`), and that address is the subject the
 element compares with the viewer's current scope for "here". A member
 has one room per site. An arrival in Room B after an arrival in Room A
 moves the member to B. A leave names a room; a leave that names a room
@@ -197,9 +221,11 @@ leave A` keeps the member in B, as the site test states
 (`examples/grow/site.test.ts:41-43`). The expressions:
 
 - Reported: the item is open and names a room. "in Room A, reported at
-  entry N", where N is the item's revision entry.
+  entry N", where N is the entry of the item's report fact.
 - Partial: the room item has no `scope` yet. "in Room A", and no "here".
-- Left: the item is closed. "left Room A at entry N".
+- Left: the item is closed. "left Room A at entry N", from the same fact.
+- Report entry unavailable: the item carries no report fact. "in Room A"
+  or "left Room A", then "report entry unavailable".
 - Not reported: no item for the member. "no arrival reported".
 - Unavailable: the read refuses, or the member cannot be resolved.
   "presence unavailable".
@@ -218,9 +244,10 @@ note does not change G3's routing rule.
 
 **Witness for the recorded layer.** Rita arrives in Room A at entry 2.
 One hundred unrelated entries follow. A client opens at entry 103. The
-presence item shows "Rita, in Room A, reported at entry 2". The window
-read holds no Rita row and shows "unknown". Neither shows Rita as absent,
-and no read scans past the window.
+presence item shows "Rita, in Room A, reported at entry 2", from the
+item's report fact, whose entry is 2, and not from its revision, which
+is 1. The window read holds no Rita row and shows "unknown". Neither
+shows Rita as absent, and no read scans past the window.
 
 **Renewal is B4, and nothing today provides it.** Enter, Renew and Leave
 are acts judged under the viewer's session, with the declaration's
@@ -309,13 +336,15 @@ packet comes first and is reviewed before any build.
    change to the grow package's HTML beyond one call.
 3. **B2. Kit-owned member screens.** The member list and the member
    record, with the membership acts offered by standing, the removal
-   provenance read of section 4, and a removed member whose removal is
-   older than the window.
+   provenance read of section 4 with its three outcomes, a removed member
+   whose removal is older than the window, and one whose read is refused.
 4. **B3. The recorded presence layer.** The element's recorded
    expressions, fed by the presence item of the second G3 head. Starts
-   after that head lands. Witnesses: the grow site overview shows who is
-   reported in each room through the element, and the late-opening
-   client of section 5.
+   after that head lands, and requires that item to expose the report
+   fact of section 5; an item without it gives "report entry
+   unavailable", never a scan. Witnesses: the grow site overview shows
+   who is reported in each room through the element, and the
+   late-opening client of section 5.
 5. **B4. Live presence.** The live source and renewal through the
    app-only tool. Waits for the live scope's executor, which plan 033
    does not commission. Not commissioned by this note.
@@ -333,9 +362,25 @@ of the second G3 head.
 - Whether a declared view may name the presence items for a list, or
   whether the service derives "where reported" from the items alone.
 
-## 10. Changes in draft 2
+## 10. Changes in drafts 2 and 3
 
-Review `868bbe12` of draft 1 requested two changes.
+Review `d273ec2d` of draft 2 requested two changes, made in draft 3.
+
+- **F3.** Draft 2 wrote "N is the item's revision entry", which names no
+  readable source. Draft 3 requires the second G3 head's presence item to
+  carry a fact ref to the entry that last reported, in the form the room
+  item's `summaryAt` already uses, takes N from that fact in every
+  recorded expression and in the witness, states that a revision is
+  never shown as an entry, and adds the "report entry unavailable"
+  expression for an item without the fact (sections 2, 5 and 8).
+- **F4.** Draft 2 gave the removal provenance read one sentence for an
+  old removal and none for a read that is refused, fails or does not
+  complete. Draft 3 gives the read three outcomes, reserves "removal
+  entry not in the last 100 entries" for a complete captured window,
+  adds "removal entry unavailable" for the rest, keeps identity and state
+  in all of them, and adds the refused-read example (sections 4 and 8).
+
+Review `868bbe12` of draft 1 requested two changes, made in draft 2.
 
 - **F1.** Draft 1 took the grow site's `arrive` and `leave` window as
   the recorded source and said the site overview already shows who is
@@ -372,7 +417,8 @@ Written by the planner against main `4d8c878c` from the
 (`packages/mcp/browser`, `packages/mcp/src/views`), the membership
 definition (`packages/platform/src/membership.ts`), the grow site
 (`examples/grow/site.ts`, `examples/grow/check/dap.application.json`),
-decision `72c9d5e5` and review `868bbe12` in the workroom, and the gitseq
+decision `72c9d5e5` and reviews `868bbe12` and `d273ec2d` in the
+workroom, and the gitseq
 presence model, whose leased sessions, four statuses, focus and note the
 declaration already follows. Nothing in this note was run against the
 dap runtime.
