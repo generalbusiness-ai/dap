@@ -2,413 +2,277 @@
 
 Request: `5aae9b0ab67909ee49118dc49d465fe881a8037a`.
 Promise: `79f23cb727ca2ae086f49764b6b8ab7a69d2f950`.
-Preparation base: actual Main `426504d89b3140e5b3f769c546e846529cf9f8c3`.
+Base: reviewed Main `2127d5c5cf5545a9983a80bad5cb54fb2c18f48b`.
 
-The chosen delivery is one complete Source head for the capability, its
-manifest and install grant, the Grow scenario, and replay. A split requires
-an explicit decision before filing. The separate durable-presence head may
-take priority. Both precede G5 and P1 to P3.
+G5a adds device-command@1, its bounded native install grant, Grow commands
+and owner answers, and shared runtime/replay code. Target, sensor report
+and owner outcome have separate writers. No device or provider operation
+runs. The delivery is one complete Source head. The first full gate failed;
+the corrected full gate and exact-head review remain pending.
 
-## Preparation findings
+## Decisions and native pins
 
-Preparation inspected the contract capability table, definition declarations,
-capability validation and derivation, preparation judgments, native Core
-preparation, reservation admission, package metadata, and the v2 installer.
-Assertion `f2d1280e04b309ea9997e69439545476586f70b7` asked planner to decide
-the required extensions before implementation. These were the initial gaps:
+Planner decision `f33619936fa8c1435a73a6d6f2d519bea5aff461` specifies owned
+outcome slots, bound-one owner preparations, an existing full MemberRef
+chosen at install, one-hop delegation, and targetAt fact binding independent
+of item revision. An older answer closes its own command only. Runtime and
+replay use the same pure code. No grant means no command opening.
 
-- A capability effect returns records only. It cannot write an item's
-  outcome slots. `StepDerived` also permits records and operations only.
-- Preparation is explicitly new work. The reserved-request declaration
-  admits `tell` messages only. An owner preparation cannot consume the
-  requested bound-one answer reservation through these forms.
-- The manifest already carries capability names and bounds. The v2 install
-  proof explicitly refuses every nonempty capability list. It retains no
-  capability grant or owner binding.
-- The item's revision changes on sensor reports as well as commands.
-  `targetAt` identifies the target-writing entry. Planner must settle which
-  revision binds a command and how a late answer affects the current item.
-- A full owner `MemberRef` names a membership scope. A signed manifest
-  cannot implicitly bind a bare member name to a future install membership.
-  The precise bounded owner binding needs a decision.
-
-The proposed version is `device-command@1`: one open command record per
-target act, final confirmed/refused/unknown answers, a named owner step,
-and one reserved answer per pending command. The command keeps the device,
-target, level, target-writing fact, and exact owner binding. Without an
-install grant, target acts retain their present behavior and open nothing.
-Only the capability writes outcome and outcomeAt. Target and sensor report
-writers remain separate. No physical device or outside operation is claimed.
-
-## Adopted form and cohort decisions
-
-Planner assertion `f33619936fa8c1435a73a6d6f2d519bea5aff461` decides the
-bounded extensions: capability-owned outcome/outcomeAt item effects with
-named validator refusal of ordinary writers; one reserved owner-answer
-preparation per pending command, with all other preparation remaining new
-work; a package capability declaration containing device kinds and exactly
-one owner requirement, with the actual existing full MemberRef chosen at
-install and retained in the authenticated proof; checked Site-to-Room
-delegation; targetAt fact binding independent of sensor reports; late
-superseded answers closing their own records without rewriting the current
-device; and finite command/preparation metadata in the archive owner table.
-Runtime and replay must use the same pure code. No grant means no command
-opening; existing independent target/report behavior remains available.
-
-Planner report `9192ef3fce43017abb91864c0f87cb76de8a5be9`, adopted by
-`84753eff`, allows G5a before S2a and reserves new numbers above S2a's
-unpublished cohort. The reservations are:
+Cohort decision `9192ef3fce43017abb91864c0f87cb76de8a5be9`, adopted by
+`84753eff`, permits G5a before S2a and reserves these numbers:
 
 | Work | Register | Directory | Membership | Rules | Destination |
 | --- | --- | --- | --- | --- | --- |
 | S2a | 14, 15 | 13, 14 | 8 | 7, 8 | 9, 10 |
 | G5a | 16 | 15 | 9 | 9 | 11 |
 
-These numbers are never reassigned, including a reservation not used by
-this head. A gap is allowed; one task never renumbers another's pins.
-Existing shipped IDs retain their exact data and meaning. The implementation
-will register only the new pins it actually needs and keep any unused
-reservation for a later G5a head. The existing Membership 7 may be reused
-where its current forms already suffice. No new pin is supported merely
-because its number is reserved; the pin table must reject duplicates.
+The implemented device-application cohort uses Register16, Directory15,
+Rules9 and Destination11, with Membership7 and Inbox1. Membership9 remains
+reserved. The pin witness contains 49 names: four additions and all 45
+shipped data digests unchanged. Defaults and earlier proof formats remain.
+A reserved but unused number is not supported or reassigned.
 
-Landing order remains durable G3, then G5a. S2a still needs its own passing
-gate and exact review, and S2a plus S2b precede the demo archive slice.
-The G5a preparation checkout has incorporated audited Main `9060775e`.
-G3's exact `3f7cce84` subsequently passed review and landed at Main
-`f6d402b0`; that actual landing is now incorporated here. No G5a code was
-changed during either G3 gate.
+Local-boundary decision `86916ce87e516b14b57842abe44d5a68a3e33b6e`, adopted
+by `ddc894d7`, chooses an explicitly scripted parent proof for local check,
+with real child genesis and preparations. Genuine native issuance is proved
+separately. Durable G3 has landed and is incorporated. S2a still needs its
+own passing gate and review; S2a plus S2b precede the demo archive slice.
 
-## Grant metadata foundation
+## Command, answer and reservation
 
-The first implementation checkpoint defines a bounded device grant with
-the exact capability ID, one full owner MemberRef, one-to-three device
-kinds, the root definition and at most eight allowed definitions. Native
-creation metadata version 2 carries that grant and a one-hop delegation
-flag, outside the application's domain fields. A granting root must match
-the recorded root definition. A receiving child must match the allowed
-definition list and retains the exact owner, bounds and full membership.
-The native send form forwards the grant once with delegation disabled;
-unlisted children receive the existing membership context without a grant.
-Domain fields cannot select this metadata. Version 1 remains unchanged.
+A target-writing member transition sets target, level and its own targetAt,
+then opens one command for the bound device through a declared capability
+effect. The record is keyed by that entry and captures device, kind, target,
+level, targetAt and the granted full owner. Opening clears the previous
+outcome and outcomeAt. Without an install grant, target acts open nothing.
+An outside-granted kind is refused as device-kind-ungranted.
 
-The pure native genesis/send witness now passes six cases, including a
-same-definition second hop that cannot inherit the grant, later sends from
-retained genesis, an unlisted child, and mismatched owner membership
-incarnation/root/child definition refusals before any child send. This
-fixture labels its parent metadata and authority as scripted: no native
-installer emission or actual existing-owner membership check is proved yet.
-Log `/tmp/artroom-g5a-grant-context-first-20261019.log`, original 47470
-closed exit 0. Both derive compiler targets pass in the matching
-`grant-context-types-first` log.
+Only the capability owns the optional mutable outcome/outcomeAt pair. Its
+answer names the exact full local command fact and closes the command once
+as confirmed, refused or unknown, recording description and answerAt.
+For the current target, it writes outcome and its answer position. An older
+answer closes its own record without changing the current device. A sensor
+report may advance the item's revision independently. Missing answers leave
+outcome and outcomeAt empty.
 
-One control removes only the send relay's delegation flag check. The
-unchanged same-definition second-hop assertion fails (five pass, one fail).
-Exact restoration returns six passing cases. Original control 4368 closed
-exit 0; driver `/tmp/artroom-g5a-onehop-control-20261019.py` and matching
-directory retain both runs. Its baseline log is copied from the preceding
-exact-source pass, not another baseline execution. Source SHA-256
-`bcf61ac1027db310d0dfa956b790a3d7ee6f8d391d6bd890024d4890af26880b`;
-unchanged test SHA-256
-`82124643f32b983b88c9f6947eff6ba9ad33bd17ffc55ab7c09702b18e0d9759`.
-This is one targeted control, not a mutation sweep.
+The validator names capability-slot-owned for ordinary act, receive, timed
+or opaque native-rule writers. Target writers must set their own targetAt
+and open a command for that same subject. Generic derived-effect checks
+also enforce the declared owned slots, answer kind, optional/mutable shape,
+valid value, local answer position and at most three derived effects.
 
-The next checkpoint implements command records, owner preparation, slot
-ownership and reserved-answer admission. Native installation and Grow
-integration are still required before the complete Source head is filed.
+The owner preparation uses current native signing identity in the recorded
+membership, within its scope and validity window. The trusted capability
+table selects scope-granted admission. The intent and transport cannot
+select it. Actual role actions remain in the recorded grant; no target
+permission or invented answer action is required. Revocation, wrong key or
+incarnation, removed member, inactive controller, scope, expiry, age and
+high-water guards remain active.
 
-## Command and answer checkpoint
+Every open command reserves one complete bounded answer entry. Only the
+preparation naming that pending command, closing its record and moving
+decided from zero to one spends the reservation. Other preparations remain
+new work. Whole-scope admission still enforces its ceiling for settlements.
+The preparation index is derived history; no separate retained input is
+needed. Finite archive metadata names command records and answer
+preparations, with no outside operation owner. Installed Grow archive/export
+admission remains S2b work.
 
-The native pure code opens one command keyed by its target-writing entry.
-It reads the authenticated grant from exact retained genesis, captures the
-bound device after ordinary target writes, and clears its previous outcome.
-The owner answer names the full local command fact. It closes that record
-once as confirmed, refused or unknown. Only the current target's answer
-sets outcome/outcomeAt; an older answer closes its own record only. Sensor
-reports can advance the device revision independently.
+## Native install and delegation
 
-The validator names `capability-slot-owned` for ordinary act, receive, timed
-or opaque native-rule outcome writers. Only the optional mutable outcome
-and outcomeAt pair can be capability owned. Target/level writers must also
-write their own targetAt and open the same subject's command. The native
-version declares the finite answer refusals and three derived effects at
-most for opening or answering.
+The signed package declares device kinds in sorted order and owners=1.
+It declares no member identity. At most eight package definitions may use
+the finite capability. Install chooses a full existing MemberRef and checks
+its membership, active member/key and controller standing. An owner who is
+also the signer is served by the actual grant observation; the native
+observation rules do not invent a second own-member read.
 
-A scope-granted answer still requires current signing identity in the same
-membership, within its scope and validity window. It does not require the
-owner's role to contain a target-setting action or an invented answer
-permission. The trusted capability table selects this route; neither the
-intent nor a transport can select it. The recorded grant retains its actual
-role actions. Native authority and strict replay call the same grant guard.
+Rules retains the owner, bounds, root and allowed definitions in the
+canonical genesis wrapper, within its existing twelve value slots. The
+wrapper is at most 20 KiB and its device grant at most 4096 bytes. Directory
+checks exact membership, root and permitted declarations, then emits the
+reserved version2 creation context. The root may relay that grant once to
+a listed child, with delegation disabled. Domain fields cannot choose it.
+Legacy/version1 metadata keeps its earlier meaning.
 
-One open command reserves one bounded entry, with its full Amount. The
-answer replaces existing keys and slots and retains no separate input.
-Only a preparation naming the pending command, moving its decided count
-from zero to one and closing that exact record, spends the bound-one
-reservation. All other preparations remain new work. Whole-scope admission
-continues to enforce its ceiling for settlements too.
+SDK and MCP retain the full owner in the signed install selection. CLI
+supports the explicit device-application cohort and package-install
+`--owner <full-member-JSON>`. The host accepts this finite native capability,
+not package-supplied capability code. The new destination origin policy
+accepts the exact new native factory; the old destination refuses it.
+Origin admission is no publication or outside-write claim.
 
-Finite archive classification metadata names only command and answer.
-It adds no device operation owner. The owning SQLite metadata test uses a
-synthetically damaged record row, explicitly proving classification only;
-installed Grow archive/export admission remains S2b work.
+## Grow and local check
 
-Evidence at this checkpoint:
+Grow's set-vent, set-fan, set-heater and authorize open commands for their
+target-writing device. Device and layers projections keep outcome separate
+from target and reported values. Portable fact kinds accept known native
+capability steps, including device-command@1:answer, and refuse unknown
+capability, version and step names.
 
-- Command/validator file: five passing cases in
-  `/tmp/artroom-g5a-command-reservation-20261019.log`; original 68657 closed
-  exit 0. An earlier run with the existing preparation file passed ten
-  cases together. Parent creation metadata and membership grants are
-  explicitly scripted in these pure fixtures; native installation and
-  actual Membership are not yet proved.
-- Identity guard: three passing cases, including the new scope-granted
-  current-identity table, in `current-identity-20261019.log`; original
-  39241 closed exit 0. Revocation, removed member, wrong key/incarnation,
-  scope filter, expiry, inactive controller, age and high-water checks stay.
-- Archive metadata: five passing native SQLite cases in
-  `/tmp/artroom-g5a-archive-command-metadata-20261019.log`; original 4444
-  closed exit 0. The device row is synthetic; this is no integrity or
-  replay proof.
-- Derive's two, Scope's three and Replay's three compiler targets pass in
-  the corresponding command/reservation/identity/archive type logs.
-  Initial retained failures were a ref-effect field typo, an incomplete
-  preparation union narrowing, a widened legacy effect API that broke
-  direct callers, a missing declaration-name union member, and a window
-  string used where the native Window object is required. Those were fixed.
-  A first focused invocation used the package config from the wrong root
-  and found no tests; the corrected root-project selection passed.
+The maintained fault scenario replaces all eight external owner labels
+with native preparations. Its 222 steps retain all 100 benches and the
+original fault, restoration, authority and stale-request journey. They
+check command closure, exact targetAt/outcomeAt, named non-owner,
+unknown/closed refusals and an exact answer retry. It reaches head169 with
+eight accepted preparation entries. The same full journey without answers
+replays through161: every command stays open and every outcome stays empty.
+The small no-grant witness separately opens no record and refuses an answer
+as device-command-ungranted.
 
-One targeted owner control changes only the answer's full MemberRef
-comparison to a member-name comparison. The unchanged foreign-incarnation
-assertion fails because the mutant writes an answer. Exact restoration
-returns all five command cases to passing. Driver
-`/tmp/artroom-g5a-owner-control-20261019.py`, matching directory, original
-44132 closed exit 0. Its baseline is a copied preceding exact-source pass,
-not a fresh baseline execution. Source SHA-256
-`bbda040a70ee70ded921f20788c1b5c78ac14abe539fd9df7ec35606a01df9ee`;
-unchanged command-test SHA-256
-`c3a84a537d6b7db30ee83d1b0a6025c566b817b2b96497d2d4ef3c8ce7b3284d`.
-This is one targeted control, not a sweep.
+Local check scripts its parent creation draft before sealing, then runs
+actual Core/SQLite child genesis and preparations. It anchors both parent
+facts explicitly: creation0 and confirmation1. Anchoring only creation
+correctly failed when proving confirmation required replay of that scripted
+parent genesis. The actual child journal and preparations are replayed.
+The report exposes the full owner and both anchors, labels the boundary as
+scripted rather than a native install, and cites the genuine install
+witness. Local TEST identity grants are trusted as recorded. No sealed
+journal rewrite or production issuer is introduced.
 
-No G5a gate, exact-head review, production install/grant, complete strict
-replay, physical device execution or deployment is claimed. The next work
-is the new native install cohort, existing-owner observation, Grow command
-forms and fault scenario, real Core/SQLite admission and strict replay.
-The latest accepted Main is expert-note landing `2127d5c5`; its audit
-`0e776482` was read in full, including its original merge-process evidence
-limit. That later prose-only Main is not incorporated at this checkpoint.
+The runner supports native prepare steps, exact named refusal expectations,
+capability-record assertions, full `$fact` and saved receipt `$position`.
+Exact preparation retries return their original receipt and count once.
+A custom factory cannot silently ignore a requested scripted grant. The
+independent MCP read fixture retains its real local Site/Room births and
+scripted authority, with no install grant; it removes obsolete owner labels.
 
-## Native install checkpoint
-
-The opt-in `device-application` cohort uses Register 16, Directory 15,
-Rules 9 and Destination 11. It reuses Membership 7; Membership 9 stays
-reserved. The 49-pin literal witness adds only those four names, preserves
-all 45 shipped data digests and leaves default founding unchanged. Rules 5
-and 6 keep their earlier package proofs and capability refusal behavior.
-
-The signed v2 package declares only device-command@1, one-to-three ordered
-kinds and one owner requirement. At most eight package definitions may
-use the capability. The new install act chooses a full existing owner
-MemberRef and checks its current membership and active key. For an owner
-who is also the signer, native observation rules serve this member from
-the actual judged key observation; no second member read is invented.
-
-Rules retains the owner, bounds, root and allowed definitions in its fixed
-canonical genesis record. Its existing twelve value slots stay within the
-native bound. The wrapper allows at most 20 KiB, including a device grant
-of at most 4096 bytes and the existing bounded genesis fields. Directory
-checks the exact membership, root and catalog declarations before its
-native create emits version 2 context with one-hop delegation enabled.
-The new destination's origin policy accepts that exact factory and grant;
-the old declared destination refuses the new factory. Origin admission
-alone is not a publication or outside-write claim.
-
-The SDK has a separate device install selection with an explicit full
-owner. MCP retains that selection in the signed request's meaning. CLI
-supports the explicit cohort and `--owner <full-member-JSON>` for package
-installation. The host accepts only this finite native capability beside
-ordinary packages. It runs no package-supplied capability code.
-
-The owning native witness uses genuine Register, Directory, Membership,
-Rules, Destination and declared child scopes, production authority and
-Core, actual SQLite, native creation and MCP custody. Repository creation,
-Git/package HTTP, clock, scheduler and setup read access are labelled TEST
-fixtures. It demonstrates:
-
-- A missing owner is refused by name before install effects. A valid
-  existing owner is retained in the actual grant observation and native
-  creation context, with exact capability, kinds and definition list.
-- A command opens its native record. Sensor reports advance the device
-  revision without changing its targetAt binding.
-- The actual child starts under a sixteen-entry fixture ceiling. Its
-  native creation packet is held until that bound is set, then delivered
-  exactly to the actual receiver. This is an explicit scheduler action,
-  not an outbox retry-timing witness.
-- At the capacity edge, SQLite shows one pending owner answer and Used
-  plus Reserved equal to sixteen. A new report is refused with scope-full
-  and changes no head or reservation. Removing the target action, deleting
-  cached package content and evicting the child still allows the owner to
-  answer on current identity and the installed grant. The recorded role
-  actions remain exactly membership.manage; no answer action is invented.
-- The answer closes that exact command, changes decided from zero to one,
-  releases its reservation, leaves Used plus Reserved at sixteen and keeps
-  the independent reported value. Its new outcome names its answer entry.
-- Rules, Directory, device and Membership journals pass strict replay with
-  proven grants, the actual native platform table and production capability
-  code, without a device simulator or provider execution.
-
-Replay has one bounds argument for every dependency. It uses the native
-shared defaults for these four runs, including Register and Destination
-proof histories. The child's smaller sixteen-entry admission edge is
-proved directly by actual SQLite counters; this replay does not claim to
-check that smaller ceiling. Attempts to impose sixteen globally failed at
-Register's genuine repository-creation duty in entry 1. An exploratory
-128-entry child/global replay failed at Destination's genuine genesis duty.
-Both are retained, not represented as successful quota replays. No anchor
-or grant-as-recorded exception was used in the passing strict native runs.
-
-Current evidence:
-
-- `/tmp/artroom-g5a-native-device-capacity-origin-replay-20261019.log`:
-  original 16737 closed exit 0, one native case with the four strict
-  journal replays and both factory-origin checks. Earlier native passes
-  55853 and 85890 are retained; they are not an extra gate.
-- `/tmp/artroom-g5a-device-cohort-focused-20261019.log`: original 27066
-  closed exit 0, three files and ten cases for native pin literals, explicit
-  CLI cohort custody and pure command forms.
-- `/tmp/artroom-g5a-native-device-cohort-types-20261019.log`: original
-  12603 closed exit 0, Platform's two and Scope's three compiler targets.
-  Derive's two targets also pass in the native-checkpoint-derive log.
-  Client, MCP and CLI owning compiler targets passed during wiring.
-
-Retained integration failures exposed a missing v2 fixture projection,
-an attempted thirteenth installation value slot, an incorrect expectation
-of a separate own-member observation, missing listed-version/answer-kind
-capability implementation, use of a full object where MCP resolves a scope
-ID, fixture bounds installed after the child's construction, and a held
-send whose retry time the finite scheduler had not advanced. These were
-corrected in source or fixture; no test assertion was weakened to permit
-an incorrect owner, budget or answer. The quota replay limits above remain
-explicit. The first MCP compiler run also caught an insufficiently narrowed
-owner option; reparsing the already owned device selection fixes it.
-
-## Grow and local scenario evidence
-
-Planner report `86916ce87e516b14b57842abe44d5a68a3e33b6e`, adopted by
-`ddc894d7`, chooses an explicit developer-only scripted parent creation
-proof, followed by actual Core/SQLite child genesis and native owner
-preparations. Local replay names both parent facts as anchors: creation 0
-and confirmation 1. Proving confirmation 1 by replay would also replay the
-scripted parent genesis, so anchoring creation alone correctly failed its
-send comparison. The actual child journal and its preparations are replayed.
-No sealed journal is rewritten. The report exposes both full anchors and
-owner, labels this as scripted rather than a native install, and cites the
-separate genuine native install/Membership witness. TEST authority remains
-explicit and replay trusts those local identity grants as recorded.
-
-The generic scenario runner now supports native `prepare` steps, named
-refusal expectations and capability-record assertions. `$position` resolves
-a saved accepted receipt position; `$fact` resolves its full fact. Exact
-preparation retries return the original receipt and count once. The local
-owner is an explicit TEST actor with no target-setting role actions. A
-custom fixture cannot silently ignore a requested device grant.
-
-Grow declares the finite capability with fan, heater and vent bounds and
-one owner requirement. Set-vent, set-fan, set-heater and authorize open
-commands for the target-writing subject. The Device slots outcome and
-outcomeAt are capability owned. The device and layers projections expose
-the outcome separately from the target and report. The portable fact-kind
-reader accepts only known native capability steps, including this answer;
-unknown capability, version and step names remain invalid.
-
-The maintained fault scenario replaces all eight out-of-journal owner
-labels with native preparations. Its 222 steps include command closure,
-exact outcome/outcomeAt and targetAt references, non-owner/unknown/closed
-named refusals, and an exact answer retry. All 100 benches and the original
-fault, restoration, authority and stale-request journey remain. It reaches
-native head 169 with eight accepted preparation entries. A second run of
-the same journey omits all owner answers: every command remains open,
-outcome and outcomeAt stay empty, and replay is consistent through 161.
-The no-grant small fixture separately opens no command and refuses answers
-as device-command-ungranted. The independent MCP read fixture also removes
-its obsolete external owner labels; it keeps its native Site/Room path,
-scripted authority and no install grant.
-
-The maintained Grow native Worker witness now uses the new cohort and a
-real existing owner. Native Directory creates Site with delegation enabled;
-Site creates Room with the same grant and delegation disabled. Set-heater
-opens records with actual SQLite owner reservations. After an intervening
-sensor report, a late answer closes its older command without filling the
-newer target's outcome. The current answer writes its own outcome and
-releases its reservation. The same witness classifies sensor evidence,
-raises an alert and takes authorize: its command targets the heater subject,
-reserves one answer and releases it on confirmation. The issued-session
-projection returns independent target, reported and outcome values with
-the actual answer position. Site and Room then pass strict proven-grant
-replay, without anchors or grants-as-recorded. This is the real install
-and delegation witness cited beside the local scripted boundary.
-
-Acceptance witnesses:
+## Acceptance witnesses and limits
 
 | Requirement | Owning witness |
 | --- | --- |
-| Set-heater and authorize open/reserve commands | `packages/scope/test/grow-owned-scopes.test.ts`, actual native install and SQLite |
-| Owner answer closes/writes, revision-independent report and late answer | Same Grow Worker witness; `packages/derive/test/forms-device-command.test.ts` also covers unknown as final |
-| Non-owner and foreign full MemberRef refused | Pure command forms and local scenario witness; owner control above distinguishes bare-name comparison |
-| Ordinary outcome writers refused as capability-slot-owned | Pure command validator variants for act, receive, timed and opaque native rule |
+| Set-heater and authorize open and reserve commands | `packages/scope/test/grow-owned-scopes.test.ts`, genuine native install and SQLite |
+| Owner closes and writes; reports and late answers stay independent | Same Grow Worker witness; pure command forms also cover unknown as final |
+| Full granted owner only, with current identity | `packages/derive/test/forms-device-command.test.ts`, `forms-grant.test.ts`, native install/restart witness |
+| Ordinary outcome writers refused by name | Pure command validator cases for act, receive, timed and opaque native rule |
 | Unknown/closed and missing/outside grant named refusals | Pure command forms and `packages/cli/test/application-scenarios.test.ts` |
-| Fault journey replays, missing owner answers stay missing | `packages/cli/test/application-examples.test.ts`, labelled local scripted parent; actual check command below |
-| Reserved answer admitted while a new act cannot fit | `packages/scope/test/device-command-install.test.ts`, actual sixteen-entry SQLite edge and restart |
+| Fault journey and missing answers replay | `packages/cli/test/application-examples.test.ts`, explicitly scripted local parent; actual check-command run |
+| Reserved answer fits when a new act does not | `packages/scope/test/device-command-install.test.ts`, actual sixteen-entry SQLite edge and restart |
 
-Current focused evidence, with each original process closed:
+The two Worker witnesses use real native scopes, production authority,
+Membership, Core and SQLite. Repository creation, Git/package HTTP, clock,
+scheduler and setup read access are TEST fixtures. Native Directory creates
+Site with delegation enabled; Site creates Room with delegation disabled.
+Issued-session projections read the actual answer. Site/Room and the
+separate Rules/Directory/device/Membership histories pass strict replay
+with proven grants, production code and no anchors.
 
-- `/tmp/artroom-g5a-grow-scripted-preparations-focused-20261019.log`:
-  original 17760, exit 0; seven files, 29 cases (Grow forms, CLI scenarios
-  and local scope, portable projection reader).
-- `/tmp/artroom-g5a-grow-unanswered-and-routing-20261019.log`: original
-  51502, exit 0; the selected Grow case includes the complete unanswered
-  run. Its global title filter skipped the MCP routing cases; those were
-  subsequently run in the complete owning selection below.
-- `/tmp/artroom-g5a-grow-native-outcome-projection-20261019.log`: original
-  17618, exit 0; one maintained Grow native install/delegation/reservation,
-  projection and two strict journal replays.
-- `/tmp/artroom-g5a-grow-mcp-inventory-and-reads-20261019.log`: original
-  55561, exit 0; four files, nine cases. The documented install schema and
-  inventory are derived from the actual tool, including owner selection.
-- `/tmp/artroom-g5a-grow-dap-check-20261019.log`: original 16523, exit 0;
-  actual check-command port over prepared maintained files, both scenarios,
-  eight native preparations and both explicit parent anchors. No network,
-  admission, production owner or device process runs in this check.
-- CLI's three and Scope's three owning compiler targets pass in the
-  corrected scripted-preparations and Grow native/authorize type logs.
+The quota witness sets its actual child's sixteen-entry ceiling before
+exact native creation delivery. It measures Used+Reserved at sixteen,
+denies a new report without changing state, removes the owner's target
+permission, deletes cached package content and evicts the child. The owner
+still answers on current identity and its installed grant. Closure releases
+one reservation while preserving the ceiling and independent report.
+Replay uses shared default bounds for its foreign Register/Destination
+histories; it does not check that smaller child ceiling. Earlier attempts
+to impose sixteen globally failed at Register's real duty; 128 globally
+failed at Destination's duty. Those failures remain evidence.
 
-Retained local integration failures were missing parent proof/birth ports,
-insufficient parent anchors, pretty JSON exceeding the source-file ceiling,
-a sensor success report with a forbidden nonempty description, and an ISO
-millisecond timestamp where native timestamps omit milliseconds. These
-were corrected without widening bounds or weakening assertions. One Worker
-attempt stopped at the sandbox's denied loopback listener; the permitted
-local-runtime runs above passed and performed no deployment. The separate
-wrong CLI workspace-name type command did not run compilation; the exact
-package name was then used successfully. No dependency install was used.
+Focused evidence before the first gate, each original terminal exit0:
 
-The delivery remains one complete Source head. Implementation and focused
-checks are complete; the full gate and exact-head review are still pending.
-The expert-note-only Main `2127d5c5` is incorporated before the gate.
-No G5a landing, push, deployment, physical device action or S2b archive
-export admission is claimed.
+- Native capacity/origin/replay: original16737,
+  `/tmp/artroom-g5a-native-device-capacity-origin-replay-20261019.log`.
+- Native Grow delegation, both command reservations, projection and two
+  proven replays: original17618, `grow-native-outcome-projection` log.
+- Seven owning local files/29 cases: original17760,
+  `grow-scripted-preparations-focused` log. The complete unanswered run
+  passed in original51502; its title filter skipped MCP routing, later
+  covered in the complete owning selection.
+- Four MCP inventory/read files/nine cases: original55561,
+  `grow-mcp-inventory-and-reads` log. Actual MCP metadata generates the
+  documented install schema and catalogue.
+- Actual check-command over both maintained scenarios: original16523,
+  `grow-dap-check` log, eight preparations and both explicit parent anchors.
+- Pure command/reservation five cases: original68657; current-identity
+  three cases:39241; finite archive classification five cases:4444. The
+  archive row is synthetic and proves classification only.
+
+Log stems above have prefix `/tmp/artroom-g5a-` and suffix
+`-20261019.log`. Owning compiler targets also passed. No new G5a browser
+screenshot is claimed; projection observations are programmatic SDK/MCP
+reads. There is no simulator, device/provider execution or deployment proof.
+
+Two targeted controls distinguish plausible wrong behavior. Removing only
+the delegation check fails the unchanged second-hop assertion, then exact
+restoration passes six cases (original4368, onehop-control driver). Replacing
+full owner comparison with bare member name fails the unchanged foreign
+incarnation assertion, then restoration passes five (44132, owner-control).
+Their baselines copy preceding exact-source passes, not fresh baseline
+executions. Historical one-hop source/test SHA-256:
+`bcf61ac1027db310d0dfa956b790a3d7ee6f8d391d6bd890024d4890af26880b` /
+`82124643f32b983b88c9f6947eff6ba9ad33bd17ffc55ab7c09702b18e0d9759`.
+Historical owner source/test SHA-256:
+`bbda040a70ee70ded921f20788c1b5c78ac14abe539fd9df7ec35606a01df9ee` /
+`c3a84a537d6b7db30ee83d1b0a6025c566b817b2b96497d2d4ef3c8ce7b3284d`.
+Neither is a mutation sweep.
+
+## First gate and correction
+
+First gate head461c1e3fca3a0dbe9586c5488bf73456de96d648,
+tree7556440081af4621993e4986a0e5f3b044a67b30: original80923 naturally
+closed exit1. It passed whitespace and full typecheck, skipped install,
+and reported 1929 passed, ten failed and three skipped cases across402
+files. Two failures were stale generated MCP/Page assets. Eight were native
+timeouts: seven at five seconds and dense proof residency at sixty.
+Test step elapsed1285.6s, CPU1512.3s; typecheck8.5s, CPU32.6s. A brief
+read-only Worker stack sample was taken after failures; these are observed
+run costs, not clean performance benchmarks. No outer timing wrapper was
+used and no source/dependency edit occurred while the original ran.
+
+Raw logs: `/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.HoVDOGeXRq`.
+Outer log: `/tmp/artroom-g5a-complete-gate-20261019.log`. The original
+process receipt, machine/load metadata and two-second sample are retained.
+No interruption or infrastructure dismissal is claimed.
+
+The unchanged eight-case selection reproduced seven timeouts (43216);
+application establishment passed, while the alarm case still timed out.
+Lending alone also timed out at five seconds (50443). A diagnostic-only
+30-second allowance completed its unchanged assertions in10.53s (5053).
+That diagnostic is not gate acceptance.
+
+A clean separate Main2127 checkout, with private version-identical COW
+dependencies, passed Lending at its normal limit in3.73s (94359).
+The new validator had scanned every item slot for every opaque native
+rule, including definitions without the capability. The fix limits those
+device-specific cross-effect scans to definitions declaring device-command.
+For legacy validation, repeated ownership work changes from rules times
+slots to one constant check per rule. Item-slot validation still rejects
+unlisted ownership, and ordinary writer/runtime protections remain active.
+Lending then passed its unchanged limit in3.77s (34252), and all five owned
+command-form cases passed. Shared-machine timings support the diagnosis;
+they are not a general performance guarantee.
+
+After that fix, the eight-case selection had seven passes and one different
+Lending failure: no native query reply (85898). The same selection passed
+all eight on Main (61011). That interaction remains unexplained and is
+retained; it is not called a baseline defect. The existing broad stability
+request1d3a13e3 is not claimed complete.
+
+Both generated assets were rebuilt by their owning scripts. Freshness
+checks passed four cases in two files (26800). Lending and both genuine
+native device/Grow witnesses then passed together at their original limits
+(95626). No test deadline or assertion was changed. Derive's two compiler
+targets and all five ownership cases also pass after the fix. The corrected
+full gate is still required before review.
 
 ## Dependency preparation
 
-The fresh checkout owns an APFS copy-on-write dependency view copied from
-the frozen G3 candidate. Only the new view's 13 workspace links and Vite
-caches were changed. All 106 maintained external manifests and four named
-nested manifests have equal bytes and different inodes from the donor.
-There were no installs and no lockfile change. The donor remains frozen.
+The G5a checkout owns an APFS COW dependency copy from the frozen G3 view:
+106 maintained and four named nested manifests have equal bytes and
+different inodes; thirteen workspace links are relative and local. There
+were zero installs and no lockfile change. The donor remains frozen and
+was never executed for this work. This verifies manifests and links, not
+full tarball integrity.
 
-Audit: `/tmp/artroom-g5a-dependency-view-20261019.json`, SHA-256
+Audit `/tmp/artroom-g5a-dependency-view-20261019.json`, SHA-256
 `3fcdee9504104a0f7040b357b7851e2820044edfe05fd17a9e849e9e37ea70bc`.
-Lock SHA-256:
+Lock SHA-256
 `3546b5384c9245fb646c4f7c22cabde0f4351b05dfcec704d1bdeb170666361a`.
-This preparation is not implementation or acceptance evidence. No G5a
-implementation or tests had run when this section was written.
+
+The separate Main comparison copies only the current private dependencies,
+with110 identical manifest bytes/different inodes and thirteen local links,
+zero installs, and its own cleared Vite caches. Its audit is
+`/tmp/artroom-g5a-baseline-main-dependency-view-20261019.json`, SHA-256
+`2bf06b9fca26f30eb69502f84b6e287c7398e9763370ab1ab016c97de51d90a5`.
+Every listed original diagnostic process is terminal. Frozen earlier
+candidate, dependency and evidence views were neither changed nor executed.

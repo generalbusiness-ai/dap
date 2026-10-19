@@ -1,6 +1,6 @@
 /** Effect forms, their conditions, and the rule that no two effects of one list set one thing (scope contract, sections 6.3, 6.6 and 6.7). */
 
-import type { Bounds, EffectForm, FieldType } from "@generalbusiness/dap-contract";
+import { DEVICE_COMMAND, type Bounds, type EffectForm, type FieldType } from "@generalbusiness/dap-contract";
 import { canonicalize } from "@generalbusiness/artroom-bytes";
 import { LAST_MS } from "../time.ts";
 import { isObject, isValue } from "../values.ts";
@@ -247,6 +247,9 @@ function exclusive(a: Rec, b: Rec): boolean {
 export function effects(d: Defining, v: unknown, path: string, ctx: Ctx, later: boolean): void {
   const { bounds, bad, list } = d;
   const set: (Sets & { written: Rec })[] = [];
+  // Unlisted ownership is already refused by item-slot validation. Legacy
+  // definitions need none of the device-specific cross-effect scans.
+  const deviceCommands = d.capabilities.get("device-command") === DEVICE_COMMAND;
   let commands = 0;
   const deviceTargets = new Map<string, boolean>(), commandSubjects = new Set<string>();
   list(v, path, bounds.effects).forEach((e, i) => {
@@ -255,13 +258,13 @@ export function effects(d: Defining, v: unknown, path: string, ctx: Ctx, later: 
       // `if` or `unless`. A timed rule's effects are total (section 6.4), and no rule is shown to be total, so a timed rule holds
       // none. Nothing is derived from a mark: it conflicts with no written effect, and what it can set is not counted here (the
       // contract's point R1-59).
-      if ([...d.types.values()].some(type => [...type.slots.values()].some(slot => slot.capability))) bad("capability-slot-owned", at(path, i), "an opaque rule effect cannot prove it avoids capability-owned slots");
+      if (deviceCommands && [...d.types.values()].some(type => [...type.slots.values()].some(slot => slot.capability))) bad("capability-slot-owned", at(path, i), "an opaque rule effect cannot prove it avoids capability-owned slots");
       else if (ctx.timed) bad("timed-partial", at(path, i), "a timed rule's effects are total, so none is a mark");
       // Section 17.2, "What a mark may start": the mark may state `most`. `holds.ts` reads it, wherever the mark stands.
       else mark(d, e, at(path, i), "effect", [], ["most"]);
       return;
     }
-    if (isObject(e)) {
+    if (deviceCommands && isObject(e)) {
       const cap = e["capability"];
       if (isObject(cap) && cap["name"] === "device-command" && cap["do"] === "open") {
         if (++commands > 1) bad("capability", at(path, i), "one target-writing entry opens at most one device command");
