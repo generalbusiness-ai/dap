@@ -247,6 +247,7 @@ checks:
 | Explicit order | A handler with no `order` entry (`order-undeclared`). A `reads` outside a group (`reads-outside-group`) | By construction |
 | Relevant dependency | In a group, a sequenced input that neither reads a member nor belongs to a definition some sequenced input reads (warning `sequenced-for-nothing`). An unsequenced act whose items a member reads (`unsequenced-read-target`) | By construction |
 | Cycle acknowledgement | A cycle in the package graph with no edge that carries `spacing`, a `late` bound, or a condition on state (`cycle-unacknowledged`). The storm bound is computed from `spacing` | By construction for the structural condition |
+| Handler forms | `late` or `spacing` on an advisory handler, which has no result to refuse into (`late-on-advisory`, `spacing-on-advisory`) | By construction |
 | Reachability | A state no row enters or leaves. A final state no row reaches. A `states` list that names a state no effect produces (warning `unreachable-state`) | Warning |
 | Derivation | A patch that fails to apply or whose result does not validate (`patch-fails`). A patch that touches a row not marked open (`sealed-row`). A parameter outside its bounds (`parameter-bounds`) | By construction |
 | Projected bound use | The entries and items each creation path can open, against the capabilities' bounds | Report |
@@ -313,11 +314,19 @@ entry's time travels in the delivery's cause and is readable as
 
 The judgment order of a handler is fixed: dispatch by class, name,
 sender kind, and `from`; then `spacing` (4.2); then `late`; then the
-handler's guards, effects, sends, and attention as today. A late
-delivery with no `then` is refused with `reason`. Nothing is written,
-and the sender's `refused` clause receives the reason. A late delivery
-with `then` applies the branch's effects, sends, and attention instead
-of the handler's. The handler's guards are not evaluated. The entry is
+handler's guards, effects, sends, and attention as today. `late` is a
+form of a request handler, class `tell` or `relate`. An advisory
+handler (`index`, `notify`) has no sends, attention, result, or
+decision, and the validator refuses `late` on one (`late-on-advisory`,
+section 3). A late delivery with no `then` is refused with `reason`:
+none of the handler's effects, sends, or attention is written, and the
+delivery is decided as every verified request delivery is decided today
+(contract, section 7.4), with one deciding entry, decision `refused`,
+reason `{ code: "late", name: reason }`, and one authenticated result
+send, through which the sender's `refused` clause receives the reason.
+A duplicate is answered from that entry. A late delivery with `then`
+applies the branch's effects, sends, and attention instead of the
+handler's. The handler's guards are not evaluated. The entry is
 `applied` and carries `late: { reason }`. A delivery that is not late is
 judged by the handler alone. Never both for one delivery.
 
@@ -345,7 +354,11 @@ spacing?: { seconds: number };
 A delivery that arrives within `seconds` of the previous applied
 delivery from the same sender scope, for the same message and handler,
 is refused with the reason `spacing`, and the sender's `refused` clause
-fires. An entry applied through a `late` branch counts as applied. The
+fires. The refusal keeps the delivery's deciding entry and its one
+result, as a late refusal does (4.1). `spacing`, like `late`, is a form
+of a request handler only; the validator refuses it on an advisory
+handler (`spacing-on-advisory`). An entry applied through a `late`
+branch counts as applied. The
 last applied time per sender and message is bookkeeping derived from
 the journal, so replay recomputes it. A cycle whose edge carries
 `spacing` has a storm bound of one round per `seconds` per sender, and
@@ -511,8 +524,11 @@ note follows the scenario form.
 
 The sequenced note (request 29e9024d) adopts, in its draft 4, the forms
 this note depends on: finality of a member's positions read from the
-order journal; refusals and expiries recorded as holes in the order
-scope, never in a member's journal; a member's judgment written as a
+order journal; a refused act and an expiry recorded as holes in the
+order scope, and a delivery decided `refused` or `superseded` prepared and
+committed in the member, because its result is an effective fact, or,
+before allocation, answered `unavailable` or decided outside the order
+with a cited order head; a member's judgment written as a
 prepare entry, bound by hash in the order scope's resolution, and put
 into effect by a commit entry that is the one effective fact, with a
 write fence between; reservations for the prepare and the allocation; a
@@ -657,6 +673,20 @@ clarity at Hugh's request:
 | F3, P2: `states` had no subject | 4.4: `{ item, in }` over an item type declared `one` |
 | F4, P2: P1 owed checks whose forms did not exist | Section 3's staging table with `unsupported-form` and three witness kinds |
 | F5, P1: "with staleness at or above lifetime it never waits" was false for a member stopped after resolution | 4.5: `behind` until the member resumes, and `missing-dependency` in replay |
+
+**After landing, 18 October, 22:30 and 23:30.** Section 4.1 says what a
+refused late delivery writes: none of the handler's effects, sends, or
+attention, and the delivery's own deciding entry and result as for any
+refused request delivery, with the reason code `late`. The landed draft
+said "nothing is written", which the native contract (section 7.4) does
+not allow for a request delivery. `late` and `spacing` are forms of
+request handlers (`tell`, `relate`) only; an advisory handler has no
+result, and the validator refuses them on one (sections 3, 4.1, 4.2).
+Builder question `0784600e`, checker corrections `91c866dc` and
+`b92bd90c`, review `44ad8b0d` F4, planner decision on that question.
+Draft 3 (19 October, 00:30) aligns section 9 with the sequenced note's
+act and delivery distinction (review `d028930e`, F2). Draft 4 adds the
+`superseded` decision to that distinction.
 
 ## Sources
 
