@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/scope/test/grow-owned-scopes.test.ts","body":{"commit":"426504d89b3140e5b3f769c546e846529cf9f8c3","path":"packages/scope/test/grow-owned-scopes.test.ts"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:022a0e23bd5a446e437aa1c2514e333087db6bee","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/declared-views.test.ts."}
