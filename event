@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2a2f0d483659a222e4d70c71f882a31a38ee6d80","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-18-s1-late-source-order.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2ed9e345014d38dc19453dddae00c9a7edee74ca","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/source-order.test.ts."}
