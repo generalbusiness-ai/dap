@@ -9,13 +9,13 @@ manifest and install grant, the Grow scenario, and replay. A split requires
 an explicit decision before filing. The separate durable-presence head may
 take priority. Both precede G5 and P1 to P3.
 
-## Existing forms and gaps
+## Preparation findings
 
 Preparation inspected the contract capability table, definition declarations,
 capability validation and derivation, preparation judgments, native Core
 preparation, reservation admission, package metadata, and the v2 installer.
-Assertion `f2d1280e04b309ea9997e69439545476586f70b7` asks planner to decide
-the required extensions before implementation:
+Assertion `f2d1280e04b309ea9997e69439545476586f70b7` asked planner to decide
+the required extensions before implementation. These were the initial gaps:
 
 - A capability effect returns records only. It cannot write an item's
   outcome slots. `StepDerived` also permits records and operations only.
@@ -35,10 +35,48 @@ the required extensions before implementation:
 The proposed version is `device-command@1`: one open command record per
 target act, final confirmed/refused/unknown answers, a named owner step,
 and one reserved answer per pending command. The command keeps the device,
-target, level, target-writing revision, and exact owner binding. Without an
+target, level, target-writing fact, and exact owner binding. Without an
 install grant, target acts retain their present behavior and open nothing.
 Only the capability writes outcome and outcomeAt. Target and sensor report
 writers remain separate. No physical device or outside operation is claimed.
+
+## Adopted form and cohort decisions
+
+Planner assertion `f33619936fa8c1435a73a6d6f2d519bea5aff461` decides the
+bounded extensions: capability-owned outcome/outcomeAt item effects with
+named validator refusal of ordinary writers; one reserved owner-answer
+preparation per pending command, with all other preparation remaining new
+work; a package capability declaration containing device kinds and exactly
+one owner requirement, with the actual existing full MemberRef chosen at
+install and retained in the authenticated proof; checked Site-to-Room
+delegation; targetAt fact binding independent of sensor reports; late
+superseded answers closing their own records without rewriting the current
+device; and finite command/preparation metadata in the archive owner table.
+Runtime and replay must use the same pure code. No grant means no command
+opening; existing independent target/report behavior remains available.
+
+Planner report `9192ef3fce43017abb91864c0f87cb76de8a5be9`, adopted by
+`84753eff`, allows G5a before S2a and reserves new numbers above S2a's
+unpublished cohort. The reservations are:
+
+| Work | Register | Directory | Membership | Rules | Destination |
+| --- | --- | --- | --- | --- | --- |
+| S2a | 14, 15 | 13, 14 | 8 | 7, 8 | 9, 10 |
+| G5a | 16 | 15 | 9 | 9 | 11 |
+
+These numbers are never reassigned, including a reservation not used by
+this head. A gap is allowed; one task never renumbers another's pins.
+Existing shipped IDs retain their exact data and meaning. The implementation
+will register only the new pins it actually needs and keep any unused
+reservation for a later G5a head. The existing Membership 7 may be reused
+where its current forms already suffice. No new pin is supported merely
+because its number is reserved; the pin table must reject duplicates.
+
+Landing order remains durable G3, then G5a. S2a still needs its own passing
+gate and exact review, and S2a plus S2b precede the demo archive slice.
+The G5a preparation checkout has incorporated audited Main `9060775e`.
+G3's exact `3f7cce84` is frozen under review and has not been incorporated
+as an approved landing. No G5a code was changed during either G3 gate.
 
 ## Acceptance evidence to collect
 
