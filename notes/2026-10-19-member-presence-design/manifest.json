@@ -1,0 +1,1012 @@
+{
+  "v": 1,
+  "fictional": true,
+  "native_execution": false,
+  "base_main": "3ed2a08a50f31e84ea42b4f6027684e14a8cedb8",
+  "design_head": "c16fe0aa3a5d22e7cc5b44030122ee524b813a43",
+  "state_cases": [
+    "person-active",
+    "agent-active",
+    "checker-active",
+    "invited",
+    "removed",
+    "lapsed",
+    "controller-unavailable",
+    "identity-unavailable",
+    "standing-unavailable",
+    "eligible",
+    "ineligible",
+    "live-available",
+    "live-busy",
+    "live-waiting",
+    "live-blocked",
+    "live-here",
+    "live-note",
+    "live-projection",
+    "recorded-here",
+    "recorded-elsewhere",
+    "recorded-partial",
+    "recorded-left",
+    "recorded-report-unavailable",
+    "recorded-left-report-unavailable",
+    "recorded-not-reported",
+    "presence-unavailable",
+    "live-absent-known",
+    "live-absent-unknown",
+    "ready-not-present",
+    "late-opening",
+    "moved-report"
+  ],
+  "pages": {
+    "person-active-light.html": {
+      "key": "person-active",
+      "title": "Active person",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "agent-active-light.html": {
+      "key": "agent-active",
+      "title": "Active agent",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "checker-active-light.html": {
+      "key": "checker-active",
+      "title": "Active checker",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "invited-light.html": {
+      "key": "invited",
+      "title": "Invited member",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "removed-light.html": {
+      "key": "removed",
+      "title": "Removed member",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "lapsed-light.html": {
+      "key": "lapsed",
+      "title": "Lapsed invitation",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "controller-unavailable-light.html": {
+      "key": "controller-unavailable",
+      "title": "Agent controller unavailable",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "identity-unavailable-light.html": {
+      "key": "identity-unavailable",
+      "title": "Identity unavailable",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "standing-unavailable-light.html": {
+      "key": "standing-unavailable",
+      "title": "Standing unavailable",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "eligible-light.html": {
+      "key": "eligible",
+      "title": "Action held at this read",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "ineligible-light.html": {
+      "key": "ineligible",
+      "title": "Action not held",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "live-available-light.html": {
+      "key": "live-available",
+      "title": "Live available",
+      "theme": "light",
+      "source": "Live B4 design only"
+    },
+    "live-busy-light.html": {
+      "key": "live-busy",
+      "title": "Live busy",
+      "theme": "light",
+      "source": "Live B4 design only"
+    },
+    "live-waiting-light.html": {
+      "key": "live-waiting",
+      "title": "Live waiting",
+      "theme": "light",
+      "source": "Live B4 design only"
+    },
+    "live-blocked-light.html": {
+      "key": "live-blocked",
+      "title": "Live blocked",
+      "theme": "light",
+      "source": "Live B4 design only"
+    },
+    "live-here-light.html": {
+      "key": "live-here",
+      "title": "Live focus includes this subject",
+      "theme": "light",
+      "source": "Live B4 design only"
+    },
+    "live-note-light.html": {
+      "key": "live-note",
+      "title": "Live note",
+      "theme": "light",
+      "source": "Live B4 design only"
+    },
+    "live-projection-light.html": {
+      "key": "live-projection",
+      "title": "Several live sessions",
+      "theme": "light",
+      "source": "Live B4 design only"
+    },
+    "recorded-here-light.html": {
+      "key": "recorded-here",
+      "title": "Reported in this room",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "recorded-elsewhere-light.html": {
+      "key": "recorded-elsewhere",
+      "title": "Reported in another room",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "recorded-partial-light.html": {
+      "key": "recorded-partial",
+      "title": "Reported room address unavailable",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "recorded-left-light.html": {
+      "key": "recorded-left",
+      "title": "Left the recorded room",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "recorded-report-unavailable-light.html": {
+      "key": "recorded-report-unavailable",
+      "title": "Present report fact unavailable",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "recorded-left-report-unavailable-light.html": {
+      "key": "recorded-left-report-unavailable",
+      "title": "Leave report fact unavailable",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "recorded-not-reported-light.html": {
+      "key": "recorded-not-reported",
+      "title": "No arrival reported",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "presence-unavailable-light.html": {
+      "key": "presence-unavailable",
+      "title": "Presence source unavailable",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "live-absent-known-light.html": {
+      "key": "live-absent-known",
+      "title": "Live lease ended",
+      "theme": "light",
+      "source": "Live B4 design only"
+    },
+    "live-absent-unknown-light.html": {
+      "key": "live-absent-unknown",
+      "title": "No live lease information",
+      "theme": "light",
+      "source": "Live B4 design only"
+    },
+    "ready-not-present-light.html": {
+      "key": "ready-not-present",
+      "title": "Provisioned agent, attendance unknown",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "late-opening-light.html": {
+      "key": "late-opening",
+      "title": "Recorded report beyond the activity window",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "moved-report-light.html": {
+      "key": "moved-report",
+      "title": "Move uses the report fact",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "members-light.html": {
+      "key": "members",
+      "title": "Members",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "members-overflow-light.html": {
+      "key": "members-overflow",
+      "title": "Member display bound",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-person-light.html": {
+      "key": "record-person",
+      "title": "@maya member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-agent-light.html": {
+      "key": "record-agent",
+      "title": "@climate member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-removed-found-light.html": {
+      "key": "record-removed-found",
+      "title": "Removed member: removed at entry 540",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-removed-old-light.html": {
+      "key": "record-removed-old",
+      "title": "Removed member: removal entry not in the last 100 entries",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-removed-unavailable-light.html": {
+      "key": "record-removed-unavailable",
+      "title": "Removed member: removal entry unavailable",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "own-presence-light.html": {
+      "key": "own-presence",
+      "title": "Your live presence control",
+      "theme": "light",
+      "source": "Live B4 design only"
+    },
+    "own-header-light.html": {
+      "key": "own-header",
+      "title": "Presence in the kit header",
+      "theme": "light",
+      "source": "Live B4 design only"
+    },
+    "own-recorded-light.html": {
+      "key": "own-recorded",
+      "title": "Your recorded presence",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-checks-light.html": {
+      "key": "record-checks",
+      "title": "@checks member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-lina-light.html": {
+      "key": "record-lina",
+      "title": "@lina member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-noor-light.html": {
+      "key": "record-noor",
+      "title": "@noor member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-irrigation-light.html": {
+      "key": "record-irrigation",
+      "title": "@irrigation member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-tender-light.html": {
+      "key": "record-tender",
+      "title": "@tender member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-rita-light.html": {
+      "key": "record-rita",
+      "title": "@rita member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-guest-01-light.html": {
+      "key": "record-guest-01",
+      "title": "@guest-01 member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-guest-02-light.html": {
+      "key": "record-guest-02",
+      "title": "@guest-02 member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-guest-03-light.html": {
+      "key": "record-guest-03",
+      "title": "@guest-03 member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-guest-04-light.html": {
+      "key": "record-guest-04",
+      "title": "@guest-04 member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-guest-05-light.html": {
+      "key": "record-guest-05",
+      "title": "@guest-05 member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-guest-06-light.html": {
+      "key": "record-guest-06",
+      "title": "@guest-06 member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-guest-07-light.html": {
+      "key": "record-guest-07",
+      "title": "@guest-07 member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-guest-08-light.html": {
+      "key": "record-guest-08",
+      "title": "@guest-08 member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-guest-09-light.html": {
+      "key": "record-guest-09",
+      "title": "@guest-09 member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-guest-10-light.html": {
+      "key": "record-guest-10",
+      "title": "@guest-10 member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-guest-11-light.html": {
+      "key": "record-guest-11",
+      "title": "@guest-11 member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-guest-12-light.html": {
+      "key": "record-guest-12",
+      "title": "@guest-12 member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-guest-13-light.html": {
+      "key": "record-guest-13",
+      "title": "@guest-13 member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-guest-14-light.html": {
+      "key": "record-guest-14",
+      "title": "@guest-14 member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-guest-15-light.html": {
+      "key": "record-guest-15",
+      "title": "@guest-15 member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-guest-16-light.html": {
+      "key": "record-guest-16",
+      "title": "@guest-16 member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-guest-17-light.html": {
+      "key": "record-guest-17",
+      "title": "@guest-17 member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-guest-18-light.html": {
+      "key": "record-guest-18",
+      "title": "@guest-18 member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-guest-19-light.html": {
+      "key": "record-guest-19",
+      "title": "@guest-19 member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-guest-20-light.html": {
+      "key": "record-guest-20",
+      "title": "@guest-20 member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-guest-21-light.html": {
+      "key": "record-guest-21",
+      "title": "@guest-21 member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-guest-22-light.html": {
+      "key": "record-guest-22",
+      "title": "@guest-22 member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-guest-23-light.html": {
+      "key": "record-guest-23",
+      "title": "@guest-23 member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-guest-24-light.html": {
+      "key": "record-guest-24",
+      "title": "@guest-24 member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-guest-25-light.html": {
+      "key": "record-guest-25",
+      "title": "@guest-25 member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-guest-26-light.html": {
+      "key": "record-guest-26",
+      "title": "@guest-26 member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-guest-27-light.html": {
+      "key": "record-guest-27",
+      "title": "@guest-27 member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-guest-28-light.html": {
+      "key": "record-guest-28",
+      "title": "@guest-28 member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-guest-29-light.html": {
+      "key": "record-guest-29",
+      "title": "@guest-29 member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-guest-30-light.html": {
+      "key": "record-guest-30",
+      "title": "@guest-30 member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-guest-31-light.html": {
+      "key": "record-guest-31",
+      "title": "@guest-31 member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-guest-32-light.html": {
+      "key": "record-guest-32",
+      "title": "@guest-32 member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "index-light.html": {
+      "key": "index",
+      "title": "D1 design index",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "person-active-dark.html": {
+      "key": "person-active",
+      "title": "Active person",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "agent-active-dark.html": {
+      "key": "agent-active",
+      "title": "Active agent",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "checker-active-dark.html": {
+      "key": "checker-active",
+      "title": "Active checker",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "invited-dark.html": {
+      "key": "invited",
+      "title": "Invited member",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "removed-dark.html": {
+      "key": "removed",
+      "title": "Removed member",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "lapsed-dark.html": {
+      "key": "lapsed",
+      "title": "Lapsed invitation",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "controller-unavailable-dark.html": {
+      "key": "controller-unavailable",
+      "title": "Agent controller unavailable",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "identity-unavailable-dark.html": {
+      "key": "identity-unavailable",
+      "title": "Identity unavailable",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "standing-unavailable-dark.html": {
+      "key": "standing-unavailable",
+      "title": "Standing unavailable",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "eligible-dark.html": {
+      "key": "eligible",
+      "title": "Action held at this read",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "ineligible-dark.html": {
+      "key": "ineligible",
+      "title": "Action not held",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "live-available-dark.html": {
+      "key": "live-available",
+      "title": "Live available",
+      "theme": "dark",
+      "source": "Live B4 design only"
+    },
+    "live-busy-dark.html": {
+      "key": "live-busy",
+      "title": "Live busy",
+      "theme": "dark",
+      "source": "Live B4 design only"
+    },
+    "live-waiting-dark.html": {
+      "key": "live-waiting",
+      "title": "Live waiting",
+      "theme": "dark",
+      "source": "Live B4 design only"
+    },
+    "live-blocked-dark.html": {
+      "key": "live-blocked",
+      "title": "Live blocked",
+      "theme": "dark",
+      "source": "Live B4 design only"
+    },
+    "live-here-dark.html": {
+      "key": "live-here",
+      "title": "Live focus includes this subject",
+      "theme": "dark",
+      "source": "Live B4 design only"
+    },
+    "live-note-dark.html": {
+      "key": "live-note",
+      "title": "Live note",
+      "theme": "dark",
+      "source": "Live B4 design only"
+    },
+    "live-projection-dark.html": {
+      "key": "live-projection",
+      "title": "Several live sessions",
+      "theme": "dark",
+      "source": "Live B4 design only"
+    },
+    "recorded-here-dark.html": {
+      "key": "recorded-here",
+      "title": "Reported in this room",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "recorded-elsewhere-dark.html": {
+      "key": "recorded-elsewhere",
+      "title": "Reported in another room",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "recorded-partial-dark.html": {
+      "key": "recorded-partial",
+      "title": "Reported room address unavailable",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "recorded-left-dark.html": {
+      "key": "recorded-left",
+      "title": "Left the recorded room",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "recorded-report-unavailable-dark.html": {
+      "key": "recorded-report-unavailable",
+      "title": "Present report fact unavailable",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "recorded-left-report-unavailable-dark.html": {
+      "key": "recorded-left-report-unavailable",
+      "title": "Leave report fact unavailable",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "recorded-not-reported-dark.html": {
+      "key": "recorded-not-reported",
+      "title": "No arrival reported",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "presence-unavailable-dark.html": {
+      "key": "presence-unavailable",
+      "title": "Presence source unavailable",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "live-absent-known-dark.html": {
+      "key": "live-absent-known",
+      "title": "Live lease ended",
+      "theme": "dark",
+      "source": "Live B4 design only"
+    },
+    "live-absent-unknown-dark.html": {
+      "key": "live-absent-unknown",
+      "title": "No live lease information",
+      "theme": "dark",
+      "source": "Live B4 design only"
+    },
+    "ready-not-present-dark.html": {
+      "key": "ready-not-present",
+      "title": "Provisioned agent, attendance unknown",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "late-opening-dark.html": {
+      "key": "late-opening",
+      "title": "Recorded report beyond the activity window",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "moved-report-dark.html": {
+      "key": "moved-report",
+      "title": "Move uses the report fact",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "members-dark.html": {
+      "key": "members",
+      "title": "Members",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "members-overflow-dark.html": {
+      "key": "members-overflow",
+      "title": "Member display bound",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-person-dark.html": {
+      "key": "record-person",
+      "title": "@maya member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-agent-dark.html": {
+      "key": "record-agent",
+      "title": "@climate member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-removed-found-dark.html": {
+      "key": "record-removed-found",
+      "title": "Removed member: removed at entry 540",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-removed-old-dark.html": {
+      "key": "record-removed-old",
+      "title": "Removed member: removal entry not in the last 100 entries",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-removed-unavailable-dark.html": {
+      "key": "record-removed-unavailable",
+      "title": "Removed member: removal entry unavailable",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "own-presence-dark.html": {
+      "key": "own-presence",
+      "title": "Your live presence control",
+      "theme": "dark",
+      "source": "Live B4 design only"
+    },
+    "own-header-dark.html": {
+      "key": "own-header",
+      "title": "Presence in the kit header",
+      "theme": "dark",
+      "source": "Live B4 design only"
+    },
+    "own-recorded-dark.html": {
+      "key": "own-recorded",
+      "title": "Your recorded presence",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-checks-dark.html": {
+      "key": "record-checks",
+      "title": "@checks member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-lina-dark.html": {
+      "key": "record-lina",
+      "title": "@lina member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-noor-dark.html": {
+      "key": "record-noor",
+      "title": "@noor member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-irrigation-dark.html": {
+      "key": "record-irrigation",
+      "title": "@irrigation member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-tender-dark.html": {
+      "key": "record-tender",
+      "title": "@tender member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-rita-dark.html": {
+      "key": "record-rita",
+      "title": "@rita member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-guest-01-dark.html": {
+      "key": "record-guest-01",
+      "title": "@guest-01 member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-guest-02-dark.html": {
+      "key": "record-guest-02",
+      "title": "@guest-02 member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-guest-03-dark.html": {
+      "key": "record-guest-03",
+      "title": "@guest-03 member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-guest-04-dark.html": {
+      "key": "record-guest-04",
+      "title": "@guest-04 member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-guest-05-dark.html": {
+      "key": "record-guest-05",
+      "title": "@guest-05 member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-guest-06-dark.html": {
+      "key": "record-guest-06",
+      "title": "@guest-06 member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-guest-07-dark.html": {
+      "key": "record-guest-07",
+      "title": "@guest-07 member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-guest-08-dark.html": {
+      "key": "record-guest-08",
+      "title": "@guest-08 member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-guest-09-dark.html": {
+      "key": "record-guest-09",
+      "title": "@guest-09 member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-guest-10-dark.html": {
+      "key": "record-guest-10",
+      "title": "@guest-10 member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-guest-11-dark.html": {
+      "key": "record-guest-11",
+      "title": "@guest-11 member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-guest-12-dark.html": {
+      "key": "record-guest-12",
+      "title": "@guest-12 member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-guest-13-dark.html": {
+      "key": "record-guest-13",
+      "title": "@guest-13 member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-guest-14-dark.html": {
+      "key": "record-guest-14",
+      "title": "@guest-14 member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-guest-15-dark.html": {
+      "key": "record-guest-15",
+      "title": "@guest-15 member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-guest-16-dark.html": {
+      "key": "record-guest-16",
+      "title": "@guest-16 member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-guest-17-dark.html": {
+      "key": "record-guest-17",
+      "title": "@guest-17 member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-guest-18-dark.html": {
+      "key": "record-guest-18",
+      "title": "@guest-18 member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-guest-19-dark.html": {
+      "key": "record-guest-19",
+      "title": "@guest-19 member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-guest-20-dark.html": {
+      "key": "record-guest-20",
+      "title": "@guest-20 member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-guest-21-dark.html": {
+      "key": "record-guest-21",
+      "title": "@guest-21 member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-guest-22-dark.html": {
+      "key": "record-guest-22",
+      "title": "@guest-22 member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-guest-23-dark.html": {
+      "key": "record-guest-23",
+      "title": "@guest-23 member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-guest-24-dark.html": {
+      "key": "record-guest-24",
+      "title": "@guest-24 member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-guest-25-dark.html": {
+      "key": "record-guest-25",
+      "title": "@guest-25 member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-guest-26-dark.html": {
+      "key": "record-guest-26",
+      "title": "@guest-26 member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-guest-27-dark.html": {
+      "key": "record-guest-27",
+      "title": "@guest-27 member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-guest-28-dark.html": {
+      "key": "record-guest-28",
+      "title": "@guest-28 member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-guest-29-dark.html": {
+      "key": "record-guest-29",
+      "title": "@guest-29 member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-guest-30-dark.html": {
+      "key": "record-guest-30",
+      "title": "@guest-30 member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-guest-31-dark.html": {
+      "key": "record-guest-31",
+      "title": "@guest-31 member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-guest-32-dark.html": {
+      "key": "record-guest-32",
+      "title": "@guest-32 member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "index-dark.html": {
+      "key": "index",
+      "title": "D1 design index",
+      "theme": "dark",
+      "source": "Recorded design"
+    }
+  },
+  "membership": {
+    "scope": "sc_4phktxax2uidx2ltzozfr4grhczppdmjveioljoelix4ukix2ghq",
+    "inc": "in_amtqnkxm2czpdahn2ybyr3ra2i",
+    "kind": "membership"
+  },
+  "roomA": {
+    "scope": "sc_zdmcik5gotpsyxrwncilopt6rlivqcx6ziljqyd6bqu5bwqfvjaa",
+    "inc": "in_7tsrb46bdaopnnoiapjn6fnto4",
+    "kind": "lane"
+  }
+}
