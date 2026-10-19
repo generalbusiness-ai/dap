@@ -1,45 +1,16 @@
 import { expect, test } from "vitest";
-import { b64url, canonicalize, definitionDigest, digestBytes, fitsFieldType, sign, utf8, verify } from "@generalbusiness/artroom-bytes";
+import { b64url, canonicalize, definitionDigest, digestBytes, sign, utf8, verify } from "@generalbusiness/artroom-bytes";
 import { ApplicationPackageValidationError, packApplication2, readApplicationProjection, type ApplicationPackageInput2 } from "@generalbusiness/artroom-bytes/application-v2";
-import { PROPOSED_BOUNDS, type DeclaredDefinition, type Digest } from "@generalbusiness/dap-contract";
-import { checkPackageGraph, emptyPackageComposition, type PackageGraphInput } from "@generalbusiness/artroom-package-graph";
+import { PROPOSED_BOUNDS, type DeclaredDefinition } from "@generalbusiness/dap-contract";
+import { checkPackageGraph, type PackageGraphInput } from "@generalbusiness/artroom-package-graph";
 import { validateDefinition, validatePackage } from "../src/index.ts";
 import { RULE_PROFILES } from "../src/rule/index.ts";
-import { site } from "../../../examples/grow/site.ts";
 import { room } from "../../../examples/grow/room.ts";
 import { keys } from "./fixtures.ts";
+import { grow } from "./fixtures-package-graph.ts";
 
 // Graph components use actual Grow declarations and native validation.
 // The final case also crosses the signed package codec and public validator.
-function grow(change: (site: DeclaredDefinition, room: DeclaredDefinition) => void = () => {}, peerPin?: Digest): PackageGraphInput {
-  const parent = structuredClone(site), child = structuredClone(room);
-  parent.items["room"]!.states["conflicted"] = { final: false };
-  const creation = parent.acts["create-room"]!.sends[0]!;
-  if (!("create" in creation)) throw new Error("Grow requires its create send");
-  creation.create.result["conflict"] = [{ state: "conflicted" }];
-  creation.create.result["undelivered"] = [];
-  const report = child.acts["report-site"]!.sends[0]!;
-  if (!("relate" in report)) throw new Error("Grow requires its relation send");
-  report.relate.result = { refused: [], undelivered: [] };
-  change(parent, child);
-  const childId = definitionDigest(child);
-  for (const row of [...Object.values(parent.acts), ...Object.values(parent.receives)]) for (const send of row.sends) {
-    if ("create" in send && send.create.definition !== "self") send.create.definition = childId;
-  }
-  parent.receives["room-summary"]!.from.pin = peerPin ?? childId;
-  const parentId = definitionDigest(parent);
-  for (const definition of [parent, child]) {
-    const native = validateDefinition(definition, PROPOSED_BOUNDS, RULE_PROFILES);
-    expect(native.ok ? [] : native.problems).toEqual([]);
-  }
-  return { bounds: PROPOSED_BOUNDS, entry: parentId, definitions: [{ id: parentId, definition: parent }, { id: childId, definition: child }], literalFits: (type, value) => fitsFieldType(type, value, PROPOSED_BOUNDS),
-    composition: { ...emptyPackageComposition(), connections: [
-      { from: parentId, item: "room", slot: "scope", to: childId },
-      { from: childId, item: "room", slot: "site", to: parentId },
-    ], order: [{ definition: parentId, handler: "room-summary", by: "any" }] },
-    roles: { operator: [...new Set([parent, child].flatMap(definition => Object.values(definition.acts).map(act => act.grant)))] },
-  };
-}
 // All variants pass native whole-definition validation first. The backup
 // opening makes the aliases reachable without adding a second child creator.
 function lifetimeVariants(): { name: string; input: PackageGraphInput }[] {

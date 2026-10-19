@@ -294,3 +294,29 @@ The control restores the source. Ordinary whitespace inspection also caught
 extra EOF blank lines in the two extracted shared guards; removing them
 changes no behavior. This checkpoint still does not cover the separate
 pre-failure relation-order witness or the complete P1 refusal matrix.
+
+## Native relation before a creation result (checkpoint)
+
+The shared Grow graph fixture now admits a third, declared Leaf definition.
+A Room opens a probe and records both a Leaf creation request and an independent
+relation to its Site in that one entry. With no final probe state, nine keys
+are proved (three Rooms, each with its root and two probe items). Making only
+creation-refusal `failed` final leaves Leaf instances bounded at six but makes
+relation fan-in unproved.
+
+`package-relation-order.test.ts` uses actual native in-memory Site/Room births,
+confirmation, judgments, relation delivery and replay, with explicit per-key
+fixture grants and manual delivery. The negative definition deliberately
+bypasses package admission as a counterexample. The Site accepts and retains
+the probe's relation while the independent creation request's result is still
+null. No Leaf is created and no refusal outcome is simulated: this witnesses
+the pre-result ordering, not a completed failing creation, SQLite lifecycle,
+installation or a provider. Both journals replay consistently.
+
+Two owning files pass nine cases in
+`/tmp/artroom-p1-pre-failure-relation-focused-20261019.log`; the corrected
+owning compiler passes in `...pre-failure-relation-type-corrected-20261019.log`.
+Its initial typecheck caught an import left unused after fixture extraction
+and a message union access that needed narrowing; both are corrected. This
+checkpoint has no new guard control, final gate or review. G1 checker feedback
+now takes priority, and P1 is saved for continuation afterward.
