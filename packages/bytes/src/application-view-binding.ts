@@ -1,6 +1,6 @@
 /** Bind presentation data to declared reads and native acts. Restricted rule
  * admission/evaluation and current viewer authority belong to the host. */
-import { PROPOSED_BOUNDS, type DeclaredDefinition } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type DeclaredDefinition, type Digest } from "@generalbusiness/dap-contract";
 import { fitsFieldType, isRecord, parseStrict } from "./index.ts";
 import { viewParameterFits } from "./application-view-parameters.ts";
 import { applicationJson } from "./application-json.ts";
@@ -11,7 +11,7 @@ import type { ApplicationReadProjection } from "./application-projection-types.t
 import { applicationViewFactField, applicationViewTemplateFields, ApplicationViewError, readApplicationViews, type ApplicationViews } from "./application-view.ts";
 
 export function bindApplicationViews(value: unknown, projections: Readonly<Record<string, ApplicationReadProjection>>,
-  definitions: readonly ApplicationDefinition[]): ApplicationViews {
+  definitions: readonly ApplicationDefinition[], entry?: Digest): ApplicationViews {
   const views = readApplicationViews(value), fail = (): never => { throw new ApplicationViewError("binding"); };
   try {
     const owned = parseStrict(applicationJson({ projections, definitions }, APPLICATION_PACKAGE_LIMITS.bytes)) as {
@@ -41,6 +41,15 @@ export function bindApplicationViews(value: unknown, projections: Readonly<Recor
       if (view.kind === "surface") {
         if (Object.values(view.opens).some(target => !Object.hasOwn(views, target))) return fail();
       } else {
+        if (view.for && (journal || source.read !== "many")) return fail();
+        for (const read of Object.values(view.reads ?? {})) {
+          const related = Object.hasOwn(owned.projections, read.projection) ? owned.projections[read.projection] : undefined;
+          if (!entry || !related || related.definition !== entry) return fail();
+          const part = owned.definitions.find(part => part.id === entry);
+          if (!part) return fail();
+          const bound = bindApplicationProjection(related, parseStrict(part.bytes) as DeclaredDefinition);
+          if (Object.values(bound.sources).some(source => !isApplicationJournalSource(source) && source.read === "item")) return fail();
+        }
         if (view.order) {
           const field = source.fields[view.order.field];
           if (journal || source.read !== "many" || !field || field.of.type !== "time" && field.of.type !== "int") return fail();

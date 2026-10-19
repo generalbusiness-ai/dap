@@ -58,12 +58,12 @@ test("typed measurement fields produce one native probe and advance the oldest b
     expect(session.scope.state.scope()!.head.seq).toBe(224);
     expect(session.scope.state.item(45)!.refs["moistureAt"]).toBe(124);
     expect(current.card?.reasons).toContain("Moisture age: 2 days ago (2026-10-16T12:00:00Z)");
-    expect(current.card?.declared?.data.sources["bench"]?.find(row => row.id === 45)?.fields["moistureTime"]).toBe("2026-10-16T12:00:00Z");
-    expect(current.card?.declared?.data.sources["bench"]?.find(row => row.id === 45)?.fields).toMatchObject({ heightTime: null, insectsTime: null });
+    expect(current.card?.declared?.data?.sources["bench"]?.find(row => row.id === 45)?.fields["moistureTime"]).toBe("2026-10-16T12:00:00Z");
+    expect(current.card?.declared?.data?.sources["bench"]?.find(row => row.id === 45)?.fields).toMatchObject({ heightTime: null, insectsTime: null });
     const layers = async (view: string) => {
       expect((await f.service.call(viewToolName("grid", true), { view, scope: session!.scope.at })).isError).toBe(false);
       const reply = await f.service.call("view_read", { view }); expect(reply.isError, JSON.stringify(reply)).toBe(false);
-      return (reply.structuredContent["display"] as Display).card!.declared!.data.sources["bench"]!.find(row => row.id === 45)!;
+      return (reply.structuredContent["display"] as Display).card!.declared!.data!.sources["bench"]!.find(row => row.id === 45)!;
     };
     expect((await layers("before")).fields).toMatchObject({ moisture: 25, moistureTime: "2026-10-16T12:00:00Z", note: "baseline", noteTime: "2026-10-16T12:00:00Z" });
     const accepted = await f.service.call(tool, { ...call, view: "current", revision: current.card!.identity.revision });

@@ -72,7 +72,7 @@ export function viewTools(sessions: ViewSessions, screens?: readonly { name: str
     const page = args["page"];
     if (page !== undefined && !["summary", "item", "diff", "updates"].includes(String(page))) throw new ViewError("shape", "page is not a card page.");
     const moving = page !== undefined || args["position"] !== undefined || args["refresh"] === true;
-    const display = await sessions.read(string(args, "view"), moving ? integer(args, "cut") : undefined, moving ? { ...(page === undefined ? {} : { page: page as PageKind }), ...(args["position"] === undefined ? {} : { position: integer(args, "position") }) } : undefined);
+    const display = await sessions.read(string(args, "view"), moving ? integer(args, "cut") : undefined, moving ? { ...(args["refresh"] === true ? { refresh: true } : {}), ...(page === undefined ? {} : { page: page as PageKind }), ...(args["position"] === undefined ? {} : { position: integer(args, "position") }) } : undefined);
     return result({ display }, JSON.stringify(display));
   });
   add("view_act", "Dispatch one server-retained act of an exact displayed card. The server checks the instance and display cut and signs its captured native revisions under ordinary custody. Duplicate dispatch returns its first outcome. This tool returns private card and receipt data to the app.", { view: key, cut, action: key }, ["view", "cut", "action"], true, undefined, async (args) => {
@@ -91,7 +91,7 @@ export function viewTools(sessions: ViewSessions, screens?: readonly { name: str
           description: `${description}; ${parameter.kind === "decimal" ? `at most ${parameter.scale} decimal places, exactly` : "whole number"}` };
       return [field, schema];
     }));
-    add(name, `${action.label} on the currently selected ${action.screen} item. Use its exact item and revision from the card context. Supply only readings the person gave. Keep the same request key and values when retrying; an unknown outcome needs Check original request.`,
+    add(name, `${action.label} on the currently selected ${action.screen} item. Use its exact item and revision from the card context. Supply only values the person gave. Keep the same request key and values when retrying; an unknown outcome needs Check original request.`,
       { view: key, item: key, revision: key, request: key,
         values: { type: "object", properties, required: Object.entries(action.parameters).filter(([, parameter]) => parameter.required).map(([field]) => field), additionalProperties: false, minProperties: 1 } },
       ["view", "item", "revision", "request", "values"], false, screens?.find(screen => screen.name === action.screen)?.resource, async args => {

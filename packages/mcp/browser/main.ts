@@ -30,7 +30,7 @@ const surfaceOf = () => display?.card?.declared?.surface ?? display?.surface;
 
 function scheduleRefresh() {
   window.clearTimeout(refreshTimer);
-  const interval = display?.card?.declared?.refresh ?? display?.surface?.refresh;
+  const interval = display?.card?.declared?.refresh ?? display?.surface?.refresh ?? display?.refresh;
   if (alive && display?.active && interval) refreshTimer = window.setTimeout(() => {
     if (busy) scheduleRefresh(); else void read({ refresh: true }).catch(error => {
       if (error instanceof AppToolError && error.reason === "busy") scheduleRefresh(); else showError(error);
@@ -111,7 +111,7 @@ async function read(move?: { page?: PageKind; position?: number; refresh?: boole
   } finally { busy = false; render(); }
 }
 async function open() {
-  if (!display?.card) return;
+  if (!display?.card || display.status !== "ready") return;
   returnPage = "summary";
   try {
     const requested = display.card.declared?.display ?? "fullscreen", mode = await bridge.displayMode(requested);
@@ -128,9 +128,9 @@ async function declaredMode() {
   catch (error) { notice = error instanceof Error ? error.message : String(error); }
   render();
 }
-async function openDeclared(screen: string, items?: Readonly<Record<string, number>>, scope: ScopeRef | undefined = display?.card?.declared?.data.scope ?? display?.data?.scope, remember = true) {
+async function openDeclared(screen: string, items?: Readonly<Record<string, number>>, scope: ScopeRef | undefined = display?.card?.declared?.scope ?? display?.scope ?? display?.data?.scope, remember = true) {
   if (busy || !alive) return;
-  const selected = display?.query.scope ?? display?.card?.declared?.data.scope ?? display?.data?.scope;
+  const selected = display?.query.scope ?? display?.card?.declared?.scope ?? display?.scope ?? display?.data?.scope;
   const previous: DeclaredAddress | undefined = display ? { screen: display.query.screen, ...(display.query.items ? { items: display.query.items } : {}), ...(selected ? { scope: selected } : {}) } : undefined;
   const key = crypto.randomUUID();
   busy = true; notice = ""; render();
@@ -148,7 +148,7 @@ async function openDeclared(screen: string, items?: Readonly<Record<string, numb
 }
 async function back() {
   if (!display) return;
-  const declaredBack = display.card?.declared?.back ?? display.surface?.back;
+  const declaredBack = display.back?.screen ?? display.card?.declared?.back ?? display.surface?.back;
   if (declaredBack) {
     for (let index = declaredHistory.length - 1; index >= 0; index--) {
       const previous = declaredHistory[index]!;
@@ -156,7 +156,7 @@ async function back() {
       declaredHistory.splice(index);
       return openDeclared(previous.screen, previous.items, previous.scope, false);
     }
-    return openDeclared(declaredBack, undefined, display.card?.declared?.backScope ?? display.surface?.backScope, false);
+    return openDeclared(declaredBack, undefined, display.back?.scope ?? display.card?.declared?.backScope ?? display.surface?.backScope, false);
   }
   const target = display.query.page === "diff" ? returnPage : "summary";
   notice = "";
@@ -218,7 +218,7 @@ function render() {
   }
   const card = display.card;
   const summary = display.query.page === "summary";
-  if ((!summary || card?.declared?.kind === "carousel" && card.declared.back) && (!surfaceOf() || card?.declared?.back || display.surface?.back)) {
+  if ((!summary || display.back || card?.declared?.kind === "carousel" && card.declared.back) && (!surfaceOf() || display.back || card?.declared?.back || display.surface?.back)) {
     const nav = node("nav"); nav.setAttribute("aria-label", "Card navigation");
     nav.append(button("← Back", back, "quiet")); root.append(nav);
   }
@@ -227,7 +227,7 @@ function render() {
     try {
       const panel = surfaces.show(surface, data, async (name, items, scope) => {
         if (!busy && alive && display?.active) await openDeclared(surface.opens[name]!, items, scope ?? data.scope);
-      }, () => alive && !!display?.active && surfaceOf()?.screen === surface.screen && scopeKey(display.card?.declared?.data.scope ?? display.data?.scope) === scopeKey(data.scope));
+      }, () => alive && !!display?.active && surfaceOf()?.screen === surface.screen && scopeKey(display.card?.declared?.scope ?? display.scope ?? display.data?.scope) === scopeKey(data.scope));
       panel.inert = busy || !display.active;
       root.append(panel);
     } catch (error) { root.append(node("p", error instanceof Error ? error.message : "The declared surface is unavailable.", "notice")); }
@@ -243,7 +243,7 @@ function render() {
   eyebrow.append(node("span", card.identity.kind), node("code", card.identity.revision, "revision"));
   article.append(eyebrow);
   const heading = node("h1");
-  if (summary) {
+  if (summary && display.status === "ready") {
     const title = node("a", card.title);
     title.href = "#detail";
     title.dataset["focus"] = "title";
@@ -260,6 +260,16 @@ function render() {
   }
   if (card.declared?.actor !== null && card.declared?.actor !== undefined) article.append(node("p", `Member ${isMemberRef(card.declared.actor) ? card.declared.actor.member : JSON.stringify(card.declared.actor)}`, "actor"));
   article.append(node("p", card.summary, "summary"));
+  if (display.status === "unavailable" && card.declared?.routed) {
+    const evidence = node("details", undefined, "read-points");
+    evidence.append(node("summary", "Read points"));
+    const points = node("ul");
+    for (const point of card.projection) {
+      const row = node("li"); row.append(node("code", `${point.scope} · entry ${point.seq} · ${point.hash}`)); points.append(row);
+    }
+    evidence.append(points); article.append(evidence);
+    const retry = button("Retry read", () => read({ refresh: true }), "quiet"); retry.disabled ||= !display.active; article.append(retry);
+  }
   if (card.reasons.length && card.declared?.kind !== "log") {
     const reasons = node("ul", undefined, "reasons");
     for (const reason of card.reasons) reasons.append(node("li", reason));
@@ -298,7 +308,7 @@ function render() {
     next.setAttribute("aria-label", "Next item"); next.disabled ||= display.position + 1 >= display.count;
     nav.append(previous, node("span", `${display.position + 1} / ${display.count}`, "position"), next); root.append(nav);
   }
-  if (display.query.page !== "diff" && (!summary || card.actions.some(action => action.input === "chat" || action.purpose === "check-original"))) {
+  if (display.query.page !== "diff" && (!summary || card.declared?.routed && card.actions.length > 0 || card.actions.some(action => action.input === "chat" || action.purpose === "check-original"))) {
     const actions = node("div", undefined, "actions");
     for (const action of card.actions) {
       const control = button(action.input === "chat" ? `${action.label} in chat` : action.label, action.input === "chat" ? handoff : () => act(action.id));

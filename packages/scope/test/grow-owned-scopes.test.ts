@@ -75,6 +75,16 @@ test("maintained Grow Site creates a native Room and opens its owned grid throug
     expect((await life.wait(() => views.call("view_site", { view: "site" }))).structuredContent).toMatchObject({ status: "ready", identity: { subject: { scope: site.name } } });
     expect((await life.wait(() => views.call("view_grid", { view: "room-grid", scope: roomAt }))).structuredContent).toMatchObject({ status: "ready" });
     expect((await life.wait(() => views.call("view_read", { view: "room-grid" }))).structuredContent).toMatchObject({ display: { query: { scope: roomAt }, card: { declared: { kind: "surface", data: layered.ok ? layered.value : null, surface: { opens: { bench: "bench-record" }, backScope: siteAt } } } } });
+    // Exercise the production viewer adapter with an issued native session,
+    // current membership grants and both declared related Site reads. There
+    // is no task yet: no presence inference or synthetic task is needed.
+    expect((await life.wait(() => views.call("view_tasks", { view: "native-member-tasks", scope: roomAt }))).structuredContent).toMatchObject({ status: "empty" });
+    const tasks = await life.wait(() => views.call("view_read", { view: "native-member-tasks" }));
+    const siteHead = (await life.wait(() => site.summary())).at;
+    expect(tasks.structuredContent).toMatchObject({ display: { status: "empty", count: 0, scope: roomAt, refresh: 2000,
+      back: { screen: "grid", scope: roomAt }, context: { projection: expect.arrayContaining([{ scope: site.name, ...siteHead }]) } } });
+    expect((tasks.structuredContent["display"] as { data?: unknown }).data).toBeUndefined();
+    expect((await life.wait(() => views.call("view_alerts", { view: "native-member-alerts", scope: roomAt }))).structuredContent).toMatchObject({ status: "empty" });
     expect((await life.wait(() => views.call("view_grid", { view: "wrong-site", scope: siteAt }))).structuredContent).toMatchObject({ status: "unavailable" });
     expect((await life.wait(() => A.entries())).filter(entry => entry.input.type === "act" && entry.input.signed.intent.kind === "install-application")).toHaveLength(1);
     for (const node of [site, room]) {

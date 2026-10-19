@@ -30,6 +30,26 @@ const views = () => ({ note: {
   context: "Note {id}", fallback: "Note {id}: {text}", waiting: {}, refresh: 2000, display: "inline", back: "note",
 } });
 
+test("member routing is bounded carousel data over a complete native item source", () => {
+  const given = { ...views().note, kind: "carousel", for: "'app.edit' in viewer.grants and item.state = 'open'" };
+  const many = readApplicationProjection({ ...projection, sources: { note: { ...projection.sources["note"]!, read: "many", limit: 10 } } });
+  expect(bindApplicationViews({ note: given }, { "room.note": many }, parts)["note"]).toMatchObject({ for: given.for });
+  expect(() => bindApplicationViews({ note: given }, { "room.note": projection }, parts)).toThrow(ApplicationViewError);
+  for (const kind of ["card", "record", "log", "surface"]) expect(() => readApplicationViews({ note: { ...given, kind } })).toThrow(ApplicationViewError);
+  for (const value of [null, false, {}, "", "a".repeat(2049)]) expect(() => readApplicationViews({ note: { ...given, for: value } })).toThrow(ApplicationViewError);
+  const related = { ...given, reads: { presence: { projection: "room.note", scope: "installation" } } };
+  expect(bindApplicationViews({ note: related }, { "room.note": many }, parts, parts[0]!.id)["note"]).toMatchObject({ reads: related.reads });
+  expect(() => bindApplicationViews({ note: related }, { "room.note": many }, parts)).toThrow(ApplicationViewError);
+  expect(() => bindApplicationViews({ note: related }, { "room.note": many }, parts, `sha256:${"0".repeat(64)}`)).toThrow(ApplicationViewError);
+  const selected = { ...related, reads: { presence: { projection: "selected", scope: "installation" } } };
+  expect(() => bindApplicationViews({ note: selected }, { "room.note": many, selected: projection }, parts, parts[0]!.id)).toThrow(ApplicationViewError);
+  for (const reads of [{}, { presence: { projection: "room.note", scope: "caller" } },
+    { presence: { projection: "room.note", scope: "installation", items: {} } },
+    Object.fromEntries(Array.from({ length: 5 }, (_, i) => [`read${i}`, { projection: "room.note", scope: "installation" }]))]) {
+    expect(() => readApplicationViews({ note: { ...given, reads } })).toThrow(ApplicationViewError);
+  }
+});
+
 test("carousel order binds only to a complete item source's integer or timestamp fields", () => {
   const timed = { ...definition, items: { ...definition.items, note: { ...definition.items["note"]!, values: {
     ...definition.items["note"]!.values, seen: { required: false, fixed: false, of: { type: "time" as const } },

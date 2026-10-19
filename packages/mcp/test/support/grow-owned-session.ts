@@ -77,6 +77,17 @@ export async function openOwnedGrowScenario(packet: AnyPackedApplication, value:
       await deliverNative(site, site.state.scope()!.head.seq, 0);
     };
     await reportSite();
-    return { ...session, directory, site, scopes, close, reportSite };
+    const createRoom = async (label: string, time: Timestamp = session.time) => {
+      await site.advance(time);
+      const opening = await site.submit(await signedIntent(signer, { to: site.at, kind: "create-room", on: null, expected: {}, fields: { label } }, { now: Date.parse(time) }));
+      if (opening.answer !== "accepted") throw Error(`Native Site create-room ${opening.answer}: ${"reason" in opening ? opening.reason : "unknown"}.`);
+      const room = await deliverNative(site, opening.receipt.fact.seq, 0); await deliverNative(room, 0, 0);
+      await deliverNative(site, site.state.scope()!.head.seq, 0);
+      await deliverNative(site, site.state.scope()!.head.seq, 0);
+      const item = site.state.page("room", ["pending", "active", "failed"], null, 3).items.find(item => canonicalize(item.refs["scope"]) === canonicalize(room.at));
+      if (!item || item.state !== "active") throw Error("The native Site room relation is not active.");
+      return { scope: room, item: item.id };
+    };
+    return { ...session, directory, site, scopes, close, reportSite, createRoom };
   } catch (error) { close(); throw error; }
 }
