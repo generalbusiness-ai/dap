@@ -598,6 +598,18 @@ the entry holds that send, to that address, with that message. Only then
 is the delivery judged, in the receiver's own turn. A delivery that
 arrives twice is answered with the entry that recorded it the first time.
 
+**Order.** A delivery takes effect at the position the receiver's commit
+gives it, not at the sender's. Deliveries from different senders have no
+order: two sends that leave two scopes in one order may take effect in the
+other. Deliveries from one sender have no order either, except that a
+`relate` update older than the copy is answered `superseded`. The
+delivery's cause records the source entry's position and the send's
+ordinal, so an application that needs the sender's order rebuilds it from
+those. Every decision whose result depends on the order of two scopes'
+acts belongs to one scope, where its journal is the order; a design note
+of 18 October 2026 adds a sequenced level for the scopes that need a
+shared order ([the sequenced level](../notes/2026-10-18-sequenced-level-and-order-scope.md)).
+
 A send's **result clauses** say what the sender does when the result
 arrives: one list of effects for each of `applied`, `refused`,
 `superseded`, `undelivered`, and for a creation `conflict`.
