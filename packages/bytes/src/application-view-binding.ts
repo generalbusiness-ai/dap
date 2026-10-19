@@ -41,6 +41,10 @@ export function bindApplicationViews(value: unknown, projections: Readonly<Recor
       if (view.kind === "surface") {
         if (Object.values(view.opens).some(target => !Object.hasOwn(views, target))) return fail();
       } else {
+        if (view.order) {
+          const field = source.fields[view.order.field];
+          if (journal || source.read !== "many" || !field || field.of.type !== "time" && field.of.type !== "int") return fail();
+        }
         for (const name of [view.title, view.summary, ...view.facts.map(applicationViewFactField)]) if (name !== null && !fields.has(name)) return fail();
         for (const fact of view.facts) if (typeof fact !== "string" && fact.field !== "id" && fact.field !== "revision"
           && source.fields[fact.field]?.of.type !== "int") return fail();

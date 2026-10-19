@@ -13,6 +13,7 @@ import type { DefinitionLike } from "../describe.ts";
 import { effectiveFields, expectedOf } from "../shape.ts";
 import { formatInteger } from "./numbers.ts";
 import { formatFact } from "./facts.ts";
+import { orderedViewRows } from "./ordering.ts";
 import { decodeViewParameters } from "@generalbusiness/artroom-bytes/application-v2";
 
 const controlId = (view: ApplicationView, control: ApplicationViewAct, index: number) => view.acts.filter(choice => choice.act === control.act).length > 1 ? `${control.act}:${index}` : control.act;
@@ -78,8 +79,9 @@ export class DeclaredViewSource implements ViewSource {
     if (!reply.ok) throw new ViewError(reply.reason === "forbidden" ? "unavailable" : reply.reason === "stale" ? "stale" : "unavailable", `The declared projection refused: ${reply.reason}.`);
     const projection = this.packet.package.semantic.projections[view.projection]!;
     if (reply.value.projection !== applicationProjectionId(projection) || canonicalize(reply.value.scope) !== canonicalize(selection.scope)) throw new ViewError("unavailable", "The read does not name this declared projection and scope.");
-    const rows = reply.value.sources[view.item];
-    if (!rows) throw new ViewError("unavailable", "The read omitted the declared item source.");
+    const nativeRows = reply.value.sources[view.item];
+    if (!nativeRows) throw new ViewError("unavailable", "The read omitted the declared item source.");
+    const rows = view.kind !== "surface" && view.order ? orderedViewRows(nativeRows, view.order) : nativeRows;
     if (rows.some(row => isApplicationJournalSource(projection.sources[view.item]!) !== !!row.entry)) throw new ViewError("unavailable", "The read confused journal entries with native items.");
     return { view, root: install.scope, scope: selection.scope, definition: projection.definition, reply, rows };
   }

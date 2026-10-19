@@ -39,6 +39,8 @@ export interface ApplicationViewSeries {
 }
 export interface ApplicationViewLink { readonly view: string; readonly field: string; readonly label: string }
 export interface ApplicationItemView extends ViewBase {
+  /** Order a complete carousel source; ties retain ascending native item IDs. */
+  readonly order?: { readonly field: string; readonly direction: "asc" | "desc"; readonly missing: "first" | "last" };
   /** Read-only navigation through a projected native local-item reference. */
   readonly links?: readonly ApplicationViewLink[];
   /** Last native journal samples on this selected item; no expression or join. */
@@ -102,7 +104,7 @@ export function readApplicationViews(value: unknown): ApplicationViews {
   for (const given of Object.values(views)) {
     if (!isRecord(given)) return fail();
     const common = "acts,back,context,display,fallback,item,kind,projection,refresh,revision,waiting";
-    const view = only(given, (common + (given["kind"] === "surface" ? ",opens,resource" : ",actor,facts,summary,title" + (Object.hasOwn(given, "links") ? ",links" : "") + (Object.hasOwn(given, "series") ? ",series" : ""))).split(",").sort().join());
+    const view = only(given, (common + (given["kind"] === "surface" ? ",opens,resource" : ",actor,facts,summary,title" + (Object.hasOwn(given, "links") ? ",links" : "") + (Object.hasOwn(given, "series") ? ",series" : "") + (Object.hasOwn(given, "order") ? ",order" : ""))).split(",").sort().join());
     name(view["projection"]); name(view["item"]);
     if (view["revision"] !== "revision" || typeof view["display"] !== "string" || !["inline", "fullscreen"].includes(view["display"])) return fail();
     if (view["back"] !== null) name(view["back"]);
@@ -129,6 +131,11 @@ export function readApplicationViews(value: unknown): ApplicationViews {
       for (const target of Object.values(dict(view["opens"], 16))) name(target);
     } else {
       if (typeof view["kind"] !== "string" || !["card", "carousel", "record", "log"].includes(view["kind"])) return fail();
+      if (Object.hasOwn(view, "order")) {
+        if (view["kind"] !== "carousel") return fail();
+        const order = only(view["order"], "direction,field,missing"); name(order["field"]);
+        if (!["asc", "desc"].includes(String(order["direction"])) || !["first", "last"].includes(String(order["missing"]))) return fail();
+      }
       if (Object.hasOwn(view, "links")) {
         const links = view["links"];
         if (!Array.isArray(links) || links.length > 16) return fail("limit");

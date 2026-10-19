@@ -3,26 +3,33 @@
 import { expect, test } from "vitest";
 import type { DeclaredDefinition, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, keyIdOfSecret, parseStrict, sign } from "@generalbusiness/artroom-bytes";
-import { applicationProjectionId, applicationProjectionQueryDigest, packApplication2 } from "@generalbusiness/artroom-bytes/application-v2";
+import { applicationProjectionId, applicationProjectionQueryDigest, isApplicationJournalSource, packApplication2 } from "@generalbusiness/artroom-bytes/application-v2";
 import { applicationCounterPacket2 } from "../../scope/test/support/application-v2-fixture.ts";
 import { DeclaredViewSource } from "../src/views/declared.ts";
 import { ViewSessions } from "../src/views/session.ts";
 import { viewTools, toolsForHost } from "../src/views/tools.ts";
 import { viewInputToolName } from "../src/views/names.ts";
 
-async function fixture() {
+async function fixture(ordered = false, direction: "asc" | "desc" = "asc", missing: "first" | "last" = "first") {
   const base = await applicationCounterPacket2(), definition = parseStrict(base.package.semantic.definitions[0]!.bytes) as DeclaredDefinition;
   definition.acts["pause"] = { ...definition.acts["pause"]!, fields: {
     tag: { type: "enum", of: ["manual"], required: true }, moisture: { type: "int", min: 0, max: 100, required: false },
     ec: { type: "int", min: 0, max: 10000, required: false }, note: { type: "text", max: 64, required: false },
   } };
+  if (ordered) definition.items["board"] = { ...definition.items["board"]!, many: true, max: 4,
+    values: { ...definition.items["board"]!.values, probeTime: { required: false, fixed: false, of: { type: "time" } } } };
   const id = definitionDigest(definition), board = base.package.presentation.views["board"]!;
   if (board.kind === "surface") throw Error("Item fixture required.");
   const { creates: _creates, ...semantic } = base.package.semantic, { semantic: _semantic, ...presentation } = base.package.presentation;
   const secret = new Uint8Array(32).fill(67);
+  const projection = { ...semantic.projections["board"]!, definition: id };
+  const boardSource = projection.sources["board"]!;
+  if (isApplicationJournalSource(boardSource)) throw Error("Item fixture required.");
+  if (ordered) projection.sources = { board: { ...boardSource, read: "many", limit: 4,
+    fields: { ...boardSource.fields, probeTime: { from: { kind: "value", name: "probeTime" }, of: { type: "time" }, nullable: true } } } };
   const packet = await packApplication2({ name: "test.input", version: "1", semantic: { ...semantic, entry: id,
-    definitions: [{ id, bytes: canonicalize(definition) }], projections: { board: { ...semantic.projections["board"]!, definition: id } } },
-  presentation: { ...presentation, views: { board: { ...board, kind: "carousel", acts: [{ act: "pause", label: "Measure", needs: "counting.control", when: "state = 'open'",
+    definitions: [{ id, bytes: canonicalize(definition) }], projections: { board: projection } },
+  presentation: { ...presentation, views: { board: { ...board, kind: "carousel", ...(ordered ? { order: { field: "probeTime", direction, missing } } : {}), acts: [{ act: "pause", label: "Measure", needs: "counting.control", when: "state = 'open'",
     args: { tag: "manual" }, parameters: {
       moisture: { kind: "int", label: "Moisture", unit: "%", min: 0, max: 100, required: false },
       ec: { kind: "decimal", label: "EC", unit: "mS/cm", min: 0, max: 10000, scale: 3, required: false },
@@ -30,19 +37,22 @@ async function fixture() {
     } }] } } } }, { key: keyIdOfSecret(secret), sign: bytes => sign(secret, bytes) });
   const scope: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "lane" };
   let held = ["counting.control"], revision = 1, answer = "accepted";
+  const times: Record<string, string | null> = { 2: "2026-10-17T08:00:00Z", 3: null, 4: "2026-10-16T08:00:00Z", 9: "2026-10-16T08:00:00Z" };
   const source = new DeclaredViewSource(packet.bytes, packet.ids.release, {
     installation: async () => ({ scope, directory: { ...scope, kind: "directory" }, membership: { ...scope, kind: "membership" },
       rules: { ...scope, kind: "rules" }, destination: { ...scope, kind: "destination" }, definition: id, ids: packet.ids, item: 7 }), actions: async () => held,
     projection: async query => ({ ok: true, query: applicationProjectionQueryDigest(query)!, value: {
       v: 1, projection: applicationProjectionId(packet.package.semantic.projections["board"]!), scope,
-      at: { seq: revision, hash: `sha256:${"a".repeat(64)}` }, sources: { board: [{ id: 2, type: "board", state: "open", revision, fields: { lastNumber: 42 } }] },
+      at: { seq: revision, hash: `sha256:${"a".repeat(64)}` }, sources: { board: (ordered ? [2, 3, 4, 9] : [2]).map(id => ({ id, type: "board", state: "open", revision,
+        fields: { lastNumber: 42, ...(ordered ? { probeTime: times[String(id)]! } : {}) } })) },
     } }),
   });
   const signed: { kind: string; args: Record<string, unknown> }[] = [];
   let release!: () => void;
   const gate = new Promise<void>(resolve => { release = resolve; });
   const sessions = new ViewSessions(source, { call: async () => { throw Error("No adapter."); } }, async (kind, args, admit) => {
-    await admit(); signed.push({ kind, args }); await gate; if (answer === "accepted") revision++;
+    await admit(); signed.push({ kind, args }); await gate;
+    if (answer === "accepted") { revision++; times[String(args["on"])] = "2026-10-18T08:00:00Z"; }
     return { structuredContent: { answer, fact: { seq: 2 }, private: "must not reach the model" }, content: [], isError: false };
   }, async () => { throw Error("No unresolved original."); });
   const opening = await sessions.open("measure", "board"), tools = viewTools(sessions, source.screens), tool = tools[viewInputToolName("board", "pause")]!;
@@ -96,4 +106,23 @@ test("an unknown measurement retains its original custody request and blocks a n
   display = await f.sessions.read("measure", display.cut, { position: 0 });
   expect(display.card?.actions[0]?.purpose).toBe("check-original");
   expect(f.signed).toHaveLength(1); expect(f.signed[0]!.args["idempotencyKey"]).toBe(before);
+});
+
+test("oldest-first carousel orders missing and tied probes, then advances after an accepted input", async () => {
+  const f = await fixture(true); f.release();
+  let display = await f.sessions.read("measure");
+  expect(display.card?.identity.item).toBe("3");
+  expect(display.card?.declared?.data.sources["board"]?.map(row => row.id)).toEqual([2, 3, 4, 9]);
+  const ids = [display.card!.identity.item];
+  for (const position of [1, 2, 3]) { display = await f.sessions.read("measure", display.cut, { position }); ids.push(display.card!.identity.item); }
+  expect(ids).toEqual(["3", "4", "9", "2"]);
+  await f.sessions.read("measure", display.cut, { position: 0 });
+  const accepted = await f.tool.run(f.args);
+  expect(accepted.structuredContent).toMatchObject({ identity: { item: "4", revision: "2" } });
+  expect(f.signed[0]!.args["on"]).toBe(3);
+  expect(await f.tool.run(f.args)).toEqual(accepted); expect(f.signed).toHaveLength(1);
+  const reverse = await fixture(true, "desc", "last");
+  let reversed = await reverse.sessions.read("measure"); const reverseIds = [reversed.card!.identity.item];
+  for (const position of [1, 2, 3]) { reversed = await reverse.sessions.read("measure", reversed.cut, { position }); reverseIds.push(reversed.card!.identity.item); }
+  expect(reverseIds).toEqual(["2", "4", "9", "3"]);
 });

@@ -100,3 +100,28 @@ flags in three fixture fields and index-signature access; these are fixed.
 call: two cases pass and the unchanged lost-standing assertion fails. The
 driver restores the source. Native Grow, ordering, age/layer and browser
 journeys still need implementation and owning evidence.
+
+## Carousel order checkpoint
+
+A carousel may declare one integer or timestamp field from its complete
+`many` source, ascending/descending direction and missing-first/last. Ties
+use ascending native item IDs. Binding refuses text/absent fields, partial
+item reads, other view kinds and executable or unknown order properties.
+Selection sorts a copy, leaving the exact projection data in native order.
+The accepted input's refresh selects the newly oldest item at position zero.
+
+The owning bytes file passes eight cases in
+`/tmp/artroom-g2-carousel-order-binding-initial-20261019.log`; the two MCP
+files pass eleven in `...carousel-order-native-time-20261019.log`, including
+missing readings, tied times, both directions and post-accept advancement.
+Both owning compilers pass. Initial fixture timestamps incorrectly included
+`.000Z`, which native canonical time refuses; they now use the native form.
+The test compiler also required narrowing the item/journal source union.
+`...carousel-order-control-20261019.log` removes ordering: three cases pass
+and the unchanged oldest-first assertion fails. The source is restored.
+
+The two-clock age option is ruled out: bench has 11 native value slots with
+a limit of 12, and probe already uses all 16 allowed effects. Two extra clocks
+would exceed both limits. A same-scope fact-time projection from the existing
+per-metric fact refs is proposed to planner; no allowance is raised and no
+metric's age is inferred from the overall probe time.
