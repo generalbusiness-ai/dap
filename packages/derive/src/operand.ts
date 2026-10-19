@@ -180,6 +180,7 @@ function entryPart(j: Judging, ref: Held, at: ScopeRef, part: EntryPart, item: I
   const { entry, local } = matched;
   const input = entry.input;
   if (part === "kind") return kindOf(entry);
+  if (part === "time") return entry.time;
   if (part === "intent") return input.type === "act" ? intentDigest(input.signed.intent) : input.type === "genesis" && input["founding"] ? intentDigest(input["founding"].intent) : null;
   // The primary item: the item the entry opens, by the entry's own `seq`, or the item an act or a timed entry is on.
   if (part === "on") return entry.effects.some((e) => e.effect === "open") ? entry.seq : input.type === "act" ? input.signed.intent.on : input.type === "timed" ? input.item : null;

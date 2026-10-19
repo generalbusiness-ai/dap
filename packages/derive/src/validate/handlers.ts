@@ -239,10 +239,11 @@ export function receives(d: Defining, v: unknown, top: Rec): void {
   const handled = new Set<string>();
   for (const [name, hv] of entries(v, "receives", bounds.receives)) {
     const path = at("receives", name);
-    const o = rec(hv, path, ["message", "class", "from", "fields", "opens", "also", "guards", "effects", "sends", "attention"], ["copies", "settles", ...(d.platform ? ["bound"] : [])]);
+    const o = rec(hv, path, ["message", "class", "from", "fields", "opens", "also", "guards", "effects", "sends", "attention"], ["copies", "settles", "order", ...(d.platform ? ["bound"] : [])]);
     if (!o) continue;
     const message = str(o["message"], at(path, "message"));
     const cls = o["class"];
+    if ("order" in o && (cls !== "tell" || (o["order"] !== "arrival" && o["order"] !== "source"))) bad("shape", at(path, "order"), "only a tell handler declares arrival or source order");
     if (typeof cls !== "string" || !CLASSES.includes(cls)) bad("shape", at(path, "class"), `is one of: ${CLASSES.join(", ")}`);
     if (cls === "advisory" && message !== null && !ADVISORIES.includes(message)) bad("name", at(path, "message"), `an advisory handler's message is its type: ${ADVISORIES.join(" or ")}`);
     const from = rec(o["from"], at(path, "from"), ["kind"], ["under"]);
@@ -271,6 +272,7 @@ export function receives(d: Defining, v: unknown, top: Rec): void {
     const of = isObject(o["bound"]) && typeof o["bound"]["of"] === "string" && o["bound"]["of"].startsWith("also.") ? o["bound"]["of"].slice(5) : null;
     const named = also(d, o["also"], at(path, "also"), fields, null, top, of === null ? null : { name: of, message, fields, written: o["fields"] });
     if ("bound" in o) bound(d, o["bound"], at(path, "bound"), { tell: cls === "tell", opens: o["opens"], message, fields }, named);
+    if ("bound" in o && o["order"] === "source") bad("shape", at(path, "order"), "source order is not supported on an item-bound native handler");
     const ctx: Ctx = { ...naming(), on, also: named.types, nascent: on !== null, fields, kind: cls === "advisory" ? null : message, handler: { update: cls === "relate", under: typeof from?.["under"] === "string" ? from["under"] : null }, senderKind: typeof from?.["kind"] === "string" ? from["kind"] : undefined, unsettled: named.unsettled };
     guards(d, o["guards"], at(path, "guards"), ctx, true);
     const copy = cls === "relate" && message !== null && isScopeKind(from?.["kind"]) ? { name: message, kind: from["kind"] } : null;
