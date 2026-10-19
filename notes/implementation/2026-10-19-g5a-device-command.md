@@ -3,15 +3,16 @@
 Request: `5aae9b0ab67909ee49118dc49d465fe881a8037a`.
 Promise: `79f23cb727ca2ae086f49764b6b8ab7a69d2f950`.
 Base: reviewed Main `3ed2a08a50f31e84ea42b4f6027684e14a8cedb8`.
-Historical gate and baseline comparisons below ran on Main2127. The later
+The first three gate attempts and historical baseline comparisons ran on
+Main2127. The later
 Main adds only the approved sales-design note; receiptbcfbc8dc and its
 exact one-path Git delta were read before incorporation.
 
 G5a adds device-command@1, its bounded native install grant, Grow commands
 and owner answers, and shared runtime/replay code. Target, sensor report
 and owner outcome have separate writers. No device or provider operation
-runs. The delivery is one complete Source head. Three full gates failed;
-the corrected full gate and exact-head review remain pending.
+runs. The delivery is one complete Source head. Three failed gates remain
+evidence. The corrected full gate passes; exact-head review is pending.
 
 ## Decisions and native pins
 
@@ -324,6 +325,43 @@ The seven attempt3 timeout stories pass in the new configured project
 (49863, native-functional-budget-witnesses log): six files, seven selected
 cases, one unselected skip; unchanged assertions completed in14.66s total
 case time. This focused result does not replace the full gate.
+
+## Passing full gate
+
+The new committed harness configuration ran in a new original process,
+43536, at code/test head09918e4a94a2cd85660343171ad567d1b26b0daa,
+tree0fc433fdf4f464c5d8217ce913b9036dd0db8946, based on reviewed Main3ed2a08a.
+The process naturally closed exit0. The checkout was clean before and after;
+no source/dependency edit, install or profiling occurred during this run.
+The final candidate changes only this evidence note after that passing head.
+
+The complete gate passes: whitespace, all workspace typechecks,401 Vitest
+files with1939 passing cases and three original skipped cases in one skipped
+file,31 chained Node checks, and55 Counting Node witnesses. Typecheck was
+8.4s elapsed/31.8s CPU; the complete test step478.3s/673.5s CPU. Vitest itself
+reported471.86s. These are the gate's separate step measurements, not an
+outer pipeline measurement or product latency benchmark.
+
+Outer log: `/tmp/artroom-g5a-functional-budget-gate-20261019.log`, SHA-256
+`2208930fed79c76daf72e5e83a247f80b145a5bf837b6c0dc867b1b5ca897c33`.
+Raw step logs:
+`/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.osuUJ9ItCU`.
+Counting source/metafile and actual Node results:
+`/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/artroom-counting-node-DvITjH`.
+Original terminal receipt and machine metadata are retained. Earlier failed
+runs, diagnostic allowances, scripted fault output and runtime warnings
+remain in the evidence. There is no warning-free or general stability claim.
+
+The incorporated Main's landing auditeb413618 was also read in full: all
+2291 prior leaves stayed exact and the approved note was the sole addition.
+Its original merge-process log was not supplied, so this note makes no
+independent execution/timing/warning claim for that other landing.
+
+No G5a Source review, landing, push, deployment or physical device action
+has occurred. This note and the exact passing code will be frozen for the
+independent review; no further tests are needed without a new change or
+unresolved finding. Stability1d3a13e3 and installed Grow archive/export S2b
+remain separate open work.
 
 ## Dependency preparation
 
