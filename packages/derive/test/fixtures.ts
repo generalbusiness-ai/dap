@@ -515,7 +515,10 @@ export function created(definition: ValidDefinition = deskDefinition, given: Int
 export function sent(from: Ledger, seq: number, n = 0): { delivered: Delivered; source: Source } {
   const { entry } = from.entries[seq]!;
   const send = entry.sends.find((s) => s.n === n)!;
-  return { delivered: { to: send.to, from: from.fact(seq), n, message: send.message }, source: { entry, under: from.under } };
+  const birth = from.entries[0]?.entry.input;
+  // This in-memory source reader has the actual ledger's genesis. Tests of
+  // missing metadata must omit it explicitly; no payload supplies this pin.
+  return { delivered: { to: send.to, from: from.fact(seq), n, message: send.message }, source: { entry, under: from.under, ...(birth?.type === "genesis" ? { pin: birth.seed.definition } : {}) } };
 }
 
 /** What a test changes in a delivery: the envelope, or the source entry that is read. */

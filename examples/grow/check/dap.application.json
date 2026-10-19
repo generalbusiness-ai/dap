@@ -1566,6 +1566,7 @@
           "read": "many",
           "states": [
             "active",
+            "conflicted",
             "failed",
             "pending"
           ],
@@ -1977,5 +1978,49 @@
     "fault-scenario.json"
   ],
   "v": 2,
-  "version": "0.2.0"
+  "version": "0.2.0",
+  "connections": [
+    {
+      "from": "site.json",
+      "item": "room",
+      "slot": "scope",
+      "to": "room.json"
+    },
+    {
+      "from": "room.json",
+      "item": "room",
+      "slot": "site",
+      "to": "site.json"
+    }
+  ],
+  "rights": {
+    "room-count": {
+      "owner": "site.json"
+    },
+    "climate": {
+      "owner": "room.json"
+    }
+  },
+  "exercises": [
+    {
+      "definition": "site.json",
+      "row": "acts.create-room",
+      "right": "room-count"
+    },
+    {
+      "definition": "room.json",
+      "row": "acts.authorize",
+      "right": "climate"
+    }
+  ],
+  "groups": [],
+  "order": [
+    {
+      "definition": "site.json",
+      "handler": "room-summary",
+      "by": "any"
+    }
+  ],
+  "derivation": {},
+  "parameters": {}
 }

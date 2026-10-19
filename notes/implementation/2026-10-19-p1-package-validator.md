@@ -179,3 +179,68 @@ new lock SHA-256
 Earlier dependency evidence remains historical. Graph, Bytes and Scope
 owning typechecks passed before the latest component checks; no complete
 gate, review, landing or completion is claimed.
+
+## Public validator and maintained-package checkpoint
+
+The shared graph is now called by the v2 writer before signing and by its
+reader. The public `validatePackage` byte entry in Derive composes the strict
+signed reader, native per-definition validation and graph report. The CLI
+resolves composition references only to already captured source files and
+prints named findings as rows; it escapes control characters in those rows.
+This remains unfinished P1 work, with no final gate, review or landing.
+
+Port fields reuse native type inclusion and native literal-value guards;
+the guards moved to shared code without new third-party dependencies. The
+graph refuses an unproved field fit, including an optional value required
+by a recipient. A declaration tree has a 64-level graph allowance and its
+native count limits are checked before graph joins. Endpoint writers are
+indexed by the full definition/item/slot tuple. Cycle acknowledgement
+removes state-conditioned edges and looks for any remaining automatic
+send/create cycle; it claims no termination or storm bound.
+
+Eight Grow component cases pass, including a signed public-byte case and
+a codec refusal before signing. Additional pairs cover field mismatch,
+same-name wrong peer, unknown message, unreachable handler, pending work
+without its timed exit, and an unacknowledged automatic create/report cycle.
+The first cycle fixture correctly failed because its birth field was
+optional; making that source required made the intended pair valid. The
+literal hand count is 574 live item slots, and ceilings of ten entries and
+seven item keys on successful creation paths. Failed attempts, repeated
+input, timed work and outside scopes are excluded; lifetime traffic and
+recyclable key counts remain unproved. These figures promise no host
+admission, physical heap, provider quota or consent. See
+`/tmp/artroom-p1-grow-projected-hand-count-20261019.log` and the preceding
+cycle/pending logs. CLI owning typecheck passes in
+`/tmp/artroom-p1-cli-findings-type-initial-20261019.log`.
+
+The maintained Grow package declares connections, rights, exercises and
+order. Site pins its actual Room definition; conflict keeps its backing
+slot in nonfinal `conflicted`, and request failures have explicit clauses.
+The source-reader fixture now takes a pin from its actual ledger genesis;
+the missing-metadata peer test omits it explicitly. Fifteen peer/graph/Grow
+cases pass in `/tmp/artroom-p1-grow-verified-genesis-source-20261019.log`.
+The fault scenario's selected-definition input was repinned; its literal
+outcome expectations were not derived or changed.
+
+Existing v2 consumers initially failed the new obligations. Counter and
+Lending now list their establishment grant in the admin role; test packets
+list otherwise uncovered actions in a separate setup role, retaining their
+selected member/control role contents. Lending declares its Destination
+endpoint outside the package and explicitly lists no-op failure clauses.
+Its native bytes, pin and maintained runbook were regenerated. The owned
+child fixture declares its child endpoint and undelivered clause. These
+are intentional source/metadata changes to comply with P1, not compatibility
+exceptions. Native install/MCP consumers pass seven cases in
+`/tmp/artroom-p1-codec-native-consumers-covered-20261019.log`; CLI maintained
+examples, packaging and Lending definition checks pass sixteen cases in
+`/tmp/artroom-p1-maintained-composition-covered-20261019.log`. Their earlier
+failure logs remain diagnostics. The first native owned-scope run stopped
+during maintained-package preparation at the missing Counter grant; no
+native scenario pass is claimed for that attempt. The unsupported Node
+transform-types probe is not evidence; the later diagnostics used the
+already pinned tsx/esbuild tools without installing anything.
+
+Remaining work includes the full signed Grow refusal matrix, the remaining
+lifetime fan-in variants (especially relation before creation failure),
+staged-form and bounds witnesses, owning native regressions, actual Main
+incorporation, final Page generation and one final gate before review.

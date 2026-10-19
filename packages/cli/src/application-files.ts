@@ -57,7 +57,9 @@ async function readSource(root: string, path: string, most: number): Promise<Uin
 async function source(directory: string, configPath: string): Promise<{ input: ApplicationPackageInput | ApplicationPackageInput2; root: string; scenarios: readonly string[] }> {
   const root = await realpath(directory);
   if (!(await lstat(root)).isDirectory()) return refuse("The application root must be a directory.");
-  const config = object(parseStrictBytes(await readSource(root, pathOf(configPath), LIMITS.metadataBytes)), "capabilities,definitions,entry,host,name,predecessor,presentation,projections,roles,v,version", ["scenarios"]);
+  const captured = parseStrictBytes(await readSource(root, pathOf(configPath), LIMITS.metadataBytes));
+  const compositionKeys = ["connections", "rights", "exercises", "groups", "order", "derivation", "parameters"] as const;
+  const config = object(captured, "capabilities,definitions,entry,host,name,predecessor,presentation,projections,roles,v,version", ["scenarios", ...(isRecord(captured) && captured["v"] === 2 ? compositionKeys : [])]);
   const givenScenarios = Object.hasOwn(config, "scenarios") ? config["scenarios"] : [];
   if (!Array.isArray(givenScenarios) || givenScenarios.length > 32) return refuse("List at most 32 local scenario files.");
   const scenarios = givenScenarios.map(pathOf);
@@ -110,9 +112,23 @@ async function source(directory: string, configPath: string): Promise<{ input: A
     const index = typeof projection["definition"] === "string" ? paths.indexOf(projection["definition"]) : -1;
     return [name, index < 0 ? projection : { ...projection, definition: definitions[index]!.id }];
   })) : given;
+  // Resolve only files already captured and natively validated above. These
+  // metadata references cause no additional file reads. The codec still owns
+  // strict syntax, exact digest membership and all graph obligations.
+  const definitionRef = (value: unknown): unknown => {
+    const index = typeof value === "string" ? paths.indexOf(value) : -1;
+    return index < 0 ? value : definitions[index]!.id;
+  };
+  const composition = version === 2 ? Object.fromEntries(compositionKeys.filter(key => Object.hasOwn(config, key)).map(key => {
+    const value = config[key];
+    if (key === "connections" && Array.isArray(value)) return [key, value.map(edge => isRecord(edge) ? { ...edge, from: definitionRef(edge["from"]), to: edge["to"] === "outside" ? "outside" : definitionRef(edge["to"]) } : edge)];
+    if (key === "rights" && isRecord(value)) return [key, Object.fromEntries(Object.entries(value).map(([name, right]) => [name, isRecord(right) ? { ...right, owner: definitionRef(right["owner"]) } : right]))];
+    if ((key === "exercises" || key === "order") && Array.isArray(value)) return [key, value.map(row => isRecord(row) ? { ...row, definition: definitionRef(row["definition"]) } : row)];
+    return [key, value];
+  })) : {};
   const input = {
     name: config["name"], version: config["version"],
-    semantic: { v: version, entry: definitions[paths.indexOf(entry)]!.id, definitions, host: config["host"], projections, capabilities: config["capabilities"], roles: config["roles"], predecessor: config["predecessor"] },
+    semantic: { v: version, entry: definitions[paths.indexOf(entry)]!.id, definitions, host: config["host"], projections, capabilities: config["capabilities"], roles: config["roles"], predecessor: config["predecessor"], ...composition },
     presentation: { v: version, entry: presentation["entry"], assets, descriptions: presentation["descriptions"], ...(version === 2 ? { views: presentation["views"], resources: presentation["resources"] } : {}) },
   } as ApplicationPackageInput | ApplicationPackageInput2;
   return { input, root, scenarios };

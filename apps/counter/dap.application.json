@@ -370,6 +370,7 @@
   },
   "roles": {
     "admin": [
+      "counting.establish",
       "counting.control",
       "counting.activity",
       "counting.commit",

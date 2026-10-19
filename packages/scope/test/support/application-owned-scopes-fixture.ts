@@ -17,7 +17,7 @@ function definition(name: string, child?: Digest): DeclaredDefinition {
       establish: { step: "open", on: "root", grant, also: {}, fields: { opener: { type: "member", required: true } }, guards: [],
         effects: [{ party: { slot: "controller", from: { field: "opener" } } }, { value: { slot: "count", from: { const: 0 } } }],
         sends: child ? [{ create: { kind: "lane", definition: child, fields: { opener: { field: "opener" } },
-          result: { applied: [{ ref: { slot: "child", from: { sender: true } } }], refused: [], conflict: [] },
+          result: { applied: [{ ref: { slot: "child", from: { sender: true } } }], refused: [], conflict: [], undelivered: [] },
         } }] : [], attention: [],
       },
       bump: { step: "transition", on: "root", grant, also: {}, fields: {}, guards: [{ state: ["open"] }, { signer: ["controller"] }],
@@ -38,6 +38,7 @@ export async function applicationOwnedScopesPacket(label = "test-owned-root", ve
   const secret = new Uint8Array(32).fill(67), signer = { key: keyIdOfSecret(secret), sign: (bytes: Uint8Array) => sign(secret, bytes) };
   const packet = await packApplication2({ name: "test.owned-scopes", version, semantic: {
     v: 2, entry: rootId, definitions: [{ id: rootId, bytes: canonicalize(root) }, { id: childId, bytes: canonicalize(child) }],
+    connections: [{ from: rootId, item: "root", slot: "child", to: childId }],
     host: { execution: "recorded-do", profiles: ["restricted@1"] }, capabilities: [], roles: { admin: [grant] }, predecessor: null,
     projections: { root: projection(rootId, true), child: projection(childId, false) },
   }, presentation: { v: 2, entry: "index.html", assets: [{ path: "index.html", mediaType: "text/html", bytes: "VEVTVA" }], descriptions: {}, resources: {}, views: {

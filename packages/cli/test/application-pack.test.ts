@@ -39,7 +39,7 @@ async function refused(work: () => Promise<unknown>): Promise<unknown> {
 test("explicit v2 sources bind projections to captured definition paths and run native local replay", async () => {
   const f = await fixture("counter");
   try {
-    const config = { ...f.config, v: 2, projections: { board: { v: 1, definition: "definition.json", revision: "revision", sources: {
+    const config = { ...f.config, v: 2, roles: { ...f.config.roles, admin: ["counting.control", "counting.establish", "counting.join", "counting.leave"] }, projections: { board: { v: 1, definition: "definition.json", revision: "revision", sources: {
       board: { item: "board", read: "one", states: ["finished", "paused", "running"], limit: 1, fields: {
         lastNumber: { from: { kind: "value", name: "lastNumber" }, of: { type: "int", min: 0, max: 100 }, nullable: false },
       } },

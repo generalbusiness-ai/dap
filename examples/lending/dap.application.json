@@ -251,7 +251,8 @@
   "roles": {
     "admin": [
       "lending.member",
-      "lending.staff"
+      "lending.staff",
+      "lending.establish"
     ],
     "member": [
       "lending.member"
@@ -417,5 +418,13 @@
   },
   "scenarios": [
     "examples/lending/scenarios/application.json"
+  ],
+  "connections": [
+    {
+      "from": "examples/lending/definition.json",
+      "item": "library",
+      "slot": "destination",
+      "to": "outside"
+    }
   ]
 }

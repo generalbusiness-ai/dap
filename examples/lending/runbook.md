@@ -103,7 +103,7 @@ that allows a member's key to sign the corresponding acts.
 
 Use the approved declaration's canonical bytes under the deployed bounds.
 Its pin is
-`sha256:6fff876ce1c64afedfe9b5ba2864aa31a7a7d5e7e05d7b83619c00e168786ee7`.
+`sha256:0c43dd56cf6d96a8051cbb0386be71737d04925e5db917a7c316c20d660b7993`.
 The checked-in authoring file has one trailing LF. `--value` sends a file
 unchanged, so remove that authoring newline before activation or establishment.
 The current canonical input is 4,458 bytes, not the 4,459-byte authoring file.
@@ -111,8 +111,8 @@ The current canonical input is 4,458 bytes, not the 4,459-byte authoring file.
 ```sh
 umask 077
 node -e 'process.stdout.write(require("fs").readFileSync("examples/lending/definition.json", "utf8").replace(/\n$/, ""))' > "$DAP_HOME/lending.json"
-node packages/cli/bin/dap.js act activate --on rules --set digest=sha256:6fff876ce1c64afedfe9b5ba2864aa31a7a7d5e7e05d7b83619c00e168786ee7 --set name=lending --value "$DAP_HOME/lending.json"
-node packages/cli/bin/dap.js act establish-application --on directory --set definition=sha256:6fff876ce1c64afedfe9b5ba2864aa31a7a7d5e7e05d7b83619c00e168786ee7 --set 'values={}' --set execution=recorded-do --value "$DAP_HOME/lending.json"
+node packages/cli/bin/dap.js act activate --on rules --set digest=sha256:0c43dd56cf6d96a8051cbb0386be71737d04925e5db917a7c316c20d660b7993 --set name=lending --value "$DAP_HOME/lending.json"
+node packages/cli/bin/dap.js act establish-application --on directory --set definition=sha256:0c43dd56cf6d96a8051cbb0386be71737d04925e5db917a7c316c20d660b7993 --set 'values={}' --set execution=recorded-do --value "$DAP_HOME/lending.json"
 ```
 
 Keep the exact signed establishment request before submission. Reconcile

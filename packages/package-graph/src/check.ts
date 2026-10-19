@@ -1,12 +1,17 @@
 /** Package-only obligations over declarations already checked by the native
  * validator. Findings never stand in for per-definition validation. */
-import type { Digest } from "@generalbusiness/dap-contract";
+import type { Bounds, Digest } from "@generalbusiness/dap-contract";
 import type { PackageComposition, PackageFinding, PackageGraphDefinition } from "./types.ts";
 import { array, graphCreates, graphRows, graphSends, graphWriters, own, record, reportedCount, subjectType, type GraphRow, type GraphWriter } from "./model.ts";
 import { instanceBounds, relateKeyBound } from "./fan-in.ts";
 import { packagePorts } from "./ports.ts";
+import { portFieldFindings, type PackageValueRules } from "./port-fields.ts";
+import { graphBudget } from "./budget.ts";
+import { cycleFindings } from "./cycles.ts";
+import { projectedUse } from "./projected.ts";
 
-export interface PackageGraphInput {
+export interface PackageGraphInput extends PackageValueRules {
+  readonly bounds: Bounds;
   readonly entry: Digest;
   readonly definitions: readonly PackageGraphDefinition[];
   readonly composition: PackageComposition;
@@ -16,10 +21,13 @@ export interface PackageGraphReport {
   readonly findings: readonly PackageFinding[];
   /** Successful scope instances over their lifetime. Null means unproved. */
   readonly instances: readonly { readonly definition: Digest; readonly maximum: number | string | null }[];
+  readonly projected: ReturnType<typeof projectedUse> | null;
 }
 
 export function checkPackageGraph(input: PackageGraphInput): PackageGraphReport {
   const { definitions, composition } = input, findings: PackageFinding[] = [];
+  const budget = graphBudget(definitions, input.bounds);
+  if (budget.length) return { findings: budget, instances: [], projected: null };
   const rows = graphRows(definitions), sends = graphSends(rows), writers = graphWriters(rows, sends);
   const ids = new Map(definitions.map(part => [part.id, part])), creations = graphCreates(sends, new Set(ids.keys()));
   const add = (definition: Digest, row: string, check: string, reason: PackageFinding["reason"], message: string, severity: PackageFinding["severity"] = "refusal") => {
@@ -44,6 +52,15 @@ export function checkPackageGraph(input: PackageGraphInput): PackageGraphReport 
     return writer.row.owner.id !== input.entry && parents.length > 0 && parents.every(edge => edge.send.row.owner.id === target
       && record(own(record(edge.send.data["fields"]), field))["scope"] === true);
   };
+  const endpointWriters = new Map<string, GraphWriter[]>();
+  const endpointKey = (definition: Digest, item: string, slot: string) => JSON.stringify([definition, item, slot]);
+  for (const writer of writers) {
+    const item = subjectType(writer.row, writer.data["of"]), slot = record(writer.data["ref"])["slot"];
+    if (item && typeof slot === "string") {
+      const key = endpointKey(writer.row.owner.id, item, slot), group = endpointWriters.get(key) ?? [];
+      group.push(writer); endpointWriters.set(key, group);
+    }
+  }
   for (const [index, edge] of composition.connections.entries()) {
     const owner = ids.get(edge.from)!;
     const slot = record(own(record(record(own(record(owner.definition.items), edge.item))["refs"]), edge.slot));
@@ -51,8 +68,7 @@ export function checkPackageGraph(input: PackageGraphInput): PackageGraphReport 
       add(edge.from, `connections.${index}`, "endpoint-binding", "unbound-endpoint", "The connection must name a scope-reference slot."); continue;
     }
     if (edge.to === "outside") continue;
-    for (const writer of writers) {
-      if (writer.row.owner.id !== edge.from || subjectType(writer.row, writer.data["of"]) !== edge.item || record(writer.data["ref"])["slot"] !== edge.slot) continue;
+    for (const writer of endpointWriters.get(endpointKey(edge.from, edge.item, edge.slot)) ?? []) {
       if (!appliedCreation(writer, edge.to) && !fromCreator(writer, edge.to)) {
         add(edge.from, writer.path, "endpoint-binding", "unbound-endpoint", `The ${edge.item}.${edge.slot} endpoint must come from its declared child or creator.`);
       }
@@ -113,6 +129,8 @@ export function checkPackageGraph(input: PackageGraphInput): PackageGraphReport 
   const bounds = instanceBounds(input.entry, definitions, creations, writers);
   const ports = packagePorts(input.entry, definitions, composition, rows, sends, creations);
   findings.push(...ports.findings);
+  findings.push(...portFieldFindings(rows, ports.links, creations, input));
+  findings.push(...cycleFindings(rows, ports.links, creations));
   for (const handler of rows) {
     if (handler.family !== "receives" || handler.path !== handler.logical || handler.data["class"] !== "relate") continue;
     const incoming = ports.links.filter(link => link.handler === handler), parts = incoming.map(({ send }) => {
@@ -126,5 +144,6 @@ export function checkPackageGraph(input: PackageGraphInput): PackageGraphReport 
       if (typeof copies === "number" && maximum > BigInt(copies)) add(handler.owner.id, handler.path, "port-typing", "fan-in-exceeds-copies", `Lifetime fan-in ${maximum} exceeds copies ${copies}.`);
     }
   }
-  return { findings, instances: definitions.map(part => ({ definition: part.id, maximum: reportedCount(bounds.get(part.id) ?? null) })) };
+  return { findings, instances: definitions.map(part => ({ definition: part.id, maximum: reportedCount(bounds.get(part.id) ?? null) })),
+    projected: projectedUse(input.entry, definitions, rows, creations, bounds, input.bounds) };
 }

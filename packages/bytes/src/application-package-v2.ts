@@ -1,14 +1,14 @@
 /** Versioned projections and presentation declarations. The legacy reader
  * is never widened; neither codec admits native execution or viewer rights. */
-import type { DeclaredDefinition, Digest } from "@generalbusiness/dap-contract";
-import { digestBytes, isDigest, isRecord, parseStrict, parseStrictBytes, utf8, verify } from "./index.ts";
+import { PROPOSED_BOUNDS, type DeclaredDefinition, type Digest } from "@generalbusiness/dap-contract";
+import { digestBytes, fitsFieldType, isDigest, isRecord, parseStrict, parseStrictBytes, utf8, verify } from "./index.ts";
 import { applicationJson } from "./application-json.ts";
 import { ApplicationPackageError, type ApplicationIds, type ApplicationPackageLimits } from "./application-types.ts";
 import { declarations, fail, limits, only, presentation as presentation1, release as release1, semantics as semantics1 } from "./application-package-validation.ts";
 import { bindApplicationProjection } from "./application-projection-binding.ts";
 import { bindApplicationViews } from "./application-view-binding.ts";
 import { isApplicationViewResource } from "./application-view.ts";
-import { emptyPackageComposition, PackageCompositionError, readPackageComposition } from "@generalbusiness/artroom-package-graph";
+import { checkPackageGraph, emptyPackageComposition, PackageCompositionError, readPackageComposition } from "@generalbusiness/artroom-package-graph";
 import { ApplicationPackageValidationError } from "./application-v2-types.ts";
 import type { Signer } from "./signer.ts";
 import type { ApplicationPackage2, ApplicationPackageInput2, ApplicationPresentation2, ApplicationRelease2, ApplicationReleaseProof2, ApplicationSemantics2, PackedApplication2 } from "./application-v2-types.ts";
@@ -48,6 +48,15 @@ function semantics(value: unknown, bounds: ApplicationPackageLimits): Applicatio
   }
   if (base.definitions.some(part => !covered.has(part.id))) return fail("closure");
   applicationJson({ host: base.host, roles: base.roles, capabilities: base.capabilities, projections, ...composition }, bounds.metadataBytes);
+  // Shared composition obligations are checked before signing and when
+  // reading. Whole native definition admission remains validatePackage's job.
+  let graph;
+  try {
+    graph = checkPackageGraph({ bounds: PROPOSED_BOUNDS, entry: base.entry,
+      definitions: base.definitions.map(part => ({ id: part.id, definition: parseStrict(part.bytes) as DeclaredDefinition })),
+      composition, roles: base.roles, literalFits: (type, value) => fitsFieldType(type, value, PROPOSED_BOUNDS) });
+  } catch { return fail(); }
+  if (graph.findings.some(finding => finding.severity === "refusal")) throw new ApplicationPackageValidationError(graph.findings);
   return body as unknown as ApplicationSemantics2;
 }
 function presentation(value: unknown, semantic: ApplicationSemantics2, semanticId: Digest, bounds: ApplicationPackageLimits): ApplicationPresentation2 {

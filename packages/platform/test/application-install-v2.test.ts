@@ -23,7 +23,9 @@ async function fixture() {
   const id = definitionDigest(countingCommitments), declaration = canonicalize(countingCommitments);
   const input = { name: "test.declared-install", version: "1", semantic: {
     v: 2 as const, entry: id, definitions: [{ id, bytes: declaration }],
-    host: { execution: "recorded-do" as const, profiles: ["restricted@1"] }, capabilities: [], roles: { member: ["counting.fulfill"] }, predecessor: null,
+    host: { execution: "recorded-do" as const, profiles: ["restricted@1"] }, capabilities: [], roles: { member: ["counting.fulfill"],
+      setup: ["counting.activity", "counting.commit", "counting.control", "counting.establish", "counting.fail", "counting.participate"],
+    }, predecessor: null,
     projections: { board: readApplicationProjection({ v: 1, definition: id, revision: "revision", sources: {
       board: { item: "board", read: "one", states: ["finished", "open", "paused"], limit: 1, fields: {
         lastNumber: { from: { kind: "value", name: "lastNumber" }, of: { type: "int", min: 0, max: 100 }, nullable: false },

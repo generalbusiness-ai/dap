@@ -60,7 +60,7 @@ export const room: DeclaredDefinition = {
     "report-site": act({ step: "transition", on: "room", grant: "grow.sense", fields: { openAlerts: { type: "int", min: 0, max: 4, required: true } },
       guards: [live("on", ["open"]), { set: "site" }, { set: "siteRoom" }, { count: { type: "alert", states: ["open", "held", "authorized"], min: { field: "openAlerts" }, max: { field: "openAlerts" } }, reason: "wrong-alert-count" }],
       effects: [{ ref: { slot: "lastSiteReport", from: "self" } }],
-      sends: [{ relate: { to: { slot: "site" }, name: "room-summary", item: { item: "on" }, state: "reported", detail: { room: { slot: "siteRoom" }, openAlerts: { field: "openAlerts" } }, result: {} } }],
+      sends: [{ relate: { to: { slot: "site" }, name: "room-summary", item: { item: "on" }, state: "reported", detail: { room: { slot: "siteRoom" }, openAlerts: { field: "openAlerts" } }, result: { refused: [], undelivered: [] } } }],
     }),
     ...zone.acts, ...device.acts, ...work.acts, ...watering.acts,
     "bind-zone-devices": act({ step: "transition", on: "zone", grant: "grow.configure",

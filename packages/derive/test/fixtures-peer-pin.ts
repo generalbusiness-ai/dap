@@ -25,7 +25,7 @@ export function peerPinFixture() {
 export function receivePeerPin(receiver: Ledger, sender: Ledger, verified = true) {
   const { delivered, source } = sent(sender, 1, 0), birth = sender.entries[0]!.entry.input;
   if (birth.type !== "genesis") throw Error("the actual sender birth is required");
-  const checked = verified ? { ...source, pin: birth.seed.definition } : source;
+  const checked = verified ? { ...source, pin: birth.seed.definition } : { entry: source.entry, under: source.under };
   const judgment = judgeDelivery(receiver.state, receiver.definition, delivered, arriving(receiver, delivered, checked));
   if (judgment.result === "write") receiver.seal(judgment.draft);
   return judgment;
