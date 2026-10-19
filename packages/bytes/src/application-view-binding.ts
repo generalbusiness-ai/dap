@@ -2,6 +2,7 @@
  * admission/evaluation and current viewer authority belong to the host. */
 import { PROPOSED_BOUNDS, type DeclaredDefinition } from "@generalbusiness/dap-contract";
 import { fitsFieldType, isRecord, parseStrict } from "./index.ts";
+import { viewParameterFits } from "./application-view-parameters.ts";
 import { applicationJson } from "./application-json.ts";
 import { APPLICATION_PACKAGE_LIMITS, type ApplicationDefinition } from "./application-types.ts";
 import { bindApplicationProjection } from "./application-projection-binding.ts";
@@ -68,7 +69,13 @@ export function bindApplicationViews(value: unknown, projections: Readonly<Recor
             const field = Object.hasOwn(act.fields, name) ? act.fields[name] : undefined;
             if (!field || !("type" in field) || !fitsFieldType(field, value, PROPOSED_BOUNDS)) return fail();
           }
-          if (Object.entries(act.fields).some(([name, field]) => field.required && !Object.hasOwn(field, "default") && !Object.hasOwn(args, name))) return fail();
+          const parameters = offered.parameters ?? {};
+          for (const [name, parameter] of Object.entries(parameters)) {
+            const field = Object.hasOwn(act.fields, name) ? act.fields[name] : undefined;
+            if (Object.hasOwn(args, name) || !field || !("type" in field) || !viewParameterFits(parameter, field)) return fail();
+          }
+          if (Object.entries(act.fields).some(([name, field]) => field.required && !Object.hasOwn(field, "default") && !Object.hasOwn(args, name)
+            && (!Object.hasOwn(parameters, name) || !parameters[name]!.required))) return fail();
         }
       }
     }

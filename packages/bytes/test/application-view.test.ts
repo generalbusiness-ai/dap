@@ -135,3 +135,25 @@ test("record series bind only bounded integer history on the selected native ite
   expect(() => bindApplicationViews({ record: { ...views().note, kind: "record", acts: [], series } },
     { "room.note": { ...selected, definition: wrongId } }, [{ id: wrongId, bytes: canonicalize(wrong) }])).toThrow(ApplicationViewError);
 });
+
+// One native act may combine fixed fields with bounded human scalar inputs;
+// required fields cannot disappear or be overridden by the model.
+test("declared parameters bind to native fields beside constants without overlap or wider ranges", () => {
+  const changed = structuredClone(definition);
+  changed.acts["hold"] = { ...changed.acts["hold"]!, fields: {
+    target: { type: "enum", of: ["on", "off"], required: true }, level: { type: "int", min: 0, max: 10000, required: true },
+  } };
+  const id = definitionDigest(changed), selected = { ...projection, definition: id };
+  const parameter = { kind: "decimal", label: "Level", unit: "units", min: 0, max: 10000, scale: 3, required: true };
+  const act = { act: "hold", label: "Set level from chat", needs: "app.edit", when: "state = 'open'", args: { target: "off" }, parameters: { level: parameter } };
+  const bind = (offered: unknown) => bindApplicationViews({ ...views(), note: { ...views().note, acts: [offered] } },
+    { "room.note": selected }, [{ id, bytes: canonicalize(changed) }]);
+  expect(bind(act)["note"]!.acts[0]).toEqual(act);
+  for (const bad of [
+    { ...act, args: { target: "off", level: 0 } },
+    { ...act, parameters: { level: { ...parameter, required: false } } },
+    { ...act, parameters: { level: { ...parameter, max: 10001 } } },
+    { ...act, parameters: { invented: parameter } },
+    { ...act, parameters: { level: { kind: "text", label: "Level", max: 10, required: true } } },
+  ]) expect(() => bind(bad)).toThrow(ApplicationViewError);
+});

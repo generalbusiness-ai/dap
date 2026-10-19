@@ -2,6 +2,7 @@
  * authority; the host separately admits/evaluates when and checks needs. */
 import type { FieldValue } from "@generalbusiness/dap-contract";
 import { canonicalize, isRecord, parseStrict, utf8 } from "./index.ts";
+import { readViewParameters, ApplicationViewParameterError, type ApplicationViewParameters } from "./application-view-parameters.ts";
 import { applicationJson } from "./application-json.ts";
 import { ApplicationPackageError } from "./application-types.ts";
 export const APPLICATION_VIEW_LIMITS = Object.freeze({ bytes: 64 * 1024, views: 32, acts: 2, facts: 16, templateBytes: 4096, expressionBytes: 2048 });
@@ -10,6 +11,8 @@ export interface ApplicationViewAct {
   readonly label: string;
   /** Constant native fields; no row substitution or browser-supplied values. */
   readonly args?: Readonly<Record<string, FieldValue>>;
+  /** Human scalar inputs exposed by this view's derived model tool. */
+  readonly parameters?: ApplicationViewParameters;
   readonly needs: string;
   /** A restricted@1 expression over the selected row's metadata and fields. */
   readonly when: string;
@@ -111,9 +114,13 @@ export function readApplicationViews(value: unknown): ApplicationViews {
     if (!Array.isArray(acts) || acts.length > B.acts) return fail("limit");
     const used = new Set<string>();
     for (const given of acts) {
-      const act = only(given, isRecord(given) && Object.hasOwn(given, "args") ? "act,args,label,needs,when" : "act,label,needs,when"), kind = name(act["act"]);
+      const act = only(given, ("act,label,needs,when" + (isRecord(given) && Object.hasOwn(given, "args") ? ",args" : "") + (isRecord(given) && Object.hasOwn(given, "parameters") ? ",parameters" : "")).split(",").sort().join()), kind = name(act["act"]);
       if (Object.hasOwn(act, "args") && (!isRecord(act["args"]) || Object.keys(act["args"]).length > 128)) return fail();
-      const binding = canonicalize([kind, act["args"] ?? {}]);
+      if (Object.hasOwn(act, "parameters")) {
+        try { readViewParameters(act["parameters"]); }
+        catch (error) { return fail(error instanceof ApplicationViewParameterError ? error.reason : "invalid"); }
+      }
+      const binding = canonicalize([kind, act["args"] ?? {}, act["parameters"] ?? {}]);
       if (used.has(binding)) return fail(); used.add(binding);
       name(act["needs"]); text(act["label"], 80); text(act["when"], B.expressionBytes);
     }

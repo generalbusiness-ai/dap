@@ -7,3 +7,5 @@ export type { ApplicationJournalRead } from "./application-journal-projection.ts
 export * from "./application-projection-wire.ts";
 export * from "./application-view.ts";
 export * from "./application-view-binding.ts";
+
+export * from "./application-view-parameters.ts";
