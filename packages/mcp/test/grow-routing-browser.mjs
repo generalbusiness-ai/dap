@@ -65,6 +65,12 @@ try {
     };
     const request = await ask('High EC on D4; request early watering.');
     const roomA = session.site.state.page('room', ['active'], null, 3).items.find(item => canonicalize(item.refs.scope) === canonicalize(session.scope.at)); assert.ok(roomA);
+    const roomB = await session.createRoom('Room B');
+    const provision = async name => {
+      const member = session.actors.find(actor => actor.name === name).member;
+      const result = await day.nativeAct('operator', 'provision-presence', null, { member }, {}, 'site');
+      assert.equal(result.answer, 'accepted', JSON.stringify(result)); return result.receipt.fact.seq;
+    };
     const errors = [], proofs = {};
     const pageFor = async (name, screen) => {
       viewer = people[name]; const page = await browser.newPage({ viewport: { width: width + 32, height: 1100 } });
@@ -82,10 +88,34 @@ try {
     await app.locator('summary').filter({ hasText: 'Read points' }).click();
     await app.locator('.read-points code').filter({ hasText: session.site.at.scope }).first().waitFor();
     await layout(app, width); await capture(page, app, `unavailable-${width}.png`);
-    const arrival = await day.nativeAct('day', 'arrive', null, { room: roomA.id }, {}, 'site'); assert.equal(arrival.answer, 'accepted');
+    const dayPresence = await provision('day'), nightPresence = await provision('night');
+    assert.equal(session.site.state.item(dayPresence).state, 'unknown');
+    assert.equal(session.site.state.item(dayPresence).refs.reportedAt, null);
+    const unknownReads = await page.evaluate(() => proof.calls.filter(call => call.name === 'view_read').length);
+    await page.waitForFunction(reads => proof.calls.filter(call => call.name === 'view_read').length >= reads + 2, unknownReads);
+    await app.getByRole('heading', { name: 'Assignment unavailable', exact: true }).waitFor();
+    assert.equal(await app.getByRole('button', { name: 'Take', exact: true }).count(), 0);
+    const arrival = await day.nativeAct('day', 'arrive', dayPresence, { room: roomA.id }, { on: dayPresence }, 'site'); assert.equal(arrival.answer, 'accepted');
+    assert.equal(session.site.state.item(dayPresence).refs.reportedAt, arrival.receipt.fact.seq);
     if (await app.getByRole('button', { name: 'Retry read', exact: true }).isVisible()) await app.getByRole('button', { name: 'Retry read', exact: true }).click();
     await app.getByRole('heading', { name: title, exact: true }).waitFor(); await app.getByRole('button', { name: 'Take', exact: true }).waitFor();
     await page.waitForFunction(() => proof.contexts.at(-1)?.structuredContent?.identity?.kind === 'task' && proof.contexts.at(-1)?.structuredContent?.status === 'ready');
+    const stablePresence = structuredClone(session.site.state.item(dayPresence));
+    const wrongRoom = await day.nativeAct('day', 'leave', dayPresence, { room: roomB.item }, { on: dayPresence }, 'site');
+    assert.deepEqual({ answer: wrongRoom.answer, reason: wrongRoom.reason, name: wrongRoom.name }, { answer: 'refused', reason: 'guard-failed', name: 'wrong-presence-room' });
+    for (let i = 0; i < 101; i++) {
+      const result = await day.nativeAct('night', 'arrive', nightPresence, { room: roomB.item }, { on: nightPresence }, 'site');
+      assert.equal(result.answer, 'accepted', JSON.stringify(result));
+    }
+    assert.deepEqual(session.site.state.item(dayPresence), stablePresence);
+    await app.getByRole('heading', { name: title, exact: true }).waitFor();
+    await app.getByRole('button', { name: 'Take', exact: true }).waitFor();
+    const sitePoint = session.site.state.scope().head;
+    await page.waitForFunction(({ scope, seq, hash }) => {
+      const context = proof.contexts.at(-1)?.structuredContent, points = context?.projection?.filter(point => point.scope === scope) ?? [];
+      return context?.status === 'ready' && points.length === 2 && points.every(point => point.seq === seq && point.hash === hash);
+    }, { scope: session.site.at.scope, ...sitePoint });
+    await app.locator('#card-root[aria-busy="false"]').waitFor();
     const quiet = await page.evaluate(() => ({ contexts: proof.contexts.length, reads: proof.calls.filter(call => call.name === 'view_read').length }));
     await page.waitForFunction(reads => proof.calls.filter(call => call.name === 'view_read').length >= reads + 2, quiet.reads);
     assert.equal(await page.evaluate(() => proof.contexts.length), quiet.contexts);
@@ -137,9 +167,9 @@ try {
     assert.deepEqual(errors, []);
     for (const proof of Object.values(proofs)) assert.ok(!JSON.stringify(proof.contexts).includes('"sources"'));
     const replay = [];
-    for (const scope of [session.site, session.scope]) { const result = await scope.replay(); assert.equal(result.report.result, 'consistent'); assert.equal(result.why, null); replay.push({ scope: scope.at, result: result.report.result }); }
-    await writeFile(join(out, `proof-${width}.json`), JSON.stringify({ proofs, errors, signed: { day: day.submitted, operator: operator.submitted, head: head.submitted }, replay }, null, 2));
-    report.cases.push({ width, resizedTo: otherWidth, unavailableReadPoints: true, quietRefresh: true, appOnlyRead: true,
+    for (const scope of [session.site, session.scope, roomB.scope]) { const result = await scope.replay(); assert.equal(result.report.result, 'consistent'); assert.equal(result.why, null); replay.push({ scope: scope.at, result: result.report.result }); }
+    await writeFile(join(out, `proof-${width}.json`), JSON.stringify({ proofs, errors, signed: { day: day.submitted, operator: operator.submitted, head: head.submitted }, presence: { item: dayPresence, scope: session.site.at, arrival: arrival.receipt.fact, rawReportPosition: stablePresence.refs.reportedAt, unrelatedReports: 101, wrongRoomRefusal: wrongRoom.name }, replay }, null, 2));
+    report.cases.push({ width, resizedTo: otherWidth, unavailableReadPoints: true, provisionedUnknown: true, durableAfterOtherReports: 101, wrongRoomRefused: true, quietRefresh: true, appOnlyRead: true,
       signatures: { day: 2, operator: 1, head: 2 }, nativeKinds: ['take-task', 'report-task', 'hold', 'approve-watering', 'decline-watering'], emptyBack: true, replay: 'consistent', errors });
   }
   await writeFile(join(out, 'report.json'), JSON.stringify(report, null, 2) + '\n'); console.log(JSON.stringify(report));

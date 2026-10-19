@@ -128,9 +128,20 @@ request keeps its captured card and check. Empty queues retain declared Back
 navigation and the refresh interval, so later items can appear.
 
 The [Grow declarations](../examples/grow/check/dap.application.json) contain
-separate alert, task and watering carousels. Their first presence rule uses
-only the declared last-100 Site entries. A covered arrival and matching
-leave can establish a result; older evidence stays unavailable.
+separate alert, task and watering carousels. Their presence rule reads
+the Site's bounded per-member presence items. An admin provisions an item
+in `unknown`; only its member's `arrive` and `leave` acts report location.
+The task rule treats missing and unknown items as unavailable, away as
+unassigned, and present as assigned only when the room's full scope matches.
+Other members' reports do not erase this recorded state. The separate
+`presence-activity` projection is a recent journal log, not occupancy.
+
+The presence item's `reportedAt` slot has native type `fact` and is written
+from `self`. Its raw local value is the report's entry position, qualified
+by the projection's complete Site scope and incarnation. It is not the
+item revision. A reader can resolve that known position directly to its
+entry and hash; a refused, missing or unavailable lookup supplies no fact.
+Provisioning leaves the room and report slots null.
 
 ## Fact timestamps and display ages
 
