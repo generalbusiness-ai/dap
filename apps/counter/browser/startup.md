@@ -8,7 +8,7 @@ presentation at `/applications/<directory>/<item>/<presentation>/`.
 
 ## Install and connect
 
-Create a generic room with `--cohort trusted-application`. Pack and commit
+Create a generic room with `--cohort declared-application`. Pack and commit
 the maintained package, have the host operator list its exact release and
 publisher, then run the Git-URI install from [the CLI guide](../../../docs/cli.md).
 The install records the selected default grants, activates the declaration,
@@ -27,6 +27,10 @@ Choose an available English (US) voice, then select **Join count**. This
 records participation and activates your own participant before arming the
 voice. The controller initializes the paused board and separately starts it.
 The native scope admits each commitment under its fairness and grant rules.
+The browser reads the package's declared `state` projection. That read binds
+the exact installed scope, Directory and install item; it preserves native
+head and item revisions without constructing a Summary response. Missing or
+mismatched installation metadata leaves the observation unavailable.
 A reload restores this browser's key and original requests, without replaying
 speech or automatically rearming it. Private device and join slots are bound
 to the native application incarnation. Session credentials stay in memory.
@@ -39,9 +43,9 @@ The register6/directory6/membership5/rules3/destination2 cohort and its native
 judging/replay support remain for recorded histories. New room setup through
 that application-specific cohort is retired. The host no longer serves the
 old `/counting/` route or a compiled Counter asset module. Outside the generic
-route, the maintained browser can still read a historical demo bundle or
-matching public binding and enrolled key through its legacy import controls.
-Those controls are hidden on an installed screen. `preview.html` remains an
+route, legacy import controls retain old bindings and request custody. A new
+counting observation requires an installed declared-projection context.
+Those import controls are hidden on an installed screen. `preview.html` remains an
 explicit local fake transport/session/scope/speech/clock surface.
 
 ## Pledge, audio and fulfillment are different events

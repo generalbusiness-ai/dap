@@ -66,6 +66,26 @@
   "name": "grow-site-queued-creation",
   "steps": [
     {
+      "projection": {
+        "name": "site",
+        "at": {
+          "seq": 0
+        },
+        "sources": {
+          "site": [
+            {
+              "id": 0,
+              "state": "open",
+              "fields": {
+                "label": "Test site"
+              }
+            }
+          ],
+          "room": []
+        }
+      }
+    },
+    {
       "act": {
         "actor": "operator",
         "fields": {
@@ -140,6 +160,74 @@
         "state": "pending",
         "values": {
           "openAlerts": null
+        }
+      }
+    },
+    {
+      "projection": {
+        "name": "site",
+        "at": {
+          "seq": 5
+        },
+        "sources": {
+          "room": [
+            {
+              "id": 1,
+              "state": "pending",
+              "fields": {
+                "label": "Room A",
+                "openAlerts": null
+              }
+            },
+            {
+              "id": 2,
+              "state": "pending",
+              "fields": {
+                "label": "Room B",
+                "openAlerts": null
+              }
+            },
+            {
+              "id": 3,
+              "state": "pending",
+              "fields": {
+                "label": "Room C",
+                "openAlerts": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "projection": {
+        "name": "presence",
+        "at": {
+          "seq": 5
+        },
+        "sources": {
+          "events": [
+            {
+              "id": 4,
+              "type": "arrive",
+              "fields": {
+                "room": 1,
+                "actor": {
+                  "$member": "day"
+                }
+              }
+            },
+            {
+              "id": 5,
+              "type": "leave",
+              "fields": {
+                "room": 1,
+                "actor": {
+                  "$member": "day"
+                }
+              }
+            }
+          ]
         }
       }
     }

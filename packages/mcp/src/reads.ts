@@ -7,9 +7,9 @@
  * anywhere: `Session` keeps it out of its JSON and text.
  */
 
-import type { ItemQueryRead, Read, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
+import type { ItemQueryRead, Read, ScopeId, ScopeRef, ApplicationProjectionQuery, ApplicationProjectionRead } from "@generalbusiness/dap-contract";
 import { timeOf } from "@generalbusiness/artroom-bytes";
-import { TransportError, httpTransport, requestSession, signedReads, signerSessionRequest, type Fetch, type Session, type Signer, type Transport } from "@generalbusiness/artroom-client";
+import { TransportError, ScopeHandle, httpTransport, requestSession, signedReads, signerSessionRequest, type Fetch, type Session, type Signer, type Transport } from "@generalbusiness/artroom-client";
 
 export interface ReadPort {
   service: string;
@@ -61,6 +61,16 @@ export class Reads {
 
   /** Forget a session, so the next read asks again: after a read that the session was refused for, as after a role change. */
   forget(membership: ScopeId): void { this.#sessions.delete(membership); }
+
+  /** A declared projection requires a session. One refused read is returned
+   * as it stands; there is no signed fallback or implicit retry. */
+  async projection(membership: ScopeRef, query: ApplicationProjectionQuery): Promise<ApplicationProjectionRead> {
+    const session = await this.session(membership);
+    if (!session) return { ok: false, reason: "forbidden" };
+    const result = await new ScopeHandle(this.#plain, query.scope.scope, session.reader()).applicationProjection(query);
+    if (!result.ok && (result.reason === "forbidden" || result.reason === "sessions-unavailable")) this.forget(membership.scope);
+    return result;
+  }
 
   /**
    * One read of one scope: with the session of `membership` first, and by a

@@ -1,8 +1,8 @@
 /** One independently enrolled device owns this mounted stage. No shared Settings identity. */
-import type { Summary, MemberRef } from "@generalbusiness/dap-contract";
+import type { MemberRef } from "@generalbusiness/dap-contract";
 import { canonicalize } from "@generalbusiness/artroom-bytes";
 import type { Observation, ObservationState } from "@generalbusiness/artroom-client";
-import { countingView, assignedTurn, canCommit, ownedParticipant, same, type CountingView, type Control, type ProposalOptions } from "./model.ts";
+import { countingView, assignedTurn, canCommit, ownedParticipant, same, type CountingRead, type CountingView, type Control, type ProposalOptions } from "./model.ts";
 import { createVoiceController, type ActorIdentity, type PendingStore, type SpeechPort, type CustodyLock, type VoiceState } from "./voice-controller.ts";
 import type { StageGateway, CommandOutcome } from "./client.ts";
 import { stageView } from "./view.ts";
@@ -151,7 +151,7 @@ export function mountCountingStage(root:HTMLElement,options:CountingStageOptions
       voice=createVoiceController({identity:next.identity,speech:next.speech,reporter:next.gateway,store:next.store,lock:next.lock,current:()=>at===epoch&&next.current(),...(options.now?{now:options.now}:{})});
       unsubscribe=voice.subscribe(state=>{if(at!==epoch||!next.current())return;voiceState=state;reconcileRunner();render();wake();claim();});
       await voice.ready;if(at!==epoch||!next.current())return;await next.gateway.restoreCommand();if(at!==epoch||!next.current())return;if(next.gateway.pendingCommand()){command="Command unknown. Check its original request.";commandOutcome="unknown";}
-      observation=next.gateway.observe((state:ObservationState<Summary>,given?:CountingView)=>{
+      observation=next.gateway.observe((state:ObservationState<CountingRead>,given?:CountingView)=>{
         if(at!==epoch||!next.current())return;
         fresh=state.status==="current";
         if(given)view=given;else if(state.status==="current")try{view=countingView(state.snapshot.value,next.identity.scope);}catch{view=undefined;fresh=false;}

@@ -5,7 +5,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   plugins: [cloudflareTest({ main: "./test/worker.ts", wrangler: { configPath: "./wrangler.test.jsonc" } })],
   test: {
-    globalSetup: ["./test/support/local-clone-setup.ts"],
+    globalSetup: ["./test/support/local-clone-setup.ts", "./test/support/maintained-applications-setup.ts"],
     include: ["test/**/*.test.ts"],
     exclude: ["test/operation-denial.test.ts"],
     // One isolate for every file: the Worker is loaded once. Each test creates its own scope, which is its own object and storage.

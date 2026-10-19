@@ -11,9 +11,9 @@ import { act, acts, claim, clone, edit, install, installPlanned, invite, issueAs
 
 export const USAGE = [
   "Usage:",
-  "  dap install <base-url> [--host <git-host>] [--namespace <name>] [--cohort application|application-publication|trusted-application|invitation-key]",
-  "  dap install --plan <base-url> [--host <git-host>] [--namespace <name>] [--cohort application|application-publication|trusted-application|invitation-key]",
-  "  dap install --planned [--cohort application|application-publication|trusted-application|invitation-key]",
+  "  dap install <base-url> [--host <git-host>] [--namespace <name>] [--cohort application|application-publication|trusted-application|declared-application|invitation-key]",
+  "  dap install --plan <base-url> [--host <git-host>] [--namespace <name>] [--cohort application|application-publication|trusted-application|declared-application|invitation-key]",
+  "  dap install --planned [--cohort application|application-publication|trusted-application|declared-application|invitation-key]",
   "  dap install <git+https-uri> --release <release-id> --request <kept-key> [--role <default-role> ...] [--values <genesis-JSON>]",
   "  dap application <install-item>",
   "  dap check [<directory>] [--config <relative-file>]",
@@ -99,7 +99,7 @@ export async function command(ctx: Context, argv: readonly string[]): Promise<Ou
       }
       if (["release", "request", "role", "values"].some(name => parsed.flags.has(name))) return needs("a git+https URI for application options");
       const cohorts = parsed.flags.get("cohort");
-      if (cohorts && (cohorts.length !== 1 || (cohorts[0] !== "application" && cohorts[0] !== "application-publication" && cohorts[0] !== "trusted-application" && cohorts[0] !== "invitation-key"))) return { code: 2, lines: ["--cohort takes exactly one value: application, application-publication, trusted-application or invitation-key.", USAGE] };
+      if (cohorts && (cohorts.length !== 1 || (cohorts[0] !== "application" && cohorts[0] !== "application-publication" && cohorts[0] !== "trusted-application" && cohorts[0] !== "declared-application" && cohorts[0] !== "invitation-key"))) return { code: 2, lines: ["--cohort takes exactly one value: application, application-publication, trusted-application, declared-application or invitation-key.", USAGE] };
       const cohort = cohorts?.[0] as InstallCohort | undefined;
       const host = flag("host"), namespace = flag("namespace");
       const where = { ...((cohort ? host !== undefined : !!host) ? { host: host! } : {}), ...((cohort ? namespace !== undefined : !!namespace) ? { namespace: namespace! } : {}), ...(cohort ? { cohort } : {}) };

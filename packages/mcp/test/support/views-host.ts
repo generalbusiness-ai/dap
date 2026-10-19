@@ -9,6 +9,10 @@ import { secretSigner } from "@generalbusiness/artroom-client";
 import { firstExtents } from "@generalbusiness/dap-platform";
 import { LEGACY, MODERN, McpService, Wire, memoryStore, newSession, type Card, type Message, type ResourcePolicy, type ViewSource } from "../../src/index.ts";
 import { StandIn, SERVICE } from "./standin.ts";
+import { applicationCounterNavigationPacket2 } from "../../../scope/test/support/application-v2-fixture.ts";
+import { viewToolName } from "../../src/views/names.ts";
+import { applicationProjectionId, applicationProjectionQueryDigest } from "@generalbusiness/artroom-bytes/application-v2";
+import { DeclaredViewSource } from "../../src/views/declared.ts";
 
 const fields = { approvals: 0, ownerMayReview: false, checks: [], labels: [], extents: firstExtents({ approvals: 0, checks: [] }) };
 function fixture(mode: string) {
@@ -54,6 +58,36 @@ function fixture(mode: string) {
   return { service, signed, scope, complete: (item: string) => completed.add(Number(item.slice(1)) - 7) };
 }
 
+/** Pure declared-view browser fixture. Native projection, install and role
+ * answers are scripted; the real native controls have a separate witness. */
+async function declaredFixture() {
+  const base = fixture("empty"), packet = await applicationCounterNavigationPacket2(true), scope = { ...base.scope.rules, kind: "lane" as const };
+  const source = new DeclaredViewSource(packet.bytes, packet.ids.release, {
+    installation: async () => ({ scope, directory: { ...scope, kind: "directory" }, rules: { ...scope, kind: "rules" },
+      membership: { ...scope, kind: "membership" }, destination: { ...scope, kind: "destination" }, item: 7, definition: packet.package.semantic.entry, ids: packet.ids }),
+    actions: async () => [],
+    projection: async query => query.projection === "person" && ![11, 12, 13].includes(query.items["participant"]!) ? { ok: false, reason: "incomplete" }
+      : query.projection === "empty-people" ? ({ ok: true, query: applicationProjectionQueryDigest(query)!, value: { v: 1, scope,
+      projection: applicationProjectionId(packet.package.semantic.projections["empty-people"]!), at: { seq: 13, hash: `sha256:${"c".repeat(64)}` }, sources: { participants: [] },
+    } }) : query.projection === "person" ? ({ ok: true, query: applicationProjectionQueryDigest(query)!, value: { v: 1, scope,
+      projection: applicationProjectionId(packet.package.semantic.projections["person"]!), at: { seq: 13, hash: `sha256:${"c".repeat(64)}` },
+      sources: { participant: [{ id: query.items["participant"]!, type: "participant", state: "active", revision: 1, fields: {} }] },
+    } }) : query.projection === "people" ? ({ ok: true, query: applicationProjectionQueryDigest(query)!, value: { v: 1, scope,
+      projection: applicationProjectionId(packet.package.semantic.projections["people"]!), at: { seq: 13, hash: `sha256:${"c".repeat(64)}` },
+      sources: { participants: [11, 12, 13].map(id => ({ id, type: "participant", state: "active", revision: 1, fields: {} })) },
+    } }) : query.projection === "activity" ? ({ ok: true, query: applicationProjectionQueryDigest(query)!, value: { v: 1, scope,
+      projection: applicationProjectionId(packet.package.semantic.projections["activity"]!), at: { seq: 5, hash: `sha256:${"b".repeat(64)}` },
+      sources: { events: [4, 5].map(seq => ({ id: seq, revision: seq, type: seq === 4 ? "initialize" : "reset", state: "sealed", on: seq === 4 ? null : 2, time: "2026-10-18T12:00:00Z",
+        entry: { at: scope, seq, hash: `sha256:${(seq === 4 ? "a" : "b").repeat(64)}` }, fields: { actor: null } })) } } }) : ({ ok: true, query: applicationProjectionQueryDigest(query)!, value: { v: 1, scope,
+      projection: applicationProjectionId(packet.package.semantic.projections["board"]!), at: { seq: 1, hash: `sha256:${"a".repeat(64)}` },
+      sources: { board: [{ id: 2, type: "board", state: "open", revision: 1, fields: { lastNumber: 42 } }] } } }),
+  });
+  const signer = secretSigner(new Uint8Array(32).fill(17));
+  const service = new McpService({ service: SERVICE, signer, custody: memoryStore(), views: source, fetch: base.scope.fetch,
+    config: { read: async () => base.scope.config(), addRoot: async () => {} } });
+  return { ...base, service };
+}
+
 function policy(ui: ResourcePolicy): string {
   const domains = (values?: string[]) => values?.length ? values.map((value) => {
     if (!/^(https?|wss?):\/\/[^\s;'"<>]+$/.test(value)) throw new Error("Fixture resource policy contains a malformed origin.");
@@ -71,7 +105,7 @@ const listen = (server: Server): Promise<string> => new Promise((resolve) => ser
 const stop = (server: Server): Promise<void> => new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
 
 /** Two loopback origins, a cross-origin sandbox proxy and the real single-file app behind package-derived CSP. */
-export async function startViewsHost() {
+export async function startViewsHost(options: { declared?: (base: ReturnType<typeof fixture>) => Promise<ReturnType<typeof fixture>> } = {}) {
   const instances = new Map<string, ReturnType<typeof fixture> & { wire: Wire; session: ReturnType<typeof newSession>; version: string }>();
   let hostOrigin = "", sandboxOrigin = "";
   const host = createServer((request, response) => { void (async () => {
@@ -103,14 +137,14 @@ export async function startViewsHost() {
     }
     if (url.pathname !== "/") { response.writeHead(404); response.end(); return; }
     if (instances.size >= 128) return json(response, { error: "Fixture host full" }, 429);
-    const id = crypto.randomUUID(), demo = fixture(url.searchParams.get("fixture") ?? "normal"), wire = new Wire(demo.service), session = newSession(null);
+    const id = crypto.randomUUID(), mode = url.searchParams.get("fixture") ?? "normal", demo = mode === "declared" ? await (options.declared ? options.declared(fixture("empty")) : declaredFixture()) : fixture(mode), wire = new Wire(demo.service), session = newSession(null);
     const version = url.searchParams.get("wire") === "legacy" ? LEGACY : MODERN;
     instances.set(id, { ...demo, wire, session, version });
     if (version === LEGACY) {
       await wire.handle({ jsonrpc: "2.0", id: 0, method: "initialize", params: { protocolVersion: LEGACY, capabilities: { extensions: { "io.modelcontextprotocol/ui": { mimeTypes: ["text/html;profile=mcp-app"] } } }, clientInfo: { name: "S2 fixture host", version: "1" } } }, session, () => {});
       await wire.handle({ jsonrpc: "2.0", method: "notifications/initialized" }, session, () => {});
     }
-    const settings = { id, sandboxOrigin, screen: url.searchParams.get("screen") ?? "needs-you", theme: url.searchParams.get("theme") ?? "light", deny: url.searchParams.has("deny"), contextFail: url.searchParams.has("context-fail"), prototype: url.searchParams.has("prototype"), fields };
+    const settings = { id, sandboxOrigin, screen: url.searchParams.get("screen") ?? "needs-you", openingTool: viewToolName(url.searchParams.get("screen") ?? "needs-you", mode === "declared"), theme: url.searchParams.get("theme") ?? "light", deny: url.searchParams.has("deny"), contextFail: url.searchParams.has("context-fail"), prototype: url.searchParams.has("prototype"), fields };
     response.writeHead(200, { "content-type": "text/html" });
     response.end(`<!doctype html><html><head><meta charset="utf-8"><title>S2 card fixture host</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;padding:16px;font:14px system-ui;background:#e9e9e9}header{font-size:12px;margin-bottom:12px;color:#555}#frame{display:block;width:min(100%,592px);height:1px;border:0;background:white;border-radius:12px}body.fullscreen #frame{width:100%}</style></head><body><header>S2 test host · scripted card and scope fixtures</header><iframe id="frame" title="MCP Apps sandbox"></iframe><script>
 const config=${JSON.stringify(settings)}, frame=document.querySelector('#frame');
@@ -131,7 +165,7 @@ if(m.method==='ui/request-display-mode'){proof.mode=config.deny?'inline':m.param
 if(m.method==='ui/message'){proof.chat.push(m.params.content.text);proof.modelTurns++;send({id:m.id,result:{}});return}
 if(m.id!==undefined)send({id:m.id,error:{code:-32601,message:'Fixture host does not support '+m.method}})
 })().catch(error=>proof.errors.push(String(error)))});
-void(async()=>{input={view:config.id,subject:config.screen};const opened=await rpc('model','view_'+config.screen.replaceAll('-','_'),input);if(opened.error||opened.result?.isError)throw Error(JSON.stringify(opened));frame.src=config.sandboxOrigin+'/proxy?instance='+config.id+'&screen='+config.screen})().catch(error=>proof.errors.push(String(error)));
+void(async()=>{input={view:config.id,subject:config.screen};const opened=await rpc('model',config.openingTool,input);if(opened.error||opened.result?.isError)throw Error(JSON.stringify(opened));frame.src=config.sandboxOrigin+'/proxy?instance='+config.id+'&screen='+config.screen})().catch(error=>proof.errors.push(String(error)));
 </script></body></html>`);
   })().catch((error) => { if (!response.headersSent) json(response, { error: String(error) }, 500); else response.end(); }); });
   const sandbox = createServer((request, response) => {
@@ -143,7 +177,9 @@ void(async()=>{input={view:config.id,subject:config.screen};const opened=await r
       return;
     }
     if (url.pathname === "/app") {
-      const resource = instance.service.resources.read(`ui://dap/${url.searchParams.get("screen")}`).contents[0]!;
+      const uri = instance.service.resources.list().resources.find(resource => resource.uri.endsWith(`/${url.searchParams.get("screen")}`))?.uri;
+      if (!uri) return json(response, { error: "Unknown fixture resource" }, 404);
+      const resource = instance.service.resources.read(uri).contents[0]!;
       response.writeHead(200, { "content-type": "text/html", "content-security-policy": policy(resource._meta.ui) });
       response.end(resource.text); return;
     }

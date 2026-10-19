@@ -1,9 +1,10 @@
 /** Generic trusted screen bytes, bound to one native active installation and
  * its exact presentation. This serves no application state and grants no
  * member authority. Same-origin delivery is not an isolation boundary. */
+import type { AnyPackedApplication } from "@generalbusiness/artroom-bytes/application-v2";
 import { PROPOSED_BOUNDS, type ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, unb64url } from "@generalbusiness/artroom-bytes";
-import { readApplicationScreenAddress, readApplicationScreenContext, type ApplicationInstallation, type ApplicationRoom, type PackedApplication } from "@generalbusiness/artroom-client/application";
+import { readApplicationScreenAddress, readApplicationScreenContext, type ApplicationInstallation, type ApplicationRoom } from "@generalbusiness/artroom-client/application";
 import { LATE, within } from "../turn.ts";
 import { ApplicationAdmissionError, readApplicationTrust, type ApplicationTrust } from "./admission.ts";
 import { ApplicationContentStore } from "./content.ts";
@@ -18,7 +19,7 @@ const json = (status: number, body: unknown) => new Response(JSON.stringify(body
 /** Two immutable packet entries per bucket. Concurrent reads of one release
  * share a load. Pending loads count toward the two entries; a third distinct
  * release waits for a later request. This is not a measured heap allowance. */
-interface CachedPacket { load: Promise<PackedApplication | null>; settled: boolean }
+interface CachedPacket { load: Promise<AnyPackedApplication | null>; settled: boolean }
 const packets = new WeakMap<R2Bucket, Map<string, CachedPacket>>();
 async function packetOf(bucket: R2Bucket, setting: string | undefined, trust: readonly ApplicationTrust[], release: ApplicationInstallation["ids"]["release"]) {
   let cache = packets.get(bucket); if (!cache) packets.set(bucket, (cache = new Map()));

@@ -18,6 +18,7 @@ import { outsideOf, wired } from "./outside.ts";
 import { Platform, rita, routed, sam } from "./repository.ts";
 import { dispatchFixture } from "./support/native-fixture-lifetime.ts";
 import { siteFixtureLifetime } from "./support/site-fixture-lifetime.ts";
+import { legacyLendingProjection } from "./support/legacy-lending-projection.ts";
 
 const SERVICE = "https://scopes.test";
 
@@ -27,6 +28,8 @@ const SERVICE = "https://scopes.test";
 // The Git host, the clock and the local memoryStore are labelled STAND-INS. No
 // Site page, provider publication, change lane or browser runs here. Signed fixture
 // text is forwarded as given; the real gateway below builds its own page text.
+// Its projection route is a labelled STAND-IN over authenticated native reads:
+// this older cohort has no declared application installation ownership record.
 test("the lending library on real scopes: Nasruddin and the pot, its refusals, another member's return, the 64-thing bound, and roles that keep their earlier actions", async () => {
   const lifetime = siteFixtureLifetime();
   const settle = (...nodes: readonly Platform[]) => dispatchFixture(nodes, lifetime.wait);
@@ -220,11 +223,12 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
       const open = (): ReturnType<typeof lendingGateway> => lendingGateway(
         { origin: SERVICE, deployment: "lending-fixture", scope: scopeOfLending, definition: LENDING_DEFINITION, membership, member: { membership, member: handle }, publicKey: who.key },
         { key: who.key, sign: async (bytes: Uint8Array) => (await import("@generalbusiness/artroom-client")).secretSigner(who.secret).sign(bytes) },
-        { current, lock, store, fetch: readFetch, now: () => timeMs(soon(0))! + skew.ms,
+        { current, lock, store, application, fetch: legacyLendingProjection(SERVICE, application, readFetch), now: () => timeMs(soon(0))! + skew.ms,
           actFetch: async (url, init) => { posts++; envelopes.push(String(init?.body)); const response = await fetch(url, init); if (lose.reply) throw new Error("the reply was lost"); return response as never; } });
       return { open, store, posts: () => posts, kept: () => slot, envelopes };
     };
     const scopeOfLending = await L.at(), skew = { ms: 0 };
+    const application = { scope: scopeOfLending, directory: await D.at(), item: 0, definition: LENDING_DEFINITION };
     const countThings = async () => (await things()).length;
     const his = browser(nasruddin, "@nasruddin"), g = his.open();
     { const seen = await g.look(); if (seen.status !== "current") throw new Error(`look: ${JSON.stringify(seen).slice(0, 300)}`);
@@ -284,14 +288,14 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
     expect(await head()).toEqual(beforeContinue);
     reloaded.dispose(); g.dispose();
 
-    // A summary reply captured before a newer confirmed view cannot roll that view back.
+    // An item-query reply captured before a newer confirmed view cannot roll that view back.
     let holdSummary = true, unreadableMembership = false, releaseSummary!: () => void, enteredSummary!: () => void;
     const entered = new Promise<void>(resolve => { enteredSummary = resolve; });
     const released = new Promise<void>(resolve => { releaseSummary = resolve; });
     const delayed: Fetch = async (url, init) => {
       if (unreadableMembership && new URL(url).pathname === `/v1/scopes/${encodeURIComponent(membership.scope)}`) return new Response("unavailable", { status: 503 }) as never;
       const response = await fetch(url, init);
-      if (holdSummary && new URL(url).pathname === `/v1/scopes/${encodeURIComponent(L.name)}`) {
+      if (holdSummary && new URL(url).pathname === `/v1/scopes/${encodeURIComponent(L.name)}/query-items`) {
         holdSummary = false; enteredSummary(); await released;
       }
       return response;
@@ -363,7 +367,7 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
     if (!matched.ok) throw new Error(matched.reason);
     expect(matched.identity).toMatchObject({ scope: scopeOfLending, member: { member: "@visitor" }, publicKey: device.publicKey });
     let visitorSlot: string | null = null;
-    const visitor = lendingGateway(matched.identity, (await import("../../../examples/lending/browser/join.ts")).deviceSigner(device), { current: () => true, lock: serial, now: clock, fetch,
+    const visitor = lendingGateway(matched.identity, (await import("../../../examples/lending/browser/join.ts")).deviceSigner(device), { current: () => true, lock: serial, now: clock, application, fetch: legacyLendingProjection(SERVICE, application, fetch),
       store: { load: async () => visitorSlot === null ? null : JSON.parse(visitorSlot) as Kept, save: async (value) => { visitorSlot = JSON.stringify(value); }, clear: async () => { visitorSlot = null; } } });
     expect((await visitor.look()).status).toBe("current");
     expect(await visitor.act("donate", { name: "Whisk", description: "Balloon." })).toEqual({ status: "recorded" });

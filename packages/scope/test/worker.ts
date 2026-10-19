@@ -189,6 +189,10 @@ export class PlatformScope extends DeployedScope<PlatformEnv> {
 export class NetService extends ScopeService<NetEnv> {
   protected override scopes() { return this.env.NET; }
 }
+/** Real ScopeService RPC over the native platform test namespace. */
+export class PlatformService extends ScopeService<NetEnv & { PLATFORM: DurableObjectNamespace }> {
+  protected override scopes() { return this.env.PLATFORM; }
+}
 
 // Exercise the production entrypoint with the same NET namespace as before.
 export default { fetch: async (request: Request, env: NetEnv & HostedEnv): Promise<Response> => scopeWorker.fetch(request, { ...env, SCOPES: env.NET }) };

@@ -4,4 +4,6 @@ export { Scope, receiptOf, type Pinned } from "./core.ts";
 export { SqliteStore, type Sql, type SqlValue } from "./sqlite.ts";
 export { production, CAPABILITY_CODE, type Ports, type Authority } from "./ports.ts";
 export { Reads } from "./reads.ts";
+export { ReadPreparation } from "./read-preparation.ts";
+export { applicationProjectionData } from "./applications/projection-data.ts";
 export type { Store } from "./store.ts";

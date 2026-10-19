@@ -1,15 +1,17 @@
 /**
  * What the member interface shows and what it may ask for. Plain functions over
- * a summary and a record that were read together; nothing here signs or sends.
+ * a declared projection, or historical complete record; nothing here signs or sends.
  */
-import type { Entry, FieldValue, Item, KeyId, MemberRef, Summary } from "@generalbusiness/dap-contract";
+import type { ApplicationProjectionData, Entry, FactRef, FieldValue, Item, KeyId, MemberRef, Summary } from "@generalbusiness/dap-contract";
+import { applicationItemSnapshot } from "@generalbusiness/artroom-client";
 import { canonicalize, isMemberRef } from "@generalbusiness/artroom-bytes";
 import { ROLE_LISTS, isActions, type Role } from "@generalbusiness/dap-platform/membership-actions";
 import { shelfPage, shelfPath, thingsOf, type RecordPointer, type Thing } from "../shelf.ts";
+import { lendingStateProjection } from "./projection.ts";
 
 export type LendingAct = "donate" | "borrow" | "return" | "cancel" | "publish";
 /** A thing with its retained revision; publish reads a gone thing without changing it. */
-export interface ShownThing extends Thing {}
+export interface ShownThing extends Omit<Thing, "seq"> { /** Present only for the historical complete-record adapter. */ seq?: number }
 export interface LendingView {
   /** Every thing, live and gone, in the order it was donated. */
   things: ShownThing[];
@@ -61,6 +63,33 @@ export function lendingView(summary: Summary, at: { seq: number; hash: string },
   const library = summary.items.find((item) => item.type === "library");
   return { things, library: library ? { id: library.id, revision: library.revision } : null, behind: entries.length <= at.seq,
     record: { scope: summary.scope.scope, incarnation: summary.scope.inc, seq: at.seq, hash: at.hash } };
+}
+
+/** Actual retained native item fields, including gone things. The bounded
+ * journal is separate evidence and never supplies invented item revisions. */
+export function lendingProjectionView(data: ApplicationProjectionData): LendingView {
+  const snapshot = applicationItemSnapshot(lendingStateProjection, data), library = snapshot.items.find(item => item.type === "library");
+  const things: ShownThing[] = snapshot.items.filter(item => item.type === "thing").map(item => ({
+    id: item.id, revision: item.revision, state: item.state as ShownThing["state"], page: words(item.values["page"]), name: words(item.values["name"]),
+    description: words(item.values["description"]), donor: handle(item.parties["donor"]) ?? "", borrower: handle(item.parties["borrower"]),
+    reason: item.values["reason"] === null ? null : words(item.values["reason"]),
+  }));
+  return { things, library: library ? { id: library.id, revision: library.revision } : null, behind: false,
+    record: { scope: data.scope.scope, incarnation: data.scope.inc, seq: data.at.seq, hash: data.at.hash } };
+}
+export interface LendingActivityRow { entry: Readonly<FactRef>; seq: number; kind: string; signer: string; what: string; time: string }
+/** Recent selected acts, at this projection's exact head. This makes no
+ * whole-prefix or full-entry read claim. */
+export function lendingProjectionActivity(data: ApplicationProjectionData, view: LendingView): LendingActivityRow[] {
+  const names = new Map(view.things.map(thing => [thing.id, thing.name]));
+  return ["events", "cancellations", "publications"].flatMap(source => (data.sources[source] ?? []).map(row => {
+    if (!row.entry || !row.time) throw Error("Lending activity needs sealed native entry facts.");
+    const id = row.type === "donate" ? row.id : row.type === "publish" ? row.fields["thing"] : row.on;
+    const name = typeof id === "number" ? names.get(id) : undefined;
+    const label = name === undefined ? `Unknown thing ${id ?? "(no ID)"}` : `${name || "Unnamed"} (thing ${id})`;
+    return { entry: row.entry, seq: row.id, kind: row.type, signer: isMemberRef(row.fields["actor"]) ? row.fields["actor"].member : "", time: row.time,
+      what: row.type === "donate" ? name ?? "Unnamed" : row.type === "cancel" ? `${label}: ${words(row.fields["reason"])}` : label };
+  })).sort((a, b) => a.seq - b.seq);
 }
 
 /** The acts a thing's state allows. Whether the signer may cancel is membership's to say; the scope answers. */
@@ -123,7 +152,7 @@ export function propose(view: LendingView, kind: LendingAct, input: { thing?: nu
     if (bytes(name) > NAME_BYTES) return no(`The name is too long: at most ${NAME_BYTES} bytes.`);
     if (bytes(description) > DESCRIPTION_BYTES) return no(`The description is too long: at most ${DESCRIPTION_BYTES} bytes.`);
     const page = shelfPath(random());
-    const content = shelfPage({ id: 0, page, revision: 1, state: "available", name, description, donor: author, borrower: null, reason: null, seq: 0 }, view.record);
+    const content = shelfPage({ id: 0, page, revision: 1, state: "available", name, description, donor: author, borrower: null, reason: null }, view.record);
     return { ok: true, proposal: { kind, on: null, expected: expectedLibrary, fields: { name, description, page, content } } };
   }
   const thing = view.things.find((candidate) => candidate.id === input.thing);

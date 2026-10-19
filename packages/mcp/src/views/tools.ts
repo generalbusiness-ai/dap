@@ -3,6 +3,7 @@ import type { CallResult } from "../service.ts";
 import { VIEW_KINDS } from "./resources.ts";
 import { ViewError, type ViewSessions } from "./session.ts";
 import type { PageKind } from "./types.ts";
+import { viewToolName } from "./names.ts";
 
 type Args = Record<string, unknown>;
 const key = { type: "string", minLength: 1, maxLength: 128 };
@@ -35,7 +36,7 @@ const integer = (args: Args, name: string): number => {
   return value;
 };
 
-export function viewTools(sessions: ViewSessions): Record<string, { tool: Tool; run: (args: Args) => Promise<CallResult> }> {
+export function viewTools(sessions: ViewSessions, screens?: readonly { name: string; resource: string }[]): Record<string, { tool: Tool; run: (args: Args) => Promise<CallResult> }> {
   const tools: ReturnType<typeof viewTools> = {};
   const add = (name: string, description: string, properties: Args, required: string[], appOnly: boolean, resource: string | undefined, run: (args: Args) => Promise<CallResult>) => {
     tools[name] = {
@@ -49,11 +50,16 @@ export function viewTools(sessions: ViewSessions): Record<string, { tool: Tool; 
       },
     };
   };
-  for (const screen of VIEW_KINDS) {
-    add(`view_${screen.replaceAll("-", "_")}`, `Open ${screen} as a compact card. Choose and keep a view key for this opening. The tool text exposes only identity, exact revision, screen and counts. Private card details are fetched separately by the app. Without views, use inspect and the ordinary read tools for the named subject.`, { view: key, subject: { type: "string", maxLength: 256 } }, ["view"], false, `ui://dap/${screen}`, async (args) => {
+  for (const { name: screen, resource } of screens ?? VIEW_KINDS.map(name => ({ name, resource: `ui://dap/${name}` }))) {
+    const name = viewToolName(screen, screens !== undefined);
+    if (Object.hasOwn(tools, name) || name === "view_read" || name === "view_act") throw new Error("Declared view tool names collide.");
+    add(name, `Open ${screen} as a compact card. Choose and keep a view key for this opening. The tool text exposes only ${screens ? "the declared fallback and identity" : "identity, exact revision, screen and counts"}. Private card details are fetched separately by the app. Without views, use inspect and the ordinary read tools for the named subject.`, { view: key, subject: { type: "string", maxLength: 256 }, ...(screens ? { items: { type: "object", maxProperties: 8, propertyNames: { pattern: "^[A-Za-z][A-Za-z0-9_-]{0,63}$" }, additionalProperties: { type: "integer", minimum: 0 } } } : {}) }, ["view"], false, resource, async (args) => {
       const subject = args["subject"] === undefined ? undefined : string(args, "subject");
       if (subject !== undefined && subject.length > 256) throw new ViewError("shape", "subject exceeds 256 characters.");
-      const opening = await sessions.open(string(args, "view"), screen, subject);
+      const items = args["items"];
+      if (items !== undefined && (!items || typeof items !== "object" || Array.isArray(items) || Object.keys(items).length > 8
+        || Object.entries(items).some(([name, id]) => !/^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(name) || typeof id !== "number" || !Number.isSafeInteger(id) || id < 0 || Object.is(id, -0)))) throw new ViewError("shape", "items must name at most eight source selections with nonnegative integer IDs.");
+      const opening = await sessions.open(string(args, "view"), screen, subject, items as Readonly<Record<string, number>> | undefined);
       const { text, ...data } = opening;
       return result(data, text);
     });

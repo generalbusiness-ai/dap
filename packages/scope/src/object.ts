@@ -1,4 +1,4 @@
-import { applicationRoom, applicationInstallation } from "@generalbusiness/dap-platform";
+import { applicationRoom, applicationInstallation, applicationProjectionDeclaration } from "@generalbusiness/dap-platform";
 /**
  * One scope as one Durable Object (scope contract, section 2.3): the object
  * named by the scope's ID in the one scope namespace, with SQLite storage.
@@ -34,7 +34,7 @@ import { DurableObject } from "cloudflare:workers";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { SessionAnswer } from "@generalbusiness/dap-contract";
 import type { Answer, Beside, Bounds, Cursor, DeclaredDefinition, Digest, OutboxId, Entry, Grant, Input, LogPage, OperationId, PlatformDefinition, Read, RetainedInput, ScopeId, Settlement, SignedIntent } from "@generalbusiness/dap-contract";
-import { canonicalize, isRecord, digestBytes, isHead, isScopeId, isScopeRef, retainedReadArgument, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isRecord, digestBytes, isHead, isScopeId, isScopeRef, parseStrict, retainedReadArgument, utf8 } from "@generalbusiness/artroom-bytes";
 import { isEntryOf, timeMs, timeOf, type Item } from "@generalbusiness/dap-derive";
 import { sourceName } from "@generalbusiness/dap-platform";
 import type { ScopeState } from "@generalbusiness/dap-derive";
@@ -51,6 +51,9 @@ import { GenesisProofs, type ProofTimer } from "./genesis-proof.ts";
 import { EXACT_PROOF_RECEIVER_BOUNDS, ProofBytes } from "./proof-bytes.ts";
 import { PreparationFlights } from "./preparation-flight.ts";
 import { ItemQueries } from "./item-queries.ts";
+import { ApplicationProjections } from "./applications/projection.ts";
+import { APPLICATION_DECLARATION_BYTES, type ApplicationDeclarationSource } from "./applications/projection-source.ts";
+import { applicationJson } from "@generalbusiness/artroom-bytes/application";
 import { ReadPreparation } from "./read-preparation.ts";
 import { nativeBirth } from "./native-birth.ts";
 import { PreparationBudget } from "./preparation-budget.ts";
@@ -106,6 +109,7 @@ export interface Wiring {
   outside?: (given: OutsideGiven) => Outside;
   sessions?: () => Sessions | null;
   sessionReferenceSource?: SessionReferenceSource;
+  applicationDeclarationSource?: ApplicationDeclarationSource;
   /** Internal elapsed-time clock; production uses the shared preparation timer. */
   queryTimer?: ProofTimer;
   limits?: LimitConfig;
@@ -123,6 +127,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   readonly #readSql: Pick<Sql, "exec">;
   readonly #queryFlights: PreparationFlights;
   readonly #itemQueries: ItemQueries;
+  readonly #applicationProjections: ApplicationProjections;
   readonly #proofBytes: ProofBytes;
   readonly #genesisProofs: GenesisProofs;
   readonly #readPreparation: ReadPreparation;
@@ -265,6 +270,8 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     this.#itemQueries = new ItemQueries({ name: this.#name, sql: this.#readSql, preparation: this.#readPreparation,
       sessionPreparation: this.#sessionPreparation, localSigners: store.localSigners, proofs: ports.proofs ?? null,
       sessions: this.#sessions, clock: this.#clock, window: bounds.intentLifetimeSeconds, flights: this.#queryFlights });
+    this.#applicationProjections = new ApplicationProjections({ name: this.#name, sql: this.#readSql, sessions: this.#sessions,
+      clock: this.#clock, sessionPreparation: this.#sessionPreparation, flights: this.#queryFlights, source: wiring.applicationDeclarationSource ?? null });
     // The session requests that this scope has answered, each until its `notAfter`: one more table that is no part of the store.
     this.#requests = new SessionRequests({ exec: (query, ...bindings) => ctx.storage.sql.exec(query, ...bindings) });
     // Only bounded control initialization happened above. No read runs a
@@ -437,6 +444,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
   }
   /** One owned bounded query; starts no activation turn or legacy read walk. */
   queryItems(encoded: unknown, reader: unknown) { return this.#itemQueries.read(encoded, reader); }
+  applicationProjection(encoded: unknown, reader: unknown) { return this.#applicationProjections.read(encoded, reader); }
   /** Admission of identifiers precedes authority and storage work. */
   async requests(reader: unknown, request?: string, trace?: string, cursor?: string) {
     const query = requestQuery(request, trace, cursor);
@@ -484,9 +492,28 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
     this.#first(); const pinned = this.#scope.pinned();
     return pinned?.definition ? applicationRoom(this.#store, pinned.named) : null;
   }
+  applicationRoomBytes(): string | null {
+    const room = this.applicationRoom();
+    return room === null ? null : applicationJson(room, 1024);
+  }
   applicationInstallation(directory: import("@generalbusiness/dap-contract").ScopeRef, item: number) {
     this.#first(); const pinned = this.#scope.pinned();
     return pinned?.definition ? applicationInstallation(this.#store, pinned.named, directory, item) : null;
+  }
+  applicationProjectionDeclaration(directory: import("@generalbusiness/dap-contract").ScopeRef, item: number, name: string) {
+    this.#first(); const pinned = this.#scope.pinned();
+    if (!pinned?.definition) return null;
+    return applicationProjectionDeclaration(this.#store, pinned.named, directory, item, name, (domain, digest, most) => {
+      const size = this.#store.retainedSize("value", digest, domain);
+      if (size === null || !Number.isSafeInteger(size) || size < 0 || size > most) return undefined;
+      const retained = this.#store.retained("value", digest, domain);
+      if (!retained || utf8(retained.bytes).length !== size) return undefined;
+      try { return parseStrict(retained.bytes); } catch { return undefined; }
+    });
+  }
+  applicationProjectionDeclarationBytes(directory: import("@generalbusiness/dap-contract").ScopeRef, item: number, name: string): string | null {
+    const declared = this.applicationProjectionDeclaration(directory, item, name);
+    return declared === null ? null : applicationJson(declared, APPLICATION_DECLARATION_BYTES);
   }
   declared(digest: Digest): string | null { this.#first(); return declaredBy(this.#store, digest, this.#scope.pinned()?.named); }
   /** A detached text that a send of this scope's entry at `seq` names, for the scope that received that send (section 6.2). */

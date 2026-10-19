@@ -2,7 +2,7 @@
  * arbitrary object key. It creates no native installation or authority. */
 import type { Bounds, Digest } from "@generalbusiness/dap-contract";
 import { isDigest } from "@generalbusiness/artroom-bytes";
-import type { PackedApplication } from "@generalbusiness/artroom-client";
+import type { AnyPackedApplication } from "@generalbusiness/artroom-bytes/application-v2";
 import { APPLICATION_HOST_PACKAGE_BYTES, ApplicationAdmissionError, readTrustedApplication, type ApplicationTrust } from "./admission.ts";
 
 export class ApplicationContentError extends Error {
@@ -20,7 +20,7 @@ export class ApplicationContentStore {
   constructor(bucket: Pick<R2Bucket, "get" | "put">, trust: readonly ApplicationTrust[], bounds: Bounds) {
     this.#bucket = bucket; this.#trust = trust.map(row => ({ ...row })); this.#bounds = { ...bounds };
   }
-  async get(release: Digest): Promise<PackedApplication | null> {
+  async get(release: Digest): Promise<AnyPackedApplication | null> {
     const key = applicationReleaseKey(release);
     if (!this.#trust.some(row => row.release === release)) throw new ApplicationAdmissionError("untrusted-release");
     let object: R2ObjectBody | null;
@@ -43,7 +43,7 @@ export class ApplicationContentStore {
     for (const chunk of chunks) { bytes.set(chunk, at); at += chunk.length; }
     return readTrustedApplication(bytes, release, this.#trust, this.#bounds);
   }
-  async put(bytes: Uint8Array, release: Digest): Promise<PackedApplication> {
+  async put(bytes: Uint8Array, release: Digest): Promise<AnyPackedApplication> {
     // The codec owns bytes before any await. Trust, signatures and native
     // support precede a write, including the first conditional write.
     const packet = readTrustedApplication(bytes, release, this.#trust, this.#bounds), key = applicationReleaseKey(release);

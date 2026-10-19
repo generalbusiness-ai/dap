@@ -1,10 +1,12 @@
 /** Actual SDK adapter. Bootstrap/enrollment belongs to F1/C4, never this stage. */
-import type { Receipt, Summary } from "@generalbusiness/dap-contract";
+import type { Receipt } from "@generalbusiness/dap-contract";
+import type { ApplicationInstallation } from "@generalbusiness/artroom-bytes/application";
 import { b64url, canonicalize, intentDigest, isRecord, timeOf } from "@generalbusiness/artroom-bytes";
-import { ScopeHandle, completeSummary, httpTransport, observeScope, openHttpHeadStream, requestSession, signerSessionRequest, shapeDeclaredAct, signedIntent, type Fetch, type HeadStreamFetch, type Observation, type ObservationState, type Session, type Signer } from "@generalbusiness/artroom-client";
+import { ScopeHandle, completeApplicationItems, httpTransport, observeScope, openHttpHeadStream, requestSession, signerSessionRequest, shapeDeclaredAct, signedIntent, type Fetch, type HeadStreamFetch, type Observation, type ObservationState, type Session, type Signer } from "@generalbusiness/artroom-client";
 import { countingCommitments as counting } from "../commitments.ts";
 import { COUNTING_COMMITMENTS_DEFINITION as COUNTING_DEFINITION } from "../commitments-pin.ts";
-import { assignedTurn, countingView, ownedParticipant, proposal, same, type Control, type ProposalOptions, type CountingView } from "./model.ts";
+import { assignedTurn, countingView, ownedParticipant, proposal, same, type Control, type ProposalOptions, type CountingRead, type CountingView } from "./model.ts";
+import { counterStateProjection } from "./projection.ts";
 import { appendPrepared, activeAttempt, envelopeKey, fitsPending, resumableJournal, validEnvelope, validReport, validJournal, type AttemptJournal } from "./journal.ts";
 import { attemptDispatcher, type TrustedActFetch } from "./dispatcher.ts";
 import type { ActorIdentity, Completion, PreparedEnvelope, Reporter, ReportOutcome, CustodyLock, PendingStore } from "./voice-controller.ts";
@@ -12,7 +14,7 @@ import type { ActorIdentity, Completion, PreparedEnvelope, Reporter, ReportOutco
 export interface CommandStore {load():Promise<{kind:string;envelope:PreparedEnvelope;journal?:AttemptJournal}|null>;save(value:{kind:string;envelope:PreparedEnvelope;journal?:AttemptJournal}):Promise<void>;clear():Promise<void>}
 export type CommandOutcome=ReportOutcome|{readonly status:"blocked";readonly reason:string;readonly definitelyUnsent?:true;readonly refreshing?:true};
 export interface StageGateway extends Reporter {
-  observe(emit:(state:ObservationState<Summary>,view?:CountingView)=>void):Observation;
+  observe(emit:(state:ObservationState<CountingRead>,view?:CountingView)=>void):Observation;
   command(kind:Control,options?:ProposalOptions):Promise<CommandOutcome>;
   checkCommand():Promise<ReportOutcome|null>;
   resumeCommand():Promise<ReportOutcome|null>;
@@ -23,8 +25,10 @@ export interface StageGateway extends Reporter {
   restoreCommand():Promise<void>;
   dispose():void;
 }
-export function nativeGateway(configured:ActorIdentity,signer:Signer,options:{current():boolean;lock:CustodyLock;voiceStore:PendingStore;commandStore:CommandStore;fetch?:Fetch;headFetch?:HeadStreamFetch;actFetch?:TrustedActFetch}):StageGateway {
+export function nativeGateway(configured:ActorIdentity,signer:Signer,options:{current():boolean;lock:CustodyLock;voiceStore:PendingStore;commandStore:CommandStore;fetch?:Fetch;headFetch?:HeadStreamFetch;actFetch?:TrustedActFetch;application?:Pick<ApplicationInstallation,"scope"|"directory"|"item"|"definition">}):StageGateway {
   const identity=JSON.parse(JSON.stringify(configured)) as ActorIdentity;
+  const application=options.application?JSON.parse(canonicalize(options.application)) as NonNullable<typeof options.application>:undefined;
+  if(application&&(!same(application.scope,identity.scope)||application.definition!==identity.definition))throw new Error("The installed Counter does not match this device.");
   const origin=new URL(identity.origin);if(origin.origin!==identity.origin||origin.pathname!=="/"||origin.search||origin.hash||origin.username||origin.password||!["https:","http:"].includes(origin.protocol))throw new Error("The configured service must be an exact trusted origin.");
   if(identity.definition!==COUNTING_DEFINITION||signer.key!==identity.publicKey||!same(identity.member.membership,identity.membership))throw new Error("This enrolled device does not match the configured counting identity.");
   // The signer holds a browser key capability; no seed or token reaches a URL or view.
@@ -82,9 +86,9 @@ export function nativeGateway(configured:ActorIdentity,signer:Signer,options:{cu
   });
   return{
     observe(emit){
-      observer=observeScope<Summary>({context:{origin:identity.origin,deployment:identity.deployment,scope:identity.scope,definition:identity.definition,membership:identity.membership,member:identity.member.member,key:identity.publicKey},current:usable,
+      observer=observeScope<CountingRead>({context:{origin:identity.origin,deployment:identity.deployment,scope:identity.scope,definition:identity.definition,membership:identity.membership,member:identity.member.member,key:identity.publicKey},current:usable,
         authenticate:async()=>options.lock.run(async()=>{current();const signed=await signerSessionRequest(identity.membership,signer,timeOf(Date.now()+60_000),b64url(crypto.getRandomValues(new Uint8Array(16))));current();const answer=await requestSession(identity.origin,identity.membership.scope,signed,options.fetch?{fetch:options.fetch}:{});current();if(answer.ok)session=answer.session;return answer.ok?{ok:true,session:answer.session}:answer;}),
-        snapshot:async next=>{session=next;return completeSummary(await handle().summary());},
+        snapshot:async next=>{session=next;if(!application)return{ok:false,reason:"unavailable"};return completeApplicationItems(await handle().applicationProjection({v:1,scope:identity.scope,directory:application.directory,install:application.item,projection:"state",items:{}}),counterStateProjection);},
         open:(next,signal)=>openHttpHeadStream(identity.origin,identity.scope,next,signal,options.headFetch?{fetch:options.headFetch}:{}),
         emit:state=>{if(!usable())return;fresh=state.status==="current";if(fresh&&state.status==="current"){try{view=countingView(state.snapshot.value,identity.scope);}catch{view=undefined;fresh=false;emit({status:"error",reason:"The counting snapshot is invalid."});return;}}emit(state,view);},
       });return observer;

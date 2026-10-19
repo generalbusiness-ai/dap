@@ -1,5 +1,7 @@
 import { AppBridge, AppToolError } from "./bridge.ts";
 import type { Display, PageKind } from "../src/views/types.ts";
+import { viewToolName } from "../src/views/names.ts";
+import { SurfacePanels } from "./surface.ts";
 import "./style.css";
 
 const root = document.querySelector<HTMLElement>("#card-root")!;
@@ -11,10 +13,22 @@ let notice = "";
 let contextError = "";
 let pendingContext: Display["context"] | null = null;
 let sendingContext = false;
+let reportedContext = "";
 let returnPage: PageKind = "summary";
 let alive = true;
 let connected = false;
 let focusKey: string | null = null;
+let refreshTimer = 0;
+const surfaces = new SurfacePanels();
+const surfaceOf = () => display?.card?.declared?.surface ?? display?.surface;
+
+function scheduleRefresh() {
+  window.clearTimeout(refreshTimer);
+  const interval = display?.card?.declared?.refresh ?? display?.surface?.refresh;
+  if (alive && display?.active && interval) refreshTimer = window.setTimeout(() => {
+    if (busy) scheduleRefresh(); else void read({ refresh: true }).catch(showError);
+  }, interval);
+}
 
 function node<K extends keyof HTMLElementTagNameMap>(tag: K, text?: string, className?: string): HTMLElementTagNameMap[K] {
   const element = document.createElement(tag);
@@ -48,10 +62,13 @@ async function reportContext() {
     while (pendingContext && alive) {
       const context = pendingContext;
       pendingContext = null;
+      const encoded = JSON.stringify(context);
+      if (encoded === reportedContext) { contextError = ""; continue; }
       const identity = context.identity;
-      const line = `${identity ? `${identity.kind} ${identity.item}, revision ${identity.revision}` : `${context.screen}: ${context.status}`}. ${context.navigation.join(", ") || "No navigation"}.${context.receipt ? ` ${context.receipt}` : ""}`;
+      const line = `${context.note ? `${context.note} ` : ""}${identity ? `${identity.kind} ${identity.item}, revision ${identity.revision}` : `${context.screen}: ${context.status}`}. ${context.navigation.join(", ") || "No navigation"}.${context.receipt ? ` ${context.receipt}` : ""}`;
       try {
         await bridge.request("ui/update-model-context", { content: [{ type: "text", text: line }], structuredContent: context });
+        reportedContext = encoded;
         contextError = "";
       } catch (error) {
         pendingContext ??= context;
@@ -68,6 +85,7 @@ function accept(data: Record<string, unknown>) {
   display = value as Display;
   if (previousPage !== undefined && previousPage !== display.query.page) focusKey = display.query.page === "summary" ? "title" : "button:← Back";
   updateContext();
+  scheduleRefresh();
 }
 async function read(move?: { page?: PageKind; position?: number; refresh?: boolean }) {
   if (busy || !alive) return;
@@ -81,15 +99,36 @@ async function open() {
   if (!display?.card) return;
   returnPage = "summary";
   try {
-    const mode = await bridge.displayMode("fullscreen");
-    notice = mode === "fullscreen" ? "" : "Full screen was not granted. Detail remains inside this card.";
+    const requested = display.card.declared?.display ?? "fullscreen", mode = await bridge.displayMode(requested);
+    notice = mode === requested ? "" : requested === "fullscreen" ? "Full screen was not granted. Detail remains inside this card." : "The host kept full screen open.";
   } catch (error) { notice = `${error instanceof Error ? error.message : String(error)} Detail remains inside this card.`; }
   const modeNotice = notice;
   await read({ page: display.card.detailPage ?? "item" });
   notice = modeNotice; render();
 }
+async function declaredMode() {
+  const requested = display?.card?.declared?.display ?? display?.surface?.display;
+  if (!requested || bridge.context.displayMode === requested) return;
+  try { if (await bridge.displayMode(requested) !== requested) notice = "The host kept the previous display mode."; }
+  catch (error) { notice = error instanceof Error ? error.message : String(error); }
+  render();
+}
+async function openDeclared(screen: string, items?: Readonly<Record<string, number>>) {
+  if (busy || !alive) return;
+  const key = crypto.randomUUID();
+  busy = true; notice = ""; render();
+  try {
+    const opening = await bridge.tool(viewToolName(screen, true), { view: key, ...(items ? { items } : {}) });
+    if (opening["view"] !== key) throw Error("The declared opening did not retain its view key.");
+    view = key; display = null;
+  } finally { busy = false; render(); }
+  await read();
+  await declaredMode();
+}
 async function back() {
   if (!display) return;
+  const declaredBack = display.card?.declared?.back ?? display.surface?.back;
+  if (declaredBack) return openDeclared(declaredBack);
   const target = display.query.page === "diff" ? returnPage : "summary";
   notice = "";
   if (target === "summary") {
@@ -152,6 +191,17 @@ function render() {
     const nav = node("nav"); nav.setAttribute("aria-label", "Card navigation");
     nav.append(button("← Back", back, "quiet")); root.append(nav);
   }
+  const surface = surfaceOf(), data = card?.declared?.data ?? display.data;
+  if (surface && data) {
+    try {
+      const panel = surfaces.show(surface, data, async (name, items) => {
+        if (!busy && alive && display?.active) await openDeclared(surface.opens[name]!, items);
+      }, () => alive && !!display?.active && surfaceOf()?.screen === surface.screen);
+      panel.inert = busy || !display.active;
+      root.append(panel);
+    } catch (error) { root.append(node("p", error instanceof Error ? error.message : "The declared surface is unavailable.", "notice")); }
+    return;
+  }
   if (!card) {
     root.append(node("p", display.fallback || display.status, "empty"));
     if (display.status !== "empty") root.append(button("Retry read", () => read({ refresh: true }), "quiet"));
@@ -168,19 +218,30 @@ function render() {
     title.dataset["focus"] = "title";
     title.onclick = (event) => { event.preventDefault(); if (!busy) void open().catch(showError); };
     heading.append(title);
-  } else heading.textContent = card.title;
+  } else heading.textContent = card.declared?.kind === "log" ? "Recent entries" : card.title;
   article.append(heading);
-  const actor = node("p", undefined, `actor ${card.actor.kind}`);
-  const mark = card.actor.kind === "person" ? "●" : card.actor.kind === "agent" ? "■" : "◇";
-  const glyph = node("span", mark); glyph.setAttribute("aria-hidden", "true");
-  actor.append(glyph, document.createTextNode(` ${card.actor.name}${card.actor.controller ? ` · controlled by ${card.actor.controller}` : ""} · ${card.actor.kind}`));
-  article.append(actor, node("p", card.summary, "summary"));
-  if (card.reasons.length) {
+  if (card.actor) {
+    const actor = node("p", undefined, `actor ${card.actor.kind}`);
+    const mark = card.actor.kind === "person" ? "●" : card.actor.kind === "agent" ? "■" : "◇";
+    const glyph = node("span", mark); glyph.setAttribute("aria-hidden", "true");
+    actor.append(glyph, document.createTextNode(` ${card.actor.name}${card.actor.controller ? ` · controlled by ${card.actor.controller}` : ""} · ${card.actor.kind}`));
+    article.append(actor);
+  }
+  if (card.declared?.actor !== null && card.declared?.actor !== undefined) article.append(node("p", `Member ${JSON.stringify(card.declared.actor)}`, "actor"));
+  article.append(node("p", card.summary, "summary"));
+  if (card.reasons.length && card.declared?.kind !== "log") {
     const reasons = node("ul", undefined, "reasons");
     for (const reason of card.reasons) reasons.append(node("li", reason));
     article.append(reasons);
   }
   if (!summary) {
+    for (const row of card.declared?.log ?? []) {
+      const section = node("section", undefined, "entry projected-entry");
+      section.append(node("h2", `Entry ${row.entry.seq}: ${row.title}`), node("p", row.time, "muted"));
+      if (row.summary) section.append(node("p", row.summary));
+      for (const fact of row.facts) section.append(node("p", fact));
+      article.append(section);
+    }
     if (card.body) article.append(node(display.query.page === "diff" ? "pre" : "p", card.body, display.query.page === "diff" ? "diff" : "body"));
     for (const entry of card.entries ?? []) {
       const section = node("section", undefined, "entry");
@@ -189,14 +250,14 @@ function render() {
     if (card.unavailable.length) article.append(node("p", `Unavailable: ${card.unavailable.map((range) => `${range.scope} entries ${range.from}–${range.to}`).join("; ")}.`, "notice"));
   }
   root.append(article);
-  if (summary) {
+  if (summary && (!card.declared || card.declared.kind === "carousel")) {
     const nav = node("nav", undefined, "carousel"); nav.setAttribute("aria-label", "Carousel");
     const previous = button("‹", () => read({ position: display!.position - 1, page: "summary" }), "quiet arrow");
     previous.setAttribute("aria-label", "Previous item"); previous.disabled ||= display.position === 0;
     const next = button("›", () => read({ position: display!.position + 1, page: "summary" }), "quiet arrow");
     next.setAttribute("aria-label", "Next item"); next.disabled ||= display.position + 1 >= display.count;
     nav.append(previous, node("span", `${display.position + 1} / ${display.count}`, "position"), next); root.append(nav);
-  } else if (display.query.page !== "diff") {
+  } else if (!summary && display.query.page !== "diff") {
     const actions = node("div", undefined, "actions");
     for (const action of card.actions) {
       const control = button(action.label, () => act(action.id));
@@ -211,6 +272,7 @@ function render() {
 }
 function keyboard(event: KeyboardEvent) {
   if (!display || busy || display.query.page !== "summary" || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+  if (display.card?.declared && display.card.declared.kind !== "carousel") return;
   const position = display.position + (event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0);
   if (position === display.position || position < 0 || position >= display.count) return;
   event.preventDefault(); void read({ position, page: "summary" }).catch(showError);
@@ -242,6 +304,8 @@ bridge.on((method) => {
   }
 });
 function close() {
+  window.clearTimeout(refreshTimer);
+  surfaces.close();
   alive = false; connected = false; cancelAnimationFrame(frame); resize.disconnect();
   window.removeEventListener("keydown", keyboard); window.removeEventListener("resize", measure);
   document.fonts.removeEventListener("loadingdone", measure); bridge.close();
@@ -255,4 +319,5 @@ void (async () => {
   if (typeof input["view"] !== "string") throw new Error("The opening tool input has no view key. Open this card again.");
   view = input["view"];
   await read();
+  await declaredMode();
 })().catch(showError);

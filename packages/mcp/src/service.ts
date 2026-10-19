@@ -15,14 +15,14 @@ import { invitationRedemptionFields } from "@generalbusiness/artroom-client";
 import type { Answer, Beside, DeclaredDefinition, Digest, Entry, FieldValue, Item, PlatformDefinition, Read, Receipt, ScopeId, ScopeRef, Seed, Summary } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, digestBytes, intentDigest, isDigest, isPlatformDefinition, isScopeId, isScopeRef, isReceipt, entryHash, parseStrict, scopeIdOf, textDigest, timeOf, utf8 } from "@generalbusiness/artroom-bytes";
-import { TransportError, ScopeHandle, ApplicationPackageError, applicationScreenPath, readApplicationInstallOptions, readApplicationReleaseUri, signedApplicationInstall, invitationOf, readCredential, signedIntent, wellFormedInvitation, type Fetch, type Signer } from "@generalbusiness/artroom-client";
-import { TRUSTED_APPLICATION_COHORT, platform } from "@generalbusiness/dap-platform";
+import { TransportError, ScopeHandle, ApplicationPackageError, applicationScreenPath, readApplicationInstallOptions, readApplicationReleaseUri, signedApplicationInstall, signedApplicationInstall2, invitationOf, readCredential, signedIntent, wellFormedInvitation, type Fetch, type Signer } from "@generalbusiness/artroom-client";
+import { TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, platform } from "@generalbusiness/dap-platform";
 import { ApplicationHttpError, applicationGitHttpSource, readApplicationGitBlob } from "@generalbusiness/artroom-git/application";
 import { ACT_OUTPUT, actTool, bindingsOf, declarationDigest, describedOf, generationOf, listed, selected, type Binding, type Held, type Inventory, type Mode, type Tool } from "./catalogue.ts";
 import { Custody, CustodyError, Lost, meaningOf, validKey, type CustodyRecord, type CustodyStore, type Envelope, type Identity } from "./custody.ts";
 import { AT_INPUT, describeAct, grantAction, onOf, schemaOf, type DefinitionLike } from "./describe.ts";
 import { answered, clip, finding, type Finding } from "./errors.ts";
-import { Kept, definitionOf, readInventory, readPartitionIndexes, type ConfigPort, type McpConfig, type Read_, type Root } from "./inventory.ts";
+import { Kept, definitionOf, readInventory, readPartitionIndexes, standingIn, type ConfigPort, type McpConfig, type Read_, type Root } from "./inventory.ts";
 import { KIB, bytesOf, cursorOf, fromCursor, pageBy, sliceText } from "./paging.ts";
 import { Reads } from "./reads.ts";
 import { Recent } from "./recent.ts";
@@ -34,6 +34,8 @@ import { PRESENTATION } from "./views/generated.ts";
 import { ViewSessions } from "./views/session.ts";
 import { toolsForHost, viewTools } from "./views/tools.ts";
 import type { ViewSource } from "./views/types.ts";
+import { DeclaredViewSource } from "./views/declared.ts";
+import type { ApplicationInstallation } from "@generalbusiness/artroom-bytes/application";
 
 export interface ServerPort {
   /** The scope service's base URL. */
@@ -63,6 +65,9 @@ export interface ServerPort {
   presentation?: PresentationPackage;
   /** An application's authenticated card projection. The generic kit contains no lane projection. */
   views?: ViewSource;
+  /** One exact installed declared package; its native install is rechecked
+   * on reads. Package bytes provide data, never a custom read adapter. */
+  declaredViews?: { bytes: Uint8Array; release: Digest; item: number };
 }
 
 /** A tool's answer, as `tools/call` sends it: structured content with an object root, and its text. */
@@ -208,9 +213,22 @@ export class McpService {
     this.#service = port.service;
     this.#reads = this.#readsOf(port.service);
     this.custody = new Custody(port.custody, () => timeOf(now()));
-    this.resources = new ViewResources(port.presentation ?? PRESENTATION);
-    const views = port.views ? new ViewSessions(port.views, { call: (name, args) => this.call(name, args) }, (kind, args, admit) => this.#viewPerform(kind, args, admit), (args) => this.call("settle", args)) : null;
-    this.#generic = { ...this.#genericTools(), ...(views ? viewTools(views) : {}) };
+    if (port.views && port.declaredViews) throw Error("Choose one view source for this MCP service.");
+    const item = port.declaredViews?.item;
+    if (item !== undefined && (!Number.isSafeInteger(item) || item < 0 || Object.is(item, -0))) throw Error("Invalid native application install item.");
+    const declared = port.declaredViews ? new DeclaredViewSource(port.declaredViews.bytes, port.declaredViews.release, {
+      installation: () => this.#declaredInstallation(item!),
+      projection: async query => this.#reads.projection((await this.#applicationRoom()).membership, query),
+      actions: async () => {
+        const room = await this.#applicationRoom(), { summary } = await this.#summary(room.membership.scope, room.membership);
+        const standing = standingIn(summary.items, this.key);
+        return standing.known ? standing.actions : [];
+      },
+    }) : null;
+    const source = declared ?? port.views;
+    this.resources = new ViewResources(port.presentation ?? source?.presentation ?? PRESENTATION);
+    const views = source ? new ViewSessions(source, { call: (name, args) => this.call(name, args) }, (kind, args, admit) => this.#viewPerform(kind, args, admit), (args) => this.call("settle", args)) : null;
+    this.#generic = { ...this.#genericTools(), ...(views ? viewTools(views, source?.screens) : {}) };
   }
 
   get key(): string { return this.#port.signer.key; }
@@ -227,7 +245,7 @@ export class McpService {
     const read = await readInventory(this.reads, this.kept, config);
     const bindings = bindingsOf(read.inventory, this.words);
     const baseGeneration = generationOf(bindings, read.inventory, { mode: this.mode, tools: this.#tools, words: this.words });
-    const generation = digestBytes(utf8(canonicalize({ tools: baseGeneration, presentation: this.resources.generation, views: !!this.#port.views })));
+    const generation = digestBytes(utf8(canonicalize({ tools: baseGeneration, presentation: this.resources.generation, views: !!(this.#port.views || this.#port.declaredViews), declared: this.#port.declaredViews?.release ?? null })));
     const memberships = new Map<string, ScopeRef>();
     if (config.repository) memberships.set(config.repository.membership.scope, config.repository.membership);
     for (const root of config.roots ?? []) if (root.membership) memberships.set(root.membership.scope, root.membership);
@@ -264,7 +282,7 @@ export class McpService {
   }
   async #page(cursor?: unknown, ui?: boolean): Promise<{ tools: Tool[]; nextCursor?: string; generation: Digest; catalogueGeneration?: Digest }> {
     const s = await this.snapshot();
-    const generation = this.#port.views && ui !== undefined ? digestBytes(utf8(canonicalize({ generation: s.generation, ui }))) : s.generation;
+    const generation = (this.#port.views || this.#port.declaredViews) && ui !== undefined ? digestBytes(utf8(canonicalize({ generation: s.generation, ui }))) : s.generation;
     const tools = ui === undefined ? s.tools : toolsForHost(s.tools, ui);
     let from = 0;
     if (cursor !== undefined && cursor !== null) {
@@ -336,7 +354,7 @@ export class McpService {
     throw error;
   }
 
-  async #viewPerform(kind: string, args: Args, admit: () => void): Promise<CallResult> {
+  async #viewPerform(kind: string, args: Args, admit: () => void | Promise<void>): Promise<CallResult> {
     try { return await this.#perform(null, args, kind, undefined, admit); }
     catch (error) { return this.#failure(error, args); }
   }
@@ -407,7 +425,7 @@ export class McpService {
 
   // ---------------------------------------------------------------- an act, under custody
 
-  async #perform(binding: Binding | null, args: Args, kind: string, preparing?: { resource: unknown; capability: string; step: string }, admit?: () => void): Promise<CallResult> {
+  async #perform(binding: Binding | null, args: Args, kind: string, preparing?: { resource: unknown; capability: string; step: string }, admit?: () => void | Promise<void>): Promise<CallResult> {
     const key = args["idempotencyKey"];
     if (!validKey(key)) return failed({ error: "shape", field: "idempotencyKey", what: "is missing, or not 1 to 128 bytes of UTF-8", declared: "a key you choose and keep" });
     const s = await this.#current();
@@ -468,7 +486,7 @@ export class McpService {
       }
       // The subjects are resolved from the fields the scope will read, defaults applied and local facts as their seq; the intent
       // signs the fields as given.
-      admit?.();
+      if (admit) await admit();
       const signed = await signedIntent(this.#port.signer, { to: summary.scope, kind, on: on as number | null, fields: shaped.fields, expected }, { idempotencyKey: key as string, now: this.#now() });
       const beside: Beside = { ...(shaped.texts.length > 0 ? { texts: shaped.texts } : {}), ...(Object.keys(presented).length > 0 ? { presented } : {}), ...(values.length > 0 ? { values } : {}) };
       return { binding: { definition: definition.name, kind, declaration, pinned: summary.definition }, envelope: { signed, beside } };
@@ -900,18 +918,32 @@ export class McpService {
    * room recorded in the configuration; the list is derived again on the next call.
    */
   /** The actual generic room and exact Rules sibling, never a caller alias. */
-  async #applicationRoom(): Promise<{ directory: ScopeRef; membership: ScopeRef; rules: ScopeRef }> {
+  async #applicationRoom(): Promise<{ directory: ScopeRef; membership: ScopeRef; rules: ScopeRef; destination: ScopeRef; cohort: typeof TRUSTED_APPLICATION_COHORT | typeof DECLARED_APPLICATION_COHORT }> {
     const config = await this.#port.config.read(), repository = config.repository;
     if (!repository || config.service !== this.#service) return stop({ error: "target", what: "configure a trusted-application room before installing" });
     const { summary: directory } = await this.#summary(repository.directory.scope, repository.membership);
     const row = directory.items.find(item => item.type === "repository" && item.state === "open"), rules = row?.refs["rules"], destination = row?.refs["destination"];
-    if (directory.status !== "active" || directory.definition !== TRUSTED_APPLICATION_COHORT.directory || canonicalize(directory.scope) !== canonicalize(repository.directory)
+    const cohort = directory.definition === DECLARED_APPLICATION_COHORT.directory ? DECLARED_APPLICATION_COHORT : TRUSTED_APPLICATION_COHORT;
+    if (directory.status !== "active" || directory.definition !== cohort.directory || canonicalize(directory.scope) !== canonicalize(repository.directory)
       || !row || canonicalize(row.refs["membership"]) !== canonicalize(repository.membership)
       || !isScopeRef(rules) || rules.kind !== "rules" || rules.scope !== repository.rules
       || !isScopeRef(destination) || destination.kind !== "destination" || destination.scope !== repository.destination) return stop({ error: "target", what: "the configured room does not match its exact generic native siblings" });
     const { summary } = await this.#summary(rules.scope, repository.membership);
-    if (summary.status !== "active" || summary.definition !== TRUSTED_APPLICATION_COHORT.rules || canonicalize(summary.scope) !== canonicalize(rules)) return stop({ error: "target", what: "the actual Rules sibling does not support native application installation" });
-    return { directory: directory.scope, membership: repository.membership, rules };
+    if (summary.status !== "active" || summary.definition !== cohort.rules || canonicalize(summary.scope) !== canonicalize(rules)) return stop({ error: "target", what: "the actual Rules sibling does not support native application installation" });
+    return { directory: directory.scope, membership: repository.membership, rules, destination, cohort };
+  }
+
+  async #declaredInstallation(item: number): Promise<ApplicationInstallation | null> {
+    const room = await this.#applicationRoom();
+    if (room.cohort.rules !== DECLARED_APPLICATION_COHORT.rules) return null;
+    const read = await this.#reads.read(room.membership, (t, r) => new ScopeHandle(t, room.rules.scope, r).queryItems({ v: 1, scope: room.rules, type: "installation", states: ["active"], ids: [item], limit: 1, cursor: null }));
+    if (!read.ok || !read.complete || read.next !== undefined) return null;
+    const row = read.value.items[0];
+    if (!row || row.id !== item || row.type !== "installation" || row.state !== "active" || !isScopeRef(row.refs["scope"]) || row.refs["scope"].kind !== "lane"
+      || canonicalize(row.refs["membership"] ?? null) !== canonicalize(room.membership) || canonicalize(row.refs["destination"] ?? null) !== canonicalize(room.destination) || !isDigest(row.values["definition"])
+      || !isDigest(row.values["release"]) || !isDigest(row.values["semantic"]) || !isDigest(row.values["presentation"])) return null;
+    return { directory: room.directory, rules: room.rules, membership: room.membership, destination: room.destination, scope: row.refs["scope"], item,
+      definition: row.values["definition"], ids: { release: row.values["release"], semantic: row.values["semantic"], presentation: row.values["presentation"] } };
   }
 
   async #installApplication(args: Args): Promise<CallResult> {
@@ -922,13 +954,14 @@ export class McpService {
     try { selected = readApplicationInstallOptions({ rules: room.rules, uri: args["uri"], release: args["release"], roles: args["roles"], values: args["values"] }); }
     catch { return failed({ error: "shape", field: "installation", what: "needs an immutable Git URI, expected release, explicit unique roles and bounded genesis values", declared: "the install_application input" }); }
     const identity: Identity = { service: this.#service, membership: room.membership, signer: this.#port.signer.key, target: room.rules, key: key as string };
-    const meaning = meaningOf(selected), pin = TRUSTED_APPLICATION_COHORT.rules;
+    const meaning = meaningOf(selected), pin = room.cohort.rules;
     const build = async () => {
       const address = readApplicationReleaseUri(selected.uri);
       const source = applicationGitHttpSource(address, { blobBytes: 4 * 1024 * 1024, ...(this.#port.applicationFetch ? { send: this.#port.applicationFetch } : {}) });
       try {
         const bytes = await readApplicationGitBlob(address, source.source, 4 * 1024 * 1024);
-        const prepared = await signedApplicationInstall(this.#port.signer, bytes, selected, { idempotencyKey: key as string, now: this.#now() });
+        const prepare = pin === DECLARED_APPLICATION_COHORT.rules ? signedApplicationInstall2 : signedApplicationInstall;
+        const prepared = await prepare(this.#port.signer, bytes, selected, { idempotencyKey: key as string, now: this.#now() });
         return { binding: { definition: "platform:rules", kind: "install-application", declaration: declarationDigest(platform(pin)!.data as unknown as DefinitionLike, "install-application", pin), pinned: pin }, envelope: { signed: prepared.signed, beside: prepared.beside } };
       } finally { await source.close(); }
     };

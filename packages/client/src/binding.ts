@@ -9,6 +9,7 @@
 
 import type { ScopeApi } from "@generalbusiness/dap-contract";
 import { itemQueryReadFor, readItemQueryParameter, within, LATE } from "@generalbusiness/artroom-bytes";
+import { readApplicationProjectionQuery, readApplicationProjectionReplyText } from "@generalbusiness/artroom-bytes/application-v2";
 import { ANSWERS } from "./answers.ts";
 import { TransportError, type Transport } from "./handle.ts";
 
@@ -48,6 +49,16 @@ export function bindingTransport(service: ServiceBinding): Transport {
       const reply = await within(10, () => call("queryItems", () => service.queryItems(scope, reader, encoded)));
       if (reply === LATE) throw new TransportError("no whole item query within 10 seconds; coverage is incomplete");
       if (!itemQueryReadFor(reply, query)) throw new TransportError("the reply does not match the bounded item query");
+      return reply;
+    },
+    applicationProjection: async (scope, reader, encoded) => {
+      const query = readApplicationProjectionQuery(encoded);
+      if (!query || query.scope.scope !== scope) throw new TransportError("invalid bounded application projection");
+      const reply = await within(10, async () => await service.applicationProjection(scope, reader, encoded)).catch(() => {
+        throw new TransportError("no application projection reply");
+      });
+      if (reply === LATE) throw new TransportError("no whole application projection within 10 seconds; coverage is incomplete");
+      if (!readApplicationProjectionReplyText(reply, query)) throw new TransportError("the reply does not match the bounded application projection");
       return reply;
     },
     history: (scope, reader, cursor) => call("history", () => service.history(scope, reader, cursor)),

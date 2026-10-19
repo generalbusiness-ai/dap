@@ -306,7 +306,7 @@ export class Operations {
       const read = await within(() => this.#resolver.read(asked.from, this.#bounds.fetchSeconds, true), this.#bounds.fetchSeconds);
       if (read === LATE || read === null || !("entry" in read) || !isEntryOf(read.entry, asked.from)) return false;
       return asked.mode === "application"
-        ? (operation.owner === "platform:destination@7" ? this.#definitions?.platform("platform:destination@7")?.applicationPublicationOrigin : applicationPublicationOrigin)?.(asked.from, asked.directory, asked.destination, read.origin ?? []) === true
+        ? (operation.owner === "platform:destination@7" || operation.owner === "platform:destination@8" ? this.#definitions?.platform(operation.owner)?.applicationPublicationOrigin : applicationPublicationOrigin)?.(asked.from, asked.directory, asked.destination, read.origin ?? []) === true
         : read.under === "change" && publishingLaneOrigin(asked.from, asked.directory, asked.destination, read.origin ?? []);
     } catch { return false; }
   }

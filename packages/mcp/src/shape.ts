@@ -152,14 +152,14 @@ export function capturedExpected(at: Record<string, number> | undefined, fresh: 
  * that a rule selects has no key: the scope resolves it. The scope checks
  * every revision again and refuses one that moved.
  */
-export function expectedOf(act: ActLike, items: readonly Item[], on: number | null, fields: Readonly<Record<string, FieldValue>>): Record<string, number> {
+export function expectedOf(act: ActLike, items: readonly Pick<Item, "id" | "type" | "revision" | "refs">[], on: number | null, fields: Readonly<Record<string, FieldValue>>): Record<string, number> {
   const expected: Record<string, number> = {};
   if (act.step === "transition" && on !== null) {
     const at = items.find((item) => item.id === on)?.revision;
     if (at !== undefined) expected["on"] = at;
   }
-  const bound = new Map<string, Item | null>();
-  const subject = (name: string): Item | null => {
+  const bound = new Map<string, (typeof items)[number] | null>();
+  const subject = (name: string): (typeof items)[number] | null => {
     if (bound.has(name)) return bound.get(name)!;
     if (name === "on") return items.find((item) => item.id === on) ?? null;
     const rule = ownValue(act.also, name.replace(/^also\./, "")) as { item?: string; one?: true; by?: string; code?: string; via?: { slot: string; of: string } } | undefined;

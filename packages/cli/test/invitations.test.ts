@@ -13,14 +13,14 @@ import { command, enrolAgentKey, issueInvitation, linkOf, memoryStore, type Cont
 // Real SDK/envelopes/followReceipt/CLI Store and pinned membership rules in memory.
 // Scripted HTTP/session authority/read pages/inbox confirmation; no native session,
 // Durable Object, browser, host, provider or full parent acceptance is proved.
-test.each([MEMBERSHIP, "platform:membership@4", "platform:membership@5", "platform:membership@6", "platform:membership@7"] as const)("retained native agent opening and key invitation survive loss; independent enrollment Checks without replacement, follows exact native facts and preserves legacy person custody (HTTP and inbox STAND-INs, %s)", async named => {
+test.each([[MEMBERSHIP,"platform:directory@3"],["platform:membership@4","platform:directory@5"],["platform:membership@5","platform:directory@6"],["platform:membership@6","platform:directory@9"],["platform:membership@7","platform:directory@11"],["platform:membership@7","platform:directory@12"]] as const)("retained native agent opening and key invitation survive loss; independent enrollment Checks without replacement, follows exact native facts and preserves legacy person custody (HTTP and inbox STAND-INs, %s with %s)", async (named,directoryDefinition) => {
   const home = await mkdtemp(pathJoin(tmpdir(), "artroom-agent-custody-"));
   try {
   const m = new Roster(named).seated(), service = "https://agents.test";
   const directory = { scope: m.office.at.scope, inc: m.office.at.inc, kind: "directory" as const };
   const repository = { directory, membership: m.at, rules: directory.scope, destination: directory.scope };
   const receipts = new Map<string, Receipt>(), sent: SignedIntent[] = [];
-  let wrongDirectory = false, sessionRequests = 0, crossReads = 0;
+  let wrongDirectory = false, wrongDirectoryPin = false, sessionRequests = 0, crossReads = 0;
   let lose: "add-member" | "enrol" | null = "add-member", loseSettle = false;
   const liveItems = (): Item[] => Object.entries(m.definition.declared.items).flatMap(([type, item]) => m.state.page(type, Object.keys(item.states).filter(s => !item.states[s]!.final), null, 100).items).map((item): Item => {
     if (item.type === "roster") return { ...item, refs: { ...item.refs, directory } }; // SCRIPTED directory creator projection.
@@ -71,7 +71,7 @@ test.each([MEMBERSHIP, "platform:membership@4", "platform:membership@5", "platfo
     }
     if (url.includes(directory.scope)) {
       expect(init?.headers?.["authorization"]?.startsWith("Session ")).toBe(true); crossReads++;
-      const definition = { "platform:membership@2": "platform:directory@3", "platform:membership@4": "platform:directory@5", "platform:membership@5": "platform:directory@6", "platform:membership@6": "platform:directory@9", "platform:membership@7": "platform:directory@11" }[named];
+      const definition = wrongDirectoryPin ? "platform:directory@13" : directoryDefinition;
       return reply({ ok: true, at: { seq: 0, hash: textDigest("SCRIPTED directory head") }, complete: true, value: { scope: directory, status: "active", definition, time: m.now, counts: [["repository", "ready", 1]], items: [{ id: 0, type: "repository", state: "ready", revision: 1, opened: textDigest("SCRIPTED repository"), attributed: [], parties: {}, values: {}, refs: { membership: m.at, rules: { ...directory, kind: "rules" }, destination: { ...directory, scope: wrongDirectory ? m.at.scope : directory.scope, kind: "destination" } } }] } });
     }
     if (path.includes("/entries/")) {
@@ -185,6 +185,14 @@ test.each([MEMBERSHIP, "platform:membership@4", "platform:membership@5", "platfo
   expect((await enrolAgentKey(receiving, link)).code).toBe(1);
   expect((await receiver.config())!.repository).toBeUndefined();
   wrongDirectory = false;
+  if(named==="platform:membership@7"){
+    const beforeFuture=sent.length;
+    wrongDirectoryPin=true;
+    expect((await enrolAgentKey(receiving,link,{mode:"check"})).code).toBe(1);
+    expect((await receiver.config())!.repository).toBeUndefined();
+    expect(sent.length).toBe(beforeFuture);
+    wrongDirectoryPin=false;
+  }
   const mutationsBeforeCheck = sent.length;
   expect((await enrolAgentKey(receiving, link, { mode: "check" })).code).toBe(0);
   expect(sent.length).toBe(mutationsBeforeCheck);

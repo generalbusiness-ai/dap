@@ -1,11 +1,12 @@
 /** Loopback-only trusted-author development. Native state is in-memory SQLite;
  * actors/read access are explicit TEST fixtures, never room enrollment. */
+import type { AnyPackedApplication } from "@generalbusiness/artroom-bytes/application-v2";
 import { watch, type FSWatcher } from "node:fs";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { resolve } from "node:path";
 import type { Answer, Beside, Read, ReadRefusal, RetainedInput } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isRecord, isSignedIntentShape, parseStrictBytes, timeOf } from "@generalbusiness/artroom-bytes";
-import { secretSigner, type PackedApplication } from "@generalbusiness/artroom-client";
+import { secretSigner } from "@generalbusiness/artroom-client";
 import { prepareApplicationDirectory, readApplicationScenario } from "./application-files.ts";
 import { openApplicationScenario, type ApplicationDevelopmentSession } from "./application-scenarios.ts";
 import { parse } from "./line.ts";
@@ -34,8 +35,8 @@ const READ_STATUS: Record<ReadRefusal, number> = { "not-found": 404, "wrong-inca
   "unsupported-definition": 501, "history-unavailable": 503, "too-large": 413, unavailable: 503, "sessions-unavailable": 503, "clock-behind": 503 };
 const RELOAD = 'const source=new EventSource("/__dap/events");const status=document.createElement("aside");status.textContent="Local TEST preview; no room installation";status.style.cssText="position:fixed;bottom:0;left:0;right:0;padding:.4rem;background:#fff5cc;color:#222;font:12px system-ui;z-index:2147483647";document.body.append(status);source.onopen=()=>{status.textContent="Local TEST preview; live reload connected";};source.onerror=()=>{status.textContent="Live reload disconnected; local TEST preview retained";};source.onmessage=event=>{const data=JSON.parse(event.data);if(data.type==="reload")location.replace(data.preview);if(data.type==="error")status.textContent="Build failed; previous preview retained. Native writes are paused.";};';
 const PANEL = '<!doctype html><html lang="en"><meta charset="utf-8"><title>Local application fixture</title><style>body{font:1rem system-ui;margin:2rem}pre{white-space:pre-wrap;overflow-wrap:anywhere}iframe{width:100%;height:32rem;border:1px solid #aaa}</style><h1>Local application fixture</h1><p>Explicit public TEST actors and open fixture reads. No room enrollment, provider calls or durable host state.</p><button id="read">Read state</button> <button id="replay">Replay</button><pre id="result"></pre><iframe title="Application preview" src="/"></iframe><script type="module">const result=document.querySelector("#result");const read=async()=>{const meta=await(await fetch("/__dap/meta")).json();const state=await(await fetch("/v1/scopes/"+encodeURIComponent(meta.scope.scope))).json();result.textContent=JSON.stringify({meta,state},null,2);};document.querySelector("#read").onclick=read;document.querySelector("#replay").onclick=async()=>{result.textContent=JSON.stringify(await(await fetch("/__dap/replay")).json(),null,2);};void read();</script></html>';
-const previewPath = (packet: PackedApplication): string => "/" + packet.package.presentation.entry.split("/").map(encodeURIComponent).join("/");
-interface Loaded { packet: PackedApplication; session: ApplicationDevelopmentSession; scenario: string; scenarioBytes: string; logical: number; wall: number }
+const previewPath = (packet: AnyPackedApplication): string => "/" + packet.package.presentation.entry.split("/").map(encodeURIComponent).join("/");
+interface Loaded { packet: AnyPackedApplication; session: ApplicationDevelopmentSession; scenario: string; scenarioBytes: string; logical: number; wall: number }
 export interface ApplicationDevelopmentServer {
   readonly origin: string;
   /** A deterministic rebuild hook for tools/tests; the CLI watches by default. */

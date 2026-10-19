@@ -6,6 +6,7 @@ import { applicationJson } from "./application-json.ts";
 import { readApplicationPackage } from "./application-package.ts";
 import { readApplicationReleaseUri } from "./application-uri.ts";
 import { ApplicationPackageError, type ApplicationIds } from "./application-types.ts";
+import { readApplicationPackage2, type AnyPackedApplication } from "@generalbusiness/artroom-bytes/application-v2";
 import { signedIntent, type Signer, type Signing } from "./intent.ts";
 
 export type ApplicationInstallRole = "admin" | "maintainer" | "member" | "agent" | "checker";
@@ -44,6 +45,18 @@ export function readApplicationInstallOptions(value: unknown): ApplicationInstal
 export async function signedApplicationInstall(signer: Signer, bytes: Uint8Array, options: ApplicationInstallOptions, signing: Signing = {}): Promise<SignedApplicationInstall> {
   const owned = readApplicationInstallOptions(options);
   const packet = readApplicationPackage(bytes, owned.release, { bytes: 4 * 1024 * 1024, definitionBytes: 64 * 1024 });
+  return signApplicationInstall(signer, packet, owned, signing);
+}
+
+/** The declared-interface cohort uses the separate strict v2 codec.
+ * Calling this does not authorize that cohort or select its native pin. */
+export async function signedApplicationInstall2(signer: Signer, bytes: Uint8Array, options: ApplicationInstallOptions, signing: Signing = {}): Promise<SignedApplicationInstall> {
+  const owned = readApplicationInstallOptions(options);
+  const packet = readApplicationPackage2(bytes, owned.release, { bytes: 4 * 1024 * 1024, definitionBytes: 64 * 1024 });
+  return signApplicationInstall(signer, packet, owned, signing);
+}
+
+async function signApplicationInstall(signer: Signer, packet: AnyPackedApplication, owned: ApplicationInstallOptions, signing: Signing): Promise<SignedApplicationInstall> {
   const semantic = applicationJson(packet.package.semantic, 256 * 1024), release = applicationJson(packet.package.release, 4096);
   const values = applicationJson(owned.values, 16 * 1024);
   const texts = packet.package.semantic.definitions.map(part => part.bytes);

@@ -1,8 +1,9 @@
 /** Declarative local scenarios. No scenario module or application server code
  * is imported. TEST keys and authority are local stand-ins, stated in reports. */
+import type { AnyPackedApplication } from "@generalbusiness/artroom-bytes/application-v2";
 import type { Answer, Digest, FactRef, FieldValue, MemberId, MemberRef, ScopeKind, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, isRecord, newIncarnation, parseStrict, scopeIdOf } from "@generalbusiness/artroom-bytes";
-import { secretSigner, signedIntent, type Asked, type PackedApplication, type Signer } from "@generalbusiness/artroom-client";
+import { secretSigner, signedIntent, type Asked, type Signer } from "@generalbusiness/artroom-client";
 import { timeMs } from "@generalbusiness/dap-derive";
 import type { Verification } from "@generalbusiness/artroom-replay";
 import type { LocalActor, LocalApplicationScope } from "./application-local.ts";
@@ -33,22 +34,22 @@ function reference(kind: ScopeKind): ScopeRef {
 }
 interface Actor { signer: Signer; member: MemberRef; actions: string[]; principal: string | null }
 export interface ScenarioOwnerRecord { readonly label: "non-native-scenario-owner"; readonly owner: string; readonly command: FactRef; readonly outcome: "confirmed" | "refused" | "unknown" }
-export interface ApplicationScenarioResult { readonly name: string; readonly definition: Digest; readonly steps: number; readonly replay: Verification; readonly authority: "scripted-test-grants"; readonly ownerRecords: readonly ScenarioOwnerRecord[] }
+export interface ApplicationScenarioResult { readonly name: string; readonly definition: Digest; readonly steps: number; readonly projectionChecks: number; readonly replay: Verification; readonly authority: "scripted-test-grants"; readonly ownerRecords: readonly ScenarioOwnerRecord[] }
 export interface ApplicationDevelopmentActor extends LocalActor { readonly name: string; readonly seed: string }
 export interface ApplicationDevelopmentSession { readonly result: ApplicationScenarioResult; readonly scope: LocalApplicationScope; readonly time: string; readonly actors: readonly ApplicationDevelopmentActor[] }
 
-export async function runApplicationScenario(packet: PackedApplication, value: unknown): Promise<ApplicationScenarioResult> {
+export async function runApplicationScenario(packet: AnyPackedApplication, value: unknown): Promise<ApplicationScenarioResult> {
   return executeScenario(packet, value);
 }
 /** A caller that opens a development session owns closing its native scope.
  * Only explicit public TEST actors are exposed, never operator custody. */
-export async function openApplicationScenario(packet: PackedApplication, value: unknown): Promise<ApplicationDevelopmentSession> {
+export async function openApplicationScenario(packet: AnyPackedApplication, value: unknown): Promise<ApplicationDevelopmentSession> {
   let session: Omit<ApplicationDevelopmentSession, "result"> | undefined;
   const result = await executeScenario(packet, value, (scope, time, actors) => { session = { scope, time, actors }; });
   if (!session) throw new ApplicationScenarioError("The local scenario did not open a session.");
   return { ...session, result };
 }
-async function executeScenario(packet: PackedApplication, value: unknown,
+async function executeScenario(packet: AnyPackedApplication, value: unknown,
   retain?: (scope: LocalApplicationScope, time: string, actors: readonly ApplicationDevelopmentActor[]) => void): Promise<ApplicationScenarioResult> {
   if (!supportsLocalSqlite(process.versions.node)) return fail("Local scenarios require unflagged Node SQLite: Node 22.13+, 23.4+, or 24+. Other CLI commands retain Node 22.0 support.");
   // The caller supplies bounded, strict JSON from readApplicationScenario.
@@ -64,6 +65,7 @@ async function executeScenario(packet: PackedApplication, value: unknown,
   const actors = new Map<string, Actor>(), seeds: Uint8Array[] = [], keys = new Set<string>();
   const accepted = new Map<string, FactRef>(), ownerRecords: ScenarioOwnerRecord[] = [], recorded = new Set<string>();
   let checkedBehavior = false;
+  let projectionChecks = 0;
   let scope: LocalApplicationScope | null = null;
   try {
     for (const [name, actor] of Object.entries(given)) {
@@ -157,6 +159,31 @@ async function executeScenario(packet: PackedApplication, value: unknown,
             if (!Object.hasOwn(item[key], slot) || canonicalize(item[key][slot]) !== canonicalize(resolve(wantedValue))) return fail(`Item ${id} has an unexpected ${key}.${slot}.`);
           }
           checkedBehavior = true;
+        } else if (Object.hasOwn(step, "projection")) {
+          object(step, ["projection"]);
+          const wanted = object(step["projection"], ["name", "sources"], ["items", "at"]);
+          if (typeof wanted["name"] !== "string" || !/^[A-Za-z][A-Za-z0-9_.-]{0,127}$/.test(wanted["name"])) return fail("Expected a declared projection name.");
+          const items = Object.hasOwn(wanted, "items") ? dictionary(wanted["items"], 8) : {};
+          if (Object.entries(items).some(([name, id]) => !/^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(name) || typeof id !== "number" || !Number.isSafeInteger(id) || id < 0 || Object.is(id, -0))) return fail("Projection selections need source names and nonnegative item IDs.");
+          const data = scope.developmentProjection(wanted["name"], items as Record<string, number>), sources = dictionary(wanted["sources"], 8);
+          if (!Object.keys(sources).length) return fail("A projection assertion must check at least one complete source.");
+          for (const [name, expected] of Object.entries(sources)) {
+            const rows = data.sources[name];
+            if (!rows || !Array.isArray(expected) || expected.length > 100 || rows.length !== expected.length) return fail(`Projection ${name} has an unexpected complete row count.`);
+            for (let i = 0; i < expected.length; i++) {
+              const row = rows[i]!, wanted = object(expected[i], ["id"], ["type", "state", "revision", "fields"]);
+              if (Object.keys(wanted).length < 2 || !["type", "state", "revision"].some(key => Object.hasOwn(wanted, key)) && (!Object.hasOwn(wanted, "fields") || !Object.keys(dictionary(wanted["fields"], 32)).length)) return fail("A projected row assertion needs its ID and a state, revision, type or field expectation.");
+              for (const key of ["id", "type", "state", "revision"] as const) if (Object.hasOwn(wanted, key) && canonicalize(row[key]) !== canonicalize(wanted[key])) return fail(`Projection ${name} row ${i} has an unexpected ${key}.`);
+              if (Object.hasOwn(wanted, "fields")) for (const [field, value] of Object.entries(dictionary(wanted["fields"], 32))) {
+                if (!Object.hasOwn(row.fields, field) || canonicalize(row.fields[field]) !== canonicalize(resolve(value))) return fail(`Projection ${name} row ${i} has an unexpected field ${field}.`);
+              }
+            }
+          }
+          if (Object.hasOwn(wanted, "at")) {
+            const head = object(wanted["at"], ["seq"], ["hash"]);
+            for (const [key, value] of Object.entries(head)) if (canonicalize(data.at[key as keyof typeof data.at]) !== canonicalize(value)) return fail(`Projection has an unexpected journal head ${key}.`);
+          }
+          projectionChecks++; checkedBehavior = true;
         } else if (Object.hasOwn(step, "owner-record")) {
           object(step, ["owner-record"]);
           const record = object(step["owner-record"], ["owner", "command", "outcome"]), owner = label(record["owner"]);
@@ -169,7 +196,7 @@ async function executeScenario(packet: PackedApplication, value: unknown,
           const key = canonicalize(command);
           if (recorded.has(key)) return fail("The scenario owner already recorded this command."); recorded.add(key);
           ownerRecords.push({ label: "non-native-scenario-owner", owner, command: parseStrict(key) as FactRef, outcome });
-        } else return fail("Expected act, sign, retry, advance, assert or owner-record.");
+        } else return fail("Expected act, sign, retry, advance, assert, projection or owner-record.");
       } catch (error) {
         if (error instanceof ApplicationScenarioError || error instanceof runtime.LocalApplicationError) throw new ApplicationScenarioError(`${name}, step ${index + 1}: ${error.message}`);
         throw error;
@@ -178,7 +205,7 @@ async function executeScenario(packet: PackedApplication, value: unknown,
     if (!checkedBehavior) return fail("Each scenario needs an expected act or retry answer, or a nonempty state assertion.");
     const replay = await scope.replay();
     if (replay.report.mode !== "replay" || replay.report.result !== "consistent") return fail(`${name}: native replay ${replay.report.result}.`);
-    const result: ApplicationScenarioResult = { name, definition, steps: steps.length, replay, authority: "scripted-test-grants", ownerRecords };
+    const result: ApplicationScenarioResult = { name, definition, steps: steps.length, projectionChecks, replay, authority: "scripted-test-grants", ownerRecords };
     if (retain) {
       retain(scope, time, [...actors].map(([name, who]) => ({ name, seed: (given[name] as Record<string, unknown>)["seed"] as string, key: who.signer.key, member: who.member, actions: [...who.actions], principal: who.principal === null ? null : actor(who.principal).member })));
       scope = null;

@@ -85,6 +85,7 @@ export function signedReads(transport: Transport, signer: Signer, signing: ReadS
     prepare: (...args) => transport.prepare(...args),
     settle: (...args) => transport.settle(...args),
     items: (...args) => transport.items(...args),
+    applicationProjection: (...args) => transport.applicationProjection(...args),
     outbox: (...args) => transport.outbox(...args),
     outboxItem: (...args) => transport.outboxItem(...args),
     summary: async (scope, reader) => transport.summary(scope, await as(reader, scope, "summary")),

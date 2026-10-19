@@ -6,14 +6,16 @@
  * lost reply or a reload Check is read-only. Explicit Continue reuses that
  * original envelope. Nothing here signs a replacement.
  */
-import type { Entry, Receipt, Summary } from "@generalbusiness/dap-contract";
+import type { ApplicationProjectionData, Receipt } from "@generalbusiness/dap-contract";
+import type { ApplicationInstallation } from "@generalbusiness/artroom-bytes/application";
 import { b64url, canonicalize, intentDigest, timeMs, timeOf } from "@generalbusiness/artroom-bytes";
-import { ScopeHandle, completeSummary, httpTransport, observeScope, openHttpHeadStream, requestSession, shapeDeclaredAct, signedIntent, signerSessionRequest,
+import { ScopeHandle, completeSummary, completeApplicationProjection, httpTransport, observeScope, openHttpHeadStream, requestSession, shapeDeclaredAct, signedIntent, signerSessionRequest,
   type CompleteSnapshot, type Fetch, type HeadStreamFetch, type Observation, type Session, type Signer } from "@generalbusiness/artroom-client";
 import { lending } from "../definition.ts";
 import { LENDING_DEFINITION } from "../pin.ts";
 import { advance, envelopeKey, lendingBinding, validKept, type CustodyLock, type Envelope, type Kept, type KeptStore, type LendingIdentity, type Ports, type Settled } from "./custody.ts";
-import { lendingView, membershipActions, propose, refusalWords, type LendingAct, type LendingView } from "./model.ts";
+import { lendingProjectionView, lendingProjectionActivity, membershipActions, propose, refusalWords, type LendingAct, type LendingView, type LendingActivityRow } from "./model.ts";
+import { lendingStateProjection } from "./projection.ts";
 
 /** How long after an intent's deadline a "not found" is taken as final. */
 export const SETTLED_AFTER_MS = 120_000;
@@ -28,13 +30,13 @@ export type ActOutcome =
 export interface Pending { kind: string; thing: number | null; name: string | null; notAfter: string; unsent: boolean }
 export type LendingState =
   | { status: "loading" }
-  | { status: "current"; view: LendingView; entries: readonly Entry[]; /** Separately observed membership actions, or unknown after a failed read. */ actions: readonly string[] | null }
+  | { status: "current"; view: LendingView; activity: readonly LendingActivityRow[]; /** Separately observed membership actions, or unknown after a failed read. */ actions: readonly string[] | null }
   | { status: "behind"; reason: string; view?: LendingView };
 
 export interface LendingGateway {
-  /** Follow the scope. Each `current` state is one coherent read: a summary, its head, and the record up to it. */
+  /** Follow one declared projection: retained items and bounded activity at one native head. */
   observe(emit: (state: LendingState) => void): Observation;
-  /** One coherent read, without following the scope: a session, the summary, and the record up to its head. */
+  /** One complete declared read without following the scope. */
   look(): Promise<LendingState>;
   /** Sign one act, keep it, then send it. Refused while another original is kept. */
   act(kind: LendingAct, input?: { thing?: number; name?: string; description?: string; reason?: string }): Promise<ActOutcome>;
@@ -54,8 +56,11 @@ export interface LendingGateway {
 
 export function lendingGateway(configured: LendingIdentity, signer: Signer, options: {
   current(): boolean; lock: CustodyLock; store: KeptStore; /** The clock for deadlines. Date.now by default. */ now?: () => number; fetch?: Fetch; headFetch?: HeadStreamFetch; /** The fetch of the one send. It defaults to `fetch`. */ actFetch?: Fetch;
+  application?: Pick<ApplicationInstallation,"scope"|"directory"|"item"|"definition">;
 }): LendingGateway {
   const identity = JSON.parse(JSON.stringify(configured)) as LendingIdentity;
+  const application=options.application?JSON.parse(canonicalize(options.application)) as NonNullable<typeof options.application>:undefined;
+  if(application&&(canonicalize(application.scope)!==canonicalize(identity.scope)||application.definition!==identity.definition))throw Error("The installed library does not match this device.");
   const origin = new URL(identity.origin);
   if (origin.origin !== identity.origin || !["https:", "http:"].includes(origin.protocol)) throw new Error("The configured service must be an exact origin.");
   if (identity.definition !== LENDING_DEFINITION || signer.key !== identity.publicKey) throw new Error("This device does not match the configured lending identity.");
@@ -63,7 +68,7 @@ export function lendingGateway(configured: LendingIdentity, signer: Signer, opti
   const now = options.now ?? (() => Date.now()), binding = lendingBinding(identity);
   const lifetime = new AbortController();
   let readVersion = 0;
-  let alive = true, session: Session | null = null, observer: Observation | undefined, view: LendingView | undefined, fresh = false, currentEntries: readonly Entry[] = [];
+  let alive = true, session: Session | null = null, observer: Observation | undefined, view: LendingView | undefined, fresh = false, currentActivity: readonly LendingActivityRow[] = [];
   let currentActions: readonly string[] | null = null;
   const usable = () => alive && options.current();
   const current = () => { if (!usable()) throw new Error("This device context is no longer current."); };
@@ -90,19 +95,7 @@ export function lendingGateway(configured: LendingIdentity, signer: Signer, opti
     } catch { return null; }
   };
 
-  /** The record up to `seq`, read page by page until the read is complete. */
-  const record = async (seq: number): Promise<Entry[]> => {
-    const entries: Entry[] = [];
-    let cursor: string | undefined;
-    for (;;) {
-      const page = await handle().history(cursor); current();
-      if (!page.ok) throw new Error(`The record could not be read: ${page.reason}.`);
-      for (const sealed of page.value) entries.push(sealed.entry);
-      if (page.complete || page.next === undefined) break;
-      cursor = page.next;
-    }
-    return entries.slice(0, seq + 1);
-  };
+  const readState=async()=>application?completeApplicationProjection(await handle().applicationProjection({v:1,scope:identity.scope,directory:application.directory,install:application.item,projection:"state",items:{}}),lendingStateProjection):{ok:false as const,reason:"unavailable" as const};
 
   const send = options.actFetch ?? options.fetch ?? ((url: string, init?: Parameters<Fetch>[1]) =>
     fetch(url, { ...init, redirect: "error", signal: init?.signal ? AbortSignal.any([init.signal, lifetime.signal]) : lifetime.signal }));
@@ -130,7 +123,7 @@ export function lendingGateway(configured: LendingIdentity, signer: Signer, opti
 
   return {
     observe(emit) {
-      observer = observeScope<Summary>({
+      observer = observeScope<ApplicationProjectionData>({
         context: { origin: identity.origin, deployment: identity.deployment, scope: identity.scope, definition: identity.definition, membership: identity.membership, member: identity.member.member, key: identity.publicKey },
         current: usable,
         authenticate: async () => options.lock.run(async () => {
@@ -140,22 +133,22 @@ export function lendingGateway(configured: LendingIdentity, signer: Signer, opti
           if (answer.ok) session = answer.session;
           return answer.ok ? { ok: true, session: answer.session } : answer;
         }),
-        snapshot: async (next) => { session = next; return completeSummary(await handle().summary()); },
+        snapshot: async (next) => { session = next; return readState(); },
         open: (next, signal) => openHttpHeadStream(identity.origin, identity.scope, next, signal, options.headFetch ? { fetch: options.headFetch } : {}),
         emit: (state) => {
           if (!usable()) return;
           if (state.status !== "current") { readVersion++; fresh = false; currentActions = null; emit(state.status === "connecting" ? { status: "loading" } : { status: "behind", reason: "reason" in state && typeof state.reason === "string" ? state.reason : state.status, ...(view ? { view } : {}) }); return; }
-          const snapshot: CompleteSnapshot<Summary> = state.snapshot;
-          // One coherent view: the summary, its head, and the record up to that head.
+          const snapshot: CompleteSnapshot<ApplicationProjectionData> = state.snapshot;
+          // Items and recent entry facts already share this native head.
           const version = ++readVersion;
           currentActions = null;
           emit({ status: "behind", reason: "Reading current membership actions.", ...(view ? { view } : {}) });
-          void Promise.all([record(snapshot.at.seq), readActions()]).then(([entries, actions]) => {
+          void readActions().then(actions => {
             if (!usable() || version !== readVersion) return;
-            const next = lendingView(snapshot.value, snapshot.at, entries);
+            const next = lendingProjectionView(snapshot.value),activity=lendingProjectionActivity(snapshot.value,next);
             if (view && next.record.seq < view.record.seq) return;
-            view = next; fresh = !view.behind; currentEntries = entries; currentActions = actions;
-            emit(view.behind ? { status: "behind", reason: "The record is behind the list.", view } : { status: "current", view, entries, actions });
+            view = next; fresh = !view.behind; currentActivity = activity; currentActions = actions;
+            emit(view.behind ? { status: "behind", reason: "The projection is behind the list.", view } : { status: "current", view, activity, actions });
           }).catch((error: unknown) => { if (usable() && version === readVersion) { fresh = false; emit({ status: "behind", reason: error instanceof Error ? error.message : "The record could not be read.", ...(view ? { view } : {}) }); } });
         },
       });
@@ -164,21 +157,21 @@ export function lendingGateway(configured: LendingIdentity, signer: Signer, opti
     async look() {
       const version = ++readVersion;
       currentActions = null;
-      const superseded = (): LendingState => view && fresh ? { status: "current", view, entries: currentEntries, actions: currentActions } : { status: "behind", reason: "A newer read replaced this one.", ...(view ? { view } : {}) };
+      const superseded = (): LendingState => view && fresh ? { status: "current", view, activity: currentActivity, actions: currentActions } : { status: "behind", reason: "A newer read replaced this one.", ...(view ? { view } : {}) };
       try {
         current();
         const refusal = await signIn();
         if (version !== readVersion) return superseded();
         if (refusal !== null) { fresh = false; return { status: "behind", reason: `The room refused a read session: ${refusal}.`, ...(view ? { view } : {}) }; }
-        const read = completeSummary(await handle().summary()); current();
+        const read = await readState(); current();
         if (version !== readVersion) return superseded();
         if (!read.ok) { fresh = false; return { status: "behind", reason: `The library could not be read: ${read.reason}.`, ...(view ? { view } : {}) }; }
-        const [entries, actions] = await Promise.all([record(read.value.at.seq), readActions()]);
+        const actions = await readActions();
         if (version !== readVersion) return superseded();
-        const next = lendingView(read.value.value, read.value.at, entries);
+        const next = lendingProjectionView(read.value.value),activity=lendingProjectionActivity(read.value.value,next);
         if (view && next.record.seq < view.record.seq) return superseded();
-        view = next; fresh = !view.behind; currentEntries = entries; currentActions = actions;
-        return view.behind ? { status: "behind", reason: "The record is behind the list.", view } : { status: "current", view, entries, actions };
+        view = next; fresh = !view.behind; currentActivity = activity; currentActions = actions;
+        return view.behind ? { status: "behind", reason: "The projection is behind the list.", view } : { status: "current", view, activity, actions };
       } catch (error) { if (version !== readVersion) return superseded(); fresh = false; return { status: "behind", reason: error instanceof Error ? error.message : "The library could not be read.", ...(view ? { view } : {}) }; }
     },
     act(kind, input = {}) {

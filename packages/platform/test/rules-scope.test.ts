@@ -75,8 +75,8 @@ test("the rules definition validates whole with the platform option; its marks a
   // The whole-scope rule (the contract's section 6.1): the package's own rules run the version, with no stand-in. Without any one of
   // the three, or with a rule of another place under a name, it is not runnable.
   const supplied = platform(RULES_SCOPE)!;
-  // Prospective Rules4 and Rules5 are explicitly supported; the next version remains unsupported.
-  expect([supplied.data, supplied.rules, platform("platform:rules@6")]).toEqual([rulesScope2, rulesScopeRules, null]);
+  // Rules4 through Rules6 are explicitly supported; the next version remains unsupported.
+  expect([supplied.data, supplied.rules, platform("platform:rules@7")]).toEqual([rulesScope2, rulesScopeRules, null]);
   expect([runnable(checked.definition, supplied.rules), ...Object.keys(rulesScopeRules).map((lost) => runnable(checked.definition, { ...supplied.rules, [lost]: undefined as never })), runnable(checked.definition, { ...supplied.rules, checkers: { place: "send", run: () => null } })])
     .toEqual([true, ...Object.keys(rulesScopeRules).map(() => false), false]);
 });

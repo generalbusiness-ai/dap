@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Grow bench grid</title><style>
+:host{display:block;font:inherit;color:inherit}*{box-sizing:border-box}h1{font-size:1.4rem;margin:0 0 8px}p{line-height:1.5;margin:8px 0}button{font:inherit;color:inherit;cursor:pointer;border:1px solid #a0aaa3;border-radius:6px;background:transparent;padding:8px;min-height:44px}button:disabled,select:disabled{opacity:.55;cursor:default}button:focus-visible{outline:3px solid #286c48;outline-offset:2px}.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.toolbar button[aria-pressed=true]{background:#dceadd;color:#183e28;border-color:#286c48}.scroll{max-width:100%;overflow:auto;padding:3px}#benches{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:4px;padding-bottom:6px}.bench{border:1px solid #a0aaa3;border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:3px;min-height:40px;background:#f0f2f0;color:#183126}.bench small{font-size:11px}.bench[data-stale=true]{border-style:dashed}.bench[data-selected=true]{outline:3px solid #286c48;outline-offset:-3px}.bench[data-missing=true]{background:repeating-linear-gradient(135deg,#f1f1ed,#f1f1ed 6px,#e4e5df 6px,#e4e5df 8px)}#selection{font-weight:600}.muted{color:var(--color-text-secondary,#58635c)}#zones{padding-left:20px}#error{color:#a22}.bench span{white-space:nowrap}@media(max-width:360px){.bench{font-size:10px;min-height:34px;padding:2px}.bench small{font-size:9px}}
+</style></head>
+<body>
+<h1>Bench grid</h1><p id="head" class="muted"></p>
+<div class="toolbar" role="group" aria-label="Bench metric"><button data-metric="moisture" aria-pressed="true">Moisture</button><button data-metric="ec" aria-pressed="false">EC</button><button data-metric="ph" aria-pressed="false">pH</button></div>
+<p id="legend" class="muted"></p><p class="muted">Dashed borders mark stale benches. Stripes mark missing readings.</p>
+<div class="scroll" role="img" aria-label="Bench rows A to J, columns 1 to 10"><div id="benches"></div></div>
+<div class="toolbar"><label>Bench <select id="choose-bench" style="font:inherit;min-height:44px;max-width:100%"></select></label><button id="open-bench">Open bench record</button></div>
+<p id="selection" role="status">Choose a bench to read its record.</p>
+<h2>Zones</h2><ul id="zones"></ul><p id="samples" class="muted"></p><p id="error" role="alert"></p>
+<script>(()=>{
+const api=window.dapSurface,root=api.root,grid=root.querySelector('#benches'),choose=root.querySelector('#choose-bench');
+let data,metric='moisture',selected=null;
+const metrics={moisture:{label:'Moisture',unit:'%',scale:1,max:100},ec:{label:'EC',unit:' mS/cm',scale:1000,max:10000},ph:{label:'pH',unit:'',scale:100,max:1400}};
+const value=(raw,scale=1,unit='')=>raw===null||raw===undefined?'No reading':String(raw/scale)+unit;
+function render(){
+ if(!data)return;const spec=metrics[metric];
+ root.querySelector('#head').textContent='Native head '+data.at.seq+' · '+data.sources.bench.length+' benches';
+ root.querySelector('#legend').textContent=spec.label+': darker green means a higher reading. Values use '+(metric==='moisture'?'percent':metric==='ec'?'mS/cm':'the pH scale')+'.';
+ grid.replaceChildren();choose.replaceChildren();
+ const benches=[...data.sources.bench].sort((a,b)=>a.fields.row.localeCompare(b.fields.row)||a.fields.column-b.fields.column);
+ if(!benches.length){grid.style.display='block';grid.textContent='No benches in this projection.';const option=document.createElement('option');option.textContent='No benches';option.value='';choose.append(option);}else grid.style.display='';
+ for(const bench of benches){const f=bench.fields,raw=f[metric],coordinate=f.row+f.column,button=document.createElement('div');
+  button.className='bench';button.dataset.stale=String(bench.state==='stale');button.dataset.missing=String(raw===null);button.dataset.selected=String(selected===bench.id);
+  button.style.gridRow=String(f.row.charCodeAt(0)-64);button.style.gridColumn=String(f.column);
+  if(raw!==null)button.style.backgroundColor='hsl(135 28% '+(95-Math.min(1,Math.max(0,raw/spec.max))*40)+'%)';
+  button.title=f.label+', '+spec.label+' '+value(raw,spec.scale,spec.unit)+', '+bench.state;
+  const label=document.createElement('span'),reading=document.createElement('small');label.textContent=coordinate;reading.textContent=raw===null?'—':value(raw,spec.scale);button.append(label,reading);
+  const option=document.createElement('option');option.value=String(bench.id);option.textContent=f.label+', '+bench.state+', '+spec.label+' '+value(raw,spec.scale,spec.unit);choose.append(option);grid.append(button);
+ }
+ if(selected!==null)choose.value=String(selected);choose.disabled=!benches.length;root.querySelector('#open-bench').disabled=!benches.length;
+ const zones=root.querySelector('#zones');zones.replaceChildren();if(!data.sources.zone.length){const li=document.createElement('li');li.textContent='No zones in this projection.';zones.append(li)}for(const zone of data.sources.zone){const li=document.createElement('li'),f=zone.fields;li.textContent=f.label+': '+zone.state+' · mean '+value(f.mean,100,' °C')+' · setpoint '+value(f.setpoint,100,' °C');zones.append(li)}
+ const samples=data.sources.samples;root.querySelector('#samples').textContent=samples.length?'Recent observation samples: '+samples.map(row=>row.fields.sampledAt).join(', ')+'. Samples are limited to the last 100 journal entries.':'No observation samples in the last 100 journal entries.';
+}
+for(const button of root.querySelectorAll('[data-metric]'))button.onclick=()=>{metric=button.dataset.metric;for(const peer of root.querySelectorAll('[data-metric]'))peer.setAttribute('aria-pressed',String(peer===button));render()};
+choose.onchange=()=>{selected=Number(choose.value);root.querySelector('#selection').textContent='Selected '+data.sources.bench.find(bench=>bench.id===selected).fields.label;render()};
+root.querySelector('#open-bench').onclick=()=>{if(!choose.value)return;selected=Number(choose.value);root.querySelector('#selection').textContent='Selected '+data.sources.bench.find(bench=>bench.id===selected).fields.label;render();void api.open('bench',{bench:selected}).catch(error=>{root.querySelector('#error').textContent=error.message})};
+api.onData(next=>{data=next;render()});
+})();</script>
+</body></html>

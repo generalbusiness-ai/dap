@@ -2,6 +2,7 @@
   "extends": "../../../tsconfig.base.json",
   "compilerOptions": {
     "skipLibCheck": true,
+    "resolveJsonModule": true,
     "lib": ["ES2022", "ESNext.Disposable", "DOM"],
     "types": ["node"],
     "paths": {

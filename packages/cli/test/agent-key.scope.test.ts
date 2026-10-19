@@ -7,14 +7,14 @@
  * Witnesses: issuance and enrolment of two separate agent configurations with real membership@7 receipts and the agent role's
  * acts; the same on membership@4, with a kept person invitation whose answer is lost, checked and joined; and three refusals: an invitation whose pin names another definition than the membership's
  * receipt, a trusted application invitation presented to the library's membership, and an issuance by an admin who names another member
- * as the controller. No link is relabelled into acceptance, no directory allowlist is widened, no person is substituted, and no
+ * as the controller. No link is relabelled into acceptance; directories use exact cohort pairs, no person is substituted, and no
  * key is transplanted between rooms.
  */
 import { describe, expect, test } from "vitest";
 import type { Digest, Item, OperationId, Read, Receipt, ScopeRef, Seed, SignedIntent } from "@generalbusiness/dap-contract";
 import { b64url, scopeIdOf } from "@generalbusiness/artroom-bytes";
 import { AGENT_KEY_LINK, agentKeyInvitationOf, encodeAgentKeyInvitation, type AgentKeyInvitation, type Fetch } from "@generalbusiness/artroom-client";
-import { APPLICATION_COHORT, TRUSTED_APPLICATION_COHORT, repositoryName } from "@generalbusiness/dap-platform";
+import { APPLICATION_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, repositoryName } from "@generalbusiness/dap-platform";
 import { beginSessionFixture } from "../../scope/test/session-settings.ts";
 import { Platform, routed } from "../../scope/test/repository.ts";
 import { outsideOf } from "../../scope/test/outside.ts";
@@ -31,11 +31,16 @@ describe("tagged agent-key enrolment on the trusted application and historical a
     const lifetime = nativeFixtureLifetime(owner);
     try { await story(lifetime); } finally { lifetime.release(); }
   }, 180_000);
+  test("declared-application: explicit CLI founding creates exact new siblings and enrolls a membership7 agent through directory12",async()=>{
+    const owner=beginSessionFixture({secret:b64url(crypto.getRandomValues(new Uint8Array(32))),sessions:true,inspector:reader});
+    const lifetime=nativeFixtureLifetime(owner);
+    try{await story(lifetime,true);}finally{lifetime.release();}
+  },60_000);
 });
 
 type Lifetime = ReturnType<typeof nativeFixtureLifetime>;
 
-async function story(lifetime: Lifetime): Promise<void> {
+async function story(lifetime: Lifetime, declaredOnly=false): Promise<void> {
   const now = lifetime.now;
   const node = lifetime.platform;
   const registers: Platform[] = [];
@@ -83,7 +88,7 @@ async function story(lifetime: Lifetime): Promise<void> {
   const run = async (who: Context, ...argv: string[]): Promise<Outcome> => lifetime.wait(() => command(who, argv));
 
   /** A room of one cohort, created by its admin through the command: install with the cohort, wire the host stand-in, create. */
-  const create = async (admin: Context, cohort: "trusted-application" | "application", namespace: string, name: string, handle: string) => {
+  const create = async (admin: Context, cohort: "trusted-application" | "declared-application" | "application", namespace: string, name: string, handle: string) => {
     const installed = await run(admin, "install", SERVICE, "--host", "git.example", "--namespace", namespace, "--cohort", cohort);
     expect(installed.code, installed.lines.join("\n")).toBe(0);
     const R = node((await admin.store.config())!.register!.scope);
@@ -169,6 +174,15 @@ async function story(lifetime: Lifetime): Promise<void> {
     return { member, key: String(key.values["id"]) };
   };
 
+  if(declaredOnly){
+    const admin=person(),room=await create(admin,"declared-application","artroom","declared","@rita");
+    const config=(await admin.store.config())!;
+    for(const [scope,pin]of [[config.register!.scope,DECLARED_APPLICATION_COHORT.register],[room.repository.directory.scope,DECLARED_APPLICATION_COHORT.directory],[room.membership.scope,DECLARED_APPLICATION_COHORT.membership],[room.repository.rules,DECLARED_APPLICATION_COHORT.rules],[room.repository.destination,DECLARED_APPLICATION_COHORT.destination]] as const){
+      expect((await node(scope).summary()).value.definition).toBe(pin);
+    }
+    await enrol(room,person(),await link(admin,room.membership,"@declared-agent","@rita"),"@declared-agent",DECLARED_APPLICATION_COHORT.membership);
+    return;
+  }
   // ---- The trusted application cohort: membership@7. Two agents, each its own configuration and key.
   const rita = person();
   const counter = await create(rita, "trusted-application", "artroom", "counter", "@rita");

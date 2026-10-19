@@ -48,13 +48,13 @@ export function literal(text: string): string {
   return text.replace(CONTROL, " ").replace(/ {2,}/g, " ").trim().replace(PUNCTUATION, "\\$&");
 }
 
-const statusOf = (thing: Thing): string =>
+const statusOf = (thing: Omit<Thing, "seq">): string =>
   thing.state === "available" ? "available"
     : thing.state === "lent" ? `lent to ${literal(thing.borrower ?? "a member")}`
       : `gone: ${literal(thing.reason ?? "")}`.trimEnd();
 
 /** The page of one thing. No future entry or item number is claimed in this signed text. */
-export function shelfPage(thing: Thing, record: ScopePointer): string {
+export function shelfPage(thing: Omit<Thing, "seq">, record: ScopePointer): string {
   const name = literal(thing.name) || `Thing ${thing.id}`;
   const description = literal(thing.description);
   return [
@@ -97,7 +97,7 @@ export function thingsOf(entries: readonly Entry[]): Thing[] {
 
 export interface PageText { title: string; description: string; lines: string[] }
 const words = (value: string): string => value.replace(/[\u0000-\u001f\u007f\u0085\u2028\u2029]+/g, " ").replace(/ {2,}/g, " ").trim();
-export function expectedPage(thing: Thing, scope: ScopePointer): PageText {
+export function expectedPage(thing: Omit<Thing,"seq">, scope: ScopePointer): PageText {
  return {title:words(thing.name)||`Thing ${thing.id}`, description:words(thing.description), lines:[
   `Status: ${thing.state === "available" ? "available" : thing.state === "lent" ? `lent to ${words(thing.borrower ?? "a member")}` : `gone: ${words(thing.reason ?? "")}`.trimEnd()}`,
   `Donated by: ${words(thing.donor)}`,

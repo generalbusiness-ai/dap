@@ -16,9 +16,10 @@
 
 import type {
   Answer, Beside, Cursor, DeclaredDefinition, Digest, OutboxItem, OutboxId, Entry, Created, Grant, Head, Item, PlatformDefinition, Read, ReadRefusal, Receipt, ScopeApi, ScopeId, Sealed, Settlement,
-  SignedIntent, Summary, ItemQuery, ItemQueryRead,
+  SignedIntent, Summary, ItemQuery, ItemQueryRead, ApplicationProjectionQuery, ApplicationProjectionRead,
 } from "@generalbusiness/dap-contract";
 import { definitionDigest, entryHash, encodeItemQueryParameter, readItemQueryParameter, itemQueryReadFor, within, LATE, isDigest, parseStrict, textDigest } from "@generalbusiness/artroom-bytes";
+import { encodeApplicationProjectionQuery, readApplicationProjectionQuery, readApplicationProjectionReplyText } from "@generalbusiness/artroom-bytes/application-v2";
 
 /** How a handle reaches a scope service: the contract's `ScopeApi`. `http.ts` and `binding.ts` each make one. */
 export type Transport = ScopeApi;
@@ -77,6 +78,20 @@ export class ScopeHandle {
       return reply;
     });
     if (result === LATE) throw new TransportError("no whole item query within 10 seconds; coverage is incomplete");
+    return result;
+  }
+  /** One complete declared projection at one journal head. Requires a read session. */
+  async applicationProjection(query: ApplicationProjectionQuery): Promise<ApplicationProjectionRead> {
+    const encoded = encodeApplicationProjectionQuery(query), checked = readApplicationProjectionQuery(encoded);
+    if (!checked || checked.scope.scope !== this.scope) throw new TransportError("invalid bounded application projection");
+    const result = await within(10, async signal => {
+      const text = await this.#transport.applicationProjection(this.scope, this.#reader, encoded!);
+      if (signal.aborted) return LATE;
+      const reply = readApplicationProjectionReplyText(text, checked);
+      if (!reply) throw new TransportError("the reply does not match the bounded application projection");
+      return reply;
+    });
+    if (result === LATE) throw new TransportError("no whole application projection within 10 seconds; coverage is incomplete");
     return result;
   }
   history(cursor?: Cursor): Promise<Read<readonly Sealed[]>> { return this.#transport.history(this.scope, this.#reader, cursor); }

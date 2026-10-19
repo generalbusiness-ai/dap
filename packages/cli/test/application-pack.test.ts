@@ -12,6 +12,8 @@ import { ApplicationSourceError, packDirectory, prepareApplicationDirectory } fr
 import { checkCommand, packCommand } from "../src/application-command.ts";
 import { memoryStore } from "../src/store.ts";
 import { fileStore } from "../src/files.ts";
+import { readApplicationPackage2 } from "@generalbusiness/artroom-bytes/application-v2";
+import { runApplicationScenario } from "../src/application-scenarios.ts";
 
 const secret = new Uint8Array(32).fill(23), signer = secretSigner(secret);
 async function fixture(kind: "counter" | "lending" = "lending") {
@@ -33,6 +35,50 @@ async function fixture(kind: "counter" | "lending" = "lending") {
 async function refused(work: () => Promise<unknown>): Promise<unknown> {
   return work().then(() => "accepted", error => error);
 }
+
+test("explicit v2 sources bind projections to captured definition paths and run native local replay", async () => {
+  const f = await fixture("counter");
+  try {
+    const config = { ...f.config, v: 2, projections: { board: { v: 1, definition: "definition.json", revision: "revision", sources: {
+      board: { item: "board", read: "one", states: ["finished", "paused", "running"], limit: 1, fields: {
+        lastNumber: { from: { kind: "value", name: "lastNumber" }, of: { type: "int", min: 0, max: 100 }, nullable: false },
+      } },
+    } } }, presentation: { ...f.config.presentation, resources: {}, views: { board: {
+      kind: "card", projection: "board", item: "board", revision: "revision", title: "state", summary: null, actor: null, facts: ["lastNumber"],
+      acts: [], context: "Board {id} v{revision}", fallback: "Board {id}: {state}", waiting: {}, refresh: 3000, display: "inline", back: null,
+    } } } };
+    const save = () => writeFile(join(f.root, "dap.application.json"), JSON.stringify(config));
+    await save();
+    const packed = await packDirectory(f.root, f.output, signer);
+    expect(packed.package.v).toBe(2);
+    const owned = readApplicationPackage2(new Uint8Array(await readFile(f.output)), packed.ids.release);
+    expect(owned).toEqual(packed);
+    expect(owned.package.semantic.projections["board"]!.definition).toBe(owned.package.semantic.entry);
+    expect(() => readApplicationPackage(owned.bytes, owned.ids.release)).toThrow();
+    expect((await prepareApplicationDirectory(f.root, signer)).packet.bytes).toEqual(packed.bytes);
+    const scenario = { v: 1, name: "declared-counter", time: "2026-10-18T12:00:00Z", actors: {
+      controller: { seed: "01".repeat(32), member: "@controller", actions: ["counting.control"] },
+    }, founding: { actor: "controller", fields: { opener: { $member: "controller" }, target: 7 } }, steps: [
+      { act: { actor: "controller", kind: "initialize", expected: { configuration: { $revision: 0 } } }, expect: { answer: "accepted" } },
+      { projection: { name: "board", at: { seq: 1 }, sources: { board: [{ id: 1, state: "paused", revision: 1, fields: { lastNumber: 0 } }] } } },
+    ] };
+    const result = await runApplicationScenario(owned, scenario);
+    expect(result.projectionChecks).toBe(1);
+    expect(result.replay.report).toMatchObject({ result: "consistent", target: { seq: 1 } });
+    await writeFile(join(f.root, "scenario.json"), JSON.stringify(scenario));
+    await writeFile(join(f.root, "dap.application.json"), JSON.stringify({ ...config, scenarios: ["scenario.json"] }));
+    expect(await checkCommand(["check", f.root])).toMatchObject({ code: 0, lines: expect.arrayContaining(["Declared projection checks: 1 passed at native journal heads."]) });
+    scenario.steps[1]!.projection!.sources.board[0]!.fields.lastNumber = 1;
+    expect(await refused(() => runApplicationScenario(owned, scenario))).toMatchObject({ message: expect.stringContaining("unexpected field lastNumber") });
+    scenario.steps[1]!.projection!.sources.board[0]!.fields.lastNumber = 0;
+    scenario.steps[1]!.projection!.sources.board = [];
+    expect(await refused(() => runApplicationScenario(owned, scenario))).toMatchObject({ message: expect.stringContaining("unexpected complete row count") });
+    config.projections.board.definition = "uncaptured.json"; await save();
+    expect(await refused(() => prepareApplicationDirectory(f.root, signer))).toBeInstanceOf(Error);
+    config.v = 1; config.projections.board.definition = "definition.json"; await save();
+    expect(await refused(() => prepareApplicationDirectory(f.root, signer))).toBeInstanceOf(ApplicationSourceError);
+  } finally { await f.cleanup(); }
+});
 
 test("a trusted author's browser entry builds through pack without generated checkout files", async () => {
   const f = await fixture();
