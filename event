@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b9be52eed214eb48132de938626598d86cefcc07","text":"Merge retired a covered predecessor; the successor is at packages/cli/test/install-cohort.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bcf8bbcdb8dcd890d2ead2e273f6a341256871e3","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/declared-surfaces-browser.mjs."}
