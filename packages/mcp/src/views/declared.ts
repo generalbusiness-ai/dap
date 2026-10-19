@@ -46,14 +46,20 @@ export class DeclaredViewSource implements ViewSource {
     if (!Object.hasOwn(views, query.screen)) throw new ViewError("shape", "This package declares no such view.");
     return views[query.screen]!;
   }
-  #surface(screen: string, view: ApplicationView): DeclaredSurface | undefined {
+  #backScope(view: ApplicationView, selected: ScopeRef, root: ScopeRef): ScopeRef {
+    const projections = this.packet.package.semantic.projections;
+    const target = view.back ? this.packet.package.presentation.views[view.back]! : null;
+    return target && projections[target.projection]!.definition === this.packet.package.semantic.entry
+      && projections[target.projection]!.definition !== projections[view.projection]!.definition ? root : selected;
+  }
+  #surface(screen: string, view: ApplicationView, backScope: ScopeRef): DeclaredSurface | undefined {
     if (view.kind !== "surface") return undefined;
     const path = this.packet.package.presentation.resources[view.resource]!;
     const asset = this.packet.package.presentation.assets.find(asset => asset.path === path)!;
     const bytes = unb64url(asset.bytes);
     if (!bytes) throw new ViewError("unavailable", "The declared surface bytes are unavailable.");
     return { screen, resource: view.resource, html: new TextDecoder("utf-8", { fatal: true, ignoreBOM: false }).decode(bytes),
-      opens: view.opens, refresh: view.refresh, display: view.display, back: view.back };
+      opens: view.opens, refresh: view.refresh, display: view.display, back: view.back, backScope };
   }
   async #read(query: ViewQuery) {
     const view = this.#view(query), install = await this.port.installation();
@@ -66,7 +72,7 @@ export class DeclaredViewSource implements ViewSource {
     const rows = reply.value.sources[view.item];
     if (!rows) throw new ViewError("unavailable", "The read omitted the declared item source.");
     if (rows.some(row => isApplicationJournalSource(projection.sources[view.item]!) !== !!row.entry)) throw new ViewError("unavailable", "The read confused journal entries with native items.");
-    return { view, scope: selection.scope, definition: projection.definition, reply, rows };
+    return { view, root: install.scope, scope: selection.scope, definition: projection.definition, reply, rows };
   }
   /** Only selected native item metadata and ref slots resolve subjects. This
    * is not an Item read and supplies no opened/attributed or review claim. */
@@ -96,8 +102,8 @@ export class DeclaredViewSource implements ViewSource {
     return actions;
   }
   async read(query: ViewQuery): Promise<Projection> {
-    const { view, scope, definition, reply, rows } = await this.#read(query);
-    const surface = this.#surface(query.screen, view);
+    const { view, root, scope, definition, reply, rows } = await this.#read(query);
+    const backScope = this.#backScope(view, scope, root), surface = this.#surface(query.screen, view, backScope);
     if (!rows.length) return { status: "empty", position: 0, count: 0, data: reply.value,
       ...(surface ? { surface } : {}),
       fallback: view.kind === "log" ? "This declared log has no matching entries in its recent window." : "This declared view has no matching items." };
@@ -111,7 +117,7 @@ export class DeclaredViewSource implements ViewSource {
       reasons: view.kind === "surface" ? [] : view.facts.map(name => `${name}: ${text(values[name])}`),
       projection: [{ scope: scope.scope, ...reply.value.at }], reviewIntended: [], unavailable: [], waitsOn: waiting ? [waiting] : [], settles: [], actions, fallback,
       declared: { kind: view.kind, source: view.item, context: template(view.context, row, waiting), actor: view.kind === "surface" || view.actor === null ? null : values[view.actor] ?? null,
-        refresh: view.refresh, display: view.display, back: view.back, data: reply.value,
+        refresh: view.refresh, display: view.display, back: view.back, backScope, data: reply.value,
         ...(view.kind === "log" ? { log: rows.map(row => {
           if (!row.entry || !row.time) throw new ViewError("unavailable", "A log needs explicit sealed entry facts.");
           const values = input(row);

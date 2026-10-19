@@ -179,3 +179,83 @@ and `.json`; logs `/tmp/artroom-m2b-ancestry-depth-mutant-20261018.log`,
 `/tmp/artroom-m2b-ancestry-late-mutant-20261018.log`, and
 `/tmp/artroom-m2b-ancestry-controls-restored-20261018.log`. Each original child
 process ended before its source restoration. No whole suite was repeated.
+
+## Scope-aware browser navigation
+
+The maintained Site surface opens only active Rooms through a named declared
+opening and their full retained scope references. Pending or failed rows do
+not offer an opening. It distinguishes an absent summary from a zero count.
+The Room grid selects its own Room label, so the user can identify the selected
+Room. Its empty/missing/stale reading distinctions remain. Root surfaces with
+no Back target no longer display an unused Back button.
+
+The generic kit retains at most 128 prior declared navigation addresses.
+Each address contains a screen, selected item IDs and full scope reference;
+it is not authority or custody. Back prefers the exact earlier address.
+For a direct opening with no local history, the server supplies the declared
+Back scope: a target projection for the entry definition returns to the
+installation root when its definition differs from the current selection;
+a same-definition target retains the selected scope. No native read falls
+back to a different scope after a refusal. Both paths use ordinary declared
+opening tools and repeat native ownership on the resulting read.
+Surface cache keys include all scope-reference fields in stable order. Each
+currentness callback also compares the full scope, so a retained callback
+from Room A is refused while Room B's same-named surface is current.
+
+Browser plugin not available. The recorded fallback is cached Playwright
+1.63.0 and Chromium 153.0.8010.12, with no package installation. The production
+kit and complete maintained Grow presentation run in the local cross-origin
+fixture host. Install, projection, scope, session and standing ports are
+explicit scripted answers; these browser cases make no native ownership,
+SQLite, provider, hostile-isolation or deployment claim.
+
+The path passes at 320 and 592 pixels: Site -> Room A grid -> its bench record
+-> grid -> Site -> Room B grid -> its bench record -> Site -> Room A grid.
+Every named record retains its selected full Room scope. Room A retains its
+EC selection while Room B begins with its own Moisture selection. The pending
+Room button is disabled. Back returns to the correct scope, the inactive Room
+callback refuses without opening a tool, and a later valid Room A opening
+clears the retained refusal message. Both widths resize without horizontal
+overflow, console/page errors, private source rows in model context, chat
+messages, acts or signatures. Two additional 390-pixel cases open the Room
+grid and bench record directly and correctly return to Site without an earlier
+Site address. The test host accepts explicit fixture opening arguments to
+exercise those direct paths; production tool validation remains unchanged.
+
+Final browser log `/tmp/artroom-m2b-owned-navigation-direct-back-20261018.log`,
+original 83395, terminal c48947. Four final screenshots and report are in
+`/tmp/artroom-m2b-owned-navigation-direct-back-20261018/`; all four were visually
+read. Earlier successful paths and captures remain in the complete, labelled
+and scope-restored browser directories. This is the selected-scope navigation
+witness, not G1's heater/incident operator acceptance or G2's complete grid.
+
+Two initial browser failures were test mistakes: a wait named a zone state
+that the resource does not render, and an assertion assumed the second grid
+opening was Room B although Back correctly reopens Room A first. The first
+Site screenshot also preceded stable host resize and was blank; it is retained
+as failed capture evidence, not visual acceptance. Corrected assertions use
+the rendered unobserved state, distinct full Room references and exact hashed
+record-tool names. Captures now wait for host containment. Those logs are
+`/tmp/artroom-m2b-owned-navigation-browser-first-20261018.log` and
+`/tmp/artroom-m2b-owned-navigation-browser-corrected-20261018.log`.
+
+The scope-currentness fault control distinguishes: removing only the scope
+comparison lets the old Room A callback proceed while Room B is current; the
+assertion expects the currentness refusal and instead sees an empty error.
+Original 20768, terminal d75066. Driver/results
+`/tmp/artroom-m2b-browser-scope-control-20261018.py` and `.json`; logs
+`/tmp/artroom-m2b-browser-scope-mutant-20261018.log` and
+`/tmp/artroom-m2b-browser-scope-restored-20261018.log`. Both viewport cases pass
+before the fault and after restoring exact source and generated resource
+bytes. The later direct-Back metadata leaves that guard unchanged.
+
+Focused regressions pass: 8 files, 16 tests, original 5409, terminal 0895d3,
+`/tmp/artroom-m2b-navigation-focused-final-20261018.log`; this includes the
+native child/Grow cases, native root controls, and maintained Counter/Lending
+adapters. The final Back metadata and native Grow root address then pass
+3 files, 9 tests, original 37633, terminal a97a89,
+`/tmp/artroom-m2b-direct-back-focused-20261018.log`. MCP typechecks pass, and
+browser resources were regenerated from their source. The M2b final gate and
+independent review remain owed. Source M2a remains frozen while checker
+completes the two queued design reviews; checker requested no additional
+Source runs.

@@ -4,7 +4,7 @@
 :host{display:block;font:inherit;color:inherit}*{box-sizing:border-box}h1{font-size:1.4rem;margin:0 0 8px}p{line-height:1.5;margin:8px 0}button{font:inherit;color:inherit;cursor:pointer;border:1px solid #a0aaa3;border-radius:6px;background:transparent;padding:8px;min-height:44px}button:disabled,select:disabled{opacity:.55;cursor:default}button:focus-visible{outline:3px solid #286c48;outline-offset:2px}.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.toolbar button[aria-pressed=true]{background:#dceadd;color:#183e28;border-color:#286c48}.scroll{max-width:100%;overflow:auto;padding:3px}#benches{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:4px;padding-bottom:6px}.bench{border:1px solid #a0aaa3;border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:3px;min-height:40px;background:#f0f2f0;color:#183126}.bench small{font-size:11px}.bench[data-stale=true]{border-style:dashed}.bench[data-selected=true]{outline:3px solid #286c48;outline-offset:-3px}.bench[data-missing=true]{background:repeating-linear-gradient(135deg,#f1f1ed,#f1f1ed 6px,#e4e5df 6px,#e4e5df 8px)}#selection{font-weight:600}.muted{color:var(--color-text-secondary,#58635c)}#zones{padding-left:20px}#error{color:#a22}.bench span{white-space:nowrap}@media(max-width:360px){.bench{font-size:10px;min-height:34px;padding:2px}.bench small{font-size:9px}}
 </style></head>
 <body>
-<h1>Bench grid</h1><p id="head" class="muted"></p>
+<h1>Bench grid</h1><p id="room-label"></p><p id="head" class="muted"></p>
 <div class="toolbar" role="group" aria-label="Bench metric"><button data-metric="moisture" aria-pressed="true">Moisture</button><button data-metric="ec" aria-pressed="false">EC</button><button data-metric="ph" aria-pressed="false">pH</button></div>
 <p id="legend" class="muted"></p><p class="muted">Dashed borders mark stale benches. Stripes mark missing readings.</p>
 <div class="scroll" role="img" aria-label="Bench rows A to J, columns 1 to 10"><div id="benches"></div></div>
@@ -18,7 +18,8 @@ const metrics={moisture:{label:'Moisture',unit:'%',scale:1,max:100},ec:{label:'E
 const value=(raw,scale=1,unit='')=>raw===null||raw===undefined?'No reading':String(raw/scale)+unit;
 function render(){
  if(!data)return;const spec=metrics[metric];
- root.querySelector('#head').textContent='Native head '+data.at.seq+' · '+data.sources.bench.length+' benches';
+ root.querySelector('#room-label').textContent=data.sources.room?.[0]?.fields.label||'';
+ root.querySelector('#head').textContent='Native head '+data.at.seq+' · '+data.sources.bench.length+' bench'+(data.sources.bench.length===1?'':'es');
  root.querySelector('#legend').textContent=spec.label+': darker green means a higher reading. Values use '+(metric==='moisture'?'percent':metric==='ec'?'mS/cm':'the pH scale')+'.';
  grid.replaceChildren();choose.replaceChildren();
  const benches=[...data.sources.bench].sort((a,b)=>a.fields.row.localeCompare(b.fields.row)||a.fields.column-b.fields.column);
@@ -37,7 +38,7 @@ function render(){
 }
 for(const button of root.querySelectorAll('[data-metric]'))button.onclick=()=>{metric=button.dataset.metric;for(const peer of root.querySelectorAll('[data-metric]'))peer.setAttribute('aria-pressed',String(peer===button));render()};
 choose.onchange=()=>{selected=Number(choose.value);root.querySelector('#selection').textContent='Selected '+data.sources.bench.find(bench=>bench.id===selected).fields.label;render()};
-root.querySelector('#open-bench').onclick=()=>{if(!choose.value)return;selected=Number(choose.value);root.querySelector('#selection').textContent='Selected '+data.sources.bench.find(bench=>bench.id===selected).fields.label;render();void api.open('bench',{bench:selected}).catch(error=>{root.querySelector('#error').textContent=error.message})};
+root.querySelector('#open-bench').onclick=()=>{if(!choose.value)return;root.querySelector('#error').textContent='';selected=Number(choose.value);root.querySelector('#selection').textContent='Selected '+data.sources.bench.find(bench=>bench.id===selected).fields.label;render();void api.open('bench',{bench:selected}).catch(error=>{root.querySelector('#error').textContent=error.message})};
 api.onData(next=>{data=next;render()});
 })();</script>
 </body></html>

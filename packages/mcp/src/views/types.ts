@@ -23,7 +23,7 @@ export interface CardAction {
   kind: string;
   args: Record<string, unknown>;
 }
-/** Public package HTML, kept separate from the private native data it renders. */
+/** Verified package HTML and declared navigation, separate from native rows. */
 export interface DeclaredSurface {
   screen: string;
   resource: string;
@@ -32,6 +32,7 @@ export interface DeclaredSurface {
   refresh: number;
   display: "inline" | "fullscreen";
   back: string | null;
+  backScope?: ScopeRef;
 }
 export interface Card {
   identity: CardIdentity;
@@ -63,6 +64,7 @@ export interface Card {
     refresh: number;
     display: "inline" | "fullscreen";
     back: string | null;
+    backScope?: ScopeRef;
     data: ApplicationProjectionData;
     log?: readonly { entry: Readonly<FactRef>; time: string; title: string; summary: string; facts: readonly string[] }[];
     resource?: string;
