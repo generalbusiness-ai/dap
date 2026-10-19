@@ -293,3 +293,15 @@ the corrected S2a source still needs a final gate and exact-head approval.
 Durable G3 lands first, followed by G5a; S2a and S2b are required before
 the demo-room archive slice. This coordination is not an S2a gate pass,
 review, landing or installed-application export claim.
+
+## Approved Main integration, 19 October
+
+The mutable S2a checkout incorporated reviewed Main
+`3ed2a08a50f31e84ea42b4f6027684e14a8cedb8` without conflicts. Merge
+`eddd8adbe0dfff03a3c903ebc4b1ce324b3bcfc5` has tree
+`54167bd0f3ce079ecb5cbd833e0e8a36af7c7b68`. This brings in durable G3
+and the later approved notes; it imports no unreviewed G5a code. The S2a
+cohort reservations remain unchanged. No new tests or gate were run for
+this preparation. G5a still precedes S2a: incorporate its actual reviewed
+Main landing before the final S2a gate and review. The earlier failed gate
+remains failed evidence, and the unused sealer must be replaced before use.
