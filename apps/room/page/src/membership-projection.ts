@@ -1,5 +1,6 @@
 /** Presentation over one complete authenticated membership summary. These
  * choices neither issue a grant nor certify the destination's admission. */
+import { isRecord as record } from "@generalbusiness/artroom-bytes";
 import type { Item, KeyId, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, isKeyId, isMemberRef, utf8 } from "@generalbusiness/artroom-bytes";
 import { CONTROLLER, EXTENT_CLASSES, EXTENTS_MOST, ROLE_LISTS, RULES_EXTENT, isActions, type Extent, type Role } from "@generalbusiness/dap-platform";
@@ -10,7 +11,6 @@ type Member = { item: Item; ref: MemberRef; actions: readonly string[]; controll
 
 type HeldExtent = Omit<Extent, "patterns">;
 const heldFields = ["name", "approvals", "approver", "checks", "class"];
-const record = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === "object" && !Array.isArray(value);
 const boundedText = (value: unknown, most: number): value is string => typeof value === "string" && utf8(value).length > 0 && utf8(value).length <= most;
 
 /** The change lane holds the rules' five-field projection. Patterns stay in

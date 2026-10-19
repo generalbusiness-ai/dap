@@ -85,7 +85,7 @@ export { hasWorkspace } from "./workspace.ts";
 
 // ---------------------------------------------------------------- what the rules read
 
-const record = (view: StateView, kind: string, key: readonly FieldValue[]): RecordState | null => view.record(HOLD, kind, key);
+const holdRecord = (view: StateView, kind: string, key: readonly FieldValue[]): RecordState | null => view.record(HOLD, kind, key);
 const records = (view: StateView, kind: string, states: readonly string[], member?: string, value?: unknown): readonly RecordState[] =>
   view.records(HOLD, kind, member === undefined ? { states } : { states, member, value });
 /** A record as an effect states it after a change: its state, and its values whole. */
@@ -127,7 +127,7 @@ const nextNumber = (view: StateView, kind: string): number => view.recordCount(H
 export function useEnded(view: StateView, definition: ValidDefinition, token: Pick<RecordState, "values">): boolean {
   const hold = holdOf(view, definition, token.values["hold"]);
   if (!hold) return true;   // Fail closed: a token that names no hold of this scope is given to nobody.
-  const instance = record(view, "instance", [hold.item.id, token.values["instance"] as FieldValue]);
+  const instance = holdRecord(view, "instance", [hold.item.id, token.values["instance"] as FieldValue]);
   return !hold.held || hold.epoch > 1 || instance?.state !== "current";
 }
 
@@ -269,7 +269,7 @@ const failed = (detail: string): StepRefusal => ({ reason: "guard-failed", detai
 const badField = (detail: string): StepRefusal => ({ reason: "bad-field", detail });
 
 /** The pin of one consumer for one intent (section 6.11): its key is the consumer's scope reference and the intent's digest. */
-const pinOf = (view: StateView, consumer: unknown, intent: unknown): RecordState | null => (isScopeRef(consumer) && isDigest(intent) ? record(view, "pin", [consumer, intent]) : null);
+const pinOf = (view: StateView, consumer: unknown, intent: unknown): RecordState | null => (isScopeRef(consumer) && isDigest(intent) ? holdRecord(view, "pin", [consumer, intent]) : null);
 
 /**
  * The guard `staged` (section 6.11). With a presented `pin` nothing local is
@@ -281,9 +281,9 @@ const pinOf = (view: StateView, consumer: unknown, intent: unknown): RecordState
 function staged(args: Readonly<Record<string, unknown>>, given: CapabilityGiven): true | string {
   if (args["pin"] !== null && args["pin"] !== undefined) return isFactRef(args["pin"]) ? true : "not-staged";
   const pin = pinOf(given.view, given.scope.at, given.intent);
-  const root = pin?.state === "provisional" ? record(given.view, "root", [pin.values["root"] as number]) : null;
+  const root = pin?.state === "provisional" ? holdRecord(given.view, "root", [pin.values["root"] as number]) : null;
   if (!pin || !root || root.state !== "live" || pin.values["commit"] !== args["commit"] || root.values["commit"] !== args["commit"] || root.values["under"] !== args["under"]) return "not-staged";
-  return record(given.view, "check", [given.intent as Digest, root.key[0]!]) ? true : "not-staged";
+  return holdRecord(given.view, "check", [given.intent as Digest, root.key[0]!]) ? true : "not-staged";
 }
 
 /** The guard `pin` (section 6.11): a pin with that key exists and names that commit, and it was not released as `never-admitted`. */
@@ -319,7 +319,7 @@ function license(args: Readonly<Record<string, unknown>>, given: CapabilityGiven
   const source = exportedHold(view, definition, args["export"]);
   const task = source && !source.held ? taskOf(view, source.item.id) : null;
   if (!task || !isScopeRef(args["from"]) || !same(task, args["from"])) return "export-not-authorized";
-  const pin = record(view, "receiver-pin", [args["export"] as number]);
+  const pin = holdRecord(view, "receiver-pin", [args["export"] as number]);
   if (pin && pin.state !== "standing") return "export-not-authorized";   // the release of this export is settled
   const target = holdOf(view, definition, args["hold"]);
   const instance = target ? currentInstance(view, target.item.id) : null;
@@ -339,7 +339,7 @@ function license(args: Readonly<Record<string, unknown>>, given: CapabilityGiven
  */
 function settled(args: Readonly<Record<string, unknown>>, given: CapabilityGiven): true | string {
   const { view, definition, source } = given;
-  const pin = record(view, "receiver-pin", [args["export"] as number]);
+  const pin = holdRecord(view, "receiver-pin", [args["export"] as number]);
   const hold = exportedHold(view, definition, args["export"]);
   const task = pin ? (pin.state === "standing" ? pin.values["task"] : null) : args["final"] === "withheld" && hold ? taskOf(view, hold.item.id) : null;
   if (!isScopeRef(task) || !same(task, args["from"])) return "export-not-authorized";
@@ -400,7 +400,7 @@ function pinRelease(args: Readonly<Record<string, unknown>>, given: CapabilityGi
  */
 function licensed(args: Readonly<Record<string, unknown>>, given: CapabilityGiven): readonly Recorded[] {
   const k = args["k"] as number;
-  const pin = record(given.view, "receiver-pin", [args["export"] as number]);
+  const pin = holdRecord(given.view, "receiver-pin", [args["export"] as number]);
   if (pin) return pin.state === "standing" ? [moved(pin, "standing", { k, decided: Math.max(pin.values["decided"] as number, k) })] : [];
   const target = holdOf(given.view, given.definition, args["hold"]);
   return [{ kind: "receiver-pin", key: [args["export"] as number], state: "standing", values: {
@@ -410,7 +410,7 @@ function licensed(args: Readonly<Record<string, unknown>>, given: CapabilityGive
 
 /** The effect `settle` (section 6.11): the `receiver-pin` becomes `released`, with the entry that made the release final. With no pin, nothing changes. */
 function settle(args: Readonly<Record<string, unknown>>, given: CapabilityGiven): readonly Recorded[] {
-  const pin = record(given.view, "receiver-pin", [args["export"] as number]);
+  const pin = holdRecord(given.view, "receiver-pin", [args["export"] as number]);
   return pin?.state === "standing" ? [moved(pin, "released", { by: args["by"] ?? null })] : [];
 }
 
@@ -441,7 +441,7 @@ export function boundLicense(view: StateView, at: Pick<ScopeRef, "scope" | "inc"
   const named = own(fields, "export");
   const exported = isLocalId(named) ? named : isFactRef(named) && named.at.scope === at.scope && named.at.inc === at.inc ? named.seq : null;
   const k = own(fields, "k");
-  const pin = exported === null ? null : record(view, "receiver-pin", [exported]);
+  const pin = exported === null ? null : holdRecord(view, "receiver-pin", [exported]);
   if (!pin || pin.state !== "standing" || !isScopeRef(from) || !same(pin.values["task"], from)) return null;
   return typeof k === "number" && Number.isSafeInteger(k) && k > (pin.values["decided"] as number) && k <= LICENSE_BOUND ? { pin, k } : null;
 }
@@ -465,7 +465,7 @@ export const licenseRefused = (bound: { pin: RecordState; k: number }): Recorded
  */
 function seedOf(view: StateView, at: ScopeRef, under: number | null): { commit: string | null; from: string; fact: number | null; under: number | null } {
   const seeds = records(view, "pin", ["held"]).flatMap((pin) => {
-    const root = same(pin.key[0], at) ? record(view, "root", [pin.values["root"] as number]) : null;
+    const root = same(pin.key[0], at) ? holdRecord(view, "root", [pin.values["root"] as number]) : null;
     const admitted = pin.values["admitted"];
     const from = isLocalId(admitted) ? view.item(admitted)?.type : undefined;
     return root?.state === "live" && under !== null && root.values["under"] === under && isLocalId(admitted) && (from === "report" || from === "manifest") ? [{ commit: root.values["commit"] as string, from, fact: admitted, under }] : [];
@@ -611,7 +611,7 @@ function stage(given: StepGiven): StepDerived | { refused: StepRefusal } {
   const source = stagedSource(given);
   if (!source) return { refused: refusal("not-staged") };
   const hold = source.hold === null ? null : ownHeld(given, source.hold);
-  if (!hold || hold.under !== source.under || source.instance === null || record(given.view, "instance", [hold.item.id, source.instance])?.state !== "current") return { refused: refusal("not-staged") };
+  if (!hold || hold.under !== source.under || source.instance === null || holdRecord(given.view, "instance", [hold.item.id, source.instance])?.state !== "current") return { refused: refusal("not-staged") };
   if (records(given.view, "root", ["live"], "commit", source.commit).some((root) => root.values["under"] === source.under)) return { refused: failed("a live root holds this commit under this commitment: the step `check` reuses it") };
   const number = nextNumber(given.view, "root");
   // Section 5.7, "Which entry makes a token": this entry opens attempt 1 of the staging, so it makes that attempt's two tokens.
@@ -639,7 +639,7 @@ function check(given: StepGiven): StepDerived | { refused: StepRefusal } {
   const root = [...records(view, "root", ["live"], "commit", source.commit)].filter((r) => r.values["under"] === source.under).sort((a, b) => (b.key[0] as number) - (a.key[0] as number))[0];
   const staged = root ? holdOf(view, definition, root.values["hold"]) : null;
   if (!root || !staged || !same(own(staged.item.parties, HOLDER) ?? null, given.signer.member)) return { refused: refusal("not-staged") };
-  const pin = record(view, "pin", [intent.to as ScopeRef, digest]);
+  const pin = holdRecord(view, "pin", [intent.to as ScopeRef, digest]);
   // A pin that is `held` or `released` belongs to an intent that was admitted or settled. Nothing is prepared for it again.
   if (pin && pin.state !== "provisional") return { refused: refusal("not-staged") };
   const values = { root: root.key[0]!, commit: source.commit, admitted: null, released: null, by: null, check: operationId(self, 0) };
@@ -661,7 +661,7 @@ function instance(given: StepGiven): StepDerived | { refused: StepRefusal } {
   if (!asked) return { refused: badField("the intent is not the one of the step instance: the hold, the task scope and a new instance ID") };
   const hold = workspaceOf(given, asked.hold);
   if ("refused" in hold) return hold;
-  if (record(given.view, "instance", [asked.hold, asked.instance])) return { refused: failed("the instance ID is not new") };
+  if (holdRecord(given.view, "instance", [asked.hold, asked.instance])) return { refused: failed("the instance ID is not new") };
   const earlier = currentInstance(given.view, asked.hold);
   return { records: [...(earlier ? [moved(earlier, "past")] : []), { kind: "instance", key: [asked.hold, asked.instance], state: "current", values: { hold: asked.hold, task: asked.task, epoch: hold.epoch } }], opens: [] };
 }
@@ -677,8 +677,8 @@ function token(options: HoldOptions, given: StepGiven): StepDerived | { refused:
   if (!asked) return { refused: badField("the intent is not the one of the step token: the hold and its current instance") };
   const hold = workspaceOf(given, asked.hold);
   if ("refused" in hold) return hold;
-  if (record(given.view, "instance", [asked.hold, asked.instance])?.state !== "current") return { refused: failed("the instance named is not the hold's current one") };
-  if (record(given.view, "fork", [asked.hold])?.state !== "selected") return { refused: failed("the hold's fork is not selected") };
+  if (holdRecord(given.view, "instance", [asked.hold, asked.instance])?.state !== "current") return { refused: failed("the instance named is not the hold's current one") };
+  if (holdRecord(given.view, "fork", [asked.hold])?.state !== "selected") return { refused: failed("the hold's fork is not selected") };
   // Section 5.7, "The judges refuse at the bound". This step is the one opening that raises the count, so the entry that ends the
   // hold never holds more than the bound allows (scope contract, section 6.1, "An entry that cannot be refused").
   if (records(given.view, "token", ["minting", "live"], "hold", asked.hold).length >= options.tokensPerHold) return { refused: refusal("tokens-full") };
@@ -716,7 +716,7 @@ function retire(options: HoldOptions, given: StepGiven): StepDerived | { refused
   const { view, definition, self, clock } = given;
   const no = { refused: refusal("not-retirable") };
   if ("root" in asked) {
-    const root = record(view, "root", [asked.root]);
+    const root = holdRecord(view, "root", [asked.root]);
     if (root?.state !== "live" || records(view, "pin", ["provisional", "held"], "root", asked.root).length > 0) return no;
     // The fold keeps the entry that last recorded a record. A root is recorded `live` once, so that is the entry that made it live.
     const since = timeMs(given.own?.(root.seq)?.entry.time);
@@ -726,7 +726,7 @@ function retire(options: HoldOptions, given: StepGiven): StepDerived | { refused
     return { records: [moved(root, "retiring", { retirement: operation }), ...tokens.made], opens: [{ owner: HOLD, kind: HOLD_KINDS.delete, attempts: HOLD_ATTEMPTS.delete }, ...tokens.opens] };
   }
   const hold = holdOf(view, definition, asked.fork);
-  const fork = record(view, "fork", [asked.fork]);
+  const fork = holdRecord(view, "fork", [asked.fork]);
   if (!hold || hold.held || fork?.state !== "selected") return no;
   if (records(view, "token", ["minting", "live", "revoking"], "hold", asked.fork).length > 0 || currentInstance(view, asked.fork) !== null) return no;
   if (records(view, "root", ["creating"], "hold", asked.fork).length > 0 || records(view, "receiver-pin", ["standing"], "hold", asked.fork).length > 0) return no;
@@ -800,7 +800,7 @@ const OPERATION_RULES: Readonly<Record<string, OperationRules>> = {
       if (outcome.result === "confirmed" && root.state === "creating") {
         made.push(moved(root, "live"));
         const key = [root.values["consumer"] as ScopeRef, root.values["intent"] as Digest];
-        const pin = record(view, "pin", key);
+        const pin = holdRecord(view, "pin", key);
         // A pin that is `held` or `released` is of an intent that was admitted or settled: it does not move, and no check is opened for it.
         if (!pin || pin.state === "provisional") {
           const values = { root: root.key[0]!, commit: root.values["commit"], admitted: null, released: null, by: null, check: operationId(self, 0) };
@@ -824,7 +824,7 @@ const OPERATION_RULES: Readonly<Record<string, OperationRules>> = {
     retains: (evidence) => (isCheckEvidence(evidence.body) && isAncestryCheck(evidence.body.record) ? [evidence.body.record.snapshot.digest] : []),
     derives: (view, operation, outcome) => {
       const pin = outcome.result === "confirmed" ? namedBy(view, "pin", ["provisional"], "check", operation) : null;
-      const root = pin ? record(view, "root", [pin.values["root"] as number]) : null;
+      const root = pin ? holdRecord(view, "root", [pin.values["root"] as number]) : null;
       if (!pin || !root) return NOTHING;
       const matched = (outcome.evidence.body as { record: unknown }).record;
       return recorded([{ kind: "check", key: [pin.key[1]!, root.key[0]!], state: matched === null ? "too-large" : "recorded", values: {

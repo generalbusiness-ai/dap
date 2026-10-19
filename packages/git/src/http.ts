@@ -5,6 +5,7 @@
  * It never retries an update. The existing classifier still requires a
  * forwarding record and a read after a complete report of that update.
  */
+import { ascii } from "./ascii.ts";
 import { sha1 } from "@noble/hashes/legacy.js";
 import { GitRefusal, objectId, refName, remoteUrl, ZERO_ID, type ObjectId, type Transport } from "./names.ts";
 import { idOf, parseCommit, parseTree, READ_BOUNDS, type ReadBounds, type RefTarget } from "./reader.ts";
@@ -37,11 +38,6 @@ const join = (parts: readonly Uint8Array[]): Uint8Array => {
   const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
   let at = 0;
   for (const part of parts) { out.set(part, at); at += part.length; }
-  return out;
-};
-const ascii = (bytes: Uint8Array): string => {
-  let out = "";
-  for (const b of bytes) out += String.fromCharCode(b);
   return out;
 };
 

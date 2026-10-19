@@ -70,7 +70,7 @@ export interface HttpPort {
 }
 
 const rpcError = (id: Id | null, code: number, message: string, data?: unknown): Message => ({ jsonrpc: "2.0", id, error: { code, message, ...(data !== undefined ? { data } : {}) } });
-const json = (status: number, message: Message, headers: Record<string, string> = {}): Response => new Response(JSON.stringify(message), { status, headers: { "content-type": "application/json", ...headers } });
+const rpcJsonReply = (status: number, message: Message, headers: Record<string, string> = {}): Response => new Response(JSON.stringify(message), { status, headers: { "content-type": "application/json", ...headers } });
 const bare = (status: number, headers: Record<string, string> = {}): Response => new Response(null, { status, headers });
 const notAllowed = (): Response => bare(405, { allow: "POST" });
 const unsupported = (id: Id | null): Message => rpcError(id, UNSUPPORTED_VERSION, "Unsupported protocol version.", { supported: SERVED });
@@ -181,9 +181,9 @@ export class McpHttp {
     const sessionId = request.headers.get("mcp-session-id");
     if (method === "GET" || method === "DELETE") {
       // No frame: a header that is not served is -32600 with a null id.
-      if (header !== null && !SERVED.includes(header)) return json(400, rpcError(null, -32600, "MCP-Protocol-Version is not a served revision."));
+      if (header !== null && !SERVED.includes(header)) return rpcJsonReply(400, rpcError(null, -32600, "MCP-Protocol-Version is not a served revision."));
       if (header === MODERN) return notAllowed();
-      if (sessionId === null) return header === LEGACY ? json(400, rpcError(null, -32600, "Mcp-Session-Id is required.")) : notAllowed();
+      if (sessionId === null) return header === LEGACY ? rpcJsonReply(400, rpcError(null, -32600, "Mcp-Session-Id is required.")) : notAllowed();
       await this.#expire();
       const session = this.sessions.get(sessionId);
       if (!session) return bare(404);
@@ -193,25 +193,25 @@ export class McpHttp {
     if (method !== "POST") return notAllowed();
     const body = await this.#body(request);
     if (body.status === "too-large") return bare(413);
-    if (body.status === "parse") return json(400, rpcError(null, -32700, "Parse error"));
+    if (body.status === "parse") return rpcJsonReply(400, rpcError(null, -32700, "Parse error"));
     const message = body.value;
-    if (Array.isArray(message)) return json(400, rpcError(null, -32600, "Batches are not served."));
-    if (!isFrame(message)) return json(400, rpcError(null, -32600, "Invalid Request: a JSON-RPC 2.0 request or notification is expected."));
+    if (Array.isArray(message)) return rpcJsonReply(400, rpcError(null, -32600, "Batches are not served."));
+    if (!isFrame(message)) return rpcJsonReply(400, rpcError(null, -32600, "Invalid Request: a JSON-RPC 2.0 request or notification is expected."));
     const m = message;
     const id = m.id ?? null;
     const meta = isRecord(m.params) && isRecord(m.params["_meta"]) ? m.params["_meta"] : null;
     const named = meta && typeof meta[PROTOCOL_META] === "string" ? meta[PROTOCOL_META] : null;
-    if (header !== null && !SERVED.includes(header)) return json(400, unsupported(id));
+    if (header !== null && !SERVED.includes(header)) return rpcJsonReply(400, unsupported(id));
     let revision: "modern" | "legacy";
     if (header === MODERN) revision = "modern";
     else if (header === LEGACY) revision = "legacy";
-    else if (named !== null) return named === MODERN ? json(400, rpcError(id, HEADER_MISMATCH, "MCP-Protocol-Version is required.")) : json(400, unsupported(id));
+    else if (named !== null) return named === MODERN ? rpcJsonReply(400, rpcError(id, HEADER_MISMATCH, "MCP-Protocol-Version is required.")) : rpcJsonReply(400, unsupported(id));
     else if (m.method === "initialize") revision = "legacy";
     else if (sessionId !== null) { if (!this.sessions.has(sessionId)) return bare(404); revision = "legacy"; }
-    else return json(400, rpcError(id, -32600, `Not initialized: send initialize (${LEGACY}), or name the protocol version in _meta (${MODERN}).`));
+    else return rpcJsonReply(400, rpcError(id, -32600, `Not initialized: send initialize (${LEGACY}), or name the protocol version in _meta (${MODERN}).`));
     // Version consistency, in both directions, before anything is dispatched.
-    if (revision === "modern" && named !== MODERN) return json(400, rpcError(id, HEADER_MISMATCH, "MCP-Protocol-Version and _meta's protocol version differ."));
-    if (revision === "legacy" && named !== null) return json(400, rpcError(id, HEADER_MISMATCH, "MCP-Protocol-Version and _meta's protocol version differ."));
+    if (revision === "modern" && named !== MODERN) return rpcJsonReply(400, rpcError(id, HEADER_MISMATCH, "MCP-Protocol-Version and _meta's protocol version differ."));
+    if (revision === "legacy" && named !== null) return rpcJsonReply(400, rpcError(id, HEADER_MISMATCH, "MCP-Protocol-Version and _meta's protocol version differ."));
     const notification = frameOf(m) === "notification";
     // A notification is accepted with 202 and no body. One whose method is only a request runs nothing and issues no session.
     if (notification && !isNotificationMethod(m.method!)) { this.port.wire.ignored++; return bare(202); }
@@ -241,20 +241,20 @@ export class McpHttp {
   async #modern(m: Message, notification: boolean, request: Request): Promise<Response> {
     const id = m.id ?? null;
     const methodHeader = request.headers.get("mcp-method");
-    if (methodHeader === null || !safeHeader(methodHeader) || methodHeader !== m.method) return json(400, rpcError(id, HEADER_MISMATCH, "Mcp-Method must name the request's method."));
+    if (methodHeader === null || !safeHeader(methodHeader) || methodHeader !== m.method) return rpcJsonReply(400, rpcError(id, HEADER_MISMATCH, "Mcp-Method must name the request's method."));
     if (m.method === "tools/call") {
       const name = request.headers.get("mcp-name");
       const params = isRecord(m.params) ? m.params : {};
       const decoded = name !== null && safeHeader(name) ? decodeName(name) : null;
-      if (decoded === null || decoded !== params["name"]) return json(400, rpcError(id, HEADER_MISMATCH, "Mcp-Name must name the tool."));
+      if (decoded === null || decoded !== params["name"]) return rpcJsonReply(400, rpcError(id, HEADER_MISMATCH, "Mcp-Name must name the tool."));
     }
     if (m.method === "subscriptions/listen" && !notification) {
-      if (this.#open.size >= STREAMS_MOST) return json(409, rpcError(id, TOO_MANY_STREAMS, `At most ${STREAMS_MOST} streams are open at once.`));
+      if (this.#open.size >= STREAMS_MOST) return rpcJsonReply(409, rpcError(id, TOO_MANY_STREAMS, `At most ${STREAMS_MOST} streams are open at once.`));
       return this.#listen(m);
     }
     const response = await this.port.wire.handle(m, null, () => {});
     if (!response) return bare(202);
-    return json(response.error?.code === -32601 ? 404 : 200, response);
+    return rpcJsonReply(response.error?.code === -32601 ? 404 : 200, response);
   }
 
   async #legacy(m: Message, notification: boolean, sessionId: string | null): Promise<Response> {
@@ -270,7 +270,7 @@ export class McpHttp {
       session.created = this.port.now?.() ?? Date.now();
       session.lastActive = session.created;
     } else {
-      if (sessionId === null) return json(400, rpcError(id, -32600, "Mcp-Session-Id is required."));
+      if (sessionId === null) return rpcJsonReply(400, rpcError(id, -32600, "Mcp-Session-Id is required."));
       const matched = this.sessions.get(sessionId);
       if (!matched) return bare(404);
       session = matched;
@@ -280,7 +280,7 @@ export class McpHttp {
     if (issued) {
       // Refused: no session was issued, nothing of it stays, and a row the hook may have kept is removed. A store that could
       // not keep it answers 507.
-      if (response?.error) { session.ended = true; this.port.wire.endLegacy(session); await this.port.remove?.(issued); return json(response.error.code === SESSION_FULL ? 507 : 200, response); }
+      if (response?.error) { session.ended = true; this.port.wire.endLegacy(session); await this.port.remove?.(issued); return rpcJsonReply(response.error.code === SESSION_FULL ? 507 : 200, response); }
       this.sessions.set(issued, session);
       while (this.sessions.size > SESSIONS_MOST) {
         const oldest = this.sessions.keys().next().value!;
@@ -289,7 +289,7 @@ export class McpHttp {
       }
     }
     if (!response) return bare(202);
-    return json(200, response, issued ? { "mcp-session-id": issued } : {});
+    return rpcJsonReply(200, response, issued ? { "mcp-session-id": issued } : {});
   }
 
   /** One server-sent event stream. `onCancel` runs when the client goes away. */
@@ -314,7 +314,7 @@ export class McpHttp {
    */
   async #stream(session: LegacySession, signal?: AbortSignal): Promise<Response> {
     const fresh = session.stream === null && !this.#pending.has(session);
-    if (fresh && this.#open.size >= STREAMS_MOST) return json(409, rpcError(null, TOO_MANY_STREAMS, `At most ${STREAMS_MOST} streams are open at once.`));
+    if (fresh && this.#open.size >= STREAMS_MOST) return rpcJsonReply(409, rpcError(null, TOO_MANY_STREAMS, `At most ${STREAMS_MOST} streams are open at once.`));
     this.#open.add(session);
     this.#pending.set(session, (this.#pending.get(session) ?? 0) + 1);
     // Every exit of this opening: the session keeps its slot while it has a live stream or another opening pending.

@@ -1,4 +1,5 @@
 /** Read-only native byte admission for exact causal entry proofs. */
+import { isLocalId as integer } from "@generalbusiness/artroom-bytes";
 import type { Entry, FactRef, FactUse, Head } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, entryHash, isDigest, isEntry, isFactRef, isFactUse, isScopeRef, parseStrict, utf8 } from "@generalbusiness/artroom-bytes";
 import { isObject, same } from "@generalbusiness/dap-derive";
@@ -12,7 +13,6 @@ export interface ProofBody { fact: FactRef; bytes: string }
 export interface ProofSource { read(fact: FactRef, maxBytes: number, milliseconds?: number): Promise<ProofBody | null> }
 export type ProofRead = { kind: "body"; value: ProofBody } | { kind: "missing" | "unavailable" };
 export interface ProofIdentity { genesis: FactRef; head: Head }
-const integer = (n: unknown): n is number => typeof n === "number" && Number.isSafeInteger(n) && n >= 0;
 const cap = (n: number): number | null => integer(n) && n > 0 ? Math.min(n, PROOF_BYTE_BOUNDS.body) : null;
 
 /** Both bindings matter: an entry's fact hash is not its raw content digest. */

@@ -21,6 +21,7 @@
  * outside: `GitSource`. It is pure apart from what a source does.
  */
 
+import { ascii } from "./ascii.ts";
 import { hex } from "@generalbusiness/artroom-bytes";
 import { sha1 } from "@noble/hashes/legacy.js";
 import { GitRefusal, objectId, refName, type GitReason, type ObjectId } from "./names.ts";
@@ -93,11 +94,6 @@ export interface RefTarget { ref: string; target: ObjectId }
 export type Closure = { complete: true; objects: number } | { complete: false; at: ObjectId; reason: GitReason };
 
 const utf8 = new TextEncoder();
-const ascii = (bytes: Uint8Array): string => {
-  let out = "";
-  for (const b of bytes) out += String.fromCharCode(b);
-  return out;
-};
 
 /** The ID of an object: the SHA-1 of Git's header, `<type> <size>\0`, and the content. */
 export function idOf(type: ObjectType, data: Uint8Array): ObjectId {

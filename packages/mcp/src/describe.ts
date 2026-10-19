@@ -64,13 +64,13 @@ export const DESCRIPTION_CHARS = 1000;
 /** The definition domain: a value place in it is a choice of the active definitions. */
 const DEFINITION_DOMAIN = "artroom-definition-1";
 
-const json = (v: unknown): string => { try { return canonicalize(v); } catch { return JSON.stringify(v); } };
+const describeJson = (v: unknown): string => { try { return canonicalize(v); } catch { return JSON.stringify(v); } };
 const or = (words: readonly string[]): string => (words.length <= 1 ? words.join("") : `${words.slice(0, -1).join(", ")} or ${words.at(-1)}`);
 const and = (words: readonly string[]): string => (words.length <= 1 ? words.join("") : `${words.slice(0, -1).join(", ")} and ${words.at(-1)}`);
 const plural = (noun: string): string => (/(s|x|sh|ch)$/.test(noun) ? `${noun}es` : /[^aeiou]y$/.test(noun) ? `${noun.slice(0, -1)}ies` : `${noun}s`);
 const article = (noun: string): string => (/^[aeiou]/i.test(noun) ? `an ${noun}` : `a ${noun}`);
 /** An unknown form, as its JSON, marked so a reader and the totality test can see it. */
-const raw = (form: unknown): string => `the form ${json(form)}`;
+const raw = (form: unknown): string => `the form ${describeJson(form)}`;
 
 // ---------------------------------------------------------------- the act's sentence
 
@@ -205,7 +205,7 @@ export function operand(o: unknown, at: Scope): string {
   if (o["scope"] === true) return "this scope";
   if (o["intent"] === true) return "the intent's digest";
   if (o["none"] === true) return "nothing";
-  if (Object.hasOwn(o, "const")) return json(o["const"]);
+  if (Object.hasOwn(o, "const")) return describeJson(o["const"]);
   return raw(o);
 }
 

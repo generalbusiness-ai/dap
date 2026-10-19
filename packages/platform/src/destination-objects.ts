@@ -92,7 +92,7 @@ const FILE_MODES: readonly string[] = ["100644", "100755"];
 interface TreeRow { mode: string; name: Uint8Array; id: string }
 const hexOf = (raw: Uint8Array): string => Array.from(raw, (byte) => byte.toString(16).padStart(2, "0")).join("");
 const rawOf = (id: string): Uint8Array => Uint8Array.from(id.match(/../g)!, (pair) => Number.parseInt(pair, 16));
-const ascii = new TextDecoder("latin1");
+const latin1Decoder = new TextDecoder("latin1");
 
 /** The rows of a tree's body. Null: the body is not a tree of that object format. */
 function treeRows(format: ObjectFormat, body: Uint8Array): TreeRow[] | null {
@@ -102,7 +102,7 @@ function treeRows(format: ObjectFormat, body: Uint8Array): TreeRow[] | null {
     const space = body.indexOf(32, at);
     const nul = space < 0 ? -1 : body.indexOf(0, space + 1);
     if (space < 0 || nul < 0 || nul + 1 + width > body.length) return null;
-    rows.push({ mode: ascii.decode(body.subarray(at, space)), name: body.slice(space + 1, nul), id: hexOf(body.subarray(nul + 1, nul + 1 + width)) });
+    rows.push({ mode: latin1Decoder.decode(body.subarray(at, space)), name: body.slice(space + 1, nul), id: hexOf(body.subarray(nul + 1, nul + 1 + width)) });
     at = nul + 1 + width;
   }
   return rows;
@@ -155,7 +155,7 @@ export function editTree(
   const paths = files.map((file) => editPath(file.path));
   if (paths.some((path) => path === null)) return null;
   const parent = read(base);
-  const rootLine = parent?.kind === "commit" ? /^tree ([0-9a-f]{40}|[0-9a-f]{64})\n/.exec(ascii.decode(parent.body.subarray(0, 80))) : null;
+  const rootLine = parent?.kind === "commit" ? /^tree ([0-9a-f]{40}|[0-9a-f]{64})\n/.exec(latin1Decoder.decode(parent.body.subarray(0, 80))) : null;
   if (!rootLine) return null;
   interface Edit { name: Uint8Array; bytes?: Uint8Array; children: Map<string, Edit> }
   const edits = new Map<string, Edit>();

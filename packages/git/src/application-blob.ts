@@ -1,6 +1,7 @@
 /** Exact immutable application-file read. This does not fetch ancestry, resolve
  * refs, parse a package or admit a publisher. The supplied transport owns its
  * wire/decompression limits and must honor each object byte allowance. */
+import { ascii } from "./ascii.ts";
 import { hex } from "@generalbusiness/artroom-bytes";
 import { sha1 } from "@noble/hashes/legacy.js";
 import { sha256 } from "@noble/hashes/sha2.js";
@@ -25,7 +26,6 @@ export class ApplicationGitError extends Error {
 const fail = (reason: ApplicationGitError["reason"]): never => { throw new ApplicationGitError(reason); };
 const utf8 = new TextEncoder();
 const sameObjectBytes = (a: Uint8Array, b: Uint8Array) => a.length === b.length && a.every((byte, index) => byte === b[index]);
-const ascii = (bytes: Uint8Array) => Array.from(bytes, byte => String.fromCharCode(byte)).join("");
 
 /** Read only the commit, path trees and final regular blob, verifying every Git
  * object hash with the format selected by the immutable commit id. */

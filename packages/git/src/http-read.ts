@@ -8,6 +8,7 @@
  * The caller's maxBytes bounds wire, inflated and retained object bytes;
  * it is a transport allowance, not an adopted platform quota.
  */
+import { ascii } from "./ascii.ts";
 import { hex } from "@generalbusiness/artroom-bytes";
 import { sha1 } from "@noble/hashes/legacy.js";
 import { GitRefusal, objectId, refName, remoteUrl, ZERO_ID, type ObjectId } from "./names.ts";
@@ -38,11 +39,6 @@ const ISOLATED_WORKING_MULTIPLE = 16;
 const fail = (what: string) => new GitRefusal("unreadable", what);
 const large = (what: string) => new GitRefusal("too-large", what);
 const utf8 = new TextEncoder();
-const ascii = (b: Uint8Array): string => {
-  let s = "";
-  for (const byte of b) s += String.fromCharCode(byte);
-  return s;
-};
 const concat = (parts: readonly Uint8Array[]): Uint8Array => {
   const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
   let at = 0;

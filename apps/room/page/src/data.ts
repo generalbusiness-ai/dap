@@ -1,3 +1,4 @@
+import { isRecord as record } from "@generalbusiness/artroom-bytes";
 import { invitationRedemptionFields } from "@generalbusiness/artroom-client";
 /**
  * The page's data functions: what it reads from a room and the one thing it
@@ -467,7 +468,6 @@ async function reviewPolicyOf(room: Room, change: ScopeRef, proposal: Item, held
     const entry = read.value.entry;
     if (entry.seq !== source.seq || canonicalize(entry.at) !== canonicalize(source.at)
       || entryHash(entry) !== source.hash || read.value.hash !== source.hash) return null;
-    const record = (value: unknown): value is Record<string, unknown> => !!value && typeof value === "object" && !Array.isArray(value);
     const sends = entry.sends.filter(send => canonicalize(send.to) === canonicalize(change) && send.message.class === "request"
       && send.message.type === "relate" && record(send.message.body) && send.message.body["name"] === "rules");
     if (sends.length !== 1) return null;

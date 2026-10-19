@@ -114,7 +114,7 @@ export interface SiteEnv extends GitHubBindings, ArtifactsBindings {
 }
 
 const REPOSITORY_NAME = /^[A-Za-z0-9][A-Za-z0-9_.-]{0,99}$/;
-const record = (value: unknown): Record<string, unknown> | null => (typeof value === "object" && value !== null && !Array.isArray(value) ? (value as Record<string, unknown>) : null);
+const recordOrNull = (value: unknown): Record<string, unknown> | null => (typeof value === "object" && value !== null && !Array.isArray(value) ? (value as Record<string, unknown>) : null);
 
 /**
  * The room that the directory `directory` is, or null when it is none: no
@@ -129,8 +129,8 @@ export async function roomOf(scopes: Binding, directory: string): Promise<Room |
   const entry = parseStrict(sourced.bytes) as unknown as Entry;
   const input = entry.input;
   if (input.type !== "genesis" || input.decision !== "applied" || !isOf(input.seed.definition, "platform:directory") || input.seed.creator?.kind !== "register") return null;
-  const fields = record(record(input.message?.body)?.["fields"]);
-  const repository = record(fields?.["repository"]);
+  const fields = recordOrNull(recordOrNull(input.message?.body)?.["fields"]);
+  const repository = recordOrNull(fields?.["repository"]);
   const branch = fields?.["branch"];
   if (!repository || typeof branch !== "string") return null;
   const { host, namespace, name, id } = repository;
@@ -143,7 +143,7 @@ interface Setting { registerScope: ScopeId; namespace: string; maxBytes: number 
 /** The fields of a host's setting that the site reads. The host's own wiring checks the whole setting; this reads only these. */
 function setting(raw: string | undefined): (Setting & Record<string, unknown>) | null {
   try {
-    const value = typeof raw === "string" && raw.length <= 4096 ? record(parseStrict(raw)) : null;
+    const value = typeof raw === "string" && raw.length <= 4096 ? recordOrNull(parseStrict(raw)) : null;
     if (!value || !isScopeId(value["registerScope"]) || typeof value["maxBytes"] !== "number" || !Number.isSafeInteger(value["maxBytes"]) || value["maxBytes"] < 32) return null;
     return value as Setting & Record<string, unknown>;
   } catch {
@@ -189,9 +189,9 @@ export function readerOf(env: SiteEnv, room: Room, fetch?: (request: Request) =>
       // The service's own report of the remote must be the expected one before a token is minted. A trailing `/` and a
       // final `.git` are not compared: either form names the same repository.
       const info = await step("info", () => handle.info());
-      if (!sameRemote(record(info)?.["remote"], remote)) throw new StepError("info", `the service reports another remote, ${typeof record(info)?.["remote"]}`);
+      if (!sameRemote(recordOrNull(info)?.["remote"], remote)) throw new StepError("info", `the service reports another remote, ${typeof recordOrNull(info)?.["remote"]}`);
       // The minted token's plaintext is `plaintext`, or `token` where the service names it so.
-      const minted = record(await step("token", () => handle.createToken("read", READ_TTL)));
+      const minted = recordOrNull(await step("token", () => handle.createToken("read", READ_TTL)));
       const plaintext = typeof minted?.["plaintext"] === "string" ? minted["plaintext"] : minted?.["token"];
       if (typeof plaintext !== "string" || !/^[!-~]{1,4096}$/.test(plaintext)) throw new StepError("token", `no read token in the answer; its fields: ${minted ? Object.keys(minted).sort().join(", ") : "none"}`);
       const { source, last } = transport(remote, config.maxBytes, `Bearer ${plaintext}`);
@@ -205,7 +205,7 @@ export function readerOf(env: SiteEnv, room: Room, fetch?: (request: Request) =>
   }
   if (repository.host === GITHUB_HOST) {
     const config = setting(env.GITHUB_APP_CONFIG);
-    const login = record(config?.["account"])?.["login"];
+    const login = recordOrNull(config?.["account"])?.["login"];
     const token = env.GITHUB_READ_TOKEN;
     if (!config || login !== repository.namespace || config.registerScope !== room.register) return null;
     if (!/^[A-Za-z0-9_.-]{1,100}$/.test(repository.name) || repository.name === "." || repository.name === ".." || repository.name.toLowerCase().endsWith(".git")) return null;

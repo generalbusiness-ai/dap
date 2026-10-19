@@ -1,4 +1,5 @@
 /** Operational metrics-v1. Nothing here is an input to a native decision. */
+import { natural } from "@generalbusiness/artroom-bytes";
 import { SCOPE_BOUNDS } from "@generalbusiness/dap-contract";
 import { isScopeId, utf8 } from "@generalbusiness/artroom-bytes";
 import type { MismatchReason, ReadRefusal, RefusalReason, SessionRefusal, UnavailableReason } from "@generalbusiness/dap-contract";
@@ -31,7 +32,7 @@ const reasons = new Set([...Object.keys(REASONS), ...SCOPE_BOUNDS, ...EVENTS, ..
 const places = new Set<string>(METRIC_PLACES);
 const kinds = new Set<string>(METRIC_KINDS);
 const ends = new Set<string>(ENDS);
-const integer = (n: unknown): n is number => typeof n === "number" && Number.isInteger(n) && !Object.is(n, -0) && n >= 0 && n <= METRIC_MAX;
+const metricInteger = (n: unknown): n is number => natural(n) && n <= METRIC_MAX;
 const requestId = (s: unknown): s is string => typeof s === "string" && /^(?:[0-9a-f]{16}|none|mixed)$/.test(s);
 const traceId = (s: unknown): s is string => typeof s === "string" && /^(?:[0-9a-f]{32}|none|mixed)$/.test(s);
 
@@ -48,7 +49,7 @@ function valid(point: MetricPoint): boolean {
     || !kind || !kinds.has(kind) || !b[1] || utf8(b[1]).length > 128
     || !/^(?:unknown|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/.test(b[2] ?? "")
     || !places.has(b[3] ?? "") || !reasons.has(b[5] ?? "") || !requestId(b[6]) || !traceId(b[7])
-    || !d.every(integer) || d[0]! < 1) return false;
+    || !d.every(metricInteger) || d[0]! < 1) return false;
   const [count, duration, a, c, e, flag] = d as [number, number, number, number, number, number];
   if (kind === "metric-dropped") return b[3] === "metrics" && b[4] === "dropped" && b[5] === "summary" && b[8] === "none" && count === 1 && duration <= 31 && c <= a && e <= c;
   if (flag > count) return false;
@@ -157,7 +158,7 @@ export class Metrics {
   }
   /** A failed operational sidecar loses correlation, never a native fact. */
   sidecar(turn = false, critical = false, count = 1): void {
-    if (this.#finished || !integer(count) || count === 0) return;
+    if (this.#finished || !metricInteger(count) || count === 0) return;
     this.#mask |= LOSS.sidecar;
     this.#lost = this.#sum(this.#lost, count);
     // Several missing entry-index rows may belong to one native turn.

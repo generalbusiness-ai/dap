@@ -59,3 +59,8 @@ export interface ApplicationProjectionDeclaration {
 export class ApplicationProjectionError extends Error {
   constructor(readonly reason: "invalid" | "limit" | "binding" | "incomplete" | "stale" | "unavailable") { super("application-projection-" + reason); }
 }
+
+/** The one constructor path for a refused application projection. */
+export function projectionFailure(reason: ApplicationProjectionError["reason"] = "invalid"): never {
+  throw new ApplicationProjectionError(reason);
+}

@@ -8,8 +8,8 @@ import { isDigest, isPlatformDefinition, platformName } from "@generalbusiness/a
 import { declarationValueDomains, type Capabilities, type OperationRules, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { platform } from "@generalbusiness/dap-platform";
 import { ArchiveBudget } from "./archive-budget.ts";
-import { ArchivePrefixStopped, type ArchivePrefix, type ArchivePosition } from "./archive-prefix.ts";
-import type { Sql } from "./sqlite.ts";
+import { stopArchivePrefix as stop, type ArchivePrefix, type ArchivePosition } from "./archive-prefix.ts";
+import { sqlJsonText as text, type Sql } from "./sqlite.ts";
 
 /** Trusted native code/registry metadata. A request cannot supply this map;
  * unknown owners/capability steps fail closed. No dynamic package runs. */
@@ -23,13 +23,11 @@ export interface ArchiveSupport {
 }
 export interface ArchivePrivacyPosition extends ArchivePosition { readonly input: Input["type"] }
 export interface ArchivePrivacyPrefix extends Omit<ArchivePrefix, "positions"> { readonly positions: readonly ArchivePrivacyPosition[] }
-const stop = (reason: ConstructorParameters<typeof ArchivePrefixStopped>[0]): never => { throw new ArchivePrefixStopped(reason); };
 const variants = ["genesis", "act", "delivery", "timed", "diagnosis", "outcome", "preparation", "checkpoint"] as const;
 const nativeDomains: ReadonlySet<string> = new Set(Object.values(DOMAINS));
 // Each expression executes at most three JSON inspections of its bounded
 // entry/effect input. The complete header + owner queries use fewer than
 // the 64 full-entry equivalents reserved by archivePrefixMetadata.
-const text = (path: string, max: number, source = "bytes") => `CASE WHEN typeof(json_extract(${source}, '${path}')) = 'text' AND octet_length(json_extract(${source}, '${path}')) <= ${max} THEN json_extract(${source}, '${path}') ELSE NULL END`;
 const HEADER = `SELECT json_extract(bytes, '$.seq') AS seq, ${text("$.at.scope", 71)} AS scope, ${text("$.at.inc", 64)} AS inc, ${text("$.at.kind", 16)} AS kind, ${text("$.input.type", 16)} AS input, ${text("$.prev", 71)} AS prev, json_type(bytes, '$.prev') AS prevType, json_type(bytes, '$.uses') AS usesType, json_array_length(bytes, '$.uses') AS uses, json_type(bytes, '$.effects') AS effectsType, json_array_length(bytes, '$.effects') AS effects FROM entry WHERE seq = ? AND hash = ? AND size = ? AND octet_length(bytes) = ? LIMIT 1`;
 const OWNER_LIMIT = 65;
 

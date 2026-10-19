@@ -58,7 +58,7 @@ const isTime: Check = (v) => timeMs(v) !== null;
 export const among = <T extends string>(names: Record<T, true>) => (v: unknown): v is T => typeof v === "string" && Object.hasOwn(names, v);
 
 /** A record with every member of `required`, each passing its check, and beside them only members of `optional`, each passing its check when present. */
-const record = (required: Record<string, Check>, optional: Record<string, Check> = {}): Check => (v) =>
+const recordShape = (required: Record<string, Check>, optional: Record<string, Check> = {}): Check => (v) =>
   isRecord(v)
   && Object.entries(required).every(([name, check]) => Object.hasOwn(v, name) && check(v[name]))
   && Object.keys(v).every((name) => Object.hasOwn(required, name) || (Object.hasOwn(optional, name) && (v[name] === undefined || optional[name]!(v[name]))));
@@ -88,21 +88,21 @@ const CLAUSE: Record<NonNullable<OutboxItem["result"]>["clause"], true> = { appl
 const FINDING: Record<NonNullable<OutboxItem["diagnosis"]>["finding"], true> = { undelivered: true, "delivery-unavailable": true };
 const RETAINED: Record<RetainedInput["kind"], true> = { definition: true, entry: true, rule: true, text: true, snapshot: true, value: true };
 /** Why a delivery was refused: a code the contract names and, where one exists, the name the failed guard declares. */
-const reason = record({ code: among(REFUSAL_REASONS) }, { name: text });
+const reason = recordShape({ code: among(REFUSAL_REASONS) }, { name: text });
 
 // ---------------------------------------------------------------- references, the seed and the intent (sections 2.1 and 3)
 
-const scopeRef = record({ scope: isScopeId, inc: isIncarnation, kind: isScopeKind });
+const scopeRef = recordShape({ scope: isScopeId, inc: isIncarnation, kind: isScopeKind });
 export const isScopeRef = (v: unknown): v is ScopeRef => scopeRef(v);
-const head = record({ seq: isLocalId, hash: isDigest });
+const head = recordShape({ seq: isLocalId, hash: isDigest });
 export const isHead = (v: unknown): v is Head => head(v);
-const factRef = record({ at: scopeRef, seq: isLocalId, hash: isDigest });
+const factRef = recordShape({ at: scopeRef, seq: isLocalId, hash: isDigest });
 export const isFactRef = (v: unknown): v is FactRef => factRef(v);
-const memberRef = record({ membership: scopeRef, member: isMemberId });
+const memberRef = recordShape({ membership: scopeRef, member: isMemberId });
 export const isMemberRef = (v: unknown): v is MemberRef => memberRef(v);
 /** A definition as a scope names it: the digest of a declaration, or a platform definition. */
 export const isDefinitionName: Check = (v) => isDigest(v) || isPlatformDefinition(v);
-const seed = record({ v: is(1), kind: isScopeKind, definition: isDefinitionName, creator: orNull(scopeRef), cause: isDigest, ordinal: isLocalId });
+const seed = recordShape({ v: is(1), kind: isScopeKind, definition: isDefinitionName, creator: orNull(scopeRef), cause: isDigest, ordinal: isLocalId });
 export const isSeed = (v: unknown): v is Seed => seed(v);
 
 /**
@@ -123,58 +123,58 @@ export const isParty = (v: unknown): v is Party => party(v);
 const named = (check: Check): Check => (v) => isRecord(v) && Object.values(v).every(check);
 
 /** The shape of section 2.1. A valid signature over some other shape is not an intent. The actor is a key ID, as the contract types it. What each field holds is the act's to say. */
-const intent = record({ v: is(1), to: orNull(scopeRef), actor: isKeyId, kind: text, on: orNull(isLocalId), expected: named(isLocalId), fields: isRecord, idempotencyKey: text, notAfter: isTime });
+const intent = recordShape({ v: is(1), to: orNull(scopeRef), actor: isKeyId, kind: text, on: orNull(isLocalId), expected: named(isLocalId), fields: isRecord, idempotencyKey: text, notAfter: isTime });
 export const isIntent = (v: unknown): v is Intent => intent(v);
 /** An intent beside a signature of the one form a signature has. Whether the signature is the actor's over these bytes is `verifySignedIntent`'s question. */
-const signedIntent = record({ intent, sig: isSignature });
+const signedIntent = recordShape({ intent, sig: isSignature });
 export const isSignedIntentShape = (v: unknown): v is SignedIntent => signedIntent(v);
 /** A grant, as far as the judge and an entry read it. `within` and `fresh` are the authority note's. */
-const grant = record({ issued: factRef, subject: memberRef, key: isKeyId, principal: orNull(memberRef), actions: listOf(text), within: any, notAfter: orNull(isTime), fresh: any });
+const grant = recordShape({ issued: factRef, subject: memberRef, key: isKeyId, principal: orNull(memberRef), actions: listOf(text), within: any, notAfter: orNull(isTime), fresh: any });
 export const isGrant = (v: unknown): v is Grant => grant(v);
 
 // ---------------------------------------------------------------- an entry and its parts (sections 4.1 and 7.4)
 
-const request = record({ class: is("request"), type: among({ create: true, tell: true, relate: true }), body: any });
+const request = recordShape({ class: is("request"), type: among({ create: true, tell: true, relate: true }), body: any });
 const message = variant("class", {
   request,
-  result: record({ class: is("result"), of: record({ from: factRef, n: isLocalId }), outcome: among(DECISION) }, { reason }),
-  control: record({ class: is("control"), type: is("confirm"), genesis: factRef }),
-  advisory: record({ class: is("advisory"), type: among({ index: true, notify: true }), body: any }),
+  result: recordShape({ class: is("result"), of: recordShape({ from: factRef, n: isLocalId }), outcome: among(DECISION) }, { reason }),
+  control: recordShape({ class: is("control"), type: is("confirm"), genesis: factRef }),
+  advisory: recordShape({ class: is("advisory"), type: among({ index: true, notify: true }), body: any }),
 });
 export const isMessage = (v: unknown): v is Message => message(v);
-const attempt = record({ at: isTime, answer: among(ATTEMPTED) });
-const factUse = record({ fact: factRef, content: isDigest });
+const attempt = recordShape({ at: isTime, answer: among(ATTEMPTED) });
+const factUse = recordShape({ fact: factRef, content: isDigest });
 export const isFactUse = (v: unknown): v is FactUse => factUse(v);
-const prepared = record({ rule: text, input: isDigest, result: flag });
+const prepared = recordShape({ rule: text, input: isDigest, result: flag });
 export const isPrepared = (v: unknown): v is Prepared => prepared(v);
-const send = record({ n: isLocalId, to: (v) => scopeRef(v) || seed(v), message });
+const send = recordShape({ n: isLocalId, to: (v) => scopeRef(v) || seed(v), message });
 export const isSend = (v: unknown): v is Send => send(v);
 
 /** A capability's name and version, of the one form `name@version`. */
 const capabilityName: Check = (v) => typeof v === "string" && /^(hold|git-read)@(0|[1-9][0-9]*)$/.test(v);
 
 const effect = variant("effect", {
-  open: record({ effect: any, item: isLocalId, type: text, state: text }),
-  state: record({ effect: any, item: isLocalId, state: text }),
-  party: record({ effect: any, item: isLocalId, slot: text, member: orNull(memberRef) }),
-  ref: record({ effect: any, item: isLocalId, slot: text, to: orNull(isFieldValue) }),
-  value: record({ effect: any, item: isLocalId, slot: text, value: orNull(isFieldValue) }),
-  list: record({ effect: any, item: isLocalId, slot: text, change: among({ add: true, remove: true }), member: memberRef }),
-  hold: record({ effect: any, item: isLocalId, change: among({ open: true, renew: true, end: true }), epoch: isLocalId }),
-  redact: record({ effect: any, item: isLocalId, slot: text, texts: listOf(isDigest) }),
-  relation: record({ effect: any, owner: scopeRef, item: isLocalId, name: text, state: text, revision: isLocalId }),
+  open: recordShape({ effect: any, item: isLocalId, type: text, state: text }),
+  state: recordShape({ effect: any, item: isLocalId, state: text }),
+  party: recordShape({ effect: any, item: isLocalId, slot: text, member: orNull(memberRef) }),
+  ref: recordShape({ effect: any, item: isLocalId, slot: text, to: orNull(isFieldValue) }),
+  value: recordShape({ effect: any, item: isLocalId, slot: text, value: orNull(isFieldValue) }),
+  list: recordShape({ effect: any, item: isLocalId, slot: text, change: among({ add: true, remove: true }), member: memberRef }),
+  hold: recordShape({ effect: any, item: isLocalId, change: among({ open: true, renew: true, end: true }), epoch: isLocalId }),
+  redact: recordShape({ effect: any, item: isLocalId, slot: text, texts: listOf(isDigest) }),
+  relation: recordShape({ effect: any, owner: scopeRef, item: isLocalId, name: text, state: text, revision: isLocalId }),
   // A capability's record: its name and version are of the one form `name@version`. What its key and its values hold is the capability's to say.
-  record: record({ effect: any, capability: capabilityName, kind: text, key: listOf(isFieldValue), state: text, values: isRecord }),
-  activate: record({ effect: any }),
+  record: recordShape({ effect: any, capability: capabilityName, kind: text, key: listOf(isFieldValue), state: text, values: isRecord }),
+  activate: recordShape({ effect: any }),
   // Section 4.3: an operation's opening, and one change of one numbered attempt. An operation of the entry itself is named by its ordinal.
   // Section 17.2a: `for` is the holder that an operation of a held kind draws on, by its local ID, or `self` for the item that the same entry opens.
-  operation: record({ effect: any, k: isLocalId, owner: (v) => capabilityName(v) || isPlatformDefinition(v), kind: text, attempts: isLocalId }, { for: (v) => v === "self" || isLocalId(v) }),
-  attempt: record({
-    effect: any, operation: (v) => isOperationId(v) || record({ k: isLocalId })(v), attempt: isLocalId,
+  operation: recordShape({ effect: any, k: isLocalId, owner: (v) => capabilityName(v) || isPlatformDefinition(v), kind: text, attempts: isLocalId }, { for: (v) => v === "self" || isLocalId(v) }),
+  attempt: recordShape({
+    effect: any, operation: (v) => isOperationId(v) || recordShape({ k: isLocalId })(v), attempt: isLocalId,
     result: among({ opened: true, confirmed: true, refused: true, unknown: true }), selected: (v) => v === null || typeof v === "boolean",
   }),
-  index: record({ effect: any, from: factRef, fields: isRecord }),
-  attention: record({ effect: any, item: isLocalId, members: listOf(memberRef), reason: text }),
+  index: recordShape({ effect: any, from: factRef, fields: isRecord }),
+  attention: recordShape({ effect: any, item: isLocalId, members: listOf(memberRef), reason: text }),
 } satisfies Record<Effect["effect"], Check>);
 export const isEffect = (v: unknown): v is Effect => effect(v);
 
@@ -186,7 +186,7 @@ export const isEffect = (v: unknown): v is Effect => effect(v);
  * ledger's and the owner's checks.
  */
 const BASIS: Record<Evidence["basis"], true> = { "own-answer": true, read: true, none: true };
-const evidence = record({ basis: among(BASIS), body: (v) => v !== undefined });
+const evidence = recordShape({ basis: among(BASIS), body: (v) => v !== undefined });
 export const isEvidence = (v: unknown): v is Evidence => evidence(v);
 
 /**
@@ -200,30 +200,30 @@ export const isEvidence = (v: unknown): v is Evidence => evidence(v);
  */
 const observedFrom = { of: scopeRef, head, definition: isPlatformDefinition, at: isTime };
 const controlled = { controller: orNull(isMemberId), controllerActive: orNull(flag) };
-const keyObservation = record({
+const keyObservation = recordShape({
   ...observedFrom, ...controlled, key: isKeyId, keyState: among({ active: true, retired: true, compromised: true, unknown: true }), member: isMemberId, memberState: among({ active: true, removed: true }),
-  role: text, actions: listOf(text), within: record({ membership: scopeRef }), notAfter: orNull(isTime),
+  role: text, actions: listOf(text), within: recordShape({ membership: scopeRef }), notAfter: orNull(isTime),
 });
 const furtherObservation = variant("subject", {
-  member: record({ ...observedFrom, ...controlled, subject: any, member: isMemberId, memberState: among({ active: true, removed: true, unknown: true }), role: orNull(text), activeKey: orNull(flag) }),
-  rules: record({
+  member: recordShape({ ...observedFrom, ...controlled, subject: any, member: isMemberId, memberState: among({ active: true, removed: true, unknown: true }), role: orNull(text), activeKey: orNull(flag) }),
+  rules: recordShape({
     ...observedFrom, subject: any, revision: isLocalId,
     content: variant("asked", {
       // Revision 19 (row I3-36): under a rules definition whose data states the value, the record also holds `singleControllerException`.
       // Revision 20 (row I3-43): and `extents`, a digest, under one whose data states that slot. Which of the two a definition states
       // is not known here: derive's `contentStates` makes that check, with the data of the observation's `definition`.
-      rules: record({ asked: any, approvals: isLocalId, ownerMayReview: flag, checks: listOf(record({ name: text, configuration: isDigest, required: flag, checker: isMemberId })), labels: listOf(text) }, { singleControllerException: flag, extents: isDigest }),
-      definitions: record({ asked: any, active: listOf(record({ digest: isDigest, name: text })) }),
+      rules: recordShape({ asked: any, approvals: isLocalId, ownerMayReview: flag, checks: listOf(recordShape({ name: text, configuration: isDigest, required: flag, checker: isMemberId })), labels: listOf(text) }, { singleControllerException: flag, extents: isDigest }),
+      definitions: recordShape({ asked: any, active: listOf(recordShape({ digest: isDigest, name: text })) }),
     }),
   }),
   // Revision 20 (row I3-42): the holders of one action. `holders` lists distinct member IDs, and no more than `count`. Their order,
   // and whether they are the first, are questions of the observed scope's history.
-  holders: (v) => record({ ...observedFrom, subject: any, action: text, count: isLocalId, holders: listOf(isMemberId) })(v)
+  holders: (v) => recordShape({ ...observedFrom, subject: any, action: text, count: isLocalId, holders: listOf(isMemberId) })(v)
     && new Set((v as { holders: string[] }).holders).size === (v as { holders: string[] }).holders.length && (v as { holders: string[]; count: number }).holders.length <= (v as { count: number }).count,
 });
-const observationUse = record({
+const observationUse = recordShape({
   observation: (v) => (isRecord(v) && Object.hasOwn(v, "subject") ? furtherObservation(v) : keyObservation(v)),
-  read: record({ run: text, n: isLocalId }), use: among({ fresh: true, reused: true }), prior: orNull(head),
+  read: recordShape({ run: text, n: isLocalId }), use: among({ fresh: true, reused: true }), prior: orNull(head),
 });
 export const isObservationUse = (v: unknown): v is ObservationUse => observationUse(v);
 /**
@@ -239,36 +239,36 @@ const observed: Check = (v) => Array.isArray(v) && v.length > 0 && v.every(obser
  */
 const delivered = { type: any, from: factRef, n: isLocalId, message };
 const deliveryOf: Record<Message["class"], Check> = {
-  request: (v) => record({ ...delivered, decision: among(DECISION) }, { reason, late: record({ reason: (v) => text(v) && v !== "" }) })(v)
+  request: (v) => recordShape({ ...delivered, decision: among(DECISION) }, { reason, late: recordShape({ reason: (v) => text(v) && v !== "" }) })(v)
     && isRecord(v) && (!Object.hasOwn(v, "late") || v["decision"] === "applied"),
-  result: record({ ...delivered, clause: among(CLAUSE) }, { observed }),
-  control: record(delivered),
-  advisory: record(delivered),
+  result: recordShape({ ...delivered, clause: among(CLAUSE) }, { observed }),
+  control: recordShape(delivered),
+  advisory: recordShape(delivered),
 };
 const input = variant("type", {
-  genesis: record({
+  genesis: recordShape({
     type: any, seed, inc: isIncarnation, kind: (v) => text(v) && v !== "", "founding": orNull(signedIntent), source: orNull(factRef), n: orNull(isLocalId), message: orNull(request), decision: among({ applied: true, refused: true }),
   }),
   // Section 4.1: an act, an outcome and a delivery of a result may hold `observed`, and no other input may.
-  act: record({ type: any, signed: signedIntent, authority: listOf(grant), presented: named(factRef) }, { observed }),
+  act: recordShape({ type: any, signed: signedIntent, authority: listOf(grant), presented: named(factRef) }, { observed }),
   delivery: (v) => {
     const of = isRecord(v) && isRecord(v["message"]) ? v["message"]["class"] : undefined;
     return among(CLASS)(of) && deliveryOf[of](v);
   },
-  diagnosis: record({ type: any, of: record({ seq: isLocalId, n: isLocalId }), finding: among(FINDING), attempts: listOf(attempt) }),
+  diagnosis: recordShape({ type: any, of: recordShape({ seq: isLocalId, n: isLocalId }), finding: among(FINDING), attempts: listOf(attempt) }),
   // Section 4.1 and 5.5: the signed intent, the one grant judged, the capability and its step. Depth is bounded as for an act.
-  preparation: record({ type: any, signed: signedIntent, authority: listOf(grant), capability: capabilityName, step: text }),
-  timed: record({ type: any, item: isLocalId, rule: text, due: isTime }),
+  preparation: recordShape({ type: any, signed: signedIntent, authority: listOf(grant), capability: capabilityName, step: text }),
+  timed: recordShape({ type: any, item: isLocalId, rule: text, due: isTime }),
   // Section 4.1, "An outcome states its owner and its kind": both are always present, and the kind is a text that is not empty.
-  outcome: record({
+  outcome: recordShape({
     type: any, operation: isOperationId, attempt: isLocalId, owner: (v) => capabilityName(v) || isPlatformDefinition(v), kind: (v) => text(v) && v !== "",
     result: among({ confirmed: true, refused: true, unknown: true }), evidence,
   }, { observed }),
-  checkpoint: record({ type: any, through: isLocalId, state: isDigest }),
+  checkpoint: recordShape({ type: any, through: isLocalId, state: isDigest }),
 } satisfies Record<Input["type"], Check>);
 export const isInput = (v: unknown): v is Input => input(v);
 
-const entry = record({
+const entry = recordShape({
   v: is(1), at: scopeRef, seq: isLocalId, prev: orNull(isDigest), time: isTime, clamped: flag, epoch: is(0),
   input, uses: listOf(factUse), prepared: listOf(prepared), effects: listOf(effect), sends: listOf(send),
 });
@@ -276,29 +276,29 @@ export const isEntry = (v: unknown): v is Entry => entry(v);
 
 // ---------------------------------------------------------------- views and reads (sections 4.1, 4.2 and 9.1)
 
-const receipt = record({ fact: factRef, definition: isDefinitionName, intent: orNull(isDigest), effects: listOf(effect), sends: listOf(isOutboxId), epoch: is(0) });
+const receipt = recordShape({ fact: factRef, definition: isDefinitionName, intent: orNull(isDigest), effects: listOf(effect), sends: listOf(isOutboxId), epoch: is(0) });
 export const isReceipt = (v: unknown): v is Receipt => receipt(v);
-const sealed = record({ entry, hash: isDigest });
+const sealed = recordShape({ entry, hash: isDigest });
 export const isSealed = (v: unknown): v is Sealed => sealed(v);
-const item = record(
+const item = recordShape(
   { id: isLocalId, type: text, state: text, revision: isLocalId, opened: orNull(isDigest), parties: named(party), refs: named(orNull(isFieldValue)), values: named(orNull(isFieldValue)), attributed: listOf(memberRef) },
 );
 export const isItem = (v: unknown): v is Item => item(v);
-const summary = record({
+const summary = recordShape({
   scope: scopeRef, status: among(STATUS), definition: isDefinitionName, time: isTime, items: listOf(item),
   counts: listOf((c) => Array.isArray(c) && c.length === 3 && text(c[0]) && text(c[1]) && isLocalId(c[2])),
-}, { reservationExpiry: (v) => record({ clock: is("available"), time: isTime, expired: listOf(isLocalId) })(v) || record({ clock: is("unavailable") })(v) });
+}, { reservationExpiry: (v) => recordShape({ clock: is("available"), time: isTime, expired: listOf(isLocalId) })(v) || recordShape({ clock: is("unavailable") })(v) });
 export const isSummary = (v: unknown): v is Summary => summary(v);
-const outboxItem = record({
-  outboxId: isOutboxId, to: (v) => scopeRef(v) || seed(v), class: among(CLASS), held: flag, attempts: listOf(record({ at: isTime, answer: among(DISPATCHED) })), acknowledged: orNull(factRef),
-  result: orNull(record({ seq: isLocalId, clause: among(CLAUSE) })), diagnosis: orNull(record({ seq: isLocalId, finding: among(FINDING) })),
+const outboxItem = recordShape({
+  outboxId: isOutboxId, to: (v) => scopeRef(v) || seed(v), class: among(CLASS), held: flag, attempts: listOf(recordShape({ at: isTime, answer: among(DISPATCHED) })), acknowledged: orNull(factRef),
+  result: orNull(recordShape({ seq: isLocalId, clause: among(CLAUSE) })), diagnosis: orNull(recordShape({ seq: isLocalId, finding: among(FINDING) })),
 });
 export const isOutboxItem = (v: unknown): v is OutboxItem => outboxItem(v);
 /** A page of stored entries. Each entry's `bytes` is text a reader hashes and parses itself; it is not read here. */
-const logPage = record({ scope: scopeRef, definition: isDefinitionName, entries: listOf(record({ seq: isLocalId, hash: isDigest, bytes: text })) });
+const logPage = recordShape({ scope: scopeRef, definition: isDefinitionName, entries: listOf(recordShape({ seq: isLocalId, hash: isDigest, bytes: text })) });
 export const isLogPage = (v: unknown): v is LogPage => logPage(v);
 /** One retained input. Its `bytes` is text a reader checks against the digest itself; it is not read here. */
-const retainedInput = record({ kind: among(RETAINED), digest: isDigest, bytes: text }, { under: text, domain: text });
+const retainedInput = recordShape({ kind: among(RETAINED), digest: isDigest, bytes: text }, { under: text, domain: text });
 /** Section 9.2, revision 19: `domain` is stated exactly when the kind is `value`, and it is not empty. */
 export const isRetainedInput = (v: unknown): v is RetainedInput => {
   if (!retainedInput(v)) return false;
@@ -308,8 +308,8 @@ export const isRetainedInput = (v: unknown): v is RetainedInput => {
 
 /** A read (section 9.1): a value of the route's shape at a stated head, or a refusal the contract names, with the reference it may carry. */
 export const isRead = <T>(value: (v: unknown) => v is T) => {
-  const unread = record({ ok: is(false), reason: among(READ_REFUSALS) }, { detail: (v) => scopeRef(v) || factRef(v) });
-  const read = record({ ok: is(true), at: head, value, complete: flag }, { next: (v) => typeof v === "string" });
+  const unread = recordShape({ ok: is(false), reason: among(READ_REFUSALS) }, { detail: (v) => scopeRef(v) || factRef(v) });
+  const read = recordShape({ ok: is(true), at: head, value, complete: flag }, { next: (v) => typeof v === "string" });
   return (v: unknown): v is Read<T> => unread(v) || read(v);
 };
 /** A list of such records, as a paged read returns. */

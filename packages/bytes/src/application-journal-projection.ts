@@ -1,15 +1,15 @@
 /** Declared fields from a complete recent journal window. The native owner
  * owes history authority and bounded storage reads; this checks their bytes. */
+import { projectionFailure as fail } from "./application-projection-types.ts";
 import type { DeclaredDefinition, Digest, FieldValue, Head, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, isDigest, isEntry, isHead, isRecord, parseStrict, utf8 } from "./index.ts";
 import { applicationJson } from "./application-json.ts";
-import { APPLICATION_PROJECTION_LIMITS as B, ApplicationProjectionError, type ApplicationJournalProjectionSource, type ApplicationProjectionRow } from "./application-projection-types.ts";
+import { APPLICATION_PROJECTION_LIMITS as B, type ApplicationJournalProjectionSource, type ApplicationProjectionRow } from "./application-projection-types.ts";
 export interface ApplicationJournalRead {
   readonly scope: ScopeRef;
   readonly at: Head;
   readonly entries: readonly { seq: number; hash: Digest; bytes: string }[];
 }
-const fail = (reason: ApplicationProjectionError["reason"] = "invalid"): never => { throw new ApplicationProjectionError(reason); };
 /** Internal phase of the parent projector, which owns/schema-binds the
  * declaration first. A seq is never a signable item revision; explicit
  * fact/time marks keep these rows distinct from item data. */

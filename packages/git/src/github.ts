@@ -53,7 +53,7 @@ export class GitHubFailure extends Error {
 
 const fail = (reason: GitHubFailureReason, status: number | null = null): never => { throw new GitHubFailure(reason, status); };
 const positive = (value: unknown): value is number => Number.isSafeInteger(value) && (value as number) > 0;
-const record = (value: unknown): Record<string, unknown> => {
+const githubRecord = (value: unknown): Record<string, unknown> => {
   if (typeof value !== "object" || value === null || Array.isArray(value)) return fail("response");
   return value as Record<string, unknown>;
 };
@@ -124,7 +124,7 @@ export class GitHubApp {
    * must establish this binding before using configured installation authority.
    */
   async validateInstallation(): Promise<void> {
-    const data = record(await this.#request(`/app/installations/${this.#installation}`, "GET", await this.jwt(), 200));
+    const data = githubRecord(await this.#request(`/app/installations/${this.#installation}`, "GET", await this.jwt(), 200));
     if (data["id"] !== this.#installation) fail("response");
     this.#checkAccount(data["account"]);
     if (data["suspended_at"] !== null) fail("response");
@@ -133,14 +133,14 @@ export class GitHubApp {
   /** One POST, explicit repository IDs and permissions; never an all-repo token. */
   async mintInstallationToken(value: GitHubTokenScope): Promise<GitHubInstallationToken> {
     const scope = scopeOf(value);
-    const answer = record(await this.#request(`/app/installations/${this.#installation}/access_tokens`, "POST", await this.jwt(), 201, { repository_ids: scope.repositoryIds, permissions: scope.permissions }));
+    const answer = githubRecord(await this.#request(`/app/installations/${this.#installation}/access_tokens`, "POST", await this.jwt(), 201, { repository_ids: scope.repositoryIds, permissions: scope.permissions }));
     if (answer["repository_selection"] !== "selected") fail("response");
     const plaintext = typeof answer["token"] === "string" && /^[A-Za-z0-9_.-]{1,4096}$/.test(answer["token"]) ? answer["token"] : fail("response");
     const expiresAt = answer["expires_at"];
     const time = typeof expiresAt === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(expiresAt) ? Date.parse(expiresAt) : NaN;
     const now = this.#now();
     if (!Number.isFinite(now) || !Number.isFinite(time) || time <= now || time > now + 65 * 60_000) fail("response");
-    const permissions = record(answer["permissions"]);
+    const permissions = githubRecord(answer["permissions"]);
     // GitHub implicitly grants metadata:read. No other extra permission or
     // a stronger returned permission can be accepted as the requested scope.
     if (Object.entries(permissions).some(([key, level]) => level !== scope.permissions[key] && !(key === "metadata" && level === "read" && scope.permissions[key] === undefined)) || Object.entries(scope.permissions).some(([key, level]) => permissions[key] !== level)) fail("response");
@@ -202,14 +202,14 @@ export class GitHubApp {
 }
 
 function checkedAccount(account: GitHubAccount, value: unknown): string {
-  const owner = record(value);
+  const owner = githubRecord(value);
   const login = owner["login"];
   if (!loginOK(login) || login.toLowerCase() !== account.login.toLowerCase() || owner["id"] !== account.id || owner["type"] !== account.type) return fail("response");
   return login;
 }
 
 function checkedRepository(account: GitHubAccount, value: unknown, expected?: string): GitHubRepository {
-  const repository = record(value);
+  const repository = githubRecord(value);
   const owner = checkedAccount(account, repository["owner"]);
   const name = repository["name"];
   const id = repository["id"];

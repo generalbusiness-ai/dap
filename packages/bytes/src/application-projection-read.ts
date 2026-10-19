@@ -1,5 +1,6 @@
 /** One pure projection over exact native query replies. The host must own
  * read authorization and the definition pin before obtaining those replies. */
+import { projectionFailure as fail } from "./application-projection-types.ts";
 import { freeze } from "./values.ts";
 import { ITEM_QUERY_BOUNDS, type DeclaredDefinition, type Head, type ItemQuery, type ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, isRecord, parseStrict } from "./index.ts";
@@ -8,12 +9,11 @@ import { itemQueryReadFor } from "./item-query-read.ts";
 import { applicationJson } from "./application-json.ts";
 import { ApplicationPackageError } from "./application-types.ts";
 import { bindApplicationProjection } from "./application-projection-binding.ts";
-import { APPLICATION_PROJECTION_LIMITS as B, ApplicationProjectionError, applicationProjectionId, readApplicationProjection, type ApplicationProjectionData, type ApplicationProjectionRow, type ApplicationReadProjection } from "./application-projection.ts";
+import { APPLICATION_PROJECTION_LIMITS as B, applicationProjectionId, readApplicationProjection, type ApplicationProjectionData, type ApplicationProjectionRow, type ApplicationReadProjection } from "./application-projection.ts";
 import { isApplicationJournalSource } from "./application-projection-types.ts";
 import { projectApplicationJournalRead } from "./application-journal-projection.ts";
 import { applicationProjectionFactRefs, readApplicationFactTimes } from "./application-fact-times.ts";
 
-const fail = (reason: ApplicationProjectionError["reason"] = "invalid"): never => { throw new ApplicationProjectionError(reason); };
 const own = (value: unknown, most: number): unknown => {
   try { return parseStrict(applicationJson(value, most)); }
   catch (error) { return fail(error instanceof ApplicationPackageError && error.reason === "limit" ? "limit" : "invalid"); }

@@ -1,4 +1,5 @@
 /** Derived signer evidence. No public admission, replay judgment or resolver work. */
+import { isLocalId as integer } from "@generalbusiness/artroom-bytes";
 import type { Digest, Entry, Head, KeyId, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, isDigest, isEntry, isKeyId, isScopeRef, parseStrict, utf8 } from "@generalbusiness/artroom-bytes";
 import { isObject, same, timeMs, type ScopeState } from "@generalbusiness/dap-derive";
@@ -18,7 +19,6 @@ export type LocalSignerProof = { state: "positive"; seq: number; time: Timestamp
 /** Query-owned admission before native metadata or a historical body. */
 export interface LocalSignerWork { call(metadataBytes: number): void; body(bytes: number): void }
 type One = (query: string, ...bindings: SqlValue[]) => Record<string, SqlValue> | null;
-const integer = (v: unknown): v is number => typeof v === "number" && Number.isSafeInteger(v) && v >= 0;
 const head = (v: unknown): v is Head => isObject(v) && Object.keys(v).length === 2 && integer(v["seq"]) && isDigest(v["hash"]);
 const faults: readonly string[] = ["generation", "tail", "missing-entry", "metadata", "unfit-entry", "entry", "chain", "cutoff"];
 const SCHEMA = `
