@@ -461,3 +461,25 @@ Its script, summary and baseline/without-refusal logs use prefix
 `/tmp/artroom-g5-http-redirect-control-`, date 20261019. All originals have
 terminated. No whole gate, Source publication, deployment or live result
 is claimed; actual reviewed G5a Main remains required for integration.
+
+## Adopted combined-cohort provisioning order
+
+Planner report `7e93abadb8623a9ca10e9c4dca1857e07bc904c8`, adopted by
+`e02cbad6f7fe798e04d33ac62bd480b5cecca7df`, changes the first hosted
+provisioning sequence. Landing order is G5a, then S2a, then G5's integration
+head. S2a adds a distinct combined Device/archive cohort at Register17,
+Directory16, Membership8, Rules10 and Destination12. G5's preparation may
+continue against G5a's Device-only cohort, but its final head includes
+landed S2a and the first hosted demo room uses the combined cohort. No
+Device-only hosted room is provisioned. This lets the running room gain
+the archive binding later without replacing it.
+
+The runbook now requires these exact combined pins and Membership8
+enrolment receipts. Its selector remains an explicit required input from
+reviewed S2a because that CLI selector is not yet implemented here. A
+missing input stops the example shell command. Existing cohorts and all
+reserved IDs retain their meaning; in particular G5a's unused Membership9
+remains reserved. No runtime, test, asset or configuration changed for this
+documentation update, so focused evidence at 12bf35bbe is unchanged.
+Actual native combined-cohort integration remains required. This is no
+gate, Source, deployment or live result. G5a's frozen views stay read-only.

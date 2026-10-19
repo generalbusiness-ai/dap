@@ -3,6 +3,8 @@
 Run status: preparation. No hosted Grow room, release packet, simulator
 Worker or live tick has been created by this work. Finish the signed packet,
 Worker entry/configuration and installed native tick witnesses before exact-head review.
+The final head must include landed S2a and its combined Device/archive
+cohort. Provision no hosted room from the earlier Device-only cohort.
 Planner deploys and runs this procedure after that review. Local builder
 checks and dry runs create no Cloudflare resources.
 
@@ -36,15 +38,18 @@ uses the verified references and selected nonsecret receipt fields.
 
 ## Provision the room and enroll the owner
 
-1. From an owner-only operator `DAP_HOME`, prepare the native
-   `device-application` cohort against the operator-selected hosting origin.
+1. From an owner-only operator `DAP_HOME`, prepare the combined native
+   Device/archive cohort against the operator-selected hosting origin.
    Follow [deployment](../../docs/deploy.md) for the plan's exact register
-   and provider configuration. The cohort is Register16, Directory15,
-   Membership7, Rules9, Destination11 and Inbox1. It does not upgrade an
-   earlier room.
+   and provider configuration. The cohort is Register17, Directory16,
+   Membership8, Rules10, Destination12 and Inbox1. Set
+   `GROW_COMBINED_COHORT` to this cohort's selector from reviewed, landed
+   S2a; that selector is not implemented in this preparation head. Verify
+   the plan's exact pins before any provisioning. This follows adopted
+   planner decision `7e93abad`; it does not upgrade an earlier room.
 
    ```sh
-   node packages/cli/bin/dap.js install --plan "$GROW_SERVICE" --cohort device-application --host artifacts --namespace "$GROW_NAMESPACE"
+   node packages/cli/bin/dap.js install --plan "$GROW_SERVICE" --cohort "${GROW_COMBINED_COHORT:?Use the reviewed S2a combined cohort selector}" --host artifacts --namespace "$GROW_NAMESPACE"
    ```
 
    Proving read: retain the plan's original signed identity and confirm the
@@ -55,7 +60,7 @@ uses the verified references and selected nonsecret receipt fields.
 2. Finish that original install and claim the room as its operator.
 
    ```sh
-   node packages/cli/bin/dap.js install --planned --cohort device-application
+   node packages/cli/bin/dap.js install --planned --cohort "${GROW_COMBINED_COHORT:?Use the reviewed S2a combined cohort selector}"
    node packages/cli/bin/dap.js create grow-demo --handle @grow-operator
    ```
 
@@ -86,7 +91,7 @@ uses the verified references and selected nonsecret receipt fields.
 
    After an uncertain answer use the same original link with `--check`;
    preserve the kept request. Proving read: the admitted enrollment is under
-   Membership7, the key kind is agent, its member is `@grow-sensors`, that
+   Membership8, the key kind is agent, its member is `@grow-sensors`, that
    member's controller is the operator, and its inbox is active. Record public
    IDs, not the key or private link. This enrollment must precede application
    installation: G5a requires an existing active owner.
@@ -94,7 +99,7 @@ uses the verified references and selected nonsecret receipt fields.
 5. Repeat invitation and enrollment for `@grow-climate` in its own private
    config directory, with a different generated key and the same operator
    controller. Enroll both agents before installing the application. Read
-   the full MemberRefs and active keys, exact controllers and Membership7
+   the full MemberRefs and active keys, exact controllers and Membership8
    pin. The demo binds sensors, climate and operator as three distinct fixed
    parties; both agents use the native agent role. Its coarse actions are
    `grow.sense` and `grow.climate`, while demo guards restrict each writer
