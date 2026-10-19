@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0b9654b43122069b5a27b5a977791a1b099fe080","text":"Merge retired a covered predecessor; the successor is at examples/grow/check/fault-scenario.json."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0cd41b91935da3229c224489e8996f372913f589","text":"Merge retired a covered predecessor; the successor is at packages/platform/test/support-application-install.ts."}
