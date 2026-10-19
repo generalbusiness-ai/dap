@@ -1,7 +1,7 @@
 # The sequenced level and the order scope
 
-18 October 2026, draft 3. Design note for review; section 12 lists what
-changed after the checker's reviews of drafts 1 and 2. It decides two things
+18 October 2026, draft 4. Design note for review; section 12 lists what
+changed after the checker's reviews of drafts 1 to 3. It decides two things
 about what a scope's definition declares, and designs the runtime for the
 second.
 
@@ -233,25 +233,43 @@ position?: { at: FactRef };               // the order scope's entry that alloca
 reads?: readonly GroupReadUse[];          // one per `reads` entry; 5.5
 ```
 
-An entry with `position` is a **prepare entry**: it holds the whole
-judgment of the sequenced input (its `uses`, `reads`, `prepared`,
-`effects` and `sends`) and takes effect only through a later entry of
-this scope with one of two new inputs:
+A sequenced input that is applied writes two entries, with three new
+input kinds between them:
 
 ```ts
-| { type: "commit";  prepared: FactRef; resolution: FactRef }   // the prepare entry and the order scope's resolution of it
-| { type: "abandon"; prepared: FactRef; expiry: FactRef }       // the prepare entry and the order scope's expiry of its position
+| { type: "prepare"; input: Input; position: { at: FactRef }; reads: readonly GroupReadUse[] }   // the judgment; not an effective fact
+| { type: "commit";  input: Input; prepared: FactRef; resolution: FactRef }                       // the effective fact
+| { type: "abandon"; prepared: FactRef; expiry: FactRef }                                         // the prepare is void
 ```
 
-A commit entry has no effects or sends of its own; the fold applies the
-prepare entry's effects at the commit entry, and the outbox dispatches
-the prepare entry's sends from the commit. An abandon entry makes the
-prepare entry void. The position of a commit entry is its prepare
-entry's position. `uses` keeps its one domain, the canonical bytes of a
-foreign entry (`entry.ts:106`): the prepare entry cites the order scope's
-head entry the input read, each cut entry, and each `leave` entry a read
-rests on. The page a read saw is a second domain, `page`, cited from
-`reads` (5.5).
+The **prepare entry** wraps the original act or delivery input and holds
+the whole judgment: `uses`, `reads`, the rule answers in `prepared`, and
+the derived `effects` and `sends`. It is not an effective fact. Its
+input kind is `prepare`, which no index, receipt, settlement, delivery
+proof, `presents`, `fact` guard or genesis source accepts; a delivery
+whose source entry has the input kind `prepare` is refused
+`source-not-effective`, in the runtime and in replay, so the sends it
+holds can never be delivered from it.
+
+The **commit entry** is the one effective fact. It wraps the same
+original input, cites the prepare entry and the order scope's
+resolution, and carries the same `effects` and `sends`, byte for byte.
+The fold applies its effects; the fold's indexes of accepted act keys
+and decided deliveries (`packages/derive/src/fold.ts`) are keyed on the
+original input inside it, so a repeat of the intent or a duplicate of
+the delivery finds the commit; the signer's receipt names the commit; a
+send's `DeliveryCause` names the commit, which holds the send at its
+ordinal as the delivery contract requires (`docs/scopes.md`, Delivery);
+a child's genesis `source` is the commit, and the child's seed `cause`
+is the original input's digest as today. The position of a commit entry
+is its prepare entry's position. An **abandon entry** makes the prepare
+entry void: no effect, no send, no receipt.
+
+`uses` keeps its one domain, the canonical bytes of a foreign entry
+(`entry.ts:106`): the prepare entry cites the order scope's head entry
+the input read, each cut entry, and each `leave` entry a read rests on.
+The page a read saw is a second domain, `page`, cited from `reads`
+(5.5).
 
 ### 5.3 The order scope
 
@@ -263,7 +281,7 @@ A platform definition, `platform:order@1`, of a new scope kind `order`
 |---|---|---|
 | `group` (one) | `name`: text; `size`: int, 1 to 32, fixed; `lifetime`: int seconds, fixed; `creator`: scope, fixed | `forming` (initial), `open`, `closed` (final) |
 | `member` (many, max 32) | `name`: text, fixed; `scope`: scope reference with incarnation, fixed; `since`: int, fixed; `until`: int | `joined`, `left` (final) |
-| `allocation` (many) | `member`: member, fixed; `input`: digest, fixed; `opened`: time, fixed; `reason`: text | `open` (initial), `resolved` (final), `holed` (final), `expired` (final) |
+| `allocation` (many) | `member`: member, fixed; `input`: digest, fixed; `opened`: time, fixed; `expires`: time, fixed; `reason`: text | `open` (initial), `resolved` (final), `holed` (final), `expired` (final). `open` is a pending state that the resolution, hole and expiry each settle |
 
 | Act | Who | What it does |
 |---|---|---|
@@ -286,6 +304,16 @@ every member of a group was created by one scope in one room; membership
 across rooms and joining later are not provided (5.10). A member creation
 that fails leaves the group `forming`, where allocation is refused
 `order-forming`; an admin's `close` ends a group that never formed.
+
+**Capacity.** An allocation is new work: it opens an `allocation` in
+`open` with its `expires` deadline, so it reserves the one entry that
+ends it (`docs/scopes.md`, "Room to settle"; `packages/derive/src/reserve.ts`),
+and is refused `scope-full` when the two do not fit. The resolution, the
+hole and the expiry are the three settling entries of that pending
+state: each is written against that reservation and never asked whether
+it fits. The platform requests therefore consume the same duty the
+allocation reserved, and an order scope that admitted an allocation can
+always record its outcome.
 
 **Three platform requests.** Each is a platform request, as the
 authority read is: a member's object asks the order scope's object
@@ -338,16 +366,23 @@ act or handler is `sequenced`:
 1. Before the turn, each foreign entry the input names is fetched and
    checked, as today.
 2. The drain, as today.
-3. **Allocate.** The scope asks its order scope for a position P. No
-   answer within the limit: the turn ends `unavailable` with the reason
-   `order-unavailable`, nothing is written, and the sender keeps the
-   duty. A refusal: the input is refused with the order scope's reason.
+3. **Allocate.** The scope first asks `fits` whether a prepare entry,
+   its commit or abandon, and the settling entries its effects could
+   open would fit; if not, the input is refused `scope-full` and no
+   allocation is requested. It then asks its order scope for a position
+   P. No answer within the limit: the turn ends `unavailable` with the
+   reason `order-unavailable`, nothing is written, and the sender keeps
+   the duty. A refusal: the input is refused with the order scope's
+   reason.
    On an answer, the scope writes one bookkeeping row, **pending**, in
    the same storage as its journal: the input as received (the signed
    intent, or the delivery's envelope with its retained source entry),
    its digest, P and the allocation's fact. At most one pending row
    exists; a second sequenced input while one is pending is answered
-   `busy`.
+   `busy`. A repeat of the same intent or a duplicate of the same
+   delivery during the row or the fence is answered `busy` too; once
+   the commit exists, the fold's index answers it with the commit's
+   receipt.
 4. **Read.** The scope reads the order scope's journal through its head
    and, for each `reads` entry, computes the cut position and the
    member's finality at or below it (5.5). An allocation to the member at
@@ -363,10 +398,15 @@ act or handler is `sequenced`:
    pending row and writes nothing, as any refusal writes nothing
    (`docs/manual/ten-terms.md`, "takes effect"). An applied judgment: the
    scope writes the **prepare entry** (5.2) with `position`, its reads,
-   the rule answers, the derived effects and sends, and the capacity
-   reservation its effects need, and clears the pending row in the same
-   transaction. The prepare entry is the durable judgment: what it says
-   is what will take effect, or nothing.
+   the rule answers and the derived effects and sends, and clears the
+   pending row in the same transaction. The prepare entry is new work
+   and is asked whether it fits: it reserves its own settling entry, the
+   commit or abandon, and every settling entry the prepared effects
+   would need once in effect (a deadline's timed entry, a request's
+   result, a `settles` state's exit), computed from the derived effects.
+   If it does not fit, the input is refused `scope-full` and a hole is
+   recorded as for any refusal. The prepare entry is the durable
+   judgment: what it says is what will take effect, or nothing.
 7. **The fence.** From the prepare entry until its commit or abandon
    entry, the scope writes nothing else: every act and delivery is
    answered `busy`, and the drain is held. Nothing can therefore change
@@ -376,14 +416,19 @@ act or handler is `sequenced`:
    plus the scope's own resumption otherwise.
 8. **Resolve.** The scope asks the order scope to resolve P for this
    input with the prepare entry's fact. `resolved`: the scope writes the
-   commit entry citing the prepare entry and the resolution fact; the
-   prepared effects take effect and its sends are dispatched. `expired`:
-   the scope writes the abandon entry citing the prepare entry and the
-   expiry fact; the prepared judgment is void; the input is judged again
-   from step 3 with a new allocation, and an intent past its `notAfter`
-   is refused as any act is. No answer: the turn ends `unavailable` with
-   the reason `order-unavailable`, the fence stays, and the scope retries
-   on its own alarm.
+   commit entry (5.2) against the prepare's reservation; the effects
+   take effect, the reservation for their pending work transfers to
+   those states, the sends are dispatched from the commit, and the
+   signer receives the commit's receipt. `expired`: the scope writes the
+   abandon entry against the same reservation, releasing the rest; the
+   prepared judgment is void; the input is judged again from step 3 with
+   a new allocation, and an intent past its `notAfter` is refused as any
+   act is. No answer: the turn ends `unavailable` with the reason
+   `order-unavailable`, the fence stays, and the scope retries on its
+   own alarm. The commit and the abandon are settling entries and are
+   never asked whether they fit, so a prepared input can always be
+   ended, after an eviction and while other members use the remaining
+   capacity.
 
 **Restart and resume.** An object that restarts reads its head. A
 pending row with no prepare entry resumes at step 4. A prepare entry at
@@ -456,7 +501,10 @@ fixed. *Final*: committed, holed, expired or abandoned; nothing waits.
 So a reader waits at most the lifetime for an undetermined position and
 at most the member's own unavailability for a determined one. A member
 that never returns is unavailable, as a destroyed scope is, and replay
-reports its missing commit entry as `missing-dependency`.
+reports its missing commit entry as `missing-dependency`. Capacity is
+never the cause of a wait: the prepare reserved its commit or abandon,
+and the allocation reserved its outcome, so only an unavailable object
+delays a determined position.
 
 **Staleness.** A reader with no staleness waits for every allocation
 below P to be final. A reader with staleness s waits only for
@@ -499,11 +547,13 @@ never wait on each other.
 
 ### 5.6 What a sequenced input may do
 
-Everything its act or handler may do today, plus `reads`. Sends stay
-unordered deliveries; a `tell` to another member is judged in the
-member's own turn with its own position if its handler is sequenced.
-Effects change this scope's items only. Atomic change across members is
-not in this note (5.10).
+Everything its act or handler may do today, plus `reads`. Its effects
+and sends take effect at the commit entry (5.2) and keep their contract
+from there: a send is an unordered delivery whose cause names the
+commit; a `tell` to another member is judged in the member's own turn
+with its own position if its handler is sequenced; a `create` makes a
+child whose genesis source is the commit. Effects change this scope's
+items only. Atomic change across members is not in this note (5.10).
 
 ### 5.7 Leaving, and the fence
 
@@ -550,11 +600,16 @@ The verifier (`packages/replay`) checks:
   or below X or its genesis, or is null with a cited `leave` entry whose
   position is below X; and the retained page is byte for byte the fold
   of the member's journal through the cut entry for the declared range;
-- for each commit entry: the cited prepare entry is this scope's, the
-  order scope's resolution at that position names this member, this
-  input and the prepare entry's fact, hash included, and no other commit
-  cites the same prepare; nothing else was written between the prepare
-  and the commit;
+- for each commit entry: the cited prepare entry is this scope's and
+  wraps the same original input; the order scope's resolution at that
+  position names this member, this input and the prepare entry's fact,
+  hash included; the commit's effects and sends equal the prepare's byte
+  for byte; no other commit cites the same prepare; nothing else was
+  written between the prepare and the commit; and the prepare's
+  reservation covered the commit and the pending work the effects open;
+- for each delivery, genesis source, `presents` and `fact` operand that
+  names an entry of a sequenced scope: the named entry's input kind is
+  not `prepare`;
 - for each abandon entry: the cited allocation is `expired`, and
   nothing else was written between the prepare and the abandon;
 - a prepare entry at the head with neither is reported **pending**: a
@@ -585,6 +640,8 @@ delivery, are assigned at admission and are inputs to the judgment.
 | `reads` per input | 4 | Four fetches before a turn, as `presents` allows four facts |
 | Items per read | 64 | The list bound of the contract's revision 19 |
 | Pending rows per scope | 1 | One sequenced input at a time |
+| Reserved by a prepare | its commit or abandon, plus the settling entries its effects open | "Room to settle"; the prepare is new work, the commit and abandon are settling entries |
+| Reserved by an allocation | its resolution, hole or expiry | The `open` state's one settling entry |
 | Group lifetime | 1 minute to 30 days, required | The bound on an unresolved position; the package declares it |
 | Entries per sequenced input | 2 in the order scope (allocation; resolution or hole) and 2 in the member (prepare; commit or abandon) for an applied input; 1 in the order scope for a refused one; an expiry adds 1 | 5.3 and 5.4 |
 | Order scope capacity | As any scope's | Bounds the group's lifetime count of sequenced inputs; `scope-full` refuses an allocation |
@@ -609,13 +666,22 @@ scopes in a group (open point O3); a barrier of any kind, by design.
 Draft 1 gave handlers a `lag` guard. The review found that it conflated a
 guard refusal, which writes no entry and runs no effect, with
 conditional effects, which belong to an applied entry. The bound is now
-the `late` form of the application packages note, section 4.1: either
-`"refuse"`, a guard refusal with a reason and nothing written, or a
-branch that applies instead of the handler when the source entry's time
-plus `within` is before the commit's clock reading, with the entry
-applied and marked `late`. Never both for one delivery. The `EntryPart`
-`"time"` and the operand `{ source: "time" }` stay, since the form reads
-them. Slice S1 builds the form from that section.
+the `late` form of the application packages note, section 4.1:
+
+```ts
+late?: { within: { seconds: number }; reason: string; then?: { effects?: EffectForm[]; sends?: SendForm[]; attention?: AttentionForm[] } };
+```
+
+The bound and the reason are always present. A delivery is late when the
+source entry's time plus `within` is strictly before the commit's clock
+reading. Late with no `then`: refused with the reason, nothing written.
+Late with `then`: the branch applies instead of the handler, the entry
+is applied and marked `late`. Never both. The judgment order is
+dispatch, `spacing`, `late`, guards; `late` judges a time, so
+`clock-behind` applies. The `EntryPart` `"time"` and the operand
+`{ source: "time" }` stay, since the form reads them. Slice S1 builds
+the form from that section, as asserts b53643f2 and d66ec837 on S1
+state.
 
 ### 6.2 Source order for `tell` handlers
 
@@ -700,7 +766,20 @@ a consistent view, not for allocation. The witness shows five things:
   one above it reads the empty page; a `close` with an open allocation
   is refused;
 - source order (6.2): the lower-first run applies both deliveries and
-  the higher-first run supersedes one.
+  the higher-first run supersedes one;
+- the effective fact (5.2): the owner's sequenced `spend` sends a `tell`
+  and creates a child; the receiver verifies the delivery and the child
+  verifies its source only against the commit entry; a delivery that
+  cites the prepare entry is refused `source-not-effective` before the
+  commit and after an abandon; the signer's receipt and a repeat of the
+  intent name the commit; a duplicate of the original delivery during
+  the fence is `busy` and after the commit is answered from the index;
+- capacity (5.3, 5.4): at the journal limit a sequenced act is refused
+  `scope-full` before any allocation; a prepared act commits after an
+  eviction while another member fills the remaining free capacity; an
+  order scope at its limit refuses a new allocation `scope-full` and
+  still records the resolution, the hole and the expiry of the
+  allocations it admitted.
 
 ## 8. Changes to existing documents
 
@@ -725,11 +804,11 @@ M2a in plan 033.
 
 | Slice | What | Needs | Done when | Size |
 |---|---|---|---|---|
-| S1 | The `late` form (packages note 4.1, per 6.1) and source order (6.2): contract, validator, derive, scope, replay, tests | nothing | a handler with `late.within` applies the branch to an old delivery and the handler to a fresh one, the entry marked; `late: "refuse"` refuses with the reason; a `source`-ordered handler applies both deliveries in the lower-first run and supersedes the lower one in the higher-first run, with the applied pairs strictly increasing in each; all replay | 1 day |
+| S1 | The `late` form (packages note 4.1, per 6.1) and source order (6.2): contract, validator, derive, scope, replay, tests | nothing | a late delivery with `then` takes the branch and a fresh one the handler, the entry marked; a late delivery with no `then` is refused with the reason; each with fresh, boundary and late deliveries and a `clock-behind` control; a `source`-ordered handler applies both deliveries in the lower-first run and supersedes the lower one in the higher-first run, with the applied pairs strictly increasing in each; all replay | 1 day |
 | S2 | The archive as a binding (section 4): the `archived` literal withdrawn, the directory slot and `bind-archive`, the claim field, the manifest requirement and the install refusal, the archiver's target step | this note approved | a room bound at its claim archives its platform scopes and an installed package's scopes; a room bound later archives them from position 0; a package that requires the archive is refused in an unbound room | 1 to 2 days; before plan 033's slice 9 |
-| S3 | The contract of the sequenced level (5.2): the level, the mark, `reads` with `staleness`, the `read` operand, `position` and `reads` in the entry, the three order inputs, the retained kind `page`, the `order` kind, and the validator | this note approved; M2a's package format, for groups in the manifest | the validator admits a sequenced definition and refuses each misuse named in 5.2 | 1 day |
-| S4 | The order scope and the sequenced turn (5.3 to 5.7): `platform:order@1` with its items, acts, three requests and expiry; bootstrap by enrolment; the pending row, the prepare entry, the fence, the commit and abandon entries, and resume; the cut, finality and the `at` read; `leave` and `close` | S3 | the two-scope witness of section 7 runs in memory and on native storage with every check of its list | 4 to 5 days |
-| S5 | Replay and archive of a group (5.8, 4.2): the four answers, the page witness, the commit and abandon checks, the order scope's ref in a clone | S4, A2 and A3 | the witness's journals and order scope replay from a clone; a tampered position, a page that differs, an `open` allocation below a cited cut, a resolution naming another hash, and an entry inside a fence are each a mismatch; a prepare at the head is `pending`; a missing order journal or commit entry is `missing-dependency` | 1 day |
+| S3 | The contract of the sequenced level (5.2): the level, the mark, `reads` with `staleness`, the `read` operand, the `prepare`, `commit` and `abandon` input kinds, the three order inputs, the retained kind `page`, the `order` kind, the reservation rules of 5.3 and 5.4 in derive, and the validator | this note approved; M2a's package format, for groups in the manifest | the validator admits a sequenced definition and refuses each misuse named in 5.2; `owed` and `fits` count a prepare, an allocation and their settlements as 5.3 and 5.4 say | 1 to 2 days |
+| S4 | The order scope and the sequenced turn (5.3 to 5.7): `platform:order@1` with its items, acts, three requests and expiry; bootstrap by enrolment; the pending row, the prepare entry, the fence, the commit and abandon entries, and resume; the fold's indexes, receipts, settlement and the delivery proof on the commit entry; the cut, finality and the `at` read; `leave` and `close` | S3 | the two-scope witness of section 7 runs in memory and on native storage with every check of its list | 5 days |
+| S5 | Replay and archive of a group (5.8, 4.2): the four answers, the page witness, the commit and abandon checks, the effective-fact and reservation checks, the order scope's ref in a clone | S4, A2 and A3 | the witness's journals and order scope replay from a clone; a tampered position, a page that differs, an `open` allocation below a cited cut, a resolution naming another hash, and an entry inside a fence are each a mismatch; a prepare at the head is `pending`; a missing order journal or commit entry is `missing-dependency` | 1 day |
 | S6 | Documents (section 8) | S2, S4 | the contract, the guide, the roadmap and the archive note say what the runtime does | with S2 and S4 |
 
 ## 10. Decisions
@@ -754,8 +833,9 @@ M2a in plan 033.
    unresolved position expires into a hole after the group's lifetime by
    the order scope's own timed rule; a hole never gains a commit.
    Planner, draft 2.
-8. Deliveries, sends and effects are unchanged. A group orders reads; it
-   does not make a transaction. Planner.
+8. Deliveries, sends and effects keep their contract, with the commit
+   entry as the effective fact. A group orders reads; it does not make a
+   transaction. Planner, draft 4.
 9. The name is "sequenced". Planner.
 10. A member writes its judgment as a prepare entry, has the order
     scope's resolution bind that entry's hash, and only then writes the
@@ -782,6 +862,14 @@ M2a in plan 033.
     draft 3.
 18. Source order is suppression of an older delivery that arrives after
     a newer one, not a latest-value guarantee. Planner, draft 3.
+19. The commit entry is the one effective fact of a sequenced input:
+    indexes, receipts, settlement, delivery causes, genesis sources and
+    fact operands name it, and a prepare entry is accepted by none of
+    them. Planner, draft 4.
+20. A prepare reserves its commit or abandon and the settlement of the
+    pending work its effects open; an allocation reserves its outcome;
+    the commit, abandon, resolution, hole and expiry are settling
+    entries. Planner, draft 4.
 
 ## 11. Open points
 
@@ -797,7 +885,15 @@ M2a in plan 033.
 | O8 | The `page` kind's byte bound, and whether a page is shared across readers of one cut | 64 items by the member's slot types; one retained copy per reader's scope |
 | O9 | Whether a reader may fold a member's resolved but uncommitted prepare entry itself, from the two journals, so that `behind` disappears | Not in the first version: a member's own state must come from its own journal, and the commit entry is what makes the prepare effective there. Revisit after S4's measurements |
 
-## 12. Changes in drafts 2 and 3
+## 12. Changes in drafts 2 to 4
+
+**Draft 4**, after review 47cd6158 of head f019da60:
+
+| Finding | Where answered |
+|---|---|
+| F1, P1: the prepare and commit had no effective-fact model; a prepare could pass for an applied fact | 5.2 the `prepare`, `commit` and `abandon` input kinds, the commit as the one effective fact, `source-not-effective`; 5.4 step 8 and the repeat and duplicate rule; 5.6; 5.8 the effective-fact checks; decision 19; the effective-fact witness in section 7; S3 to S5 |
+| F2, P1: the prepare reserved only its effects, not its settlement; allocations' outcomes were unreserved | 5.3 the allocation's `expires` deadline reserves its outcome and the three requests settle it; 5.4 steps 3, 6 and 8 reserve, transfer and release; 5.5 capacity is never the cause of a wait; 5.9 rows; decision 20; the capacity witness in section 7; S3 |
+| F3, P2: 6.1 and S1 still used `late: "refuse"` | 6.1 restated with the amended form and the asserts b53643f2 and d66ec837; S1's row |
 
 **Draft 3**, after review a98cca3e of head 66439e2a:
 
