@@ -7,6 +7,9 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Input, SendForm } from "@generalbusiness/dap-contract";
 import { canonicalize, utf8 } from "@generalbusiness/artroom-bytes";
 import { variant } from "@generalbusiness/dap-derive/testing";
+import { outcomeValueDomains, validateDefinition } from "@generalbusiness/dap-derive";
+import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
+import { COUNTING_COHORT, platform } from "@generalbusiness/dap-platform";
 import { ArchiveBudget } from "../src/archive-budget.ts";
 import { buildJournalArchive, journalRef, JournalWork } from "@generalbusiness/artroom-git/journal";
 import { JournalObjectReader, JournalObjects } from "../../git/src/journal-objects.ts";
@@ -16,6 +19,7 @@ import { ArchiveRows } from "../src/archive-row.ts";
 import type { FixtureArchiveProvider } from "../src/archive-driver.ts";
 import { archiveRepository, archiveSql } from "./support/archive.ts";
 import { fixtureArchiveWiring } from "./worker.ts";
+import { sessionRoom } from "./support/session-room.ts";
 import { namespace } from "../src/namespace.ts";
 import { ArchiveForeignMetadata } from "../src/archive-foreign.ts";
 import { archiveInput } from "../src/archive-input.ts";
@@ -264,4 +268,35 @@ test("native alarm stops a marked foreign archive after source configuration dis
   expect(stopped.pending).toEqual(marked.pending); expect(mints).toBe(1); expect(sends).toBe(0);
   expect(await f.consumer.inside(state => state.storage.getAlarm())).toBeNull();
   expect(await f.consumer.head()).toEqual(before);
+});
+
+test("a genuine legacy membership copy refuses before body selection despite fixture identity and caller policy", async () => {
+  const { life, children } = await sessionRoom(COUNTING_COHORT.register), membership = children[0]!;
+  try {
+    const seq = await life.wait(() => membership.did(rita, "seat", { expected: { roster: 1 } }));
+    const sourceAt = await life.wait(() => membership.at()), source = await life.wait(() => membership.stub.entry(reader, seq)), birth = await life.wait(() => membership.stub.entry(reader, 0));
+    expect(source.ok && birth.ok).toBe(true); if (!source.ok || !birth.ok) return;
+    const accepting = variant(receiver.declared, data => { data.acts.remark.fields.proof.kind = ["seat"]; data.acts.remark.fields.proof.under = "platform:membership"; });
+    const consumer = await create({}, {}, accepting);
+    wired.set(consumer.name, () => ({ resolver: namespace(env.PLATFORM).resolver }));
+    try {
+      await consumer.restart();
+      await consumer.did(rita, "remark", { on: 0, fields: { text: "real legacy member source", proof: { at: sourceAt, seq, hash: source.value.hash } } });
+    } finally { wired.delete(consumer.name); }
+    const sources = new FixtureArchiveSourcePins([{ at: sourceAt, birth: { bytes: canonicalize(birth.value.entry), hash: birth.value.hash } }], PROPOSED_BOUNDS, new ArchiveBudget());
+    const native = platform(COUNTING_COHORT.membership)!;
+    const checked = validateDefinition(native.data, PROPOSED_BOUNDS, RULE_PROFILES, { platform: true, outcomeValues: outcomeValueDomains(native.data, native.rules) });
+    expect(checked.ok).toBe(true); if (!checked.ok) return;
+    const policies: ArchivePolicyRegistry = new Map([[accepting.digest, policy(accepting)], [COUNTING_COHORT.membership, { review: "TEST caller policy cannot override excluded credential cohort", entryTypes: variants,
+      support: { named: COUNTING_COHORT.membership, definition: checked.definition, owners: new Map(), records: new Map(), preparations: new Map() } }]]);
+    const through = await consumer.head();
+    await consumer.inside(state => {
+      const bodies: string[] = [];
+      const result = inventoryArchive({ exec(query, ...args) {
+        if (query.startsWith("SELECT bytes FROM entry") || query.startsWith("SELECT bytes FROM retained_input") && args[0] !== "definition") bodies.push(query);
+        return state.storage.sql.exec(query, ...args);
+      }, transaction: work => state.storage.transactionSync(work) }, consumer.at, through, PROPOSED_BOUNDS, policies, new ArchiveBudget(), sources);
+      expect(result).toEqual({ ok: false, reason: "unsupported-credential-cohort" }); expect(bodies).toEqual([]);
+    });
+  } finally { life.release(); }
 });

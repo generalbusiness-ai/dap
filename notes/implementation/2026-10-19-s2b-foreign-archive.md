@@ -388,3 +388,16 @@ stands in for host custody and writes no journal entry. Original 73312
 exit 0, two cases, 259 ms tests/2.87 s overall, in
 `/tmp/artroom-s2b-foreign-parent-basis-owning-20261019.log`; source/test
 compiler passes in `...foreign-parent-basis-types...log`.
+
+The foreign-copy path also preserves the credential-cohort exclusion. A
+real native Counting repository creates membership version 5 and accepts
+its `seat` act. A real namespace read lets a separate fixture consumer
+retain that fact through an accepted act. Actual native birth metadata and
+an explicit caller policy still cannot admit the excluded membership pin:
+inventory returns `unsupported-credential-cohort` before any local entry or
+retained payload body. Neither journal is edited. The host, clock, setup
+reader, consumer authority and proposed review policy are TEST fixtures;
+membership creation and the retained fact are native. Original 66352
+exit 0, one case, 189 ms tests/2.85 s overall, in
+`/tmp/artroom-s2b-foreign-legacy-owning-20261019.log`; source/test compiler
+passes in `...foreign-legacy-types...log`.
