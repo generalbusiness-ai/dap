@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c14725c7370be0df422d2d4458be2b94d4a9e7bd","text":"Closed 19 October: answered by planner assert c6c2a0fa; nothing further owed."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:7346e82fa1cba1701660f665386597168cc25197","text":"Closed 19 October: answered by planner assert 1fd1e4c5 and tracked as request 1d3a13e3 (gate stability under load); nothing further owed here."}
