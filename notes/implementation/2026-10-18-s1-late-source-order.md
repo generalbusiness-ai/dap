@@ -10,8 +10,8 @@ source-order/source-time child is request `0a66c7072fcddeda1e483f7df78051480bf55
 promise `9f3dc1b5b8fac97d054c9736eee14747e650268f`. Earlier child attempt
 `79a5a3b5` was ineffective because the promise alone carried no inheritable
 target; the effective request also rests on the parent request. The parent
-stays open for the late form. This is a progress note, not a gate, review
-or completion claim.
+stays open for the late form. This note records the child's exact gate
+evidence. Checker review and landing remain separate; parent S1 is not complete.
 
 ## Current source-order behavior
 
@@ -81,7 +81,7 @@ journal additions, all three owning package typechecks pass in
 `/tmp/artroom-s1-dap-derive-type-time-native-20261018.log`,
 `/tmp/artroom-s1-artroom-scope-type-time-native-20261018.log` and
 `/tmp/artroom-s1-artroom-replay-type-time-native-20261018.log`.
-The first gate failed, as recorded below; a corrected gate remains required.
+The first gate failed; the corrected gate below passes.
 
 Dependencies are a private APFS COW copy of the owned G1 view: 106 versions,
 13 workspace links inside this checkout and zero installs. Only this copy's
@@ -93,8 +93,9 @@ This checks versions and links, not tarball integrity.
 
 ## Late-refusal clarification
 
-Clarification request `0784600e23323634638dd7b07197c4b2dee37f74` is with
-planner. The approved note says late without a branch writes nothing and
+At implementation start, clarification request
+`0784600e23323634638dd7b07197c4b2dee37f74` was with planner.
+The approved note says late without a branch writes nothing and
 fires the sender's refused clause. Today a verified request refusal writes
 the decision and exactly one authenticated result send. A non-writing
 delivery refusal maps to retry/unavailable and cannot fire that clause.
@@ -136,3 +137,34 @@ passing gate or total edit cost. The machine was shared arm64 macOS 27.0.1,
 starting load 1.65 / 1.74 / 1.79, with the warm private COW dependency view.
 Other G1 browser work ran concurrently; this was not exclusive CPU or a heap
 measurement. Installs were skipped against the unchanged audited lock.
+
+## Corrected gate and review boundary
+
+The corrected gate passes at clean `b44a8e255c36dd4654e07c6cc406d3633b5805ba`,
+tree `f2f45bc1d73a76e06c91557fbf612c605b02e8d5`. Original PTY 59168 terminated
+at `4f4b19`, exit 0: 387 Vitest files / 1,874 cases pass; one file / three
+cases skip; chained Node 31 and Counter 55 pass. Log
+`/tmp/artroom-s1-source-order-gate-corrected-20261018.log`, raw directory
+`/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.Hj1O6L6CX0/`,
+outer time `/tmp/artroom-s1-source-order-gate-corrected-outer-20261018.time`.
+Typechecking took 8.2 s elapsed / 31.4 s CPU; tests 472.8 s / 644.4 s.
+The measured outer gate took 481.25 s elapsed / 676.04 s CPU
+(578.57 user + 97.47 system). The shared arm64 macOS 27.0.1 host started at
+load 1.24 / 2.43 / 2.49. The private COW view was warm after the failed
+attempt and focused correction; independent G1 work ran concurrently.
+These are gate costs, not exclusive CPU, heap or total edit-cost figures.
+The earlier Lending mismatch remains qualified evidence, not a claimed fix.
+
+Only this note changes after that passing code/test head. Per
+`docs/testing.md`, the gate is not repeated for a documentation-only evidence
+commit. The review candidate and tree are named by its filed artifacts and
+review request. Its scope is source order plus the authenticated source-time
+operand, not the late form or the whole parent.
+
+Planner decision `a692fd0d` subsequently resolves the late wording: ordinary
+authenticated refusal entry/result, new code `late` with the declared name,
+and clock-behind before any entry. Builder ratified it at `5a8f1709`.
+The late form proceeds independently under child request `4353d842`, promise
+`6201d371`, in a different checkout based initially on this unlanded source
+candidate. That checkout does not change this review's source or evidence,
+and its unreviewed late behavior is not covered by this gate.
