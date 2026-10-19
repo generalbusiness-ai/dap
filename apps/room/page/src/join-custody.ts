@@ -1,8 +1,9 @@
 import { isInvitationRedemptionFields } from "@generalbusiness/artroom-client";
 /** One bounded origin-private enrollment slot. Page's existing raw-key policy remains. */
 import type { Answer, KeyId, Receipt } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, intentDigest, isHead, isReceipt, isRecord, isScopeId, isScopeRef, isSignedIntentShape, keyIdOfSecret, unb64url, utf8, verifySignedIntent } from "@generalbusiness/artroom-bytes";
+import { b64url, canonicalize, intentDigest, isHead, isReceipt, isScopeId, isScopeRef, isSignedIntentShape, keyIdOfSecret, unb64url, verifySignedIntent } from "@generalbusiness/artroom-bytes";
 import type { Fetch } from "@generalbusiness/artroom-client";
+import { closedCustodyRecord as closed, custodyKind } from "./custody.ts";
 import { invitationTarget, prepareJoin, settleJoin, submitJoin, verifyJoinReceipt, type Place, type PreparedJoin, type Session } from "./data.ts";
 
 export interface JoinStorage { getItem(key: string): string | null; setItem(key: string, value: string): void }
@@ -14,20 +15,9 @@ interface PriorRefusal { prepared: PreparedJoin; refusal: Extract<Answer, { answ
 interface RecordJoin { history?: PriorRefusal[]; v: 1; origin: string; secret: string; prepared: PreparedJoin; phase: OriginalJoin["status"]; receipt?: Receipt; refusal?: Extract<Answer, { answer: "refused" }> }
 const MOST = 64 * 1024, MAX_REFUSALS = 8;
 const error = () => new Error("The original private enrollment is unavailable or no longer current. Nothing was replaced.");
-const closed = (value: unknown, required: string[], optional: string[] = []): value is Record<string, unknown> => isRecord(value) && required.every(k => Object.hasOwn(value, k)) && Object.keys(value).every(k => required.includes(k) || optional.includes(k));
-function originOf(origin: string): void {
-  const url = new URL(origin);
-  const browser = globalThis as { location?: { origin: string } };
-  if (url.origin !== origin || !["https:", "http:"].includes(url.protocol) || browser.location && browser.location.origin !== origin) throw error();
-}
-const storageKey = (origin: string) => `artroom-page-enrollment:${origin}`;
-function read(origin: string, storage: JoinStorage): RecordJoin | null {
-  originOf(origin);
-  const raw = storage.getItem(storageKey(origin));
-  if (raw === null) return null;
+function decode(raw: string, origin: string): RecordJoin {
   let seed: Uint8Array | null = null;
   try {
-    if (utf8(raw).length > MOST) throw error();
     const row: unknown = JSON.parse(raw);
     if (!closed(row, ["v", "origin", "secret", "prepared", "phase"], ["receipt", "refusal", "history"]) || row["v"] !== 1 || row["origin"] !== origin || typeof row["secret"] !== "string" || !["prepared", "unknown", "refused", "verified"].includes(String(row["phase"]))) throw error();
     seed = unb64url(row["secret"]);
@@ -52,18 +42,6 @@ function read(origin: string, storage: JoinStorage): RecordJoin | null {
     return row as unknown as RecordJoin;
   } catch { throw error(); } finally { seed?.fill(0); }
 }
-function current(options: JoinOptions): void { if (options.current?.() === false) throw error(); }
-function write(row: RecordJoin, storage: JoinStorage, options: JoinOptions): RecordJoin {
-  current(options);
-  const raw = canonicalize(row);
-  if (utf8(raw).length > MOST) throw error();
-  // Validate the candidate before touching the retained original slot.
-  read(row.origin, { getItem: () => raw, setItem: () => { throw error(); } });
-  storage.setItem(storageKey(row.origin), raw);
-  if (storage.getItem(storageKey(row.origin)) !== raw) throw error();
-  current(options);
-  return read(row.origin, storage)!;
-}
 function locked<T>(origin: string, options: JoinOptions, work: () => Promise<T>): Promise<T> {
   if (options.lock) return options.lock.run(work);
   if (typeof navigator === "undefined" || !navigator.locks) throw new Error("Private enrollment locking is unavailable. Nothing was submitted.");
@@ -74,7 +52,12 @@ function publicOf(row: RecordJoin): OriginalJoin {
   try { return { status: row.phase, key: keyIdOfSecret(seed), place: structuredClone(row.prepared.place), handle: row.prepared.handle }; }
   finally { seed.fill(0); }
 }
-export function originalJoin(origin: string, storage: JoinStorage): OriginalJoin | null { const row = read(origin, storage); return row ? publicOf(row) : null; }
+const custody = custodyKind<RecordJoin, OriginalJoin>({
+  kind: "join", prefix: "artroom-page-enrollment", most: MOST, sameOrigin: true,
+  unavailable: error, bindingOf: row => row.origin, decode, publicOf
+});
+const { read, write, current, originOf } = custody;
+export function originalJoin(origin: string, storage: JoinStorage): OriginalJoin | null { return custody.original(origin, storage); }
 function sessionOf(row: RecordJoin, options: JoinOptions): Session { return { service: row.origin, secret: unb64url(row.secret)!, ...(options.fetch ? { fetch: options.fetch } : {}), ...(options.now ? { now: options.now } : {}) }; }
 const unknown = (row: RecordJoin, reason: string): JoinResult => ({ ...publicOf(row), status: "unknown", reason });
 async function checked(row: RecordJoin, storage: JoinStorage, options: JoinOptions): Promise<JoinResult> {

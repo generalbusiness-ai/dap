@@ -1,8 +1,9 @@
 /** Page raw-key custody for one explicit demo Start. The claim journal alone
  * retains signed stages and the separate internal recovery key. */
 import type { KeyId } from "@generalbusiness/dap-contract";
-import { b64url, canonicalize, isRecord, isScopeRef, keyIdOfSecret, unb64url, utf8 } from "@generalbusiness/artroom-bytes";
+import { b64url, canonicalize, isRecord, isScopeRef, keyIdOfSecret, unb64url } from "@generalbusiness/artroom-bytes";
 import { isCreationOffer, type CreationOffer, type Fetch } from "@generalbusiness/artroom-client";
+import { custodyKind } from "./custody.ts";
 import { claimRoom, claimStatus, type ClaimOptions, type ClaimRegister, type ClaimStorage, type ClaimedRoom } from "./claim.ts";
 
 interface KeptStart { v: 1; origin: string; secret: string; configured: ClaimRegister; label: string; handle: "@founder"; operation?: string; recoverySaved?: true }
@@ -15,20 +16,10 @@ export interface StartOptions extends Pick<ClaimOptions, "locks" | "current" | "
   now?: () => number;
 }
 export interface StartedRoom extends ClaimedRoom { key: KeyId; configured: ClaimRegister; handle: "@founder"; /** Private verified-settings handoff only. */ secret?: Uint8Array }
-const keyOf = (origin: string) => `artroom-page-start:${origin}`;
 const unavailable = () => new Error("The original private Start key or claim is unavailable. Nothing was replaced or submitted.");
-function originOf(origin: string): void {
-  const url = new URL(origin);
-  const browser = globalThis as { location?: { origin: string } };
-  if (url.origin !== origin || !["https:", "http:"].includes(url.protocol) || browser.location && browser.location.origin !== origin) throw unavailable();
-}
-function read(origin: string, storage: ClaimStorage): KeptStart | null {
-  originOf(origin);
-  const raw = storage.getItem(keyOf(origin));
-  if (raw === null) return null;
+function decode(raw: string, origin: string): KeptStart {
   let secret: Uint8Array | null = null;
   try {
-    if (utf8(raw).length > 4096) throw unavailable();
     const row: unknown = JSON.parse(raw);
     if (!isRecord(row) || !Object.keys(row).every(key => ["v", "origin", "secret", "configured", "label", "handle", "operation", "recoverySaved"].includes(key)) || row["v"] !== 1 || row["origin"] !== origin || row["handle"] !== "@founder" || typeof row["label"] !== "string" || !row["label"].trim() || row["label"].length > 256 || typeof row["secret"] !== "string") throw unavailable();
     if (row["operation"] !== undefined && (typeof row["operation"] !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(row["operation"]))) throw unavailable();
@@ -41,16 +32,6 @@ function read(origin: string, storage: ClaimStorage): KeptStart | null {
   } catch { throw unavailable(); }
   finally { secret?.fill(0); }
 }
-function current(options: StartOptions): void { if (options.current?.() === false) throw unavailable(); }
-function save(row: KeptStart, storage: ClaimStorage, options: StartOptions): KeptStart {
-  current(options);
-  const bytes = canonicalize(row);
-  read(row.origin, { getItem: () => bytes, setItem: () => { throw unavailable(); } });
-  storage.setItem(keyOf(row.origin), bytes);
-  if (storage.getItem(keyOf(row.origin)) !== bytes) throw unavailable();
-  current(options);
-  return read(row.origin, storage)!;
-}
 function publicOf(row: KeptStart, storage: ClaimStorage): StartStatus {
   const secret = unb64url(row.secret)!;
   try {
@@ -61,10 +42,12 @@ function publicOf(row: KeptStart, storage: ClaimStorage): StartStatus {
     return { key: keyIdOfSecret(secret), configured: structuredClone(row.configured), label: row.label, handle: row.handle, state: status?.state ?? "prepared", ...(status ? { operation: status.operation } : {}), ...(row.recoverySaved ? { recoverySaved: true } : {}) };
   } finally { secret.fill(0); }
 }
-export function originalStart(origin: string, storage: ClaimStorage): StartStatus | null {
-  const row = read(origin, storage);
-  return row ? publicOf(row, storage) : null;
-}
+const custody = custodyKind<KeptStart, StartStatus>({
+  kind: "start", prefix: "artroom-page-start", most: 4096, sameOrigin: true,
+  unavailable, bindingOf: row => row.origin, decode, publicOf
+});
+const { read, write: save, current, originOf, keyOf } = custody;
+export function originalStart(origin: string, storage: ClaimStorage): StartStatus | null { return custody.original(origin, storage); }
 export async function startRoom(origin: string, storage: ClaimStorage, options: StartOptions): Promise<StartedRoom> {
   originOf(origin);
   const browser = globalThis as { navigator?: { locks?: import("./claim.ts").ClaimLocks } };

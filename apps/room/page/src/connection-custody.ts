@@ -6,6 +6,7 @@ import { issueInvitation, isInvitationIssueInput, type Config, type Store, type 
 import { openRoom, type Room } from "./data.ts";
 import { startRoom, originalStart, recoveryKeyOnce, type StartOptions } from "./start-custody.ts";
 import type { ClaimStorage } from "./claim.ts";
+import { custodyKind } from "./custody.ts";
 
 export interface CreatorBinding { key: KeyId; operation: string; membership: ScopeRef }
 export interface ConnectionOptions extends Pick<StartOptions, "locks" | "current" | "fetch" | "now" | "pause" | "tries"> { mode: "new" | "check" | "continue" }
@@ -16,44 +17,36 @@ const MOST = 256 * 1024, MAX_OPERATIONS = 16;
 const uuid = (value: unknown): value is string => typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(value);
 const unavailable = () => new Error("The original private connection is unavailable or changed. Nothing was replaced or submitted.");
 const bindingOf = (origin: string, expected: CreatorBinding) => canonicalize([origin, expected.membership, expected.key, expected.operation]);
-const storageKey = (binding: string) => `artroom-page-connections:${binding}`;
-function read(storage: ClaimStorage, binding: string): Journal | null {
-  const bytes = storage.getItem(storageKey(binding));
-  if (bytes === null) return null;
-  try {
-    if (utf8(bytes).length > MOST) throw unavailable();
-    const journal: unknown = parseStrict(bytes);
-    if (!isRecord(journal) || Object.keys(journal).sort().join(",") !== "active,binding,rows,v" || journal["v"] !== 1 || journal["binding"] !== binding || !uuid(journal["active"]) || !isRecord(journal["rows"]) || Object.keys(journal["rows"]).length > MAX_OPERATIONS || !Object.hasOwn(journal["rows"], journal["active"])) throw unavailable();
-    for (const [operation, row] of Object.entries(journal["rows"])) {
-      if (!uuid(operation) || !isRecord(row) || row["operation"] !== operation || !Object.keys(row).every(k => ["operation", "input", "state", "config", "private", "reason"].includes(k)) || !["reserved", "entered", "prepared", "unknown", "refused", "verified"].includes(String(row["state"])) || !isInvitationIssueInput(row["input"]) || !isRecord(row["config"]) || !isRecord(row["private"]) || Object.entries(row["private"]).some(([name, value]) => !/^[A-Za-z0-9._-]{1,160}$/.test(name) || typeof value !== "string") || row["reason"] !== undefined && typeof row["reason"] !== "string") throw unavailable();
-      // Once the workflow has been entered, absent private custody must never
-      // be reinterpreted as a fresh operation. The shared helper validates its
-      // own pointer/digest/input/stages before any Check or Continue.
-      if (row["state"] !== "reserved" && !row["config"]["invitationIssue"]) throw unavailable();
-      const pointer = row["config"]["invitationIssue"];
-      const context = parseStrict(binding) as readonly unknown[];
-      if (pointer !== undefined && (!isRecord(pointer) || Object.keys(pointer).sort().join(",") !== "actor,digest,membership,operation,request" || pointer["operation"] !== operation || !isDigest(pointer["digest"]) || canonicalize(pointer["membership"]) !== canonicalize(context[1]) || pointer["actor"] !== context[2] || typeof pointer["request"] !== "string" || !Object.hasOwn(row["private"], pointer["request"]))) throw unavailable();
-    }
-    if (canonicalize(journal) !== bytes) throw unavailable();
-    return journal as unknown as Journal;
-  } catch { throw unavailable(); }
+function decode(bytes: string, binding: string): Journal {
+  const journal: unknown = parseStrict(bytes);
+  if (!isRecord(journal) || Object.keys(journal).sort().join(",") !== "active,binding,rows,v" || journal["v"] !== 1 || journal["binding"] !== binding || !uuid(journal["active"]) || !isRecord(journal["rows"]) || Object.keys(journal["rows"]).length > MAX_OPERATIONS || !Object.hasOwn(journal["rows"], journal["active"])) throw unavailable();
+  for (const [operation, row] of Object.entries(journal["rows"])) {
+    if (!uuid(operation) || !isRecord(row) || row["operation"] !== operation || !Object.keys(row).every(k => ["operation", "input", "state", "config", "private", "reason"].includes(k)) || !["reserved", "entered", "prepared", "unknown", "refused", "verified"].includes(String(row["state"])) || !isInvitationIssueInput(row["input"]) || !isRecord(row["config"]) || !isRecord(row["private"]) || Object.entries(row["private"]).some(([name, value]) => !/^[A-Za-z0-9._-]{1,160}$/.test(name) || typeof value !== "string") || row["reason"] !== undefined && typeof row["reason"] !== "string") throw unavailable();
+    // Once the workflow has been entered, absent private custody must never
+    // be reinterpreted as a fresh operation. The shared helper validates its
+    // own pointer/digest/input/stages before any Check or Continue.
+    if (row["state"] !== "reserved" && !row["config"]["invitationIssue"]) throw unavailable();
+    const pointer = row["config"]["invitationIssue"];
+    const context = parseStrict(binding) as readonly unknown[];
+    if (pointer !== undefined && (!isRecord(pointer) || Object.keys(pointer).sort().join(",") !== "actor,digest,membership,operation,request" || pointer["operation"] !== operation || !isDigest(pointer["digest"]) || canonicalize(pointer["membership"]) !== canonicalize(context[1]) || pointer["actor"] !== context[2] || typeof pointer["request"] !== "string" || !Object.hasOwn(row["private"], pointer["request"]))) throw unavailable();
+  }
+  if (canonicalize(journal) !== bytes) throw unavailable();
+  return journal as unknown as Journal;
 }
-function write(storage: ClaimStorage, journal: Journal, current: () => boolean): Journal {
-  if (!current()) throw unavailable();
-  const bytes = canonicalize(journal);
-  if (utf8(bytes).length > MOST) throw new Error("Private connection custody is full. Originals are retained; nothing further was submitted.");
-  // Validate the complete candidate before touching the retained original.
-  read({ getItem: () => bytes, setItem: () => { throw unavailable(); } }, journal.binding);
-  storage.setItem(storageKey(journal.binding), bytes);
-  if (storage.getItem(storageKey(journal.binding)) !== bytes) throw unavailable();
-  if (!current()) throw unavailable();
-  return structuredClone(journal);
-}
+const custody = custodyKind<Journal, ConnectionStatus>({
+  kind: "connection", prefix: "artroom-page-connections", most: MOST,
+  unavailable, full: () => new Error("Private connection custody is full. Originals are retained; nothing further was submitted."),
+  bindingOf: journal => journal.binding, decode, readBack: "clone",
+  publicOf: journal => {
+    const row = journal.rows[journal.active]!;
+    return { operation: row.operation, kind: row.input.kind, handle: row.input.handle, state: row.state, ...(row.reason ? { reason: row.reason } : {}) };
+  }
+});
+const storageKey = custody.keyOf;
+const read = (storage: ClaimStorage, binding: string) => custody.read(binding, storage);
+const write = (storage: ClaimStorage, journal: Journal, current: () => boolean) => custody.write(journal, storage, { current: () => !!current() });
 export function originalConnection(origin: string, storage: ClaimStorage, expected: CreatorBinding): ConnectionStatus | null {
-  const journal = read(storage, bindingOf(origin, expected));
-  if (!journal) return null;
-  const row = journal.rows[journal.active]!;
-  return { operation: row.operation, kind: row.input.kind, handle: row.input.handle, state: row.state, ...(row.reason ? { reason: row.reason } : {}) };
+  return custody.original(bindingOf(origin, expected), storage);
 }
 async function withCreator<T>(origin: string, storage: ClaimStorage, expected: CreatorBinding, options: ConnectionOptions, work: (room: Room, config: Config) => Promise<T>): Promise<T> {
   const status = originalStart(origin, storage);
