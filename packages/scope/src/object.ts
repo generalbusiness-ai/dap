@@ -271,7 +271,7 @@ export class ScopeObject<Env = unknown> extends DurableObject<Env> {
       sessionPreparation: this.#sessionPreparation, localSigners: store.localSigners, proofs: ports.proofs ?? null,
       sessions: this.#sessions, clock: this.#clock, window: bounds.intentLifetimeSeconds, flights: this.#queryFlights });
     this.#applicationProjections = new ApplicationProjections({ name: this.#name, sql: this.#readSql, sessions: this.#sessions,
-      clock: this.#clock, sessionPreparation: this.#sessionPreparation, flights: this.#queryFlights, source: wiring.applicationDeclarationSource ?? null });
+      clock: this.#clock, sessionPreparation: this.#sessionPreparation, flights: this.#queryFlights, source: wiring.applicationDeclarationSource ?? null, births: ports.births ?? null });
     // The session requests that this scope has answered, each until its `notAfter`: one more table that is no part of the store.
     this.#requests = new SessionRequests({ exec: (query, ...bindings) => ctx.storage.sql.exec(query, ...bindings) });
     // Only bounded control initialization happened above. No read runs a

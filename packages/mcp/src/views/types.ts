@@ -1,5 +1,5 @@
 import type { PresentationPackage, ViewKind } from "./resources.ts";
-import type { ApplicationProjectionData, FactRef, FieldValue } from "@generalbusiness/dap-contract";
+import type { ApplicationProjectionData, FactRef, FieldValue, ScopeRef } from "@generalbusiness/dap-contract";
 import type { ApplicationView } from "@generalbusiness/artroom-bytes/application-v2";
 
 export type PageKind = "summary" | "item" | "diff" | "updates";
@@ -73,6 +73,7 @@ export interface Card {
 export interface ViewQuery {
   screen: ViewKind;
   subject?: string;
+  scope?: ScopeRef;
   position: number;
   page: PageKind;
   items?: Readonly<Record<string, number>>;

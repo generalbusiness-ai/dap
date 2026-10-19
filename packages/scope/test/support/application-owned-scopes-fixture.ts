@@ -25,7 +25,7 @@ function definition(name: string, child?: Digest): DeclaredDefinition {
     }, receives: {}, timed: {}, rules: {},
   };
 }
-export async function applicationOwnedScopesPacket(label = "test-owned-root") {
+export async function applicationOwnedScopesPacket(label = "test-owned-root", version = "1") {
   const child = definition("test-owned-child"), childId = definitionDigest(child), root = definition(label, childId), rootId = definitionDigest(root);
   const projection = (id: Digest, withChild: boolean) => readApplicationProjection({ v: 1, definition: id, revision: "revision", sources: {
     row: { read: "one", item: "root", states: ["open"], limit: 1, fields: {
@@ -36,7 +36,7 @@ export async function applicationOwnedScopesPacket(label = "test-owned-root") {
   const view = { kind: "card" as const, item: "row", title: "count", summary: null, actor: null, facts: ["revision"], revision: "revision" as const,
     context: "Owned row {id} v{revision}: {count}", fallback: "Owned row {id}: {count}", waiting: {}, refresh: 2000, display: "inline" as const, back: null };
   const secret = new Uint8Array(32).fill(67), signer = { key: keyIdOfSecret(secret), sign: (bytes: Uint8Array) => sign(secret, bytes) };
-  const packet = await packApplication2({ name: "test.owned-scopes", version: "1", semantic: {
+  const packet = await packApplication2({ name: "test.owned-scopes", version, semantic: {
     v: 2, entry: rootId, definitions: [{ id: rootId, bytes: canonicalize(root) }, { id: childId, bytes: canonicalize(child) }],
     host: { execution: "recorded-do", profiles: ["restricted@1"] }, capabilities: [], roles: { admin: [grant] }, predecessor: null,
     projections: { root: projection(rootId, true), child: projection(childId, false) },

@@ -1,3 +1,4 @@
+import type { ScopeRef } from "@generalbusiness/dap-contract";
 import { AppBridge, AppToolError } from "./bridge.ts";
 import type { Display, PageKind } from "../src/views/types.ts";
 import { viewToolName } from "../src/views/names.ts";
@@ -113,12 +114,12 @@ async function declaredMode() {
   catch (error) { notice = error instanceof Error ? error.message : String(error); }
   render();
 }
-async function openDeclared(screen: string, items?: Readonly<Record<string, number>>) {
+async function openDeclared(screen: string, items?: Readonly<Record<string, number>>, scope: ScopeRef | undefined = display?.card?.declared?.data.scope ?? display?.data?.scope) {
   if (busy || !alive) return;
   const key = crypto.randomUUID();
   busy = true; notice = ""; render();
   try {
-    const opening = await bridge.tool(viewToolName(screen, true), { view: key, ...(items ? { items } : {}) });
+    const opening = await bridge.tool(viewToolName(screen, true), { view: key, ...(items ? { items } : {}), ...(scope ? { scope } : {}) });
     if (opening["view"] !== key) throw Error("The declared opening did not retain its view key.");
     view = key; display = null;
   } finally { busy = false; render(); }
@@ -194,9 +195,9 @@ function render() {
   const surface = surfaceOf(), data = card?.declared?.data ?? display.data;
   if (surface && data) {
     try {
-      const panel = surfaces.show(surface, data, async (name, items) => {
-        if (!busy && alive && display?.active) await openDeclared(surface.opens[name]!, items);
-      }, () => alive && !!display?.active && surfaceOf()?.screen === surface.screen);
+      const panel = surfaces.show(surface, data, async (name, items, scope) => {
+        if (!busy && alive && display?.active) await openDeclared(surface.opens[name]!, items, scope ?? data.scope);
+      }, () => alive && !!display?.active && surfaceOf()?.screen === surface.screen && JSON.stringify(display.card?.declared?.data.scope ?? display.data?.scope) === JSON.stringify(data.scope));
       panel.inert = busy || !display.active;
       root.append(panel);
     } catch (error) { root.append(node("p", error instanceof Error ? error.message : "The declared surface is unavailable.", "notice")); }

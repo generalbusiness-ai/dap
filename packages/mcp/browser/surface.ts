@@ -1,13 +1,13 @@
 /** Trusted browser presentation integration, not a hostile-code boundary.
  * Package code receives a DOM root, native data and declared navigation. */
-import type { ApplicationProjectionData } from "@generalbusiness/dap-contract";
+import type { ApplicationProjectionData, ScopeRef } from "@generalbusiness/dap-contract";
 import type { DeclaredSurface } from "../src/views/types.ts";
 
 export interface SurfaceApi {
   readonly root: ShadowRoot;
   readonly signal: AbortSignal;
   onData(render: (data: ApplicationProjectionData) => void): void;
-  open(name: string, items?: Readonly<Record<string, number>>): Promise<void>;
+  open(name: string, items?: Readonly<Record<string, number>>, scope?: ScopeRef): Promise<void>;
 }
 declare global { interface Window { dapSurface?: SurfaceApi } }
 interface Panel {
@@ -22,7 +22,7 @@ export class SurfacePanels {
   readonly #panels = new Map<string, Panel>();
   show(surface: DeclaredSurface, data: ApplicationProjectionData,
     open: SurfaceApi["open"], current: () => boolean): HTMLElement {
-    const key = JSON.stringify([surface.screen, surface.resource, surface.html]);
+    const key = JSON.stringify([surface.screen, surface.resource, surface.html, data.scope]);
     let panel = this.#panels.get(key);
     if (!panel) {
       if (this.#panels.size >= 32) throw Error("This kit retains its maximum of 32 surface resources.");
@@ -41,10 +41,10 @@ export class SurfacePanels {
           if (retained.render) throw Error("A surface registers one data renderer.");
           retained.render = render;
         },
-        async open(name: string, items?: Readonly<Record<string, number>>) {
+        async open(name: string, items?: Readonly<Record<string, number>>, scope?: ScopeRef) {
           if (controller.signal.aborted || !current()) throw Error("This surface is no longer current.");
           if (!Object.hasOwn(surface.opens, name)) throw Error("This surface declares no such opening.");
-          await open(name, items);
+          await open(name, items, scope);
         },
       });
       let initializationError: Error | undefined;
