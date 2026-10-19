@@ -169,6 +169,7 @@ pricing, a manager who decides, and the buyer.
 | Contributors | people: sales engineer, product managers, legal, security | Verify and sign the answers in their domain |
 | Approvers | people: pricing, management | Grant or refuse the price and the go or no-go, decide submission |
 | Buyer contact | person, optional member | Answers questions and records the award |
+| Intake agent | agent, hosted ([hosted agent teams](2026-10-15-hosted-agent-teams-design.md)) | Decomposes the request's spreadsheets into requirements, and renders the verified answers back into the buyer's layout |
 | Drafting agent | agent | Drafts answers from the answer library, flags inconsistencies, chases due dates |
 
 | Grant | Held by | Acts |
@@ -179,6 +180,7 @@ pricing, a manager who decides, and the buyer.
 | `bid.product` | product managers | `verify-answer` on product and roadmap requirements |
 | `bid.technical` | sales engineers | `verify-answer` on technical requirements |
 | `bid.legal`, `bid.security` | legal, security | `verify-answer` in their domain; `grant-approval` on terms |
+| `bid.intake` | intake agent | `import`, `open-requirement`, `propose-mapping`, `render-response` |
 | `bid.draft` | drafting agent | `draft-answer`, `flag` |
 | `bid.buyer` | buyer contact | `answer-question`, `record-award` |
 
@@ -186,8 +188,10 @@ Each requirement has a domain. `verify-answer` on a requirement is
 guarded by the domain's grant, so a sales engineer cannot vouch for a
 roadmap date and a product manager cannot vouch for a security control.
 A roadmap claim is refused without a source ref to the roadmap version
-it rests on. The drafting agent holds no verify grant at all: its draft
-is a draft until a person signs it.
+it rests on. Neither agent holds a verify grant: the intake agent's
+mapping and the drafting agent's text are drafts until a person signs
+them. The intake agent is hosted, so the decomposition of a long request
+does not wait for anyone's laptop.
 
 ### 4.2 The interaction
 
@@ -196,8 +200,22 @@ buyer, the deadline, the document's link and digest. Management decides
 go, with reasons, which opens the work; no-go closes the bid with its
 reasons kept.
 
-The owner, or the agent on the owner's behalf, breaks the request into
-requirements, each with a domain and a due time, and assigns owners.
+The request's documents are usually spreadsheets: a compliance matrix
+of a few hundred rows, each with an identifier, a requirement text, a
+response kind (yes or no, a narrative, an attachment) and sometimes a
+weight, across several sheets. The intake agent takes that load. It
+records the import (the file's link and digest, its sheets and their
+row counts), then opens one requirement per row with the row's
+reference, identifier, text, kind, a proposed domain and the due time
+the deadline implies. The requirement is the simple data model: those
+fields, an owner, an answer and a source, and nothing else from the
+sheet; the import keeps the rest by reference. The agent proposes a
+mapping for what it could not classify, for rows it merged or split,
+and for apparent duplicates, and those rows wait in the owner's carousel
+to be confirmed or remapped. A duplicate of a row already opened is
+refused by name.
+
+The owner assigns owners by domain, or accepts the agent's proposal.
 Each contributor's carousel now shows their unverified requirements,
 oldest due first. The agent drafts answers from the answer library and
 marks each requirement `drafted`. A contributor reads the draft, edits,
@@ -214,9 +232,11 @@ carousels.
 Pricing is a requirement in the pricing domain with an approval: the
 owner requests it, pricing grants or refuses it at the exact price
 revision. Terms go to legal the same way. When every requirement is
-verified or declined and every approval is granted, `assemble` writes
-the response as one revision that names each answer's revision, and
-management signs `submit`, which seals it. The sealed response is
+verified or declined and every approval is granted, the intake agent
+renders the verified answers back into the buyer's layout, one row per
+requirement in the sheet's order, and `assemble` writes the response as
+one revision that names the rendering and each answer's revision.
+Management signs `submit`, which seals it. The sealed response is
 published to the bid's Git destination as the exact bytes that went out,
 which is the one operation dap runs today. Clarifications after
 submission are new questions; a revised offer is a new assembly and a
@@ -238,29 +258,42 @@ it.
 **Items.** `bid` (states `received`, `open`, `assembled`, `submitted`,
 `clarifying`, `awarded`, `lost`, `withdrawn`; values: buyer, deadline,
 document link and digest; refs: the decision, the submission),
-`requirement` (states `unassigned`, `assigned`, `drafted`, `verified`,
-`declined`; values: text, domain, due time, draft, answer; parties:
-owner; refs: the verifying entry, the source), `question` (states
+`import` (states `read`, `mapped`, `confirmed`; values: link, digest,
+sheet names, row counts), `requirement` (states `unassigned`,
+`assigned`, `drafted`, `verified`, `declined`; values: identifier, row
+reference, text, kind, weight, domain, due time, draft, answer; parties:
+owner; refs: the import, the verifying entry, the source), `mapping`
+(the agent's proposal for a row it could not place, merged or split;
+states `proposed`, `confirmed`, `remapped`), `rendering` (the answers
+in the buyer's layout at an exact set of revisions), `question` (states
 `asked`, `answered`; refs: the answer entry), `approval` (kind price or
 terms; states `requested`, `granted`, `refused`; refs: the revision
 approved), `submission` (the sealed assembly: the list of answer
 revisions, the publication receipt).
 
-**Acts.** `intake`, `decide-go`, `decide-no-go`, `assign`, `draft-answer`,
+**Acts.** `intake`, `decide-go`, `decide-no-go`, `import` (the intake
+agent; records the digest), `open-requirement` (the intake agent; guard:
+an import ref and a row reference, and no requirement with that row,
+refused `row-exists`), `propose-mapping`, `confirm-mapping` and `remap`
+(the owner; a remap names its reason), `assign`, `draft-answer`,
 `verify-answer` (guards: the domain's grant, a source for roadmap
 claims), `decline-requirement` (with a reason), `flag`, `ask-buyer`,
 `answer-question` (the buyer member's), `record-buyer-answer` (the
 owner's report with source), `request-approval`, `grant-approval` and
-`refuse-approval` (by kind), `assemble` (guard: no requirement
-`assigned` or `drafted`, every approval `granted`), `submit` (`bid.decide`;
-sends `publish-file` with the sealed bytes), `record-outcome`.
+`refuse-approval` (by kind), `render-response` (the intake agent;
+guard: every requirement `verified` or `declined`), `assemble` (guard:
+no requirement `assigned` or `drafted`, every approval `granted`, a
+rendering at the current revisions), `submit` (`bid.decide`; sends
+`publish-file` with the sealed bytes), `record-outcome`.
 
 **Timed rules.** A requirement due in two days and not verified: attention
 to its owner. The bid's deadline in five days with unverified
 requirements: attention to the bid owner and management. A library
 answer older than its stale period: attention to its owner.
 
-**Views.** The bid record (counts by state, deadline, approvals), the
+**Views.** The bid record (counts by state, deadline, approvals, the
+import's rows mapped and confirmed), the mapping carousel for the owner
+(rows to confirm or remap, with the agent's reason), the
 requirement carousel per contributor (my unverified requirements, due
 soonest first, with the draft and the Verify act, or Decline), the
 approval card for approvers (Grant and Refuse at the named revision),
@@ -275,6 +308,12 @@ and the win or loss log.
 - Several scopes in one package: the bid room and the answer library
   as two scopes, landed in M2a.
 - Publication of the sealed response: today's Git publication.
+- The intake agent as a hosted member: the hosted agent teams design,
+  not yet built. Until then the same agent runs from the owner's
+  machine under the same grant, and the record does not change.
+- Reading the spreadsheet: the agent is given the file and reads it
+  outside the record; only the digest, the row references and the
+  texts enter. A spreadsheet that changes after import is a new import.
 - The buyer as a member: an invitation, which exists; or the owner's
   recorded reports, which need nothing.
 - Documents: the request, attachments and the response's files need
@@ -378,7 +417,7 @@ estimates from the grow slices.
 |---|---|---|---|
 | C1 | The marketing calendar: definitions, scenario, views, publication to a site repository | a post planned in the room is approved, published to a test destination and read back; a late post reaches the owner's carousel | 2 days |
 | C2 | The prospect room: definitions, scenario, views; the prospect as an invited member | an account goes from research to a proposal accepted by a member in the test host; the five-day rule reaches the owner | 2 days |
-| C3 | The bid response: definitions in two scopes, routing by domain, approvals, assembly and submission with publication | a four-member scenario verifies six requirements across three domains, refuses an unsourced roadmap claim, grants a price, assembles and submits, and the sealed response is published | 4 days |
+| C3 | The bid response: definitions in two scopes, the intake agent's decomposition and rendering, routing by domain, approvals, assembly and submission with publication | a two-sheet request of forty rows is decomposed into requirements with three rows remapped by the owner and a duplicate refused; a four-member scenario verifies six of them across three domains, refuses an unsourced roadmap claim, grants a price, renders the answers back in the request's layout, assembles and submits, and the sealed response is published | 5 days |
 | C4 | The hosted rooms and a page for each on the homepage, after the demo-room pattern of plan 033 | a person in their AI app takes an act in each | 2 days |
 
 Named and deferred: custody for documents; private price views; declared
@@ -400,7 +439,12 @@ bids under a site.
 4. **Mail and channels.** Whether the first operation after Git should
    be sending mail, so that outreach and chasing leave the room as acts
    rather than statements.
-5. **Many accounts, one owner.** The prospect room keeps all of one
+5. **The mapping's confirmation.** Whether the owner confirms every
+   row the agent mapped, or only the rows the agent flagged, is a
+   question of how good the decomposition is on real requests. The
+   first version asks for the flagged rows only and records the rest as
+   the agent's proposal.
+6. **Many accounts, one owner.** The prospect room keeps all of one
    owner's accounts in one scope. A team of sellers wants one scope per
    seller or private views; the roll-up for a manager is a site-level
    projection, as the grow site reads its rooms.
