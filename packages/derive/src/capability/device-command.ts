@@ -111,7 +111,9 @@ export function deviceCommand(): Capabilities & Steps & Owners {
   return {
     implements: ((form: unknown, step?: string) => typeof form === "string" ? form === DEVICE_COMMAND && step === "answer"
       : form !== null && typeof form === "object" && "capability" in form && form.capability === DEVICE_COMMAND
-        && "form" in form && "name" in form && (form.form === "guard" && form.name === "allowed" || form.form === "effect" && form.name === "open")) as Capabilities["implements"] & Steps["implements"],
+        && "form" in form && "name" in form && (form.form === "listed" && form.name === DEVICE_COMMAND
+          || form.form === "kind" && form.name === `${DEVICE_COMMAND}:answer`
+          || form.form === "guard" && form.name === "allowed" || form.form === "effect" && form.name === "open")) as Capabilities["implements"] & Steps["implements"],
     guard: (_capability, _guard, args, given) => {
       const grant = grantOf(given.view, given.definition, given.own);
       if (grant && "unavailable" in grant) return grant;

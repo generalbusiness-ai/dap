@@ -198,6 +198,109 @@ The latest accepted Main is expert-note landing `2127d5c5`; its audit
 `0e776482` was read in full, including its original merge-process evidence
 limit. That later prose-only Main is not incorporated at this checkpoint.
 
+## Native install checkpoint
+
+The opt-in `device-application` cohort uses Register 16, Directory 15,
+Rules 9 and Destination 11. It reuses Membership 7; Membership 9 stays
+reserved. The 49-pin literal witness adds only those four names, preserves
+all 45 shipped data digests and leaves default founding unchanged. Rules 5
+and 6 keep their earlier package proofs and capability refusal behavior.
+
+The signed v2 package declares only device-command@1, one-to-three ordered
+kinds and one owner requirement. At most eight package definitions may
+use the capability. The new install act chooses a full existing owner
+MemberRef and checks its current membership and active key. For an owner
+who is also the signer, native observation rules serve this member from
+the actual judged key observation; no second member read is invented.
+
+Rules retains the owner, bounds, root and allowed definitions in its fixed
+canonical genesis record. Its existing twelve value slots stay within the
+native bound. The wrapper allows at most 20 KiB, including a device grant
+of at most 4096 bytes and the existing bounded genesis fields. Directory
+checks the exact membership, root and catalog declarations before its
+native create emits version 2 context with one-hop delegation enabled.
+The new destination's origin policy accepts that exact factory and grant;
+the old declared destination refuses the new factory. Origin admission
+alone is not a publication or outside-write claim.
+
+The SDK has a separate device install selection with an explicit full
+owner. MCP retains that selection in the signed request's meaning. CLI
+supports the explicit cohort and `--owner <full-member-JSON>` for package
+installation. The host accepts only this finite native capability beside
+ordinary packages. It runs no package-supplied capability code.
+
+The owning native witness uses genuine Register, Directory, Membership,
+Rules, Destination and declared child scopes, production authority and
+Core, actual SQLite, native creation and MCP custody. Repository creation,
+Git/package HTTP, clock, scheduler and setup read access are labelled TEST
+fixtures. It demonstrates:
+
+- A missing owner is refused by name before install effects. A valid
+  existing owner is retained in the actual grant observation and native
+  creation context, with exact capability, kinds and definition list.
+- A command opens its native record. Sensor reports advance the device
+  revision without changing its targetAt binding.
+- The actual child starts under a sixteen-entry fixture ceiling. Its
+  native creation packet is held until that bound is set, then delivered
+  exactly to the actual receiver. This is an explicit scheduler action,
+  not an outbox retry-timing witness.
+- At the capacity edge, SQLite shows one pending owner answer and Used
+  plus Reserved equal to sixteen. A new report is refused with scope-full
+  and changes no head or reservation. Removing the target action, deleting
+  cached package content and evicting the child still allows the owner to
+  answer on current identity and the installed grant. The recorded role
+  actions remain exactly membership.manage; no answer action is invented.
+- The answer closes that exact command, changes decided from zero to one,
+  releases its reservation, leaves Used plus Reserved at sixteen and keeps
+  the independent reported value. Its new outcome names its answer entry.
+- Rules, Directory, device and Membership journals pass strict replay with
+  proven grants, the actual native platform table and production capability
+  code, without a device simulator or provider execution.
+
+Replay has one bounds argument for every dependency. It uses the native
+shared defaults for these four runs, including Register and Destination
+proof histories. The child's smaller sixteen-entry admission edge is
+proved directly by actual SQLite counters; this replay does not claim to
+check that smaller ceiling. Attempts to impose sixteen globally failed at
+Register's genuine repository-creation duty in entry 1. An exploratory
+128-entry child/global replay failed at Destination's genuine genesis duty.
+Both are retained, not represented as successful quota replays. No anchor
+or grant-as-recorded exception was used in the passing strict native runs.
+
+Current evidence:
+
+- `/tmp/artroom-g5a-native-device-capacity-origin-replay-20261019.log`:
+  original 16737 closed exit 0, one native case with the four strict
+  journal replays and both factory-origin checks. Earlier native passes
+  55853 and 85890 are retained; they are not an extra gate.
+- `/tmp/artroom-g5a-device-cohort-focused-20261019.log`: original 27066
+  closed exit 0, three files and ten cases for native pin literals, explicit
+  CLI cohort custody and pure command forms.
+- `/tmp/artroom-g5a-native-device-cohort-types-20261019.log`: original
+  12603 closed exit 0, Platform's two and Scope's three compiler targets.
+  Derive's two targets also pass in the native-checkpoint-derive log.
+  Client, MCP and CLI owning compiler targets passed during wiring.
+
+Retained integration failures exposed a missing v2 fixture projection,
+an attempted thirteenth installation value slot, an incorrect expectation
+of a separate own-member observation, missing listed-version/answer-kind
+capability implementation, use of a full object where MCP resolves a scope
+ID, fixture bounds installed after the child's construction, and a held
+send whose retry time the finite scheduler had not advanced. These were
+corrected in source or fixture; no test assertion was weakened to permit
+an incorrect owner, budget or answer. The quota replay limits above remain
+explicit. The first MCP compiler run also caught an insufficiently narrowed
+owner option; reparsing the already owned device selection fixes it.
+
+The generic local CLI scenario currently creates a scripted single root,
+not a native installation. It therefore has no install grant to open these
+commands. Planner decision request `80218ee2` asks for its evidence boundary
+before adding native owner preparations: explicit scripted creation proof
+and replay anchor, a full local native install graph, or a separate actual
+runtime fault witness. No domain field, package manifest or silent genesis
+rewrite will mint a grant. Independent Grow declaration work can proceed.
+No complete G5a gate, review, landing, push or deployment is claimed.
+
 ## Acceptance evidence to collect
 
 The owning witnesses must show command opening by set-heater and authorize;
