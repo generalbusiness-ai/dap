@@ -360,7 +360,107 @@
     "waiting": {},
     "refresh": 2000,
     "display": "fullscreen",
-    "back": "grid"
+    "back": "grid",
+    "links": [
+     {
+      "view": "heater",
+      "field": "heater",
+      "label": "Open heater controls"
+     },
+     {
+      "view": "vent",
+      "field": "vent",
+      "label": "Open vent controls"
+     }
+    ]
+   },
+   "heater": {
+    "kind": "record",
+    "projection": "device",
+    "item": "device",
+    "title": "label",
+    "summary": "description",
+    "actor": null,
+    "facts": [
+     "target",
+     "level",
+     "reported",
+     "reportedLevel",
+     "reportedTime"
+    ],
+    "revision": "revision",
+    "acts": [
+     {
+      "act": "set-heater",
+      "label": "Turn heater off",
+      "needs": "grow.heat",
+      "args": {
+       "target": "off",
+       "level": 0
+      },
+      "when": "state = 'active' and kind = 'heater' and reported != 'error'"
+     },
+     {
+      "act": "set-heater",
+      "label": "Turn heater on",
+      "needs": "grow.heat",
+      "args": {
+       "target": "on",
+       "level": 100
+      },
+      "when": "state = 'active' and kind = 'heater' and reported != 'error'"
+     }
+    ],
+    "context": "Device {label} v{revision}: target {target} at {level}; sensor report {reported} at {reportedLevel}.",
+    "fallback": "Device {label}: target {target} at {level}; sensor report {reported} at {reportedLevel} ({reportedTime}).",
+    "waiting": {},
+    "refresh": 2000,
+    "display": "fullscreen",
+    "back": "zone"
+   },
+   "vent": {
+    "kind": "record",
+    "projection": "device",
+    "item": "device",
+    "title": "label",
+    "summary": "description",
+    "actor": null,
+    "facts": [
+     "target",
+     "level",
+     "reported",
+     "reportedLevel",
+     "reportedTime"
+    ],
+    "revision": "revision",
+    "acts": [
+     {
+      "act": "set-vent",
+      "label": "Close vent",
+      "needs": "grow.climate",
+      "args": {
+       "target": "closed",
+       "level": 0
+      },
+      "when": "state = 'active' and kind = 'vent' and reported != 'error'"
+     },
+     {
+      "act": "set-vent",
+      "label": "Open vent",
+      "needs": "grow.climate",
+      "args": {
+       "target": "open",
+       "level": 100
+      },
+      "when": "state = 'active' and kind = 'vent' and reported != 'error'"
+     }
+    ],
+    "context": "Device {label} v{revision}: target {target} at {level}; sensor report {reported} at {reportedLevel}.",
+    "fallback": "Device {label}: target {target} at {level}; sensor report {reported} at {reportedLevel} ({reportedTime}).",
+    "waiting": {},
+    "refresh": 2000,
+    "display": "fullscreen",
+    "back": "zone"
    }
   }
  },
@@ -2814,6 +2914,194 @@
       "active"
      ],
      "limit": 100,
+     "fields": {
+      "kind": {
+       "from": {
+        "kind": "value",
+        "name": "kind"
+       },
+       "of": {
+        "type": "enum",
+        "of": [
+         "vent",
+         "fan",
+         "heater"
+        ]
+       },
+       "nullable": false
+      },
+      "label": {
+       "from": {
+        "kind": "value",
+        "name": "label"
+       },
+       "of": {
+        "type": "text",
+        "max": 80
+       },
+       "nullable": false
+      },
+      "minLevel": {
+       "from": {
+        "kind": "value",
+        "name": "minLevel"
+       },
+       "of": {
+        "type": "int",
+        "min": 0,
+        "max": 100
+       },
+       "nullable": false
+      },
+      "maxLevel": {
+       "from": {
+        "kind": "value",
+        "name": "maxLevel"
+       },
+       "of": {
+        "type": "int",
+        "min": 0,
+        "max": 100
+       },
+       "nullable": false
+      },
+      "target": {
+       "from": {
+        "kind": "value",
+        "name": "target"
+       },
+       "of": {
+        "type": "enum",
+        "of": [
+         "open",
+         "closed",
+         "on",
+         "off"
+        ]
+       },
+       "nullable": false
+      },
+      "level": {
+       "from": {
+        "kind": "value",
+        "name": "level"
+       },
+       "of": {
+        "type": "int",
+        "min": 0,
+        "max": 100
+       },
+       "nullable": false
+      },
+      "reported": {
+       "from": {
+        "kind": "value",
+        "name": "reported"
+       },
+       "of": {
+        "type": "enum",
+        "of": [
+         "open",
+         "closed",
+         "on",
+         "off",
+         "error"
+        ]
+       },
+       "nullable": true
+      },
+      "reportedLevel": {
+       "from": {
+        "kind": "value",
+        "name": "reportedLevel"
+       },
+       "of": {
+        "type": "int",
+        "min": 0,
+        "max": 100
+       },
+       "nullable": true
+      },
+      "description": {
+       "from": {
+        "kind": "value",
+        "name": "description"
+       },
+       "of": {
+        "type": "text",
+        "max": 1024
+       },
+       "nullable": true
+      },
+      "reportedTime": {
+       "from": {
+        "kind": "value",
+        "name": "reportedTime"
+       },
+       "of": {
+        "type": "time"
+       },
+       "nullable": true
+      },
+      "targetAt": {
+       "from": {
+        "kind": "ref",
+        "name": "targetAt"
+       },
+       "of": {
+        "type": "fact",
+        "under": "grow-room",
+        "kind": [
+         "commission-device",
+         "set-vent",
+         "set-fan",
+         "set-heater",
+         "authorize"
+        ]
+       },
+       "nullable": false
+      },
+      "reportedAt": {
+       "from": {
+        "kind": "ref",
+        "name": "reportedAt"
+       },
+       "of": {
+        "type": "fact",
+        "under": "grow-room",
+        "kind": [
+         "report-device"
+        ]
+       },
+       "nullable": true
+      },
+      "zone": {
+       "from": {
+        "kind": "ref",
+        "name": "zone"
+       },
+       "of": {
+        "type": "item",
+        "of": "zone"
+       },
+       "nullable": false
+      }
+     }
+    }
+   }
+  },
+  "device": {
+   "v": 1,
+   "definition": "room.json",
+   "revision": "revision",
+   "sources": {
+    "device": {
+     "item": "device",
+     "read": "item",
+     "states": [
+      "active"
+     ],
+     "limit": 1,
      "fields": {
       "kind": {
        "from": {

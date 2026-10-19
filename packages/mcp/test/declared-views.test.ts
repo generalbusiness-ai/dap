@@ -159,3 +159,43 @@ test("declared opening tool names preserve exact names without reserved-name col
   expect(tools["view_read"]?.tool._meta?.["ui"]).toEqual({ visibility: ["app"] });
   expect(tools["view_act"]?.tool._meta?.["ui"]).toEqual({ visibility: ["app"] });
 });
+
+// Invariant: fixed choices retain their exact native fields and distinct
+// custody identities, and renewed admission refuses stale or altered choices.
+test("two constant choices retain one native act and recheck fields, standing and revision before signing", async () => {
+  const base = await applicationCounterPacket2(), definition = parseStrict(base.package.semantic.definitions[0]!.bytes) as DeclaredDefinition;
+  definition.acts["pause"] = { ...definition.acts["pause"]!, fields: {
+    target: { type: "enum", of: ["on", "off"], required: true }, level: { type: "int", min: 0, max: 100, required: true },
+  } };
+  const id = definitionDigest(definition), board = base.package.presentation.views["board"]!;
+  if (board.kind === "surface") throw Error("Board fixture required.");
+  const controls = [{ act: "pause", label: "Off", needs: "counting.control", when: "state = 'open'", args: { target: "off", level: 0 } },
+    { act: "pause", label: "On", needs: "counting.control", when: "state = 'open'", args: { target: "on", level: 100 } }];
+  const secret = new Uint8Array(32).fill(67);
+  const { creates: _creates, ...semantic } = base.package.semantic;
+  const { semantic: _semantic, ...presentation } = base.package.presentation;
+  const packet = await packApplication2({ name: "test.constants", version: "1", semantic: { ...semantic,
+    entry: id, definitions: [{ id, bytes: canonicalize(definition) }], projections: { board: { ...base.package.semantic.projections["board"]!, definition: id } } },
+    presentation: { ...presentation, views: { board: { ...board, acts: controls } } } },
+    { key: keyIdOfSecret(secret), sign: bytes => sign(secret, bytes) });
+  const installation: ApplicationInstallation = { scope, directory: { ...scope, kind: "directory" }, membership: { ...scope, kind: "membership" },
+    rules: { ...scope, kind: "rules" }, destination: { ...scope, kind: "destination" }, definition: id, ids: packet.ids, item: 7 };
+  let held = ["counting.control"], revision = 1;
+  const source = new DeclaredViewSource(packet.bytes, packet.ids.release, { installation: async () => installation, actions: async () => held,
+    projection: async query => ({ ok: true, query: applicationProjectionQueryDigest(query)!, value: {
+      v: 1, projection: applicationProjectionId(packet.package.semantic.projections["board"]!), scope,
+      at: { seq: revision, hash: `sha256:${"a".repeat(64)}` }, sources: { board: [{ id: 2, type: "board", state: "open", revision, fields: { lastNumber: 42 } }] },
+    } }),
+  });
+  const query = { screen: "board", page: "item" as const, position: 0 }, card = (await source.read(query)).card!;
+  expect(card.actions.map(action => [action.id, action.kind, action.args["fields"]])).toEqual([
+    ["pause:0", "pause", { target: "off", level: 0 }], ["pause:1", "pause", { target: "on", level: 100 }],
+  ]);
+  await expect(source.admit(query, card, card.actions[0]!)).resolves.toBeUndefined();
+  await expect(source.admit(query, card, card.actions[1]!)).resolves.toBeUndefined();
+  const altered = structuredClone(card.actions[0]!); altered.args["fields"] = { target: "on", level: 100 };
+  await expect(source.admit(query, card, altered)).rejects.toMatchObject({ reason: "stale" });
+  held = []; await expect(source.admit(query, card, card.actions[0]!)).rejects.toMatchObject({ reason: "stale" });
+  held = ["counting.control"]; revision = 2;
+  await expect(source.admit(query, card, card.actions[0]!)).rejects.toMatchObject({ reason: "stale" });
+});

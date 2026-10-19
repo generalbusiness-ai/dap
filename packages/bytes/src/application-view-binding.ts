@@ -1,7 +1,7 @@
 /** Bind presentation data to declared reads and native acts. Restricted rule
  * admission/evaluation and current viewer authority belong to the host. */
-import type { DeclaredDefinition } from "@generalbusiness/dap-contract";
-import { isRecord, parseStrict } from "./index.ts";
+import { PROPOSED_BOUNDS, type DeclaredDefinition } from "@generalbusiness/dap-contract";
+import { fitsFieldType, isRecord, parseStrict } from "./index.ts";
 import { applicationJson } from "./application-json.ts";
 import { APPLICATION_PACKAGE_LIMITS, type ApplicationDefinition } from "./application-types.ts";
 import { bindApplicationProjection } from "./application-projection-binding.ts";
@@ -44,11 +44,25 @@ export function bindApplicationViews(value: unknown, projections: Readonly<Recor
         for (const fact of view.facts) if (typeof fact !== "string" && fact.field !== "id" && fact.field !== "revision"
           && source.fields[fact.field]?.of.type !== "int") return fail();
         if (view.actor !== null && (!Object.hasOwn(source.fields, view.actor) || source.fields[view.actor]!.of.type !== "member")) return fail();
+        for (const link of view.links ?? []) {
+          const target = Object.hasOwn(views, link.view) ? views[link.view] : undefined;
+          const targetProjection = target ? owned.projections[target.projection] : undefined;
+          const selected = target && targetProjection ? targetProjection.sources[target.item] : undefined;
+          const field = source.fields[link.field];
+          if (journal || !target || target.kind !== "record" || !targetProjection || targetProjection.definition !== projection.definition
+            || !selected || isApplicationJournalSource(selected) || selected.read !== "item" || !field || field.of.type !== "item" || field.of.of !== selected.item) return fail();
+        }
         for (const offered of view.acts) {
           const act = Object.hasOwn(definition.acts, offered.act) ? definition.acts[offered.act] : undefined;
           if (isApplicationJournalSource(source) || !act || act.on !== source.item || act.grant !== offered.needs || !isRecord(act.fields)) return fail();
-          // Compact controls have no field editor or undisclosed arguments.
-          if (Object.values(act.fields).some(field => field.required && !Object.hasOwn(field, "default"))) return fail();
+          // Constants are validated against the same native literal guard.
+          // Local item existence and all guards still belong to native submit.
+          const args = offered.args ?? {};
+          for (const [name, value] of Object.entries(args)) {
+            const field = Object.hasOwn(act.fields, name) ? act.fields[name] : undefined;
+            if (!field || !("type" in field) || !fitsFieldType(field, value, PROPOSED_BOUNDS)) return fail();
+          }
+          if (Object.entries(act.fields).some(([name, field]) => field.required && !Object.hasOwn(field, "default") && !Object.hasOwn(args, name))) return fail();
         }
       }
     }

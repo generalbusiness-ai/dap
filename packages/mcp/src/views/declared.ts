@@ -2,9 +2,9 @@
  * runs no package code. Its ports are native reads, not application adapters. */
 import type { ApplicationProjectionData, ApplicationProjectionQuery, ApplicationProjectionRead, ApplicationProjectionRow, Digest, FieldValue, ScopeRef } from "@generalbusiness/dap-contract";
 import { applicationItemSnapshot } from "@generalbusiness/artroom-client";
-import { canonicalize, parseStrict, unb64url } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isLocalId, parseStrict, unb64url } from "@generalbusiness/artroom-bytes";
 import type { ApplicationInstallation } from "@generalbusiness/artroom-bytes/application";
-import { applicationProjectionId, applicationViewFactField, isApplicationJournalSource, readApplicationPackage2, type ApplicationView, type PackedApplication2 } from "@generalbusiness/artroom-bytes/application-v2";
+import { applicationProjectionId, applicationViewFactField, isApplicationJournalSource, readApplicationPackage2, type ApplicationView, type ApplicationViewAct, type PackedApplication2 } from "@generalbusiness/artroom-bytes/application-v2";
 import { admit, evaluate, RuleEvalError } from "@generalbusiness/dap-derive/rule";
 import { ViewError } from "./session.ts";
 import type { Card, CardAction, DeclaredSurface, Projection, ViewQuery, ViewSource } from "./types.ts";
@@ -77,12 +77,12 @@ export class DeclaredViewSource implements ViewSource {
   }
   /** Only selected native item metadata and ref slots resolve subjects. This
    * is not an Item read and supplies no opened/attributed or review claim. */
-  #expected(view: ApplicationView, act: string, row: ApplicationProjectionRow, data: ApplicationProjectionData): Record<string, number> | null {
+  #expected(view: ApplicationView, control: ApplicationViewAct, row: ApplicationProjectionRow, data: ApplicationProjectionData): Record<string, number> | null {
     const projection = this.packet.package.semantic.projections[view.projection]!;
     const part = this.packet.package.semantic.definitions.find(part => part.id === projection.definition)!;
-    const definition = parseStrict(part.bytes) as DefinitionLike, declaration = definition.acts[act]!;
+    const definition = parseStrict(part.bytes) as DefinitionLike, declaration = definition.acts[control.act]!;
     const items = applicationItemSnapshot(projection, data).items;
-    const expected = expectedOf(declaration, items, row.id, effectiveFields(declaration, {}, data.scope));
+    const expected = expectedOf(declaration, items, row.id, effectiveFields(declaration, control.args ?? {}, data.scope));
     // An absent secondary row is not permission to sign an incomplete set.
     const names = Object.entries(declaration.also).filter(([, rule]) => rule["code"] === undefined).map(([name]) => name);
     if (declaration.step === "transition") names.push("on");
@@ -91,14 +91,14 @@ export class DeclaredViewSource implements ViewSource {
   async #allowed(view: ApplicationView, row: ApplicationProjectionRow, data: ApplicationProjectionData, scope: ScopeRef, definition: Digest): Promise<CardAction[]> {
     if (view.kind === "surface" || !view.acts.length) return [];
     const held = await this.port.actions(), actions: CardAction[] = [];
-    for (const control of view.acts) {
+    for (const [index, control] of view.acts.entries()) {
       if (!held.includes(control.needs)) continue;
       let holds = false;
       try { holds = (await evaluate(control.when, input(row))).value === true; }
       catch (error) { if (!(error instanceof RuleEvalError)) throw error; }
-      const at = holds ? this.#expected(view, control.act, row, data) : null;
-      if (at !== null) actions.push({ id: control.act, label: control.label, purpose: "act", kind: control.act,
-        args: { target: scope.scope, on: row.id, at, digest: definition } });
+      const at = holds ? this.#expected(view, control, row, data) : null;
+      if (at !== null) actions.push({ id: view.acts.filter(choice => choice.act === control.act).length > 1 ? `${control.act}:${index}` : control.act, label: control.label, purpose: "act", kind: control.act,
+        args: { target: scope.scope, on: row.id, at, digest: definition, ...(control.args ? { fields: control.args } : {}) } });
     }
     return actions;
   }
@@ -119,6 +119,12 @@ export class DeclaredViewSource implements ViewSource {
       projection: [{ scope: scope.scope, ...reply.value.at }], reviewIntended: [], unavailable: [], waitsOn: waiting ? [waiting] : [], settles: [], actions, fallback,
       declared: { kind: view.kind, source: view.item, context: template(view.context, row, waiting), actor: view.kind === "surface" || view.actor === null ? null : values[view.actor] ?? null,
         refresh: view.refresh, display: view.display, back: view.back, backScope, data: reply.value,
+        ...(view.kind !== "surface" && view.links ? { links: view.links.flatMap(link => {
+          const id = row.fields[link.field];
+          if (id === null || id === undefined) return [];
+          if (!isLocalId(id)) throw new ViewError("unavailable", "The linked native item reference is invalid.");
+          return [{ label: link.label, screen: link.view, items: { [this.packet.package.presentation.views[link.view]!.item]: id } }];
+        }) } : {}),
         ...(view.kind === "log" ? { log: rows.map(row => {
           if (!row.entry || !row.time) throw new ViewError("unavailable", "A log needs explicit sealed entry facts.");
           const values = input(row);

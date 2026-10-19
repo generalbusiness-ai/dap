@@ -66,6 +66,7 @@ export interface Card {
     back: string | null;
     backScope?: ScopeRef;
     data: ApplicationProjectionData;
+    links?: readonly { label: string; screen: string; items: Readonly<Record<string, number>> }[];
     log?: readonly { entry: Readonly<FactRef>; time: string; title: string; summary: string; facts: readonly string[] }[];
     resource?: string;
     opens?: Readonly<Record<string, string>>;

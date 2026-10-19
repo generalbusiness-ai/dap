@@ -270,6 +270,14 @@ function render() {
     }
     if (card.unavailable.length) article.append(node("p", `Unavailable: ${card.unavailable.map((range) => `${range.scope} entries ${range.from}–${range.to}`).join("; ")}.`, "notice"));
   }
+  if (card.declared?.links?.length) {
+    const links = node("nav"); links.setAttribute("aria-label", "Related records");
+    for (const link of card.declared.links) {
+      const control = button(link.label, () => openDeclared(link.screen, link.items), "quiet");
+      control.disabled ||= !display.active; links.append(control);
+    }
+    article.append(links);
+  }
   root.append(article);
   if (summary && (!card.declared || card.declared.kind === "carousel")) {
     const nav = node("nav", undefined, "carousel"); nav.setAttribute("aria-label", "Carousel");

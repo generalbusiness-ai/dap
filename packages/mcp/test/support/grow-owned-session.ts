@@ -1,7 +1,7 @@
 /** One Core/SQLite Site -> Room path. TEST grants, namespace routing,
  * installation lookup and sessions remain fixtures. Every birth and source
  * entry is native; no Lane reference or application state is manufactured. */
-import type { DeclaredDefinition, ScopeId } from "@generalbusiness/dap-contract";
+import type { DeclaredDefinition, ScopeId, Timestamp } from "@generalbusiness/dap-contract";
 import { canonicalize, factRefOf, isEntry, isScopeRef, isSeed, parseStrict, scopeIdOf } from "@generalbusiness/artroom-bytes";
 import type { AnyPackedApplication } from "@generalbusiness/artroom-bytes/application-v2";
 import { secretSigner, signedIntent } from "@generalbusiness/artroom-client";
@@ -64,14 +64,14 @@ export async function openOwnedGrowScenario(packet: AnyPackedApplication, value:
       if (room.at.kind !== "lane" || site.at.kind !== "lane" || room.definition !== selected) throw Error("The native path selected another application definition.");
       return room;
     });
-    const reportSite = async () => {
+    const reportSite = async (time: Timestamp = session.time) => {
       const sensor = session.actors.find(actor => actor.name === "sensors" && actor.actions.includes("grow.sense"));
       if (!sensor) throw Error("The owned scene needs its separate public TEST sensor.");
       const signer = secretSigner(Uint8Array.from(sensor.seed.match(/../g)!, byte => Number.parseInt(byte, 16)));
       const alerts = session.scope.developmentProjection("grid").sources["alert"]?.filter(row => ["open", "held", "authorized"].includes(row.state)).length ?? 0;
-      await site.advance(session.time);
+      await site.advance(time);
       const answer = await session.scope.submit(await signedIntent(signer, { to: session.scope.at, kind: "report-site", on: 0,
-        expected: { on: session.scope.state.item(0)!.revision }, fields: { openAlerts: alerts } }, { now: Date.parse(session.time) }));
+        expected: { on: session.scope.state.item(0)!.revision }, fields: { openAlerts: alerts } }, { now: Date.parse(time) }));
       if (answer.answer !== "accepted") throw Error(`Native Room report-site ${answer.answer}: ${"reason" in answer ? answer.reason : "unknown"}.`);
       await deliverNative(session.scope, answer.receipt.fact.seq, 0);
       await deliverNative(site, site.state.scope()!.head.seq, 0);

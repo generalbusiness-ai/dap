@@ -232,3 +232,45 @@ consistent. Both have 100 benches and no horizontal overflow. A separate
 390 px closed scene reaches Room head 163. Site and receipt screenshots were
 visually inspected. The failed earlier run and its partial captures remain
 historical evidence. This checkpoint has no final gate or review request.
+
+## Constant device controls and related records
+
+The shared view act form now accepts optional constant `args`. Each supplied
+field must exist and pass the native literal guard; every required field
+must be supplied or have a declared default. The native guard moved unchanged
+from derive into bytes and derive re-exports it, avoiding a second validator.
+Two choices may name the same native act with different fixed fields. Their
+retained IDs include the declaration index, while the signed native act name
+stays unchanged. Renewed admission compares the complete fixed argument set
+as well as current standing, row and secondary revisions.
+
+Optional record links select a projected native local-item reference into a
+record source of the same definition. They do not sign. The zone record links
+to heater and vent records; each device record offers two same-item native
+controls. Surface resources remain read-only. The maintained configuration is
+60,712 bytes, below the existing 64 KiB limit.
+
+The final focused run passes four files and 16 cases in
+`/tmp/artroom-g1-device-record-final-focused-20261019.log`; four owning compiler
+configs pass in `...device-record-final-types-20261019.log`. The native Grow
+witness signs exact `set-heater` on/off and `set-vent` close fields through MCP
+custody and Core/SQLite, preserves reported state, hides controls for a device
+reporting error, and replays consistently. Pure fixtures separately check
+bound field types, distinct choices and altered/stale admission.
+`/tmp/artroom-g1-constant-field-binding-control-20261019.log` disables the one
+literal check: four cases still pass and the unchanged constant-binding case
+fails by assertion. The driver restores the source.
+
+The full browser evidence is
+`/tmp/artroom-g1-manual-device-browser-site-20261019/`. At both widths it keeps
+the alert journey, then navigates Zone → heater and vent, signs four further
+fixed native controls, and returns through the grid to the Site. A separate
+sensor actor reports the closed alert count through the actual Room relation;
+the Site reaches head 5 and shows zero open alerts. Room head 155 replays
+consistent. The separate closed scene remains head 163. Heater-off and Site
+closure captures were visually inspected; target off remains visibly separate
+from sensor report on. Earlier attempts failed on fixture label capitalization
+and a navigation race before Zone 1 had rendered; those failed logs/captures
+remain historical. One test-packet attempt also supplied derived package keys
+where pack input excludes them, and an initial test typecheck lacked union
+narrowing; both were corrected before the passing run. No gate or review yet.

@@ -46,6 +46,30 @@ test("Grow's displayed alert refuses lost standing and stale revisions before cu
     expect(f.signatures()).toBe(after); expect(f.submitted).toHaveLength(1);
     const duplicate = await f.service.call("view_act", { view: "current", cut: current.cut, action: "authorize" });
     expect(duplicate).toEqual(acted); expect(f.signatures()).toBe(after); expect(f.submitted).toHaveLength(1);
+    // Manual controls use the same native device item, fixed fields and
+    // custody path. Related-record navigation itself never signs.
+    f.actions(["grow.heat", "grow.climate"]);
+    const device = async (screen: string, item: number, view: string) => {
+      expect((await f.service.call(viewToolName(screen, true), { view, scope: session!.scope.at, items: { device: item } })).isError).toBe(false);
+      const read = await f.service.call("view_read", { view });
+      return read.structuredContent["display"] as Display;
+    };
+    const heatOn = await device("heater", 10, "heat-on");
+    expect(heatOn.card?.actions.map(action => action.id)).toEqual(["set-heater:0", "set-heater:1"]);
+    const manualOn = await f.service.call("view_act", { view: "heat-on", cut: heatOn.cut, action: "set-heater:1" });
+    expect(manualOn.structuredContent["result"]).toMatchObject({ structuredContent: { answer: "accepted" } });
+    expect(f.submitted[1]!.intent).toMatchObject({ kind: "set-heater", on: 10, fields: { target: "on", level: 100 } });
+    expect(session.scope.state.item(10)!.values).toMatchObject({ target: "on", reported: null });
+    const heatOff = await device("heater", 10, "heat-off");
+    const manualOff = await f.service.call("view_act", { view: "heat-off", cut: heatOff.cut, action: "set-heater:0" });
+    expect(manualOff.structuredContent["result"]).toMatchObject({ structuredContent: { answer: "accepted" } });
+    const vent = await device("vent", 3, "vent-close");
+    const closed = await f.service.call("view_act", { view: "vent-close", cut: vent.cut, action: "set-vent:0" });
+    expect(closed.structuredContent["result"]).toMatchObject({ structuredContent: { answer: "accepted" } });
+    expect(f.submitted[3]!.intent).toMatchObject({ kind: "set-vent", on: 3, fields: { target: "closed", level: 0 } });
+    expect(session.scope.state.item(3)!.values).toMatchObject({ target: "closed" });
+    expect((await device("vent", 8, "vent-error")).card?.actions).toEqual([]);
+    expect(f.submitted).toHaveLength(4);
     const replay = await session.scope.replay();
     expect([replay.report.result, replay.why]).toEqual(["consistent", null]);
   } finally { session?.close(); await rm(root, { recursive: true, force: true }); }

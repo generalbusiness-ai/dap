@@ -72,3 +72,43 @@ test("unknown syntax, extra controls, signing surfaces and executable inputs ref
     { ...views(), grid: { ...views().grid, resource: "ui://example/../escape" } },
   ]) expect(() => readApplicationViews(value)).toThrow(ApplicationViewError);
 });
+
+// Invariant: two fixed choices may name one native act, but every constant
+// must fit a declared native field before the signed presentation is admitted.
+test("constant native arguments bind two choices without accepting invented or ill-typed fields", () => {
+  const changed = structuredClone(definition);
+  changed.acts["hold"] = { ...changed.acts["hold"]!, fields: {
+    target: { type: "enum", of: ["on", "off"], required: true },
+    level: { type: "int", min: 0, max: 100, required: true },
+  } };
+  const id = definitionDigest(changed), selected = { ...projection, definition: id };
+  const choices = [{ act: "hold", label: "Off", needs: "app.edit", when: "state = 'open'", args: { target: "off", level: 0 } },
+    { act: "hold", label: "On", needs: "app.edit", when: "state = 'open'", args: { target: "on", level: 100 } }];
+  const bind = (acts: unknown[]) => bindApplicationViews({ ...views(), note: { ...views().note, acts } },
+    { "room.note": selected }, [{ id, bytes: canonicalize(changed) }]);
+  expect(bind(choices)["note"]!.acts).toEqual(choices);
+  for (const args of [{ target: "on" }, { target: "other", level: 100 }, { target: "on", level: 101 },
+    { target: "on", level: 1.5 }, { target: "on", level: 100, invented: true }]) {
+    expect(() => bind([{ ...choices[0], args }])).toThrow(ApplicationViewError);
+  }
+  expect(() => bind([choices[0], choices[0]])).toThrow(ApplicationViewError);
+});
+
+// Invariant: a record link selects only a projected native local-item field,
+// under the same definition, into an explicitly selected record source.
+test("related records bind to typed local-item references and selected record targets", () => {
+  const changed = structuredClone(definition);
+  changed.items["note"]!.refs = { related: { required: false, fixed: false, to: { type: "item", of: "note" } } };
+  const id = definitionDigest(changed), source = projection.sources["note"]!;
+  if (source.read === "entries" || source.read === "latest-entry") throw Error("Item fixture required.");
+  const selected = readApplicationProjection({ ...projection, definition: id, sources: { note: { ...source, read: "item", fields: {
+    ...source.fields, related: { from: { kind: "ref", name: "related" }, of: { type: "item", of: "note" }, nullable: true },
+  } } } });
+  const link = { view: "record", field: "related", label: "Open related note" };
+  const input = (links: unknown[]) => ({ note: { ...views().note, links }, record: { ...views().note, kind: "record" } });
+  const bind = (links: unknown[]) => bindApplicationViews(input(links), { "room.note": selected }, [{ id, bytes: canonicalize(changed) }]);
+  expect(bind([link])["note"]).toMatchObject({ links: [link] });
+  for (const invalid of [{ ...link, field: "text" }, { ...link, field: "missing" }, { ...link, view: "missing" }, { ...link, view: "note" }]) {
+    expect(() => bind([invalid])).toThrow(ApplicationViewError);
+  }
+});

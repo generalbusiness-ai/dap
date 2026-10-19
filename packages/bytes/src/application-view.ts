@@ -1,12 +1,15 @@
 /** Declarative trusted views. Parsing this data grants no read or signing
  * authority; the host separately admits/evaluates when and checks needs. */
-import { isRecord, parseStrict, utf8 } from "./index.ts";
+import type { FieldValue } from "@generalbusiness/dap-contract";
+import { canonicalize, isRecord, parseStrict, utf8 } from "./index.ts";
 import { applicationJson } from "./application-json.ts";
 import { ApplicationPackageError } from "./application-types.ts";
 export const APPLICATION_VIEW_LIMITS = Object.freeze({ bytes: 64 * 1024, views: 32, acts: 2, facts: 16, templateBytes: 4096, expressionBytes: 2048 });
 export interface ApplicationViewAct {
   readonly act: string;
   readonly label: string;
+  /** Constant native fields; no row substitution or browser-supplied values. */
+  readonly args?: Readonly<Record<string, FieldValue>>;
   readonly needs: string;
   /** A restricted@1 expression over the selected row's metadata and fields. */
   readonly when: string;
@@ -27,7 +30,10 @@ interface ViewBase {
   readonly display: "inline" | "fullscreen";
   readonly back: string | null;
 }
+export interface ApplicationViewLink { readonly view: string; readonly field: string; readonly label: string }
 export interface ApplicationItemView extends ViewBase {
+  /** Read-only navigation through a projected native local-item reference. */
+  readonly links?: readonly ApplicationViewLink[];
   readonly kind: "card" | "carousel" | "record" | "log";
   readonly title: string;
   readonly summary: string | null;
@@ -87,7 +93,7 @@ export function readApplicationViews(value: unknown): ApplicationViews {
   for (const given of Object.values(views)) {
     if (!isRecord(given)) return fail();
     const common = "acts,back,context,display,fallback,item,kind,projection,refresh,revision,waiting";
-    const view = only(given, (common + (given["kind"] === "surface" ? ",opens,resource" : ",actor,facts,summary,title")).split(",").sort().join());
+    const view = only(given, (common + (given["kind"] === "surface" ? ",opens,resource" : ",actor,facts,summary,title" + (Object.hasOwn(given, "links") ? ",links" : ""))).split(",").sort().join());
     name(view["projection"]); name(view["item"]);
     if (view["revision"] !== "revision" || typeof view["display"] !== "string" || !["inline", "fullscreen"].includes(view["display"])) return fail();
     if (view["back"] !== null) name(view["back"]);
@@ -99,8 +105,10 @@ export function readApplicationViews(value: unknown): ApplicationViews {
     if (!Array.isArray(acts) || acts.length > B.acts) return fail("limit");
     const used = new Set<string>();
     for (const given of acts) {
-      const act = only(given, "act,label,needs,when"), kind = name(act["act"]);
-      if (used.has(kind)) return fail(); used.add(kind);
+      const act = only(given, isRecord(given) && Object.hasOwn(given, "args") ? "act,args,label,needs,when" : "act,label,needs,when"), kind = name(act["act"]);
+      if (Object.hasOwn(act, "args") && (!isRecord(act["args"]) || Object.keys(act["args"]).length > 128)) return fail();
+      const binding = canonicalize([kind, act["args"] ?? {}]);
+      if (used.has(binding)) return fail(); used.add(binding);
       name(act["needs"]); text(act["label"], 80); text(act["when"], B.expressionBytes);
     }
     if (view["kind"] === "surface") {
@@ -108,6 +116,16 @@ export function readApplicationViews(value: unknown): ApplicationViews {
       for (const target of Object.values(dict(view["opens"], 16))) name(target);
     } else {
       if (typeof view["kind"] !== "string" || !["card", "carousel", "record", "log"].includes(view["kind"])) return fail();
+      if (Object.hasOwn(view, "links")) {
+        const links = view["links"];
+        if (!Array.isArray(links) || links.length > 16) return fail("limit");
+        const destinations = new Set<string>();
+        for (const given of links) {
+          const link = only(given, "field,label,view"); name(link["view"]); name(link["field"]); text(link["label"], 80);
+          const destination = canonicalize([link["view"], link["field"]]);
+          if (destinations.has(destination)) return fail(); destinations.add(destination);
+        }
+      }
       name(view["title"]);
       for (const key of ["summary", "actor"]) if (view[key] !== null) name(view[key]);
       const facts = view["facts"];
