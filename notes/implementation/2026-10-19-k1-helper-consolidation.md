@@ -1,12 +1,19 @@
 # K1: consolidate shared helpers
 
+The implementation is complete and its required gate passed at
+`b1f611d78eabb01ffe7adbcb2fee458647645283`. Exact-head review remains
+required. The reporting candidate changes only this note after that
+code/test head; the final section records the gate and its qualifications.
+The earlier sections retain the development checkpoints and failed probes.
+
 Request `b1212999e370e4936b14138e381446047b18d92d`, builder promise
 `1b758ab79406a126c390fca8a5e14b0b76fa9405`. This is interruptible filler
 behind G5a, G5, S2a and S2b. Preparation starts at actual Main
 `dba3e76237250b6ce205d511691554de3d809baf` in an isolated checkout. No
-frozen demo or review view is changed. This first checkpoint is incomplete:
-the other named helper families still need their semantic comparison,
-consolidation or distinct names. No whole gate, Source or review is claimed.
+frozen demo or review view is changed. The first checkpoint was incomplete:
+the other named helper families still needed their semantic comparison,
+consolidation or distinct names. Its evidence did not include a whole gate
+or review; those stages are recorded separately below.
 
 ## The first shared families
 
