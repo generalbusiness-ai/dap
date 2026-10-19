@@ -292,25 +292,111 @@ an incorrect owner, budget or answer. The quota replay limits above remain
 explicit. The first MCP compiler run also caught an insufficiently narrowed
 owner option; reparsing the already owned device selection fixes it.
 
-The generic local CLI scenario currently creates a scripted single root,
-not a native installation. It therefore has no install grant to open these
-commands. Planner decision request `80218ee2` asks for its evidence boundary
-before adding native owner preparations: explicit scripted creation proof
-and replay anchor, a full local native install graph, or a separate actual
-runtime fault witness. No domain field, package manifest or silent genesis
-rewrite will mint a grant. Independent Grow declaration work can proceed.
-No complete G5a gate, review, landing, push or deployment is claimed.
+## Grow and local scenario evidence
 
-## Acceptance evidence to collect
+Planner report `86916ce87e516b14b57842abe44d5a68a3e33b6e`, adopted by
+`ddc894d7`, chooses an explicit developer-only scripted parent creation
+proof, followed by actual Core/SQLite child genesis and native owner
+preparations. Local replay names both parent facts as anchors: creation 0
+and confirmation 1. Proving confirmation 1 by replay would also replay the
+scripted parent genesis, so anchoring creation alone correctly failed its
+send comparison. The actual child journal and its preparations are replayed.
+No sealed journal is rewritten. The report exposes both full anchors and
+owner, labels this as scripted rather than a native install, and cites the
+separate genuine native install/Membership witness. TEST authority remains
+explicit and replay trusts those local identity grants as recorded.
 
-The owning witnesses must show command opening by set-heater and authorize;
-owner admission and record closure; named refusal of a non-owner and an
-ordinary outcome writer; a superseded answer retained on its own record;
-an unanswered command left unanswered; the G0 fault scenario and journal
-replay without the simulator; and reserved answer admission when a new act
-cannot fit. The review must distinguish native storage, pure judgments,
-scripted sensor inputs, and any browser observation. Run focused owning
-tests during development and one final gate before exact-head review.
+The generic scenario runner now supports native `prepare` steps, named
+refusal expectations and capability-record assertions. `$position` resolves
+a saved accepted receipt position; `$fact` resolves its full fact. Exact
+preparation retries return the original receipt and count once. The local
+owner is an explicit TEST actor with no target-setting role actions. A
+custom fixture cannot silently ignore a requested device grant.
+
+Grow declares the finite capability with fan, heater and vent bounds and
+one owner requirement. Set-vent, set-fan, set-heater and authorize open
+commands for the target-writing subject. The Device slots outcome and
+outcomeAt are capability owned. The device and layers projections expose
+the outcome separately from the target and report. The portable fact-kind
+reader accepts only known native capability steps, including this answer;
+unknown capability, version and step names remain invalid.
+
+The maintained fault scenario replaces all eight out-of-journal owner
+labels with native preparations. Its 222 steps include command closure,
+exact outcome/outcomeAt and targetAt references, non-owner/unknown/closed
+named refusals, and an exact answer retry. All 100 benches and the original
+fault, restoration, authority and stale-request journey remain. It reaches
+native head 169 with eight accepted preparation entries. A second run of
+the same journey omits all owner answers: every command remains open,
+outcome and outcomeAt stay empty, and replay is consistent through 161.
+The no-grant small fixture separately opens no command and refuses answers
+as device-command-ungranted. The independent MCP read fixture also removes
+its obsolete external owner labels; it keeps its native Site/Room path,
+scripted authority and no install grant.
+
+The maintained Grow native Worker witness now uses the new cohort and a
+real existing owner. Native Directory creates Site with delegation enabled;
+Site creates Room with the same grant and delegation disabled. Set-heater
+opens records with actual SQLite owner reservations. After an intervening
+sensor report, a late answer closes its older command without filling the
+newer target's outcome. The current answer writes its own outcome and
+releases its reservation. The same witness classifies sensor evidence,
+raises an alert and takes authorize: its command targets the heater subject,
+reserves one answer and releases it on confirmation. The issued-session
+projection returns independent target, reported and outcome values with
+the actual answer position. Site and Room then pass strict proven-grant
+replay, without anchors or grants-as-recorded. This is the real install
+and delegation witness cited beside the local scripted boundary.
+
+Acceptance witnesses:
+
+| Requirement | Owning witness |
+| --- | --- |
+| Set-heater and authorize open/reserve commands | `packages/scope/test/grow-owned-scopes.test.ts`, actual native install and SQLite |
+| Owner answer closes/writes, revision-independent report and late answer | Same Grow Worker witness; `packages/derive/test/forms-device-command.test.ts` also covers unknown as final |
+| Non-owner and foreign full MemberRef refused | Pure command forms and local scenario witness; owner control above distinguishes bare-name comparison |
+| Ordinary outcome writers refused as capability-slot-owned | Pure command validator variants for act, receive, timed and opaque native rule |
+| Unknown/closed and missing/outside grant named refusals | Pure command forms and `packages/cli/test/application-scenarios.test.ts` |
+| Fault journey replays, missing owner answers stay missing | `packages/cli/test/application-examples.test.ts`, labelled local scripted parent; actual check command below |
+| Reserved answer admitted while a new act cannot fit | `packages/scope/test/device-command-install.test.ts`, actual sixteen-entry SQLite edge and restart |
+
+Current focused evidence, with each original process closed:
+
+- `/tmp/artroom-g5a-grow-scripted-preparations-focused-20261019.log`:
+  original 17760, exit 0; seven files, 29 cases (Grow forms, CLI scenarios
+  and local scope, portable projection reader).
+- `/tmp/artroom-g5a-grow-unanswered-and-routing-20261019.log`: original
+  51502, exit 0; the selected Grow case includes the complete unanswered
+  run. Its global title filter skipped the MCP routing cases; those were
+  subsequently run in the complete owning selection below.
+- `/tmp/artroom-g5a-grow-native-outcome-projection-20261019.log`: original
+  17618, exit 0; one maintained Grow native install/delegation/reservation,
+  projection and two strict journal replays.
+- `/tmp/artroom-g5a-grow-mcp-inventory-and-reads-20261019.log`: original
+  55561, exit 0; four files, nine cases. The documented install schema and
+  inventory are derived from the actual tool, including owner selection.
+- `/tmp/artroom-g5a-grow-dap-check-20261019.log`: original 16523, exit 0;
+  actual check-command port over prepared maintained files, both scenarios,
+  eight native preparations and both explicit parent anchors. No network,
+  admission, production owner or device process runs in this check.
+- CLI's three and Scope's three owning compiler targets pass in the
+  corrected scripted-preparations and Grow native/authorize type logs.
+
+Retained local integration failures were missing parent proof/birth ports,
+insufficient parent anchors, pretty JSON exceeding the source-file ceiling,
+a sensor success report with a forbidden nonempty description, and an ISO
+millisecond timestamp where native timestamps omit milliseconds. These
+were corrected without widening bounds or weakening assertions. One Worker
+attempt stopped at the sandbox's denied loopback listener; the permitted
+local-runtime runs above passed and performed no deployment. The separate
+wrong CLI workspace-name type command did not run compilation; the exact
+package name was then used successfully. No dependency install was used.
+
+The delivery remains one complete Source head. Implementation and focused
+checks are complete; the full gate and exact-head review are still pending.
+The expert-note-only Main `2127d5c5` will be incorporated before the gate.
+No G5a landing, push, deployment, physical device action or S2b archive
+export admission is claimed.
 
 ## Dependency preparation
 

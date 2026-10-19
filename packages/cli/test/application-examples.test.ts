@@ -4,6 +4,7 @@
 import { fileURLToPath } from "node:url";
 import { rm } from "node:fs/promises";
 import { expect, test } from "vitest";
+import { isRecord } from "@generalbusiness/artroom-bytes";
 import { secretSigner } from "@generalbusiness/artroom-client";
 import { COUNTING_COMMITMENTS_DEFINITION } from "../../../apps/counter/commitments-pin.ts";
 import { LENDING_DEFINITION } from "../../../examples/lending/pin.ts";
@@ -55,12 +56,29 @@ test("maintained Grow declarations check durable presence and the complete room 
     const prepared = await prepareApplicationDirectory(root, secretSigner(new Uint8Array(32).fill(254)));
     expect(prepared.packet.package.v).toBe(2);
     expect(prepared.packet.package.semantic.definitions).toHaveLength(2);
-    for (const [path, steps, through, owners, projections] of [["site-scenario.json", 13, 6, 0, 4], ["fault-scenario.json", 202, 160, 8, 3]] as const) {
-      const result = await runApplicationScenario(prepared.packet, await readApplicationScenario(root, path));
+    for (const [path, steps, through, owners, projections] of [["site-scenario.json", 13, 6, 0, 4], ["fault-scenario.json", 222, 169, 8, 3]] as const) {
+      const input = await readApplicationScenario(root, path);
+      const result = await runApplicationScenario(prepared.packet, input);
       expect(result.steps).toBe(steps);
       expect(result.projectionChecks).toBe(projections);
       expect(result.replay.report).toMatchObject({ result: "consistent", target: { seq: through } });
-      expect(result.ownerRecords).toHaveLength(owners);
+      expect(result.ownerRecords).toEqual([]);
+      expect(result.preparations).toBe(owners);
+      expect(result.capabilityGrant?.authority ?? null).toBe(owners ? "scripted-parent-creation" : null);
+      if (owners) {
+        // With the same grant and target/sensor journey, no owner execution
+        // means every command remains open and every outcome stays absent.
+        if (!isRecord(input) || !Array.isArray(input["steps"])) throw Error("The maintained fixture must list steps.");
+        const outcomeChecks = input["steps"].filter(step => isRecord(step) && isRecord(step["assert"]) && isRecord(step["assert"]["values"]) && Object.hasOwn(step["assert"]["values"], "outcome"));
+        const steps = input["steps"].filter(step => isRecord(step) && !Object.hasOwn(step, "prepare") && !Object.hasOwn(step, "record") && !outcomeChecks.includes(step) && !(typeof step["retry"] === "string" && step["retry"].startsWith("answer-")));
+        for (const check of outcomeChecks) if (isRecord(check) && isRecord(check["assert"])) steps.push({ assert: { item: check["assert"]["item"], values: { outcome: null }, refs: { outcomeAt: null } } });
+        for (const step of input["steps"]) if (isRecord(step) && isRecord(step["record"])) steps.push({ record: { ...step["record"], state: "open", values: { decided: 0 } } });
+        const unanswered = await runApplicationScenario(prepared.packet, { ...input, steps });
+        expect(unanswered.preparations).toBe(0);
+        expect(unanswered.ownerRecords).toEqual([]);
+        expect(unanswered.capabilityGrant?.authority).toBe("scripted-parent-creation");
+        expect(unanswered.replay.report).toMatchObject({ result: "consistent", target: { seq: through - owners } });
+      }
     }
   } finally { await rm(root, { recursive: true, force: true }); }
 });
