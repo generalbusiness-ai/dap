@@ -1,7 +1,7 @@
 # The sequenced level and the order scope
 
-18 October 2026, draft 2. Design note for review; section 12 lists what
-changed after the checker's review of draft 1. It decides two things
+18 October 2026, draft 3. Design note for review; section 12 lists what
+changed after the checker's reviews of drafts 1 and 2. It decides two things
 about what a scope's definition declares, and designs the runtime for the
 second.
 
@@ -182,8 +182,9 @@ A group is a set of sequenced scopes and one **order scope**. The order
 scope's journal is the group's order: each of its allocation entries
 gives one position to one member for one input. A member asks for a
 position before it judges a sequenced input, reads the other members as
-of that position, judges, has the order scope record the resolution, and
-commits an entry that names the position. Nothing waits for the whole
+of that position, judges, writes the judgment as a prepare entry, has the
+order scope record a resolution bound to that entry's hash, and then
+writes the commit entry that puts the prepared effects into effect. Nothing waits for the whole
 group: a member waits only for another member's earlier positions, and
 only when it reads that member. Deliveries between members, and to and
 from the rest of the room, stay as they are.
@@ -232,10 +233,25 @@ position?: { at: FactRef };               // the order scope's entry that alloca
 reads?: readonly GroupReadUse[];          // one per `reads` entry; 5.5
 ```
 
-`uses` keeps its one domain, the canonical bytes of a foreign entry
-(`entry.ts:106`): it cites the order scope's head entry the input read,
-each cut entry, and each `leave` entry a read rests on. The page a read
-saw is a second domain, `page`, cited from `reads` (5.5).
+An entry with `position` is a **prepare entry**: it holds the whole
+judgment of the sequenced input (its `uses`, `reads`, `prepared`,
+`effects` and `sends`) and takes effect only through a later entry of
+this scope with one of two new inputs:
+
+```ts
+| { type: "commit";  prepared: FactRef; resolution: FactRef }   // the prepare entry and the order scope's resolution of it
+| { type: "abandon"; prepared: FactRef; expiry: FactRef }       // the prepare entry and the order scope's expiry of its position
+```
+
+A commit entry has no effects or sends of its own; the fold applies the
+prepare entry's effects at the commit entry, and the outbox dispatches
+the prepare entry's sends from the commit. An abandon entry makes the
+prepare entry void. The position of a commit entry is its prepare
+entry's position. `uses` keeps its one domain, the canonical bytes of a
+foreign entry (`entry.ts:106`): the prepare entry cites the order scope's
+head entry the input read, each cut entry, and each `leave` entry a read
+rests on. The page a read saw is a second domain, `page`, cited from
+`reads` (5.5).
 
 ### 5.3 The order scope
 
@@ -254,7 +270,7 @@ A platform definition, `platform:order@1`, of a new scope kind `order`
 | `establish` (genesis) | the creating scope's `create` send; fields `name`, `size`, `lifetime` | Opens the `group` as `forming` and records the creator from the genesis's source entry. No member is named: none exists yet |
 | `enroll` | a `tell` handler whose guard requires the sender to be the recorded creator; fields `member` (a scope reference with incarnation) and `name` | Opens one `member` row, `joined`, `since` this entry's position. When the joined count reaches `size`, the same entry transitions the group to `open` |
 | `leave` | an admin, grant `order.leave`; field `member` | Transitions the member to `left`, `until` this entry's position (5.7) |
-| `close` | an admin, grant `order.close` | Transitions the group to `closed` when it is `forming`, or when every member is `left`. The scope is then terminal |
+| `close` | an admin, grant `order.close` | Transitions the group to `closed` when it is `forming`, or when every member is `left` and no `allocation` is `open` (a `count` guard). The scope is then terminal: it admits no request. Nothing is stranded, because every allocation is final and a member settles a final allocation from the order journal alone (5.4) |
 
 **Bootstrap.** The package root creates the order scope first and, on
 its `applied` result, creates each member with the order scope's
@@ -280,7 +296,7 @@ entry in the order scope's own turn, with a new input kind:
 
 ```ts
 | { type: "allocation"; member: ScopeRef; input: Digest }                              // opens an `allocation`; its seq is the position
-| { type: "resolution"; member: ScopeRef; position: number; input: Digest }            // `open` to `resolved`
+| { type: "resolution"; member: ScopeRef; position: number; input: Digest; prepared: FactRef }  // `open` to `resolved`, bound to the prepare entry
 | { type: "hole"; member: ScopeRef; position: number; input: Digest; reason: string }  // `open` to `holed`
 ```
 
@@ -290,9 +306,13 @@ entry in the order scope's own turn, with a new input kind:
   `holed` or `expired`, a repeat opens a new allocation at a new
   position. Refused `not-a-member`, `order-forming`, `order-left`,
   `order-closed` or `scope-full`.
-- **Resolve.** `open` to `resolved`. Refused `expired` or `holed` when
-  already final in that state, `not-open` when it names another member's
-  or input's allocation. Idempotent on a `resolved` allocation.
+- **Resolve.** `open` to `resolved`, recording the prepare entry's fact,
+  hash included, so that exactly one prepared result can commit at that
+  position. Refused `expired` or `holed` when already final in that
+  state, `not-open` when it names another member's or input's
+  allocation. Idempotent on a `resolved` allocation with the same
+  `prepared`; a different `prepared` for a resolved position is refused
+  `position-bound`.
 - **Hole.** `open` to `holed`, with the reason the member's judgment
   gave. Idempotent the same way.
 
@@ -303,14 +323,17 @@ the member, does not fetch, and holds no bytes but the digest.
 from `open` to `expired` when `opened` plus the group's `lifetime` has
 passed, with attention. The lifetime is set at genesis from the package's
 `groups` declaration. A later `resolve` for that position is refused
-`expired`, so a hole never gains a commit. Expiry, resolution and holes
-are entries of one journal, so which came first is decided where the
-position was allocated, and no clock bound between members is assumed.
+`expired`, so a hole never gains a commit. Only an `open` allocation
+expires: a `resolved` one has a determined result (5.5, the failure
+model). Expiry, resolution and holes are entries of one journal, so
+which came first is decided where the position was allocated, and no
+clock bound between members is assumed. The timed rule runs until
+`close`, which requires that nothing is `open`.
 
 ### 5.4 The turn of a sequenced input
 
-The turn (`docs/scopes.md:207-228`) gains three steps for an input whose
-act or handler is `sequenced`, and one after the commit:
+The turn (`docs/scopes.md:207-228`) gains these steps for an input whose
+act or handler is `sequenced`:
 
 1. Before the turn, each foreign entry the input names is fetched and
    checked, as today.
@@ -324,7 +347,7 @@ act or handler is `sequenced`, and one after the commit:
    intent, or the delivery's envelope with its retained source entry),
    its digest, P and the allocation's fact. At most one pending row
    exists; a second sequenced input while one is pending is answered
-   `busy`. Unsequenced inputs are not held by the row.
+   `busy`.
 4. **Read.** The scope reads the order scope's journal through its head
    and, for each `reads` entry, computes the cut position and the
    member's finality at or below it (5.5). An allocation to the member at
@@ -332,40 +355,50 @@ act or handler is `sequenced`, and one after the commit:
    the reason `member-pending`; the pending row stays, and the next
    attempt gets the same P by idempotency. Otherwise the scope reads the
    page from the member as of the cut.
-5. The head is noted; the rule expressions are evaluated.
-6. **Resolve or hole.** When the judgment is `applied`, the scope asks
-   the order scope to resolve P before it writes anything. `expired`:
-   the pending row is cleared and the input is judged again from step 3
-   with a new allocation; an intent past its `notAfter` is refused as
-   any act is. No answer: `unavailable`, `order-unavailable`, and the row
-   stays. When the judgment is a refusal, the scope asks the order scope
-   to record a hole at P with the reason, then answers the refusal and
-   writes nothing, as any refusal writes nothing
-   (`docs/manual/ten-terms.md`, "takes effect").
-7. **The commit**, as today; the entry carries `position: { at }`, the
-   reads in `reads`, and in `uses` the order head and the cut entries.
-   The pending row is cleared in the same transaction.
+5. The head is noted; the rule expressions are evaluated, with the
+   clock reading of this turn; `notAfter` and every other time is
+   judged here and not again.
+6. **Refuse, or prepare.** A refusal: the scope asks the order scope to
+   record a hole at P with the reason, answers the refusal, clears the
+   pending row and writes nothing, as any refusal writes nothing
+   (`docs/manual/ten-terms.md`, "takes effect"). An applied judgment: the
+   scope writes the **prepare entry** (5.2) with `position`, its reads,
+   the rule answers, the derived effects and sends, and the capacity
+   reservation its effects need, and clears the pending row in the same
+   transaction. The prepare entry is the durable judgment: what it says
+   is what will take effect, or nothing.
+7. **The fence.** From the prepare entry until its commit or abandon
+   entry, the scope writes nothing else: every act and delivery is
+   answered `busy`, and the drain is held. Nothing can therefore change
+   the state, the authority, the clock reading or the reservation the
+   prepared judgment rests on. The fence lasts one round trip to the
+   order scope in the ordinary case, and at most the group's lifetime
+   plus the scope's own resumption otherwise.
+8. **Resolve.** The scope asks the order scope to resolve P for this
+   input with the prepare entry's fact. `resolved`: the scope writes the
+   commit entry citing the prepare entry and the resolution fact; the
+   prepared effects take effect and its sends are dispatched. `expired`:
+   the scope writes the abandon entry citing the prepare entry and the
+   expiry fact; the prepared judgment is void; the input is judged again
+   from step 3 with a new allocation, and an intent past its `notAfter`
+   is refused as any act is. No answer: the turn ends `unavailable` with
+   the reason `order-unavailable`, the fence stays, and the scope retries
+   on its own alarm.
 
-Nothing is written in the member's journal before the order scope has
-recorded the resolution, so the member's state never holds the effects
-of an input the group counts as a hole, and the fold stays a function of
-the member's own journal.
+**Restart and resume.** An object that restarts reads its head. A
+pending row with no prepare entry resumes at step 4. A prepare entry at
+the head with no commit or abandon resumes at step 8: the resolve
+request is idempotent, and its answer, `resolved` or `expired`, is
+also readable from the order journal without a request, which is how a
+member settles after the order scope has closed. The object's own alarm
+resumes both cases, as it runs timed rules, so a stopped member that
+returns completes its input without its sender. An admitted delivery is
+never abandoned by this: after an `expired` answer the sender's
+dispatcher retries it, and the retry is judged at a new position.
 
-**Restart and resume.** An object that restarts with a pending row
-resumes it from step 4 without waiting for the sender; the row holds the
-input. If its journal already has an entry naming the pending position,
-the row is stale and is cleared. If the order scope answers `expired` at
-step 6, the input is judged again from step 3. The object's own alarm
-resumes a pending row as it runs timed rules, so a stopped member that
-returns completes its input, and a member that never returns blocks a
-reader for at most the group's lifetime, after which the order scope's
-expiry makes the position a hole. An admitted delivery is never
-abandoned: the sender's dispatcher retries it, and the retry is judged
-at a new position.
-
-**Unsequenced inputs** of a sequenced scope take no position and change
-nothing above. They are judged under the rules of a recorded scope, and
-D5-5 holds for them.
+**Unsequenced inputs** of a sequenced scope take no position. Outside
+the fence they are judged under the rules of a recorded scope, and D5-5
+holds for them; inside the fence they are answered `busy`.
 
 ### 5.5 Reading a member as of a position
 
@@ -385,12 +418,15 @@ allocation is in the order journal before its reply is sent, and stays
 `open` until its outcome is recorded there, so a lost reply cannot make a
 cut change.
 
-**The cut.** Once N is final at X, N's state as of X is N's journal
-through its last entry whose `position` is at or below X, or its genesis
-if it has none. Unsequenced entries of N before that entry are in the
-cut; those after it are not. The cut is a function of N's journal, the
-order journal and X alone, and finality is permanent, so it never
-changes. Two consequences: what the group reads of a member, the member
+**The cut.** Once N is final at X, N's cut entry at X is its last
+commit entry whose position is at or below X, or its genesis entry when
+it has none; N's state as of X is the fold of N's journal through that
+entry. A genesis that opens items gives a non-empty page; holed and
+expired positions contribute nothing and need no distinction from
+positions never allocated. Unsequenced entries of N before the cut entry
+are in the cut; those after it are not. The cut is a function of N's
+journal, the order journal and X alone, and finality is permanent, so it
+never changes. Two consequences: what the group reads of a member, the member
 must have written in a sequenced entry or in an entry before one, so
 sequence what the group reads or decides and nothing else; and a scope's
 own guards read its own live head, every entry included, as every act
@@ -399,18 +435,34 @@ does; the cut is what other members see of it.
 **The read.** A new read of the scope API, `at(X, range)`, answers the
 items the range covers as of X, in one page bounded as `items` is; or
 `busy` under the limits the member has for any reader; or `behind` while
-the member is between step 6 and step 7 of its turn for an entry the
-order journal already shows resolved. The read is served from the
-member's journal: the member folds its items to the cut, which it may
-cache per position. Who may read: a member of the same group, for a
+the member holds a prepare entry at or below X whose position the order
+journal shows resolved and whose commit entry it has not yet written.
+The read is served from the member's journal: the member folds its items
+to the cut, which it may cache per position. Who may read: a member of the same group, for a
 sequenced input, with the member's own authorization, as the authority
 read is made; no session is checked; a reader that is not a `joined`
 member of the same order scope is refused.
 
+**The failure model.** A position has three conditions, and a reader
+waits differently for each. *Open*: the outcome is undetermined; the
+reader is `member-pending`, and the order scope's expiry bounds the wait
+by the group's lifetime. *Resolved, not committed*: the outcome is
+determined and durable, in the member's prepare entry and in the order
+scope's resolution that names its hash; the member writes the commit
+entry on its next activation; the reader is `behind` for exactly as long
+as that member is unavailable, which is the dependence any read of that
+member has. No expiry applies and none would help, since the result is
+fixed. *Final*: committed, holed, expired or abandoned; nothing waits.
+So a reader waits at most the lifetime for an undetermined position and
+at most the member's own unavailability for a determined one. A member
+that never returns is unavailable, as a destroyed scope is, and replay
+reports its missing commit entry as `missing-dependency`.
+
 **Staleness.** A reader with no staleness waits for every allocation
 below P to be final. A reader with staleness s waits only for
-allocations older than s; with s at or above the group's lifetime it
-never waits. The author chooses per read, in the definition.
+allocations older than s; with s at or above the group's lifetime no
+allocation below its cut can still be open, and it waits only on an
+unavailable member. The author chooses per read, in the definition.
 
 **The witness.** For each read the entry's `reads` holds:
 
@@ -419,8 +471,7 @@ export interface GroupReadUse {
   name: string;                           // the `reads` key
   member: ScopeRef;                       // incarnation included
   cut: number;                            // X
-  entry: FactRef | null;                  // the cut entry of the member, or null for an absence
-  absent?: "genesis" | "left";            // no positioned entry at or below X; or the member left at or below X
+  entry: FactRef | null;                  // the cut entry of the member (a commit entry or its genesis), or null when the member left
   page: Digest;                           // the canonical page bytes, retained under the kind `page`
 }
 ```
@@ -432,12 +483,14 @@ its digest, when the entry is committed; it is bounded by the page bound
 (64 items, each bounded by the member's slot types) and archived with the
 entry (section 8). The two byte domains are never mixed.
 
-**Absence.** A read of a member with no positioned entry at or below X,
-once final, answers an empty page with `absent: "genesis"`. A read of a
-member that left at or below X answers an empty page with `absent:
-"left"` and cites the `leave` entry (5.7). Both are verified absence:
-replay rebuilds each from the order journal. An unresolved allocation is
-never written; it is the live answer `member-pending`.
+**Absence.** The one absence is a member that left: when the `leave`
+entry's position L is below X, the read answers an empty page with
+`entry: null` and cites the `leave` entry in `uses` (5.7); replay
+verifies L < X from the order journal. A member with no committed
+position at or below X is not absent: its cut entry is its genesis and
+its page is the genesis fold. An unresolved allocation is never written;
+it is the live answer `member-pending`. An empty page therefore never
+stands for an undetermined position or an unavailable journal.
 
 **No barrier.** No step waits for the whole group. A sequenced input
 waits only for the members it reads, and only for those members'
@@ -461,48 +514,62 @@ own position L is the fence:
   `order-left`. Allocations to it at or below L that are still `open`
   resolve, hole or expire as any allocation does.
 - A reader whose cut position X is at or below L reads the member's cut
-  as before. A reader whose X is above L treats the member as absent: an
-  empty page with `absent: "left"`, citing the `leave` entry, and a
-  `count` over it is zero.
+  as before, including positions at or below L that settle after the
+  leave. A reader whose X is above L treats the member as absent: an
+  empty page with `entry: null`, citing the `leave` entry, and a `count`
+  over it is zero. X equal to L reads the cut.
 - The member keeps its journal and its unsequenced inputs. Its sequenced
   acts and handlers are refused `order-left` from the moment it observes
   the `leave` entry, which it reads before each sequenced turn.
 - A member's pending requests to others settle as they would for any
   scope; nothing is undone.
 
-A scope never joins a group after its genesis, because the level and the
+A leave that races a sequenced input of the leaving member: an open
+allocation at or below L still resolves, holes or expires; a prepare
+entry whose position is resolved still commits, since the member reads
+the resolution from the order journal and needs no request. A scope
+never joins a group after its genesis, because the level and the
 reference are pinned; an application that wants a scope in a group makes
 a new scope and carries forward under gap 10 of the applications note.
-`close` ends the order scope after every member has left, or while the
-group is still `forming`.
+`close` ends the order scope when every member has left and no
+allocation is open, or while the group is still `forming`; after it,
+members settle their resolved or expired positions from the order
+journal alone.
 
 ### 5.8 Replay
 
-The verifier (`packages/replay`) checks, for each entry with `position`:
+The verifier (`packages/replay`) checks:
 
-- the order scope has an allocation entry at that position naming this
-  scope, incarnation included, and this input's digest, and a resolution
-  entry for that position naming the same input; a `holed` or `expired`
-  allocation with a member entry at that position is a mismatch;
-- for each `reads` witness: X is the cut position 5.5 computes from P,
-  the read's `staleness` and the order journal; every allocation to the
-  member at or below X is final in the order journal at the head entry
-  cited in `uses`; `entry` is the member's last entry with a position at
-  or below X, or `absent` holds by the order journal (`genesis`: no
-  allocation to the member at or below X; `left`: the cited `leave`
-  entry's position is at or below X); and the retained page is byte for
-  byte what folding the member's journal through the cut entry gives for
-  the declared range;
-- the member was `joined` in the order scope at P.
+- for each prepare entry: the order scope has an allocation entry at
+  that position naming this scope, incarnation included, and this
+  input's digest; the member was `joined` there; and for each `reads`
+  witness, X is the cut position 5.5 computes from P, the read's
+  `staleness` and the order journal; every allocation to the member at
+  or below X is final in the order journal at the head entry cited in
+  `uses`; `entry` is the member's last commit entry with a position at
+  or below X or its genesis, or is null with a cited `leave` entry whose
+  position is below X; and the retained page is byte for byte the fold
+  of the member's journal through the cut entry for the declared range;
+- for each commit entry: the cited prepare entry is this scope's, the
+  order scope's resolution at that position names this member, this
+  input and the prepare entry's fact, hash included, and no other commit
+  cites the same prepare; nothing else was written between the prepare
+  and the commit;
+- for each abandon entry: the cited allocation is `expired`, and
+  nothing else was written between the prepare and the abandon;
+- a prepare entry at the head with neither is reported **pending**: a
+  live condition, not a fault.
 
-The report distinguishes **verified**; **mismatch**, when a journal or a
-retained page contradicts the entry, including an `open` allocation at
-or below a cited cut, which a committed reader can never have seen; and
-**missing-dependency**, when the order scope's journal, a read member's
-journal through its cut, or a retained page is not available, reported
-for that entry as for any foreign fact (`packages/replay/README.md`). An
-entry whose scope declares `sequenced` and whose input is sequenced but
-which has no `position` is a mismatch. The `--git` source of 15.7 reads
+The report distinguishes **verified**; **pending**; **mismatch**, when a
+journal or a retained page contradicts an entry, including an `open`
+allocation at or below a cited cut, which a committed reader can never
+have seen, a `holed` or `expired` allocation with a commit entry at its
+position, or an entry inside a fence; and **missing-dependency**, when
+the order scope's journal, a read member's journal through its cut, a
+member's commit entry for a resolved position, or a retained page is not
+available, reported for that entry as for any foreign fact
+(`packages/replay/README.md`). An entry whose scope declares `sequenced`
+and whose input is sequenced but which has no `position` is a mismatch. The `--git` source of 15.7 reads
 the order scope from its own ref in the clone, and the pages from the
 reader's archived inputs.
 
@@ -519,14 +586,15 @@ delivery, are assigned at admission and are inputs to the judgment.
 | Items per read | 64 | The list bound of the contract's revision 19 |
 | Pending rows per scope | 1 | One sequenced input at a time |
 | Group lifetime | 1 minute to 30 days, required | The bound on an unresolved position; the package declares it |
-| Entries per sequenced input | 2 in the order scope (allocation; resolution or hole), 1 in the member; an expiry adds 1 | 5.3 and 5.4 |
+| Entries per sequenced input | 2 in the order scope (allocation; resolution or hole) and 2 in the member (prepare; commit or abandon) for an applied input; 1 in the order scope for a refused one; an expiry adds 1 | 5.3 and 5.4 |
 | Order scope capacity | As any scope's | Bounds the group's lifetime count of sequenced inputs; `scope-full` refuses an allocation |
 
-Costs: two round trips at admission for every applied sequenced input,
-to one object that only appends; a reader with no staleness stalls on a
-stopped member for at most the group's lifetime; a group whose exchanges
-are strictly sequential pays for nothing, and that case is one owner,
-which stays the first choice.
+Costs: two round trips and two own entries for every applied sequenced
+input, the round trips to one object that only appends; a fence on the
+member for one round trip in the ordinary case; a reader's wait as the
+failure model of 5.5 states it; a group whose exchanges are strictly
+sequential pays for nothing, and that case is one owner, which stays the
+first choice.
 
 ### 5.10 What this note does not provide
 
@@ -558,12 +626,19 @@ order?: "arrival" | "source";             // default arrival
 ```
 
 With `source`, the receiver keeps, per source scope and handler, the
-highest `(seq, n)` of the delivery it last applied, and answers
-`superseded` to a `tell` whose `DeliveryCause` is lower, writing a
-`superseded` entry as a `relate` does for an older revision
-(`docs/scopes.md`, "Relationship updates"). Newest from each sender wins;
-a gap is not detected. The copy of the last applied pair is bookkeeping
-derived from the journal, and a replay recomputes it.
+highest `(seq, n)` of the delivery it has applied, and answers
+`superseded` to a `tell` whose `DeliveryCause` is lower than that,
+writing a `superseded` entry as a `relate` does for an older revision
+(`docs/scopes.md`, "Relationship updates"). This is suppression of an
+older delivery that arrives after a newer one, and nothing more: an
+older delivery that arrives first is applied, and a newer one after it
+is applied too, so two arrival orders can leave different states. It is
+not a latest-value guarantee, and it detects no gap. The witness names
+its observation exactly: the sequence of applied pairs per source is
+strictly increasing in every run, the lower-first run applies both, and
+the higher-first run applies one and writes one `superseded` entry. The
+copy of the highest pair is bookkeeping derived from the journal, and a
+replay recomputes it.
 
 ### 6.3 The ordering paragraph
 
@@ -599,17 +674,33 @@ owner's balance as of its cut with a `count` guard over the owner's
 a consistent view, not for allocation. The witness shows five things:
 
 - two requesters reading the owner as of positions 5 and 7 see the
-  owner's entries at or below their cuts and no others, in any arrival
-  order;
+  owner's committed entries at or below their cuts and no others, in
+  any arrival order, and a requester reading before the owner's first
+  commit sees the owner's genesis fold, which opens the ledger and is
+  not empty;
 - the reactor model's relay trap (one cause reaching a scope by two
-  paths) ends the same way on every run;
+  paths) takes two positions in whichever order they are allocated, and
+  the owner's state after both equals the fold of the two prepared
+  judgments in position order, on every run and in replay;
 - an allocation whose reply is lost leaves the reader `member-pending`
-  until the owner resumes and resolves it, and the reader's cut then
-  includes the owner's entry;
-- an owner stopped past the group's lifetime leaves a hole the reader
-  passes over, and the owner's later resolve is refused `expired`;
+  until the owner resumes and prepares, and the reader's cut then
+  includes the owner's commit;
+- a resolve whose reply is lost, with an unsequenced act and a clock
+  advance attempted during the fence (both answered `busy`) and an
+  eviction before the commit, resumes to exactly the prepared entry's
+  commit; replay verifies the resolution names its hash;
+- an owner stopped past the group's lifetime before preparing leaves a
+  hole the reader passes over, and the owner's later resolve is refused
+  `expired` and writes an abandon entry;
+- an owner stopped after resolution and before the commit leaves the
+  reader `behind`, not on an older cut, until the owner resumes;
 - a requester with a `staleness` of one hour proceeds while the owner's
-  newest position is still open.
+  newest position is still open;
+- a reader at X equal to the owner's leave position reads the cut, and
+  one above it reads the empty page; a `close` with an open allocation
+  is refused;
+- source order (6.2): the lower-first run applies both deliveries and
+  the higher-first run supersedes one.
 
 ## 8. Changes to existing documents
 
@@ -634,11 +725,11 @@ M2a in plan 033.
 
 | Slice | What | Needs | Done when | Size |
 |---|---|---|---|---|
-| S1 | The `late` form (packages note 4.1, per 6.1) and source order (6.2): contract, validator, derive, scope, replay, tests | nothing | a handler with `late.within` applies the branch to an old delivery and the handler to a fresh one, the entry marked; `late: "refuse"` refuses with the reason; a `source`-ordered handler answers `superseded` to a lower pair in either arrival order; all replay | 1 day |
+| S1 | The `late` form (packages note 4.1, per 6.1) and source order (6.2): contract, validator, derive, scope, replay, tests | nothing | a handler with `late.within` applies the branch to an old delivery and the handler to a fresh one, the entry marked; `late: "refuse"` refuses with the reason; a `source`-ordered handler applies both deliveries in the lower-first run and supersedes the lower one in the higher-first run, with the applied pairs strictly increasing in each; all replay | 1 day |
 | S2 | The archive as a binding (section 4): the `archived` literal withdrawn, the directory slot and `bind-archive`, the claim field, the manifest requirement and the install refusal, the archiver's target step | this note approved | a room bound at its claim archives its platform scopes and an installed package's scopes; a room bound later archives them from position 0; a package that requires the archive is refused in an unbound room | 1 to 2 days; before plan 033's slice 9 |
 | S3 | The contract of the sequenced level (5.2): the level, the mark, `reads` with `staleness`, the `read` operand, `position` and `reads` in the entry, the three order inputs, the retained kind `page`, the `order` kind, and the validator | this note approved; M2a's package format, for groups in the manifest | the validator admits a sequenced definition and refuses each misuse named in 5.2 | 1 day |
-| S4 | The order scope and the sequenced turn (5.3 to 5.7): `platform:order@1` with its items, acts, three requests and expiry; bootstrap by enrolment; the pending row and resume; the cut, finality and the `at` read; `leave` and `close` | S3 | the two-scope witness of section 7 runs in memory and on native storage with its five checks | 4 days |
-| S5 | Replay and archive of a group (5.8, 4.2): the three answers, the page witness, the order scope's ref in a clone | S4, A2 and A3 | the witness's journals and order scope replay from a clone; a tampered position, a page that differs, and an `open` allocation below a cited cut are each a mismatch; a missing order journal is `missing-dependency` | 1 day |
+| S4 | The order scope and the sequenced turn (5.3 to 5.7): `platform:order@1` with its items, acts, three requests and expiry; bootstrap by enrolment; the pending row, the prepare entry, the fence, the commit and abandon entries, and resume; the cut, finality and the `at` read; `leave` and `close` | S3 | the two-scope witness of section 7 runs in memory and on native storage with every check of its list | 4 to 5 days |
+| S5 | Replay and archive of a group (5.8, 4.2): the four answers, the page witness, the commit and abandon checks, the order scope's ref in a clone | S4, A2 and A3 | the witness's journals and order scope replay from a clone; a tampered position, a page that differs, an `open` allocation below a cited cut, a resolution naming another hash, and an entry inside a fence are each a mismatch; a prepare at the head is `pending`; a missing order journal or commit entry is `missing-dependency` | 1 day |
 | S6 | Documents (section 8) | S2, S4 | the contract, the guide, the roadmap and the archive note say what the runtime does | with S2 and S4 |
 
 ## 10. Decisions
@@ -653,10 +744,10 @@ M2a in plan 033.
    write one entry in the order scope; allocation is idempotent per
    member and input while open; the order scope judges nothing about the
    input. Planner.
-5. A member's state as of a cut position is its journal through its last
-   entry at or below it, and a reader takes that cut only when every
-   allocation to the member at or below it is final in the order
-   journal. Planner, draft 2.
+5. A member's state as of a cut position is the fold of its journal
+   through its last commit entry at or below it, or through its genesis,
+   and a reader takes that cut only when every allocation to the member
+   at or below it is final in the order journal. Planner, drafts 2 and 3.
 6. No barrier. A sequenced input waits only for the members it reads and
    only for their positions at or below its cut. Planner.
 7. A refused sequenced input is a hole recorded in the order scope; an
@@ -666,8 +757,10 @@ M2a in plan 033.
 8. Deliveries, sends and effects are unchanged. A group orders reads; it
    does not make a transaction. Planner.
 9. The name is "sequenced". Planner.
-10. A member writes nothing in its journal for a sequenced input until
-    the order scope has recorded the resolution. Planner, draft 2.
+10. A member writes its judgment as a prepare entry, has the order
+    scope's resolution bind that entry's hash, and only then writes the
+    commit entry that puts the judgment into effect; between the two it
+    writes nothing else. Planner, draft 3.
 11. A group is formed by enrolment from its creator after the members
     exist, incarnation included; no member identity is claimed before
     its genesis. Planner, draft 2.
@@ -678,6 +771,17 @@ M2a in plan 033.
     measured on the order scope's one clock. Planner, draft 2.
 14. The lag guard is withdrawn; the `late` form of the packages note is
     the consumer-side bound. Planner, draft 2.
+15. Only an open allocation expires. A resolved position's result is
+    determined and durable; a reader waits for it only as long as its
+    member is unavailable. Planner, draft 3.
+16. The one absence is a left member, below the reader's cut; a member
+    with no committed position reads as its genesis fold. Planner,
+    draft 3.
+17. `close` requires every member left and no allocation open; members
+    settle final positions from the order journal after it. Planner,
+    draft 3.
+18. Source order is suppression of an older delivery that arrives after
+    a newer one, not a latest-value guarantee. Planner, draft 3.
 
 ## 11. Open points
 
@@ -691,10 +795,23 @@ M2a in plan 033.
 | O6 | Whether a sequenced handler for a `relate` update allocates before or after the revision check | After: a superseded update takes no position |
 | O7 | Whether the order scope should tell a member that its position expired | Attention only in the first version; a `tell` once timed rules may send (packages note, 4.3) |
 | O8 | The `page` kind's byte bound, and whether a page is shared across readers of one cut | 64 items by the member's slot types; one retained copy per reader's scope |
+| O9 | Whether a reader may fold a member's resolved but uncommitted prepare entry itself, from the two journals, so that `behind` disappears | Not in the first version: a member's own state must come from its own journal, and the commit entry is what makes the prepare effective there. Revisit after S4's measurements |
 
-## 12. Changes in draft 2
+## 12. Changes in drafts 2 and 3
 
-| Finding of review 2ff202f0 (head 365f56a5) | Where answered |
+**Draft 3**, after review a98cca3e of head 66439e2a:
+
+| Finding | Where answered |
+|---|---|
+| F1, P1: resolution bound only member, position and input; state could change between resolution and commit | 5.2 the prepare entry and the commit and abandon inputs; 5.3 the resolution carries the prepare entry's fact; 5.4 steps 6 to 8 and the fence; decision 10; the lost-resolve control in section 7 |
+| F2, P1: a resolved but uncommitted position defeated the finite wait | 5.5 the failure model: an undetermined position waits at most the lifetime, a determined one only for its member's availability; decision 15; the stopped-after-resolution control |
+| F3, P1: genesis, holes and leave did not share one cut rule | 5.5 the cut entry is a commit entry or the genesis, the page is always a fold, holes need no distinction; the one absence is `left` with L below X; 5.7 X equal to L reads the cut; decision 16; the nonempty-genesis and X-equals-L controls |
+| F4, P1: `close` could strand open positions | 5.3 and 5.7 `close` requires no open allocation; settlement after close from the order journal; decision 17 |
+| F5, P2: source order is high-water suppression | 6.2 restated with the lower-first trace; the relay-trap witness names the position-order fold; S1's row; decision 18 |
+
+**Draft 2**, after review 2ff202f0 of head 365f56a5:
+
+| Finding | Where answered |
 |---|---|
 | F1, P1: a returned cut could change after a lost allocation reply; a cleared refusal could be retried at its old position | 5.5 finality from the order journal; 5.3 holes and expiry as entries of the order scope; 5.4 step 6; decision 7; the lost-reply and expiry checks in section 7 |
 | F2, P1: the restart rule gave no finite progress | 5.4 the pending row holds the input itself and is resumed by the object; 5.3 expiry after the group's lifetime; the delivery duty continues at a new position |
