@@ -186,9 +186,11 @@ input. A member asks for a position before it judges a sequenced input,
 reads the other members as of that position, judges, writes the
 judgment as a **prepare entry**, has the order scope record a
 **resolution** bound to that entry's hash, and then writes the **commit
-entry** that puts the prepared effects into effect. A refused input
-leaves a **hole** at its position, recorded in the order scope. Nothing
-waits for the whole group. A member waits only for another member's
+entry** that puts the prepared effects into effect. A refused act
+leaves a **hole** at its position, recorded in the order scope; a
+refused delivery is prepared and committed like an applied one, because
+its result is an effective fact (5.4, step 6). Nothing waits for the
+whole group. A member waits only for another member's
 earlier positions, and only when it reads that member. Deliveries
 between members, and to and from the rest of the room, stay as they
 are.
@@ -413,8 +415,13 @@ act or handler is `sequenced`:
    scope's reason. A delivery is answered `unavailable` with a reason
    that can change, such as `forming`, and the sender keeps the duty;
    with `order-left` or `not-a-member` it is decided outside the group's
-   order, as an unsequenced delivery is, with its deciding entry and
-   result, which the member may still write (5.7). On an answer, the
+   order: an ordinary deciding entry with no position, `refused` with
+   that reason, no effects, and its one result, whose `uses` cites the
+   order scope's head entry that the member read before the turn, at
+   which the member is not `joined` (never enrolled, or its `leave`
+   entry at or below that head). The member may still write it (5.7),
+   the fold's index of decided deliveries answers a duplicate from it,
+   and 5.8 verifies it. On an answer, the
    scope writes one bookkeeping row,
    **pending**, in the same storage as its journal: the input as
    received (the signed intent, or the delivery's envelope with its
@@ -675,6 +682,12 @@ The verifier (`packages/replay`) checks:
   empty, its one send is the result that names that delivery, and the
   commit carries the same; a refused act has no prepare entry, and its
   position is `holed`;
+- for each delivery entry of a sequenced handler that has no position:
+  its decision is `refused` with the reason `order-left` or
+  `not-a-member`, its effects are empty, its one send is the result, and
+  its `uses` cites an order scope head entry through which this member
+  is not `joined`; any other entry of a sequenced input without a
+  position is a mismatch, whatever reason it claims;
 - for each delivery, genesis source, `presents`, and `fact` operand that
   names an entry of a sequenced scope: the named entry's input kind is
   not `prepare`;
@@ -898,8 +911,8 @@ or M2a in plan 033.
 | S1 | The `late` form (packages note 4.1, per 6.1) and source order (6.2): contract, validator, derive, scope, replay, tests | nothing | A late delivery with `then` takes the branch, and a fresh one takes the handler, with the entry marked. A late delivery with no `then` is refused with the reason code `late`, keeping its deciding entry and result; the validator refuses `late` on an advisory handler. Each has fresh, boundary, and late deliveries and a `clock-behind` control. A `source`-ordered handler applies both deliveries in the lower-first run and supersedes the lower one in the higher-first run, with the applied pairs strictly increasing in each. All replay | 1 day |
 | S2 | The archive as a binding (section 4): the `archived` literal withdrawn, the directory slot and `bind-archive`, the claim field, the manifest requirement and the install refusal, and the archiver's target step | this note approved | A room bound at its claim archives its platform scopes and an installed package's scopes. A room bound later archives them from position 0. A package that requires the archive is refused in an unbound room | 1 to 2 days, before plan 033's slice 9 |
 | S3 | The contract of the sequenced level (5.2): the level, the mark, `reads` with `staleness`, the `read` operand, the `prepare`, `commit`, and `abandon` input kinds, the three order inputs, the retained kind `page`, the `order` kind, the reservation rules of 5.3 and 5.4 and the derivation context of 5.2 (prospective sequence, judgment time) in derive, and the validator | this note approved, and M2a's package format for groups in the manifest | The validator admits a sequenced definition and refuses each misuse named in 5.2. `owed` and `fits` count a prepare, an allocation, and their settlements as 5.3 and 5.4 say | 1 to 2 days |
-| S4 | The order scope and the sequenced turn (5.3 to 5.7): `platform:order@1` with its items, acts, three requests, and expiry; bootstrap by enrolment; the pending row, the prepare entry, the fence, the commit and abandon entries, and resume; the fold's indexes, receipts, settlement, and the delivery proof on the commit entry; derivation in the prospective context; the cut, finality, and the `at` read; `leave` and `close` | S3 | The two-scope witness of section 7 runs in memory and on native storage with every check of its list. A refused sequenced delivery prepares and commits its deciding entry with its result, and a late refusal in a sequenced handler is one such; a refused sequenced act writes nothing and holes its position; a delivery refused before allocation is `unavailable`, or decided outside the order after `leave`; each with a native witness | 5 days |
-| S5 | Replay and archive of a group (5.8, 4.2): the four answers, the page witness, the commit and abandon checks, the effective-fact, sequence, judgment-time, and reservation checks, and the order scope's ref in a clone | S4, A2, and A3 | The witness's journals and order scope replay from a clone. A tampered position, a page that differs, an `open` allocation below a cited cut, a resolution naming another hash, and an entry inside a fence are each a mismatch. A prepare at the head is `pending`. A missing order journal or commit entry is `missing-dependency`. A refused delivery's prepare and commit verify, and a refused act's holed position verifies | 1 day |
+| S4 | The order scope and the sequenced turn (5.3 to 5.7): `platform:order@1` with its items, acts, three requests, and expiry; bootstrap by enrolment; the pending row, the prepare entry, the fence, the commit and abandon entries, and resume; the fold's indexes, receipts, settlement, and the delivery proof on the commit entry; derivation in the prospective context; the cut, finality, and the `at` read; `leave` and `close` | S3 | The two-scope witness of section 7 runs in memory and on native storage with every check of its list. A refused sequenced delivery prepares and commits its deciding entry with its result, and a late refusal in a sequenced handler is one such; a refused sequenced act writes nothing and holes its position; a delivery refused before allocation is `unavailable`, or decided outside the order after `leave`; each with a native witness, and the outside-order refusal with its cited order head and its repeat answered from the deciding entry | 5 days |
+| S5 | Replay and archive of a group (5.8, 4.2): the four answers, the page witness, the commit and abandon checks, the effective-fact, sequence, judgment-time, and reservation checks, and the order scope's ref in a clone | S4, A2, and A3 | The witness's journals and order scope replay from a clone. A tampered position, a page that differs, an `open` allocation below a cited cut, a resolution naming another hash, and an entry inside a fence are each a mismatch. A prepare at the head is `pending`. A missing order journal or commit entry is `missing-dependency`. A refused delivery's prepare and commit verify, and a refused act's holed position verifies. The outside-order refusal verifies with its cited head, while the same entry with the citation removed or forged, and an applied entry without a position, are each a mismatch | 1 day |
 | S6 | Documents (section 8) | S2, S4 | The contract, the guide, the roadmap, and the archive note say what the runtime does | with S2 and S4 |
 
 ## 10. Decisions
@@ -920,9 +933,14 @@ or M2a in plan 033.
    or below it is final in the order journal. Planner, drafts 2 and 3.
 6. No barrier. A sequenced input waits only for the members it reads,
    and only for their positions at or below its cut. Planner.
-7. A refused sequenced input is a hole recorded in the order scope. An
-   unresolved position expires into a hole after the group's lifetime,
-   by the order scope's own timed rule. A hole never gains a commit.
+7. A refused sequenced act is a hole recorded in the order scope. A
+   refused sequenced delivery is prepared and committed at its position,
+   because its result is an effective fact (5.4, step 6); a delivery
+   refused before allocation is `unavailable`, or decided outside the
+   order with a cited order head once the member is not `joined` (5.4,
+   step 3; 5.8). An unresolved position expires into a hole after the
+   group's lifetime, by the order scope's own timed rule. A hole never
+   gains a commit.
    Planner, draft 2.
 8. Deliveries, sends, and effects keep their contract, with the commit
    entry as the effective fact. A group orders reads. It does not make a
@@ -1038,7 +1056,10 @@ nothing and holes its position. A delivery refused before allocation is
 The late reason has the code `late`, and `late` is a form of request
 handlers only. Builder question `0784600e`, checker corrections
 `91c866dc` and `b92bd90c`, review `44ad8b0d` F1 to F4, planner decision
-on that question and its amendment.
+on that question and its amendment. Draft 3 (19 October, 00:30) gives
+the outside-order refusal its retained justification and replay rule
+(review `d028930e`, F1) and aligns 5.1, decision 7, and the packages
+note's section 9 with the act and delivery distinction (F2).
 
 ## Sources
 

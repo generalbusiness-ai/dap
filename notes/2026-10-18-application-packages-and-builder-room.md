@@ -524,8 +524,11 @@ note follows the scenario form.
 
 The sequenced note (request 29e9024d) adopts, in its draft 4, the forms
 this note depends on: finality of a member's positions read from the
-order journal; refusals and expiries recorded as holes in the order
-scope, never in a member's journal; a member's judgment written as a
+order journal; a refused act and an expiry recorded as holes in the
+order scope, and a refused delivery prepared and committed in the
+member, because its result is an effective fact, or, before allocation,
+answered `unavailable` or decided outside the order with a cited order
+head; a member's judgment written as a
 prepare entry, bound by hash in the order scope's resolution, and put
 into effect by a commit entry that is the one effective fact, with a
 write fence between; reservations for the prepare and the allocation; a
@@ -681,6 +684,8 @@ request handlers (`tell`, `relate`) only; an advisory handler has no
 result, and the validator refuses them on one (sections 3, 4.1, 4.2).
 Builder question `0784600e`, checker corrections `91c866dc` and
 `b92bd90c`, review `44ad8b0d` F4, planner decision on that question.
+Draft 3 (19 October, 00:30) aligns section 9 with the sequenced note's
+act and delivery distinction (review `d028930e`, F2).
 
 ## Sources
 
