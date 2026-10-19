@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bf41a1d91effad12959eb84551994110944a0905","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/applications/projection-data.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bfea94c7a1b3f20c8dc4ef080e1317db24548f6b","text":"Merge retired a covered predecessor; the successor is at apps/room/page/assets.ts."}
