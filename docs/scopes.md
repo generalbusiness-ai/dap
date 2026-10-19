@@ -601,11 +601,17 @@ arrives twice is answered with the entry that recorded it the first time.
 **Order.** A delivery takes effect at the position the receiver's commit
 gives it, not at the sender's. Deliveries from different senders have no
 order: two sends that leave two scopes in one order may take effect in the
-other. Deliveries from one sender have no order either, except that a
-`relate` update older than the copy is answered `superseded`. The
-delivery's cause records the source entry's position and the send's
-ordinal, so an application that needs the sender's order rebuilds it from
-those. Every decision whose result depends on the order of two scopes'
+other. By default, deliveries from one sender have no order either. A
+`relate` update older than the copy is answered `superseded`. A `tell`
+handler may declare `order: "source"` to suppress a lower
+`(source entry position, send ordinal)` pair, compared in that order,
+after a higher pair has applied. The receiver
+keeps that pair separately for each sender incarnation and handler. An
+older delivery arriving first still applies, followed by the newer one;
+this suppresses late arrivals and does not guarantee a latest value or
+detect a missing delivery. Without the declaration, or with
+`order: "arrival"`, the handler keeps arrival behavior. Every decision
+whose result depends on the order of two scopes'
 acts belongs to one scope, where its journal is the order; a design note
 of 18 October 2026 adds a sequenced level for the scopes that need a
 shared order ([the sequenced level](../notes/2026-10-18-sequenced-level-and-order-scope.md)).

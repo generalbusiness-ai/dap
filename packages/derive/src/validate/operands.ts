@@ -31,7 +31,7 @@ const OPERANDS = ["field", "presented", "slot", "element", "item", "signer", "se
 /** The operands that hold a value a part may read inside. */
 const WITH_PART = ["field", "presented", "slot", "element"];
 /** The parts that are one word. The first three are read from the reference, and the others from the entry's bytes. */
-const WORDS = ["ref", "scope", "seq", "kind", "intent", "on"];
+const WORDS = ["ref", "scope", "seq", "kind", "intent", "on", "time"];
 /**
  * A position: the `seq` of an entry, and the revision of an update. It is an
  * integer of at least 0. The contract states no most for it, so the
@@ -64,7 +64,7 @@ export function operand(d: Defining, v: unknown, path: string, ctx: Ctx, owner: 
   const entryPart = (p: unknown, pp: string, base: FieldType | null): FieldType | null | undefined => {
     if (typeof p === "string") {
       if (!WORDS.includes(p)) return bad("shape", pp, `must be one of: ${WORDS.join(", ")}, or a part with a name`) ?? undefined;
-      return p === "ref" ? base : p === "seq" ? POSITION : p === "intent" ? { type: "digest" } : null;
+      return p === "ref" ? base : p === "seq" ? POSITION : p === "intent" ? { type: "digest" } : p === "time" ? { type: "time" } : null;
     }
     const pf = d.form(p, pp, ["field", "opened", "set", "carried"]);
     if (!pf) return undefined;

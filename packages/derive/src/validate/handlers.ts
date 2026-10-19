@@ -239,10 +239,11 @@ export function receives(d: Defining, v: unknown, top: Rec): void {
   const handled = new Set<string>();
   for (const [name, hv] of entries(v, "receives", bounds.receives)) {
     const path = at("receives", name);
-    const o = rec(hv, path, ["message", "class", "from", "fields", "opens", "also", "guards", "effects", "sends", "attention"], ["copies", "settles", ...(d.platform ? ["bound"] : [])]);
+    const o = rec(hv, path, ["message", "class", "from", "fields", "opens", "also", "guards", "effects", "sends", "attention"], ["copies", "settles", "order", ...(d.platform ? ["bound"] : [])]);
     if (!o) continue;
     const message = str(o["message"], at(path, "message"));
     const cls = o["class"];
+    if ("order" in o && (cls !== "tell" || (o["order"] !== "arrival" && o["order"] !== "source"))) bad("shape", at(path, "order"), "only a tell handler declares arrival or source order");
     if (typeof cls !== "string" || !CLASSES.includes(cls)) bad("shape", at(path, "class"), `is one of: ${CLASSES.join(", ")}`);
     if (cls === "advisory" && message !== null && !ADVISORIES.includes(message)) bad("name", at(path, "message"), `an advisory handler's message is its type: ${ADVISORIES.join(" or ")}`);
     const from = rec(o["from"], at(path, "from"), ["kind"], ["under"]);

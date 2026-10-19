@@ -57,6 +57,8 @@ export interface HeldCreation { inc: Incarnation; seq: number }
  * recorded it. An owner entry is consumed once (section 7.3).
  */
 export interface Decided { from: Pick<ScopeRef, "scope" | "inc">; seq: number; hash: Digest; n: number; by: number }
+/** Highest applied source pair for one tell dispatch. Incarnations are separate. */
+export interface SourceOrder { from: Pick<ScopeRef, "scope" | "inc">; handler: string; seq: number; n: number }
 
 /**
  * One recorded outcome of an attempt (section 4.3): the entry that holds it,
@@ -169,6 +171,7 @@ export interface Page { items: readonly Item[]; more: boolean }
  * A count of zero is left out. Two states with one snapshot are equal.
  */
 export interface StateSnapshot {
+  sourceOrder?: readonly SourceOrder[];
   v: 1;
   scope: ScopeState | null;
   items: readonly Item[];                                               // by ID
@@ -250,6 +253,7 @@ export interface StateView {
   pendingRequests(): readonly OwnRequest[];
   /** The record of the incoming delivery from that scope, entry and ordinal, if one was recorded. */
   decided(from: ScopeRef, seq: number, n: number): Decided | null;
+  sourceOrder(from: ScopeRef, handler: string): SourceOrder | null;
   creation(seed: Digest): HeldCreation | null;
   operation(id: OperationId): Operation | null;
   /**
@@ -327,6 +331,7 @@ export interface StateWriter extends StateView {
   putAccepted(actor: KeyId, idempotencyKey: string, accepted: Accepted): void;
   putRequest(request: OwnRequest): void;
   putDecided(from: FactRef, n: number, by: number): void;
+  putSourceOrder(order: SourceOrder): void;
   putCreation(seed: Digest, held: HeldCreation): void;
   putOperation(operation: Operation): void;
   /** The texts that a slot has held and that are not redacted. An empty list holds none. */
@@ -383,6 +388,7 @@ export class MemoryState implements StateWriter {
   readonly #requests = new Map<string, OwnRequest>();
   readonly #pendingRequests = new Set<string>();
   readonly #decided = new Map<string, Decided>();
+  readonly #sourceOrder = new Map<string, SourceOrder>();
   readonly #creations = new Map<Digest, HeldCreation>();
   readonly #operations = new Map<OperationId, Operation>();
   readonly #texts = new Map<string, readonly [number, string, readonly Digest[]]>();
@@ -448,6 +454,7 @@ export class MemoryState implements StateWriter {
     return [...this.#pendingRequests].map(at => this.#requests.get(at)!).sort((a, b) => a.seq - b.seq || a.n - b.n);
   }
   decided(from: ScopeRef, seq: number, n: number) { return this.#decided.get(key(from.scope, from.inc, seq, n)) ?? null; }
+  sourceOrder(from: ScopeRef, handler: string) { return this.#sourceOrder.get(key(from.scope, from.inc, handler)) ?? null; }
   creation(seed: Digest) { return this.#creations.get(seed) ?? null; }
   operation(id: OperationId) { return this.#operations.get(id) ?? null; }
   texts(item: number, slot: string) { return this.#texts.get(key(item, slot))?.[2] ?? []; }
@@ -540,6 +547,7 @@ export class MemoryState implements StateWriter {
     else this.#pendingRequests.delete(at);
   }
   putDecided(from: FactRef, n: number, by: number) { this.#decided.set(key(from.at.scope, from.at.inc, from.seq, n), { from: { scope: from.at.scope, inc: from.at.inc }, seq: from.seq, hash: from.hash, n, by }); }
+  putSourceOrder(order: SourceOrder) { this.#sourceOrder.set(key(order.from.scope, order.from.inc, order.handler), order); }
   putCreation(seed: Digest, held: HeldCreation) { this.#creations.set(seed, held); }
   putOperation(operation: Operation) { this.#operations.set(operation.id, operation); }
   putTexts(item: number, slot: string, texts: readonly Digest[]) {
@@ -574,6 +582,7 @@ export class MemoryState implements StateWriter {
       texts: sorted(this.#texts.values(), ([item, slot]) => [item, slot]),
       // A member that would be empty is left out, so a state that holds none has the digest it had before these members existed.
       ...(this.#prepared.size === 0 ? {} : { prepared: this.#steps() }),
+      ...(this.#sourceOrder.size === 0 ? {} : { sourceOrder: sorted(this.#sourceOrder.values(), order => [order.from.scope, order.from.inc, order.handler]) }),
       ...(this.#records.size === 0 ? {} : { records: this.#kept() }),
       ...(this.#observed.size === 0 ? {} : { observed: sorted(this.#observed.values(), (h) => [h.of.scope, h.of.inc, h.subject]) }),
       ...(this.#holders.size === 0 ? {} : { holders: this.holders() }),
