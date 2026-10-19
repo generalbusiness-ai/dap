@@ -1,4 +1,5 @@
-import { canonicalize, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isScopeRef, utf8 } from "@generalbusiness/artroom-bytes";
+import type { ScopeRef } from "@generalbusiness/dap-contract";
 import { validKey } from "../custody.ts";
 import { capturedExpected, shapeAt } from "../shape.ts";
 import type { CallResult } from "../service.ts";
@@ -95,15 +96,16 @@ export class ViewSessions {
     if (!this.#active(instance)) throw new ViewError("superseded", "A newer card replaced this one. Its receipts remain readable; no new act was sent.");
     if (instance.cut !== cut) throw new ViewError("stale", "The displayed card changed. Read it again; no new act was sent.");
   }
-  async open(key: string, screen: ViewKind, subject?: string, items?: Readonly<Record<string, number>>) {
+  async open(key: string, screen: ViewKind, subject?: string, items?: Readonly<Record<string, number>>, scope?: ScopeRef) {
     if (!validKey(key)) throw new ViewError("shape", "Choose a view key of 1 to 128 UTF-8 bytes.");
+    if (scope !== undefined && (!this.source.declared || !isScopeRef(scope))) throw new ViewError("shape", "A selected scope needs a declared view and a full native scope reference.");
     const old = this.#instances.get(key);
     if (old) {
-      if (old.query.screen !== screen || old.query.subject !== subject || canonicalize(old.query.items ?? {}) !== canonicalize(items ?? {})) throw new ViewError("shape", "This view key already names another opening.");
+      if (old.query.screen !== screen || old.query.subject !== subject || canonicalize(old.query.items ?? {}) !== canonicalize(items ?? {}) || canonicalize(old.query.scope ?? null) !== canonicalize(scope ?? null)) throw new ViewError("shape", "This view key already names another opening.");
       return this.opening(old);
     }
     if (this.#instances.size >= MAX_INSTANCES) throw new ViewError("busy", "This connection retains its maximum of 128 views. Start a new connection.");
-    const query: ViewQuery = { screen, position: 0, page: this.source.initialPage?.(screen) ?? "summary", ...(subject === undefined ? {} : { subject }), ...(items === undefined ? {} : { items: structuredClone(items) }) };
+    const query: ViewQuery = { screen, position: 0, page: this.source.initialPage?.(screen) ?? "summary", ...(subject === undefined ? {} : { subject }), ...(items === undefined ? {} : { items: structuredClone(items) }), ...(scope === undefined ? {} : { scope: structuredClone(scope) }) };
     const instance: Instance = { key, query, cut: 0, projection: { status: "unavailable", count: 0, position: 0, fallback: "Loading the card." }, busy: true, dispatches: new Map(), pending: new Map() };
     this.#instances.set(key, instance);
     this.#current.set(screen, key);

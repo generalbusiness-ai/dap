@@ -24,12 +24,18 @@
         "file": "grid.html",
         "path": "grid.html",
         "mediaType": "text/html; charset=utf-8"
+      },
+      {
+        "file": "site.html",
+        "path": "site.html",
+        "mediaType": "text/html; charset=utf-8"
       }
     ],
     "descriptions": {},
     "entry": "index.html",
     "resources": {
-      "ui://grow/bench-grid": "grid.html"
+      "ui://grow/bench-grid": "grid.html",
+      "ui://grow/site": "site.html"
     },
     "views": {
       "alert": {
@@ -234,7 +240,7 @@
         "waiting": {},
         "refresh": 2000,
         "display": "fullscreen",
-        "back": null
+        "back": "site"
       },
       "bench-record": {
         "kind": "record",
@@ -264,6 +270,23 @@
         "refresh": 2000,
         "display": "fullscreen",
         "back": "grid"
+      },
+      "site": {
+        "kind": "surface",
+        "projection": "site",
+        "item": "site",
+        "revision": "revision",
+        "resource": "ui://grow/site",
+        "opens": {
+          "room": "grid"
+        },
+        "acts": [],
+        "context": "Grow site at its native head",
+        "fallback": "Grow site. Open an active room to read its bench grid.",
+        "waiting": {},
+        "refresh": 2000,
+        "display": "fullscreen",
+        "back": null
       }
     }
   },
@@ -1488,6 +1511,27 @@
               "nullable": true
             }
           }
+        },
+        "room": {
+          "read": "one",
+          "item": "room",
+          "states": [
+            "open"
+          ],
+          "limit": 1,
+          "fields": {
+            "label": {
+              "from": {
+                "kind": "value",
+                "name": "label"
+              },
+              "of": {
+                "type": "text",
+                "max": 80
+              },
+              "nullable": false
+            }
+          }
         }
       }
     },
@@ -1916,7 +1960,18 @@
       }
     }
   },
-  "roles": {},
+  "roles": {
+    "admin": [
+      "grow.configure",
+      "grow.climate",
+      "grow.heat",
+      "grow.sense",
+      "grow.tend",
+      "grow.water",
+      "grow.water-more",
+      "grow.apply"
+    ]
+  },
   "scenarios": [
     "site-scenario.json",
     "fault-scenario.json"

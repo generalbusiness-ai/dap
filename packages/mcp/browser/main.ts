@@ -1,3 +1,4 @@
+import type { ScopeRef } from "@generalbusiness/dap-contract";
 import { AppBridge, AppToolError } from "./bridge.ts";
 import type { Display, PageKind } from "../src/views/types.ts";
 import { viewToolName } from "../src/views/names.ts";
@@ -20,6 +21,9 @@ let connected = false;
 let focusKey: string | null = null;
 let refreshTimer = 0;
 const surfaces = new SurfacePanels();
+interface DeclaredAddress { screen: string; items?: Readonly<Record<string, number>>; scope?: ScopeRef }
+const declaredHistory: DeclaredAddress[] = [];
+const scopeKey = (scope?: ScopeRef) => scope ? JSON.stringify([scope.scope, scope.inc, scope.kind]) : "";
 const surfaceOf = () => display?.card?.declared?.surface ?? display?.surface;
 
 function scheduleRefresh() {
@@ -113,13 +117,19 @@ async function declaredMode() {
   catch (error) { notice = error instanceof Error ? error.message : String(error); }
   render();
 }
-async function openDeclared(screen: string, items?: Readonly<Record<string, number>>) {
+async function openDeclared(screen: string, items?: Readonly<Record<string, number>>, scope: ScopeRef | undefined = display?.card?.declared?.data.scope ?? display?.data?.scope, remember = true) {
   if (busy || !alive) return;
+  const selected = display?.query.scope ?? display?.card?.declared?.data.scope ?? display?.data?.scope;
+  const previous: DeclaredAddress | undefined = display ? { screen: display.query.screen, ...(display.query.items ? { items: display.query.items } : {}), ...(selected ? { scope: selected } : {}) } : undefined;
   const key = crypto.randomUUID();
   busy = true; notice = ""; render();
   try {
-    const opening = await bridge.tool(viewToolName(screen, true), { view: key, ...(items ? { items } : {}) });
+    const opening = await bridge.tool(viewToolName(screen, true), { view: key, ...(items ? { items } : {}), ...(scope ? { scope } : {}) });
     if (opening["view"] !== key) throw Error("The declared opening did not retain its view key.");
+    if (remember && previous) {
+      if (declaredHistory.length >= 128) declaredHistory.shift();
+      declaredHistory.push(structuredClone(previous));
+    }
     view = key; display = null;
   } finally { busy = false; render(); }
   await read();
@@ -128,7 +138,15 @@ async function openDeclared(screen: string, items?: Readonly<Record<string, numb
 async function back() {
   if (!display) return;
   const declaredBack = display.card?.declared?.back ?? display.surface?.back;
-  if (declaredBack) return openDeclared(declaredBack);
+  if (declaredBack) {
+    for (let index = declaredHistory.length - 1; index >= 0; index--) {
+      const previous = declaredHistory[index]!;
+      if (previous.screen !== declaredBack) continue;
+      declaredHistory.splice(index);
+      return openDeclared(previous.screen, previous.items, previous.scope, false);
+    }
+    return openDeclared(declaredBack, undefined, display.card?.declared?.backScope ?? display.surface?.backScope, false);
+  }
   const target = display.query.page === "diff" ? returnPage : "summary";
   notice = "";
   if (target === "summary") {
@@ -187,16 +205,16 @@ function render() {
   }
   const card = display.card;
   const summary = display.query.page === "summary";
-  if (!summary) {
+  if (!summary && (!surfaceOf() || card?.declared?.back || display.surface?.back)) {
     const nav = node("nav"); nav.setAttribute("aria-label", "Card navigation");
     nav.append(button("← Back", back, "quiet")); root.append(nav);
   }
   const surface = surfaceOf(), data = card?.declared?.data ?? display.data;
   if (surface && data) {
     try {
-      const panel = surfaces.show(surface, data, async (name, items) => {
-        if (!busy && alive && display?.active) await openDeclared(surface.opens[name]!, items);
-      }, () => alive && !!display?.active && surfaceOf()?.screen === surface.screen);
+      const panel = surfaces.show(surface, data, async (name, items, scope) => {
+        if (!busy && alive && display?.active) await openDeclared(surface.opens[name]!, items, scope ?? data.scope);
+      }, () => alive && !!display?.active && surfaceOf()?.screen === surface.screen && scopeKey(display.card?.declared?.data.scope ?? display.data?.scope) === scopeKey(data.scope));
       panel.inert = busy || !display.active;
       root.append(panel);
     } catch (error) { root.append(node("p", error instanceof Error ? error.message : "The declared surface is unavailable.", "notice")); }

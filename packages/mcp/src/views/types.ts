@@ -1,5 +1,5 @@
 import type { PresentationPackage, ViewKind } from "./resources.ts";
-import type { ApplicationProjectionData, FactRef, FieldValue } from "@generalbusiness/dap-contract";
+import type { ApplicationProjectionData, FactRef, FieldValue, ScopeRef } from "@generalbusiness/dap-contract";
 import type { ApplicationView } from "@generalbusiness/artroom-bytes/application-v2";
 
 export type PageKind = "summary" | "item" | "diff" | "updates";
@@ -23,7 +23,7 @@ export interface CardAction {
   kind: string;
   args: Record<string, unknown>;
 }
-/** Public package HTML, kept separate from the private native data it renders. */
+/** Verified package HTML and declared navigation, separate from native rows. */
 export interface DeclaredSurface {
   screen: string;
   resource: string;
@@ -32,6 +32,7 @@ export interface DeclaredSurface {
   refresh: number;
   display: "inline" | "fullscreen";
   back: string | null;
+  backScope?: ScopeRef;
 }
 export interface Card {
   identity: CardIdentity;
@@ -63,6 +64,7 @@ export interface Card {
     refresh: number;
     display: "inline" | "fullscreen";
     back: string | null;
+    backScope?: ScopeRef;
     data: ApplicationProjectionData;
     log?: readonly { entry: Readonly<FactRef>; time: string; title: string; summary: string; facts: readonly string[] }[];
     resource?: string;
@@ -73,6 +75,7 @@ export interface Card {
 export interface ViewQuery {
   screen: ViewKind;
   subject?: string;
+  scope?: ScopeRef;
   position: number;
   page: PageKind;
   items?: Readonly<Record<string, number>>;

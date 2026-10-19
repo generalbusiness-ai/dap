@@ -46,27 +46,33 @@ export class DeclaredViewSource implements ViewSource {
     if (!Object.hasOwn(views, query.screen)) throw new ViewError("shape", "This package declares no such view.");
     return views[query.screen]!;
   }
-  #surface(screen: string, view: ApplicationView): DeclaredSurface | undefined {
+  #backScope(view: ApplicationView, selected: ScopeRef, root: ScopeRef): ScopeRef {
+    const projections = this.packet.package.semantic.projections;
+    const target = view.back ? this.packet.package.presentation.views[view.back]! : null;
+    return target && projections[target.projection]!.definition === this.packet.package.semantic.entry
+      && projections[target.projection]!.definition !== projections[view.projection]!.definition ? root : selected;
+  }
+  #surface(screen: string, view: ApplicationView, backScope: ScopeRef): DeclaredSurface | undefined {
     if (view.kind !== "surface") return undefined;
     const path = this.packet.package.presentation.resources[view.resource]!;
     const asset = this.packet.package.presentation.assets.find(asset => asset.path === path)!;
     const bytes = unb64url(asset.bytes);
     if (!bytes) throw new ViewError("unavailable", "The declared surface bytes are unavailable.");
     return { screen, resource: view.resource, html: new TextDecoder("utf-8", { fatal: true, ignoreBOM: false }).decode(bytes),
-      opens: view.opens, refresh: view.refresh, display: view.display, back: view.back };
+      opens: view.opens, refresh: view.refresh, display: view.display, back: view.back, backScope };
   }
   async #read(query: ViewQuery) {
     const view = this.#view(query), install = await this.port.installation();
     if (!install || canonicalize(install.ids) !== canonicalize(this.packet.ids) || install.definition !== this.packet.package.semantic.entry) throw new ViewError("unavailable", "The exact declared package is not active in this installation.");
-    const selection: ApplicationProjectionQuery = { v: 1, scope: install.scope, directory: install.directory, install: install.item, projection: view.projection, items: query.items ?? {} };
+    const selection: ApplicationProjectionQuery = { v: 1, scope: query.scope ?? install.scope, directory: install.directory, install: install.item, projection: view.projection, items: query.items ?? {} };
     const reply = await this.port.projection(selection);
     if (!reply.ok) throw new ViewError(reply.reason === "forbidden" ? "unavailable" : reply.reason === "stale" ? "stale" : "unavailable", `The declared projection refused: ${reply.reason}.`);
     const projection = this.packet.package.semantic.projections[view.projection]!;
-    if (reply.value.projection !== applicationProjectionId(projection) || canonicalize(reply.value.scope) !== canonicalize(install.scope)) throw new ViewError("unavailable", "The read does not name this declared projection and scope.");
+    if (reply.value.projection !== applicationProjectionId(projection) || canonicalize(reply.value.scope) !== canonicalize(selection.scope)) throw new ViewError("unavailable", "The read does not name this declared projection and scope.");
     const rows = reply.value.sources[view.item];
     if (!rows) throw new ViewError("unavailable", "The read omitted the declared item source.");
     if (rows.some(row => isApplicationJournalSource(projection.sources[view.item]!) !== !!row.entry)) throw new ViewError("unavailable", "The read confused journal entries with native items.");
-    return { view, install, reply, rows };
+    return { view, root: install.scope, scope: selection.scope, definition: projection.definition, reply, rows };
   }
   /** Only selected native item metadata and ref slots resolve subjects. This
    * is not an Item read and supplies no opened/attributed or review claim. */
@@ -96,22 +102,22 @@ export class DeclaredViewSource implements ViewSource {
     return actions;
   }
   async read(query: ViewQuery): Promise<Projection> {
-    const { view, install, reply, rows } = await this.#read(query);
-    const surface = this.#surface(query.screen, view);
+    const { view, root, scope, definition, reply, rows } = await this.#read(query);
+    const backScope = this.#backScope(view, scope, root), surface = this.#surface(query.screen, view, backScope);
     if (!rows.length) return { status: "empty", position: 0, count: 0, data: reply.value,
       ...(surface ? { surface } : {}),
       fallback: view.kind === "log" ? "This declared log has no matching entries in its recent window." : "This declared view has no matching items." };
     if (!Number.isSafeInteger(query.position) || query.position < 0 || query.position >= rows.length) throw new ViewError("shape", "The declared view position is outside its complete projection.");
     const row = rows[query.position]!, values = input(row), waiting = Object.hasOwn(view.waiting, row.state) ? template(view.waiting[row.state]!, row, "") : "";
-    const fallback = template(view.fallback, row, waiting), actions = await this.#allowed(view, row, reply.value, install.scope, install.definition);
+    const fallback = template(view.fallback, row, waiting), actions = await this.#allowed(view, row, reply.value, scope, definition);
     const card: Card = {
-      identity: surface ? { item: install.scope.scope, kind: "scope", revision: String(reply.value.at.seq), subject: { scope: install.scope.scope }, at: {} }
-        : { item: String(row.id), kind: row.entry ? "entry" : row.type, revision: String(row.revision), subject: { scope: install.scope.scope, ...(row.entry ? {} : { item: row.id }) }, at: row.entry ? {} : { on: row.revision } },
+      identity: surface ? { item: scope.scope, kind: "scope", revision: String(reply.value.at.seq), subject: { scope: scope.scope }, at: {} }
+        : { item: String(row.id), kind: row.entry ? "entry" : row.type, revision: String(row.revision), subject: { scope: scope.scope, ...(row.entry ? {} : { item: row.id }) }, at: row.entry ? {} : { on: row.revision } },
       title: view.kind === "surface" ? query.screen : text(values[view.title]), summary: view.kind === "surface" || view.summary === null ? "" : text(values[view.summary]),
       reasons: view.kind === "surface" ? [] : view.facts.map(name => `${name}: ${text(values[name])}`),
-      projection: [{ scope: install.scope.scope, ...reply.value.at }], reviewIntended: [], unavailable: [], waitsOn: waiting ? [waiting] : [], settles: [], actions, fallback,
+      projection: [{ scope: scope.scope, ...reply.value.at }], reviewIntended: [], unavailable: [], waitsOn: waiting ? [waiting] : [], settles: [], actions, fallback,
       declared: { kind: view.kind, source: view.item, context: template(view.context, row, waiting), actor: view.kind === "surface" || view.actor === null ? null : values[view.actor] ?? null,
-        refresh: view.refresh, display: view.display, back: view.back, data: reply.value,
+        refresh: view.refresh, display: view.display, back: view.back, backScope, data: reply.value,
         ...(view.kind === "log" ? { log: rows.map(row => {
           if (!row.entry || !row.time) throw new ViewError("unavailable", "A log needs explicit sealed entry facts.");
           const values = input(row);
@@ -124,11 +130,11 @@ export class DeclaredViewSource implements ViewSource {
   /** Called by the mounted-view host inside the custody build, immediately
    * before signing. Native expected revisions and grants still judge submit. */
   async admit(query: ViewQuery, card: Card, action: CardAction): Promise<void> {
-    const { view, install, reply, rows } = await this.#read(query);
+    const { view, scope, definition, reply, rows } = await this.#read(query);
     const row = rows.find(row => row.id === card.identity.subject.item);
-    if (!row || card.identity.subject.scope !== install.scope.scope || canonicalize(card.declared?.data.scope ?? null) !== canonicalize(install.scope)
+    if (!row || card.identity.subject.scope !== scope.scope || canonicalize(card.declared?.data.scope ?? null) !== canonicalize(scope)
       || String(row.revision) !== card.identity.revision) throw new ViewError("stale", "The declared item changed. Refresh before acting; no new request was signed.");
-    const actions = await this.#allowed(view, row, reply.value, install.scope, install.definition);
-    if (!actions.some(current => current.kind === action.kind && current.id === action.id && canonicalize(current.args["at"]) === canonicalize(action.args["at"]))) throw new ViewError("stale", "This act or one of its subjects changed under the current when and held actions; no new request was signed.");
+    const actions = await this.#allowed(view, row, reply.value, scope, definition);
+    if (!actions.some(current => current.kind === action.kind && current.id === action.id && canonicalize(current.args) === canonicalize(action.args))) throw new ViewError("stale", "This act or one of its subjects changed under the current when and held actions; no new request was signed.");
   }
 }

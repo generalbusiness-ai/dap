@@ -47,10 +47,10 @@ const heaterProposal: Guard = { reason: "invalid-heater-proposal", anyOf: [
 export const room: DeclaredDefinition = {
   format: "artroom-definition-1", name: ROOM, profile: { name: "restricted", version: 1 }, capabilities: [], genesis: "establish",
   items: { room: { many: false, max: 1, initial: "open", states: { open: { final: false } }, parties: {}, refs: {
-    site: { fixed: true, required: false, to: { type: "scope", kind: "directory" } }, siteRoom: { fixed: true, required: false, to: { type: "fact", under: SITE, kind: ["create-room"] } }, lastSiteReport: { ...optional, to: fact(["report-site"]) },
+    site: { fixed: true, required: false, to: { type: "scope", kind: "lane" } }, siteRoom: { fixed: true, required: false, to: { type: "fact", under: SITE, kind: ["create-room"] } }, lastSiteReport: { ...optional, to: fact(["report-site"]) },
   }, values: { label: { ...fixed, of: { type: "text", max: 80 } } } }, zone: zone.item, device: device.item, alert, incident, ...work.items, ...watering.items },
   acts: {
-    establish: act({ step: "open", on: "room", grant: "grow.configure", fields: { label: { type: "text", max: 80, required: true }, site: { type: "scope", kind: "directory", required: false }, siteRoom: { type: "fact", under: SITE, kind: ["create-room"], required: false } },
+    establish: act({ step: "open", on: "room", grant: "grow.configure", fields: { label: { type: "text", max: 80, required: true }, site: { type: "scope", kind: "lane", required: false }, siteRoom: { type: "fact", under: SITE, kind: ["create-room"], required: false } },
       guards: [{ anyOf: [
         [eq({ field: "site" }, { none: true }), eq({ field: "siteRoom" }, { none: true })],
         [{ differs: { a: { field: "site" }, b: { none: true } } }, { differs: { a: { field: "siteRoom" }, b: { none: true } } }],

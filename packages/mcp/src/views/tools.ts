@@ -1,3 +1,5 @@
+import { isScopeRef } from "@generalbusiness/artroom-bytes";
+import type { ScopeRef } from "@generalbusiness/dap-contract";
 import type { Tool } from "../catalogue.ts";
 import type { CallResult } from "../service.ts";
 import { VIEW_KINDS } from "./resources.ts";
@@ -53,13 +55,15 @@ export function viewTools(sessions: ViewSessions, screens?: readonly { name: str
   for (const { name: screen, resource } of screens ?? VIEW_KINDS.map(name => ({ name, resource: `ui://dap/${name}` }))) {
     const name = viewToolName(screen, screens !== undefined);
     if (Object.hasOwn(tools, name) || name === "view_read" || name === "view_act") throw new Error("Declared view tool names collide.");
-    add(name, `Open ${screen} as a compact card. Choose and keep a view key for this opening. The tool text exposes only ${screens ? "the declared fallback and identity" : "identity, exact revision, screen and counts"}. Private card details are fetched separately by the app. Without views, use inspect and the ordinary read tools for the named subject.`, { view: key, subject: { type: "string", maxLength: 256 }, ...(screens ? { items: { type: "object", maxProperties: 8, propertyNames: { pattern: "^[A-Za-z][A-Za-z0-9_-]{0,63}$" }, additionalProperties: { type: "integer", minimum: 0 } } } : {}) }, ["view"], false, resource, async (args) => {
+    add(name, `Open ${screen} as a compact card. Choose and keep a view key for this opening. The tool text exposes only ${screens ? "the declared fallback and identity" : "identity, exact revision, screen and counts"}. Private card details are fetched separately by the app. Without views, use inspect and the ordinary read tools for the named subject.`, { view: key, subject: { type: "string", maxLength: 256 }, ...(screens ? { scope: { type: "object", properties: { scope: { type: "string" }, inc: { type: "string" }, kind: { type: "string" } }, required: ["scope", "inc", "kind"], additionalProperties: false }, items: { type: "object", maxProperties: 8, propertyNames: { pattern: "^[A-Za-z][A-Za-z0-9_-]{0,63}$" }, additionalProperties: { type: "integer", minimum: 0 } } } : {}) }, ["view"], false, resource, async (args) => {
       const subject = args["subject"] === undefined ? undefined : string(args, "subject");
       if (subject !== undefined && subject.length > 256) throw new ViewError("shape", "subject exceeds 256 characters.");
       const items = args["items"];
       if (items !== undefined && (!items || typeof items !== "object" || Array.isArray(items) || Object.keys(items).length > 8
         || Object.entries(items).some(([name, id]) => !/^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(name) || typeof id !== "number" || !Number.isSafeInteger(id) || id < 0 || Object.is(id, -0)))) throw new ViewError("shape", "items must name at most eight source selections with nonnegative integer IDs.");
-      const opening = await sessions.open(string(args, "view"), screen, subject, items as Readonly<Record<string, number>> | undefined);
+      const scope = args["scope"];
+      if (scope !== undefined && (!screens || !isScopeRef(scope))) throw new ViewError("shape", "scope must be a full native scope reference for a declared view.");
+      const opening = await sessions.open(string(args, "view"), screen, subject, items as Readonly<Record<string, number>> | undefined, scope as ScopeRef | undefined);
       const { text, ...data } = opening;
       return result(data, text);
     });
