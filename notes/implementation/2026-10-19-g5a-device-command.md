@@ -66,9 +66,11 @@ A single control replaces only `command <= target.last` with false.
 The unchanged owning file has five passes before the bypass, four passes
 and one assertion failure with it, and the exact source is restored.
 Original58306 naturally exits zero; log
-`/tmp/artroom-g5a-order-guard-control-20261019.log`, raw control directory
-`/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/artroom-control-cjE7eA`.
-No sweep or frozen baseline rerun occurs.
+`/tmp/artroom-g5a-order-guard-control-20261019.log` retains the before and
+changed outcomes and assertion. The standard helper removes its temporary
+`artroom-control-cjE7eA` directory on exit (`scripts/control.mjs:134`), so
+its temporary JSON files are not retained evidence. No sweep or frozen
+baseline rerun occurs.
 
 The Derive source/test compilers pass. Actual native install and Grow
 Site-to-Room tests pass two cases (original56394 naturally exit0), retaining
@@ -131,6 +133,15 @@ Raw warnings and scripted fault output remain evidence; passing does not
 mean warning-free operation. All three earlier failed gates, their real
 corrections, the earlier passing gate and both checker counterexamples
 remain retained, with their own exact heads and boundaries.
+
+The first sealing attempt (original28467, exit1) expected that disposable
+control directory to remain. It stopped before creating a map; no gate,
+control or source check was rerun. Its failed sealer and 166 partial Git
+snapshots remain unchanged, with receipt
+`/tmp/artroom-g5a-order-sealer-failed-attempt-20261019.json`. A new v2
+sealer uses a fresh history and map, retaining the actual control log and
+this correction. This is evidence packaging failure, separate from the
+passing whole gate and the distinguishing control.
 
 ## Decisions and native pins
 
