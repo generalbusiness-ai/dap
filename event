@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fa276395bdfcbc31b4f371fbdabf864e90e42d1d","text":"Merge retired a covered predecessor; the successor is at packages/bytes/test/application-package-v2.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fe72462ef86fb5d67126779143a9c15cd52ae5c5","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-18-s1-late-handlers.md."}
