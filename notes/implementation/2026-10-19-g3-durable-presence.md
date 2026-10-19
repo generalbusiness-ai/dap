@@ -2,7 +2,7 @@
 
 Request `8614ac1e0789eb5d323ad8853ee671ee3c357470`; promise
 `3b26a047e49ef80a0d7b6fb22a1ec05a66a18e4c`. This is a separate head
-from the published first G3 delivery. The base is actual Main
+from the published first G3 delivery. Implementation started from actual Main
 `9554919beb3581ffe1124fcb2a70fab6bf20fbd2`, including the approved members
 and presence design. Checker audit `b712c8ef` independently confirms that
 the note is exact and every previous G3 runtime leaf is unchanged. Its
@@ -182,7 +182,8 @@ After the original processes closed, this candidate incorporated audited
 Main `9060775ee32c934086bca8b481c1e0d328036385`: the two approved celld
 design documents and the three approved homepage cleanup paths. Audits
 `cf6834e1` and `be8b86bc` were read in full. These are existing Main content,
-not additional G3 implementation. A corrected-head gate remains required.
+not additional G3 implementation. At that point a corrected-head gate was
+still required.
 
 The focused native success-capacity case passes after that correction:
 `/tmp/artroom-g3-durable-partition-boundary-20261019.log`, original tool
@@ -191,3 +192,78 @@ the 3,000 standing-entry reserve, periodic restarts and final named refusal.
 Vitest reports 124.87 s command duration, including 122.00 s test time;
 this is not a measured outer-pipeline or CPU figure. The original failed
 gate is retained, not converted into a pass by this focused result.
+
+## Final gate and exact source browser proof
+
+The corrected gate passes once at clean head
+`324c752b11b56611df68f7f4add6fcda7d9514bc`, tree
+`fd84ec07693897e5e75ce7a2ab855119591d2ee6`. Original tool session 42514
+closed exit 0. Vitest reports 399 files and 1,926 cases passed, one file
+and three cases skipped. The 31 Node and 55 Counting checks also pass.
+Gate assertion `8916e7c8` records the result without erasing the failed
+first gate. The raw logs are in `tmp.aLKpczkS5X`; complete output,
+outer time, machine metadata and process closure JSON use the prefix
+`/tmp/artroom-g3-durable-corrected-gate-20261019`.
+
+Measured complete pipeline: 534.58 s elapsed and 759.18 s CPU (652.03 user,
+107.15 system). Type checking: 8.9 s and 33.2 s CPU. Tests: 525.5 s and
+725.7 s CPU. macOS 27.0.1 arm64, 18 CPUs, Node 26.12.0, initial shared
+load 1.96/2.63/3.91, warm private APFS COW dependencies, zero installs.
+These are this run's measurements, not exclusive-machine or total edit cost.
+
+The exact gated browser run passes at 320 and 592 px, each resized to the
+other width and back: `/tmp/artroom-g3-durable-gated-browser-20261019/`
+and its matching log. Original 36538 closed exit 0. Both widths prove
+missing and provisioned-unknown placeholders with read points; 101 other
+member reports without losing the task or altering its presence report;
+named wrong-room refusal; quiet context after exact source-point capture;
+app-only read denial; typed report input; Take, Report, Hold, Approve and
+Decline; receipt/refresh separation; empty Back recovery; and three
+consistent scope replays. Each width records exactly five MCP signatures
+(day 2, operator 1, head 2), no browser errors and no overflow.
+
+The task captures at both widths and unavailable phone capture were
+visually inspected: titles and full read-point hashes wrap, controls fit,
+and unavailable content exposes neither the task body nor Take. Cached
+Playwright 1.63.0 and Chromium 153.0.8010.12, scripted typed-text consumer,
+and TEST authority boundaries remain as described above. Browser outer
+pipeline: 38.05 s elapsed, 14.38 s CPU (12.14 user, 2.24 system), after the
+gate closed, on the same warm shared machine. This is no LLM/provider,
+physical-device or hosting result.
+
+The selected 42 source/test/config inputs were hashed at that exact clean
+head and checked unchanged before and after the run. Manifest
+`/tmp/artroom-g3-durable-gated-browser-inputs-20261019.json`, SHA-256
+`63d4e8ed6ef4947cfdc26a9102e7c99608bad920060d2e2139e12acef3d01c16`.
+It is a selected-input manifest, not an independently computed complete
+transitive import closure. The exact Git commit identifies the remaining
+tracked source; it does not retroactively describe failed development runs.
+
+## Review scope
+
+The final base is audited Main `9060775e`. Twelve G3 paths and the one
+separately tracked partition test change are offered together, with each
+request and promise bound to its own artifacts. This primary note is the
+only path changed after the passing gate and browser run; code and tests
+remain identical. The final head/tree and the passing head/tree are recorded
+by the evidence map and its Gitseq assertion. No gate is repeated for this
+documents-only commit, following `docs/testing.md`.
+
+| Request condition | Owning evidence |
+| --- | --- |
+| Provision unknown; duplicate/admin/signer refusal | Memory Site case and Core/SQLite producer case |
+| Arrive A, arrive B, wrong leave A keeps B and last report; matching leave records away | Same native cases, exact item/head/ref assertions and replay |
+| Present, away, unknown and missing routing; no unknown signing or body | Core/SQLite queue case, captured-unknown/away stale calls and browser placeholders |
+| Selection survives more than 100 Site entries; entry position differs from item revision | Producer and queue cases, browser 101-report cases, one distinguishing old-window control |
+| App-only data, quiet context, receipts, stale refusals and resize | Kit queue case, exact gated 320/592 browser proof and replay |
+
+Stable-copy grant: exactly
+`/private/tmp/artroom-g3-durable-review-evidence-map-20261019.json`
+and its listed owned regular files for this exact review. Once sealed,
+every listed leaf, the sealer, the entire candidate source checkout and
+private dependency view freeze forever. Use a fresh copy for any probe.
+Unchanged tracked code remains readable through the review commit.
+No adjacent credentials/custody directories, publication or deployment
+authority is included. The targeted witness correction does not close the
+older broad gate-stability request. G5a/G5, P1-P3, mixed queues, device
+location, the attention loop, provider and hosting work remain separate.
