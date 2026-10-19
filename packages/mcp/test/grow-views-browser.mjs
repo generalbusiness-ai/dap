@@ -1,14 +1,14 @@
 // G1 UI witness: production kit/resources/MCP custody and real local Core/SQLite.
 // Install, read-session and standing ports are scripted TEST fixtures. The
-// developer Room is a Directory root, not a native child-ownership witness.
+// Site and Room are actual Core/SQLite Lane births in one owned path.
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
-import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { startViewsHost } from './support/views-host.ts';
 import { prepareGrowCheck } from '../../../examples/grow/prepare-check.ts';
-import { prepareApplicationDirectory, readApplicationScenario } from '../../cli/src/application-files.ts';
-import { openApplicationScenario } from '../../cli/src/application-scenarios.ts';
+import { prepareApplicationDirectory } from '../../cli/src/application-files.ts';
+import { openOwnedGrowScenario } from './support/grow-owned-session.ts';
 import { secretSigner } from '@generalbusiness/artroom-client';
 import { growOperator } from './support/grow-operator.ts';
 const { PLAYWRIGHT_CORE, CHROMIUM, VIEW_CAPTURE_OUT: out } = process.env;
@@ -17,7 +17,7 @@ const require = createRequire(join(PLAYWRIGHT_CORE, 'package.json'));
 assert.equal(require('playwright-core/package.json').version, '1.63.0');
 const { chromium } = require('playwright-core');
 const root = await prepareGrowCheck(); let session, host, browser, operator;
-const report = { browserPlugin: 'Browser plugin not available; cached pinned Playwright fallback', authority: 'Local Core/SQLite with scripted TEST grants and developer Directory root; installation, read session and standing are stand-ins. Real MCP operator custody and native target judgment. Sensor/agent inputs use separate public TEST actors. No device execution or native child ownership claim.', cases: [] };
+const report = { browserPlugin: 'Browser plugin not available; cached pinned Playwright fallback', authority: 'One actual Core/SQLite Site-to-Room creation and ownership path, with explicit TEST grants and manual delivery of recorded native sends. Directory launcher, installation lookup, read sessions and standing are fixtures. Real MCP custody and native target judgment; separate sensor/agent actors. No device execution, provider or host installation-admission claim.', cases: [] };
 async function contained(app) {
   await app.locator('#card-root').evaluate(async root => { for (let n = 0; n < 90; n++) { await new Promise(resolve => requestAnimationFrame(resolve)); if (window.innerHeight >= Math.ceil(root.getBoundingClientRect().height)) return; } throw Error('The host did not resize to its card'); });
 }
@@ -36,7 +36,7 @@ async function capture(page, app, name) {
 }
 try {
   const { packet } = await prepareApplicationDirectory(root, secretSigner(new Uint8Array(32).fill(254)));
-  const original = await readApplicationScenario(root, 'fault-scenario.json'), open = structuredClone(original);
+  const original = JSON.parse(await readFile(new URL('./support/grow-owned-fault-scenario.json', import.meta.url), 'utf8')), open = structuredClone(original);
   const opened = open.steps.findIndex(step => step.act?.kind === 'open-incident' && step.expect.answer === 'accepted');
   assert.ok(opened > 0); open.steps = open.steps.slice(0, opened + 1);
   host = await startViewsHost({ declared: async base => {
@@ -45,11 +45,15 @@ try {
   } });
   browser = await chromium.launch({ executablePath: CHROMIUM, headless: true }); report.browser = browser.version(); await mkdir(out, { recursive: true });
   for (const width of (process.env.GROW_VIEW_WIDTH ? [Number(process.env.GROW_VIEW_WIDTH)] : [320, 592])) {
-    session?.scope.close(); session = await openApplicationScenario(packet, open);
+    session?.close(); session = await openOwnedGrowScenario(packet, open);
     const page = await browser.newPage({ viewport: { width: width + 32, height: 1100 } }), errors = [];
     page.on('pageerror', error => errors.push(String(error))); page.on('console', msg => { if (msg.type() === 'error') errors.push(msg.text()); });
-    await page.goto(host.url + '/?fixture=declared&screen=grid'); assert.match(await page.title(), /S2 card fixture host/);
+    await page.goto(host.url + '/?fixture=declared&screen=site'); assert.match(await page.title(), /S2 card fixture host/);
     const app = page.frameLocator('#frame').frameLocator('iframe');
+    await app.getByRole('heading', { name: 'Grow site', exact: true }).waitFor();
+    await app.getByText('Native head 4 · 1 room', { exact: true }).waitFor();
+    await capture(page, app, `site-open-${width}.png`);
+    await app.getByRole('button', { name: 'Open Room A', exact: true }).click();
     await app.getByRole('heading', { name: 'Operator authorization needed', exact: true }).waitFor();
     await app.getByRole('heading', { name: 'Bench grid', exact: true }).waitFor();
     assert.equal(await app.locator('.bench').count(), 100);
@@ -84,39 +88,40 @@ try {
     await app.getByText('state: authorized', { exact: true }).waitFor();
     assert.equal(operator.signatures(), 1); assert.equal(operator.submitted.length, 1);
     assert.equal(await app.getByRole('button', { name: /Back/ }).count(), 1, 'An accepted record retains detail and Back');
-    assert.deepEqual({ target: session.scope.state.item(9).values.target, reported: session.scope.state.item(9).values.reported }, { target: 'off', reported: null });
+    assert.deepEqual({ target: session.scope.state.item(10).values.target, reported: session.scope.state.item(10).values.reported }, { target: 'off', reported: null });
     await capture(page, app, `receipt-${width}.png`);
     const accepted = async (name, kind, on, fields, subjects) => {
       const answer = await operator.nativeAct(name, kind, on, fields, subjects); assert.equal(answer.answer, 'accepted', JSON.stringify(answer)); return answer.receipt.fact;
     };
-    await accepted('sensors', 'report-device', 9, { reported: 'off', level: 0, description: '' }, { on: 9 });
-    await accepted('sensors', 'report-device', 7, { reported: 'open', level: 100, description: '' }, { on: 7 });
+    await accepted('sensors', 'report-device', 10, { reported: 'off', level: 0, description: '' }, { on: 10 });
+    await accepted('sensors', 'report-device', 8, { reported: 'open', level: 100, description: '' }, { on: 8 });
     await operator.advance('2026-10-18T12:10:00Z');
-    const zones = [1, 6, 11, 16].map(zone => ({ zone, min: 2300, max: 2500, mean: 2400, inBand: 25 }));
+    const zones = [2, 7, 12, 17].map(zone => ({ zone, min: 2300, max: 2500, mean: 2400, inBand: 25 }));
     const cool = await accepted('sensors', 'observe', null, { sampledAt: '2026-10-18T12:10:00Z', zones }, {});
-    await accepted('sensors', 'report-zone', 6, { summary: cool, sampledAt: '2026-10-18T12:10:00Z', zones, min: 2300, max: 2500, mean: 2400, inBand: 25 }, { on: 6 });
-    await accepted('climate', 'propose-restoration', 136, { text: 'Vent 2 is responding.', proposal: 'Restore heater 2?' }, { on: 136, zone: 6, vent: 7 });
+    await accepted('sensors', 'report-zone', 7, { summary: cool, sampledAt: '2026-10-18T12:10:00Z', zones, min: 2300, max: 2500, mean: 2400, inBand: 25 }, { on: 7 });
+    await accepted('climate', 'propose-restoration', 137, { text: 'Vent 2 is responding.', proposal: 'Restore heater 2?' }, { on: 137, zone: 7, vent: 8 });
     await app.getByRole('heading', { name: 'Vent 2 is responding.', exact: true }).waitFor();
     await app.getByRole('button', { name: 'Authorize', exact: true }).click();
     await app.getByText(/accepted \(entry \d+\)/).waitFor();
     assert.equal(operator.signatures(), 2); assert.equal(operator.submitted.length, 2);
-    assert.equal(session.scope.state.item(9).values.target, 'on'); assert.equal(session.scope.state.item(9).values.reported, 'off');
-    await accepted('sensors', 'report-device', 9, { reported: 'on', level: 100, description: '' }, { on: 9 });
-    const closed = await accepted('climate', 'close-incident', 136, { incident: 137 }, { on: 136, incident: 137, zone: 6 });
+    assert.equal(session.scope.state.item(10).values.target, 'on'); assert.equal(session.scope.state.item(10).values.reported, 'off');
+    await accepted('sensors', 'report-device', 10, { reported: 'on', level: 100, description: '' }, { on: 10 });
+    const closed = await accepted('climate', 'close-incident', 137, { incident: 138 }, { on: 137, incident: 138, zone: 7 });
     await app.getByRole('button', { name: /Back/ }).click(); await page.evaluate(() => window.scrollTo(0, 0));
-    await app.getByText(new RegExp(`Incident 137 closed · entries 136–${closed.seq}`)).waitFor();
+    await app.getByText(new RegExp(`Incident 138 closed · entries 137–${closed.seq}`)).waitFor();
     await app.getByRole('button', { name: 'Open incident record', exact: true }).click(); await app.getByRole('heading', { name: 'closed', exact: true }).waitFor();
     await capture(page, app, `closed-same-flow-${width}.png`);
-    assert.equal(session.scope.state.item(137).refs.first, 136); assert.equal(session.scope.state.item(137).refs.last, closed.seq);
+    assert.equal(session.scope.state.item(138).refs.first, 137); assert.equal(session.scope.state.item(138).refs.last, closed.seq);
     const replay = await session.scope.replay(); assert.equal(replay.report.result, 'consistent'); assert.equal(replay.why, null);
     const finalProof = await page.evaluate(() => window.proof); assert.ok(!JSON.stringify(finalProof.contexts).includes('sources')); assert.deepEqual(finalProof.errors, []); assert.deepEqual(finalProof.chat, []); assert.deepEqual(errors, []);
     for (let n = 1; n < finalProof.contexts.length; n++) assert.notDeepEqual(finalProof.contexts[n], finalProof.contexts[n - 1], 'Unchanged private refreshes keep model context quiet');
-    report.cases.push({ width, head: session.scope.developmentProjection('grid').at.seq, benches: 100, alertAtTop: true, sensorDescriptions: true, genericAlertControls: ['Authorize', 'Hold 60 s'], zonePointerNavigationAfterResize: true, capture: 'Outer viewport temporarily expanded for nested-frame rasterization; restored to 1100 px before interactions', measured, operatorIntents: operator.submitted.map(signed => ({ kind: signed.intent.kind, on: signed.intent.on, expected: signed.intent.expected })), targetSeparateFromReport: true, closedIncident: { first: 136, last: closed.seq }, replay: replay.report.result });
+    report.cases.push({ width, site: session.site.at, room: session.scope.at, head: session.scope.developmentProjection('grid').at.seq, nativeOwnedSiteToRoom: true, benches: 100, alertAtTop: true, sensorDescriptions: true, genericAlertControls: ['Authorize', 'Hold 60 s'], zonePointerNavigationAfterResize: true, capture: 'Outer viewport temporarily expanded for nested-frame rasterization; restored to 1100 px before interactions', measured, operatorIntents: operator.submitted.map(signed => ({ kind: signed.intent.kind, on: signed.intent.on, expected: signed.intent.expected })), targetSeparateFromReport: true, closedIncident: { first: 137, last: closed.seq }, replay: replay.report.result });
     await page.close();
   }
-  const previous = session; session = await openApplicationScenario(packet, original); previous.scope.close();
-  const page = await browser.newPage({ viewport: { width: 422, height: 1000 } }); await page.goto(host.url + '/?fixture=declared&screen=grid');
+  const previous = session; session = await openOwnedGrowScenario(packet, original); previous.close();
+  const page = await browser.newPage({ viewport: { width: 422, height: 1000 } }); await page.goto(host.url + '/?fixture=declared&screen=site');
   const app = page.frameLocator('#frame').frameLocator('iframe');
+  await app.getByRole('button', { name: 'Open Room A', exact: true }).click();
   await app.getByText(/Incident \d+ closed · entries \d+–\d+/, { exact: false }).waitFor(); await contained(app);
   await capture(page, app, 'grid-closed-390.png');
   await app.getByRole('button', { name: 'Open incident record', exact: true }).click();
@@ -129,4 +134,4 @@ try {
     try { const app = page.frameLocator('#frame').frameLocator('iframe'); await writeFile(join(out, 'failure.json'), JSON.stringify({ text: await app.locator('html').innerText(), proof: await page.evaluate(() => window.proof) }, null, 2)); await page.screenshot({ path: join(out, 'failure.png'), fullPage: true }); } catch {}
   }
   throw error;
-} finally { await browser?.close(); await host?.close(); session?.scope.close(); await rm(root, { recursive: true, force: true }); }
+} finally { await browser?.close(); await host?.close(); session?.close(); await rm(root, { recursive: true, force: true }); }

@@ -3,13 +3,13 @@
  * provider call, hosted durability or screen isolation is claimed here. */
 import { bindApplicationProjection, ApplicationProjectionError, readApplicationPackage2, type AnyPackedApplication, type ApplicationReadProjection } from "@generalbusiness/artroom-bytes/application-v2";
 import { DatabaseSync } from "node:sqlite";
-import type { Answer, ApplicationProjectionData, Beside, Digest, FreshnessProof, Grant, KeyId, MemberRef, ScopeId, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
+import type { Answer, ApplicationProjectionData, Beside, DeclaredDefinition, Digest, FreshnessProof, Grant, KeyId, MemberRef, ScopeId, ScopeRef, SignedIntent, Timestamp } from "@generalbusiness/dap-contract";
 import { HISTORY_PAGE_ENTRIES, PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import { canonicalize, intentDigest, parseStrict, scopeIdOf, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, definitionDigest, intentDigest, parseStrict, scopeIdOf, utf8 } from "@generalbusiness/artroom-bytes";
 import { readApplicationPackage } from "@generalbusiness/artroom-client";
 import { timeMs, type StateView } from "@generalbusiness/dap-derive";
 import { verify, type HistorySource, type Verification } from "@generalbusiness/artroom-replay";
-import { CAPABILITY_CODE, Reads, ReadPreparation, applicationProjectionData, Scope, SqliteStore, production, type Ports, type Sql, type SqlValue } from "@generalbusiness/artroom-scope/runtime";
+import { CAPABILITY_CODE, Deliveries, PreparationFlights, Reads, ReadPreparation, applicationProjectionData, declaredBy, namespace, nativeBirth, projectionScopeOwned, sourced, sentText, Scope, SqliteStore, production, type Binding, type Peer, type Ports, type Sql, type SqlValue } from "@generalbusiness/artroom-scope/runtime";
 
 /** An explicit scenario/development grant list. It is never inferred from all
  * app actions, an app role, an HTTP caller or a production membership store. */
@@ -56,12 +56,15 @@ export class LocalApplicationScope {
   readonly #store = new SqliteStore(this.#sql);
   readonly #ports: Ports;
   readonly #core: Scope;
+  readonly #name: ScopeId;
   #now: Timestamp;
   #closed = false;
   #projections: Readonly<Record<string, ApplicationReadProjection>> | null = null;
+  #history: HistorySource | null = null;
+  readonly #ownership = new PreparationFlights();
 
   private constructor(name: ScopeId, actors: readonly LocalActor[], now: Timestamp) {
-    this.#now = now;
+    this.#name = name; this.#now = now;
     const held = new Map(actors.map(actor => [actor.key, parseStrict(canonicalize(actor)) as LocalActor]));
     this.#ports = production();
     this.#ports.clock = { read: () => this.#now };
@@ -99,8 +102,50 @@ export class LocalApplicationScope {
     } catch (error) { scope.close(); throw error; }
   }
 
+  /** Development/test graph entry. The Directory root is actually founded;
+   * children must subsequently be born by Deliveries from recorded creates.
+   * This grants no package installation, enrollment or production authority. */
+  static async directory(definition: DeclaredDefinition, definitions: readonly DeclaredDefinition[], founding: SignedIntent, actors: readonly LocalActor[], now: Timestamp): Promise<LocalApplicationScope> {
+    const name = scopeIdOf({ v: 1, kind: "directory", definition: definitionDigest(definition), creator: null, cause: intentDigest(founding.intent), ordinal: 0 });
+    const scope = new LocalApplicationScope(name, actors, now);
+    try {
+      const answer = await scope.#core.create(founding, definition, definitions);
+      if (answer.answer !== "accepted") throw new LocalApplicationError(`Local graph founding ${answer.answer}: ${answer.reason}.`);
+      return scope;
+    } catch (error) { scope.close(); throw error; }
+  }
+
+  /** An empty object at a name. No reference or genesis is manufactured. */
+  static empty(name: ScopeId, packet: AnyPackedApplication, actors: readonly LocalActor[], now: Timestamp): LocalApplicationScope {
+    const scope = new LocalApplicationScope(name, actors, now);
+    if (packet.package.v === 2) scope.#projections = packet.package.semantic.projections;
+    return scope;
+  }
+
+  /** The binding is a test/development transport. All source, declaration,
+   * birth and delivery answers below come from actual Core/SQLite state. */
+  connect(binding: Binding, history: HistorySource): Peer {
+    this.#open();
+    const peers = namespace(binding);
+    this.#ports.resolver = peers.resolver; this.#ports.proofs = peers.proofs; this.#ports.births = peers.births;
+    this.#ports.definitions = peers.definitions; this.#ports.texts = peers.texts;
+    // Test graphs explicitly deliver actual recorded sends. Keep this
+    // adapter's background dispatcher and outside operations closed.
+    this.#history = history;
+    const deliveries = new Deliveries(this.#name, this.#core, this.#store, this.#ports, PROPOSED_BOUNDS);
+    return {
+      deliver: envelope => deliveries.deliver(envelope),
+      source: async (seq, origin) => sourced(this.#store, this.#core.pinned(), seq, origin),
+      declared: async digest => declaredBy(this.#store, digest),
+      text: async (seq, digest) => sentText(this.#store, seq, digest),
+      nativeBirth: async (at, _milliseconds, maxBytes) => nativeBirth(this.#preparation(), at, undefined, maxBytes),
+      observe: async () => null,
+    };
+  }
+
   get state(): StateView { this.#open(); return this.#store; }
   get at() { this.#open(); return this.#store.scope()!.at; }
+  get definition() { this.#open(); return this.#core.pinned()?.named ?? null; }
   /** Explicit whole-fixture TEST reads. No membership/session proof is claimed. */
   developmentReads(): Reads { this.#open(); return new Reads(this.#store, () => this.#core.pinned(), { allows: () => true }); }
   /** Explicit TEST read access, using the host's same bounded synchronous
@@ -120,6 +165,19 @@ export class LocalApplicationScope {
       if (error instanceof ApplicationProjectionError) throw new LocalApplicationError(`The local native projection refused: ${error.reason}.`);
       throw error;
     }
+  }
+
+  /** Same production ownership walk used by declared projection reads. Read
+   * sessions/installation lookup remain explicit caller fixture boundaries. */
+  async ownedDevelopmentProjection(name: string, items: Readonly<Record<string, number>>, root: ScopeRef, rootDefinition: Digest, directory: ScopeRef): Promise<ApplicationProjectionData> {
+    this.#open();
+    const result = await this.#ownership.run(async run => {
+      const frame = this.#preparation().capture();
+      if (!frame || await projectionScopeOwned(frame, root, rootDefinition, directory, this.#ports.births ?? null, run) !== "owned" || !frame.current()) return null;
+      return this.developmentProjection(name, items);
+    });
+    if (!result) throw new LocalApplicationError("The selected scope is not a currently owned application descendant.");
+    return result;
   }
   settle(signed: SignedIntent) { this.#open(); return this.#core.settle(signed); }
   async submit(signed: SignedIntent, beside: Beside = {}): Promise<Answer> { this.#open(); return this.#core.submit(signed, [], beside); }
@@ -148,8 +206,9 @@ export class LocalApplicationScope {
   };
   replay(): Promise<Verification> {
     this.#open();
-    return verify(this.source, { mode: "replay", scope: this.at.scope, head: this.#store.scope()!.head, grants: "as-recorded", bounds: PROPOSED_BOUNDS, capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE });
+    return verify(this.#history ?? this.source, { mode: "replay", scope: this.at.scope, head: this.#store.scope()!.head, grants: "as-recorded", bounds: PROPOSED_BOUNDS, capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE });
   }
+  #preparation(): ReadPreparation { return new ReadPreparation(this.#sql, { policy: () => "local-application-projection-v1", declared: bytes => this.#core.validate(bytes), platform: named => this.#core.platform(named) }); }
   close(): void { if (!this.#closed) { this.#closed = true; this.#sql.close(); } }
   #open(): void { if (this.#closed) throw new LocalApplicationError("The local application scope is closed."); }
 }

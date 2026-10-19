@@ -187,3 +187,48 @@ reported state, native receipts, exact same-incident closure and replay
 remain checked. Both formatted zone captures were visually inspected.
 The overview boundary, manual zone controls and sparkline remain separate
 unfinished work; this is still not a full G1 completion or a final gate.
+
+## Owned Site → Room continuity (19 October)
+
+Planner decision `eae6f61d` requires one joint overview path, constant native
+arguments on device records, and a bounded journal series. This checkpoint
+implements the first part. The generic controls and series remain unfinished.
+
+The browser fixture now creates a Directory launcher, Site and Room through
+actual Core/SQLite creation, source delivery, result and confirmation entries.
+The Site's retained Room reference selects the descendant through production
+`projectionScopeOwned`, before the same Room supplies its grid, alert and
+operator controls. No Lane reference or genesis is manufactured. The Node
+adapter exposes the existing native namespace, birth and read-preparation
+helpers; its background dispatcher and outside transport remain closed.
+Installation lookup, read sessions, membership and per-key grants remain
+fixtures. Manual transport delivers actual recorded native sends. This is
+not production installation, enrollment, provider admission or device execution.
+
+The native Room confirmation adds one journal position. A separate literal
+owned-room scene relocates the original fixture's positive item/revision and
+entry references by one; root item and genesis remain zero. Business outcomes
+and temperatures stay literal. The original developer-root scenario is unchanged.
+An initial relocation missed nested expected revisions and failed at step 3;
+that fixture correction precedes the passing native custody test.
+
+Other initial failures remain in the focused logs: the Node typecheck exposed
+a Cloudflare-only ID type (now a generic opaque binding ID); the native path
+refused Site creation while provisional (fixed by delivering its actual
+confirmation); and the first whole browser run completed both open-incident
+widths but failed preparing the closed scene because it counted closed alerts
+as open. The sensor report now counts native open/held/authorized rows and
+advances the receiving Site's test clock to the scene time before delivery.
+No application guard was bypassed to make these fixtures pass.
+
+`/tmp/artroom-g1-owned-operator-site-report-20261019.log` passes the native
+custody test; `/tmp/artroom-g1-owned-operator-type-reported-20261019.log` and
+`/tmp/artroom-g1-owned-scope-type-20261019.log` pass the owning typechecks.
+The corrected browser run is
+`/tmp/artroom-g1-owned-operator-browser-corrected-20261019/`: 320 and 592 px
+flows select Site → Room → alert, sign two operator requests, preserve target
+versus reported state, close incident 138 over entries 137–149 and replay
+consistent. Both have 100 benches and no horizontal overflow. A separate
+390 px closed scene reaches Room head 163. Site and receipt screenshots were
+visually inspected. The failed earlier run and its partial captures remain
+historical evidence. This checkpoint has no final gate or review request.
