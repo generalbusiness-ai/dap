@@ -243,8 +243,8 @@ position?: { at: FactRef };               // the order scope's entry that alloca
 reads?: readonly GroupReadUse[];          // one per `reads` entry; 5.5
 ```
 
-An applied sequenced input writes two entries, with three new input
-kinds between them:
+An applied sequenced input, and a refused sequenced delivery (5.4, step
+6), write two entries, with three new input kinds between them:
 
 ```ts
 | { type: "prepare"; input: Input; position: { at: FactRef }; reads: readonly GroupReadUse[] }   // the judgment; not an effective fact
@@ -272,8 +272,14 @@ send's `DeliveryCause` names the commit, which holds the send at its
 ordinal as the delivery contract requires (`docs/scopes.md`, Delivery).
 A child's genesis `source` is the commit, and the child's seed `cause`
 is the original input's digest, as today. The position of a commit
-entry is its prepare entry's position. The **abandon entry** makes the
-prepare entry void: no effect, no send, no receipt.
+entry is its prepare entry's position. A refused sequenced delivery is
+prepared and committed the same way: the wrapped delivery input carries
+`decision: "refused"` and its reason, as an unsequenced refused
+delivery's does (contract, section 7.4), the prepare derives no effects
+and one send, the result, and the commit is the deciding entry, from
+which the result is dispatched and a duplicate is answered. A refused
+sequenced act has no prepare entry (5.4, step 6). The **abandon entry**
+makes the prepare entry void: no effect, no send, no receipt.
 
 **The derivation context.** Effects and sends are derived once, at the
 prepare, and the fold applies them at the commit, so they are derived
@@ -398,12 +404,18 @@ act or handler is `sequenced`:
 2. The drain, as today.
 3. **Allocate.** The scope first asks `fits` whether a prepare entry,
    its commit or abandon, and the settling entries its effects could
-   open would fit. If not, the input is refused `scope-full`, and no
-   allocation is requested. The scope then asks its order scope for a
+   open would fit. If not, an act is refused `scope-full`, a delivery is
+   answered `unavailable` with that reason and keeps the sender's duty,
+   as today, and no allocation is requested. The scope then asks its order scope for a
    position P. No answer within the limit: the turn ends `unavailable`
    with the reason `order-unavailable`, nothing is written, and the
-   sender keeps the duty. A refusal: the input is refused with the order
-   scope's reason. On an answer, the scope writes one bookkeeping row,
+   sender keeps the duty. A refusal: an act is refused with the order
+   scope's reason. A delivery is answered `unavailable` with a reason
+   that can change, such as `forming`, and the sender keeps the duty;
+   with `order-left` or `not-a-member` it is decided outside the group's
+   order, as an unsequenced delivery is, with its deciding entry and
+   result, which the member may still write (5.7). On an answer, the
+   scope writes one bookkeeping row,
    **pending**, in the same storage as its journal: the input as
    received (the signed intent, or the delivery's envelope with its
    retained source entry), its digest, P, and the allocation's fact. At
@@ -427,16 +439,15 @@ act or handler is `sequenced`:
 6. **Refuse, or prepare.** A refused act: the scope asks the order scope
    to record a hole at P with the reason, answers the refusal, clears the
    pending row, and writes nothing, as a refused act writes nothing
-   (`docs/manual/ten-terms.md`, "takes effect"). A refused delivery: the
-   scope writes the delivery's deciding entry, `refused` with no effects
-   and its one result send, as for any verified delivery (contract,
-   section 7.4), clears the pending row in the same transaction, and
-   asks the order scope to record a hole at P with the reason. The
-   deciding entry takes no position, since it is no effective fact of
-   the group. It names P as the position it releases, so the hole
-   request is idempotent. It is written in the room that `fits` was
-   asked for at step 3, with no new reservation, and its result send is
-   dispatched from it as a commit's sends are. An applied judgment: the
+   (`docs/manual/ten-terms.md`, "takes effect"). A delivery is never
+   refused without its deciding entry (contract, section 7.4), so a
+   refused delivery is prepared like an applied one: its prepare entry
+   wraps the delivery with `decision: "refused"` and the reason, holds
+   its reads and rule answers, derives no effects and one send, the
+   result, and takes the position; it resolves and commits as steps 7
+   and 8 say, and the commit is its deciding entry. The fence, the
+   reservation, resume, and replay cover it as they cover any prepare.
+   An applied judgment, and a refused delivery: the
    scope writes the **prepare entry** (5.2) with `position`, its reads,
    the rule answers, and the derived effects and sends, and clears the
    pending row in the same transaction. The prepare entry is new work,
@@ -444,8 +455,10 @@ act or handler is `sequenced`:
    commit or abandon, and every settling entry the prepared effects
    would need once in effect: a deadline's timed entry, a request's
    result, or a `settles` state's exit, computed from the derived
-   effects. If it does not fit, the input is refused `scope-full`, and a
-   hole is recorded as for any refusal. The prepare entry is the durable
+   effects. If it does not fit, an act is refused `scope-full`, a
+   delivery is answered `unavailable` with that reason and keeps the
+   sender's duty, and in both cases a hole is recorded at P and the
+   pending row is cleared. The prepare entry is the durable
    judgment. What it says is what will take effect, or nothing.
 7. **The fence.** From the prepare entry until its commit or abandon
    entry, the scope writes nothing else. Every act and delivery is
@@ -472,9 +485,7 @@ act or handler is `sequenced`:
 
 **Restart and resume.** An object that restarts reads its head. A
 pending row with no prepare entry resumes at step 4. A prepare entry at
-the head with no commit or abandon resumes at step 8. A deciding entry
-at the head that names a released position with no hole or expiry in
-the order journal asks for the hole again. The resolve
+the head with no commit or abandon resumes at step 8. The resolve
 request is idempotent, and its answer, `resolved` or `expired`, is also
 readable from the order journal without a request, which is how a
 member settles after the order scope has closed. The object's own alarm
@@ -660,6 +671,10 @@ The verifier (`packages/replay`) checks:
   other commit cites the same prepare; nothing else was written between
   the prepare and the commit; and the prepare's reservation covered the
   commit and the pending work the effects open;
+- for each prepare entry that wraps a refused delivery: its effects are
+  empty, its one send is the result that names that delivery, and the
+  commit carries the same; a refused act has no prepare entry, and its
+  position is `holed`;
 - for each delivery, genesis source, `presents`, and `fact` operand that
   names an entry of a sequenced scope: the named entry's input kind is
   not `prepare`;
@@ -698,15 +713,15 @@ delivery, are assigned at admission and are inputs to the judgment.
 | Reserved by an allocation | its resolution, hole, or expiry | The `open` state's one settling entry |
 | Group lifetime | 1 minute to 30 days, required | The bound on an unresolved position. The package declares it |
 | Entries per attempt, applied | 2 in the order scope (allocation, then resolution) and 2 in the member (prepare, then commit) | 5.3 and 5.4 |
-| Entries per attempt, refused after allocation | 2 in the order scope (allocation, then hole) and, in the member, 0 for an act or 1 for a delivery (its deciding entry) | 5.4, step 6 |
-| Entries per attempt, refused before allocation | 0 | 5.4, step 3: `scope-full` or an order scope refusal |
+| Entries per attempt, refused after allocation | An act: 2 in the order scope (allocation, then hole) and 0 in the member. A delivery: as applied, because its refusal is prepared and committed | 5.4, step 6 |
+| Entries per attempt, refused before allocation | 0 for an act, and for a delivery answered `unavailable`. 1 in the member, outside the order, for a delivery decided `order-left` or `not-a-member` | 5.4, step 3 |
 | Entries per attempt, expired | 2 in the order scope (allocation, then expiry, which is that allocation's outcome) and 0 or 2 in the member (none, or prepare then abandon). The retry is another attempt | 5.3 and 5.4 |
 | Order scope capacity | As any scope's | Bounds the group's lifetime count of sequenced inputs. `scope-full` refuses an allocation |
 
 The costs, stated plainly: two round trips and two own entries for every
 applied attempt, the round trips to one object that only appends; two
-order entries and no own entry for an act refused after allocation, one
-own entry for a refused delivery;
+order entries and no own entry for an act refused after allocation, and
+the applied cost for a refused delivery;
 a fence on the member for one round trip in the ordinary case; a
 reader's wait as the failure model of 5.5 states it. A group whose
 exchanges are strictly sequential pays for nothing. That case is one
@@ -736,8 +751,9 @@ source entry's time plus `within` is strictly before the commit's clock
 reading. Late with no `then`: refused with the reason
 `{ code: "late", name }`; none of the handler's effects, sends, or
 attention is written, and the delivery's deciding entry with its one
-result send is written as for any refused delivery (packages note,
-section 4.1). Late with `then`: the branch applies instead of the handler, and the
+result send is written as for any refused request delivery (packages
+note, section 4.1). `late` is a form of request handlers only; an
+advisory delivery is never refused. Late with `then`: the branch applies instead of the handler, and the
 entry is applied and marked `late`. Never both. The judgment order is
 dispatch, `spacing`, `late`, guards. `late` judges a time, so
 `clock-behind` applies. In a sequenced handler the reading compared is
@@ -879,11 +895,11 @@ or M2a in plan 033.
 
 | Slice | What | Needs | Done when | Size |
 |---|---|---|---|---|
-| S1 | The `late` form (packages note 4.1, per 6.1) and source order (6.2): contract, validator, derive, scope, replay, tests | nothing | A late delivery with `then` takes the branch, and a fresh one takes the handler, with the entry marked. A late delivery with no `then` is refused with the reason. Each has fresh, boundary, and late deliveries and a `clock-behind` control. A `source`-ordered handler applies both deliveries in the lower-first run and supersedes the lower one in the higher-first run, with the applied pairs strictly increasing in each. All replay | 1 day |
+| S1 | The `late` form (packages note 4.1, per 6.1) and source order (6.2): contract, validator, derive, scope, replay, tests | nothing | A late delivery with `then` takes the branch, and a fresh one takes the handler, with the entry marked. A late delivery with no `then` is refused with the reason code `late`, keeping its deciding entry and result; the validator refuses `late` on an advisory handler. Each has fresh, boundary, and late deliveries and a `clock-behind` control. A `source`-ordered handler applies both deliveries in the lower-first run and supersedes the lower one in the higher-first run, with the applied pairs strictly increasing in each. All replay | 1 day |
 | S2 | The archive as a binding (section 4): the `archived` literal withdrawn, the directory slot and `bind-archive`, the claim field, the manifest requirement and the install refusal, and the archiver's target step | this note approved | A room bound at its claim archives its platform scopes and an installed package's scopes. A room bound later archives them from position 0. A package that requires the archive is refused in an unbound room | 1 to 2 days, before plan 033's slice 9 |
 | S3 | The contract of the sequenced level (5.2): the level, the mark, `reads` with `staleness`, the `read` operand, the `prepare`, `commit`, and `abandon` input kinds, the three order inputs, the retained kind `page`, the `order` kind, the reservation rules of 5.3 and 5.4 and the derivation context of 5.2 (prospective sequence, judgment time) in derive, and the validator | this note approved, and M2a's package format for groups in the manifest | The validator admits a sequenced definition and refuses each misuse named in 5.2. `owed` and `fits` count a prepare, an allocation, and their settlements as 5.3 and 5.4 say | 1 to 2 days |
-| S4 | The order scope and the sequenced turn (5.3 to 5.7): `platform:order@1` with its items, acts, three requests, and expiry; bootstrap by enrolment; the pending row, the prepare entry, the fence, the commit and abandon entries, and resume; the fold's indexes, receipts, settlement, and the delivery proof on the commit entry; derivation in the prospective context; the cut, finality, and the `at` read; `leave` and `close` | S3 | The two-scope witness of section 7 runs in memory and on native storage with every check of its list | 5 days |
-| S5 | Replay and archive of a group (5.8, 4.2): the four answers, the page witness, the commit and abandon checks, the effective-fact, sequence, judgment-time, and reservation checks, and the order scope's ref in a clone | S4, A2, and A3 | The witness's journals and order scope replay from a clone. A tampered position, a page that differs, an `open` allocation below a cited cut, a resolution naming another hash, and an entry inside a fence are each a mismatch. A prepare at the head is `pending`. A missing order journal or commit entry is `missing-dependency` | 1 day |
+| S4 | The order scope and the sequenced turn (5.3 to 5.7): `platform:order@1` with its items, acts, three requests, and expiry; bootstrap by enrolment; the pending row, the prepare entry, the fence, the commit and abandon entries, and resume; the fold's indexes, receipts, settlement, and the delivery proof on the commit entry; derivation in the prospective context; the cut, finality, and the `at` read; `leave` and `close` | S3 | The two-scope witness of section 7 runs in memory and on native storage with every check of its list. A refused sequenced delivery prepares and commits its deciding entry with its result, and a late refusal in a sequenced handler is one such; a refused sequenced act writes nothing and holes its position; a delivery refused before allocation is `unavailable`, or decided outside the order after `leave`; each with a native witness | 5 days |
+| S5 | Replay and archive of a group (5.8, 4.2): the four answers, the page witness, the commit and abandon checks, the effective-fact, sequence, judgment-time, and reservation checks, and the order scope's ref in a clone | S4, A2, and A3 | The witness's journals and order scope replay from a clone. A tampered position, a page that differs, an `open` allocation below a cited cut, a resolution naming another hash, and an entry inside a fence are each a mismatch. A prepare at the head is `pending`. A missing order journal or commit entry is `missing-dependency`. A refused delivery's prepare and commit verify, and a refused act's holed position verifies | 1 day |
 | S6 | Documents (section 8) | S2, S4 | The contract, the guide, the roadmap, and the archive note say what the runtime does | with S2 and S4 |
 
 ## 10. Decisions
@@ -1010,12 +1026,19 @@ The shape of the draft 2 fixes follows Spanner's safe time, read against
 dap's assumption of no clock bound: finality comes from the one journal
 that serializes allocation.
 
-**After landing, 18 October, 22:30.** Step 6 of 5.4, the resume rule,
-the cost row of 5.9, and 6.1 distinguish a refused act from a refused
-delivery. A refused delivery keeps its deciding entry and its one
-result, as the contract's section 7.4 requires, and the late reason has
-the code `late`. Builder question `0784600e`, checker corrections
-`91c866dc` and `b92bd90c`, planner decision on that question.
+**After landing, 18 October, 22:30 and 23:30.** Steps 3 and 6 of 5.4,
+5.2, 5.8, the cost rows of 5.9, 6.1, and slices S1, S4, and S5
+distinguish a refused act from a refused delivery. A refused delivery
+keeps its deciding entry and its one result, as the contract's section
+7.4 requires, so in a sequenced scope its refusal is prepared and
+committed at its position like an applied judgment, under the same
+fence, reservation, resume, and replay rules; a refused act writes
+nothing and holes its position. A delivery refused before allocation is
+`unavailable`, or decided outside the order once the member has left.
+The late reason has the code `late`, and `late` is a form of request
+handlers only. Builder question `0784600e`, checker corrections
+`91c866dc` and `b92bd90c`, review `44ad8b0d` F1 to F4, planner decision
+on that question and its amendment.
 
 ## Sources
 
