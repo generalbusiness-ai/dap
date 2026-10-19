@@ -498,3 +498,16 @@ dependencies or evidence. No unreviewed G5a code is incorporated. P1's
 final gate and Source remain after incorporation of the relevant actual
 reviewed landings, including G5a and S2a. This checkpoint has no P1 gate,
 review, landing, publication or deployment.
+
+
+## Package authoring reference
+
+`docs/write-an-application.md` now explains the seven signed composition
+places, source-path resolution, exact peer pins, the declared-right
+boundary, lifetime relation fan-in, refusal and warning rows, projected
+counts and staged `unsupported-form` refusals. The small Grow excerpt is
+explicitly partial. It distinguishes local validation from the later
+install-time guard and from native or provider authority. The text is
+checked against the current codec, source resolver, graph, public validator
+and command output. This documentation-only addition runs no further
+suite or gate; final dependency incorporation and the P1 gate remain ahead.
