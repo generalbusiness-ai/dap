@@ -2,7 +2,7 @@
  * The package codec already closes all declared create edges; matching a
  * selected definition alone grants no ownership. No application state is read. */
 import type { Digest, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isScopeRef, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isDigest, isScopeRef } from "@generalbusiness/artroom-bytes";
 import { readNativeBirth, type NativeBirthSource } from "../native-birth.ts";
 import { proofEntry } from "../proof-bytes.ts";
 import type { PreparationRun } from "../preparation-flight.ts";
@@ -10,13 +10,13 @@ import type { PreparedRead } from "../read-preparation.ts";
 
 /** Additional projection-owner work, separate from unchanged G2p and native
  * item-query allowances. Counts are admission limits, not heap measurements. */
-export const APPLICATION_OWNERSHIP_BOUNDS = Object.freeze({ ancestors: 16, birthBytes: 64 * 1024, totalBirthBytes: 1024 * 1024 });
+export const APPLICATION_OWNERSHIP_BOUNDS = Object.freeze({ ancestors: 16, birthBytes: 64 * 1024, totalBirthBytes: 16 * 64 * 1024 });
 const same = (a: unknown, b: unknown) => canonicalize(a) === canonicalize(b);
 export async function projectionScopeOwned(frame: PreparedRead, root: ScopeRef, rootDefinition: Digest, directory: ScopeRef,
   births: NativeBirthSource | null, run: PreparationRun): Promise<"owned" | "unavailable" | "unowned" | "too-large"> {
   if (same(frame.scope.at, root)) return frame.pinned.named === rootDefinition && same(frame.genesis.seed.creator, directory) ? "owned" : "unowned";
   if (!births || !isDigest(frame.pinned.named)) return "unavailable";
-  let genesis = frame.genesis, bytes = 0;
+  let genesis = frame.genesis;
   const seen = new Set([canonicalize(frame.scope.at)]);
   for (let count = 0; count < APPLICATION_OWNERSHIP_BOUNDS.ancestors; count++) {
     const parent = genesis.seed.creator;
@@ -28,8 +28,6 @@ export async function projectionScopeOwned(frame: PreparedRead, root: ScopeRef, 
     if (!run.active()) return "unavailable";
     const birth = readNativeBirth(raw, parent, APPLICATION_OWNERSHIP_BOUNDS.birthBytes);
     if (!birth || birth.native || !isDigest(birth.named)) return "unowned";
-    bytes += utf8(birth.proof.bytes).length;
-    if (bytes > APPLICATION_OWNERSHIP_BOUNDS.totalBirthBytes) return "too-large";
     const entry = proofEntry(birth.proof, birth.proof.fact, APPLICATION_OWNERSHIP_BOUNDS.birthBytes);
     if (!entry || entry.input.type !== "genesis" || entry.input.decision !== "applied" || !same(entry.at, parent)) return "unowned";
     if (same(parent, root)) return birth.named === rootDefinition && same(entry.input.seed.creator, directory) ? "owned" : "unowned";

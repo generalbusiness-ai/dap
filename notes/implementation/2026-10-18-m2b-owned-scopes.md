@@ -146,3 +146,36 @@ Focused evidence:
   mode passes the complete native Grow case. Duration 4.36 seconds is
   Vitest's printed command duration on this shared arm64 Mac; outer command
   CPU/load were not measured. Source/test typecheck passes.
+
+## Ancestry admission and late work
+
+Two pure protocol/clock cases pass. Their canonical birth entries are explicitly
+constructed fixtures, not native creation or authority evidence. They show the
+complete 16-parent chain succeeds, a seventeenth ancestor is refused before its
+RPC, and a canonical birth admitted by the general 1 MiB protocol is rejected
+by this owner's smaller 64 KiB body cap. Each admitted RPC receives the original
+remaining deadline and body allowance. A gated late response retains the single
+preparation slot, cannot yield ownership after expiration, and releases the
+slot only after its underlying promise settles; a later request then succeeds.
+No real sleeps or provider calls are used.
+
+The total 1 MiB limit is derived from 16 calls at 64 KiB each. The earlier sum
+check could never decide after those two bounds, so it was removed rather than
+claiming an independent total-byte control. The derived upper bound remains
+explicit. These are admission limits, not heap or performance measurements.
+
+Focused run `/tmp/artroom-m2b-owner-bounds-first-20261018.log` passes two cases,
+original 15900, terminal abad56. Source/test typecheck passes after correcting
+two fixture-only TypeScript mistakes (a readonly effects array and explicit
+optional-property typing). Both failure and corrected typecheck logs are kept.
+
+Two focused controls distinguish the new boundaries. Letting the loop admit
+one extra ancestor changes the seventeenth result from too-large to owned.
+Removing the post-await deadline guard makes the late ownership counter 1
+instead of 0. Both fail by their intended assertions; the unchanged cases pass
+before the controls and again after restoration. Original 51257, terminal
+f7fb84. Driver/results `/tmp/artroom-m2b-ancestry-bounds-controls-20261018.py`
+and `.json`; logs `/tmp/artroom-m2b-ancestry-depth-mutant-20261018.log`,
+`/tmp/artroom-m2b-ancestry-late-mutant-20261018.log`, and
+`/tmp/artroom-m2b-ancestry-controls-restored-20261018.log`. Each original child
+process ended before its source restoration. No whole suite was repeated.
