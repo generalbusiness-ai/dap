@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bcf8bbcdb8dcd890d2ead2e273f6a341256871e3","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/declared-surfaces-browser.mjs."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bda6489a1e9601b2cdd5afb6334e4fe3a99b5477","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/runtime.ts."}
