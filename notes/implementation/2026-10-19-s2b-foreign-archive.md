@@ -1,11 +1,11 @@
-# S2b: foreign archive inputs — preparation
+# S2b: foreign archive inputs
 
 Request `c8c6ff6b6277fd103c30f80d0b76fd40a60ca8bb`, promise
-`ea3d761900e434f096adbb83e46ff1af3a86fe1f`. This is preparation against
-reviewed Main `3ed2a08a50f31e84ea42b4f6027684e14a8cedb8`. There is no
-S2b inventory/admission/selection change, gate, review or landing. The initial
-fixture source-identity helper and focused checks are recorded below, along
-with the private dependency preparation.
+`ea3d761900e434f096adbb83e46ff1af3a86fe1f`. Development below is based on
+reviewed Main `3ed2a08a50f31e84ea42b4f6027684e14a8cedb8`. It adds explicit
+fixture source metadata, separate policy checks, direct-copy inventory,
+immutable rebuilds and structural archive readback. No whole gate, review
+or landing is claimed. The installed-application export is still pending.
 Actual reviewed G5a and S2a landings must be incorporated before final
 S2b integration. Neither unreviewed branch is imported here.
 
@@ -15,10 +15,10 @@ configuration path, and export of an installed application's scopes,
 including genesis position zero when binding happens later. The A2/A3
 fixture boundary remains. A0b production admission and consent are separate.
 
-## Current refusal boundaries
+## Initial refusal boundaries
 
-The current implementation refuses copied entries at several interfaces.
-Removing the `uses != 0` check alone cannot deliver this slice.
+Before this slice, copied entries refused at several interfaces. The table
+records that starting point. Removing `uses != 0` alone cannot deliver it.
 
 | Interface | Current boundary |
 |---|---|
@@ -247,6 +247,82 @@ compiler passes in `...foreign-namespace-types...log`. The initial compiler
 also caught one unused type import before that witness ran. Scope/pin
 metadata and trusted fixture policy are still distinct from archive payload
 integrity, production permission and offline foreign-history verification.
-Inventory/body selection, immutable Mark/manifest/restart binding and the
-actual installed application export remain to implement and prove after
-actual reviewed G5a/S2a Main incorporation. No whole gate or review claim.
+At that checkpoint inventory/body selection and immutable rebuild were
+still pending. The following checkpoint adds them. The actual installed
+application export still awaits reviewed G5a/S2a Main incorporation.
+
+## Direct-copy inventory, immutable rebuild and structural readback
+
+The optional `fixtureSources` configuration reaches inventory, planning,
+rebuild and the fixture driver. Without it the default privacy pass still
+refuses foreign uses. Every selected local and foreign inline class must
+pass metadata checks before any local entry or copied/rule/snapshot/value
+body read. The retained reader then verifies the copy's canonical bytes,
+raw digest, size, full producer ScopeRef, sequence and consumer FactRef.
+It checks a genesis copy against the configured pin. No copied entry's own
+dependencies are selected recursively.
+
+The immutable selection records `foreign: { fact, pin }` on each copied
+entry and a sorted, unique `foreignSources: [{ at, pin }]` basis. Rebuild
+joins every stored pair to the immutable fixture map before any SQL input
+read. Missing configuration returns `foreign-source-unavailable`; a
+different marked pair returns `foreign-source-mismatch`. This named rebuild
+refusal prevents the driver from reducing it to a generic retry. Reads
+after construction remain restricted to the marked positions and keys.
+
+The existing inventory/v1 manifest grammar now has an explicit optional,
+nonempty `foreignSources` extension. Local-only descriptions and manifests
+omit it. The new `foreign-use` selection consumer admits only entry-copy
+keys with exact source metadata. Layout binds every copy consumer to an
+actual direct use in its selected native entry, verifies copied bodies and
+preserves the appropriate source basis when checking an earlier parent.
+The cumulative manifest carries ScopeRef/pin pairs; private consumer facts,
+work counters and policy review strings remain in selection/configuration.
+This vocabulary/schema extension needs review with S2b. It supplies no new
+certificate or permission.
+
+The existing structural reader returns the descriptive source basis. For
+extended manifests it checks every direct use against the copied body,
+rejects missing/orphan source metadata and checks a copied genesis's own
+pin. Legacy manifests retain their existing read grammar. The replay
+archive data interface can carry the same descriptive basis; no replay
+judge, trust rule or foreign-history traversal changed.
+
+The native witness uses real assignment and genesis copies from the earlier
+fixture. It proves final-class policy refusal before any entry body,
+successful direct-copy selection, post-admission body tampering refusal,
+later-act/restart reads and missing/mismatched source configuration. In
+both SHA-1 and SHA-256 it persists a real native Mark, appends another act,
+evicts/restarts, reconstructs identical objects and reads the original
+cutoff through the existing structural reader. A changed consumer fact
+refuses before any retained body read. A mechanically altered manifest
+with freshly valid Git objects but a false source pin refuses at its real
+retained genesis. The graph is two native test scopes, not an installed
+application; grants, policy and map setup are explicit TEST fixtures.
+There is no provider send, production admission or complete offline replay
+claim.
+
+Checks, with every original process terminal before subsequent edits:
+
+- Native inventory/retained regression: original 69277 exit 0, three files,
+  18 cases, 3.07 s, `...foreign-inventory-owning...log`.
+- Native immutable-input regression: original 74099 exit 0, two files,
+  five cases, 2.77 s, `...foreign-input-owning...log`.
+- Native build/driver and Git layout/reader: original 17501 exit 0, five
+  files, 35 cases, 11.04 s, `...foreign-build-owning...log`.
+- Named rebuild refusal: original 61254 exit 0, five cases, 2.89 s,
+  `...foreign-rebuild-refusal-owning...log`.
+- Independent pin-corruption readback: original 92864 exit 0, two cases,
+  2.78 s, `...foreign-reader-pin-owning...log`.
+- One targeted control: original 41787 exit 0, one unchanged case passed;
+  disabling only foreign inline-class coverage made its final-genesis
+  refusal assertion fail. The helper restored the exact source. Full log:
+  `/tmp/artroom-s2b-foreign-final-class-control-20261019.log`.
+
+Logs above have prefix `/tmp/artroom-s2b-` and suffix `-20261019.log`.
+Source/test compilers pass for Scope, Git and Replay. The first driver
+compiler rejected an explicitly undefined optional configuration property;
+the corrected call omits that property when absent. Final compiler logs
+include `...foreign-reader-pin-types...log`, `...foreign-git-test-types...log`
+and `...foreign-replay-types...log`. No package or lockfile changed. These
+focused checks are not a combined gate or installed-application acceptance.

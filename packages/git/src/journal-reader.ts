@@ -1,6 +1,6 @@
 /** Untrusted archive bytes over Git objects. No checkout, replay judgment,
  * export admission or service fallback. The caller owns one read budget. */
-import { DOMAINS, type Digest, type Head, type RetainedInput, type ScopeId, type ScopeRef } from "@generalbusiness/dap-contract";
+import { DOMAINS, type Digest, type FactRef, type Head, type RetainedInput, type ScopeId, type ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, domainRetainedJSON, entryHash, isEntry, parseStrict, rawRetainedJSON, scopeIdOf, timeMs, utf8 } from "@generalbusiness/artroom-bytes";
 import { GitRefusal } from "./names.ts";
 import { journalPhysicalFiles, journalTreeFiles, type JournalRetainedFile } from "./journal-files.ts";
@@ -8,7 +8,7 @@ import { journalHead, journalManifest } from "./journal-manifest.ts";
 import { JournalObjectReader, journalId, type JournalFormat, type JournalObjectSource } from "./journal-objects.ts";
 import { archiveRetainedPath, firstOfArchiveSegment, journalRef } from "./journal-path.ts";
 import { archiveSegments, archiveShards } from "./journal-segments.ts";
-import { JOURNAL_SELECTION_BYTES, sameJournalScope } from "./journal-selection.ts";
+import { JOURNAL_SELECTION_BYTES, sameJournalScope, type JournalForeignSource } from "./journal-selection.ts";
 import { JournalLayoutRefusal, JournalWork, type JournalBudget } from "./journal-work.ts";
 
 export interface JournalReadBudget extends JournalBudget {
@@ -36,6 +36,8 @@ export interface ReadJournal {
   readonly name: string | null;
   readonly entries: readonly { readonly seq: number; readonly hash: Digest; readonly bytes: string }[];
   readonly retained: readonly RetainedInput[];
+  /** Descriptive classifier basis, not independently proven source history. */
+  readonly foreignSources?: readonly JournalForeignSource[];
 }
 export type JournalReadResult = { readonly ok: true; readonly archive: ReadJournal } | JournalReadFailure;
 class InvalidArchive extends Error {
@@ -95,6 +97,8 @@ export async function readJournalArchive(repository: JournalReadRepository, scop
     }
     segments.sort((a, b) => a.first - b.first);
     const entries: { seq: number; hash: Digest; bytes: string }[] = [];
+    const foreignUses = new Map<Digest, { fact: FactRef; found: boolean }>();
+    const sources = new Map(manifest.foreignSources?.map(source => [canonicalize(source.at), source.pin]) ?? []), usedSources = new Set<string>();
     const bodies = new Map<string, Uint8Array>([["journal/v1/head.json", headBody], ["journal/v1/manifest.json", manifestBody]]);
     let lastTime: number | null = null;
     for (const segment of segments) {
@@ -113,6 +117,15 @@ export async function readJournalArchive(repository: JournalReadRepository, scop
           if (entry.input.type !== "genesis" || scopeIdOf(entry.input.seed) !== scope || entry.input.inc !== head.scope.inc || entry.input.seed.kind !== head.scope.kind) mismatch("archive genesis identity differs");
         } else if (entry.input.type === "genesis") mismatch("archive contains a second genesis");
         lastTime = timeMs(entry.time);
+        if (manifest.foreignSources) {
+          work.metadata(entry.uses.length * 512);
+          for (const use of entry.uses) {
+            work.check();
+            const previous = foreignUses.get(use.content);
+            if (previous && canonicalize(previous.fact) !== canonicalize(use.fact)) mismatch("foreign content has conflicting consumer facts");
+            foreignUses.set(use.content, { fact: use.fact, found: false });
+          }
+        }
         entries.push({ seq: entry.seq, hash: entryHash(entry), bytes });
       }
     }
@@ -128,8 +141,17 @@ export async function readJournalArchive(repository: JournalReadRepository, scop
       const value = key.kind === "entry" || key.kind === "rule" ? rawRetainedJSON(key.digest, bytes)
         : domainRetainedJSON(key.kind === "value" ? key.domain : key.kind === "definition" ? DOMAINS.definition : DOMAINS.snapshot, key.digest, bytes, { canonical: true, max: body.length });
       if (value === undefined || canonicalize(value) !== bytes || key.kind === "entry" && !isEntry(value)) mismatch("retained input differs from its named bytes");
+      if (key.kind === "entry" && manifest.foreignSources) {
+        const use = foreignUses.get(key.digest);
+        if (!isEntry(value) || !use || !sameJournalScope(value.at, use.fact.at) || value.seq !== use.fact.seq || entryHash(value) !== use.fact.hash) mismatch("foreign copy differs from its consumer fact");
+        const source = canonicalize(value.at), pin = sources.get(source);
+        if (!pin) mismatch("foreign copy lacks its classified source pin");
+        if (value.seq === 0 ? value.input.type !== "genesis" || value.prev !== null || value.input.seed.definition !== pin || value.input.inc !== value.at.inc || value.input.seed.kind !== value.at.kind || scopeIdOf(value.input.seed) !== value.at.scope : value.input.type === "genesis") mismatch("foreign copy birth differs from its classified source pin");
+        use.found = true; usedSources.add(source);
+      }
       retained.push({ ...key, bytes }); files.push({ key, data: body });
     }
+    if (manifest.foreignSources && (usedSources.size !== sources.size || [...foreignUses.values()].some(use => !use.found))) mismatch("foreign source basis or direct copies are incomplete");
     const canonicalSegments = archiveSegments(entries.map(entry => ({ seq: entry.seq, bytes: entry.bytes })), entries.reduce((sum, entry) => sum + utf8(entry.bytes).length + 1, 0));
     const expected = journalPhysicalFiles(canonicalSegments, files, headBody, manifestBody, work);
     const differing = expected.find(file => !bodies.has(file.path) || !equalBytes(bodies.get(file.path)!, file.data));
@@ -145,7 +167,7 @@ export async function readJournalArchive(repository: JournalReadRepository, scop
       }
     }
     work.check();
-    return { ok: true, archive: Object.freeze({ scope: Object.freeze({ ...head.scope }), head: Object.freeze({ seq: head.through, hash: head.hash }), format, commit: id, name, entries: Object.freeze(entries.map(entry => Object.freeze(entry))), retained: Object.freeze(retained.map(input => Object.freeze(input))) }) };
+    return { ok: true, archive: Object.freeze({ scope: Object.freeze({ ...head.scope }), head: Object.freeze({ seq: head.through, hash: head.hash }), format, commit: id, name, entries: Object.freeze(entries.map(entry => Object.freeze(entry))), retained: Object.freeze(retained.map(input => Object.freeze(input))), ...(manifest.foreignSources ? { foreignSources: Object.freeze(manifest.foreignSources.map(source => Object.freeze({ at: Object.freeze({ ...source.at }), pin: source.pin }))) } : {}) }) };
   } catch (error) {
     let result: JournalReadOutcome = "unavailable", why = "archive read is unavailable";
     if (error instanceof InvalidArchive) { result = error.result; why = error.message; }

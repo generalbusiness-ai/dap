@@ -1,22 +1,36 @@
 /** Bounded native retained-byte mechanism. This helper grants no phase or
  * privacy admission. The owning inventory must finish privacy/root policy
  * before value/rule/snapshot selection; declaration metadata is permitted
- * earlier. No entry-copy or detached-text body can be read here. */
+ * earlier. Copies need exact already-classified descriptors; detached texts
+ * are never read here. */
 import { DOMAINS, RETAINED_INPUT_BYTES, type Digest } from "@generalbusiness/dap-contract";
-import { canonicalize, domainRetainedJSON, rawRetainedJSON, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, domainRetainedJSON, entryHash, isDigest, isEntry, isFactRef, isPlatformDefinition, rawRetainedJSON, utf8 } from "@generalbusiness/artroom-bytes";
 import { checkedRetainedKey, type ProbeDependency, type RetainedKey } from "@generalbusiness/dap-derive";
-import { ArchiveBudget } from "./archive-budget.ts";
+import { ARCHIVE_BOUNDS, ArchiveBudget } from "./archive-budget.ts";
 import { ArchivePrefixStopped } from "./archive-prefix.ts";
 import type { Sql } from "./sqlite.ts";
+import type { ArchiveForeignCopy } from "./archive-foreign.ts";
 
 export interface ArchiveRetainedValue { readonly bytes: string; readonly value: unknown }
+export type ArchiveRetainedCopy = Pick<ArchiveForeignCopy, "content" | "bytes" | "fact" | "pin">;
 const nativeDomains: ReadonlySet<string> = new Set(Object.values(DOMAINS));
 const natural = (n: unknown): n is number => typeof n === "number" && Number.isSafeInteger(n) && n >= 0 && !Object.is(n, -0);
 const keyName = (key: RetainedKey): string => JSON.stringify(key.kind === "value" ? [key.kind, key.domain, key.digest] : [key.kind, key.digest]);
 
 export class ArchiveRetainedReader {
   readonly #cache = new Map<string, string>();
-  constructor(readonly sql: Pick<Sql, "exec">, readonly budget: ArchiveBudget) {}
+  readonly #copies = new Map<Digest, Readonly<ArchiveRetainedCopy>>();
+  /** The owning pass supplies descriptors only after every local/foreign
+   * policy class is admitted, or from its exact immutable marked selection. */
+  constructor(readonly sql: Pick<Sql, "exec">, readonly budget: ArchiveBudget, copies: readonly Readonly<ArchiveRetainedCopy>[] = []) {
+    if (copies.length > ARCHIVE_BOUNDS.attempts) budget.stop("limit");
+    budget.spend({ metadata: copies.length * 512, inputWork: copies.length * 1024 });
+    for (const copy of copies) {
+      if (!isDigest(copy.content) || !isFactRef(copy.fact) || !isDigest(copy.pin) && !isPlatformDefinition(copy.pin)
+        || !natural(copy.bytes) || copy.bytes === 0 || copy.bytes > RETAINED_INPUT_BYTES || this.#copies.has(copy.content)) budget.stop("unavailable");
+      this.#copies.set(copy.content, Object.freeze({ ...copy, fact: Object.freeze({ ...copy.fact, at: Object.freeze({ ...copy.fact.at }) }) }));
+    }
+  }
   /** An unconfigured potential definition probe may be genuinely absent.
    * Inspect only its native keyed existence before requesting policy; an
    * uncovered present candidate still refuses before any body fetch. */
@@ -33,10 +47,11 @@ export class ArchiveRetainedReader {
   read(key: RetainedKey, max: number): ArchiveRetainedValue | null {
     key = checkedRetainedKey(key);
     this.budget.spend({ attempts: 1, inputWork: 256 });
-    if (key.kind === "entry") throw new ArchivePrefixStopped("unsupported-foreign-copy");
+    const copy = key.kind === "entry" ? this.#copies.get(key.digest) : undefined;
+    if (key.kind === "entry" && !copy) throw new ArchivePrefixStopped("unsupported-foreign-copy");
     // Runtime check as well as the closed TypeScript key; never fall through
     // an unknown future kind into the ordinary retained_input table.
-    if (!["definition", "rule", "snapshot", "value"].includes(key.kind)) throw new ArchivePrefixStopped("unavailable");
+    if (!["definition", "entry", "rule", "snapshot", "value"].includes(key.kind)) throw new ArchivePrefixStopped("unavailable");
     if (key.kind === "value" && (!nativeDomains.has(key.domain) || key.domain === DOMAINS.definition)) throw new ArchivePrefixStopped("unsupported-custom-domain");
     if (!natural(max) || max === 0 || max > RETAINED_INPUT_BYTES) return this.budget.stop("limit");
     const cacheKey = keyName(key);
@@ -50,6 +65,7 @@ export class ArchiveRetainedReader {
       const row = rows[0];
       if (rows.length !== 1 || row?.["type"] !== "text" || !natural(row["size"]) || row["size"] === 0 || row["size"] > max) return null;
       size = row["size"];
+      if (copy && size !== copy.bytes) return null;
       this.budget.spend({ inputWork: size * 32 });
       const body = this.budget.native(this.sql, () => ({ metadata: 0, inputWork: size })).exec(`SELECT bytes FROM ${table} WHERE ${where} AND typeof(bytes) = 'text' AND octet_length(bytes) = ? LIMIT 1`, ...bindings, size).toArray();
       if (body.length !== 1 || typeof body[0]?.["bytes"] !== "string") return this.budget.stop("unavailable");
@@ -62,10 +78,12 @@ export class ArchiveRetainedReader {
       size = utf8(bytes).length;
     }
     if (bytes.length > max || utf8(bytes).length !== size || size > max) return null;
-    const parsed = key.kind === "rule" ? rawRetainedJSON(key.digest, bytes)
+    const parsed = key.kind === "rule" || key.kind === "entry" ? rawRetainedJSON(key.digest, bytes)
       : domainRetainedJSON(key.kind === "value" ? key.domain : key.kind === "definition" ? DOMAINS.definition : DOMAINS.snapshot, key.digest, bytes, { canonical: true, max });
     this.budget.check();
     if (parsed === undefined || canonicalize(parsed) !== bytes) return null;
+    if (copy && (!isEntry(parsed) || parsed.seq !== copy.fact.seq || canonicalize(parsed.at) !== canonicalize(copy.fact.at)
+      || entryHash(parsed) !== copy.fact.hash || size !== copy.bytes || parsed.input.type === "genesis" && parsed.input.seed.definition !== copy.pin)) return null;
     this.budget.check();
     this.#cache.set(cacheKey, bytes);
     return { bytes, value: parsed };

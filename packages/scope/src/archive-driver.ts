@@ -5,6 +5,7 @@ import { canonicalize, isScopeRef, timeMs, timeOf } from "@generalbusiness/artro
 import { journalId, journalRef, type JournalArchive, type JournalFormat, type JournalObject } from "@generalbusiness/artroom-git/journal";
 import { ArchiveBudget, ArchiveStopped } from "./archive-budget.ts";
 import { planArchive, rebuildArchive } from "./archive-build.ts";
+import type { FixtureArchiveSourcePins } from "./archive-source-pins.ts";
 import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, readArchivePin } from "./archive-pin.ts";
 import type { ArchivePolicyRegistry } from "./archive-inventory.ts";
 import { ArchiveRows, type ArchiveRow } from "./archive-row.ts";
@@ -41,6 +42,8 @@ export interface FixtureArchiveDriverOptions {
   readonly clock: () => Timestamp;
   readonly bounds: Bounds;
   readonly policies: FixtureArchivePolicies;
+  /** Immutable graph metadata prepared through the existing fixture reader. */
+  readonly fixtureSources?: FixtureArchiveSourcePins;
   readonly target: FixtureArchiveTarget;
   readonly provider: FixtureArchiveProvider;
   readonly maxBytes?: number;
@@ -175,11 +178,11 @@ export class ArchiveDriver {
       const previous = await this.#parent(row, budget, allowed);
       let archive: JournalArchive;
       if (row.pending) {
-        const rebuilt = await rebuildArchive(this.#options.sql, row, previous.parent, budget);
+        const rebuilt = await rebuildArchive(this.#options.sql, row, previous.parent, budget, this.#options.fixtureSources);
         if (!rebuilt.ok) { rows.stop(rebuilt.reason, "where" in rebuilt ? rebuilt.where ?? null : null, budget); return { state: "stopped", next: null, reason: rebuilt.reason }; }
         archive = rebuilt.archive;
       } else {
-        const planned = await planArchive(this.#options.sql, { at, through, bounds: this.#options.bounds, policies: this.#options.policies.registry, format: row.format, parent: previous.parent, markedAt: this.#options.clock() }, budget);
+        const planned = await planArchive(this.#options.sql, { at, through, bounds: this.#options.bounds, policies: this.#options.policies.registry, format: row.format, parent: previous.parent, markedAt: this.#options.clock(), ...(this.#options.fixtureSources ? { fixtureSources: this.#options.fixtureSources } : {}) }, budget);
         if (!planned.ok) { rows.stop(planned.reason, "where" in planned ? planned.where ?? null : null, budget); return { state: "stopped", next: null, reason: planned.reason }; }
         archive = planned.archive; row = rows.mark(planned.mark, budget);
       }

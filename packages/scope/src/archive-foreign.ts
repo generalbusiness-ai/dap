@@ -3,6 +3,7 @@
 import { INVITATION_KEY_MEMBERSHIP } from "@generalbusiness/dap-contract";
 import type { Bounds, Digest, FactRef, PlatformDefinition } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isFactRef, platformName } from "@generalbusiness/artroom-bytes";
+import { derivable } from "@generalbusiness/dap-derive";
 import { ArchiveBudget } from "./archive-budget.ts";
 import { archiveEntryHeader, archiveEntryPrivacy, archiveMetadataText, archiveSupportMetadata } from "./archive-entry-metadata.ts";
 import type { ArchivePolicyRegistry, ReviewedArchivePolicy } from "./archive-inventory.ts";
@@ -38,6 +39,7 @@ export class ArchiveForeignMetadata {
     if (!policy || !policy.review || policy.review.length > 512 || policy.support.named !== pin) return stop("unsupported-archive-cohort");
     if (isDigest(pin) ? policy.support.definition.digest !== pin : policy.support.definition.declared.name !== platformName(pin)) return stop("foreign-source-mismatch");
     if (canonicalize(policy.support.definition.declared) !== source.declaration) return stop("foreign-source-mismatch");
+    if (!derivable(policy.support.definition, policy.support.capabilities)) return stop("unsupported-archive-cohort");
     archiveSupportMetadata(policy.support, this.budget);
     return policy;
   }
@@ -98,6 +100,10 @@ export class ArchiveForeignMetadata {
     this.budget.spend({ attempts: 1, metadata: 256, inputWork: 512 });
     const content = this.#facts.get(canonicalize(fact));
     return content === undefined ? null : this.#copies.get(content) ?? null;
+  }
+  selection(): readonly Readonly<ArchiveForeignCopy>[] {
+    this.budget.spend({ metadata: this.#copies.size * 512, inputWork: this.#copies.size * 1024 });
+    return Object.freeze([...this.#copies.values()]);
   }
   basis(): readonly Readonly<ArchiveSourceBasis>[] {
     this.budget.spend({ metadata: this.#sources.size * 512, inputWork: this.#sources.size * 4096 });

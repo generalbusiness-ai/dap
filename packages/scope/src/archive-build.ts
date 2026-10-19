@@ -8,7 +8,8 @@ import { archiveInput } from "./archive-input.ts";
 import { inventoryArchive, type ArchivePolicyRegistry } from "./archive-inventory.ts";
 import type { ArchiveMark, ArchiveRow } from "./archive-row.ts";
 import type { Sql } from "./sqlite.ts";
-import type { ArchivePrefixReason } from "./archive-prefix.ts";
+import { ArchivePrefixStopped, type ArchivePrefixReason } from "./archive-prefix.ts";
+import type { FixtureArchiveSourcePins } from "./archive-source-pins.ts";
 
 type LayoutFailure = Extract<JournalLayoutResult, { ok: false }>;
 export type ArchiveBuildFailure = LayoutFailure | { readonly ok: false; readonly reason: ArchivePrefixReason | "rebuild-mismatch" | "manifest" };
@@ -46,26 +47,33 @@ function storedSelection(manifest: string, budget: ArchiveBudget) {
 
 /** Initial planning uses the native synchronous inventory and its explicit
  * caller-owned fixture/reviewed policy registry. It does not mark or send. */
-export async function planArchive(sql: Sql, context: { readonly at: ScopeRef; readonly through: Head; readonly bounds: Bounds; readonly policies: ArchivePolicyRegistry; readonly format: JournalFormat; readonly parent: Parent; readonly markedAt: Timestamp }, budget: ArchiveBudget): Promise<ArchiveBuildFailure | { readonly ok: true; readonly archive: JournalArchive; readonly mark: ArchiveMark }> {
+export async function planArchive(sql: Sql, context: { readonly at: ScopeRef; readonly through: Head; readonly bounds: Bounds; readonly policies: ArchivePolicyRegistry; readonly format: JournalFormat; readonly parent: Parent; readonly markedAt: Timestamp; readonly fixtureSources?: FixtureArchiveSourcePins }, budget: ArchiveBudget): Promise<ArchiveBuildFailure | { readonly ok: true; readonly archive: JournalArchive; readonly mark: ArchiveMark }> {
   const at = { ...context.at }, through = { ...context.through }, parent = context.parent ? { ...context.parent } : null, format = context.format, markedAt = context.markedAt;
-  const selected = inventoryArchive(sql, at, through, context.bounds, context.policies, budget);
+  const fixtureSources = context.fixtureSources;
+  const selected = inventoryArchive(sql, at, through, context.bounds, context.policies, budget, fixtureSources);
   if (!selected.ok) return selected;
   budget.spend({ inputWork: JOURNAL_SELECTION_BYTES * 3 });
   const manifest = canonicalize(selected.inventory);
   if (manifest.length > JOURNAL_SELECTION_BYTES || utf8(manifest).length > JOURNAL_SELECTION_BYTES) budget.stop("limit");
-  const built = await buildJournalArchive({ format, selection: manifest, input: archiveInput(sql, selected.inventory, budget), parent, budget });
+  const built = await buildJournalArchive({ format, selection: manifest, input: archiveInput(sql, selected.inventory, budget, fixtureSources), parent, budget });
   if (!built.ok) return built;
   return { ...built, mark: { commit: built.archive.commit, parent: parent?.id ?? null, through: { ...selected.inventory.through }, manifest, markedAt } };
 }
 
 /** No new inventory is computed after Mark. The caller supplies only the
  * marked parent's bounded object port; current head/retained sets are unread. */
-export async function rebuildArchive(sql: Sql, row: ArchiveRow, parent: Parent, budget: ArchiveBudget): Promise<ArchiveBuildResult> {
+export async function rebuildArchive(sql: Sql, row: ArchiveRow, parent: Parent, budget: ArchiveBudget, fixtureSources?: FixtureArchiveSourcePins): Promise<ArchiveBuildResult> {
   const mark = row.pending ? { ...row.pending, through: { ...row.pending.through } } : null, at = { ...row.at }, format = row.format, base = parent ? { ...parent } : null;
   if (!mark || mark.parent !== (base?.id ?? null)) return { ok: false, reason: "manifest" };
   const selection = storedSelection(mark.manifest, budget);
   if (!selection || !same(selection.at, at) || !same(selection.through, mark.through)) return { ok: false, reason: "manifest" };
-  const built = await buildJournalArchive({ format, selection: mark.manifest, input: archiveInput(sql, selection, budget), parent: base, budget });
+  let input: ReturnType<typeof archiveInput>;
+  try { input = archiveInput(sql, selection, budget, fixtureSources); }
+  catch (error) {
+    if (error instanceof ArchivePrefixStopped) return { ok: false, reason: error.reason };
+    throw error;
+  }
+  const built = await buildJournalArchive({ format, selection: mark.manifest, input, parent: base, budget });
   if (!built.ok) return built;
   if (built.archive.commit !== mark.commit) return { ok: false, reason: "rebuild-mismatch" };
   return built;

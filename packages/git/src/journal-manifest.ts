@@ -4,7 +4,7 @@ import type { Digest, Head, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isScopeRef, parseStrict } from "@generalbusiness/artroom-bytes";
 import type { ArchiveRetainedName } from "./journal-path.ts";
 import { journalFormat, journalId, type JournalFormat } from "./journal-objects.ts";
-import { JOURNAL_SELECTION_BYTES, journalKeyName, journalList, journalNatural, journalOrdered, journalRecord, journalRetainedKey, type JournalSelection } from "./journal-selection.ts";
+import { JOURNAL_SELECTION_BYTES, journalForeignSources, journalKeyName, journalList, journalNatural, journalOrdered, journalRecord, journalRetainedKey, type JournalForeignSource, type JournalSelection } from "./journal-selection.ts";
 import { JournalWork, refuseJournal } from "./journal-work.ts";
 
 export interface JournalManifest {
@@ -15,6 +15,7 @@ export interface JournalManifest {
   readonly entries: readonly [0, number];
   readonly retained: readonly ArchiveRetainedName[];
   readonly omitted: readonly { readonly kind: "text"; readonly digest: Digest; readonly reason: "detached-text" }[];
+  readonly foreignSources?: readonly JournalForeignSource[];
 }
 export interface JournalHead { readonly v: 1; readonly scope: ScopeRef; readonly through: number; readonly hash: Digest }
 const text = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
@@ -36,7 +37,10 @@ export function journalHead(body: Uint8Array, work: JournalWork): JournalHead {
   return { v: 1, scope: { ...r["scope"] }, through: r["through"], hash: r["hash"] };
 }
 export function journalManifest(body: Uint8Array, expected: JournalFormat, work: JournalWork): JournalManifest {
-  const r = journalRecord(journalJSON(body, JOURNAL_SELECTION_BYTES, work), ["v", "through", "parent", "format", "entries", "retained", "omitted"]);
+  const value = journalJSON(body, JOURNAL_SELECTION_BYTES, work);
+  const extended = value !== null && typeof value === "object" && Object.hasOwn(value, "foreignSources");
+  const r = journalRecord(value, ["v", "through", "parent", "format", "entries", "retained", "omitted", ...(extended ? ["foreignSources"] : [])]);
+  const foreignSources = extended ? journalForeignSources(r["foreignSources"], work) : [];
   const head = journalRecord(r["through"], ["seq", "hash"]), range = journalList(r["entries"], 2, work);
   if (r["v"] !== 1 || journalFormat(r["format"]) !== expected || !journalNatural(head["seq"]) || head["seq"] >= 4096 || !isDigest(head["hash"]) || range.length !== 2 || range[0] !== 0 || range[1] !== head["seq"]) return refuseJournal("manifest");
   const parent = r["parent"] === null ? null : journalId(expected, r["parent"]);
@@ -53,8 +57,9 @@ export function journalManifest(body: Uint8Array, expected: JournalFormat, work:
   validateOrder(retained, journalKeyName); validateOrder(omitted, journalKeyName);
   const present = new Set(retained.map(journalKeyName));
   if (omitted.some(key => present.has(journalKeyName(key)))) return refuseJournal("manifest");
+  if (foreignSources.length && !retained.some(key => key.kind === "entry")) return refuseJournal("manifest");
   work.check();
-  return { v: 1, through: { seq: head["seq"], hash: head["hash"] }, parent, format: expected, entries: [0, head["seq"]], retained, omitted };
+  return { v: 1, through: { seq: head["seq"], hash: head["hash"] }, parent, format: expected, entries: [0, head["seq"]], retained, omitted, ...(foreignSources.length ? { foreignSources } : {}) };
 }
 
 /** Only keys and explicit policy omissions enter archive files. Native
@@ -68,5 +73,6 @@ export function manifestOfSelection(selection: JournalSelection, format: Journal
     entries: [0, selection.through.seq],
     retained: selection.objects.map(row => ({ ...row.key })),
     omitted: selection.omitted.map(row => ({ kind: row.kind, digest: row.digest, reason: row.reason })),
+    ...(selection.foreignSources?.length ? { foreignSources: selection.foreignSources.map(source => ({ at: { ...source.at }, pin: source.pin })) } : {}),
   };
 }

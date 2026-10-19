@@ -1,26 +1,34 @@
 /** Actual native foreign uses/retention/SQLite. Grants, reviewed policy,
  * clock and setup reader are explicit TEST fixtures. This classifies
- * metadata only: no installed export, payload selection or replay verdict. */
+ * metadata and local inventory only: no installed export or replay verdict. */
 import { expect, test } from "vitest";
 import { env } from "cloudflare:test";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Input } from "@generalbusiness/dap-contract";
-import { canonicalize } from "@generalbusiness/artroom-bytes";
+import type { Input, SendForm } from "@generalbusiness/dap-contract";
+import { canonicalize, utf8 } from "@generalbusiness/artroom-bytes";
 import { variant } from "@generalbusiness/dap-derive/testing";
 import { ArchiveBudget } from "../src/archive-budget.ts";
+import { buildJournalArchive, journalRef, JournalWork } from "@generalbusiness/artroom-git/journal";
+import { JournalObjectReader, JournalObjects } from "../../git/src/journal-objects.ts";
+import { readJournalArchive } from "@generalbusiness/artroom-git/journal-reader";
+import { planArchive, rebuildArchive } from "../src/archive-build.ts";
+import { ArchiveRows } from "../src/archive-row.ts";
+import { archiveRepository, archiveSql } from "./support/archive.ts";
 import { namespace } from "../src/namespace.ts";
 import { ArchiveForeignMetadata } from "../src/archive-foreign.ts";
+import { archiveInput } from "../src/archive-input.ts";
 import { archivePrefixMetadata } from "../src/archive-prefix.ts";
 import { archivePrivacyMetadata } from "../src/archive-privacy.ts";
 import { FixtureArchiveSourcePins } from "../src/archive-source-pins.ts";
-import type { ArchivePolicyRegistry, ReviewedArchivePolicy } from "../src/archive-inventory.ts";
-import { definition, create, reader, rita } from "./support.ts";
+import { inventoryArchive, type ArchivePolicyRegistry, type ReviewedArchivePolicy } from "../src/archive-inventory.ts";
+import { at, definition, create, reader, rita } from "./support.ts";
 import { wired } from "./outside.ts";
 const variants = new Set<Input["type"]>(["genesis", "act", "delivery", "timed", "diagnosis", "outcome", "preparation", "checkpoint"]);
 const receiver = variant(definition.declared, data => {
   // Same producer name, different exact pin: the name cannot choose policy.
   data.acts.remark.fields.text.max = 127;
   data.acts.remark.fields.proof.kind = ["assign", "found"];
+  data.acts.link.sends = data.acts.link.sends.filter((send: SendForm) => !("create" in send));
 });
 const policy = (def: typeof definition, entryTypes = variants): ReviewedArchivePolicy => ({ review: "TEST reviewed inline classes; no production certificate",
   entryTypes, support: { named: def.digest, definition: def, owners: new Map(), records: new Map(), preparations: new Map() } });
@@ -59,7 +67,23 @@ async function fixture() {
     expect(forbidden).toEqual([]);
     return { reason, positions, basis, copies, queries, cost: budget.admitted() };
   });
-  return { producer, consumer, birth: birth.value, uses, sources, policies, scan };
+  const inventory = (pins: FixtureArchiveSourcePins | undefined = sources, reviewed = policies, damageBody = false) => consumer.inside(state => {
+    const calls: { query: string; key: unknown }[] = [];
+    let damaged = false;
+    const result = inventoryArchive({ exec(query, ...args) {
+      calls.push({ query, key: args[0] });
+      if (damageBody && !damaged && query.startsWith("SELECT bytes FROM retained_input") && args[0] === "entry") {
+        damaged = true;
+        // Change a genuine retained body after metadata admission. Neither
+        // source nor consumer journal is changed; the content hash must fail.
+        const seq = uses.find(use => use.content === args[1])!.fact.seq;
+        state.storage.sql.exec("UPDATE retained_input SET bytes = replace(bytes, ?, ?) WHERE kind = 'entry' AND digest = ?", `"seq":${seq}`, `"seq":${seq + 1}`, args[1]!);
+      }
+      return state.storage.sql.exec(query, ...args);
+    }, transaction: work => state.storage.transactionSync(work) }, consumer.at, through, PROPOSED_BOUNDS, reviewed, new ArchiveBudget(), pins);
+    return { result, calls, damaged };
+  });
+  return { producer, consumer, birth: birth.value, uses, sources, policies, scan, inventory };
 }
 
 test("direct foreign copies classify their own full headers against fixture pins and separate reviewed policy before any payload body", async () => {
@@ -86,4 +110,103 @@ test("missing source or inline policy and a conflicting retained genesis pin ref
   await f.consumer.inside(state => { state.storage.sql.exec("UPDATE retained_input SET bytes = ? WHERE kind = 'entry' AND digest = ?", canonicalize(damaged), genesisUse.content); });
   const conflict = await f.scan();
   expect(conflict.reason).toBe("foreign-source-mismatch"); expect(conflict.positions).toEqual([]);
+});
+
+test("native inventory admits only classified direct copies and refuses a final uncovered class before any entry body", async () => {
+  const f = await fixture();
+  const incomplete = await f.inventory(f.sources, new Map([[receiver.digest, policy(receiver)], [definition.digest, policy(definition, new Set(["act"]))]]));
+  expect(incomplete.result).toEqual({ ok: false, reason: "unsupported-archive-cohort" });
+  const bodies = (calls: typeof incomplete.calls) => calls.filter(call => call.query.startsWith("SELECT bytes FROM entry") || call.query.startsWith("SELECT bytes FROM retained_input") && call.key !== "definition" || call.query.startsWith("SELECT bytes FROM retained_value"));
+  expect(bodies(incomplete.calls)).toEqual([]);
+  const missing = await f.inventory(new FixtureArchiveSourcePins([], PROPOSED_BOUNDS, new ArchiveBudget()));
+  expect(missing.result).toEqual({ ok: false, reason: "foreign-source-unavailable" }); expect(bodies(missing.calls)).toEqual([]);
+  const accepted = await f.inventory();
+  expect(accepted.result.ok).toBe(true);
+  if (!accepted.result.ok) return;
+  expect(accepted.result.inventory.foreignSources).toEqual([{ at: f.producer.at, pin: definition.digest }]);
+  expect(accepted.result.inventory.objects.map(object => object.key)).toEqual([{ kind: "definition", digest: receiver.digest }, ...f.uses.map(use => ({ kind: "entry", digest: use.content }))]);
+  expect(accepted.result.inventory.objects.filter(object => object.key.kind === "entry").map(object => object.foreign)).toEqual(f.uses.map(use => ({ fact: use.fact, pin: definition.digest })));
+  expect(bodies(accepted.calls).filter(call => call.key === "entry")).toHaveLength(2);
+  expect(accepted.result.inventory.replay).toBe("unchecked");
+  // Rebuild reads the immutable result after another native turn/restart.
+  // The fixture supplies the same separately prepared source-pin map.
+  const selection = accepted.result.inventory;
+  await f.consumer.did(rita, "remark", { on: 0, fields: { text: "later unselected native act" } });
+  await f.consumer.restart();
+  await f.consumer.inside(async state => {
+    let calls = 0;
+    const sql = { exec(query: string, ...args: (string | number | null | ArrayBuffer)[]) {
+      calls++; expect(query).not.toContain("json_each"); expect(query).not.toContain("FROM meta");
+      return state.storage.sql.exec(query, ...args);
+    }, transaction: <T>(work: () => T) => state.storage.transactionSync(work) };
+    expect(() => archiveInput(sql, selection, new ArchiveBudget())).toThrow(expect.objectContaining({ reason: "foreign-source-unavailable" }));
+    const wrongPair = { ...selection, foreignSources: [{ at: f.producer.at, pin: receiver.digest }] };
+    expect(() => archiveInput(sql, wrongPair, new ArchiveBudget(), f.sources)).toThrow(expect.objectContaining({ reason: "foreign-source-mismatch" }));
+    expect(calls).toBe(0);
+    const input = archiveInput(sql, selection, new ArchiveBudget(), f.sources);
+    for (const object of selection.objects.filter(object => object.key.kind === "entry")) {
+      const bytes = await input.retained(object.key, object.bytes);
+      expect(bytes).not.toBeNull();
+      expect(JSON.parse(bytes!).at).toEqual(f.producer.at);
+    }
+    expect(await input.entry(3, 1)).toBeNull();
+  });
+  const damaged = await f.inventory(f.sources, f.policies, true);
+  expect(damaged.damaged).toBe(true);
+  expect(damaged.result).toEqual({ ok: false, reason: "incomplete" });
+});
+
+// Native direct-use scopes, not an installed application. This covers the
+// immutable Mark/layout/structural reader boundary; no host or replay claim.
+test.each(["sha1", "sha256"] as const)("foreign copies retain their source basis in %s files and rebuild after eviction", async format => {
+  const f = await fixture(), through = await f.consumer.head();
+  const planned = await f.consumer.inside(state => planArchive(archiveSql(state), { at: f.consumer.at, through, bounds: PROPOSED_BOUNDS, policies: f.policies, format, parent: null, markedAt: at(0), fixtureSources: f.sources }, new ArchiveBudget()));
+  expect(planned.ok, JSON.stringify(planned)).toBe(true); if (!planned.ok) return;
+  expect(planned.archive.manifest.foreignSources).toEqual([{ at: f.producer.at, pin: definition.digest }]);
+  await f.consumer.inside(state => { const rows = new ArchiveRows(archiveSql(state), f.consumer.at); rows.target(archiveRepository, format); rows.mark(planned.mark); });
+  await f.consumer.did(rita, "remark", { on: 0, fields: { text: "after immutable Mark" } });
+  await f.consumer.restart();
+  const rebuilt = await f.consumer.inside(async state => {
+    const sql = archiveSql(state), row = new ArchiveRows(sql, f.consumer.at).load()!;
+    let reads = 0;
+    const exact = { ...sql, exec: (...args: Parameters<typeof sql.exec>) => { reads++; return sql.exec(...args); } };
+    expect(await rebuildArchive(exact, row, null, new ArchiveBudget())).toEqual({ ok: false, reason: "foreign-source-unavailable" });
+    expect(reads).toBe(0);
+    return rebuildArchive(exact, row, null, new ArchiveBudget(), f.sources);
+  });
+  expect(rebuilt.ok, JSON.stringify(rebuilt)).toBe(true); if (!rebuilt.ok) return;
+  expect(rebuilt.archive.commit).toBe(planned.archive.commit); expect(rebuilt.archive.objects).toEqual(planned.archive.objects);
+  const objects = new Map(rebuilt.archive.objects.map(object => [object.id, object]));
+  const object = async (id: string, limit: number) => { const object = objects.get(id); return object ? { type: object.type, size: object.data.length, data: object.data.length <= limit ? object.data : null } : null; };
+  const open = (commit: string) => {
+    const native = new ArchiveBudget(); let bytes = 0;
+    return readJournalArchive({ format: async () => format, resolve: async ref => ref === journalRef(f.consumer.at.scope) ? commit : null, object,
+    }, f.consumer.at.scope, Object.assign(native, { bytes: (size: number) => { bytes += size; if (bytes > 8 * 1024 * 1024) native.stop("limit"); }, scope: () => native.spend({ nodes: 1 }) }));
+  };
+  const read = await open(rebuilt.archive.commit);
+  expect(read.ok, JSON.stringify(read)).toBe(true); if (!read.ok) return;
+  expect(read.archive.foreignSources).toEqual(planned.archive.manifest.foreignSources);
+  expect(read.archive.head).toEqual(through);
+  expect(read.archive.retained.filter(input => input.kind === "entry").map(input => input.digest).sort()).toEqual(f.uses.map(use => use.content).sort());
+  // A validly shaped selection still cannot invent a different consumer
+  // fact. Layout must refuse it before asking for any retained copy body.
+  const altered = JSON.parse(planned.mark.manifest);
+  altered.objects.find((object: { foreign?: { fact: { seq: number } } }) => object.foreign?.fact.seq !== undefined && object.foreign.fact.seq > 0).foreign.fact.seq++;
+  const budget = new ArchiveBudget(); budget.spend(altered.cost);
+  const wrong = await buildJournalArchive({ format, selection: canonicalize(altered), budget, parent: null, input: {
+    entry: async seq => read.archive.entries.find(entry => entry.seq === seq)?.bytes ?? null,
+    retained: async () => expect.fail("altered foreign binding reached a retained body"),
+  } });
+  expect(wrong).toMatchObject({ ok: false, reason: "input-mismatch" });
+  // Mechanically alter only the archive's descriptive pin. Re-encode valid
+  // Git hashes/trees/commit so the independent reader must detect the
+  // retained genesis disagreement, rather than an object hash corruption.
+  const work = new JournalWork(new ArchiveBudget()), maker = new JournalObjects(format, work), parser = new JournalObjectReader(format, { object }, work);
+  const manifest = { ...rebuilt.archive.manifest, foreignSources: [{ at: f.producer.at, pin: receiver.digest }] };
+  const blob = maker.make("blob", utf8(canonicalize(manifest)));
+  const change = (tree: string, path: readonly string[]): string => maker.tree(parser.tree(objects.get(tree)!.data).map(row => row.name === path[0] ? { ...row, id: path.length === 1 ? blob.id : change(row.id, path.slice(1)) } : row)).id;
+  const original = parser.commit(objects.get(rebuilt.archive.commit)!.data), tree = change(original.tree, ["journal", "v1", "manifest.json"]);
+  const corrupted = maker.commit(tree, original.parent, original.seconds);
+  for (const made of maker.objects()) objects.set(made.id, made);
+  expect(await open(corrupted.id)).toMatchObject({ ok: false, result: "mismatch", reason: "foreign copy birth differs from its classified source pin" });
 });

@@ -1,6 +1,6 @@
 /** One local, caller-owned synchronous read frame. No route, writer,
  * certificate, provider lease, current authority or replay verdict. */
-import type { Bounds, Digest, Head, Input, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
+import type { Bounds, Digest, FactRef, Head, Input, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, isDigest, isEntry, parseStrict, utf8 } from "@generalbusiness/artroom-bytes";
 import { creates, derivable, localRetainedPlan, requiredDependency, snapshotRead, runnable, outcomeValueDomains, UnsupportedConsumer, validateDefinition } from "@generalbusiness/dap-derive";
 import type { DependencyOrigin, LocalRetainedPlan, RequiredDependency, RetainedDependency, RetainedKey, TextDependency, ValidDefinition } from "@generalbusiness/dap-derive";
@@ -12,6 +12,8 @@ import { archivePrefixMetadata, ArchivePrefixStopped, type ArchivePrefixReason }
 import { archivePrivacyMetadata, archiveSupportMetadata, type ArchiveSupport } from "./archive-privacy.ts";
 import { ArchiveRetainedReader, readArchiveProbe } from "./archive-retained.ts";
 import type { Sql } from "./sqlite.ts";
+import { ArchiveForeignMetadata } from "./archive-foreign.ts";
+import type { ArchiveSourceBasis, FixtureArchiveSourcePins } from "./archive-source-pins.ts";
 
 /** Loaded only from trusted reviewer/native configuration, never request
  * input. `entryTypes` is the reviewed coverage of inline signed fields and
@@ -29,6 +31,7 @@ export interface ArchiveSelectedObject {
   readonly key: RetainedKey;
   readonly bytes: number;
   readonly consumers: readonly RetainedDependency[];
+  readonly foreign?: { readonly fact: FactRef; readonly pin: Digest | PlatformDefinition };
 }
 export interface ArchiveInventory {
   readonly format: "artroom-local-inventory-1";
@@ -41,6 +44,7 @@ export interface ArchiveInventory {
   readonly replay: "unchecked";
   readonly retention: "observed-local";
   readonly cost: ArchiveCost;
+  readonly foreignSources?: readonly ArchiveSourceBasis[];
 }
 export type ArchiveInventoryResult = { readonly ok: true; readonly inventory: ArchiveInventory } | { readonly ok: false; readonly reason: ArchivePrefixReason | "timeout" };
 interface DefinitionMetadata { readonly definition: ValidDefinition; readonly bytes: number }
@@ -52,7 +56,7 @@ const stop = (reason: ArchivePrefixReason): never => { throw new ArchivePrefixSt
  * context. The caller supplies its real Sql.transaction (transactionSync).
  * All work is synchronous: no provider task can outlive this frame. The
  * same one budget is used across every stage and every cache hit. */
-export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: Bounds, reviewed: ArchivePolicyRegistry, budget = new ArchiveBudget()): ArchiveInventoryResult {
+export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: Bounds, reviewed: ArchivePolicyRegistry, budget = new ArchiveBudget(), fixtureSources?: FixtureArchiveSourcePins): ArchiveInventoryResult {
   try {
     return sql.transaction(() => {
       budget.check();
@@ -60,7 +64,7 @@ export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: 
       const prefix = archivePrefixMetadata(sql, at, through, bounds, budget, certified);
       const rootPolicy = reviewed.get(prefix.pin.seed.definition);
       if (!rootPolicy || !rootPolicy.review || rootPolicy.review.length > 512 || rootPolicy.support.named !== prefix.pin.seed.definition) return stop("unsupported-archive-cohort");
-      const reader = new ArchiveRetainedReader(sql, budget);
+      let reader = new ArchiveRetainedReader(sql, budget);
       const metadata = new Map<Digest, DefinitionMetadata | null>(), visited = new Set<Digest>();
       const closures = new Map<Digest, Closure>();
       const policyOf = (digest: Digest): ReviewedArchivePolicy => {
@@ -125,10 +129,15 @@ export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: 
         platformClosure = closureOf(definition.digest, definition);
         if (!platformClosure.complete) return stop("incomplete");
       }
-      const admitted = archivePrivacyMetadata(sql, prefix, { ...rootPolicy.support, definition }, budget);
+      const foreign = fixtureSources ? new ArchiveForeignMetadata(sql, fixtureSources, reviewed, bounds, budget) : undefined;
+      const admitted = archivePrivacyMetadata(sql, prefix, { ...rootPolicy.support, definition }, budget, foreign);
       // First finish admission of ALL inline local-entry classes. A trusted
       // owner table/root certificate alone cannot authorize their bodies.
       if (admitted.positions.some(position => !rootPolicy.entryTypes.has(position.input))) return stop("unsupported-archive-cohort");
+      // No copied/value/rule/snapshot body is available to this reader until
+      // every selected local and foreign inline class has passed metadata.
+      const copies = foreign?.selection() ?? [];
+      if (copies.length) reader = new ArchiveRetainedReader(sql, budget, copies);
       const plans: { origin: DependencyOrigin; plan: LocalRetainedPlan }[] = [];
       for (const position of admitted.positions) {
         budget.spend({ inputWork: position.bytes * 32 });
@@ -138,12 +147,19 @@ export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: 
         const entry: unknown = parseStrict(bytes);
         if (!isEntry(entry) || entry.seq !== position.seq || entry.at.scope !== at.scope || entry.at.inc !== at.inc || entry.at.kind !== at.kind || entry.input.type !== position.input || canonicalize(entry) !== bytes || entryHash(entry) !== position.hash) return stop("mismatch");
         if (entry.seq === 0 && (entry.input.type !== "genesis" || canonicalize(entry.input.seed) !== canonicalize(prefix.pin.seed) || entry.input.inc !== at.inc || canonicalize(entry.input.source) !== canonicalize(prefix.frame.genesis.source) || entry.input.n !== prefix.frame.genesis.n)) return stop("mismatch");
-        // No copied-entry read for a delivery's sender identity. If exact
-        // handler-under selection needs it, this v1 cannot plan that entry.
-        if (entry.input.type === "delivery" && Object.values(definition.declared.receives).some(handler => handler.from.under !== undefined)) return stop("unsupported-foreign-copy");
+        for (const use of entry.uses) {
+          const copy = foreign?.get(use.content);
+          if (!copy || canonicalize(copy.fact) !== canonicalize(use.fact)) return stop("foreign-source-mismatch");
+        }
+        let deliveryUnder: string | undefined;
+        if (entry.input.type === "delivery" && Object.values(definition.declared.receives).some(handler => handler.from.under !== undefined)) {
+          const sender = foreign?.source(entry.input.from);
+          if (!sender) return stop("unsupported-foreign-copy");
+          deliveryUnder = sender.under;
+        }
         const rules = entry.input.type === "outcome" ? rootPolicy.support.owners.get(entry.input.owner)?.get(entry.input.kind) ?? null : null;
         const origin: DependencyOrigin = { at: { at, seq: entry.seq, hash: position.hash }, input: entry.input.type };
-        const plan = localRetainedPlan(definition, entry, position.hash, rules, bounds);
+        const plan = localRetainedPlan(definition, entry, position.hash, rules, bounds, deliveryUnder);
         budget.check();
         plans.push({ origin, plan });
       }
@@ -156,12 +172,16 @@ export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: 
           if (!closureOf(dependency.key.digest).complete) return stop("incomplete");
         } else if (dependency.mode === "probe") for (const { key } of dependency.choices) if (key.kind === "definition") closureOf(key.digest);
       }
-      const objects = new Map<string, { key: RetainedKey; bytes: number; consumers: RetainedDependency[] }>();
+      const objects = new Map<string, { key: RetainedKey; bytes: number; consumers: RetainedDependency[]; foreign?: { fact: FactRef; pin: Digest | PlatformDefinition } }>();
       const omittedTexts: TextDependency[] = [], ancestryUnwalked: DependencyOrigin[] = [];
       const add = (key: RetainedKey, bytes: number, consumer: RetainedDependency) => {
         const name = nameOf(key), prior = objects.get(name);
         if (prior) prior.consumers.push(consumer);
-        else objects.set(name, { key, bytes, consumers: [consumer] });
+        else {
+          const copy = key.kind === "entry" ? foreign?.get(key.digest) : null;
+          if (key.kind === "entry" && (!copy || copy.bytes !== bytes)) return stop("foreign-source-mismatch");
+          objects.set(name, { key, bytes, consumers: [consumer], ...(copy ? { foreign: { fact: copy.fact, pin: copy.pin } } : {}) });
+        }
       };
       const selectClosure = (digest: Digest, consumer: RequiredDependency | Extract<RetainedDependency, { mode: "probe" }>) => {
         const closure = closures.get(digest);
@@ -212,8 +232,9 @@ export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: 
       if (!finalPin || canonicalize(finalPin) !== canonicalize(prefix.pin)) return stop("mismatch");
       const cutoff = budget.native(sql, () => ({ metadata: 128, inputWork: 0 })).exec("SELECT hash, size, octet_length(bytes) AS actual FROM entry WHERE seq = ? AND typeof(hash) = 'text' AND octet_length(hash) = 71 LIMIT 1", through.seq).toArray(), last = admitted.positions.at(-1)!;
       if (cutoff.length !== 1 || cutoff[0]?.["hash"] !== through.hash || cutoff[0]?.["size"] !== last.bytes || cutoff[0]?.["actual"] !== last.bytes) return stop("mismatch");
+      const foreignSources = foreign?.basis() ?? [];
       budget.check();
-      return { ok: true as const, inventory: { format: "artroom-local-inventory-1" as const, at, through, entries: prefix.positions, objects: [...objects.values()], omittedTexts, ancestryUnwalked, replay: "unchecked" as const, retention: "observed-local" as const, cost: budget.admitted() } };
+      return { ok: true as const, inventory: { format: "artroom-local-inventory-1" as const, at, through, entries: prefix.positions, objects: [...objects.values()], omittedTexts, ancestryUnwalked, replay: "unchecked" as const, retention: "observed-local" as const, cost: budget.admitted(), ...(foreignSources.length ? { foreignSources } : {}) } };
     });
   } catch (error) {
     if (error instanceof ArchiveStopped || error instanceof ArchivePrefixStopped) return { ok: false, reason: error.reason };

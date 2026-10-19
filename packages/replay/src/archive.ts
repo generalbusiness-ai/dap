@@ -1,6 +1,6 @@
 /** Portable archive adaptation. The trusted read port owns object parsing
  * and I/O. This module imports neither Git nor Node and changes no judge. */
-import { DOMAINS, type Digest, type FactRef, type Head, type RetainedInput, type ScopeId, type ScopeRef } from "@generalbusiness/dap-contract";
+import { DOMAINS, type Digest, type FactRef, type Head, type PlatformDefinition, type RetainedInput, type ScopeId, type ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isEntry, isFactRef, isScopeId, rawRetainedJSON, utf8 } from "@generalbusiness/artroom-bytes";
 import { PAGE_ENTRIES, PAGE_REPLY_BYTES, READ_SECONDS, RETAINED_REPLY_BYTES, type Allow, type HistorySource, type Page, type Stored, type Unread } from "./source.ts";
 import { LIMITS, SourceError, TRUSTS, verify, type Limits, type Options, type Verification } from "./verify.ts";
@@ -24,6 +24,8 @@ export interface ArchiveData {
   readonly name: string | null;
   readonly entries: readonly Stored[];
   readonly retained: readonly RetainedInput[];
+  /** Archive-declared classifier basis; no source-history proof is implied. */
+  readonly foreignSources?: readonly { readonly at: ScopeRef; readonly pin: Digest | PlatformDefinition }[];
 }
 export type ArchiveRead = { readonly ok: true; readonly archive: ArchiveData } | ArchiveFailure;
 export interface ArchiveReadPort {

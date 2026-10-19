@@ -81,22 +81,38 @@ async function selectedEntries(selection: JournalSelection, input: JournalInputS
     work.check();
     if (rows[origin.at.seq]?.entry.input.type !== origin.input) return refuseJournal("input-mismatch", `origin:${origin.at.seq}`);
   }
+  const copies = new Map(selection.objects.filter(object => object.key.kind === "entry").map(object => [object.key.digest, object]));
+  const bindings = new Set<string>();
+  for (const [content, copy] of copies) for (const consumer of copy.consumers) {
+    const entry = rows[consumer.origin.at.seq]?.entry;
+    if (!copy.foreign || !entry?.uses.some(use => use.content === content && canonicalize(use.fact) === canonicalize(copy.foreign!.fact))) return refuseJournal("input-mismatch", `foreign-use:${consumer.origin.at.seq}`);
+    bindings.add(`${consumer.origin.at.seq}:${content}`);
+  }
+  for (const row of rows) for (const use of row.entry.uses) {
+    work.check();
+    const copy = copies.get(use.content);
+    if (!copy?.foreign || canonicalize(copy.foreign.fact) !== canonicalize(use.fact) || !bindings.has(`${row.entry.seq}:${use.content}`)) return refuseJournal("input-mismatch", `foreign-use:${row.entry.seq}`);
+  }
   return rows;
 }
 async function selectedRetained(selection: JournalSelection, input: JournalInputSource, work: JournalWork): Promise<ReadonlyMap<string, JournalRetainedFile>> {
   const rows = new Map<string, JournalRetainedFile>();
   for (const selected of selection.objects) {
     const key = selected.key, where = journalKeyName(key);
-    if (key.kind === "entry") return refuseJournal("input", where);
     // Each new native retained read, including a later reconstruction,
     // spends the same pass's attempt allowance. No cache bypass is used.
     work.budget.spend({ attempts: 1 });
     work.metadata(where.length + 128);
     const requested = { ...key };
     const bytes = await namedBytes(work, selected.bytes, where, () => input.retained(requested, selected.bytes));
-    const parsed = key.kind === "rule" ? rawRetainedJSON(key.digest, bytes)
+    const parsed = key.kind === "rule" || key.kind === "entry" ? rawRetainedJSON(key.digest, bytes)
       : domainRetainedJSON(key.kind === "value" ? key.domain : key.kind === "definition" ? DOMAINS.definition : DOMAINS.snapshot, key.digest, bytes, { canonical: true, max: selected.bytes });
     if (parsed === undefined || canonicalize(parsed) !== bytes) return refuseJournal("input-mismatch", where);
+    if (key.kind === "entry") {
+      const foreign = selected.foreign;
+      if (!foreign || !isEntry(parsed) || !sameJournalScope(parsed.at, foreign.fact.at) || parsed.seq !== foreign.fact.seq || entryHash(parsed) !== foreign.fact.hash) return refuseJournal("input-mismatch", where);
+      if (parsed.seq === 0 ? parsed.input.type !== "genesis" || parsed.prev !== null || parsed.input.seed.definition !== foreign.pin || parsed.input.inc !== parsed.at.inc || scopeIdOf(parsed.input.seed) !== parsed.at.scope || parsed.input.seed.kind !== parsed.at.kind : parsed.input.type === "genesis") return refuseJournal("input-mismatch", where);
+    }
     work.check(); work.metadata(where.length + 128);
     rows.set(where, { key, data: utf8(bytes) });
   }
@@ -135,8 +151,10 @@ async function parentCutoff(parent: NonNullable<JournalLayoutOptions["parent"]>,
     // prefix. A parent never grants a cached-prefix or retention proof.
     const oldObjects = selection.objects.filter(row => row.consumers.some(c => c.origin.at.seq <= n));
     const oldOmitted = selection.omitted.filter(row => row.consumers.some(c => c.origin.at.seq <= n));
+    const oldSourceNames = new Set(oldObjects.flatMap(row => row.foreign ? [canonicalize(row.foreign.fact.at)] : []));
+    const oldSources = selection.foreignSources?.filter(source => oldSourceNames.has(canonicalize(source.at))) ?? [];
     work.input(manifestBody.length, 2);
-    if (canonicalize(manifest.retained) !== canonicalize(oldObjects.map(row => row.key)) || canonicalize(manifest.omitted) !== canonicalize(oldOmitted.map(row => ({ kind: row.kind, digest: row.digest, reason: row.reason })))) return refuseJournal("parent");
+    if (canonicalize(manifest.retained) !== canonicalize(oldObjects.map(row => row.key)) || canonicalize(manifest.omitted) !== canonicalize(oldOmitted.map(row => ({ kind: row.kind, digest: row.digest, reason: row.reason }))) || canonicalize(manifest.foreignSources ?? []) !== canonicalize(oldSources)) return refuseJournal("parent");
     work.metadata((n + 1) * 64 + oldObjects.length * 128);
     const oldRows = entries.slice(0, n + 1), files = journalPhysicalFiles(segments(oldRows, work), oldObjects.map(row => retained.get(journalKeyName(row.key))!), headBody, manifestBody, work);
     if (actual.size !== files.length || files.some(file => !actual.has(file.path))) return refuseJournal("parent");
