@@ -73,7 +73,7 @@ const variant = (by: string, variants: Record<string, Check>): Check => (v) => {
 export const REFUSAL_REASONS: Record<RefusalReason, true> = {
   "revision-moved": true, alias: true, "duplicate-relation": true, "required-unset": true, "scope-full": true, "bad-intent": true, misaddressed: true, expired: true, "scope-refused": true,
   "unknown-act": true, "bad-field": true, "no-item": true, final: true, "fact-mismatch": true, unauthorized: true, "guard-failed": true, "capability-refused": true, "slot-full": true, "type-full": true, "entry-too-large": true, "send-unresolved": true,
-  "unknown-message": true, "wrong-pin": true, "unsupported-definition": true, "bad-input": true,
+  "unknown-message": true, "wrong-pin": true, "unsupported-definition": true, "bad-input": true, late: true,
 };
 export const READ_REFUSALS: Record<ReadRefusal, true> = {
   "not-found": true, "wrong-incarnation": true, forbidden: true, "scope-provisional": true, "unsupported-definition": true, "history-unavailable": true, "too-large": true, unavailable: true,
@@ -239,7 +239,8 @@ const observed: Check = (v) => Array.isArray(v) && v.length > 0 && v.every(obser
  */
 const delivered = { type: any, from: factRef, n: isLocalId, message };
 const deliveryOf: Record<Message["class"], Check> = {
-  request: record({ ...delivered, decision: among(DECISION) }, { reason }),
+  request: (v) => record({ ...delivered, decision: among(DECISION) }, { reason, late: record({ reason: (v) => text(v) && v !== "" }) })(v)
+    && isRecord(v) && (!Object.hasOwn(v, "late") || v["decision"] === "applied"),
   result: record({ ...delivered, clause: among(CLAUSE) }, { observed }),
   control: record(delivered),
   advisory: record(delivered),

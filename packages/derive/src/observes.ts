@@ -504,7 +504,7 @@ export function retainsOf(definition: Pick<ValidDefinition, "declared">): string
   const forms = [...Object.values(data.acts), ...Object.values(data.receives)];
   const rows: Observe[] = [
     ...Object.values(data.acts).flatMap((act) => rowsOfAct(act)), ...Object.keys(data.outcomes ?? {}).flatMap((kind) => rowsOfKind(data, kind)),
-    ...forms.flatMap((form) => form.sends.flatMap((send) => (["applied", "refused", "superseded", "conflict"] as const).flatMap((clause) => rowsOfClause(send as SendForm, clause)))),
+    ...forms.flatMap((form) => [...form.sends, ...("late" in form ? form.late?.then?.sends ?? [] : [])].flatMap((send) => (["applied", "refused", "superseded", "conflict"] as const).flatMap((clause) => rowsOfClause(send as SendForm, clause)))),
   ];
   return [...new Set(rows.flatMap((row) => (row.of === "rules" ? (row.retains ?? []).map((record) => record.domain) : [])))];
 }

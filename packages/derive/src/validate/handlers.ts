@@ -7,6 +7,7 @@
 import type { FieldType } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isScopeKind } from "@generalbusiness/artroom-bytes";
 import { isObject, own } from "../values.ts";
+import { LAST_MS } from "../time.ts";
 import { alsoMark, bound, type Selecting } from "./binding.ts";
 import { mark, marked, naming, onSubject, subject, type ClauseSet, type Ctx, type Defining, type PendingWork, type Type } from "./context.ts";
 import { settlesByMark } from "./markers.ts";
@@ -18,6 +19,7 @@ import { observes } from "./observes.ts";
 import { attention, sends } from "./sends.ts";
 import { at, type Rec } from "./shape.ts";
 import { nativeReceiver } from "./native-capacity.ts";
+import { declaredBy } from "../capability.ts";
 
 const members = (v: unknown): Rec => (isObject(v) ? v : {});
 /** Whether an item type is `many`, as the definition writes it. */
@@ -239,7 +241,7 @@ export function receives(d: Defining, v: unknown, top: Rec): void {
   const handled = new Set<string>();
   for (const [name, hv] of entries(v, "receives", bounds.receives)) {
     const path = at("receives", name);
-    const o = rec(hv, path, ["message", "class", "from", "fields", "opens", "also", "guards", "effects", "sends", "attention"], ["copies", "settles", "order", ...(d.platform ? ["bound"] : [])]);
+    const o = rec(hv, path, ["message", "class", "from", "fields", "opens", "also", "guards", "effects", "sends", "attention"], ["copies", "settles", "order", "late", ...(d.platform ? ["bound"] : [])]);
     if (!o) continue;
     const message = str(o["message"], at(path, "message"));
     const cls = o["class"];
@@ -275,33 +277,64 @@ export function receives(d: Defining, v: unknown, top: Rec): void {
     if ("bound" in o) bound(d, o["bound"], at(path, "bound"), { tell: cls === "tell", opens: o["opens"], message, fields }, named);
     if ("bound" in o && o["order"] === "source") bad("shape", at(path, "order"), "source order is not supported on an item-bound native handler");
     if ("bound" in o && from?.["pin"] !== undefined) bad("shape", at(at(path, "from"), "pin"), "a pin is not supported on an item-bound native handler");
-    const ctx: Ctx = { ...naming(), on, also: named.types, nascent: on !== null, fields, kind: cls === "advisory" ? null : message, handler: { update: cls === "relate", under: typeof from?.["under"] === "string" ? from["under"] : null }, senderKind: typeof from?.["kind"] === "string" ? from["kind"] : undefined, unsettled: named.unsettled };
-    guards(d, o["guards"], at(path, "guards"), ctx, true);
-    const copy = cls === "relate" && message !== null && isScopeKind(from?.["kind"]) ? { name: message, kind: from["kind"] } : null;
-    const settles = "settles" in o ? settling(d, o["settles"], at(path, "settles"), ctx, copy, top) : null;
-    // A singleton primary item may already exist, so its opening counts at the static maximum of one. A settlement of this
-    // handler's own copy requires an existing key; a relate handler that settles an item can still receive a first key.
-    const pendingWork: PendingWork = { retained: { fields: [...fields.values()], presented: 0, source: true }, path, settles, opens: on?.name ?? null, mayCreateCopy: cls === "relate" && !(settles && "copy" in settles), sets: [], requests: [] };
-    pendingWork.sets = setsOf(d, on, () => effects(d, o["effects"], at(path, "effects"), ctx, false));
-    nativeReceiver(d, pendingWork, fields, o["also"], cls, message, from?.["kind"]);
-    // The entry that decides a request sends the platform's one result.
-    entrySends(d, path, sends(d, o["sends"], at(path, "sends"), ctx, top, pendingWork.requests), attention(d, o["attention"], at(path, "attention"), ctx), cls === "advisory" ? 0 : 1);
-    d.pendingWork.push(pendingWork);
-    // Section 6.4: an advisory has no result, so its handler ends the exchange: it sends nothing and tells nobody.
-    if (cls === "advisory") for (const k of ["sends", "attention"]) if (Array.isArray(o[k]) && o[k].length > 0) bad("advisory-sends", at(path, k), "a handler of class advisory declares none");
-    if (!on) continue;
-    const written = Array.isArray(o["effects"]) ? o["effects"] : [];
-    const set = new Set(written.map(setsSlot));
-    // Section 6.3: an opening sets every required slot. With an effect mark in the row the check is the commit's alone (section 6.1).
-    if (!coded(d, written)) for (const [s, slot] of on.slots) if (slot.required && !slot.hasDefault && !set.has(s)) bad("required-unset", at(path, "effects"), `no effect sets the required slot ${s}`);
-    if (many(top, on.name) === true) continue;
-    // Section 6.4: a type that is not `many` is opened only if the scope has none. Otherwise `on` is the one that exists, which
-    // this entry did not open: its fixed slots are set, and nothing shows that its state is not final.
-    for (const [i, e] of written.entries()) {
-      if (!isObject(e) || !onSubject(e["of"])) continue;
-      const fixed = [...on.slots].some(([s, slot]) => slot.fixed && ["party", "ref", "value", "attribute"].some((k) => isObject(e[k]) && e[k]["slot"] === s));
-      if (fixed) bad("fixed", at(at(path, "effects"), i), "the one item of this type may exist before the entry, and a fixed slot is set only by the entry that opens its item");
-      if ("state" in e && [...on.states.values()].some((final) => final)) bad("final", at(at(path, "effects"), i), "the one item of this type may exist before the entry, in a final state");
+    const context = (): Ctx => ({ ...naming(), on, also: named.types, nascent: on !== null, fields, kind: cls === "advisory" ? null : message, handler: { update: cls === "relate", under: typeof from?.["under"] === "string" ? from["under"] : null }, senderKind: typeof from?.["kind"] === "string" ? from["kind"] : undefined, unsettled: new Set(named.unsettled) });
+    const bodies: { body: Rec; where: string; context: Ctx }[] = [{ body: o, where: path, context: context() }];
+    if ("late" in o) {
+      const latePath = at(path, "late"), late = rec(o["late"], latePath, ["within", "reason"], ["then"]);
+      if (cls === "advisory") bad("late-on-advisory", latePath, "late is a form of a request handler");
+      if ("bound" in o) bad("late-on-item-bound-handler", latePath, "late is not supported on an item-bound native handler");
+      if (late) {
+        str(late["reason"], at(latePath, "reason"));
+        const within = rec(late["within"], at(latePath, "within"), ["seconds"]);
+        const seconds = within && int(within["seconds"], at(at(latePath, "within"), "seconds"));
+        if (seconds !== null && seconds * 1000 > LAST_MS) bad("bound", at(latePath, "within"), "is longer than the span a timestamp can name");
+        if ("then" in late) {
+          // Reservation paths name this synthetic body. A real handler with
+          // that same identity would overwrite its quoted result closure.
+          if (Object.hasOwn(members(v), `${name}.late.then`)) bad("handler-body-collision", at(latePath, "then"), "a real handler has the replacement body's reservation identity");
+          // Match the listed capability's reserved request, as delivery does;
+          // the local handler key is not part of that protocol.
+          if ([...d.capabilities.values()].some(capability => declaredBy(capability)?.reserved.some(reserved => reserved.request.class === cls && reserved.request.message === message))) {
+            bad("late-then-on-reserved-handler", at(latePath, "then"), "a replacement body cannot settle a capability's reserved receiver decision");
+          }
+          const branch = rec(late["then"], at(latePath, "then"), [], ["effects", "sends", "attention"]);
+          if (branch) {
+            if (holdDoes(branch["effects"], "open")) bad("hold", at(latePath, "then"), "a handler cannot open a hold");
+            bodies.push({ body: { ...o, guards: [], effects: branch["effects"] ?? [], sends: branch["sends"] ?? [], attention: branch["attention"] ?? [] }, where: at(latePath, "then"), context: context() });
+          }
+        }
+      }
+    }
+    // Independent contexts: a replacement branch cannot borrow proofs from
+    // normal guards that it never evaluates. Each body has its own bounds.
+    for (const { body: o, where: path, context: ctx } of bodies) {
+      guards(d, o["guards"], at(path, "guards"), ctx, true);
+      const copy = cls === "relate" && message !== null && isScopeKind(from?.["kind"]) ? { name: message, kind: from["kind"] } : null;
+      const settles = "settles" in o ? settling(d, o["settles"], at(path, "settles"), ctx, copy, top) : null;
+      // A singleton primary item may already exist, so its opening counts at the static maximum of one. A settlement of this
+      // handler's own copy requires an existing key; a relate handler that settles an item can still receive a first key.
+      const pendingWork: PendingWork = { retained: { fields: [...fields.values()], presented: 0, source: true }, path, settles, opens: on?.name ?? null, mayCreateCopy: cls === "relate" && !(settles && "copy" in settles), sets: [], requests: [] };
+      pendingWork.sets = setsOf(d, on, () => effects(d, o["effects"], at(path, "effects"), ctx, false));
+      nativeReceiver(d, pendingWork, fields, o["also"], cls, message, from?.["kind"]);
+      // The entry that decides a request sends the platform's one result.
+      entrySends(d, path, sends(d, o["sends"], at(path, "sends"), ctx, top, pendingWork.requests), attention(d, o["attention"], at(path, "attention"), ctx), cls === "advisory" ? 0 : 1);
+      d.pendingWork.push(pendingWork);
+      // Section 6.4: an advisory has no result, so its handler ends the exchange: it sends nothing and tells nobody.
+      if (cls === "advisory") for (const k of ["sends", "attention"]) if (Array.isArray(o[k]) && o[k].length > 0) bad("advisory-sends", at(path, k), "a handler of class advisory declares none");
+      if (!on) continue;
+      const written = Array.isArray(o["effects"]) ? o["effects"] : [];
+      const set = new Set(written.map(setsSlot));
+      // Section 6.3: an opening sets every required slot. With an effect mark in the row the check is the commit's alone (section 6.1).
+      if (!coded(d, written)) for (const [s, slot] of on.slots) if (slot.required && !slot.hasDefault && !set.has(s)) bad("required-unset", at(path, "effects"), `no effect sets the required slot ${s}`);
+      if (many(top, on.name) === true) continue;
+      // Section 6.4: a type that is not `many` is opened only if the scope has none. Otherwise `on` is the one that exists, which
+      // this entry did not open: its fixed slots are set, and nothing shows that its state is not final.
+      for (const [i, e] of written.entries()) {
+        if (!isObject(e) || !onSubject(e["of"])) continue;
+        const fixed = [...on.slots].some(([s, slot]) => slot.fixed && ["party", "ref", "value", "attribute"].some((k) => isObject(e[k]) && e[k]["slot"] === s));
+        if (fixed) bad("fixed", at(at(path, "effects"), i), "the one item of this type may exist before the entry, and a fixed slot is set only by the entry that opens its item");
+        if ("state" in e && [...on.states.values()].some((final) => final)) bad("final", at(at(path, "effects"), i), "the one item of this type may exist before the entry, in a final state");
+      }
     }
   }
 }

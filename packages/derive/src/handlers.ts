@@ -8,6 +8,7 @@
 
 import type { ActType, Advisory, AlsoMark, AlsoRule, Bounds, Digest, Effect, EffectForm, Entry, FactRef, FactUse, FieldType, FieldValue, Guard, Input, Notify, PlatformData, PlatformReceive, Prepared, Reason, ReceiveType, RefusalReason, Request, ResultClauses, ScopeRef, Send, SendForm, SendMark, Settles, UnavailableReason } from "@generalbusiness/dap-contract";
 import { entryHash } from "@generalbusiness/artroom-bytes";
+import { handlerBranch } from "./handler-branch.ts";
 import type { Signer } from "./attribution.ts";
 import { boundTo, decisionCounts, selectedByIndex, selectorOf } from "./binding.ts";
 import { deriveEffects } from "./effects.ts";
@@ -558,7 +559,8 @@ export function runClause(view: StateView, definition: ValidDefinition, context:
   } else if (input.type === "delivery" && (input.message.class === "request" || input.message.class === "advisory")) {
     const b = bound(definition, input.message, input.from);
     if (!b?.handler || !b.fields) throw new Error(`entry ${origin.seq} sent a request and ran no handler`);
-    const handler = b.handler;
+    const handler = handlerBranch(b.handler, "decision" in input ? input.late : undefined);
+    if (!handler) throw new RuleFault(`entry ${origin.seq} names no declared late branch`);
     const read = messageRead(view, scope.at, handler, b.fields, context.bounds);
     if (!read.ok) throw new Error(`entry ${origin.seq} was sealed with fields its handler does not take`);
     // The handler's primary item: the one the origin opened, or the one item of the type that it found.

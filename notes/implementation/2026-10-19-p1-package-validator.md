@@ -244,3 +244,15 @@ Remaining work includes the full signed Grow refusal matrix, the remaining
 lifetime fan-in variants (especially relation before creation failure),
 staged-form and bounds witnesses, owning native regressions, actual Main
 incorporation, final Page generation and one final gate before review.
+
+Actual S1 Main `bdda6bd0f4a152a65763f6493a7b729cd13d6c68` is incorporated.
+Four conflicts preserve both late and wrong-pin reason tables, both codec
+cases, P1's item-bound pin refusal and the landed independent late-body
+validation with its reservation-identity guard. Thirty-two cases across
+five owning files pass in `/tmp/artroom-p1-main-late-merge-focused-20261019.log`;
+Derive's owning test typecheck passes in
+`/tmp/artroom-p1-main-late-merge-type-20261019.log`.
+The native owned-scope regression now passes its one case in
+`/tmp/artroom-p1-owned-scopes-codec-regression-covered-20261019.log`, after
+the maintained package preparation corrections. These are focused passes,
+not P1's final gate or a claim that its remaining work is done.
