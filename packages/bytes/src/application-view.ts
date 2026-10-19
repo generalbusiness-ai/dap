@@ -5,7 +5,7 @@ import { canonicalize, isRecord, parseStrict, utf8 } from "./index.ts";
 import { readViewParameters, ApplicationViewParameterError, type ApplicationViewParameters } from "./application-view-parameters.ts";
 import { applicationJson } from "./application-json.ts";
 import { ApplicationPackageError } from "./application-types.ts";
-export const APPLICATION_VIEW_LIMITS = Object.freeze({ bytes: 64 * 1024, views: 32, acts: 2, facts: 16, templateBytes: 4096, expressionBytes: 2048 });
+export const APPLICATION_VIEW_LIMITS = Object.freeze({ bytes: 64 * 1024, views: 32, acts: 2, facts: 16, reads: 4, templateBytes: 4096, expressionBytes: 2048 });
 export interface ApplicationViewAct {
   readonly act: string;
   readonly label: string;
@@ -43,6 +43,9 @@ export interface ApplicationItemView extends ViewBase {
   /** Carousel membership: a restricted@1 boolean over trusted viewer and item.
    * Record-by-id views do not apply this rule. It grants no read authority. */
   readonly for?: string;
+  /** Named native projections used by for, bound to this installation's root.
+   * No caller scope or item binding is accepted for these reads. */
+  readonly reads?: Readonly<Record<string, { readonly projection: string; readonly scope: "installation" }>>;
   /** Order a complete carousel source; ties retain ascending native item IDs. */
   readonly order?: { readonly field: string; readonly direction: "asc" | "desc"; readonly missing: "first" | "last" };
   /** Read-only navigation through a projected native local-item reference. */
@@ -108,7 +111,7 @@ export function readApplicationViews(value: unknown): ApplicationViews {
   for (const given of Object.values(views)) {
     if (!isRecord(given)) return fail();
     const common = "acts,back,context,display,fallback,item,kind,projection,refresh,revision,waiting";
-    const view = only(given, (common + (given["kind"] === "surface" ? ",opens,resource" : ",actor,facts,summary,title" + (Object.hasOwn(given, "links") ? ",links" : "") + (Object.hasOwn(given, "series") ? ",series" : "") + (Object.hasOwn(given, "order") ? ",order" : "") + (Object.hasOwn(given, "for") ? ",for" : ""))).split(",").sort().join());
+    const view = only(given, (common + (given["kind"] === "surface" ? ",opens,resource" : ",actor,facts,summary,title" + (Object.hasOwn(given, "links") ? ",links" : "") + (Object.hasOwn(given, "series") ? ",series" : "") + (Object.hasOwn(given, "order") ? ",order" : "") + (Object.hasOwn(given, "for") ? ",for" : "") + (Object.hasOwn(given, "reads") ? ",reads" : ""))).split(",").sort().join());
     name(view["projection"]); name(view["item"]);
     if (view["revision"] !== "revision" || typeof view["display"] !== "string" || !["inline", "fullscreen"].includes(view["display"])) return fail();
     if (view["back"] !== null) name(view["back"]);
@@ -138,6 +141,15 @@ export function readApplicationViews(value: unknown): ApplicationViews {
       if (Object.hasOwn(view, "for")) {
         if (view["kind"] !== "carousel") return fail();
         text(view["for"], B.expressionBytes);
+      }
+      if (Object.hasOwn(view, "reads")) {
+        if (view["kind"] !== "carousel" || !Object.hasOwn(view, "for")) return fail();
+        const reads = dict(view["reads"], B.reads);
+        if (!Object.keys(reads).length) return fail();
+        for (const given of Object.values(reads)) {
+          const read = only(given, "projection,scope"); name(read["projection"]);
+          if (read["scope"] !== "installation") return fail();
+        }
       }
       if (Object.hasOwn(view, "order")) {
         if (view["kind"] !== "carousel") return fail();

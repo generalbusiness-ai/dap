@@ -1,7 +1,7 @@
 /** Trusted read/session/standing ports are explicit fixtures. This witnesses
  * generic routing and the mounted pre-sign boundary, not native authority. */
 import { expect, test } from "vitest";
-import type { ApplicationProjectionRow, DeclaredDefinition, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
+import type { ApplicationProjectionQuery, ApplicationProjectionRow, DeclaredDefinition, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, keyIdOfSecret, parseStrict, sign } from "@generalbusiness/artroom-bytes";
 import { applicationProjectionId, applicationProjectionQueryDigest, packApplication2, readApplicationProjection } from "@generalbusiness/artroom-bytes/application-v2";
 import { applicationCounterPacket2 } from "../../scope/test/support/application-v2-fixture.ts";
@@ -12,7 +12,7 @@ import type { CallResult } from "../src/service.ts";
 const scope: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "lane" };
 const membership: ScopeRef = { ...scope, kind: "membership" };
 const rule = "'counting.control' in viewer.grants and item.state = 'open' and ((viewer.member.member = '@alice' and item.id = 2) or (viewer.member.member = '@bob' and item.id = 4))";
-async function fixture(condition = rule) {
+async function fixture(condition = rule, related = false) {
   const base = await applicationCounterPacket2(), board = base.package.presentation.views["board"]!;
   if (board.kind === "surface") throw Error("Item fixture required.");
   const definition = parseStrict(base.package.semantic.definitions[0]!.bytes) as DeclaredDefinition;
@@ -20,13 +20,13 @@ async function fixture(condition = rule) {
   const id = definitionDigest(definition), { creates: _creates, ...semantic } = base.package.semantic;
   const { semantic: _semantic, ...presentation } = base.package.presentation;
   const fields = { lastNumber: { from: { kind: "value", name: "lastNumber" }, of: { type: "int", min: 0, max: 100 }, nullable: false } };
-  const projections = Object.fromEntries(["queue", "record"].map(name => [name, readApplicationProjection({ v: 1, definition: id, revision: "revision", sources: {
-    board: { item: "board", read: name === "queue" ? "many" : "item", states: ["finished", "open", "paused"], limit: name === "queue" ? 4 : 1, fields },
+  const projections = Object.fromEntries(["queue", "record", "related"].map(name => [name, readApplicationProjection({ v: 1, definition: id, revision: "revision", sources: {
+    board: { item: "board", read: name === "record" ? "item" : "many", states: ["finished", "open", "paused"], limit: name === "record" ? 1 : 4, fields },
   } })]));
   const secret = new Uint8Array(32).fill(67);
   const packet = await packApplication2({ name: "test.routing", version: "1", semantic: { ...semantic, entry: id,
     definitions: [{ id, bytes: canonicalize(definition) }], projections }, presentation: { ...presentation, views: {
-    queue: { ...board, kind: "carousel", projection: "queue", for: condition },
+    queue: { ...board, kind: "carousel", projection: "queue", for: condition, ...(related ? { reads: { roster: { projection: "related", scope: "installation" as const } } } : {}) },
     record: { ...board, kind: "record", projection: "record" },
   } } }, { key: keyIdOfSecret(secret), sign: bytes => sign(secret, bytes) });
   let viewer: { member: MemberRef; grants: string[] } | null = { member: { membership, member: "@alice" }, grants: ["counting.control"] };
@@ -35,21 +35,30 @@ async function fixture(condition = rule) {
     { id: 3, type: "board", state: "paused", revision: 1, fields: { lastNumber: 93 } },
     { id: 4, type: "board", state: "open", revision: 1, fields: { lastNumber: 44 } },
   ];
+  const queries: ApplicationProjectionQuery[] = [];
+  let relatedFailure: "scope" | "projection" | "forbidden" | null = null, head = 9;
   const source = new DeclaredViewSource(packet.bytes, packet.ids.release, {
     installation: async () => ({ scope, membership, directory: { ...scope, kind: "directory" }, rules: { ...scope, kind: "rules" },
       destination: { ...scope, kind: "destination" }, definition: id, ids: packet.ids, item: 7 }),
     viewer: async () => viewer, actions: async () => viewer?.grants ?? [],
-    projection: async query => ({ ok: true, query: applicationProjectionQueryDigest(query)!, value: {
-      v: 1, projection: applicationProjectionId(projections[query.projection]!), scope, at: { seq: 9, hash: `sha256:${"b".repeat(64)}` },
+    projection: async query => {
+      queries.push(structuredClone(query));
+      const related = query.projection === "related";
+      if (related && relatedFailure === "forbidden") return { ok: false, reason: "forbidden" };
+      return { ok: true, query: applicationProjectionQueryDigest(query)!, value: {
+      v: 1, projection: related && relatedFailure === "projection" ? `sha256:${"c".repeat(64)}` : applicationProjectionId(projections[query.projection]!),
+      scope: related && relatedFailure === "scope" ? { ...query.scope, inc: `in_${"c".repeat(25)}a` } : query.scope,
+      at: { seq: related ? head - 2 : head, hash: `sha256:${"b".repeat(64)}` },
       sources: { board: query.projection === "record" ? rows.filter(row => row.id === query.items["board"]) : rows },
-    } }),
+    } }; },
   });
   let signed = 0;
   const sessions = new ViewSessions(source, { call: async () => { throw Error("No host application code runs."); } }, async (_kind, _args, admit) => {
     await admit(); signed++;
     return { structuredContent: { answer: "accepted" }, content: [], isError: false } satisfies CallResult;
   }, async () => { throw Error("No original request is unresolved."); });
-  return { source, sessions, signed: () => signed, viewer: (value: typeof viewer) => { viewer = value; }, rows: (value: typeof rows) => { rows = value; } };
+  return { source, sessions, queries, signed: () => signed, viewer: (value: typeof viewer) => { viewer = value; },
+    rows: (value: typeof rows) => { rows = value; head++; }, relatedFailure: (value: typeof relatedFailure) => { relatedFailure = value; } };
 }
 
 test("carousel routes from trusted member, grants and item state without exposing other rows; explicit records retain ordinary grants", async () => {
@@ -71,6 +80,32 @@ test("carousel routes from trusted member, grants and item state without exposin
   expect(f.sessions.display("explicit").card).toMatchObject({ identity: { item: "4" }, actions: [] });
 });
 
+test("declared root reads retain both heads and recheck current routing without caller scope or item bindings", async () => {
+  const f = await fixture(`${rule} and reads.roster.sources.board[id = 4].fields.lastNumber = 44`, true);
+  const child: ScopeRef = { ...scope, scope: `sc_${"d".repeat(51)}a`, inc: `in_${"d".repeat(25)}a` };
+  await f.sessions.open("related", "queue", undefined, undefined, child);
+  const display = f.sessions.display("related");
+  expect(display.card?.identity.item).toBe("2");
+  expect(display.context.projection).toEqual([
+    { scope: child.scope, seq: 9, hash: `sha256:${"b".repeat(64)}` },
+    { scope: scope.scope, seq: 7, hash: `sha256:${"b".repeat(64)}` },
+  ]);
+  expect(f.queries.map(query => ({ projection: query.projection, scope: query.scope, items: query.items }))).toEqual([
+    { projection: "queue", scope: child, items: {} }, { projection: "related", scope, items: {} },
+  ]);
+  expect(display.card?.declared?.data).toBeUndefined();
+  f.rows([
+    { id: 2, type: "board", state: "open", revision: 1, fields: { lastNumber: 11 } },
+    { id: 4, type: "board", state: "open", revision: 2, fields: { lastNumber: 45 } },
+  ]);
+  await expect(f.sessions.act("related", display.cut, "pause")).rejects.toMatchObject({ reason: "stale" });
+  expect(f.signed()).toBe(0);
+  for (const failure of ["scope", "projection", "forbidden"] as const) {
+    f.relatedFailure(failure);
+    await expect(f.source.read({ screen: "queue", page: "summary", position: 0, scope: child })).rejects.toMatchObject({ reason: "unavailable" });
+  }
+});
+
 test("a changed route at unchanged native item revision refuses before signing", async () => {
   const f = await fixture(); await f.sessions.open("queue", "queue");
   const before = f.sessions.display("queue");
@@ -80,7 +115,7 @@ test("a changed route at unchanged native item revision refuses before signing",
 });
 
 test("missing or foreign viewer and nonboolean or failed rules stay unavailable", async () => {
-  for (const viewer of [null, { member: { membership: { ...membership, inc: `in_${"b".repeat(26)}` as const }, member: "@alice" as const }, grants: ["counting.control"] }]) {
+  for (const viewer of [null, { member: { membership: { ...membership, inc: `in_${"b".repeat(25)}a` as const }, member: "@alice" as const }, grants: ["counting.control"] }]) {
     const f = await fixture(); f.viewer(viewer);
     await expect(f.source.read({ screen: "queue", page: "summary", position: 0 })).rejects.toMatchObject({ reason: "unavailable" });
   }

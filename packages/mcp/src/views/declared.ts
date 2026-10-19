@@ -79,27 +79,39 @@ export class DeclaredViewSource implements ViewSource {
     return { screen, resource: view.resource, html: new TextDecoder("utf-8", { fatal: true, ignoreBOM: false }).decode(bytes),
       opens: view.opens, refresh: view.refresh, display: view.display, back: view.back, backScope };
   }
+  async #projection(selection: ApplicationProjectionQuery) {
+    const reply = await this.port.projection(selection);
+    if (!reply.ok) throw new ViewError(reply.reason === "stale" ? "stale" : "unavailable", `The declared projection refused: ${reply.reason}.`);
+    const projection = this.packet.package.semantic.projections[selection.projection]!;
+    if (reply.value.projection !== applicationProjectionId(projection) || canonicalize(reply.value.scope) !== canonicalize(selection.scope)) throw new ViewError("unavailable", "The read does not name this declared projection and scope.");
+    return reply;
+  }
   async #read(query: ViewQuery) {
     const view = this.#view(query), install = await this.port.installation();
     if (!install || canonicalize(install.ids) !== canonicalize(this.packet.ids) || install.definition !== this.packet.package.semantic.entry) throw new ViewError("unavailable", "The exact declared package is not active in this installation.");
     const selection: ApplicationProjectionQuery = { v: 1, scope: query.scope ?? install.scope, directory: install.directory, install: install.item, projection: view.projection, items: query.items ?? {} };
-    const reply = await this.port.projection(selection);
-    if (!reply.ok) throw new ViewError(reply.reason === "forbidden" ? "unavailable" : reply.reason === "stale" ? "stale" : "unavailable", `The declared projection refused: ${reply.reason}.`);
+    const reply = await this.#projection(selection);
     const projection = this.packet.package.semantic.projections[view.projection]!;
-    if (reply.value.projection !== applicationProjectionId(projection) || canonicalize(reply.value.scope) !== canonicalize(selection.scope)) throw new ViewError("unavailable", "The read does not name this declared projection and scope.");
     const nativeRows = reply.value.sources[view.item];
     if (!nativeRows) throw new ViewError("unavailable", "The read omitted the declared item source.");
     let rows = view.kind !== "surface" && view.order ? orderedViewRows(nativeRows, view.order) : nativeRows;
     if (rows.some(row => isApplicationJournalSource(projection.sources[view.item]!) !== !!row.entry)) throw new ViewError("unavailable", "The read confused journal entries with native items.");
     const routed = view.kind === "carousel" && !!view.for;
+    const points = [{ scope: selection.scope.scope, ...reply.value.at }];
     if (view.kind === "carousel" && view.for) {
       const viewer = await this.port.viewer?.();
       if (!viewer || !isMemberRef(viewer.member) || canonicalize(viewer.member.membership) !== canonicalize(install.membership)
         || !Array.isArray(viewer.grants) || viewer.grants.some(grant => typeof grant !== "string")) throw new ViewError("unavailable", "The authenticated carousel viewer is unavailable.");
+      const reads: Record<string, ApplicationProjectionData> = {};
+      for (const [name, read] of Object.entries(view.reads ?? {})) {
+        const related = await this.#projection({ v: 1, scope: install.scope, directory: install.directory, install: install.item, projection: read.projection, items: {} });
+        reads[name] = related.value;
+        points.push({ scope: related.value.scope.scope, ...related.value.at });
+      }
       const selected: ApplicationProjectionRow[] = [];
       for (const row of rows) {
         let result: unknown;
-        try { result = (await evaluate(view.for, { viewer, item: input(row) })).value; }
+        try { result = (await evaluate(view.for, { viewer, item: input(row), scope: reply.value.scope, reads })).value; }
         catch (error) {
           if (!(error instanceof RuleEvalError)) throw error;
           throw new ViewError("unavailable", "The declared carousel rule is unavailable.");
@@ -109,7 +121,7 @@ export class DeclaredViewSource implements ViewSource {
       }
       rows = selected;
     }
-    return { view, root: install.scope, scope: selection.scope, definition: projection.definition, reply, rows, routed };
+    return { view, root: install.scope, scope: selection.scope, definition: projection.definition, reply, rows, routed, points };
   }
   /** Only selected native item metadata and ref slots resolve subjects. This
    * is not an Item read and supplies no opened/attributed or review claim. */
@@ -160,9 +172,8 @@ export class DeclaredViewSource implements ViewSource {
     return { label: series.label, scale: series.scale, unit: series.unit, window, samples, fallback };
   }
   async read(query: ViewQuery): Promise<Projection> {
-    const { view, root, scope, definition, reply, rows, routed } = await this.#read(query);
+    const { view, root, scope, definition, reply, rows, routed, points } = await this.#read(query);
     const backScope = this.#backScope(view, scope, root), surface = this.#surface(query.screen, view, backScope);
-    const points = [{ scope: scope.scope, ...reply.value.at }];
     if (!rows.length) return { status: "empty", position: 0, count: 0, scope, points, ...(!routed ? { data: reply.value } : {}),
       ...(surface ? { surface } : {}),
       fallback: view.kind === "log" ? "This declared log has no matching entries in its recent window." : "This declared view has no matching items." };
@@ -176,7 +187,7 @@ export class DeclaredViewSource implements ViewSource {
         : { item: String(row.id), kind: row.entry ? "entry" : row.type, revision: String(row.revision), subject: { scope: scope.scope, ...(row.entry ? {} : { item: row.id }) }, at: row.entry ? {} : { on: row.revision } },
       title: view.kind === "surface" ? query.screen : text(values[view.title]), summary: view.kind === "surface" || view.summary === null ? "" : text(values[view.summary]),
       reasons: view.kind === "surface" ? [] : view.facts.map(fact => formatFact(fact, values, now)),
-      projection: [{ scope: scope.scope, ...reply.value.at }], reviewIntended: [], unavailable: [], waitsOn: waiting ? [waiting] : [], settles: [], actions, fallback,
+      projection: points, reviewIntended: [], unavailable: [], waitsOn: waiting ? [waiting] : [], settles: [], actions, fallback,
       declared: { kind: view.kind, source: view.item, context: template(view.context, row, waiting), actor: view.kind === "surface" || view.actor === null ? null : values[view.actor] ?? null,
         refresh: view.refresh, display: view.display, back: view.back, backScope, scope, ...(routed ? { routed: true } : {}), data: reply.value,
         ...(series ? { series } : {}),

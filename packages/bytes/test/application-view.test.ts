@@ -37,6 +37,17 @@ test("member routing is bounded carousel data over a complete native item source
   expect(() => bindApplicationViews({ note: given }, { "room.note": projection }, parts)).toThrow(ApplicationViewError);
   for (const kind of ["card", "record", "log", "surface"]) expect(() => readApplicationViews({ note: { ...given, kind } })).toThrow(ApplicationViewError);
   for (const value of [null, false, {}, "", "a".repeat(2049)]) expect(() => readApplicationViews({ note: { ...given, for: value } })).toThrow(ApplicationViewError);
+  const related = { ...given, reads: { presence: { projection: "room.note", scope: "installation" } } };
+  expect(bindApplicationViews({ note: related }, { "room.note": many }, parts, parts[0]!.id)["note"]).toMatchObject({ reads: related.reads });
+  expect(() => bindApplicationViews({ note: related }, { "room.note": many }, parts)).toThrow(ApplicationViewError);
+  expect(() => bindApplicationViews({ note: related }, { "room.note": many }, parts, `sha256:${"0".repeat(64)}`)).toThrow(ApplicationViewError);
+  const selected = { ...related, reads: { presence: { projection: "selected", scope: "installation" } } };
+  expect(() => bindApplicationViews({ note: selected }, { "room.note": many, selected: projection }, parts, parts[0]!.id)).toThrow(ApplicationViewError);
+  for (const reads of [{}, { presence: { projection: "room.note", scope: "caller" } },
+    { presence: { projection: "room.note", scope: "installation", items: {} } },
+    Object.fromEntries(Array.from({ length: 5 }, (_, i) => [`read${i}`, { projection: "room.note", scope: "installation" }]))]) {
+    expect(() => readApplicationViews({ note: { ...given, reads } })).toThrow(ApplicationViewError);
+  }
 });
 
 test("carousel order binds only to a complete item source's integer or timestamp fields", () => {
