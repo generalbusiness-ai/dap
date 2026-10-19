@@ -42,7 +42,67 @@ Agents do most of the drafting, chasing and checking. People sign the
 commitments. The record answers "what happened" without anyone having
 written it up.
 
-## 2. What the three share
+## 2. Why not just an agent
+
+A personal agent now holds context about you, keeps working after you
+close the window and acts on your behalf: it browses, fills forms,
+drafts, chases, schedules its own tasks, asks you before a sensitive
+step and remembers across tasks. The best ones run on your own machine
+or server. Each application below assumes every member has one. The
+question is what the room adds that the agent cannot supply by itself,
+however good it gets.
+
+- **The agent is one party. Selling is several.** Your agent works for
+  you; the product manager's works for her; the buyer's for the buyer.
+  An agent that "does the bid for me" reaches the others through mail
+  and chat, waits, and merges their replies into its own notes, where
+  each person's answer becomes its paraphrase. The room is where their
+  agents and yours meet: each person answers in their own app, under
+  their own name, and the record keeps their words. Nothing is re-keyed
+  and nothing is paraphrased.
+- **A yes in a chat is not authority.** The agent asks "shall I send
+  this?", you say yes, and that yes lives in a transcript only the agent
+  holds. In the room the authority is on the act: a discount is granted
+  by a holder of the pricing grant at an exact revision, a roadmap claim
+  is signed by the product manager with its source, a submission is
+  sealed by management. The agent cannot sign any of these, not because
+  it was told not to but because it holds no grant, and "could the agent
+  have done that" has a checkable answer: no. The same guard decides
+  what the agent may propose and what each person is offered.
+- **An agent's memory is private and fallible. The record is shared
+  and exact.** An agent remembers what it noticed and summarizes the
+  rest; two agents remember differently; what the buyer said becomes
+  the agent's summary of a mail. The record is a journal of signed acts
+  with the revision each decision bound to, replayable without any
+  agent and archived in Git. "What did we promise in row 212, and who
+  signed it" is a lookup, a year later, by the next account executive,
+  after the agent that did the work has been replaced.
+- **Rules run in the room, not in an agent's loop.** The stale account,
+  the two-day reminder, the deadline: these are the room's timed rules,
+  visible to every member and firing whether or not any agent is up. An
+  agent's scheduled task is a promise it makes to itself.
+- **Routing is a rule, not a judgement.** Who may answer a security
+  requirement is a grant; who should is a rule over grants, presence
+  and state. An agent can propose, and a misroute is a visible refusal.
+  A personal agent routes by what it believes about people.
+- **Agents are replaceable, and many.** Because authority and the
+  record live in the room, each member brings their own agent, a team
+  runs several (intake, drafting, chasing) from different makers, swaps
+  one out, and removes a bad one while its acts stay attributed and
+  visible. The room does not care which agent did the work; it cares
+  who signed.
+- **Done means the same thing to everyone.** Each person's "needs you"
+  is derived from the same record, so the sales engineer's list and the
+  product manager's list agree, and "done" for the bid is a state with
+  a guard, not an agent's opinion.
+
+What an agent alone does well: one person's work, with no commitment to
+anyone else and nothing to prove later. The prospect room's research and
+drafting are that, and the owner's agent does them. The moment a second
+person's signature matters, or a decision must be found later, the
+record is the thing an agent cannot be.
+
+## 3. What the three share
 
 Each application is its own package. They share a vocabulary, not code:
 
@@ -74,9 +134,12 @@ Each application is its own package. They share a vocabulary, not code:
   used where it fits. Everything else that crosses the boundary enters
   as a member's statement that they did it, with its source.
 
-## 3. The prospect room
+## 4. The prospect room
 
-For one seller, or a small team, with their own assistant.
+For one seller, or a small team, with their own assistant. The
+assistant does the research, the drafting and the chasing; the room adds
+the signed sends, the prospect's words kept as theirs, the proposal
+accepted at an exact revision, and the record the next assistant reads.
 
 ### 3.1 Parties and authority
 
@@ -159,11 +222,14 @@ prospect as a member needs an invitation, which exists. A proposal
 document beyond its text needs custody; until then the record keeps a
 link and a digest.
 
-## 4. The bid response
+## 5. The bid response
 
 For a team answering a formal request: an account executive who owns
 the bid, a sales engineer, product managers, legal, security and
-pricing, a manager who decides, and the buyer.
+pricing, a manager who decides, and the buyer. The intake and drafting
+agents do the heavy lifting; the room is where the team's signatures,
+grants and deadlines live, so the response is the team's, and provably
+so.
 
 ### 4.1 Parties and authority
 
@@ -352,10 +418,12 @@ and the win or loss log.
 This is the application with the most coordination value and the most
 members. Its first version has no files and no buyer member.
 
-## 5. The marketing calendar
+## 6. The marketing calendar
 
 For one person, or two, publishing on a schedule, with an agent that
-writes drafts.
+writes drafts. The writer drafts; the room keeps the approval at an
+exact revision and the publication receipt, so what is on the site is
+what was approved, and nothing else.
 
 ### 5.1 Parties and authority
 
@@ -417,7 +485,7 @@ library's shelf uses. Posting to channels outside Git stays a recorded
 statement. This is the smallest of the three and the first to build,
 and it can run for dap's own site.
 
-## 6. How they are built
+## 7. How they are built
 
 Each is a package installed into a room, as the grow package is:
 definitions, declared projections and views, no view code in the host.
@@ -433,7 +501,7 @@ for a full item, `log` for entries. The routing rule of the bid
 requirement carousel is the grow room's routing rule with the domain
 grant in place of presence.
 
-## 7. Order and slices
+## 8. Order and slices
 
 After the grow demo of plan 033, and ahead of none of it. Sizes are
 estimates from the grow slices.
@@ -450,7 +518,7 @@ buyer as a member; integrations, which wait for the general design of
 outside operations; the answer library as a shared resource across bid
 rooms; the roll-up of many prospect accounts or bids under a site.
 
-## 8. Open questions
+## 9. Open questions
 
 1. **When the buyer joins.** The first version keeps the buyer outside
    the room and records their words as the owner's reports. A later
