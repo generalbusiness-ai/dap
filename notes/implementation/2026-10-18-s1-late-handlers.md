@@ -1,8 +1,8 @@
 # S1: late handlers
 
-This implementation is awaiting its final gate and review under request `4353d842ce797515e7a369ceae6515c9efaa547b`,
+This implementation passed its final gate and awaits review under request `4353d842ce797515e7a369ceae6515c9efaa547b`,
 promise `6201d371095659784d6c68f4e5dfbeb5c4c5eac6`, and parent S1 request
-`b42d3b741986eb8f171e353ad3cb3704f202be9b`. It has no final gate, review,
+`b42d3b741986eb8f171e353ad3cb3704f202be9b`. It has no review,
 landing, publication or deployment. The initial base was `b44a8e255`, the
 earlier source-order candidate. Its F1 correction and audited Main
 `1da3f4ca79ad034286ca4d8988bed9dee022369e` are incorporated.
@@ -161,3 +161,31 @@ classified it inconclusive. That diagnostic remains in
 `/tmp/artroom-s1-late-reserved-control-20261019.log` and is not the control
 result. Page assets were regenerated from the final validator source;
 `/tmp/artroom-s1-late-page-build-20261019.log` records the build.
+
+## Final gate
+
+The one final gate passed at code/test head
+`e82eb8ff4d62f03de6e2b5725ec1434bf13e0a2f`, tree
+`d546ca65d92c091cd9e6f7025d533b5ece7f19ed`. The original process 37729
+closed with exit 0. It passed 391 test files and 1,893 cases; one file and
+three cases were skipped. The explicit Node checks passed 31 cases and
+Counter's Node checks passed 55. Assertion `b67298cc` records this result.
+Only evidence prose changes after that code/test head.
+
+The outer gate took 491.08 elapsed seconds and 687.32 CPU seconds
+(589.35 user, 97.97 system). Its typecheck step took 8.15 elapsed and
+31.26 CPU seconds; the test step took 482.70 elapsed and 655.82 CPU seconds.
+This was a shared warm macOS 27.0.1 arm64 machine with 18 CPUs, start load
+1.97 / 1.81 / 1.81, the verified private dependency view and zero installs.
+Independent P1 development ran concurrently. These are one gate's measured
+costs, not exclusive-machine CPU, heap use or total edit-to-review cost.
+
+Logs are `/tmp/artroom-s1-late-gate-20261019.log`,
+`/tmp/artroom-s1-late-gate-outer-20261019.time` and
+`/tmp/artroom-s1-late-gate-preparation-20261019.json`. Raw step evidence is
+under `/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.ZeVdFkEggH`;
+Counter's explicit evidence is under the same temporary root at
+`artroom-counting-node-BDogZl`. The finite review map grants only its exact
+listed owned regular files, including historical diagnostics. It grants
+no adjacent or private dependency-tree access. All listed files and this
+checkout's source and dependencies stay frozen during review.
