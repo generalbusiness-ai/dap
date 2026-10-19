@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/mcp/test/grow-routing.test.ts","body":{"commit":"f6d402b0b87ca226725adfe49c87d8893ef6c53a","path":"packages/mcp/test/grow-routing.test.ts"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:14bb2dae8c7042b8f9c9f176d363f3a475da6ed7","text":"Merge retired a covered predecessor; the successor is at examples/grow/check/site-scenario.json."}
