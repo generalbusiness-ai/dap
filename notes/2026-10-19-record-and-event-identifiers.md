@@ -1,48 +1,44 @@
 # Record and event identifiers
 
-19 October 2026, draft 1. Design note for review. It proposes the first
-protocol to be factored out of dap and published for independent
-implementations: how a record is identified, how one event in it is
-cited, how either is resolved to bytes, and what a reader can check.
-Everything else that crosses a boundary in dap rests on these two
-identifiers: a delivery names its source event, a grant names the event
-that issued it, a receipt is an event, a receipt commit carries one in
-its message, and the archive is a chain of them.
+19 October 2026, draft 2. Design note for review.
 
-The proposal is shaped so that gitseq, atseq, noseq and the Open
-Integrity Forge can each express their records in it, because all five
-systems already have the same three primitives: a record named by the
-hash of its first event, an event named by its record, its position and
-its hash, and a signed request answered with the first receipt. None of
-the five shares a written form with another. Section 8 weighs the cost
-of adoption for each.
+This note defines two identifiers, one for a record and one for an event
+in it, and how to resolve and check them. An application or a platform
+that implements it gains:
 
-It decides seven things:
+- **A permanent name for every record it keeps.** The name is the same
+  on every host and in every copy, and no one can reissue it for other
+  content.
+- **A citation for any one event** that a reader anywhere can fetch and
+  check, without trusting the host that served it.
+- **Citations that cross systems.** Its records can cite events kept by
+  other implementations, and be cited by them, with one syntax and one
+  check. A review in one system can name the exact change it judged in
+  another.
+- **Verification from any copy.** Whoever holds the bytes, from a service
+  or from a Git clone, runs the same four checks with the same tool and
+  gets the same answer: the bytes match the citation, the event belongs
+  to that record at that position, nothing between a known point and the
+  event was replaced, and the signatures hold.
+- **Receipts that outlive the service.** The receipt for an act is a
+  citation, so a participant keeps proof of what was recorded and checks
+  it later against any copy.
+- **Interchangeable hosts.** Any host that holds a copy can serve the
+  record, and a reader can tell when a host is behind or wrong.
+- **Conformance it can prove alone**, against published test vectors,
+  with no reference implementation in the loop.
 
-1. **Two identifiers, with different jobs.** An *identity* names one life
-   of a record and is the hash of its genesis. An *address* is where the
-   record is served, and is a URL. The identity is the same whatever the
-   host. An address can exist before the genesis does.
-2. **A citation is identity, position and hash**, written as a DID URL:
-   `did:seq:<format>:<genesis>/<position>/<event>`.
-3. **One DID method, many formats.** The method is `seq`. The first
-   segment of the method-specific identifier names the byte format and
-   the hash function, so one resolver and one verifier serve dap, Git
-   based records, AT Protocol records and Nostr events.
-4. **Four verification levels**, named, each with a stated reach. The
-   protocol says what a citation does not prove.
-5. **Golden vectors from independent code.** The specification ships
-   vectors for each format, produced by code that is not the
-   implementation under test.
-6. **The record format is versioned apart from the service.** The format
-   token versions the bytes. Routes and tools version themselves.
-7. **dap adopts it in one change, with no compatibility layer.** Its
-   references shrink from five parts to four, and the incarnation and the
-   kind leave every reference.
+The two forms:
 
-Not provided here: the signed request, delivery between records,
-membership observation, and item addressing. Section 9 says how the
-signed request sits on these two identifiers.
+```
+did:seq:<format>:<genesis>                        a record
+did:seq:<format>:<genesis>/<position>/<event>     an event in it
+```
+
+Not provided here: judging events against a record's rules, requests and
+messages, and who may read. Each sits on these identifiers; section 9
+shows the signed request. Section 8 gives the cost of adoption for dap
+and for four other systems.
 
 ## 1. Terms
 
@@ -207,10 +203,8 @@ The vectors are produced by code that is not any implementation under
 test. For `dap1` that is a short script in another language, run on the
 committed bytes, and the gate compares its output with the TypeScript
 implementation's and never regenerates the vectors from the
-implementation. atseq already works this way; noseq planned it and never
-did; the forge's rules exist only as TypeScript. A conforming
-implementation passes the vectors of the formats it claims and states
-the levels it runs.
+implementation. A conforming implementation passes the vectors of the
+formats it claims and states the levels it runs.
 
 ## 7. What changes in dap
 
@@ -285,11 +279,8 @@ this note and adds nothing to it:
 - The receipt is a citation, with the effects and sends the entry made.
 - A refusal names the head it was judged at as a citation.
 - The idempotency key is scoped to the signing key, the signature covers
-  the canonical bytes under a domain tag, and an exact retry is answered
-  with the first receipt. These are the rules dap, gitseq, atseq and
-  noseq each arrived at separately, and the atseq lessons apply: identify
-  an act by its unsigned bytes, never bind an act to a whole definition
-  digest, and keep the retry namespace per key.
+  the canonical bytes under a domain tag, an act is identified by its
+  unsigned bytes, and an exact retry is answered with the first receipt.
 
 ## 10. Decisions
 
