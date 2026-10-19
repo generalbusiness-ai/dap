@@ -126,3 +126,19 @@ copy remain. The corrected witness waits for that exact Site point in both
 captured reads and for the idle card before measuring two unchanged refreshes.
 The kit runtime was not changed. These development observations have no
 separate frozen input manifest and do not replace the final gate/head proof.
+
+One targeted control restores the former task view's last-100 rule and
+points that view's read at the retained recent-activity projection. It
+changes no item or runtime code. The unchanged durable-selection assertion
+then fails after 101 other-member reports: the task becomes unavailable
+instead of ready. The producer still passes. Restoring the exact config
+bytes returns both kit cases to passing. Evidence is the driver
+`/tmp/artroom-g3-durable-window-control-20261019.py` and matching directory
+(original 9160 closed zero): baseline two pass, control one pass/one fail,
+restored two pass. The result records config SHA-256
+`5dfb015c800186e48418901be6788cf18099ff5ad0bbc81103c23faf99ba0176`
+and unchanged test SHA-256
+`d78bb7f0c618e7514e35ea07c8082ecf876a2e97d04473d79877354298a0a39f`.
+The control config is 63,217 bytes, within the unchanged source bound, so
+the failure is the routing invariant rather than package-size admission.
+This is a single policy control, not a mutation sweep.
