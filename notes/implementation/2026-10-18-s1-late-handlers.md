@@ -1,6 +1,6 @@
 # S1: late handlers
 
-This correction awaits its gate and review under request `4353d842ce797515e7a369ceae6515c9efaa547b`,
+This correction passed its gate and awaits review under request `4353d842ce797515e7a369ceae6515c9efaa547b`,
 promise `6201d371095659784d6c68f4e5dfbeb5c4c5eac6`, and parent S1 request
 `b42d3b741986eb8f171e353ad3cb3704f202be9b`. The first review requested the
 reservation-identity correction below; this correction has no approval,
@@ -242,3 +242,34 @@ Audit `/tmp/artroom-s1-late-identity-dependency-view-20261019.json`, SHA-256
 `6b07aaa76127187373c5c8b60914b493ca0734e186719a85e9fc2b8fb9867b04`.
 This verifies versions and links, not tarball integrity or private trees.
 No correction gate, approval or completion is claimed at this checkpoint.
+
+## Correction gate
+
+The correction gate passed at exact code/test head
+`106f13c68f6921e9c2a891e515a3482e4244a519`, tree
+`a9115451f10fde18994f7bdcd2619b728505fe62`. Original process 23043 closed
+exit 0. It passed 392 test files and 1,895 cases, with one file and three
+cases skipped. Explicit Node passed 31 and Counter's Node checks passed 55.
+Assertion `ca1b5367` records the result. Only evidence prose changes after
+that passing code/test head; the previous section is its saved checkpoint.
+
+The outer gate took 491.23 elapsed and 685.54 CPU seconds (588.44 user,
+97.10 system). Typecheck took 8.15 elapsed and 31.04 CPU seconds; tests
+took 482.85 elapsed and 654.27 CPU seconds. Shared warm macOS 27.0.1 arm64,
+18 CPUs, starting load 1.67 / 1.74 / 1.93; verified private dependencies,
+zero installs, independent P1 development and checks concurrent. These are
+one correction attempt's costs, not exclusive-machine CPU, heap or total
+edit-to-review cost. The original candidate's gate above remains historical
+evidence for that earlier code only.
+
+Logs: `/tmp/artroom-s1-late-identity-gate-20261019.log`,
+`/tmp/artroom-s1-late-identity-gate-outer-20261019.time`, and
+`/tmp/artroom-s1-late-identity-gate-preparation-20261019.json`.
+Raw step evidence is under
+`/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.25Cjd1CIkc`;
+Counter evidence is under that same temporary root at
+`artroom-counting-node-e3BUVi`. A fresh finite map preserves all 165 old
+files byte-for-byte and lists the exact new owned regular files. Its grant
+excludes adjacent paths, private dependencies, custody, credentials,
+providers, push and deployment. All listed files, correction source and
+dependencies freeze for the replacement review.
