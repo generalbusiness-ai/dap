@@ -292,3 +292,30 @@ Focused log `/tmp/artroom-m2b-grow-fault-site-corrected-20261018.log`, original
 73486, terminal 7e38de. The first gate process ended before any fixture edit.
 The corrected-head gate remains owed; this failure and correction justify
 that run. No mutation sweep or repeated unchanged passing whole suite is used.
+
+## Corrected full gate passed
+
+The corrected gate passes at clean 5ef3ddfcf32506c5dc6410a0be0a1bf555e8452e,
+tree a173567af6f7fd295784a5d5c152b894504799cf. Original PTY 56992, terminal
+0175ce, exit 0: 384 Vitest files and 1,868 cases pass; one file and three
+cases are skipped. The subsequent Node checks pass 31, and Counter passes 55.
+Typecheck passes. Zero installs ran after all 106 versions and 13 private
+workspace links were rechecked against the same lock.
+
+Log `/tmp/artroom-m2b-gate-corrected-20261018.log`, outer time
+`/tmp/artroom-m2b-gate-corrected-outer-20261018.time`, raw captures
+`/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.k6GESz2CEn/`,
+dependency audit `/tmp/artroom-m2b-dependency-gate-corrected-20261018.json`.
+The outer command measured 511.54 seconds elapsed and 710.16 seconds CPU,
+including children. Typecheck: 8.2 seconds elapsed / 31.2 CPU. Test command:
+503.1 elapsed / 678.7 CPU. Shared arm64 Mac, warm adopted dependency view after
+focused runs and the failed gate; load sampled at start was 1.65/2.39/2.36,
+not exclusive or fixed. Whole-edit cost was not measured. The gate process
+ended before this note-only update. Source and tests are unchanged by the
+update; the gate is not repeated for it, under docs/testing.md.
+
+Independent review and local landing/audit remain owed. Source M2a is under
+review with its accepted finite grant and original receipts retained. This
+child does not close the parent or claim G1, G2, hostile isolation, native
+device outcomes, a provider effect, publication or deployment. G1 work is on
+its own checkout and branch, using these unlanded prerequisites explicitly.
