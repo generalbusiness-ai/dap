@@ -13,8 +13,14 @@ import type { DefinitionLike } from "../describe.ts";
 import { effectiveFields, expectedOf } from "../shape.ts";
 import { formatInteger } from "./numbers.ts";
 import { formatFact } from "./facts.ts";
+import { orderedViewRows } from "./ordering.ts";
+import { decodeViewParameters } from "@generalbusiness/artroom-bytes/application-v2";
+
+const controlId = (view: ApplicationView, control: ApplicationViewAct, index: number) => view.acts.filter(choice => choice.act === control.act).length > 1 ? `${control.act}:${index}` : control.act;
 
 export interface DeclaredViewPort {
+  /** Host wall clock for display ages only; never native admission. */
+  now?(): number;
   /** The current active native install, read under the configured membership. */
   installation(): Promise<ApplicationInstallation | null>;
   projection(query: ApplicationProjectionQuery): Promise<ApplicationProjectionRead>;
@@ -30,6 +36,10 @@ const template = (source: string, row: ApplicationProjectionRow, waiting: string
 export class DeclaredViewSource implements ViewSource {
   readonly declared = true;
   readonly packet: PackedApplication2;
+  get inputActs() {
+    return Object.entries(this.packet.package.presentation.views).flatMap(([screen, view]) => view.acts.flatMap((control, index) =>
+      control.parameters ? [{ screen, id: controlId(view, control, index), label: control.label, parameters: control.parameters }] : []));
+  }
   get screens() { return Object.keys(this.packet.package.presentation.views).map(name => ({ name, resource: `ui://dap/declared/${name}` })); }
   get presentation() {
     return { resources: this.screens.map(({ name, resource }) => ({ ...PRESENTATION.resources[0]!, uri: resource, name,
@@ -71,8 +81,9 @@ export class DeclaredViewSource implements ViewSource {
     if (!reply.ok) throw new ViewError(reply.reason === "forbidden" ? "unavailable" : reply.reason === "stale" ? "stale" : "unavailable", `The declared projection refused: ${reply.reason}.`);
     const projection = this.packet.package.semantic.projections[view.projection]!;
     if (reply.value.projection !== applicationProjectionId(projection) || canonicalize(reply.value.scope) !== canonicalize(selection.scope)) throw new ViewError("unavailable", "The read does not name this declared projection and scope.");
-    const rows = reply.value.sources[view.item];
-    if (!rows) throw new ViewError("unavailable", "The read omitted the declared item source.");
+    const nativeRows = reply.value.sources[view.item];
+    if (!nativeRows) throw new ViewError("unavailable", "The read omitted the declared item source.");
+    const rows = view.kind !== "surface" && view.order ? orderedViewRows(nativeRows, view.order) : nativeRows;
     if (rows.some(row => isApplicationJournalSource(projection.sources[view.item]!) !== !!row.entry)) throw new ViewError("unavailable", "The read confused journal entries with native items.");
     return { view, root: install.scope, scope: selection.scope, definition: projection.definition, reply, rows };
   }
@@ -98,7 +109,7 @@ export class DeclaredViewSource implements ViewSource {
       try { holds = (await evaluate(control.when, input(row))).value === true; }
       catch (error) { if (!(error instanceof RuleEvalError)) throw error; }
       const at = holds ? this.#expected(view, control, row, data) : null;
-      if (at !== null) actions.push({ id: view.acts.filter(choice => choice.act === control.act).length > 1 ? `${control.act}:${index}` : control.act, label: control.label, purpose: "act", kind: control.act,
+      if (at !== null) actions.push({ id: controlId(view, control, index), label: control.label, purpose: "act", kind: control.act, ...(control.parameters ? { parameters: control.parameters } : {}),
         args: { target: scope.scope, on: row.id, at, digest: definition, ...(control.args ? { fields: control.args } : {}) } });
     }
     return actions;
@@ -133,12 +144,13 @@ export class DeclaredViewSource implements ViewSource {
     if (!Number.isSafeInteger(query.position) || query.position < 0 || query.position >= rows.length) throw new ViewError("shape", "The declared view position is outside its complete projection.");
     const row = rows[query.position]!, values = input(row), waiting = Object.hasOwn(view.waiting, row.state) ? template(view.waiting[row.state]!, row, "") : "";
     const fallback = template(view.fallback, row, waiting), actions = await this.#allowed(view, row, reply.value, scope, definition);
+    const now = this.port.now?.() ?? Date.now();
     const series = this.#series(view, row, reply.value);
     const card: Card = {
       identity: surface ? { item: scope.scope, kind: "scope", revision: String(reply.value.at.seq), subject: { scope: scope.scope }, at: {} }
         : { item: String(row.id), kind: row.entry ? "entry" : row.type, revision: String(row.revision), subject: { scope: scope.scope, ...(row.entry ? {} : { item: row.id }) }, at: row.entry ? {} : { on: row.revision } },
       title: view.kind === "surface" ? query.screen : text(values[view.title]), summary: view.kind === "surface" || view.summary === null ? "" : text(values[view.summary]),
-      reasons: view.kind === "surface" ? [] : view.facts.map(fact => formatFact(fact, values)),
+      reasons: view.kind === "surface" ? [] : view.facts.map(fact => formatFact(fact, values, now)),
       projection: [{ scope: scope.scope, ...reply.value.at }], reviewIntended: [], unavailable: [], waitsOn: waiting ? [waiting] : [], settles: [], actions, fallback,
       declared: { kind: view.kind, source: view.item, context: template(view.context, row, waiting), actor: view.kind === "surface" || view.actor === null ? null : values[view.actor] ?? null,
         refresh: view.refresh, display: view.display, back: view.back, backScope, data: reply.value,
@@ -166,6 +178,17 @@ export class DeclaredViewSource implements ViewSource {
     if (!row || card.identity.subject.scope !== scope.scope || canonicalize(card.declared?.data.scope ?? null) !== canonicalize(scope)
       || String(row.revision) !== card.identity.revision) throw new ViewError("stale", "The declared item changed. Refresh before acting; no new request was signed.");
     const actions = await this.#allowed(view, row, reply.value, scope, definition);
-    if (!actions.some(current => current.kind === action.kind && current.id === action.id && canonicalize(current.args) === canonicalize(action.args))) throw new ViewError("stale", "This act or one of its subjects changed under the current when and held actions; no new request was signed.");
+    const matches = actions.some(current => {
+      if (current.kind !== action.kind || current.id !== action.id) return false;
+      let args = current.args;
+      if (current.parameters) {
+        let fields;
+        try { fields = decodeViewParameters(current.parameters, action.parameterInput); }
+        catch { return false; }
+        args = { ...args, fields: { ...(args["fields"] as Record<string, FieldValue> | undefined), ...fields } };
+      }
+      return canonicalize(args) === canonicalize(action.args);
+    });
+    if (!matches) throw new ViewError("stale", "This act or one of its subjects changed under the current when and held actions; no new request was signed.");
   }
 }

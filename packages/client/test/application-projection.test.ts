@@ -82,6 +82,7 @@ test("declared item observations resolve aliases and merge identical subjects wi
     number: { from: { kind: "value", name: "lastNumber" }, of: { type: "int", min: 0, max: 100 }, nullable: false },
     writer: { from: { kind: "party", name: "controller" }, of: { type: "member" }, nullable: false },
     linked: { from: { kind: "ref", name: "pledge" }, of: { type: "item", of: "promise" }, nullable: true },
+    seenTime: { from: { kind: "fact-time", name: "seen" }, of: { type: "time" }, nullable: true },
   };
   const declaration = readApplicationProjection({ v: 1, definition: textDigest("PUBLIC TEST selected definition"), revision: "revision", sources: {
     board: { item: "board", read: "many", states: ["open"], limit: 1, fields },
@@ -89,7 +90,7 @@ test("declared item observations resolve aliases and merge identical subjects wi
   } });
   const writer = { membership: { ...scope, kind: "membership" as const }, member: "@ada" as const };
   const data = { ...good.value, projection: applicationProjectionId(declaration), sources: {
-    board: [{ id: 2, type: "board", state: "open", revision: 1, fields: { number: 4, writer, linked: null } }],
+    board: [{ id: 2, type: "board", state: "open", revision: 1, fields: { number: 4, writer, linked: null, seenTime: "2026-10-16T08:00:00Z" } }],
     selected: [{ id: 2, type: "board", state: "open", revision: 1, fields: { number: 4 } }],
   } };
   const snapshot = applicationItemSnapshot(declaration, data);

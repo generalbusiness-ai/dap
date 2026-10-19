@@ -2,6 +2,7 @@
  * authority; the host separately admits/evaluates when and checks needs. */
 import type { FieldValue } from "@generalbusiness/dap-contract";
 import { canonicalize, isRecord, parseStrict, utf8 } from "./index.ts";
+import { readViewParameters, ApplicationViewParameterError, type ApplicationViewParameters } from "./application-view-parameters.ts";
 import { applicationJson } from "./application-json.ts";
 import { ApplicationPackageError } from "./application-types.ts";
 export const APPLICATION_VIEW_LIMITS = Object.freeze({ bytes: 64 * 1024, views: 32, acts: 2, facts: 16, templateBytes: 4096, expressionBytes: 2048 });
@@ -10,13 +11,16 @@ export interface ApplicationViewAct {
   readonly label: string;
   /** Constant native fields; no row substitution or browser-supplied values. */
   readonly args?: Readonly<Record<string, FieldValue>>;
+  /** Human scalar inputs exposed by this view's derived model tool. */
+  readonly parameters?: ApplicationViewParameters;
   readonly needs: string;
   /** A restricted@1 expression over the selected row's metadata and fields. */
   readonly when: string;
 }
 /** Presentation of an integer stored in fixed-point units. Scaling is an
  * exact decimal shift, not an expression or a change to projection data. */
-export type ApplicationViewFact = string | { readonly field: string; readonly label: string; readonly scale: number; readonly unit: string };
+export type ApplicationViewFact = string | { readonly field: string; readonly label: string; readonly scale: number; readonly unit: string }
+  | { readonly field: string; readonly label: string; readonly format: "age" };
 export const applicationViewFactField = (fact: ApplicationViewFact): string => typeof fact === "string" ? fact : fact.field;
 interface ViewBase {
   readonly projection: string;
@@ -36,6 +40,8 @@ export interface ApplicationViewSeries {
 }
 export interface ApplicationViewLink { readonly view: string; readonly field: string; readonly label: string }
 export interface ApplicationItemView extends ViewBase {
+  /** Order a complete carousel source; ties retain ascending native item IDs. */
+  readonly order?: { readonly field: string; readonly direction: "asc" | "desc"; readonly missing: "first" | "last" };
   /** Read-only navigation through a projected native local-item reference. */
   readonly links?: readonly ApplicationViewLink[];
   /** Last native journal samples on this selected item; no expression or join. */
@@ -99,7 +105,7 @@ export function readApplicationViews(value: unknown): ApplicationViews {
   for (const given of Object.values(views)) {
     if (!isRecord(given)) return fail();
     const common = "acts,back,context,display,fallback,item,kind,projection,refresh,revision,waiting";
-    const view = only(given, (common + (given["kind"] === "surface" ? ",opens,resource" : ",actor,facts,summary,title" + (Object.hasOwn(given, "links") ? ",links" : "") + (Object.hasOwn(given, "series") ? ",series" : ""))).split(",").sort().join());
+    const view = only(given, (common + (given["kind"] === "surface" ? ",opens,resource" : ",actor,facts,summary,title" + (Object.hasOwn(given, "links") ? ",links" : "") + (Object.hasOwn(given, "series") ? ",series" : "") + (Object.hasOwn(given, "order") ? ",order" : ""))).split(",").sort().join());
     name(view["projection"]); name(view["item"]);
     if (view["revision"] !== "revision" || typeof view["display"] !== "string" || !["inline", "fullscreen"].includes(view["display"])) return fail();
     if (view["back"] !== null) name(view["back"]);
@@ -111,9 +117,13 @@ export function readApplicationViews(value: unknown): ApplicationViews {
     if (!Array.isArray(acts) || acts.length > B.acts) return fail("limit");
     const used = new Set<string>();
     for (const given of acts) {
-      const act = only(given, isRecord(given) && Object.hasOwn(given, "args") ? "act,args,label,needs,when" : "act,label,needs,when"), kind = name(act["act"]);
+      const act = only(given, ("act,label,needs,when" + (isRecord(given) && Object.hasOwn(given, "args") ? ",args" : "") + (isRecord(given) && Object.hasOwn(given, "parameters") ? ",parameters" : "")).split(",").sort().join()), kind = name(act["act"]);
       if (Object.hasOwn(act, "args") && (!isRecord(act["args"]) || Object.keys(act["args"]).length > 128)) return fail();
-      const binding = canonicalize([kind, act["args"] ?? {}]);
+      if (Object.hasOwn(act, "parameters")) {
+        try { readViewParameters(act["parameters"]); }
+        catch (error) { return fail(error instanceof ApplicationViewParameterError ? error.reason : "invalid"); }
+      }
+      const binding = canonicalize([kind, act["args"] ?? {}, act["parameters"] ?? {}]);
       if (used.has(binding)) return fail(); used.add(binding);
       name(act["needs"]); text(act["label"], 80); text(act["when"], B.expressionBytes);
     }
@@ -122,6 +132,11 @@ export function readApplicationViews(value: unknown): ApplicationViews {
       for (const target of Object.values(dict(view["opens"], 16))) name(target);
     } else {
       if (typeof view["kind"] !== "string" || !["card", "carousel", "record", "log"].includes(view["kind"])) return fail();
+      if (Object.hasOwn(view, "order")) {
+        if (view["kind"] !== "carousel") return fail();
+        const order = only(view["order"], "direction,field,missing"); name(order["field"]);
+        if (order["direction"] !== "asc" && order["direction"] !== "desc" || order["missing"] !== "first" && order["missing"] !== "last") return fail();
+      }
       if (Object.hasOwn(view, "links")) {
         const links = view["links"];
         if (!Array.isArray(links) || links.length > 16) return fail("limit");
@@ -146,6 +161,11 @@ export function readApplicationViews(value: unknown): ApplicationViews {
       if (!Array.isArray(facts) || facts.length > B.facts) return fail("limit");
       for (const fact of facts) {
         if (typeof fact === "string") { name(fact); continue; }
+        if (isRecord(fact) && Object.hasOwn(fact, "format")) {
+          const format = only(fact, "field,format,label"); name(format["field"]); text(format["label"], 80);
+          if (format["format"] !== "age") return fail();
+          continue;
+        }
         const format = only(fact, "field,label,scale,unit");
         name(format["field"]); text(format["label"], 80);
         if (typeof format["scale"] !== "number" || !Number.isSafeInteger(format["scale"]) || format["scale"] < 0 || format["scale"] > 6) return fail();
