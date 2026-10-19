@@ -155,3 +155,41 @@ failed logs remain historical. The unchanged G1 operator case passed in
 passes in `...grow-measurement-types-20261019.log`.
 The typed text and consumer fields in this witness are explicitly scripted;
 an actual-model invocation, age layers and browser proof are still owed.
+
+## Fact-time projection checkpoint
+
+The generic projection may select `from: {kind: "fact-time", name: slot}`.
+Binding requires a native fact ref under this definition's name, time output
+and matching optionality. Local entry-number refs resolve only under the
+captured scope; full refs must name that exact scope and match its hash.
+Future, foreign, conflicting, missing and malformed evidence refuses. Absent
+refs remain null. The client keeps the timestamp as projected data and does
+not fabricate a native value or ref slot for subject/guard resolution.
+
+The native owner reads only the selected seq/hash/time index metadata, in
+at-most-100-key batches. It charges candidates and a conservative 160 bytes
+per row to the source's existing page allowance before each lookup; it does
+not read entry bodies, scan a recent window, reset a budget, call a peer or
+raise an allowance. Pure checks bind the metadata to the same captured head
+and exact selected refs. This relies on the native owner's immutable entry
+metadata, and is not an independent cryptographic entry-body verification.
+Fact-time requires history access even without a journal source, and the
+native owner's final authority check still runs after metadata reads.
+
+Two owning bytes files pass six cases in
+`/tmp/artroom-g2-fact-time-local-ref-bytes-20261019.log`. The native production
+owner passes in `...fact-time-final-authority-20261019.log`, including actual
+installed Counter reads, history denial, eviction, missing evidence and
+session loss after metadata. The budget file passes three cases in
+`...fact-time-budget-focused-20261019.log`; the client observation file passes
+in `...fact-time-client-boundary-20261019.log`. Scope, client and MCP owning
+compilers pass. Initial attempts exposed local entry-number refs in native
+item replies, a readonly fixture effect array, and an overly broad SQL
+stand-in argument type; these are corrected, with failed logs retained.
+
+`...fact-time-history-control-20261019.log` removes fact-time's history
+requirement and the unchanged native denial assertion fails. The separate
+`...fact-time-budget-control-20261019.log` removes the metadata charge: two
+cases pass and the unchanged admitted-cost assertion fails. Both drivers
+restore source. Grow's per-metric layers and old-ref journey still need to
+consume this form; this checkpoint makes no G2 acceptance claim.

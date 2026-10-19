@@ -63,8 +63,8 @@ test("typed measurement fields produce one native probe and advance the oldest b
     expect(session.scope.state.item(45)!.values).toMatchObject({ moisture: 31, ec: 2100, ph: 590, note: "leaf edge curl", height: null, insects: null, probeTime: "2026-10-18T12:00:00Z" });
     expect(accepted.structuredContent).toMatchObject({ identity: { item: "22" } });
     expect(accepted.structuredContent["receipt"]).toContain("accepted (entry 225)");
-    // Core keeps same-scope refs as local entry positions; read projections
-    // expand them into full facts under the captured scope and journal hash.
+    // Same-scope refs remain local entry positions. Explicit journal rows
+    // separately carry full entry facts under their captured scope and hash.
     for (const name of ["moistureAt", "ecAt", "phAt", "noteAt", "lastProbe"]) expect(session.scope.state.item(45)!.refs[name]).toBe(225);
     expect(session.scope.state.item(45)!.refs["heightAt"]).toBeNull(); expect(session.scope.state.item(45)!.refs["insectsAt"]).toBeNull();
     expect(JSON.stringify(accepted)).not.toMatch(/sources|leaf edge curl|2100/);

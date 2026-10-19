@@ -12,7 +12,7 @@ import { requestSession, sessionRequest, ScopeHandle, httpTransport, bindingTran
 import { McpService, memoryStore as custodyStore, type ServerPort } from "@generalbusiness/dap-mcp";
 import nativeWorker from "../../../apps/room/worker.ts";
 import { outsideOf as hostOutside } from "../src/worker.ts";
-import { applicationCounterJournalPacket2 } from "./support/application-v2-fixture.ts";
+import { applicationCounterFactTimePacket2 } from "./support/application-fact-time-fixture.ts";
 import { applicationResolverFixture } from "./support/application-fixture.ts";
 import { applicationHttpPeer } from "./support/application-http-peer.ts";
 import { sessionRoom } from "./support/session-room.ts";
@@ -33,7 +33,7 @@ import { authenticateSession, mintSession, readerOf, type Sessions } from "../sr
 test("native installed projection reads exact journal state and survives R2 deletion and eviction", async () => {
   const room = await sessionRoom(C.register), { life, R, D, children } = room, [M, A, G] = children;
   if (!M || !A || !G) throw Error("The native cohort needs its three siblings.");
-  const packet = await applicationCounterJournalPacket2("state = 'open'", "native"), f = await applicationResolverFixture("sha1", undefined, {}, undefined, packet);
+  const packet = await applicationCounterFactTimePacket2(), f = await applicationResolverFixture("sha1", undefined, {}, undefined, packet);
   const peer = applicationHttpPeer(f), bindings = { SCOPES: env.PLATFORM, APPLICATION_CONTENT: env.APPLICATION_CONTENT, APPLICATION_TRUST: JSON.stringify(f.trust) };
   try {
     const seat = await life.wait(() => M.did(rita, "seat", { expected: { roster: 1 } }));
@@ -118,6 +118,13 @@ test("native installed projection reads exact journal state and survives R2 dele
     expect(activity.value.value.sources["events"]![0]!.fields["actor"]).toEqual({ membership, member: actual.claims.member });
     const noHistory = readerOf(mintSession(room.sessions, { ...actual.claims, reads: actual.claims.reads.filter(read => read !== "history") }));
     expect(await read(activityQuery, noHistory)).toMatchObject({ status: 403, value: { ok: false, reason: "forbidden" } });
+    const clockQuery = { ...query, projection: "clock" }, clock = await read(clockQuery);
+    expect(clock.status, clock.raw).toBe(200);
+    expect(clock.value).toMatchObject({ ok: true, value: { at: first.value.value.at, sources: { board: [{ fields: {
+      seenTime: activity.value.value.sources["events"]![0]!.time,
+    } }] } } });
+    // This source has no journal window; fact-time alone owes history access.
+    expect(await read(clockQuery, noHistory)).toMatchObject({ status: 403, value: { ok: false, reason: "forbidden" } });
     const mcpRead = await life.wait(() => mcp.reads.projection(membership, query));
     expect(canonicalize(mcpRead)).toBe(first.raw);
     expect((await life.wait(() => mcp.call("application_installation", { item: job }))).structuredContent).toMatchObject({ item: job, state: "active", scope: query.scope });
@@ -134,33 +141,39 @@ test("native installed projection reads exact journal state and survives R2 dele
     const ads = peer.ads(); await env.APPLICATION_CONTENT.delete(f.key);
     await life.wait(() => A.restart()); await life.wait(() => app.restart());
     expect((await read()).raw).toBe(first.raw); expect(peer.ads()).toBe(ads);
+    expect((await read(clockQuery)).raw).toBe(clock.raw);
     // Real native storage and production read owner. Only the post-body
     // session-configuration loss is scripted; it changes no roster or key.
     const finalAuthority = await life.wait(() => runInDurableObject(app.object, async (_instance, state) => {
       const results = [];
-      for (const kind of ["board", "activity"]) for (const fault of kind === "board" ? ["none", "sessions"] : ["none", "sessions", "oversize"]) {
+      for (const kind of ["board", "activity", "clock"]) for (const fault of kind === "board" ? ["none", "sessions"] : kind === "clock" ? ["none", "sessions", "missing"] : ["none", "sessions", "oversize"]) {
         const raw = { exec: (sql: string, ...args: SqlValue[]) => state.storage.sql.exec(sql, ...args), transaction: <T>(work: () => T) => state.storage.transactionSync(work) };
         const store = new SqliteStore(raw), core = new Scope(app.name, store, production(), PROPOSED_BOUNDS);
-        let sessions: Sessions | null = room.sessions, bodies = 0;
+        let sessions: Sessions | null = room.sessions, bodies = 0, metadata = 0;
         const sql = { exec(text: string, ...args: SqlValue[]) {
           const cursor = raw.exec(text, ...args);
           if (fault === "oversize" && text.startsWith("SELECT seq,hash,time,size FROM entry WHERE")) {
             const rows = cursor.toArray();
             return { toArray: () => rows.map((row, i) => i === 0 ? { ...row, size: ITEM_QUERY_BOUNDS.payloadBytes + 1 } : row) };
           }
-          if (text.startsWith(kind === "board" ? "SELECT record FROM item" : "SELECT bytes FROM entry WHERE seq=? AND hash=?")) { bodies++; if (fault === "sessions") sessions = null; }
+          if (text.startsWith(kind === "activity" ? "SELECT bytes FROM entry WHERE seq=? AND hash=?" : "SELECT record FROM item")) { bodies++; if (fault === "sessions" && kind !== "clock") sessions = null; }
+          if (kind === "clock" && text.startsWith("SELECT seq,hash,time FROM entry WHERE seq IN")) {
+            metadata++; if (fault === "sessions") sessions = null;
+            if (fault === "missing") return { toArray: () => [] };
+          }
           return cursor;
         } };
         const preparation = new ReadPreparation(sql, { policy: () => "projection-authority-test-v1", declared: bytes => core.validate(bytes), platform: named => core.platform(named) });
         const sessionPreparation = new SessionPreparation(preparation, () => sessions, net.clock, sessionReferencesIn(env.PLATFORM));
         const owner = new ApplicationProjections({ name: app.name, sql, sessions: () => sessions, clock: net.clock, sessionPreparation,
           flights: new PreparationFlights(), source: applicationDeclarationsIn(env.PLATFORM) });
-        results.push({ kind, fault, result: await owner.read(encodeApplicationProjectionQuery({ ...query, projection: kind }), session.session.reader()), bodies });
+        results.push({ kind, fault, result: await owner.read(encodeApplicationProjectionQuery({ ...query, projection: kind }), session.session.reader()), bodies, metadata });
       }
       return results;
     }));
-    expect(finalAuthority.map(row => row.result.ok ? "ok" : row.result.reason)).toEqual(["ok", "sessions-unavailable", "ok", "sessions-unavailable", "too-large"]);
-    expect(finalAuthority.map(row => row.bodies)).toEqual([1, 1, first.value.value.at.seq + 1, first.value.value.at.seq + 1, 0]);
+    expect(finalAuthority.map(row => row.result.ok ? "ok" : row.result.reason)).toEqual(["ok", "sessions-unavailable", "ok", "sessions-unavailable", "too-large", "ok", "sessions-unavailable", "unavailable"]);
+    expect(finalAuthority.map(row => row.bodies)).toEqual([1, 1, first.value.value.at.seq + 1, first.value.value.at.seq + 1, 0, 1, 1, 1]);
+    expect(finalAuthority.map(row => row.metadata)).toEqual([0, 0, 0, 0, 0, 1, 1, 1]);
     const board = first.value.value.sources["board"]![0]!;
     await life.wait(() => app.did(rita, "reset", { on: board.id, expected: { on: board.revision }, fields: { generation: 1 } }));
     const updated = await read(); expect(updated.status, updated.raw).toBe(200); if (!updated.value?.ok) return;

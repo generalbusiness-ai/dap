@@ -1,5 +1,8 @@
 import { expect, test } from "vitest";
 import { ItemQueryBudget, ItemQueryUnavailable } from "../src/item-query-budget.ts";
+import { applicationProjectionFactTimes } from "../src/applications/projection-fact-times.ts";
+import { textDigest } from "@generalbusiness/artroom-bytes";
+import type { SqlValue } from "../src/sqlite.ts";
 
 // Invariant: operation admission stops the next native call before execution, fences the whole
 // operation on exhaustion, and disallows a phase from another credential mode. SQL is a STAND-IN.
@@ -31,4 +34,24 @@ test("query preparation preserves phase limits, accounts genesis reservation onc
   active = false;
   expect(() => budget.preparation("preparation").spend({ metadata: 1 })).toThrow();
   expect(budget.admitted().total.metadata).toBe(64 * 1024);
+});
+
+test("fact-time metadata spends the existing source allowance before its bounded indexed lookups", () => {
+  const scope = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "lane" as const };
+  const hash = textDigest("PUBLIC TEST fact-time metadata"), frame = { scope: { at: scope, head: { seq: 200, hash } } } as Parameters<typeof applicationProjectionFactTimes>[1];
+  const refs = Array.from({ length: 200 }, (_, i) => ({ seq: i + 1, hash: null }));
+  const queries: string[] = [];
+  const sql = { exec(query: string, ...args: SqlValue[]) {
+    queries.push(query);
+    return { toArray: () => args.slice(0, -1).map(seq => ({ seq, hash, time: "2026-10-16T08:00:00Z" })) };
+  } };
+  const budget = new ItemQueryBudget("session", () => true);
+  expect(applicationProjectionFactTimes(sql, frame, refs, budget)?.entries).toHaveLength(200);
+  expect(budget.admitted().total).toMatchObject({ calls: 2, candidates: 200, metadata: 32000, bodies: 0, payloadBytes: 0 });
+  expect(queries.every(query => !/\bbytes\b/.test(query))).toBe(true);
+  queries.length = 0;
+  const exhausted = new ItemQueryBudget("session", () => true);
+  exhausted.spend("page", { metadata: 128 * 1024 - 15999 });
+  expect(() => applicationProjectionFactTimes(sql, frame, refs, exhausted)).toThrow(ItemQueryUnavailable);
+  expect(queries).toHaveLength(0);
 });

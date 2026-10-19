@@ -68,6 +68,7 @@ export class ApplicationProjections {
       let live = false, hasFinal = false, history = false;
       for (const source of Object.values(projection.sources)) {
         if (isApplicationJournalSource(source)) { history = true; continue; }
+        if (Object.values(source.fields).some(field => field.from.kind === "fact-time")) history = true;
         for (const state of source.states) {
           if (definition.declared.items[source.item]!.states[state]!.final) hasFinal = true; else live = true;
         }
