@@ -1835,6 +1835,8 @@ class Verifier {
  * a report. `tally`, when it is given, counts the work of the replay over
  * what it has already checked (`Tally`).
  */
-export function verify(source: HistorySource, options: Options, tally?: Tally): Promise<Verification> {
+export function verifyHistory(source: HistorySource, options: Options, tally?: Tally): Promise<Verification> {
   return new Verifier(source, options, tally).run();
 }
+
+export { verifyHistory as verify };

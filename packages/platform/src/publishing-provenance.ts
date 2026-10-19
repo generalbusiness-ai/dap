@@ -1,4 +1,5 @@
 /** Native identities are established by immutable creation facts, not declared names. */
+import { same } from "@generalbusiness/artroom-bytes";
 import type { Digest, FactRef, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, deliveryCauseDigest, intentDigest, isMemberRef, messageDigest, parseStrict, isDigest, isPlatformDefinition, isSeed, platformName, scopeIdOf, verifySignedIntent } from "@generalbusiness/artroom-bytes";
 import { isEntryOf, isFactRef, isObject, isScopeRef, sentBy, type Fetched } from "@generalbusiness/dap-derive";
@@ -14,7 +15,6 @@ export const ISSUE_LANE_DIGESTS = [
   "sha256:82a938c8f54ddcac7974ca688ebea7d51c35d2aa70f4e3729965e9f915bc464e",
 ] as const satisfies readonly Digest[];
 
-const same = (a: unknown, b: unknown): boolean => canonicalize(a) === canonicalize(b);
 
 /** A reserve must address the full Directory and destination of its birth. */
 export function publishingLaneAffiliation(from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly Fetched[]): boolean {

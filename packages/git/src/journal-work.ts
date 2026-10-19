@@ -1,5 +1,6 @@
 /** Internal archive layout work. The native caller owns the original
  * inventory allowance/deadline; layout never creates or tops it up. */
+import { natural } from "@generalbusiness/artroom-bytes";
 export interface JournalCost {
   entries: number;
   attempts: number;
@@ -35,7 +36,6 @@ export class JournalLayoutRefusal extends Error {
   constructor(reason: JournalLayoutReason, where?: string) { super(`journal-layout-${reason}`); this.reason = reason; this.where = where; }
 }
 export function refuseJournal(reason: JournalLayoutReason, where?: string): never { throw new JournalLayoutRefusal(reason, where); }
-const natural = (n: number): boolean => Number.isSafeInteger(n) && n >= 0 && !Object.is(n, -0);
 const keys = Object.keys(JOURNAL_LAYOUT_LIMITS) as (keyof JournalLayoutLimits)[];
 
 /** Counts attempts, including repeated/cached object construction. Output

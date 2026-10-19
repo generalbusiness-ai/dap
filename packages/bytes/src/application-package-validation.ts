@@ -1,5 +1,6 @@
 /** Internal strict v1 validators shared by the versioned package codecs.
  * The legacy semantic validator continues to admit empty projections only. */
+import { same } from "./values.ts";
 import type { DeclaredDefinition, Digest } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, definitionDigest, digestBytes, isDigest, isKeyId, isRecord, parseStrict, unb64url, utf8 } from "./index.ts";
 import { applicationJson } from "./application-json.ts";
@@ -7,7 +8,6 @@ import { APPLICATION_PACKAGE_LIMITS, ApplicationPackageError, type ApplicationCr
 
 const TAGS = { semantic: "dap-application-semantics-1", presentation: "dap-application-presentation-1", release: "dap-application-release-1", signature: "dap-application-release-signature-1" } as const;
 export const fail = (reason: ApplicationPackageError["reason"] = "invalid"): never => { throw new ApplicationPackageError(reason); };
-const same = (a: unknown, b: unknown) => canonicalize(a) === canonicalize(b);
 const token = /^[a-zA-Z][a-zA-Z0-9_.-]*$/;
 const assetPath = /^(?:[A-Za-z0-9][A-Za-z0-9._-]{0,63}\/)*[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 export const only = (value: unknown, keys: string): Record<string, unknown> => isRecord(value) && Object.keys(value).sort().join() === keys ? value : fail();

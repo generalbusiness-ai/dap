@@ -22,6 +22,7 @@
  * | `judgeExtents` | "How the rule `judge` judges extents", steps 2 to 7; "Which reviews count for an extent"; "The exception, in the planner's words" | The extents of the observed rules: the contract owes `RulesContent.extents`. The count of controllers: the missing form 11; null, no exception. The controllers of the authoring agents: the missing form 15; null, no exception by the second clause, and no review where a controller's is refused |
  */
 
+import { isRecord } from "@generalbusiness/artroom-bytes";
 import type { MemberId } from "@generalbusiness/dap-contract";
 import { utf8 } from "@generalbusiness/artroom-bytes";
 import { byteOrder } from "@generalbusiness/dap-derive";
@@ -78,7 +79,6 @@ export const holdsRulesExtent = (extents: readonly Extent[]): boolean =>
 
 // ---------------------------------------------------------------- the bounds of a list of extents
 
-const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value);
 /** A text of 1 to `most` bytes, each of which `allowed` takes. */
 const textOf = (value: unknown, most: number, allowed: (byte: number) => boolean = () => true): value is string => {
   if (typeof value !== "string") return false;

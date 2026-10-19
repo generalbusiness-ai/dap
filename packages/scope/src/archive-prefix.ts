@@ -1,5 +1,6 @@
 /** Native metadata sizing before JSON inspection. This is not a complete
  * privacy inventory or permission to select/export payload bodies. */
+import { natural } from "@generalbusiness/artroom-bytes";
 import type { Bounds, Digest, Head, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isFactRef, isHead, isRecord, isScopeRef, parseStrict, utf8 } from "@generalbusiness/artroom-bytes";
 import { admitArchivePin, type ArchiveExportRefusal } from "@generalbusiness/artroom-git/archive-policy";
@@ -24,7 +25,6 @@ export interface ArchivePrefix {
   readonly positions: readonly ArchivePosition[];
   readonly bytes: number;
 }
-const natural = (n: unknown): n is number => typeof n === "number" && Number.isSafeInteger(n) && n >= 0 && !Object.is(n, -0);
 
 /** `expected` and certificates come from native caller-owned context and
  * trusted reviewer configuration, never a request's claimed safe flags. */

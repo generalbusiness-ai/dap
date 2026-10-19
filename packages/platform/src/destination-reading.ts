@@ -1,11 +1,11 @@
 /** The destination's reading of the pinned change lane's retained entries (authority revision 28, sections 3.3 and 6.5). */
+import { same } from "@generalbusiness/artroom-bytes";
 import type { Entry, FactRef, KeyId, MemberId, RulesObservation } from "@generalbusiness/dap-contract";
-import { canonicalize, isFactRef, isMemberRef } from "@generalbusiness/artroom-bytes";
+import { isFactRef, isMemberRef } from "@generalbusiness/artroom-bytes";
 import type { RuleGiven } from "@generalbusiness/dap-derive";
 import type { LaneRead } from "./destination.ts";
 import type { EditFile, Statement } from "./reservation.ts";
 
-const same = (a: unknown, b: unknown): boolean => canonicalize(a) === canonicalize(b);
 const of = (given: Pick<RuleGiven, "uses">, fact: FactRef): Entry | null => given.uses.find((copy) => same(copy.fact, fact))?.entry ?? null;
 const fields = (entry: Entry | null, kind: string) => entry?.input.type === "act" && entry.input.signed.intent.kind === kind ? entry.input.signed.intent.fields : null;
 const actor = (entry: Entry | null): KeyId | null => entry?.input.type === "act" ? entry.input.signed.intent.actor : null;

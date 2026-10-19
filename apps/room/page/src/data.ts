@@ -170,7 +170,7 @@ const scopeOf = (ref: FieldValue | null | undefined): ScopeId | null => (ref && 
 
 // ---------------------------------------------------------------- the room
 
-const isScopeRef = (v: unknown): v is ScopeRef =>
+const hasScopeRefFields = (v: unknown): v is ScopeRef =>
   typeof v === "object" && v !== null && typeof (v as ScopeRef).scope === "string" && typeof (v as ScopeRef).inc === "string" && typeof (v as ScopeRef).kind === "string";
 
 /**
@@ -282,7 +282,7 @@ export async function openRoom(session: Session, place: Place): Promise<Room> {
   const M = repository?.refs["membership"];
   const rules = scopeOf(repository?.refs["rules"]);
   const destination = scopeOf(repository?.refs["destination"]);
-  if (!repository || !isScopeRef(M) || !rules || !destination) throw new Unreadable(`The directory ${place.directory} names no membership, rules scope and destination yet.`);
+  if (!repository || !hasScopeRefFields(M) || !rules || !destination) throw new Unreadable(`The directory ${place.directory} names no membership, rules scope and destination yet.`);
   if (M.scope !== place.membership.scope || M.inc !== place.membership.inc) throw new Unreadable(`The directory ${place.directory} names another membership scope than ${place.membership.scope}.`);
   room.rules = rules;
   room.destination = destination;

@@ -24,7 +24,7 @@ export class ApplicationGitError extends Error {
 }
 const fail = (reason: ApplicationGitError["reason"]): never => { throw new ApplicationGitError(reason); };
 const utf8 = new TextEncoder();
-const same = (a: Uint8Array, b: Uint8Array) => a.length === b.length && a.every((byte, index) => byte === b[index]);
+const sameObjectBytes = (a: Uint8Array, b: Uint8Array) => a.length === b.length && a.every((byte, index) => byte === b[index]);
 const ascii = (bytes: Uint8Array) => Array.from(bytes, byte => String.fromCharCode(byte)).join("");
 
 /** Read only the commit, path trees and final regular blob, verifying every Git
@@ -64,7 +64,7 @@ export async function readApplicationGitBlob(address: ApplicationGitAddress, sou
       if (space <= at || space - at > 6 || nul <= space + 1 || nul + 1 + width > bytes.length) return fail("unreadable");
       const mode = ascii(bytes.subarray(at, space)), name = bytes.subarray(space + 1, nul);
       if (!["40000", "100644", "100755", "120000", "160000"].includes(mode) || name.includes(47)) return fail("unreadable");
-      if (same(name, wanted)) {
+      if (sameObjectBytes(name, wanted)) {
         if (selected) return fail("unreadable");
         selected = { mode, id: hex(bytes.subarray(nul + 1, nul + 1 + width)) };
       }

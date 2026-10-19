@@ -32,6 +32,7 @@
  * never a value. Header safety is judged on the raw value as received.
  */
 
+import { isRecord } from "@generalbusiness/artroom-bytes";
 import type { Digest } from "@generalbusiness/dap-contract";
 import { LEGACY, MODERN, PROTOCOL_META, SESSION_FULL, UNSUPPORTED_VERSION, Wire, frameOf, isFrame, isNotificationMethod, newSession, type Id, type LegacySession, type Message, type Stream } from "./wire.ts";
 
@@ -68,7 +69,6 @@ export interface HttpPort {
   now?(): number;
 }
 
-const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
 const rpcError = (id: Id | null, code: number, message: string, data?: unknown): Message => ({ jsonrpc: "2.0", id, error: { code, message, ...(data !== undefined ? { data } : {}) } });
 const json = (status: number, message: Message, headers: Record<string, string> = {}): Response => new Response(JSON.stringify(message), { status, headers: { "content-type": "application/json", ...headers } });
 const bare = (status: number, headers: Record<string, string> = {}): Response => new Response(null, { status, headers });

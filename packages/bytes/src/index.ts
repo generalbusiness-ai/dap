@@ -5,6 +5,7 @@ export * from "./sign.ts";
 export * from "./domains.ts";
 export * from "./ids.ts";
 export * from "./records.ts";
+export * from "./values.ts";
 export * from "./facttext.ts";
 export * from "./take.ts";
 export * from "./session.ts";

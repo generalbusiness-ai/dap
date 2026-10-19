@@ -15,6 +15,7 @@
  * then one pointer line to the complete text.
  */
 
+import { isRecord } from "@generalbusiness/artroom-bytes";
 import { canonicalize } from "@generalbusiness/artroom-bytes";
 import { markRefusals, markText } from "./marks.ts";
 
@@ -63,7 +64,6 @@ export const DESCRIPTION_CHARS = 1000;
 /** The definition domain: a value place in it is a choice of the active definitions. */
 const DEFINITION_DOMAIN = "artroom-definition-1";
 
-const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
 const json = (v: unknown): string => { try { return canonicalize(v); } catch { return JSON.stringify(v); } };
 const or = (words: readonly string[]): string => (words.length <= 1 ? words.join("") : `${words.slice(0, -1).join(", ")} or ${words.at(-1)}`);
 const and = (words: readonly string[]): string => (words.length <= 1 ? words.join("") : `${words.slice(0, -1).join(", ")} and ${words.at(-1)}`);

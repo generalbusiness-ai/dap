@@ -1,5 +1,6 @@
 /** Declarative trusted views. Parsing this data grants no read or signing
  * authority; the host separately admits/evaluates when and checks needs. */
+import { freeze } from "./values.ts";
 import type { FieldValue } from "@generalbusiness/dap-contract";
 import { canonicalize, isRecord, parseStrict, utf8 } from "./index.ts";
 import { readViewParameters, ApplicationViewParameterError, type ApplicationViewParameters } from "./application-view-parameters.ts";
@@ -86,9 +87,6 @@ const dict = (value: unknown, most: number): Record<string, unknown> => {
   const keys = Object.keys(value); if (keys.length > most) return fail("limit");
   keys.forEach(name); return value;
 };
-function freeze(value: unknown): void {
-  if (value !== null && typeof value === "object") { for (const child of Object.values(value)) freeze(child); Object.freeze(value); }
-}
 /** Template substitution is plain text with one declared row. No expressions,
  * HTML, implicit data reads or property traversal execute inside a template. */
 export function applicationViewTemplateFields(template: string): readonly string[] {

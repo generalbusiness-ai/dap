@@ -1,3 +1,4 @@
+import { isRecord } from "@generalbusiness/artroom-bytes";
 import { invitationRedemptionFields } from "@generalbusiness/artroom-client";
 /**
  * One MCP service for every dap application (plan 031). It lists
@@ -105,7 +106,6 @@ interface Snapshot {
 type Args = Record<string, unknown>;
 type Run = (args: Args) => Promise<CallResult>;
 
-const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
 const text = (structured: Record<string, unknown>): string => JSON.stringify(structured);
 /**
  * Response bounds of plan 031, section 8, for the whole CallResult as the service makes it: text, structured content and isError

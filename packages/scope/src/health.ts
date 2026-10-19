@@ -17,7 +17,7 @@ interface HealthEnvironment extends Omit<MetricEnvironment, "DEPLOYMENT"> {
   ARTIFACTS_CONFIG?: unknown;
 }
 interface Key { binding: Binding; scope: ScopeId }
-const same = (a: Key, b: Key): boolean => a.binding === b.binding && a.scope === b.scope;
+const sameHealthKey = (a: Key, b: Key): boolean => a.binding === b.binding && a.scope === b.scope;
 const ready = (value: unknown): Readiness => value === "ready" || value === "absent" || value === "not-ready" ? value : "unavailable";
 
 /** One physical probe until it settles, including after a caller's timeout. */
@@ -27,9 +27,9 @@ export class HealthProbe {
   constructor(readonly now: () => number = Date.now, readonly wait: (promise: Promise<Readiness>) => Promise<Readiness | typeof LATE> = promise => within(() => promise, 2)) {}
   async read(binding: Binding, scope: ScopeId): Promise<Readiness> {
     const key = { binding, scope }, cached = this.#cached, age = cached ? this.now() - cached.time : Infinity;
-    if (cached && same(cached, key) && age >= 0 && age < 5000) return cached.result;
+    if (cached && sameHealthKey(cached, key) && age >= 0 && age < 5000) return cached.result;
     let pending = this.#pending;
-    if (pending && !same(pending, key)) return "unavailable";
+    if (pending && !sameHealthKey(pending, key)) return "unavailable";
     if (!pending) {
       const promise = Promise.resolve().then(async () => {
         const object = binding.get(binding.idFromName(scope)) as unknown as { readiness(): Promise<unknown> };

@@ -1,7 +1,8 @@
 /** Fixture-only archive credentials over the actual smart-HTTP send path.
  * No ledger operation, production mint or credential custody is involved. */
+import { same } from "@generalbusiness/artroom-bytes";
 import type { ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, isScopeRef, timeMs } from "@generalbusiness/artroom-bytes";
+import { isScopeRef, timeMs } from "@generalbusiness/artroom-bytes";
 import { GitRefusal, READ_BOUNDS, Reader, type GitSource } from "@generalbusiness/artroom-git";
 import { journalRef, type JournalObject } from "@generalbusiness/artroom-git/journal";
 import { SmartHttpSource } from "@generalbusiness/artroom-git/http-read";
@@ -28,7 +29,6 @@ interface ArchiveTransport {
 }
 const bad = (): never => { throw new GitRefusal("unreadable", "archive fixture adapter"); };
 const check = (allowed: () => boolean): void => { if (!allowed()) bad(); };
-const same = (a: unknown, b: unknown): boolean => canonicalize(a) === canonicalize(b);
 
 /** Private construction seam used only by the two concrete provider classes.
  * Fixture tags and injected token methods do not certify real-room admission. */

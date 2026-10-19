@@ -1,4 +1,5 @@
 /** Session policy over an admitted operation frame. No roster or grant read. */
+import { freeze } from "@generalbusiness/artroom-bytes";
 import type { ScopeRef } from "@generalbusiness/dap-contract";
 import { isScopeRef, same, type Page, type StateView } from "@generalbusiness/dap-derive";
 import { recordedMembership, repositorySessionBirth } from "./authority.ts";
@@ -33,7 +34,6 @@ export function preparedSessionRefusal(config: { sessions(): Sessions | null; cl
   return sessionAllowsVisibility(fresh.claims.reads, visibility) && (!resolvedBirth || fresh.claims.reads.includes("summary")) && (!history || fresh.claims.reads.includes("history")) ? null : "forbidden";
 }
 
-const freeze = (value: unknown): void => { if (value && typeof value === "object") { for (const child of Object.values(value)) freeze(child); Object.freeze(value); } };
 /** Exact current native callback pages, shared only within this full frame.
  * A cache hit spends a conservative call. No key crosses an operation/head. */
 function referenceView(frame: PreparedRead): StateView {

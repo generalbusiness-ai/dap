@@ -1165,7 +1165,7 @@ async function replayOf(ctx: Context, config: Config, reader: string | null, sco
   return replay(source, { mode: "replay", scope, platform, grants: "proven", capabilities: CAPABILITIES, owners: CAPABILITIES });
 }
 
-export function verify(ctx: Context, named: string | undefined, options: { all?: boolean } = {}): Promise<Outcome> {
+export function verifyScopeCommand(ctx: Context, named: string | undefined, options: { all?: boolean } = {}): Promise<Outcome> {
   if (options.all) return named === undefined ? verifyAll(ctx) : Promise.resolve(usage("verify --all takes no scope: it verifies every scope of the room."));
   return run(async () => {
     const config = await configOf(ctx);
@@ -1942,3 +1942,5 @@ export function status(ctx: Context, named?: string, request?: string): Promise<
     return done(...await statusReport(httpTransport(config.service, ctx.fetch ? { fetch: ctx.fetch } : {}), session.reader(), scopes, admin, request, named === undefined));
   });
 }
+
+export { verifyScopeCommand as verify };

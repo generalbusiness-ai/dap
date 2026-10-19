@@ -15,7 +15,7 @@ export interface InvitationIssueOptions { privateRequests: readonly string[]; re
 export interface InvitationIssueResult { operation: string; kind: "person" | "agent-key"; handle: string; state: "prepared" | "unknown" | "refused" | "verified"; reason?: string; /** Private handoff, never put into a public status log. */ link?: string }
 interface Stage { signed: SignedIntent; attempted: boolean; receipt?: Receipt; refused?: Extract<Answer, { answer: "refused" }> }
 interface Issue { previous?: { request: string; digest: import("@generalbusiness/dap-contract").Digest }; v: 1; operation: string; input: InvitationIssueInput; service: string; repository: Repository; actor: string; secret: string; ends: string; /** The membership's pinned definition, read at issuance; a retained row without it is a membership@2 row. */ definition?: AgentKeyMembership; member?: Stage; invitation?: Stage; link?: string }
-const same = (a: unknown, b: unknown) => a === undefined || b === undefined ? a === b : canonicalize(a) === canonicalize(b);
+const sameOptional = (a: unknown, b: unknown) => a === undefined || b === undefined ? a === b : canonicalize(a) === canonicalize(b);
 const blocked = () => new Error("The original invitation custody or context is unavailable. Nothing was replaced.");
 const privateName = (prefix: "i" | "a" | "k") => prefix + "-" + crypto.randomUUID().replace(/-/g, "").slice(0, 30);
 const uuid = (v: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(v);
@@ -25,7 +25,7 @@ const wait = async <T>(options: InvitationIssueOptions, work: () => Promise<T>):
 async function readerFor(ctx: Context, service: string, membership: ScopeRef, secret: Uint8Array): Promise<string> {
   const signed = sessionRequest(membership, secret, timeOf(Math.floor(now(ctx) / 1000) * 1000 + 60_000), b64url(crypto.getRandomValues(new Uint8Array(16))));
   const answer = await requestSession(service, membership.scope, signed, ctx.fetch ? { fetch: ctx.fetch } : {});
-  if (!answer.ok || answer.session.claims.key !== keyIdOfSecret(secret) || !same(answer.session.claims.membership, membership)) throw blocked();
+  if (!answer.ok || answer.session.claims.key !== keyIdOfSecret(secret) || !sameOptional(answer.session.claims.membership, membership)) throw blocked();
   return answer.session.reader(); // Volatile only; never stored or used as act authority.
 }
 function handle(ctx: Context, service: string, scope: import("@generalbusiness/dap-contract").ScopeId, reader: string): ScopeHandle {
@@ -38,13 +38,13 @@ function handle(ctx: Context, service: string, scope: import("@generalbusiness/d
  */
 async function summary(M: ScopeHandle, at: ScopeRef, definition: AgentKeyMembership): Promise<Summary> {
   const read = await M.summary();
-  if (!read.ok || !read.complete || read.next !== undefined || !same(read.value.scope, at) || read.value.definition !== definition) throw blocked();
+  if (!read.ok || !read.complete || read.next !== undefined || !sameOptional(read.value.scope, at) || read.value.definition !== definition) throw blocked();
   return read.value;
 }
 /** The membership's summary and its pinned definition, which must be one this command enrols agents under. */
 async function pinnedSummary(M: ScopeHandle, at: ScopeRef): Promise<{ summary: Summary; definition: AgentKeyMembership }> {
   const read = await M.summary();
-  if (!read.ok || !read.complete || read.next !== undefined || !same(read.value.scope, at) || !isAgentKeyMembership(read.value.definition) || platform(read.value.definition)?.data.name !== "platform:membership") throw blocked();
+  if (!read.ok || !read.complete || read.next !== undefined || !sameOptional(read.value.scope, at) || !isAgentKeyMembership(read.value.definition) || platform(read.value.definition)?.data.name !== "platform:membership") throw blocked();
   return { summary: read.value, definition: read.value.definition };
 }
 /** The directory definitions each membership pin is created beside: exact pairs of the cohorts, not names. */
@@ -59,11 +59,11 @@ const pinOf = (issue: Pick<Issue, "definition">): AgentKeyMembership => issue.de
 const closed = (value: unknown, required: string[], optional: string[] = []): value is Record<string, unknown> => isRecord(value) && required.every(k => Object.hasOwn(value, k)) && Object.keys(value).every(k => required.includes(k) || optional.includes(k));
 async function boundDirectory(ctx: Context, service: string, reader: string, repository: Repository, membership: Summary, definition: AgentKeyMembership): Promise<Repository | null> {
   const roster = membership.items.find(item => item.type === "roster" && item.state === "open");
-  if (!roster || !same(roster.refs["directory"], repository.directory)) return null;
+  if (!roster || !sameOptional(roster.refs["directory"], repository.directory)) return null;
   const read = await handle(ctx, service, repository.directory.scope, reader).summary();
-  if (!read.ok || !read.complete || read.next !== undefined || read.value.status !== "active" || !DIRECTORIES_OF[definition].includes(read.value.definition) || !same(read.value.scope, repository.directory)) return null;
+  if (!read.ok || !read.complete || read.next !== undefined || read.value.status !== "active" || !DIRECTORIES_OF[definition].includes(read.value.definition) || !sameOptional(read.value.scope, repository.directory)) return null;
   const item = read.value.items.find(item => item.type === "repository"), rules = item?.refs["rules"], destination = item?.refs["destination"];
-  if (!item || !same(item.refs["membership"], repository.membership) || !isScopeRef(rules) || rules.kind !== "rules" || rules.scope !== repository.rules || !isScopeRef(destination) || destination.kind !== "destination" || destination.scope !== repository.destination) return null;
+  if (!item || !sameOptional(item.refs["membership"], repository.membership) || !isScopeRef(rules) || rules.kind !== "rules" || rules.scope !== repository.rules || !isScopeRef(destination) || destination.kind !== "destination" || destination.scope !== repository.destination) return null;
   return { directory: read.value.scope, membership: membership.scope, rules: rules.scope, destination: destination.scope };
 }
 export function isInvitationIssueInput(value: unknown): value is InvitationIssueInput {
@@ -77,8 +77,8 @@ function repositoryValid(r: unknown): r is Repository {
   return isScopeRef(r["directory"]) && r["directory"].kind === "directory" && isScopeRef(r["membership"]) && r["membership"].kind === "membership" && isScopeId(r["rules"]) && isScopeId(r["destination"]) && (r["inbox"] === undefined || isScopeId(r["inbox"]));
 }
 function stageValid(stage: Stage, issue: Issue, kind: string): boolean {
-  if (!closed(stage, ["signed", "attempted"], ["receipt", "refused"]) || !isSignedIntentShape(stage.signed) || !verifySignedIntent(stage.signed) || stage.signed.intent.kind !== kind || stage.signed.intent.actor !== issue.actor || !same(stage.signed.intent.to, issue.repository.membership) || typeof stage.attempted !== "boolean") return false;
-  if (stage.receipt && (!stage.attempted || !isReceipt(stage.receipt) || stage.receipt.definition !== pinOf(issue) || stage.receipt.intent !== intentDigest(stage.signed.intent) || !same(stage.receipt.fact.at, issue.repository.membership))) return false;
+  if (!closed(stage, ["signed", "attempted"], ["receipt", "refused"]) || !isSignedIntentShape(stage.signed) || !verifySignedIntent(stage.signed) || stage.signed.intent.kind !== kind || stage.signed.intent.actor !== issue.actor || !sameOptional(stage.signed.intent.to, issue.repository.membership) || typeof stage.attempted !== "boolean") return false;
+  if (stage.receipt && (!stage.attempted || !isReceipt(stage.receipt) || stage.receipt.definition !== pinOf(issue) || stage.receipt.intent !== intentDigest(stage.signed.intent) || !sameOptional(stage.receipt.fact.at, issue.repository.membership))) return false;
   if (stage.refused && (!stage.attempted || stage.receipt || !closed(stage.refused, ["answer", "reason", "judgedAt"], ["name"]) || stage.refused.answer !== "refused" || !Object.hasOwn(REFUSAL_REASONS, stage.refused.reason) || !isHead(stage.refused.judgedAt) || stage.refused.name !== undefined && typeof stage.refused.name !== "string")) return false;
   return true;
 }
@@ -94,23 +94,23 @@ function issueValid(value: unknown): value is Issue {
     const Url = (globalThis as { URL?: new (url: string) => { origin: string; protocol: string; username: string; password: string; search: string; hash: string } }).URL;
     if (!Url) return false;
     const origin = new Url(row.service);
-    if (origin.origin !== row.service || !["https:", "http:"].includes(origin.protocol) || origin.username || origin.password || origin.search || origin.hash || row.input.controller && !same(row.input.controller.membership, row.repository.membership)) return false;
-    if (row.member && (!stageValid(row.member, row, "add-member") || !same(row.member.signed.intent.fields, { handle: row.input.handle, kind: "agent", controller: row.input.controller }))) return false;
+    if (origin.origin !== row.service || !["https:", "http:"].includes(origin.protocol) || origin.username || origin.password || origin.search || origin.hash || row.input.controller && !sameOptional(row.input.controller.membership, row.repository.membership)) return false;
+    if (row.member && (!stageValid(row.member, row, "add-member") || !sameOptional(row.member.signed.intent.fields, { handle: row.input.handle, kind: "agent", controller: row.input.controller }))) return false;
     const invited = row.invitation;
     if (invited) {
       if (row.input.kind === "agent-key" && !row.member?.receipt) return false;
       const fields = row.input.kind === "person" ? { handle: row.input.handle, role: row.input.role, ...invitationIssueFields(pinOf(row), row.secret), inviteEnds: row.ends } : { member: row.member!.receipt!.fact.seq, kind: "agent", ...invitationIssueFields(pinOf(row), row.secret), inviteEnds: row.ends };
-      if (!stageValid(invited, row, row.input.kind === "person" ? "invite-member" : "invite-key") || !same(invited.signed.intent.fields, fields)) return false;
+      if (!stageValid(invited, row, row.input.kind === "person" ? "invite-member" : "invite-key") || !sameOptional(invited.signed.intent.fields, fields)) return false;
     }
     if (row.link !== undefined) {
       if (typeof row.link !== "string" || !row.invitation?.receipt) return false;
       const { inbox: _inbox, ...repository } = row.repository;
       if (row.input.kind === "person") {
         const parsed = linkOf(row.link);
-        if (!parsed || !same(parsed, { v: 1, service: row.service, repository, invitation: row.invitation.receipt.fact.seq, secret: row.secret, handle: row.input.handle, definition: pinOf(row) })) return false;
+        if (!parsed || !sameOptional(parsed, { v: 1, service: row.service, repository, invitation: row.invitation.receipt.fact.seq, secret: row.secret, handle: row.input.handle, definition: pinOf(row) })) return false;
       } else {
         const parsed = agentKeyInvitationOf(row.link);
-        if (!parsed || !row.member?.receipt || parsed.definition !== pinOf(row) || parsed.service !== row.service || !same(parsed.repository, repository) || parsed.handle !== row.input.handle || !same(parsed.controller, row.input.controller) || !same(parsed.member, row.member.receipt.fact) || !same(parsed.invitation, row.invitation.receipt.fact) || parsed.secret !== row.secret) return false;
+        if (!parsed || !row.member?.receipt || parsed.definition !== pinOf(row) || parsed.service !== row.service || !sameOptional(parsed.repository, repository) || parsed.handle !== row.input.handle || !sameOptional(parsed.controller, row.input.controller) || !sameOptional(parsed.member, row.member.receipt.fact) || !sameOptional(parsed.invitation, row.invitation.receipt.fact) || parsed.secret !== row.secret) return false;
       }
     }
     return row.input.kind !== "person" || row.member === undefined;
@@ -118,11 +118,11 @@ function issueValid(value: unknown): value is Issue {
 }
 function successor(before: Issue, after: Issue): boolean {
   const core = (row: Issue) => ({ v: row.v, operation: row.operation, input: row.input, service: row.service, repository: row.repository, actor: row.actor, secret: row.secret, ends: row.ends, definition: pinOf(row) });
-  if (!same(core(before), core(after)) || before.link !== undefined && before.link !== after.link) return false;
+  if (!sameOptional(core(before), core(after)) || before.link !== undefined && before.link !== after.link) return false;
   for (const name of ["member", "invitation"] as const) {
     const prior = before[name], next = after[name];
     if (!prior) { if (next && (next.attempted || next.receipt || next.refused)) return false; continue; }
-    if (!next || !same(prior.signed, next.signed) || prior.attempted && !next.attempted || prior.receipt && !same(prior.receipt, next.receipt) || prior.refused && !same(prior.refused, next.refused)) return false;
+    if (!next || !sameOptional(prior.signed, next.signed) || prior.attempted && !next.attempted || prior.receipt && !sameOptional(prior.receipt, next.receipt) || prior.refused && !sameOptional(prior.refused, next.refused)) return false;
   }
   return true;
 }
@@ -134,7 +134,7 @@ async function snapshotChain(ctx: Context, config: Config, input: InvitationIssu
     const bytes = await wait(options, () => ctx.store.private(request));
     if (!bytes || bytes.length > 64 * 1024) throw blocked();
     const raw = new TextDecoder("utf-8", { fatal: true, ignoreBOM: false }).decode(bytes), value = parseStrict(raw);
-    if (!issueValid(value) || value.operation !== options.operation || value.actor !== actor || value.service !== config.service || !same(value.repository, config.repository) || !same(value.input, input)) throw blocked();
+    if (!issueValid(value) || value.operation !== options.operation || value.actor !== actor || value.service !== config.service || !sameOptional(value.repository, config.repository) || !sameOptional(value.input, input)) throw blocked();
     rows.set(request, { row: value, digest: textDigest(raw) });
   }
   if (rows.size === 0) { if (config.invitationIssue) throw blocked(); return null; }
@@ -151,32 +151,32 @@ async function snapshotChain(ctx: Context, config: Config, input: InvitationIssu
   if (visited.size !== rows.size) throw blocked();
   if (config.invitationIssue) {
     const current = rows.get(config.invitationIssue.request);
-    if (!current || current.digest !== config.invitationIssue.digest || config.invitationIssue.operation !== options.operation || config.invitationIssue.actor !== actor || !same(config.invitationIssue.membership, config.repository!.membership)) throw blocked();
+    if (!current || current.digest !== config.invitationIssue.digest || config.invitationIssue.operation !== options.operation || config.invitationIssue.actor !== actor || !sameOptional(config.invitationIssue.membership, config.repository!.membership)) throw blocked();
   } else if (options.mode !== "continue" || options.reservedRequest !== request || rows.size !== 1) throw blocked();
   const leaf = rows.get(request)!;
   return { row: leaf.row, pointer: { operation: options.operation, request, digest: leaf.digest, membership: leaf.row.repository.membership, actor: actor } };
 }
 async function followFact(M: ScopeHandle, fact: FactRef): Promise<Entry | null> {
   const read = await M.entry(fact.seq);
-  return read.ok && read.complete && read.next === undefined && same(factRefOf(read.value.entry), fact) && read.value.hash === fact.hash && entryHash(read.value.entry) === fact.hash ? read.value.entry : null;
+  return read.ok && read.complete && read.next === undefined && sameOptional(factRefOf(read.value.entry), fact) && read.value.hash === fact.hash && entryHash(read.value.entry) === fact.hash ? read.value.entry : null;
 }
 async function follow(M: ScopeHandle, signed: SignedIntent, receipt: Receipt, definition: AgentKeyMembership): Promise<Entry | null> {
-  if (!isReceipt(receipt) || receipt.definition !== definition || receipt.intent !== intentDigest(signed.intent) || !same(receipt.fact.at, signed.intent.to)) return null;
+  if (!isReceipt(receipt) || receipt.definition !== definition || receipt.intent !== intentDigest(signed.intent) || !sameOptional(receipt.fact.at, signed.intent.to)) return null;
   const read = await M.followReceipt(receipt);
-  return read.ok && read.entry.input.type === "act" && same(read.entry.input.signed, signed) ? read.entry : null;
+  return read.ok && read.entry.input.type === "act" && sameOptional(read.entry.input.signed, signed) ? read.entry : null;
 }
 /** M2 records an inbox create send, not member.refs.inbox (EM9). */
 async function inboxOfOpening(ctx: Context, service: string, reader: string, opening: Entry, membership: ScopeRef, owner: MemberRef): Promise<ScopeRef | null> {
   const births = opening.sends.filter(send => "creator" in send.to && send.to.kind === "inbox");
   const birth = births.length === 1 ? births[0] : undefined;
-  if (!birth || !("creator" in birth.to) || birth.to.definition !== "platform:inbox@1" || !same(birth.to.creator, membership)) return null;
+  if (!birth || !("creator" in birth.to) || birth.to.definition !== "platform:inbox@1" || !sameOptional(birth.to.creator, membership)) return null;
   const scope = scopeIdOf(birth.to), I = handle(ctx, service, scope, reader);
   const [summaryRead, birthRead] = await Promise.all([I.summary(), I.entry(0)]);
   if (!summaryRead.ok || !summaryRead.complete || summaryRead.next !== undefined || summaryRead.value.status !== "active" || summaryRead.value.definition !== "platform:inbox@1" || summaryRead.value.scope.kind !== "inbox" || summaryRead.value.scope.scope !== scope || !birthRead.ok || !birthRead.complete || birthRead.next !== undefined) return null;
   const entry = birthRead.value.entry;
-  if (entry.seq !== 0 || entry.input.type !== "genesis" || entry.input.decision !== "applied" || entry.input.kind !== "establish" || entry.input.inc !== summaryRead.value.scope.inc || !same(entry.at, summaryRead.value.scope) || !same(entry.input.seed, birth.to) || !same(entry.input.source, factRefOf(opening)) || entry.input.n !== birth.n || entryHash(entry) !== birthRead.value.hash) return null;
+  if (entry.seq !== 0 || entry.input.type !== "genesis" || entry.input.decision !== "applied" || entry.input.kind !== "establish" || entry.input.inc !== summaryRead.value.scope.inc || !sameOptional(entry.at, summaryRead.value.scope) || !sameOptional(entry.input.seed, birth.to) || !sameOptional(entry.input.source, factRefOf(opening)) || entry.input.n !== birth.n || entryHash(entry) !== birthRead.value.hash) return null;
   const inbox = summaryRead.value.items.find(item => item.type === "inbox" && item.state === "open");
-  return inbox && same(inbox.parties["owner"], owner) && same(inbox.refs["membership"], membership) ? summaryRead.value.scope : null;
+  return inbox && sameOptional(inbox.parties["owner"], owner) && sameOptional(inbox.refs["membership"], membership) ? summaryRead.value.scope : null;
 }
 /** No output exposes a signing key. The optional link is a private invitation. */
 export async function issueInvitation(ctx: Context, input: InvitationIssueInput, options: InvitationIssueOptions): Promise<InvitationIssueResult> {
@@ -201,13 +201,13 @@ export async function issueInvitation(ctx: Context, input: InvitationIssueInput,
     if (chain) {
       if (options.mode === "new") throw blocked();
       row = chain.row;
-      if (!same(pointer, chain.pointer)) {
+      if (!sameOptional(pointer, chain.pointer)) {
         if (options.mode === "check") return { operation: row.operation, kind: row.input.kind, handle: row.input.handle, state: "unknown", reason: "A retained private successor awaits explicit Continue. Check restored no pointer and sent nothing." };
         const before = config;
-        if (!same(await wait(options, () => ctx.store.config()), before)) throw blocked();
+        if (!sameOptional(await wait(options, () => ctx.store.config()), before)) throw blocked();
         pointer = chain.pointer; config = { ...before, invitationIssue: pointer };
         await wait(options, () => ctx.store.save(config!));
-        if (!same(await wait(options, () => ctx.store.config()), config)) throw blocked();
+        if (!sameOptional(await wait(options, () => ctx.store.config()), config)) throw blocked();
       }
     } else {
       if (options.mode !== "new") throw blocked();
@@ -219,7 +219,7 @@ export async function issueInvitation(ctx: Context, input: InvitationIssueInput,
     const persist = async (): Promise<void> => {
       if (!issueValid(row)) throw blocked();
       const before = await wait(options, () => ctx.store.config());
-      if (!same(before, config)) throw blocked();
+      if (!sameOptional(before, config)) throw blocked();
       if (pointer) row.previous = { request: pointer.request, digest: pointer.digest };
       const raw = canonicalize(row), request = privateName("i");
       await wait(options, () => ctx.store.keepPrivate(request, utf8(raw)));
@@ -228,7 +228,7 @@ export async function issueInvitation(ctx: Context, input: InvitationIssueInput,
       pointer = { operation: row.operation, request, digest: textDigest(raw), membership: row.repository.membership, actor };
       config = { ...config!, invitationIssue: pointer };
       await wait(options, () => ctx.store.save(config!));
-      if (!same(await wait(options, () => ctx.store.config()), config)) throw blocked();
+      if (!sameOptional(await wait(options, () => ctx.store.config()), config)) throw blocked();
     };
     if (!pointer) await persist();
     const pin = pinOf(row);
@@ -239,7 +239,7 @@ export async function issueInvitation(ctx: Context, input: InvitationIssueInput,
       const activeKey = member && s.items.find(i => i.type === "key" && i.state === "active" && i.refs["member"] === member.id && i.values["id"] === actor);
       const roster = s.items.find(i => i.type === "roster" && i.state === "open");
       const role = member?.values["role"], actions = typeof role === "string" ? roster?.values[role + "Actions"] : null;
-      if (!activeKey || !member || member.values["kind"] !== "person" || !Array.isArray(actions) || !actions.includes("membership.invite") || row.input.kind === "agent-key" && (!actions.includes("membership.manage") || !same(row.input.controller, member.parties["member"]))) throw blocked();
+      if (!activeKey || !member || member.values["kind"] !== "person" || !Array.isArray(actions) || !actions.includes("membership.invite") || row.input.kind === "agent-key" && (!actions.includes("membership.manage") || !sameOptional(row.input.controller, member.parties["member"]))) throw blocked();
       const signed = await wait(options, () => signedIntent(secretSigner(key), { to: row.repository.membership, kind, fields, expected: expectedOf(shape.acts[kind]!, s.items, null, fields) }, { now: now(ctx) }));
       return { signed, attempted: false };
     };
@@ -248,7 +248,7 @@ export async function issueInvitation(ctx: Context, input: InvitationIssueInput,
       if (options.mode === "check" || stage.receipt) {
         let settled: Awaited<ReturnType<ScopeHandle["settle"]>>;
         try { settled = await wait(options, async () => (await membershipHandle()).settle(stage.signed)); } catch { check(options); return "unknown"; }
-        if (!settled.ok || stage.receipt && !same(settled.value, stage.receipt) || !await wait(options, async () => follow(await membershipHandle(), stage.signed, settled.value, pin))) return "unknown";
+        if (!settled.ok || stage.receipt && !sameOptional(settled.value, stage.receipt) || !await wait(options, async () => follow(await membershipHandle(), stage.signed, settled.value, pin))) return "unknown";
         if (!stage.attempted || !stage.receipt) { stage.attempted = true; stage.receipt = settled.value; await persist(); }
         return "verified";
       }
@@ -290,8 +290,8 @@ export async function issueInvitation(ctx: Context, input: InvitationIssueInput,
       link = LINK + b64url(utf8(JSON.stringify(person)));
     } else {
       const member = s.items.find(i => i.type === "member" && i.id === row.member!.receipt!.fact.seq), roster = s.items.find(i => i.type === "roster" && i.state === "open");
-      const controller = s.items.find(item => item.type === "member" && item.state === "active" && item.values["kind"] === "person" && same(item.parties["member"], row.input.controller));
-      if (!controller || !s.items.some(item => item.type === "key" && item.state === "active" && item.refs["member"] === controller.id) || !member || member.state !== "active" || member.values["kind"] !== "agent" || member.values["role"] !== "agent" || member.values["handle"] !== row.input.handle || !same(member.parties["controller"], row.input.controller) || invited.values["kind"] !== "agent" || invited.refs["member"] !== member.id || !isMemberRef(member.parties["member"]) || !roster) return status("unknown");
+      const controller = s.items.find(item => item.type === "member" && item.state === "active" && item.values["kind"] === "person" && sameOptional(item.parties["member"], row.input.controller));
+      if (!controller || !s.items.some(item => item.type === "key" && item.state === "active" && item.refs["member"] === controller.id) || !member || member.state !== "active" || member.values["kind"] !== "agent" || member.values["role"] !== "agent" || member.values["handle"] !== row.input.handle || !sameOptional(member.parties["controller"], row.input.controller) || invited.values["kind"] !== "agent" || invited.refs["member"] !== member.id || !isMemberRef(member.parties["member"]) || !roster) return status("unknown");
       const owner = member.parties["member"];
       const opening = await wait(options, async () => follow(await membershipHandle(), row.member!.signed, row.member!.receipt!, pin));
       if (!opening || !await wait(options, () => inboxOfOpening(ctx, row.service, reader!, opening, row.repository.membership, owner))) return status("unknown", "The native agent inbox creation could not be verified.");
@@ -311,13 +311,13 @@ export async function enrolAgentKey(ctx: Context, text: string, options: { mode?
     let config = await ctx.store.config();
     let heldConfig = config;
     const save = async (next: Config): Promise<void> => {
-      if (!same(await ctx.store.config(), heldConfig)) throw blocked();
+      if (!sameOptional(await ctx.store.config(), heldConfig)) throw blocked();
       await ctx.store.save(next);
-      if (!same(await ctx.store.config(), next)) throw blocked();
+      if (!sameOptional(await ctx.store.config(), next)) throw blocked();
       heldConfig = next;
     };
     const digest = textDigest(canonicalize(link)), pending = config?.join;
-    if (pending && (pending.kind !== "enrol" || pending.link !== digest || config!.service !== link.service || !same(pending.repository, link.repository) || pending.handle !== link.handle) || config && !pending) return bad();
+    if (pending && (pending.kind !== "enrol" || pending.link !== digest || config!.service !== link.service || !sameOptional(pending.repository, link.repository) || pending.handle !== link.handle) || config && !pending) return bad();
     if (pending?.refused) return { code: 1, lines: [`The original agent enrollment was refused: ${pending.refused.reason}. Nothing was replaced.`] };
     if (options.mode === "check" && !pending) return bad();
     let own: Uint8Array | null = null;
@@ -334,7 +334,7 @@ export async function enrolAgentKey(ctx: Context, text: string, options: { mode?
         own = crypto.getRandomValues(new Uint8Array(32)); freshKey = true;
         await ctx.store.keep(keyName, own);
         const readback = await ctx.store.secret(keyName);
-        if (!readback || !same([...readback], [...own])) { own.fill(0); return bad(); }
+        if (!readback || !sameOptional([...readback], [...own])) { own.fill(0); return bad(); }
       }
       config = { v: 1, service: link.service, key: keyName };
     }
@@ -367,23 +367,23 @@ export async function enrolAgentKey(ctx: Context, text: string, options: { mode?
         }
         config = { ...config!, join: { kind: "enrol", request: requestName, intent: intentDigest(signed.intent), link: digest, repository: link.repository, handle: link.handle } };
         // Validate the original before restoring its public pointer.
-        if (!verifySignedIntent(signed) || signed.intent.actor !== keyIdOfSecret(key) || signed.intent.kind !== "enrol" || signed.intent.on !== 0 || !same(signed.intent.to, link.repository.membership) || !same(signed.intent.fields, invitationRedemptionFields(link.definition, link.repository.membership, link.invitation.seq, keyIdOfSecret(key), link.secret)) || !same(signed.intent.expected, link.expected)) return bad();
+        if (!verifySignedIntent(signed) || signed.intent.actor !== keyIdOfSecret(key) || signed.intent.kind !== "enrol" || signed.intent.on !== 0 || !sameOptional(signed.intent.to, link.repository.membership) || !sameOptional(signed.intent.fields, invitationRedemptionFields(link.definition, link.repository.membership, link.invitation.seq, keyIdOfSecret(key), link.secret)) || !sameOptional(signed.intent.expected, link.expected)) return bad();
         await save(config);
       }
-      if (!verifySignedIntent(signed) || signed.intent.actor !== keyIdOfSecret(key) || signed.intent.kind !== "enrol" || signed.intent.on !== 0 || !same(signed.intent.to, link.repository.membership) || !same(signed.intent.fields, invitationRedemptionFields(link.definition, link.repository.membership, link.invitation.seq, keyIdOfSecret(key), link.secret)) || !same(signed.intent.expected, link.expected) || intentDigest(signed.intent) !== config!.join!.intent) return bad();
+      if (!verifySignedIntent(signed) || signed.intent.actor !== keyIdOfSecret(key) || signed.intent.kind !== "enrol" || signed.intent.on !== 0 || !sameOptional(signed.intent.to, link.repository.membership) || !sameOptional(signed.intent.fields, invitationRedemptionFields(link.definition, link.repository.membership, link.invitation.seq, keyIdOfSecret(key), link.secret)) || !sameOptional(signed.intent.expected, link.expected) || intentDigest(signed.intent) !== config!.join!.intent) return bad();
       let M = new ScopeHandle(httpTransport(link.service, ctx.fetch ? { fetch: ctx.fetch } : {}), link.repository.membership.scope);
-      if (!same(await ctx.store.config(), heldConfig)) return bad();
+      if (!sameOptional(await ctx.store.config(), heldConfig)) return bad();
       let receipt: Receipt;
       if (options.mode === "check" || config!.join!.accepted) {
         const settled = await M.settle(signed);
-        if (!settled.ok || config!.join!.accepted && !same(settled.value.fact, config!.join!.accepted)) return bad();
+        if (!settled.ok || config!.join!.accepted && !sameOptional(settled.value.fact, config!.join!.accepted)) return bad();
         receipt = settled.value;
       } else {
         const answer = await M.submit(signed);
         if (answer.answer === "refused") {
           config = { ...config!, join: { ...config!.join!, refused: answer } };
           await save(config);
-          if (!same(await ctx.store.config(), config)) return bad();
+          if (!sameOptional(await ctx.store.config(), config)) return bad();
           return { code: 1, lines: [`Agent enrollment refused: ${answer.reason}. The exact original remains retained.`] };
         }
         if (answer.answer !== "accepted") return { code: 1, lines: ["The original agent enrollment remains unknown. Check it or Continue explicitly."] };
@@ -396,21 +396,21 @@ export async function enrolAgentKey(ctx: Context, text: string, options: { mode?
       if (isReceipt(receipt) && receipt.definition !== link.definition) return { code: 1, lines: [`The invitation names ${link.definition}, and the membership's receipt names ${receipt.definition}. The exact original enrolment is retained unverified; nothing was replaced.`] };
       if (!await follow(M, signed, receipt, link.definition)) return bad();
       config = { ...config!, join: { ...config!.join!, accepted: receipt.fact } }; await save(config);
-      if (!same(await ctx.store.config(), config)) return bad();
+      if (!sameOptional(await ctx.store.config(), config)) return bad();
       const [memberEntry, invitationEntry, s] = await Promise.all([followFact(M, link.member), followFact(M, link.invitation), summary(M, link.repository.membership, link.definition)]);
       if (!memberEntry || !invitationEntry || memberEntry.input.type !== "act" || invitationEntry.input.type !== "act") return bad();
       const opened = memberEntry.input.signed.intent, invited = invitationEntry.input.signed.intent;
-      if (opened.kind !== "add-member" || !same(opened.fields, { handle: link.handle, kind: "agent", controller: link.controller }) || invited.kind !== "invite-key" || !same(invited.fields, { member: link.member.seq, kind: "agent", ...invitationIssueFields(link.definition, link.secret), inviteEnds: invited.fields["inviteEnds"] })) return bad();
+      if (opened.kind !== "add-member" || !sameOptional(opened.fields, { handle: link.handle, kind: "agent", controller: link.controller }) || invited.kind !== "invite-key" || !sameOptional(invited.fields, { member: link.member.seq, kind: "agent", ...invitationIssueFields(link.definition, link.secret), inviteEnds: invited.fields["inviteEnds"] })) return bad();
       const member = s.items.find(i => i.type === "member" && i.id === link.member.seq), activeKey = s.items.find(i => i.type === "key" && i.id === link.invitation.seq);
-      const controller = s.items.find(item => item.type === "member" && item.state === "active" && item.values["kind"] === "person" && same(item.parties["member"], link.controller));
-      if (!controller || !s.items.some(item => item.type === "key" && item.state === "active" && item.refs["member"] === controller.id) || !member || member.state !== "active" || member.values["handle"] !== link.handle || member.values["kind"] !== "agent" || member.values["role"] !== "agent" || !same(member.parties["controller"], link.controller) || !activeKey || activeKey.state !== "active" || activeKey.values["kind"] !== "agent" || activeKey.values["id"] !== keyIdOfSecret(key) || activeKey.refs["member"] !== member.id || !isMemberRef(member.parties["member"])) return bad();
+      const controller = s.items.find(item => item.type === "member" && item.state === "active" && item.values["kind"] === "person" && sameOptional(item.parties["member"], link.controller));
+      if (!controller || !s.items.some(item => item.type === "key" && item.state === "active" && item.refs["member"] === controller.id) || !member || member.state !== "active" || member.values["handle"] !== link.handle || member.values["kind"] !== "agent" || member.values["role"] !== "agent" || !sameOptional(member.parties["controller"], link.controller) || !activeKey || activeKey.state !== "active" || activeKey.values["kind"] !== "agent" || activeKey.values["id"] !== keyIdOfSecret(key) || activeKey.refs["member"] !== member.id || !isMemberRef(member.parties["member"])) return bad();
       const observed = await boundDirectory(ctx, link.service, reader, link.repository, s, link.definition);
       if (!observed) return bad();
       const inbox = await inboxOfOpening(ctx, link.service, reader, memberEntry, link.repository.membership, member.parties["member"]);
       if (!inbox) return bad();
       config = { ...config!, repository: { ...observed, inbox: inbox.scope }, handle: link.handle };
       await save(config);
-      if (!same(await ctx.store.config(), config)) return bad();
+      if (!sameOptional(await ctx.store.config(), config)) return bad();
       return { code: 0, lines: [`Enrolled independent agent ${link.handle}. Native agent and controller bindings verified.`] };
     } finally { key.fill(0); }
   } catch { return bad(); }

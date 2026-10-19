@@ -1,5 +1,6 @@
 /** One pure projection over exact native query replies. The host must own
  * read authorization and the definition pin before obtaining those replies. */
+import { freeze } from "./values.ts";
 import { ITEM_QUERY_BOUNDS, type DeclaredDefinition, type Head, type ItemQuery, type ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, isRecord, parseStrict } from "./index.ts";
 import { encodeItemQuery } from "./item-query.ts";
@@ -17,9 +18,6 @@ const own = (value: unknown, most: number): unknown => {
   try { return parseStrict(applicationJson(value, most)); }
   catch (error) { return fail(error instanceof ApplicationPackageError && error.reason === "limit" ? "limit" : "invalid"); }
 };
-function freeze(value: unknown): void {
-  if (value !== null && typeof value === "object") { for (const child of Object.values(value)) freeze(child); Object.freeze(value); }
-}
 /** Item reads require one explicit item ID per `item` source. Other sources
  * have no caller-defined filters, cursor or hidden selection parameters. */
 export function applicationProjectionQueries(projection: ApplicationReadProjection, scope: ScopeRef,

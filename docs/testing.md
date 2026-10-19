@@ -425,6 +425,14 @@ Run the gate once, at the head you will send.
 npm run gate
 ```
 
+The gate runs `node scripts/check-shared-helpers.mjs` before typechecking.
+It parses source declarations and the bytes package's actual runtime
+exports, without executing those files. A local function that redefines
+an exported bytes helper must import its existing implementation. If it
+has a different meaning, give it a distinct name. Imports and public
+re-export aliases are allowed. The check includes new untracked source
+files and excludes test fixtures. Its two Node cases run in `npm test`.
+
 It installs only if `package-lock.json` changed since the last install,
 typechecks every workspace, and runs every test: one vitest process for
 the repository (`vitest.config.ts` at the root, one project for each of

@@ -1,5 +1,6 @@
 /** One local inventory pass's admitted work, not a heap or custody proof.
  * Native callers must reserve SQL/parse work before touching the bodies. */
+import { natural } from "@generalbusiness/artroom-bytes";
 import type { Sql, SqlValue } from "./sqlite.ts";
 
 export const ARCHIVE_BOUNDS = Object.freeze({ entries: 4096, attempts: 512, nodes: 64, calls: 16384, metadata: 4 * 1024 * 1024, inputWork: 64 * 1024 * 1024 });
@@ -10,7 +11,6 @@ export type ArchiveStopReason = "limit" | "timeout" | "unavailable";
 export class ArchiveStopped extends Error {
   constructor(readonly reason: ArchiveStopReason) { super(`archive-${reason}`); }
 }
-const natural = (n: number): boolean => Number.isSafeInteger(n) && n >= 0 && !Object.is(n, -0);
 const zero = (): ArchiveCost => ({ entries: 0, attempts: 0, nodes: 0, calls: 0, metadata: 0, inputWork: 0 });
 
 /** Limits may only decrease in trusted tests/configuration. There is no

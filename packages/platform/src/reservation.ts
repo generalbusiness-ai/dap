@@ -13,6 +13,7 @@
  * by an exception. Nothing here reads a scope, a store or a host.
  */
 
+import { isRecord } from "@generalbusiness/artroom-bytes";
 import type { Digest, FactRef, KeyId, MemberId, MemberRef, Observation, RulesObservation, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, isDigest, timeMs, utf8 } from "@generalbusiness/artroom-bytes";
 import { byteOrder } from "@generalbusiness/dap-derive";
@@ -324,7 +325,6 @@ const OBJECT_ID = /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/;
 /** A commit or a tree, as text: the ID of a Git object in one of the two object formats. */
 export const isObjectId = (value: unknown): value is string => typeof value === "string" && OBJECT_ID.test(value);
 
-const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value);
 const members = (value: Record<string, unknown>, names: readonly string[]): boolean => Object.keys(value).length === names.length && names.every((name) => Object.hasOwn(value, name));
 const isPath = (value: unknown): boolean => typeof value === "string";
 

@@ -1,4 +1,5 @@
 /** Explicit private agent-key handoff. Encoding is not native authority. */
+import { same } from "@generalbusiness/artroom-bytes";
 import { invitationServiceUrl } from "./invitation-service.ts";
 import type { FactRef, MemberRef, ScopeRef, ScopeId } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, isFactRef, isMemberRef, isRecord, isScopeId, isScopeRef, parseStrict, unb64url, utf8 } from "@generalbusiness/artroom-bytes";
@@ -16,7 +17,6 @@ export interface AgentKeyInvitation {
   expected: { on: number; member: number };
 }
 const closed = (v: unknown, keys: readonly string[]): v is Record<string, unknown> => isRecord(v) && Object.keys(v).length === keys.length && keys.every(k => Object.hasOwn(v, k));
-const same = (a: unknown, b: unknown): boolean => canonicalize(a) === canonicalize(b);
 const revision = (n: unknown): n is number => Number.isSafeInteger(n) && Number(n) >= 1;
 export function isAgentKeyInvitation(value: unknown): value is AgentKeyInvitation {
   try {

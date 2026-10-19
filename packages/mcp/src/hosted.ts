@@ -1,3 +1,4 @@
+import { isRecord, same } from "@generalbusiness/artroom-bytes";
 import { invitationRedemptionFields } from "@generalbusiness/artroom-client";
 /**
  * The hosted MCP endpoint (notes/2026-10-13-hosted-mcp-endpoint.md): the
@@ -54,9 +55,7 @@ export const OP_BYTES = 128;
 /** What a control route answers: the status, and a body that names a rule or a result, never a secret except the bearer shown once. */
 export interface ControlAnswer { status: number; body: Record<string, unknown> }
 const answer = (status: number, body: Record<string, unknown>): ControlAnswer => ({ status, body });
-const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
 const closed = (v: unknown, keys: readonly string[]): v is Record<string, unknown> => isRecord(v) && Object.keys(v).length === keys.length && keys.every((k) => Object.hasOwn(v, k));
-const same = (a: unknown, b: unknown): boolean => canonicalize(a as never) === canonicalize(b as never);
 
 /** The `Authorization: Control <b64url canonical JSON>.<sig>` header, parsed and shape-checked; null when malformed. Verifies nothing. */
 export function controlOf(authorization: string | null): SignedControl | null {

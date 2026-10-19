@@ -1,4 +1,5 @@
 /** Bounded query replies. Shape checks grant no authority or prefix coverage. */
+import { same } from "./values.ts";
 import { ITEM_QUERY_ARGUMENT_PREFIX, ITEM_QUERY_BOUNDS as B, ITEM_QUERY_REFUSALS, ITEM_QUERY_WIRE_BOUNDS } from "@generalbusiness/dap-contract";
 import type { ItemQuery, ItemQueryRead } from "@generalbusiness/dap-contract";
 import { canonicalize, parseStrict, utf8 } from "./canonical.ts";
@@ -6,7 +7,6 @@ import { isDigest } from "./hash.ts";
 import { isHead, isItem, isRecord, isScopeRef } from "./records.ts";
 import { itemQueryArgument, itemQueryContinuation, itemQueryDigest, readItemQueryCursor } from "./item-query.ts";
 const only = (value: object, names: string) => Object.keys(value).sort().join() === names;
-const same = (a: unknown, b: unknown) => canonicalize(a) === canonicalize(b);
 
 /** For already materialized RPC data. The trusted producer caps allocation;
  * this check bounds its canonical representation before accepting it. */

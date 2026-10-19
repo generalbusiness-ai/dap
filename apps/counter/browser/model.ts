@@ -1,4 +1,5 @@
 /** Proposals are convenience inputs. The native C1 declaration still checks authority and admission. */
+import { same } from "@generalbusiness/artroom-bytes";
 import type { FieldValue, MemberRef, ScopeRef, Summary } from "@generalbusiness/dap-contract";
 import { canonicalize, isMemberRef, timeMs } from "@generalbusiness/artroom-bytes";
 import type { ProjectedItem } from "@generalbusiness/artroom-client";
@@ -32,7 +33,6 @@ export interface CountingView {
 export type Control = "initialize"|"participate"|"activate"|"deactivate"|"force-deactivate"|"remove-participant"|"start"|"commit"|"fulfill"|"fail"|"cancel"|"pause"|"reset";
 export interface ProposalOptions { participant?:number; reason?:FailureReason }
 export interface Proposal { kind:Control; on:number|null; fields:Record<string,FieldValue>; expected:Record<string,number> }
-export const same = (a:unknown,b:unknown):boolean => canonicalize(a)===canonicalize(b);
 function invalid():never { throw new Error("The counting snapshot has invalid values."); }
 const numeric = (v:unknown,min=0,max=Number.MAX_SAFE_INTEGER):number => typeof v==="number"&&Number.isSafeInteger(v)&&v>=min&&v<=max?v:invalid();
 const member = (v:unknown):MemberRef|null => v===null||v===undefined?null:isMemberRef(v)?v:invalid();
@@ -147,3 +147,5 @@ export function proposal(view:CountingView,actor:ActorIdentity,kind:Control,comp
   return{kind,on,fields,expected};
 }
 export function label(memberRef:MemberRef):string{const text=memberRef.member.slice(1);return text.charAt(0).toUpperCase()+text.slice(1);}
+
+export { same };

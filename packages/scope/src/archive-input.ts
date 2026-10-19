@@ -1,5 +1,6 @@
 /** Exact immutable-selection reads for a build or rebuild. No head read,
  * inventory, retention enumeration, foreign copy or detached-text fallback. */
+import { natural } from "@generalbusiness/artroom-bytes";
 import { RETAINED_INPUT_BYTES, type Digest } from "@generalbusiness/dap-contract";
 import { isDigest, utf8 } from "@generalbusiness/artroom-bytes";
 import { checkedRetainedKey, type RetainedKey } from "@generalbusiness/dap-derive";
@@ -11,7 +12,6 @@ export interface ArchiveInputSelection {
   readonly entries: readonly { readonly seq: number; readonly hash: Digest; readonly bytes: number }[];
   readonly objects: readonly { readonly key: RetainedKey; readonly bytes: number }[];
 }
-const natural = (value: number): boolean => Number.isSafeInteger(value) && value >= 0 && !Object.is(value, -0);
 const nameOf = (key: RetainedKey): string => JSON.stringify(key.kind === "value" ? [key.kind, key.domain, key.digest] : [key.kind, key.digest]);
 export interface ArchiveInput {
   entry(seq: number, limit: number): Promise<string | null>;

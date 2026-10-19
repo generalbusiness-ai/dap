@@ -1,5 +1,6 @@
 /** Bounded projection declarations only. Native schema binding and actual
  * journal reads belong to the reader; this module performs neither. */
+import { freeze } from "./values.ts";
 import type { Digest, ScopeKind } from "@generalbusiness/dap-contract";
 import { canonicalize, digestBytes, isDigest, isRecord, parseStrict, utf8 } from "./index.ts";
 import { applicationJson } from "./application-json.ts";
@@ -57,9 +58,6 @@ function fieldType(value: unknown, budget: { left: number }, depth = 0): void {
     }
     default: return fail();
   }
-}
-function freeze(value: unknown): void {
-  if (value !== null && typeof value === "object") { for (const part of Object.values(value)) freeze(part); Object.freeze(value); }
 }
 /** Own the complete bounded JSON before inspecting fields. This refuses
  * accessors and retains no caller-owned nested object. */

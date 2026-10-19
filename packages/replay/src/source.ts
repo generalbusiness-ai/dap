@@ -72,7 +72,7 @@ export type Body = ByteStream;
 export type Fetch = (url: string, init?: { method?: string; headers?: Record<string, string>; signal?: never }) => Promise<{ status: number; body: Body | null }>;
 
 const unread = (reason: string): Unread => ({ ok: false, reason });
-const isHead = (v: unknown): v is Head => isObject(v) && isLocalId(v["seq"]) && typeof v["hash"] === "string";
+const hasHeadFields = (v: unknown): v is Head => isObject(v) && isLocalId(v["seq"]) && typeof v["hash"] === "string";
 
 /**
  * A source over a scope service's read routes: `GET
@@ -129,7 +129,7 @@ export function httpSource(service: string, options: { fetch?: Fetch; reader?: s
       const got = await get(`/v1/scopes/${scope}/log?cursor=${from}`, Math.min(allow.bytes, PAGE_REPLY_BYTES), [scope, "log", String(from)]);
       if (!("body" in got)) return got;
       const { at, value, complete, next } = got.body;
-      if (!isHead(at) || !isObject(value) || !isScopeRef(value["scope"]) || !Array.isArray(value["entries"])) return unread("unavailable");
+      if (!hasHeadFields(at) || !isObject(value) || !isScopeRef(value["scope"]) || !Array.isArray(value["entries"])) return unread("unavailable");
       if (value["entries"].length > Math.min(allow.entries, PAGE_ENTRIES)) return unread("too-large");
       const entries: Stored[] = [];
       for (const e of value["entries"] as unknown[]) {
