@@ -102,9 +102,9 @@ presence in the interface, and three sales applications.
   health route reports the register ready.
 
 The homepage head's final gate, as observed: 1,917 cases with 3 skipped,
-plus 31 runtime and 55 Counter cases. The device-command record's second
-gate, as the builder reported it and the checker audited it: 1,939 cases
-with 3 skipped across 401 files.
+plus 31 runtime and 55 Counter cases. The device-command record's
+current gate, as the builder reported it: 1,939 cases with 3 skipped,
+plus 31 runtime and 55 Counter cases.
 
 ## Decisions
 
@@ -144,12 +144,18 @@ Recorded in the workroom as the builder asked.
 - **G5a's local grant model** (`86916ce8`). The package check runs on a
   scripted parent creation proof and replay anchor, labelled scripted;
   one real Worker witness proves native issuance and membership.
-- **G5a's gate budget** (`f20558ab`). Three gates failed only on the
-  framework's five-second timeouts in the one-isolate workerd project,
-  while the same code cleared another gate and no behaviour assertion
-  failed. The project gets an explicit thirty-second timeout as a
-  reviewed configuration change inside the head, followed by a new gate;
-  every case-specific limit stays; the failed gates stay on record; the
+- **G5a's gate budget** (`f20558ab`). Three gates failed at successive
+  heads, for three different reasons. The first failed ten cases: two
+  stale generated assets and eight framework timeouts in the workerd
+  project, behind which a repeated ownership scan had regressed; it was
+  corrected with a device-only fast path, and one query-reply
+  interaction stays unexplained. The second failed one real assertion in
+  the hosted stream synchronization, since fixed. Only the third failed
+  on framework timeouts alone, seven of them, each the five-second
+  default in the one-isolate workerd project. That project gets an
+  explicit thirty-second timeout as a reviewed configuration change
+  inside the head, followed by a new gate, which passed; every
+  case-specific limit stays; all three failed gates stay on record; the
   gate-stability investigation (`1d3a13e3`) stays open after G5a.
 - **G5's simulator** (`74c94c4d`). Command coverage: a durable
   scanned-through position carried on the sensors' reading summary,
@@ -189,8 +195,10 @@ Recorded in the workroom as the builder asked.
 ## What stalled, and why
 
 - **Three failed gates on one head.** The device-command head's gates
-  failed on framework timeouts in the workerd project, not on the code
-  under test. The project-level budget above is the fix; the open
+  failed for three different reasons: a real regression and stale
+  assets in the first, one real assertion in the second, and framework
+  timeouts alone in the third. The fixes for the first two are in the
+  head; the project-level budget above answers the third; the open
   gate-stability investigation keeps the question of load on the shared
   machine.
 - **Two untouched files failed a gate** on the homepage head under load
