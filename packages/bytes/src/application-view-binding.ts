@@ -44,6 +44,12 @@ export function bindApplicationViews(value: unknown, projections: Readonly<Recor
         for (const fact of view.facts) if (typeof fact !== "string" && fact.field !== "id" && fact.field !== "revision"
           && source.fields[fact.field]?.of.type !== "int") return fail();
         if (view.actor !== null && (!Object.hasOwn(source.fields, view.actor) || source.fields[view.actor]!.of.type !== "member")) return fail();
+        if (view.series) {
+          const series = view.series, history = Object.hasOwn(bound.sources, series.source) ? bound.sources[series.source] : undefined;
+          if (journal || !history || !isApplicationJournalSource(history) || history.read !== "entries" || history.latestBy !== null
+            || history.limit < series.last || !Object.hasOwn(history.fields, series.field) || history.fields[series.field]!.of.type !== "int"
+            || history.fields[series.field]!.nullable || history.acts.some(name => definition.acts[name]?.on !== source.item)) return fail();
+        }
         for (const link of view.links ?? []) {
           const target = Object.hasOwn(views, link.view) ? views[link.view] : undefined;
           const targetProjection = target ? owned.projections[target.projection] : undefined;

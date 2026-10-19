@@ -30,10 +30,16 @@ interface ViewBase {
   readonly display: "inline" | "fullscreen";
   readonly back: string | null;
 }
+export interface ApplicationViewSeries {
+  readonly source: string; readonly field: string; readonly label: string;
+  readonly scale: number; readonly unit: string; readonly last: number;
+}
 export interface ApplicationViewLink { readonly view: string; readonly field: string; readonly label: string }
 export interface ApplicationItemView extends ViewBase {
   /** Read-only navigation through a projected native local-item reference. */
   readonly links?: readonly ApplicationViewLink[];
+  /** Last native journal samples on this selected item; no expression or join. */
+  readonly series?: ApplicationViewSeries;
   readonly kind: "card" | "carousel" | "record" | "log";
   readonly title: string;
   readonly summary: string | null;
@@ -93,7 +99,7 @@ export function readApplicationViews(value: unknown): ApplicationViews {
   for (const given of Object.values(views)) {
     if (!isRecord(given)) return fail();
     const common = "acts,back,context,display,fallback,item,kind,projection,refresh,revision,waiting";
-    const view = only(given, (common + (given["kind"] === "surface" ? ",opens,resource" : ",actor,facts,summary,title" + (Object.hasOwn(given, "links") ? ",links" : ""))).split(",").sort().join());
+    const view = only(given, (common + (given["kind"] === "surface" ? ",opens,resource" : ",actor,facts,summary,title" + (Object.hasOwn(given, "links") ? ",links" : "") + (Object.hasOwn(given, "series") ? ",series" : ""))).split(",").sort().join());
     name(view["projection"]); name(view["item"]);
     if (view["revision"] !== "revision" || typeof view["display"] !== "string" || !["inline", "fullscreen"].includes(view["display"])) return fail();
     if (view["back"] !== null) name(view["back"]);
@@ -125,6 +131,14 @@ export function readApplicationViews(value: unknown): ApplicationViews {
           const destination = canonicalize([link["view"], link["field"]]);
           if (destinations.has(destination)) return fail(); destinations.add(destination);
         }
+      }
+      if (Object.hasOwn(view, "series")) {
+        if (view["kind"] !== "record") return fail();
+        const series = only(view["series"], "field,label,last,scale,source,unit");
+        name(series["source"]); name(series["field"]); text(series["label"], 80);
+        if (typeof series["last"] !== "number" || !Number.isSafeInteger(series["last"]) || series["last"] < 1 || series["last"] > 64) return fail("limit");
+        if (typeof series["scale"] !== "number" || !Number.isSafeInteger(series["scale"]) || series["scale"] < 0 || series["scale"] > 6) return fail();
+        if (typeof series["unit"] !== "string" || series["unit"].length > 16 || utf8(series["unit"]).length > 32 || series["unit"].trim() !== series["unit"]) return fail();
       }
       name(view["title"]);
       for (const key of ["summary", "actor"]) if (view[key] !== null) name(view[key]);

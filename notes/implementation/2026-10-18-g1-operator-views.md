@@ -1,5 +1,11 @@
 # G1: Grow operator views in the generic card kit
 
+Current code includes the joint owned Site → Room → alert path, fixed native
+device controls, related-record navigation and bounded zone history. The
+sections below retain the development evidence in order. The final gate and
+review are still pending; earlier unfinished-boundary notes describe earlier
+checkpoints and are superseded by the 19 October sections.
+
 Request `2c5969dc34788e6f130e3e81e0c105f35fa5f7a5`, promise
 `811e2f5bbba0b3bb26ee052fb3520048202cc047`. This is a separate G1 head,
 `request/g1-operator-views-20261018`, based on unlanded M2b
@@ -274,3 +280,50 @@ and a navigation race before Zone 1 had rendered; those failed logs/captures
 remain historical. One test-packet attempt also supplied derived package keys
 where pack input excludes them, and an initial test typecheck lacked union
 narrowing; both were corrected before the passing run. No gate or review yet.
+
+
+## Bounded native zone history
+
+A record may declare `series: {source, field, label, scale, unit, last}`.
+`source` names an existing journal source in that record's projection, so all
+samples share its captured native head. Binding requires a non-null integer
+field, an uncollapsed entries source, matching native on-item types and
+1–64 samples within its declared limit. The host filters on native `on`,
+keeps the last N entries in journal order and preserves each exact integer,
+source time and fact reference. No collect, secondary lookup, sample synthesis
+or smoothing runs. The renderer draws only these points, joined in source-time
+order, and provides exact latest/lowest/highest values with times and an
+expandable native-entry sample list. An empty window states that it has no
+recorded samples. This is a recent window, not lifetime history or presence.
+
+Grow's zone projection uses `report-zone` mean values in its existing 100-entry
+window, with last 64, scale 2 and °C. The configuration is 61,269 bytes. The
+shared exact decimal formatter now serves both facts and series labels.
+The native custody witness reads Zone 2's literal 2400/2650 samples at
+12:00/12:05 from the actual Room journal and checks the device links. Pure
+presentation fixtures cover bounded selection, another item's later sample,
+source facts/times, exact fallback and an empty selected-item window.
+Four files pass 15 cases in
+`/tmp/artroom-g1-zone-series-boundaries-corrected-20261019.log`; bytes, MCP and
+browser compilers pass in `...zone-series-types-20261019.log`.
+
+The selected-item control is
+`/tmp/artroom-g1-series-selected-item-control-20261019.log`: disabling that
+filter makes the unchanged case include another item's 8000 reading and fail
+by assertion; six other cases pass and the source is restored. An initial
+series-only declaration fixture accidentally inherited an act that required
+new fields; it failed binding and was corrected to offer no controls. The
+first series browser probe also counted before the newly selected Zone had
+rendered; it is retained as a failed navigation probe, not a chart regression.
+
+Final browser evidence is
+`/tmp/artroom-g1-zone-series-browser-settled-20261019/`. Both 320/592 px flows
+show two native samples while hot and three after cooling. The expanded
+320 px capture shows exact temperatures, times and entries 126/130, with no
+invented points. Both journeys still sign six operator intents, keep sensor
+reports separate, close incident 138 over entries 137–149, return to Site
+head 5 with zero alerts and replay Room head 155 consistent. The independent
+390 px closed scene reaches head 163. The narrow series capture was visually
+inspected. All authority and deployment boundaries stated above still apply.
+The Page's owning build ran before the code checkpoint. No final gate result
+or review approval is claimed by this development note yet.

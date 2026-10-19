@@ -3,6 +3,7 @@ import type { ScopeRef } from "@generalbusiness/dap-contract";
 import { AppBridge, AppToolError } from "./bridge.ts";
 import type { Display, PageKind } from "../src/views/types.ts";
 import { viewToolName } from "../src/views/names.ts";
+import { seriesPanel } from "./series.ts";
 import { SurfacePanels } from "./surface.ts";
 import "./style.css";
 
@@ -270,6 +271,7 @@ function render() {
     }
     if (card.unavailable.length) article.append(node("p", `Unavailable: ${card.unavailable.map((range) => `${range.scope} entries ${range.from}–${range.to}`).join("; ")}.`, "notice"));
   }
+  if (card.declared?.series) article.append(seriesPanel(card.declared.series));
   if (card.declared?.links?.length) {
     const links = node("nav"); links.setAttribute("aria-label", "Related records");
     for (const link of card.declared.links) {

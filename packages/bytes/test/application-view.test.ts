@@ -112,3 +112,26 @@ test("related records bind to typed local-item references and selected record ta
     expect(() => bind([invalid])).toThrow(ApplicationViewError);
   }
 });
+
+// Invariant: a bounded record series uses complete native journal samples
+// whose declared acts transition the selected item type.
+test("record series bind only bounded integer history on the selected native item type", () => {
+  const changed = structuredClone(definition);
+  changed.acts["hold"] = { ...changed.acts["hold"]!, fields: { mean: { type: "int", min: -4000, max: 8000, required: true } } };
+  const id = definitionDigest(changed), series = { source: "history", field: "mean", label: "Mean", scale: 2, unit: "°C", last: 64 };
+  const history = { read: "entries", acts: ["hold"], window: 100, limit: 100, latestBy: null, fields: {
+    mean: { from: { kind: "field", name: "mean" }, of: { type: "int", min: -4000, max: 8000 }, nullable: false },
+  } };
+  const selected = readApplicationProjection({ ...projection, definition: id, sources: { ...projection.sources, history } });
+  const bind = (value: unknown) => bindApplicationViews({ record: { ...views().note, kind: "record", acts: [], series: value } },
+    { "room.note": selected }, [{ id, bytes: canonicalize(changed) }]);
+  expect(bind(series)["record"]).toMatchObject({ series });
+  for (const invalid of [{ ...series, source: "note" }, { ...series, field: "missing" }, { ...series, last: 65 },
+    { ...series, last: 0 }, { ...series, scale: 7 }, { ...series, unit: "x".repeat(17) }]) {
+    expect(() => bind(invalid)).toThrow(ApplicationViewError);
+  }
+  const wrong = structuredClone(changed); wrong.acts["hold"] = { ...wrong.acts["hold"]!, on: null, step: "comment" };
+  const wrongId = definitionDigest(wrong);
+  expect(() => bindApplicationViews({ record: { ...views().note, kind: "record", acts: [], series } },
+    { "room.note": { ...selected, definition: wrongId } }, [{ id: wrongId, bytes: canonicalize(wrong) }])).toThrow(ApplicationViewError);
+});

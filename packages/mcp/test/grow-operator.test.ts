@@ -28,6 +28,16 @@ test("Grow's displayed alert refuses lost standing and stale revisions before cu
       expect(read.isError, JSON.stringify(read)).toBe(false);
       return read.structuredContent["display"] as Display;
     };
+    expect((await f.service.call(viewToolName("zone", true), { view: "zone-history", scope: session.scope.at, items: { zone: 7 } })).isError).toBe(false);
+    const history = (await f.service.call("view_read", { view: "zone-history" })).structuredContent["display"] as Display;
+    expect(history.card?.declared?.series?.samples.map(point => [point.value, point.time])).toEqual([
+      [2400, "2026-10-18T12:00:00Z"], [2650, "2026-10-18T12:05:00Z"],
+    ]);
+    expect(history.card?.declared?.series?.samples.every(point => point.entry.at.scope === session!.scope.at.scope)).toBe(true);
+    expect(history.card?.declared?.links).toEqual([
+      { label: "Open heater controls", screen: "heater", items: { device: 10 } },
+      { label: "Open vent controls", screen: "vent", items: { device: 8 } },
+    ]);
     const lost = await open("lost"); expect(lost.card?.actions.map(action => action.id)).toEqual(["authorize", "hold"]);
     const before = f.signatures(); f.actions([]);
     expect((await f.service.call("view_act", { view: "lost", cut: lost.cut, action: "authorize" })).isError).toBe(true);

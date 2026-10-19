@@ -66,6 +66,8 @@ export interface Card {
     back: string | null;
     backScope?: ScopeRef;
     data: ApplicationProjectionData;
+    series?: { label: string; scale: number; unit: string; window: number; fallback: string;
+      samples: readonly { value: number; time: string; entry: Readonly<FactRef> }[] };
     links?: readonly { label: string; screen: string; items: Readonly<Record<string, number>> }[];
     log?: readonly { entry: Readonly<FactRef>; time: string; title: string; summary: string; facts: readonly string[] }[];
     resource?: string;

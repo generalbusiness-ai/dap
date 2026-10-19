@@ -11,6 +11,7 @@ import type { Card, CardAction, DeclaredSurface, Projection, ViewQuery, ViewSour
 import { PRESENTATION } from "./generated.ts";
 import type { DefinitionLike } from "../describe.ts";
 import { effectiveFields, expectedOf } from "../shape.ts";
+import { formatInteger } from "./numbers.ts";
 import { formatFact } from "./facts.ts";
 
 export interface DeclaredViewPort {
@@ -102,6 +103,27 @@ export class DeclaredViewSource implements ViewSource {
     }
     return actions;
   }
+  #series(view: ApplicationView, row: ApplicationProjectionRow, data: ApplicationProjectionData): NonNullable<Card["declared"]>["series"] {
+    if (view.kind === "surface" || !view.series) return undefined;
+    const series = view.series, projection = this.packet.package.semantic.projections[view.projection]!;
+    const source = projection.sources[series.source]!;
+    if (!isApplicationJournalSource(source)) throw new ViewError("unavailable", "The series needs its declared journal source.");
+    const rows = data.sources[series.source];
+    if (!rows) throw new ViewError("unavailable", "The series journal source is unavailable.");
+    const samples = rows.filter(point => point.on === row.id).slice(-series.last).map(point => {
+      const value = point.fields[series.field];
+      if (!point.entry || !point.time || typeof value !== "number" || !Number.isSafeInteger(value)) throw new ViewError("unavailable", "A series needs explicit native integer samples and source times.");
+      return { value, time: point.time, entry: point.entry };
+    });
+    const window = source.window;
+    let fallback = `${series.label}: no recorded samples in the last ${window} native entries.`;
+    if (samples.length) {
+      const latest = samples.at(-1)!, lowest = samples.reduce((a, b) => b.value < a.value ? b : a), highest = samples.reduce((a, b) => b.value > a.value ? b : a);
+      const text = (sample: typeof latest) => `${formatInteger(sample.value, series.scale, series.unit)} at ${sample.time}`;
+      fallback = `${series.label}: ${samples.length} recorded samples in the last ${window} native entries. Latest ${text(latest)}; lowest ${text(lowest)}; highest ${text(highest)}.`;
+    }
+    return { label: series.label, scale: series.scale, unit: series.unit, window, samples, fallback };
+  }
   async read(query: ViewQuery): Promise<Projection> {
     const { view, root, scope, definition, reply, rows } = await this.#read(query);
     const backScope = this.#backScope(view, scope, root), surface = this.#surface(query.screen, view, backScope);
@@ -111,6 +133,7 @@ export class DeclaredViewSource implements ViewSource {
     if (!Number.isSafeInteger(query.position) || query.position < 0 || query.position >= rows.length) throw new ViewError("shape", "The declared view position is outside its complete projection.");
     const row = rows[query.position]!, values = input(row), waiting = Object.hasOwn(view.waiting, row.state) ? template(view.waiting[row.state]!, row, "") : "";
     const fallback = template(view.fallback, row, waiting), actions = await this.#allowed(view, row, reply.value, scope, definition);
+    const series = this.#series(view, row, reply.value);
     const card: Card = {
       identity: surface ? { item: scope.scope, kind: "scope", revision: String(reply.value.at.seq), subject: { scope: scope.scope }, at: {} }
         : { item: String(row.id), kind: row.entry ? "entry" : row.type, revision: String(row.revision), subject: { scope: scope.scope, ...(row.entry ? {} : { item: row.id }) }, at: row.entry ? {} : { on: row.revision } },
@@ -119,6 +142,7 @@ export class DeclaredViewSource implements ViewSource {
       projection: [{ scope: scope.scope, ...reply.value.at }], reviewIntended: [], unavailable: [], waitsOn: waiting ? [waiting] : [], settles: [], actions, fallback,
       declared: { kind: view.kind, source: view.item, context: template(view.context, row, waiting), actor: view.kind === "surface" || view.actor === null ? null : values[view.actor] ?? null,
         refresh: view.refresh, display: view.display, back: view.back, backScope, data: reply.value,
+        ...(series ? { series } : {}),
         ...(view.kind !== "surface" && view.links ? { links: view.links.flatMap(link => {
           const id = row.fields[link.field];
           if (id === null || id === undefined) return [];

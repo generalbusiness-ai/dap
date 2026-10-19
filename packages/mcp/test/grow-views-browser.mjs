@@ -76,6 +76,12 @@ try {
     await app.getByText('Mean: 26.5 °C', { exact: true }).waitFor();
     await app.getByText('Minimum: 23 °C', { exact: true }).waitFor();
     await app.getByText('Maximum: 27.4 °C', { exact: true }).waitFor();
+    await app.getByRole('heading', { name: 'Mean temperature history', exact: true }).waitFor();
+    assert.equal(await app.locator('.native-series svg circle').count(), 2);
+    await app.locator('.series-fallback').filter({ hasText: 'Latest 26.5 °C at 2026-10-18T12:05:00Z' }).waitFor();
+    await app.locator('.native-series summary').click();
+    assert.equal(await app.locator('.native-series li').count(), 2);
+    assert.match(await app.locator('.native-series li').first().innerText(), /^24 °C at 2026-10-18T12:00:00Z \(entry \d+\)$/);
     await capture(page, app, `zone-${width}.png`);
     await app.getByRole('button', { name: /Back/ }).click(); await app.getByRole('heading', { name: 'Bench grid', exact: true }).waitFor(); await contained(app); await page.evaluate(() => window.scrollTo(0, 0));
     await app.getByRole('button', { name: 'Open alert', exact: true }).click(); await app.getByRole('button', { name: 'Authorize', exact: true }).waitFor();
@@ -115,6 +121,9 @@ try {
     await app.getByRole('button', { name: /Back/ }).click();
     await app.getByRole('heading', { name: 'Bench grid', exact: true }).waitFor(); await contained(app);
     await app.locator('#zones').getByRole('button', { name: /^Zone 2:/ }).click();
+    await app.getByRole('heading', { name: 'Zone 2', exact: true }).waitFor(); await contained(app);
+    assert.equal(await app.locator('.native-series svg circle').count(), 3);
+    await app.locator('.series-fallback').filter({ hasText: 'Latest 24 °C at 2026-10-18T12:10:00Z' }).waitFor();
     await app.getByRole('button', { name: 'Open heater controls', exact: true }).click();
     await app.getByRole('heading', { name: /^heater 2$/i }).waitFor();
     const fixed = async (label, kind, on, fields) => {
@@ -149,7 +158,7 @@ try {
     const replay = await session.scope.replay(); assert.equal(replay.report.result, 'consistent'); assert.equal(replay.why, null);
     const finalProof = await page.evaluate(() => window.proof); assert.ok(!JSON.stringify(finalProof.contexts).includes('sources')); assert.deepEqual(finalProof.errors, []); assert.deepEqual(finalProof.chat, []); assert.deepEqual(errors, []);
     for (let n = 1; n < finalProof.contexts.length; n++) assert.notDeepEqual(finalProof.contexts[n], finalProof.contexts[n - 1], 'Unchanged private refreshes keep model context quiet');
-    report.cases.push({ width, site: session.site.at, room: session.scope.at, head: session.scope.developmentProjection('grid').at.seq, nativeOwnedSiteToRoom: true, nativeManualDeviceControls: true, freshSiteClosure: true, benches: 100, alertAtTop: true, sensorDescriptions: true, genericAlertControls: ['Authorize', 'Hold 60 s'], zonePointerNavigationAfterResize: true, capture: 'Outer viewport temporarily expanded for nested-frame rasterization; restored to 1100 px before interactions', measured, operatorIntents: operator.submitted.map(signed => ({ kind: signed.intent.kind, on: signed.intent.on, expected: signed.intent.expected })), targetSeparateFromReport: true, closedIncident: { first: 137, last: closed.seq }, replay: replay.report.result });
+    report.cases.push({ width, site: session.site.at, room: session.scope.at, head: session.scope.developmentProjection('grid').at.seq, nativeOwnedSiteToRoom: true, nativeManualDeviceControls: true, freshSiteClosure: true, nativeZoneHistory: { openSamples: 2, closedSamples: 3, sourceTimes: true }, benches: 100, alertAtTop: true, sensorDescriptions: true, genericAlertControls: ['Authorize', 'Hold 60 s'], zonePointerNavigationAfterResize: true, capture: 'Outer viewport temporarily expanded for nested-frame rasterization; restored to 1100 px before interactions', measured, operatorIntents: operator.submitted.map(signed => ({ kind: signed.intent.kind, on: signed.intent.on, expected: signed.intent.expected })), targetSeparateFromReport: true, closedIncident: { first: 137, last: closed.seq }, replay: replay.report.result });
     await page.close();
   }
   const previous = session; session = await openOwnedGrowScenario(packet, original); previous.close();

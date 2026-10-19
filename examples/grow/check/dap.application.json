@@ -372,7 +372,15 @@
       "field": "vent",
       "label": "Open vent controls"
      }
-    ]
+    ],
+    "series": {
+     "source": "history",
+     "field": "mean",
+     "label": "Mean temperature history",
+     "scale": 2,
+     "unit": "°C",
+     "last": 64
+    }
    },
    "heater": {
     "kind": "record",
@@ -3083,6 +3091,29 @@
        "of": {
         "type": "item",
         "of": "zone"
+       },
+       "nullable": false
+      }
+     }
+    },
+    "history": {
+     "read": "entries",
+     "acts": [
+      "report-zone"
+     ],
+     "window": 100,
+     "limit": 100,
+     "latestBy": null,
+     "fields": {
+      "mean": {
+       "from": {
+        "kind": "field",
+        "name": "mean"
+       },
+       "of": {
+        "type": "int",
+        "min": -4000,
+        "max": 8000
        },
        "nullable": false
       }
