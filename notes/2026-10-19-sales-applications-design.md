@@ -126,8 +126,8 @@ are content-library platforms: Loopio, Responsive, AutogenAI, with
 Tribble, Conveyor, 1Up, DeepRFP and AutoRFP.ai behind them. They keep
 an answer library, draft with a model, assign questions to contributors
 and route reviews, and export into the buyer's format. They are bought
-per team at enterprise prices (one lists its entry tier at twenty
-thousand dollars a year) with onboarding measured in weeks. Answering
+per team on quoted enterprise contracts, with onboarding measured in
+weeks. Answering
 from chat is not new: Loopio documents experts answering in Slack and
 Teams and an agent that creates library entries from Teams
 ([Loopio](https://loopio.com/), [its Copilot agent](https://support.loopio.com/hc/en-us/articles/43969095406867-What-is-the-Loopio-Copilot-Agent-for-Microsoft-365)).
