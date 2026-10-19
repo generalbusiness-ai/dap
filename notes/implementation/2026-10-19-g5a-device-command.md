@@ -303,8 +303,11 @@ whether to give the functional workerd project an explicit bounded framework
 allowance, preserving case-specific limits and every modeled protocol,
 read, clock, capacity and latency assertion, or put the broader stability
 investigation first. It also asks which Source owns that correction.
-No test limit or acceptance condition has been changed. All three failed
-gates remain evidence. No seal, Source or review has been filed.
+No test limit or acceptance condition has been changed. The ownership
+validator witness was strengthened to reject unlisted owned slots in both
+ordinary and opaque-rule definitions; all five cases pass (74252), as do
+Derive's two compiler targets (81347). All three failed gates remain
+evidence. No seal, Source or review has been filed.
 
 ## Dependency preparation
 

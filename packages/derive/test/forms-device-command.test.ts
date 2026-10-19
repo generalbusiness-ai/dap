@@ -23,6 +23,12 @@ test("capability-owned outcomes reject ordinary act, receive, timed and opaque r
   const platform = { ...scope, outcomes: {}, acts: { ...scope.acts, command: { ...scope.acts["command"]!, effects: [{ code: "opaque-writer", row: "test" }] } } };
   const checked = validateDefinition(platform, PROPOSED_BOUNDS, undefined, { platform: true });
   expect(checked.ok ? [] : checked.problems.map(problem => problem.code)).toEqual(["capability-slot-owned"]);
+  // The legacy fast path cannot admit owned slots without their declaration.
+  for (const declared of [scope, platform]) {
+    const unlisted = validateDefinition({ ...declared, capabilities: [] }, PROPOSED_BOUNDS, undefined, { platform: declared === platform });
+    expect(unlisted.ok).toBe(false);
+    expect(unlisted.ok ? [] : unlisted.problems.map(problem => problem.code)).toContain("capability");
+  }
 });
 
 const code = capabilitiesOf(holdCapability({ tokensPerHold: 2, rootRetentionSeconds: null }), deviceCommand());
