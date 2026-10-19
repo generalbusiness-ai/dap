@@ -32,6 +32,16 @@ const views = () => ({ note: {
 
 // Invariant: the immutable view binds only to declared fields and native acts
 // of its own definition, using that act's actual required action.
+test("fixed-point fact descriptors bind only to selected integers with bounded decimal shifts and unique fields", () => {
+  const fact = { field: "revision", label: "Revision", scale: 0, unit: "" };
+  const declaration = (facts: unknown[]) => ({ ...views(), note: { ...views().note, facts } });
+  expect(bindApplicationViews(declaration([fact]), { "room.note": projection }, parts)["note"]).toMatchObject({ facts: [fact] });
+  for (const invalid of [{ ...fact, field: "text" }, { ...fact, scale: 7 }, { ...fact, scale: -1 }, { ...fact, scale: 0.5 }, { ...fact, unit: "x".repeat(17) }, { ...fact, label: "" }, { ...fact, extra: true }]) {
+    expect(() => bindApplicationViews(declaration([invalid]), { "room.note": projection }, parts)).toThrow(ApplicationViewError);
+  }
+  expect(() => readApplicationViews(declaration([fact, "revision"]))).toThrow(ApplicationViewError);
+});
+
 test("owned item and read-only surface views bind to their declared projection and native acts", () => {
   const input = views(), bound = bindApplicationViews(input, { "room.note": projection }, parts);
   expect(bound).toEqual(input); expect(Object.isFrozen(bound["note"]!.acts)).toBe(true);
@@ -61,4 +71,67 @@ test("unknown syntax, extra controls, signing surfaces and executable inputs ref
     { ...views(), grid: { ...views().grid, acts: views().note.acts } },
     { ...views(), grid: { ...views().grid, resource: "ui://example/../escape" } },
   ]) expect(() => readApplicationViews(value)).toThrow(ApplicationViewError);
+});
+
+// Invariant: two fixed choices may name one native act, but every constant
+// must fit a declared native field before the signed presentation is admitted.
+test("constant native arguments bind two choices without accepting invented or ill-typed fields", () => {
+  const changed = structuredClone(definition);
+  changed.acts["hold"] = { ...changed.acts["hold"]!, fields: {
+    target: { type: "enum", of: ["on", "off"], required: true },
+    level: { type: "int", min: 0, max: 100, required: true },
+  } };
+  const id = definitionDigest(changed), selected = { ...projection, definition: id };
+  const choices = [{ act: "hold", label: "Off", needs: "app.edit", when: "state = 'open'", args: { target: "off", level: 0 } },
+    { act: "hold", label: "On", needs: "app.edit", when: "state = 'open'", args: { target: "on", level: 100 } }];
+  const bind = (acts: unknown[]) => bindApplicationViews({ ...views(), note: { ...views().note, acts } },
+    { "room.note": selected }, [{ id, bytes: canonicalize(changed) }]);
+  expect(bind(choices)["note"]!.acts).toEqual(choices);
+  for (const args of [{ target: "on" }, { target: "other", level: 100 }, { target: "on", level: 101 },
+    { target: "on", level: 1.5 }, { target: "on", level: 100, invented: true }]) {
+    expect(() => bind([{ ...choices[0], args }])).toThrow(ApplicationViewError);
+  }
+  expect(() => bind([choices[0], choices[0]])).toThrow(ApplicationViewError);
+});
+
+// Invariant: a record link selects only a projected native local-item field,
+// under the same definition, into an explicitly selected record source.
+test("related records bind to typed local-item references and selected record targets", () => {
+  const changed = structuredClone(definition);
+  changed.items["note"]!.refs = { related: { required: false, fixed: false, to: { type: "item", of: "note" } } };
+  const id = definitionDigest(changed), source = projection.sources["note"]!;
+  if (source.read === "entries" || source.read === "latest-entry") throw Error("Item fixture required.");
+  const selected = readApplicationProjection({ ...projection, definition: id, sources: { note: { ...source, read: "item", fields: {
+    ...source.fields, related: { from: { kind: "ref", name: "related" }, of: { type: "item", of: "note" }, nullable: true },
+  } } } });
+  const link = { view: "record", field: "related", label: "Open related note" };
+  const input = (links: unknown[]) => ({ note: { ...views().note, links }, record: { ...views().note, kind: "record" } });
+  const bind = (links: unknown[]) => bindApplicationViews(input(links), { "room.note": selected }, [{ id, bytes: canonicalize(changed) }]);
+  expect(bind([link])["note"]).toMatchObject({ links: [link] });
+  for (const invalid of [{ ...link, field: "text" }, { ...link, field: "missing" }, { ...link, view: "missing" }, { ...link, view: "note" }]) {
+    expect(() => bind([invalid])).toThrow(ApplicationViewError);
+  }
+});
+
+// Invariant: a bounded record series uses complete native journal samples
+// whose declared acts transition the selected item type.
+test("record series bind only bounded integer history on the selected native item type", () => {
+  const changed = structuredClone(definition);
+  changed.acts["hold"] = { ...changed.acts["hold"]!, fields: { mean: { type: "int", min: -4000, max: 8000, required: true } } };
+  const id = definitionDigest(changed), series = { source: "history", field: "mean", label: "Mean", scale: 2, unit: "°C", last: 64 };
+  const history = { read: "entries", acts: ["hold"], window: 100, limit: 100, latestBy: null, fields: {
+    mean: { from: { kind: "field", name: "mean" }, of: { type: "int", min: -4000, max: 8000 }, nullable: false },
+  } };
+  const selected = readApplicationProjection({ ...projection, definition: id, sources: { ...projection.sources, history } });
+  const bind = (value: unknown) => bindApplicationViews({ record: { ...views().note, kind: "record", acts: [], series: value } },
+    { "room.note": selected }, [{ id, bytes: canonicalize(changed) }]);
+  expect(bind(series)["record"]).toMatchObject({ series });
+  for (const invalid of [{ ...series, source: "note" }, { ...series, field: "missing" }, { ...series, last: 65 },
+    { ...series, last: 0 }, { ...series, scale: 7 }, { ...series, unit: "x".repeat(17) }]) {
+    expect(() => bind(invalid)).toThrow(ApplicationViewError);
+  }
+  const wrong = structuredClone(changed); wrong.acts["hold"] = { ...wrong.acts["hold"]!, on: null, step: "comment" };
+  const wrongId = definitionDigest(wrong);
+  expect(() => bindApplicationViews({ record: { ...views().note, kind: "record", acts: [], series } },
+    { "room.note": { ...selected, definition: wrongId } }, [{ id: wrongId, bytes: canonicalize(wrong) }])).toThrow(ApplicationViewError);
 });

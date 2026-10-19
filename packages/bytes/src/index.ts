@@ -14,4 +14,5 @@ export * from "./invitation-proof.ts";
 export * from "./item-query-read.ts";
 export * from "./retained-key.ts";
 export * from "./retained-json.ts";
-export * from "./field-value.ts";
+
+export { fitsFieldType, memberFits } from "./field-value.ts";
