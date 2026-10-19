@@ -1,3 +1,4 @@
+import { isMemberRef } from "@generalbusiness/artroom-bytes";
 import type { ScopeRef } from "@generalbusiness/dap-contract";
 import { AppBridge, AppToolError } from "./bridge.ts";
 import type { Display, PageKind } from "../src/views/types.ts";
@@ -171,9 +172,11 @@ async function act(action: string) {
   } finally { busy = false; render(); }
   if (accepted) {
     let modeNotice = "";
-    try { if (await bridge.displayMode("inline") !== "inline") modeNotice = "The host kept full screen open."; }
+    const record = display.card?.declared?.kind === "record" || display.card?.declared?.kind === "log";
+    const requested = record ? display.card!.declared!.display : "inline";
+    try { if (await bridge.displayMode(requested) !== requested) modeNotice = "The host kept the previous display mode."; }
     catch (error) { modeNotice = error instanceof Error ? error.message : String(error); }
-    await read({ page: "summary", position: display.position, refresh: true });
+    await read({ page: record ? "item" : "summary", position: display.position, refresh: true });
     notice = modeNotice; render();
   }
 }
@@ -245,7 +248,7 @@ function render() {
     actor.append(glyph, document.createTextNode(` ${card.actor.name}${card.actor.controller ? ` · controlled by ${card.actor.controller}` : ""} · ${card.actor.kind}`));
     article.append(actor);
   }
-  if (card.declared?.actor !== null && card.declared?.actor !== undefined) article.append(node("p", `Member ${JSON.stringify(card.declared.actor)}`, "actor"));
+  if (card.declared?.actor !== null && card.declared?.actor !== undefined) article.append(node("p", `Member ${isMemberRef(card.declared.actor) ? card.declared.actor.member : JSON.stringify(card.declared.actor)}`, "actor"));
   article.append(node("p", card.summary, "summary"));
   if (card.reasons.length && card.declared?.kind !== "log") {
     const reasons = node("ul", undefined, "reasons");
