@@ -125,3 +125,33 @@ a limit of 12, and probe already uses all 16 allowed effects. Two extra clocks
 would exceed both limits. A same-scope fact-time projection from the existing
 per-metric fact refs is proposed to planner; no allowance is raised and no
 metric's age is inferred from the overall probe time.
+
+## Native measurement checkpoint
+
+Grow declares a `benches` carousel ordered by `probeTime`, with the six
+optional native measurement fields, and the same form on a bench record.
+EC and pH display in human units. The TEST operator helper may select the
+existing tender actor; its default heat-operator path is unchanged.
+The new sections are compact JSON to stay inside the existing 64 KiB source
+metadata allowance (65,033 bytes). The initial expanded source exceeded
+that allowance and refused before preparation; the allowance is unchanged.
+
+`/tmp/artroom-g2-grow-measurement-native-local-facts-20261019.log` passes the
+Core/SQLite owned Site/Room witness. C4 is actually probed first on October16,
+then the other99 benches on October17. The October18 stale event changes
+C4's revision before submission. Lost `grow.tend` and that stale revision
+refuse without an MCP signature. The current call signs one native `probe`
+on item45/revision3 with exactly moisture31/EC2100/pH590/note. It records
+entry225, leaves height/insects and their refs absent, refreshes to A1/item22,
+and repeats without a second signature. Supplied metrics point to225 and
+the native journal replays consistently.
+
+Literal-assertion tightening had three failed attempts: it initially confused
+item revision with journal position, omitted the native Site summary/result
+round trip when counting entries, and expected a full fact in Core's internal
+local entry-ref slots. The witness now keeps those boundaries distinct;
+failed logs remain historical. The unchanged G1 operator case passed in
+`...grow-measurement-exact-native-20261019.log`; the MCP owning compiler
+passes in `...grow-measurement-types-20261019.log`.
+The typed text and consumer fields in this witness are explicitly scripted;
+an actual-model invocation, age layers and browser proof are still owed.

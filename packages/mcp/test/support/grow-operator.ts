@@ -13,9 +13,9 @@ import { McpService, memoryStore } from "../../src/index.ts";
 import { DeclaredViewSource } from "../../src/views/declared.ts";
 import { SERVICE, StandIn } from "./standin.ts";
 
-export function growOperator(packet: AnyPackedApplication, session: Awaited<ReturnType<typeof openOwnedGrowScenario>>) {
-  const actor = session.actors.find(actor => actor.actions.includes("grow.heat"));
-  if (!actor) throw Error("The maintained scene needs an explicit TEST heat operator.");
+export function growOperator(packet: AnyPackedApplication, session: Awaited<ReturnType<typeof openOwnedGrowScenario>>, action = "grow.heat") {
+  const actor = session.actors.find(actor => actor.actions.includes(action));
+  if (!actor) throw Error(`The maintained scene needs an explicit TEST operator for ${action}.`);
   const signer = secretSigner(Uint8Array.from(actor.seed.match(/../g)!, byte => Number.parseInt(byte, 16)));
   const stand = new StandIn(signer.key, "admin", actor.actions);
   stand.activate(room);
