@@ -1,16 +1,18 @@
 /** Site data. Application names introduce no new native scope kind.
- * Presence remains signed comments; room summaries arrive by native relation. */
+ * Recorded presence is a member-owned item; room summaries arrive by relation. */
 import type { ActType, DeclaredDefinition } from "@generalbusiness/dap-contract";
 import { definitionDigest } from "@generalbusiness/artroom-bytes";
 import { room, ROOM } from "./room.ts";
 import { SITE } from "./names.ts";
+import { presenceForms } from "./presence.ts";
 export { SITE } from "./names.ts";
 const fixed = { fixed: true, required: true } as const, optional = { fixed: false, required: false } as const;
 const act = (body: Pick<ActType, "step" | "on" | "grant"> & Partial<ActType>): ActType => ({ also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [], ...body });
-const presence = act({ step: "comment", on: null, grant: "grow.tend", fields: { room: { type: "item", of: "room", required: true } } });
+const presence = presenceForms(SITE);
 export const site: DeclaredDefinition = {
   format: "artroom-definition-1", name: SITE, profile: { name: "restricted", version: 1 }, capabilities: [], genesis: "establish",
   items: {
+    presence: presence.item,
     site: { many: false, max: 1, initial: "open", states: { open: { final: false } }, parties: {}, refs: {}, values: { label: { ...fixed, of: { type: "text", max: 80 } } } },
     room: { many: true, max: 3, initial: "pending", states: { pending: { final: false }, active: { final: false }, conflicted: { final: false }, failed: { final: true } }, parties: {},
       refs: { scope: { ...optional, to: { type: "scope", kind: "lane" } }, summaryAt: { ...optional, to: { type: "fact", under: ROOM, kind: ["report-site"] } } },
@@ -25,7 +27,7 @@ export const site: DeclaredDefinition = {
         result: { applied: [{ state: "active" }, { ref: { slot: "scope", from: { sender: true } } }], refused: [{ state: "failed" }], conflict: [{ state: "conflicted" }], undelivered: [] },
       } }],
     }),
-    arrive: presence, leave: presence,
+    ...presence.acts,
   },
   receives: {
     "room-summary": { message: "room-summary", class: "relate", from: { kind: "lane", under: ROOM, pin: definitionDigest(room) }, copies: 3, opens: null,

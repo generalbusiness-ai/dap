@@ -1,6 +1,6 @@
 /** Actual owned Core/SQLite Site comments and room births. Installation,
  * membership, read sessions and held-grant lookup remain explicit fixtures.
- * This producer witness makes no per-member queue or presence-coverage claim. */
+ * The producer witnesses durable report refs; the second case owns queue routing. */
 import { expect, test } from "vitest";
 import { readFile, rm } from "node:fs/promises";
 import { canonicalize } from "@generalbusiness/artroom-bytes";
@@ -12,7 +12,7 @@ import { growOperator } from "./support/grow-operator.ts";
 import { viewInputToolName, viewToolName } from "../src/views/names.ts";
 import type { Display } from "../src/views/types.ts";
 
-test("owned Site presence retains native signers, room references and exact heads across two actual Room births", async () => {
+test("owned Site presence retains explicit scoped report positions beyond one hundred other reports", async () => {
   const root = await prepareGrowCheck();
   let session: Awaited<ReturnType<typeof openOwnedGrowScenario>> | undefined;
   try {
@@ -21,46 +21,54 @@ test("owned Site presence retains native signers, room references and exact head
     input.steps = input.steps.slice(0, 1);
     session = await openOwnedGrowScenario(packet, input);
     const f = growOperator(packet, session, "grow.tend", "day"), night = session.actors.find(actor => actor.name === "night")!;
-    expect(f.member).toEqual(session.actors.find(actor => actor.name === "day")!.member);
     expect((await f.source.port.viewer!())?.member).toEqual(f.member);
-    const rooms = () => session!.site.state.page("room", ["pending", "active", "failed"], null, 3).items;
-    const roomA = rooms().find(item => canonicalize(item.refs["scope"]) === canonicalize(session!.scope.at))!;
+    const roomA = session.site.state.page("room", ["active"], null, 3).items.find(item => canonicalize(item.refs["scope"]) === canonicalize(session!.scope.at))!;
     const roomB = await session.createRoom("Room B");
-    expect(roomB.scope.at).not.toEqual(session.scope.at);
-    expect(session.site.state.item(roomB.item)).toMatchObject({ state: "active", refs: { scope: roomB.scope.at } });
-    const before = structuredClone([session.site.state.item(0), ...rooms()]);
-    const arrive = await f.nativeAct("day", "arrive", null, { room: roomA.id }, {}, "site");
-    if (arrive.answer !== "accepted") throw Error(`Native day arrival ${arrive.answer}.`);
     const query = { v: 1 as const, scope: session.site.at, directory: session.directory.at, install: 7, projection: "presence", items: {} };
-    const first = await f.source.port.projection(query);
-    if (!first.ok) throw Error(`Native presence read ${first.reason}.`);
-    expect(first.value.at).toEqual(session.site.state.scope()!.head);
-    expect(first.value.sources["events"]).toEqual([expect.objectContaining({ type: "arrive", entry: arrive.receipt.fact, fields: { actor: f.member, room: roomA.id } })]);
-    for (const [actor, kind, room] of [["day", "arrive", roomB.item], ["day", "leave", roomA.id], ["night", "arrive", roomA.id]] as const) {
-      expect((await f.nativeAct(actor, kind, null, { room }, {}, "site")).answer).toBe("accepted");
-    }
-    const next = await f.source.port.projection(query);
-    if (!next.ok) throw Error(`Native presence read ${next.reason}.`);
-    expect(next.value.at).toEqual(session.site.state.scope()!.head);
-    expect(next.value.at.seq).toBe(first.value.at.seq + 3);
-    expect(next.value.sources["events"]!.map(row => ({ type: row.type, ...row.fields }))).toEqual([
-      { type: "arrive", actor: f.member, room: roomA.id },
-      { type: "arrive", actor: f.member, room: roomB.item },
-      { type: "leave", actor: f.member, room: roomA.id },
-      { type: "arrive", actor: night.member, room: roomA.id },
-    ]);
-    expect([session.site.state.item(0), ...rooms()]).toEqual(before);
-    // The declared journal is a recent window, not persistent current state.
-    // Day's real arrival in B is now outside coverage; no row may invent it.
-    for (let i = 0; i < 100; i++) expect((await f.nativeAct("night", "arrive", null, { room: roomA.id }, {}, "site")).answer).toBe("accepted");
-    const bounded = await f.source.port.projection(query);
-    if (!bounded.ok) throw Error(`Native bounded presence read ${bounded.reason}.`);
-    expect(bounded.value.at).toEqual(session.site.state.scope()!.head);
-    expect(bounded.value.sources["events"]).toHaveLength(100);
-    expect(bounded.value.sources["events"]!.every(row => canonicalize(row.fields["actor"]) === canonicalize(night.member))).toBe(true);
-    expect(first.value.sources["events"]![0]!.entry).toEqual(arrive.receipt.fact);
+    const projected = async () => {
+      const value = await f.source.port.projection(query);
+      if (!value.ok) throw Error(`Native presence read ${value.reason}.`);
+      expect(value.value.scope).toEqual(session!.site.at);
+      expect(value.value.at).toEqual(session!.site.state.scope()!.head);
+      return value.value;
+    };
+    expect((await projected()).sources["people"]).toEqual([]);
+    const provision = async (member: typeof f.member) => {
+      const result = await f.nativeAct("operator", "provision-presence", null, { member }, {}, "site");
+      if (result.answer !== "accepted") throw Error(`Native provisioning ${result.answer}.`);
+      return result.receipt.fact.seq;
+    };
+    const dayId = await provision(f.member), nightId = await provision(night.member);
+    expect((await projected()).sources["people"]).toContainEqual(expect.objectContaining({ id: dayId, state: "unknown", fields: { member: f.member, room: null, reportedAt: null } }));
+    expect(await f.nativeAct("operator", "provision-presence", null, { member: f.member }, {}, "site")).toMatchObject({ answer: "refused", reason: "guard-failed", name: "presence-exists" });
+    const report = (who: "day" | "night", kind: "arrive" | "leave", id: number, room: number) => f.nativeAct(who, kind, id, { room }, { on: id }, "site");
+    expect(await report("night", "arrive", dayId, roomA.id)).toMatchObject({ answer: "refused", reason: "guard-failed", name: "not-presence-member" });
+    for (let i = 0; i < 101; i++) expect((await report("night", "arrive", nightId, roomA.id)).answer).toBe("accepted");
+    const arrive = await report("day", "arrive", dayId, roomA.id);
+    if (arrive.answer !== "accepted") throw Error(`Native day arrival ${arrive.answer}.`);
+    expect(arrive.receipt.fact.seq).toBeGreaterThan(100);
+    expect(session.site.state.item(dayId)?.revision).toBe(2);
+    const moved = await report("day", "arrive", dayId, roomB.item);
+    if (moved.answer !== "accepted") throw Error(`Native day move ${moved.answer}.`);
+    const before = structuredClone(session.site.state.item(dayId)), head = session.site.state.scope()!.head;
+    expect(await report("day", "leave", dayId, roomA.id)).toMatchObject({ answer: "refused", reason: "guard-failed", name: "wrong-presence-room" });
+    expect(session.site.state.scope()!.head).toEqual(head); expect(session.site.state.item(dayId)).toEqual(before);
+    for (let i = 0; i < 101; i++) expect((await report("night", "arrive", nightId, roomA.id)).answer).toBe("accepted");
+    const durable = await projected(), row = durable.sources["people"]!.find(row => row.id === dayId)!;
+    expect(row).toMatchObject({ state: "present", revision: 3, fields: { member: f.member, room: roomB.item, reportedAt: moved.receipt.fact.seq } });
+    const entry = session.site.developmentReads().entry(null, Number(row.fields["reportedAt"]));
+    if (!entry.ok) throw Error(`Native known report position ${entry.reason}.`);
+    expect({ at: entry.value.entry.at, seq: entry.value.entry.seq, hash: entry.value.hash }).toEqual(moved.receipt.fact);
+    expect(entry.value.entry.at).toEqual(durable.scope);
+    expect(session.site.developmentReads().entry(null, durable.at.seq + 1).ok).toBe(false);
+    const activity = await f.source.port.projection({ ...query, projection: "presence-activity" });
+    if (!activity.ok) throw Error(`Native activity read ${activity.reason}.`);
+    expect(activity.value.sources["events"]).toHaveLength(100);
+    expect(activity.value.sources["events"]!.every(row => canonicalize(row.fields["actor"]) === canonicalize(night.member))).toBe(true);
+    expect((await report("day", "leave", dayId, roomB.item)).answer).toBe("accepted");
+    expect((await projected()).sources["people"]!.find(row => row.id === dayId)).toMatchObject({ state: "away", fields: { room: roomB.item } });
     expect(f.signatures()).toBe(0); expect(f.submitted).toEqual([]);
-    for (const scope of [session.site, roomB.scope]) {
+    for (const scope of [session.site, session.scope, roomB.scope]) {
       const replay = await scope.replay(); expect([replay.report.result, replay.why]).toEqual(["consistent", null]);
     }
   } finally { session?.close(); await rm(root, { recursive: true, force: true }); }
@@ -100,8 +108,18 @@ test("member queues route native alerts, present tender work and watering decisi
     const request = await ask("High EC on D4; request early watering.");
     const roomA = session.site.state.page("room", ["active"], null, 3).items.find(item => canonicalize(item.refs["scope"]) === canonicalize(session!.scope.at))!;
     const roomB = await session.createRoom("Room B");
+    const presenceIds = new Map<string, number>();
+    const provision = async (who: "day" | "night") => {
+      if (presenceIds.has(who)) return presenceIds.get(who)!;
+      const member = session!.actors.find(actor => actor.name === who)!.member;
+      const result = await day.nativeAct("operator", "provision-presence", null, { member }, {}, "site");
+      if (result.answer !== "accepted") throw Error(`Native provisioning ${result.answer}.`);
+      presenceIds.set(who, result.receipt.fact.seq); return result.receipt.fact.seq;
+    };
     const present = async (who: "day" | "night", kind: "arrive" | "leave", room: number) => {
-      expect((await day.nativeAct(who, kind, null, { room }, {}, "site")).answer).toBe("accepted");
+      const id = await provision(who);
+      const result = await day.nativeAct(who, kind, id, { room }, { on: id }, "site");
+      expect(result.answer, JSON.stringify(result)).toBe("accepted"); return result;
     };
     const open = async (person: typeof day, screen: string, key: string, items?: Record<string, number>) => {
       const opening = await person.service.call(viewToolName(screen, true), { view: key, scope: session!.scope.at, ...(items ? { items } : {}) });
@@ -111,13 +129,19 @@ test("member queues route native alerts, present tender work and watering decisi
       expect(result.isError, JSON.stringify(result)).toBe(false);
       return result.structuredContent["display"] as Display;
     };
-    // No covered arrival or matching leave is unknown, never an empty queue.
+    // A missing or provisioned-unknown item is unavailable, never an empty queue.
     const unknown = await open(day, "tasks", "unknown-presence");
     expect(unknown).toMatchObject({ status: "unavailable", count: 1, card: { title: "Assignment unavailable", identity: { item: String(task.id) }, actions: [] } });
     expect(unknown.card?.declared?.data).toBeUndefined();
     expect(unknown.context.projection).toContainEqual({ scope: session.site.at.scope, ...session.site.state.scope()!.head });
     expect(JSON.stringify(unknown)).not.toContain("Check vent 2's actuator");
+    const dayPresence = await provision("day");
+    expect(session.site.state.item(dayPresence)?.refs["reportedAt"]).toBeNull();
+    expect(await open(day, "tasks", "provisioned-unknown")).toMatchObject({ status: "unavailable", count: 1, card: { actions: [] } });
     await present("day", "arrive", roomA.id); await present("night", "arrive", roomB.item);
+    // A captured unknown item never becomes an authorization to sign.
+    expect((await day.service.call("view_act", { view: "unknown-presence", cut: unknown.cut, action: "take-task" })).isError).toBe(true);
+    expect(day.signatures()).toBe(0);
     const expected = { operator: [1, 0, 0], day: [0, 1, 0], head: [0, 0, 1] };
     const displays: Record<string, Display> = {};
     for (const name of ["operator", "day", "head"] as const) for (const [i, screen] of ["alerts", "tasks", "watering-requests"].entries()) {
@@ -141,17 +165,18 @@ test("member queues route native alerts, present tender work and watering decisi
     expect(day.signatures()).toBe(0); expect(session.scope.state.item(task.id)!.revision).toBe(task.revision);
     expect((await open(day, "tasks", "left-room")).count).toBe(0);
     await present("day", "arrive", roomA.id);
-    const beforeCoverageLoss = await open(day, "tasks", "coverage-loss");
-    for (let i = 0; i < 100; i++) await present("night", "arrive", roomB.item);
-    const lostCoverage = await day.service.call("view_act", { view: "coverage-loss", cut: beforeCoverageLoss.cut, action: "take-task" });
+    const beforeNoise = await open(day, "tasks", "before-site-noise");
+    const stablePresence = structuredClone(session.site.state.item(dayPresence));
+    for (let i = 0; i < 101; i++) await present("night", "arrive", roomB.item);
+    expect(session.site.state.item(dayPresence)).toEqual(stablePresence);
+    const durable = await open(day, "tasks", "durable-presence");
+    expect(durable).toMatchObject({ status: "ready", count: 1, card: { identity: beforeNoise.card!.identity, actions: [{ label: "Take" }] } });
+    expect(durable.context.projection).toContainEqual({ scope: session.site.at.scope, ...session.site.state.scope()!.head });
     expect(day.signatures()).toBe(0); expect(session.scope.state.item(task.id)!.revision).toBe(task.revision);
-    expect(lostCoverage.isError).toBe(true);
-    const uncovered = await open(day, "tasks", "uncovered-presence");
-    expect(uncovered).toMatchObject({ status: "unavailable", count: 1, card: { identity: { item: String(task.id) }, actions: [] } });
-    expect(uncovered.context.projection).toContainEqual({ scope: session.site.at.scope, ...session.site.state.scope()!.head });
     await present("day", "leave", roomA.id);
     expect((await open(day, "tasks", "covered-negative")).count).toBe(0);
-    await present("day", "arrive", roomA.id); await present("day", "leave", roomB.item);
+    await present("day", "arrive", roomA.id);
+    expect(await day.nativeAct("day", "leave", dayPresence, { room: roomB.item }, { on: dayPresence }, "site")).toMatchObject({ answer: "refused", reason: "guard-failed", name: "wrong-presence-room" });
     const current = await open(day, "tasks", "current-task");
     expect(current.count).toBe(1); // A wrong-room leave does not cancel A.
     expect(current.context.projection).toContainEqual({ scope: session.site.at.scope, ...session.site.state.scope()!.head });

@@ -206,8 +206,10 @@ the room, the library, the Counter and Jam from `homepage/`.
 Run `npm run build:home` to copy its source and the repository brand masters
 into `homepage/assets/`. Its Wrangler configuration attaches
 `dap.generalbusiness.ai` as a custom domain. The room, library, Counter
-and Jam applications keep their own addresses; the homepage links to
-those origins.
+and Jam applications keep their own addresses; each page links to its
+origin. The homepage lists the room, the library and the Counter; the
+Jam page is reachable by its address but not listed while that demo is
+not ready to show.
 
 ## What is never written down
 

@@ -49,6 +49,11 @@ export async function nativeChild(parent: Ledger, seq: number, definition: Decla
 export async function nativeCreatedSite(definition: DeclaredDefinition, permissions: readonly Permission[], fields: Record<string, FieldValue>) {
   const launcherDefinition = structuredClone(definition);
   launcherDefinition.name = "test.grow-site-launcher";
+  // The launcher owns no Site reports: its own name cannot stand in for the
+  // Site's self-fact type. Keep only the actual creation row and root item.
+  launcherDefinition.items = { site: definition.items["site"]! };
+  launcherDefinition.acts = { [definition.genesis]: structuredClone(definition.acts[definition.genesis]!) };
+  launcherDefinition.receives = {}; launcherDefinition.timed = {}; launcherDefinition.rules = {};
   launcherDefinition.acts[launcherDefinition.genesis]!.sends = [{ create: { kind: "lane", definition: definitionDigest(definition), fields: { label: { field: "label" } }, result: {} } }];
   const launcher = nativeScenario(launcherDefinition, permissions, fields);
   const site = await nativeChild(launcher, 0, definition, permissions, 19);
