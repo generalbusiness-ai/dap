@@ -1916,7 +1916,18 @@
       }
     }
   },
-  "roles": {},
+  "roles": {
+    "admin": [
+      "grow.configure",
+      "grow.climate",
+      "grow.heat",
+      "grow.sense",
+      "grow.tend",
+      "grow.water",
+      "grow.water-more",
+      "grow.apply"
+    ]
+  },
   "scenarios": [
     "site-scenario.json",
     "fault-scenario.json"

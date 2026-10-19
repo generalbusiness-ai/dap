@@ -1,6 +1,6 @@
 {
   "actors": {"climate":{"actions":["grow.climate"],"member":"@test-2","principal":"operator","seed":"0202020202020202020202020202020202020202020202020202020202020202"},"day":{"actions":["grow.tend"],"member":"@test-4","seed":"0404040404040404040404040404040404040404040404040404040404040404"},"head":{"actions":["grow.water","grow.water-more","grow.apply"],"member":"@test-6","seed":"0606060606060606060606060606060606060606060606060606060606060606"},"irrigation":{"actions":["grow.water"],"member":"@test-7","principal":"head","seed":"0707070707070707070707070707070707070707070707070707070707070707"},"night":{"actions":["grow.tend"],"member":"@test-5","seed":"0505050505050505050505050505050505050505050505050505050505050505"},"operator":{"actions":["grow.configure","grow.climate","grow.heat"],"member":"@test-1","seed":"0101010101010101010101010101010101010101010101010101010101010101"},"sensors":{"actions":["grow.sense"],"member":"@test-3","principal":"operator","seed":"0303030303030303030303030303030303030303030303030303030303030303"}},
-  "definition": "sha256:590cb0413be0d7910b191d10a72d5ea786412373a01058382d2b0ea545deffd4",
+  "definition": "sha256:53ea3b249f86d0a87dc9b8b059f7dfe786c97f18e7daa33b20b52bc55fb08bae",
   "founding": {"actor":"operator","fields":{"label":"Room A"}},
   "name": "grow-fault",
   "steps": [

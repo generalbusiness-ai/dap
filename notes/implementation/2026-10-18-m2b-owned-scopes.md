@@ -97,3 +97,52 @@ scope navigation, maintained Grow Site/Room creation, incorporation of audited
 Main after M2a landing, the final gate and independent exact-head review remain.
 M2a head 316d103901c46439f0633db876721137847c536e and its sealed finite evidence
 grant remain unchanged.
+
+## Maintained Grow Site and Room
+
+Room's optional Site field and retained reference now require a native Lane.
+Installed application roots are Lanes; Grow introduces no new native kind and
+cannot turn a declared Site into a platform Directory. The pure Grow Site
+fixture now creates its Site Lane from a labelled tiny Directory launcher,
+judges its result and confirmation, then creates the maintained Rooms. The
+launcher journal is supplied to replay as the actual foreign source. The first
+run failed all three replay assertions because that newly required source was
+missing from the test's source set; the corrected run passes all three. The
+fixed row used by the wrong-sender fixture moves from 1 to 2 after Site's real
+confirmation entry. No production birth or replay check was weakened.
+
+The local check fixture keeps its explicit developer-only Directory founding;
+it does not deliver its pending create sends or claim native Room creation.
+Its scenarios still pass. The explicit selected Room definition digest follows
+the maintained Room change. The check package now declares an admin role with
+its eight existing Grow actions for native installation. It adds no capability
+or device/provider behavior. Node source capture builds that complete maintained
+Grow package in an owned temporary directory and removes that directory before
+returning its public TEST-signed packet to the native tests.
+
+The new native Grow witness passes: one real install creates and activates the
+Site Lane, a generic MCP create-room act makes its Room Lane, and native result
+and confirmation leave the active Room reference on Site and the exact Site
+and create-room fact references on Room. The same install and an issued native
+session read the empty Room grid, then read a genuinely commissioned zone and
+bench. The generic selected Room surface returns the same exact projection;
+requesting that Room grid on Site refuses. Only one install act is recorded.
+Site and Room journals both replay consistently with proven native membership
+grants. The fixture does not claim a 100-bench native install, G1 operator flow,
+browser behavior, device integration, provider effects or deployment.
+
+Focused evidence:
+
+- `/tmp/artroom-m2b-grow-site-lane-first-20261018.log`: original 54499,
+  terminal ac060c, three missing-source replay assertions; both CLI example
+  cases pass, including the two maintained local Grow scenarios.
+- `/tmp/artroom-m2b-grow-site-lane-replay-corrected-20261018.log`: original
+  7755, terminal 66064a, three Grow Site cases pass.
+- `/tmp/artroom-m2b-grow-native-first-20261018.log`: original 3717,
+  terminal a1afb5, the test called the generic act tool without selecting
+  generic mode. The service correctly returned unknown-tool.
+- `/tmp/artroom-m2b-grow-native-generic-20261018.log`: original 54074,
+  terminal f96559, the unchanged production tool path in explicit generic
+  mode passes the complete native Grow case. Duration 4.36 seconds is
+  Vitest's printed command duration on this shared arm64 Mac; outer command
+  CPU/load were not measured. Source/test typecheck passes.
