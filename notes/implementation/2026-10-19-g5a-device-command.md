@@ -75,8 +75,48 @@ because its number is reserved; the pin table must reject duplicates.
 Landing order remains durable G3, then G5a. S2a still needs its own passing
 gate and exact review, and S2a plus S2b precede the demo archive slice.
 The G5a preparation checkout has incorporated audited Main `9060775e`.
-G3's exact `3f7cce84` is frozen under review and has not been incorporated
-as an approved landing. No G5a code was changed during either G3 gate.
+G3's exact `3f7cce84` subsequently passed review and landed at Main
+`f6d402b0`; that actual landing is now incorporated here. No G5a code was
+changed during either G3 gate.
+
+## Grant metadata foundation
+
+The first implementation checkpoint defines a bounded device grant with
+the exact capability ID, one full owner MemberRef, one-to-three device
+kinds, the root definition and at most eight allowed definitions. Native
+creation metadata version 2 carries that grant and a one-hop delegation
+flag, outside the application's domain fields. A granting root must match
+the recorded root definition. A receiving child must match the allowed
+definition list and retains the exact owner, bounds and full membership.
+The native send form forwards the grant once with delegation disabled;
+unlisted children receive the existing membership context without a grant.
+Domain fields cannot select this metadata. Version 1 remains unchanged.
+
+The pure native genesis/send witness now passes six cases, including a
+same-definition second hop that cannot inherit the grant, later sends from
+retained genesis, an unlisted child, and mismatched owner membership
+incarnation/root/child definition refusals before any child send. This
+fixture labels its parent metadata and authority as scripted: no native
+installer emission or actual existing-owner membership check is proved yet.
+Log `/tmp/artroom-g5a-grant-context-first-20261019.log`, original 47470
+closed exit 0. Both derive compiler targets pass in the matching
+`grant-context-types-first` log.
+
+One control removes only the send relay's delegation flag check. The
+unchanged same-definition second-hop assertion fails (five pass, one fail).
+Exact restoration returns six passing cases. Original control 4368 closed
+exit 0; driver `/tmp/artroom-g5a-onehop-control-20261019.py` and matching
+directory retain both runs. Its baseline log is copied from the preceding
+exact-source pass, not another baseline execution. Source SHA-256
+`bcf61ac1027db310d0dfa956b790a3d7ee6f8d391d6bd890024d4890af26880b`;
+unchanged test SHA-256
+`82124643f32b983b88c9f6947eff6ba9ad33bd17ffc55ab7c09702b18e0d9759`.
+This is one targeted control, not a mutation sweep.
+
+The capability's command records, owner preparation and slot ownership,
+reservation admission, actual native install producer and owner observation,
+archive metadata and Grow scenario integration remain to implement. No G5a
+gate, exact-head review, production grant or device execution is claimed.
 
 ## Acceptance evidence to collect
 
