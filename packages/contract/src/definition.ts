@@ -105,6 +105,7 @@ export interface ActType {
 
 /** A handler: what a delivered message of one class and name does, from a scope of one kind (section 6.4). */
 export interface ReceiveType {
+  late?: { within: { seconds: number }; reason: string; then?: { effects?: readonly EffectForm[]; sends?: readonly SendForm[]; attention?: readonly Notify[] } };
   /** Tell handlers may suppress an older source pair after a newer one applied. */
   order?: "arrival" | "source";
   message: string;                         // a `tell` message's name, or a relationship's name

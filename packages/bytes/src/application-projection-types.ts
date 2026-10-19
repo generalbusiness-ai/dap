@@ -11,7 +11,7 @@ export const APPLICATION_PROJECTION_LIMITS = Object.freeze({
   resultBytes: 256 * 1024, textBytes: 64 * 1024, typeDepth: 6, typeNodes: 256,
 });
 export interface ApplicationProjectionField {
-  readonly from: { readonly kind: "value" | "party" | "ref"; readonly name: string };
+  readonly from: { readonly kind: "value" | "party" | "ref" | "fact-time"; readonly name: string };
   readonly of: ProjectionFieldType;
   readonly nullable: boolean;
 }

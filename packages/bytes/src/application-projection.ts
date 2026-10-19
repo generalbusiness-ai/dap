@@ -93,7 +93,7 @@ export function readApplicationProjection(value: unknown): ApplicationReadProjec
     for (const [key, given] of Object.entries(record(source["fields"], B.fields, 0))) {
       if (META.has(key)) return fail();
       const field = object(given, "from,nullable,of"), from = object(field["from"], "kind,name");
-      if (typeof from["kind"] !== "string" || !["value", "party", "ref"].includes(from["kind"]) || typeof field["nullable"] !== "boolean") return fail();
+      if (typeof from["kind"] !== "string" || !["value", "party", "ref", "fact-time"].includes(from["kind"]) || typeof field["nullable"] !== "boolean") return fail();
       name(from["name"]); fieldType(field["of"], budget);
     }
   }

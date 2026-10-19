@@ -87,3 +87,22 @@ test("a signed host requirement names archive explicitly and refuses unknown or 
     await expect(packApplication2(bad, signer)).rejects.toThrow("application-package-invalid");
   }
 });
+
+test("a child created only by a late replacement belongs to the signed package closure", async () => {
+  const child: DeclaredDefinition = { ...empty, name: "test.late-child" }, childId = definitionDigest(child);
+  const parent: DeclaredDefinition = { ...empty, name: "test.late-parent", receives: {
+    spawn: { class: "tell", message: "spawn", from: { kind: "directory" }, opens: null, also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [],
+      late: { within: { seconds: 30 }, reason: "old-spawn", then: { sends: [{ create: { kind: "directory", definition: childId, fields: {}, result: {} } }] } } },
+  } }, parentId = definitionDigest(parent);
+  // The shared declaration-closure reader is exercised through v1 here;
+  // v2 additionally requires a bound projection for each definition.
+  const { views: _views, resources: _resources, ...presentation } = input().presentation;
+  const packet: Parameters<typeof packApplication>[0] = { ...input(), semantic: { ...input().semantic, v: 1, entry: parentId, projections: {}, roles: {},
+    definitions: [{ id: parentId, bytes: canonicalize(parent) }] }, presentation: { ...presentation, v: 1 } };
+  let calls = 0; const tracked = { key: signer.key, sign: (bytes: Uint8Array) => { calls++; return signer.sign(bytes); } };
+  await expect(packApplication(packet, tracked)).rejects.toThrow("application-package-closure");
+  expect(calls).toBe(0);
+  const complete = await packApplication({ ...packet, semantic: { ...packet.semantic, definitions: [...packet.semantic.definitions, { id: childId, bytes: canonicalize(child) }] } }, tracked);
+  expect(complete.package.semantic.creates).toEqual([{ from: parentId, to: childId }]);
+  expect(readApplicationPackage(complete.bytes, complete.ids.release).ids).toEqual(complete.ids);
+});

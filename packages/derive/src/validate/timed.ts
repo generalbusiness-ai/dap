@@ -57,6 +57,7 @@ export function timedKinds(d: Defining, acts: unknown, receives: unknown): void 
     if (!isObject(h)) continue;
     message(h["message"], at(at("receives", name), "message"));
     sent(h["sends"], at(at("receives", name), "sends"));
+    if (isObject(h["late"]) && isObject(h["late"]["then"])) sent(h["late"]["then"]["sends"], at(at(at(at("receives", name), "late"), "then"), "sends"));
   }
 }
 

@@ -1,44 +1,92 @@
 <!doctype html>
 <html lang="en">
 <head><meta charset="utf-8"><title>Grow bench grid</title><style>
-:host{display:block;font:inherit;color:inherit}*{box-sizing:border-box}h1{font-size:1.4rem;margin:0 0 8px}p{line-height:1.5;margin:8px 0}button{font:inherit;color:inherit;cursor:pointer;border:1px solid #a0aaa3;border-radius:6px;background:transparent;padding:8px;min-height:44px}button:disabled,select:disabled{opacity:.55;cursor:default}button:focus-visible{outline:3px solid #286c48;outline-offset:2px}.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.toolbar button[aria-pressed=true]{background:#dceadd;color:#183e28;border-color:#286c48}.scroll{max-width:100%;overflow:auto;padding:3px}#benches{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:4px;padding-bottom:6px}.bench{border:1px solid #a0aaa3;border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:3px;min-height:40px;background:#f0f2f0;color:#183126}.bench small{font-size:11px}.bench[data-stale=true]{border-style:dashed}.bench[data-selected=true]{outline:3px solid #286c48;outline-offset:-3px}.bench[data-missing=true]{background:repeating-linear-gradient(135deg,#f1f1ed,#f1f1ed 6px,#e4e5df 6px,#e4e5df 8px)}#selection{font-weight:600}.muted{color:var(--color-text-secondary,#58635c)}#zones{padding-left:20px}#error{color:#a22}.bench span{white-space:nowrap}@media(max-width:360px){.bench{font-size:10px;min-height:34px;padding:2px}.bench small{font-size:9px}}
+#attention:not(:empty){border:1px solid #c9a16b;background:#fff8e9;border-radius:8px;padding:12px;margin:0 0 16px}#attention h2{font-size:1.1rem;margin:0 0 8px}#attention p{overflow-wrap:anywhere}#attention blockquote{margin:8px 0;padding-left:10px;border-left:3px solid #d4ba8e}#attention button{margin-top:6px}#attention .closed{color:#286c48}#zones button{width:100%;text-align:left;margin:5px 0}
+:host{display:block;font:inherit;color:inherit}*{box-sizing:border-box}h1{font-size:1.4rem;margin:0 0 8px}p{line-height:1.5;margin:8px 0;overflow-wrap:anywhere}button{font:inherit;color:inherit;cursor:pointer;border:1px solid #a0aaa3;border-radius:6px;background:transparent;padding:8px;min-height:44px}button:disabled,select:disabled{opacity:.55;cursor:default}button:focus-visible{outline:3px solid #286c48;outline-offset:2px}.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.toolbar label{display:grid;gap:4px;min-width:0;max-width:100%;flex:1 1 180px}.toolbar select{width:100%;min-width:0}.toolbar button[aria-pressed=true]{background:#dceadd;color:#183e28;border-color:#286c48}.scroll{max-width:100%;overflow:auto;padding:3px}#benches{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:4px;padding-bottom:6px}.bench{border:1px solid #a0aaa3;border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:3px;min-height:40px;background:#f0f2f0;color:#183126}.bench small{font-size:11px}.bench[data-stale=true]{border-style:dashed}.bench[data-selected=true]{outline:3px solid #286c48;outline-offset:-3px}.bench[data-missing=true]{background:repeating-linear-gradient(135deg,#f1f1ed,#f1f1ed 6px,#e4e5df 6px,#e4e5df 8px)}#selection{font-weight:600}.muted{color:var(--color-text-secondary,#58635c)}#zones{padding-left:20px}#error{color:#a22}.bench span{white-space:nowrap}.bench .age{font-size:10px;font-weight:600}.bench[data-unknown=true]{border-style:dotted}.bench[data-stale=true]{border-width:2px}.bench{min-width:0;overflow:hidden;min-height:58px}.bench small{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}@media(max-width:360px){.bench{font-size:10px;min-height:34px;padding:2px}.bench small{font-size:9px}}
 </style></head>
 <body>
+<section id="attention" aria-label="Operator attention"></section>
 <h1>Bench grid</h1><p id="room-label"></p><p id="head" class="muted"></p>
-<div class="toolbar" role="group" aria-label="Bench metric"><button data-metric="moisture" aria-pressed="true">Moisture</button><button data-metric="ec" aria-pressed="false">EC</button><button data-metric="ph" aria-pressed="false">pH</button></div>
-<p id="legend" class="muted"></p><p class="muted">Dashed borders mark stale benches. Stripes mark missing readings.</p>
-<div class="scroll" role="img" aria-label="Bench rows A to J, columns 1 to 10"><div id="benches"></div></div>
+<div class="toolbar" role="group" aria-label="Grid layer"><button data-metric="temperature" aria-pressed="false">Temperature</button><button data-metric="moisture" aria-pressed="true">Moisture</button><button data-metric="scouting" aria-pressed="false">Scouting</button><button id="measure">Measure benches</button></div>
+<p id="legend" class="muted"></p><p class="muted">Ages use this device’s clock. Faded, dashed cells are at least 2 days old. Stripes mark missing readings.</p>
+<div class="scroll" role="group" aria-label="Bench rows A to J, columns 1 to 10"><div id="benches"></div></div>
 <div class="toolbar"><label>Bench <select id="choose-bench" style="font:inherit;min-height:44px;max-width:100%"></select></label><button id="open-bench">Open bench record</button></div>
 <p id="selection" role="status">Choose a bench to read its record.</p>
 <h2>Zones</h2><ul id="zones"></ul><p id="samples" class="muted"></p><p id="error" role="alert"></p>
 <script>(()=>{
 const api=window.dapSurface,root=api.root,grid=root.querySelector('#benches'),choose=root.querySelector('#choose-bench');
 let data,metric='moisture',selected=null;
-const metrics={moisture:{label:'Moisture',unit:'%',scale:1,max:100},ec:{label:'EC',unit:' mS/cm',scale:1000,max:10000},ph:{label:'pH',unit:'',scale:100,max:1400}};
+const metrics={temperature:{label:'Temperature',unit:' °C',scale:100,max:3500},moisture:{label:'Moisture',unit:'%',scale:1,max:100},scouting:{label:'Scouting',unit:'',scale:1,max:1}};
 const value=(raw,scale=1,unit='')=>raw===null||raw===undefined?'No reading':String(raw/scale)+unit;
+function openView(name,items){root.querySelector('#error').textContent='';void api.open(name,items).catch(error=>{root.querySelector('#error').textContent=error.message})}
+function renderAttention(){
+ const panel=root.querySelector('#attention');panel.replaceChildren();
+ const alerts=(data.sources.alert||[]).filter(row=>row.state!=='closed').sort((a,b)=>({open:0,held:1,authorized:2}[a.state]-({open:0,held:1,authorized:2}[b.state])||b.id-a.id));
+ const alert=alerts[0];
+ if(alert){
+  const title=document.createElement('h2');title.textContent=alert.state==='held'?'Operator alert · held':alert.state==='authorized'?'Operator alert · authorized':'Operator authorization needed';panel.append(title);
+  const text=document.createElement('p');text.textContent=alert.fields.text;panel.append(text);
+  const proposal=document.createElement('p');proposal.textContent=alert.fields.proposal;panel.append(proposal);
+  for(const device of data.sources.device.filter(row=>row.fields.zone===alert.fields.zone&&row.fields.reported==='error')){
+   const quote=document.createElement('blockquote');quote.textContent=device.fields.label+': “'+device.fields.description+'” — sensor report';panel.append(quote);
+  }
+  const state=document.createElement('p');state.textContent=alert.state==='held'?'Held until '+alert.fields.holdUntil+'.':alert.state==='authorized'?'The operator signed the target change. A sensor report is separate.':'Heater targets require the operator’s authority.';panel.append(state);
+  const button=document.createElement('button');button.type='button';button.textContent='Open alert';button.onclick=()=>openView('alert',{alert:alert.id});panel.append(button);
+ }else{
+  const incident=(data.sources.incident||[]).filter(row=>row.state==='closed').sort((a,b)=>b.id-a.id)[0];
+  if(incident){const status=document.createElement('p');status.className='closed';status.textContent='Incident '+incident.id+' closed · entries '+incident.fields.first+'–'+incident.fields.last;panel.append(status);const button=document.createElement('button');button.type='button';button.textContent='Open incident record';button.onclick=()=>openView('incident',{incident:incident.id});panel.append(button)}
+ }
+}
+function age(stamp){
+ const time=typeof stamp==='string'?Date.parse(stamp):NaN,elapsed=Date.now()-time;
+ if(!Number.isFinite(time))return {label:'No time',full:'time unavailable',known:false,stale:false};
+ if(elapsed<0)return {label:'Clock?',full:'device clock before reading',known:false,stale:false};
+ const minutes=Math.floor(elapsed/60000),hours=Math.floor(minutes/60),days=Math.floor(hours/24);
+ return {label:days?days+'d':hours?hours+'h':minutes+'m',full:days?days+' day'+(days===1?'':'s')+' old':hours?hours+' h old':minutes+' min old',known:true,stale:elapsed>=172800000,minutes};
+}
+function reading(bench){
+ const zone=data.sources.zone.find(zone=>zone.id===bench.fields.zone),f=bench.fields;
+ let raw=metric==='temperature'?zone?.fields.mean??null:f.moisture,stamp=metric==='temperature'?zone?.fields.summaryTime:f.moistureTime;
+ if(metric==='scouting'){const note=f.note!==null&&f.note!==undefined,count=f.insects!==null&&f.insects!==undefined;raw=note||count?[...(note?[f.note||'Empty note']:[]),...(count?[f.insects+' insects']:[])].join(' · '):null;stamp=note?f.noteTime:f.insectsTime;if(count&&(!stamp||Date.parse(f.insectsTime)>Date.parse(stamp)))stamp=f.insectsTime;}
+ return {raw,stamp,age:age(stamp),zone,missing:raw===null||raw===undefined};
+}
+function select(bench){
+ selected=bench.id;const r=reading(bench),spec=metrics[metric];
+ root.querySelector('#selection').textContent=bench.fields.label+' · '+spec.label+' '+(r.missing?'No reading':metric==='scouting'?(r.raw||'Empty note'):value(r.raw,spec.scale,spec.unit))+' · '+r.age.full;
+}
+function openBench(bench){
+ select(bench);const r=reading(bench);
+ if(metric==='temperature'){if(r.zone)openView('zone',{zone:r.zone.id});}
+ else openView('bench',{bench:bench.id});
+}
 function render(){
- if(!data)return;const spec=metrics[metric];
+ if(!data)return;renderAttention();const spec=metrics[metric];
  root.querySelector('#room-label').textContent=data.sources.room?.[0]?.fields.label||'';
  root.querySelector('#head').textContent='Native head '+data.at.seq+' · '+data.sources.bench.length+' bench'+(data.sources.bench.length===1?'':'es');
- root.querySelector('#legend').textContent=spec.label+': darker green means a higher reading. Values use '+(metric==='moisture'?'percent':metric==='ec'?'mS/cm':'the pH scale')+'.';
+ root.querySelector('#legend').textContent=metric==='temperature'?'Zone mean temperature in °C. Open a cell for its zone.':metric==='moisture'?'Moisture in percent. Deeper green means a higher reading. Open a cell for its bench.':'Latest recorded scouting input. Notes and insect counts keep their own ages in the bench record. Colour shows presence and age, not severity.';
  grid.replaceChildren();choose.replaceChildren();
  const benches=[...data.sources.bench].sort((a,b)=>a.fields.row.localeCompare(b.fields.row)||a.fields.column-b.fields.column);
  if(!benches.length){grid.style.display='block';grid.textContent='No benches in this projection.';const option=document.createElement('option');option.textContent='No benches';option.value='';choose.append(option);}else grid.style.display='';
- for(const bench of benches){const f=bench.fields,raw=f[metric],coordinate=f.row+f.column,button=document.createElement('div');
-  button.className='bench';button.dataset.stale=String(bench.state==='stale');button.dataset.missing=String(raw===null);button.dataset.selected=String(selected===bench.id);
+ for(const bench of benches){const f=bench.fields,r=reading(bench),coordinate=f.row+f.column,button=document.createElement('button');
+  button.type='button';button.className='bench';button.dataset.stale=String(!r.missing&&r.age.stale);button.dataset.missing=String(r.missing);button.dataset.unknown=String(!r.missing&&!r.age.known);button.dataset.selected=String(selected===bench.id);
+  button.dataset.bench=String(bench.id);button.dataset.value=r.missing?'':String(r.raw);button.dataset.time=r.stamp||'';button.dataset.ageMinutes=r.age.known?String(r.age.minutes):'';
   button.style.gridRow=String(f.row.charCodeAt(0)-64);button.style.gridColumn=String(f.column);
-  if(raw!==null)button.style.backgroundColor='hsl(135 28% '+(95-Math.min(1,Math.max(0,raw/spec.max))*40)+'%)';
-  button.title=f.label+', '+spec.label+' '+value(raw,spec.scale,spec.unit)+', '+bench.state;
-  const label=document.createElement('span'),reading=document.createElement('small');label.textContent=coordinate;reading.textContent=raw===null?'—':value(raw,spec.scale);button.append(label,reading);
-  const option=document.createElement('option');option.value=String(bench.id);option.textContent=f.label+', '+bench.state+', '+spec.label+' '+value(raw,spec.scale,spec.unit);choose.append(option);grid.append(button);
+  if(!r.missing){const strength=metric==='scouting'?0.4:metric==='temperature'?Math.min(1,Math.max(0,(r.raw-1500)/2000)):Math.min(1,Math.max(0,r.raw/spec.max));button.style.backgroundColor='hsl('+(metric==='temperature'?220-strength*200:135)+' '+(r.age.stale||!r.age.known?12:28)+'% '+(r.age.stale||!r.age.known?94:95-strength*35)+'%)';}
+  const full=r.missing?'No reading':metric==='scouting'?(r.raw||'Empty note'):value(r.raw,spec.scale,spec.unit);
+  button.title=f.label+', '+spec.label+' '+full+', '+r.age.full+(r.stamp?' · '+r.stamp:'');button.setAttribute('aria-label',button.title);
+  const label=document.createElement('span'),shown=document.createElement('small'),aged=document.createElement('small');label.textContent=coordinate;
+  shown.textContent=r.missing?'—':metric==='scouting'?(r.raw?Array.from(r.raw).slice(0,5).join('')+'…':'Empty'):value(r.raw,spec.scale);aged.textContent=r.missing?'—':r.age.label;aged.className='age';button.append(label,shown,aged);button.onclick=()=>openBench(bench);
+  const option=document.createElement('option');option.value=String(bench.id);option.textContent=button.title;choose.append(option);grid.append(button);
  }
- if(selected!==null)choose.value=String(selected);choose.disabled=!benches.length;root.querySelector('#open-bench').disabled=!benches.length;
- const zones=root.querySelector('#zones');zones.replaceChildren();if(!data.sources.zone.length){const li=document.createElement('li');li.textContent='No zones in this projection.';zones.append(li)}for(const zone of data.sources.zone){const li=document.createElement('li'),f=zone.fields;li.textContent=f.label+': '+zone.state+' · mean '+value(f.mean,100,' °C')+' · setpoint '+value(f.setpoint,100,' °C');zones.append(li)}
+ if(selected!==null){choose.value=String(selected);const bench=benches.find(bench=>bench.id===selected);if(bench)select(bench)}choose.disabled=!benches.length;root.querySelector('#open-bench').disabled=!benches.length;root.querySelector('#open-bench').textContent=metric==='temperature'?'Open zone record':'Open bench record';
+ const zones=root.querySelector('#zones');zones.replaceChildren();if(!data.sources.zone.length){const li=document.createElement('li');li.textContent='No zones in this projection.';zones.append(li)}for(const zone of data.sources.zone){const li=document.createElement('li'),f=zone.fields,button=document.createElement('button');button.type='button';button.textContent=f.label+': '+zone.state+' · mean '+value(f.mean,100,' °C')+' · setpoint '+value(f.setpoint,100,' °C');button.onclick=()=>openView('zone',{zone:zone.id});li.append(button);zones.append(li)}
  const samples=data.sources.samples;root.querySelector('#samples').textContent=samples.length?'Recent observation samples: '+samples.map(row=>row.fields.sampledAt).join(', ')+'. Samples are limited to the last 100 journal entries.':'No observation samples in the last 100 journal entries.';
 }
 for(const button of root.querySelectorAll('[data-metric]'))button.onclick=()=>{metric=button.dataset.metric;for(const peer of root.querySelectorAll('[data-metric]'))peer.setAttribute('aria-pressed',String(peer===button));render()};
-choose.onchange=()=>{selected=Number(choose.value);root.querySelector('#selection').textContent='Selected '+data.sources.bench.find(bench=>bench.id===selected).fields.label;render()};
-root.querySelector('#open-bench').onclick=()=>{if(!choose.value)return;root.querySelector('#error').textContent='';selected=Number(choose.value);root.querySelector('#selection').textContent='Selected '+data.sources.bench.find(bench=>bench.id===selected).fields.label;render();void api.open('bench',{bench:selected}).catch(error=>{root.querySelector('#error').textContent=error.message})};
+choose.onchange=()=>{const bench=data.sources.bench.find(bench=>bench.id===Number(choose.value));if(bench){select(bench);render()}};
+root.querySelector('#open-bench').onclick=()=>{const bench=data.sources.bench.find(bench=>bench.id===Number(choose.value));if(bench)openBench(bench)};
+root.querySelector('#measure').onclick=()=>openView('measure');
+const timer=setInterval(render,60000);api.signal.addEventListener('abort',()=>clearInterval(timer),{once:true});
 api.onData(next=>{data=next;render()});
 })();</script>
 </body></html>

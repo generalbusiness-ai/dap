@@ -9,6 +9,8 @@ import { deliveryCauseDigest, messageDigest, scopeIdOf, seedDigest } from "@gene
 import { declaredBy, type Recorded } from "./capability.ts";
 import { isEntryOf, updateOf, useOf, type Reading } from "./fields.ts";
 import { bound, runClause, runHandler, type Clause, type Handled, type Sent } from "./handlers.ts";
+import { handlerBranch } from "./handler-branch.ts";
+import { timeMs } from "./time.ts";
 import type { Judgment } from "./judge.ts";
 import { heldOpenings } from "./ledger.ts";
 import { withinCounts } from "./draws.ts";
@@ -162,9 +164,10 @@ function deliveryJudged(view: StateView, definition: ValidDefinition, delivered:
    * entry sends exactly one result, which names the request by its source
    * fact and ordinal. The result follows the sends the handler declares.
    */
+  let lateTime = false, lateBranch: { reason: string } | undefined;
   const decide = (decision: "applied" | "refused" | "superseded", reason: Reason | undefined, effects: readonly Effect[] = [], sends: readonly Send[] = [], prepared: readonly Prepared[] = [], judgesTime = false, read: readonly FactUse[] = [], settles = false, bound?: { item: number; message: string }): Judgment => {
     const answer: Result = { class: "result", of: { from, n }, outcome: decision, ...(reason ? { reason } : {}) };
-    return write({ type: "delivery", from, n, message: message as Request, decision, ...(reason ? { reason } : {}) }, effects, [...sends, { n: sends.length, to: from.at, message: answer }], prepared, judgesTime, read, settles, bound);
+    return write({ type: "delivery", from, n, message: message as Request, decision, ...(reason ? { reason } : {}), ...(decision === "applied" && lateBranch ? { late: lateBranch } : {}) }, effects, [...sends, { n: sends.length, to: from.at, message: answer }], prepared, judgesTime || lateTime, read, settles, bound);
   };
   const b = bound(definition, message, from);
   if (!b) return decide("refused", { code: "bad-field" });
@@ -212,7 +215,20 @@ function deliveryJudged(view: StateView, definition: ValidDefinition, delivered:
     platform.push({ effect: "relation", owner: from.at, item: update.item.seq, name: update.name, state: update.state, revision: from.seq });
   }
 
-  const ran = runHandler(view, definition, context, scope, handler, b.kind, given, cause(), sent, judged);
+  let selected = handler;
+  if (handler.late) {
+    // This is a time judgment even when it refuses before any normal guard.
+    if (clock.behind) return { result: "unavailable", reason: "clock-behind" };
+    lateTime = true;
+    const sourceTime = timeMs(source.time), now = timeMs(clock.reading);
+    if (sourceTime === null || now === null) return unverified("a late judgment needs verified source and commit times");
+    if (sourceTime + handler.late.within.seconds * 1000 < now) {
+      if (!handler.late.then) return refuse({ code: "late", name: handler.late.reason });
+      lateBranch = { reason: handler.late.reason };
+      selected = handlerBranch(handler, lateBranch)!;
+    }
+  }
+  const ran = runHandler(view, definition, context, scope, selected, b.kind, given, cause(), sent, judged);
   if (ran.result === "unavailable") return ran;
   // A refusal, among them `duplicate-relation` for a handler whose sends hold two for one key: no effect and no send but the result.
   // The deciding entry records each rule result a guard read before the refusal, and each foreign entry the fields named (section 9.2).

@@ -42,7 +42,7 @@ test("declared fallback and identity open quietly; the app gets the exact projec
   expect(JSON.stringify(opening)).not.toContain("lastNumber");
   expect(JSON.stringify(opening)).not.toContain("42");
   const detail = await f.sessions.read("first", 0, { page: "item" });
-  expect(detail.card?.declared?.data.sources["board"]![0]!.fields).toEqual({ lastNumber: 42 });
+  expect(detail.card?.declared?.data?.sources["board"]![0]!.fields).toEqual({ lastNumber: 42 });
   expect(detail.card?.reasons).toEqual(["lastNumber: 42"]);
   expect(detail.card?.actions.map(action => action.id)).toEqual(["pause"]);
   expect((await f.sessions.act("first", detail.cut, "pause")).result.structuredContent["answer"]).toBe("accepted");
@@ -158,4 +158,81 @@ test("declared opening tool names preserve exact names without reserved-name col
   }
   expect(tools["view_read"]?.tool._meta?.["ui"]).toEqual({ visibility: ["app"] });
   expect(tools["view_act"]?.tool._meta?.["ui"]).toEqual({ visibility: ["app"] });
+});
+
+// Invariant: fixed choices retain their exact native fields and distinct
+// custody identities, and renewed admission refuses stale or altered choices.
+test("two constant choices retain one native act and recheck fields, standing and revision before signing", async () => {
+  const base = await applicationCounterPacket2(), definition = parseStrict(base.package.semantic.definitions[0]!.bytes) as DeclaredDefinition;
+  definition.acts["pause"] = { ...definition.acts["pause"]!, fields: {
+    target: { type: "enum", of: ["on", "off"], required: true }, level: { type: "int", min: 0, max: 100, required: true },
+  } };
+  const id = definitionDigest(definition), board = base.package.presentation.views["board"]!;
+  if (board.kind === "surface") throw Error("Board fixture required.");
+  const controls = [{ act: "pause", label: "Off", needs: "counting.control", when: "state = 'open'", args: { target: "off", level: 0 } },
+    { act: "pause", label: "On", needs: "counting.control", when: "state = 'open'", args: { target: "on", level: 100 } }];
+  const secret = new Uint8Array(32).fill(67);
+  const { creates: _creates, ...semantic } = base.package.semantic;
+  const { semantic: _semantic, ...presentation } = base.package.presentation;
+  const packet = await packApplication2({ name: "test.constants", version: "1", semantic: { ...semantic,
+    entry: id, definitions: [{ id, bytes: canonicalize(definition) }], projections: { board: { ...base.package.semantic.projections["board"]!, definition: id } } },
+    presentation: { ...presentation, views: { board: { ...board, acts: controls } } } },
+    { key: keyIdOfSecret(secret), sign: bytes => sign(secret, bytes) });
+  const installation: ApplicationInstallation = { scope, directory: { ...scope, kind: "directory" }, membership: { ...scope, kind: "membership" },
+    rules: { ...scope, kind: "rules" }, destination: { ...scope, kind: "destination" }, definition: id, ids: packet.ids, item: 7 };
+  let held = ["counting.control"], revision = 1;
+  const source = new DeclaredViewSource(packet.bytes, packet.ids.release, { installation: async () => installation, actions: async () => held,
+    projection: async query => ({ ok: true, query: applicationProjectionQueryDigest(query)!, value: {
+      v: 1, projection: applicationProjectionId(packet.package.semantic.projections["board"]!), scope,
+      at: { seq: revision, hash: `sha256:${"a".repeat(64)}` }, sources: { board: [{ id: 2, type: "board", state: "open", revision, fields: { lastNumber: 42 } }] },
+    } }),
+  });
+  const query = { screen: "board", page: "item" as const, position: 0 }, card = (await source.read(query)).card!;
+  expect(card.actions.map(action => [action.id, action.kind, action.args["fields"]])).toEqual([
+    ["pause:0", "pause", { target: "off", level: 0 }], ["pause:1", "pause", { target: "on", level: 100 }],
+  ]);
+  await expect(source.admit(query, card, card.actions[0]!)).resolves.toBeUndefined();
+  await expect(source.admit(query, card, card.actions[1]!)).resolves.toBeUndefined();
+  const altered = structuredClone(card.actions[0]!); altered.args["fields"] = { target: "on", level: 100 };
+  await expect(source.admit(query, card, altered)).rejects.toMatchObject({ reason: "stale" });
+  held = []; await expect(source.admit(query, card, card.actions[0]!)).rejects.toMatchObject({ reason: "stale" });
+  held = ["counting.control"]; revision = 2;
+  await expect(source.admit(query, card, card.actions[0]!)).rejects.toMatchObject({ reason: "stale" });
+});
+
+// In-memory read answers expose only presentation: native projection bytes,
+// history completeness and authority are witnessed in the owning Scope tests.
+test("record history keeps only the last selected-item samples and their exact source facts and times", async () => {
+  const base = await applicationCounterPacket2(), definition = parseStrict(base.package.semantic.definitions[0]!.bytes) as DeclaredDefinition;
+  definition.acts["pause"] = { ...definition.acts["pause"]!, fields: { mean: { type: "int", min: -4000, max: 8000, required: true } } };
+  const id = definitionDigest(definition), board = base.package.presentation.views["board"]!;
+  if (board.kind === "surface") throw Error("Board fixture required.");
+  const projection = readApplicationProjection({ ...base.package.semantic.projections["board"]!, definition: id, sources: {
+    ...base.package.semantic.projections["board"]!.sources,
+    history: { read: "entries", acts: ["pause"], window: 100, limit: 100, latestBy: null,
+      fields: { mean: { from: { kind: "field", name: "mean" }, of: { type: "int", min: -4000, max: 8000 }, nullable: false } } },
+  } });
+  const { creates: _creates, ...semantic } = base.package.semantic, { semantic: _semantic, ...presentation } = base.package.presentation;
+  const secret = new Uint8Array(32).fill(67);
+  const packet = await packApplication2({ name: "test.series", version: "1", semantic: { ...semantic, entry: id,
+    definitions: [{ id, bytes: canonicalize(definition) }], projections: { board: projection } }, presentation: { ...presentation, views: {
+      board: { ...board, kind: "record", acts: [], series: { source: "history", field: "mean", label: "Mean", scale: 2, unit: "°C", last: 2 } },
+    } } }, { key: keyIdOfSecret(secret), sign: bytes => sign(secret, bytes) });
+  const installation: ApplicationInstallation = { scope, directory: { ...scope, kind: "directory" }, membership: { ...scope, kind: "membership" },
+    rules: { ...scope, kind: "rules" }, destination: { ...scope, kind: "destination" }, definition: id, ids: packet.ids, item: 7 };
+  const point = (seq: number, on: number, mean: number, time: string) => ({ id: seq, type: "pause", state: "sealed", revision: seq, on, time,
+    fields: { mean }, entry: { at: scope, seq, hash: `sha256:${"b".repeat(64)}` as const } });
+  let history = [point(1, 2, 2400, "2026-10-18T12:00:00Z"), point(3, 2, 2650, "2026-10-18T12:05:00Z"),
+    point(5, 2, 2300, "2026-10-18T12:10:00Z"), point(19, 99, 8000, "2026-10-18T12:15:00Z")];
+  const source = new DeclaredViewSource(packet.bytes, packet.ids.release, { installation: async () => installation, actions: async () => [],
+    projection: async query => ({ ok: true, query: applicationProjectionQueryDigest(query)!, value: {
+      v: 1, projection: applicationProjectionId(projection), scope, at: { seq: 20, hash: `sha256:${"a".repeat(64)}` },
+      sources: { board: [{ id: 2, type: "board", state: "open", revision: 1, fields: { lastNumber: 42 } }], history },
+    } }),
+  });
+  const query = { screen: "board", page: "item" as const, position: 0 }, series = (await source.read(query)).card!.declared!.series!;
+  expect(series.samples).toEqual([point(3, 2, 2650, "2026-10-18T12:05:00Z"), point(5, 2, 2300, "2026-10-18T12:10:00Z")].map(row => ({ value: row.fields.mean, time: row.time, entry: row.entry })));
+  expect(series.fallback).toBe("Mean: 2 recorded samples in the last 100 native entries. Latest 23 °C at 2026-10-18T12:10:00Z; lowest 23 °C at 2026-10-18T12:10:00Z; highest 26.5 °C at 2026-10-18T12:05:00Z.");
+  history = [point(19, 99, 8000, "2026-10-18T12:15:00Z")];
+  expect((await source.read(query)).card!.declared!.series).toMatchObject({ samples: [], fallback: "Mean: no recorded samples in the last 100 native entries." });
 });
