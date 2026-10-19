@@ -123,7 +123,7 @@ are a JSON object containing `label` and the actual full MemberRefs named
 Site forwards all three assignments to each Room it creates.
 
 ```sh
-node packages/cli/bin/dap.js install "$GROW_PACKAGE_URI" --release "$GROW_RELEASE" --request "$GROW_INSTALL_REQUEST" --owner "$GROW_SENSORS_MEMBER" --values "$GROW_GENESIS_VALUES" <reviewed --role selections>
+node packages/cli/bin/dap.js install "$GROW_PACKAGE_URI" --release "$GROW_RELEASE" --request "$GROW_INSTALL_REQUEST" --owner "$GROW_SENSORS_MEMBER" --values "$GROW_GENESIS_VALUES" --role admin --role maintainer --role member --role agent
 node packages/cli/bin/dap.js application "$GROW_INSTALL_ITEM"
 ```
 
@@ -136,13 +136,50 @@ Room reference. A pending or refused job supplies no active-room claim.
 Repeat an uncertain original with the same request key and arguments; a
 new key is not recovery.
 
-Commission the four zones and their twelve devices through the application's
-actual acts, then bind each zone's devices. Read every assigned ID and
-revision; no scenario fixture ID is an operational input. Initial heater
-commands must have native owner records and reservations. Read the full
-sensors/climate assignments and demonstrate their cross-principal refusals
-before scheduling the driver. The final native witness and exact commands
-for these demo-only declarations remain to be added here.
+### Commission through the operator's retained MCP custody
+
+Use the existing `actions`, `act`, `items`, `step`, `wait` and `settle` tools
+in the operator's configured MCP custody. Call `actions` for the actual
+Site/Room target and keep the returned definition digest. The generic `act`
+tool takes `target`, `kind`, `digest`, `fields`, an optional item `on`, and
+the explicit `idempotencyKey` you choose once and keep. It derives expected
+revisions from the declared subjects and retains the exact signed envelope
+before submission. After an uncertain reply use `settle` with that target
+and key; a fresh key is not a retry. Do not automate setup by repeating
+unretained ad hoc CLI acts.
+
+If the Room does not yet exist, use the actual Site target and its digest
+with `kind: "create-room"`, `fields: {"label":"Room A"}` and one retained
+key for that deployment. `wait` on its accepted creation entry, then read
+`items` with `type: "room"` at the Site. Keep the resulting active row's
+full Room scope; a pending row is not a commissioned Room.
+
+At that Room, use the following actual acts. Every new opening's local ID
+is its accepted receipt's fact position. Follow each with `step` and the
+matching `items` read; use the assigned IDs in subsequent fields.
+
+| Act | Fields and subject | Proving read |
+|---|---|---|
+| `commission-zone`, four times | `label`: Zone 1 to Zone 4; `setpoint`: 2400; `band`: 200 | Four distinct zone items with those values; keep their actual IDs in creation order |
+| `commission-device`, three per zone | `zone`: that actual zone ID; `kind`: vent, fan or heater; `label`: kind plus zone number; `minLevel`: 0; `maxLevel`: 100; `target`: closed for vent, off for fan, on for heater; `level`: 0, 0 or 100 respectively | Twelve distinct devices, one of each kind per zone, exact zone refs, targetAt of their commissioning entry, no invented report or outcome |
+| `bind-zone-devices`, once per zone | `on`: actual zone ID; fields `vent`, `fan`, `heater`: its actual device IDs | Each zone names those exact three devices |
+| `commission-bench`, for each A1 to J10 | `label`: row letter plus column; `row`: A to J; `column`: 1 to 10; `zone`: the assigned zone ID | One hundred distinct benches and 25 per zone; no duplicate row/column pair |
+| `set-heater`, once per zone | `on`: its actual heater ID; `target`: on; `level`: 100 | Four actual command openings and reserved owner answers, distinct from the commissioning target facts |
+
+Assign benches by quadrant: rows A–E/columns 1–5 are Zone 1, rows
+A–E/columns 6–10 Zone 2, rows F–J/columns 1–5 Zone 3, and the remaining
+quadrant Zone 4. The model derives 25 transient temperature cells per zone;
+commissioning writes no fabricated probe observations. Use a unique retained
+request key per setup act and the same key for settlement. The table is a
+provisioning procedure, not evidence that these acts have run.
+
+Read the full sensors/climate/operator Room assignments. Through each
+agent's separate custody, retain the named refusal when climate tries a
+sensor report and sensors tries climate control. Read the unchanged head
+after each refusal. Neither agent can authorize or set a heater. Do not
+schedule the driver until this native readback and the final installed
+integration witness are complete. No scenario fixture ID is an operational
+input.
 
 Invite the operator and head grower as people into their separate AI-app
 custodies; invite a tender as member when a visitor asks. Verify their
@@ -186,7 +223,8 @@ application-journal cursor readback are required before this step is ready.
 The client allowance is 96 reads, 48 mutations, 256 KiB of request bodies,
 4 MiB of retained reply chunks and a 45-second window. The host uses a
 five-second per-request SDK deadline. Each tick answers at most eight open
-commands, scans at most four pages/800 entries/64 command changes, and
+commands, scans at most four pages/800 entries/1 MiB of canonical prefix/64 command
+changes, and
 takes at most eight climate acts. The final installed integration must
 verify these limits. The sensors' observe transition records the durable
 scanned head in commandsAnsweredThrough, fenced by the Room revision;

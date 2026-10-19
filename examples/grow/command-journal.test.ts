@@ -2,7 +2,7 @@
  * boundary only, never native issuance, authority or owner settlement. */
 import { expect, test } from "vitest";
 import type { Entry, MemberRef, ScopeRef, Sealed } from "@generalbusiness/dap-contract";
-import { entryHash, scopeIdOf } from "@generalbusiness/artroom-bytes";
+import { canonicalBytes, entryHash, scopeIdOf } from "@generalbusiness/artroom-bytes";
 import { openCommands, readCommandJournal } from "./command-journal.ts";
 const scope: ScopeRef = { scope: scopeIdOf({ v: 1, kind: "lane", creator: null, cause: `sha256:${"2".repeat(64)}`, ordinal: 0, definition: `sha256:${"1".repeat(64)}` }), inc: "in_aaaaaaaaaaaaaaaaaaaaaaaaaa", kind: "lane" };
 const owner: MemberRef = { membership: { ...scope, kind: "membership" }, member: "@sensors" };
@@ -56,6 +56,30 @@ test("complete public coverage keeps an old pending command until its own closur
   expect([first.entries.length, first.through!.seq, first.complete, first.open.length]).toEqual([800, 799, false, 0]);
   const next = await readCommandJournal(publicPages, scope, owner, first.through, head);
   expect([next.entries.length, next.through!.seq, next.complete, next.open.length]).toEqual([11, 810, true, 0]);
+  // SCRIPTED large entries, with a public-history-like one-MiB page bound.
+  // The retained prefix leaves room for the tick's other replies, then the
+  // following invocation resumes at the first entry not acknowledged.
+  const large = history(400);
+  for (const sealed of large) {
+    sealed.entry.prev = sealed.entry.seq === 0 ? null : large[sealed.entry.seq - 1]!.hash;
+    sealed.entry.effects = [...sealed.entry.effects, { effect: "value", item: 0, slot: "TEST-padding", value: "x".repeat(7000) }];
+    sealed.hash = entryHash(sealed.entry);
+  }
+  const largeHead = { seq: large.length - 1, hash: large.at(-1)!.hash };
+  const largePages = { history: async (cursor?: string) => {
+    const from = Number(cursor ?? "0"); let end = from, bytes = 0;
+    while (end < large.length && end - from < 200) {
+      const size = canonicalBytes(large[end]!.entry).length;
+      if (end > from && bytes + size > 1024 * 1024) break;
+      bytes += size; end++;
+    }
+    return { ok: true as const, at: largeHead, value: large.slice(from, end), complete: end === large.length, ...(end === large.length ? {} : { next: String(end) }) };
+  } };
+  const bytePrefix = await readCommandJournal(largePages, scope, owner, null, largeHead);
+  expect(bytePrefix.complete).toBe(false); expect(canonicalBytes(bytePrefix.entries).length).toBeLessThanOrEqual(1024 * 1024);
+  const byteNext = await readCommandJournal(largePages, scope, owner, bytePrefix.through, largeHead);
+  expect(byteNext.entries[0]!.entry.seq).toBe(bytePrefix.through!.seq + 1);
+  expect(byteNext.through!.seq).toBeGreaterThan(bytePrefix.through!.seq);
   const corrupted = structuredClone(journal); corrupted[3]!.entry.prev = journal[0]!.hash;
   expect(() => openCommands(scope, owner, null, at(4), corrupted)).toThrow("coverage");
 });

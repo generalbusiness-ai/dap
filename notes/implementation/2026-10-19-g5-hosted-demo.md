@@ -374,3 +374,45 @@ and `...native-revision-types...log`. The earlier stop-fence control used the
 previous explicitly scripted revision refusal; its lost-reply case and
 stop assertions are unchanged. This is still in-memory Native evidence,
 not installed owner settlement or remote transport.
+
+
+## Native preparation receipt and reply headroom
+
+Self-review caught a native protocol distinction before installed execution:
+receiptOf leaves intent null for a preparation. The driver now checks the
+exact receipt scope/definition and reads its sealed entry, matching the
+whole signed owner request, capability and answer step. An act receipt
+still binds its intent digest. The focused receipt witness runs the real
+native receipt projection over a clearly SCRIPTED unjudged wire entry;
+current Main does not yet admit the G5a capability name. No owner judgment,
+authority, installation or reservation is claimed by that case. The initial
+compiler correctly rejected the future capability's typed literal on old
+Main; the fixture now scripts wire JSON explicitly, like the existing
+public-journal fixture, and the production comparison uses a string until
+reviewed G5a lands. Actual maintained type/owner integration is still required.
+
+The journal's canonical retained-prefix limit is now 1 MiB inside the 4 MiB
+total HTTP reply allowance. It can receive an extra bounded public history
+page before filling the prefix, leaving room for owner-entry proofs and
+other tick reads/replies. Entry/page/record bounds remain 800/four/64. The
+scripted journal witness now includes large entries under a public-like
+one-MiB page bound: it retains a bounded prefix and resumes at its exact
+next position. This is no native large-history integration claim.
+
+The owning three files/six cases pass in
+`/tmp/artroom-g5-hosted-receipt-headroom-owning-20261019.log`; corrected
+compiler passes in `...receipt-headroom-corrected-types...log`. A one-line
+whole-signed-request binding bypass first produced an inconclusive control:
+Vitest printed AssertionError, but the helper classified its promise-reject
+assertion as Error. No distinction was claimed. The same assertion now
+joins the result and checks a boolean: one pass to one unchanged assertion
+failure, exact restoration, original exit 0 in
+`/tmp/artroom-g5-hosted-owner-receipt-joined-control-20261019.log`. The earlier
+inconclusive log is retained separately.
+
+The runbook now gives actual MCP setup acts and proving reads, with retained
+request keys and native assigned IDs: Site child Room, four zones, twelve
+devices, bindings, one hundred quadrant benches and four explicit initial
+heater commands. Initial commissioning targets are not presented as command
+records. Only the later set-heater entries open command reservations. No
+provisioning command has been executed against a service.

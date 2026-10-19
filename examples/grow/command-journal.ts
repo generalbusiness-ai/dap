@@ -7,7 +7,10 @@ import type { SimulatedDevice } from "./simulator.ts";
 
 const CAPABILITY: string = "device-command@1";
 export const COMMAND_SUFFIX_ENTRIES = 800;
-export const COMMAND_SUFFIX_BYTES = 4 * 1024 * 1024;
+// Keep reply headroom inside the invocation's four-MiB total allowance.
+// One extra bounded history page can be fetched before this prefix fills;
+// later owner-entry proofs, snapshots and signed-write replies still fit.
+export const COMMAND_SUFFIX_BYTES = 1024 * 1024;
 export const COMMAND_SUFFIX_RECORDS = 64;
 export interface OpenCommand {
   readonly fact: FactRef;

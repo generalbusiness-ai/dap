@@ -7,6 +7,7 @@ import { readCommandJournal, type OpenCommand } from "./command-journal.ts";
 import { simulateRoom, type SimulatedDevice, type SimulatedZone, type SimulatorSchedule } from "./simulator.ts";
 
 export const TICK_ANSWERS = 8, TICK_CLIMATE_ACTS = 8;
+const DEVICE_OWNER: string = "device-command@1";
 export interface SimulatorPorts {
   reader: Pick<ScopeHandle, "summary" | "history" | "entry">;
   submit(signed: SignedIntent): Promise<Answer>;
@@ -46,6 +47,23 @@ const headOf = (value: unknown): Head | null => value == null ? null : isRecord(
 const seqOf = (value: unknown, scope: ScopeRef): number => integer(value) ? value : isFactRef(value) && same(value.at, scope) ? value.seq : fail("invalid-room-fact");
 const itemOf = (snapshot: Snapshot, id: number): Item => snapshot.summary.items.find(item => item.id === id) ?? fail("room-item-unavailable");
 
+/** Native preparation receipts have intent=null. Bind an owner's accepted
+ * answer by reading its exact sealed preparation, rather than mistaking it
+ * for an act receipt or trusting an unrelated accepted step. */
+export async function acceptedTickFact(answer: Extract<Answer, { answer: "accepted" }>, scope: ScopeRef, definition: Digest,
+  signed: SignedIntent, owner: boolean, reader: Pick<ScopeHandle, "entry">): Promise<FactRef> {
+  const receipt = answer.receipt;
+  if (!same(receipt.fact.at, scope) || receipt.definition !== definition || receipt.intent !== (owner ? null : intentDigest(signed.intent))) return fail("accepted-receipt-mismatch");
+  if (owner) {
+    const read = await reader.entry(receipt.fact.seq);
+    if (!read.ok || !read.complete || read.next !== undefined || read.value.hash !== receipt.fact.hash || entryHash(read.value.entry) !== receipt.fact.hash
+      || read.value.entry.seq !== receipt.fact.seq || !same(read.value.entry.at, scope)) return fail("owner-preparation-unavailable");
+    const input = read.value.entry.input;
+    if (input.type !== "preparation" || input.capability !== DEVICE_OWNER || input.step !== "answer" || !same(input.signed, signed)) return fail("owner-preparation-mismatch");
+  }
+  return receipt.fact;
+}
+
 /** A new scheduled tick reads current recorded state. It never fabricates
  * observations for skipped minutes or automatically resends an unknown
  * request. Within one invocation each exact signed envelope is sent once;
@@ -76,8 +94,8 @@ export async function simulatorTick(config: SimulatorTick, port: SimulatorPorts)
     const answer = await (owner ? port.answer(lastRequest) : port.submit(lastRequest));
     if (owner && answer.answer === "refused" && answer.reason === "capability-refused" && answer.name === "device-command-closed") { report.alreadyClosed++; return "already-closed"; }
     if (answer.answer !== "accepted") return fail(`${answer.answer}:${answer.reason}${"name" in answer && answer.name ? ":" + answer.name : ""}`);
-    if (!same(answer.receipt.fact.at, config.scope) || answer.receipt.intent !== intentDigest(lastRequest.intent)) return fail("accepted-receipt-mismatch");
-    report.accepted.push({ kind, fact: answer.receipt.fact }); return answer.receipt.fact;
+    const accepted = await acceptedTickFact(answer, config.scope, config.definition, lastRequest, owner, port.reader);
+    report.accepted.push({ kind, fact: accepted }); return accepted;
   }
   async function act(role: "sensors" | "climate", current: Snapshot, kind: string, on: number | null, fields: Record<string, FieldValue>, subjects: Record<string, number>): Promise<FactRef> {
     if (role === "climate" && ++climateActs > TICK_CLIMATE_ACTS) return fail("climate-act-limit");
