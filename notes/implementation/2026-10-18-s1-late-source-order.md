@@ -1,5 +1,11 @@
 # S1: late deliveries and source order
 
+Current revision: settlement correction for checker report `b5ec3cf1` on
+candidate `684002a4`. The old review checkout and all 106 map-listed files
+remain frozen. This correction has a new checkout and private dependency
+view. Its new runtime/test changes still need the final gate and exact-head
+review; the passing gate recorded below covers the earlier candidate.
+
 Request `b42d3b741986eb8f171e353ad3cb3704f202be9b`, promise
 `1de1f7be5eec7f9e02c5fa5e4e527ee23477b5a1`. This branch starts from reviewed
 Main `165d5a86fe8c1868f3069efad61a435a5417bde2`. The approved sequenced note's
@@ -10,8 +16,8 @@ source-order/source-time child is request `0a66c7072fcddeda1e483f7df78051480bf55
 promise `9f3dc1b5b8fac97d054c9736eee14747e650268f`. Earlier child attempt
 `79a5a3b5` was ineffective because the promise alone carried no inheritable
 target; the effective request also rests on the parent request. The parent
-stays open for the late form. This is a progress note, not a gate, review
-or completion claim.
+stays open for the late form. This note records the child's exact gate
+evidence. Checker review and landing remain separate; parent S1 is not complete.
 
 ## Current source-order behavior
 
@@ -81,7 +87,7 @@ journal additions, all three owning package typechecks pass in
 `/tmp/artroom-s1-dap-derive-type-time-native-20261018.log`,
 `/tmp/artroom-s1-artroom-scope-type-time-native-20261018.log` and
 `/tmp/artroom-s1-artroom-replay-type-time-native-20261018.log`.
-The first gate failed, as recorded below; a corrected gate remains required.
+The first gate failed; the corrected gate below passes.
 
 Dependencies are a private APFS COW copy of the owned G1 view: 106 versions,
 13 workspace links inside this checkout and zero installs. Only this copy's
@@ -93,8 +99,9 @@ This checks versions and links, not tarball integrity.
 
 ## Late-refusal clarification
 
-Clarification request `0784600e23323634638dd7b07197c4b2dee37f74` is with
-planner. The approved note says late without a branch writes nothing and
+At implementation start, clarification request
+`0784600e23323634638dd7b07197c4b2dee37f74` was with planner.
+The approved note says late without a branch writes nothing and
 fires the sender's refused clause. Today a verified request refusal writes
 the decision and exactly one authenticated result send. A non-writing
 delivery refusal maps to retry/unavailable and cannot fire that clause.
@@ -136,3 +143,103 @@ passing gate or total edit cost. The machine was shared arm64 macOS 27.0.1,
 starting load 1.65 / 1.74 / 1.79, with the warm private COW dependency view.
 Other G1 browser work ran concurrently; this was not exclusive CPU or a heap
 measurement. Installs were skipped against the unchanged audited lock.
+
+## Corrected gate and review boundary
+
+The corrected gate passes at clean `b44a8e255c36dd4654e07c6cc406d3633b5805ba`,
+tree `f2f45bc1d73a76e06c91557fbf612c605b02e8d5`. Original PTY 59168 terminated
+at `4f4b19`, exit 0: 387 Vitest files / 1,874 cases pass; one file / three
+cases skip; chained Node 31 and Counter 55 pass. Log
+`/tmp/artroom-s1-source-order-gate-corrected-20261018.log`, raw directory
+`/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.Hj1O6L6CX0/`,
+outer time `/tmp/artroom-s1-source-order-gate-corrected-outer-20261018.time`.
+Typechecking took 8.2 s elapsed / 31.4 s CPU; tests 472.8 s / 644.4 s.
+The measured outer gate took 481.25 s elapsed / 676.04 s CPU
+(578.57 user + 97.47 system). The shared arm64 macOS 27.0.1 host started at
+load 1.24 / 2.43 / 2.49. The private COW view was warm after the failed
+attempt and focused correction; independent G1 work ran concurrently.
+These are gate costs, not exclusive CPU, heap or total edit-cost figures.
+The earlier Lending mismatch remains qualified evidence, not a claimed fix.
+
+Only this note changes after that passing code/test head. Per
+`docs/testing.md`, the gate is not repeated for a documentation-only evidence
+commit. The review candidate and tree are named by its filed artifacts and
+review request. Its scope is source order plus the authenticated source-time
+operand, not the late form or the whole parent.
+
+Planner decision `a692fd0d` subsequently resolves the late wording: ordinary
+authenticated refusal entry/result, new code `late` with the declared name,
+and clock-behind before any entry. Builder ratified it at `5a8f1709`.
+The late form proceeds independently under child request `4353d842`, promise
+`6201d371`, in a different checkout based initially on this unlanded source
+candidate. That checkout does not change this review's source or evidence,
+and its unreviewed late behavior is not covered by this gate.
+
+## Reserved suppression correction
+
+Checker report `b5ec3cf1ea6d0ed60eaa2b4778329ef84a723702`, read and ratified
+at `fbd0691e`, found that the suppression early return left a native numbered
+receiver pin's deciding reservation outstanding. The deciding entry was
+terminal but did not consume that decision. The correction records the same
+native refused-decision bookkeeping that an ordinary refusal uses and marks
+the draft as a settlement. It runs no handler body a second time and adds
+no history scan. An ordinary source-ordered request without a pin keeps its
+existing behavior.
+
+The separate native item-bound handler protocol has different accounting.
+This revision rejects `order: "source"` when that handler declares `bound`;
+absent order and explicit `arrival` remain valid. This is the narrow
+declaration restriction allowed by the review, not an assertion that item
+binding was settled by the receiver-pin correction.
+
+`source-order-reserved.test.ts` adapts the checker's two-export example:
+actual native capability, validator, judge, fold and MemoryState, with
+scripted task source entries and per-key fixture grants. Both pins start at
+decision 1. The higher entry advances B to 2; the suppressed lower entry
+consumes A's decision 2 without granting its license. Exactly two future
+deciding entries remain, rather than three. The capacity kernel fits the
+exact entry boundary and refuses one less, with byte accounting explicitly
+omitted; this is not a native object/storage or provider witness. Exact
+repeat adds no entry or debit. The arrival control still applies both, and
+the item-bound declaration has a passing arrival/refused source pair.
+
+Three focused derive files pass eight cases in
+`/tmp/artroom-s1-settlement-focused-initial-20261018.log`. A paired control
+removes just the pin record effect while retaining `settles: true`; the
+unchanged test fails by `decided` remaining 1 instead of 2, then the source
+is restored. Log `/tmp/artroom-s1-settlement-record-control-20261018.log`.
+The flag alone cannot stand in for consuming the actual reservation.
+
+Dependencies are another owned APFS COW view, 106 versions / 13 internal
+workspace links, unchanged lock and zero installs. Audit
+`/tmp/artroom-s1-settlement-dependency-view-20261018.json`, SHA-256
+`cad45b86bf6eb0268c5db7648665129c9d61a5bfccb68e8e7d59a37f9a936780`.
+No old review source, evidence, dependency view or script was changed.
+
+Derive and Scope typechecks pass for the correction. The reserved regression,
+actual native source-order/eviction/replay witness and regenerated Page asset
+pass together, three files / four cases, in
+`/tmp/artroom-s1-settlement-native-assets-20261018.log`. The Page bundle was
+regenerated for the changed shared validator. The paired record-effect
+control is also terminal and restored, with its intended assertion failure.
+The correction's gate passed at `b34a9f38f4b3937f70a5117be2e5811195e1764b`,
+tree `9440138222a548547f63aa8d2db7df1212c08a44`: 388 test files / 1,876
+cases passed, one file / three cases skipped, plus the 31-case and 55-case
+Node checks. Typecheck took 8.1 seconds elapsed / 31.1 CPU; tests took
+486.6 elapsed / 657.3 CPU. The outer gate took 494.91 elapsed / 688.61 CPU
+(592.13 user + 96.48 system). The original process ended with exit 0 before
+this note changed. No code, tests or dependencies changed after that gate.
+
+Evidence: `/tmp/artroom-s1-settlement-gate-20261018.log`,
+`/tmp/artroom-s1-settlement-gate-outer-20261018.time`,
+`/tmp/artroom-s1-settlement-gate-preparation-20261018.json`, and raw gate
+files in `/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.8MqkpHfsvX/`.
+Counting Node artifacts are in the same temporary root under
+`artroom-counting-node-v8mQul/`. The shared macOS 27.0.1 arm64 machine had
+starting load averages 2.10 / 1.64 / 1.73. This private COW dependency view
+was warm from focused checks and had no earlier full gate; independent
+late-handler work shared the machine. These are measured attempt costs,
+not exclusive CPU, heap measurements or total edit-to-review costs. The
+previous two attempts remain historical costs and do not count as testing
+this changed runtime. This evidence-only note commit does not rerun the
+unchanged code and tests, per `docs/testing.md`.

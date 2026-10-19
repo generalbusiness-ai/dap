@@ -191,7 +191,11 @@ function deliveryJudged(view: StateView, definition: ValidDefinition, delivered:
   // source incarnations separate; arrival order remains the default.
   if (message.type === "tell" && handler.order === "source") {
     const highest = view.sourceOrder(from.at, b.kind);
-    if (highest && (from.seq < highest.seq || (from.seq === highest.seq && n < highest.n))) return decide("superseded", undefined);
+    if (highest && (from.seq < highest.seq || (from.seq === highest.seq && n < highest.n))) {
+      // A terminal suppressed request still consumes its numbered receiver
+      // decision. Preserve the same native bookkeeping as a refusal.
+      return decide("superseded", undefined, reserved ? recordEffects(reserved.capability, [reserved.refused]) : [], [], [], false, [], reserved !== null);
+    }
   }
 
   const platform: Effect[] = [];
