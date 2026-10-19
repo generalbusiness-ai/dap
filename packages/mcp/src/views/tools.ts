@@ -5,7 +5,7 @@ import type { CallResult } from "../service.ts";
 import { VIEW_KINDS } from "./resources.ts";
 import { ViewError, type ViewSessions } from "./session.ts";
 import type { PageKind } from "./types.ts";
-import { viewToolName } from "./names.ts";
+import { viewInputToolName, viewToolName } from "./names.ts";
 
 type Args = Record<string, unknown>;
 const key = { type: "string", minLength: 1, maxLength: 128 };
@@ -40,9 +40,9 @@ const integer = (args: Args, name: string): number => {
 
 export function viewTools(sessions: ViewSessions, screens?: readonly { name: string; resource: string }[]): Record<string, { tool: Tool; run: (args: Args) => Promise<CallResult> }> {
   const tools: ReturnType<typeof viewTools> = {};
-  const add = (name: string, description: string, properties: Args, required: string[], appOnly: boolean, resource: string | undefined, run: (args: Args) => Promise<CallResult>) => {
+  const add = (name: string, description: string, properties: Args, required: string[], appOnly: boolean, resource: string | undefined, run: (args: Args) => Promise<CallResult>, writes = false) => {
     tools[name] = {
-      tool: { name, description, inputSchema: { type: "object", properties, required, additionalProperties: false }, _meta: { ui: { visibility: appOnly ? ["app"] : ["model", "app"], ...(resource ? { resourceUri: resource } : {}) } }, annotations: { readOnlyHint: name !== "view_act" } },
+      tool: { name, description, inputSchema: { type: "object", properties, required, additionalProperties: false }, _meta: { ui: { visibility: appOnly ? ["app"] : ["model", "app"], ...(resource ? { resourceUri: resource } : {}) } }, annotations: { readOnlyHint: !writes && name !== "view_act" } },
       run: async (args) => {
         try { return await run(args); }
         catch (error) {
@@ -79,5 +79,26 @@ export function viewTools(sessions: ViewSessions, screens?: readonly { name: str
     const answer = await sessions.act(string(args, "view"), integer(args, "cut"), string(args, "action"));
     return result(answer, JSON.stringify(answer));
   });
+  for (const action of sessions.source.inputActs ?? []) {
+    const name = viewInputToolName(action.screen, action.id);
+    if (Object.hasOwn(tools, name)) throw new Error("Declared input tool names collide.");
+    const properties = Object.fromEntries(Object.entries(action.parameters).map(([field, parameter]) => {
+      const description = parameter.label + ("unit" in parameter && parameter.unit ? ` (${parameter.unit})` : "");
+      const schema = parameter.kind === "enum" ? { type: "string", enum: parameter.of, description }
+        : parameter.kind === "text" ? { type: "string", maxLength: parameter.max, description: `${description}; at most ${parameter.max} UTF-8 bytes` }
+        : { type: parameter.kind === "int" ? "integer" : "number", minimum: parameter.min / 10 ** (parameter.kind === "decimal" ? parameter.scale : 0),
+          maximum: parameter.max / 10 ** (parameter.kind === "decimal" ? parameter.scale : 0),
+          description: `${description}; ${parameter.kind === "decimal" ? `at most ${parameter.scale} decimal places, exactly` : "whole number"}` };
+      return [field, schema];
+    }));
+    add(name, `${action.label} on the currently selected ${action.screen} item. Use its exact item and revision from the card context. Supply only readings the person gave. Keep the same request key and values when retrying; an unknown outcome needs Check original request.`,
+      { view: key, item: key, revision: key, request: key,
+        values: { type: "object", properties, required: Object.entries(action.parameters).filter(([, parameter]) => parameter.required).map(([field]) => field), additionalProperties: false, minProperties: 1 } },
+      ["view", "item", "revision", "request", "values"], false, screens?.find(screen => screen.name === action.screen)?.resource, async args => {
+        const answer = await sessions.input(string(args, "view"), action.screen, action.id, string(args, "item"), string(args, "revision"), string(args, "request"), args["values"]);
+        const { text, ...data } = answer;
+        return result(data, [answer.receipt, text].filter(Boolean).join(" "));
+      }, true);
+  }
   return tools;
 }

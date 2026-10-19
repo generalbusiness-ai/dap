@@ -13,6 +13,9 @@ import type { DefinitionLike } from "../describe.ts";
 import { effectiveFields, expectedOf } from "../shape.ts";
 import { formatInteger } from "./numbers.ts";
 import { formatFact } from "./facts.ts";
+import { decodeViewParameters } from "@generalbusiness/artroom-bytes/application-v2";
+
+const controlId = (view: ApplicationView, control: ApplicationViewAct, index: number) => view.acts.filter(choice => choice.act === control.act).length > 1 ? `${control.act}:${index}` : control.act;
 
 export interface DeclaredViewPort {
   /** The current active native install, read under the configured membership. */
@@ -30,6 +33,10 @@ const template = (source: string, row: ApplicationProjectionRow, waiting: string
 export class DeclaredViewSource implements ViewSource {
   readonly declared = true;
   readonly packet: PackedApplication2;
+  get inputActs() {
+    return Object.entries(this.packet.package.presentation.views).flatMap(([screen, view]) => view.acts.flatMap((control, index) =>
+      control.parameters ? [{ screen, id: controlId(view, control, index), label: control.label, parameters: control.parameters }] : []));
+  }
   get screens() { return Object.keys(this.packet.package.presentation.views).map(name => ({ name, resource: `ui://dap/declared/${name}` })); }
   get presentation() {
     return { resources: this.screens.map(({ name, resource }) => ({ ...PRESENTATION.resources[0]!, uri: resource, name,
@@ -98,7 +105,7 @@ export class DeclaredViewSource implements ViewSource {
       try { holds = (await evaluate(control.when, input(row))).value === true; }
       catch (error) { if (!(error instanceof RuleEvalError)) throw error; }
       const at = holds ? this.#expected(view, control, row, data) : null;
-      if (at !== null) actions.push({ id: view.acts.filter(choice => choice.act === control.act).length > 1 ? `${control.act}:${index}` : control.act, label: control.label, purpose: "act", kind: control.act,
+      if (at !== null) actions.push({ id: controlId(view, control, index), label: control.label, purpose: "act", kind: control.act, ...(control.parameters ? { parameters: control.parameters } : {}),
         args: { target: scope.scope, on: row.id, at, digest: definition, ...(control.args ? { fields: control.args } : {}) } });
     }
     return actions;
@@ -166,6 +173,17 @@ export class DeclaredViewSource implements ViewSource {
     if (!row || card.identity.subject.scope !== scope.scope || canonicalize(card.declared?.data.scope ?? null) !== canonicalize(scope)
       || String(row.revision) !== card.identity.revision) throw new ViewError("stale", "The declared item changed. Refresh before acting; no new request was signed.");
     const actions = await this.#allowed(view, row, reply.value, scope, definition);
-    if (!actions.some(current => current.kind === action.kind && current.id === action.id && canonicalize(current.args) === canonicalize(action.args))) throw new ViewError("stale", "This act or one of its subjects changed under the current when and held actions; no new request was signed.");
+    const matches = actions.some(current => {
+      if (current.kind !== action.kind || current.id !== action.id) return false;
+      let args = current.args;
+      if (current.parameters) {
+        let fields;
+        try { fields = decodeViewParameters(current.parameters, action.parameterInput); }
+        catch { return false; }
+        args = { ...args, fields: { ...(args["fields"] as Record<string, FieldValue> | undefined), ...fields } };
+      }
+      return canonicalize(args) === canonicalize(action.args);
+    });
+    if (!matches) throw new ViewError("stale", "This act or one of its subjects changed under the current when and held actions; no new request was signed.");
   }
 }

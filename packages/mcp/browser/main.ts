@@ -288,13 +288,14 @@ function render() {
     const next = button("›", () => read({ position: display!.position + 1, page: "summary" }), "quiet arrow");
     next.setAttribute("aria-label", "Next item"); next.disabled ||= display.position + 1 >= display.count;
     nav.append(previous, node("span", `${display.position + 1} / ${display.count}`, "position"), next); root.append(nav);
-  } else if (!summary && display.query.page !== "diff") {
+  }
+  if (display.query.page !== "diff" && (!summary || card.actions.some(action => action.input === "chat" || action.purpose === "check-original"))) {
     const actions = node("div", undefined, "actions");
     for (const action of card.actions) {
-      const control = button(action.label, () => act(action.id));
+      const control = button(action.input === "chat" ? `${action.label} in chat` : action.label, action.input === "chat" ? handoff : () => act(action.id));
       control.disabled ||= !display.active; actions.append(control);
     }
-    if (display.query.page === "item" && card.actions.length < 2 && !card.unresolvedOriginal) {
+    if (display.query.page === "item" && card.actions.length < 2 && !card.unresolvedOriginal && !card.actions.some(action => action.input === "chat")) {
       const ask = button("Ask in chat", handoff, "quiet"); ask.disabled ||= !display.active; actions.append(ask);
     }
     if (display.query.page === "item" && card.diffAvailable) actions.append(button("View diff", async () => { returnPage = "item"; await read({ page: "diff" }); }, "quiet"));

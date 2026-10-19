@@ -70,3 +70,33 @@ This checkpoint implements parsing, scalar conversion and native schema
 binding only. Derived model tools, fresh standing/revision admission, the
 carousel, layers and the typed-text journey still need implementation and
 owning witnesses. No G2 gate, review or completion is claimed.
+
+## Derived input tools checkpoint
+
+Each parameterized act now derives a stable model-visible tool with human
+units, exact precision guidance and a closed values schema. The caller names
+the retained view, selected item and revision, and a request key. The host
+owns the target, native act, constants, expected subjects and custody key.
+It repeats the declared when/standing/revision admission inside the perform
+callback, then combines only decoded scalar fields with the fixed constants.
+App act calls cannot bypass measurement entry. Their buttons hand off to chat.
+
+Concurrent duplicate input keys share one promise. Completed retries return
+the original context and receipt even after advancement or lost standing;
+changed meanings refuse. There are at most 32 retained inputs per view.
+Unknown outcomes retain the original custody request and its check button,
+including after a carousel refresh, and offer no successor measurement.
+Accepted outcomes refresh position zero for the forthcoming oldest-first
+order. Model results contain only the opening context/identity and receipt;
+private card data and raw native response fields stay out of this path.
+
+The two MCP owning files pass ten cases in
+`/tmp/artroom-g2-model-input-focused-20261019.log`. These use scripted model
+calls, read answers and a perform callback that counts admission; they prove
+neither an LLM call nor a native accepted probe. The owning test and browser
+compilers pass. Their first test-compiler attempt found missing `required`
+flags in three fixture fields and index-signature access; these are fixed.
+`...model-input-admission-control-20261019.log` removes the current admission
+call: two cases pass and the unchanged lost-standing assertion fails. The
+driver restores the source. Native Grow, ordering, age/layer and browser
+journeys still need implementation and owning evidence.

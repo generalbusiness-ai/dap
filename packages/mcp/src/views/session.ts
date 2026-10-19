@@ -1,14 +1,16 @@
 import { canonicalize, isScopeRef, utf8 } from "@generalbusiness/artroom-bytes";
 import type { ScopeRef } from "@generalbusiness/dap-contract";
 import { validKey } from "../custody.ts";
+import { decodeViewParameters } from "@generalbusiness/artroom-bytes/application-v2";
 import { capturedExpected, shapeAt } from "../shape.ts";
 import type { CallResult } from "../service.ts";
 import type { ViewKind } from "./resources.ts";
-import type { Card, CardContext, Display, EntryRange, PageKind, Projection, ViewQuery, ViewSource } from "./types.ts";
+import type { Card, CardAction, CardContext, Display, EntryRange, PageKind, Projection, ViewQuery, ViewSource } from "./types.ts";
 
 export class ViewError extends Error {
   constructor(readonly reason: "shape" | "absent" | "superseded" | "stale" | "busy" | "unavailable", message: string) { super(message); }
 }
+type InputOpening = Awaited<ReturnType<ViewSessions["open"]>> & { receipt?: string };
 interface Instance {
   key: string;
   query: ViewQuery;
@@ -18,6 +20,7 @@ interface Instance {
   busy: boolean;
   dispatches: Map<string, Promise<CallResult>>;
   pending: Map<string, Card["actions"][number]>;
+  inputs: Map<string, { meaning: string; outcome: Promise<InputOpening> }>;
 }
 const MAX_INSTANCES = 128;
 const PAGES = new Set<PageKind>(["summary", "item", "diff", "updates"]);
@@ -69,8 +72,9 @@ function checked(projection: Projection, query: ViewQuery): Projection {
     }
     // The kit knows screen contracts and generic act purposes, never lane states or names.
     card.actions = card.actions.filter((action) => {
-      if (query.page === "summary" || query.page === "diff") return false;
+      if (query.page === "diff") return false;
       if (card.unresolvedOriginal) return action.purpose === "check-original";
+      if (query.page === "summary" && !(card.declared?.kind === "carousel" && action.parameters)) return false;
       if (projection.status !== "ready") return false;
       if (query.page === "updates") return action.purpose === "mark-reviewed" && card.unavailable.length === 0 && (card.entries?.length ?? 0) > 0 && canonicalize(mergeRanges(card.reviewIntended)) === canonicalize(ranges(card.entries ?? []));
       if (action.purpose === "mark-reviewed") return false;
@@ -106,7 +110,7 @@ export class ViewSessions {
     }
     if (this.#instances.size >= MAX_INSTANCES) throw new ViewError("busy", "This connection retains its maximum of 128 views. Start a new connection.");
     const query: ViewQuery = { screen, position: 0, page: this.source.initialPage?.(screen) ?? "summary", ...(subject === undefined ? {} : { subject }), ...(items === undefined ? {} : { items: structuredClone(items) }), ...(scope === undefined ? {} : { scope: structuredClone(scope) }) };
-    const instance: Instance = { key, query, cut: 0, projection: { status: "unavailable", count: 0, position: 0, fallback: "Loading the card." }, busy: true, dispatches: new Map(), pending: new Map() };
+    const instance: Instance = { key, query, cut: 0, projection: { status: "unavailable", count: 0, position: 0, fallback: "Loading the card." }, busy: true, dispatches: new Map(), pending: new Map(), inputs: new Map() };
     this.#instances.set(key, instance);
     this.#current.set(screen, key);
     try { instance.projection = checked(structuredClone(await this.source.read(query, this.access)), query); }
@@ -141,7 +145,7 @@ export class ViewSessions {
       ...(instance.receipt ? { receipt: instance.receipt } : {}),
     };
     return structuredClone({ view: instance.key, cut: instance.cut, active: this.#active(instance), query, status: projection.status, position: projection.position, count: projection.count,
-      ...(card ? { card: { ...card, actions: card.actions.map(({ id, label, purpose }) => ({ id, label, purpose })) } } : {}), fallback: projection.fallback, context,
+      ...(card ? { card: { ...card, actions: card.actions.map(({ id, label, purpose, parameters }) => ({ id, label, purpose, ...(parameters ? { input: "chat" as const } : {}) })) } } : {}), fallback: projection.fallback, context,
       ...(projection.data ? { data: projection.data } : {}),
       ...(projection.surface ? { surface: projection.surface } : {}),
       ...(instance.receipt ? { receipt: instance.receipt } : {}) });
@@ -163,7 +167,7 @@ export class ViewSessions {
         this.#admit(instance, cut ?? -1);
         if (projection.card) {
           const pending = instance.pending.get(this.#itemKey(projection.card));
-          if (pending && query.page !== "summary" && query.page !== "diff") {
+          if (pending && query.page !== "diff" && (query.page !== "summary" || projection.card.declared?.kind === "carousel")) {
             projection.card.unresolvedOriginal = true;
             projection.card.actions = [pending];
           }
@@ -182,6 +186,48 @@ export class ViewSessions {
     const instance = this.#instance(key);
     const dispatchKey = `${cut}:${actionId}`;
     const action = instance.projection.card?.actions.find((candidate) => candidate.id === actionId);
+    if (action?.parameters) throw new ViewError("shape", "Type the declared measurements in chat; this card cannot supply their values.");
+    return this.#dispatch(instance, cut, action, dispatchKey);
+  }
+  /** Only the context line, selected identity and receipt cross back to the model. */
+  #inputOpening(instance: Instance): InputOpening {
+    return { ...this.opening(instance), ...(instance.receipt ? { receipt: instance.receipt } : {}) };
+  }
+  async input(key: string, screen: string, actionId: string, item: string, revision: string, request: string, values: unknown) {
+    const instance = this.#instance(key);
+    if (!validKey(request)) throw new ViewError("shape", "Keep a request key of 1 to 128 UTF-8 bytes for retries.");
+    if (!validKey(item) || !validKey(revision)) throw new ViewError("shape", "Use the bounded item and revision from the card context.");
+    const declaration = this.source.inputActs?.find(action => action.screen === screen && action.id === actionId);
+    if (!declaration || instance.query.screen !== screen) throw new ViewError("shape", "This view declares no such input act.");
+    let fields;
+    try { fields = decodeViewParameters(declaration.parameters, values); }
+    catch { throw new ViewError("shape", "The measurements do not fit the declared fields, precision or limits; no request was signed."); }
+    const meaning = canonicalize({ screen, actionId, item, revision, fields });
+    const old = instance.inputs.get(request);
+    if (old) {
+      if (old.meaning !== meaning) throw new ViewError("shape", "This request key already names different measurements. No successor was signed.");
+      return old.outcome;
+    }
+    if (instance.inputs.size >= 32) throw new ViewError("busy", "This view retains 32 measurement requests. Open a new view.");
+    const outcome = (async () => {
+      const card = instance.projection.card;
+      if (!card || card.identity.item !== item || card.identity.revision !== revision) throw new ViewError("stale", "The selected item or revision changed. Read the card again; no request was signed.");
+      const offered = card.actions.find(action => action.id === actionId && action.parameters);
+      if (!offered) throw new ViewError("stale", "This card no longer offers that measurement act; no request was signed.");
+      const action = { ...offered, parameterInput: structuredClone(values), args: { ...offered.args,
+        fields: { ...(offered.args["fields"] as Record<string, unknown> | undefined), ...fields } } };
+      const cut = instance.cut;
+      const { result } = await this.#dispatch(instance, cut, action, `input:${request}`);
+      if (result.structuredContent["answer"] === "accepted") {
+        try { await this.read(key, cut, { position: 0 }); }
+        catch { /* The accepted receipt survives a failed refresh. */ }
+      }
+      return this.#inputOpening(instance);
+    })();
+    instance.inputs.set(request, { meaning, outcome });
+    return outcome;
+  }
+  async #dispatch(instance: Instance, cut: number, action: CardAction | undefined, dispatchKey: string): Promise<{ result: CallResult; display: Display }> {
     const retained = action?.purpose === "check-original" ? undefined : instance.dispatches.get(dispatchKey);
     if (retained) return { result: await retained, display: this.#display(instance) };
     this.#admit(instance, cut);
