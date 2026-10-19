@@ -92,12 +92,21 @@ from an expert's statements, as the
 regulated work, that separation matters most. The provider can show who
 advised what, and on which facts.
 
+In the three cases below, an expert's answer and an operation on the
+provider's backend are different things. An accepted recommendation, a
+requested booking, or an approved return authorizes nothing by itself. An
+instruction the backend carries out has its own explicit authorization,
+for the exact action and version, under the provider's rules, and the
+record keeps the backend's confirmed reference or receipt, with the
+operation pending or unknown until one is confirmed.
+
 **A nurse answers a medication question.** A patient asks their assistant
 whether a cold remedy is safe with a prescribed medicine. The assistant
 says that a clinic nurse should answer. The intake form lists the
 medicines, the symptom, and the question. The nurse answers within the
-clinic's stated time. If a visit is needed, the clinic's booking system
-makes it, and the record keeps the booking reference. In a later
+clinic's stated time. If a visit is needed, the patient asks for the
+booking, the clinic's booking system makes it, and the record keeps the
+booking as pending until that system confirms a reference. In a later
 conversation, the patient asks, "What did the nurse say?" The assistant
 reads the nurse's answer, not its own summary of it.
 
@@ -105,15 +114,19 @@ reads the nurse's answer, not its own summary of it.
 move an old workplace retirement account. The fact-find form collects
 balances, charges, goals, and attitude to risk. A licensed adviser signs a
 recommendation with its reasons and required disclosures. The client
-accepts or declines it in the app. Only an accepted recommendation sends an
-instruction to the firm's account system. A later review starts from the
-signed recommendation and the facts it relied on.
+accepts or declines it in the app. Accepting it does not move the money:
+the transfer instruction is a separate act, authorized for that exact
+recommendation and version under the firm's rules, and the record shows
+the transfer as pending until the firm's account system confirms it. A
+later review starts from the signed recommendation and the facts it relied
+on.
 
 **A tax preparer asks for missing documents.** A household's assistant
 collects documents against the preparer's checklist. The preparer asks for
 what is missing, and the household answers in the form. The household
 approves the exact version of the return before the preparer files it, and
-the record keeps the filing receipt.
+the record keeps the filing as pending until the preparer's system
+confirms a receipt.
 
 These services need more than the learning case:
 
@@ -130,6 +143,17 @@ These services need more than the learning case:
   that way ([outside parties and systems](../docs/roadmap.md#outside-parties-and-systems)).
 - **The provider's rules.** The provider, not the client, sets response
   times, who may advise, and which disclosures an answer needs.
+- **Host restrictions.** The
+  [ChatGPT plugin rules](https://developers.openai.com/plugins/plugin-guidelines)
+  (read 16 October 2026) forbid collecting or processing protected health
+  information and government identifiers, and forbid facilitating or
+  meaningfully enabling money transfers or investment trades. So the
+  patient's medicines and symptoms, the household's tax documents, and the
+  transfer instruction do not pass through that plugin path, and moving
+  the transfer call to the provider's backend does not change that, since
+  the rules cover facilitation. Only permitted context, status, and receipt
+  flows may be considered there, subject to the host's and the field's
+  validation. No other host's permission is assumed here.
 - **Validation in each field.** Health, financial, and tax services each
   have their own rules on advice, records, and data. A provider must
   validate the service against them. This note claims no compliance.
