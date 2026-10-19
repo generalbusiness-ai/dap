@@ -33,7 +33,7 @@ That format support is separate from native selection or privacy admission.
 The journal manifest and retained paths therefore need examination before
 choosing any new format; a format change is not assumed.
 
-## Identity and policy questions to settle in implementation
+## Adopted identity and policy boundary
 
 `core.used` retains each selected foreign entry's canonical bytes and its
 producer name. `retained_input.under` is that name, not an exact definition
@@ -56,15 +56,52 @@ inside selection. The final choice must preserve scope/incarnation binding
 and the existing final pin/cutoff fence. No new policy certificate, request
 parameter, public read bypass or production credential is proposed here.
 
-Decision request `992b2b650b1f929274a50bc080874a0070513ddb` asks the
-planner to confirm the trusted fixture source-frame route before runtime
-implementation, or require persisted exact source-pin provenance instead.
-The proposed frame would bind full scope/incarnation to the native pin,
-declaration name and genesis fact from actual installed-scope birth/setup;
-the separate reviewed policy would cover inline classes and owner/domain
-metadata. It would add no request-controlled policy or public read bypass.
-The decision remains pending; the proposal is not an adopted policy or a
-certificate. G5a's complete review correction now takes priority.
+Planner report `b5584b262c2a9eb2fed7cb79c81758f143d4c24a`, adopted as
+`e63673f7b5a0e2739120a4b3deb549ed34056923`, answers decision request
+`992b2b650b1f929274a50bc080874a0070513ddb`. The fixture configuration
+route is approved with these fixed points:
+
+1. Read the producer's exact ScopeRef from the retained copy's own canonical
+   entry header through bounded metadata. A producer name, alias, digest
+   allowlist, fixture tag or owner table supplies neither identity nor
+   privacy coverage.
+2. Supply an immutable, bounded ScopeRef-to-pin/declaration map through an
+   explicitly fixture-named configuration port before the synchronous
+   inventory frame opens. The fixture builds it from actual installed-graph
+   native births at genesis 0 read through the existing reader. Record the
+   bound and provenance at the call site. Persisting provenance at retention
+   time is outside S2b; it remains an A0b open question.
+3. Keep reviewed policy separate, keyed by pin and covering every inline
+   class, owner, record, preparation step and custom domain. Join every
+   direct copy header to its pin and classify every selected local and
+   foreign class before fetching any copied, value, rule or snapshot body.
+   Missing identity, map entry or policy, or a conflict with a retained
+   genesis seed or retained declaration digest, refuses the whole prefix
+   with a named reason. Later body selection verifies canonical bytes, raw
+   content digest and the consumer's exact FactRef.
+4. Mark each foreign source's full ScopeRef and classified pin in the
+   immutable selection. Restart/rebuild checks the same pair and refuses a
+   changed configuration. Name that ScopeRef/pin policy basis in the archive
+   pass manifest. Keep the same pass budgets, one synchronous inventory
+   transaction and final scope/pin/cutoff fences. No foreign copy recursively
+   brings in its producer's other history.
+5. Actual native birth/setup are trusted fixture preparation under A2/A3,
+   not a public RPC, request-supplied policy, production certificate or
+   consent. Integrated export includes an installed application's late-bound
+   genesis 0 and structural readback through the existing reader. It proves
+   neither production admission nor complete offline foreign-history
+   verification. Incorporate actual reviewed G5a and S2a Main before the
+   final integration gate, and name that Main in the final note.
+
+The later G5 request `78fba9fc` puts the hosted demo ahead of S2b runtime,
+while S2a continues. This note records the adopted decision now; runtime
+work has not started and no pending approval is inferred from that priority.
+
+### A0b open question
+
+Whether production retention should persist independently verified exact
+source-pin provenance is a store/runtime and admission question for A0b.
+The fixture map is not a production provenance certificate or consent.
 
 ## Verification plan
 
