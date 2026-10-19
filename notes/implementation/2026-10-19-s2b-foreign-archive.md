@@ -3,8 +3,9 @@
 Request `c8c6ff6b6277fd103c30f80d0b76fd40a60ca8bb`, promise
 `ea3d761900e434f096adbb83e46ff1af3a86fe1f`. This is preparation against
 reviewed Main `3ed2a08a50f31e84ea42b4f6027684e14a8cedb8`. There is no
-S2b runtime implementation, test run, gate, review or landing. The private
-dependency preparation is recorded below.
+S2b inventory/admission/selection change, gate, review or landing. The initial
+fixture source-identity helper and focused checks are recorded below, along
+with the private dependency preparation.
 Actual reviewed G5a and S2a landings must be incorporated before final
 S2b integration. Neither unreviewed branch is imported here.
 
@@ -158,3 +159,44 @@ absent optional package; the second assumed every optional absence had
 platform metadata. The corrected audit records those absences explicitly.
 No test, build or dependency process ran during copying or cleanup. No
 S2b tests or runtime implementation have run yet.
+
+
+## Initial fixture source-identity implementation
+
+While G5 awaits actual reviewed G5a for its installed integration, the new
+archive-source-pins.ts prepares the adopted immutable fixture map. It takes
+bounded actual genesis 0 bytes/hash and exact declaration bytes from the
+fixture's existing native reader. It checks canonical entry bytes, seal
+hash, full scope/incarnation/kind, matching genesis incarnation, and the
+seed-derived scope ID. Digest pins require the exact declaration; native
+platform pins use finite registry data and their declared outcome domains.
+It owns frozen metadata and exposes no birth payload. A later get uses the
+full ScopeRef only and charges the pass even on a repeated lookup. The map
+itself grants no reviewed privacy coverage, production provenance or consent.
+It has not been wired into inventory, export, a driver or a public route.
+
+The focused case uses actual native creation/SQLite and an existing genesis
+read under TEST authority, clock and reader. It checks the owned map,
+unknown source, declaration/identity conflicts, repeated lookup cost, map
+count/lookup bounds and malformed input. Tampered configuration bytes are
+never inserted into the native journal. One allowed original process 33705
+ended 0: one file/one case, 34 ms tests, 4.06 s overall. The earlier sandbox run
+stopped at loopback EPERM before tests. Logs:
+`/tmp/artroom-s2b-source-pins-first-owning-20261019.log` and
+`/tmp/artroom-s2b-source-pins-allowed-owning-20261019.log`.
+
+A one-line seed-to-scope check bypass gives one pass to one unchanged
+boolean assertion failure, followed by exact source restoration; original
+process 51232 ends 0. The control log is
+`/tmp/artroom-s2b-source-seed-control-20261019.log`.
+A later extension adds named malformed-object/JSON refusals: one case
+passes, 32 ms tests/2.60 s overall, original 88646 ends 0 in
+`/tmp/artroom-s2b-source-pins-shape-owning-20261019.log`. Its compiler caught
+an index-signature narrowing in the inline shape check; an equivalent typed
+shape predicate fixes that. The corrected source/test compiler exits 0 in
+`/tmp/artroom-s2b-source-pins-shape-corrected-types-20261019.log`.
+The earlier compiler failure is retained. No whole gate or installed Grow
+export is claimed. Current reviewed Main 715e97f0 adds the planner's sprint
+report only; actual reviewed G5a/S2a Main incorporation remains required
+before final integration. Earlier preparation-only statements above are
+historical to this initial implementation checkpoint.
