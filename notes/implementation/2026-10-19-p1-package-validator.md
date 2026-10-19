@@ -426,3 +426,25 @@ G3 remains higher priority and in exact-head review49f191c4 at its frozen
 2a80a300f candidate. No G3 original is edited or executed by this P1 work.
 P1 still needs incorporation of later actual landings, remaining proof review
 and its own final gate before Source review. No P1 completion is claimed.
+
+## G3 incorporation while G5a forms are decided
+
+Merge `be49aa2ca` incorporates actual reviewed and audited G3 Main
+`426504d89b3140e5b3f769c546e846529cf9f8c3`. The Grow declaration had one
+merge conflict. Resolution preserves all reviewed G3 content, including 18
+views and 17 projections, together with P1's seven composition places and
+the nonfinal conflicted room state in the Site projection. Structural
+comparisons checked both sides. The resulting source is 63,214 bytes,
+within the unchanged 64 KiB limit.
+
+One focused Vitest invocation passes all 13 cases: graph ten, native Grow
+measurements one, and native Grow routing two. Its original process 35898
+closed with exit zero; the log is
+`/tmp/artroom-p1-g3-merge-owning-20261019.log`. The derive package's two and
+CLI's three compiler targets also pass; process 36209 closed with exit
+zero, with log `/tmp/artroom-p1-g3-merge-types-20261019.log`. No installs
+or package/lock changes. No frozen G3 source or evidence was changed.
+
+G5a contract decisions and the separate durable-presence request remain
+pending and take priority over final P1. This is integration evidence,
+not a P1 gate or completion claim.
