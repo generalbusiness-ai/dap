@@ -135,6 +135,7 @@ export class ViewSessions {
     const card = projection.card;
     const entries = query.page === "summary" ? [] : ranges(card?.entries ?? []);
     const context: CardContext = {
+      view: instance.key,
       screen: query.screen, page: query.page, status: projection.status, identity: card ? this.#identity(card) : null,
       projection: card?.projection.map(({ scope, seq, hash }) => ({ scope, seq, hash })) ?? (projection.data ? [{ scope: projection.data.scope.scope, ...projection.data.at }] : []),
       entriesRead: entries, presented: entries.map((range) => ({ ...range })),

@@ -46,8 +46,10 @@ export function bindApplicationViews(value: unknown, projections: Readonly<Recor
           if (journal || source.read !== "many" || !field || field.of.type !== "time" && field.of.type !== "int") return fail();
         }
         for (const name of [view.title, view.summary, ...view.facts.map(applicationViewFactField)]) if (name !== null && !fields.has(name)) return fail();
-        for (const fact of view.facts) if (typeof fact !== "string" && fact.field !== "id" && fact.field !== "revision"
-          && source.fields[fact.field]?.of.type !== "int") return fail();
+        for (const fact of view.facts) if (typeof fact !== "string") {
+          if ("format" in fact) { if (!(journal && fact.field === "time") && source.fields[fact.field]?.of.type !== "time") return fail(); }
+          else if (fact.field !== "id" && fact.field !== "revision" && source.fields[fact.field]?.of.type !== "int") return fail();
+        }
         if (view.actor !== null && (!Object.hasOwn(source.fields, view.actor) || source.fields[view.actor]!.of.type !== "member")) return fail();
         if (view.series) {
           const series = view.series, history = Object.hasOwn(bound.sources, series.source) ? bound.sources[series.source] : undefined;

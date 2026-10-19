@@ -193,3 +193,43 @@ requirement and the unchanged native denial assertion fails. The separate
 cases pass and the unchanged admitted-cost assertion fails. Both drivers
 restore source. Grow's per-metric layers and old-ref journey still need to
 consume this form; this checkpoint makes no G2 acceptance claim.
+
+## Grow ages and layers checkpoint
+
+Grow's bench carousel and record select each metric's own fact timestamp.
+Age facts bind only to time fields, retain the absolute native timestamp,
+show missing evidence as absent and report a clock before the reading instead
+of inventing a fresh age. Card ages use the MCP host's clock for display only.
+The grid declares a separate, smaller `layers` projection; the original `grid`
+projection used by maintained native scenarios is unchanged. Compact source
+sections keep metadata at 62,231 bytes without raising its allowance.
+
+The application-owned grid HTML now switches temperature, moisture and
+scouting, shows value and age, fades readings at least two days old, and opens
+the declared zone or bench record on cell selection. Scouting colour conveys
+presence/age, with no inferred severity. Layer ages use the device clock and
+say so; they report unavailable time or a clock behind the reading. A local
+minute timer updates ages without model context traffic. Browser verification
+is still owed for these HTML changes.
+
+The stable mounted-view key is now part of the context line/metadata so the
+model can address an input tool after app navigation. No volatile display cut
+is exposed. The model input fixture builds its routing fields from that
+public context. Production card resources have been rebuilt from source.
+
+`/tmp/artroom-g2-native-age-old-fact-20261019.log` passes three MCP cases;
+`...age-form-binding-20261019.log` passes nine bytes cases. The unchanged G1
+operator and new native layer-data case pass in
+`...grow-layers-native-data-20261019.log`. C4's metric fact124 remains readable
+at head224, outside the last100 entries. Before/after layers retain exact
+25→31 moisture and baseline→leaf-edge-curl note with their own timestamps.
+`...sparse-native-alarm-drain-20261019.log` then proves an EC-only probe on
+October20 makes the bench fresh while moisture/scouting stay two days old.
+Initial sparse-probe attempts captured revisions before the bounded native
+alarm drain finished and correctly refused `revision-moved`; the fixture now
+finishes those alarm turns before its next explicit actor call. No guard or
+budget was relaxed. Owning compilers pass; age/context/resource checks pass
+nine cases in `...age-context-card-resources-20261019.log`.
+
+No G2 gate, browser acceptance, actual-model invocation, review or landing has
+run. The final head still owes those checks and its complete evidence map.

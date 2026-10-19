@@ -217,6 +217,7 @@ export class McpService {
     const item = port.declaredViews?.item;
     if (item !== undefined && (!Number.isSafeInteger(item) || item < 0 || Object.is(item, -0))) throw Error("Invalid native application install item.");
     const declared = port.declaredViews ? new DeclaredViewSource(port.declaredViews.bytes, port.declaredViews.release, {
+      now,
       installation: () => this.#declaredInstallation(item!),
       projection: async query => this.#reads.projection((await this.#applicationRoom()).membership, query),
       actions: async () => {

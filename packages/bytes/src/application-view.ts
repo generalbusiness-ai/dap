@@ -19,7 +19,8 @@ export interface ApplicationViewAct {
 }
 /** Presentation of an integer stored in fixed-point units. Scaling is an
  * exact decimal shift, not an expression or a change to projection data. */
-export type ApplicationViewFact = string | { readonly field: string; readonly label: string; readonly scale: number; readonly unit: string };
+export type ApplicationViewFact = string | { readonly field: string; readonly label: string; readonly scale: number; readonly unit: string }
+  | { readonly field: string; readonly label: string; readonly format: "age" };
 export const applicationViewFactField = (fact: ApplicationViewFact): string => typeof fact === "string" ? fact : fact.field;
 interface ViewBase {
   readonly projection: string;
@@ -160,6 +161,11 @@ export function readApplicationViews(value: unknown): ApplicationViews {
       if (!Array.isArray(facts) || facts.length > B.facts) return fail("limit");
       for (const fact of facts) {
         if (typeof fact === "string") { name(fact); continue; }
+        if (isRecord(fact) && Object.hasOwn(fact, "format")) {
+          const format = only(fact, "field,format,label"); name(format["field"]); text(format["label"], 80);
+          if (format["format"] !== "age") return fail();
+          continue;
+        }
         const format = only(fact, "field,label,scale,unit");
         name(format["field"]); text(format["label"], 80);
         if (typeof format["scale"] !== "number" || !Number.isSafeInteger(format["scale"]) || format["scale"] < 0 || format["scale"] > 6) return fail();

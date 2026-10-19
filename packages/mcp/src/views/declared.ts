@@ -19,6 +19,8 @@ import { decodeViewParameters } from "@generalbusiness/artroom-bytes/application
 const controlId = (view: ApplicationView, control: ApplicationViewAct, index: number) => view.acts.filter(choice => choice.act === control.act).length > 1 ? `${control.act}:${index}` : control.act;
 
 export interface DeclaredViewPort {
+  /** Host wall clock for display ages only; never native admission. */
+  now?(): number;
   /** The current active native install, read under the configured membership. */
   installation(): Promise<ApplicationInstallation | null>;
   projection(query: ApplicationProjectionQuery): Promise<ApplicationProjectionRead>;
@@ -142,12 +144,13 @@ export class DeclaredViewSource implements ViewSource {
     if (!Number.isSafeInteger(query.position) || query.position < 0 || query.position >= rows.length) throw new ViewError("shape", "The declared view position is outside its complete projection.");
     const row = rows[query.position]!, values = input(row), waiting = Object.hasOwn(view.waiting, row.state) ? template(view.waiting[row.state]!, row, "") : "";
     const fallback = template(view.fallback, row, waiting), actions = await this.#allowed(view, row, reply.value, scope, definition);
+    const now = this.port.now?.() ?? Date.now();
     const series = this.#series(view, row, reply.value);
     const card: Card = {
       identity: surface ? { item: scope.scope, kind: "scope", revision: String(reply.value.at.seq), subject: { scope: scope.scope }, at: {} }
         : { item: String(row.id), kind: row.entry ? "entry" : row.type, revision: String(row.revision), subject: { scope: scope.scope, ...(row.entry ? {} : { item: row.id }) }, at: row.entry ? {} : { on: row.revision } },
       title: view.kind === "surface" ? query.screen : text(values[view.title]), summary: view.kind === "surface" || view.summary === null ? "" : text(values[view.summary]),
-      reasons: view.kind === "surface" ? [] : view.facts.map(fact => formatFact(fact, values)),
+      reasons: view.kind === "surface" ? [] : view.facts.map(fact => formatFact(fact, values, now)),
       projection: [{ scope: scope.scope, ...reply.value.at }], reviewIntended: [], unavailable: [], waitsOn: waiting ? [waiting] : [], settles: [], actions, fallback,
       declared: { kind: view.kind, source: view.item, context: template(view.context, row, waiting), actor: view.kind === "surface" || view.actor === null ? null : values[view.actor] ?? null,
         refresh: view.refresh, display: view.display, back: view.back, backScope, data: reply.value,

@@ -66,9 +66,11 @@ test("declared model input converts exact fields once, retains concurrent retrie
   expect(toolsForHost(Object.values(f.tools).map(value => value.tool), false).map(tool => tool.name)).toContain(f.tool.tool.name);
   expect(f.tool.tool.inputSchema).toMatchObject({ properties: { values: { additionalProperties: false, properties: { ec: { type: "number", minimum: 0, maximum: 10 } } } } });
   const display = await f.sessions.read("measure");
+  expect(display.context.view).toBe("measure"); expect(display.context).not.toHaveProperty("cut");
   expect(display.card?.actions).toEqual([{ id: "pause", label: "Measure", purpose: "act", input: "chat" }]);
   await expect(f.sessions.act("measure", display.cut, "pause")).rejects.toMatchObject({ reason: "shape" });
-  const first = f.tool.run(f.args), duplicate = f.tool.run(structuredClone(f.args)); f.release();
+  const routed = { ...f.args, view: display.context.view, item: display.context.identity!.item, revision: display.context.identity!.revision };
+  const first = f.tool.run(routed), duplicate = f.tool.run(structuredClone(routed)); f.release();
   const [one, two] = await Promise.all([first, duplicate]);
   expect(one).toEqual(two); expect(f.signed).toHaveLength(1);
   expect(f.signed[0]).toMatchObject({ kind: "pause", args: { target: f.scope.scope, on: 2, digest: f.id,

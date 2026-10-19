@@ -62,6 +62,19 @@ test("fixed-point fact descriptors bind only to selected integers with bounded d
   expect(() => readApplicationViews(declaration([fact, "revision"]))).toThrow(ApplicationViewError);
 });
 
+test("age descriptors bind only to selected timestamp fields", () => {
+  const native = { ...definition, items: { note: { ...definition.items["note"]!, values: {
+    ...definition.items["note"]!.values, seen: { required: false, fixed: false, of: { type: "time" as const } },
+  } } } };
+  const timed = readApplicationProjection({ ...projection, definition: definitionDigest(native), sources: { note: { ...projection.sources["note"]!, fields: {
+    ...projection.sources["note"]!.fields, seen: { from: { kind: "value", name: "seen" }, of: { type: "time" }, nullable: true },
+  } } } });
+  const age = { field: "seen", label: "Age", format: "age" };
+  const bound = (fact: unknown) => bindApplicationViews({ ...views(), note: { ...views().note, facts: [fact] } }, { "room.note": timed }, [{ id: definitionDigest(native), bytes: canonicalize(native) }]);
+  expect(bound(age)["note"]).toMatchObject({ facts: [age] });
+  for (const fact of [{ ...age, field: "text" }, { ...age, field: "id" }, { ...age, format: "script" }, { ...age, scale: 2 }]) expect(() => bound(fact)).toThrow(ApplicationViewError);
+});
+
 test("owned item and read-only surface views bind to their declared projection and native acts", () => {
   const input = views(), bound = bindApplicationViews(input, { "room.note": projection }, parts);
   expect(bound).toEqual(input); expect(Object.isFrozen(bound["note"]!.acts)).toBe(true);

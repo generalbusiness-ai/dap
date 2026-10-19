@@ -109,6 +109,8 @@ export interface ViewSource {
   admit?(query: ViewQuery, card: Card, action: CardAction): Promise<void>;
 }
 export interface CardContext {
+  /** Opaque mounted-view key for model input tools; never a dispatch cut. */
+  view: string;
   screen: ViewKind;
   page: PageKind;
   status: Projection["status"];

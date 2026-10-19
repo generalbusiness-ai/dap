@@ -43,6 +43,7 @@ export function growOperator(packet: AnyPackedApplication, session: Awaited<Retu
     return json({ ok: false, reason: "not-found" });
   };
   const source = new DeclaredViewSource(packet.bytes, packet.ids.release, {
+    now: () => now,
     installation: async () => ({ scope: session.site.at, directory: session.directory.at, rules: stand.rules, membership: stand.membership, destination: stand.destination,
       item: 7, definition: packet.package.semantic.entry, ids: packet.ids }),
     actions: async () => held,
