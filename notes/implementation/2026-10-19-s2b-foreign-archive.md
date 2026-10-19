@@ -85,3 +85,28 @@ Strengthen existing boundary witnesses where they expose the invariant:
 No new tests have been added or run for this preparation. Final witnesses
 must state their actual boundaries; one owning gate and exact-head review
 remain required before landing.
+
+
+## Private dependency preparation
+
+An idle S2a dependency view was copied with APFS `cp -cR` into this
+checkout, retaining independent regular-file inodes and only internal
+relative links. No install ran and no manifest or lock changed. The
+copy audit covers 127 package.json files, including embedded subpackage
+metadata; 106 installed package versions match the lock. All missing
+lock entries are optional and also absent from the donor. This is no
+claim about every optional absence's cause or tarball integrity.
+
+Audit `/tmp/artroom-s2b-dependency-view-20261019.json`, SHA-256
+`787158d16647b8e8543229187c528f65ee8778838dced971a8009a19a4110a1b`.
+The locked-version and cache-cleanup receipt is
+`/tmp/artroom-s2b-dependency-versions-20261019.json`, SHA-256
+`1a45cd4019dda8b48bc6311e798b8a67ea97ef7f53928b224698039ec1d2b5de`.
+Six copied Vite cache directories were cleared before any execution.
+Lock and retained install stamp both equal
+`3546b5384c9245fb646c4f7c22cabde0f4351b05dfcec704d1bdeb170666361a`.
+The receipt retains two stopped validation attempts: the first tried an
+absent optional package; the second assumed every optional absence had
+platform metadata. The corrected audit records those absences explicitly.
+No test, build or dependency process ran during copying or cleanup. No
+S2b tests or runtime implementation have run yet.
