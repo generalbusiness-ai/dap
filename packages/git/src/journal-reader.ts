@@ -1,5 +1,6 @@
 /** Untrusted archive bytes over Git objects. No checkout, replay judgment,
  * export admission or service fallback. The caller owns one read budget. */
+import { decodeGitText } from "./wire-text.ts";
 import { DOMAINS, type Digest, type Head, type RetainedInput, type ScopeId, type ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, domainRetainedJSON, entryHash, isEntry, parseStrict, rawRetainedJSON, scopeIdOf, timeMs, utf8 } from "@generalbusiness/artroom-bytes";
 import { GitRefusal } from "./names.ts";
@@ -44,7 +45,6 @@ class InvalidArchive extends Error {
 }
 function mismatch(why: string): never { throw new InvalidArchive("mismatch", why); }
 function refused(why: string): never { throw new InvalidArchive("refused", why); }
-const text = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 const equalBytes = (a: Uint8Array, b: Uint8Array): boolean => a.length === b.length && a.every((value, index) => value === b[index]);
 
 /** This reads the current commit's complete native prefix. It does not
@@ -101,7 +101,7 @@ export async function readJournalArchive(repository: JournalReadRepository, scop
       const body = await read(segment.id, "blob", segment.path); bodies.set(segment.path, body);
       work.input(body.length, 12);
       let lines: string[];
-      try { lines = text.decode(body).split("\n"); } catch { mismatch("segment is not UTF-8"); }
+      try { lines = decodeGitText(body).split("\n"); } catch { mismatch("segment is not UTF-8"); }
       if (lines.length === 0 || lines.length > 1000 || segment.first !== entries.length) mismatch("segment interval is not contiguous");
       budget.spend({ entries: lines.length }); work.metadata(lines.length * 128);
       for (const bytes of lines) {
@@ -124,7 +124,7 @@ export async function readJournalArchive(repository: JournalReadRepository, scop
       if (!object) { location.path = path; delete location.object; mismatch("manifest input is absent from the tree"); }
       const body = await read(object, "blob", path); bodies.set(path, body); work.input(body.length, 12);
       let bytes: string;
-      try { bytes = text.decode(body); } catch { mismatch("retained input is not UTF-8"); }
+      try { bytes = decodeGitText(body); } catch { mismatch("retained input is not UTF-8"); }
       const value = key.kind === "entry" || key.kind === "rule" ? rawRetainedJSON(key.digest, bytes)
         : domainRetainedJSON(key.kind === "value" ? key.domain : key.kind === "definition" ? DOMAINS.definition : DOMAINS.snapshot, key.digest, bytes, { canonical: true, max: body.length });
       if (value === undefined || canonicalize(value) !== bytes || key.kind === "entry" && !isEntry(value)) mismatch("retained input differs from its named bytes");

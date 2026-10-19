@@ -150,7 +150,7 @@ export interface TokenDriverOptions {
 
 type Recorded = Extract<Effect, { effect: "record" }>;
 
-const keyOf = (at: AttemptOf): string => `${at.scope.scope}/${at.scope.inc}/${at.operation}#${at.attempt}`;
+const attemptStorageKey = (at: AttemptOf): string => `${at.scope.scope}/${at.scope.inc}/${at.operation}#${at.attempt}`;
 const position = (value: unknown): value is number => typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
 const isOperation = (value: unknown): value is OperationId => typeof value === "string" && /^(0|[1-9][0-9]{0,15}):(0|[1-9][0-9]{0,15})$/.test(value);
 
@@ -265,7 +265,7 @@ export class TokenDriver {
   async answered(ask: MintAsk | RevokeAsk, reply: MintReply | RevokeReply): Promise<unknown> {
     const answer = "id" in ask ? (TOKEN_ID.test(ask.id) ? this.#revoking(ask.id, reply) : null) : this.#minting(ask, reply, "job" in ask.for ? READ_TOKEN_OWNER : TOKEN_OWNER);
     if (answer === null || this.#deliver === null) {
-      this.#minted.delete(keyOf(ask));
+      this.#minted.delete(attemptStorageKey(ask));
       return null;
     }
     return this.#deliver(ask.operation, ask.attempt, answer);
@@ -278,7 +278,7 @@ export class TokenDriver {
    * of the custody, above.
    */
   judged(at: AttemptOf, sealed: { entry: Entry; hash: Digest } | null): void {
-    const key = keyOf(at);
+    const key = attemptStorageKey(at);
     const held = this.#minted.get(key);
     if (held === undefined) return;
     this.#minted.delete(key);
@@ -336,7 +336,7 @@ export class TokenDriver {
       this.#log({ step: "mint", event: "no-answer" });
       return null;
     }
-    if (plaintext !== "") this.#minted.set(keyOf(at), { id: r.id, plaintext, owner });
+    if (plaintext !== "") this.#minted.set(attemptStorageKey(at), { id: r.id, plaintext, owner });
     return { result: "confirmed", evidence: { basis: "own-answer", body: { token: r.id, ends: r.ends as Timestamp } } };
   }
 }

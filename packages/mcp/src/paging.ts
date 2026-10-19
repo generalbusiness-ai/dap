@@ -4,7 +4,7 @@ import { b64url, unb64url, utf8 } from "@generalbusiness/artroom-bytes";
 
 export const KIB = 1024;
 
-export const bytesOf = (value: unknown): number => utf8(JSON.stringify(value)).length;
+export const replyBytes = (value: unknown): number => utf8(JSON.stringify(value)).length;
 
 /**
  * The items from `offset` that fit in `limit` bytes, at least one: an item
@@ -15,7 +15,7 @@ export function pageBy<T>(items: readonly T[], offset: number, limit: number): {
   const page: T[] = [];
   let used = 2;
   for (let i = offset; i < items.length; i++) {
-    const size = bytesOf(items[i]) + 1;
+    const size = replyBytes(items[i]) + 1;
     if (page.length > 0 && used + size > limit) return { page, next: i };
     page.push(items[i]!);
     used += size;
@@ -36,7 +36,7 @@ export function sliceText(text: string, offset: number, limit: number): { text: 
   let take = limit;
   let end = cut(take);
   let part = new TextDecoder().decode(bytes.subarray(start, end));
-  for (let sent = bytesOf(part); sent > limit && end > start; sent = bytesOf(part)) {
+  for (let sent = replyBytes(part); sent > limit && end > start; sent = replyBytes(part)) {
     take = Math.max(1, Math.floor(take * limit / sent) - 8);
     end = cut(take);
     if (end <= start) end = cut(take + 4);
@@ -52,3 +52,5 @@ export function fromCursor<T>(cursor: unknown): T | null {
   if (!bytes) return null;
   try { return JSON.parse(new TextDecoder().decode(bytes)) as T; } catch { return null; }
 }
+
+export { replyBytes as bytesOf };

@@ -63,7 +63,7 @@ export interface JobRecord {
   reservation?: ReservationSnapshot;
 }
 
-const keyOf = (job: FactRef): string => `job/${job.at.scope}/${job.at.inc}/${job.seq}/${job.hash}`;
+const jobStorageKey = (job: FactRef): string => `job/${job.at.scope}/${job.at.inc}/${job.seq}/${job.hash}`;
 
 const recordBytes = (record: JobRecord): string => canonicalize(record.reservation ? { ...record, reservation: { ...record.reservation, objects: record.reservation.objects.map((object) => ({ ...object, data: b64url(object.data) })) } } : record);
 
@@ -78,11 +78,11 @@ export class Outcomes {
    */
   start(job: FactRef, run: string, asked: SignedIntent | null, reservation?: ReservationSnapshot): Promise<boolean> {
     const record: JobRecord = { job, state: "started", run, asked, outcome: null, details: null, signed: null, ...(reservation ? { reservation } : {}) };
-    return this.#durable.create(keyOf(job), canonicalize(reservation ? { ...record, reservation: { ...reservation, objects: reservation.objects.map((object) => ({ ...object, data: b64url(object.data) })) } } : record));
+    return this.#durable.create(jobStorageKey(job), canonicalize(reservation ? { ...record, reservation: { ...reservation, objects: reservation.objects.map((object) => ({ ...object, data: b64url(object.data) })) } } : record));
   }
 
   async get(job: FactRef): Promise<JobRecord | null> {
-    const kept = await this.#durable.read(keyOf(job));
+    const kept = await this.#durable.read(jobStorageKey(job));
     if (kept === null) return null;
     const record = JSON.parse(kept) as JobRecord;
     if (record.reservation) record.reservation = { ...record.reservation, objects: record.reservation.objects.map((object) => ({ ...object, data: typeof object.data === "string" ? unb64url(object.data)! : object.data })) };
@@ -91,7 +91,7 @@ export class Outcomes {
 
   /** One change of a record, from exactly the record that was read. False: another delivery changed it first, and this one changes nothing. */
   #move(from: JobRecord, to: JobRecord): Promise<boolean> {
-    return this.#durable.replace(keyOf(from.job), recordBytes(from), recordBytes(to));
+    return this.#durable.replace(jobStorageKey(from.job), recordBytes(from), recordBytes(to));
   }
 
   /**

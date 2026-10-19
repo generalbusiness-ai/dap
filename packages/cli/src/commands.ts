@@ -102,7 +102,7 @@ const usage = (...lines: string[]): Outcome => ({ code: 2, lines });
 class Stop extends Error {
   constructor(readonly outcome: Outcome) { super(outcome.lines.join(" ")); }
 }
-const stop = (outcome: Outcome): never => { throw new Stop(outcome); };
+const stopCommand = (outcome: Outcome): never => { throw new Stop(outcome); };
 
 /**
  * Runs a command, and turns a stop, a lost reply and a history that cannot be read into its outcome. A lost reply says what the
@@ -126,7 +126,7 @@ const short = (text: string): string => (text.length > 16 ? `${text.slice(0, 12)
 
 async function configOf(ctx: Context): Promise<Config> {
   const config = await ctx.store.config();
-  return config ?? stop(usage("No room is set up here. Run: dap install <base-url>, or dap join <link>."));
+  return config ?? stopCommand(usage("No room is set up here. Run: dap install <base-url>, or dap join <link>."));
 }
 
 /** The named key, made and kept when it does not exist yet. */
@@ -139,7 +139,7 @@ async function keyOf(ctx: Context, name: string): Promise<Uint8Array> {
 }
 
 async function signerOf(ctx: Context, config: Config): Promise<Uint8Array> {
-  return (await ctx.store.secret(config.key)) ?? stop(failed(`The key ${config.key} is missing from the config directory; nothing was signed.`));
+  return (await ctx.store.secret(config.key)) ?? stopCommand(failed(`The key ${config.key} is missing from the config directory; nothing was signed.`));
 }
 
 const signing = (ctx: Context): Signing => (ctx.now ? { now: ctx.now() } : {});
@@ -186,7 +186,7 @@ async function handleOf(ctx: Context, config: Config, scope: ScopeId, reader?: s
 
 async function summaryOf(handle: ScopeHandle): Promise<Summary> {
   const read = await handle.summary();
-  return read.ok ? read.value : stop(failed(`Cannot read ${handle.scope}: ${read.reason}.`));
+  return read.ok ? read.value : stopCommand(failed(`Cannot read ${handle.scope}: ${read.reason}.`));
 }
 
 const directoryReader = (ctx: Context, config: Config, reader: string | null) => ({
@@ -202,11 +202,11 @@ async function openingDirectory(ctx: Context, config: Config, reader: string | n
   let summary = await summaryOf(D);
   if (summary.definition === "platform:directory@10") {
     const selected = await activeDirectory(directoryReader(ctx, config, reader), repository.directory, repository.membership);
-    if (!selected.ref) return stop(failed(`Cannot open work: ${selected.reason}. Inspect the directory and its pending partition; no mutation was submitted.`));
+    if (!selected.ref) return stopCommand(failed(`Cannot open work: ${selected.reason}. Inspect the directory and its pending partition; no mutation was submitted.`));
     target = selected.ref;
     D = await handleOf(ctx, config, selected.ref.scope, reader);
     summary = await summaryOf(D);
-    if (canonicalize(summary.scope) !== canonicalize(selected.ref) || summary.definition !== "platform:directory-partition@1") return stop(failed("The opening partition changed. No mutation was submitted."));
+    if (canonicalize(summary.scope) !== canonicalize(selected.ref) || summary.definition !== "platform:directory-partition@1") return stopCommand(failed("The opening partition changed. No mutation was submitted."));
   }
   return { D, summary, target };
 }
@@ -219,7 +219,7 @@ function scopeNamed(config: Config, named: string | undefined): ScopeId {
   };
   const name = named ?? "directory";
   if (/^sc_[a-z2-7]+$/.test(name)) return name as ScopeId;
-  return names[name] ?? stop(usage(`No scope named ${name} is known here. Name one of: ${Object.keys(names).filter((n) => names[n]).join(", ") || "none yet"}; or give a scope ID.`));
+  return names[name] ?? stopCommand(usage(`No scope named ${name} is known here. Name one of: ${Object.keys(names).filter((n) => names[n]).join(", ") || "none yet"}; or give a scope ID.`));
 }
 
 // ---------------------------------------------------------------- a definition, as this command reads it
@@ -240,7 +240,7 @@ async function definitionOf(handle: ScopeHandle, summary: Summary): Promise<{ sh
   const supplied = platform(named);
   if (supplied) return { shape: supplied.data as unknown as DefinitionShape, declared: null, named };
   const read = await handle.definition();
-  if (!read.ok) return stop(failed(`Cannot read the definition of ${handle.scope}: ${read.reason}.`));
+  if (!read.ok) return stopCommand(failed(`Cannot read the definition of ${handle.scope}: ${read.reason}.`));
   return { shape: read.value as unknown as DefinitionShape, declared: read.value, named };
 }
 
@@ -327,9 +327,9 @@ function answered(scope: ScopeId, answer: Answer, took: string): Outcome {
 
 function accepted(answer: Answer | Created, scope: ScopeId | null, took: string): Extract<Answer, { answer: "accepted" }> {
   if (answer.answer === "accepted") return answer;
-  if (answer.answer === "unavailable") return stop(unavailableAnswer(answer.reason, scope));
-  if (answer.answer === "mismatch") return stop(mismatchAnswer(answer.reason, scope));
-  return stop("judgedAt" in answer ? answered(scope!, answer, took) : failed(`Refused: ${answer.reason}. The request was refused.`));
+  if (answer.answer === "unavailable") return stopCommand(unavailableAnswer(answer.reason, scope));
+  if (answer.answer === "mismatch") return stopCommand(mismatchAnswer(answer.reason, scope));
+  return stopCommand("judgedAt" in answer ? answered(scope!, answer, took) : failed(`Refused: ${answer.reason}. The request was refused.`));
 }
 
 // ---------------------------------------------------------------- waiting for scopes
@@ -342,7 +342,7 @@ async function waitFor<T>(ctx: Context, waiting: () => readonly ScopeId[], read:
     if (got !== null) return got;
     await (ctx.pause ?? (() => new Promise<void>((resolve) => { setTimeout(resolve, 1000); })))(waiting());
   }
-  return stop(failed(`Gave up waiting for ${what} after ${tries} reads. What was asked may still take effect; ${then}`));
+  return stopCommand(failed(`Gave up waiting for ${what} after ${tries} reads. What was asked may still take effect; ${then}`));
 }
 
 /** The scope's summary once it is `active`: created and confirmed. */
@@ -354,14 +354,14 @@ const active = async (handle: ScopeHandle): Promise<Summary | null> => {
 /** A lane's summary once it is `active`; a stop once its genesis is refused, which no wait changes. */
 const laneActive = async (handle: ScopeHandle, opened: string): Promise<Summary | null> => {
   const read = await handle.summary();
-  if (read.ok && read.value.status === "refused") return stop(failed(`The lane ${handle.scope} refused its creation by ${opened}; nothing else was written there.`));
+  if (read.ok && read.value.status === "refused") return stopCommand(failed(`The lane ${handle.scope} refused its creation by ${opened}; nothing else was written there.`));
   return read.ok && read.value.status === "active" ? read.value : null;
 };
 
 /** The scopes that entry `seq` of a scope creates, by the seed of each send, with the send's number. */
 async function createdBy(handle: ScopeHandle, seq: number): Promise<{ n: number; seed: Seed; scope: ScopeId }[]> {
   const read = await handle.entry(seq);
-  if (!read.ok) return stop(failed(`Cannot read entry ${handle.scope}:${seq}: ${read.reason}.`));
+  if (!read.ok) return stopCommand(failed(`Cannot read entry ${handle.scope}:${seq}: ${read.reason}.`));
   return read.value.entry.sends.flatMap((send) => ("creator" in send.to ? [{ n: send.n, seed: send.to as Seed, scope: scopeIdOf(send.to as Seed) }] : []));
 }
 
@@ -384,7 +384,7 @@ function selectedRegister(cohort: unknown): PlatformDefinition | undefined {
   if (cohort === "application") return INSTALL_COHORTS.application;
   if (cohort === "trusted-application") return INSTALL_COHORTS["trusted-application"];
   if (cohort === "declared-application") return INSTALL_COHORTS["declared-application"];
-  return stop(usage("--cohort takes exactly application, application-publication, trusted-application, declared-application or invitation-key; nothing was signed or sent."));
+  return stopCommand(usage("--cohort takes exactly application, application-publication, trusted-application, declared-application or invitation-key; nothing was signed or sent."));
 }
 const selectedPlan = (definition: PlatformDefinition): boolean =>
   definition === APPLICATION_COHORT.register || definition === FILE_PUBLICATION_COHORT.register || definition === TRUSTED_APPLICATION_COHORT.register || definition === DECLARED_APPLICATION_COHORT.register || definition === INVITATION_KEY_COHORT.register;
@@ -441,13 +441,13 @@ async function readBackCohortConfig(ctx: Context, expected: Config | string): Pr
     const saved = await ctx.store.config();
     matches = saved !== null && canonicalize(saved) === identity;
   } catch { /* no verified selected custody */ }
-  if (!matches) stop(failed("Held: storage of the exact selected install plan could not be verified. No request was sent by this run; keep the original request."));
+  if (!matches) stopCommand(failed("Held: storage of the exact selected install plan could not be verified. No request was sent by this run; keep the original request."));
 }
 async function saveCohortConfig(ctx: Context, config: Config): Promise<void> {
   const identity = canonicalize(config);
   const copy = parseStrict(identity) as Config;
   try { await ctx.store.save(copy); }
-  catch { stop(failed("Held: storage of the exact selected install plan failed. No request was sent by this run; keep the original request.")); }
+  catch { stopCommand(failed("Held: storage of the exact selected install plan failed. No request was sent by this run; keep the original request.")); }
   await readBackCohortConfig(ctx, identity);
 }
 function retainedCohortPlan(before: Config, service: string, options: InstallOptions, definition: PlatformDefinition): PlannedInstall {
@@ -464,18 +464,18 @@ function retainedCohortPlan(before: Config, service: string, options: InstallOpt
       && (options.namespace === undefined || options.namespace === plan["founding"].intent.fields["namespace"])
       && isScopeId(plan.register) && registerIdOf(plan["founding"], plan.definition) === plan.register;
   } catch { /* malformed retained plan cannot select a new request */ }
-  if (!compatible) stop(failed("Refused: plan-mismatch. The retained install's cohort, service, host or namespace conflicts with this request. The original plan is kept; nothing was signed or sent."));
+  if (!compatible) stopCommand(failed("Refused: plan-mismatch. The retained install's cohort, service, host or namespace conflicts with this request. The original plan is kept; nothing was signed or sent."));
   return parseStrict(canonicalize(plan)) as PlannedInstall;
 }
 async function cohortPlan(ctx: Context, service: string, options: InstallOptions, before: Config | null, definition: PlatformDefinition): Promise<PlannedInstall> {
-  if (!knownPlatform(definition, "platform:register")) stop(failed("Unsupported selected cohort: the exact register pin is not installed. Nothing was signed or sent."));
+  if (!knownPlatform(definition, "platform:register")) stopCommand(failed("Unsupported selected cohort: the exact register pin is not installed. Nothing was signed or sent."));
   if (before?.plan) {
     const plan = retainedCohortPlan(before, service, options, definition);
     await readBackCohortConfig(ctx, before);
     return plan;
   }
   if (before && (before.key !== "operator" || before.repository || before.claim || before.join)) {
-    stop(usage("This config directory already holds another setup or pending request. Use a separate config directory for the selected install."));
+    stopCommand(usage("This config directory already holds another setup or pending request. Use a separate config directory for the selected install."));
   }
   const { signed } = await installing(ctx, options, { ...signing(ctx), lifetimeSeconds: PROPOSED_BOUNDS.intentLifetimeSeconds - 60 });
   const plan: PlannedInstall = { service, definition, "founding": signed, register: registerIdOf(signed, definition) };
@@ -529,7 +529,7 @@ async function executePlannedInstall(ctx: Context, cohort?: InstallCohort, expec
   const selected = selectedRegister(cohort);
   const before = await ctx.store.config();
   if (before?.register) return usage(`This config directory has a register already: ${before.register.scope}.`);
-  const kept = before?.plan ?? stop(usage("No install is planned here. Run: dap install --plan <base-url>."));
+  const kept = before?.plan ?? stopCommand(usage("No install is planned here. Run: dap install --plan <base-url>."));
   if (kept.definition === COUNTING_COHORT.register) return failed("Refused: retired-cohort. New rooms use the generic trusted-application cohort. The old plan is kept; nothing was sent.");
   if (selected && kept.definition !== selected) return failed("Refused: plan-mismatch. The selected cohort conflicts with the original install plan. Nothing was sent; the plan is kept.");
   if (expected && canonicalize(kept) !== canonicalize(expected)) return failed("Held: the selected install plan changed before delivery. Nothing was sent; restore the original request.");
@@ -619,10 +619,10 @@ function creationMembership(summary: Summary, at: ScopeRef, key: KeyId, handle: 
 }
 async function recordedStep(handle: ScopeHandle, seq: number, at: ScopeRef, key: KeyId, kind: string): Promise<ClaimStep> {
   const got = await handle.entry(seq);
-  if (!got.ok || got.value.entry.input.type !== "act") return stop(failed(`Cannot recover the admitted ${kind} entry; the claim remains pending.`));
+  if (!got.ok || got.value.entry.input.type !== "act") return stopCommand(failed(`Cannot recover the admitted ${kind} entry; the claim remains pending.`));
   const entry = got.value.entry;
-  const step: ClaimStep = { signed: entry.input.type === "act" ? entry.input.signed : stop(failed("The enrollment entry is not an act.")), accepted: factRefOf(entry) };
-  if (!validStep(step, at, key, kind) || step.accepted!.seq !== seq || step.accepted!.hash !== got.value.hash) return stop(failed(`The admitted ${kind} entry does not match this membership and signing key; nothing was submitted.`));
+  const step: ClaimStep = { signed: entry.input.type === "act" ? entry.input.signed : stopCommand(failed("The enrollment entry is not an act.")), accepted: factRefOf(entry) };
+  if (!validStep(step, at, key, kind) || step.accepted!.seq !== seq || step.accepted!.hash !== got.value.hash) return stopCommand(failed(`The admitted ${kind} entry does not match this membership and signing key; nothing was submitted.`));
   return step;
 }
 
@@ -656,7 +656,7 @@ export function checkClaim(ctx: Context, name: string): Promise<Outcome> {
 function walkClaim(ctx: Context, name: string, options: { handle?: string; branch?: string; again?: boolean }, readOnly: boolean): Promise<Outcome> {
   return run(async () => {
     const config = await configOf(ctx);
-    const register = config.register ?? stop(usage("No register is known here. Run: dap install <base-url>."));
+    const register = config.register ?? stopCommand(usage("No register is known here. Run: dap install <base-url>."));
     if (config.repository) return usage(`A repository is claimed here already: directory ${config.repository.directory.scope}.`);
     if (readOnly && !config.claim) return failed("No original claim is retained. Check prepares and submits nothing.");
     // A status check reads once and invokes no injected scheduler/pause hook.
@@ -741,11 +741,11 @@ function walkClaim(ctx: Context, name: string, options: { handle?: string; branc
       const digest = intentDigest(step.signed.intent);
       if (readOnly) {
         const settled = await handle.settle(step.signed);
-        if (!settled.ok) return stop(failed(`The original ${step.signed.intent.kind === "found" ? "create" : step.signed.intent.kind} is not confirmed: ${settled.reason}. It remains pending; Check submitted nothing.`));
+        if (!settled.ok) return stopCommand(failed(`The original ${step.signed.intent.kind === "found" ? "create" : step.signed.intent.kind} is not confirmed: ${settled.reason}. It remains pending; Check submitted nothing.`));
         const receipt = settled.value;
-        if (!isFactRef(receipt.fact) || canonicalize(receipt.fact.at) !== canonicalize(at) || receipt.intent !== digest || step.accepted && canonicalize(receipt.fact) !== canonicalize(step.accepted)) return stop(failed("The checked receipt does not match the exact original stage. It remains pending; nothing was submitted."));
+        if (!isFactRef(receipt.fact) || canonicalize(receipt.fact.at) !== canonicalize(at) || receipt.intent !== digest || step.accepted && canonicalize(receipt.fact) !== canonicalize(step.accepted)) return stopCommand(failed("The checked receipt does not match the exact original stage. It remains pending; nothing was submitted."));
         const followed = await handle.followReceipt(receipt);
-        if (!followed.ok || followed.entry.input.type !== "act" || canonicalize(followed.entry.input.signed) !== canonicalize(step.signed)) return stop(failed("The original accepted stage could not be followed exactly. It remains pending; nothing was submitted."));
+        if (!followed.ok || followed.entry.input.type !== "act" || canonicalize(followed.entry.input.signed) !== canonicalize(step.signed)) return stopCommand(failed("The original accepted stage could not be followed exactly. It remains pending; nothing was submitted."));
         if (step.signed.intent.kind === "found" && canonicalize(at) === canonicalize(register)) registerDefinition = receipt.definition;
         return receipt.fact;
       }
@@ -753,8 +753,8 @@ function walkClaim(ctx: Context, name: string, options: { handle?: string; branc
         // Settlement admits nothing and is bound to the exact envelope. A
         // saved marker alone cannot stand for some other accepted request.
         const settled = await handle.settle(step.signed);
-        if (!settled.ok) return stop(failed(`Cannot confirm the saved ${step.signed.intent.kind === "found" ? "create" : step.signed.intent.kind} step: ${settled.reason}. The exact request remains pending; nothing was submitted.`));
-        if (settled.value.intent !== digest || canonicalize(settled.value.fact) !== canonicalize(step.accepted)) return stop(failed("The saved accepted fact does not match this exact claim step; nothing was submitted."));
+        if (!settled.ok) return stopCommand(failed(`Cannot confirm the saved ${step.signed.intent.kind === "found" ? "create" : step.signed.intent.kind} step: ${settled.reason}. The exact request remains pending; nothing was submitted.`));
+        if (settled.value.intent !== digest || canonicalize(settled.value.fact) !== canonicalize(step.accepted)) return stopCommand(failed("The saved accepted fact does not match this exact claim step; nothing was submitted."));
         if (step.signed.intent.kind === "found" && canonicalize(at) === canonicalize(register)) registerDefinition = settled.value.definition;
         return step.accepted;
       }
@@ -791,7 +791,7 @@ function walkClaim(ctx: Context, name: string, options: { handle?: string; branc
       const children: ScopeId[] = [];
       const directory = await waitFor(waiting, () => [register.scope, D.scope, ...children], () => active(D), "the directory", resume);
       const made = await createdBy(D, 0);
-      const kind = (k: string) => made.find((m) => m.seed.kind === k)?.scope ?? stop(failed(`The directory's genesis creates no ${k}.`));
+      const kind = (k: string) => made.find((m) => m.seed.kind === k)?.scope ?? stopCommand(failed(`The directory's genesis creates no ${k}.`));
       children.push(kind("membership"), kind("rules"), kind("destination"));
       const handles = await Promise.all(children.map((scope) => handleOf(ctx, config, scope, null)));
       const summaries = await waitFor(waiting, () => [register.scope, D.scope, ...children], async () => {
@@ -875,7 +875,7 @@ export function invite(ctx: Context, member: string, options: { role?: string; a
     }
     if (!options.role || !(options.role in ROLE_LISTS)) return usage(`Name a role with --role: one of ${Object.keys(ROLE_LISTS).join(", ")}.`);
     const config = await configOf(ctx);
-    const repository = config.repository ?? stop(usage("No repository is known here. Run: dap create <name>."));
+    const repository = config.repository ?? stopCommand(usage("No repository is known here. Run: dap create <name>."));
     const signer = secretSigner(await signerOf(ctx, config));
     const M = await handleOf(ctx, config, repository.membership.scope);
     const summary = await summaryOf(M);
@@ -910,7 +910,7 @@ export function linkOf(text: string): Link | null {
 export function join(ctx: Context, text: string): Promise<Outcome> {
   if (text.startsWith(AGENT_KEY_LINK)) return enrolAgentKey(ctx, text);
   return run(async () => {
-    const link = linkOf(text) ?? stop(usage("That is not an invitation link from dap invite."));
+    const link = linkOf(text) ?? stopCommand(usage("That is not an invitation link from dap invite."));
     if (!wellFormedInvitation(link)) return usage("That invitation link has invalid repository references.");
     const before = await ctx.store.config();
     if (before?.join?.kind === "enrol") return failed("An original agent enrollment is retained; a person invitation cannot replace it.");
@@ -969,7 +969,7 @@ export function join(ctx: Context, text: string): Promise<Outcome> {
     if (canonicalize(factRefOf(entry.value.entry)) !== canonicalize(fact) || entry.value.hash !== fact.hash
       || entry.value.entry.input.type !== "act" || canonicalize(entry.value.entry.input.signed) !== canonicalize(signed)) return failed("The admitted entry does not match this exact join; nothing was submitted.");
     const inbox = entry.value.entry.sends.flatMap((send) => "creator" in send.to && send.to.kind === "inbox" ? [scopeIdOf(send.to as Seed)] : [])[0]
-      ?? stop(failed(`Joined, but entry ${M.scope}:${fact.seq} creates no inbox. The join remains pending.`));
+      ?? stopCommand(failed(`Joined, but entry ${M.scope}:${fact.seq} creates no inbox. The join remains pending.`));
     if (pending!.repository.inbox && pending!.repository.inbox !== inbox) return failed("The saved inbox does not match this join; nothing was submitted.");
     await keep({ ...pending!, repository: { ...link.repository, inbox } });
     const I = await handleOf(ctx, config, inbox, null);
@@ -1121,7 +1121,7 @@ export function log(ctx: Context, named: string | undefined, options: { limit?: 
 export function show(ctx: Context, named: string): Promise<Outcome> {
   return run(async () => {
     const config = await configOf(ctx);
-    const match = /^(.+):(\d+)$/.exec(named) ?? stop(usage("Name an entry as <scope>:<seq>, as log prints it."));
+    const match = /^(.+):(\d+)$/.exec(named) ?? stopCommand(usage("Name an entry as <scope>:<seq>, as log prints it."));
     const scope = scopeNamed(config, match[1]);
     const handle = await handleOf(ctx, config, scope);
     const read = await handle.entry(Number(match[2]));
@@ -1183,7 +1183,7 @@ export function verifyScopeCommand(ctx: Context, named: string | undefined, opti
  */
 async function roomScopes(ctx: Context, config: Config, reader: string | null): Promise<{ kind: string; scope: ScopeId }[]> {
   const pageLimit = ctx.historyPages ?? 1000;
-  if (!Number.isSafeInteger(pageLimit) || pageLimit < 1) return stop(usage("The room history page limit must be a positive integer."));
+  if (!Number.isSafeInteger(pageLimit) || pageLimit < 1) return stopCommand(usage("The room history page limit must be a positive integer."));
   const directory = config.repository!.directory.scope;
   const D = await handleOf(ctx, config, directory, reader);
   const register = ((await summaryOf(D)).items.find((item) => item.type === "repository")?.refs["register"] as ScopeRef | undefined)?.scope;
@@ -1193,7 +1193,7 @@ async function roomScopes(ctx: Context, config: Config, reader: string | null): 
     const handle = await handleOf(ctx, config, matched[i]!.scope, reader);
     for (let cursor: string | undefined, pages = 0; pages < pageLimit; pages++) {
       const page = await handle.history(cursor);
-      if (!page.ok) return stop(failed(`Cannot read the history of ${handle.scope}: ${page.reason}.`));
+      if (!page.ok) return stopCommand(failed(`Cannot read the history of ${handle.scope}: ${page.reason}.`));
       for (const { entry } of page.value) {
         for (const send of entry.sends) {
           if (!("creator" in send.to)) continue;
@@ -1203,7 +1203,7 @@ async function roomScopes(ctx: Context, config: Config, reader: string | null): 
         }
       }
       if (page.next === undefined) break;
-      if (pages + 1 === pageLimit) return stop(failed(`Incomplete: room discovery for ${handle.scope} reached ${pageLimit} history pages; next cursor ${JSON.stringify(page.next)}. The whole room was not verified.`));
+      if (pages + 1 === pageLimit) return stopCommand(failed(`Incomplete: room discovery for ${handle.scope} reached ${pageLimit} history pages; next cursor ${JSON.stringify(page.next)}. The whole room was not verified.`));
       cursor = page.next;
     }
   }
@@ -1279,15 +1279,15 @@ const remoteLine = (config: Config, repository: Recorded): string =>
  * destination answers where the key's claim caused it, within the intent window.
  */
 async function destinationOf(ctx: Context, config: Config): Promise<{ summary: Summary; reader: string | null; repository: Recorded }> {
-  const scope = config.repository?.destination ?? stop(usage("No repository is known here. Run: dap create <name>, or dap join <link>."));
+  const scope = config.repository?.destination ?? stopCommand(usage("No repository is known here. Run: dap create <name>, or dap join <link>."));
   const reader = await readerOf(ctx, config);
   let read = await (await handleOf(ctx, config, scope, reader)).summary();
   if (!read.ok && read.reason === "forbidden" && reader !== null) read = await (await handleOf(ctx, config, scope, null)).summary();
-  if (!read.ok) return stop(failed(`Cannot read ${scope}: ${read.reason}.`));
-  if (read.value.scope.scope !== scope || read.value.scope.kind !== "destination" || !knownPlatform(read.value.definition, "platform:destination")) return stop(failed(`${scope} is no supported destination.`));
+  if (!read.ok) return stopCommand(failed(`Cannot read ${scope}: ${read.reason}.`));
+  if (read.value.scope.scope !== scope || read.value.scope.kind !== "destination" || !knownPlatform(read.value.definition, "platform:destination")) return stopCommand(failed(`${scope} is no supported destination.`));
   const branch = read.value.items.find((item) => item.type === "branch");
   const repository = branch?.values["repository"] as Recorded | undefined;
-  if (!branch || !repository || typeof repository.host !== "string" || typeof repository.name !== "string" || typeof repository.namespace !== "string" || typeof repository.id !== "string") return stop(failed(`The destination ${scope} records no repository.`));
+  if (!branch || !repository || typeof repository.host !== "string" || typeof repository.name !== "string" || typeof repository.namespace !== "string" || typeof repository.id !== "string") return stopCommand(failed(`The destination ${scope} records no repository.`));
   return { summary: read.value, reader, repository };
 }
 
@@ -1340,7 +1340,7 @@ export function clone(ctx: Context, directory: string | undefined, options: { ho
     const seq = proof.receipt.fact.seq;
     // The outcome of its `mint-read`, which the host's answer writes: read with the caller's session, which the destination now accepts.
     const operation = proof.operation;
-    const reader = await readerOf(ctx, config) ?? stop(failed(`Signed read-token at ${scope}:${seq}, but no read session is given here, and only a session reads the token.`));
+    const reader = await readerOf(ctx, config) ?? stopCommand(failed(`Signed read-token at ${scope}:${seq}, but no read session is given here, and only a session reads the token.`));
     const send = ctx.fetch ?? (globalThis as { fetch?: Fetch }).fetch!;
     let D: ScopeHandle | null = null;
     let openingChecked = false;
@@ -1348,11 +1348,11 @@ export function clone(ctx: Context, directory: string | undefined, options: { ho
       D ??= await handleOf({ ...ctx, fetch: outcomeFetch(send, signal) }, config, scope, reader);
       if (!openingChecked) {
         const opening = await D.entry(seq);
-        if (!opening.ok || !readTokenOpening(opening.value, proof)) return stop(failed(`Cannot confirm the exact accepted read-token act and its mint-read opening at ${scope}:${seq}; inspect dap show ${scope}:${seq} and dap log destination. No credential was retrieved and nothing was cloned.`));
+        if (!opening.ok || !readTokenOpening(opening.value, proof)) return stopCommand(failed(`Cannot confirm the exact accepted read-token act and its mint-read opening at ${scope}:${seq}; inspect dap show ${scope}:${seq} and dap log destination. No credential was retrieved and nothing was cloned.`));
         openingChecked = true;
       }
       const got = await D.entry(next);
-      if (got.ok && (!readTokenEntry(got.value, proof.to, next) || (got.value.entry.input.type === "outcome" && got.value.entry.input.operation === operation && !readTokenOutcome(got.value, next, proof)))) return stop(failed(`The entry at ${scope}:${next} does not match this destination's recorded mint-read (${operation}); inspect dap log destination. No credential was retrieved and nothing was cloned.`));
+      if (got.ok && (!readTokenEntry(got.value, proof.to, next) || (got.value.entry.input.type === "outcome" && got.value.entry.input.operation === operation && !readTokenOutcome(got.value, next, proof)))) return stopCommand(failed(`The entry at ${scope}:${next} does not match this destination's recorded mint-read (${operation}); inspect dap log destination. No credential was retrieved and nothing was cloned.`));
       return got;
     }, (signal) => ctx.pause ? ctx.pause([scope]) : pauseOutcome(signal), ctx.tries ?? 120, ctx.cloneWait, (error) => error instanceof Stop);
     if (!waited.ok) return failed(...outcomeWaitLines(scope, seq, operation, waited));
@@ -1382,14 +1382,14 @@ export const EDIT_BYTES = 65536;
 /** A local file's bytes, or a stop: the command cannot run without them. */
 async function fileOf(ctx: Context, path: string): Promise<Uint8Array> {
   const bytes = ctx.read ? await ctx.read(path) : null;
-  return bytes ?? stop(usage(`Cannot read the file ${path}.`));
+  return bytes ?? stopCommand(usage(`Cannot read the file ${path}.`));
 }
 
 /** The text that is exactly these bytes, as UTF-8 with any byte order mark kept, or a stop: a change carries a file as a text. */
 function textOf(bytes: Uint8Array, path: string): string {
   let text: string | null = null;
   try { text = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes); } catch { /* not UTF-8 */ }
-  if (text === null || utf8(text).length !== bytes.length) return stop(usage(`${path} is not UTF-8 text: a change carries a file as a text.`));
+  if (text === null || utf8(text).length !== bytes.length) return stopCommand(usage(`${path} is not UTF-8 text: a change carries a file as a text.`));
   return text;
 }
 
@@ -1404,22 +1404,22 @@ async function activeDefinition(ctx: Context, config: Config, reader: string | n
   const R = await handleOf(ctx, config, repository.rules, reader);
   const active = (await summaryOf(R)).items.filter((item) => item.type === "definition" && item.state === "active" && item.values["name"] === name).sort((a, b) => b.id - a.id)[0];
   const digest = active?.values["digest"] as Digest | undefined;
-  if (!digest) return stop(failed(`The rules scope ${repository.rules} holds no ${name} definition active. An admin activates one: dap act activate --on rules --set digest=<digest> --set name=${name} --value <definition file>.`));
+  if (!digest) return stopCommand(failed(`The rules scope ${repository.rules} holds no ${name} definition active. An admin activates one: dap act activate --on rules --set digest=<digest> --set name=${name} --value <definition file>.`));
   const transport = await readTransportOf(ctx, config, reader);
   // A value in the domain of a definition is kept as a definition (`core.ts`), and read by that kind.
   const kept = await transport.retained(repository.rules, reader, "definition", digest);
-  if (!kept.ok) return stop(failed(`Cannot read the ${name} definition ${digest} from the rules scope: ${kept.reason}.`));
+  if (!kept.ok) return stopCommand(failed(`Cannot read the ${name} definition ${digest} from the rules scope: ${kept.reason}.`));
   try {
     const declared = parseStrict(kept.value.bytes) as DeclaredDefinition;
     if (definitionDigest(declared) === digest) return { digest, bytes: kept.value.bytes, declared };
   } catch { /* not a definition */ }
-  return stop(failed(`The rules scope's bytes for ${digest} are not that definition.`));
+  return stopCommand(failed(`The rules scope's bytes for ${digest} are not that definition.`));
 }
 
 /** A declared handle on a lane: the lane must run exactly the definition given. */
 async function laneOf(ctx: Context, config: Config, lane: ScopeId, reader: string | null, declared: DeclaredDefinition) {
   const typed = await declaredHandle(await handleOf(ctx, config, lane, reader), declared);
-  return typed.ok ? typed.handle : stop(failed(`Cannot act on ${lane}: ${typed.reason}.`));
+  return typed.ok ? typed.handle : stopCommand(failed(`Cannot act on ${lane}: ${typed.reason}.`));
 }
 
 /** The fixed edit workflow needs these declared inputs and effects. Guards
@@ -1504,7 +1504,7 @@ export function edit(ctx: Context, path: string, options: { file?: string; title
     if (bytes.length > EDIT_BYTES) return usage(`${options.file} has ${bytes.length} bytes; a change carries at most ${EDIT_BYTES}.`);
     const content = textOf(bytes, options.file);
     const config = await configOf(ctx);
-    const repository = config.repository ?? stop(usage("No repository is known here. Run: dap create <name>, or dap join <link>."));
+    const repository = config.repository ?? stopCommand(usage("No repository is known here. Run: dap create <name>, or dap join <link>."));
     const signer = secretSigner(await signerOf(ctx, config));
     const reader = await readerOf(ctx, config);
     // The issue that the change closes is found before anything is signed.
@@ -1525,7 +1525,7 @@ export function edit(ctx: Context, path: string, options: { file?: string; title
     const fields = { definition: change.digest, title: options.title ?? `Edit ${path}`, draft: false };
     const signed = await signedIntent(signer, { to: target, kind: "open-pr", fields, expected: expectedOf(shape.acts["open-pr"]!, (await summaryOf(D)).items, null, fields) }, signing(ctx));
     const opened = accepted(await D.submit(signed, [], { values: [change.bytes] }), D.scope, "Opened").receipt.fact.seq;
-    const lane = (await createdBy(D, opened)).find((made) => made.seed.kind === "lane")?.scope ?? stop(failed(`Entry ${D.scope}:${opened} opens no lane.`));
+    const lane = (await createdBy(D, opened)).find((made) => made.seed.kind === "lane")?.scope ?? stopCommand(failed(`Entry ${D.scope}:${opened} opens no lane.`));
     const L = await handleOf(ctx, config, lane, reader);
     await waitFor(ctx, () => [D.scope, lane], () => laneActive(L, `${D.scope}:${opened}`), `the change ${lane}`);
     const C = await laneOf(ctx, config, lane, reader, change.declared);
@@ -1625,7 +1625,7 @@ async function proposingFiles(ctx: Context, config: Config, base: string, files:
     `Inspect dap show ${opening.at.scope}:${opening.seq}${knownLane ? ` and dap log ${knownLane}` : ` and dap log ${opening.at.scope}`} before another mutation. A fresh propose or edit opens another change lane and signs new requests. No mutation was retried; recovery requires any uncertain request's original signed envelope, which this command does not retain.`,
   ] };
   try {
-    const lane = (await createdBy(D, opened)).find((made) => made.seed.kind === "lane")?.scope ?? stop(failed("The directory opened no change lane."));
+    const lane = (await createdBy(D, opened)).find((made) => made.seed.kind === "lane")?.scope ?? stopCommand(failed("The directory opened no change lane."));
     knownLane = lane;
     const L = await handleOf(ctx, config, lane, reader);
     await waitFor(ctx, () => [D.scope, lane], () => laneActive(L, `${D.scope}:${opened}`), `the change ${lane}`);
@@ -1710,11 +1710,11 @@ export function merge(ctx: Context, named: string, options: { closes?: string } 
  * commit, and the page's address for a one-file version. Refused, by the lane or by the destination: the reason, and how to go on.
  */
 async function merging(ctx: Context, config: Config, lane: ScopeId, reader: string | null, declared: DeclaredDefinition): Promise<Outcome> {
-  const repository = config.repository ?? stop(usage("No repository is known here. Run: dap create <name>, or dap join <link>."));
+  const repository = config.repository ?? stopCommand(usage("No repository is known here. Run: dap create <name>, or dap join <link>."));
   const signer = secretSigner(await signerOf(ctx, config));
   const L = await handleOf(ctx, config, lane, reader);
   const items = (await summaryOf(L)).items;
-  const version = items.find((item) => item.type === "manifest" && item.state === "current") ?? stop(failed(`The change ${lane} has no current version.`));
+  const version = items.find((item) => item.type === "manifest" && item.state === "current") ?? stopCommand(failed(`The change ${lane} has no current version.`));
   const selected = (version.values["selected"] ?? []) as { report: unknown }[];
   const fields = { manifest: version.id, reports: selected.map((s) => s.report) } as Record<string, FieldValue>;
   const C = await laneOf(ctx, config, lane, reader, declared);
@@ -1793,7 +1793,7 @@ async function issuesOf(ctx: Context, config: Config, reader: string | null): Pr
   let rows = summary.items;
   if (summary.definition === "platform:directory@10") {
     const coverage = await partitionIndexes(directoryReader(ctx, config, reader), config.repository!.directory, config.repository!.membership);
-    if (!coverage.complete) return stop(failed(`Directory indexes incomplete: ${coverage.reason}. No issue absence is inferred.`));
+    if (!coverage.complete) return stopCommand(failed(`Directory indexes incomplete: ${coverage.reason}. No issue absence is inferred.`));
     rows = coverage.indexes.flatMap(index => [...index.lanes]);
   }
   rows = rows.filter((item) => item.type === "lane" && item.values["kind"] === "issue").sort((a, b) => Number(a.values["number"] ?? a.id) - Number(b.values["number"] ?? b.id));
@@ -1821,7 +1821,7 @@ async function issueNamed(ctx: Context, config: Config, reader: string | null, n
   const issues = await issuesOf(ctx, config, reader);
   const number = /^#?(\d+)$/.exec(named);
   const matched = number ? issues.find((issue) => issue.number === Number(number[1])) : issues.find((issue) => issue.lane === named);
-  return matched ?? stop(usage(`No issue ${named} is listed in the directory ${config.repository!.directory.scope}. Run: dap issues`));
+  return matched ?? stopCommand(usage(`No issue ${named} is listed in the directory ${config.repository!.directory.scope}. Run: dap issues`));
 }
 
 /**
@@ -1831,14 +1831,14 @@ async function issueNamed(ctx: Context, config: Config, reader: string | null, n
 function issueAct(ctx: Context, named: string, choose: (issue: Issue, handle: string | undefined, membership: ScopeRef) => { kind: string; on: number | null; fields: Record<string, unknown> }, took: string): Promise<Outcome> {
   return run(async () => {
     const config = await configOf(ctx);
-    const repository = config.repository ?? stop(usage("No repository is known here. Run: dap create <name>, or dap join <link>."));
+    const repository = config.repository ?? stopCommand(usage("No repository is known here. Run: dap create <name>, or dap join <link>."));
     const reader = await readerOf(ctx, config);
     const issue = await issueNamed(ctx, config, reader, named);
     const L = await handleOf(ctx, config, issue.lane, reader);
     const read = await L.definition();
     if (!read.ok) return failed(`Cannot read the definition of ${issue.lane}: ${read.reason}.`);
     const { kind, on, fields } = choose(issue, config.handle, repository.membership);
-    const declaration = read.value.acts[kind] ?? stop(failed(`The issue ${issue.lane} is under ${read.value.name}, which has no act ${kind}.`));
+    const declaration = read.value.acts[kind] ?? stopCommand(failed(`The issue ${issue.lane} is under ${read.value.name}, which has no act ${kind}.`));
     const items = (await summaryOf(L)).items;
     const I = await laneOf(ctx, config, issue.lane, reader, read.value);
     const signer = secretSigner(await signerOf(ctx, config));
@@ -1867,7 +1867,7 @@ export function issueOpen(ctx: Context, options: { title?: string; body?: string
     const fields = { definition: issue.digest, title: options.title, ...(options.body !== undefined ? { body: textDigest(options.body) } : {}), conditions: [options.title] };
     const signed = await signedIntent(signer, { to: target, kind: "open-issue", fields, expected: expectedOf(shape.acts["open-issue"]!, summary.items, null, fields) }, signing(ctx));
     const opened = accepted(await D.submit(signed, [], { values: [issue.bytes], ...(options.body !== undefined ? { texts: [options.body] } : {}) }), D.scope, "Opened").receipt.fact.seq;
-    const lane = (await createdBy(D, opened)).find((made) => made.seed.kind === "lane")?.scope ?? stop(failed(`Entry ${D.scope}:${opened} opens no lane.`));
+    const lane = (await createdBy(D, opened)).find((made) => made.seed.kind === "lane")?.scope ?? stopCommand(failed(`Entry ${D.scope}:${opened} opens no lane.`));
     const L = await handleOf(ctx, config, lane, reader);
     const created = await waitFor(ctx, () => [D.scope, lane], () => laneActive(L, `${D.scope}:${opened}`), `the issue ${lane}`);
     const number = created.items.find((item) => item.type === "intent")?.values["number"];
@@ -1910,7 +1910,7 @@ export function issues(ctx: Context): Promise<Outcome> {
  * closes (plan 019, default 3). The lane takes it from the change's author only; the demo profile has no `link-any`.
  */
 async function linking(ctx: Context, config: Config, lane: ScopeId, reader: string | null, declared: DeclaredDefinition, issue: Issue): Promise<Outcome> {
-  const declaration = declared.acts["link-own"] ?? stop(failed(`The change ${lane} is under a definition with no act link-own.`));
+  const declaration = declared.acts["link-own"] ?? stopCommand(failed(`The change ${lane} is under a definition with no act link-own.`));
   const fields = { issue: issue.ref, how: "keyword" } as Record<string, FieldValue>;
   const items = (await summaryOf(await handleOf(ctx, config, lane, reader))).items;
   const C = await laneOf(ctx, config, lane, reader, declared);

@@ -5,6 +5,7 @@
  * It never retries an update. The existing classifier still requires a
  * forwarding record and a read after a complete report of that update.
  */
+import { unreadableGit as bad } from "./names.ts";
 import { ascii } from "./ascii.ts";
 import { sha1 } from "@noble/hashes/legacy.js";
 import { GitRefusal, objectId, refName, remoteUrl, ZERO_ID, type ObjectId, type Transport } from "./names.ts";
@@ -33,7 +34,6 @@ export interface SmartHttpOptions {
 }
 
 const utf8 = new TextEncoder();
-const bad = (what: string) => new GitRefusal("unreadable", what);
 const join = (parts: readonly Uint8Array[]): Uint8Array => {
   const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
   let at = 0;

@@ -21,7 +21,7 @@ const validState = (value: unknown, kind: ListKind): value is ListState => {
   return typeof state.query === "string" && state.query.length <= LIST_QUERY_LIMIT
     && ["open", "all", kind === "issue" ? "closed" : "merged"].includes(state.filter);
 };
-function keyOf(context: ListContext, kind: ListKind): string | null {
+function listStorageKey(context: ListContext, kind: ListKind): string | null {
   try {
     const { origin, directory, membership, key } = context;
     if (origin.length > 2048 || new URL(origin).origin !== origin || !isScopeId(directory)
@@ -36,7 +36,7 @@ function kindOfKey(key: string): ListKind | null {
     const [origin, directory, scope, inc, memberKind, keyId, kind] = parts;
     if (!validKind(kind)) return null;
     const context = { origin, directory, membership: { scope, inc, kind: memberKind }, key: keyId } as ListContext;
-    return keyOf(context, kind) === key ? kind : null;
+    return listStorageKey(context, kind) === key ? kind : null;
   } catch { return null; }
 }
 
@@ -63,11 +63,11 @@ export class ListContexts {
     return merged;
   }
   stateOf(context: ListContext, kind: ListKind): ListState {
-    const key = keyOf(context, kind);
+    const key = listStorageKey(context, kind);
     return key ? { ...(this.read().get(key) ?? initial()) } : initial();
   }
   keepState(context: ListContext, kind: ListKind, state: ListState): void {
-    const key = keyOf(context, kind);
+    const key = listStorageKey(context, kind);
     if (!key || !validState(state, kind)) return;
     this.memory.delete(key);
     this.memory.set(key, { ...state });

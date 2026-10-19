@@ -61,7 +61,7 @@ const OWNER = "platform:destination";
 
 const sameScope = (a: ScopeRef, b: ScopeRef) => canonicalize(a) === canonicalize(b);
 const objectId = (v: unknown): v is string => typeof v === "string" && /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/.test(v);
-const text = (v: unknown): v is string => typeof v === "string" && v.length > 0 && utf8(v).length <= 256;
+const destinationText = (v: unknown): v is string => typeof v === "string" && v.length > 0 && utf8(v).length <= 256;
 function members(reply: unknown, names: readonly string[]): Record<string, unknown> | null {
   if (typeof reply !== "object" || reply === null || Array.isArray(reply)) return null;
   try {
@@ -122,7 +122,7 @@ export class DestinationHost implements Outside {
     this.#replyCursor = page.more && last ? { mint: last.mint, attempt: last.attempt } : null;
     for (const held of page.items) {
       const operation = this.#given.state.operation(held.mint);
-      if (!isOf(operation?.owner, OWNER) || !MINTS.includes(operation.kind) || !text(held.id) || timeMs(held.ends) === null) continue;
+      if (!isOf(operation?.owner, OWNER) || !MINTS.includes(operation.kind) || !destinationText(held.id) || timeMs(held.ends) === null) continue;
       const origin = this.#given.own(Number(held.mint.split(":")[0]));
       if (!origin || !this.#bound({ scope: scope.at, operation: held.mint, attempt: held.attempt, owner: operation.owner, kind: operation.kind, origin })) continue;
       answers.push({ operation: held.mint, attempt: held.attempt, answer: answer("confirmed", { token: held.id, ends: held.ends }) });
@@ -164,7 +164,7 @@ export class DestinationHost implements Outside {
         const reply = await this.#options.provider.mint(repository, binding);
         if (members(reply, ["minted"])?.["minted"] === false) return answer("refused", {});
         const body = members(reply, ["id", "ends", "plaintext"]);
-        if (!body || !text(body["id"]) || typeof body["ends"] !== "string" || timeMs(body["ends"]) === null || typeof body["plaintext"] !== "string" || body["plaintext"].length === 0 || utf8(body["plaintext"]).length > 4096) return null;
+        if (!body || !destinationText(body["id"]) || typeof body["ends"] !== "string" || timeMs(body["ends"]) === null || typeof body["plaintext"] !== "string" || body["plaintext"].length === 0 || utf8(body["plaintext"]).length > 4096) return null;
         const held = this.#options.custody.put({ id: body["id"], ends: body["ends"], plaintext: body["plaintext"], mint: operation.id, attempt: request.attempt });
         return held === "stored" || held === "repeat" ? answer("confirmed", { token: body["id"], ends: body["ends"] }) : null;
       }
@@ -219,7 +219,7 @@ export class DestinationHost implements Outside {
       return;
     }
     const body = valid && input.type === "outcome" ? members(input.evidence.body, ["token", "ends"]) : null;
-    this.#options.custody.judged(at.operation, at.attempt, body && text(body["token"]) && typeof body["ends"] === "string" && timeMs(body["ends"]) !== null ? { id: body["token"], ends: body["ends"] } : null);
+    this.#options.custody.judged(at.operation, at.attempt, body && destinationText(body["token"]) && typeof body["ends"] === "string" && timeMs(body["ends"]) !== null ? { id: body["token"], ends: body["ends"] } : null);
   }
 
   /**
@@ -230,7 +230,7 @@ export class DestinationHost implements Outside {
    */
   credential(handle: string, key: KeyId): ReadCredential | null {
     try {
-      if (!text(handle) || !this.#given.scope()) return null;
+      if (!destinationText(handle) || !this.#given.scope()) return null;
       const held = this.#options.custody.held(handle);
       const operation = held ? this.#given.state.operation(held.mint) : null;
       if (!held || held.state !== "live" || !isOf(operation?.owner, OWNER) || operation.kind !== DESTINATION_KINDS.mintRead) return null;
@@ -363,7 +363,7 @@ export class DestinationHost implements Outside {
     const branch = destinationBranch(this.#given.state);
     const repository = members(branch?.values["repository"], ["host", "namespace", "name", "id"]);
     const name = branch?.values["name"];
-    if (!repository || !Object.values(repository).every(text) || repository["host"] !== this.#options.host || repository["namespace"] !== this.#options.namespace || !text(name)) return null;
+    if (!repository || !Object.values(repository).every(destinationText) || repository["host"] !== this.#options.host || repository["namespace"] !== this.#options.namespace || !destinationText(name)) return null;
     return { operation, repository: repository as unknown as DestinationRepository, ref: `refs/heads/${name}` };
   }
 

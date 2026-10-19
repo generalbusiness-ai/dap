@@ -128,8 +128,8 @@ const PAGE_POLICY = "default-src 'none'; img-src 'self' https: data:; style-src 
 const FILE_POLICY = "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; sandbox";
 
 const utf8 = new TextEncoder();
-const text = new TextDecoder("utf-8");
-const nameOf = (entry: TreeEntry): string => text.decode(entry.name);
+const siteTextDecoder = new TextDecoder("utf-8");
+const nameOf = (entry: TreeEntry): string => siteTextDecoder.decode(entry.name);
 const sameName = (entry: TreeEntry, name: Uint8Array): boolean => entry.name.length === name.length && entry.name.every((b, i) => b === name[i]);
 /** One path segment as it goes in an address. */
 const segment = (part: string): string => encodeURIComponent(part);
@@ -363,7 +363,7 @@ export async function site(request: Request, env: SiteEnv, fetch?: (request: Req
     const crumbs = [`<a href="${escapeHtml(prefix)}">${escapeHtml(ref)}</a>`, ...path.map((part, i) => `<a href="${escapeHtml(href(path.slice(0, i + 1), i < path.length - 1 || entry === null || entry.kind === "tree"))}">${escapeHtml(part)}</a>`)].join(" / ");
     const frame: Frame = { room: room.repository.name, root: prefix, version: versionOf(ref, named.name), versions: `${base}versions/`, crumbs, commit };
     const rendered = async (file: TreeEntry, where: string[]) => {
-      const source = text.decode(await reader.blob(file.id, "page"));
+      const source = siteTextDecoder.decode(await reader.blob(file.id, "page"));
       at("render");
       const { html: body, title } = renderMarkdown(source, { resolve: (destination) => resolveAddress(prefix, where.join("/"), destination) });
       return await eligible(html(title ?? where.join("/"), frame, body, cached));
@@ -407,7 +407,7 @@ async function verifiedReceipt(reader: Reader, proof: import("./publication.ts")
   if (receiptCommit.tree !== proof.receipt.tree) throw new GitRefusal("unreadable", "publication receipt tree");
   const receiptTree = await reader.tree(receiptCommit.tree, "publication receipt");
   if (receiptTree.length !== 1 || receiptTree[0]!.mode !== "100644" || nameOf(receiptTree[0]!) !== "receipt.json" || receiptTree[0]!.id !== proof.receipt.blob
-    || text.decode(await reader.blob(proof.receipt.blob, "publication receipt")) !== proof.receipt.file) throw new GitRefusal("unreadable", "publication receipt file");
+    || siteTextDecoder.decode(await reader.blob(proof.receipt.blob, "publication receipt")) !== proof.receipt.file) throw new GitRefusal("unreadable", "publication receipt file");
 }
 
 /**
@@ -427,7 +427,7 @@ async function listing(reader: Reader, entries: readonly TreeEntry[], href: (nam
     let title: string | null = null;
     if (read++ < LISTED_TITLES) {
       try {
-        title = titleOf(text.decode(await reader.blob(e.id, "page")));
+        title = titleOf(siteTextDecoder.decode(await reader.blob(e.id, "page")));
       } catch (error) {
         if (!(error instanceof GitRefusal && error.reason === "too-large")) throw error;
       }

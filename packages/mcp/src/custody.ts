@@ -194,7 +194,7 @@ export type Sent = { record: CustodyRecord; answer: Answer; retained: boolean } 
 
 /** Bytes a record keeps beside its envelope: identity, binding, phase, times, and room for its first outcome. */
 const RECORD_OVERHEAD = 64 * 1024;
-const bytesOf = (value: unknown): number => utf8(canonicalize(value as never)).length;
+const envelopeBytes = (value: unknown): number => utf8(canonicalize(value as never)).length;
 
 /** The newest decisive outcome of the record's current attempt, chronologically; null while the attempt is unresolved. */
 export function decisive(outcomes: readonly Outcome[], attempt: number): { at: string; answer: Answer } | null {
@@ -237,7 +237,7 @@ export class Custody {
   }
 
   async #write(id: string, record: CustodyRecord, dispatch = false, from: Phase | null = record.phase): Promise<void> {
-    if (bytesOf(record) > RECORD_BYTES) throw new CustodyError({ held: "too-large" });
+    if (envelopeBytes(record) > RECORD_BYTES) throw new CustodyError({ held: "too-large" });
     // A store may refuse a write by its own account (`full`: the hosted store's budget, before anything is dispatched); any
     // other failure is a storage failure, which settles nothing.
     try { await this.store.write(id, record, dispatch ? { dispatch: true } : {}); } catch (error) { throw error instanceof CustodyError ? error : new CustodyError({ held: "unreadable" }); }
@@ -252,7 +252,7 @@ export class Custody {
     record.outcomes.push(outcome);
     record.count++;
     let spill = Math.max(0, record.outcomes.length - OUTCOMES_INLINE);
-    while (spill < record.outcomes.length && (bytesOf(record.outcomes.slice(spill)) > OUTCOMES_INLINE_BYTES || bytesOf({ ...record, outcomes: record.outcomes.slice(spill) }) > RECORD_BYTES)) spill++;
+    while (spill < record.outcomes.length && (envelopeBytes(record.outcomes.slice(spill)) > OUTCOMES_INLINE_BYTES || envelopeBytes({ ...record, outcomes: record.outcomes.slice(spill) }) > RECORD_BYTES)) spill++;
     if (spill > 0) {
       const inSegment = record.count - record.outcomes.length;
       await this.store.segment(id, inSegment, record.outcomes.splice(0, spill));
@@ -327,7 +327,7 @@ export class Custody {
         const { binding, envelope } = await build();
         const at = this.now();
         const record: CustodyRecord = { v: 1, identity, binding, meaning, envelope, phase: "prepared", outcomes: [], count: 0, attempt: 1, steps: {}, created: at, updated: at, ...(standalone ? { standalone: true as const } : {}) };
-        const size = bytesOf(record);
+        const size = envelopeBytes(record);
         if (size + RECORD_OVERHEAD > RECORD_BYTES) throw new CustodyError({ held: "full", reason: "bytes", bytes: size });
         await this.#write(id, record, false, null);
         return record;

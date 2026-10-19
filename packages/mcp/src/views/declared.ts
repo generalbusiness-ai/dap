@@ -30,11 +30,11 @@ export interface DeclaredViewPort {
    * Unavailable identity must not select a member's carousel. */
   viewer?(): Promise<{ member: MemberRef; grants: readonly string[] } | null>;
 }
-const text = (value: unknown): string => value === null || value === undefined ? "" : typeof value === "string" ? value : canonicalize(value);
+const displayText = (value: unknown): string => value === null || value === undefined ? "" : typeof value === "string" ? value : canonicalize(value);
 const input = (row: ApplicationProjectionRow): Record<string, FieldValue | null> => ({ ...row.fields, id: row.id, type: row.type, state: row.state, revision: row.revision, ...(row.entry ? { time: row.time!, on: row.on! } : {}) });
 const template = (source: string, row: ApplicationProjectionRow, waiting: string): string => {
   const values = { ...input(row), waiting };
-  return source.replace(/\{([^{}]+)\}/g, (_whole, key: string) => text(Object.hasOwn(values, key) ? values[key as keyof typeof values] : null));
+  return source.replace(/\{([^{}]+)\}/g, (_whole, key: string) => displayText(Object.hasOwn(values, key) ? values[key as keyof typeof values] : null));
 };
 export class DeclaredViewSource implements ViewSource {
   readonly declared = true;
@@ -200,7 +200,7 @@ export class DeclaredViewSource implements ViewSource {
     const card: Card = {
       identity: surface ? { item: scope.scope, kind: "scope", revision: String(reply.value.at.seq), subject: { scope: scope.scope }, at: {} }
         : { item: String(row.id), kind: row.entry ? "entry" : row.type, revision: String(row.revision), subject: { scope: scope.scope, ...(row.entry ? {} : { item: row.id }) }, at: row.entry ? {} : { on: row.revision } },
-      title: view.kind === "surface" ? query.screen : text(values[view.title]), summary: view.kind === "surface" || view.summary === null ? "" : text(values[view.summary]),
+      title: view.kind === "surface" ? query.screen : displayText(values[view.title]), summary: view.kind === "surface" || view.summary === null ? "" : displayText(values[view.summary]),
       reasons: view.kind === "surface" ? [] : view.facts.map(fact => formatFact(fact, values, now)),
       projection: points, reviewIntended: [], unavailable: [], waitsOn: waiting ? [waiting] : [], settles: [], actions, fallback,
       declared: { kind: view.kind, source: view.item, context: template(view.context, row, waiting), actor: view.kind === "surface" || view.actor === null ? null : values[view.actor] ?? null,
@@ -215,7 +215,7 @@ export class DeclaredViewSource implements ViewSource {
         ...(view.kind === "log" ? { log: rows.map(row => {
           if (!row.entry || !row.time) throw new ViewError("unavailable", "A log needs explicit sealed entry facts.");
           const values = input(row);
-          return { entry: row.entry, time: row.time, title: text(values[view.title]), summary: view.summary === null ? "" : text(values[view.summary]), facts: view.facts.filter(fact => applicationViewFactField(fact) !== "time").map(fact => formatFact(fact, values)) };
+          return { entry: row.entry, time: row.time, title: displayText(values[view.title]), summary: view.summary === null ? "" : displayText(values[view.summary]), facts: view.facts.filter(fact => applicationViewFactField(fact) !== "time").map(fact => formatFact(fact, values)) };
         }) } : {}),
         ...(surface ? { resource: surface.resource, opens: surface.opens, surface } : {}) },
     };

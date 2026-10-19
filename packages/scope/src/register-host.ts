@@ -23,7 +23,7 @@ export type CredentialRevocation = { revoked: boolean; credential: string };
 export interface RegisterHostOptions { host: string; namespace: string; provider: RegisterProvider }
 
 const sameScope = (a: ScopeRef, b: ScopeRef): boolean => a.scope === b.scope && a.inc === b.inc && a.kind === b.kind;
-const text = (value: unknown): value is string => typeof value === "string" && utf8(value).length <= 256;
+const registerText = (value: unknown): value is string => typeof value === "string" && utf8(value).length <= 256;
 
 /** Snapshot untrusted members once, including getters, then validate that snapshot. */
 function members(reply: unknown, required: readonly string[], optional: readonly string[] = []): Record<string, unknown> | null {
@@ -64,14 +64,14 @@ export class RegisterHost implements Outside {
       const opening = request.origin.entry.input;
       if (opening.type !== "outcome" || !isOf(opening.owner, "platform:register") || opening.kind !== "create-repository" || opening.result !== "confirmed" || opening.evidence.basis !== "own-answer") return null;
       const body = members(opening.evidence.body, ["name", "id"], ["credential"]);
-      if (!body || !text(body["name"]) || !text(body["id"]) || (body["credential"] !== undefined && !text(body["credential"]))) return null;
+      if (!body || !registerText(body["name"]) || !registerText(body["id"]) || (body["credential"] !== undefined && !registerText(body["credential"]))) return null;
       if (request.kind === "delete-repository") {
         const id = body["id"];
         const reply = members(await this.#provider.deleteRepository(id, body["name"]), ["deleted", "id"]);
         return reply?.["id"] === id && typeof reply["deleted"] === "boolean" ? answer(reply["deleted"] ? "confirmed" : "refused", { id }) : null;
       }
       const credential = body["credential"];
-      if (!text(credential)) return null;
+      if (!registerText(credential)) return null;
       const reply = members(await this.#provider.revokeCredential(credential), ["revoked", "credential"]);
       return reply?.["credential"] === credential && typeof reply["revoked"] === "boolean" ? answer(reply["revoked"] ? "confirmed" : "refused", { credential }) : null;
     } catch {
@@ -115,7 +115,7 @@ export class RegisterHost implements Outside {
   #created(name: string, reply: unknown): EffectAnswer | null {
     const body = members(reply, ["created", "name"], ["id", "credential", "nameExists"]);
     if (!body || body["name"] !== name) return null;
-    if (body["created"] === true && Object.hasOwn(body, "id") && !Object.hasOwn(body, "nameExists") && text(body["id"]) && (!Object.hasOwn(body, "credential") || text(body["credential"]))) {
+    if (body["created"] === true && Object.hasOwn(body, "id") && !Object.hasOwn(body, "nameExists") && registerText(body["id"]) && (!Object.hasOwn(body, "credential") || registerText(body["credential"]))) {
       return answer("confirmed", { name, id: body["id"], ...(Object.hasOwn(body, "credential") ? { credential: body["credential"] as string } : {}) });
     }
     if (body["created"] === false && typeof body["nameExists"] === "boolean" && !Object.hasOwn(body, "id") && !Object.hasOwn(body, "credential")) return answer("refused", { name, nameExists: body["nameExists"] });

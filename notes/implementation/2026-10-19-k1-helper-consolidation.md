@@ -242,3 +242,119 @@ to 2; text 22 to 21. The four first-checkpoint families stay at one each.
 keyOf remains eight and bytesOf four. These and the remaining text/error
 families still need completion. No existing test assertion changed. No
 whole gate or Source review has run, and demo work still takes priority.
+
+## Implementation ready for its gate
+
+The remaining families now have shared implementations or explicit names
+for their different meanings. Storage-key formats stay exact:
+jobStorageKey, attemptStorageKey, bindingKey, attemptKey,
+identityStorageKey, startStorageKey and listStorageKey name their separate
+inputs and records. Derive's existing keyOf export remains an alias of
+bindingKey. Jam's unrelated musical keyOf stays at its recorded source.
+
+Byte operations are envelopeBytes (canonical custody JSON size),
+replyBytes (ordinary reply JSON size), sqlBytes (SQLite buffer conversion)
+and objectIdBytes (Git object-ID decoding). Paging's bytesOf export remains
+an alias of replyBytes. None exchanges its serialization or copy policy
+for another's. Scenario, package, view, view-parameter, GitHub, blob,
+content and admission failures have distinct names and retain their
+existing error classes and arguments. The package validator's fail export
+remains an alias. Git's HTTP readers now share the nonthrowing
+unreadableGit error constructor; their caller still chooses throw or
+rejection. stopCall and stopCommand keep their different result types.
+
+Bytes owns stringOrNull for the two identical optional-string readers.
+Git's three strict journal decoders share decodeGitText, preserving fatal
+UTF-8 refusal and the retained leading byte order mark; Git operations use
+bytes utf8 for encoding. Default process and Site decoders keep their
+different replacement/BOM behavior under explicit names. queryText,
+configurationText, wellFormedText, callResultText, displayText,
+outcomeText, viewText, packageText, registerText, destinationText,
+textNode and shelfText name different validation, rendering or construction
+policies. Their empty-string, byte/character limit, NUL, surrogate,
+fallback and error rules are unchanged. Nullable Site and throwing GitHub
+record adapters now call the shared isRecord decision too.
+
+A draft identifier-only rename had also renamed Destination's unrelated
+local record variable. The scope-aware audit restores that local binding
+and its references while keeping the actual helper named
+matchesRecordMembers. The same audit of every earlier helper rename found
+no other such change. It handles parameters, block/loop/catch bindings,
+property keys and public aliases separately. Its first text pass exposed
+a type-annotation span in the parser's binding node: all six compilers
+stopped at the resulting implicit-any parameter in wellFormedText. The
+original Check annotation is restored, and identifier replacements now
+preserve that span. These failed originals remain in
+`shared-text-{bytes,platform,git,mcp,scope,checkers}-types` logs. Corrected
+commands all pass. The scoped tool, mapping files and repair log are
+retained under `/tmp/artroom-k1-` for review; they execute no project code.
+
+Final inventories repeat exactly the command above, retained as
+`/tmp/artroom-k1-helper-final-20261019.txt` and
+`...helper-counts-final...json`:
+
+| Helper | Before | After |
+|---|---:|---:|
+| isRecord | 9 | 1 |
+| natural | 12 | 1 |
+| same | 21 | 1 |
+| freeze | 9 | 1 |
+| ascii | 6 | 1 |
+| integer | 8 | 0 |
+| json | 6 | 0 |
+| text | 22 | 0 |
+| fail | 14 | 0 |
+| stop | 4 | 0 |
+| bytesOf | 4 | 0 |
+| record | 9 | 1 |
+| keyOf | 8 | 1 |
+
+The last two are Jam's distinct recorded domain operations. This is a
+reduction from 132 to seven matching declarations, achieved by imports
+and by naming different meanings. It is not a claim that 125 identical
+function bodies were removed. The SQL helper has one original declaration
+and now one owning declaration in SQLite. No exact alternative planner
+grep arrived during preparation; this explicit repeatable baseline is the
+comparison used, rather than an unexplained different count.
+
+The guard passes 506 source files against 174 runtime exports across all
+public bytes entry points. Existing test files and their assertions remain
+unchanged; its two Node cases are the only new cases. No case deadline,
+Vitest worker setting, pinned definition body, default cohort, storage key
+or wire schema changes. The final Page asset is rebuilt and its existing
+comparison passes; Jam's source, asset record and nineteen bodies are exact.
+
+Further owning evidence, with the same K1 prefix/date:
+
+- `distinct-errors-keys-{bytes,derive,git,mcp,scope,cli,checkers}-types`
+  pass. `shared-text-corrected-{bytes,platform,git,mcp,scope,checkers}-types`
+  and `shared-text-page-types` pass after the annotation correction.
+- `complete-helper-types` passes the full project typecheck after the
+  scoped correction and final shared helpers (83527 closed zero), including
+  all workspace and root script, browser and Grow targets.
+- `text-storage-errors-owning`: fifteen files, 95 cases pass and one
+  existing case skips (85211 closed zero). These are the unchanged owning
+  view/parameter, journal/object/GitHub/snapshot/read, SQLite custody/budget/
+  resource, Page custody/list/member, checker runner and Lending shelf cases.
+- `text-storage-errors-native`: five files, 37 cases pass (1929 closed
+  zero), covering actual operations, register/destination hosts and Site
+  routes/host. Their existing TEST provider/transport boundaries stay
+  labelled; no live provider or deployment result follows.
+- `final-page-assets-build` and `final-page-assets-owning` pass after the
+  final Page changes. `git diff` confirms no existing test file changed.
+
+All originals have terminated, with source stable during each related
+process. The required gate, its natural terminal result and exact-head
+Source/review are next. This checkpoint is not that gate or an approval.
+
+Before that gate, the existing Main pretest compatibility script adopted
+the owned Cloudflare pool package view: version 0.22.0, copied false,
+bundle SHA-256
+`8d3d115037c749cce1e8cb26bc70ba08e215aaaa357e4eae9f0c1577277c5855`
+to `cd50d18adce92adb54a3f00410d646b2fe09b3f12c5b833c492bcf5857621b39`.
+The earlier focused runs precede this dependency adoption. A second
+verification reports the same cd50 hash before and after, so the required
+gate will use that stable adopted view. Both logs are retained as
+`pre-gate-pool-compat` and `pre-gate-pool-verified`. No package was installed
+and no lock or dependency manifest changed; the patch is to the private
+copy, outside any original process and before its gate snapshot.

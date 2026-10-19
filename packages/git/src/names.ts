@@ -38,6 +38,9 @@ export class GitRefusal extends Error {
   }
 }
 
+/** Construct the shared unreadable result; callers throw or reject it. */
+export const unreadableGit = (what: string): GitRefusal => new GitRefusal("unreadable", what);
+
 /**
  * A Git object ID in the SHA-1 object format: 40 lower-case hex characters.
  * No adopted text names the hash function of the canonical repository (I3

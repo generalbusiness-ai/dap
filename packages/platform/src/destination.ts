@@ -1446,7 +1446,7 @@ function reportsBound(given: Pick<RuleGiven, "uses" | "own">, statement: Stateme
   // i5 edit: a one-file manifest selects no report.
   const selected = manifest.input.type !== "act" ? null : manifest.input.signed.intent.kind === PROPOSE_FILE || (["platform:destination@3", "platform:destination@4", "platform:destination@5", "platform:destination@6", "platform:destination@7", "platform:destination@8"].includes(pinnedOf(given.own) ?? "") && sourcesOf(manifest)) ? [] : manifest.input.signed.intent.fields["selected"];
   if (!Array.isArray(selected) || selected.length !== statement.reports.length) return null;
-  const same = selected.every((matchesRecordMembers, place) => isObject(matchesRecordMembers) && isFactRef(matchesRecordMembers["report"]) && canonicalize(matchesRecordMembers["report"]) === canonicalize(statement.reports[place]!));
+  const same = selected.every((record, place) => isObject(record) && isFactRef(record["report"]) && canonicalize(record["report"]) === canonicalize(statement.reports[place]!));
   return same && commits.every((commit): commit is string => commit !== null) ? commits : null;
 }
 
@@ -2271,9 +2271,9 @@ const generations = (publication: Item, given: RuleGiven): CheckGeneration[] => 
   if (value === undefined || value === null) return [];
   if (Array.isArray(value)) return value as unknown as CheckGeneration[];
   if (!isStandingDestination(pinnedBy(given))) throw new Error("This destination version keeps array generations");
-  const matchesRecordMembers = publicationStandingRecord(value);
-  if (!matchesRecordMembers || matchesRecordMembers.reservation !== publication.values["reservedAt"]) throw new Error("D1 current generation provenance is unavailable");
-  return [...matchesRecordMembers.checks];
+  const record = publicationStandingRecord(value);
+  if (!record || record.reservation !== publication.values["reservedAt"]) throw new Error("D1 current generation provenance is unavailable");
+  return [...record.checks];
 };
 const resultGeneration = (given: RuleGiven, publication: Item): boolean => {
   const job = given.uses.find((use) => use.entry.input.type === "act" && use.entry.input.signed.intent.kind === "request-check");
@@ -2819,8 +2819,8 @@ function standingKeys(given: RuleGiven, publication: Item): readonly KeyId[] {
 function standingEffects(given: RuleGiven, effects: readonly RuleEffect[]): readonly RuleEffect[] {
   return effects.map(effect => {
     if (effect.effect !== "value" || effect.slot !== "passes" || !Array.isArray(effect.value)) return effect;
-    const publication = given.state.item(effect.item), matchesRecordMembers = publicationStandingRecord(publication?.values["passes"]);
-    if (!publication || !matchesRecordMembers || matchesRecordMembers.reservation !== publication.values["reservedAt"]) throw new Error("D1 generation base is unavailable");
+    const publication = given.state.item(effect.item), record = publicationStandingRecord(publication?.values["passes"]);
+    if (!publication || !record || record.reservation !== publication.values["reservedAt"]) throw new Error("D1 generation base is unavailable");
     let checks = effect.value;
     if (given.input.type === "outcome" && given.input.kind === "check-judge") {
       const operation = given.state.operation(given.input.operation), origin = operation ? given.own(seqOf(operation.id))?.entry : null;
@@ -2832,7 +2832,7 @@ function standingEffects(given: RuleGiven, effects: readonly RuleEffect[]): read
       const proof = { key: entry.input.signed.intent.actor, result, decided: given.resolved.self };
       checks = checks.map(row => isObject(row) && row["passed"] === true && canonicalize(row["job"]) === canonicalize(job) ? { ...row, proof } : row);
     }
-    const next = publicationStandingRecord({ ...matchesRecordMembers, checks });
+    const next = publicationStandingRecord({ ...record, checks });
     if (!next) throw new Error("D1 current generation exceeds its bound");
     return { ...effect, value: next as unknown as FieldValue };
   });

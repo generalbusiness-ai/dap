@@ -1,3 +1,4 @@
+import { stringOrNull as text } from "@generalbusiness/artroom-bytes";
 import { isRecord as record } from "@generalbusiness/artroom-bytes";
 import { invitationRedemptionFields } from "@generalbusiness/artroom-client";
 /**
@@ -166,7 +167,6 @@ async function textOf(handle: ScopeHandle, digest: FieldValue | null | undefined
 
 const memberOf = (party: unknown): string | null => (party && typeof party === "object" && "member" in party ? String((party as MemberRef).member) : null);
 const membersOf = (party: unknown): string[] => (Array.isArray(party) ? party.map(memberOf).filter((m): m is string => m !== null) : []);
-const text = (value: FieldValue | null | undefined): string | null => (typeof value === "string" ? value : null);
 const scopeOf = (ref: FieldValue | null | undefined): ScopeId | null => (ref && typeof ref === "object" && "scope" in ref ? (ref as { scope: ScopeId }).scope : null);
 
 // ---------------------------------------------------------------- the room

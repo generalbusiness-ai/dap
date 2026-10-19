@@ -85,7 +85,7 @@ export class GitFailure extends Error {
   }
 }
 
-const text = new TextDecoder();
+const programTextDecoder = new TextDecoder();
 const bytes = new TextEncoder();
 
 export class GitProgram {
@@ -122,7 +122,7 @@ export class GitProgram {
   async ok(step: string, args: readonly string[], stdin?: Uint8Array): Promise<string> {
     const r = await this.run(args, stdin);
     if (r.code !== 0 || r.timedOut) throw new GitFailure(step, r);
-    return text.decode(r.stdout);
+    return programTextDecoder.decode(r.stdout);
   }
 }
 

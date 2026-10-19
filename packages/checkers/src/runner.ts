@@ -61,7 +61,7 @@ export interface CheckoutAsk {
 export type CheckoutReason = GitReason | "bad-directory" | "fetch-failed" | "checkout-failed" | "not-as-fetched" | "reservation-mismatch";
 export type Checkout = { confirmed: true; commit: ObjectId; tree: ObjectId; parents: readonly ObjectId[] } | { confirmed: false; reason: CheckoutReason };
 
-const text = new TextDecoder();
+const runnerTextDecoder = new TextDecoder();
 
 /** An absolute path with no control character and no part that is `.` or `..`: it is never read as an option, and never leaves its place. */
 const isDirectory = (dir: unknown): dir is string => typeof dir === "string" && dir.startsWith("/") && !/[\u0000-\u001f\u007f]/.test(dir) && !dir.split("/").some((part) => part === "." || part === "..");
@@ -96,7 +96,7 @@ export async function checkout(git: GitProgram, ask: CheckoutAsk, bounds?: ReadB
     if (ref !== undefined) {
       const target = await git.run([...at, "rev-parse", "--verify", "--end-of-options", "FETCH_HEAD"]);
       if (target.code !== 0 || target.timedOut) return no("fetch-failed");
-      if (text.decode(target.stdout).trim() !== commit) return no("reservation-mismatch");
+      if (runnerTextDecoder.decode(target.stdout).trim() !== commit) return no("reservation-mismatch");
     }
     // 3 to 5. Read by the reviewed reader, from what the fetch stored.
     const reader = new Reader(repositorySource(git, ask.dir), bounds);
@@ -111,7 +111,7 @@ export async function checkout(git: GitProgram, ask: CheckoutAsk, bounds?: ReadB
     const head = await git.run([...at, "rev-parse", "--verify", "--end-of-options", "HEAD^{commit}"]);
     const written = await git.run([...at, "write-tree"]);
     if (head.code !== 0 || head.timedOut || written.code !== 0 || written.timedOut) return no("checkout-failed");
-    if (text.decode(head.stdout).trim() !== commit || text.decode(written.stdout).trim() !== tree) return no("not-as-fetched");
+    if (runnerTextDecoder.decode(head.stdout).trim() !== commit || runnerTextDecoder.decode(written.stdout).trim() !== tree) return no("not-as-fetched");
     return { confirmed: true, commit, tree, parents: read.parents.filter(isObjectId) };
   } catch (e) {
     if (e instanceof GitRefusal) return no(e.reason);

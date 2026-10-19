@@ -106,7 +106,7 @@ interface Snapshot {
 type Args = Record<string, unknown>;
 type Run = (args: Args) => Promise<CallResult>;
 
-const text = (structured: Record<string, unknown>): string => JSON.stringify(structured);
+const callResultText = (structured: Record<string, unknown>): string => JSON.stringify(structured);
 /**
  * Response bounds of plan 031, section 8, for the whole CallResult as the service makes it: text, structured content and isError
  * together. Over 2026-07-28 the wire adds MODERN_RESULT_EXTRA bytes to each result, which these bounds do not count.
@@ -120,7 +120,7 @@ const pageOf = (bound: number): number => bound - PAGE_SPARE;
  * where the result is, and the JSON is sent once. A single item larger than a page is the one result that exceeds its bound.
  */
 const ok = (structured: Record<string, unknown>, bound: number = BOUNDS.act): CallResult => {
-  const whole: CallResult = { content: [{ type: "text", text: text(structured) }], structuredContent: structured, isError: false };
+  const whole: CallResult = { content: [{ type: "text", text: callResultText(structured) }], structuredContent: structured, isError: false };
   if (bytesOf(whole) <= bound) return whole;
   return { content: [{ type: "text", text: `The result is in structuredContent: ${bytesOf(structured)} bytes of JSON, which this text does not repeat.` }], structuredContent: structured, isError: false };
 };
@@ -134,7 +134,7 @@ export const ERROR_BYTES = Math.min(...Object.values(BOUNDS));
  */
 export const failed = (f: Finding): CallResult => {
   const said = finding(f);
-  const result = (message: string, next: string = said.next): CallResult => { const structured = { error: said.error, message, next }; return { content: [{ type: "text", text: text(structured) }], structuredContent: structured, isError: true }; };
+  const result = (message: string, next: string = said.next): CallResult => { const structured = { error: said.error, message, next }; return { content: [{ type: "text", text: callResultText(structured) }], structuredContent: structured, isError: true }; };
   const whole = result(said.sentence);
   if (bytesOf(whole) <= ERROR_BYTES) return whole;
   /** The longest marked cut of `full` that fits, or null when even the marked cut of nothing does not fit. */
@@ -168,7 +168,7 @@ export function projectAnswer(answer: Answer): Record<string, unknown> {
 const configDigest = (config: McpConfig): Digest => digestBytes(utf8(canonicalize(config as never)));
 
 class Stop extends Error { constructor(readonly result: CallResult) { super("stop"); } }
-const stop = (f: Finding): never => { throw new Stop(failed(f)); };
+const stopCall = (f: Finding): never => { throw new Stop(failed(f)); };
 
 const READ = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false };
 const WRITE = { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false };
@@ -383,7 +383,7 @@ export class McpService {
     if (typeof named === "string" && isScopeId(named)) return at(named);
     if (typeof named === "string" && (SINGLETON_PLACES as readonly string[]).includes(named)) {
       const matched = s.read.inventory.scopes.find((h) => h.place === named);
-      return matched ? at(matched.scope) : stop({ error: "target", what: `no ${named} is in the inventory` });
+      return matched ? at(matched.scope) : stopCall({ error: "target", what: `no ${named} is in the inventory` });
     }
     const number = typeof named === "number" ? named : typeof named === "string" && /^#?\d+$/.test(named) ? Number(named.replace("#", "")) : null;
     if (number !== null && room) {
@@ -391,10 +391,10 @@ export class McpService {
       if (!lane) {
         if (held(room.directory.scope)?.pinned === "platform:directory@10") {
           const coverage = await readPartitionIndexes(this.#reads, room.directory, room.membership);
-          if (!coverage.complete) return stop({ error: "read", scope: room.directory.scope, reason: "unavailable" });
+          if (!coverage.complete) return stopCall({ error: "read", scope: room.directory.scope, reason: "unavailable" });
           const row = coverage.indexes.flatMap(index => [...index.lanes]).find(item => item.values["number"] === number && isScopeRef(item.refs["scope"]));
           if (row) return at((row.refs["scope"] as ScopeRef).scope);
-          return stop({ error: "target", what: `no issue or change ${number} is listed in the selected complete partition indexes` });
+          return stopCall({ error: "target", what: `no issue or change ${number} is listed in the selected complete partition indexes` });
         }
         // A lane opened since the list was read: the directory's rows, read once.
         const read = await this.#reads.read(room.membership, (t, r) => t.summary(room.directory.scope, r));
@@ -405,12 +405,12 @@ export class McpService {
       }
       if (lane) return at(lane.ref.scope);
     }
-    return stop({ error: "target", what: `${clip(JSON.stringify(named) ?? String(named))} names no scope here` });
+    return stopCall({ error: "target", what: `${clip(JSON.stringify(named) ?? String(named))} names no scope here` });
   }
 
   async #summary(scope: ScopeId, membership: ScopeRef | null): Promise<{ summary: Summary; at: Read<Summary> & { ok: true } }> {
     const read = await this.#reads.read(membership, (t, r) => t.summary(scope, r));
-    if (!read.ok) return stop({ error: "read", scope, reason: read.reason });
+    if (!read.ok) return stopCall({ error: "read", scope, reason: read.reason });
     return { summary: read.value, at: read };
   }
 
@@ -423,13 +423,13 @@ export class McpService {
     if (read.ok) return read.value;
     const pin = this.kept.pins.get(scope);
     if (pin && read.reason === "forbidden") return { scope: pin.ref, definition: pin.pinned, items: [] };
-    return stop({ error: "read", scope, reason: read.reason });
+    return stopCall({ error: "read", scope, reason: read.reason });
   }
 
   async #definition(s: Snapshot, pinned: Digest | PlatformDefinition, scope: ScopeId, membership: ScopeRef | null): Promise<DefinitionLike> {
     const rules = s.read.room?.rules;
     const matched = await definitionOf(this.reads, this.kept, pinned, [{ scope, membership }, ...(rules ? [{ scope: rules.scope, membership: s.read.room!.membership }] : [])]);
-    return matched ?? stop({ error: "read", scope, reason: "unsupported-definition" });
+    return matched ?? stopCall({ error: "read", scope, reason: "unsupported-definition" });
   }
 
   // ---------------------------------------------------------------- an act, under custody
@@ -485,7 +485,7 @@ export class McpService {
         presented = shapePresented(act, presentedGiven);
         expected = capturedExpected(at, expectedOf(act, items, on as number | null, effectiveFields(act, shaped.fields, summary.scope)));
       } catch (error) {
-        if (error instanceof Unshaped) return stop({ error: "shape", field: error.field, what: error.what, declared: error.declared });
+        if (error instanceof Unshaped) return stopCall({ error: "shape", field: error.field, what: error.what, declared: error.declared });
         throw error;
       }
       const values = [...valuesGiven];
@@ -545,9 +545,9 @@ export class McpService {
   /** The bytes of a value a field names by digest: a definition's, read from the rules scope that retained it. */
   async #valueBytes(s: Snapshot, place: { name: string; domain: string; digest: string }): Promise<string> {
     const room = s.read.room;
-    if (place.domain !== "artroom-definition-1" || !room?.rules) return stop({ error: "shape", field: `fields.${place.name}`, what: `names a value in ${place.domain} that is not in values`, declared: "a digest of a value given in values" });
+    if (place.domain !== "artroom-definition-1" || !room?.rules) return stopCall({ error: "shape", field: `fields.${place.name}`, what: `names a value in ${place.domain} that is not in values`, declared: "a digest of a value given in values" });
     const read = await this.#reads.read(room.membership, (t, r) => t.retained(room.rules!.scope, r, "definition", place.digest as Digest));
-    if (!read.ok) return stop({ error: "shape", field: `fields.${place.name}`, what: `names a definition the rules scope does not hold (${read.reason}); give its bytes in values`, declared: "the digest of a definition" });
+    if (!read.ok) return stopCall({ error: "shape", field: `fields.${place.name}`, what: `names a definition the rules scope does not hold (${read.reason}); give its bytes in values`, declared: "the digest of a definition" });
     return read.value.bytes;
   }
 
@@ -864,9 +864,9 @@ export class McpService {
     if (typeof given === "string" && isScopeId(given)) {
       const read = await this.#reads.read(null, (t, r) => t.summary(given, r));
       if (read.ok) return read.value.scope;
-      return stop({ error: "read", scope: given, reason: read.reason });
+      return stopCall({ error: "read", scope: given, reason: read.reason });
     }
-    return stop({ error: "shape", field: "membership", what: "is not a membership scope", declared: "a scope ID or { scope, inc, kind }" });
+    return stopCall({ error: "shape", field: "membership", what: "is not a membership scope", declared: "a scope ID or { scope, inc, kind }" });
   }
 
   async #create(args: Args): Promise<CallResult> {
@@ -893,7 +893,7 @@ export class McpService {
     const build = async () => {
       let shaped: { fields: Record<string, FieldValue>; texts: string[] };
       try { shaped = shapeFields(act, fieldsGiven, textsGiven, membership); }
-      catch (error) { if (error instanceof Unshaped) return stop({ error: "shape", field: error.field, what: error.what, declared: error.declared }); throw error; }
+      catch (error) { if (error instanceof Unshaped) return stopCall({ error: "shape", field: error.field, what: error.what, declared: error.declared }); throw error; }
       // A creation intent's kind is the creation's, not the genesis act's: `install` for a register, `found` for any other scope
       // with no creator (the scope contract, section 7.1). The genesis act then applies with the intent's fields.
       const creation = data!.name === "platform:register" ? "install" : "found";
@@ -929,16 +929,16 @@ export class McpService {
   /** The actual generic room and exact Rules sibling, never a caller alias. */
   async #applicationRoom(): Promise<{ directory: ScopeRef; membership: ScopeRef; rules: ScopeRef; destination: ScopeRef; cohort: typeof TRUSTED_APPLICATION_COHORT | typeof DECLARED_APPLICATION_COHORT }> {
     const config = await this.#port.config.read(), repository = config.repository;
-    if (!repository || config.service !== this.#service) return stop({ error: "target", what: "configure a trusted-application room before installing" });
+    if (!repository || config.service !== this.#service) return stopCall({ error: "target", what: "configure a trusted-application room before installing" });
     const { summary: directory } = await this.#summary(repository.directory.scope, repository.membership);
     const row = directory.items.find(item => item.type === "repository" && item.state === "open"), rules = row?.refs["rules"], destination = row?.refs["destination"];
     const cohort = directory.definition === DECLARED_APPLICATION_COHORT.directory ? DECLARED_APPLICATION_COHORT : TRUSTED_APPLICATION_COHORT;
     if (directory.status !== "active" || directory.definition !== cohort.directory || canonicalize(directory.scope) !== canonicalize(repository.directory)
       || !row || canonicalize(row.refs["membership"]) !== canonicalize(repository.membership)
       || !isScopeRef(rules) || rules.kind !== "rules" || rules.scope !== repository.rules
-      || !isScopeRef(destination) || destination.kind !== "destination" || destination.scope !== repository.destination) return stop({ error: "target", what: "the configured room does not match its exact generic native siblings" });
+      || !isScopeRef(destination) || destination.kind !== "destination" || destination.scope !== repository.destination) return stopCall({ error: "target", what: "the configured room does not match its exact generic native siblings" });
     const { summary } = await this.#summary(rules.scope, repository.membership);
-    if (summary.status !== "active" || summary.definition !== cohort.rules || canonicalize(summary.scope) !== canonicalize(rules)) return stop({ error: "target", what: "the actual Rules sibling does not support native application installation" });
+    if (summary.status !== "active" || summary.definition !== cohort.rules || canonicalize(summary.scope) !== canonicalize(rules)) return stopCall({ error: "target", what: "the actual Rules sibling does not support native application installation" });
     return { directory: directory.scope, membership: repository.membership, rules, destination, cohort };
   }
 

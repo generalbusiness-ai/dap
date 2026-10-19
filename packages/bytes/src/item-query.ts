@@ -9,7 +9,7 @@ import { isHead, isRecord, isScopeRef } from "./records.ts";
 import { taggedBytes } from "./session.ts";
 
 const whole = (value: unknown): value is number => typeof value === "number" && Number.isSafeInteger(value) && value >= 0 && !Object.is(value, -0);
-const text = (value: unknown, cap: number, empty = false): value is string => typeof value === "string" && (empty || value.length > 0) && value.length <= cap && wellFormed(value) && utf8(value).length <= cap;
+const queryText = (value: unknown, cap: number, empty = false): value is string => typeof value === "string" && (empty || value.length > 0) && value.length <= cap && wellFormed(value) && utf8(value).length <= cap;
 const keys = (value: object, names: string) => Object.keys(value).sort().join() === names;
 
 /** Lexical nesting admission before JSON parsing; escapes and delimiters
@@ -26,16 +26,16 @@ function withinDepth(raw: string): boolean {
   return depth === 0 && !quoted;
 }
 function parse(raw: unknown, cap: number): unknown {
-  if (!text(raw, cap) || !withinDepth(raw)) return null;
+  if (!queryText(raw, cap) || !withinDepth(raw)) return null;
   try { const value: unknown = parseStrict(raw); return canonicalize(value) === raw ? value : null; } catch { return null; }
 }
 function query(value: unknown): ItemQuery | null {
-  if (!isRecord(value) || value["v"] !== 1 || !isScopeRef(value["scope"]) || !text(value["type"], B.nameBytes)
+  if (!isRecord(value) || value["v"] !== 1 || !isScopeRef(value["scope"]) || !queryText(value["type"], B.nameBytes)
     || !Array.isArray(value["states"]) || value["states"].length > B.states
-    || !value["states"].every((state: unknown, i: number, states: unknown[]) => text(state, B.nameBytes) && (i === 0 || byteOrder(states[i - 1] as string, state) < 0))
+    || !value["states"].every((state: unknown, i: number, states: unknown[]) => queryText(state, B.nameBytes) && (i === 0 || byteOrder(states[i - 1] as string, state) < 0))
     || !(value["ids"] === null || (Array.isArray(value["ids"]) && value["ids"].length <= B.ids && value["ids"].every((id: unknown, i: number, ids: unknown[]) => whole(id) && (i === 0 || (ids[i - 1] as number) < id))))
     || !whole(value["limit"]) || value["limit"] < 1 || value["limit"] > B.rows
-    || !(value["cursor"] === null || text(value["cursor"], B.cursorBytes, true)) || !keys(value, "cursor,ids,limit,scope,states,type,v")) return null;
+    || !(value["cursor"] === null || queryText(value["cursor"], B.cursorBytes, true)) || !keys(value, "cursor,ids,limit,scope,states,type,v")) return null;
   return Object.freeze({ v: 1, scope: Object.freeze({ ...value["scope"] }), type: value["type"], states: Object.freeze([...value["states"]]) as readonly string[], ids: value["ids"] === null ? null : Object.freeze([...value["ids"]]) as readonly number[], limit: value["limit"], cursor: value["cursor"] });
 }
 

@@ -8,6 +8,7 @@
  * The caller's maxBytes bounds wire, inflated and retained object bytes;
  * it is a transport allowance, not an adopted platform quota.
  */
+import { unreadableGit as fail } from "./names.ts";
 import { ascii } from "./ascii.ts";
 import { hex } from "@generalbusiness/artroom-bytes";
 import { sha1 } from "@noble/hashes/legacy.js";
@@ -36,7 +37,6 @@ export interface SmartHttpReadOptions extends SmartHttpOptions { isolateObjects?
 // inflate chunks/concat, retained bytes and one returned copy. Metadata is
 // separately finite by packet, ref and exact-one-object counts.
 const ISOLATED_WORKING_MULTIPLE = 16;
-const fail = (what: string) => new GitRefusal("unreadable", what);
 const large = (what: string) => new GitRefusal("too-large", what);
 const utf8 = new TextEncoder();
 const concat = (parts: readonly Uint8Array[]): Uint8Array => {

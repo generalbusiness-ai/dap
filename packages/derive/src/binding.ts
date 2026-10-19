@@ -46,7 +46,7 @@ export const INDEXED_TYPES: readonly string[] = ["fact", "item", "scope", "membe
  * An integer uses its unquoted canonical decimal text. Equality lookup
  * implies neither numeric ordering nor uniqueness of that value.
  */
-export function keyOf(value: unknown, at: ScopeRef): string | null {
+export function bindingKey(value: unknown, at: ScopeRef): string | null {
   if (value === null || value === undefined) return null;
   // A value with no canonical bytes is no key, and this never throws: negative zero, an object that is not plain. No field as
   // check 7 read it and no slot of a folded item is one.
@@ -65,7 +65,7 @@ export function keyOf(value: unknown, at: ScopeRef): string | null {
  */
 export function indexRows(definition: Pick<ValidDefinition, "keyed">, item: Item, at: ScopeRef): { slot: string; key: string }[] {
   return (own(definition.keyed, item.type) ?? []).flatMap((slot) => {
-    const key = keyOf(own(item.refs, slot) ?? own(item.values, slot), at);
+    const key = bindingKey(own(item.refs, slot) ?? own(item.values, slot), at);
     return key === null ? [] : [{ slot, key }];
   });
 }
@@ -115,7 +115,7 @@ export function selectorOf(handler: ReceiveType): BindingMark | null {
  * retried (section 6.1, "A fault of a rule is no judgment").
  */
 export function selectedByIndex(g: Pick<Giving, "view" | "scope" | "fields" | "platform">, mark: BindingMark): Item | null {
-  const key = keyOf(own(g.fields, mark.key), g.scope.at);
+  const key = bindingKey(own(g.fields, mark.key), g.scope.at);
   if (key === null) return null;
   const ids = g.view.lookup(mark.item, mark.index, key, SELECTED_MOST + 1);
   if (ids === null) throw new RuleFault(`the index of ${mark.item} on ${mark.index} does not hold every item of the type, so no lookup is answered`);
@@ -174,3 +174,5 @@ export function decisionsOf(definition: Pick<ValidDefinition, "declared">, type:
   const stated = (own(definition.declared.items, type) as { holds?: { decisions?: Record<string, number> } } | undefined)?.holds?.decisions;
   return own(stated, message) ?? 0;
 }
+
+export { bindingKey as keyOf };

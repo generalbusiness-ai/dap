@@ -142,7 +142,7 @@ export interface SnapshotCommit { commit: ObjectId; tree: ObjectId; objects: rea
 
 interface Dir { files: Map<string, { mode: FileMode; id: ObjectId }>; dirs: Map<string, Dir> }
 
-const bytesOf = (id: ObjectId): Uint8Array => Uint8Array.from(id.match(/../g)!, (pair) => parseInt(pair, 16));
+const objectIdBytes = (id: ObjectId): Uint8Array => Uint8Array.from(id.match(/../g)!, (pair) => parseInt(pair, 16));
 
 function concat(chunks: readonly Uint8Array[]): Uint8Array {
   const out = new Uint8Array(chunks.reduce((n, c) => n + c.length, 0));
@@ -219,7 +219,7 @@ export function snapshotCommit(files: readonly SnapshotFile[], message: string, 
       ...[...dir.files].map(([name, f]) => ({ key: utf8.encode(name), line: utf8.encode(`${f.mode} ${name}\0`), id: f.id })),
       ...[...dir.dirs].map(([name, sub]) => ({ key: utf8.encode(`${name}/`), line: utf8.encode(`40000 ${name}\0`), id: write(sub) })),
     ].sort((a, b) => order(a.key, b.key));
-    const data = concat(entries.flatMap((e) => [e.line, bytesOf(e.id)]));
+    const data = concat(entries.flatMap((e) => [e.line, objectIdBytes(e.id)]));
     const id = idOf("tree", data);
     if (!known(id)) {
       written.add(id);

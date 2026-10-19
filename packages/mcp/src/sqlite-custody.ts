@@ -81,7 +81,7 @@ class Queue {
   }
 }
 
-const bytesOf = (bytes: SqlValue): Uint8Array => (bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes as ArrayBuffer));
+const sqlBytes = (bytes: SqlValue): Uint8Array => (bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes as ArrayBuffer));
 const decoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: false });
 
 export function sqliteStore(sql: Sql, bounds: SqliteCustodyBounds = SQLITE_CUSTODY_BOUNDS, now: () => number = Date.now): CustodyStore & { used(): number; reserved(): number; archived(): number; identity(id: string): { stored: number; reserved: number } } {
@@ -159,7 +159,7 @@ export function sqliteStore(sql: Sql, bounds: SqliteCustodyBounds = SQLITE_CUSTO
   const readChunks = (table: "chunk" | "archive_chunk", id: string, count: number): Uint8Array => {
     const rows = sql.exec(`SELECT idx, bytes FROM ${table} WHERE id = ? ORDER BY idx`, id).toArray();
     if (rows.length !== count) throw new Error(`${id}: ${rows.length} chunks where ${count} are recorded`);
-    const parts = rows.map((r) => bytesOf(r["bytes"]!));
+    const parts = rows.map((r) => sqlBytes(r["bytes"]!));
     const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
     let at = 0;
     for (const p of parts) { out.set(p, at); at += p.length; }
@@ -268,7 +268,7 @@ export function sqliteStore(sql: Sql, bounds: SqliteCustodyBounds = SQLITE_CUSTO
         if (count < at) throw new Error(`the segment of ${id} holds fewer outcomes than its record counts`);
         // Cut what an interrupted earlier append left past the record's count, then append, each outcome in rows within the bound.
         if (count > at) {
-          const cut = sql.exec(`SELECT bytes FROM segment WHERE id = ? AND ordinal >= ?`, id, at).toArray().reduce((n, r) => n + rowBytes(bytesOf(r["bytes"]!)), 0);
+          const cut = sql.exec(`SELECT bytes FROM segment WHERE id = ? AND ordinal >= ?`, id, at).toArray().reduce((n, r) => n + rowBytes(sqlBytes(r["bytes"]!)), 0);
           sql.exec(`DELETE FROM segment WHERE id = ? AND ordinal >= ?`, id, at);
           held -= cut;
           store(id, -cut);
@@ -294,7 +294,7 @@ export function sqliteStore(sql: Sql, bounds: SqliteCustodyBounds = SQLITE_CUSTO
       for (const r of rows) {
         const ordinal = Number(r["ordinal"]);
         if (!byOrdinal.has(ordinal)) byOrdinal.set(ordinal, []);
-        byOrdinal.get(ordinal)!.push(bytesOf(r["bytes"]!));
+        byOrdinal.get(ordinal)!.push(sqlBytes(r["bytes"]!));
       }
       return [...byOrdinal.keys()].sort((a, b) => a - b).map((ordinal) => {
         const parts = byOrdinal.get(ordinal)!;

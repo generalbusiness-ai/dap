@@ -10,6 +10,7 @@
  * https://docs.github.com/en/rest/apps/installations#revoke-an-installation-access-token
  * https://docs.github.com/en/rest/repos/repos
  */
+import { isRecord } from "@generalbusiness/artroom-bytes";
 
 export type GitHubPermission = "read" | "write";
 export type GitHubPermissions = Readonly<Record<string, GitHubPermission>>;
@@ -51,16 +52,16 @@ export class GitHubFailure extends Error {
   }
 }
 
-const fail = (reason: GitHubFailureReason, status: number | null = null): never => { throw new GitHubFailure(reason, status); };
+const githubFailure = (reason: GitHubFailureReason, status: number | null = null): never => { throw new GitHubFailure(reason, status); };
 const positive = (value: unknown): value is number => Number.isSafeInteger(value) && (value as number) > 0;
 const githubRecord = (value: unknown): Record<string, unknown> => {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) return fail("response");
+  if (!isRecord(value)) return githubFailure("response");
   return value as Record<string, unknown>;
 };
 const loginOK = (value: unknown): value is string => typeof value === "string" && /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$/.test(value);
 const nameOK = (value: unknown): value is string => typeof value === "string" && /^[A-Za-z0-9_.-]{1,100}$/.test(value) && value !== "." && value !== ".." && !value.toLowerCase().endsWith(".git");
 const credential = (value: unknown): string => {
-  if (typeof value !== "string" || !/^[A-Za-z0-9_.-]{1,4096}$/.test(value)) return fail("input");
+  if (typeof value !== "string" || !/^[A-Za-z0-9_.-]{1,4096}$/.test(value)) return githubFailure("input");
   return value;
 };
 const utf8 = new TextEncoder();
@@ -75,7 +76,7 @@ function scopeOf(value: GitHubTokenScope): { repositoryIds: number[]; permission
   // Snapshot both inputs before any await. Never omit the repository scope.
   const ids = [...value.repositoryIds];
   const permissions = Object.fromEntries(Object.entries(value.permissions));
-  if (ids.length === 0 || ids.length > 500 || !ids.every(positive) || new Set(ids).size !== ids.length || Object.keys(permissions).length === 0 || Object.keys(permissions).length > 50 || Object.entries(permissions).some(([key, level]) => !/^[a-z][a-z0-9_]{0,63}$/.test(key) || (level !== "read" && level !== "write"))) return fail("input");
+  if (ids.length === 0 || ids.length > 500 || !ids.every(positive) || new Set(ids).size !== ids.length || Object.keys(permissions).length === 0 || Object.keys(permissions).length > 50 || Object.entries(permissions).some(([key, level]) => !/^[a-z][a-z0-9_]{0,63}$/.test(key) || (level !== "read" && level !== "write"))) return githubFailure("input");
   return { repositoryIds: ids, permissions };
 }
 
@@ -91,7 +92,7 @@ export class GitHubApp {
   #key: CryptoKey | undefined;
 
   constructor(options: GitHubAppOptions) {
-    if (!/^[A-Za-z0-9_.-]{1,128}$/.test(options.issuer) || !positive(options.installationId) || !positive(options.account.id) || !loginOK(options.account.login) || (options.account.type !== "User" && options.account.type !== "Organization") || typeof options.privateKey !== "string" || options.privateKey.length > 16_384 || !/^-----BEGIN PRIVATE KEY-----\r?\n[A-Za-z0-9+/=\r\n]+\r?\n-----END PRIVATE KEY-----\s*$/.test(options.privateKey)) fail("configuration");
+    if (!/^[A-Za-z0-9_.-]{1,128}$/.test(options.issuer) || !positive(options.installationId) || !positive(options.account.id) || !loginOK(options.account.login) || (options.account.type !== "User" && options.account.type !== "Organization") || typeof options.privateKey !== "string" || options.privateKey.length > 16_384 || !/^-----BEGIN PRIVATE KEY-----\r?\n[A-Za-z0-9+/=\r\n]+\r?\n-----END PRIVATE KEY-----\s*$/.test(options.privateKey)) githubFailure("configuration");
     this.#issuer = options.issuer;
     this.#pem = options.privateKey;
     this.#installation = options.installationId;
@@ -100,7 +101,7 @@ export class GitHubApp {
     this.#now = options.now ?? Date.now;
     this.#timeout = options.timeoutMs ?? 30_000;
     this.#maxBytes = options.maxResponseBytes ?? 512 * 1024;
-    if (!positive(this.#timeout) || this.#timeout > 120_000 || !positive(this.#maxBytes) || this.#maxBytes > 4 * 1024 * 1024) fail("configuration");
+    if (!positive(this.#timeout) || this.#timeout > 120_000 || !positive(this.#maxBytes) || this.#maxBytes > 4 * 1024 * 1024) githubFailure("configuration");
   }
 
   /** RS256 JWT, issued 60s in the past and expiring 9 minutes from now. */
@@ -112,11 +113,11 @@ export class GitHubApp {
         this.#key = await crypto.subtle.importKey("pkcs8", bytes, { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["sign"]);
       }
       const now = Math.floor(this.#now() / 1000);
-      if (!positive(now)) return fail("configuration");
+      if (!positive(now)) return githubFailure("configuration");
       const unsigned = `${jsonPart({ alg: "RS256", typ: "JWT" })}.${jsonPart({ iat: now - 60, exp: now + 540, iss: this.#issuer })}`;
       const signed = await crypto.subtle.sign("RSASSA-PKCS1-v1_5", this.#key, utf8.encode(unsigned));
       return `${unsigned}.${base64url(new Uint8Array(signed))}`;
-    } catch { return fail("configuration"); }
+    } catch { return githubFailure("configuration"); }
   }
 
   /**
@@ -125,29 +126,29 @@ export class GitHubApp {
    */
   async validateInstallation(): Promise<void> {
     const data = githubRecord(await this.#request(`/app/installations/${this.#installation}`, "GET", await this.jwt(), 200));
-    if (data["id"] !== this.#installation) fail("response");
+    if (data["id"] !== this.#installation) githubFailure("response");
     this.#checkAccount(data["account"]);
-    if (data["suspended_at"] !== null) fail("response");
+    if (data["suspended_at"] !== null) githubFailure("response");
   }
 
   /** One POST, explicit repository IDs and permissions; never an all-repo token. */
   async mintInstallationToken(value: GitHubTokenScope): Promise<GitHubInstallationToken> {
     const scope = scopeOf(value);
     const answer = githubRecord(await this.#request(`/app/installations/${this.#installation}/access_tokens`, "POST", await this.jwt(), 201, { repository_ids: scope.repositoryIds, permissions: scope.permissions }));
-    if (answer["repository_selection"] !== "selected") fail("response");
-    const plaintext = typeof answer["token"] === "string" && /^[A-Za-z0-9_.-]{1,4096}$/.test(answer["token"]) ? answer["token"] : fail("response");
+    if (answer["repository_selection"] !== "selected") githubFailure("response");
+    const plaintext = typeof answer["token"] === "string" && /^[A-Za-z0-9_.-]{1,4096}$/.test(answer["token"]) ? answer["token"] : githubFailure("response");
     const expiresAt = answer["expires_at"];
     const time = typeof expiresAt === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(expiresAt) ? Date.parse(expiresAt) : NaN;
     const now = this.#now();
-    if (!Number.isFinite(now) || !Number.isFinite(time) || time <= now || time > now + 65 * 60_000) fail("response");
+    if (!Number.isFinite(now) || !Number.isFinite(time) || time <= now || time > now + 65 * 60_000) githubFailure("response");
     const permissions = githubRecord(answer["permissions"]);
     // GitHub implicitly grants metadata:read. No other extra permission or
     // a stronger returned permission can be accepted as the requested scope.
-    if (Object.entries(permissions).some(([key, level]) => level !== scope.permissions[key] && !(key === "metadata" && level === "read" && scope.permissions[key] === undefined)) || Object.entries(scope.permissions).some(([key, level]) => permissions[key] !== level)) fail("response");
+    if (Object.entries(permissions).some(([key, level]) => level !== scope.permissions[key] && !(key === "metadata" && level === "read" && scope.permissions[key] === undefined)) || Object.entries(scope.permissions).some(([key, level]) => permissions[key] !== level)) githubFailure("response");
     const repositories = answer["repositories"];
-    if (!Array.isArray(repositories) || repositories.length !== scope.repositoryIds.length) return fail("response");
+    if (!Array.isArray(repositories) || repositories.length !== scope.repositoryIds.length) return githubFailure("response");
     const ids = repositories.map((repository) => this.#repository(repository).id);
-    if (new Set(ids).size !== ids.length || ids.some((id) => !scope.repositoryIds.includes(id))) fail("response");
+    if (new Set(ids).size !== ids.length || ids.some((id) => !scope.repositoryIds.includes(id))) githubFailure("response");
     return Object.freeze({ plaintext, expiresAt: expiresAt as string, repositoryIds: Object.freeze(scope.repositoryIds), permissions: Object.freeze(scope.permissions) });
   }
 
@@ -168,11 +169,11 @@ export class GitHubApp {
    */
   async createRepository(name: string, options: { private: boolean }, plaintext: string): Promise<GitHubRepository> {
     this.#repoPath(name);
-    if (typeof options.private !== "boolean") return fail("input");
+    if (typeof options.private !== "boolean") return githubFailure("input");
     const isPrivate = options.private;
     const path = this.#account.type === "Organization" ? `/orgs/${this.#account.login}/repos` : "/user/repos";
     const answer = this.#repository(await this.#request(path, "POST", credential(plaintext), 201, { name, private: isPrivate, auto_init: false }), name);
-    if (answer.private !== isPrivate) fail("response");
+    if (answer.private !== isPrivate) githubFailure("response");
     return answer;
   }
 
@@ -185,12 +186,12 @@ export class GitHubApp {
    */
   async deleteRepository(name: string, repositoryId: number, token: GitHubInstallationToken): Promise<void> {
     const scope = scopeOf(token);
-    if (!positive(repositoryId) || scope.repositoryIds.length !== 1 || scope.repositoryIds[0] !== repositoryId || scope.permissions["administration"] !== "write" || Object.entries(scope.permissions).some(([key, level]) => key !== "administration" && !(key === "metadata" && level === "read")) || !Number.isFinite(Date.parse(token.expiresAt)) || Date.parse(token.expiresAt) <= this.#now()) fail("input");
+    if (!positive(repositoryId) || scope.repositoryIds.length !== 1 || scope.repositoryIds[0] !== repositoryId || scope.permissions["administration"] !== "write" || Object.entries(scope.permissions).some(([key, level]) => key !== "administration" && !(key === "metadata" && level === "read")) || !Number.isFinite(Date.parse(token.expiresAt)) || Date.parse(token.expiresAt) <= this.#now()) githubFailure("input");
     await this.#request(this.#repoPath(name), "DELETE", credential(token.plaintext), 204);
   }
 
   #repoPath(name: string): string {
-    if (!nameOK(name)) return fail("input");
+    if (!nameOK(name)) return githubFailure("input");
     return `/repos/${this.#account.login}/${name}`;
   }
 
@@ -204,7 +205,7 @@ export class GitHubApp {
 function checkedAccount(account: GitHubAccount, value: unknown): string {
   const owner = githubRecord(value);
   const login = owner["login"];
-  if (!loginOK(login) || login.toLowerCase() !== account.login.toLowerCase() || owner["id"] !== account.id || owner["type"] !== account.type) return fail("response");
+  if (!loginOK(login) || login.toLowerCase() !== account.login.toLowerCase() || owner["id"] !== account.id || owner["type"] !== account.type) return githubFailure("response");
   return login;
 }
 
@@ -213,10 +214,10 @@ function checkedRepository(account: GitHubAccount, value: unknown, expected?: st
   const owner = checkedAccount(account, repository["owner"]);
   const name = repository["name"];
   const id = repository["id"];
-  if (!nameOK(name) || !positive(id) || typeof repository["private"] !== "boolean" || (expected !== undefined && name.toLowerCase() !== expected.toLowerCase())) return fail("response");
+  if (!nameOK(name) || !positive(id) || typeof repository["private"] !== "boolean" || (expected !== undefined && name.toLowerCase() !== expected.toLowerCase())) return githubFailure("response");
   const htmlUrl = `https://github.com/${owner}/${name}`;
   const gitUrl = `${htmlUrl}.git`;
-  if (repository["full_name"] !== `${owner}/${name}` || repository["html_url"] !== htmlUrl || repository["clone_url"] !== gitUrl) return fail("response");
+  if (repository["full_name"] !== `${owner}/${name}` || repository["html_url"] !== htmlUrl || repository["clone_url"] !== gitUrl) return githubFailure("response");
   return { id, owner, name, private: repository["private"], htmlUrl, gitUrl };
 }
 
@@ -224,7 +225,7 @@ async function githubRequest(options: Pick<GitHubAppOptions, "fetch" | "timeoutM
   const timeout = options.timeoutMs ?? 30_000;
   const maxBytes = options.maxResponseBytes ?? 512 * 1024;
   const send = options.fetch ?? ((request: Request) => fetch(request));
-  if (!positive(timeout) || timeout > 120_000 || !positive(maxBytes) || maxBytes > 4 * 1024 * 1024) fail("configuration");
+  if (!positive(timeout) || timeout > 120_000 || !positive(maxBytes) || maxBytes > 4 * 1024 * 1024) githubFailure("configuration");
   const controller = new AbortController();
   let timer: ReturnType<typeof setTimeout> | undefined;
   const deadline = new Promise<never>((_, reject) => {
@@ -245,13 +246,13 @@ async function githubRequest(options: Pick<GitHubAppOptions, "fetch" | "timeoutM
     // Dispose a late response even if a supplied transport ignores abort.
     void pending.then((late) => { if (controller.signal.aborted) void late.body?.cancel().catch(() => undefined); }, () => undefined);
     response = await Promise.race([pending, deadline]);
-    if (response.redirected || (response.url !== "" && response.url !== url)) return fail("response", response.status);
+    if (response.redirected || (response.url !== "" && response.url !== url)) return githubFailure("response", response.status);
     if (missing && response.status === 404) return null;
-    if (response.status !== status) return fail("response", response.status);
+    if (response.status !== status) return githubFailure("response", response.status);
     if (status === 204) return undefined;
-    if (response.headers.get("content-type")?.split(";", 1)[0]?.trim().toLowerCase() !== "application/json" || response.body === null) return fail("response", response.status);
+    if (response.headers.get("content-type")?.split(";", 1)[0]?.trim().toLowerCase() !== "application/json" || response.body === null) return githubFailure("response", response.status);
     const length = response.headers.get("content-length");
-    if (length !== null && (!/^\d+$/.test(length) || Number(length) > maxBytes)) return fail("too-large");
+    if (length !== null && (!/^\d+$/.test(length) || Number(length) > maxBytes)) return githubFailure("too-large");
     reader = response.body.getReader();
     const chunks: Uint8Array[] = [];
     let size = 0;
@@ -259,17 +260,17 @@ async function githubRequest(options: Pick<GitHubAppOptions, "fetch" | "timeoutM
       const chunk = await Promise.race([reader.read(), deadline]);
       if (chunk.done) break;
       size += chunk.value.length;
-      if (size > maxBytes) return fail("too-large");
+      if (size > maxBytes) return githubFailure("too-large");
       chunks.push(chunk.value);
     }
     const bytes = new Uint8Array(size);
     let at = 0;
     for (const chunk of chunks) { bytes.set(chunk, at); at += chunk.length; }
     try { return JSON.parse(new TextDecoder("utf-8", { fatal: true, ignoreBOM: false }).decode(bytes)) as unknown; }
-    catch { return fail("response"); }
+    catch { return githubFailure("response"); }
   } catch (error) {
     if (error instanceof GitHubFailure) throw error;
-    return fail(controller.signal.aborted ? "timeout" : "request");
+    return githubFailure(controller.signal.aborted ? "timeout" : "request");
   } finally {
     if (timer !== undefined) clearTimeout(timer);
     if (reader !== undefined) { void reader.cancel().catch(() => undefined); reader.releaseLock(); }
@@ -282,8 +283,8 @@ async function githubRequest(options: Pick<GitHubAppOptions, "fetch" | "timeoutM
  * is unexposed identity, not proof that the repository does not exist. */
 export async function githubRepository(options: Pick<GitHubAppOptions, "account" | "fetch" | "timeoutMs" | "maxResponseBytes">, name: string, plaintext?: string): Promise<GitHubRepository | null> {
   const account = { ...options.account };
-  if (!positive(account.id) || !loginOK(account.login) || (account.type !== "User" && account.type !== "Organization")) return fail("configuration");
-  if (!nameOK(name)) return fail("input");
+  if (!positive(account.id) || !loginOK(account.login) || (account.type !== "User" && account.type !== "Organization")) return githubFailure("configuration");
+  if (!nameOK(name)) return githubFailure("input");
   const answer = await githubRequest(options, `/repos/${account.login}/${name}`, "GET", plaintext === undefined ? undefined : credential(plaintext), 200, undefined, true);
   return answer === null ? null : checkedRepository(account, answer, name);
 }

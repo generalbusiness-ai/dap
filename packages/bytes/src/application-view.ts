@@ -73,18 +73,18 @@ export class ApplicationViewError extends Error {
   constructor(readonly reason: "invalid" | "limit" | "binding") { super("application-view-" + reason); }
 }
 const B = APPLICATION_VIEW_LIMITS;
-const fail = (reason: ApplicationViewError["reason"] = "invalid"): never => { throw new ApplicationViewError(reason); };
-const name = (value: unknown): string => typeof value === "string" && /^[A-Za-z][A-Za-z0-9_.-]{0,127}$/.test(value) ? value : fail();
-const text = (value: unknown, max: number): string => typeof value === "string" && value.length > 0 && value.length <= max && utf8(value).length <= max ? value : fail();
-const only = (value: unknown, keys: string): Record<string, unknown> => isRecord(value) && Object.keys(value).sort().join() === keys ? value : fail();
+const viewFailure = (reason: ApplicationViewError["reason"] = "invalid"): never => { throw new ApplicationViewError(reason); };
+const name = (value: unknown): string => typeof value === "string" && /^[A-Za-z][A-Za-z0-9_.-]{0,127}$/.test(value) ? value : viewFailure();
+const viewText = (value: unknown, max: number): string => typeof value === "string" && value.length > 0 && value.length <= max && utf8(value).length <= max ? value : viewFailure();
+const only = (value: unknown, keys: string): Record<string, unknown> => isRecord(value) && Object.keys(value).sort().join() === keys ? value : viewFailure();
 export function isApplicationViewResource(value: unknown): value is string {
   return typeof value === "string" && value.length <= 256
     && /^ui:\/\/[A-Za-z0-9][A-Za-z0-9._-]{0,63}(?:\/[A-Za-z0-9][A-Za-z0-9._-]{0,63})+$/.test(value)
     && !value.slice(5).split("/").some(part => part === "." || part === "..");
 }
 const dict = (value: unknown, most: number): Record<string, unknown> => {
-  if (!isRecord(value)) return fail();
-  const keys = Object.keys(value); if (keys.length > most) return fail("limit");
+  if (!isRecord(value)) return viewFailure();
+  const keys = Object.keys(value); if (keys.length > most) return viewFailure("limit");
   keys.forEach(name); return value;
 };
 /** Template substitution is plain text with one declared row. No expressions,
@@ -94,8 +94,8 @@ export function applicationViewTemplateFields(template: string): readonly string
   let at = 0;
   while (at < template.length) {
     const open = template.indexOf("{", at), close = template.indexOf("}", at);
-    if (open < 0) { if (close >= 0) return fail(); break; }
-    if (close < open || close < 0) return fail();
+    if (open < 0) { if (close >= 0) return viewFailure(); break; }
+    if (close < open || close < 0) return viewFailure();
     found.push(name(template.slice(open + 1, close)));
     at = close + 1;
   }
@@ -104,91 +104,91 @@ export function applicationViewTemplateFields(template: string): readonly string
 export function readApplicationViews(value: unknown): ApplicationViews {
   let owned: unknown;
   try { owned = parseStrict(applicationJson(value, B.bytes)); }
-  catch (error) { return fail(error instanceof ApplicationPackageError && error.reason === "limit" ? "limit" : "invalid"); }
+  catch (error) { return viewFailure(error instanceof ApplicationPackageError && error.reason === "limit" ? "limit" : "invalid"); }
   const views = dict(owned, B.views);
   for (const given of Object.values(views)) {
-    if (!isRecord(given)) return fail();
+    if (!isRecord(given)) return viewFailure();
     const common = "acts,back,context,display,fallback,item,kind,projection,refresh,revision,waiting";
     const view = only(given, (common + (given["kind"] === "surface" ? ",opens,resource" : ",actor,facts,summary,title" + (Object.hasOwn(given, "links") ? ",links" : "") + (Object.hasOwn(given, "series") ? ",series" : "") + (Object.hasOwn(given, "order") ? ",order" : "") + (Object.hasOwn(given, "for") ? ",for" : "") + (Object.hasOwn(given, "reads") ? ",reads" : ""))).split(",").sort().join());
     name(view["projection"]); name(view["item"]);
-    if (view["revision"] !== "revision" || typeof view["display"] !== "string" || !["inline", "fullscreen"].includes(view["display"])) return fail();
+    if (view["revision"] !== "revision" || typeof view["display"] !== "string" || !["inline", "fullscreen"].includes(view["display"])) return viewFailure();
     if (view["back"] !== null) name(view["back"]);
     const refresh = view["refresh"];
-    if (typeof refresh !== "number" || !Number.isSafeInteger(refresh) || refresh < 1000 || refresh > 60_000) return fail("limit");
-    for (const key of ["context", "fallback"]) applicationViewTemplateFields(text(view[key], B.templateBytes));
-    for (const template of Object.values(dict(view["waiting"], 16))) applicationViewTemplateFields(text(template, B.templateBytes));
+    if (typeof refresh !== "number" || !Number.isSafeInteger(refresh) || refresh < 1000 || refresh > 60_000) return viewFailure("limit");
+    for (const key of ["context", "fallback"]) applicationViewTemplateFields(viewText(view[key], B.templateBytes));
+    for (const template of Object.values(dict(view["waiting"], 16))) applicationViewTemplateFields(viewText(template, B.templateBytes));
     const acts = view["acts"];
-    if (!Array.isArray(acts) || acts.length > B.acts) return fail("limit");
+    if (!Array.isArray(acts) || acts.length > B.acts) return viewFailure("limit");
     const used = new Set<string>();
     for (const given of acts) {
       const act = only(given, ("act,label,needs,when" + (isRecord(given) && Object.hasOwn(given, "args") ? ",args" : "") + (isRecord(given) && Object.hasOwn(given, "parameters") ? ",parameters" : "")).split(",").sort().join()), kind = name(act["act"]);
-      if (Object.hasOwn(act, "args") && (!isRecord(act["args"]) || Object.keys(act["args"]).length > 128)) return fail();
+      if (Object.hasOwn(act, "args") && (!isRecord(act["args"]) || Object.keys(act["args"]).length > 128)) return viewFailure();
       if (Object.hasOwn(act, "parameters")) {
         try { readViewParameters(act["parameters"]); }
-        catch (error) { return fail(error instanceof ApplicationViewParameterError ? error.reason : "invalid"); }
+        catch (error) { return viewFailure(error instanceof ApplicationViewParameterError ? error.reason : "invalid"); }
       }
       const binding = canonicalize([kind, act["args"] ?? {}, act["parameters"] ?? {}]);
-      if (used.has(binding)) return fail(); used.add(binding);
-      name(act["needs"]); text(act["label"], 80); text(act["when"], B.expressionBytes);
+      if (used.has(binding)) return viewFailure(); used.add(binding);
+      name(act["needs"]); viewText(act["label"], 80); viewText(act["when"], B.expressionBytes);
     }
     if (view["kind"] === "surface") {
-      if (acts.length || !isApplicationViewResource(view["resource"])) return fail();
+      if (acts.length || !isApplicationViewResource(view["resource"])) return viewFailure();
       for (const target of Object.values(dict(view["opens"], 16))) name(target);
     } else {
-      if (typeof view["kind"] !== "string" || !["card", "carousel", "record", "log"].includes(view["kind"])) return fail();
+      if (typeof view["kind"] !== "string" || !["card", "carousel", "record", "log"].includes(view["kind"])) return viewFailure();
       if (Object.hasOwn(view, "for")) {
-        if (view["kind"] !== "carousel") return fail();
-        text(view["for"], B.expressionBytes);
+        if (view["kind"] !== "carousel") return viewFailure();
+        viewText(view["for"], B.expressionBytes);
       }
       if (Object.hasOwn(view, "reads")) {
-        if (view["kind"] !== "carousel" || !Object.hasOwn(view, "for")) return fail();
+        if (view["kind"] !== "carousel" || !Object.hasOwn(view, "for")) return viewFailure();
         const reads = dict(view["reads"], B.reads);
-        if (!Object.keys(reads).length) return fail();
+        if (!Object.keys(reads).length) return viewFailure();
         for (const given of Object.values(reads)) {
           const read = only(given, "projection,scope"); name(read["projection"]);
-          if (read["scope"] !== "installation") return fail();
+          if (read["scope"] !== "installation") return viewFailure();
         }
       }
       if (Object.hasOwn(view, "order")) {
-        if (view["kind"] !== "carousel") return fail();
+        if (view["kind"] !== "carousel") return viewFailure();
         const order = only(view["order"], "direction,field,missing"); name(order["field"]);
-        if (order["direction"] !== "asc" && order["direction"] !== "desc" || order["missing"] !== "first" && order["missing"] !== "last") return fail();
+        if (order["direction"] !== "asc" && order["direction"] !== "desc" || order["missing"] !== "first" && order["missing"] !== "last") return viewFailure();
       }
       if (Object.hasOwn(view, "links")) {
         const links = view["links"];
-        if (!Array.isArray(links) || links.length > 16) return fail("limit");
+        if (!Array.isArray(links) || links.length > 16) return viewFailure("limit");
         const destinations = new Set<string>();
         for (const given of links) {
-          const link = only(given, "field,label,view"); name(link["view"]); name(link["field"]); text(link["label"], 80);
+          const link = only(given, "field,label,view"); name(link["view"]); name(link["field"]); viewText(link["label"], 80);
           const destination = canonicalize([link["view"], link["field"]]);
-          if (destinations.has(destination)) return fail(); destinations.add(destination);
+          if (destinations.has(destination)) return viewFailure(); destinations.add(destination);
         }
       }
       if (Object.hasOwn(view, "series")) {
-        if (view["kind"] !== "record") return fail();
+        if (view["kind"] !== "record") return viewFailure();
         const series = only(view["series"], "field,label,last,scale,source,unit");
-        name(series["source"]); name(series["field"]); text(series["label"], 80);
-        if (typeof series["last"] !== "number" || !Number.isSafeInteger(series["last"]) || series["last"] < 1 || series["last"] > 64) return fail("limit");
-        if (typeof series["scale"] !== "number" || !Number.isSafeInteger(series["scale"]) || series["scale"] < 0 || series["scale"] > 6) return fail();
-        if (typeof series["unit"] !== "string" || series["unit"].length > 16 || utf8(series["unit"]).length > 32 || series["unit"].trim() !== series["unit"]) return fail();
+        name(series["source"]); name(series["field"]); viewText(series["label"], 80);
+        if (typeof series["last"] !== "number" || !Number.isSafeInteger(series["last"]) || series["last"] < 1 || series["last"] > 64) return viewFailure("limit");
+        if (typeof series["scale"] !== "number" || !Number.isSafeInteger(series["scale"]) || series["scale"] < 0 || series["scale"] > 6) return viewFailure();
+        if (typeof series["unit"] !== "string" || series["unit"].length > 16 || utf8(series["unit"]).length > 32 || series["unit"].trim() !== series["unit"]) return viewFailure();
       }
       name(view["title"]);
       for (const key of ["summary", "actor"]) if (view[key] !== null) name(view[key]);
       const facts = view["facts"];
-      if (!Array.isArray(facts) || facts.length > B.facts) return fail("limit");
+      if (!Array.isArray(facts) || facts.length > B.facts) return viewFailure("limit");
       for (const fact of facts) {
         if (typeof fact === "string") { name(fact); continue; }
         if (isRecord(fact) && Object.hasOwn(fact, "format")) {
-          const format = only(fact, "field,format,label"); name(format["field"]); text(format["label"], 80);
-          if (format["format"] !== "age") return fail();
+          const format = only(fact, "field,format,label"); name(format["field"]); viewText(format["label"], 80);
+          if (format["format"] !== "age") return viewFailure();
           continue;
         }
         const format = only(fact, "field,label,scale,unit");
-        name(format["field"]); text(format["label"], 80);
-        if (typeof format["scale"] !== "number" || !Number.isSafeInteger(format["scale"]) || format["scale"] < 0 || format["scale"] > 6) return fail();
-        if (typeof format["unit"] !== "string" || format["unit"].length > 16 || utf8(format["unit"]).length > 32 || format["unit"].trim() !== format["unit"]) return fail();
+        name(format["field"]); viewText(format["label"], 80);
+        if (typeof format["scale"] !== "number" || !Number.isSafeInteger(format["scale"]) || format["scale"] < 0 || format["scale"] > 6) return viewFailure();
+        if (typeof format["unit"] !== "string" || format["unit"].length > 16 || utf8(format["unit"]).length > 32 || format["unit"].trim() !== format["unit"]) return viewFailure();
       }
-      if (new Set((facts as ApplicationViewFact[]).map(applicationViewFactField)).size !== facts.length) return fail();
+      if (new Set((facts as ApplicationViewFact[]).map(applicationViewFactField)).size !== facts.length) return viewFailure();
     }
   }
   freeze(owned); return owned as ApplicationViews;

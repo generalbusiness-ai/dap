@@ -15,6 +15,7 @@
  * revoked after; on GitHub with the deployment's `GITHUB_READ_TOKEN`, or
  * with none when the setting says reads are public.
  */
+import { isRecord } from "@generalbusiness/artroom-bytes";
 import type { Entry, ScopeId } from "@generalbusiness/dap-contract";
 import { canonicalize, isScopeId, parseStrict } from "@generalbusiness/artroom-bytes";
 import { isOf } from "@generalbusiness/dap-platform";
@@ -114,7 +115,7 @@ export interface SiteEnv extends GitHubBindings, ArtifactsBindings {
 }
 
 const REPOSITORY_NAME = /^[A-Za-z0-9][A-Za-z0-9_.-]{0,99}$/;
-const recordOrNull = (value: unknown): Record<string, unknown> | null => (typeof value === "object" && value !== null && !Array.isArray(value) ? (value as Record<string, unknown>) : null);
+const recordOrNull = (value: unknown): Record<string, unknown> | null => isRecord(value) ? value : null;
 
 /**
  * The room that the directory `directory` is, or null when it is none: no
