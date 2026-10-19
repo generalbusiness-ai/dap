@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9498de48e22bab531ca3a75186a0527ff1e0356d","text":"Closed 19 October: P3 follow-ups retained by approval ea7ed209, not scheduled; plan 033's order governs; refile as a backlog item if it becomes needed."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:056cba37d5439d16184223304700a6fea86dc6cb","text":"Closed 19 October: the artifact filing bottleneck was addressed by the gitseq landing work on 17 October; refile if it recurs."}
