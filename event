@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/2026-10-18-application-packages-and-builder-room.md","body":{"commit":"165d5a86fe8c1868f3069efad61a435a5417bde2","path":"notes/2026-10-18-application-packages-and-builder-room.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a97343a2c958045a4dad0dfcec17236395e0a8f0","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-18-application-packages-and-builder-room.md."}
