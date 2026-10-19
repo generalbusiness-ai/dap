@@ -1,6 +1,6 @@
 # Application packages, their checks, and the builder room
 
-18 October 2026, draft 7. Design note for review. Section 15 lists what
+18 October 2026, draft 8. Design note for review. Section 15 lists what
 changed after each checker review.
 
 This note makes application authoring in dap easier to do and easier to
@@ -170,9 +170,17 @@ instances with three rules, each over forms the runtime already has.
    bounds no keys.
 
    *The successful-creation bound of an item type T in a creating row*
-   is T's `max` when T has no final state, or when each of its final
-   states is entered only by the `refused` and `conflict` clauses of
-   that row's creation result. Any other final state leaves it unproved.
+   is T's `max` when T has no final state, or when all three of the
+   following hold. Every final state of T is entered only by the
+   `refused` clause of that row's creation result. The effects of that
+   clause name only the row's own `on` item, never an `also` subject or
+   an alias, so a refused creation cannot end another slot that backs a
+   confirmed child. The row's `conflict` clause enters no final state,
+   because a `conflict` answer can arrive while a child exists under
+   another incarnation (`packages/scope/src/delivery.ts:285-290`), and
+   that child can send. Under those conditions a slot is freed only for
+   a child that was never created, and every successful child keeps its
+   own slot occupied. Any other final state leaves the bound unproved.
 
    *The instance bound of a definition* is one for the root. For any
    other definition D it is proved when exactly one row in the package
@@ -200,12 +208,14 @@ instances with three rules, each over forms the runtime already has.
    `fan-in-exceeds-copies`. A group member is a singleton when its
    instance bound is proved to be one.
 
-   The grow package passes. The site is the root. Its `create-room` act
-   opens a `room` item (`site.ts:22`), and that type's one final state,
-   `failed`, is entered only by the creation result's `refused` and
-   `conflict` clauses (`site.ts:15,25`), so the room definition's
-   instance bound is three. The site's `room` type bounds nothing else:
-   it is never related. The room's `report-site` act relates the room
+   The grow package passes after one change that P1 makes. The site is
+   the root. Its `create-room` act opens a `room` item (`site.ts:22`),
+   and that type's one final state, `failed`, is entered only by the
+   creation result's `refused` and `conflict` clauses, each naming the
+   opened room alone (`site.ts:15,25`). The `conflict` clause must stop
+   entering `failed`: P1 moves it to a non-final `conflicted` state, and
+   the room definition's instance bound is then three. The site's `room`
+   type bounds nothing else: it is never related. The room's `report-site` act relates the room
    scope's own `room` item (`room.ts:63`), a singleton type with no final
    state (`room.ts:49`), so the key bound is one. The fan-in is three,
    and `copies: 3` passes.
@@ -247,13 +257,18 @@ fan-in is proved to be three (section 2, rule 3), so `copies: 3` passes
 and `copies: 2` is refused `fan-in-exceeds-copies`. A room whose `room`
 type becomes `many: true, max: 2` with no final state has a proved key
 bound of two, so the fan-in is proved to be six: `copies: 3` is refused
-`fan-in-exceeds-copies`, and `copies: 6` passes. Three variants are
+`fan-in-exceeds-copies`, and `copies: 6` passes. Five variants are
 refused `fan-in-unproved`: a site whose `room` type gains a `retire` act
 into `failed`, because a retired room frees a slot for a fourth sender;
 a site whose `create-room` becomes a transition act on its singleton
-`site` item, because it then runs as often as it is called; and a room
+`site` item, because it then runs as often as it is called; a room
 whose related `room` type gains a final state, because a room can relate
-its item, end it, and relate the next one.
+its item, end it, and relate the next one; a site whose `refused` clause
+also moves an `also.previous` room to `failed`, because that frees a
+slot that backs a confirmed child; and a site whose `conflict` clause
+enters `failed`, because the child may exist. The site whose `refused`
+clause names only the opened room, and whose `conflict` clause keeps
+it, is the positive control.
 
 "By construction" means this. The install act's guard runs the validator
 in its own turn, so no room holds a scope under a package that fails.
@@ -537,7 +552,7 @@ blocked on review.
 
 | Slice | What | Needs | Done when | Size |
 |---|---|---|---|---|
-| P1 | Package version 2 (section 2) and `validatePackage` with the P1 row of section 3's staging table, used by the codec and `dap check`, with `unsupported-form` for the rest. `ReceiveType.from.pin` in the contract, the delivery check and replay. The grow package declares its connections, rights, and order | M2a landed | Each P1 refusal has its pair on the grow package, and the projected-bound report matches a hand count. `fan-in-exceeds-copies` refuses the grow site with `copies: 2`. A room whose `room` type is `many: true, max: 2` with no final state is refused `fan-in-exceeds-copies` with `copies: 3` and passes with `copies: 6`. `fan-in-unproved` refuses a site whose `room` type gains a `retire` act, a site whose `create-room` is a transition act on its singleton, and a definition that relates an item of a type with a creation-failure final state before the creation result arrives. `unbound-endpoint` refuses a site whose room slot is written from a signer's field, and a wrong-definition creation result. `wrong-peer` refuses a handler whose `pin` is a second digest with the declared name, and the delivery check refuses that sender `wrong-pin` while the declared peer passes. `dap check` reports findings as rows | 3 days |
+| P1 | Package version 2 (section 2) and `validatePackage` with the P1 row of section 3's staging table, used by the codec and `dap check`, with `unsupported-form` for the rest. `ReceiveType.from.pin` in the contract, the delivery check and replay. The grow package declares its connections, rights, and order | M2a landed | Each P1 refusal has its pair on the grow package, and the projected-bound report matches a hand count. `fan-in-exceeds-copies` refuses the grow site with `copies: 2`. A room whose `room` type is `many: true, max: 2` with no final state is refused `fan-in-exceeds-copies` with `copies: 3` and passes with `copies: 6`. `fan-in-unproved` refuses a site whose `room` type gains a `retire` act, a site whose `create-room` is a transition act on its singleton, a definition that relates an item of a type with a creation-failure final state before the creation result arrives, a site whose `refused` clause also ends an `also.previous` room, and a site whose `conflict` clause enters `failed`, while the site whose `refused` clause names only the opened room and whose `conflict` clause keeps it passes. The grow site's `conflict` clause is migrated to a non-final `conflicted` state. `unbound-endpoint` refuses a site whose room slot is written from a signer's field, and a wrong-definition creation result. `wrong-peer` refuses a handler whose `pin` is a second digest with the declared name, and the delivery check refuses that sender `wrong-pin` while the declared peer passes. `dap check` reports findings as rows | 3 days |
 | P1g | The group checks of the staging table | P1, S3 | Each refusal has its pair, and `sequenced-for-nothing` has its warning witness, on the two-scope witness of the sequenced note | 1 day |
 | P2 | `spacing` (4.2) and the cycle edges that carry `spacing` or `late`: contract, validator, derive, scope, replay, tests | P1, and S1 for the `late` edge | A second delivery inside `spacing` is refused and the sender's clause fires, with fresh and boundary controls and a `clock-behind` control. A late-branch entry counts as applied. A cycle with a `spacing` edge is admitted with its computed bound. All replay | 1 day |
 | P3 | Timed rules may send (4.3) | P2 | A timed rule's `tell` is delivered with the timed entry as its cause. The drain order is unchanged. Both journals replay | 1 day |
@@ -599,7 +614,13 @@ predecessors land.
 | Q7 | Banks in groups: a member definition created several times | Not in version 2. A bank's instances would need names from their creation index, which the sequenced note's `enroll` can carry later |
 | Q8 | Whether a handler may admit an unproved fan-in on purpose, with `type-full` as the runtime backstop | Not in version 2. A declared `copies: "unbounded"` would need its own retention rule |
 
-## 15. Changes in drafts 3 to 7
+## 15. Changes in drafts 3 to 8
+
+**Draft 8**, after review f119c3b9 of head 0ba0397a:
+
+| Finding | Where answered |
+|---|---|
+| F1, P1: a refused clause could end another slot through `also`, and a `conflict` answer can come with an existing child | Section 2, rule 3: the `refused` clause names only the row's own item, and the `conflict` clause enters no final state. The grow site's `conflict` clause is migrated in P1. The sibling-failure and conflict variants are negative controls, and the owning-slot site is the positive control, in section 3 and P1 |
 
 **Draft 7**, after review c2b00734 of head 5346406f:
 
