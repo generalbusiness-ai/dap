@@ -1,1 +1,1 @@
-{"kind":"promise","text":"Planner writes the note, files the head for the checker's review, and lands it when approved.","body":{"branch":"planner/member-presence-20261018"}}
+{"kind":"artifact","text":"notes/2026-10-18-member-and-presence-ui.md at exact e00abdb700de3a0a5d6977a30c915c6428871a9d on planner/member-presence-20261018, under promise git:sha1…44093bc on request git:sha1…1c6bbe5\n\nThe design note, at e00abdb700de3a0a5d6977a30c915c6428871a9d.","body":{"commit":"e00abdb700de3a0a5d6977a30c915c6428871a9d","path":"notes/2026-10-18-member-and-presence-ui.md"}}
