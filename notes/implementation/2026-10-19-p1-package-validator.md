@@ -14,10 +14,10 @@ replay. Groups, sequenced reads, spacing, timed sends, row states,
 derivation and parameters refuse as `unsupported-form` until their
 owning slices. The approved design's staging table governs that boundary.
 
-The existing Grow witnesses cover each P1 refusal through packing before
-signing and independently signed input to the public validator, including
-all lifetime fan-in variants. Admitted warnings and projected counts have
-separate witnesses. The current live-item hand count is 606, with ceilings
+The Grow graph refusal pairs run through packing before signing and
+independently signed input to the public validator, including the lifetime
+fan-in variants. Admitted warnings, byte/count limits and projected counts
+have separate witnesses. The current live-item hand count is 606, with ceilings
 of ten entries and seven item keys for successful creation paths; lifetime
 traffic remains unproved. These figures establish no native admission,
 physical memory or provider quota.
