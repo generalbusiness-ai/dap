@@ -51,6 +51,7 @@ export const REFUSALS: Readonly<Record<RefusalReason, (asked: Asked, name: strin
   "entry-too-large": (_, name) => ({ sentence: `the entry would pass a bound${name ? ` (${name})` : ""}`, next: "Make the act smaller: fewer or shorter values." }),
   "send-unresolved": () => ({ sentence: "a send of the act names a target or item that resolves to nothing", next: "Read the scope; correct the fields that name the target." }),
   "unknown-message": () => ({ sentence: "the message names no handler of the definition", next: "Nothing an act tool can change; report it." }),
+  "wrong-pin": () => ({ sentence: "the message came from a different pinned definition than the handler requires", next: "Read the package connection and use the declared peer." }),
   "unsupported-definition": () => ({ sentence: "the definition bytes are not a definition this runtime can pin", next: "Use a definition that validates under the deployed bounds." }),
   "bad-input": () => ({ sentence: "the input does not follow from the scope's state", next: HINTS.read }),
 };

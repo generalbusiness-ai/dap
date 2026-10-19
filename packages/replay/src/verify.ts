@@ -41,7 +41,7 @@ import { DOMAINS, PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Bounds, CapabilityName, Digest, Entry, FactRef, Grant, Head, KeyId, Observation, ObservationRequest, ObservationUse, MismatchName, PlatformData, PlatformDefinition, Report, RetainedInput, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import { rawRetainedJSON, domainRetainedJSON, canonicalize, intentDigest, isDigest, isEntry, isObservationUse, isPlatformDefinition, parseStrict, platformName, scopeIdOf, utf8, verifySignedIntent } from "@generalbusiness/artroom-bytes";
 import {
-  AmountError, ByteUsage, capacityFull, namedDeclarations, amountMath, subtract, NOTHING, reserved, actValueDependencies, observedValueDependencies, detachedTextDependencies, outcomeValueDependencies, outcomeSnapshotDependencies, requiredDependency, textDependency, MISMATCHES, MemoryState, WINDOWS, actionOf, agrees, applyEntry, drawsOf, clockOf, contentStates, entryOf, fits, observedName, headsOf, highestHead, isFactRef, isLocalId, isObject, isScopeRef, isUnprovenDecisionBinding, judgeAct, judgeCheckpoint, judgeDelivery,
+  AmountError, ByteUsage, bound, capacityFull, namedDeclarations, amountMath, subtract, NOTHING, reserved, actValueDependencies, observedValueDependencies, detachedTextDependencies, outcomeValueDependencies, outcomeSnapshotDependencies, requiredDependency, textDependency, MISMATCHES, MemoryState, WINDOWS, actionOf, agrees, applyEntry, drawsOf, clockOf, contentStates, entryOf, fits, observedName, headsOf, highestHead, isFactRef, isLocalId, isObject, isScopeRef, isUnprovenDecisionBinding, judgeAct, judgeCheckpoint, judgeDelivery,
   judgeDiagnosis, outcomeValueDomains, fixedBy, judgeGenesis, judgeGrant, judgeOutcome, judgePreparation, judgeTimed, membershipOf, nextDue, observedOf, own, ownersOf, ruleAt, same, snapshotRead, stepsOf, timeMs, updateOf, sentBy, validateDefinition, windowOf, checkedTextBounds,
 } from "@generalbusiness/dap-derive";
 import type { DependencyOrigin, RequiredDependency, ActJudgment, Capabilities, Clock, DrawOptions, Fetched, Judgment, Observing, Owners, PlatformRules, PreparationJudgment, RecordedRef, Retains, Rules, StateView, Texts, TimedJudgment, ValidDefinition, Window } from "@generalbusiness/dap-derive";
@@ -1688,7 +1688,13 @@ class Verifier {
         if (further && !definition.observing) await this.#observed(run, entry, further, WINDOWS.once, where, depth);
         const clauseRows = definition.observing && "clause" in input ? await this.#hand(run, entry, further, where) : null;
         const delivered = { to, from: input.from, n: input.n, message: input.message };
-        const deliveryContext = { ...reading, source: { entry: source.entry, under: source.under }, origin, ...(further ? { observed: further } : {}), ...(clauseRows ?? {}) };
+        let sourcePin: Digest | PlatformDefinition | undefined;
+        if ((input.message.class === "request" || input.message.class === "advisory") && bound(definition, input.message, input.from, source.under)?.handler?.from.pin) {
+          const birth = await this.#identityFrame(input.from.at, where, depth);
+          if (!birth) throw new Stop("incomplete", "the pinned sender's genesis cannot be verified", where);
+          sourcePin = birth.named;
+        }
+        const deliveryContext = { ...reading, source: { entry: source.entry, under: source.under, ...(sourcePin === undefined ? {} : { pin: sourcePin }) }, origin, ...(further ? { observed: further } : {}), ...(clauseRows ?? {}) };
         judgeText = (view, texts) => judgeDelivery(view, definition, delivered, { ...deliveryContext, texts });
         judged = withTextGaps(state, judgeText, reading.texts);
         if (clauseRows) await this.#byRows(run, entry, judged, clauseRows.observed, where, depth);

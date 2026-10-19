@@ -5,7 +5,7 @@
  */
 
 import type { FieldType } from "@generalbusiness/dap-contract";
-import { canonicalize, isScopeKind } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isDigest, isScopeKind } from "@generalbusiness/artroom-bytes";
 import { isObject, own } from "../values.ts";
 import { alsoMark, bound, type Selecting } from "./binding.ts";
 import { mark, marked, naming, onSubject, subject, type ClauseSet, type Ctx, type Defining, type PendingWork, type Type } from "./context.ts";
@@ -246,7 +246,8 @@ export function receives(d: Defining, v: unknown, top: Rec): void {
     if ("order" in o && (cls !== "tell" || (o["order"] !== "arrival" && o["order"] !== "source"))) bad("shape", at(path, "order"), "only a tell handler declares arrival or source order");
     if (typeof cls !== "string" || !CLASSES.includes(cls)) bad("shape", at(path, "class"), `is one of: ${CLASSES.join(", ")}`);
     if (cls === "advisory" && message !== null && !ADVISORIES.includes(message)) bad("name", at(path, "message"), `an advisory handler's message is its type: ${ADVISORIES.join(" or ")}`);
-    const from = rec(o["from"], at(path, "from"), ["kind"], ["under"]);
+    const from = rec(o["from"], at(path, "from"), ["kind"], ["under", "pin"]);
+    if (from && "pin" in from && !isDigest(from["pin"])) bad("shape", at(at(path, "from"), "pin"), "is a definition digest");
     // Section 7.4: a handler is found by the message's class and name and the sender's kind, so no two handlers are for one of
     // those. The handler an entry ran is then found again from the entry alone.
     const key = canonicalize([String(cls), String(o["message"]), String(from?.["kind"])]);
@@ -273,6 +274,7 @@ export function receives(d: Defining, v: unknown, top: Rec): void {
     const named = also(d, o["also"], at(path, "also"), fields, null, top, of === null ? null : { name: of, message, fields, written: o["fields"] });
     if ("bound" in o) bound(d, o["bound"], at(path, "bound"), { tell: cls === "tell", opens: o["opens"], message, fields }, named);
     if ("bound" in o && o["order"] === "source") bad("shape", at(path, "order"), "source order is not supported on an item-bound native handler");
+    if ("bound" in o && from?.["pin"] !== undefined) bad("shape", at(at(path, "from"), "pin"), "a pin is not supported on an item-bound native handler");
     const ctx: Ctx = { ...naming(), on, also: named.types, nascent: on !== null, fields, kind: cls === "advisory" ? null : message, handler: { update: cls === "relate", under: typeof from?.["under"] === "string" ? from["under"] : null }, senderKind: typeof from?.["kind"] === "string" ? from["kind"] : undefined, unsettled: named.unsettled };
     guards(d, o["guards"], at(path, "guards"), ctx, true);
     const copy = cls === "relate" && message !== null && isScopeKind(from?.["kind"]) ? { name: message, kind: from["kind"] } : null;

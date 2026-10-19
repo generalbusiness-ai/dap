@@ -109,7 +109,7 @@ export interface ReceiveType {
   order?: "arrival" | "source";
   message: string;                         // a `tell` message's name, or a relationship's name
   class: "tell" | "relate" | "advisory";   // for an advisory, `message` is its type: `index` or `notify`
-  from: { kind: ScopeKind; under?: string };
+  from: { kind: ScopeKind; under?: string; pin?: Digest };
   fields: Record<string, FieldType & { required: boolean }>;   // the message's fields, or a relationship update's detail
   opens: string | null;                    // the item type this handler opens, if any
   copies?: number;                         // `relate` only: the most keys this scope keeps a copy for

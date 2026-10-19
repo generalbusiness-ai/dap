@@ -4,7 +4,7 @@
  * advisory.
  */
 
-import type { Advisory, CapabilityName, Control, Effect, Entry, FactRef, FactUse, Message, ObservationUse, Prepared, Reason, Request, Result, RoutingRefusal, ScopeRef, Seed, Send } from "@generalbusiness/dap-contract";
+import type { Advisory, CapabilityName, Control, Digest, Effect, Entry, FactRef, FactUse, Message, ObservationUse, PlatformDefinition, Prepared, Reason, Request, Result, RoutingRefusal, ScopeRef, Seed, Send } from "@generalbusiness/dap-contract";
 import { deliveryCauseDigest, messageDigest, scopeIdOf, seedDigest } from "@generalbusiness/artroom-bytes";
 import { declaredBy, type Recorded } from "./capability.ts";
 import { isEntryOf, updateOf, useOf, type Reading } from "./fields.ts";
@@ -28,7 +28,7 @@ import { isFactRef, isLocalId, isObject, isScopeRef, same } from "./values.ts";
 export interface Delivered { to: ScopeRef | Seed; from: FactRef; n: number; message: Message }
 
 /** The source entry as read from the source scope (section 7.4), and the name of the definition that scope pins. */
-export interface Source { entry: Entry; under: string }
+export interface Source { entry: Entry; under: string; pin?: Digest | PlatformDefinition }
 
 export interface DeliveryContext extends Reading {
   /** The entry the envelope's `from` names. Null: it could not be read, and the delivery is retried. */
@@ -148,7 +148,9 @@ function deliveryJudged(view: StateView, definition: ValidDefinition, delivered:
   if (message.class === "advisory") {
     // As the receiver's own definition says: a handler for its type, or a record with no effect. An advisory has no decision.
     const b = bound(definition, message, from);
-    const ran: Handled | null = b?.handler && b.fields && under(b.handler, context.source) ? runHandler(view, definition, context, scope, b.handler, b.kind, b.fields, cause(), sent, judged) : null;
+    if (b?.handler?.from.pin && context.source.pin === undefined) return { result: "unavailable", reason: "dependency-unavailable" };
+    const matches = !b?.handler?.from.pin || b.handler.from.pin === context.source.pin;
+    const ran: Handled | null = matches && b?.handler && b.fields && under(b.handler, context.source) ? runHandler(view, definition, context, scope, b.handler, b.kind, b.fields, cause(), sent, judged) : null;
     if (ran?.result === "unavailable") return ran;
     // A handler that refuses leaves the entry with no effect. The entry still records each rule result its guards read, and each
     // foreign entry its fields named.
@@ -181,6 +183,10 @@ function deliveryJudged(view: StateView, definition: ValidDefinition, delivered:
   // An entry so decided has no kind (section 6.2): no handler of this definition received it.
   const handler = b.handler && under(b.handler, context.source) ? b.handler : null;
   if (!handler) return refuse({ code: "unknown-message" });
+  if (handler.from.pin) {
+    if (context.source.pin === undefined) return { result: "unavailable", reason: "dependency-unavailable" };
+    if (handler.from.pin !== context.source.pin) return refuse({ code: "wrong-pin" });
+  }
   const given = b.fields;
   if (!given) return refuse({ code: "bad-field" });
 

@@ -17,6 +17,7 @@ export const EVENTS = ["outside-call-failed", "outside-replies-failed", "outside
 export const METRIC_PLACES = ["create", "acts", "preparations", "rpc:create", "rpc:acts", "rpc:preparations", "settle", "summary", "items", "query-items", "application-projection", "reservation-snapshot", "operations", "history", "entries", "outbox", "outboxItem", "log", "retained", "sessions", "stream", "incidents", "waiting", "credential", "site", "page", "health", "requests", "alarm", "dispatch", "metrics", "mixed", "other", ...STEPS] as const;
 // An exhaustive union makes a new contract reason an explicit schema decision.
 const REASONS: Record<RefusalReason | UnavailableReason | MismatchReason | ReadRefusal | SessionRefusal, true> = {
+  "wrong-pin": true,
   "revision-moved": true, alias: true, "duplicate-relation": true, "required-unset": true, "scope-full": true,
   "bad-intent": true, misaddressed: true, expired: true, "scope-refused": true, "unknown-act": true, "bad-field": true,
   "no-item": true, final: true, "fact-mismatch": true, unauthorized: true, "guard-failed": true, "capability-refused": true,

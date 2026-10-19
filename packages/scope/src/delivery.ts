@@ -25,12 +25,13 @@
 import type { Bounds, Digest, Entry, FactRef, Incarnation, PlatformDefinition, ScopeId, Seed, UnavailableReason } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isPlatformDefinition, newIncarnation, isSeed, parseStrict, platformName } from "@generalbusiness/artroom-bytes";
 import { applicationPublicationOrigin, publishingLaneAffiliation } from "@generalbusiness/dap-platform";
-import { clockOf, creationFields, factsNamed, isEntryOf, isFactRef, isLocalId, isObject, isScopeRef, judgeDelivery, judgeGenesis, messageFacts, messageTexts, own, prepareRules, readFields, textsNamed } from "@generalbusiness/dap-derive";
+import { bound, clockOf, creationFields, factsNamed, isEntryOf, isFactRef, isLocalId, isObject, isScopeRef, judgeDelivery, judgeGenesis, messageFacts, messageTexts, own, prepareRules, readFields, textsNamed } from "@generalbusiness/dap-derive";
 import type { Clock as Reading, Creation, Delivered, DeliveryContext, Fetched, Judgment, PlatformRules, StateView, ValidDefinition } from "@generalbusiness/dap-derive";
 import { NO_INCARNATION, Observes, Received, ownOf, retainedFacts, snapshotsOf, used, valuesOf, type Scope } from "./core.ts";
 import { carryProducerName } from "./receiver-facts.ts";
 import { ReceiverReads } from "./receiver-reads.ts";
 import { namedBy } from "./definitions.ts";
+import { readNativeBirth } from "./native-birth.ts";
 import type { DefinitionRead, Delivery, Ports } from "./ports.ts";
 import type { Retained, Store } from "./store.ts";
 import { LATE, fetchFacts, within, type Verdict } from "./turn.ts";
@@ -163,6 +164,7 @@ export class Deliveries {
     // For a result: this scope's own entry that sent the request, and the foreign entries that entry read, from its retained inputs.
     // For a request or an advisory that a handler receives: the foreign entries that the message's declared fields name.
     let facts: Fetched[] = [];
+    let sourcePin: Digest | PlatformDefinition | undefined;
     let origin: Entry | null = null;
     let carried: Digest[] = [];
     // Section 7.4, the order of a delivery's checks: a repeat is found after the source entry is read, and before the checks of the
@@ -222,6 +224,12 @@ export class Deliveries {
       if (!interpreted) return retry("dependency-unavailable");
       facts = interpreted;
     } else if (!known && pinned?.definition && (message.class === "request" || message.class === "advisory")) {
+      if (bound(pinned.definition, message, from, source.under)?.handler?.from.pin) {
+        const birth = await within(() => this.#ports.births?.read(from.at, bounds.fetchSeconds * 1000, bounds.entryBytes) ?? Promise.resolve(null), bounds.fetchSeconds);
+        const checked = birth === LATE ? null : readNativeBirth(birth, from.at, bounds.entryBytes);
+        if (!checked) return retry("dependency-unavailable");
+        sourcePin = checked.named;
+      }
       // Section 6.4: the foreign entries that the declared fields of the message name. More than one entry may use are not fetched:
       // the judge refuses that message, `bad-field`, before it reads any.
       const wanted = messageFacts(store, pinned.definition, message, from, bounds, source.under);
@@ -238,7 +246,7 @@ export class Deliveries {
     // derives the list again (`Observes`). No other delivery may hold `observed`, so nothing is read for one.
     const rows = message.class === "result" && !known ? this.#scope.observes() : new Observes(null, bounds);
     const context = (clock: Reading): Omit<DeliveryContext, "prepared"> =>
-      ({ clock, bounds, facts, own: ownOf(store), snapshot: snapshotsOf(store), texts: texts.sizes, capabilities: this.#ports.capabilities ?? undefined, platform: (this.#scope.pinned() ?? creation)?.platform ?? undefined, source: { entry: source.entry, under: source.under }, origin, ...rows.hand() });
+      ({ clock, bounds, facts, own: ownOf(store), snapshot: snapshotsOf(store), texts: texts.sizes, capabilities: this.#ports.capabilities ?? undefined, platform: (this.#scope.pinned() ?? creation)?.platform ?? undefined, source: { entry: source.entry, under: source.under, ...(sourcePin === undefined ? {} : { pin: sourcePin }) }, origin, ...rows.hand() });
     /** The definition a section of the turn runs under: the pinned one, or before the genesis the one the seed names. */
     const definition = (): ValidDefinition => this.#scope.pinned()?.definition ?? creation!.valid;
     /** A `create` goes to the genesis judge, which answers a repeat from the genesis when the scope exists. */
