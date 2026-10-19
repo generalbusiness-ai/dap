@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f71148749c7f833b321c820100e73ce9d28451cb","text":"Merge retired a covered predecessor; the successor is at packages/bytes/test/application-view.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fd4fdb0bec922fc801477c97e7aedd4f013f9395","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-19-g3-routing.md."}
