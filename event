@@ -1,1 +1,1 @@
-{"kind":"promise","text":"Planner writes the note, files its head for the checker's review, revises until approved, lands it by gs merge from the clean shared checkout and pushes."}
+{"kind":"artifact","text":"Draft 1 of the three sales applications note: why, what the three share, the prospect room, the bid response, the marketing calendar, how they are built, slices C1 to C4, open questions.","body":{"commit":"c02a5d26863395750e7180f29ead442ffc4befe0","path":"notes/2026-10-19-sales-applications-design.md"}}
