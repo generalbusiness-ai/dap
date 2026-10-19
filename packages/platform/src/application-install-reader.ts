@@ -24,5 +24,6 @@ export function applicationInstallation(state: StateView, named: string, directo
     || destination.kind !== "destination" || !isScopeRef(application) || application.kind !== "lane"
     || !["definition", "release", "semantic", "presentation"].every(key => isDigest(job.values[key]))) return null;
   return { directory: room.refs["directory"], rules: scope.at, membership, destination, scope: application, item, definition: job.values["definition"] as Digest,
-    ids: { release: job.values["release"] as Digest, semantic: job.values["semantic"] as Digest, presentation: job.values["presentation"] as Digest } };
+    ids: { release: job.values["release"] as Digest, semantic: job.values["semantic"] as Digest, presentation: job.values["presentation"] as Digest },
+    membershipDefinition: named === AC.rules || named === AC2.rules ? AC.membership : C.membership };
 }

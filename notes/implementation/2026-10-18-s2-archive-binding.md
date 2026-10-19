@@ -335,3 +335,84 @@ cohort reservations remain unchanged. No new tests or gate were run for
 this preparation. G5a still precedes S2a: incorporate its actual reviewed
 Main landing before the final S2a gate and review. The earlier failed gate
 remains failed evidence, and the unused sealer must be replaced before use.
+
+## Membership8 clients and native application metadata
+
+The archive cohorts actually use Membership8. It is not an unused
+reservation. The saved implementation had omitted this pin from private
+person and agent invitation parsing, exact CLI Directory pairing, native
+session issuance, native self-standing and invitation-proof classification.
+Those paths now explicitly admit Membership8; the legacy singular
+`INVITATION_KEY_MEMBERSHIP` remains Membership6. This changes no pinned
+definition body and grants no archive export permission.
+
+MCP now recognizes both exact archive Directory/Rules pairs and chooses
+the existing v1 or v2 signing codec accordingly. Declared views recognize
+archive Rules8. Native installation metadata carries the actual cohort's
+membership pin through the application context route. Current metadata
+sets it explicitly; old metadata retains its Membership7 fallback. The
+screen decoder admits exactly Membership7 or Membership8, and rejects a
+future pin and an array that merely stringifies to an admitted pin. A
+Membership8 screen accepts its matching invitation and refuses a
+Membership7 invitation. Page assets are rebuilt from source. Counter and
+Lending package assets are built from source during packing; there is no
+maintained generated bundle to update for either package.
+
+The CLI's actual native story now covers both archive cohorts, including
+an issued session with the actual member and key claims, agent issuance
+and enrolment, person invitation and join, exact native receipts and
+Directory siblings, active role actions, and absence of either private
+invitation seed from the native journal. HTTP goes through the real
+Worker routes and native scopes. The existing Git host, clock, scheduler
+and setup inspector remain labelled TEST fixtures. The cheap retained
+invitation witness also covers both archive Directory pairs, lost answers,
+exact custody reuse, wrong-pair refusal before further submission, and
+private seed absence; its HTTP and inbox remain explicit stand-ins.
+
+`packages/scope/test/archive-mcp.test.ts` installs through actual native
+Rules and Directory scopes in both archive cohorts, drives actual root
+creation and the v2 child's creation and confirmation, reads the active
+installation and its screen context through the real Worker, and opens
+the v2 declared view. It then binds the Directory archive after application
+genesis and confirms that binding leaves the application's head unchanged.
+Package/Git peer, host trust, clock, scheduler and setup inspector are TEST
+fixtures. This is no archive export, provider or deployment witness.
+
+Focused evidence under `/tmp/artroom-s2a-membership8-`, dated 20261019:
+
+- `native-invitation-owning`: four native stories pass, including the two
+  new archive cases (65847 closed zero). Earlier first, corrected and
+  opening-diagnostic originals exposed the missing native session and
+  self-standing admissions. `authority-owning` reached both enrolments
+  but failed because the test assumed completed person custody retained a
+  pointer that person join clears. The corrected assertion reads the
+  actual native join entry. All failed originals remain failed evidence.
+- `mcp-native-owning` and `mcp-native-refusal`: each passed the declared
+  archive cohort and failed the v1 fixture with `invalid-application-package`.
+  It selected admin from a fixture with no declared role. Correcting the
+  fixture to Counter's actual `counting.control` role, without changing
+  production code, gives two native passes in `mcp-native-corrected`
+  (42820 closed zero, 742 ms tests, 3.58 s total).
+- `session-control`: original 21361 closed zero. Baseline passes both
+  archive CLI cases; deleting only the Membership8 native session admission
+  causes both unchanged tests to fail at `expect(token.ok).toBe(true)`.
+  No timeout occurs. The paired script restores exact bytes in `finally`,
+  SHA-256 `beebd3b8fcb9fb6d2f5bd08f1d9b72a775529b29a1011b935181a3bcfb63a5e3`.
+  The script and separate baseline/without-pin logs are retained. This is
+  one targeted control, not a sweep.
+- `final-client-assets`: three files, four cases pass (25829 closed zero),
+  including the rebuilt Page asset comparison and strict context decoding.
+- `retained-invitation`: both selected Membership8 retention cases pass
+  (35091 closed zero, seven unselected cases skip); CLI typecheck also
+  passes after this test extension.
+- `final-{bytes,contract,client,platform,mcp,cli,scope}-types`: all seven
+  package typecheck commands pass. The Scope command includes its source,
+  test and Node support targets. All originals have terminated.
+
+No second whole gate, Source publication, review, landing or deployment
+has occurred. G5a's actual reviewed Main remains required before the final
+integrated S2a gate. Planner request `dc8ff821` separately asks how to
+provide Device grants and later archive binding in the same demo room:
+frozen G5a's cohort has no archive binding, while these archive cohorts
+have no Device grant protocol. No proposed combined cohort is implemented
+or authorized by this checkpoint, and no frozen G5a source is changed.

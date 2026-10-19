@@ -16,7 +16,7 @@ import type { Answer, Beside, DeclaredDefinition, Digest, Entry, FieldValue, Ite
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, digestBytes, intentDigest, isDigest, isPlatformDefinition, isScopeId, isScopeRef, isReceipt, entryHash, parseStrict, scopeIdOf, textDigest, timeOf, utf8 } from "@generalbusiness/artroom-bytes";
 import { TransportError, ScopeHandle, ApplicationPackageError, applicationScreenPath, readApplicationInstallOptions, readApplicationReleaseUri, signedApplicationInstall, signedApplicationInstall2, invitationOf, readCredential, signedIntent, wellFormedInvitation, type Fetch, type Signer } from "@generalbusiness/artroom-client";
-import { TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, platform } from "@generalbusiness/dap-platform";
+import { TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, platform } from "@generalbusiness/dap-platform";
 import { ApplicationHttpError, applicationGitHttpSource, readApplicationGitBlob } from "@generalbusiness/artroom-git/application";
 import { ACT_OUTPUT, actTool, bindingsOf, declarationDigest, describedOf, generationOf, listed, selected, type Binding, type Held, type Inventory, type Mode, type Tool } from "./catalogue.ts";
 import { Custody, CustodyError, Lost, meaningOf, validKey, type CustodyRecord, type CustodyStore, type Envelope, type Identity } from "./custody.ts";
@@ -927,13 +927,13 @@ export class McpService {
    * room recorded in the configuration; the list is derived again on the next call.
    */
   /** The actual generic room and exact Rules sibling, never a caller alias. */
-  async #applicationRoom(): Promise<{ directory: ScopeRef; membership: ScopeRef; rules: ScopeRef; destination: ScopeRef; cohort: typeof TRUSTED_APPLICATION_COHORT | typeof DECLARED_APPLICATION_COHORT }> {
+  async #applicationRoom(): Promise<{ directory: ScopeRef; membership: ScopeRef; rules: ScopeRef; destination: ScopeRef; cohort: typeof TRUSTED_APPLICATION_COHORT | typeof DECLARED_APPLICATION_COHORT | typeof ARCHIVE_APPLICATION_COHORT | typeof ARCHIVE_DECLARED_APPLICATION_COHORT }> {
     const config = await this.#port.config.read(), repository = config.repository;
     if (!repository || config.service !== this.#service) return stop({ error: "target", what: "configure a trusted-application room before installing" });
     const { summary: directory } = await this.#summary(repository.directory.scope, repository.membership);
     const row = directory.items.find(item => item.type === "repository" && item.state === "open"), rules = row?.refs["rules"], destination = row?.refs["destination"];
-    const cohort = directory.definition === DECLARED_APPLICATION_COHORT.directory ? DECLARED_APPLICATION_COHORT : TRUSTED_APPLICATION_COHORT;
-    if (directory.status !== "active" || directory.definition !== cohort.directory || canonicalize(directory.scope) !== canonicalize(repository.directory)
+    const cohort = [TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT].find(cohort => directory.definition === cohort.directory);
+    if (!cohort || directory.status !== "active" || canonicalize(directory.scope) !== canonicalize(repository.directory)
       || !row || canonicalize(row.refs["membership"]) !== canonicalize(repository.membership)
       || !isScopeRef(rules) || rules.kind !== "rules" || rules.scope !== repository.rules
       || !isScopeRef(destination) || destination.kind !== "destination" || destination.scope !== repository.destination) return stop({ error: "target", what: "the configured room does not match its exact generic native siblings" });
@@ -944,7 +944,7 @@ export class McpService {
 
   async #declaredInstallation(item: number): Promise<ApplicationInstallation | null> {
     const room = await this.#applicationRoom();
-    if (room.cohort.rules !== DECLARED_APPLICATION_COHORT.rules) return null;
+    if (room.cohort.rules !== DECLARED_APPLICATION_COHORT.rules && room.cohort.rules !== ARCHIVE_DECLARED_APPLICATION_COHORT.rules) return null;
     const read = await this.#reads.read(room.membership, (t, r) => new ScopeHandle(t, room.rules.scope, r).queryItems({ v: 1, scope: room.rules, type: "installation", states: ["active"], ids: [item], limit: 1, cursor: null }));
     if (!read.ok || !read.complete || read.next !== undefined) return null;
     const row = read.value.items[0];
@@ -952,7 +952,7 @@ export class McpService {
       || canonicalize(row.refs["membership"] ?? null) !== canonicalize(room.membership) || canonicalize(row.refs["destination"] ?? null) !== canonicalize(room.destination) || !isDigest(row.values["definition"])
       || !isDigest(row.values["release"]) || !isDigest(row.values["semantic"]) || !isDigest(row.values["presentation"])) return null;
     return { directory: room.directory, rules: room.rules, membership: room.membership, destination: room.destination, scope: row.refs["scope"], item,
-      definition: row.values["definition"], ids: { release: row.values["release"], semantic: row.values["semantic"], presentation: row.values["presentation"] } };
+      definition: row.values["definition"], ids: { release: row.values["release"], semantic: row.values["semantic"], presentation: row.values["presentation"] }, membershipDefinition: room.cohort.membership };
   }
 
   async #installApplication(args: Args): Promise<CallResult> {
@@ -969,7 +969,7 @@ export class McpService {
       const source = applicationGitHttpSource(address, { blobBytes: 4 * 1024 * 1024, ...(this.#port.applicationFetch ? { send: this.#port.applicationFetch } : {}) });
       try {
         const bytes = await readApplicationGitBlob(address, source.source, 4 * 1024 * 1024);
-        const prepare = pin === DECLARED_APPLICATION_COHORT.rules ? signedApplicationInstall2 : signedApplicationInstall;
+        const prepare = pin === DECLARED_APPLICATION_COHORT.rules || pin === ARCHIVE_DECLARED_APPLICATION_COHORT.rules ? signedApplicationInstall2 : signedApplicationInstall;
         const prepared = await prepare(this.#port.signer, bytes, selected, { idempotencyKey: key as string, now: this.#now() });
         return { binding: { definition: "platform:rules", kind: "install-application", declaration: declarationDigest(platform(pin)!.data as unknown as DefinitionLike, "install-application", pin), pinned: pin }, envelope: { signed: prepared.signed, beside: prepared.beside } };
       } finally { await source.close(); }

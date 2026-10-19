@@ -1,5 +1,5 @@
 /**
- * Tagged agent-key issuance and enrolment on the current application cohorts (request 53850986): the trusted application cohort, whose
+ * Tagged agent-key issuance and enrolment on the current application cohorts (requests 53850986 and f54185fb): the trusted application cohort, whose
  * membership is pinned to platform:membership@7, and the application cohort, pinned to platform:membership@4. The command's
  * functions run over the Worker's real routes on real scopes of the namespace PLATFORM, with the real read sessions under a
  * TEST SECRET; the Git host and the scheduler are STAND-INs, as in story.scope.test.ts.
@@ -8,13 +8,15 @@
  * acts; the same on membership@4, with a kept person invitation whose answer is lost, checked and joined; and three refusals: an invitation whose pin names another definition than the membership's
  * receipt, a trusted application invitation presented to the library's membership, and an issuance by an admin who names another member
  * as the controller. No link is relabelled into acceptance; directories use exact cohort pairs, no person is substituted, and no
- * key is transplanted between rooms.
+ * key is transplanted between rooms. The archive cohorts additionally witness
+ * Membership8 sessions, person invitations and agent enrolment through each
+ * actual Directory sibling, with no private invitation seed in the journal.
  */
 import { describe, expect, test } from "vitest";
 import type { Digest, Item, OperationId, Read, Receipt, ScopeRef, Seed, SignedIntent } from "@generalbusiness/dap-contract";
-import { b64url, scopeIdOf } from "@generalbusiness/artroom-bytes";
-import { AGENT_KEY_LINK, agentKeyInvitationOf, encodeAgentKeyInvitation, type AgentKeyInvitation, type Fetch } from "@generalbusiness/artroom-client";
-import { APPLICATION_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, repositoryName } from "@generalbusiness/dap-platform";
+import { b64url, keyIdOfSecret, scopeIdOf, timeOf } from "@generalbusiness/artroom-bytes";
+import { AGENT_KEY_LINK, agentKeyInvitationOf, encodeAgentKeyInvitation, requestSession, sessionRequest, type AgentKeyInvitation, type Fetch } from "@generalbusiness/artroom-client";
+import { APPLICATION_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, repositoryName } from "@generalbusiness/dap-platform";
 import { beginSessionFixture } from "../../scope/test/session-settings.ts";
 import { Platform, routed } from "../../scope/test/repository.ts";
 import { outsideOf } from "../../scope/test/outside.ts";
@@ -34,13 +36,19 @@ describe("tagged agent-key enrolment on the trusted application and historical a
   test("declared-application: explicit CLI founding creates exact new siblings and enrolls a membership7 agent through directory12",async()=>{
     const owner=beginSessionFixture({secret:b64url(crypto.getRandomValues(new Uint8Array(32))),sessions:true,inspector:reader});
     const lifetime=nativeFixtureLifetime(owner);
-    try{await story(lifetime,true);}finally{lifetime.release();}
+    try{await story(lifetime,"declared-application");}finally{lifetime.release();}
   },60_000);
+  test.each(["archive-application", "archive-declared-application"] as const)("%s: native Membership8 issues private person and agent invitations and enrolls both through its exact directory", async cohort => {
+    const owner = beginSessionFixture({ secret: b64url(crypto.getRandomValues(new Uint8Array(32))), sessions: true, inspector: reader });
+    const lifetime = nativeFixtureLifetime(owner);
+    try { await story(lifetime, cohort); } finally { lifetime.release(); }
+  }, 60_000);
 });
 
 type Lifetime = ReturnType<typeof nativeFixtureLifetime>;
 
-async function story(lifetime: Lifetime, declaredOnly=false): Promise<void> {
+type SelectedCohort = "declared-application" | "archive-application" | "archive-declared-application";
+async function story(lifetime: Lifetime, selected?: SelectedCohort): Promise<void> {
   const now = lifetime.now;
   const node = lifetime.platform;
   const registers: Platform[] = [];
@@ -88,7 +96,7 @@ async function story(lifetime: Lifetime, declaredOnly=false): Promise<void> {
   const run = async (who: Context, ...argv: string[]): Promise<Outcome> => lifetime.wait(() => command(who, argv));
 
   /** A room of one cohort, created by its admin through the command: install with the cohort, wire the host stand-in, create. */
-  const create = async (admin: Context, cohort: "trusted-application" | "declared-application" | "application", namespace: string, name: string, handle: string) => {
+  const create = async (admin: Context, cohort: "trusted-application" | SelectedCohort | "application", namespace: string, name: string, handle: string) => {
     const installed = await run(admin, "install", SERVICE, "--host", "git.example", "--namespace", namespace, "--cohort", cohort);
     expect(installed.code, installed.lines.join("\n")).toBe(0);
     const R = node((await admin.store.config())!.register!.scope);
@@ -174,13 +182,38 @@ async function story(lifetime: Lifetime, declaredOnly=false): Promise<void> {
     return { member, key: String(key.values["id"]) };
   };
 
-  if(declaredOnly){
-    const admin=person(),room=await create(admin,"declared-application","artroom","declared","@rita");
+  if(selected){
+    const pins = { "declared-application": DECLARED_APPLICATION_COHORT, "archive-application": ARCHIVE_APPLICATION_COHORT, "archive-declared-application": ARCHIVE_DECLARED_APPLICATION_COHORT }[selected];
+    const admin=person(),room=await create(admin,selected,"artroom",selected,"@rita");
     const config=(await admin.store.config())!;
-    for(const [scope,pin]of [[config.register!.scope,DECLARED_APPLICATION_COHORT.register],[room.repository.directory.scope,DECLARED_APPLICATION_COHORT.directory],[room.membership.scope,DECLARED_APPLICATION_COHORT.membership],[room.repository.rules,DECLARED_APPLICATION_COHORT.rules],[room.repository.destination,DECLARED_APPLICATION_COHORT.destination]] as const){
+    for(const [scope,pin]of [[config.register!.scope,pins.register],[room.repository.directory.scope,pins.directory],[room.membership.scope,pins.membership],[room.repository.rules,pins.rules],[room.repository.destination,pins.destination]] as const){
       expect((await node(scope).summary()).value.definition).toBe(pin);
     }
-    await enrol(room,person(),await link(admin,room.membership,"@declared-agent","@rita"),"@declared-agent",DECLARED_APPLICATION_COHORT.membership);
+    if (selected !== "declared-application") {
+      const key = (await admin.store.secret(config.key))!.slice(), id = keyIdOfSecret(key);
+      try {
+        const token = await lifetime.wait(() => requestSession(SERVICE, room.membership.scope, sessionRequest(room.membership, key, timeOf(Math.floor(now() / 1000) * 1000 + 60_000), crypto.randomUUID()), { fetch }));
+        expect(token.ok).toBe(true);
+        if (token.ok) expect([token.session.claims.membership, token.session.claims.key, token.session.claims.member]).toEqual([room.membership, id, "@rita"]);
+      } finally { key.fill(0); }
+    }
+    const agentLink = await link(admin,room.membership,"@declared-agent","@rita");
+    await enrol(room,person(),agentLink,"@declared-agent",pins.membership);
+    if (selected !== "declared-application") {
+      const issued = await lifetime.wait(() => issueInvitation({ ...admin, store: issuanceStore(admin) }, { kind: "person", handle: "@tender", role: "member", hours: 1 }, { privateRequests: [], mode: "new", operation: crypto.randomUUID() }));
+      expect([issued.state, issued.kind, issued.reason]).toEqual(["verified", "person", undefined]);
+      const tender = person(), joined = await run(tender, "join", issued.link!);
+      expect(joined.code, joined.lines.join("\n")).toBe(0);
+      const joinedConfig = (await tender.store.config())!, joinedKey = keyIdOfSecret((await tender.store.secret(joinedConfig.key))!);
+      const entries = await room.M.entries(), nativeJoin = entries.find(entry => entry.input.type === "act" && entry.input.signed.intent.kind === "join" && entry.input.signed.intent.actor === joinedKey);
+      expect(nativeJoin).toBeDefined();
+      if (nativeJoin?.input.type !== "act") throw Error("Native person join entry required.");
+      expect(nativeJoin.input.signed.intent.fields["secret"]).toBeUndefined(); expect(typeof nativeJoin.input.signed.intent.fields["proof"]).toBe("string");
+      const current = (await room.M.summary()).value.items.find(item => item.type === "member" && item.values["handle"] === "@tender");
+      expect(current).toMatchObject({ state: "active", values: { kind: "person", role: "member" } });
+      expect(JSON.stringify(entries)).not.toContain(agentKeyInvitationOf(agentLink)!.secret);
+      expect(JSON.stringify(entries)).not.toContain(linkOf(issued.link!)!.secret);
+    }
     return;
   }
   // ---- The trusted application cohort: membership@7. Two agents, each its own configuration and key.

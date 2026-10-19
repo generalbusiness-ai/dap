@@ -59,9 +59,11 @@ export interface ApplicationPackageInput {
  * grant or a read session and exposes no application item data. */
 export interface ApplicationRoom { readonly directory: import("@generalbusiness/dap-contract").ScopeRef; readonly rules: import("@generalbusiness/dap-contract").ScopeRef }
 export interface ApplicationInstallation extends ApplicationRoom {
+  /** Filled by current native routing metadata. Legacy metadata used M7. */
+  readonly membershipDefinition?: "platform:membership@7" | "platform:membership@8";
   readonly membership: import("@generalbusiness/dap-contract").ScopeRef;
   readonly destination: import("@generalbusiness/dap-contract").ScopeRef;
   readonly scope: import("@generalbusiness/dap-contract").ScopeRef;
   readonly item: number; readonly definition: Digest; readonly ids: ApplicationIds;
 }
-export interface ApplicationScreenContext extends ApplicationInstallation { readonly v: 1; readonly origin: string; readonly deployment: string; readonly membershipDefinition: "platform:membership@7" }
+export interface ApplicationScreenContext extends ApplicationInstallation { readonly v: 1; readonly origin: string; readonly deployment: string; readonly membershipDefinition: "platform:membership@7" | "platform:membership@8" }
