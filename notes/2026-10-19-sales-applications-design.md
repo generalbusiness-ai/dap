@@ -1,163 +1,190 @@
 # Three sales applications: the prospect room, the bid response and the marketing calendar
 
 Design note, 19 October 2026. Proposed functionality: nothing here is
-built. The three applications are packages in the sense of the
+built.
+
+We chose three sales use cases to design around, and this note designs
+them:
+
+1. **The prospect room.** One seller and their assistant working a list
+   of accounts: research, outreach, replies, a proposal the prospect
+   accepts. We would use it ourselves.
+2. **The bid response.** A team answering a formal request for
+   proposals: an account executive, a sales engineer, product managers,
+   legal, security, pricing and a manager, with hosted agents taking
+   the heavy lifting. The enterprise case with the most coordination
+   in it.
+3. **The marketing calendar.** One or two people publishing on a
+   schedule with an agent that drafts. The smallest, and the first to
+   build, because the site is a repository and publishing to it is the
+   one outside operation dap runs today.
+
+Each is a package in the sense of the
 [applications note](2026-10-15-self-contained-applications.md), built
 on the forms the grow room is landing ([grow note](2026-10-17-grow-operation-application-design.md),
-[plan 033](plans/033-2026-10-18-grow-room-demo.md)). The sales motions
-they cover are the ordinary ones: finding and talking to prospects,
-answering a formal request for proposals as a team, and publishing
-marketing on a schedule.
+[plan 033](plans/033-2026-10-18-grow-room-demo.md)). Section 1 says
+why a room makes selling easier to coordinate; sections 2 and 3 place
+the three against personal agents and against the tools people use for
+these jobs today; sections 4 to 7 design them; section 8 orders the
+work.
 
-## 1. Why
+## 1. Why coordinating is easier
 
-Selling is teamwork with commitments. An account executive owns the
-deal, but a sales engineer answers the technical questions, a product
-manager vouches for what ships when, legal and security review the terms,
-and a manager decides whether to bid and approves the price. The buyer
-asks questions and expects the answers to hold. Later, someone asks what
-was promised, by whom, and on which version of the proposal.
-
-Today's tools keep most of this in documents, chat threads and a record
-that one person updates by hand. Three things get blurred that dap keeps
-apart:
-
-- **Who said it.** An assistant's draft, a person's signed statement and
-  the other party's confirmed answer are
-  [three kinds of statement](../docs/use-cases.md#three-kinds-of-statement).
-  A roadmap claim in a bid is worth something only when the product
-  manager signed it, with the roadmap version it rests on, and the
-  sales engineer who reviewed it into the response is a second, separate
-  signature.
-- **Who may decide.** A discount, a go or no-go, a submission and a
-  published post each need a holder of the right authority, at an exact
-  version. Dap's acts carry their grant, so the question "could this
-  person do that" never needs a tool's settings page.
-- **What needs me.** Each member's part is a short list: the
-  requirements asked of me that I have not yet answered, the proposals waiting
-  for my decision, the posts due this week. The grow room's per-member
-  carousel is the same view with different nouns.
-
-Agents do most of the drafting, chasing and checking. People sign the
-commitments. The record answers "what happened" without anyone having
-written it up.
-
-## 2. Why coordinating is easier
-
-A personal agent now holds context about you, keeps working after you
-close the window and acts on your behalf: it browses, drafts, chases,
-schedules its own tasks, asks you before a sensitive step and remembers.
-Each application below assumes every member has one. What slows team
-selling is not the thinking, which the agents increasingly do. It is the
-finding, the chasing, the re-telling and the re-keying between people:
-the coordination. The room makes that part easy, in two ways.
+What slows team selling is not the thinking, which agents increasingly
+do. It is the finding, the chasing, the re-telling and the re-keying
+between people. The room makes that part easy in two ways.
 
 **Each participant works from their own perspective on the shared
 work.** A bid has a hundred rows. The product manager needs the four
 that are hers, with the draft, the buyer's related question and the due
 time, and nothing else. The sales engineer sees what has been supplied
 and waits for review. The manager sees two approvals and a deadline. The
-owner sees what is blocked and by whom. These are one record seen from
-each seat, derived, not maintained: nobody writes a status update,
-because the status is the view, and each person's "needs you" list is
-short because it is theirs. The same is true for the agents: the
-drafting agent works from the rows, the owner's assistant from the
-blocked ones, the product manager's assistant from her four.
+owner sees what is blocked and by whom. One record seen from each seat,
+derived rather than maintained: nobody writes a status update, because
+the status is the view, and each person's "needs you" list is short
+because it is theirs. The agents get the same seats.
 
 **Any participant reaches the specific interaction in one step, from
 the app they are already in.** "What did the buyer say about data
-residency?" is answered with that exchange: the question, the answer,
-its source and date. "Why did we say next quarter for that feature?"
-lands on the product manager's signed answer and the roadmap revision
-it cites. "What is holding up section 7?" lands on the three rows asked
-of legal yesterday, with their due times. Each is a card in the chat
-the person is already using, not a search across threads and a "can
-someone remind me". Agents get the same access, which is why their
-drafts are good: the drafting agent reads the buyer's actual answer,
-not a paraphrase of it, and flags the row that contradicts it.
+residency?" is answered with that exchange, its source and its date.
+"Why did we say next quarter for that feature?" lands on the product
+manager's signed answer and the roadmap revision it cites. "What is
+holding up section 7?" lands on the three rows asked of legal
+yesterday. A card in the chat the person is using, not a search across
+threads and a "can someone remind me". Agents get the same access,
+which is why their drafts are good: the drafting agent reads the
+buyer's actual answer and flags the row that contradicts it.
 
-Two consequences follow. **Handoffs carry their context.** Asking an
-expert is one act; the expert's phone shows the row, the draft, the
-related buyer question and the due time, and their answer is in the
-sales engineer's list the moment it is signed. No forwarding, no
-attachment, no "see the thread below"; the same for an approval and a
-send-back. **Each person's work shrinks to judgement and signature.**
-The intake agent decomposed the request, the drafting agent wrote the
-first answers, the person's own assistant prepared their slice ("four
-to answer; drafts from the last two bids; row 212 conflicts with what
-the buyer said on Tuesday"), and the person reads, edits and signs.
+Two consequences follow. Handoffs carry their context: asking an expert
+is one act, and the expert's phone shows the row, the draft and the due
+time, with no forwarding. Each person's work shrinks to judgement and
+signature: the agents decomposed, drafted and prepared each person's
+slice, and the person reads, edits and signs.
 
 The alternative is an agent that does the bid for one person. It reads
 the spreadsheet, drafts a hundred answers and mails four people. The
 replies come back as prose and the agent merges them; the product
 manager asks "which row?"; the sales engineer says he answered that in
 another thread; the manager approves "the price" without seeing which
-version; the buyer's question goes to the owner, who forwards it. The
-work gets done. The coordination was the cost, and people paid it in
-attention, one message at a time. The agent did not make that cost go
-away, because the cost was never in the thinking.
+version. The work gets done. The coordination was the cost, paid by
+people in attention, one message at a time.
 
-The prospect room and the calendar are the same shape at a smaller
-scale. The owner's list is today's follow-ups, each with the prospect's
-last words; the prospect's view is one card, the proposal, with Accept
-and Decline. The writer's list is this week's briefs; the owner's is
-this week's posts waiting for a decision, with the text in front of
-them.
+The record's other properties, that authority is on the act, that each
+statement keeps its author, that the journal replays and is archived,
+make this safe: the list offers only the acts the grant admits, and the
+exchange you find is the signed one. They are the floor, not the pitch.
 
-The record's other properties, that the authority is on the act, that
-each statement keeps its author, that the journal replays and is
-archived, are what make this safe: the list offers only the acts the
-grant admits, and the exchange you find is the signed one. They are the
-floor, not the pitch. The pitch is that the work is in front of the
-right person, with what they need, when they need it, and that anyone
-can get to any part of it in one step.
+## 2. Personal agents today
 
-## 3. What the three share
+Three personal agents define the category this month. OpenAI's Dots
+(launched 29 September) are always-on agents with their own cloud
+computer and browser, connected to thousands of apps, running scheduled
+jobs and background research, read-only until a person authorizes a
+send or a change, messaging the person in chat when a decision is
+needed. Meta's Muse (8 September) takes a goal, plans, launches
+subagents, browses, fills forms and completes purchases, keeps working
+after the app is closed, returns for approval before sensitive actions,
+and keeps an editable memory. Hermes Agent (open source) is a persistent
+process on the person's own server with cross-session memory, skills it
+writes for itself, scheduled tasks and a gateway to the messaging apps
+the person already uses.
 
-Each application is its own package. They share a vocabulary, not code:
+Each of the three applications below assumes every member has one of
+these. What the room adds is not what the agent does but who it does it
+for and where the result lives:
 
-- **A commitment** is an item with an owner, a state, and a decision
-  taken by a holder of a grant at an exact revision. Its acts are
-  propose, verify, approve, submit, accept and close, in the sense the
-  [use cases](../docs/use-cases.md#what-a-reusable-application-needs-to-say)
-  give those words.
-- **An outside party's word** enters the record in one of two ways. If
-  the party is a member, it is their own signed act, from their own AI
-  app or browser. If not, it is a member's signed report of what the
-  party said, with its source named. The record never shows a reported
-  reply as the party's act.
-- **Deadlines are timed rules.** A reminder, a stale mark and an expiry
-  are rules on the item, and they write attention to the owner, never an
-  invented state.
-- **Routing is a view rule.** Who sees an item in their "needs you"
-  carousel follows from the item's state, the viewer's grants and, where
-  it matters, the viewer's presence, as the grow room's routing decides
-  ([decision 72c9d5e5](plans/033-2026-10-18-grow-room-demo.md)).
+- An agent serves one principal. The product manager's agent works for
+  her, the owner's for the owner. The room is where their agents meet,
+  and each person's answer stays in their words, signed by them.
+- An agent's approval is a line in a transcript that only that agent
+  holds. In the room the authority is on the act, so a discount, a
+  roadmap claim and a submission are signed by their holders at an
+  exact revision, and no agent can sign them.
+- An agent's memory is its own. The room's record is shared, exact and
+  readable by the next person after the agent has been replaced.
+- An agent's schedule is a promise to itself. The room's timed rules
+  fire for every member whether or not any agent is up.
+
+What an agent alone does well: one person's work with no commitment to
+anyone else and nothing to prove later. The prospect room's research
+and drafting are that, and the owner's agent does them.
+
+## 3. The field today, for each use case
+
+The 2026 roundups below are mostly vendor-written; the shape of each
+market is clear even where the rankings are not.
+
+**Bid response.** The established products ([one ranking](https://loopio.com/blog/best-ai-software-rfp-responses/),
+[another](https://autogenai.com/blog/the-best-rfp-software-in-2026/),
+[a workflow comparison](https://www.arphie.ai/blog/top-30-rfp-proposal-software-in-2026))
+are content-library platforms: Loopio, Responsive, AutogenAI, with
+Tribble, Conveyor, 1Up, DeepRFP and AutoRFP.ai behind them. They keep
+an answer library, draft with a model, assign questions to contributors
+and route reviews, and export into the buyer's format. They are bought
+per team at enterprise prices (one lists its entry tier at twenty
+thousand dollars a year) with onboarding measured in weeks, and they
+are a portal the contributors must go to. The room differs in where
+the work happens and who signs: each contributor answers from their
+own AI app, the expert's answer and the team's review are two
+attributed signatures, routing is a grant rather than an assignment
+list, and the agents are members. What those products do that the
+first version does not: files and custody, large matrices, formatting,
+and integrations.
+
+**Prospect room.** Solo sellers today pair a light CRM (folk, Attio,
+Zoho Bigin, a free HubSpot tier) with an agent for outreach and
+follow-up (Lindy, Relay with a human approval step, Unify) and a
+sequencing tool (Apollo, Instantly, Lemlist) ([a founder's guide](https://www.folk.app/articles/ai-crms-for-solo-founders),
+[a stack guide](https://www.unifygtm.com/explore/best-ai-sales-tools-solo-founders)).
+Every one of them is a database the seller maintains plus an agent that
+sends. The room keeps the prospect's words as theirs, lets the prospect
+accept a proposal at an exact revision from their own AI app, and makes
+the seller's assistant work inside the record rather than beside it.
+What those tools do that the first version does not: send mail and run
+sequences, which here stay the owner's statements until the general
+design of outside operations exists.
+
+**Marketing calendar.** Small teams use a calendar with publishing
+(CoSchedule, Buffer, Planable, which attaches review to the content and
+publishes to nine channels), a work tool with approval chains (Monday,
+Notion) or an agent that drafts the whole calendar (RankYak, Velocity)
+([a comparison](https://asana.com/resources/best-content-calendar-software),
+[another](https://planable.io/blog/content-calendar-tools/)). The room
+differs in one thing worth having: the approval is bound to the exact
+text that is published, and the publication to the site is the
+repository write dap already does. Channels beyond the site are
+recorded statements, which is less than those tools do, and the first
+version says so.
+
+## 4. What the three share
+
+- **A commitment** is an item with an owner and a decision taken by a
+  holder of a grant at an exact revision.
+- **An outside party's word** is either their own signed act as a
+  member, or a member's signed report of what they said, with its
+  source. The record never shows a report as the party's act.
+- **Deadlines are timed rules** that write attention to the owner,
+  never an invented state.
+- **Routing is a view rule** over the item's state, the viewer's grants
+  and, where it matters, presence, as the grow room's routing decides;
+  it offers an act, and only the grant and the guards admit it.
 - **Documents stay outside the record** until custody exists
-  ([roadmap](../docs/roadmap.md#evidence-capture-and-private-custody)).
-  The record keeps a link and a digest, and says so.
-- **Integrations are out of scope.** Mail, calendars, sales systems and
-  channels are not built as point integrations for these applications;
-  they wait for a general design of outside operations
-  ([roadmap](../docs/roadmap.md#outside-parties-and-systems)). The one
-  operation that exists today, publication to a Git destination, is
-  used where it fits. Everything else that crosses the boundary enters
-  as a member's statement that they did it, with its source.
+  ([roadmap](../docs/roadmap.md#evidence-capture-and-private-custody)):
+  a link and a digest.
+- **Integrations are out of scope.** Mail, calendars, sales systems
+  and channels wait for a general design of outside operations
+  ([roadmap](../docs/roadmap.md#outside-parties-and-systems)); the one
+  operation that exists, publication to a Git destination, is used
+  where it fits, and everything else that crosses the boundary enters
+  as a member's statement.
 
-## 4. The prospect room
-
-For one seller, or a small team, with their own assistant. The
-assistant does the research, the drafting and the chasing; the room adds
-the signed sends, the prospect's words kept as theirs, the proposal
-accepted at an exact revision, and the record the next assistant reads.
-
-### 4.1 Parties and authority
+## 5. The prospect room
 
 | Member | Kind | Does |
 |---|---|---|
 | Owner | person | Signs outreach, records replies, proposes, decides stages |
 | Assistant | agent, the owner's | Drafts outreach and proposals, summarizes, asks "what next" |
-| Researcher | agent | Writes research notes on an account from public sources, each with its source |
+| Researcher | agent | Writes research notes on an account, each with a source |
 | Prospect contact | person, optional member | Accepts or declines a proposal from their own AI app |
 
 | Grant | Held by | Acts |
@@ -166,96 +193,48 @@ accepted at an exact revision, and the record the next assistant reads.
 | `sell.draft` | assistant, researcher | `research-note`, `draft-outreach`, `draft-proposal` |
 | `sell.accept` | prospect contact | `accept-proposal`, `decline-proposal` |
 
-A draft never leaves the room by itself: `send-outreach` is the owner's
-act, and the act records the draft's revision that was sent. The
-researcher's notes carry a source each and are refused without one.
+The owner names an account and the researcher writes notes on it, each
+refused without a source. The assistant drafts an opening message; the
+owner edits and signs `send-outreach`, which records the draft's
+revision as sent. Five days with no reply, and a timed rule marks the
+account "waiting" and puts it in the owner's carousel with the sent
+text. The prospect replies by mail; the owner records the reply in its
+words with `record-reply`, so a later "what did they say" is answered
+from their words. The assistant drafts a proposal; the owner signs
+`propose`, fixing its revision. A prospect who is a member sees the
+proposal card with Accept and Decline, and their act is the acceptance;
+otherwise the owner records their answer with its source. A changed
+proposal needs a new `propose`; the old revision stays as declined or
+superseded. The week's review is the assistant reading the journal.
 
-### 4.2 The interaction
+**Shape.** Items: `account` (researching, contacted, waiting,
+in-conversation, proposed, won, lost, dormant), `note`, `touch`,
+`proposal` (drafted, sent, accepted, declined, superseded). Rules: no
+reply for five days, no touch for twenty-one days, a proposal's
+validity passed. Views: the owner's account carousel (oldest touch
+first, with the last text and its age), the account record, the
+proposal card, the week's log.
 
-The owner names an account and the researcher writes three notes on it.
-The assistant drafts an opening message; the owner edits and signs
-`send-outreach`, which records the text as sent. Five days pass with no
-reply: a timed rule marks the account "waiting" and the carousel shows
-it with the sent text and the date. The prospect replies by mail; the
-owner records the reply with `record-reply`, quoting it, so a later
-"what did they say" is answered from their words. A call is booked and
-recorded the same way.
+**Needs.** Nothing beyond the forms the grow room uses. The prospect as
+a member needs an invitation, which exists. Sending mail is the owner's
+statement. A proposal document beyond its text needs custody; until
+then, a link and a digest.
 
-The assistant drafts a proposal from the notes and the replies. The
-owner signs `propose`, which fixes the proposal's revision. If the
-prospect is a member, they see the proposal card in their AI app with
-Accept and Decline, and their act is the acceptance. If not, the owner
-records their answer with its source. Accepting a changed proposal needs
-a new `propose`; the old revision stays in the record as declined or
-superseded.
-
-The week's review is the assistant reading the journal: which accounts
-moved, which are waiting, which the owner has not touched in two weeks.
-
-### 4.3 Definitions
-
-**Items.** `account` (states `researching`, `contacted`, `waiting`,
-`in-conversation`, `proposed`, `won`, `lost`, `dormant`; values: name,
-stage note, last touch time; refs: last touch, current proposal),
-`note` (a researcher's finding with its source), `touch` (one outreach
-or reply, with its text, direction and the revision of the draft it
-sent), `proposal` (states `drafted`, `sent`, `accepted`, `declined`,
-`superseded`; values: summary, terms text; refs: the account, the
-acceptance entry).
-
-**Acts.** `open-account`, `research-note` (guard: a source), `draft-outreach`,
-`send-outreach` (writes a `touch` and moves the account to `contacted`
-or keeps `in-conversation`), `record-reply` (writes a `touch` with the
-quoted text and its source), `draft-proposal`, `propose` (fixes the
-revision, moves to `proposed`), `accept-proposal` and `decline-proposal`
-(the prospect member's, guarded by `sell.accept`), `record-answer` (the
-owner's report of a non-member's answer, with source), `set-stage`,
-`defer` (to a date), `close` (won or lost, with a reason).
-
-**Timed rules.** No reply for five days after a sent touch: the account
-becomes `waiting` with attention to the owner. No touch for twenty-one
-days: `dormant`, attention to the owner. A proposal's stated validity
-passes: the proposal is `superseded` and the owner is told.
-
-**Views.** The account carousel for the owner (accounts needing a
-decision or a touch, oldest first, with the last text and its age), the
-account record (notes, touches, proposals, in order), the proposal card
-(for the prospect member: summary, terms, Accept and Decline; for the
-owner: the same without acts), the week's log.
-
-### 4.4 What it needs
-
-Everything in 3.3 is within the forms the grow room uses: items, acts
-with grants and guards, timed rules, declared views and the generic
-interface. Sending mail is the owner's statement, not an operation. The
-prospect as a member needs an invitation, which exists. A proposal
-document beyond its text needs custody; until then the record keeps a
-link and a digest.
-
-## 5. The bid response
-
-For a team answering a formal request: an account executive who owns
-the bid, a sales engineer, product managers, legal, security and
-pricing, a manager who decides, and the buyer. The intake and drafting
-agents do the heavy lifting; the room is where the team's signatures,
-grants and deadlines live, so the response is the team's, and provably
-so.
-
-### 5.1 Parties and authority
+## 6. The bid response
 
 | Member | Kind | Does |
 |---|---|---|
-| Bid owner | person, the account executive | Takes in the request, assigns requirements, asks the buyer, assembles and submits |
+| Bid owner | person, the account executive | Takes in the request, assigns, asks the buyer, assembles |
 | Experts | people: product managers, legal, security, finance | Supply the answers in their domain, signed as their own statements |
-| Sales engineer | person | Supplies technical answers, asks experts, and reviews every answer into the response |
-| Approvers | people: pricing, management | Grant or refuse the price and the go or no-go, decide submission |
-| Buyer | not a member in the first version | Their questions, answers and the award enter as the bid owner's recorded reports, each with its source |
-| Intake agent | agent, hosted ([hosted agent teams](2026-10-15-hosted-agent-teams-design.md)) | Decomposes the request's spreadsheets into requirements, and renders the verified answers back into the buyer's layout |
+| Sales engineer | person | Supplies technical answers, asks experts, reviews every answer into the response |
+| Approvers | people: pricing, management | Grant or refuse the price and the terms, decide go or no-go and submission |
+| Buyer | not a member in the first version | Their questions, answers and the award enter as the owner's recorded reports with sources |
+| Intake agent | agent, hosted ([hosted agent teams](2026-10-15-hosted-agent-teams-design.md)) | Decomposes the request's spreadsheets into requirements, renders the answers back into the buyer's layout |
 | Drafting agent | agent | Drafts answers from the answer library, flags inconsistencies, chases due dates |
 
 | Grant | Held by | Acts |
 |---|---|---|
-| `bid.own` | bid owner | `intake`, `assign`, `ask-buyer`, `record-buyer-answer`, `confirm-mapping`, `remap`, `assemble`, `record-outcome` |
+| `bid.own` | bid owner | `intake`, `assign`, `ask-buyer`, `record-buyer-answer`, `confirm-mapping`, `remap`, `open-price-approval`, `open-terms-approval`, `assemble`, `withdraw-bid`, `record-outcome` |
 | `bid.decide` | management | `decide-go`, `decide-no-go`, `submit` |
 | `bid.review` | bid owner, sales engineer | `ask-expert`, `review-answer`, `send-back`, `decline-requirement` |
 | `bid.technical` | sales engineer | `supply-technical` |
@@ -266,269 +245,96 @@ so.
 | `bid.intake` | intake agent | `import`, `open-requirement`, `propose-mapping`, `render-response` |
 | `bid.draft` | drafting agent | `draft-answer`, `flag` |
 
-An act carries one fixed grant string, and the judge checks that action
-before the item's guards, so nothing here chooses a grant at run time.
-Supply is four acts, one per domain, each guarded by the requirement's
-domain being that domain and by the signer being the requirement's
-assigned expert: a sales engineer cannot vouch for a roadmap date and a
-product manager cannot vouch for a security control, and a roadmap claim
-is refused without a source ref to the roadmap revision it rests on.
-Review is one act under one grant held by the owner and the sales
-engineer, guarded by the signer being the requirement's reviewer when
-one is set; it accepts the supplied answer into the response, checked
-against the rest, and makes no claim of its own. Approvals are per kind,
-each under its own grant. The record keeps both signatures: the claim
-is the expert's, the response is the team's. Neither agent holds a
-supply, review or approval grant: the intake agent's mapping and the
-drafting agent's text are drafts until a person signs them, and asking
-an expert is a person's act, not the agent's. A view's routing offers
-an act; only the grant and the guards admit it. The intake agent is
-hosted, so the decomposition of a long request does not wait for
-anyone's laptop.
+An act carries one fixed grant string, so supply is four acts, one per
+domain, each guarded by the requirement's domain and by the signer
+being the assigned expert; a roadmap claim is refused without a source
+ref to the roadmap revision it rests on. Review is one act under one
+grant held by the owner and the sales engineer, and makes no claim of
+its own. The record keeps both signatures: the claim is the expert's,
+the response is the team's. Neither agent holds a supply, review or
+approval grant, and asking an expert is a person's act.
 
-### 5.2 The interaction
+**The interaction.** The request arrives as spreadsheets: a compliance
+matrix of rows with an identifier, a text, a response kind and
+sometimes a weight. The owner records it with `intake` and management
+decides go or no-go with reasons. The hosted intake agent records the
+import (link, digest, sheets, row counts) and opens one requirement per
+row with its row reference, identifier, text, kind, a proposed domain
+and a due time. The requirement is the simple data model: those fields,
+an expert, a reviewer, an answer and a source, and nothing else from the
+sheet. Rows the agent could not place, merged or split wait in the
+owner's carousel to be confirmed or remapped; a duplicate row is refused
+by name.
 
-The request arrives. The bid owner records it with `intake`: the
-buyer, the deadline, the document's link and digest. Management decides
-go, with reasons, which opens the work; no-go closes the bid with its
-reasons kept.
+The drafting agent writes first drafts from the answer library and
+flags the ones that need an expert. The sales engineer supplies
+technical answers himself and signs `ask-expert` for the rest, naming
+the expert and a due time; the requirement appears in that expert's
+carousel with the draft. The expert edits and signs the supply act of
+their domain. The supplied answer appears in the sales engineer's
+carousel, who reviews it into the response or sends it back with a
+comment. Questions to the buyer are items; the owner records the
+buyer's answers with their sources, and the agent flags a draft that
+contradicts one.
 
-The request's documents are usually spreadsheets: a compliance matrix
-of tens to hundreds of rows, each with an identifier, a requirement
-text, a response kind (yes or no, a narrative, an attachment) and
-sometimes a weight, across several sheets. The intake agent takes that
-load. The first version is bounded by the bid room, not by the file,
-and by bytes, not characters. A bid room has one import and at most
-fifty requirements. Each requirement's whole queried representation
-(identifier, row reference, kind, domain, text, draft, answer, parties
-and refs) is at most two kibibytes in UTF-8, with the text at most 512
-bytes and the draft and the answer at most 640 bytes each, so fifty
-requirements stay under half of the native query payload limit with
-room for metadata, and the complete reads a routed carousel needs stay
-complete. The sealed rendering is at most sixty-four kibibytes, the
-file write's limit. A request over any of these is refused at import,
-by name and with its count, before any requirement is opened; a draft,
-supply, remap or rendering that would exceed its bound is refused by
-name before it strands the queue; a second import into the same bid
-room is refused `import-exists`. A spreadsheet that changes after
-import is a new bid room, with the old one `withdrawn` and referenced;
-a small correction is a remap. Longer texts, longer answers and larger
-matrices are deferred (section 8). The agent records the import (the file's link and
-digest, its sheets and their row counts), then opens one requirement
-per row with the row's
-reference, identifier, text, kind, a proposed domain and the due time
-the deadline implies. The requirement is the simple data model: those
-fields, an owner, an answer and a source, and nothing else from the
-sheet; the import keeps the rest by reference. The agent proposes a
-mapping for what it could not classify, for rows it merged or split,
-and for apparent duplicates, and those rows wait in the owner's carousel
-to be confirmed or remapped. A duplicate of a row already opened is
-refused by name.
-
-The owner assigns experts by domain, or accepts the agent's proposal.
-The drafting agent writes a first draft of each answer from the answer
-library and flags the ones that need an expert. For a technical
-requirement the sales engineer edits the draft and signs
-`supply-technical`. For a product, legal or security requirement the
-sales engineer signs `ask-expert`, naming the expert and a due time, and
-the requirement appears in that expert's carousel with the draft. The
-expert edits and signs the supply act of their domain: a product manager
-confirming that a feature ships next quarter signs `supply-product` and
-cites the roadmap revision, and without it the act is refused and the
-requirement shows "needs a source". The supplied answer then appears in
-the sales engineer's carousel, who signs `review-answer` to accept it
-into the response, or `send-back` with a comment, which asks the expert
-again. A requirement is `reviewed` when it has a supplied answer and a
-review.
-
-Questions to the buyer are items: the owner asks through whatever
-channel the request names, and records the buyer's answer with its
-source. The agent flags a drafted answer that contradicts a buyer's
-answer or another supplied answer, which puts both in their owners'
-carousels.
-
-Every bid has two approvals, one for the price and one for the terms,
-each its own item. An act opens one item, so they are not created with
-the bid: once the pricing requirement exists the owner signs
-`open-price-approval`, and once the terms requirement exists
-`open-terms-approval`, each refused `approval-exists` if the bid already
-has one of that kind, and each bound to the requirement it covers.
-Pricing signs `approve-price` at the exact revision of the pricing
-answer; legal signs `approve-terms` the same way. A later supply on
-either requirement puts its approval back to `requested`, so an
-approval is never older than what it approves.
-
-Assembly is complete or refused. `assemble` is guarded on all of: the
-bid's import is `confirmed`, which it cannot be while any of its
-mappings is `proposed`; every row of that import has a requirement that
-is `reviewed` or `declined` with a reason; both approval items exist
-and are `granted` at the current revisions of the requirements they
-cover; and a rendering exists at those exact revisions. The intake
-agent produces that rendering, the reviewed answers back in the buyer's
-layout, one row per requirement in the sheet's order. `assemble` then
-writes the response as one revision that names the rendering's digest,
-each answer's revision and both approvals' entries. Management signs
-`submit`, which names that exact assembly revision and seals it; an
-assembly made stale by any later change cannot be submitted, and no
-missing approval, unaccounted row or edited answer can become an
-apparently complete submission.
+The price and the terms each have an approval item, opened by the owner
+once the requirement it covers exists and granted by pricing or legal
+at that answer's exact revision; a later supply puts the approval back
+to requested. Assembly is complete or refused: the import confirmed
+with every row reviewed or declined with a reason, both approvals
+present and granted at current revisions, and the intake agent's
+rendering of the answers back into the buyer's layout at those
+revisions. Management signs `submit`, which seals that exact assembly
+and sends it to the bid's Git destination with `publish-file`.
 
 Sealing is local; publication is not, and the first version is honest
-about how far the record can see. `submit` sends `publish-file` with
-the sealed bytes to the bid's Git destination. The send declares a
-result clause, as the lending library's `publish` does, and what that
-result proves is admission: the destination decided the request,
-applied, refused or superseded, and the clause writes that outcome onto
-the submission with the destination as the authenticated sender. The
-push to the repository and the public receipt happen later, outside
-what today's result carries, so no native state says "published". A
-member who wants to know reads the receipt file the destination
-publishes under its public receipt ref for that source fact and
-ordinal, compares its path and content digest with the submission's
-expected values, and signs `report-receipt-check`; the record shows it
-as that member's statement, "checked by" their name, never as a
-destination-confirmed state. An unknown outcome stays unknown and is
-not resent. A revised offer is a new assembly and a new submission with
-its own send and result, and the earlier one stays. A native completion
-protocol, in which the destination's later receipt reaches the room as
-its own authenticated fact, is a named dependency (section 8), not
-today's behaviour.
+about how far the record can see. The send's result proves admission,
+that the destination decided the request, and the clause writes that
+outcome with the destination as sender. The push and the public receipt
+happen later, outside what today's result carries, so no native state
+says "published". A member who reads the destination's public receipt
+file and compares path and digest signs `report-receipt-check`, shown
+as their statement with their name. A native completion protocol is a
+named dependency (section 8).
 
-The award or the loss is recorded by the owner with its source. The
-win or loss review reads the entry range from intake to outcome: which
-answers were supplied late, which questions went unanswered, what the
-price approval said.
+The answer library is a second scope: supplied answers with their
+expert, date and source, drafted from next time, stale on a rule. The
+win or loss review reads the entry range from intake to outcome.
 
-The answer library is a second scope the team keeps: supplied answers
-with the expert who signed them, the date and the source, which the
-agent drafts from next time. A library answer goes stale on a rule, say
-after one hundred and eighty days, and the carousel asks its expert to
-supply it again or retire it.
+**Shape.** Items: `bid`, `import` (one per bid room), `requirement`
+(unassigned, assigned, drafted, asked, supplied, reviewed, declined),
+`mapping`, `question`, `approval` (price, terms), `assembly`,
+`submission` (pending, admitted, refused, superseded). Rules: a
+requirement asked and not supplied two days before its due time; a
+supplied answer not reviewed in two days; the deadline in five days
+with rows unresolved; a library answer past its stale period. Views:
+the bid record, the owner's mapping carousel, the expert's carousel
+(what is asked of me, due soonest first), the sales engineer's carousel
+(answers to review), the approval card, the question log, the
+submission record.
 
-### 5.3 Definitions
+**Boundaries of the first version.**
 
-**Items.** `bid` (states `received`, `open`, `assembled`, `submitted`,
-`clarifying`, `awarded`, `lost`, `withdrawn`; values: buyer, deadline,
-document link and digest; refs: the decision, the submission),
-`import` (one per bid room; states `read`, `mapped`, `confirmed`,
-`withdrawn`; values: link, digest, sheet names, row counts),
-`requirement` (at most fifty per bid room; states `unassigned`,
-`assigned`, `drafted`, `asked`, `supplied`, `reviewed`, `declined`;
-values: identifier, row reference, text, kind, weight, domain, due time,
-draft, answer; parties: expert, reviewer; refs: the import, the
-supplying entry, the reviewing entry, the source), `mapping`
-(the agent's proposal for a row it could not place, merged or split;
-states `proposed`, `confirmed`, `remapped`), `rendering` (the answers
-in the buyer's layout at an exact set of revisions), `question` (states
-`asked`, `answered`; values: the buyer's answer and its source), `approval` (kind price or
-terms, one of each per bid; states `requested`, `granted`, `refused`;
-refs: the requirement it covers and the revision approved),
-`assembly` (the rendering's digest, each answer's revision, both
-approvals' entries), `submission` (the sealed assembly; request states `pending`,
-`admitted`, `refused`, `superseded`, written only by the send's result
-clause; values: the source fact and send ordinal, the expected path and
-content digest; refs: the assembly, any receipt-check reports).
-
-**Acts.** `intake`, `decide-go`, `decide-no-go`, `import` (the intake
-agent; records the digest; guards: no import in this bid room, refused
-`import-exists`; at most fifty rows and the byte bounds above, refused
-by name), `open-requirement` (the intake agent; guards: the import ref
-and a row reference, no requirement with that row, refused
-`row-exists`, and fewer than fifty requirements, refused `bid-full`), `propose-mapping`, `confirm-mapping` and `remap`
-(the owner; a remap names its reason), `assign` (sets the expert and
-reviewer parties), `draft-answer` and `flag` (the drafting agent),
-`ask-expert` (`bid.review`; names the expert party and a due time; moves
-to `asked`), `supply-technical`, `supply-product`, `supply-legal` and
-`supply-security` (each under its grant; guards: the requirement's
-domain is that domain, the signer is the expert party, a source for
-roadmap claims; moves to `supplied`), `review-answer` (`bid.review`;
-guard: the signer is the reviewer party when set; moves to `reviewed`),
-`send-back` (`bid.review`; back to `asked` with a comment),
-`decline-requirement` (`bid.review`; with a reason), `ask-buyer`,
-`record-buyer-answer` (the owner's report with source),
-`open-price-approval` and `open-terms-approval` (`bid.own`; guards: the
-covered requirement exists, no approval of that kind, refused
-`approval-exists`), `approve-price` and `refuse-price` (`bid.price`; at
-the pricing answer's revision),
-`approve-terms` and `refuse-terms` (`bid.legal`; at the terms answer's
-revision), `render-response` (the intake agent; guard: every row's
-requirement `reviewed` or `declined`), `assemble` (guards as above;
-writes the assembly), `submit` (`bid.decide`; names the exact assembly
-revision, seals it, sends `publish-file` with a result clause whose
-effects write the request's admission outcome from the result, with the
-destination as sender), `report-receipt-check` (any member; their
-report that the public receipt file for the submission's source fact
-and ordinal carries its path and content digest; attributed, never
-confirming),
-`withdraw-bid` (`bid.own`; with a reason, naming a successor bid room
-when there is one), `record-outcome`.
-
-**Timed rules.** A requirement asked and not supplied two days before
-its due time: attention to its expert and the sales engineer. A supplied
-answer not reviewed in two days: attention to the reviewer. The bid's
-deadline in five days with requirements not yet reviewed: attention to
-the bid owner and management. A library answer older than its stale
-period: attention to its expert.
-
-**Views.** The bid record (counts by state, deadline, approvals, the
-import's rows mapped and confirmed), the mapping carousel for the owner
-(rows to confirm or remap, with the agent's reason), the
-expert's carousel (the requirements asked of me, due soonest first,
-with the draft and the Supply act, or Decline), the sales engineer's
-carousel (supplied answers to review, with Accept and Send back, and
-technical requirements to supply), the
-approval card for approvers (Grant and Refuse at the named revision),
-the question log, the submission record (the sealed assembly, its
-request state and any receipt checks by name), and the win or loss
-log.
-
-### 5.4 What it needs
-
-- The team's routing by domain grant, by the asked expert and by the
-  reviewer, with the per-member carousel: the grow room's routing,
-  landed.
-- Several scopes in one package: the bid room and the answer library
-  as two scopes, landed with M2a's interface and M2b's ownership work.
-- Publication of the sealed response: today's Git publication. The
-  record sees the destination's admission through the send's result
-  clause, and a member's attributed check of the public receipt file;
-  a native completion protocol is deferred.
-- The bound: one import and at most fifty requirements per bid room,
-  two kibibytes per requirement's queried representation, a
-  sixty-four-kibibyte sealed rendering, within the native query payload
-  and file-write limits; bigger requests are refused at import and
-  deferred; a changed spreadsheet is a new bid room.
-- The intake agent as a hosted member: the hosted agent teams design,
-  not yet built. Until then the same agent runs from the owner's
-  machine under the same grant, and the record does not change.
-- Reading the spreadsheet: the agent is given the file and reads it
-  outside the record; only the digest, the row references and the
-  texts enter. A spreadsheet that changes after import is a new import.
-- The buyer stays outside the room in the first version: their
-  questions, answers and the award are the owner's recorded reports
-  with sources, which need nothing new. Inviting the buyer as a member
-  is a later version, and brings the whole-record visibility question
-  with it.
-- Documents: the request, attachments and the response's files need
-  custody. Until then the record keeps links and digests, and the
+- One import and at most fifty requirements per bid room, with each
+  requirement's queried representation at most two kibibytes (text 512
+  bytes, draft and answer 640 bytes each) and the sealed rendering at
+  most sixty-four kibibytes, the file write's limit; a request over any
+  bound is refused at import by name, an oversized draft or answer is
+  refused before it strands the queue, a second import is refused, and
+  a changed spreadsheet is a new bid room with the old one withdrawn.
+- The buyer stays outside the room, so the team reads the whole
+  record, price included, and no private view is needed. Inviting the
+  buyer is a later version and brings that question with it.
+- The intake agent as a hosted member is the hosted agent teams
+  design, not built; until then the same agent runs from the owner's
+  machine under the same grant.
+- Files need custody: the record keeps links and digests, and the
   sealed response is text.
-- Price visibility: with no buyer in the room, the team reads the
-  whole record, price included, and no private view is needed. If a
-  later version invites the buyer, pricing moves to a third scope that
-  only the team joins, until
-  [private views](../docs/roadmap.md#private-views-in-one-record) exist.
+- Routing by grant, the per-member carousel and several scopes in one
+  package are landed (the grow room's routing; M2a's interface and
+  M2b's ownership work).
 
-This is the application with the most coordination value and the most
-members. Its first version has no files and no buyer member.
-
-## 6. The marketing calendar
-
-For one person, or two, publishing on a schedule, with an agent that
-writes drafts. The writer drafts; the room keeps the approval at an
-exact revision and the publication receipt, so what is on the site is
-what was approved, and nothing else.
-
-### 6.1 Parties and authority
+## 7. The marketing calendar
 
 | Member | Kind | Does |
 |---|---|---|
@@ -543,81 +349,41 @@ what was approved, and nothing else.
 | `publish.approve` | owner, reviewer | `approve` |
 | `publish.send` | owner | `publish`, `record-posting`, `retire` |
 
-### 6.2 The interaction
+The owner plans a month, a post per slot with a channel, a date and a
+brief. The writer drafts; the owner or the reviewer comments; the
+writer revises, which resets any approval; the owner signs `approve` at
+the exact revision. Two days before the date, an unapproved post is in
+the owner's carousel. On the date the owner signs `publish`, which sends
+the approved text to the site's Git destination as `publish-file`; the
+post is `publishing` until the destination's result, which the clause
+writes as the post's request outcome: `admitted`, `refused` with the
+reason, or `superseded`, in which case the post returns to `approved`
+for a new publish. Whether the file is on the site is a member's check,
+shown with their name, as in the bid. For a channel dap cannot write to, the owner posts
+by hand and records it with the link. Retiring a post replaces its file
+with a short notice and rewrites the index, each a publication of its
+own, since today's file write has no delete.
 
-The owner plans a month: a post item per slot, with a channel, a date
-and a brief. The writer drafts each one; the owner or the reviewer
-comments, the writer revises, and the owner signs `approve` at the
-exact revision. Two days before the date, a post that is drafted and not
-approved appears in the owner's carousel. On the date the owner signs
-`publish`: for the site, the act sends the approved text to the site's
-Git destination as `publish-file`, with a result clause as the lending
-library's `publish` has; the post is `publishing` until the
-destination's result, which proves admission only, and then `admitted`,
-or `refused` with the reason; an unknown stays as it is, and no act
-writes those slots. Whether the file is on the site is a member's
-check, `report-receipt-check`, shown with their name; no native state
-says published. A text changed after publication needs a new
-approval and a new `publish` with its own receipt. For a channel dap
-cannot write to, the owner posts it by hand and records that with the
-link, which stays a statement. Retiring a post replaces its file with a
-short retirement notice and rewrites the index without it, each a
-publication with its own outcome, since today's file write has no
-delete; removing the file from the repository is deferred.
+**Shape.** Items: `campaign`, `post` (states planned, drafted,
+approved, publishing, admitted, refused, retired; a request outcome
+value of pending, admitted, refused or superseded, written only by the
+publish send's result clause), `comment`. Rules: two days before the
+date without approval; past the date and not admitted. Views: the
+owner's calendar carousel, the post card (Approve; Publish when
+approved), the campaign record, the log of admitted publications with
+checks by name.
 
-"What went out this month" is the published log. "What is late" is the
-carousel.
+**Bounds of the first version.** A calendar room holds one quarter: at
+most twenty-four posts in all, retired ones included, each with a text
+of at most four kibibytes and a queried representation of at most six
+kibibytes, so the carousel's complete source stays under 144 kibibytes,
+well inside the native query payload limit; a longer text or a
+twenty-fifth post is refused by name, and the next quarter is a new
+room. Longer posts are deferred.
 
-### 6.3 Definitions
-
-**Items.** `campaign` (a name and a period), `post` (states `planned`,
-`drafted`, `approved`, `publishing`, `admitted`, `retired`; values:
-title, channel, date, brief, text (at most thirty-two kibibytes), path,
-content digest; refs: the campaign, the approving entry, any
-receipt-check reports), `comment`.
-
-**Acts.** `plan`, `brief`, `draft`, `revise` (resets `approved` to
-`drafted`: a changed text needs a new approval), `comment`, `approve`
-(fixes the revision), `publish` (guard: `approved` at the current
-revision; sends `publish-file` with the text at the post's path, with a
-result clause that writes the admission outcome from the destination's
-result; moves to `publishing`), `report-receipt-check` (any member;
-attributed), `record-posting`
-(for other channels, with the link), `retire` (sends the notice and the
-index rewrite as publications of their own).
-
-**Timed rules.** Two days before a post's date without approval:
-attention to the owner. A post past its date and not published:
-attention to the owner. No invented state either way.
-
-**Views.** The calendar carousel for the owner (upcoming posts needing
-approval or publication), the post card (text, channel, date; Approve;
-Publish when approved), the campaign record, the log of admitted publications with receipt
-checks by name, and pending and unknown ones shown apart.
-
-### 6.4 What it needs
-
-Nothing beyond today's forms and today's publication: the site is a
-repository, so publishing a post is the same operation the lending
-library's shelf uses. Posting to channels outside Git stays a recorded
-statement. This is the smallest of the three and the first to build,
-and it can run for dap's own site.
-
-## 7. How they are built
-
-Each is a package installed into a room, as the grow package is:
-definitions, declared projections and views, no view code in the host.
-The prospect room and the calendar are one scope each. The bid response
-is two scopes, the bid and the answer library, and a third for pricing
-when a team wants it. All three run in the kit's test host first, with a
-scenario that `dap check` replays, and then on the hosting deployment
-as rooms a person joins from their AI app.
-
-The views are the declared kinds the grow room uses: `carousel` for what
-needs the viewer, `card` for one item with at most two acts, `record`
-for a full item, `log` for entries. The routing rule of the bid
-requirement carousel is the grow room's routing rule with the domain
-grant in place of presence.
+**Needs.** Nothing beyond today's forms and today's publication. This
+is the smallest of the three and the first to build, and it can run for
+dap's own site.
 
 ## 8. Order and slices
 
@@ -626,45 +392,44 @@ estimates from the grow slices.
 
 | Slice | What | Done when | Size |
 |---|---|---|---|
-| C1 | The marketing calendar: definitions, scenario, views, publication to a site repository | a post planned in the room is approved, published to a test destination and read back; a late post reaches the owner's carousel | 2 days |
+| C1 | The marketing calendar: definitions, scenario, views, publication to a site repository | a post planned in the room is approved, published to a test destination and admitted, with a member's check recorded by name; a refused result leaves the post refused with its reason; a late post reaches the owner's carousel; a twenty-fifth post and an oversized text are refused by name | 2 days |
 | C2 | The prospect room: definitions, scenario, views; the prospect as an invited member | an account goes from research to a proposal accepted by a member in the test host; the five-day rule reaches the owner | 2 days |
-| C3 | The bid response: definitions in two scopes, the intake agent's decomposition and rendering, routing by domain, approvals, assembly and submission with publication | a two-sheet request of forty rows is decomposed into requirements, three rows remapped by the owner and a duplicate refused; a fifty-one-row request, an oversized cell, an oversized answer and a second import into the same bid room are each refused by name; assembly is refused while a mapping is proposed, while a row is unresolved, while an approval is missing and while the terms approval is stale; then all forty rows are reviewed or declined with reasons, six of them supplied by asked experts across three domains, an unsourced roadmap claim is refused, both approvals are opened and granted at their current revisions, the answers are rendered back in the request's layout, assembled and submitted; the submission stays pending until the destination's result admits it, a member's receipt check is recorded with their name, and no state claims the file published | 5 days |
+| C3 | The bid response: definitions in two scopes, the intake agent's decomposition and rendering, routing by domain, approvals, assembly and submission | a two-sheet request of forty rows is decomposed, three rows remapped and a duplicate refused; oversized and second imports refused by name; assembly refused while a mapping is proposed, a row unresolved or an approval missing or stale; then every row reviewed or declined, six supplied by asked experts across three domains, an unsourced roadmap claim refused, both approvals granted, the answers rendered back, assembled and submitted, the submission admitted and a member's receipt check recorded by name | 5 days |
 | C4 | The hosted rooms and a page for each on the homepage, after the demo-room pattern of plan 033 | a person in their AI app takes an act in each | 2 days |
 
 Named and deferred: custody for documents; private price views; the
-buyer as a member; requests over fifty rows, and longer texts and
-answers; deleting published files; a native completion protocol for
-publication, in which the destination's later receipt reaches the room
-as its own authenticated fact; integrations, which wait for the general
-design of outside operations; the answer library as a shared resource
-across bid rooms; the roll-up of many prospect accounts or bids under a
-site.
+buyer as a member; requests over fifty rows, longer texts, and more
+than twenty-four posts a quarter; deleting
+published files; a native completion protocol for publication, in
+which the destination's later receipt reaches the room as its own
+authenticated fact; integrations, which wait for the general design of
+outside operations; the answer library as a shared resource across bid
+rooms; the roll-up of many prospect accounts or bids under a site.
 
 ## 9. Open questions
 
-1. **When the buyer joins.** The first version keeps the buyer outside
-   the room and records their words as the owner's reports. A later
-   version may invite them, so their answers are their own acts; that
-   version needs either a separate buyer room or private views, since a
-   member reads the whole record, price included.
+1. **When the buyer joins.** A later version may invite the buyer so
+   their answers are their own acts; that version needs a separate
+   buyer room or private views, since a member reads the whole record.
 2. **The answer library's authority.** Who may supply a library answer
    outside a bid, and whether a supply in one bid refreshes the library
    automatically or by a separate act.
-3. **Integrations.** Out of scope for all three. Outreach, chasing,
-   posting to channels and writing to a sales system stay members'
-   statements until the general design of outside operations exists;
-   no point integration is built for one application.
-4. **Publication completion.** The record sees a request admitted and
-   a member's check of the receipt file. Whether the first users need
-   the room itself to know the file is on the site, and so need the
-   completion protocol before the calendar is useful, is a question for
-   them.
-5. **The mapping's confirmation.** Whether the owner confirms every
-   row the agent mapped, or only the rows the agent flagged, is a
-   question of how good the decomposition is on real requests. The
-   first version asks for the flagged rows only and records the rest as
-   the agent's proposal.
-6. **Many accounts, one owner.** The prospect room keeps all of one
-   owner's accounts in one scope. A team of sellers wants one scope per
-   seller or private views; the roll-up for a manager is a site-level
+3. **Publication completion.** Whether the first users need the room
+   itself to know the file is on the site, and so need the completion
+   protocol before the calendar is useful.
+4. **The mapping's confirmation.** Whether the owner confirms every row
+   the agent mapped, or only the flagged ones. The first version asks
+   for the flagged rows only.
+5. **Many accounts, one owner.** A team of sellers wants one scope per
+   seller or private views; the manager's roll-up is a site-level
    projection, as the grow site reads its rooms.
+
+## Sources
+
+Personal agents, read 19 October 2026:
+[OpenAI Dots](https://www.vellum.ai/blog/official-openai-dots-breakdown),
+[Meta Muse](https://www.vellum.ai/blog/official-muse-breakdown),
+[Hermes Agent](https://www.vellum.ai/blog/official-hermes-agent-breakdown).
+Markets: the roundups linked in section 3, plus
+[a solo-founder prospecting review](https://www.crono.one/academy/ai-tools-for-sales-prospecting/)
+and [a small-team calendar review](https://storyflow.so/blog/best-content-calendar-tools-2026).
