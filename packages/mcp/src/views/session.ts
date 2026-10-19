@@ -141,7 +141,7 @@ export class ViewSessions {
       entriesRead: entries, presented: entries.map((range) => ({ ...range })),
       reviewIntended: query.page === "updates" ? structuredClone(card?.reviewIntended ?? []) : [],
       unavailable: structuredClone(card?.unavailable ?? []), waitsOn: [...(card?.waitsOn ?? [])], settles: [...(card?.settles ?? [])],
-      navigation: query.page === "summary" ? [...(projection.position > 0 ? ["previous"] : []), ...(projection.position + 1 < projection.count ? ["next"] : []), ...(card ? ["open"] : [])] : ["back", ...(card?.diffAvailable && query.page === "item" ? ["diff"] : [])],
+      navigation: query.page === "summary" ? [...(projection.status !== "ready" && projection.back ? ["back"] : []), ...(projection.position > 0 ? ["previous"] : []), ...(projection.position + 1 < projection.count ? ["next"] : []), ...(card && projection.status === "ready" ? ["open"] : [])] : ["back", ...(card?.diffAvailable && query.page === "item" ? ["diff"] : [])],
       ...(card?.declared ? { note: card.declared.context } : {}),
       ...(instance.receipt ? { receipt: instance.receipt } : {}),
     };
@@ -153,12 +153,14 @@ export class ViewSessions {
     return structuredClone({ view: instance.key, cut: instance.cut, active: this.#active(instance), query, status: projection.status, position: projection.position, count: projection.count,
       ...(displayedCard ? { card: displayedCard } : {}), fallback: projection.fallback, context,
       ...(projection.scope ? { scope: projection.scope } : {}),
+      ...(projection.back ? { back: projection.back } : {}),
+      ...(projection.refresh ? { refresh: projection.refresh } : {}),
       ...(projection.data ? { data: projection.data } : {}),
       ...(projection.surface ? { surface: projection.surface } : {}),
       ...(instance.receipt ? { receipt: instance.receipt } : {}) });
   }
   display(key: string) { return this.#display(this.#instance(key)); }
-  async read(key: string, cut?: number, move?: { position?: number; page?: PageKind }): Promise<Display> {
+  async read(key: string, cut?: number, move?: { position?: number; page?: PageKind; refresh?: boolean }): Promise<Display> {
     const instance = this.#instance(key);
     if (move) {
       this.#admit(instance, cut ?? -1);
@@ -176,7 +178,8 @@ export class ViewSessions {
       const query = { ...instance.query, position, page };
       instance.busy = true;
       try {
-        const projection = checked(structuredClone(await this.source.read(query, this.access)), query);
+        const reading: ViewQuery = { ...query, ...(this.source.declared && move.refresh === true && move.position === undefined && move.page === undefined ? { refresh: true as const } : {}) };
+        const projection = checked(structuredClone(await this.source.read(reading, this.access)), query);
         this.#admit(instance, cut ?? -1);
         if (projection.card) {
           const pending = instance.pending.get(this.#itemKey(projection.card));
@@ -185,7 +188,7 @@ export class ViewSessions {
             projection.card.actions = [pending];
           }
         }
-        instance.query = query;
+        instance.query = { ...query, position: projection.position };
         instance.projection = projection;
         instance.cut++;
       } catch (error) {
@@ -214,19 +217,19 @@ export class ViewSessions {
     if (!declaration || instance.query.screen !== screen) throw new ViewError("shape", "This view declares no such input act.");
     let fields;
     try { fields = decodeViewParameters(declaration.parameters, values); }
-    catch { throw new ViewError("shape", "The measurements do not fit the declared fields, precision or limits; no request was signed."); }
+    catch { throw new ViewError("shape", "The supplied values do not fit the declared fields, precision or limits; no request was signed."); }
     const meaning = canonicalize({ screen, actionId, item, revision, fields });
     const old = instance.inputs.get(request);
     if (old) {
-      if (old.meaning !== meaning) throw new ViewError("shape", "This request key already names different measurements. No successor was signed.");
+      if (old.meaning !== meaning) throw new ViewError("shape", "This request key already names different values. No successor was signed.");
       return old.outcome;
     }
-    if (instance.inputs.size >= 32) throw new ViewError("busy", "This view retains 32 measurement requests. Open a new view.");
+    if (instance.inputs.size >= 32) throw new ViewError("busy", "This view retains 32 input requests. Open a new view.");
     const outcome = (async () => {
       const card = instance.projection.card;
       if (!card || card.identity.item !== item || card.identity.revision !== revision) throw new ViewError("stale", "The selected item or revision changed. Read the card again; no request was signed.");
       const offered = card.actions.find(action => action.id === actionId && action.parameters);
-      if (!offered) throw new ViewError("stale", "This card no longer offers that measurement act; no request was signed.");
+      if (!offered) throw new ViewError("stale", "This card no longer offers that input act; no request was signed.");
       const action = { ...offered, parameterInput: structuredClone(values), args: { ...offered.args,
         fields: { ...(offered.args["fields"] as Record<string, unknown> | undefined), ...fields } } };
       const cut = instance.cut;

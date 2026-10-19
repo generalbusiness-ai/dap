@@ -12,7 +12,7 @@ import type { CallResult } from "../src/service.ts";
 const scope: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "lane" };
 const membership: ScopeRef = { ...scope, kind: "membership" };
 const rule = "'counting.control' in viewer.grants and item.state = 'open' and ((viewer.member.member = '@alice' and item.id = 2) or (viewer.member.member = '@bob' and item.id = 4))";
-async function fixture(condition = rule, related = false) {
+async function fixture(condition = rule, related = false, outcome: "accepted" | "unknown" = "accepted") {
   const base = await applicationCounterPacket2(), board = base.package.presentation.views["board"]!;
   if (board.kind === "surface") throw Error("Item fixture required.");
   const definition = parseStrict(base.package.semantic.definitions[0]!.bytes) as DeclaredDefinition;
@@ -55,7 +55,7 @@ async function fixture(condition = rule, related = false) {
   let signed = 0;
   const sessions = new ViewSessions(source, { call: async () => { throw Error("No host application code runs."); } }, async (_kind, _args, admit) => {
     await admit(); signed++;
-    return { structuredContent: { answer: "accepted" }, content: [], isError: false } satisfies CallResult;
+    return { structuredContent: { answer: outcome }, content: [], isError: false } satisfies CallResult;
   }, async () => { throw Error("No original request is unresolved."); });
   return { source, sessions, queries, signed: () => signed, viewer: (value: typeof viewer) => { viewer = value; },
     rows: (value: typeof rows) => { rows = value; head++; }, relatedFailure: (value: typeof relatedFailure) => { relatedFailure = value; } };
@@ -81,7 +81,7 @@ test("carousel routes from trusted member, grants and item state without exposin
 });
 
 test("declared root reads retain both heads and recheck current routing without caller scope or item bindings", async () => {
-  const f = await fixture(`${rule} and reads.roster.sources.board[id = 4].fields.lastNumber = 44`, true);
+  const f = await fixture(`(${rule}) ? (reads.roster.sources.board[id = 4].fields.lastNumber = 44 ? true : null) : false`, true);
   const child: ScopeRef = { ...scope, scope: `sc_${"d".repeat(51)}a`, inc: `in_${"d".repeat(25)}a` };
   await f.sessions.open("related", "queue", undefined, undefined, child);
   const display = f.sessions.display("related");
@@ -98,7 +98,7 @@ test("declared root reads retain both heads and recheck current routing without 
     { id: 2, type: "board", state: "open", revision: 1, fields: { lastNumber: 11 } },
     { id: 4, type: "board", state: "open", revision: 2, fields: { lastNumber: 45 } },
   ]);
-  await expect(f.sessions.act("related", display.cut, "pause")).rejects.toMatchObject({ reason: "stale" });
+  await expect(f.sessions.act("related", display.cut, "pause")).rejects.toMatchObject({ reason: "unavailable" });
   expect(f.signed()).toBe(0);
   for (const failure of ["scope", "projection", "forbidden"] as const) {
     f.relatedFailure(failure);
@@ -114,6 +114,34 @@ test("a changed route at unchanged native item revision refuses before signing",
   expect(f.signed()).toBe(0);
 });
 
+test("automatic refresh recovers a shortened member queue without retargeting explicit navigation or stale acts", async () => {
+  const f = await fixture("'counting.control' in viewer.grants and item.state = 'open'");
+  await f.sessions.open("shortened", "queue");
+  const last = await f.sessions.read("shortened", 0, { position: 1 });
+  expect(last.card?.identity.item).toBe("4");
+  f.rows([{ id: 2, type: "board", state: "open", revision: 1, fields: { lastNumber: 11 } }]);
+  await expect(f.sessions.read("shortened", last.cut, { position: 1 })).rejects.toMatchObject({ reason: "shape" });
+  const refreshed = await f.sessions.read("shortened", last.cut, { refresh: true });
+  expect(refreshed).toMatchObject({ position: 0, count: 1, query: { position: 0 }, card: { identity: { item: "2" } } });
+  expect(refreshed.query.refresh).toBeUndefined();
+  await expect(f.sessions.act("shortened", last.cut, "pause")).rejects.toMatchObject({ reason: "stale" });
+  expect(f.signed()).toBe(0);
+});
+
+test("automatic member-queue refresh retains an unknown original even when current routing selects another item", async () => {
+  const f = await fixture("'counting.control' in viewer.grants", false, "unknown");
+  await f.sessions.open("unknown", "queue");
+  const current = f.sessions.display("unknown");
+  const unknown = await f.sessions.act("unknown", current.cut, "pause");
+  f.rows([{ id: 4, type: "board", state: "open", revision: 1, fields: { lastNumber: 44 } }]);
+  expect((await f.source.read({ screen: "queue", page: "summary", position: 0 })).card?.identity.item).toBe("4");
+  const retained = await f.sessions.read("unknown", unknown.display.cut, { refresh: true });
+  expect(retained.card?.identity.item).toBe("2");
+  expect(retained.card?.unresolvedOriginal).toBe(true);
+  expect(retained.card?.actions.map(action => action.purpose)).toEqual(["check-original"]);
+  expect(f.signed()).toBe(1);
+});
+
 test("missing or foreign viewer and nonboolean or failed rules stay unavailable", async () => {
   for (const viewer of [null, { member: { membership: { ...membership, inc: `in_${"b".repeat(25)}a` as const }, member: "@alice" as const }, grants: ["counting.control"] }]) {
     const f = await fixture(); f.viewer(viewer);
@@ -121,7 +149,11 @@ test("missing or foreign viewer and nonboolean or failed rules stay unavailable"
   }
   for (const condition of ["item.missing", "'yes'", "$substring(1, 0)"]) {
     const f = await fixture(condition);
-    await expect(f.source.read({ screen: "queue", page: "summary", position: 0 })).rejects.toMatchObject({ reason: "unavailable" });
+    await f.sessions.open("unknown-membership", "queue");
+    const display = f.sessions.display("unknown-membership");
+    expect(display).toMatchObject({ status: "unavailable", card: { title: "Assignment unavailable", identity: { item: "2" }, actions: [],
+      declared: { actor: null } }, context: { projection: [{ scope: scope.scope, seq: 9 }] } });
+    expect(display.card?.declared?.data).toBeUndefined(); expect(display.card?.reasons).toEqual([]);
   }
   await expect(fixture("$number('wrong')")).rejects.toThrow("Only the named pure profile functions can be called");
 });

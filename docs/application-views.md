@@ -69,6 +69,69 @@ item IDs break ties in ascending order. Sorting selects the presentation
 row without changing the native projection's row order. Partial item reads,
 text fields and other view kinds cannot declare this order.
 
+## Member queues
+
+A carousel over a complete `many` item source may declare `for`:
+
+```json
+"for": "'grow.heat' in viewer.grants and item.state = 'open'"
+```
+
+The host admits this expression under `restricted@1`. Its input contains:
+
+- `viewer.member`: the authenticated native member reference, including its
+  full membership scope. A display handle does not establish this identity.
+- `viewer.grants`: that member's current held actions.
+- `item`: the selected row's projected fields and its `id`, `type`, `state`
+  and `revision` metadata.
+- `scope`: the verified full scope of the primary projection.
+- `reads`: any named related projection results declared below.
+
+This nested input belongs to `for`. An act's `when` still uses the selected
+row's flat fields and metadata. Neither expression supplies native authority.
+The caller cannot override the viewer, grants or related-read bindings.
+
+A routed carousel may declare one to four related reads:
+
+```json
+"reads": {
+  "presence": { "projection": "presence", "scope": "installation" }
+}
+```
+
+Each name binds to an existing projection of the package's entry definition,
+read at the installation's root scope. Related reads accept no caller scope
+or item selectors; projections with explicit-item sources cannot bind here.
+The rule receives the native result at `reads.presence`, including its
+`scope`, `at` and `sources`. These reads use normal native sessions, limits
+and access checks. Each contributes an exact scope/head to the card. They
+are separate read points, without an atomic snapshot across scopes.
+
+`true` includes an item and `false` excludes it. Missing or nonboolean
+evidence and evaluation failures leave an unavailable placeholder. It keeps
+the native item identity and read points, with no unassigned body, actor or
+acts. An unknown result never becomes an empty queue. The app offers a read
+retry and expandable read points. Missing authenticated viewer identity
+refuses the opening.
+
+The host rechecks current routing immediately before signing. A false or
+unknown result refuses the old control even when the item revision is
+unchanged. Native grants and guards still judge the signed act. Explicit
+record-by-id views bypass routing and retain ordinary read and act admission.
+
+Routed app displays omit the complete native source data held by the server;
+they do not present a filtered array as a complete native projection. Model
+context carries declared context, identity, read points, navigation and receipts. Automatic
+refresh recovers to the first item if the current queue position disappears.
+Explicit navigation is not silently redirected, and an unknown original
+request keeps its captured card and check. Empty queues retain declared Back
+navigation and the refresh interval, so later items can appear.
+
+The [Grow declarations](../examples/grow/check/dap.application.json) contain
+separate alert, task and watering carousels. Their first presence rule uses
+only the declared last-100 Site entries. A covered arrival and matching
+leave can establish a result; older evidence stays unavailable.
+
 ## Fact timestamps and display ages
 
 An item projection can select the recorded time of one native fact-ref slot:

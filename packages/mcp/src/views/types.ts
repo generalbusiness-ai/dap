@@ -88,6 +88,8 @@ export interface ViewQuery {
   position: number;
   page: PageKind;
   items?: Readonly<Record<string, number>>;
+  /** Host-only automatic read hint; never retained or used for signing. */
+  refresh?: true;
 }
 export interface Projection {
   status: "ready" | "empty" | "unavailable" | "denied" | "absent" | "incomplete" | "stale";
@@ -101,6 +103,8 @@ export interface Projection {
   /** Exact read metadata remains available without exposing source rows. */
   scope?: ScopeRef;
   points?: ReadPoint[];
+  back?: { screen: string; scope: ScopeRef };
+  refresh?: number;
   surface?: DeclaredSurface;
 }
 /** A trusted application's projection adapter. Reads use the service's normal authenticated tool path. */
@@ -148,6 +152,8 @@ export interface Display {
   fallback: string;
   data?: ApplicationProjectionData;
   scope?: ScopeRef;
+  back?: { screen: string; scope: ScopeRef };
+  refresh?: number;
   surface?: DeclaredSurface;
   context: CardContext;
   receipt?: string;

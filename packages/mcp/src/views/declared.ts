@@ -97,11 +97,12 @@ export class DeclaredViewSource implements ViewSource {
     let rows = view.kind !== "surface" && view.order ? orderedViewRows(nativeRows, view.order) : nativeRows;
     if (rows.some(row => isApplicationJournalSource(projection.sources[view.item]!) !== !!row.entry)) throw new ViewError("unavailable", "The read confused journal entries with native items.");
     const routed = view.kind === "carousel" && !!view.for;
+    const unknown = new Set<number>();
     const points = [{ scope: selection.scope.scope, ...reply.value.at }];
     if (view.kind === "carousel" && view.for) {
       const viewer = await this.port.viewer?.();
       if (!viewer || !isMemberRef(viewer.member) || canonicalize(viewer.member.membership) !== canonicalize(install.membership)
-        || !Array.isArray(viewer.grants) || viewer.grants.some(grant => typeof grant !== "string")) throw new ViewError("unavailable", "The authenticated carousel viewer is unavailable.");
+        || !Array.isArray(viewer.grants) || viewer.grants.some(grant => typeof grant !== "string")) throw new ViewError("unavailable", "Your member identity is unavailable. Refresh before opening this queue.");
       const reads: Record<string, ApplicationProjectionData> = {};
       for (const [name, read] of Object.entries(view.reads ?? {})) {
         const related = await this.#projection({ v: 1, scope: install.scope, directory: install.directory, install: install.item, projection: read.projection, items: {} });
@@ -114,14 +115,14 @@ export class DeclaredViewSource implements ViewSource {
         try { result = (await evaluate(view.for, { viewer, item: input(row), scope: reply.value.scope, reads })).value; }
         catch (error) {
           if (!(error instanceof RuleEvalError)) throw error;
-          throw new ViewError("unavailable", "The declared carousel rule is unavailable.");
+          result = null;
         }
-        if (result !== true && result !== false) throw new ViewError("unavailable", "The declared carousel rule must return a boolean.");
-        if (result) selected.push(row);
+        if (result !== true && result !== false) unknown.add(row.id);
+        if (result !== false) selected.push(row);
       }
       rows = selected;
     }
-    return { view, root: install.scope, scope: selection.scope, definition: projection.definition, reply, rows, routed, points };
+    return { view, root: install.scope, scope: selection.scope, definition: projection.definition, reply, rows, routed, points, unknown };
   }
   /** Only selected native item metadata and ref slots resolve subjects. This
    * is not an Item read and supplies no opened/attributed or review claim. */
@@ -172,13 +173,27 @@ export class DeclaredViewSource implements ViewSource {
     return { label: series.label, scale: series.scale, unit: series.unit, window, samples, fallback };
   }
   async read(query: ViewQuery): Promise<Projection> {
-    const { view, root, scope, definition, reply, rows, routed, points } = await this.#read(query);
+    const { view, root, scope, definition, reply, rows, routed, points, unknown } = await this.#read(query);
     const backScope = this.#backScope(view, scope, root), surface = this.#surface(query.screen, view, backScope);
-    if (!rows.length) return { status: "empty", position: 0, count: 0, scope, points, ...(!routed ? { data: reply.value } : {}),
+    const navigation = view.back ? { back: { screen: view.back, scope: backScope } } : {};
+    if (!rows.length) return { status: "empty", position: 0, count: 0, scope, points, refresh: view.refresh, ...navigation, ...(!routed ? { data: reply.value } : {}),
       ...(surface ? { surface } : {}),
       fallback: view.kind === "log" ? "This declared log has no matching entries in its recent window." : "This declared view has no matching items." };
-    if (!Number.isSafeInteger(query.position) || query.position < 0 || query.position >= rows.length) throw new ViewError("shape", "The declared view position is outside its complete projection.");
-    const row = rows[query.position]!, values = input(row), waiting = Object.hasOwn(view.waiting, row.state) ? template(view.waiting[row.state]!, row, "") : "";
+    const position = routed && query.refresh === true && Number.isSafeInteger(query.position) && query.position >= rows.length ? 0 : query.position;
+    if (!Number.isSafeInteger(position) || position < 0 || position >= rows.length) throw new ViewError("shape", "The declared view position is outside its complete projection.");
+    const row = rows[position]!;
+    if (unknown.has(row.id)) {
+      const fallback = "The available evidence does not establish whether this item is for you. Refresh after the evidence is updated.";
+      const card: Card = {
+        identity: { item: String(row.id), kind: row.type, revision: String(row.revision), subject: { scope: scope.scope, item: row.id }, at: { on: row.revision } },
+        title: "Assignment unavailable", summary: `Item ${row.id}: the available evidence does not establish whether this is for you.`, reasons: [],
+        projection: points, reviewIntended: [], unavailable: [], waitsOn: [fallback], settles: [], actions: [], fallback,
+        declared: { kind: view.kind, source: view.item, context: fallback, actor: null, refresh: view.refresh, display: view.display,
+          back: view.back, backScope, scope, routed: true, data: reply.value },
+      };
+      return { status: "unavailable", position, count: rows.length, scope, points, refresh: view.refresh, ...navigation, card, fallback };
+    }
+    const values = input(row), waiting = Object.hasOwn(view.waiting, row.state) ? template(view.waiting[row.state]!, row, "") : "";
     const fallback = template(view.fallback, row, waiting), actions = await this.#allowed(view, row, reply.value, scope, definition);
     const now = this.port.now?.() ?? Date.now();
     const series = this.#series(view, row, reply.value);
@@ -204,13 +219,14 @@ export class DeclaredViewSource implements ViewSource {
         }) } : {}),
         ...(surface ? { resource: surface.resource, opens: surface.opens, surface } : {}) },
     };
-    return { status: "ready", position: query.position, count: rows.length, scope, points, card, fallback };
+    return { status: "ready", position, count: rows.length, scope, points, refresh: view.refresh, ...navigation, card, fallback };
   }
   /** Called by the mounted-view host inside the custody build, immediately
    * before signing. Native expected revisions and grants still judge submit. */
   async admit(query: ViewQuery, card: Card, action: CardAction): Promise<void> {
-    const { view, scope, definition, reply, rows } = await this.#read(query);
+    const { view, scope, definition, reply, rows, unknown } = await this.#read(query);
     const row = rows.find(row => row.id === card.identity.subject.item);
+    if (row && unknown.has(row.id)) throw new ViewError("unavailable", "The available evidence does not establish whether this item is for you. No request was signed.");
     if (!row || card.identity.subject.scope !== scope.scope || canonicalize(card.declared?.data.scope ?? null) !== canonicalize(scope)
       || String(row.revision) !== card.identity.revision) throw new ViewError("stale", "The declared item changed. Refresh before acting; no new request was signed.");
     const actions = await this.#allowed(view, row, reply.value, scope, definition);

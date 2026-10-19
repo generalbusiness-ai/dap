@@ -112,7 +112,11 @@ test("member queues route native alerts, present tender work and watering decisi
       return result.structuredContent["display"] as Display;
     };
     // No covered arrival or matching leave is unknown, never an empty queue.
-    await expect(day.source.read({ screen: "tasks", page: "summary", position: 0, scope: session.scope.at })).rejects.toMatchObject({ reason: "unavailable" });
+    const unknown = await open(day, "tasks", "unknown-presence");
+    expect(unknown).toMatchObject({ status: "unavailable", count: 1, card: { title: "Assignment unavailable", identity: { item: String(task.id) }, actions: [] } });
+    expect(unknown.card?.declared?.data).toBeUndefined();
+    expect(unknown.context.projection).toContainEqual({ scope: session.site.at.scope, ...session.site.state.scope()!.head });
+    expect(JSON.stringify(unknown)).not.toContain("Check vent 2's actuator");
     await present("day", "arrive", roomA.id); await present("night", "arrive", roomB.item);
     const expected = { operator: [1, 0, 0], day: [0, 1, 0], head: [0, 0, 1] };
     const displays: Record<string, Display> = {};
@@ -136,8 +140,14 @@ test("member queues route native alerts, present tender work and watering decisi
     expect((await day.service.call("view_act", { view: "day-tasks", cut: stale.cut, action: "take-task" })).isError).toBe(true);
     expect(day.signatures()).toBe(0); expect(session.scope.state.item(task.id)!.revision).toBe(task.revision);
     expect((await open(day, "tasks", "left-room")).count).toBe(0);
+    await present("day", "arrive", roomA.id);
+    const beforeCoverageLoss = await open(day, "tasks", "coverage-loss");
     for (let i = 0; i < 100; i++) await present("night", "arrive", roomB.item);
-    await expect(day.source.read({ screen: "tasks", page: "summary", position: 0, scope: session.scope.at })).rejects.toMatchObject({ reason: "unavailable" });
+    expect((await day.service.call("view_act", { view: "coverage-loss", cut: beforeCoverageLoss.cut, action: "take-task" })).isError).toBe(true);
+    expect(day.signatures()).toBe(0); expect(session.scope.state.item(task.id)!.revision).toBe(task.revision);
+    const uncovered = await open(day, "tasks", "uncovered-presence");
+    expect(uncovered).toMatchObject({ status: "unavailable", count: 1, card: { identity: { item: String(task.id) }, actions: [] } });
+    expect(uncovered.context.projection).toContainEqual({ scope: session.site.at.scope, ...session.site.state.scope()!.head });
     await present("day", "leave", roomA.id);
     expect((await open(day, "tasks", "covered-negative")).count).toBe(0);
     await present("day", "arrive", roomA.id); await present("day", "leave", roomB.item);
@@ -165,6 +175,9 @@ test("member queues route native alerts, present tender work and watering decisi
     expect(reported.isError, JSON.stringify(reported)).toBe(false); expect(day.signatures()).toBe(2);
     expect(reported.structuredContent["receipt"]).toContain("accepted"); expect(JSON.stringify(reported)).not.toContain("sources");
     expect(session.scope.state.item(task.id)).toMatchObject({ state: "done", values: { report: "Freed the jammed vane by hand." } });
+    const empty = await day.service.call("view_read", { view: "current-task" });
+    expect(empty.structuredContent["display"]).toMatchObject({ status: "empty", count: 0, refresh: 2000,
+      back: { screen: "grid", scope: session.scope.at }, context: { navigation: ["back"] } });
 
     const water = displays["head-watering-requests"]!; head.actions([]);
     expect((await head.service.call("view_act", { view: "head-watering-requests", cut: water.cut, action: "approve-watering" })).isError).toBe(true);
