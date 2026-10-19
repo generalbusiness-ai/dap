@@ -448,3 +448,21 @@ or package/lock changes. No frozen G3 source or evidence was changed.
 G5a contract decisions and the separate durable-presence request remain
 pending and take priority over final P1. This is integration evidence,
 not a P1 gate or completion claim.
+
+The lifetime matrix now also covers a room retired through the Site's
+selected-room reference. Its selection and retirement are native-valid
+acts. The graph refuses `fan-in-unproved`, pack signs nothing, and an
+independently signed package is refused at the public byte boundary. This
+strengthens the existing lifetime witness without adding another test.
+All ten graph cases pass in
+`/tmp/artroom-p1-alias-lifetime-20261019.log`; the derive compiler targets
+pass in `/tmp/artroom-p1-alias-lifetime-types-20261019.log`.
+
+One targeted control omits final-state writers with an explicit subject
+from the lifetime proof. The new selected-room variant then wrongly
+receives no finding and fails its unchanged assertion: nine cases pass,
+one fails. Restoring the exact original bytes returns ten passes. Driver
+and inputs are `/tmp/artroom-p1-alias-lifetime-control-20261019.py` and
+the matching directory; `result.json` records both source and test hashes.
+The original control process 17458 closed with exit zero. This was a
+single proof control, not a mutation sweep.

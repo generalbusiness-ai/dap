@@ -31,6 +31,16 @@ function lifetimeVariants(): { name: string; input: PackageGraphInput }[] {
       parent.acts["retire"] = { step: "transition", on: "room", grant: "grow.configure", fields: {}, also: {},
         guards: [{ state: ["active"] }], effects: [{ state: "failed" }], sends: [], attention: [] };
     }) },
+    { name: "retiring a backing slot through the Site's selected room", input: grow(parent => {
+      parent.items["site"]!.refs["selected"] = { fixed: false, required: false, to: { type: "item", of: "room" } };
+      parent.acts["select-room"] = { step: "transition", on: "site", grant: "grow.configure",
+        fields: { room: { type: "item", of: "room", required: true } }, also: {}, guards: [],
+        effects: [{ ref: { slot: "selected", from: { field: "room" } } }], sends: [], attention: [] };
+      parent.acts["retire-selected-room"] = { step: "transition", on: "site", grant: "grow.configure", fields: {},
+        also: { selected: { item: "room", via: { of: "on", slot: "selected" } } },
+        guards: [{ of: "also.selected", state: ["active"] }],
+        effects: [{ of: "also.selected", state: "failed" }], sends: [], attention: [] };
+    }) },
     { name: "repeated creation from the singleton Site", input: grow((parent, child) => {
       backup(parent); birthKinds(child, ["open-backup-slot"]);
       const creator = parent.acts["create-room"]!;
