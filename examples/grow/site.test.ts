@@ -7,7 +7,7 @@ import { definitionDigest } from "@generalbusiness/artroom-bytes";
 import { site } from "./site.ts";
 import { sitePresence } from "./presence.ts";
 import { room } from "./room.ts";
-import { nativeScenario, nativeChild, devicePermissions, operator, climate, sensors, on, replay, submit, type Ledger } from "./test-support.ts";
+import { nativeCreatedSite, nativeChild, devicePermissions, operator, climate, sensors, on, replay, submit, type Ledger } from "./test-support.ts";
 const night = { ...keys.sam, principal: operator.member };
 const permissions = [...devicePermissions, [keys.rita, ["grow.tend"]], [night, ["grow.tend"]]] as const;
 const wrote = (result: { result: string }) => expect(result).toMatchObject({ result: "write" });
@@ -15,16 +15,8 @@ async function setup(childDefinition = room) {
   const parentDefinition = structuredClone(site), send = parentDefinition.acts["create-room"]!.sends[0]!;
   if (!("create" in send)) throw new Error("site fixture requires a declared create send");
   send.create.definition = definitionDigest(childDefinition);
-  // A declared application Site is a native Lane, born through a real create.
-  // The tiny Directory launcher and per-key authority remain explicit fixtures.
-  const launcherDefinition = structuredClone(site);
-  launcherDefinition.name = "test.grow-site-launcher";
-  launcherDefinition.acts["establish"]!.sends = [{ create: { kind: "lane", definition: definitionDigest(parentDefinition), fields: { label: { field: "label" } }, result: {} } }];
-  const launcher = nativeScenario(launcherDefinition, permissions, { label: "Test grow site" });
-  const parent = await nativeChild(launcher, 0, parentDefinition, permissions, 19), rooms: Ledger[] = [], rows: number[] = [];
-  wrote(deliver(launcher, parent, 0));
-  wrote(deliver(parent, launcher, launcher.last.seq));
-  expect(parent.at.kind).toBe("lane");
+  const { launcher, site: parent } = await nativeCreatedSite(parentDefinition, permissions, { label: "Test grow site" });
+  const rooms: Ledger[] = [], rows: number[] = [];
   for (const label of ["Room A", "Room B", "Room C"]) {
     wrote(await submit(parent, operator, "create-room", { fields: { label } })); const row = parent.last.seq;
     expect(parent.item(row)).toMatchObject({ state: "pending", refs: { scope: null }, values: { openAlerts: null } });

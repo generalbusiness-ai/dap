@@ -259,3 +259,36 @@ browser resources were regenerated from their source. The M2b final gate and
 independent review remain owed. Source M2a remains frozen while checker
 completes the two queued design reviews; checker requested no additional
 Source runs.
+
+## First full gate and the remaining Site fixture
+
+The first M2b gate at 205a7460062b375fb0dcea77bc75b6571850af99, tree
+4f23f3c66f6b335f25a286081a317378e1ed20b5, ended with one assertion failure:
+the long four-zone Grow fault test still founded Site as a Directory. Its Room
+birth was correctly refused with bad-field after Room's Site reference became
+a Lane. This was a missed owning fixture; no production refusal was relaxed.
+383 files and 1,867 tests passed, one file/test failed, one file and three tests
+were skipped. The chained Node and Counter checks were not reached.
+
+Original PTY 48505, terminal b02a1b, exit 1. Gate log
+`/tmp/artroom-m2b-gate-final-20261018.log`, outer time
+`/tmp/artroom-m2b-gate-outer-20261018.time`, raw captures
+`/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.jHWKA9L8x9/`.
+The outer command measured 501.02 seconds elapsed and 696.60 seconds CPU,
+including child processes. The printed typecheck measured 8.3 seconds elapsed
+and 31.6 seconds CPU; the test step measured 492.41 elapsed and 664.69 CPU.
+Vitest's 610.15-second test sum is not pipeline duration. This is a shared
+arm64 Mac with an adopted private COW dependency view and prior focused runs;
+load was sampled during the gate at 2.56/2.89/2.49, not held constant or
+measured over the pipeline. No package install ran. Whole-edit CPU and elapsed
+time were not measured.
+
+The existing judged Site Lane launcher is now shared by the Site tests and
+the long Room fault test. Both include the actual launcher journal in replay.
+There is no handmade Lane genesis or duplicated launcher implementation.
+The two owning files pass all seven cases unchanged in their authority,
+fault, refusal, command/report distinction, closure and replay assertions.
+Focused log `/tmp/artroom-m2b-grow-fault-site-corrected-20261018.log`, original
+73486, terminal 7e38de. The first gate process ended before any fixture edit.
+The corrected-head gate remains owed; this failure and correction justify
+that run. No mutation sweep or repeated unchanged passing whole suite is used.
