@@ -431,3 +431,33 @@ to check this change; no private custody was read, no connection was
 started, and no native or hosted acceptance is claimed. This is a documents
 only clarification, with no production/test/config/asset change or new test
 run. The final integrated G5 gate and review remain pending actual G5a Main.
+
+## Keep HTTP redirects inside the tick's transport boundary
+
+The budget checked the requested service origin, scope and route, but the
+SDK's small Fetch port did not disable redirects. The runtime's default
+fetch could therefore follow a 307 response and forward a signed POST to
+an unchecked second origin, outside the tick's request accounting. The
+budget now passes `redirect: "error"` to fetch while preserving the SDK's
+method, body, headers and abort signal. A redirect rejects the call and
+closes the existing local fence; remote acceptance remains unknown.
+
+The new case in `tick-budget.test.ts` starts two actual local HTTP peers
+and uses the runtime's real fetch. The first peer returns 307. With the
+refusal enabled, only that peer receives a request, the second receives
+zero, and a later attempted mutation sends nothing. Both HTTP peers have
+scripted responses and dummy TEST envelopes. This proves the client
+transport boundary, not native authority, an install or provider behavior.
+
+`/tmp/artroom-g5-http-redirect-owning-20261019.log` passes both budget cases
+(12 ms tests, 119 ms total). `...redirect-types...log` passes Grow's compiler.
+One paired control, original 85153 closed zero, passes the selected redirect
+case and then removes only its refusal option. The unchanged assertion
+fails with one actual forwarded request, `refused: false` and
+`stopped: false`. No timeout occurs. The script restores exact source in
+`finally`, SHA-256
+`60743822ed4df3b3b95b5fdb7e943f29d297d9b6683396a4fde78f2db93c9254`.
+Its script, summary and baseline/without-refusal logs use prefix
+`/tmp/artroom-g5-http-redirect-control-`, date 20261019. All originals have
+terminated. No whole gate, Source publication, deployment or live result
+is claimed; actual reviewed G5a Main remains required for integration.

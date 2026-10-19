@@ -30,7 +30,10 @@ export function tickBudget(service: string, scopes: readonly ScopeId[], send: Fe
     if ((write ? costs.writes >= TICK_LIMITS.writes : costs.reads >= TICK_LIMITS.reads) || costs.requestBytes + requestBytes > TICK_LIMITS.requestBytes) return refuse();
     costs[write ? "writes" : "reads"]++; costs.requestBytes += requestBytes;
     let response: Awaited<ReturnType<Fetch>>;
-    try { response = await send(url, init); active(); } catch { return refuse(); }
+    // A followed redirect would leave the checked origin and bypass this
+    // invocation's request allowance. Preserve the SDK abort signal.
+    const request = { ...init, redirect: "error" as const };
+    try { response = await send(url, request); active(); } catch { return refuse(); }
     const original = response.body;
     const body: ByteStream | null = original === null ? null : { getReader() {
       const reader = original.getReader();
