@@ -1,6 +1,7 @@
 # Self-hosting dap on celld
 
-19 October 2026, draft 1. Design note for review.
+19 October 2026, draft 2. Design note for review. Section 12 lists what
+changed after the checker's review.
 
 Today dap runs only on Cloudflare: Workers, Durable Objects with SQLite,
 R2, and Cloudflare Artifacts as the git host. This note says how a
@@ -56,6 +57,7 @@ At main `9554919b`, five source files name a Workers type, out of about
 | R2 bucket for application packages, `get` and `put`, 4 MB a package | `applications/content.ts:17-20`, `applications/bindings.ts` | celld's R2 binding over the fleet bucket (4.3) |
 | Analytics Engine `writeDataPoint`, `VERSION_METADATA` | `operational.ts:9`, `metrics.ts:42` | Both are optional today. Nothing to do (4.4) |
 | `node:async_hooks` for request correlation | `operational.ts:2` | celld's Node compatibility is partial. It worked in both runs |
+| The client address: the `cf-connecting-ip` header, trusted for the join limits and the MCP bearer-failure limit | `worker.ts:320`, `packages/mcp/src/hosted.ts:556` | The proxy sets the header from the connection and the public port is loopback-only (4.6) |
 | Static Workers: the homepage, jam | `homepage/wrangler.jsonc`, `apps/jam/wrangler.jsonc` | Static assets of the room Worker, or any static host (decision 2) |
 | Wrangler deploy, secrets and migrations | `package.json`, [deploy](../docs/deploy.md) | `celld deploy` (4.5) |
 | 79 test files on `cloudflare:test` | `packages/scope/test`, the lane scenarios | Unchanged. workerd is open source and runs the tests anywhere. A celld smoke joins them (H1) |
@@ -84,12 +86,15 @@ What shapes a deployment:
   writers. Amazon S3, Google Cloud Storage, Azure Blob Storage, R2 and
   Tigris qualify. MinIO is not qualified, and Backblaze, Hetzner and
   DigitalOcean Spaces lack the conditional writes.
-- **One node pays a bucket round trip for each write.** A fleet of two or
-  more acknowledges on a follower's fsync and uploads afterwards. Every
-  dap turn is one storage transaction. In the GCP run with one node, an
-  act cost between 70 and 180 ms more than the same act on the laptop,
-  bounded by command-line differences (section 7). That is the price of
-  one node. Two nodes remove it and add failover.
+- **A write is acknowledged only once it survives a failure.** One node
+  acknowledges on a bucket proof, so the bucket holds the write before
+  the answer. A fleet of two or more acknowledges once every follower
+  has fsynced it, and uploads afterwards, so for a while an acknowledged
+  write exists only on node disks. Every dap turn is one storage
+  transaction and pays this. How much of the GCP run's slower acts is the
+  bucket proof is not known (section 7). celld's documents say a
+  follower's fsync is much faster than a bucket round trip. That two
+  nodes commit faster is the expectation H4 measures, not a result.
 - **Each cell has its own SQLite database, with the Workers API.**
   `sql.exec`, `transactionSync` with a 30 second limit, one alarm per
   object confirmed only once its wake record is durable, `idFromName`
@@ -113,12 +118,13 @@ What shapes a deployment:
 
 `apps/room/worker.ts` stays the one entry. The celld project is a second
 configuration beside `wrangler.jsonc`: `apps/room/celld/wrangler.json`
-with the three object bindings, the two migrations, `nodejs_compat`, and
-the string vars `DEPLOYMENT` and `SESSION_SECRET`. The Cloudflare-only
-keys stay out of it: `observability`, `analytics_engine_datasets`,
-`version_metadata`, `artifacts`, `r2_buckets`, since celld refuses an
-unknown key. celld requires the entry inside its project directory, so
-the project's `main` is a two-line file that re-exports the Worker.
+with the three object bindings, the two migrations, `nodejs_compat`, the
+string vars `DEPLOYMENT` and `SESSION_SECRET`, and the optional package
+binding of 4.3. The Cloudflare-only keys stay out of it:
+`observability`, `analytics_engine_datasets`, `version_metadata` and
+`artifacts`, since celld refuses an unknown key. celld requires the
+entry inside its project directory, so the project's `main` is a
+two-line file that re-exports the Worker.
 
 The in-process callers of `ScopeService`, the page and the MCP routes,
 call `api(env.SCOPES)` directly, as `route()` does. `ScopeService` stays
@@ -164,9 +170,17 @@ else to run.
 ### 4.3 Application packages
 
 `ApplicationContentStore` takes `Pick<R2Bucket, "get" | "put">`. celld
-provides an R2 binding over the fleet bucket, on GCS and on S3 alike. The
-celld project adds that binding and no code changes. A customer who
-installs no packages configures nothing.
+accepts the `r2_buckets` key and serves such a binding from the fleet
+bucket: a key `k` of the binding's `bucket_name` is the object
+`r2/<bucket_name>/k` there, on GCS and on S3 alike. The celld project
+carries the binding `APPLICATION_CONTENT` with `bucket_name`
+`application-content`, and the trust setting `APPLICATION_TRUST`, with
+no code change. Both are omitted only when a deployment installs no
+packages. Two limits: on a node without a fleet bucket every R2 method
+fails, so packages are a fleet feature and `celld dev` does not cover
+them; and neither qualification run installed a package. H4 witnesses
+the store on a fleet: a `put`, a conditional `put` refused, a `get`, and
+the same bytes read back.
 
 ### 4.4 Operations
 
@@ -199,14 +213,70 @@ nodes. celld's internal port listens on the private address and is
 reachable only inside the network. Two nodes in one zone are the
 default; two zones of one region when the customer asks.
 
-### 4.7 Backups
+**The proxy owns the client address.** The Worker trusts the
+`cf-connecting-ip` header: `worker.ts:320` passes it to the join limits,
+and `packages/mcp/src/hosted.ts:556` keys the bearer-failure limit on
+it. Cloudflare sets that header from the connection. celld's ingress
+copies the request's headers and sets nothing, and a plain Caddy reverse
+proxy passes an unknown header through, so a caller could choose its own
+address and evade both limits, or send none and share one empty key. So
+the kit makes the header the proxy's: Caddy overwrites `CF-Connecting-IP`
+with the verified remote address on every request, whatever the client
+sent; celld's public listener binds to loopback, so only the proxy on the
+same node reaches it; the firewall opens 443 and 80 and nothing else to
+the public; and the internal port stays on the private address. The
+header then reaches the Worker and the hosted MCP object as it does on
+Cloudflare. This changes the serving transport and no judgment. H3's
+witnesses: a forged header arrives at the Worker as the connecting
+address, a request without the header gets the connecting address, and
+two clients at different addresses get separate join windows. `celld dev`
+has no proxy, and H1's smoke sends the header itself.
 
-The bucket is the record. Its own versioning and the cloud's replication
-options cover loss of the bucket. For a verifiable history apart from
-the service, the archive binding of the sequenced note's section 4
-points at a git host, which may be the own host or an external one.
-Restoring a scope from an archive is not built, and a kit cannot promise
-it (section 6).
+### 4.7 Where the record is, and how it is kept
+
+The record is the bucket plus the nodes' disks. A node's work directory,
+`CELLD_WATCH`, holds its SQLite databases and its replication logs, and
+in fleet mode an acknowledged write can be on the owner's and one
+follower's disk and not yet in the bucket. A new owner recovers that
+tail from a surviving follower, and needs at least one current follower
+to return its complete range. So a copy of the bucket taken while the
+fleet serves is not a backup: it can lack acknowledged writes, or hold
+an open recovery record whose tail is on a disk that no longer exists.
+The kit treats these as rules:
+
+- **Node disks persist and nodes keep their names.** Each node's work
+  directory is on its persistent disk, and each node has a fixed
+  `CELLD_NODE` name. A restart is the same node. Nothing wipes a work
+  directory while the fleet is live.
+- **A node stops only gracefully.** On SIGTERM celld answers 503, lets
+  accepted requests finish, proves each cell durable, publishes its
+  snapshot, and releases the cell to a peer, within
+  `CELLD_SHUTDOWN_TOTAL_MS`, 40 seconds by default. The unit sets
+  `TimeoutStopSec` above it. A node is replaced by stopping it this way
+  first, then removing its VM, then starting the replacement with the
+  same name, and never two at once.
+- **The supervisor restarts without limit and waits a lease lifetime.**
+  A fenced node exits with code 3 and only a restart returns it. The
+  unit sets `Restart=always`, no start limit, and `RestartSec` above
+  `CELLD_TTL_MS`, 10 seconds by default.
+- **A backup is a stopped-fleet backup.** Drain every node, wait for
+  the handoffs to finish, copy the bucket, start the nodes. The copy is
+  complete to the moment of the drain, and a restore from it loses
+  everything after. With one node, which acknowledges on the bucket
+  proof, the bucket is complete at any instant up to the last
+  acknowledgement, and the stopped-fleet rule still applies before a
+  restore. The bucket's own versioning covers the bucket's loss, not the
+  tail on the disks.
+
+H4 holds the kit to this: stop the owner and watch the peer recover the
+acknowledged tail, replace one VM by the procedure, take a stopped-fleet
+backup and restore it into a fresh fleet, and show that a bucket copy of
+a serving fleet is not offered as a backup.
+
+For a verifiable history apart from the service, the archive binding of
+the sequenced note's section 4 points at a git host, which may be the
+own host or an external one. Restoring a scope from an archive is not
+built, and a kit cannot promise it (section 6).
 
 ## 5. Packaging for the simplest deployment
 
@@ -215,21 +285,24 @@ The release artifact `dap-host-<version>.tar.gz` holds:
 | Path | What |
 |---|---|
 | `worker/worker.js` | The room Worker, bundled by esbuild at release time, with the Cloudflare-only imports left external |
-| `worker/wrangler.json` | The celld project of 4.1, with `vars` placeholders |
+| `worker/wrangler.json` | The celld project of 4.1, with `vars` placeholders and the optional package binding |
 | `celld.version` | The pinned celld tag |
-| `celld.service`, `Caddyfile` | The unit and the proxy configuration, with the DNS name as the one substitution |
+| `celld.service` | The unit: `Restart=always`, no start limit, `RestartSec` above the lease, `TimeoutStopSec` above the shutdown bound, `CELLD_WATCH` on the persistent disk, a fixed `CELLD_NODE`, the public listener on loopback |
+| `Caddyfile` | The proxy: the DNS name as the one substitution, 443 to the loopback port, `CF-Connecting-IP` overwritten with the remote address |
 | `up.gcp.sh`, `up.aws.sh` | Create the parts for one cloud |
 | `deploy.sh` | `celld deploy` of `worker/` to the bucket, with the vars filled from the operator's secret source |
-| `down.gcp.sh`, `down.aws.sh` | Remove every part the matching `up` made |
+| `drain.sh` | Stop one node gracefully and wait for its handoff, for a replacement or a backup |
+| `down.gcp.sh`, `down.aws.sh` | Drain both nodes, then remove every part the matching `up` made |
 
 **GCP.** `up.gcp.sh` takes a project, a region and a DNS name and makes:
 one bucket with uniform access, a service account with object admin on
-that bucket and nothing else, two `e2-small` instances with that account
-and the `cloud-platform` scope, a firewall rule for 443 and 80 from
-anywhere and for the internal port inside the VPC, and a startup script
-that installs the pinned celld, writes the unit with `--bucket gs://`,
-`--listen` on the public port and `--internal-listen` and `--advertise`
-on the private address, installs Caddy, and starts both. The operator
+that bucket and nothing else, two `e2-small` instances with that account,
+the `cloud-platform` scope and a persistent disk for the work directory,
+a firewall rule for 443 and 80 from anywhere and for the internal port
+inside the VPC only, and a startup script that installs the pinned
+celld, writes the unit with `--bucket gs://`, `--listen` on loopback
+and `--internal-listen` and `--advertise` on the private address,
+installs Caddy, and starts both. The operator
 points the DNS name at the two addresses, runs `deploy.sh`, and follows
 [Run dap in 10 minutes](../docs/self-host.md) from the `dap install`
 step with `--host self`. The qualification used the same pieces by hand,
@@ -255,10 +328,25 @@ wrap the same binary and bucket, and the kit does not stop them.
 
 ## 6. Trade-offs and future constraints
 
-- **One node is slower to commit than Cloudflare.** Tens of milliseconds
-  a turn for the bucket proof (section 7). Two nodes bring it back to a
-  follower's fsync. The kit makes two nodes the default and documents one
-  node as the cheap, slower option.
+- **A commit pays for durability, and the price is unmeasured.** One
+  node waits for a bucket proof, a fleet for a follower's fsync. The GCP
+  run's acts were slower than the laptop's, and how much of that is the
+  proof, the network, process startup or the node's work is not known
+  (section 7). The kit makes two nodes the default for failover, and H4
+  measures the turn on one node and on two before any number reaches a
+  customer.
+- **Acknowledged writes live on node disks before they reach the
+  bucket.** The work directories persist, nodes keep their names, stops
+  are graceful, the supervisor restarts without limit after a lease
+  lifetime, and a backup is a stopped-fleet backup (4.7). A bucket copy
+  of a serving fleet is not one.
+- **The proxy owns the client address.** The join limits and the MCP
+  bearer-failure limit key on `cf-connecting-ip`, which only the proxy
+  may set (4.6). A deployment that exposes celld's port without the
+  proxy has no address limits.
+- **Packages need a fleet.** The R2 binding fails on a node without a
+  fleet bucket, so `celld dev` does not cover them, and neither run
+  installed one. H4 witnesses the store.
 - **celld is beta and is being merged into workerd.** The application API
   is Cloudflare's and does not move. The node's command line, the bucket
   layout and the upgrade rules may. The kit pins a celld version per dap
@@ -312,10 +400,13 @@ full output.
 | Health round trip | about 1 ms | about 110 ms |
 | `dap verify --all`, 13 scopes | 2.3 s | 66 s |
 
-An act is a read and a submit, so about one round trip of the 180 ms
-difference between an act and a read on GCP is the network. The rest,
-70 ms or less, is the single node's bucket proof. The replay time on GCP
-is the client's round trips over 13 journals, not the node. The pinned
+These figures do not isolate anything. An act on GCP took about 505 ms
+longer than on the laptop, and about 180 ms longer than a different read
+command on GCP. Process startup, the network, the node's work and the
+bucket proof are all inside those differences, with unmatched samples,
+and the 66 seconds of replay say nothing about how much the node
+contributed. The one claim they support is that every step worked. The
+node's own turn time, on one node and on two, is H4's timer. The pinned
 redeploy was adopted in place within 60 seconds with no restart.
 
 ## 8. Changes to existing documents
@@ -331,10 +422,10 @@ redeploy was adopted in place within 60 seconds with no restart.
 
 | Slice | What | After |
 |---|---|---|
-| H1 | The celld project in the repository: `apps/room/celld/`, the direct-call change for the page and MCP routes, the qualification smoke as a script, and a CI job that runs it against `celld dev` | Now |
+| H1 | The celld project in the repository: `apps/room/celld/`, the direct-call change for the page and MCP routes, the qualification smoke as a script that sends the address header itself, and a CI job that runs it against `celld dev` | Now |
 | H2 | The own git host: `GitRepository`, the smart HTTP route, the `self` wiring, tokens, bounds; witnesses: the lane story over host `self`, a real `git clone` and `git push` from a laptop, a push refused `stale` | H1 |
-| H3 | The host kit and the GCP scripts, the second self-host path in the docs with a measured run | H1, H2 |
-| H4 | Two-node fleet qualification: the grow package with a timed rule, a takeover by stopping the owner, a celld version bump; a timer in the Worker for the node's own turn time | H3 |
+| H3 | The host kit and the GCP scripts with the unit, the proxy, `drain` and `down` of 4.7, the second self-host path in the docs with a measured run; witnesses: the three address witnesses of 4.6, and a node replaced by the procedure | H1, H2 |
+| H4 | Two-node fleet qualification: the grow package with a timed rule; stop the owner and watch the peer recover the acknowledged tail; a stopped-fleet backup restored into a fresh fleet; the package store's `put`, refused conditional `put`, `get` and readback; a celld version bump under its release rule; a timer in the Worker for the node's own turn time on one node and on two | H3 |
 | H5 | The AWS scripts and their measured run | H3 |
 
 H1 is a day. H2 is two to three days. H3 and H5 are a day each. H4 is a
@@ -356,8 +447,13 @@ day. None of them goes ahead of the grow demo of plan 033.
 6. Secrets are deployment vars in the bucket for the first version, read
    from the operator's secret source by the `deploy` script.
 7. Two nodes, one bucket, Caddy, one DNS name, no Kubernetes.
-8. Not provided: moving live rooms, more than one region, an
-   on-premises store, Windows.
+8. The proxy owns the client address, and celld's public port is
+   reachable only from the proxy on its node.
+9. Node work directories persist, nodes keep their names, stops are
+   graceful, the supervisor restarts without limit after a lease
+   lifetime, and a backup is a stopped-fleet backup.
+10. Not provided: moving live rooms, more than one region, an
+    on-premises store, Windows.
 
 ## 11. Open points
 
@@ -369,14 +465,31 @@ day. None of them goes ahead of the grow demo of plan 033.
 | Q4 | Whether the CI job of H1 runs on every head or on heads that touch the scope package | On heads that touch `packages/scope`, `packages/mcp` or `apps/room` |
 | Q5 | The node's own turn time, single node and fleet | H4's timer |
 
+## 12. Changes in draft 2
+
+Review `9c5dadcc` of draft 1 requested four changes.
+
+| Finding | Answer |
+|---|---|
+| F1 (P1): a bucket copy omits acknowledged writes held on node disks, and the supervisor rules were missing | 4.7 rewritten: the record is the bucket plus the node disks; persistent work directories and fixed node names; graceful stop within the shutdown bound with `TimeoutStopSec` above it; restart without limit after a lease lifetime; a backup is a stopped-fleet backup; node replacement by the procedure. The unit, `drain` and `down` in section 5. H4's witnesses. Decision 9 |
+| F2 (P2): the timings claimed a 70 to 180 ms bucket proof and a two-node improvement they cannot isolate | The causal bounds are gone from sections 3, 6 and 7 and from the record. The tables stay as observed command-line wall times. The node's turn time is H4's timer, and the two-node expectation is named as unmeasured |
+| F3 (P2): `r2_buckets` was excluded and required at once, and `celld dev` has no bucket | 4.1 excludes only the four Cloudflare-only keys. 4.3 states the optional `APPLICATION_CONTENT` binding, its `bucket_name` and prefix in the fleet bucket, `APPLICATION_TRUST`, that every R2 method fails without a fleet bucket, and that neither run installed a package. H4 witnesses the store |
+| F4 (P2): the `cf-connecting-ip` header trust was an unlisted coupling, forgeable behind celld and a plain proxy | Section 2 lists it. 4.6 makes the header the proxy's: overwritten from the remote address, celld's public port on loopback, the firewall closed to all but 443 and 80. Three witnesses in H3. Decision 8 |
+
 ## Sources
 
 - The two runs: [celld qualification record](implementation/2026-10-19-celld-qualification.md).
-- celld: [Cloudflare compatibility](https://celld.dev/docs/cloudflare-compat/),
+- celld, at the pinned tag v0.6.2:
+  [README](https://raw.githubusercontent.com/denoland/celld/v0.6.2/docs/README.md)
+  (shutdown, rollout, environment variables),
+  [guarantees](https://raw.githubusercontent.com/denoland/celld/v0.6.2/docs/guarantees.md)
+  (acknowledgement, recovery, the supervisor),
+  [Cloudflare compatibility](https://raw.githubusercontent.com/denoland/celld/v0.6.2/docs/cloudflare-compat.md),
+  [R2](https://raw.githubusercontent.com/denoland/celld/v0.6.2/docs/services/r2.md),
   [Durable Objects](https://celld.dev/docs/services/durable-objects/),
-  [guarantees](https://celld.dev/docs/guarantees/),
   [limitations](https://celld.dev/docs/limitations/),
   [the repository](https://github.com/denoland/celld).
+- Caddy, [`reverse_proxy` headers](https://caddyserver.com/docs/caddyfile/directives/reverse_proxy#headers).
 - [Deno is joining Cloudflare](https://blog.cloudflare.com/deno-joins-cloudflare/), 9 October 2026.
 - [workerd pull request 6780](https://github.com/cloudflare/workerd/pull/6780), closed 11 September 2026.
 - In this repository: [Run dap in 10 minutes](../docs/self-host.md),

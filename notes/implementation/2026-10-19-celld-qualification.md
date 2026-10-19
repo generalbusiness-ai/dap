@@ -198,6 +198,11 @@ scope; a redeploy adopted in place.
 
 Not established: alarms firing on schedule, since nothing in the run has
 a timed rule; a fleet of two nodes and a takeover; a real git host; TLS;
-a celld upgrade; the node's own turn time. The single-node commit cost
-is bounded only by the difference between an act and a read on GCP,
-about 180 ms, of which about one round trip is the network.
+a celld upgrade; the node's own turn time; the application package
+store, since neither run installed a package and every R2 method fails
+on a node without a fleet bucket, which `celld dev` is. The timings
+isolate nothing: an act on GCP took about 505 ms longer than on the
+laptop and about 180 ms longer than a different read command on GCP,
+with process startup, the network, the node's work and the bucket proof
+all inside those differences. No number here bounds the single-node
+commit cost.
