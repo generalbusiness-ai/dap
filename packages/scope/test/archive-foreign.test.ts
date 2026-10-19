@@ -1,7 +1,7 @@
 /** Actual native foreign uses/retention/SQLite. Grants, reviewed policy,
  * clock and setup reader are explicit TEST fixtures. This classifies
  * metadata and local inventory only: no installed export or replay verdict. */
-import { expect, test } from "vitest";
+import { expect, onTestFinished, test } from "vitest";
 import { env } from "cloudflare:test";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Input, SendForm } from "@generalbusiness/dap-contract";
@@ -13,7 +13,9 @@ import { JournalObjectReader, JournalObjects } from "../../git/src/journal-objec
 import { readJournalArchive } from "@generalbusiness/artroom-git/journal-reader";
 import { planArchive, rebuildArchive } from "../src/archive-build.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
+import type { FixtureArchiveProvider } from "../src/archive-driver.ts";
 import { archiveRepository, archiveSql } from "./support/archive.ts";
+import { fixtureArchiveWiring } from "./worker.ts";
 import { namespace } from "../src/namespace.ts";
 import { ArchiveForeignMetadata } from "../src/archive-foreign.ts";
 import { archiveInput } from "../src/archive-input.ts";
@@ -209,4 +211,31 @@ test.each(["sha1", "sha256"] as const)("foreign copies retain their source basis
   const corrupted = maker.commit(tree, original.parent, original.seconds);
   for (const made of maker.objects()) objects.set(made.id, made);
   expect(await open(corrupted.id)).toMatchObject({ ok: false, result: "mismatch", reason: "foreign copy birth differs from its classified source pin" });
+});
+
+test("native alarm stops a marked foreign archive after source configuration disappears without another mint", async () => {
+  const f = await fixture(); let mints = 0, sends = 0;
+  // Explicit TEST host/credential stand-in. The native alarm and persisted
+  // archive row are real; no provider adapter or outside send runs.
+  const provider: FixtureArchiveProvider = { fixture: "archive-provider", format: async () => "sha1", ref: async () => null, objects: async () => [],
+    mintArchive: async () => { mints++; return null; }, sendArchive: async () => { sends++; return null; }, revokeArchive: async () => {},
+  };
+  const wiring = { policies: { fixture: "archive-policies" as const, registry: f.policies }, target: { fixture: "archive-target" as const, resolve: async () => archiveRepository }, provider };
+  fixtureArchiveWiring.set(f.consumer.name, { ...wiring, fixtureSources: f.sources });
+  onTestFinished(() => { fixtureArchiveWiring.delete(f.consumer.name); });
+  await f.consumer.restart();
+  await f.consumer.did(rita, "remark", { on: 0, fields: { text: "schedule configured foreign archive" } });
+  const before = await f.consumer.head();
+  expect(await f.consumer.alarm()).toBe(true);
+  const marked = await f.consumer.inside(state => new ArchiveRows(archiveSql(state), f.consumer.at).load()!);
+  expect(marked.pending).not.toBeNull(); expect(marked.next).not.toBeNull(); expect(mints).toBe(1);
+  // Same separate reviewed policy, but no graph source metadata on restart.
+  fixtureArchiveWiring.set(f.consumer.name, wiring);
+  f.consumer.c.clock.now = marked.next!; await f.consumer.restart();
+  expect(await f.consumer.alarm()).toBe(true);
+  const stopped = await f.consumer.inside(state => new ArchiveRows(archiveSql(state), f.consumer.at).load()!);
+  expect(stopped.stopped?.reason).toBe("foreign-source-unavailable");
+  expect(stopped.pending).toEqual(marked.pending); expect(mints).toBe(1); expect(sends).toBe(0);
+  expect(await f.consumer.inside(state => state.storage.getAlarm())).toBeNull();
+  expect(await f.consumer.head()).toEqual(before);
 });

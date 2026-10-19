@@ -326,3 +326,14 @@ the corrected call omits that property when absent. Final compiler logs
 include `...foreign-reader-pin-types...log`, `...foreign-git-test-types...log`
 and `...foreign-replay-types...log`. No package or lockfile changed. These
 focused checks are not a combined gate or installed-application acceptance.
+
+The actual native alarm also preserves a named stop when the graph map is
+removed after Mark and eviction. Its first pass persists the real Mark;
+an explicit TEST provider returns no credential. After restart with the
+same reviewed policy but no source map, the alarm records
+`foreign-source-unavailable`, preserves the pending Mark, clears its wake,
+and makes no second mint or send. The native head is unchanged. Original
+28927 exits 0: one case, 102 ms tests/2.72 s overall, in
+`/tmp/artroom-s2b-foreign-alarm-owning-20261019.log`; its source/test compiler
+passes in `...foreign-alarm-types...log`. This is a real alarm/storage
+witness with a scripted host, not evidence of a provider adapter or token.
