@@ -466,3 +466,35 @@ and inputs are `/tmp/artroom-p1-alias-lifetime-control-20261019.py` and
 the matching directory; `result.json` records both source and test hashes.
 The original control process 17458 closed with exit zero. This was a
 single proof control, not a mutation sweep.
+
+
+## Reviewed Main incorporation during G5a review
+
+Merge `37c6ab709229f98c4f3c2ba5e97faead7b4e9bd6` incorporates actual
+reviewed Main `3ed2a08a50f31e84ea42b4f6027684e14a8cedb8`. The sole
+manifest conflict preserves Main's durable presence and task filtering,
+together with all seven P1 composition places and P1's nonfinal
+`conflicted` room state. A full parsed-object comparison checks that
+union. The manifest is 63,570 bytes, with 18 views and 18 projections.
+
+The literal live-item hand count now includes the Site's 32 presence
+items: Site `1+3+32=36`, three Rooms `3*190=570`, total 606. The
+successful-creation entry ceiling ten and item-key ceiling seven stay
+unchanged. All ten graph cases pass in
+`/tmp/artroom-p1-reviewed-main-graph-20261019.log`; the owning Derive test
+compiler passes in `...reviewed-main-types-20261019.log`.
+
+The two owning MCP tests pass three cases in
+`/tmp/artroom-p1-reviewed-main-local-sqlite-20261019.log`; original process
+82293 naturally closed with exit zero. They use the local Core/Node SQLite
+fixture with its stated authority and transport boundaries. The initial
+command selected `scope` and found no files; its exit one in
+`...reviewed-main-native-20261019.log` is a selection error, not a test
+failure or native Worker evidence. The corrected command selects `mcp`.
+
+G5a remains frozen in complete exact-head review `5c00e7d4` at
+`dfb0268f8`. This P1 work edits or executes none of its sealed source,
+dependencies or evidence. No unreviewed G5a code is incorporated. P1's
+final gate and Source remain after incorporation of the relevant actual
+reviewed landings, including G5a and S2a. This checkpoint has no P1 gate,
+review, landing, publication or deployment.

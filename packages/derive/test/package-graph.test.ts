@@ -89,10 +89,10 @@ test("Grow's three retained child slots prove three lifetime relation keys, rath
   const input = grow(), checked = checkPackageGraph(input);
   expect(checked.findings).toEqual([]);
   expect(checked.instances).toEqual([{ definition: input.entry, maximum: 1 }, { definition: input.definitions[1]!.id, maximum: 3 }]);
-  // Hand count: Site live 1+3=4; each Room live 1+4+12+4+4+100+32+1+32=190.
+  // Hand count: Site live 1+3+32=36; each Room live 1+4+12+4+4+100+32+1+32=190.
   // Three successful children add three creator entries, geneses and results;
   // their backing items and root items add six keys beside the Site's root.
-  expect(checked.projected).toMatchObject({ liveItems: { acrossInstall: 574 }, successfulCreation: { entryCeiling: 10, itemKeyCeiling: 7 }, lifetime: { entries: null, itemKeys: null } });
+  expect(checked.projected).toMatchObject({ liveItems: { acrossInstall: 606 }, successfulCreation: { entryCeiling: 10, itemKeyCeiling: 7 }, lifetime: { entries: null, itemKeys: null } });
   const insufficient = checkPackageGraph(grow(parent => { parent.receives["room-summary"]!.copies = 2; }));
   expect(insufficient.findings.map(finding => finding.reason)).toEqual(["fan-in-exceeds-copies"]);
   expect(insufficient.findings[0]!.message).toContain("fan-in 3 exceeds copies 2");
