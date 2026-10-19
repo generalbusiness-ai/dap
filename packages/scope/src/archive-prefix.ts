@@ -13,7 +13,7 @@ import type { Sql } from "./sqlite.ts";
  * This intentionally limits dense/large prefixes below the row ceiling. */
 export const ARCHIVE_PRIVACY_JSON_PASSES = 64;
 const POSITION_METADATA_BYTES = 192;
-export type ArchivePrefixReason = ArchiveExportRefusal | "unavailable" | "incomplete" | "mismatch" | "limit";
+export type ArchivePrefixReason = ArchiveExportRefusal | "unavailable" | "incomplete" | "mismatch" | "limit" | "foreign-source-unavailable" | "foreign-source-mismatch";
 export class ArchivePrefixStopped extends Error { constructor(readonly reason: ArchivePrefixReason) { super(`archive-${reason}`); } }
 const fail = (reason: ArchivePrefixReason): never => { throw new ArchivePrefixStopped(reason); };
 export interface ArchivePosition { readonly seq: number; readonly hash: Digest; readonly bytes: number }

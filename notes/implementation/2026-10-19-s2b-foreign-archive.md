@@ -200,3 +200,53 @@ export is claimed. Current reviewed Main 715e97f0 adds the planner's sprint
 report only; actual reviewed G5a/S2a Main incorporation remains required
 before final integration. Earlier preparation-only statements above are
 historical to this initial implementation checkpoint.
+
+## Shared and foreign metadata classification
+
+The local header/owner/record/step classifier is now shared in
+archive-entry-metadata.ts. archive-privacy.ts retains the exact default
+foreign-copy refusal when no fixture foreign classifier is supplied. The
+existing inventory/export driver still takes that default path. This stage
+has not enabled payload selection or export.
+
+archive-foreign.ts classifies only direct copied entries. It joins each
+selected local use to the retained copy's own full header, then to the
+immutable fixture pin map and a separate exact-pin reviewed policy. It
+checks inline class coverage, native support metadata, owner/step/record
+coverage and domains, and refuses legacy membership pins. A retained
+genesis copy must match the mapped genesis fact and seed pin/incarnation/
+kind. Source names and receiver aliases choose neither identity nor policy.
+The metadata descriptors name the exact fact/content/byte size and source
+pin; they fetch no nested foreign history. Copied JSON work reserves the
+same 64 full-entry equivalents before inspection; caches and metadata
+lookups spend the original pass allowance. New named source failures are
+foreign-source-unavailable and foreign-source-mismatch.
+
+After the first shared extraction, the compiler caught a moved domain set;
+restored it before the owning run. Three native files/15 cases pass,
+original 95861 exit 0, 309 ms tests/2.95 s overall:
+`/tmp/artroom-s2b-shared-metadata-owning-20261019.log`. Corrected compiler is
+`...shared-metadata-corrected-types...log`.
+
+The new two-case foreign witness initially used the simple TestScope
+fixture, whose resolver is deliberately scripted and has no peer value:
+both foreign acts correctly returned dependency-unavailable. No metadata
+assertion ran, and that first failure is retained in
+`/tmp/artroom-s2b-foreign-metadata-first-owning-20261019.log`. The corrected
+fixture selects the real namespace resolver for actual peer source reads;
+no foreign entry is invented. Genuine native assignment and genesis copies
+are retained through accepted acts. Their own producer name is deliberately
+the same as the receiver's, with a different exact pin. A body-read tripwire
+checks successful metadata admission, missing source/policy/class coverage
+and a conflicting retained genesis pin. The corruption case changes only
+the retained copy, never either native journal.
+
+Both cases pass, original 78947 exit 0, 120 ms tests/2.69 s overall, in
+`/tmp/artroom-s2b-foreign-namespace-owning-20261019.log`. Final source/test
+compiler passes in `...foreign-namespace-types...log`. The initial compiler
+also caught one unused type import before that witness ran. Scope/pin
+metadata and trusted fixture policy are still distinct from archive payload
+integrity, production permission and offline foreign-history verification.
+Inventory/body selection, immutable Mark/manifest/restart binding and the
+actual installed application export remain to implement and prove after
+actual reviewed G5a/S2a Main incorporation. No whole gate or review claim.
