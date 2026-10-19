@@ -223,3 +223,16 @@ The focused case and compiler then passed, logs
 publisher-comparison bypass distinguishes one pass → one unchanged
 assertion failure → exact restore, retained in
 `/tmp/artroom-g5-hosted-release-publisher-control-20261019.log`.
+
+## Operator runbook draft
+
+`examples/grow/runbook.md` now records the known native cohort, immutable
+packet URI shape, retained request/enrollment recovery, proving reads at
+each phase and live visitor/person acceptance. It uses the actual configured
+repository origin (`generalbusiness-ai/artroom.git`) and records the
+owner-before-install dependency. It explicitly marks the pending principal,
+cursor, final packet and Worker commands as unfinished; no placeholder is
+presented as an executed step. It offers no public tender seat and separates
+the existing Room invitation destination from actual provisioned-room
+navigation. The runbook is preparation, not a deployment receipt. This
+addition changes documents only and runs no tests or provider command.
