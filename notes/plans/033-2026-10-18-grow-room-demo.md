@@ -81,16 +81,19 @@ the demo needs a visitor and a page.
    bounds that open question 2 waited for have landed. The simulator's
    cadence is fixed and declared in the package.
 7. **Archiving the demo room is its own gate.** A2 and A3 are
-   fixture-only: a definition that declares the archived level is still
-   refused as unsupported, the hosting deployment has no archive policy or
-   configuration, and no real archive token or destination exists. G4's
-   day's archive therefore needs the demo room admitted at the archived
-   level with the room's permission, the policy and configuration for the
-   hosting deployment reviewed, a real destination and token, A3's
-   archiver wired for that room, and a line on the `/grow/` page that says
-   the room's journal is archived and where. That is the demo-room
-   archive slice below, after G5 and before G4. It widens neither A2 nor
-   A3, and it claims nothing about A4, A5 for other rooms, or the archive
+   fixture-only: the hosting deployment has no archive policy or
+   configuration, and no real archive token or destination exists. The
+   archive is a binding of the room, not a level
+   ([the sequenced-level note](../2026-10-18-sequenced-level-and-order-scope.md),
+   section 4): the room's directory holds the binding, set at its claim.
+   G4's day's archive therefore needs the demo room's binding set, the
+   policy and configuration for the hosting deployment reviewed, a real
+   destination and token, A3's archiver wired for that room, and a line
+   on the `/grow/` page that says the room's journal is archived and
+   where. That is the demo-room archive slice below, after G5 and before
+   G4. The grow package does not require the archive, so the slice can
+   set the binding on a running demo room. It widens neither A2 nor A3,
+   and it claims nothing about A4, A5 for other rooms, or the archive
    root; those stay where plan 032 and the archive note leave them.
 
 ## 3. Order and slices
@@ -109,7 +112,7 @@ builder's pace over the last week, not measurements.
 | 6 | G3 | Routing: alerts to the holders of the authority they need, tasks to the tenders present in the room, requests to the head grower | M2a's site scope, G1 | the fault produces the two cards of section 4 for two members and the watering request for a third | 1 day |
 | 7 | G5a | The native device-command record: a bounded capability with its own opening, outcome, reservation and replay rules, held by the simulator as the demo's owner (decision 1); the G0 scenario runs on it in place of the labelled record | M2a's package forms, G0 | a commanded target produces a native outcome that only the owner writes, replay reproduces it, and the three device facts keep their separate writers | 2 days |
 | 8 | G5 | The hosted demo: a room on the hosting deployment with the grow package installed and the simulator running as the sensors member and the device-command owner; the `/grow/` page and its link on the homepage | G1 to G3, G5a, the hosted MCP endpoint, a deployment after review | a visitor opens the room from the homepage; a person in their AI app takes the operator's act during the fault; the simulator keeps running between visits | 2 days |
-| 9 | Demo-room archive | Archive enablement for the demo room (decision 7): archived-level admission with the room's permission, the reviewed archive policy and configuration for the hosting deployment, a real destination and token, A3's archiver wired for that room, and the disclosure on the `/grow/` page | A2, A3, G5, a deployment after review | the demo room's journal is archived from the hosting deployment, a clone of it replays offline through A2's replay, and the page says so | 2 to 3 days |
+| 9 | Demo-room archive | Archive enablement for the demo room (decision 7): the archive binding in the room's directory, set at its claim (sequenced-level note, section 4.5), the reviewed archive policy and configuration for the hosting deployment, a real destination and token, A3's archiver wired for that room, and the disclosure on the `/grow/` page | A2, A3, G5, a deployment after review | the demo room's journal is archived from the hosting deployment, a clone of it replays offline through A2's replay, and the page says so | 2 to 3 days |
 | 10 | G4 | The incident's entry range, "what happened today" from the read tool, and the day's archive | the demo-room archive slice | a clone of the demo room's day replays, and the model's answer names entries that exist | 1 day |
 | 11 | J3, evidence rules | The journey resumes (plan 032, section 2b) | G4 | | |
 

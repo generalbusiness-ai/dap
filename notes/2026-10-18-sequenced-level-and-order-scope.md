@@ -424,10 +424,19 @@ act or handler is `sequenced`:
    clock reading, and derives in that context (5.2). The rule
    expressions are evaluated once. `notAfter` and every other time is
    judged here and not again.
-6. **Refuse, or prepare.** A refusal: the scope asks the order scope to
-   record a hole at P with the reason, answers the refusal, clears the
-   pending row, and writes nothing, as any refusal writes nothing
-   (`docs/manual/ten-terms.md`, "takes effect"). An applied judgment: the
+6. **Refuse, or prepare.** A refused act: the scope asks the order scope
+   to record a hole at P with the reason, answers the refusal, clears the
+   pending row, and writes nothing, as a refused act writes nothing
+   (`docs/manual/ten-terms.md`, "takes effect"). A refused delivery: the
+   scope writes the delivery's deciding entry, `refused` with no effects
+   and its one result send, as for any verified delivery (contract,
+   section 7.4), clears the pending row in the same transaction, and
+   asks the order scope to record a hole at P with the reason. The
+   deciding entry takes no position, since it is no effective fact of
+   the group. It names P as the position it releases, so the hole
+   request is idempotent. It is written in the room that `fits` was
+   asked for at step 3, with no new reservation, and its result send is
+   dispatched from it as a commit's sends are. An applied judgment: the
    scope writes the **prepare entry** (5.2) with `position`, its reads,
    the rule answers, and the derived effects and sends, and clears the
    pending row in the same transaction. The prepare entry is new work,
@@ -463,7 +472,9 @@ act or handler is `sequenced`:
 
 **Restart and resume.** An object that restarts reads its head. A
 pending row with no prepare entry resumes at step 4. A prepare entry at
-the head with no commit or abandon resumes at step 8. The resolve
+the head with no commit or abandon resumes at step 8. A deciding entry
+at the head that names a released position with no hole or expiry in
+the order journal asks for the hole again. The resolve
 request is idempotent, and its answer, `resolved` or `expired`, is also
 readable from the order journal without a request, which is how a
 member settles after the order scope has closed. The object's own alarm
@@ -687,14 +698,15 @@ delivery, are assigned at admission and are inputs to the judgment.
 | Reserved by an allocation | its resolution, hole, or expiry | The `open` state's one settling entry |
 | Group lifetime | 1 minute to 30 days, required | The bound on an unresolved position. The package declares it |
 | Entries per attempt, applied | 2 in the order scope (allocation, then resolution) and 2 in the member (prepare, then commit) | 5.3 and 5.4 |
-| Entries per attempt, refused after allocation | 2 in the order scope (allocation, then hole) and 0 in the member | 5.4, step 6 |
+| Entries per attempt, refused after allocation | 2 in the order scope (allocation, then hole) and, in the member, 0 for an act or 1 for a delivery (its deciding entry) | 5.4, step 6 |
 | Entries per attempt, refused before allocation | 0 | 5.4, step 3: `scope-full` or an order scope refusal |
 | Entries per attempt, expired | 2 in the order scope (allocation, then expiry, which is that allocation's outcome) and 0 or 2 in the member (none, or prepare then abandon). The retry is another attempt | 5.3 and 5.4 |
 | Order scope capacity | As any scope's | Bounds the group's lifetime count of sequenced inputs. `scope-full` refuses an allocation |
 
 The costs, stated plainly: two round trips and two own entries for every
 applied attempt, the round trips to one object that only appends; two
-order entries and no own entry for an attempt refused after allocation;
+order entries and no own entry for an act refused after allocation, one
+own entry for a refused delivery;
 a fence on the member for one round trip in the ordinary case; a
 reader's wait as the failure model of 5.5 states it. A group whose
 exchanges are strictly sequential pays for nothing. That case is one
@@ -721,8 +733,11 @@ late?: { within: { seconds: number }; reason: string; then?: { effects?: EffectF
 
 The bound and the reason are always present. A delivery is late when the
 source entry's time plus `within` is strictly before the commit's clock
-reading. Late with no `then`: refused with the reason, nothing written.
-Late with `then`: the branch applies instead of the handler, and the
+reading. Late with no `then`: refused with the reason
+`{ code: "late", name }`; none of the handler's effects, sends, or
+attention is written, and the delivery's deciding entry with its one
+result send is written as for any refused delivery (packages note,
+section 4.1). Late with `then`: the branch applies instead of the handler, and the
 entry is applied and marked `late`. Never both. The judgment order is
 dispatch, `spacing`, `late`, guards. `late` judges a time, so
 `clock-behind` applies. In a sequenced handler the reading compared is
@@ -994,6 +1009,13 @@ terms paragraph in 5.1 and changes no rule.
 The shape of the draft 2 fixes follows Spanner's safe time, read against
 dap's assumption of no clock bound: finality comes from the one journal
 that serializes allocation.
+
+**After landing, 18 October, 22:30.** Step 6 of 5.4, the resume rule,
+the cost row of 5.9, and 6.1 distinguish a refused act from a refused
+delivery. A refused delivery keeps its deciding entry and its one
+result, as the contract's section 7.4 requires, and the late reason has
+the code `late`. Builder question `0784600e`, checker corrections
+`91c866dc` and `b92bd90c`, planner decision on that question.
 
 ## Sources
 

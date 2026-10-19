@@ -314,10 +314,15 @@ entry's time travels in the delivery's cause and is readable as
 The judgment order of a handler is fixed: dispatch by class, name,
 sender kind, and `from`; then `spacing` (4.2); then `late`; then the
 handler's guards, effects, sends, and attention as today. A late
-delivery with no `then` is refused with `reason`. Nothing is written,
-and the sender's `refused` clause receives the reason. A late delivery
-with `then` applies the branch's effects, sends, and attention instead
-of the handler's. The handler's guards are not evaluated. The entry is
+delivery with no `then` is refused with `reason`: none of the handler's
+effects, sends, or attention is written, and the delivery is decided as
+every verified delivery is decided today (contract, section 7.4), with
+one deciding entry, decision `refused`, reason
+`{ code: "late", name: reason }`, and one authenticated result send,
+through which the sender's `refused` clause receives the reason. A
+duplicate is answered from that entry. A late delivery with `then`
+applies the branch's effects, sends, and attention instead of the
+handler's. The handler's guards are not evaluated. The entry is
 `applied` and carries `late: { reason }`. A delivery that is not late is
 judged by the handler alone. Never both for one delivery.
 
@@ -657,6 +662,14 @@ clarity at Hugh's request:
 | F3, P2: `states` had no subject | 4.4: `{ item, in }` over an item type declared `one` |
 | F4, P2: P1 owed checks whose forms did not exist | Section 3's staging table with `unsupported-form` and three witness kinds |
 | F5, P1: "with staleness at or above lifetime it never waits" was false for a member stopped after resolution | 4.5: `behind` until the member resumes, and `missing-dependency` in replay |
+
+**After landing, 18 October, 22:30.** Section 4.1 says what a refused
+late delivery writes: none of the handler's effects, sends, or
+attention, and the delivery's own deciding entry and result as for any
+refused delivery, with the reason code `late`. The landed draft said
+"nothing is written", which the native contract (section 7.4) does not
+allow for a delivery. Builder question `0784600e`, checker corrections
+`91c866dc` and `b92bd90c`, planner decision on that question.
 
 ## Sources
 
