@@ -303,11 +303,27 @@ whether to give the functional workerd project an explicit bounded framework
 allowance, preserving case-specific limits and every modeled protocol,
 read, clock, capacity and latency assertion, or put the broader stability
 investigation first. It also asks which Source owns that correction.
-No test limit or acceptance condition has been changed. The ownership
+At that checkpoint, limits and acceptance conditions remained unchanged. The ownership
 validator witness was strengthened to reject unlisted owned slots in both
 ordinary and opaque-rule definitions; all five cases pass (74252), as do
 Derive's two compiler targets (81347). All three failed gates remain
 evidence. No seal, Source or review has been filed.
+
+Planner decisionf20558ab29815618a8e84333cbab2def29c64b75 answers34bc30df:
+set an explicit thirty-second framework allowance in
+packages/scope/vitest.worker.config.ts, the functional `scope` project
+running native application, MCP, Page and CLI stories in one isolate. This
+configuration and explanation belong to the same complete G5a Source.
+Case-specific limits and every modeled protocol, read, clock, capacity and
+latency assertion remain. Pure Node and separate scope-denial budgets stay.
+The allowance describes the harness on a shared machine, not product
+latency. It waives no acceptance condition, relabels no old process and
+closes no stability investigation. Request1d3a13e3 remains after G5a. A new
+original whole gate must pass at the committed configuration head.
+The seven attempt3 timeout stories pass in the new configured project
+(49863, native-functional-budget-witnesses log): six files, seven selected
+cases, one unselected skip; unchanged assertions completed in14.66s total
+case time. This focused result does not replace the full gate.
 
 ## Dependency preparation
 
