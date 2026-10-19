@@ -5,7 +5,8 @@ Request `78fba9fca56a28dc75cca37f88a0fbea334bdc2a`, promise
 starts from reviewed Main `3ed2a08a`. Actual reviewed G5a must land before
 the integration witness and final gate. The frozen G5a views have not been
 imported, executed or edited. This has no release packet, private dependency
-view, simulator, test, gate, review, deployment or live acceptance yet.
+view, simulator, whole gate, review, deployment or live acceptance yet. The
+static landing-page portion and its focused checks are now prepared below.
 
 The commissioned Source contains a separate signed demo release, a stateless
 bounded cron Worker beside the package, an operator runbook, and the Grow
@@ -72,3 +73,32 @@ The operator's post-review receipt must record trust/deployment identity,
 actual native room/install and first ticks, actual page-to-room navigation,
 and person-in-AI operator act. Until then there is no hosted-demo completion
 claim. Archive exit-test work follows the separate demo-room archive slice.
+
+## Static landing page prepared
+
+The Grow page reuses the existing child-page utility header, shared style,
+brand masters and link-preview metadata. The home card links to `/grow/`.
+The build retains home, Room, Library, Counter and Jam, adding Grow as the
+sixth page and fifth destination card. The existing Node built-output
+invariant was strengthened and passed; its first original log is
+`/tmp/artroom-g5-hosted-home-first-20261019.log`. No checkout dependency was
+installed or changed.
+
+Rendered validation used cached pinned Playwright 1.63.0 and Chromium
+153.0.8010.12 because the Browser plugin was not available. The scratch
+script `/tmp/artroom-g5-hosted-home-browser-20261019.mjs` builds into its
+own scratch directory and serves only those files on local loopback. At
+1440×1000 and 390×844, home → Grow renders the expected title, heading,
+shared header, separate-fact explanation and invitation guidance without
+horizontal overflow, framework overlays or console/page errors. Both
+screenshots were inspected; desktop retains the two-column hero and phone
+stacks the workflow below the introduction. The browser process and local
+server completed naturally with exit 0. Evidence is the matching `.log`
+and `report.json`, `grow-1440.png`, `grow-390.png` under the script's
+same-named output directory.
+
+The primary link's exact existing Room invitation URL was checked and
+clicked through a locally intercepted destination. No external request,
+actual Grow room selection, invitation redemption or hosted acceptance was
+proved. Actual post-review provisioned-room navigation remains an operator
+receipt obligation. No public tender seats or credentials are offered.
