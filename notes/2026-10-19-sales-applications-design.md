@@ -53,7 +53,7 @@ finding, the chasing, the re-telling and the re-keying between people:
 the coordination. The room makes that part easy, in two ways.
 
 **Each participant works from their own perspective on the shared
-work.** A bid has two hundred rows. The product manager needs the four
+work.** A bid has a hundred rows. The product manager needs the four
 that are hers, with the draft, the buyer's related question and the due
 time, and nothing else. The sales engineer sees what has been supplied
 and waits for review. The manager sees two approvals and a deadline. The
@@ -88,7 +88,7 @@ to answer; drafts from the last two bids; row 212 conflicts with what
 the buyer said on Tuesday"), and the person reads, edits and signs.
 
 The alternative is an agent that does the bid for one person. It reads
-the spreadsheet, drafts two hundred answers and mails four people. The
+the spreadsheet, drafts a hundred answers and mails four people. The
 replies come back as prose and the agent merges them; the product
 manager asks "which row?"; the sales engineer says he answered that in
 another thread; the manager approves "the price" without seeing which
@@ -297,17 +297,23 @@ The request's documents are usually spreadsheets: a compliance matrix
 of tens to hundreds of rows, each with an identifier, a requirement
 text, a response kind (yes or no, a narrative, an attachment) and
 sometimes a weight, across several sheets. The intake agent takes that
-load. The first version is bounded by the bid room, not by the file: a
-bid room has one import and at most one hundred requirements, which is
-the bound of the complete reads a routed carousel needs, and each
-requirement's text and answer hold at most four thousand characters,
-with an import's texts together under one hundred and twenty-eight
-kibibytes. A request over any of these is refused at import, by name
-and with its count, before any requirement is opened; a second import
-into the same bid room is refused `import-exists`. A spreadsheet that
-changes after import is a new bid room, with the old one `withdrawn`
-and referenced; a small correction is a remap. Larger matrices are
-deferred (section 8). The agent records the import (the file's link and
+load. The first version is bounded by the bid room, not by the file,
+and by bytes, not characters. A bid room has one import and at most
+fifty requirements. Each requirement's whole queried representation
+(identifier, row reference, kind, domain, text, draft, answer, parties
+and refs) is at most two kibibytes in UTF-8, with the text at most 512
+bytes and the draft and the answer at most 640 bytes each, so fifty
+requirements stay under half of the native query payload limit with
+room for metadata, and the complete reads a routed carousel needs stay
+complete. The sealed rendering is at most sixty-four kibibytes, the
+file write's limit. A request over any of these is refused at import,
+by name and with its count, before any requirement is opened; a draft,
+supply, remap or rendering that would exceed its bound is refused by
+name before it strands the queue; a second import into the same bid
+room is refused `import-exists`. A spreadsheet that changes after
+import is a new bid room, with the old one `withdrawn` and referenced;
+a small correction is a remap. Longer texts, longer answers and larger
+matrices are deferred (section 8). The agent records the import (the file's link and
 digest, its sheets and their row counts), then opens one requirement
 per row with the row's
 reference, identifier, text, kind, a proposed domain and the due time
@@ -367,28 +373,26 @@ assembly made stale by any later change cannot be submitted, and no
 missing approval, unaccounted row or edited answer can become an
 apparently complete submission.
 
-Sealing is local; publication is not. `submit` sends `publish-file`
-with the sealed bytes to the bid's Git destination, and the submission's
-publication is `pending` from that send. No member writes what happens
-next. The send declares a result clause, as the lending library's
-`publish` does: when the destination answers, the host applies the
-clause's effects to the submission with the destination as the
-authenticated sender. The result carries the destination's binding of
-the sending scope and incarnation, the source fact, the send ordinal,
-the path and the content digest; the clause writes them, and sets
-`confirmed` only when every one of them equals the submission's own
-expected values, not the digest alone, since two paths or two sends can
-carry identical text. A refused result sets `refused` with the result's
-reason; a superseding result sets `superseded`; no result leaves it
-`pending` or `unknown`, and an unknown is not resent. No act has an
-effect on the publication slots. A person who wants to see for
-themselves reads the receipt file the destination publishes under its
-public receipt ref for that source fact and ordinal; a member's report
-of such a check is that member's statement, shown with their name, and
-never sets `confirmed`. "What went out" in this note means the
-confirmed result, not the send. Clarifications after submission are new
-questions; a revised offer is a new assembly and a new submission with
-its own send and its own result, and the earlier one stays.
+Sealing is local; publication is not, and the first version is honest
+about how far the record can see. `submit` sends `publish-file` with
+the sealed bytes to the bid's Git destination. The send declares a
+result clause, as the lending library's `publish` does, and what that
+result proves is admission: the destination decided the request,
+applied, refused or superseded, and the clause writes that outcome onto
+the submission with the destination as the authenticated sender. The
+push to the repository and the public receipt happen later, outside
+what today's result carries, so no native state says "published". A
+member who wants to know reads the receipt file the destination
+publishes under its public receipt ref for that source fact and
+ordinal, compares its path and content digest with the submission's
+expected values, and signs `report-receipt-check`; the record shows it
+as that member's statement, "checked by" their name, never as a
+destination-confirmed state. An unknown outcome stays unknown and is
+not resent. A revised offer is a new assembly and a new submission with
+its own send and result, and the earlier one stays. A native completion
+protocol, in which the destination's later receipt reaches the room as
+its own authenticated fact, is a named dependency (section 8), not
+today's behaviour.
 
 The award or the loss is recorded by the owner with its source. The
 win or loss review reads the entry range from intake to outcome: which
@@ -408,7 +412,7 @@ supply it again or retire it.
 document link and digest; refs: the decision, the submission),
 `import` (one per bid room; states `read`, `mapped`, `confirmed`,
 `withdrawn`; values: link, digest, sheet names, row counts),
-`requirement` (at most one hundred per bid room; states `unassigned`,
+`requirement` (at most fifty per bid room; states `unassigned`,
 `assigned`, `drafted`, `asked`, `supplied`, `reviewed`, `declined`;
 values: identifier, row reference, text, kind, weight, domain, due time,
 draft, answer; parties: expert, reviewer; refs: the import, the
@@ -420,19 +424,17 @@ in the buyer's layout at an exact set of revisions), `question` (states
 terms, one of each per bid; states `requested`, `granted`, `refused`;
 refs: the requirement it covers and the revision approved),
 `assembly` (the rendering's digest, each answer's revision, both
-approvals' entries), `submission` (the sealed assembly; publication
-states `pending`, `confirmed`, `unknown`, `refused`, `superseded`,
-written only by the send's result clause; values: the expected and the
-received sending scope and incarnation, source fact, send ordinal, path
-and content digest; refs: the assembly).
+approvals' entries), `submission` (the sealed assembly; request states `pending`,
+`admitted`, `refused`, `superseded`, written only by the send's result
+clause; values: the source fact and send ordinal, the expected path and
+content digest; refs: the assembly, any receipt-check reports).
 
 **Acts.** `intake`, `decide-go`, `decide-no-go`, `import` (the intake
 agent; records the digest; guards: no import in this bid room, refused
-`import-exists`; at most one hundred rows and the text bounds above,
-refused by name), `open-requirement` (the intake agent; guards: the
-import ref and a row reference, no requirement with that row, refused
-`row-exists`, and fewer than one hundred requirements, refused
-`bid-full`), `propose-mapping`, `confirm-mapping` and `remap`
+`import-exists`; at most fifty rows and the byte bounds above, refused
+by name), `open-requirement` (the intake agent; guards: the import ref
+and a row reference, no requirement with that row, refused
+`row-exists`, and fewer than fifty requirements, refused `bid-full`), `propose-mapping`, `confirm-mapping` and `remap`
 (the owner; a remap names its reason), `assign` (sets the expert and
 reviewer parties), `draft-answer` and `flag` (the drafting agent),
 `ask-expert` (`bid.review`; names the expert party and a due time; moves
@@ -453,8 +455,11 @@ revision), `render-response` (the intake agent; guard: every row's
 requirement `reviewed` or `declined`), `assemble` (guards as above;
 writes the assembly), `submit` (`bid.decide`; names the exact assembly
 revision, seals it, sends `publish-file` with a result clause whose
-effects write the submission's publication state and the destination's
-binding from the result, with the destination as sender),
+effects write the request's admission outcome from the result, with the
+destination as sender), `report-receipt-check` (any member; their
+report that the public receipt file for the submission's source fact
+and ordinal carries its path and content digest; attributed, never
+confirming),
 `withdraw-bid` (`bid.own`; with a reason, naming a successor bid room
 when there is one), `record-outcome`.
 
@@ -474,8 +479,8 @@ carousel (supplied answers to review, with Accept and Send back, and
 technical requirements to supply), the
 approval card for approvers (Grant and Refuse at the named revision),
 the question log, the submission record (the sealed assembly, its
-publication state and the destination's binding as received), and the
-win or loss log.
+request state and any receipt checks by name), and the win or loss
+log.
 
 ### 5.4 What it needs
 
@@ -484,14 +489,15 @@ win or loss log.
   landed.
 - Several scopes in one package: the bid room and the answer library
   as two scopes, landed with M2a's interface and M2b's ownership work.
-- Publication of the sealed response: today's Git publication, with
-  the destination's result applied by the send's result clause as the
-  publication outcome, and its public receipt file for anyone who wants
-  to look.
-- The bound: one import and at most one hundred requirements per bid
-  room, with the text bounds of 5.2, within the complete-read and
-  payload limits of the routed carousel; bigger requests are refused at
-  import and deferred; a changed spreadsheet is a new bid room.
+- Publication of the sealed response: today's Git publication. The
+  record sees the destination's admission through the send's result
+  clause, and a member's attributed check of the public receipt file;
+  a native completion protocol is deferred.
+- The bound: one import and at most fifty requirements per bid room,
+  two kibibytes per requirement's queried representation, a
+  sixty-four-kibibyte sealed rendering, within the native query payload
+  and file-write limits; bigger requests are refused at import and
+  deferred; a changed spreadsheet is a new bid room.
 - The intake agent as a hosted member: the hosted agent teams design,
   not yet built. Until then the same agent runs from the owner's
   machine under the same grant, and the record does not change.
@@ -546,12 +552,12 @@ exact revision. Two days before the date, a post that is drafted and not
 approved appears in the owner's carousel. On the date the owner signs
 `publish`: for the site, the act sends the approved text to the site's
 Git destination as `publish-file`, with a result clause as the lending
-library's `publish` has, and the post is `publishing` until the
-destination's result arrives; the clause sets `published` only when the
-result's sending scope and incarnation, source fact, send ordinal, path
-and content digest all equal the post's expected values, sets `refused`
-with the reason otherwise, and leaves an unknown as it is. No act
-writes those slots. A text changed after publication needs a new
+library's `publish` has; the post is `publishing` until the
+destination's result, which proves admission only, and then `admitted`,
+or `refused` with the reason; an unknown stays as it is, and no act
+writes those slots. Whether the file is on the site is a member's
+check, `report-receipt-check`, shown with their name; no native state
+says published. A text changed after publication needs a new
 approval and a new `publish` with its own receipt. For a channel dap
 cannot write to, the owner posts it by hand and records that with the
 link, which stays a statement. Retiring a post replaces its file with a
@@ -565,16 +571,18 @@ carousel.
 ### 6.3 Definitions
 
 **Items.** `campaign` (a name and a period), `post` (states `planned`,
-`drafted`, `approved`, `publishing`, `published`, `retired`; values:
-title, channel, date, brief, text, path, content digest; refs: the
-campaign, the approving entry, the confirmed receipt), `comment`.
+`drafted`, `approved`, `publishing`, `admitted`, `retired`; values:
+title, channel, date, brief, text (at most thirty-two kibibytes), path,
+content digest; refs: the campaign, the approving entry, any
+receipt-check reports), `comment`.
 
 **Acts.** `plan`, `brief`, `draft`, `revise` (resets `approved` to
 `drafted`: a changed text needs a new approval), `comment`, `approve`
 (fixes the revision), `publish` (guard: `approved` at the current
 revision; sends `publish-file` with the text at the post's path, with a
-result clause that writes the publication state from the destination's
-result; moves to `publishing`), `record-posting`
+result clause that writes the admission outcome from the destination's
+result; moves to `publishing`), `report-receipt-check` (any member;
+attributed), `record-posting`
 (for other channels, with the link), `retire` (sends the notice and the
 index rewrite as publications of their own).
 
@@ -584,8 +592,8 @@ attention to the owner. No invented state either way.
 
 **Views.** The calendar carousel for the owner (upcoming posts needing
 approval or publication), the post card (text, channel, date; Approve;
-Publish when approved), the campaign record, the published log of confirmed publications, with
-pending and unknown ones shown apart.
+Publish when approved), the campaign record, the log of admitted publications with receipt
+checks by name, and pending and unknown ones shown apart.
 
 ### 6.4 What it needs
 
@@ -620,14 +628,17 @@ estimates from the grow slices.
 |---|---|---|---|
 | C1 | The marketing calendar: definitions, scenario, views, publication to a site repository | a post planned in the room is approved, published to a test destination and read back; a late post reaches the owner's carousel | 2 days |
 | C2 | The prospect room: definitions, scenario, views; the prospect as an invited member | an account goes from research to a proposal accepted by a member in the test host; the five-day rule reaches the owner | 2 days |
-| C3 | The bid response: definitions in two scopes, the intake agent's decomposition and rendering, routing by domain, approvals, assembly and submission with publication | a two-sheet request of forty rows is decomposed into requirements, three rows remapped by the owner and a duplicate refused; a one-hundred-and-one-row request, an oversized cell and a second import into the same bid room are each refused by name; assembly is refused while a mapping is proposed, while a row is unresolved, while an approval is missing and while the terms approval is stale; then all forty rows are reviewed or declined with reasons, six of them supplied by asked experts across three domains, an unsourced roadmap claim is refused, both approvals are opened and granted at their current revisions, the answers are rendered back in the request's layout, assembled and submitted; the submission stays pending until the destination's result arrives through the result clause, and a result whose binding differs from the expected one does not confirm it | 5 days |
+| C3 | The bid response: definitions in two scopes, the intake agent's decomposition and rendering, routing by domain, approvals, assembly and submission with publication | a two-sheet request of forty rows is decomposed into requirements, three rows remapped by the owner and a duplicate refused; a fifty-one-row request, an oversized cell, an oversized answer and a second import into the same bid room are each refused by name; assembly is refused while a mapping is proposed, while a row is unresolved, while an approval is missing and while the terms approval is stale; then all forty rows are reviewed or declined with reasons, six of them supplied by asked experts across three domains, an unsourced roadmap claim is refused, both approvals are opened and granted at their current revisions, the answers are rendered back in the request's layout, assembled and submitted; the submission stays pending until the destination's result admits it, a member's receipt check is recorded with their name, and no state claims the file published | 5 days |
 | C4 | The hosted rooms and a page for each on the homepage, after the demo-room pattern of plan 033 | a person in their AI app takes an act in each | 2 days |
 
 Named and deferred: custody for documents; private price views; the
-buyer as a member; requests over one hundred rows; deleting published
-files; integrations, which wait for the general design of outside
-operations; the answer library as a shared resource across bid rooms;
-the roll-up of many prospect accounts or bids under a site.
+buyer as a member; requests over fifty rows, and longer texts and
+answers; deleting published files; a native completion protocol for
+publication, in which the destination's later receipt reaches the room
+as its own authenticated fact; integrations, which wait for the general
+design of outside operations; the answer library as a shared resource
+across bid rooms; the roll-up of many prospect accounts or bids under a
+site.
 
 ## 9. Open questions
 
@@ -643,12 +654,17 @@ the roll-up of many prospect accounts or bids under a site.
    posting to channels and writing to a sales system stay members'
    statements until the general design of outside operations exists;
    no point integration is built for one application.
-4. **The mapping's confirmation.** Whether the owner confirms every
+4. **Publication completion.** The record sees a request admitted and
+   a member's check of the receipt file. Whether the first users need
+   the room itself to know the file is on the site, and so need the
+   completion protocol before the calendar is useful, is a question for
+   them.
+5. **The mapping's confirmation.** Whether the owner confirms every
    row the agent mapped, or only the rows the agent flagged, is a
    question of how good the decomposition is on real requests. The
    first version asks for the flagged rows only and records the rest as
    the agent's proposal.
-5. **Many accounts, one owner.** The prospect room keeps all of one
+6. **Many accounts, one owner.** The prospect room keeps all of one
    owner's accounts in one scope. A team of sellers wants one scope per
    seller or private views; the roll-up for a manager is a site-level
    projection, as the grow site reads its rooms.
