@@ -1,10 +1,11 @@
 /** Shared synchronous journal projection phase over a schema-bound
  * declaration. Authority, metadata, binding and final freshness remain the
  * caller's. No retry lives here. */
-import type { ApplicationProjectionData, ApplicationProjectionRefusal } from "@generalbusiness/dap-contract";
+import type { ApplicationProjectionData, ApplicationProjectionRefusal, ItemQueryRead } from "@generalbusiness/dap-contract";
 import { parseStrict } from "@generalbusiness/artroom-bytes";
-import { applicationProjectionQueries, isApplicationJournalSource, projectApplicationQueryReads, type ApplicationReadProjection } from "@generalbusiness/artroom-bytes/application-v2";
+import { applicationProjectionQueries, applicationProjectionFactRefs, isApplicationJournalSource, projectApplicationQueryReads, type ApplicationReadProjection } from "@generalbusiness/artroom-bytes/application-v2";
 import { applicationProjectionJournal } from "./projection-journal.ts";
+import { applicationProjectionFactTimes } from "./projection-fact-times.ts";
 import { ItemQueryBudget } from "../item-query-budget.ts";
 import { itemQueryPage } from "../item-query-page.ts";
 import type { PreparedRead } from "../read-preparation.ts";
@@ -36,5 +37,15 @@ export function applicationProjectionData(sql: Pick<Sql, "exec">, frame: Pick<Pr
     if (!read.ok) return read;
     journals[name] = read.value;
   }
-  return { ok: true, value: projectApplicationQueryReads(projection, definition.declared, frame.scope.at, items, replies, journals) };
+  const factTimes: Record<string, unknown> = {};
+  for (const [name, source] of Object.entries(projection.sources)) if (!isApplicationJournalSource(source)
+    && Object.values(source.fields).some(field => field.from.kind === "fact-time")) {
+    const reply = replies[name] as ItemQueryRead;
+    if (!reply.ok) return { ok: false, reason: "unavailable" };
+    const refs = applicationProjectionFactRefs(source, frame.scope.at, reply.at, reply.value.items);
+    const read = applicationProjectionFactTimes(sql, frame, refs, budgets[name]!);
+    if (!read) return { ok: false, reason: "unavailable" };
+    factTimes[name] = read;
+  }
+  return { ok: true, value: projectApplicationQueryReads(projection, definition.declared, frame.scope.at, items, replies, journals, factTimes) };
 }

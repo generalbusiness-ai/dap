@@ -32,7 +32,9 @@ function scheduleRefresh() {
   window.clearTimeout(refreshTimer);
   const interval = display?.card?.declared?.refresh ?? display?.surface?.refresh;
   if (alive && display?.active && interval) refreshTimer = window.setTimeout(() => {
-    if (busy) scheduleRefresh(); else void read({ refresh: true }).catch(showError);
+    if (busy) scheduleRefresh(); else void read({ refresh: true }).catch(error => {
+      if (error instanceof AppToolError && error.reason === "busy") scheduleRefresh(); else showError(error);
+    });
   }, interval);
 }
 
@@ -71,7 +73,7 @@ async function reportContext() {
       const encoded = JSON.stringify(context);
       if (encoded === reportedContext) { contextError = ""; continue; }
       const identity = context.identity;
-      const line = `${context.note ? `${context.note} ` : ""}${identity ? `${identity.kind} ${identity.item}, revision ${identity.revision}` : `${context.screen}: ${context.status}`}. ${context.navigation.join(", ") || "No navigation"}.${context.receipt ? ` ${context.receipt}` : ""}`;
+      const line = `${context.note ? `${context.note} ` : ""}${identity ? `${identity.kind} ${identity.item}, revision ${identity.revision}` : `${context.screen}: ${context.status}`}. View ${context.view}. ${context.navigation.join(", ") || "No navigation"}.${context.receipt ? ` ${context.receipt}` : ""}`;
       try {
         await bridge.request("ui/update-model-context", { content: [{ type: "text", text: line }], structuredContent: context });
         reportedContext = encoded;
@@ -97,7 +99,14 @@ async function read(move?: { page?: PageKind; position?: number; refresh?: boole
   if (busy || !alive) return;
   busy = true; notice = ""; render();
   try {
-    const data = await bridge.tool("view_read", { view, ...(move ? { cut: display?.cut, ...move } : {}) });
+    let data;
+    try { data = await bridge.tool("view_read", { view, ...(move ? { cut: display?.cut, ...move } : {}) }); }
+    catch (error) {
+      // A model input can advance this retained view between app polls.
+      // Recover its current server display; never repeat a stale navigation.
+      if (!(error instanceof AppToolError) || error.reason !== "stale" || !move?.refresh) throw error;
+      data = await bridge.tool("view_read", { view });
+    }
     accept(data);
   } finally { busy = false; render(); }
 }
@@ -209,7 +218,7 @@ function render() {
   }
   const card = display.card;
   const summary = display.query.page === "summary";
-  if (!summary && (!surfaceOf() || card?.declared?.back || display.surface?.back)) {
+  if ((!summary || card?.declared?.kind === "carousel" && card.declared.back) && (!surfaceOf() || card?.declared?.back || display.surface?.back)) {
     const nav = node("nav"); nav.setAttribute("aria-label", "Card navigation");
     nav.append(button("← Back", back, "quiet")); root.append(nav);
   }
@@ -288,13 +297,14 @@ function render() {
     const next = button("›", () => read({ position: display!.position + 1, page: "summary" }), "quiet arrow");
     next.setAttribute("aria-label", "Next item"); next.disabled ||= display.position + 1 >= display.count;
     nav.append(previous, node("span", `${display.position + 1} / ${display.count}`, "position"), next); root.append(nav);
-  } else if (!summary && display.query.page !== "diff") {
+  }
+  if (display.query.page !== "diff" && (!summary || card.actions.some(action => action.input === "chat" || action.purpose === "check-original"))) {
     const actions = node("div", undefined, "actions");
     for (const action of card.actions) {
-      const control = button(action.label, () => act(action.id));
+      const control = button(action.input === "chat" ? `${action.label} in chat` : action.label, action.input === "chat" ? handoff : () => act(action.id));
       control.disabled ||= !display.active; actions.append(control);
     }
-    if (display.query.page === "item" && card.actions.length < 2 && !card.unresolvedOriginal) {
+    if (display.query.page === "item" && card.actions.length < 2 && !card.unresolvedOriginal && !card.actions.some(action => action.input === "chat")) {
       const ask = button("Ask in chat", handoff, "quiet"); ask.disabled ||= !display.active; actions.append(ask);
     }
     if (display.query.page === "item" && card.diffAvailable) actions.append(button("View diff", async () => { returnPage = "item"; await read({ page: "diff" }); }, "quiet"));

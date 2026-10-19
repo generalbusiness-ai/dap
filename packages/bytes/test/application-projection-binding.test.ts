@@ -55,3 +55,16 @@ test("binding refuses detached text and executable definition input before a get
   expect(() => bindApplicationProjection(input, ordinary)).toThrow("application-projection-binding");
   expect(calls).toBe(0);
 });
+
+test("fact-time binds only to an optionality-matched same-definition native fact ref", () => {
+  const native = definition();
+  native.items["alert"]!.refs["seen"] = { fixed: false, required: false, to: { type: "fact", under: native.name, kind: ["touch"] } };
+  const field = { from: { kind: "fact-time", name: "seen" }, of: { type: "time" }, nullable: true };
+  const input = (given: unknown = field) => ({ ...projection(native), sources: { alerts: { ...projection(native).sources.alerts, fields: { seenTime: given } } } });
+  expect(bindApplicationProjection(input(), native).sources["alerts"]!.fields["seenTime"]).toEqual(field);
+  for (const given of [{ ...field, nullable: false }, { ...field, of: { type: "int", min: 0, max: 100 } }, { ...field, from: { ...field.from, name: "parent" } }]) {
+    expect(() => bindApplicationProjection(input(given), native)).toThrow(ApplicationProjectionError);
+  }
+  native.items["alert"]!.refs["seen"]!.to = { type: "fact", under: "foreign", kind: ["touch"] };
+  expect(() => bindApplicationProjection(input(), native)).toThrow(ApplicationProjectionError);
+});

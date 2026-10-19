@@ -30,6 +30,26 @@ const views = () => ({ note: {
   context: "Note {id}", fallback: "Note {id}: {text}", waiting: {}, refresh: 2000, display: "inline", back: "note",
 } });
 
+test("carousel order binds only to a complete item source's integer or timestamp fields", () => {
+  const timed = { ...definition, items: { ...definition.items, note: { ...definition.items["note"]!, values: {
+    ...definition.items["note"]!.values, seen: { required: false, fixed: false, of: { type: "time" as const } },
+  } } } };
+  const many = readApplicationProjection({ ...projection, definition: definitionDigest(timed), sources: { note: {
+    ...projection.sources["note"]!, read: "many", limit: 10, fields: { ...projection.sources["note"]!.fields,
+      seen: { from: { kind: "value", name: "seen" }, of: { type: "time" }, nullable: true },
+    },
+  } } });
+  const declaration = (order: unknown, kind = "carousel") => ({ note: { ...views().note, kind, order } });
+  const order = { field: "seen", direction: "asc", missing: "first" }, parts = [{ id: definitionDigest(timed), bytes: canonicalize(timed) }];
+  expect(bindApplicationViews(declaration(order), { "room.note": many }, parts)["note"]).toMatchObject({ order });
+  for (const bad of [{ ...order, field: "text" }, { ...order, field: "absent" }, { ...order, direction: "random" }, { ...order, missing: "hide" }, { ...order, direction: ["asc"] }, { ...order, missing: ["first"] }, { ...order, script: "sort()" }]) {
+    expect(() => bindApplicationViews(declaration(bad), { "room.note": many }, parts)).toThrow(ApplicationViewError);
+  }
+  expect(() => bindApplicationViews(declaration(order, "card"), { "room.note": many }, parts)).toThrow(ApplicationViewError);
+  const one = readApplicationProjection({ ...many, sources: { note: { ...many.sources["note"]!, read: "item", limit: 1 } } });
+  expect(() => bindApplicationViews(declaration(order), { "room.note": one }, parts)).toThrow(ApplicationViewError);
+});
+
 // Invariant: the immutable view binds only to declared fields and native acts
 // of its own definition, using that act's actual required action.
 test("fixed-point fact descriptors bind only to selected integers with bounded decimal shifts and unique fields", () => {
@@ -40,6 +60,19 @@ test("fixed-point fact descriptors bind only to selected integers with bounded d
     expect(() => bindApplicationViews(declaration([invalid]), { "room.note": projection }, parts)).toThrow(ApplicationViewError);
   }
   expect(() => readApplicationViews(declaration([fact, "revision"]))).toThrow(ApplicationViewError);
+});
+
+test("age descriptors bind only to selected timestamp fields", () => {
+  const native = { ...definition, items: { note: { ...definition.items["note"]!, values: {
+    ...definition.items["note"]!.values, seen: { required: false, fixed: false, of: { type: "time" as const } },
+  } } } };
+  const timed = readApplicationProjection({ ...projection, definition: definitionDigest(native), sources: { note: { ...projection.sources["note"]!, fields: {
+    ...projection.sources["note"]!.fields, seen: { from: { kind: "value", name: "seen" }, of: { type: "time" }, nullable: true },
+  } } } });
+  const age = { field: "seen", label: "Age", format: "age" };
+  const bound = (fact: unknown) => bindApplicationViews({ ...views(), note: { ...views().note, facts: [fact] } }, { "room.note": timed }, [{ id: definitionDigest(native), bytes: canonicalize(native) }]);
+  expect(bound(age)["note"]).toMatchObject({ facts: [age] });
+  for (const fact of [{ ...age, field: "text" }, { ...age, field: "id" }, { ...age, format: "script" }, { ...age, scale: 2 }]) expect(() => bound(fact)).toThrow(ApplicationViewError);
 });
 
 test("owned item and read-only surface views bind to their declared projection and native acts", () => {
@@ -134,4 +167,26 @@ test("record series bind only bounded integer history on the selected native ite
   const wrongId = definitionDigest(wrong);
   expect(() => bindApplicationViews({ record: { ...views().note, kind: "record", acts: [], series } },
     { "room.note": { ...selected, definition: wrongId } }, [{ id: wrongId, bytes: canonicalize(wrong) }])).toThrow(ApplicationViewError);
+});
+
+// One native act may combine fixed fields with bounded human scalar inputs;
+// required fields cannot disappear or be overridden by the model.
+test("declared parameters bind to native fields beside constants without overlap or wider ranges", () => {
+  const changed = structuredClone(definition);
+  changed.acts["hold"] = { ...changed.acts["hold"]!, fields: {
+    target: { type: "enum", of: ["on", "off"], required: true }, level: { type: "int", min: 0, max: 10000, required: true },
+  } };
+  const id = definitionDigest(changed), selected = { ...projection, definition: id };
+  const parameter = { kind: "decimal", label: "Level", unit: "units", min: 0, max: 10000, scale: 3, required: true };
+  const act = { act: "hold", label: "Set level from chat", needs: "app.edit", when: "state = 'open'", args: { target: "off" }, parameters: { level: parameter } };
+  const bind = (offered: unknown) => bindApplicationViews({ ...views(), note: { ...views().note, acts: [offered] } },
+    { "room.note": selected }, [{ id, bytes: canonicalize(changed) }]);
+  expect(bind(act)["note"]!.acts[0]).toEqual(act);
+  for (const bad of [
+    { ...act, args: { target: "off", level: 0 } },
+    { ...act, parameters: { level: { ...parameter, required: false } } },
+    { ...act, parameters: { level: { ...parameter, max: 10001 } } },
+    { ...act, parameters: { invented: parameter } },
+    { ...act, parameters: { level: { kind: "text", label: "Level", max: 10, required: true } } },
+  ]) expect(() => bind(bad)).toThrow(ApplicationViewError);
 });

@@ -43,10 +43,11 @@ export function bindApplicationProjection(value: unknown, definition: DeclaredDe
           if (!slot) return fail();
           type = slot.list ? { type: "list", of: { type: "member" }, max: slot.max ?? 64 } : { type: "member" };
           required = slot.required;
-        } else if (kind === "ref") {
+        } else if (kind === "ref" || kind === "fact-time") {
           const slot = Object.hasOwn(item.refs, name) ? item.refs[name] : undefined;
           if (!slot) return fail();
-          type = slot.to; required = slot.required;
+          if (kind === "fact-time" && (slot.to.type !== "fact" || slot.to.under !== owned.name)) return fail();
+          type = kind === "fact-time" ? { type: "time" } : slot.to; required = slot.required;
         } else {
           const slot = Object.hasOwn(item.values, name) ? item.values[name] : undefined;
           if (!slot || slot.of.type === "text" && slot.of.detached) return fail();

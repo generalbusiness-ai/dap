@@ -1,6 +1,6 @@
 import type { PresentationPackage, ViewKind } from "./resources.ts";
 import type { ApplicationProjectionData, FactRef, FieldValue, ScopeRef } from "@generalbusiness/dap-contract";
-import type { ApplicationView } from "@generalbusiness/artroom-bytes/application-v2";
+import type { ApplicationView, ApplicationViewParameters } from "@generalbusiness/artroom-bytes/application-v2";
 
 export type PageKind = "summary" | "item" | "diff" | "updates";
 export interface EntryRange { scope: string; from: number; to: number }
@@ -22,6 +22,9 @@ export interface CardAction {
   /** A native kind and its already captured input; the browser never supplies these. */
   kind: string;
   args: Record<string, unknown>;
+  /** Server-owned declaration and transient model input; never app action arguments. */
+  parameters?: ApplicationViewParameters;
+  parameterInput?: unknown;
 }
 /** Verified package HTML and declared navigation, separate from native rows. */
 export interface DeclaredSurface {
@@ -98,6 +101,7 @@ export interface Projection {
 export interface ViewSource {
   readonly declared?: boolean;
   readonly screens?: readonly { name: string; resource: string }[];
+  readonly inputActs?: readonly { screen: string; id: string; label: string; parameters: ApplicationViewParameters }[];
   readonly presentation?: PresentationPackage;
   initialPage?(screen: ViewKind): PageKind;
   read(query: ViewQuery, access: { call(name: string, args: Record<string, unknown>): Promise<{ structuredContent: Record<string, unknown>; isError: boolean }> }): Promise<Projection>;
@@ -105,6 +109,8 @@ export interface ViewSource {
   admit?(query: ViewQuery, card: Card, action: CardAction): Promise<void>;
 }
 export interface CardContext {
+  /** Opaque mounted-view key for model input tools; never a dispatch cut. */
+  view: string;
   screen: ViewKind;
   page: PageKind;
   status: Projection["status"];
@@ -129,7 +135,7 @@ export interface Display {
   status: Projection["status"];
   position: number;
   count: number;
-  card?: Omit<Card, "actions"> & { actions: Pick<CardAction, "id" | "label" | "purpose">[] };
+  card?: Omit<Card, "actions"> & { actions: (Pick<CardAction, "id" | "label" | "purpose"> & { input?: "chat" })[] };
   fallback: string;
   data?: ApplicationProjectionData;
   surface?: DeclaredSurface;

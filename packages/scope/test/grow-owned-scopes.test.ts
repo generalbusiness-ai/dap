@@ -67,10 +67,14 @@ test("maintained Grow Site creates a native Room and opens its owned grid throug
     const bench = await life.wait(() => room.did(rita, "commission-bench", { expected: { zone: 1 }, fields: { zone, label: "A1", row: "A", column: 1 } }));
     const projected = await life.owner.required(() => handle.applicationProjection(query));
     expect(projected).toMatchObject({ ok: true, value: { scope: roomAt, sources: { bench: [{ id: bench, state: "stale", fields: { label: "A1", row: "A", column: 1 } }], zone: [{ id: zone }] } } });
+    // The G2 surface selects its separate layers declaration. Keep the
+    // original grid read above and compare the view to the SDK's same read.
+    const layered = await life.owner.required(() => handle.applicationProjection({ ...query, projection: "layers" }));
+    expect(layered).toMatchObject({ ok: true, value: { scope: roomAt, sources: { bench: [{ id: bench, fields: { moistureTime: null, noteTime: null, insectsTime: null } }] } } });
     const views = new McpService({ ...port, custody: memoryStore(), declaredViews: { bytes: packet.bytes, release: packet.ids.release, item: job } });
     expect((await life.wait(() => views.call("view_site", { view: "site" }))).structuredContent).toMatchObject({ status: "ready", identity: { subject: { scope: site.name } } });
     expect((await life.wait(() => views.call("view_grid", { view: "room-grid", scope: roomAt }))).structuredContent).toMatchObject({ status: "ready" });
-    expect((await life.wait(() => views.call("view_read", { view: "room-grid" }))).structuredContent).toMatchObject({ display: { query: { scope: roomAt }, card: { declared: { kind: "surface", data: projected.ok ? projected.value : null, surface: { opens: { bench: "bench-record" }, backScope: siteAt } } } } });
+    expect((await life.wait(() => views.call("view_read", { view: "room-grid" }))).structuredContent).toMatchObject({ display: { query: { scope: roomAt }, card: { declared: { kind: "surface", data: layered.ok ? layered.value : null, surface: { opens: { bench: "bench-record" }, backScope: siteAt } } } } });
     expect((await life.wait(() => views.call("view_grid", { view: "wrong-site", scope: siteAt }))).structuredContent).toMatchObject({ status: "unavailable" });
     expect((await life.wait(() => A.entries())).filter(entry => entry.input.type === "act" && entry.input.signed.intent.kind === "install-application")).toHaveLength(1);
     for (const node of [site, room]) {
