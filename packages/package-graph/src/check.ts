@@ -1,5 +1,6 @@
-/** Package-only obligations over declarations already checked by the native
- * validator. Findings never stand in for per-definition validation. */
+/** Package-only checks over bounded declaration data. Whole native admission
+ * remains a separate step of the public validator; these findings never
+ * stand in for it, including early codec checks before signing. */
 import type { Bounds, Digest } from "@generalbusiness/dap-contract";
 import type { PackageComposition, PackageFinding, PackageGraphDefinition } from "./types.ts";
 import { array, graphCreates, graphRows, graphSends, graphWriters, own, record, reportedCount, subjectType, type GraphRow, type GraphWriter } from "./model.ts";
@@ -8,6 +9,7 @@ import { packagePorts } from "./ports.ts";
 import { portFieldFindings, type PackageValueRules } from "./port-fields.ts";
 import { graphBudget } from "./budget.ts";
 import { cycleFindings } from "./cycles.ts";
+import { stagedFindings } from "./staged.ts";
 import { projectedUse } from "./projected.ts";
 
 export interface PackageGraphInput extends PackageValueRules {
@@ -28,6 +30,8 @@ export function checkPackageGraph(input: PackageGraphInput): PackageGraphReport 
   const { definitions, composition } = input, findings: PackageFinding[] = [];
   const budget = graphBudget(definitions, input.bounds);
   if (budget.length) return { findings: budget, instances: [], projected: null };
+  const staged = stagedFindings(definitions);
+  if (staged.length) return { findings: staged, instances: [], projected: null };
   const rows = graphRows(definitions), sends = graphSends(rows), writers = graphWriters(rows, sends);
   const ids = new Map(definitions.map(part => [part.id, part])), creations = graphCreates(sends, new Set(ids.keys()));
   const add = (definition: Digest, row: string, check: string, reason: PackageFinding["reason"], message: string, severity: PackageFinding["severity"] = "refusal") => {

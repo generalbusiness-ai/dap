@@ -7,7 +7,7 @@ import { validateDefinition } from "../src/index.ts";
 import { RULE_PROFILES } from "../src/rule/index.ts";
 import { site } from "../../../examples/grow/site.ts";
 import { room } from "../../../examples/grow/room.ts";
-export function grow(change: (site: DeclaredDefinition, room: DeclaredDefinition) => void = () => {}, peerPin?: Digest, extra: readonly DeclaredDefinition[] = []): PackageGraphInput {
+export function grow(change: (site: DeclaredDefinition, room: DeclaredDefinition) => void = () => {}, peerPin?: Digest, extra: readonly DeclaredDefinition[] = [], options: { nativeValidation?: boolean } = {}): PackageGraphInput {
   const parent = structuredClone(site), child = structuredClone(room);
   parent.items["room"]!.states["conflicted"] = { final: false };
   const creation = parent.acts["create-room"]!.sends[0]!;
@@ -24,7 +24,7 @@ export function grow(change: (site: DeclaredDefinition, room: DeclaredDefinition
   }
   parent.receives["room-summary"]!.from.pin = peerPin ?? childId;
   const parentId = definitionDigest(parent);
-  for (const definition of [parent, child, ...extra]) {
+  for (const definition of options.nativeValidation === false ? [] : [parent, child, ...extra]) {
     const native = validateDefinition(definition, PROPOSED_BOUNDS, RULE_PROFILES);
     expect(native.ok ? [] : native.problems).toEqual([]);
   }

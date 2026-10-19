@@ -263,3 +263,29 @@ test("Grow's declared pending creation work needs its own timed exit without rec
   expect(settled.instances[1]!.maximum).toBe(3);
   expect(checkPackageGraph(pending(false)).findings.map(finding => finding.reason)).toEqual(["unsettled-pending"]);
 });
+
+// These intentional future-form inputs bypass native validation in the
+// fixture. No current Native or future-slice admission is claimed for them.
+test("planned definition forms refuse by name before signing and from correctly signed package bytes", async () => {
+  const cases: { name: string; change: (parent: DeclaredDefinition, child: DeclaredDefinition) => void }[] = [
+    { name: "P4 states", change: parent => { Object.assign(parent.acts["create-room"]!, { states: ["pending"] }); } },
+    { name: "P1g reads", change: parent => { Object.assign(parent.acts["create-room"]!, { reads: ["room"] }); } },
+    { name: "P2 spacing", change: parent => { Object.assign(parent.receives["room-summary"]!, { spacing: { seconds: 5 } }); } },
+    { name: "P3 timed sends", change: (_parent, child) => { Object.assign(child.timed[Object.keys(child.timed)[0]!]!, { sends: [] }); } },
+    { name: "S3 sequenced", change: parent => { Object.assign(parent, { level: "sequenced" }); } },
+  ];
+  const good = signedGrowWire(grow());
+  expect(validatePackage(good.bytes, PROPOSED_BOUNDS, RULE_PROFILES, {}, good.release)).toMatchObject({ ok: true, kind: "graph" });
+  for (const variant of cases) {
+    const input = grow(variant.change, undefined, [], { nativeValidation: false });
+    expect(checkPackageGraph(input).findings.map(finding => finding.reason), variant.name).toEqual(["unsupported-form"]);
+    let signatures = 0;
+    await expect(packApplication2(packageInput(input), { key: keys.rita.key, sign: bytes => { signatures++; return sign(keys.rita.secret, bytes); } }), variant.name)
+      .rejects.toMatchObject({ findings: [expect.objectContaining({ reason: "unsupported-form" })] });
+    expect(signatures, variant.name).toBe(0);
+    const signed = signedGrowWire(input);
+    expect(validatePackage(signed.bytes, PROPOSED_BOUNDS, RULE_PROFILES, {}, signed.release), variant.name).toMatchObject({
+      ok: false, kind: "codec", reason: "invalid", findings: [expect.objectContaining({ reason: "unsupported-form" })],
+    });
+  }
+});

@@ -320,3 +320,33 @@ Its initial typecheck caught an import left unused after fixture extraction
 and a message union access that needed narrowing; both are corrected. This
 checkpoint has no new guard control, final gate or review. G1 checker feedback
 now takes priority, and P1 is saved for continuation afterward.
+
+
+## Refuse later declaration forms explicitly
+
+The shared graph preflight now recognizes the later-slice forms before it
+builds rows: act/handler `states` (P4), their `reads` (P1g), handler `spacing`
+(P2), timed `sends` (P3), and definition level `sequenced` (S3/P1g). It refuses
+each as `unsupported-form`, with its source row and owning slice, rather than
+silently ignoring it during packing and leaving a later native shape error.
+Nonempty groups, group order, derivation and parameters already refuse through
+the composition reader. This implements none of those later semantics; landed
+S1 `late` forms remain native and unchanged.
+
+One matrix intentionally bypasses native validation in its fixture for these
+future-form inputs. The ordinary Grow package passes. Each future form fails
+with its named finding before the pack signer runs, and also fails from an
+independently verified signed wire package. Two files pass ten cases in
+`/tmp/artroom-p1-staged-native-forms-initial-20261019.log`; graph, derive-test
+and bytes-test compilers pass in `...staged-native-forms-type-20261019.log`.
+Three maintained CLI/package/Lending files pass 16 cases in
+`...staged-maintained-codec-regression-20261019.log`.
+
+Disabling the single staged-return guard gives eight passes and one unchanged
+assertion failure for P4 states; the source is restored:
+`/tmp/artroom-p1-staged-form-control-20261019.log`. The separate pre-result
+relation control also distinguishes: disabling the final-state key restriction
+makes its unchanged `fan-in-unproved` assertion fail, then restores the source
+(`...pre-failure-related-key-control-20261019.log`). No final P1 gate or review
+yet. This work used P1's private view while the G1 correction gate was frozen
+and running; it changed no G1 source or dependency file.
