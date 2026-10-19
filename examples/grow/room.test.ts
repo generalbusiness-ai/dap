@@ -7,7 +7,7 @@ import { t, keys, member, deliver } from "@generalbusiness/dap-derive/testing";
 import { room } from "./room.ts";
 import { site } from "./site.ts";
 import { sitePresence } from "./presence.ts";
-import { nativeScenario, nativeChild, devicePermissions, operator, climate, sensors, on, replay, submit, type Actor, type Ledger } from "./test-support.ts";
+import { nativeScenario, nativeCreatedSite, nativeChild, devicePermissions, operator, climate, sensors, on, replay, submit, type Actor, type Ledger } from "./test-support.ts";
 
 interface Zone { id: number; vent: number; fan: number; heater: number }
 const wrote = (result: Awaited<ReturnType<typeof submit>>) => expect(result, JSON.stringify(result)).toMatchObject({ result: "write" });
@@ -45,7 +45,8 @@ test("four-zone climate fault holds, refuses stale authority, authorizes only ta
   const day = keys.rita, head = keys.sam, secret = new Uint8Array(32).fill(7);
   const irrigation: Actor = { secret, key: keyIdOfSecret(secret), member: member("irrigation"), principal: head.member };
   const permissions = [...devicePermissions, [day, ["grow.tend"]], [head, ["grow.water-more", "grow.apply", "grow.water"]], [irrigation, ["grow.water"]]] as const;
-  const parent = nativeScenario(site, permissions, { label: "Test grow site" }), rooms: Ledger[] = [], rows: number[] = [];
+  const { launcher, site: parent } = await nativeCreatedSite(site, permissions, { label: "Test grow site" });
+  const rooms: Ledger[] = [], rows: number[] = [];
   for (const label of ["Room A", "Room B", "Room C"]) {
     wrote(await submit(parent, operator, "create-room", { fields: { label } })); const row = parent.last.seq;
     const child = await nativeChild(parent, row, room, permissions, 20 + rooms.length);
@@ -123,7 +124,7 @@ test("four-zone climate fault holds, refuses stale authority, authorizes only ta
   parent.now = ledger.now; wrote(await submit(parent, day, "leave", { fields: { room: rows[0]! } })); expect(sitePresence(parent.entries)).toEqual([]);
   ledger.now = t(172800); expect(ledger.drain()).toHaveLength(1); expect(ledger.item(c4).state).toBe("stale"); expect(ledger.item(d4).state).toBe("fresh");
   ledger.now = t(173100); expect(ledger.drain()).toHaveLength(1); expect(ledger.item(d4).state).toBe("stale");
-  for (const current of [parent, ...rooms]) { const result = await replay(current, [parent, ...rooms].filter(other => other !== current)); expect([result.report.result, result.why]).toEqual(["consistent", null]); }
+  for (const current of [parent, ...rooms]) { const result = await replay(current, [launcher, parent, ...rooms].filter(other => other !== current)); expect([result.report.result, result.why]).toEqual(["consistent", null]); }
 });
 
 async function eligible(heaterMax = 100) {

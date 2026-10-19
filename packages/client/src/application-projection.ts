@@ -1,7 +1,7 @@
 /** Item fields selected by a declared native read. These adapters add no
  * opened/attributed fields, Summary reply or native authority proof. */
 import type { ApplicationProjectionData, ApplicationProjectionRead, FieldValue, Item, Read } from "@generalbusiness/dap-contract";
-import { canonicalize, isMemberRef, parseStrict } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isMemberRef, parseStrict, timeMs } from "@generalbusiness/artroom-bytes";
 import { applicationProjectionId, isApplicationJournalSource, readApplicationProjection, type ApplicationReadProjection } from "@generalbusiness/artroom-bytes/application-v2";
 import type { CompleteSnapshot } from "./observe.ts";
 
@@ -31,6 +31,9 @@ export function applicationItemSnapshot(declaration: ApplicationReadProjection, 
       for (const [alias, field] of Object.entries(source.fields)) {
         const value = row.fields[alias];
         if (value === undefined || value === null && !field.nullable) return fail();
+        // A timestamp resolved from a fact is derived read data, not a new
+        // native value/ref slot available to subject or guard resolution.
+        if (field.from.kind === "fact-time") { if (value !== null && timeMs(value) === null) return fail(); continue; }
         const slots = groups[field.from.kind] as Record<string, FieldValue | null>;
         if (Object.hasOwn(slots, field.from.name) && canonicalize(slots[field.from.name]) !== canonicalize(value)) return fail();
         if (field.from.kind === "party" && value !== null && !isMemberRef(value) && !(Array.isArray(value) && value.every(isMemberRef))) return fail();

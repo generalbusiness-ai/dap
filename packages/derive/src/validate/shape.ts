@@ -9,6 +9,10 @@ import type { Bounds } from "@generalbusiness/dap-contract";
 import { isObject } from "../values.ts";
 
 export type ProblemCode =
+  | "handler-body-collision"
+  | "late-on-advisory"
+  | "late-on-item-bound-handler"
+  | "late-then-on-reserved-handler"
   | "ambiguous-send"    // same-name sends may omit or fan out, and their result effects or observations differ (revision 24)
   | "shape"              // not the shape of the form, or a form or field the contract does not define
   | "bound"              // past a bound of sections 6.1 to 6.4

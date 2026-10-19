@@ -17,7 +17,7 @@ import type { CapabilityName, Digest, Entry, FactRef, FieldValue, Held, Incarnat
 import { DOMAINS } from "@generalbusiness/dap-contract";
 import { RETAINED_BYTE_DOMAINS, canonicalize, isDigest, isScopeRef, parseStrict } from "@generalbusiness/artroom-bytes";
 import { AmountError, NOTHING, naturalAmount, isObject, MemoryState, byteOrder, operationId, operationStanding, pendingOf, slotOf, timeMs } from "@generalbusiness/dap-derive";
-import type { Accepted, Account, Decided, HeldCreation, Holder, Item, ObservedHead, Operation, Outstanding, OwnRequest, Page, PreparedStep, RangeIndex, RecordState, RecordsWhere, Relation, ScopeState, StateSnapshot } from "@generalbusiness/dap-derive";
+import type { Accepted, Account, Decided, HeldCreation, Holder, Item, ObservedHead, Operation, Outstanding, OwnRequest, Page, PreparedStep, RangeIndex, RecordState, RecordsWhere, Relation, ScopeState, SourceOrder, StateSnapshot } from "@generalbusiness/dap-derive";
 import type { Dispatched, OutboxItem, OperationStatus, Outgoing, Retained, Sending, Store, Stored } from "./store.ts";
 import { ARCHIVE_PIN_KEY, archivePinBytes } from "./archive-pin.ts";
 import { LocalSigners, SIGNER_INDEX_BOUNDS } from "./local-signers.ts";
@@ -45,6 +45,7 @@ export interface Sql {
  *   `next` and `ack` are the dispatcher's: the attempt log, when the next
  *   attempt is due, and the fact transport acknowledged the send with.
  *   `outbox_due` indexes the sends that are still to be dispatched.
+ * - `source_order`: the highest applied source pair for each tell dispatch.
  * - `inbox`: each incoming delivery this scope recorded, by source scope,
  *   incarnation, entry and ordinal.
  * - `folded`: folded records that are not items: relationship copies, held
@@ -89,6 +90,7 @@ CREATE TABLE IF NOT EXISTS outbox (seq INTEGER NOT NULL, n INTEGER NOT NULL, tar
 CREATE INDEX IF NOT EXISTS outbox_due ON outbox (next, seq, n) WHERE held = 0 AND ack IS NULL AND result IS NULL AND diagnosis IS NULL;
 CREATE INDEX IF NOT EXISTS outbox_open ON outbox (seq, n) WHERE request IS NOT NULL AND result IS NULL;
 CREATE TABLE IF NOT EXISTS inbox (scope TEXT NOT NULL, inc TEXT NOT NULL, seq INTEGER NOT NULL, n INTEGER NOT NULL, hash TEXT NOT NULL, by INTEGER NOT NULL, PRIMARY KEY (scope, inc, seq, n)) WITHOUT ROWID;
+CREATE TABLE IF NOT EXISTS source_order (scope TEXT NOT NULL, inc TEXT NOT NULL, handler TEXT NOT NULL, seq INTEGER NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (scope, inc, handler)) WITHOUT ROWID;
 CREATE TABLE IF NOT EXISTS folded (kind TEXT NOT NULL, key TEXT NOT NULL, value TEXT NOT NULL, PRIMARY KEY (kind, key)) WITHOUT ROWID;
 CREATE TABLE IF NOT EXISTS operation (seq INTEGER NOT NULL, k INTEGER NOT NULL, value TEXT NOT NULL, opened INTEGER NOT NULL, unknown INTEGER NOT NULL, unopened INTEGER NOT NULL, PRIMARY KEY (seq, k)) WITHOUT ROWID;
 CREATE INDEX IF NOT EXISTS operation_open ON operation (seq, k) WHERE opened + unknown + unopened > 0;
@@ -255,6 +257,10 @@ export class SqliteStore implements Store {
     return row && { from: { scope: from.scope, inc: from.inc }, seq, hash: row["hash"] as Digest, n, by: row["by"] as number };
   }
   creation(seed: Digest): HeldCreation | null { return this.#folded("creation", seed); }
+  sourceOrder(from: ScopeRef, handler: string): SourceOrder | null {
+    const row = this.#one("SELECT seq, n FROM source_order WHERE scope = ? AND inc = ? AND handler = ?", from.scope, from.inc, handler);
+    return row && { from: { scope: from.scope, inc: from.inc }, handler, seq: row["seq"] as number, n: row["n"] as number };
+  }
   operation(id: OperationId): Operation | null {
     const [seq, k] = partsOf(id);
     return orNull<Operation>(this.#one("SELECT value FROM operation WHERE seq = ? AND k = ?", seq, k)?.["value"]);
@@ -370,6 +376,7 @@ export class SqliteStore implements Store {
       const at = { scope: row["scope"], inc: row["inc"], kind: "lane" } as ScopeRef;
       memory.putDecided({ at, seq: row["seq"] as number, hash: row["hash"] as Digest }, row["n"] as number, row["by"] as number);
     }
+    for (const row of this.#all("SELECT scope, inc, handler, seq, n FROM source_order")) memory.putSourceOrder({ from: { scope: row["scope"] as ScopeId, inc: row["inc"] as Incarnation }, handler: row["handler"] as string, seq: row["seq"] as number, n: row["n"] as number });
     return memory.all();
   }
 
@@ -409,6 +416,9 @@ export class SqliteStore implements Store {
     this.#run("INSERT INTO inbox (scope, inc, seq, n, hash, by) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT (scope, inc, seq, n) DO UPDATE SET hash = excluded.hash, by = excluded.by", from.at.scope, from.at.inc, from.seq, n, from.hash, by);
   }
   putCreation(seed: Digest, held: HeldCreation): void { this.#fold("creation", seed, held); }
+  putSourceOrder(order: SourceOrder): void {
+    this.#run("INSERT INTO source_order (scope, inc, handler, seq, n) VALUES (?, ?, ?, ?, ?) ON CONFLICT (scope, inc, handler) DO UPDATE SET seq = excluded.seq, n = excluded.n", order.from.scope, order.from.inc, order.handler, order.seq, order.n);
+  }
   putObserved(head: ObservedHead): void { this.#fold("observed", canonicalize([head.of.scope, head.of.inc, head.subject]), { of: { scope: head.of.scope, inc: head.of.inc }, subject: head.subject, seq: head.seq }); }
   putIndexed(type: string, slot: string, key: string, item: number): void {
     this.#run("INSERT INTO item_key (type, slot, key, id) VALUES (?, ?, ?, ?)", type, slot, key, item);

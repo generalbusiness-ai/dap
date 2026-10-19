@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Grow site</title>
+<style>
+:host{display:block;color:#21352b;font:16px/1.5 system-ui,sans-serif}*{box-sizing:border-box}section{padding:12px}h2{margin:0;font-size:1.45rem;line-height:1.2}.head,.status{color:#53685b;font-size:.9rem}ul{list-style:none;padding:0;margin:20px 0}li{padding:16px 0;border-top:1px solid #dce4dd;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}h3{font-size:1rem;margin:0}p{margin:.3rem 0}button{min-height:44px;border:1px solid #38654a;border-radius:7px;padding:9px 14px;background:#f3f8f2;color:#214c32;font:inherit;cursor:pointer}button:disabled{opacity:.55;cursor:default}button:focus-visible{outline:3px solid #b1b67b;outline-offset:3px}.error{color:#8a3029}
+</style></head><body><section aria-label="Grow site"><h2 id="name">Grow site</h2><p id="head" class="head"></p><ul id="rooms"></ul><p id="empty"></p><p id="error" class="error" role="status"></p></section>
+<script>
+(() => {
+  const api = window.dapSurface, root = api.root;
+  const node = (tag, text, className) => { const element = document.createElement(tag); element.textContent = text; if (className) element.className = className; return element; };
+  api.onData(data => {
+    const site = data.sources.site[0], rooms = data.sources.room;
+    root.querySelector('#name').textContent = site?.fields.label || 'Grow site';
+    root.querySelector('#head').textContent = `Native head ${data.at.seq} · ${rooms.length} room${rooms.length === 1 ? '' : 's'}`;
+    root.querySelector('#empty').textContent = rooms.length ? '' : 'No rooms in this site.';
+    const list = root.querySelector('#rooms'); list.replaceChildren();
+    for (const room of rooms) {
+      const row = node('li', ''), details = node('div', ''), button = node('button', `Open ${room.fields.label}`);
+      details.append(node('h3', room.fields.label), node('p', room.state === 'active' ? room.fields.openAlerts === null ? 'Active · summary not yet received' : `Active · ${room.fields.openAlerts} open alerts` : room.state === 'failed' ? 'Creation refused' : 'Creation pending', 'status'));
+      button.type = 'button'; button.disabled = room.state !== 'active' || !room.fields.scope;
+      button.addEventListener('click', async () => {
+        root.querySelector('#error').textContent = '';
+        try { await api.open('room', {}, room.fields.scope); }
+        catch (error) { root.querySelector('#error').textContent = error instanceof Error ? error.message : 'This room could not be opened.'; }
+      }, { signal: api.signal });
+      row.append(details, button); list.append(row);
+    }
+  });
+})();
+</script></body></html>

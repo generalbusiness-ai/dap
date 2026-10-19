@@ -1,6 +1,9 @@
+import { isMemberRef } from "@generalbusiness/artroom-bytes";
+import type { ScopeRef } from "@generalbusiness/dap-contract";
 import { AppBridge, AppToolError } from "./bridge.ts";
 import type { Display, PageKind } from "../src/views/types.ts";
 import { viewToolName } from "../src/views/names.ts";
+import { seriesPanel } from "./series.ts";
 import { SurfacePanels } from "./surface.ts";
 import "./style.css";
 
@@ -20,13 +23,18 @@ let connected = false;
 let focusKey: string | null = null;
 let refreshTimer = 0;
 const surfaces = new SurfacePanels();
+interface DeclaredAddress { screen: string; items?: Readonly<Record<string, number>>; scope?: ScopeRef }
+const declaredHistory: DeclaredAddress[] = [];
+const scopeKey = (scope?: ScopeRef) => scope ? JSON.stringify([scope.scope, scope.inc, scope.kind]) : "";
 const surfaceOf = () => display?.card?.declared?.surface ?? display?.surface;
 
 function scheduleRefresh() {
   window.clearTimeout(refreshTimer);
-  const interval = display?.card?.declared?.refresh ?? display?.surface?.refresh;
+  const interval = display?.card?.declared?.refresh ?? display?.surface?.refresh ?? display?.refresh;
   if (alive && display?.active && interval) refreshTimer = window.setTimeout(() => {
-    if (busy) scheduleRefresh(); else void read({ refresh: true }).catch(showError);
+    if (busy) scheduleRefresh(); else void read({ refresh: true }).catch(error => {
+      if (error instanceof AppToolError && error.reason === "busy") scheduleRefresh(); else showError(error);
+    });
   }, interval);
 }
 
@@ -65,7 +73,7 @@ async function reportContext() {
       const encoded = JSON.stringify(context);
       if (encoded === reportedContext) { contextError = ""; continue; }
       const identity = context.identity;
-      const line = `${context.note ? `${context.note} ` : ""}${identity ? `${identity.kind} ${identity.item}, revision ${identity.revision}` : `${context.screen}: ${context.status}`}. ${context.navigation.join(", ") || "No navigation"}.${context.receipt ? ` ${context.receipt}` : ""}`;
+      const line = `${context.note ? `${context.note} ` : ""}${identity ? `${identity.kind} ${identity.item}, revision ${identity.revision}` : `${context.screen}: ${context.status}`}. View ${context.view}. ${context.navigation.join(", ") || "No navigation"}.${context.receipt ? ` ${context.receipt}` : ""}`;
       try {
         await bridge.request("ui/update-model-context", { content: [{ type: "text", text: line }], structuredContent: context });
         reportedContext = encoded;
@@ -91,12 +99,19 @@ async function read(move?: { page?: PageKind; position?: number; refresh?: boole
   if (busy || !alive) return;
   busy = true; notice = ""; render();
   try {
-    const data = await bridge.tool("view_read", { view, ...(move ? { cut: display?.cut, ...move } : {}) });
+    let data;
+    try { data = await bridge.tool("view_read", { view, ...(move ? { cut: display?.cut, ...move } : {}) }); }
+    catch (error) {
+      // A model input can advance this retained view between app polls.
+      // Recover its current server display; never repeat a stale navigation.
+      if (!(error instanceof AppToolError) || error.reason !== "stale" || !move?.refresh) throw error;
+      data = await bridge.tool("view_read", { view });
+    }
     accept(data);
   } finally { busy = false; render(); }
 }
 async function open() {
-  if (!display?.card) return;
+  if (!display?.card || display.status !== "ready") return;
   returnPage = "summary";
   try {
     const requested = display.card.declared?.display ?? "fullscreen", mode = await bridge.displayMode(requested);
@@ -113,13 +128,19 @@ async function declaredMode() {
   catch (error) { notice = error instanceof Error ? error.message : String(error); }
   render();
 }
-async function openDeclared(screen: string, items?: Readonly<Record<string, number>>) {
+async function openDeclared(screen: string, items?: Readonly<Record<string, number>>, scope: ScopeRef | undefined = display?.card?.declared?.scope ?? display?.scope ?? display?.data?.scope, remember = true) {
   if (busy || !alive) return;
+  const selected = display?.query.scope ?? display?.card?.declared?.scope ?? display?.scope ?? display?.data?.scope;
+  const previous: DeclaredAddress | undefined = display ? { screen: display.query.screen, ...(display.query.items ? { items: display.query.items } : {}), ...(selected ? { scope: selected } : {}) } : undefined;
   const key = crypto.randomUUID();
   busy = true; notice = ""; render();
   try {
-    const opening = await bridge.tool(viewToolName(screen, true), { view: key, ...(items ? { items } : {}) });
+    const opening = await bridge.tool(viewToolName(screen, true), { view: key, ...(items ? { items } : {}), ...(scope ? { scope } : {}) });
     if (opening["view"] !== key) throw Error("The declared opening did not retain its view key.");
+    if (remember && previous) {
+      if (declaredHistory.length >= 128) declaredHistory.shift();
+      declaredHistory.push(structuredClone(previous));
+    }
     view = key; display = null;
   } finally { busy = false; render(); }
   await read();
@@ -127,8 +148,16 @@ async function openDeclared(screen: string, items?: Readonly<Record<string, numb
 }
 async function back() {
   if (!display) return;
-  const declaredBack = display.card?.declared?.back ?? display.surface?.back;
-  if (declaredBack) return openDeclared(declaredBack);
+  const declaredBack = display.back?.screen ?? display.card?.declared?.back ?? display.surface?.back;
+  if (declaredBack) {
+    for (let index = declaredHistory.length - 1; index >= 0; index--) {
+      const previous = declaredHistory[index]!;
+      if (previous.screen !== declaredBack) continue;
+      declaredHistory.splice(index);
+      return openDeclared(previous.screen, previous.items, previous.scope, false);
+    }
+    return openDeclared(declaredBack, undefined, display.back?.scope ?? display.card?.declared?.backScope ?? display.surface?.backScope, false);
+  }
   const target = display.query.page === "diff" ? returnPage : "summary";
   notice = "";
   if (target === "summary") {
@@ -153,9 +182,11 @@ async function act(action: string) {
   } finally { busy = false; render(); }
   if (accepted) {
     let modeNotice = "";
-    try { if (await bridge.displayMode("inline") !== "inline") modeNotice = "The host kept full screen open."; }
+    const record = display.card?.declared?.kind === "record" || display.card?.declared?.kind === "log";
+    const requested = record ? display.card!.declared!.display : "inline";
+    try { if (await bridge.displayMode(requested) !== requested) modeNotice = "The host kept the previous display mode."; }
     catch (error) { modeNotice = error instanceof Error ? error.message : String(error); }
-    await read({ page: "summary", position: display.position, refresh: true });
+    await read({ page: record ? "item" : "summary", position: display.position, refresh: true });
     notice = modeNotice; render();
   }
 }
@@ -187,16 +218,16 @@ function render() {
   }
   const card = display.card;
   const summary = display.query.page === "summary";
-  if (!summary) {
+  if ((!summary || display.back || card?.declared?.kind === "carousel" && card.declared.back) && (!surfaceOf() || display.back || card?.declared?.back || display.surface?.back)) {
     const nav = node("nav"); nav.setAttribute("aria-label", "Card navigation");
     nav.append(button("← Back", back, "quiet")); root.append(nav);
   }
   const surface = surfaceOf(), data = card?.declared?.data ?? display.data;
   if (surface && data) {
     try {
-      const panel = surfaces.show(surface, data, async (name, items) => {
-        if (!busy && alive && display?.active) await openDeclared(surface.opens[name]!, items);
-      }, () => alive && !!display?.active && surfaceOf()?.screen === surface.screen);
+      const panel = surfaces.show(surface, data, async (name, items, scope) => {
+        if (!busy && alive && display?.active) await openDeclared(surface.opens[name]!, items, scope ?? data.scope);
+      }, () => alive && !!display?.active && surfaceOf()?.screen === surface.screen && scopeKey(display.card?.declared?.scope ?? display.scope ?? display.data?.scope) === scopeKey(data.scope));
       panel.inert = busy || !display.active;
       root.append(panel);
     } catch (error) { root.append(node("p", error instanceof Error ? error.message : "The declared surface is unavailable.", "notice")); }
@@ -212,7 +243,7 @@ function render() {
   eyebrow.append(node("span", card.identity.kind), node("code", card.identity.revision, "revision"));
   article.append(eyebrow);
   const heading = node("h1");
-  if (summary) {
+  if (summary && display.status === "ready") {
     const title = node("a", card.title);
     title.href = "#detail";
     title.dataset["focus"] = "title";
@@ -227,8 +258,18 @@ function render() {
     actor.append(glyph, document.createTextNode(` ${card.actor.name}${card.actor.controller ? ` · controlled by ${card.actor.controller}` : ""} · ${card.actor.kind}`));
     article.append(actor);
   }
-  if (card.declared?.actor !== null && card.declared?.actor !== undefined) article.append(node("p", `Member ${JSON.stringify(card.declared.actor)}`, "actor"));
+  if (card.declared?.actor !== null && card.declared?.actor !== undefined) article.append(node("p", `Member ${isMemberRef(card.declared.actor) ? card.declared.actor.member : JSON.stringify(card.declared.actor)}`, "actor"));
   article.append(node("p", card.summary, "summary"));
+  if (display.status === "unavailable" && card.declared?.routed) {
+    const evidence = node("details", undefined, "read-points");
+    evidence.append(node("summary", "Read points"));
+    const points = node("ul");
+    for (const point of card.projection) {
+      const row = node("li"); row.append(node("code", `${point.scope} · entry ${point.seq} · ${point.hash}`)); points.append(row);
+    }
+    evidence.append(points); article.append(evidence);
+    const retry = button("Retry read", () => read({ refresh: true }), "quiet"); retry.disabled ||= !display.active; article.append(retry);
+  }
   if (card.reasons.length && card.declared?.kind !== "log") {
     const reasons = node("ul", undefined, "reasons");
     for (const reason of card.reasons) reasons.append(node("li", reason));
@@ -249,6 +290,15 @@ function render() {
     }
     if (card.unavailable.length) article.append(node("p", `Unavailable: ${card.unavailable.map((range) => `${range.scope} entries ${range.from}–${range.to}`).join("; ")}.`, "notice"));
   }
+  if (card.declared?.series) article.append(seriesPanel(card.declared.series));
+  if (card.declared?.links?.length) {
+    const links = node("nav"); links.setAttribute("aria-label", "Related records");
+    for (const link of card.declared.links) {
+      const control = button(link.label, () => openDeclared(link.screen, link.items), "quiet");
+      control.disabled ||= !display.active; links.append(control);
+    }
+    article.append(links);
+  }
   root.append(article);
   if (summary && (!card.declared || card.declared.kind === "carousel")) {
     const nav = node("nav", undefined, "carousel"); nav.setAttribute("aria-label", "Carousel");
@@ -257,13 +307,14 @@ function render() {
     const next = button("›", () => read({ position: display!.position + 1, page: "summary" }), "quiet arrow");
     next.setAttribute("aria-label", "Next item"); next.disabled ||= display.position + 1 >= display.count;
     nav.append(previous, node("span", `${display.position + 1} / ${display.count}`, "position"), next); root.append(nav);
-  } else if (!summary && display.query.page !== "diff") {
+  }
+  if (display.query.page !== "diff" && (!summary || card.declared?.routed && card.actions.length > 0 || card.actions.some(action => action.input === "chat" || action.purpose === "check-original"))) {
     const actions = node("div", undefined, "actions");
     for (const action of card.actions) {
-      const control = button(action.label, () => act(action.id));
+      const control = button(action.input === "chat" ? `${action.label} in chat` : action.label, action.input === "chat" ? handoff : () => act(action.id));
       control.disabled ||= !display.active; actions.append(control);
     }
-    if (display.query.page === "item" && card.actions.length < 2 && !card.unresolvedOriginal) {
+    if (display.query.page === "item" && card.actions.length < 2 && !card.unresolvedOriginal && !card.actions.some(action => action.input === "chat")) {
       const ask = button("Ask in chat", handoff, "quiet"); ask.disabled ||= !display.active; actions.append(ask);
     }
     if (display.query.page === "item" && card.diffAvailable) actions.append(button("View diff", async () => { returnPage = "item"; await read({ page: "diff" }); }, "quiet"));

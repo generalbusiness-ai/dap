@@ -20,10 +20,9 @@ export function applicationProjectionDeclaration(state: StateView, named: string
     if (canonicalize(proof.ids) !== canonicalize(installation.ids) || proof.semantic.entry !== installation.definition
       || proof.release.manifest.publisher !== state.item(item)?.values["publisher"] || !Object.hasOwn(proof.semantic.projections, name)) return null;
     const projection = proof.semantic.projections[name]!;
-    // The first integration supports the recorded entry scope only. A child
-    // scope needs its actual checked birth, not just matching definition text.
-    if (projection.definition !== installation.definition) return null;
     const definition = proof.semantic.definitions.find(part => part.id === projection.definition);
+    // The closed package proof contains this exact definition. The target
+    // owner must separately prove a native creation chain to the install root.
     return definition ? Object.freeze({ v: 1, installation, name, projection, definition }) : null;
   } catch { return null; }
 }

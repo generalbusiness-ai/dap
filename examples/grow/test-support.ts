@@ -3,10 +3,10 @@
  * lifecycle is exercised here. Application data modules do not import it. */
 import { expect } from "vitest";
 import { PROPOSED_BOUNDS, type DeclaredDefinition, type Digest, type FieldValue, type RetainedInput } from "@generalbusiness/dap-contract";
-import { canonicalBytes, canonicalize, digestBytes } from "@generalbusiness/artroom-bytes";
+import { canonicalBytes, canonicalize, definitionDigest, digestBytes } from "@generalbusiness/artroom-bytes";
 import { clockOf, judgeGenesis, prepareRules, validateDefinition, type Fetched } from "@generalbusiness/dap-derive";
 import { evaluateRules, RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
-import { created, creation, grantOf, keys, valid, Ledger, type Actor, type Over } from "@generalbusiness/dap-derive/testing";
+import { created, creation, deliver, grantOf, keys, valid, Ledger, type Actor, type Over } from "@generalbusiness/dap-derive/testing";
 import { MemorySource, verify } from "@generalbusiness/artroom-replay";
 export type { Actor, Ledger, Over };
 export const operator = keys.paul, climate = keys.una, sensors: Actor = { ...keys.vic, principal: operator.member };
@@ -43,6 +43,19 @@ export async function nativeChild(parent: Ledger, seq: number, definition: Decla
   }
   child.grants = () => permissions.map(([who, actions]) => ({ grant: grantOf(who, child.at, actions), current: true }));
   return child;
+}
+/** A created Site Lane, with a labelled Directory launcher and complete
+ * source journal for replay. This is in-memory judged creation, not a host. */
+export async function nativeCreatedSite(definition: DeclaredDefinition, permissions: readonly Permission[], fields: Record<string, FieldValue>) {
+  const launcherDefinition = structuredClone(definition);
+  launcherDefinition.name = "test.grow-site-launcher";
+  launcherDefinition.acts[launcherDefinition.genesis]!.sends = [{ create: { kind: "lane", definition: definitionDigest(definition), fields: { label: { field: "label" } }, result: {} } }];
+  const launcher = nativeScenario(launcherDefinition, permissions, fields);
+  const site = await nativeChild(launcher, 0, definition, permissions, 19);
+  expect(deliver(launcher, site, 0).result).toBe("write");
+  expect(deliver(site, launcher, launcher.last.seq).result).toBe("write");
+  expect(site.at.kind).toBe("lane");
+  return { launcher, site };
 }
 export async function submit(ledger: Ledger, who: Actor, kind: string, over: Over = {}, facts: readonly Fetched[] = []) {
   const signed = ledger.intent(who, kind, over), context = ledger.context({ facts });

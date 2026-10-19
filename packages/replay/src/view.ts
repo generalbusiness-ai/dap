@@ -93,6 +93,7 @@ export class View extends MemoryState {
   override putAccepted(...given: Put<"putAccepted">) { super.putAccepted(...given); this.#keep("accepted", [given[0] as KeyId, given[1]], (state) => state.putAccepted(...given)); }
   override putRequest(...given: Put<"putRequest">) { super.putRequest(...given); this.#keep("request", [given[0].seq, given[0].n], (state) => state.putRequest(...given)); }
   override putDecided(...given: Put<"putDecided">) { super.putDecided(...given); const [from, n] = given; this.#keep("decided", [from.at.scope, from.at.inc, from.seq, n], (state) => state.putDecided(...given)); }
+  override putSourceOrder(...given: Put<"putSourceOrder">) { super.putSourceOrder(...given); const [order] = given; this.#keep("source-order", [order.from.scope, order.from.inc, order.handler], state => state.putSourceOrder(...given)); }
   override putCreation(...given: Put<"putCreation">) { super.putCreation(...given); this.#keep("creation", [given[0]], (state) => state.putCreation(...given)); }
   override putOperation(...given: Put<"putOperation">) { super.putOperation(...given); this.#keep("operation", [given[0].id], (state) => state.putOperation(...given)); }
   override putTexts(...given: Put<"putTexts">) { super.putTexts(...given); this.#keep("texts", [given[0], given[1]], (state) => state.putTexts(...given)); }

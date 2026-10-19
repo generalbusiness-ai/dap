@@ -53,7 +53,7 @@ function presentation(value: unknown, semantic: ApplicationSemantics2, semanticI
     const asset = base.assets.find(asset => asset.path === path);
     if (!asset || !/^text\/html(?:; charset=utf-8)?$/.test(asset.mediaType)) return fail("closure");
   }
-  const views = binding(() => bindApplicationViews(body["views"], semantic.projections, semantic.definitions));
+  const views = binding(() => bindApplicationViews(body["views"], semantic.projections, semantic.definitions, semantic.entry));
   for (const view of Object.values(views)) if (view.kind === "surface" && !Object.hasOwn(resources, view.resource)) return fail("closure");
   applicationJson({ descriptions: base.descriptions, views, resources }, bounds.metadataBytes);
   return body as unknown as ApplicationPresentation2;

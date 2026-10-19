@@ -19,4 +19,6 @@ test("native create-definition edges are typed direct sends from acts/receives, 
   act.create.definition = "self"; receive.create.definition = "platform:directory@1";
   changed.rules["unused"] = JSON.stringify(d("c"));
   expect(creates(valid(validateDefinition(changed, PROPOSED_BOUNDS)).declared)).toEqual([]);
+  changed.receives["spawn"]!.late = { within: { seconds: 30 }, reason: "old-spawn", then: { sends: [{ create: { ...receive.create, definition: d("c") } }] } };
+  expect(creates(valid(validateDefinition(changed, PROPOSED_BOUNDS)).declared)).toEqual([d("c")]);
 });

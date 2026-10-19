@@ -27,6 +27,28 @@ function reply(query: ItemQuery, items: readonly Item[], at = head, complete = t
 }
 const replies = () => ({ all: reply(queries["all"]!, [row(1), row(2, "done")]), selected: reply(queries["selected"]!, [row(1)]) });
 
+test("fact-time uses only exact same-scope refs at the captured head and preserves absent evidence", () => {
+  const native: DeclaredDefinition = { ...definition, items: { note: { ...definition.items["note"]!, refs: {
+    seen: { required: false, fixed: false, to: { type: "fact", under: definition.name, kind: ["touch"] } },
+  } } } };
+  const timed = readApplicationProjection({ v: 1, definition: definitionDigest(native), revision: "revision", sources: { all: {
+    item: "note", read: "many", states: ["open"], limit: 20, fields: { seenTime: { from: { kind: "fact-time", name: "seen" }, of: { type: "time" }, nullable: true } },
+  } } });
+  const query = applicationProjectionQueries(timed, scope, {})["all"]!;
+  const fact = { at: scope, seq: 7, hash: textDigest("PUBLIC TEST old metric fact") };
+  const rows: Item[] = [{ ...row(1), refs: { seen: fact } }, { ...row(2), refs: { seen: 7 } }, { ...row(3), refs: { seen: null } }];
+  const metadata = { scope, at: head, entries: [{ seq: 7, hash: fact.hash, time: "2026-10-16T08:00:00Z" }] };
+  const read = (times: unknown = metadata, items = rows) => projectApplicationQueryReads(timed, native, scope, {}, { all: reply(query, items) }, {}, { all: times });
+  expect(read().sources["all"]!.map(row => row.fields["seenTime"])).toEqual(["2026-10-16T08:00:00Z", "2026-10-16T08:00:00Z", null]);
+  expect(() => read({ ...metadata, at: { ...head, seq: 13 } })).toThrow();
+  expect(() => read({ ...metadata, entries: [] })).toThrow();
+  expect(() => read({ ...metadata, entries: [{ ...metadata.entries[0]!, hash: head.hash }] })).toThrow();
+  expect(() => read({ ...metadata, entries: [...metadata.entries, metadata.entries[0]!] })).toThrow();
+  expect(() => read({ ...metadata, entries: [{ ...metadata.entries[0]!, time: "2026-10-16T08:00:00.000Z" }] })).toThrow();
+  expect(() => read(metadata, [{ ...row(1), refs: { seen: { ...fact, seq: 13 } } }])).toThrow();
+  expect(() => read(metadata, [{ ...row(1), refs: { seen: { ...fact, at: { ...scope, scope: `sc_${"b".repeat(52)}` } } } }])).toThrow();
+});
+
 // Invariant: selected fields and native row identity at one exact head form
 // the complete result; final rows survive, while unselected content does not.
 test("one canonical projection keeps final rows and revisions while selecting only declared fields", () => {

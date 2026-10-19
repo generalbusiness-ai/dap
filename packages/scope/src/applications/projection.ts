@@ -13,6 +13,8 @@ import type { Clock } from "../ports.ts";
 import type { Sql } from "../sqlite.ts";
 import { APPLICATION_DECLARATION_BYTES, type ApplicationDeclarationSource } from "./projection-source.ts";
 import { applicationProjectionData } from "./projection-data.ts";
+import type { NativeBirthSource } from "../native-birth.ts";
+import { projectionScopeOwned } from "./projection-ownership.ts";
 export type NativeApplicationProjection = { ok: true; serialized: string } | { ok: false; reason: ApplicationProjectionRefusal };
 const no = (reason: ApplicationProjectionRefusal): NativeApplicationProjection => ({ ok: false, reason });
 export interface ApplicationProjectionConfig {
@@ -23,6 +25,7 @@ export interface ApplicationProjectionConfig {
   sessionPreparation: SessionPreparation;
   flights: PreparationFlights;
   source: ApplicationDeclarationSource | null;
+  births?: NativeBirthSource | null;
 }
 export class ApplicationProjections {
   constructor(readonly config: ApplicationProjectionConfig) {}
@@ -46,8 +49,7 @@ export class ApplicationProjections {
     const { prepared } = result, { frame } = prepared;
     if (canonicalize(frame.scope.at) !== canonicalize(query.scope)) return no("wrong-scope");
     const definition = frame.pinned.definition;
-    if (!definition || frame.scope.status !== "active" || frame.scope.at.kind !== "lane" || !isDigest(frame.pinned.named)
-      || canonicalize(frame.genesis.seed.creator) !== canonicalize(query.directory) || !c.source) return no("query-not-ready");
+    if (!definition || frame.scope.status !== "active" || !isDigest(frame.pinned.named) || !c.source) return no("query-not-ready");
     const reply = await c.source.read(query.directory, query.install, query.projection, run);
     if (!run.active() || !preparation.available) return no("unavailable");
     try {
@@ -55,11 +57,14 @@ export class ApplicationProjections {
       if (!isRecord(metadata) || Object.keys(metadata).sort().join() !== "definition,installation,name,projection,v" || metadata["v"] !== 1
         || metadata["name"] !== query.projection || !isRecord(metadata["installation"]) || !isRecord(metadata["definition"])) return no("query-not-ready");
       const installed = metadata["installation"], declared = metadata["definition"];
-      if (installed["item"] !== query.install || installed["definition"] !== definition.digest || declared["id"] !== definition.digest
+      if (installed["item"] !== query.install || !isDigest(installed["definition"]) || declared["id"] !== definition.digest
         || declared["bytes"] !== canonicalize(definition.declared) || !isScopeRef(installed["scope"]) || !isScopeRef(installed["directory"])
-        || !isScopeRef(installed["membership"]) || canonicalize(installed["scope"]) !== canonicalize(frame.scope.at)
+        || !isScopeRef(installed["membership"])
         || canonicalize(installed["directory"]) !== canonicalize(query.directory) || canonicalize(installed["membership"]) !== canonicalize(prepared.membership)) return no("query-not-ready");
       const projection = bindApplicationProjection(metadata["projection"], definition.declared);
+      const owned = await projectionScopeOwned(frame, installed["scope"], installed["definition"], query.directory, c.births ?? null, run);
+      if (!run.active() || !preparation.available) return no("unavailable");
+      if (owned !== "owned") return no(owned === "too-large" ? "too-large" : owned === "unavailable" ? "unavailable" : "query-not-ready");
       let live = false, hasFinal = false, history = false;
       for (const source of Object.values(projection.sources)) {
         if (isApplicationJournalSource(source)) { history = true; continue; }

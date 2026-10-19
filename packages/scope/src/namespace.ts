@@ -50,14 +50,14 @@ export interface Peer {
 }
 
 /** The little of a Durable Object namespace binding this file uses. */
-export interface Binding {
-  idFromName(name: string): DurableObjectId;
-  get(id: DurableObjectId): unknown;
+export interface Binding<Id = unknown> {
+  idFromName(name: string): Id;
+  get(id: Id): unknown;
 }
 
 /** One optional native capability, addressed only by validated birth. No
  * summary/source fallback, separate timeout, peer discovery or retries. */
-export function sessionReferencesIn(binding: Binding): SessionReferenceSource {
+export function sessionReferencesIn<Id>(binding: Binding<Id>): SessionReferenceSource {
   return { async read(directory, request) {
     if (!isScopeRef(directory) || directory.kind !== "directory") return null;
     const parsed = sessionReferenceRequest(request);
@@ -245,7 +245,7 @@ export function observedAt(store: Store, pinned: Pinned | null, asked: unknown):
  * namespace binding. A call that fails is no answer: the entry cannot be
  * read now, or the attempt is unanswered.
  */
-export function namespace(binding: Binding): { resolver: Resolver; proofs: ProofSource; births: NativeBirthSource; transport: Transport; definitions: Definitions; texts: SentTexts } {
+export function namespace<Id>(binding: Binding<Id>): { resolver: Resolver; proofs: ProofSource; births: NativeBirthSource; transport: Transport; definitions: Definitions; texts: SentTexts } {
   const peer = (name: ScopeId): Peer => binding.get(binding.idFromName(name)) as Peer;
   return {
     proofs: {
@@ -343,7 +343,7 @@ export function namespace(binding: Binding): { resolver: Resolver; proofs: Proof
  * asking scope then holds nothing new. The answer names the scope and the
  * incarnation that gave it, and the asking scope checks both.
  */
-export function membershipIn(binding: Binding): Membership {
+export function membershipIn<Id>(binding: Binding<Id>): Membership {
   return {
     async observe(asked) {
       try {

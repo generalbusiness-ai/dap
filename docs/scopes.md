@@ -598,6 +598,28 @@ the entry holds that send, to that address, with that message. Only then
 is the delivery judged, in the receiver's own turn. A delivery that
 arrives twice is answered with the entry that recorded it the first time.
 
+**Order.** A delivery takes effect at the position the receiver's commit
+gives it, not at the sender's. Deliveries from different senders have no
+order: two sends that leave two scopes in one order may take effect in the
+other. By default, deliveries from one sender have no order either. A
+`relate` update older than the copy is answered `superseded`. A `tell`
+handler may declare `order: "source"` to suppress a lower
+`(source entry position, send ordinal)` pair, compared in that order,
+after a higher pair has applied. The receiver
+keeps that pair separately for each sender incarnation and handler. An
+older delivery arriving first still applies, followed by the newer one;
+this suppresses late arrivals and does not guarantee a latest value or
+detect a missing delivery. Without the declaration, or with
+`order: "arrival"`, the handler keeps arrival behavior. Every decision
+of a numbered native receiver pin still consumes its reserved decision when
+the delivery is suppressed; suppression grants no license. Source order is
+not admitted on a native item-bound handler, whose protocol keeps arrival
+behavior until that composition is defined. Every decision
+whose result depends on the order of two scopes'
+acts belongs to one scope, where its journal is the order; a design note
+of 18 October 2026 adds a sequenced level for the scopes that need a
+shared order ([the sequenced level](../notes/2026-10-18-sequenced-level-and-order-scope.md)).
+
 A send's **result clauses** say what the sender does when the result
 arrives: one list of effects for each of `applied`, `refused`,
 `superseded`, `undelivered`, and for a creation `conflict`.

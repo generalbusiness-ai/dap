@@ -233,7 +233,8 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
     const his = browser(nasruddin, "@nasruddin"), g = his.open();
     { const seen = await g.look(); if (seen.status !== "current") throw new Error(`look: ${JSON.stringify(seen).slice(0, 300)}`);
       expect(seen.actions).toContain("lending.member"); expect(seen.actions).not.toContain("lending.staff"); }
-    expect(await g.look()).toMatchObject({ status: "current", view: { things: [{ id: big, state: "gone", reason: "Nasruddin says the pot died", revision: lent + 1 }, { id: small, state: "available" }, { id: fresh, state: "available" }] } });
+    const seenAgain = await g.look();
+    expect(seenAgain, JSON.stringify(seenAgain).slice(0, 1000)).toMatchObject({ status: "current", view: { things: [{ id: big, state: "gone", reason: "Nasruddin says the pot died", revision: lent + 1 }, { id: small, state: "available" }, { id: fresh, state: "available" }] } });
     // A proposal the view rules out signs and sends nothing.
     expect(await g.act("return", { thing: small })).toEqual({ status: "nothing-sent", reason: "That thing is not lent." });
     expect([his.posts(), his.kept()]).toEqual([0, null]);
