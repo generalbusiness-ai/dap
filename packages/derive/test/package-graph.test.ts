@@ -142,7 +142,7 @@ test("Grow's explicit failure clauses, default grants and order each carry a sep
   expect(checkPackageGraph({ ...input, composition: { ...input.composition, order: [] } }).findings.map(finding => finding.reason)).toEqual(["order-undeclared"]);
 });
 
-test("Grow rights check declared ownership and warn without claiming complete writer coverage", () => {
+test("Grow rights check declared ownership and warn without claiming complete writer coverage", async () => {
   const input = grow(), child = input.definitions[1]!.id;
   const exercises = [{ definition: input.entry, row: "acts.create-room", right: "room-count" }];
   const owned = { ...input, composition: { ...input.composition, rights: { "room-count": { owner: input.entry } }, exercises } };
@@ -154,6 +154,10 @@ test("Grow rights check declared ownership and warn without claiming complete wr
   });
   const warnings = checkPackageGraph(opening).findings;
   expect(warnings.map(finding => [finding.reason, finding.severity])).toEqual([["unowned-bound", "warning"]]);
+  const packet = await packApplication2(packageInput(opening), { key: keys.rita.key, sign: bytes => sign(keys.rita.secret, bytes) });
+  expect(validatePackage(packet.bytes, PROPOSED_BOUNDS, RULE_PROFILES, {}, packet.ids.release)).toMatchObject({
+    ok: true, kind: "graph", findings: [expect.objectContaining({ reason: "unowned-bound", severity: "warning" })],
+  });
   const acknowledged = { ...opening, composition: { ...opening.composition, rights: { reports: { owner: opening.entry } },
     exercises: [{ definition: opening.entry, row: "receives.room-summary", right: "reports" }],
   } };
@@ -214,7 +218,12 @@ test("the public package byte validator checks signed Grow bytes and preserves t
   expect(checked.findings).toEqual([]);
   expect(checked.definitions).toHaveLength(2);
   expect(checked.report.instances.find(part => part.definition === input.definitions[1]!.id)?.maximum).toBe(3);
-  expect(validatePackage(packet.bytes, PROPOSED_BOUNDS, RULE_PROFILES, { bytes: packet.bytes.length - 1 })).toMatchObject({ ok: false, kind: "codec", reason: "limit" });
+  expect(validatePackage(packet.bytes, PROPOSED_BOUNDS, RULE_PROFILES, { bytes: packet.bytes.length }, packet.ids.release)).toMatchObject({ ok: true });
+  for (const bounds of [{ bytes: packet.bytes.length - 1 }, { definitions: 1 }]) {
+    expect(validatePackage(packet.bytes, PROPOSED_BOUNDS, RULE_PROFILES, bounds)).toMatchObject({
+      ok: false, kind: "codec", reason: "limit", findings: [expect.objectContaining({ reason: "bounds" })],
+    });
+  }
   const rejected = packApplication2(packageInput(grow(parent => { parent.receives["room-summary"]!.copies = 2; })), signer);
   await expect(rejected).rejects.toBeInstanceOf(ApplicationPackageValidationError);
   await expect(rejected).rejects.toMatchObject({ findings: [expect.objectContaining({ reason: "fan-in-exceeds-copies" })] });

@@ -50,7 +50,7 @@ export async function checkCommand(argv: readonly string[], cwd = process.cwd())
       const projected = validation.report.projected, show = (value: number | string | null) => value === null ? "unproved" : `at most ${value}`;
       if (projected) lines.push(`Successful creation paths: ${show(projected.successfulCreation.entryCeiling)} entries; ${show(projected.successfulCreation.itemKeyCeiling)} item keys.`,
         "Creation-path counts exclude failures, repeated inputs, timed work and outside scopes; admission is checked per scope.",
-        `Live items across this install: ${show(projected.liveItems.acrossInstall)}. Lifetime entries and recyclable item keys remain unproved.`);
+        `Live items across this install: ${show(projected.liveItems.acrossInstall)}. Lifetime entries: ${show(projected.lifetime.entries)}; lifetime item keys: ${show(projected.lifetime.itemKeys)}.`);
     }
     for (const path of prepared.scenarios) {
       const result = await runApplicationScenario(prepared.packet, await readApplicationScenario(prepared.root, path));
@@ -88,6 +88,7 @@ export async function packCommand(store: Store, argv: readonly string[], cwd = p
     const packed = await packDirectory(directory, output, secretSigner(secret), { ...(parsed.flags.has("config") ? { config: parsed.flags.get("config")![0]! } : {}) });
     return { code: 0, lines: [`Package: ${output}`, `Semantic: ${packed.ids.semantic}`, `Presentation: ${packed.ids.presentation}`, `Release: ${packed.ids.release}`, `Publisher: ${packed.package.release.manifest.publisher}`] };
   } catch (error) {
+    if (error instanceof ApplicationPackageValidationError) return { code: 1, lines: ["Package validation refused.", ...findingRows(error.findings)] };
     if (error instanceof ApplicationSourceError || error instanceof ApplicationPackageError) return { code: 1, lines: [error.message] };
     const code = (error as NodeJS.ErrnoException).code;
     if (code === "EEXIST") return { code: 1, lines: ["Output already exists; choose a new --out file."] };

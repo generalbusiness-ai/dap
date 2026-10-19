@@ -279,3 +279,49 @@ test("dap check fails on a wrong expected result, a missing scenario or an inval
     expect(await checkCommand(["check"], f.root)).toMatchObject({ code: 1, lines: ["List at most 32 local scenario files."] });
   } finally { await f.cleanup(); }
 });
+
+// One actual local source/key flow: a proved bound is reported honestly, and
+// a later bad declaration yields stable one-line diagnostics from both tools.
+test("v2 CLI reports proved item keys and escapes the same refusal rows through check and pack", async () => {
+  const f = await fixture("counter"), store = memoryStore();
+  try {
+    const definition = { format: "artroom-definition-1", name: "test.package-report", profile: { name: "restricted", version: 1 }, capabilities: [], genesis: "found",
+      items: { note: { many: false, max: 1, initial: "open", states: { open: { final: false } }, parties: {}, refs: {},
+        values: { label: { fixed: true, required: true, of: { type: "text", max: 80 } } } } },
+      acts: {
+        found: { step: "open", on: "note", grant: "app.configure", fields: { label: { type: "text", max: 80, required: true } }, also: {}, guards: [], effects: [{ value: { slot: "label", from: { field: "label" } } }], sends: [], attention: [] },
+        note: { step: "comment", on: "note", grant: "app.comment", fields: { text: { type: "text", max: 80, required: true } }, also: {}, guards: [], effects: [], sends: [], attention: [] },
+      } as Record<string, unknown>, receives: {}, timed: {}, rules: {},
+    };
+    const config = { ...f.config, v: 2, roles: { author: ["app.configure", "app.comment"] }, scenarios: ["scenario.json"],
+      projections: { note: { v: 1, definition: "definition.json", revision: "revision", sources: {
+        note: { item: "note", read: "one", states: ["open"], limit: 1, fields: { label: { from: { kind: "value", name: "label" }, of: { type: "text", max: 80 }, nullable: false } } },
+      } } }, presentation: { ...f.config.presentation, resources: {}, views: {} } };
+    const scenario = { v: 1, name: "one-note", time: "2026-10-18T12:00:00Z", actors: {
+      author: { seed: "01".repeat(32), member: "@author", actions: ["app.configure", "app.comment"] },
+    }, founding: { actor: "author", fields: { label: "One note" } }, steps: [
+      { act: { actor: "author", kind: "note", on: 0, expected: {}, fields: { text: "Recorded." } }, expect: { answer: "accepted" } },
+    ] };
+    await writeFile(join(f.root, "dap.application.json"), JSON.stringify(config));
+    await writeFile(join(f.root, "scenario.json"), JSON.stringify(scenario));
+    await writeFile(join(f.root, "definition.json"), JSON.stringify(definition));
+    const good = await checkCommand(["check", f.root]);
+    expect(good.code, good.lines.join("\n")).toBe(0);
+    expect(good.lines).toContain("Live items across this install: at most 1. Lifetime entries: unproved; lifetime item keys: at most 1.");
+    const badName = 'note|\nquoted"\\name';
+    definition.acts[badName] = { ...(definition.acts["note"] as Record<string, unknown>), grant: "app.ungranted" };
+    await writeFile(join(f.root, "definition.json"), JSON.stringify(definition));
+    await store.keep("publisher", secret);
+    const checked = await checkCommand(["check", f.root]), packed = await packCommand(store, ["pack", "--publisher", "publisher"], f.root);
+    expect(packed).toEqual(checked);
+    expect(checked.code).toBe(1);
+    expect(checked.lines[0]).toBe("Package validation refused.");
+    expect(checked.lines[1]).toBe("Definition | Row | Check | Severity | Reason | Message");
+    expect(checked.lines[2]).toContain(String.raw`acts.note\|\nquoted\"\\name`);
+    expect(checked.lines[2]).toContain(" | ungranted-act | ");
+    expect(checked.lines.every(line => !line.includes("\n"))).toBe(true);
+    expect(checked.lines.join("\n")).not.toContain(b64url(secret));
+    expect(await store.secret("publisher")).toEqual(secret);
+    expect(await readdir(f.root)).not.toContain("application.dap.json");
+  } finally { await f.cleanup(); }
+});

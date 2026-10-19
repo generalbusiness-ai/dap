@@ -369,3 +369,41 @@ Two files pass 11 cases in
 passes in `...refusal-byte-matrix-type-20261019.log`. G1's correction is now
 approved, so this checkpoint is saved before its landing. Warning/report byte
 witnesses, the remaining CLI diagnostics and the final P1 review gate remain.
+
+## G1 incorporation and CLI diagnostics (checkpoint)
+
+P1 incorporates actual audited G1 Main `b54f8880` in merge `d464d80fc`.
+The two overlaps preserve G1's complete views/projections and explicit shared
+guard exports, together with P1's seven composition places and conflicted-room
+selection. The merged Grow config is 61,956 bytes. The new owned-room scene's
+selected definition identity is repinned to P1's Room digest `491dca8e`; no
+literal business outcomes or positional expectations change. Five owning files
+pass 25 cases in `/tmp/artroom-p1-g1-landing-merge-focused-20261019.log` and
+four compilers pass in `...g1-landing-merge-types-20261019.log`.
+
+The public byte witness now explicitly admits and reports `unowned-bound`
+as a warning, and maps byte/count limit refusals to `bounds`, with the exact
+byte limit as a passing control. The ten-case graph file passes in
+`...warning-report-byte-boundaries-20261019.log`.
+
+`pack` now prints the same structured finding table as `check`, rather than
+reducing a graph refusal to `application-package-invalid`. Check reports the
+computed lifetime item-key bound when proved, retaining `unproved` for entries
+and unknown counts. A real local one-note source/scenario proves the literal
+one-key count, then adds an ungranted native act whose name includes a pipe,
+newline, quote and backslash. Both commands return the same escaped physical
+line, preserve the stored TEST key and write no package output. Eleven cases
+pass in `...cli-finding-rows-comment-revisions-20261019.log`; CLI and derive
+owning compilers pass in `...cli-finding-rows-types-20261019.log`.
+
+Fixture attempts before that pass had a missing JSON-object brace, then an
+invalid guard on a native comment, then a comment expectation naming an
+unneeded revision. Those failures remain in the initial/syntax/native-comment
+logs; no production guard was relaxed. The standard control driver selected
+Node's runner for the CLI's mixed Vitest/Node script, so its baseline was
+inconclusive and never changed source. A bounded manual driver then ran the
+unchanged Vitest file before, without cell escaping, and restored. Counts are
+11 pass, 10 pass/one unchanged assertion failure, 11 pass; exact test titles
+and source bytes match. Evidence is
+`/tmp/artroom-p1-cli-cell-control-20261019/` and its driver/log. This is one
+formatter control, not a sweep. P1 still has no final gate or review.
