@@ -1,16 +1,46 @@
-# S2: archive binding — development checkpoint
+# S2a: room archive binding
 
 Request `f54185fb5b7ccacdf932248552127e4985b3f956`, promise
-`7993405b993bd00d857cb0d0798b44125ebd4b74`. This is unfinished work from
-audited Main `1da3f4ca79ad034286ca4d8988bed9dee022369e`. The sequenced
-design draft 6 was approved by `d9d777a2` and landed before this work.
-Current section 4 explicitly starts a later-bound archive at genesis,
-position 0; that supersedes the original request's position 1 wording.
-There is no successful final gate, Source review, landing, publication or
-deployment for this head. The initial implementation below was corrected
-after the first gate exposed a shipped-version violation. Current code
-uses the explicit archive cohorts in the last section, preserving old
-definition bodies and default cohort selection.
+`7993405b993bd00d857cb0d0798b44125ebd4b74`. Current mutable preparation
+incorporates reviewed Main `3ed2a08a`. It still needs the actual reviewed
+G5a landing, a corrected whole gate, exact-head Source review and landing
+audit. The first gate failed five shipped-version assertions; it remains
+failed evidence. No S2a publication, deployment or completion is claimed.
+
+The current implementation adds nine explicit archive-cohort pins and
+preserves all 45 previously shipped definition bodies. Existing rooms and
+default cohort choices keep their original meaning. Only the new cohorts
+admit the binding and archive-required package workflow. S2a reservations
+remain Register14/15, Directory13/14, Membership8, Rules7/8 and
+Destination9/10; G5a's higher reservations are separate and may land first.
+After integration, verify the complete combined catalog against both actual
+Main and the independently recorded shipped literals.
+
+The Directory's optional `archive: journal` may be set at claim or later
+by an authorized admin; it cannot be cleared or replaced. A signed
+`host.requires: ["archive"]` requirement reaches final authenticated
+`archive-unavailable` before grants or child creation when the room is
+unbound. A new request after binding may succeed; exact retry of the first
+request keeps its original result. Binding permits target resolution but
+does not establish an exported prefix.
+
+The adopted S2 split `75060e2d` limits S2a to binding, manifest requirements,
+install admission and target resolution. S2b request `c8c6ff6b` owns foreign
+privacy metadata and actual installed-application export, including genesis
+position zero after late binding. Its preparation is separate. A2/A3
+fixture ports remain explicit; A0b production admission and consent remain
+outside both slices. Native replay and target resolution in S2a do not
+close the export obligation.
+
+## Historical checkpoints
+
+The sections below preserve the implementation sequence and the actual
+checks at each checkpoint. Statements about changing existing definition
+bodies or making existing rooms inoperable describe the abandoned first
+attempt, before the failed gate exposed that version violation. They do
+not describe the additive correction above. Earlier catalog and focused
+counts apply to their own exact heads. They are not new tests of current
+Main or a corrected gate pass.
 
 ## Implemented boundary
 
