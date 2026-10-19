@@ -251,7 +251,7 @@ export function effects(d: Defining, v: unknown, path: string, ctx: Ctx, later: 
   // definitions need none of the device-specific cross-effect scans.
   const deviceCommands = d.capabilities.get("device-command") === DEVICE_COMMAND;
   let commands = 0;
-  const deviceTargets = new Map<string, boolean>(), commandSubjects = new Set<string>();
+  const deviceTargets = new Map<string, { self: boolean; last: number }>(), commandSubjects = new Map<string, number>();
   list(v, path, bounds.effects).forEach((e, i) => {
     if (d.platform && marked(e)) {
       // Section 6.1, place 5: a mark is one effect of the written list of an act, a handler or a result clause. It has no `of`,
@@ -270,7 +270,7 @@ export function effects(d: Defining, v: unknown, path: string, ctx: Ctx, later: 
         if (++commands > 1) bad("capability", at(path, i), "one target-writing entry opens at most one device command");
         if ("if" in e || "unless" in e) bad("capability", at(path, i), "the command effect follows the target writes without an independent condition");
         const device = isObject(cap["with"]) ? cap["with"]["device"] : undefined;
-        commandSubjects.add(String(isObject(device) ? (device["of"] ?? e["of"] ?? "on") : (e["of"] ?? "on")));
+        commandSubjects.set(String(isObject(device) ? (device["of"] ?? e["of"] ?? "on") : (e["of"] ?? "on")), i);
       }
       const name = String(e["of"] ?? "on"), type = name === "on" ? ctx.on : ctx.also.get(name.slice(5));
       const value = e["value"], ref = e["ref"];
@@ -278,7 +278,7 @@ export function effects(d: Defining, v: unknown, path: string, ctx: Ctx, later: 
         && ((isObject(value) && ["target", "level"].includes(String(value["slot"]))) || (isObject(ref) && ref["slot"] === "targetAt"))) {
         const self = isObject(ref) && ref["slot"] === "targetAt" && ref["from"] === "self";
         if (isObject(ref) && !self) bad("capability", at(path, i), "a command's targetAt names the entry writing its target");
-        deviceTargets.set(name, (deviceTargets.get(name) ?? false) || self);
+        deviceTargets.set(name, { self: (deviceTargets.get(name)?.self ?? false) || self, last: i });
       }
     }
     const sets = effect(d, e, at(path, i), ctx, later);
@@ -290,7 +290,12 @@ export function effects(d: Defining, v: unknown, path: string, ctx: Ctx, later: 
     if (other) bad("conflict", at(path, i), `another effect also sets ${sets.what}`);
     set.push({ ...sets, written: e as Rec });
   });
-  for (const [subject, self] of deviceTargets) if (!self || !commandSubjects.has(subject)) bad("capability", path, "a device target change writes its own targetAt and opens that subject's command");
+  // The capability observes the working item at its written position.
+  // Require every relevant write before it so its snapshot is the final target.
+  for (const [subject, target] of deviceTargets) {
+    const command = commandSubjects.get(subject);
+    if (!target.self || command === undefined || command <= target.last) bad("capability", path, "a device target change writes its own targetAt and opens that subject's command after all target writes");
+  }
 }
 
 /**

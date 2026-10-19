@@ -12,7 +12,82 @@ G5a adds device-command@1, its bounded native install grant, Grow commands
 and owner answers, and shared runtime/replay code. Target, sensor report
 and owner outcome have separate writers. No device or provider operation
 runs. The delivery is one complete Source head. Three failed gates remain
-evidence. The corrected full gate passes; exact-head review is pending.
+evidence. The fourth gate passed at the earlier code/test head. Complete
+review `5396f5ed` requested one command-ordering correction. That correction
+is implemented in a fresh view; its new required gate is pending. The
+earlier sealed candidate and evidence remain frozen forever.
+
+## Command-ordering correction after complete review
+
+Checker report `5396f5ed44ca31175be75eeb813a1063eed7a97a`, adopted by
+`a566fd79`, has one required finding, F1, and no other required findings.
+The validator admitted `[open, target, level, targetAt]`, which wrote a new
+target without a command, and `[targetAt, open, target, level]`, which
+recorded the previous target snapshot. The capability correctly observes
+the working item at its written position; the missing condition was in
+whole-definition admission.
+
+The validator now tracks each command's position and each subject's last
+relevant target/level/targetAt write. Admission requires targetAt=self and
+one command after all those writes. Conditional target writes keep their
+written order; an independently conditioned command remains refused. The
+legacy no-device fast path and the pure runtime/replay capability are
+unchanged. No maintained declaration or native pin data changed.
+
+Fresh checkout `/tmp/artroom-builder-g5a-command-order-20261019` starts at
+sealed candidate `dfb0268f8`; its original view was neither edited nor
+executed. The checker granted nine exact frozen regular files through
+`/private/tmp/checker-g5a-review-s4k7guda/checker-evidence-manifest.json`,
+SHA-256 `d91f78d60d34d33412e9b78c0ca5a61108295274e94d8dd6ee4e4a44991ddcc6`.
+All nine bytes/sizes/hashes were verified and stable-copied into
+`/tmp/artroom-g5a-order-checker-evidence-20261019`. No adjacent checker
+files or checker source/dependencies were used or executed.
+
+The exact checker probe, SHA-256
+`59adbe0c6a43bd8cca9711b19957dccba541d0f79dbe6c4408751e4eab8620c4`,
+was run only in the new owned checkout. Its original-order control and
+five existing cases pass, while both counterexamples fail semantically
+(two files, six pass/two fail; original82998 naturally exit1). Log
+`/tmp/artroom-g5a-order-baseline-reproduction-20261019.log`. This is a
+focused reproduction, not a gate failure. Parent creation metadata and
+identity are SCRIPTED; validator, capability, judges and fold are real.
+
+After correction, the owning four-file selection passes 17 cases,
+including all three unchanged probe cases. The two unsafe orders join
+the existing validator witness. The reservation witness now also proves
+shared-condition false leaves the previous target and no command or
+reservation, while true records the final target and reserves one answer.
+Existing no-grant behavior remains covered. The temporary duplicate probe
+is removed from source after that original process closes; the exact
+probe remains in the owned evidence copy. No redundant test file is added.
+
+A single control replaces only `command <= target.last` with false.
+The unchanged owning file has five passes before the bypass, four passes
+and one assertion failure with it, and the exact source is restored.
+Original58306 naturally exits zero; log
+`/tmp/artroom-g5a-order-guard-control-20261019.log`, raw control directory
+`/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/artroom-control-cjE7eA`.
+No sweep or frozen baseline rerun occurs.
+
+The Derive source/test compilers pass. Actual native install and Grow
+Site-to-Room tests pass two cases (original56394 naturally exit0), retaining
+their TEST transport, setup, clock and scheduler boundaries. Normal Page
+generation updates its embedded validator; MCP generation reproduces its
+unchanged module. Both freshness files pass four cases (original13194
+naturally exit0). Logs use `/tmp/artroom-g5a-order-` with suffixes
+`corrected-owning`, `types`, `native`, `regenerate-page`, `regenerate-mcp`
+and `assets`, all dated `20261019`.
+
+The private dependency view is an independent-inode APFS COW copy from
+the sealed donor, which is read only. It checks 127 package.json files,
+including embedded subpackage metadata, and 28 internal links (13 workspace
+links and executable links). Two copied Vite caches were cleared before
+execution. No installs or manifest/lock changes. Audit
+`/tmp/artroom-g5a-order-dependency-view-20261019.json`, SHA-256
+`4de3655896a73b507df6e76eec7e2ca6cfb7c79cc9b17f2082d945d3d5b3481e`.
+This checks copied manifests/inodes/links, not tarball integrity. Original
+processes are terminal before each source/dependency edit. The new complete
+gate and exact-head review remain required; no landing or publication yet.
 
 ## Decisions and native pins
 
