@@ -36,13 +36,16 @@ changes the definition's bytes and digest. It does not change an existing
 scope's pin. Live and Sequenced levels are not supported yet. Their declarations
 are refused as `unsupported-definition`, without creating a recorded fallback.
 
-An archive is a separate binding of the room. A signed application package
-can require it with `host.requires: ["archive"]`. The installer refuses that
-package with `archive-unavailable` when the Directory has no archive binding,
-before adding roles or creating the application. The claim can set
+An archive is a separate binding of the room. Create an archive-capable room
+with `--cohort archive-application` for package v1 or
+`--cohort archive-declared-application` for v2. A signed package can require
+the binding with `host.requires: ["archive"]`. In these cohorts, installation
+ends with `archive-unavailable` when the Directory has no archive binding,
+before adding roles or creating the application. The native claim can set
 `archive: "journal"`; an admin can set it later with `bind-archive`. A new
 install request can then succeed; retrying the original request keeps its
 recorded refusal. A binding does not prove that any journal has been exported.
+Earlier cohorts keep their original pins and refuse the new requirement.
 The archive engine still requires its reviewed policy and host configuration;
 the current engine runs under fixture-only admission.
 

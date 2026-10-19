@@ -114,8 +114,9 @@ scope keeps its journal, as every scope does today. **Sequenced**: scopes
 that share an order use an order scope. An archive is a separate room
 binding; it is no longer a durability level.
 
-**Today.** Execution supports Recorded only. The Directory can bind a journal
-archive, and a signed package can require that binding before installation.
+**Today.** Execution supports Recorded only. Explicit archive cohorts let
+the Directory bind a journal archive, and a signed package can require
+that binding before installation. Existing cohorts retain their old pins.
 Binding does not establish export. The archive engine's current acceptance
 remains fixture-only, with production admission and consent still outstanding.
 

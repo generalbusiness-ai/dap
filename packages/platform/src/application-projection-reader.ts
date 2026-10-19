@@ -7,9 +7,10 @@ import type { StateView } from "@generalbusiness/dap-derive";
 import { applicationInstallation } from "./application-install-reader.ts";
 import { APPLICATION_RELEASE_VALUE2, APPLICATION_SEMANTIC_VALUE2 } from "./application-install-v2.ts";
 import { DECLARED_APPLICATION_COHORT as C } from "./application-install-v2-wire.ts";
+import { ARCHIVE_DECLARED_APPLICATION_COHORT as AC } from "./archive-binding-wire.ts";
 export function applicationProjectionDeclaration(state: StateView, named: string, directory: ScopeRef, item: number, name: string,
   value: (domain: string, digest: Digest, most: number) => unknown | undefined): ApplicationProjectionDeclaration | null {
-  if (named !== C.rules || typeof name !== "string" || !/^[A-Za-z][A-Za-z0-9_.-]{0,127}$/.test(name)) return null;
+  if ((named !== C.rules && named !== AC.rules) || typeof name !== "string" || !/^[A-Za-z][A-Za-z0-9_.-]{0,127}$/.test(name)) return null;
   const installation = applicationInstallation(state, named, directory, item);
   if (!installation) return null;
   try {

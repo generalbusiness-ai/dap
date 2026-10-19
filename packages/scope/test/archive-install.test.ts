@@ -5,7 +5,7 @@ import { env, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { isSeed, parseStrict, scopeIdOf } from "@generalbusiness/artroom-bytes";
-import { TRUSTED_APPLICATION_COHORT as C, platform } from "@generalbusiness/dap-platform";
+import { ARCHIVE_APPLICATION_COHORT as C, platform } from "@generalbusiness/dap-platform";
 import { validateDefinition } from "@generalbusiness/dap-derive";
 import { httpSource, verify } from "@generalbusiness/artroom-replay";
 import { secretSigner, signedApplicationInstall } from "@generalbusiness/artroom-client";

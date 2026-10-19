@@ -64,7 +64,7 @@ authorization to install a register remains unimplemented.
 The examples are from one run of the test in
 `packages/cli/test/story.scope.test.ts`, with long IDs cut short.
 
-**`dap install <base-url> [--host <git-host>] [--namespace <name>] [--cohort application|application-publication|trusted-application|declared-application|invitation-key]`**
+**`dap install <base-url> [--host <git-host>] [--namespace <name>] [--cohort application|application-publication|trusted-application|declared-application|archive-application|archive-declared-application|invitation-key]`**
 creates the register with an `install` intent, signed by a new operator
 key, which is also the one creator key. The host defaults to `github.com`
 and the namespace to `artroom`. For the demo's host, the hosting's own Git
@@ -76,7 +76,7 @@ Installed: register sc_hinqqbm4....
 The operator key key_baqzbaDy... is kept in the config directory, readable only by you. It is the one founder key.
 ```
 
-**`dap install --plan <base-url> [--host <git-host>] [--namespace <name>] [--cohort application|application-publication|trusted-application|declared-application|invitation-key]`**
+**`dap install --plan <base-url> [--host <git-host>] [--namespace <name>] [--cohort application|application-publication|trusted-application|declared-application|archive-application|archive-declared-application|invitation-key]`**
 signs the same `install` intent and creates nothing. A register's ID is a
 function of its seed, and the seed of the intent and the register's
 version alone, so the command prints the ID that the install will create,
@@ -93,7 +93,7 @@ Planned: register sc_4kq2v7..., under platform:register@2, on host artifacts, na
 Set registerScope to sc_4kq2v7... in the Worker's host setting, then run dap install --planned before 2026-10-08T09:14:00Z.
 ```
 
-**`dap install --planned [--cohort application|application-publication|trusted-application|declared-application|invitation-key]`** creates the planned register, with the kept
+**`dap install --planned [--cohort application|application-publication|trusted-application|declared-application|archive-application|archive-declared-application|invitation-key]`** creates the planned register, with the kept
 intent and no other argument. Before anything is sent it checks the plan:
 a plan whose ID is not the one its intent and version make, or whose
 version is not supported by the installed catalog, is refused as
@@ -237,7 +237,10 @@ roles are `admin`, `maintainer`, `member`, `agent`, and `checker`. Omission
 selects no default grants. Existing grants remain. `--values` is a JSON object
 of application genesis fields; its default is `{}`.
 
-A package whose signed host requirements include `archive` needs the room's
+A package whose signed host requirements include `archive` needs an
+archive-capable room: select `--cohort archive-application` for package v1
+or `--cohort archive-declared-application` for v2. These are explicit new
+pins; they do not migrate an existing room. The package needs the room's
 Directory binding `archive: "journal"`. Without it, installation ends with
 `archive-unavailable` before granting roles or creating the application.
 An admin may set the binding at claim or later with `bind-archive`. Submit

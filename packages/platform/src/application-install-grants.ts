@@ -30,9 +30,9 @@ export const directory11: PlatformData = {
     ? { create: { ...send.create, definition: TRUSTED_APPLICATION_COHORT.membership } } : send) } },
   receives: { ...directory8.receives, "application-stage": {
     message: "application-stage", class: "tell", from: { kind: "rules", under: "platform:rules" }, opens: null, also: repository,
-    fields: { ...installGrantFields, ...installDefinitionTextFields, declarations: { ...installDeclarationsType, required: true }, name: { type: "text", max: 64, required: true }, needsArchive: { type: "bool", required: true } },
+    fields: { ...installGrantFields, ...installDefinitionTextFields, declarations: { ...installDeclarationsType, required: true }, name: { type: "text", max: 64, required: true } },
     guards: [{ equals: { a: { sender: true }, b: { slot: "rules", of: "also.repository" } }, reason: "not-the-rules" },
-      { code: "install-room-ready", row: "M1" }, { code: "install-room-archive", row: "S2" }, { code: "install-catalog-form", row: "M1" }],
+      { code: "install-room-ready", row: "M1" }, { code: "install-catalog-form", row: "M1" }],
     effects: [{ code: "install-retain-catalog", row: "M1" }], sends: [{ code: "install-room-context", row: "M1", result: {} }], attention: [],
   }, "application-grants": {
     message: "application-grants", class: "tell", from: { kind: "rules", under: "platform:rules" }, opens: null, also: repository,
@@ -44,9 +44,6 @@ export const directory11: PlatformData = {
 };
 export const directoryRules11: Rules = {
   ...directoryRules8,
-  "install-room-archive": { place: "guard", refusals: ["archive-unavailable"], run: given =>
-    given.resolved.fields["needsArchive"] !== true || given.state.page("repository", ["open"], null, 1).items[0]?.values["archive"] === "journal"
-      ? { holds: true } : { holds: false, name: "archive-unavailable" } },
   "install-catalog-form": { place: "guard", refusals: ["invalid-install-catalog"], run: given => {
     const entries = given.resolved.fields["declarations"];
     if (!Array.isArray(entries) || entries.length === 0 || entries.length > INSTALL_DEFINITIONS) return { holds: false, name: "invalid-install-catalog" };

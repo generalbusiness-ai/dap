@@ -54,7 +54,7 @@ import { pinnedBy } from "./versions.ts";
  * `platform:directory@2` (`versions.ts`). The `operation` effects of its
  * rules state the scope's own version as their owner.
  */
-export const DIRECTORY_OF: Readonly<Record<string, PlatformDefinition>> = { "platform:register@1": "platform:directory@1", "platform:register@2": "platform:directory@2", "platform:register@3": "platform:directory@3", "platform:register@5": "platform:directory@5", "platform:register@6": "platform:directory@6", "platform:register@7": "platform:directory@3", "platform:register@8": "platform:directory@7", "platform:register@9": "platform:directory@8", "platform:register@10": "platform:directory@9", "platform:register@11": "platform:directory@10", "platform:register@12": "platform:directory@11", "platform:register@13": "platform:directory@12" };
+export const DIRECTORY_OF: Readonly<Record<string, PlatformDefinition>> = { "platform:register@1": "platform:directory@1", "platform:register@2": "platform:directory@2", "platform:register@3": "platform:directory@3", "platform:register@5": "platform:directory@5", "platform:register@6": "platform:directory@6", "platform:register@7": "platform:directory@3", "platform:register@8": "platform:directory@7", "platform:register@9": "platform:directory@8", "platform:register@10": "platform:directory@9", "platform:register@11": "platform:directory@10", "platform:register@12": "platform:directory@11", "platform:register@13": "platform:directory@12", "platform:register@14": "platform:directory@13", "platform:register@15": "platform:directory@14" };
 /** The newest version of the register: the one under which `install` creates a register. */
 export const REGISTER = "platform:register@2" satisfies PlatformDefinition;
 /** The directory that the newest register creates. */
@@ -148,7 +148,6 @@ export const register: PlatformData = {
         "founderHandle": { ...NAME, required: true },
         recoveryKey: { ...KEY, required: true },
         import: { type: "text", max: 2048, required: false },
-        archive: { ...ARCHIVE, required: false },
       },
       // The row's one guard (section 12.1.1, stated in revision 24): `founderHandle` is a handle, or `bad-field`, named `bad-handle`.
       guards: [{ code: "handle-form", row: "P27" }],

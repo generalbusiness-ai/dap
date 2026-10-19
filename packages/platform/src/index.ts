@@ -10,6 +10,9 @@ import { DECLARED_APPLICATION_RULES, applicationInstallRulesScope2, applicationI
 export { DECLARED_APPLICATION_RULES } from "./application-install-v2.ts";
 import { DECLARED_APPLICATION_COHORT } from "./application-install-v2-wire.ts";
 export { DECLARED_APPLICATION_COHORT } from "./application-install-v2-wire.ts";
+import { ARCHIVE_APPLICATION_COHORT as AC, ARCHIVE_DECLARED_APPLICATION_COHORT as AC2 } from "./archive-binding-wire.ts";
+export { ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT } from "./archive-binding-wire.ts";
+import { archiveRegister, archiveDirectory, archiveDeclaredDirectory, archiveRulesScope, archiveDeclaredRulesScope } from "./archive-binding.ts";
 import { INVITATION_KEY_COHORT, directory9, directoryRules9, membership6, membershipRules6 } from "./invitation-key.ts";
 export { INVITATION_KEY_COHORT, directory9, directoryRules9, membership6, membershipRules6 } from "./invitation-key.ts";
 /**
@@ -36,7 +39,7 @@ import { PARTITION_IDENTITY_POLICY } from "./partition-provenance.ts";
 export { PARTITION_IDENTITY_POLICY, PARTITION_IDENTITY_BOUNDS, partitionReceiverPolicy, partitionSourceName, partitionCreationPolicy, partitionDeclaredCreationPolicy, partitionNativeCreationPolicy, partitionPublicationOrigin, partitionProducerName, type PartitionCreationSelection, type PartitionCreation, type PartitionCreationPolicy, type PartitionNativeFrame, type PartitionReceiverLineage, type PartitionReceiverPolicy } from "./partition-provenance.ts";
 
 import type { Digest, ObservationRequest, PlatformData, PlatformDefinition } from "@generalbusiness/dap-contract";
-import { sourceName, applicationPublicationOrigin, installedApplicationPublicationOrigin, declaredApplicationPublicationOrigin } from "./publishing-provenance.ts";
+import { sourceName, applicationPublicationOrigin, installedApplicationPublicationOrigin, declaredApplicationPublicationOrigin, archiveApplicationPublicationOrigin, archiveDeclaredApplicationPublicationOrigin } from "./publishing-provenance.ts";
 import { destination, destination2, destination3, destination4, destination5, destination6, destinationMembership, destinationRules, destinationRules2, destinationRules3, destinationRules4, destinationRules5, destinationRules6, destinationRulesScope } from "./destination.ts";
 import { inbox, inboxRules } from "./inbox.ts";
 import { MEMBERSHIP, MEMBERSHIP_1, membership, membership5, membershipRules, standingOf } from "./membership.ts";
@@ -150,6 +153,15 @@ export interface Platform {
  * cannot run.
  */
 const VERSION_DATA: Readonly<Record<string, Platform>> = {
+  [AC.register]: { data: archiveRegister, rules: registerRules },
+  [AC2.register]: { data: archiveRegister, rules: registerRules },
+  [AC.directory]: { data: archiveDirectory, rules: directoryRules11, declaredText: (state, digest) => installDefinitionText(state, digest, "application-catalog"), membership: directoryMembership, rulesScope: directoryRulesScope },
+  [AC2.directory]: { data: archiveDeclaredDirectory, rules: directoryRules11, declaredText: (state, digest) => installDefinitionText(state, digest, "application-catalog"), membership: directoryMembership, rulesScope: directoryRulesScope },
+  [AC.membership]: { data: membership7, rules: membershipRules7, observed: (state, asked) => standingOf(state, asked, AC.membership) },
+  [AC.rules]: { data: archiveRulesScope, rules: applicationInstallRules, hostPreparationKinds: ["fetch-application"], declaredText: (state, digest) => installDefinitionText(state, digest, "definition"), observed: (state, asked) => rulesAnswer(state, asked, AC.rules), observedValues: rulesObservedValues, revised: PUBLISH, membership: rulesMembership },
+  [AC2.rules]: { data: archiveDeclaredRulesScope, rules: applicationInstallRules2, hostPreparationKinds: ["fetch-application"], declaredText: (state, digest) => installDefinitionText(state, digest, "definition"), observed: (state, asked) => rulesAnswer(state, asked, AC2.rules), observedValues: rulesObservedValues, revised: PUBLISH, membership: rulesMembership },
+  [AC.destination]: { data: destination4, rules: destinationRules4, membership: destinationMembership, rulesScope: destinationRulesScope, applicationPublicationOrigin: archiveApplicationPublicationOrigin },
+  [AC2.destination]: { data: destination4, rules: destinationRules4, membership: destinationMembership, rulesScope: destinationRulesScope, applicationPublicationOrigin: archiveDeclaredApplicationPublicationOrigin },
   [DECLARED_APPLICATION_COHORT.register]: { data: register, rules: registerRules },
   [DECLARED_APPLICATION_COHORT.directory]: { data: directory11, rules: directoryRules11, declaredText: (state, digest) => installDefinitionText(state, digest, "application-catalog"), membership: directoryMembership, rulesScope: directoryRulesScope },
   [DECLARED_APPLICATION_COHORT.destination]: { data: destination4, rules: destinationRules4, membership: destinationMembership, rulesScope: destinationRulesScope, applicationPublicationOrigin: declaredApplicationPublicationOrigin },

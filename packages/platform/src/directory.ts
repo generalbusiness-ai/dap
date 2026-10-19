@@ -65,7 +65,7 @@ import type { Digest, FactRef, FieldValue, Grant, MemberObservation, MemberRef, 
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { intentDigest, isDigest, scopeIdOf, seedDigest } from "@generalbusiness/artroom-bytes";
 import { PROFILES, isObject, isScopeRef, same, validateDefinition, type Item, type Operation, type RuleEffect, type RuleGiven, type Rules, type StateView } from "@generalbusiness/dap-derive";
-import { ARCHIVE, CREATION_ATTEMPTS, DIRECTORY, REPOSITORY } from "./register.ts";
+import { CREATION_ATTEMPTS, DIRECTORY, REPOSITORY } from "./register.ts";
 import { isOf, pinnedBy } from "./versions.ts";
 
 export { DIRECTORY };
@@ -77,6 +77,8 @@ export { DIRECTORY };
  * definition-byte places shipped by actual main at1eed91aa.
  */
 export const SIBLINGS_OF: Readonly<Record<string, { membership: PlatformDefinition; rules: PlatformDefinition; destination: PlatformDefinition }>> = {
+  "platform:directory@13": { membership: "platform:membership@8", rules: "platform:rules@7", destination: "platform:destination@9" },
+  "platform:directory@14": { membership: "platform:membership@8", rules: "platform:rules@8", destination: "platform:destination@10" },
   "platform:directory@12": { membership: "platform:membership@7", rules: "platform:rules@6", destination: "platform:destination@8" },
   "platform:directory@11": { membership: "platform:membership@7", rules: "platform:rules@5", destination: "platform:destination@7" },
   "platform:directory@10": { membership: "platform:membership@6", rules: "platform:rules@3", destination: "platform:destination@6" },
@@ -185,7 +187,6 @@ export const directory: PlatformData = {
         recoveryKey: { fixed: true, required: true, of: KEY },
         import: { fixed: true, required: false, of: { type: "text", max: 2048 } },
         imported: { fixed: false, required: false, of: { type: "commit" } },
-        archive: { fixed: false, required: false, of: ARCHIVE },
         lastNumber: { fixed: false, required: true, of: COUNT, default: 0 },
       },
     },
@@ -241,7 +242,6 @@ export const directory: PlatformData = {
         "founderHandle": { ...NAME, required: true },
         recoveryKey: { ...KEY, required: true },
         import: { type: "text", max: 2048, required: false },
-        archive: { ...ARCHIVE, required: false },
       },
       guards: [],
       effects: [
@@ -255,7 +255,6 @@ export const directory: PlatformData = {
         { value: { slot: "founderHandle", from: { field: "founderHandle" } } },
         { value: { slot: "recoveryKey", from: { field: "recoveryKey" } } },
         { value: { slot: "import", from: { field: "import" } } },
-        { value: { slot: "archive", from: { field: "archive" } } },
       ],
       // Three `create` sends, held until the register's `confirm`: membership, rules, destination, in that order. Each `applied`
       // clause sets the child's reference.
@@ -280,13 +279,6 @@ export const directory: PlatformData = {
         { code: "create-destination", row: "P20", always: true, result: { applied: [{ ref: { slot: "destination", from: { sender: true } } }, { code: "open-import", row: "P16" }] } },
       ],
       attention: [],
-    },
-    "bind-archive": {
-      step: "transition", on: "repository", grant: "directory.archive", also: {},
-      fields: { archive: { ...ARCHIVE, required: true } },
-      guards: [{ state: ["open"] }],
-      effects: [{ value: { slot: "archive", from: { field: "archive" } } }],
-      sends: [], attention: [],
     },
     // `open-issue` and `open-pr`: an act. Grant `issue.open` or `change.open`. It opens `lane`.
     "open-issue": opens("issue", opening1),

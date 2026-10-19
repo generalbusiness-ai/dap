@@ -149,7 +149,8 @@ test.each([false, true])("checked native grant route stages exact custody before
 
 test.each([false, true])("an archive requirement checks the room binding before grants (bound=%s)", async bound => {
   const { installGraph } = await import("./support-application-install.ts");
-  const { A, D, M, send } = installGraph();
+  const { ARCHIVE_APPLICATION_COHORT } = await import("../src/index.ts");
+  const { A, D, M, send } = installGraph(ARCHIVE_APPLICATION_COHORT);
   const { packet, values, texts, fields } = await fixture(true);
   const installer = { ...keys.rita, member: { membership: M.at, member: "@rita" as const } };
   if (bound) expect(D.act(installer, "bind-archive", { on: 0, expected: { on: D.item(0).revision }, fields: { archive: "journal" } }, { membership: M.at })).toMatchObject({ result: "write" });

@@ -150,7 +150,7 @@ export function applicationPublicationOrigin(from: FactRef, directory: ScopeRef,
 /** M1's new Directory handler factory. Destination7 alone adopts this policy;
  * destination4 keeps its original signed-act factory boundary. */
 function installedApplicationOrigin(from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly Fetched[],
-  pins: Readonly<{ directory: string; rules: string; destination: string }>): boolean | null {
+  pins: Readonly<{ directory: string; rules: string; destination: string; membership?: string }>): boolean | null {
   try {
     const genesis = facts.find(copy => copy.fact.seq === 0 && same(copy.fact.at, from.at));
     if (!genesis) return null;
@@ -176,7 +176,7 @@ function installedApplicationOrigin(from: FactRef, directory: ScopeRef, destinat
     const requested = made.message.body["fields"];
     if (requested["definition"] !== seed.definition || !isMemberRef(requested["installer"]) || typeof requested["genesis"] !== "string"
       || typeof requested["needsDestination"] !== "boolean" || deliveryCauseDigest({ v: 1, from: made.from, n: made.n, message: messageDigest(made.message) }) !== seed.cause) return false;
-    if (!sibling("membership", "platform:membership@7", requested["installer"].membership)) return false;
+    if (!sibling("membership", pins.membership ?? "platform:membership@7", requested["installer"].membership)) return false;
     const body = born.message.body;
     if (!isObject(body) || !same(body["directory"], directory) || !same(body["membership"], requested["installer"].membership)
       || !same(body["creationContext"], { v: 1 }) || !isObject(body["fields"])) return false;
@@ -195,4 +195,11 @@ export function installedApplicationPublicationOrigin(from: FactRef, directory: 
 /** Only Destination8 adopts the declared-projection cohort's factory. */
 export function declaredApplicationPublicationOrigin(from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly Fetched[]): boolean | null {
   return installedApplicationOrigin(from, directory, destination, facts, { directory: "platform:directory@12", rules: "platform:rules@6", destination: "platform:destination@8" });
+}
+/** Only the explicit archive destinations adopt the new factory pins. */
+export function archiveApplicationPublicationOrigin(from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly Fetched[]): boolean | null {
+  return installedApplicationOrigin(from, directory, destination, facts, { directory: "platform:directory@13", rules: "platform:rules@7", destination: "platform:destination@9", membership: "platform:membership@8" });
+}
+export function archiveDeclaredApplicationPublicationOrigin(from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly Fetched[]): boolean | null {
+  return installedApplicationOrigin(from, directory, destination, facts, { directory: "platform:directory@14", rules: "platform:rules@8", destination: "platform:destination@10", membership: "platform:membership@8" });
 }

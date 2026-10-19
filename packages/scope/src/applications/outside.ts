@@ -7,7 +7,7 @@ import { canonicalize, digestBytes, isDigest, isRecord, utf8 } from "@generalbus
 import { ApplicationPackageError } from "@generalbusiness/artroom-client/application";
 import { ApplicationGitError } from "@generalbusiness/artroom-git";
 import { APPLICATION_INSTALL_RULES } from "@generalbusiness/dap-platform/application-install";
-import { DECLARED_APPLICATION_RULES } from "@generalbusiness/dap-platform";
+import { DECLARED_APPLICATION_RULES, ARCHIVE_APPLICATION_COHORT as AC, ARCHIVE_DECLARED_APPLICATION_COHORT as AC2 } from "@generalbusiness/dap-platform";
 import type { EffectAnswer, EffectRequest, Outside } from "../operations.ts";
 import { ApplicationAdmissionError, type ApplicationTrust } from "./admission.ts";
 import { ApplicationContentError, type ApplicationContentStore } from "./content.ts";
@@ -22,7 +22,7 @@ function reason(error: unknown): Refusal | null {
   if (error instanceof ApplicationContentError) return error.reason === "unavailable" ? null : error.reason === "too-large" ? "package-too-large" : "package-invalid";
   return null;
 }
-export const acceptsApplicationOperation: Outside["accepts"] = (owner, kind) => (owner === APPLICATION_INSTALL_RULES || owner === DECLARED_APPLICATION_RULES) && ["fetch-application", "admit-application"].includes(kind);
+export const acceptsApplicationOperation: Outside["accepts"] = (owner, kind) => (owner === APPLICATION_INSTALL_RULES || owner === DECLARED_APPLICATION_RULES || owner === AC.rules || owner === AC2.rules) && ["fetch-application", "admit-application"].includes(kind);
 const prepares: Outside["accepts"] = (owner, kind) => acceptsApplicationOperation(owner, kind) && kind === "fetch-application";
 const admits: Outside["accepts"] = (owner, kind) => acceptsApplicationOperation(owner, kind) && kind === "admit-application";
 export function applicationOperationRequest(request: EffectRequest): { uri: string; release: Digest } | null {

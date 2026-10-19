@@ -6,7 +6,11 @@ audited Main `1da3f4ca79ad034286ca4d8988bed9dee022369e`. The sequenced
 design draft 6 was approved by `d9d777a2` and landed before this work.
 Current section 4 explicitly starts a later-bound archive at genesis,
 position 0; that supersedes the original request's position 1 wording.
-There is no gate, review, landing, publication or deployment for this head.
+There is no successful final gate, Source review, landing, publication or
+deployment for this head. The initial implementation below was corrected
+after the first gate exposed a shipped-version violation. Current code
+uses the explicit archive cohorts in the last section, preserving old
+definition bodies and default cohort selection.
 
 ## Implemented boundary
 
@@ -220,3 +224,56 @@ outer timing `/tmp/artroom-s2-final-gate-20261019.outer.time`: 626.50 seconds
 elapsed, 862.68 seconds CPU (741.26 user, 121.42 system). These are warm,
 shared-machine measurements. No source or dependency changed while the
 original gate ran. No retry, review, seal, or completion is implied.
+
+## Additive cohort correction, saved before second G3
+
+The correction preserves every one of the 45 shipped definition bodies.
+`archive-application` selects Register14, Directory13, Membership8, Rules7
+and Destination9 for package v1. `archive-declared-application` selects
+Register15, Directory14, Membership8, Rules8 and Destination10 for v2.
+The CLI selects these explicitly. Existing cohorts have no new binding act
+and their install proofs refuse the new archive requirement. No migration
+or compatibility adapter is added.
+
+Only new Directory bodies have the archive slot and act. Only new Rules
+pins retain the combined destination/archive requirements record and send
+the bounded requirement to Directory before grants. Membership8 adds the
+admin action without changing earlier tables. Native host routes, active
+install/projection readers and publication-origin policies recognize exact
+new pins, including Membership8. Old origin policies retain their cohort.
+Page assets are rebuilt; docs identify the explicit CLI choices.
+
+Actual complete catalog generation validates all 54 entries, records nine
+new digests, and proves the 45 independent historical literals unchanged:
+`/tmp/artroom-s2-archive-cohort-catalog-20261019.json`, SHA-256
+`fea417f858d5ef4167a65de021091fc68763c67b1e637063ee20becdda428300`.
+Its script and input hashes are retained. Generation and static validation
+are not a gate or runtime result. The version witness adds only nine new
+literals and preserves the old 45.
+
+Focused logs have prefix `/tmp/artroom-s2-archive-cohort-` and date 20261019:
+
+- `owning-first`: two files, nine cases pass (83158 closed zero).
+- `native-first`: three files, six cases pass, including real Core/SQLite
+  install and target reads, plus v2 requirement admission/refusal (70198
+  closed zero).
+- `types-full`: platform two, CLI three and scope three compiler targets
+  pass (80933 closed zero). `test-types` passes platform and CLI after
+  additional test rows; `final-focused-types` passes platform after the
+  final origin witness change.
+- `regression`: five files, 63 cases pass and one existing case skips
+  (7328 closed zero): versions, membership observations, MCP inventory and
+  budget, and explicit CLI cohort custody.
+- `cli-story`: the original native CLI story passes with its original
+  expected directory acts (99605 closed zero).
+- `origin-assets` first failed the added archive case because the fixture
+  still expected old literal sibling IDs; the asset case passed. The
+  corrected existing witness has two independent literal ID lists, checks
+  each exact cohort's positive origin and the other cohort's refusal,
+  completes native install/projection/replay, and passes all four cases
+  in `origin-corrected` (73874 closed zero).
+
+All originals are closed. No second whole gate has run. This correction
+is saved clean while newly issued second G3 request `8614ac1e` takes
+priority. S2a still needs later actual Main, final review of these changes,
+a corrected gate, and its own exact-head Source review.

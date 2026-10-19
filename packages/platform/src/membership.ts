@@ -35,7 +35,7 @@
  * | `handle-form` | 4, guard | q (P27) | `invite-member`, `add-member` |
  *
  * The five role lists hold 64 names, as the note's revision 24 has them,
- * and an admin's first list has 35. That needs the bound on a list of the
+ * and an admin's first list has 34. That needs the bound on a list of the
  * scope contract's revision 19 (its section 6.1, 64).
  *
  * Two rows are of the note's revision 28, at `8b1c3c9d7`, which its checker
@@ -106,7 +106,7 @@ const ROLE_TABLE_1: readonly (readonly [actions: readonly string[], roles: reado
   [["change.edit-any", "change.dismiss", "change.merge"], ["admin", "maintainer"]],
   [["change.check"], ["checker"]],
   [["work.export", "task.control", "task.read-private"], ["admin", "member"]],
-  [["membership.invite", "membership.manage", "rules.publish", "rules.activate", "directory.archive"], ["admin"]],
+  [["membership.invite", "membership.manage", "rules.publish", "rules.activate"], ["admin"]],
   [["destination.adopt", "ledger.retry"], ["admin"]],
   [["task.operate"], ["admin", "maintainer", "member", "agent"]],
   [["inbox.own"], ["admin", "maintainer", "member", "agent", "checker"]],
@@ -123,7 +123,7 @@ export const ROLE_TABLE: readonly (readonly [actions: readonly string[], roles: 
 ];
 
 /** The table of each version. */
-export const ROLE_TABLE_OF: Readonly<Record<string, typeof ROLE_TABLE>> = { [MEMBERSHIP_1]: ROLE_TABLE_1, [MEMBERSHIP]: ROLE_TABLE, "platform:membership@4": [...ROLE_TABLE, [["application.establish"], ["admin"]]], "platform:membership@5": [...ROLE_TABLE, [["application.establish"], ["admin"]]], "platform:membership@6": [...ROLE_TABLE, [["application.establish"], ["admin"]]], "platform:membership@7": [...ROLE_TABLE, [["application.install"], ["admin"]]] };
+export const ROLE_TABLE_OF: Readonly<Record<string, typeof ROLE_TABLE>> = { [MEMBERSHIP_1]: ROLE_TABLE_1, [MEMBERSHIP]: ROLE_TABLE, "platform:membership@4": [...ROLE_TABLE, [["application.establish"], ["admin"]]], "platform:membership@5": [...ROLE_TABLE, [["application.establish"], ["admin"]]], "platform:membership@6": [...ROLE_TABLE, [["application.establish"], ["admin"]]], "platform:membership@7": [...ROLE_TABLE, [["application.install"], ["admin"]]], "platform:membership@8": [...ROLE_TABLE, [["application.install", "directory.archive"], ["admin"]]] };
 
 /** The actions that the table of section 3.2 gives one role, in the order of its rows. */
 export const actionsIn = (role: Role): string[] => ROLE_TABLE.flatMap(([actions, roles]) => (roles.includes(role) ? actions : []));
@@ -136,7 +136,7 @@ const CHANGE_MERGE = ["change.edit-any", "change.dismiss", "change.merge"] as co
 /**
  * The first list of each role: the authority note's section 3.2, "The
  * table, counted", row for row, with the names in the order of that table.
- * An admin has 35 actions, a maintainer 25, a member 22, an agent 18 and a
+ * An admin has 34 actions, a maintainer 25, a member 22, an agent 18 and a
  * checker 2. It is a constant of version 1, and part of the rule
  * `role-table` (section 12.1.8, row o). `ROLE_TABLE_1`, above, is the
  * table that the note counts them from, and a test holds the two together.
@@ -144,7 +144,7 @@ const CHANGE_MERGE = ["change.edit-any", "change.dismiss", "change.merge"] as co
 const FIRST_ACTIONS_1: { readonly [role in Role]: readonly string[] } = {
   admin: [
     ...ISSUE_WORK, ...ISSUE_PLAN, ...CHANGE_WORK, "change.review", ...CHANGE_MERGE, "work.export", "task.control", "task.read-private",
-    "membership.invite", "membership.manage", "rules.publish", "rules.activate", "directory.archive", "destination.adopt", "ledger.retry", "task.operate", "inbox.own",
+    "membership.invite", "membership.manage", "rules.publish", "rules.activate", "destination.adopt", "ledger.retry", "task.operate", "inbox.own",
   ],
   maintainer: [...ISSUE_WORK, ...ISSUE_PLAN, ...CHANGE_WORK, "change.review", ...CHANGE_MERGE, "task.operate", "inbox.own"],
   member: [...ISSUE_WORK, ...CHANGE_WORK, "change.review", "work.export", "task.control", "task.read-private", "task.operate", "inbox.own"],
@@ -162,7 +162,7 @@ export const FIRST_ACTIONS: { readonly [role in Role]: readonly string[] } = {
 };
 
 /** The first lists of each version. */
-export const FIRST_ACTIONS_OF: Readonly<Record<string, typeof FIRST_ACTIONS>> = { [MEMBERSHIP_1]: FIRST_ACTIONS_1, [MEMBERSHIP]: FIRST_ACTIONS, "platform:membership@4": { ...FIRST_ACTIONS, admin: [...FIRST_ACTIONS.admin, "application.establish"] }, "platform:membership@5": { ...FIRST_ACTIONS, admin: [...FIRST_ACTIONS.admin, "application.establish"] }, "platform:membership@6": { ...FIRST_ACTIONS, admin: [...FIRST_ACTIONS.admin, "application.establish"] }, "platform:membership@7": { ...FIRST_ACTIONS, admin: [...FIRST_ACTIONS.admin, "application.install"] } };
+export const FIRST_ACTIONS_OF: Readonly<Record<string, typeof FIRST_ACTIONS>> = { [MEMBERSHIP_1]: FIRST_ACTIONS_1, [MEMBERSHIP]: FIRST_ACTIONS, "platform:membership@4": { ...FIRST_ACTIONS, admin: [...FIRST_ACTIONS.admin, "application.establish"] }, "platform:membership@5": { ...FIRST_ACTIONS, admin: [...FIRST_ACTIONS.admin, "application.establish"] }, "platform:membership@6": { ...FIRST_ACTIONS, admin: [...FIRST_ACTIONS.admin, "application.establish"] }, "platform:membership@7": { ...FIRST_ACTIONS, admin: [...FIRST_ACTIONS.admin, "application.install"] }, "platform:membership@8": { ...FIRST_ACTIONS, admin: [...FIRST_ACTIONS.admin, "application.install", "directory.archive"] } };
 
 /**
  * The form of a handle (section 3.1; section 12.1.8, rows q and r): `@`,

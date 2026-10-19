@@ -44,13 +44,12 @@ type Row = readonly [seq: number, time: string, fields: Record<string, FieldValu
 test("the directory definition validates whole with the platform option; every mark of the note's table has its rule, so the package's rules run it, and with any one missing they do not", () => {
   const valid = directoryDefinition;
   expect([valid.underived, derivable(valid, null), directory.capabilities, directory.rules, directory.timed]).toEqual([[], true, [], {}, {}]);
-  // Section 12.1.2 plus the S2 room archive binding: three item types,
-  // the genesis and five other acts, two handlers, one kind of operation.
+  // Section 12.1.2: three item types, the genesis `establish` with four acts, two handlers, and one kind of operation.
   expect([Object.keys(directory.items), directory.genesis, Object.keys(directory.acts), Object.values(directory.receives).map((h) => [h.message, h.class, h.from.kind]), Object.keys(directory.outcomes)]).toEqual([
-    ["repository", "lane", "task"], "establish", ["establish", "bind-archive", "open-issue", "open-pr", "open-task", "retry-import"], [["index", "advisory", "lane"], ["compromised", "tell", "membership"]], ["import"],
+    ["repository", "lane", "task"], "establish", ["establish", "open-issue", "open-pr", "open-task", "retry-import"], [["index", "advisory", "lane"], ["compromised", "tell", "membership"]], ["import"],
   ]);
   // No entry sends more than three requests: the genesis (section 12.1). Every other entry sends at most one.
-  expect(Object.entries({ ...directory.acts, ...directory.receives }).map(([name, row]) => [name, row.sends.length])).toEqual([["establish", 3], ["bind-archive", 0], ["open-issue", 1], ["open-pr", 1], ["open-task", 1], ["retry-import", 0], ["index", 0], ["compromised", 1]]);
+  expect(Object.entries({ ...directory.acts, ...directory.receives }).map(([name, row]) => [name, row.sends.length])).toEqual([["establish", 3], ["open-issue", 1], ["open-pr", 1], ["open-task", 1], ["retry-import", 0], ["index", 0], ["compromised", 1]]);
 
   // The marks, by the rows of the note's table: rows 7 to 13, and rows a and d of the further marks.
   const listed = [
@@ -201,7 +200,7 @@ test("a directory's genesis, by an outcome entry of its register, opens the repo
   // The fixed slots, from the creation's fields. The register is the scope of the claim, and the creator is the key that signed it.
   expect([p.item(0).refs, p.item(0).values]).toEqual([
     { register: p.register.at, claim: p.claim, membership: null, rules: null, destination: null },
-    { repository: { host: "git.example", namespace: "artroom", name: repositoryName(seedDigest(genesis.seed), 1), id: "r-1" }, branch: "main", "founder": rita.key, "founderHandle": "@rita", recoveryKey: sam.key, import: null, imported: null, archive: null, lastNumber: 0 },
+    { repository: { host: "git.example", namespace: "artroom", name: repositoryName(seedDigest(genesis.seed), 1), id: "r-1" }, branch: "main", "founder": rita.key, "founderHandle": "@rita", recoveryKey: sam.key, import: null, imported: null, lastNumber: 0 },
   ]);
   // Three creations, in the order membership, rules, destination, each with the digest of the directory's seed as its cause. The
   // result is at ordinal 0, and the three are sealed as pending work and held. The second and the third are by the package's rules

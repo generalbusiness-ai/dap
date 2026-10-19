@@ -11,6 +11,8 @@ import { rulesScope3, rulesScopeRules3 } from "./rules-scope.ts";
 import { applicationResultFields } from "./application-install-creation.ts";
 import { applicationValues } from "./application.ts";
 import { pinnedBy } from "./versions.ts";
+import { archiveInstallPin } from "./archive-binding-wire.ts";
+const archiveInstall = (given: RuleGiven): boolean => archiveInstallPin(pinnedBy(given));
 
 import { INSTALL_ADDITIONS_BYTES, INSTALL_DEFINITION_BYTES, INSTALL_DEFINITIONS, installDefinitionTextFields, installDeclarationsType, installGrantFields, readInstallAdditions } from "./application-install-wire.ts";
 export { APPLICATION_INSTALL_RULES } from "./application-install-wire.ts";
@@ -32,7 +34,7 @@ export const applicationInstallRulesScope: PlatformData = {
       membership: { fixed: false, required: false, to: { type: "scope", kind: "membership" } },
       destination: { fixed: false, required: false, to: { type: "scope", kind: "destination" } } },
     values: { uri: { ...fixed, of: { type: "text", max: 4096 } }, release: { ...fixed, of: digest }, semantic: { ...fixed, of: digest },
-      requirements: { ...fixed, of: { type: "record", of: { destination: { type: "bool", required: true }, archive: { type: "bool", required: true } } } },
+      needsDestination: { ...fixed, of: { type: "bool" } },
       presentation: { ...fixed, of: digest }, definition: { ...fixed, of: digest }, publisher: { ...fixed, of: { type: "text", max: 64 } },
       additions: { ...fixed, of: { type: "text", max: INSTALL_ADDITIONS_BYTES } },
       declarations: { ...fixed, of: installDeclarationsType }, genesis: { ...fixed, of: { type: "text", max: 16 * 1024 } },
@@ -93,7 +95,7 @@ function proof(given: RuleGiven): ApplicationReleaseProof | null {
   const signed = given.value(APPLICATION_RELEASE_VALUE.domain, fields["release"], APPLICATION_RELEASE_VALUE.max);
   if (semantic === undefined || signed === undefined) return null;
   const result = readApplicationReleaseProof(semantic, signed, fields["release"], { bytes: APPLICATION_SEMANTIC_VALUE.max + APPLICATION_RELEASE_VALUE.max });
-  if (result.ids.semantic !== fields["semantic"] || result.semantic.capabilities.length || result.semantic.host.profiles.some(profile => profile !== "restricted@1")) throw Error("unsupported install proof");
+  if (result.ids.semantic !== fields["semantic"] || result.semantic.capabilities.length || (!archiveInstall(given) && result.semantic.host.requires !== undefined) || result.semantic.host.profiles.some(profile => profile !== "restricted@1")) throw Error("unsupported install proof");
   for (let index = 0; index < result.semantic.definitions.length; index++) {
     const part = result.semantic.definitions[index]!;
     if (utf8(part.bytes).length > INSTALL_DEFINITION_BYTES || fields[`definitionText${index}`] !== textDigest(part.bytes)) throw Error("exact native declaration text required");
@@ -173,7 +175,7 @@ export const applicationInstallRules: Rules = {
     return [
       { effect: "value", item: given.resolved.self, slot: "declarations", value: checked.semantic.definitions.map(part => ({ digest: part.id, text: textDigest(part.bytes), name: (parseStrict(part.bytes) as DeclaredDefinition).name })) },
       { effect: "value", item: given.resolved.self, slot: "additions", value: additions },
-      { effect: "value", item: given.resolved.self, slot: "requirements", value: { destination: genesis.needsDestination, archive: checked.semantic.host.requires?.includes("archive") === true } },
+      { effect: "value", item: given.resolved.self, slot: archiveInstall(given) ? "requirements" : "needsDestination", value: archiveInstall(given) ? { destination: genesis.needsDestination, archive: checked.semantic.host.requires?.includes("archive") === true } : genesis.needsDestination },
       { effect: "value", item: given.resolved.self, slot: "genesis", value: canonicalize(genesis.fields) },
       { effect: "value", item: given.resolved.self, slot: "definition", value: checked.semantic.entry },
       { effect: "value", item: given.resolved.self, slot: "presentation", value: checked.ids.presentation },
@@ -220,7 +222,7 @@ export const applicationInstallRules: Rules = {
     if (!job || !isScopeRef(directory) || !isMemberRef(installer)) throw Error("original checked install authority required");
     return { to: directory, message: { class: "request", type: "tell", body: { message: "application-create", fields: {
       job: job.id, definition: job.values["definition"], release: job.values["release"], semantic: job.values["semantic"], presentation: job.values["presentation"],
-      installer, genesis: job.values["genesis"], needsDestination: isRecord(job.values["requirements"]) && job.values["requirements"]["destination"] === true,
+      installer, genesis: job.values["genesis"], needsDestination: archiveInstall(given) ? isRecord(job.values["requirements"]) && job.values["requirements"]["destination"] === true : job.values["needsDestination"],
     } } } };
   } },
   "application-creation-matches": { place: "guard", refusals: ["invalid-application-result"], run: given => {
@@ -241,7 +243,7 @@ export const applicationInstallRules: Rules = {
     if (!job || !isScopeRef(directory)) throw Error("install retains its room directory");
     if (!activationAvailable(given, job)) return null;
     return { to: directory, message: { class: "request", type: "tell", body: { message: "application-stage", fields: {
-      name: rootName(job), declarations: job.values["declarations"], needsArchive: isRecord(job.values["requirements"]) && job.values["requirements"]["archive"] === true,
+      name: rootName(job), declarations: job.values["declarations"], ...(archiveInstall(given) ? { needsArchive: isRecord(job.values["requirements"]) && job.values["requirements"]["archive"] === true } : {}),
       ...Object.fromEntries((job.values["declarations"] as unknown as { text: string }[]).map((part, index) => [`definitionText${index}`, part.text])),
       definition: job.values["definition"], job: job.id, release: job.values["release"], semantic: job.values["semantic"], additions: job.values["additions"],
     } } } };
