@@ -81,7 +81,7 @@ journal additions, all three owning package typechecks pass in
 `/tmp/artroom-s1-dap-derive-type-time-native-20261018.log`,
 `/tmp/artroom-s1-artroom-scope-type-time-native-20261018.log` and
 `/tmp/artroom-s1-artroom-replay-type-time-native-20261018.log`.
-No final gate has run.
+The first gate failed, as recorded below; a corrected gate remains required.
 
 Dependencies are a private APFS COW copy of the owned G1 view: 106 versions,
 13 workspace links inside this checkout and zero installs. Only this copy's
@@ -105,3 +105,34 @@ sequenced-refusal consequences in `b92bd90c`. Those source findings are not
 planner adoption. The implementation will not invent a no-entry result
 protocol or silently reinterpret the approved design. Clock-behind must
 remain unavailable before any time-judging decision is written.
+
+## First gate and correction
+
+The first gate at clean `8c117af37df12167793f52676b35195254cd2885`, tree
+`33dd4cd1b9cc7b5301a4514584cbbbdd31830882`, failed. Original PTY 29743
+terminated at `d5c5c7`, exit 1. It passed typechecking and 385 Vitest files /
+1,872 cases; two files / two cases failed and one file / three cases skipped.
+The chained Node and Counter checks did not run.
+
+The Page asset needed regeneration because its bundle includes the changed
+operand validator. The owning build regenerated `apps/room/page/assets.ts`.
+The native Lending story's second read returned `behind` where its unchanged
+assertion expected `current`. Its original failure omitted the read reason.
+The assertion now includes at most 1,000 characters of diagnostic JSON; its
+expected behavior and all story obligations remain unchanged. A focused run
+of the Page asset, native Lending story and native source-order file passes,
+three files / three cases, in
+`/tmp/artroom-s1-gate-correction-focused-20261018.log`. This is not a demonstrated
+Lending fix. The original transient freshness mismatch remains an explicit
+qualification, alongside the existing runtime warnings in the raw log.
+
+First-gate evidence is `/tmp/artroom-s1-source-order-gate-20261018.log`, outer
+time `/tmp/artroom-s1-source-order-gate-outer-20261018.time` and raw directory
+`/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.HZh183bm3b/`.
+Typechecking took 8.1 s elapsed / 30.7 s CPU; the test command took 489.8 s /
+660.5 s. The measured outer gate took 498.12 s elapsed / 691.46 s CPU
+(592.69 user + 98.77 system). These are the failed attempt's costs, not a
+passing gate or total edit cost. The machine was shared arm64 macOS 27.0.1,
+starting load 1.65 / 1.74 / 1.79, with the warm private COW dependency view.
+Other G1 browser work ran concurrently; this was not exclusive CPU or a heap
+measurement. Installs were skipped against the unchanged audited lock.
