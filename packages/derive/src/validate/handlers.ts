@@ -19,6 +19,7 @@ import { observes } from "./observes.ts";
 import { attention, sends } from "./sends.ts";
 import { at, type Rec } from "./shape.ts";
 import { nativeReceiver } from "./native-capacity.ts";
+import { declaredBy } from "../capability.ts";
 
 const members = (v: unknown): Rec => (isObject(v) ? v : {});
 /** Whether an item type is `many`, as the definition writes it. */
@@ -278,14 +279,19 @@ export function receives(d: Defining, v: unknown, top: Rec): void {
     const bodies: { body: Rec; where: string; context: Ctx }[] = [{ body: o, where: path, context: context() }];
     if ("late" in o) {
       const latePath = at(path, "late"), late = rec(o["late"], latePath, ["within", "reason"], ["then"]);
-      if (cls === "advisory") bad("shape", latePath, "late is a form of a request handler");
-      if ("bound" in o) bad("shape", latePath, "late is not supported on an item-bound native handler");
+      if (cls === "advisory") bad("late-on-advisory", latePath, "late is a form of a request handler");
+      if ("bound" in o) bad("late-on-item-bound-handler", latePath, "late is not supported on an item-bound native handler");
       if (late) {
         str(late["reason"], at(latePath, "reason"));
         const within = rec(late["within"], at(latePath, "within"), ["seconds"]);
         const seconds = within && int(within["seconds"], at(at(latePath, "within"), "seconds"));
         if (seconds !== null && seconds * 1000 > LAST_MS) bad("bound", at(latePath, "within"), "is longer than the span a timestamp can name");
         if ("then" in late) {
+          // Match the listed capability's reserved request, as delivery does;
+          // the local handler key is not part of that protocol.
+          if ([...d.capabilities.values()].some(capability => declaredBy(capability)?.reserved.some(reserved => reserved.request.class === cls && reserved.request.message === message))) {
+            bad("late-then-on-reserved-handler", at(latePath, "then"), "a replacement body cannot settle a capability's reserved receiver decision");
+          }
           const branch = rec(late["then"], at(latePath, "then"), [], ["effects", "sends", "attention"]);
           if (branch) {
             if (holdDoes(branch["effects"], "open")) bad("hold", at(latePath, "then"), "a handler cannot open a hold");

@@ -123,7 +123,28 @@ test("late refuses the unsupported item-bound native combination while the origi
   declaration.receives["stop"]!.late = { within: { seconds: 30 }, reason: "old-stop" };
   const checked = validateDefinition(declaration, PIN_BOUNDS, undefined, { platform: true });
   expect(checked.ok).toBe(false);
-  if (!checked.ok) expect(checked.problems.some(problem => problem.path === "receives.stop.late")).toBe(true);
+  if (!checked.ok) expect(checked.problems).toContainEqual(expect.objectContaining({ code: "late-on-item-bound-handler", path: "receives.stop.late" }));
+});
+
+test("late replacement refuses the capability's reserved request regardless of the local handler name", () => {
+  const data = receiverPinData(), handler = data.receives["license"]!;
+  delete data.receives["license"]; data.receives["renamed"] = handler;
+  handler.late = { within: { seconds: 30 }, reason: "old-license" };
+  expect(validateDefinition(data, PIN_BOUNDS).ok).toBe(true);
+  handler.late.then = {};
+  const checked = validateDefinition(data, PIN_BOUNDS);
+  expect(checked.ok).toBe(false);
+  if (!checked.ok) expect(checked.problems).toContainEqual(expect.objectContaining({ code: "late-then-on-reserved-handler", path: "receives.renamed.late.then" }));
+  // A same-name ordinary message has no native receiver reservation.
+  const ordinary = lateDefinition(true);
+  ordinary.receives["sample"]!.message = "export-license";
+  expect(validateDefinition(ordinary, PROPOSED_BOUNDS).ok).toBe(true);
+  const advisory = lateDefinition(false);
+  advisory.receives["sample"]!.class = "advisory";
+  delete advisory.receives["sample"]!.order;
+  const rejected = validateDefinition(advisory, PROPOSED_BOUNDS);
+  expect(rejected.ok).toBe(false);
+  if (!rejected.ok) expect(rejected.problems).toContainEqual(expect.objectContaining({ code: "late-on-advisory", path: "receives.sample.late" }));
 });
 
 test("trusted platform capacity includes requests declared only by a late replacement", () => {

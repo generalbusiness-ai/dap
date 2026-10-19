@@ -1,10 +1,11 @@
-# S1: late handlers — development checkpoint
+# S1: late handlers
 
-This is unfinished work under request `4353d842ce797515e7a369ceae6515c9efaa547b`,
+This implementation is awaiting its final gate and review under request `4353d842ce797515e7a369ceae6515c9efaa547b`,
 promise `6201d371095659784d6c68f4e5dfbeb5c4c5eac6`, and parent S1 request
 `b42d3b741986eb8f171e353ad3cb3704f202be9b`. It has no final gate, review,
-landing, publication or deployment. The initial base is `b44a8e255`, the
-earlier source-order candidate; its F1 correction must be incorporated.
+landing, publication or deployment. The initial base was `b44a8e255`, the
+earlier source-order candidate. Its F1 correction and audited Main
+`1da3f4ca79ad034286ca4d8988bed9dee022369e` are incorporated.
 The source-order review checkouts and evidence remain frozen.
 
 The behavior follows planner decision `a692fd0d` (ratified `5a8f1709`):
@@ -27,20 +28,21 @@ capacity include the replacement sends. Folded request reservations select
 the recorded branch's send path. This does not scan journal history or run
 two handler bodies.
 
-`late` is currently rejected on advisory and native item-bound handlers.
+`late` is rejected on advisory and native item-bound handlers.
 Advisories have no request decision/result. Native item-bound settlement
-composition is not implemented. Decision request `df405e9433acbfde95b792e63c3fd5c71b2fd5ea`
-asks the planner to confirm request-only support and the proposed narrower
-restriction on replacement branches of native reserved receiver handlers.
-That latter restriction is **not implemented in this checkpoint**: an
-empty late replacement on an export-license handler could still omit the
-normal license effect and leave its numbered pin undecided. Do not ship
-this checkpoint. No-then late refusal already uses the native refusal
+composition is not implemented. Planner report `56398945` answers decision
+request `df405e9433acbfde95b792e63c3fd5c71b2fd5ea` (ratified `54fedf44`).
+Validation refuses replacement branches on the listed capability's reserved
+request, identified by its declared class and message, independently of the
+local handler key. This prevents an empty replacement from omitting the
+license effect and leaving its numbered pin undecided. The named refusals
+are `late-on-advisory`, `late-on-item-bound-handler` and
+`late-then-on-reserved-handler`. No-then late refusal uses the native refusal
 record effect; its witness checks pin debit and unchanged exact repeat.
 
 ## Witnesses and their limits
 
-`derive/test/late.test.ts` has twelve cases. They cover normal/boundary/late
+`derive/test/late.test.ts` has fourteen cases. They cover normal/boundary/late
 decisions and effects, one authenticated result, actual sender consumption
 of refused and applied results, exact repeat, clock-behind with no entry,
 negative apparent latency, normal-guard exclusion and rule preparation,
@@ -134,4 +136,28 @@ All thirteen pass in `/tmp/artroom-s1-late-relate-copy-20261018.log`.
 The time and platform-capacity control targets are unchanged by this test.
 Planner amendment `9ae4eb97` confirms request-only late/spacing forms;
 native reserved-receiver replacement composition remains the unanswered
-part of `df405e94`. No final gate or completion is claimed.
+part of `df405e94` at that historical checkpoint. The decision below closes
+that question. No final gate or completion is claimed here.
+
+## Reserved-handler boundary
+
+Planner decision `56398945` is implemented. All fourteen late cases pass in
+`/tmp/artroom-s1-late-reserved-validation-20261019.log`; the owning Derive
+test typecheck passes in `/tmp/artroom-s1-late-reserved-type-20261019.log`.
+The strengthened validator witness rejects an empty replacement after the
+reserved handler is renamed, admits its no-then form, and admits an ordinary
+same-message application handler without the capability. It also checks the
+named advisory and item-bound refusals. The existing native hold witness
+still checks the numbered debit and repeat through the actual capability,
+judge and fold, with scripted task source and grants as stated above.
+
+The focused control changes the reserved-message match to a mismatch. The
+unchanged witness fails because validation wrongly admits the replacement;
+the source is restored. See
+`/tmp/artroom-s1-late-reserved-control-exact-20261019.log` (one selected case,
+thirteen filtered cases). An earlier control used a typographic apostrophe
+in its expected test-name filter; the same assertion failed, but the runner
+classified it inconclusive. That diagnostic remains in
+`/tmp/artroom-s1-late-reserved-control-20261019.log` and is not the control
+result. Page assets were regenerated from the final validator source;
+`/tmp/artroom-s1-late-page-build-20261019.log` records the build.
