@@ -272,6 +272,7 @@ export function receives(d: Defining, v: unknown, top: Rec): void {
     const of = isObject(o["bound"]) && typeof o["bound"]["of"] === "string" && o["bound"]["of"].startsWith("also.") ? o["bound"]["of"].slice(5) : null;
     const named = also(d, o["also"], at(path, "also"), fields, null, top, of === null ? null : { name: of, message, fields, written: o["fields"] });
     if ("bound" in o) bound(d, o["bound"], at(path, "bound"), { tell: cls === "tell", opens: o["opens"], message, fields }, named);
+    if ("bound" in o && o["order"] === "source") bad("shape", at(path, "order"), "source order is not supported on an item-bound native handler");
     const ctx: Ctx = { ...naming(), on, also: named.types, nascent: on !== null, fields, kind: cls === "advisory" ? null : message, handler: { update: cls === "relate", under: typeof from?.["under"] === "string" ? from["under"] : null }, senderKind: typeof from?.["kind"] === "string" ? from["kind"] : undefined, unsettled: named.unsettled };
     guards(d, o["guards"], at(path, "guards"), ctx, true);
     const copy = cls === "relate" && message !== null && isScopeKind(from?.["kind"]) ? { name: message, kind: from["kind"] } : null;

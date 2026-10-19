@@ -1,5 +1,11 @@
 # S1: late deliveries and source order
 
+Current revision: settlement correction for checker report `b5ec3cf1` on
+candidate `684002a4`. The old review checkout and all 106 map-listed files
+remain frozen. This correction has a new checkout and private dependency
+view. Its new runtime/test changes still need the final gate and exact-head
+review; the passing gate recorded below covers the earlier candidate.
+
 Request `b42d3b741986eb8f171e353ad3cb3704f202be9b`, promise
 `1de1f7be5eec7f9e02c5fa5e4e527ee23477b5a1`. This branch starts from reviewed
 Main `165d5a86fe8c1868f3069efad61a435a5417bde2`. The approved sequenced note's
@@ -168,3 +174,53 @@ The late form proceeds independently under child request `4353d842`, promise
 `6201d371`, in a different checkout based initially on this unlanded source
 candidate. That checkout does not change this review's source or evidence,
 and its unreviewed late behavior is not covered by this gate.
+
+## Reserved suppression correction
+
+Checker report `b5ec3cf1ea6d0ed60eaa2b4778329ef84a723702`, read and ratified
+at `fbd0691e`, found that the suppression early return left a native numbered
+receiver pin's deciding reservation outstanding. The deciding entry was
+terminal but did not consume that decision. The correction records the same
+native refused-decision bookkeeping that an ordinary refusal uses and marks
+the draft as a settlement. It runs no handler body a second time and adds
+no history scan. An ordinary source-ordered request without a pin keeps its
+existing behavior.
+
+The separate native item-bound handler protocol has different accounting.
+This revision rejects `order: "source"` when that handler declares `bound`;
+absent order and explicit `arrival` remain valid. This is the narrow
+declaration restriction allowed by the review, not an assertion that item
+binding was settled by the receiver-pin correction.
+
+`source-order-reserved.test.ts` adapts the checker's two-export example:
+actual native capability, validator, judge, fold and MemoryState, with
+scripted task source entries and per-key fixture grants. Both pins start at
+decision 1. The higher entry advances B to 2; the suppressed lower entry
+consumes A's decision 2 without granting its license. Exactly two future
+deciding entries remain, rather than three. The capacity kernel fits the
+exact entry boundary and refuses one less, with byte accounting explicitly
+omitted; this is not a native object/storage or provider witness. Exact
+repeat adds no entry or debit. The arrival control still applies both, and
+the item-bound declaration has a passing arrival/refused source pair.
+
+Three focused derive files pass eight cases in
+`/tmp/artroom-s1-settlement-focused-initial-20261018.log`. A paired control
+removes just the pin record effect while retaining `settles: true`; the
+unchanged test fails by `decided` remaining 1 instead of 2, then the source
+is restored. Log `/tmp/artroom-s1-settlement-record-control-20261018.log`.
+The flag alone cannot stand in for consuming the actual reservation.
+
+Dependencies are another owned APFS COW view, 106 versions / 13 internal
+workspace links, unchanged lock and zero installs. Audit
+`/tmp/artroom-s1-settlement-dependency-view-20261018.json`, SHA-256
+`cad45b86bf6eb0268c5db7648665129c9d61a5bfccb68e8e7d59a37f9a936780`.
+No old review source, evidence, dependency view or script was changed.
+
+Derive and Scope typechecks pass for the correction. The reserved regression,
+actual native source-order/eviction/replay witness and regenerated Page asset
+pass together, three files / four cases, in
+`/tmp/artroom-s1-settlement-native-assets-20261018.log`. The Page bundle was
+regenerated for the changed shared validator. The paired record-effect
+control is also terminal and restored, with its intended assertion failure.
+The correction's final gate is next; the previous two attempts below remain
+historical costs and do not count as testing this changed runtime.
