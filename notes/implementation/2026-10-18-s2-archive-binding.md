@@ -159,9 +159,12 @@ Merge `e199a47d7` incorporates actual Main
 resolved by retaining both the archive-requirement witness and the reviewed
 late-child closure witness. The five focused byte/platform/native files
 pass ten cases in `/tmp/artroom-s2-g3-merge-owning-20261019.log`; original
-process 88200 closed with exit zero. Scope's three, platform's two and
-bytes' two compiler targets pass in
-`/tmp/artroom-s2-g3-merge-types-20261019.log` (process 7785 closed zero).
+process 88200 closed with exit zero. Platform's two and bytes' two compiler
+targets pass in `/tmp/artroom-s2-g3-merge-types-20261019.log` (process 7785
+closed zero). That invocation named the wrong scope workspace and did not
+run its targets. The corrected owning scope invocation passes all three
+targets in `/tmp/artroom-s2-native-birth-types-20261019.log` (process 97023
+closed zero), including the new birth-cutoff witness.
 
 The existing native install witness now also feeds its actual installed
 application's birth into archive prefix and privacy metadata classification.
