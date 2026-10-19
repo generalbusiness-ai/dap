@@ -1,6 +1,7 @@
 # Application packages, their checks, and the builder room
 
-18 October 2026, draft 2. Design note for review. It makes application
+18 October 2026, draft 3; section 15 lists what changed after the
+checker's reviews. Design note for review. It makes application
 authoring in dap easier to do and easier to verify, so that an agent can
 build and customize an application on demand and a person can see what
 it did. It decides four things and designs each:
@@ -80,25 +81,28 @@ can say is which definition fills a slot. That is the package's job.
 and it gains:
 
 ```ts
-connections: readonly { from: Digest; slot: string; to: Digest | "outside" }[];
+connections: readonly { from: Digest; item: string; slot: string; to: Digest | "outside" }[];
 rights: Readonly<Record<string, { owner: Digest }>>;
 exercises: readonly { definition: Digest; row: string; right: string }[];
-groups: readonly { name: string; members: readonly Digest[]; lifetime: { seconds: number } }[];
+groups: readonly { name: string; members: readonly { name: string; definition: Digest }[]; lifetime: { seconds: number } }[];
 order: readonly { definition: Digest; handler: string; by: "any" | { right: string } | { group: string } }[];
 derivation: Readonly<Record<Digest, { parent: Digest; patch: Patch } | { parent: Digest; parameters: Readonly<Record<string, number | string>> }>>;
 parameters: Readonly<Record<string, { type: "int" | "text"; default: number | string; min?: number; max?: number }>>;
 ```
 
-- **Connections.** For each definition and each slot of kind `scope`,
-  the definition that fills it, or `outside` for a platform scope. A
-  `create` edge is a connection whose filler is the child; `creates`
-  stays derived. The entry definition is the root.
+- **Connections.** For each definition, each item type and each slot of
+  kind `scope`, the definition that fills it, or `outside` for a
+  platform scope. A `create` edge is a connection whose filler is the
+  child; `creates` stays derived. The entry definition is the root.
 - **Rights.** Named exclusive constraints, each with one owning
   definition; an act or handler that changes the constrained state is
   listed under `exercises`. This is "a shared constraint has one owner"
   made declarable.
-- **Groups.** Sequenced groups, their members, and the lifetime that
-  bounds an unresolved position (sequenced note, 5.3).
+- **Groups.** Sequenced groups, their members by name and definition,
+  and the lifetime that bounds an unresolved position (sequenced note,
+  5.3). In version 2 a member is a singleton: its definition is created
+  once per install, so its manifest name is its name in the order scope
+  and a `reads.member` resolves to it. Banks in groups are open point Q7.
 - **Order.** For each handler: `any` when its result does not depend on
   the order of two senders' acts; the right it exercises; or its group.
 - **Derivation.** A definition declared as a parent digest with a patch,
@@ -115,6 +119,29 @@ parameters: Readonly<Record<string, { type: "int" | "text"; default: number | st
   the binding under `derivation`. A room with different limits is a
   release of the same template with different values.
 
+**How a connection binds.** A declaration names definitions; a running
+room holds instances. The check makes the declaration true of the
+instances by admitting an endpoint slot only when it is `fixed` and
+every effect that sets it takes its value from one of two sources: the
+`applied` result of a `create` send that names the declared `to`
+definition (`{ ref: { slot, from: { sender: true } } }`, as the grow site
+stores a room, `examples/grow/site.ts:25`), or the creator's own
+reference carried as a creation field of the genesis
+(`{ scope: true }`, as the grow room's `site`, `room.ts:53-58`) when the
+package's `creates` edge says the creator is the declared `to`. Any other
+source, such as a scope field a signer supplies, is refused
+`unbound-endpoint`. Native creation then makes the slot hold a scope
+pinned to the declared definition: a creation result's sender is
+authenticated, and a child's creator is its genesis's source. On the
+receiving side the handler's `from { kind, under }` checks the sender's
+definition at every delivery, and the check requires `under` to equal the
+connection's `from`. For an `outside` endpoint the check proves the
+slot's kind and, when the manifest names the platform definition, that
+it has the handler; nothing more is claimed. A definition created
+several times (a bank of rooms) shares one declaration, and the fan-in
+into a `relate` handler is the creating item type's `max`, which
+`fan-in-exceeds-copies` compares with `copies`.
+
 Nothing here puts a guard, an effect or any judgment into the manifest.
 A scope pins resolved bytes.
 
@@ -128,15 +155,15 @@ connections, creations to geneses) and checks:
 
 | Check | Refuses, with the reason | Kind |
 |---|---|---|
-| Port typing | A send whose message or fields match no handler of the connected definition (`unknown-message`, `field-mismatch`); a handler no connected definition can reach (`unreachable-handler`); a `relate` whose `copies` cannot hold the fan-in the senders' `each` and creation bounds imply (`fan-in-exceeds-copies`) | By construction |
-| Both ends consent | A connection whose sender slot kind and receiver `from` clause disagree (`connection-mismatch`) | By construction |
+| Port typing | A send whose message or fields match no handler of the connected definition (`unknown-message`, `field-mismatch`); a handler no connected definition can reach (`unreachable-handler`); a `relate` whose `copies` cannot hold the fan-in the creating item type's `max` implies (`fan-in-exceeds-copies`) | By construction, given the binding rule |
+| Endpoint binding | An endpoint slot that is not `fixed` or that an effect sets from a source other than the two of section 2 (`unbound-endpoint`); a group member whose definition is created more than once (`group-member-not-singleton`) | By construction |
+| Both ends consent | A connection whose sender slot kind or receiver `from { kind, under }` disagrees with the declared pair (`connection-mismatch`) | By construction |
 | Result coverage | A request send without clauses for `refused` and `undelivered`; a creation without `conflict` (`unhandled-result`) | By construction |
 | Settled pending work | A send that leaves an item pending (`settles`) with no timed rule that exits the pending state (`unsettled-pending`) | By construction |
 | Grant coverage | An act whose action no default role holds (`ungranted-act`) | By construction |
 | One owner | An act or handler under `exercises` for a right in a definition other than the owner (`right-not-owned`); a `max`-bounded type opened by a handler with no right (warning `unowned-bound`) | By construction for declared rights |
 | Explicit order | A handler with no `order` entry (`order-undeclared`); a `reads` outside a group (`reads-outside-group`) | By construction |
 | Relevant dependency | In a group, a sequenced input that neither reads a member nor belongs to a definition some sequenced input reads (warning `sequenced-for-nothing`); an unsequenced act whose items a member reads (`unsequenced-read-target`) | By construction |
-| Late handling | A handler whose source is a group member, or that carries a lag bound, with no `late` (`late-undeclared`) | By construction |
 | Cycle acknowledgement | A cycle in the package graph with no edge that carries `spacing`, a `late` bound, or a condition on state (`cycle-unacknowledged`); the storm bound is computed from `spacing` | By construction for the structural condition |
 | Reachability | A state no row enters or leaves; a final state unreachable; a `states` list naming a state no effect produces (warning `unreachable-state`) | Warning |
 | Derivation | A patch that fails to apply or whose result does not validate (`patch-fails`); a patch touching a row not marked open (`sealed-row`); a parameter outside its bounds (`parameter-bounds`) | By construction |
@@ -156,6 +183,21 @@ about outside operations need scenarios (section 8), whose expectations
 are frozen literally and never derived from the declaration the
 validator reads.
 
+**Staging.** The validator checks the forms that exist when it is built,
+and refuses a form it does not yet know as `unsupported-form`. Three
+kinds of witness are told apart: a **refusal** has a pair, one package
+that passes and one that fails for that reason only; a **warning** has
+one package that is admitted with the warning reported; a **report** has
+one package whose computed values match a hand count.
+
+| Checks | Built in | Needs |
+|---|---|---|
+| Port typing, endpoint binding, both ends consent, result coverage, settled pending work, grant coverage, one owner, explicit order with `by: "any"` or a right, cycle acknowledgement on state conditions, closure and bounds, the projected-bound report | P1 | M2a |
+| Cycle edges carrying `late` or `spacing` | P2 (the `late` edge once S1 has landed) | P1, S1, P2 |
+| Explicit order `by: { group }`, `reads-outside-group`, relevant dependency, `group-member-not-singleton` | P1g | P1, S3 |
+| Reachability, with `states` | P4 | P1 |
+| Derivation and parameters | P5 | P1 |
+
 ## 4. Six forms for the authoring language
 
 Each form is judged from inputs the entry records, so it replays; each
@@ -164,25 +206,36 @@ gives a check something to compute; none adds code.
 ### 4.1 The `late` branch on handlers
 
 ```ts
-late?: "refuse" | { within: { seconds: number }; reason: string; effects?: EffectForm[]; sends?: SendForm[]; attention?: AttentionForm[] };
+late?: { within: { seconds: number }; reason: string; then?: { effects?: EffectForm[]; sends?: SendForm[]; attention?: AttentionForm[] } };
 ```
 
-`within` compares the source entry's time, carried in the delivery's
-cause and readable as `{ source: "time" }`, with the commit's clock
-reading. When the source time plus `within` is before the commit's
-reading, the branch applies instead of the handler's effects and sends;
-the entry is still `applied` and carries `late: { reason }`. With `late:
-"refuse"`, the delivery is refused with the reason, nothing is written,
-and the sender's `refused` clause receives the reason. Never both for
-one delivery. A handler that judges `late` judges a time, and
-`clock-behind` applies to it.
+The bound and the reason are always present; `then` chooses between the
+two outcomes. A delivery is late when the source entry's time, carried
+in the delivery's cause and readable as `{ source: "time" }`, plus
+`within` is strictly before the commit's clock reading; equal is not
+late. The judgment order of a handler is fixed: dispatch by class, name,
+sender kind and `from`; then `spacing` (4.2); then `late`; then the
+handler's guards, effects, sends and attention as today. A late delivery
+with no `then` is refused with `reason`, nothing is written, and the
+sender's `refused` clause receives the reason. A late delivery with
+`then` applies the branch's effects, sends and attention instead of the
+handler's; the handler's guards are not evaluated; the entry is
+`applied` and carries `late: { reason }`. A delivery that is not late is
+judged by the handler alone. Never both for one delivery. `late` and
+`spacing` judge a time, so under `clock-behind` the answer is
+`unavailable` with that reason and nothing is written. Replay derives the
+same answer from the retained source entry's time and the entry's own
+time. Each slice's witnesses cover both outcomes with a fresh, a
+boundary and a late delivery, and a `clock-behind` control. Lingua
+Franca's deadline is likewise an interval and a handler, and the handler
+runs instead of the reaction.
 
 The difference measured is the delivery's apparent latency, the sender's
 clock reading against the receiver's, with any clock disagreement inside
 it; nothing in dap bounds or separates the two, so no tolerance term goes
 into the form, and a negative value only means the delivery appears to
-precede its cause. This replaces the sequenced note's lag guard; slice
-S1 follows this section.
+precede its cause. This replaces the sequenced note's lag guard. Slice
+S1 owns `late`; P2 owns `spacing` (section 12).
 
 ### 4.2 `spacing` on handlers
 
@@ -193,8 +246,9 @@ spacing?: { seconds: number };
 A delivery that arrives within `seconds` of the previous applied
 delivery from the same sender scope for the same message and handler is
 refused with the reason `spacing`, and the sender's `refused` clause
-fires. The last applied time per sender and message is bookkeeping
-derived from the journal, so replay recomputes it. A cycle whose edge
+fires; an entry applied through a `late` branch counts as applied. The
+last applied time per sender and message is bookkeeping derived from the
+journal, so replay recomputes it. A cycle whose edge
 carries `spacing` has a storm bound of one round per `seconds` per
 sender, computable at the package.
 
@@ -212,13 +266,22 @@ change, its own slice.
 ### 4.4 Declared `states` on acts and handlers
 
 ```ts
-states?: readonly string[];
+states?: { item: string; in: readonly string[] };
 ```
 
-on an act or handler, as timed rules already carry, is sugar for a state
-guard on the scope's mode item, declared in a fixed place so that the
-reachability check can compute which rows are live in which state,
-which states are dead, and whether every non-final state has an exit.
+on an act or handler names an item type declared `one` and the states
+of that type in which the row is live. It is sugar for a `state` guard
+over that one item, declared in a fixed place so that the reachability
+check can compute, per named item type, which rows are live in which
+state, which states no row enters or leaves, and whether every non-final
+state has an exit. The validator refuses an item type that is not `one`
+(`states-not-singleton`) and a state the type does not declare
+(`unknown-state`). Two item types may declare a state of the same name,
+since the item is named: the order scope's `group` and `allocation` both
+have `open`, and `{ item: "group", in: ["open"] }` is distinct from
+`{ item: "allocation", in: ["open"] }`; that pair is P4's witness. A row
+with no primary item may still carry `states`, since the subject is the
+named item, not the row's `on`.
 
 ### 4.5 `staleness` on a group read
 
@@ -226,11 +289,15 @@ In a sequenced group every position carries the order scope's clock
 reading, one clock for the group. A `reads` entry may declare
 `staleness: { seconds }`: the reader's cut is as of the latest position
 allocated at least that long before its own, and it waits only for
-unresolved allocations at or below that point. With a staleness at or
-above the group's lifetime it never waits. The cut stays a function of
-the two journals, the position and the declaration, so it is immutable
-and replays. The form is specified in the sequenced note, 5.5, and built
-in S3.
+allocations at or below that point that are still open. With a
+staleness at or above the group's lifetime no allocation below the cut
+can still be open, since each has resolved, holed or expired; the reader
+can still be answered `behind` by a member that stopped between the
+order scope's resolution and its own commit, until that member resumes,
+and replay reports the missing entry as `missing-dependency`, never as
+an empty page. The cut stays a function of the two journals, the
+position and the declaration, so it is immutable and replays. The form
+is specified in the sequenced note, 5.5, and built in S3.
 
 ### 4.6 Parameters
 
@@ -365,7 +432,7 @@ as that note states them.
 | [Applications note](2026-10-15-self-contained-applications.md), section 4 | The semantic part gains section 2's members; the three identities table says the semantic id covers them |
 | Applications note, section 7, M2 | Package version 2 and `validatePackage` join M2 after M2a; publication by URI is the builder room's release |
 | Sequenced note | Section 9 above; its 6.1 is withdrawn in favour of 4.1 here |
-| Request S1 (`b42d3b74`) | The lag form follows 4.1; amended by assert f92b3f2a |
+| Requests S1 (`b42d3b74`) and P2 (`506d46ed`) | S1 builds `late` per 4.1 (assert f92b3f2a); P2 builds `spacing` and the cycle edges, not `late` (assert of draft 3) |
 | `docs/scopes.md` | `late`, `spacing`, `states`, timed sends and `{ param }` in "The forms" when their slices land; the validator's refusals in "Validation and bounds" |
 | `docs/write-an-application.md`, `docs/testing.md` | The package's structure, checks and views (P1, P8); the scenario form across scopes (P6) |
 | Plan 033 | Nothing moves. P1 and P2 may run beside G1 to G3; P9 follows step 11 |
@@ -378,10 +445,11 @@ blocked on review.
 
 | Slice | What | Needs | Done when | Size |
 |---|---|---|---|---|
-| P1 | Package version 2 (section 2) and `validatePackage` (section 3), used by the codec and `dap check`; the grow package declares its connections, rights and order | M2a landed | each check of section 3 has a named refusal with a witness pair on the grow package; `fan-in-exceeds-copies` refuses a site whose room bound exceeds `copies`; `dap check` reports findings as rows | 2 to 3 days |
-| P2 | The `late` branch (4.1) and `spacing` (4.2): contract, validator, derive, scope, replay, tests; `late-undeclared` | S1's source order, or together with S1 | an old delivery takes the branch and a fresh one the handler, the entry marked; `late: "refuse"` refuses with the reason; a second delivery inside `spacing` is refused and the sender's clause fires; all replay | 1 day |
+| P1 | Package version 2 (section 2) and `validatePackage` with the P1 row of section 3's staging table, used by the codec and `dap check`; `unsupported-form` for the rest; the grow package declares its connections, rights and order | M2a landed | each P1 refusal has its pair on the grow package and the projected-bound report matches a hand count; `fan-in-exceeds-copies` refuses a site whose room bound exceeds `copies`; `unbound-endpoint` refuses a site whose room slot is set from a signer's field; `dap check` reports findings as rows | 2 to 3 days |
+| P1g | The group checks of the staging table | P1, S3 | each refusal has its pair and `sequenced-for-nothing` its warning witness on the two-scope witness of the sequenced note | 1 day |
+| P2 | `spacing` (4.2) and the cycle edges carrying `spacing` or `late`: contract, validator, derive, scope, replay, tests | P1; S1 for the `late` edge | a second delivery inside `spacing` is refused and the sender's clause fires, with fresh and boundary controls and a `clock-behind` control; a late-branch entry counts as applied; a cycle with a `spacing` edge is admitted with its computed bound; all replay | 1 day |
 | P3 | Timed rules may send (4.3) | P2 | a timed rule's `tell` is delivered with the timed entry as its cause; the drain order is unchanged; both journals replay | 1 day |
-| P4 | Declared `states` (4.4) and the reachability check | P1 | the validator reports a dead state and a missing exit on a witness pair; the grow definitions pass | 1 day |
+| P4 | Declared `states` (4.4) and the reachability check | P1 | `states-not-singleton` and `unknown-state` have their pairs; two item types sharing a state name are told apart; a dead state and a missing exit have warning witnesses; the grow definitions pass | 1 day |
 | P5 | Parameters and derivation (4.6, section 2): `{ param }`, `dap pack` resolution, the manifest binding, re-resolution at install, `sealed-row` and `patch-fails` | P1, M1's install act | a grow release with `copies` as a parameter installs with two bindings into two rooms; altered bytes are refused at install; a patch to a sealed row is refused at the package | 1 to 2 days |
 | P6 | The scenario form across scopes (section 8): native child transport in `dap check`, literal expectations at positions, the causal trace and apparent-latency outputs | M2a, P1 | the grow fault scenario runs across the site and a room in `dap check` with G0's refusals and closures, and the trace names the act behind each refusal | 2 days |
 | P7 | Package activation (section 5, layer 1): the install act runs `validatePackage` as a guard; `dap pack` refuses the same | P1, M1's install act | a room refuses a package that fails a section 3 check, with the reason in its record, and replay reports the same | 1 day |
@@ -414,6 +482,13 @@ predecessors land.
    checked at install. Planner.
 8. Scenario expectations are literal and independent of the manifest;
    invariants are a second statement by the author. Planner.
+9. A connection endpoint is bound by construction: a `fixed` slot set
+   only from a creation result or a genesis back-reference; group
+   members are singletons in version 2. Planner, draft 3.
+10. `late` carries its bound and reason always; `then` chooses the
+    branch, its absence the refusal; the judgment order is dispatch,
+    `spacing`, `late`, guards. Planner, draft 3.
+11. S1 owns `late`; P2 owns `spacing`. Planner, draft 3.
 
 ## 14. Open points
 
@@ -425,6 +500,17 @@ predecessors land.
 | Q4 | Where the apparent-latency view belongs | In `dap check` for a scenario, and in the room's reference from its journal |
 | Q5 | The group lifetime's default and bounds | Required, no default; 1 minute to 30 days (sequenced note, 5.9) |
 | Q6 | Whether P7 also refuses at `dap pack` | Yes, as the codec does for closure; the install guard remains the rule that holds everywhere |
+| Q7 | Banks in groups: a member definition created several times | Not in version 2; a bank's instances would need names from their creation index, which the sequenced note's `enroll` can carry later |
+
+## 15. Changes in draft 3
+
+| Finding of review 8afe6c0b (head 82f067e6) | Where answered |
+|---|---|
+| F1, P1: `late: "refuse"` carried no bound or reason; judgment order and `clock-behind` unstated | 4.1: `within` and `reason` always present, `then` chooses; the order dispatch, `spacing`, `late`, guards; strict boundary; `clock-behind`; witnesses for both outcomes; decision 10; S1 owns `late`, P2 `spacing` (decision 11) |
+| F2, P1: connections named definitions, not instances or slots; nothing made the declared target the actual one | Section 2 `item` in the endpoint, the binding rule (creation result or genesis back-reference, `unbound-endpoint`), `from { under }` must equal the connection's `from`, `outside` claims only kind; singleton group members by name (`group-member-not-singleton`); decision 9; Q7 |
+| F3, P2: `states` had no subject | 4.4: `{ item, in }` over an item type declared `one`; `states-not-singleton`, `unknown-state`; the `group` and `allocation` witness |
+| F4, P2: P1 owed checks whose forms did not exist; warnings and reports had no refusal pairs | Section 3 staging table with `unsupported-form`; three witness kinds; P1, P1g, P2, P4 and P5 rows restated |
+| F5, P1: "with staleness at or above lifetime it never waits" was false for a member stopped after resolution | 4.5: no open allocation below the cut, but `behind` until the member resumes and `missing-dependency` in replay, never an empty page |
 
 ## Sources
 
