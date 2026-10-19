@@ -1,12 +1,38 @@
-# P1: package validation — sender-pin checkpoint
+# P1: package validation
 
 Request `4e63c67c30e866555e9efcfdf49af75a2c2f92e1`, promise
-`0afa98af9294045f7906395d0bc8a206ebf1aa90`. Work starts from audited
-Main `1da3f4ca79ad034286ca4d8988bed9dee022369e`, after M2a's delivered
-parent supersession `5681c911`. The approved packages draft 8 and its
-section 3 staging table govern P1. The original request's all-forms wording
-does not pull P1g, P4 or P5 into this slice. This checkpoint has no gate,
-review, landing, publication or deployment, and P1 is not complete.
+`0afa98af9294045f7906395d0bc8a206ebf1aa90`. This mutable preparation
+incorporates reviewed Main `3ed2a08a`. It has no final gate, review or
+landing. G5a and S2a remain ahead of final P1 integration. No package or
+code from the frozen G5a review view has been imported or executed here.
+
+The implemented slice contains the seven explicit version 2 composition
+places, strict codec checks, the public byte-based `validatePackage`,
+structured CLI findings and the maintained Grow declarations. It also
+checks exact sender pins against native birth metadata at delivery and
+replay. Groups, sequenced reads, spacing, timed sends, row states,
+derivation and parameters refuse as `unsupported-form` until their
+owning slices. The approved design's staging table governs that boundary.
+
+The existing Grow witnesses cover each P1 refusal through packing before
+signing and independently signed input to the public validator, including
+all lifetime fan-in variants. Admitted warnings and projected counts have
+separate witnesses. The current live-item hand count is 606, with ceilings
+of ten entries and seven item keys for successful creation paths; lifetime
+traffic remains unproved. These figures establish no native admission,
+physical memory or provider quota.
+
+Latest integration checks pass ten graph cases, the Derive test compiler,
+and three local Core/Node SQLite routing and measurement cases. Earlier
+focused native peer-pin and reservation checks, controls and their stated
+stand-ins remain below. These separate runs are not a whole gate or a
+single measured pipeline.
+
+## Historical checkpoints
+
+The following sections retain their original scope and test boundaries.
+A checkpoint's pending-work statement describes that checkpoint; the
+current implementation and remaining integration work are stated above.
 
 ## Exact sender pin
 
