@@ -42,65 +42,75 @@ Agents do most of the drafting, chasing and checking. People sign the
 commitments. The record answers "what happened" without anyone having
 written it up.
 
-## 2. Why not just an agent
+## 2. Why coordinating is easier
 
 A personal agent now holds context about you, keeps working after you
-close the window and acts on your behalf: it browses, fills forms,
-drafts, chases, schedules its own tasks, asks you before a sensitive
-step and remembers across tasks. The best ones run on your own machine
-or server. Each application below assumes every member has one. The
-question is what the room adds that the agent cannot supply by itself,
-however good it gets.
+close the window and acts on your behalf: it browses, drafts, chases,
+schedules its own tasks, asks you before a sensitive step and remembers.
+Each application below assumes every member has one. What slows team
+selling is not the thinking, which the agents increasingly do. It is the
+finding, the chasing, the re-telling and the re-keying between people:
+the coordination. The room makes that part easy, in two ways.
 
-- **The agent is one party. Selling is several.** Your agent works for
-  you; the product manager's works for her; the buyer's for the buyer.
-  An agent that "does the bid for me" reaches the others through mail
-  and chat, waits, and merges their replies into its own notes, where
-  each person's answer becomes its paraphrase. The room is where their
-  agents and yours meet: each person answers in their own app, under
-  their own name, and the record keeps their words. Nothing is re-keyed
-  and nothing is paraphrased.
-- **A yes in a chat is not authority.** The agent asks "shall I send
-  this?", you say yes, and that yes lives in a transcript only the agent
-  holds. In the room the authority is on the act: a discount is granted
-  by a holder of the pricing grant at an exact revision, a roadmap claim
-  is signed by the product manager with its source, a submission is
-  sealed by management. The agent cannot sign any of these, not because
-  it was told not to but because it holds no grant, and "could the agent
-  have done that" has a checkable answer: no. The same guard decides
-  what the agent may propose and what each person is offered.
-- **An agent's memory is private and fallible. The record is shared
-  and exact.** An agent remembers what it noticed and summarizes the
-  rest; two agents remember differently; what the buyer said becomes
-  the agent's summary of a mail. The record is a journal of signed acts
-  with the revision each decision bound to, replayable without any
-  agent and archived in Git. "What did we promise in row 212, and who
-  signed it" is a lookup, a year later, by the next account executive,
-  after the agent that did the work has been replaced.
-- **Rules run in the room, not in an agent's loop.** The stale account,
-  the two-day reminder, the deadline: these are the room's timed rules,
-  visible to every member and firing whether or not any agent is up. An
-  agent's scheduled task is a promise it makes to itself.
-- **Routing is a rule, not a judgement.** Who may answer a security
-  requirement is a grant; who should is a rule over grants, presence
-  and state. An agent can propose, and a misroute is a visible refusal.
-  A personal agent routes by what it believes about people.
-- **Agents are replaceable, and many.** Because authority and the
-  record live in the room, each member brings their own agent, a team
-  runs several (intake, drafting, chasing) from different makers, swaps
-  one out, and removes a bad one while its acts stay attributed and
-  visible. The room does not care which agent did the work; it cares
-  who signed.
-- **Done means the same thing to everyone.** Each person's "needs you"
-  is derived from the same record, so the sales engineer's list and the
-  product manager's list agree, and "done" for the bid is a state with
-  a guard, not an agent's opinion.
+**Each participant works from their own perspective on the shared
+work.** A bid has two hundred rows. The product manager needs the four
+that are hers, with the draft, the buyer's related question and the due
+time, and nothing else. The sales engineer sees what has been supplied
+and waits for review. The manager sees two approvals and a deadline. The
+owner sees what is blocked and by whom. These are one record seen from
+each seat, derived, not maintained: nobody writes a status update,
+because the status is the view, and each person's "needs you" list is
+short because it is theirs. The same is true for the agents: the
+drafting agent works from the rows, the owner's assistant from the
+blocked ones, the product manager's assistant from her four.
 
-What an agent alone does well: one person's work, with no commitment to
-anyone else and nothing to prove later. The prospect room's research and
-drafting are that, and the owner's agent does them. The moment a second
-person's signature matters, or a decision must be found later, the
-record is the thing an agent cannot be.
+**Any participant reaches the specific interaction in one step, from
+the app they are already in.** "What did the buyer say about data
+residency?" is answered with that exchange: the question, the answer,
+its source and date. "Why did we say next quarter for that feature?"
+lands on the product manager's signed answer and the roadmap revision
+it cites. "What is holding up section 7?" lands on the three rows asked
+of legal yesterday, with their due times. Each is a card in the chat
+the person is already using, not a search across threads and a "can
+someone remind me". Agents get the same access, which is why their
+drafts are good: the drafting agent reads the buyer's actual answer,
+not a paraphrase of it, and flags the row that contradicts it.
+
+Two consequences follow. **Handoffs carry their context.** Asking an
+expert is one act; the expert's phone shows the row, the draft, the
+related buyer question and the due time, and their answer is in the
+sales engineer's list the moment it is signed. No forwarding, no
+attachment, no "see the thread below"; the same for an approval and a
+send-back. **Each person's work shrinks to judgement and signature.**
+The intake agent decomposed the request, the drafting agent wrote the
+first answers, the person's own assistant prepared their slice ("four
+to answer; drafts from the last two bids; row 212 conflicts with what
+the buyer said on Tuesday"), and the person reads, edits and signs.
+
+The alternative is an agent that does the bid for one person. It reads
+the spreadsheet, drafts two hundred answers and mails four people. The
+replies come back as prose and the agent merges them; the product
+manager asks "which row?"; the sales engineer says he answered that in
+another thread; the manager approves "the price" without seeing which
+version; the buyer's question goes to the owner, who forwards it. The
+work gets done. The coordination was the cost, and people paid it in
+attention, one message at a time. The agent did not make that cost go
+away, because the cost was never in the thinking.
+
+The prospect room and the calendar are the same shape at a smaller
+scale. The owner's list is today's follow-ups, each with the prospect's
+last words; the prospect's view is one card, the proposal, with Accept
+and Decline. The writer's list is this week's briefs; the owner's is
+this week's posts waiting for a decision, with the text in front of
+them.
+
+The record's other properties, that the authority is on the act, that
+each statement keeps its author, that the journal replays and is
+archived, are what make this safe: the list offers only the acts the
+grant admits, and the exchange you find is the signed one. They are the
+floor, not the pitch. The pitch is that the work is in front of the
+right person, with what they need, when they need it, and that anyone
+can get to any part of it in one step.
 
 ## 3. What the three share
 
