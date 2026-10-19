@@ -102,3 +102,62 @@ clicked through a locally intercepted destination. No external request,
 actual Grow room selection, invitation redemption or hosted acceptance was
 proved. Actual post-review provisioned-room navigation remains an operator
 receipt obligation. No public tender seats or credentials are offered.
+
+## Simulator preparation and public coverage
+
+Two dependent design points are with planner in request `771e183a`,
+assertions `c96ffedc` and `9a0f62a3`: an application-journal cursor for
+bounded command discovery, and separate sensors/climate principals. Native
+Membership has five fixed roles; all agent principals have role `agent`.
+A second key alone does not separate their role permissions. The proposed
+demo declarations bind fixed principal party slots and exact signer guards,
+with Site forwarding them to Room. That proposal and the cursor declaration
+are not implemented yet. Owner enrollment must precede G5a installation;
+the runbook must use that actual dependency.
+
+The pure simulator now computes transient samples afresh from whole-minute
+clock time, the declared one-minute cadence/sixty-minute period, current
+zone bands and current device targets. Vent obstruction runs at minutes
+10–34 and fan trip at minutes 20–39 of each UTC hour, in zone 2. The clock
+clears these fictional faults; no person's repair is inferred. Vents 1 and
+4 provide cross-draft; a working local fan cools; cutting the heater cools
+the zone during the fault. Only min/max/mean/in-band summaries and reports
+are returned; no raw samples or private progress state are retained. A
+missed invocation produces the next current reading and does not invent
+observations for missing times. This is not the pending native tick/catch-up
+witness. The schedule file is prepared under `examples/grow/demo/` but is
+not yet a verified signed packet.
+
+The separate public-journal reducer takes a caller-proved closed prefix and
+one exact head, then checks every entry's scope, position, predecessor and
+computed hash. Its limits are 800 entries, 4 MiB of canonical suffix bytes
+and 64 command-record changes. It keeps all open commands, including an
+older target superseded by a newer one; only that command's own complete
+closure removes it. Wrong full owner identity, gaps, incomplete suffixes,
+head mismatch or a false closed-prefix claim refuse. It reads no native
+record table. The caller's durable prefix proof and public read/tick wiring
+are still pending. The reconstruction test scripts journal entries and
+effects; it is no proof of native issuance or settlement.
+
+Focused pure checks passed: two files/three cases in
+`/tmp/artroom-g5-hosted-pure-owning-20261019.log`, plus the Grow TypeScript
+compiler (`...command-types-final...log`). Preparation compiler failures
+remain in the first/corrected/second type logs: the pre-G5a capability union,
+a digest fixture's inferred string type and an incorrectly shaped fixture
+Seed; they were corrected before the focused pass. The maintained simulator
+witness distinguishes ignoring the recorded heater cut (two cases pass,
+then one unchanged assertion fails, exact restore). The command witness
+distinguishes ignoring the full owner identity (one case passes, then its
+unchanged assertion fails, exact restore). Full logs are respectively
+`/tmp/artroom-g5-hosted-simulator-control-20261019.log` and
+`/tmp/artroom-g5-hosted-command-owner-control-20261019.log`; the standard
+helper deletes its disposable JSON directory at exit. No mutation sweep.
+
+Private APFS COW dependencies were copied from the idle clean S2b checkout,
+without executing or modifying the donor. Audit
+`/tmp/artroom-g5-hosted-dependency-view-20261019.json`, SHA-256
+`1c2795792c513f27cf91b558b8f24ef42bc9f324aeada6372bdef772dd59fd8f`,
+checks 127 manifest bytes/distinct inodes and 28 contained links, including
+13 workspaces. Lock/stamp stays `3546b538…`; zero installs, no copied Vite
+caches to clear. This is not a tarball-integrity check. No whole gate,
+Source/review, provider resource, deployment or live acceptance is claimed.

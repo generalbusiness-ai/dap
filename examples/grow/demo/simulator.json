@@ -1,0 +1,8 @@
+{
+  "v": 1,
+  "cadenceMinutes": 1,
+  "periodMinutes": 60,
+  "faultZone": 2,
+  "ventFault": { "fromMinute": 10, "untilMinute": 35 },
+  "fanFault": { "fromMinute": 20, "untilMinute": 40 }
+}
