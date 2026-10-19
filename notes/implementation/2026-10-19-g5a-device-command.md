@@ -7,7 +7,7 @@ Base: reviewed Main `2127d5c5cf5545a9983a80bad5cb54fb2c18f48b`.
 G5a adds device-command@1, its bounded native install grant, Grow commands
 and owner answers, and shared runtime/replay code. Target, sensor report
 and owner outcome have separate writers. No device or provider operation
-runs. The delivery is one complete Source head. Two full gates failed;
+runs. The delivery is one complete Source head. Three full gates failed;
 the corrected full gate and exact-head review remain pending.
 
 ## Decisions and native pins
@@ -279,6 +279,29 @@ of the separate stability request.
 Second gate outer log: `/tmp/artroom-g5a-corrected-complete-gate-20261019.log`.
 Raw: `/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.Ug7IT3AcXU`.
 Both failed gates remain evidence. The final corrected full gate is pending.
+
+Attempt3 at b5120d5f772d119261ecba816ed2e0f463388d4e,
+tree5015f6e603cd22b16e9e99dc6070497180e154f0 naturally closed88101 exit1.
+It passed1932 cases with seven framework5000ms timeouts and three skips,
+across402 files. H5 and all other behavior assertions passed. Failures were
+application establishment, Lending, manifest T3, native3 publication, Page
+source preview and both Page task-data stories. Stage traces show real
+setup/publication/review progress before the framework limit. This recurrence
+means the prior focused/gate passes do not establish full-suite stability.
+No profiling or source/dependency edit occurred during the run. Typecheck
+8.4s/CPU32.4s; test941.2s/CPU1152.6s. Outer log is
+`/tmp/artroom-g5a-event-synchronized-gate-20261019.log`; raw logs are in
+`/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.YfkOY40xim`.
+
+Host load and memory observations are retained without a cause claim.
+The memory-pressure query reported59% free; a low instantaneous free-RAM
+sample alone is not proof of pressure. Decision request34bc30df asks planner
+whether to give the functional workerd project an explicit bounded framework
+allowance, preserving case-specific limits and every modeled protocol,
+read, clock, capacity and latency assertion, or put the broader stability
+investigation first. It also asks which Source owns that correction.
+No test limit or acceptance condition has been changed. All three failed
+gates remain evidence. No seal, Source or review has been filed.
 
 ## Dependency preparation
 
