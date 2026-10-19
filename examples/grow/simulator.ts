@@ -8,7 +8,7 @@ export interface SimulatorSchedule {
   readonly faultZone: number;
   readonly ventFault: { readonly fromMinute: number; readonly untilMinute: number };
   readonly fanFault: { readonly fromMinute: number; readonly untilMinute: number };
-  readonly autonomousRecovery: { readonly fromMinute: number; readonly description: string };
+  readonly autonomousRecovery: { readonly fromMinute: number; readonly restorationWindowMinutes: number; readonly description: string };
 }
 export interface SimulatedZone {
   readonly id: number;
@@ -57,8 +57,9 @@ export function simulatorSchedule(value: unknown): SimulatorSchedule {
       || range.fromMinute % s.cadenceMinutes !== 0 || range.untilMinute % s.cadenceMinutes !== 0) throw new Error("invalid simulator fault period");
   }
   const recovery = s.autonomousRecovery;
-  if (!recovery || typeof recovery !== "object" || Object.keys(recovery).sort().join(",") !== "description,fromMinute"
+  if (!recovery || typeof recovery !== "object" || Object.keys(recovery).sort().join(",") !== "description,fromMinute,restorationWindowMinutes"
     || recovery.fromMinute !== s.ventFault.untilMinute || !integer(recovery.fromMinute, 0, s.periodMinutes - 1)
+    || !integer(recovery.restorationWindowMinutes, 1, s.periodMinutes - recovery.fromMinute) || recovery.restorationWindowMinutes % s.cadenceMinutes !== 0
     || typeof recovery.description !== "string" || recovery.description.length === 0 || new TextEncoder().encode(recovery.description).length > 1024) throw new Error("invalid simulator recovery schedule");
   return structuredClone(s);
 }

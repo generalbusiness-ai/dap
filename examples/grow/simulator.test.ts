@@ -2,7 +2,7 @@
 import { expect, test } from "vitest";
 import { simulateRoom, simulatorSchedule, type SimulatedDevice } from "./simulator.ts";
 const schedule = { v: 1 as const, cadenceMinutes: 1, periodMinutes: 60, faultZone: 2,
-  ventFault: { fromMinute: 10, untilMinute: 35 }, fanFault: { fromMinute: 20, untilMinute: 40 }, autonomousRecovery: {"fromMinute": 35, "description": "At minute 35 the simulated vent vane frees and the room returns to band; the fan trip resets at minute 40. Cross-draft and a working fan reduce the fault heat load. A person cutting the heater can shorten the fault. The climate agent closes the incident and records whether a heater command occurred."} };
+  ventFault: { fromMinute: 10, untilMinute: 35 }, fanFault: { fromMinute: 20, untilMinute: 40 }, autonomousRecovery: {"fromMinute": 35, "description": "At minute 35 the simulated vent vane frees; the fan trip resets at minute 40. A person cutting the heater can shorten the fault. Once the vent responds, the agent offers restoration for five minutes, then closes with the heater left as commanded. Without a heat cut it closes at recovery.", "restorationWindowMinutes": 5} };
 const zones = [1, 5, 9, 13].map(id => ({ id, setpoint: 2400, band: 200 }));
 const devices: SimulatedDevice[] = zones.flatMap(zone => (["vent", "fan", "heater"] as const).map((kind, i) => ({ id: zone.id + i + 1, zone: zone.id, kind,
   target: kind === "vent" ? "closed" as const : kind === "heater" ? "on" as const : "off" as const, level: kind === "heater" ? 100 : 0 })));

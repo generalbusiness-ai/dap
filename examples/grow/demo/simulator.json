@@ -13,6 +13,7 @@
   },
   "autonomousRecovery": {
     "fromMinute": 35,
-    "description": "At minute 35 the simulated vent vane frees and the room returns to band; the fan trip resets at minute 40. Cross-draft and a working fan reduce the fault heat load. A person cutting the heater can shorten the fault. The climate agent closes the incident and records whether a heater command occurred."
+    "description": "At minute 35 the simulated vent vane frees; the fan trip resets at minute 40. A person cutting the heater can shorten the fault. Once the vent responds, the agent offers restoration for five minutes, then closes with the heater left as commanded. Without a heat cut it closes at recovery.",
+    "restorationWindowMinutes": 5
   }
 }

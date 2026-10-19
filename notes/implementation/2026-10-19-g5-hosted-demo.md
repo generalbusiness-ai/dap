@@ -5,8 +5,8 @@ Request `78fba9fca56a28dc75cca37f88a0fbea334bdc2a`, promise
 starts from reviewed Main `3ed2a08a`. Actual reviewed G5a must land before
 the integration witness and final gate. The frozen G5a views have not been
 imported, executed or edited. The static page, pure simulation, bounded public
-journal reconstruction and per-tick HTTP allowance are prepared and checked
-below. Release packet, native tick/catch-up, whole gate, Source/review,
+journal reconstruction, stateless tick and scheduled-host factory are prepared
+and checked below. Release packet, installed native tick/catch-up, whole gate, Source/review,
 deployment and live acceptance remain pending.
 
 The commissioned Source contains a separate signed demo release, a stateless
@@ -85,11 +85,11 @@ and signed-schedule consumer pass two files/three cases in
 one-line heater-causality control in the matching recovery logs. The control
 gives two passes → one pass/one unchanged assertion failure → exact restore.
 
-The Worker/tick orchestration, actual reviewed G5a integration, final demo
-packet/publisher, native quota/refusal/catch-up witnesses, final gate and
-complete review are still ahead. The runbook draft must be updated with the
-adopted forms and both-agent-before-install order. No live resources or
-acceptance are claimed. The following sections retain earlier checkpoints
+The tick orchestration and scheduled-host factory are now prepared in the
+latest section below. Actual reviewed G5a integration, final packet/publisher,
+installed native quota/refusal/catch-up witnesses, final gate and complete
+review remain ahead. The runbook now uses the adopted forms and
+both-agents-before-install order. No live resources or acceptance are claimed. The following sections retain earlier checkpoints
 and their original limits; pending-decision wording below is historical.
 
 ## Existing boundaries checked
@@ -311,3 +311,66 @@ presented as an executed step. It offers no public tender seat and separates
 the existing Room invitation destination from actual provisioned-room
 navigation. The runbook is preparation, not a deployment receipt. This
 addition changes documents only and runs no tests or provider command.
+
+## Tick and scheduled-host preparation
+
+The stateless driver is now implemented in simulator-tick.ts. Its only
+ports are public member summary/history/entry reads, signed acts and owner
+preparations. It checks the fixed principals and recorded cursor provenance,
+answers at most eight commands in journal order and acknowledges only the
+covered prefix in the existing observe transition. An observation includes
+its exact targetBasis head. Duplicate same-minute observations are reused;
+a later callback reconciles an uncertain accepted write from the journal.
+Every other refusal or unknown reply closes the local HTTP allowance.
+
+The native in-memory witness runs actual validation, restricted rules,
+judgments, sealing and folding. Public read adapters and per-key authority
+are explicitly SCRIPTED: no Worker, native enrollment/install, transport or
+owned command settlement is claimed. Four cases cover duplicate/restarted
+callbacks, skipped minutes, unattended and later-cycle incidents, a lost
+reply after sealing, person-only cut/restoration, timeout with heat left off,
+and an actual room-refusal branch stopping later writes. The one-line
+stop-fence control changes four passes to two unchanged assertion failures
+and restores the source exactly; original process exits0. Evidence:
+`/tmp/artroom-g5-hosted-tick-stop-control-20261019.log`.
+
+The signed schedule now includes restorationWindowMinutes=5. Only an actual
+recorded heat-cut authorization earns a restoration proposal once the vent
+responds. A person can restore; otherwise the incident closes at minute40
+of its original cycle with heat left as commanded. No callback state or
+fabricated human authorization is used. The updated tick/pure cases passed;
+the same owning run caught one stale literal expected schedule in the
+signed-consumer witness. That expectation was updated, and its corrected
+one-file/one-case run passed. Both original logs remain:
+`/tmp/artroom-g5-hosted-tick-restoration-owning-20261019.log` and
+`/tmp/artroom-g5-hosted-restoration-release-owning-20261019.log`.
+
+simulator-host.ts prepares the separate scheduled Worker factory. It uses
+only public SDK HTTP/session calls, verifies both sessions' exact members
+and distinct keys, and compares the retained Room birth's owner metadata
+to the committed signed graph. It holds two agent secrets and no private
+progress, operator key, host authority or public control endpoint. Its SDK
+deadline is five seconds inside the existing per-tick budget. The actual
+Worker entry module, committed signed packet and Wrangler configuration
+remain pending G5a's reviewed landing, as does installed native execution.
+The first compiler run caught a missing judgedAt in the new scripted
+refusal adapter; corrected compiler exits0 in
+`/tmp/artroom-g5-hosted-host-corrected-types-20261019.log`.
+
+The runbook now reflects the adopted three fixed principals, both agents
+before install, signed restoration timing, exact public configuration and
+two secret names. It still marks final deploy commands and installed proof
+as unfinished. No package key, trust row, deployment or live acceptance has
+been created by this preparation.
+
+The refusal witness now creates a real concurrent, separately signed sensors
+observation before submitting the original envelope; the native judge
+refuses that stale revision. The first updated assertion forgot that the
+attempted refused request now appears in the send list and failed; corrected
+it asserts that exact request is last and all preceding driver requests are
+device reports. Four cases and compiler pass in
+`/tmp/artroom-g5-hosted-native-revision-tick-corrected-owning-20261019.log`
+and `...native-revision-types...log`. The earlier stop-fence control used the
+previous explicitly scripted revision refusal; its lost-reply case and
+stop assertions are unchanged. This is still in-memory Native evidence,
+not installed owner settlement or remote transport.

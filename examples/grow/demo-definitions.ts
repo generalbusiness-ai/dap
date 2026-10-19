@@ -45,6 +45,7 @@ export function demoDefinitions(): { site: DeclaredDefinition; room: DeclaredDef
   // and payload while binding identity and progress in the same entry.
   observe.step = "transition"; observe.on = "room";
   observe.fields["commandsAnsweredThrough"] = { ...head, required: true };
+  observe.fields["targetBasis"] = { ...head, required: true };
   observe.guards = [...observe.guards, { rule: "demo-reading-order", reason: "stale-demo-reading" }];
   observe.effects = [...observe.effects,
     { of: "on", value: { slot: "commandsAnsweredThrough", from: { field: "commandsAnsweredThrough" } } },

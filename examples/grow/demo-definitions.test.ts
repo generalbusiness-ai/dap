@@ -20,7 +20,7 @@ test("the signed demo forms separate agents sharing one native role, forward exa
   const child = await nativeChild(graph.site, graph.site.last.seq, room, permissions);
   expect(child.item(0).parties).toMatchObject({ sensors: sensors.member, climate: climate.member, operator: operator.member });
   const ledger = nativeScenario(room, permissions, assignments);
-  const fields = { sampledAt: ledger.now, zones: [], commandsAnsweredThrough: { seq: 0, hash: ledger.fact(0).hash } };
+  const fields = { sampledAt: ledger.now, zones: [], targetBasis: { seq: 0, hash: ledger.fact(0).hash }, commandsAnsweredThrough: { seq: 0, hash: ledger.fact(0).hash } };
   const expected = () => ({ on: ledger.item(0).revision });
   const wrong = await submit(ledger, climate, "observe", { on: 0, fields, expected: expected() });
   expect(wrong).toMatchObject({ result: "refused", reason: "guard-failed", name: "not-demo-sensors" });

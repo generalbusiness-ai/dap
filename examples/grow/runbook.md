@@ -2,7 +2,7 @@
 
 Run status: preparation. No hosted Grow room, release packet, simulator
 Worker or live tick has been created by this work. Finish the signed packet,
-principal/cursor decision and native tick witnesses before exact-head review.
+Worker entry/configuration and installed native tick witnesses before exact-head review.
 Planner deploys and runs this procedure after that review. Local builder
 checks and dry runs create no Cloudflare resources.
 
@@ -91,12 +91,16 @@ uses the verified references and selected nonsecret receipt fields.
    IDs, not the key or private link. This enrollment must precede application
    installation: G5a requires an existing active owner.
 
-5. The native roles are only admin, maintainer, member, agent and checker;
-   all agent members use role agent. Separate sensors/climate principals and
-   the demo's exact per-act signer guards are pending decision `771e183a`
-   and amendment `9a0f62a3`. Finish and verify that decision before proceeding.
-   Do not assume that a separate agent key or its controller supplies a
-   different role's domain actions. No agent receives `grow.heat`.
+5. Repeat invitation and enrollment for `@grow-climate` in its own private
+   config directory, with a different generated key and the same operator
+   controller. Enroll both agents before installing the application. Read
+   the full MemberRefs and active keys, exact controllers and Membership7
+   pin. The demo binds sensors, climate and operator as three distinct fixed
+   parties; both agents use the native agent role. Its coarse actions are
+   `grow.sense` and `grow.climate`, while demo guards restrict each writer
+   to its assigned full MemberRef. The operator also keeps climate control.
+   No agent receives `grow.heat` or irrigation permissions. These are the
+   adopted choices in planner report `74c94c4d`.
 
 ## Install the signed demo package
 
@@ -113,8 +117,10 @@ No trust setting or publisher secret is supplied by this checkout.
 
 Use the recorded URI and release, an explicit kept request key and the full
 sensors MemberRef as `--owner`. Select only the final signed package's
-reviewed role defaults. Genesis values must carry its reviewed principal
-assignments; those declarations are still pending.
+reviewed role defaults: admin, maintainer, member and agent. Genesis values
+are a JSON object containing `label` and the actual full MemberRefs named
+`sensors`, `climate` and `operator`. Set owner to that exact sensors member.
+Site forwards all three assignments to each Room it creates.
 
 ```sh
 node packages/cli/bin/dap.js install "$GROW_PACKAGE_URI" --release "$GROW_RELEASE" --request "$GROW_INSTALL_REQUEST" --owner "$GROW_SENSORS_MEMBER" --values "$GROW_GENESIS_VALUES" <reviewed --role selections>
@@ -147,8 +153,17 @@ are never visitor credentials.
 
 ## Start the separate simulator
 
-The final simulator configuration and secret names are still pending. The
-Worker is separate from the scope host and holds no operator key. Its only
+The final Worker entry module and Wrangler configuration remain pending the
+actual reviewed G5a integration and signed packet. The prepared scheduled
+host uses `GROW_BINDING` for public configuration and
+`GROW_SENSORS_SECRET`/`GROW_CLIMATE_SECRET` for the two separate 32-byte agent
+secrets encoded as unpadded base64url. `GROW_BINDING` is a JSON object with
+`service` (HTTPS origin), `room` (full Room ScopeRef), and `members`
+containing the full `sensors`, `climate` and `operator` MemberRefs.
+It opens public sessions for both keys and compares the public retained
+birth's owner grant to the exact signed graph before running a tick.
+
+The Worker is separate from the scope host and holds no operator key. Its only
 room interface is the public member API. Use pinned Wrangler 4.147.0 from a
 scratch directory with an explicit config path; do not install tooling into
 the checkout or run a local command against a remote Artifacts binding.
@@ -168,12 +183,30 @@ the reserved-answer count and the next recorded tick. Retain a missed-tick
 recovery separately from a dry run. Exact unresolved-request recovery and
 application-journal cursor readback are required before this step is ready.
 
-The prepared client allowance is 96 reads, 48 mutations, 256 KiB of request
-bodies, 4 MiB of retained reply chunks and a 45-second window, with a planned
-five-second per-request SDK deadline. The final integrated driver must name
-its actual same-or-smaller bounds and show the stop-after-refusal fence.
+The client allowance is 96 reads, 48 mutations, 256 KiB of request bodies,
+4 MiB of retained reply chunks and a 45-second window. The host uses a
+five-second per-request SDK deadline. Each tick answers at most eight open
+commands, scans at most four pages/800 entries/64 command changes, and
+takes at most eight climate acts. The final installed integration must
+verify these limits. The sensors' observe transition records the durable
+scanned head in commandsAnsweredThrough, fenced by the Room revision;
+it never advances past an unanswered command. Only the native named
+device-command-closed refusal counts as an already covered answer.
+Every other refusal or uncertain reply stops the invocation. A later tick
+reads the journal again; it does not invent skipped observations or resend
+the earlier unknown request automatically.
 Earlier accepted entries remain accepted; a later refused tick step does not
 roll back a batch. Cancellation does not prove a remote act was unrecorded.
+
+The signed story repeats every sixty minutes: vent fault from minute10 to35,
+fan trip from20 to40. Climate control increases the working fan and
+cross-draft. A person cutting heat can bring the zone back into band earlier.
+After the vent responds, an actual recorded heat-cut authorization earns a
+restoration proposal through minute40 of that incident's cycle. Only a
+person can authorize restoration. If unanswered, the incident closes with
+the heater left off. With no intervening heater command it closes at
+recovery and says so. The clock clears fictional faults; no repair or
+person's act is invented.
 
 ## Verify the visitor and operator path
 
