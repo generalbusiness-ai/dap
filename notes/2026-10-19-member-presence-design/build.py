@@ -61,7 +61,14 @@ CASES = [
     ("invited", "Invited member", dict(handle="@lina", state="invited"), "Outlined mark and the word invited."),
     ("removed", "Removed member", dict(handle="@eli", state="removed"), "State is known. Removal provenance appears only on the record."),
     ("lapsed", "Lapsed invitation", dict(handle="@noor", state="lapsed"), "Muted mark; invitation lapsed is explicit."),
+    ("agent-invited", "Invited agent", dict(handle="@agent-invited", kind="agent", state="invited"), "Sharp outlined square; invited and controlled by remain explicit."),
+    ("agent-removed", "Removed agent", dict(handle="@agent-removed", kind="agent", state="removed"), "Muted square; removed and controlled by remain explicit."),
+    ("agent-lapsed", "Lapsed agent invitation", dict(handle="@agent-lapsed", kind="agent", state="lapsed"), "Muted square and invitation lapsed; the controller stays readable."),
+    ("checker-invited", "Invited checker", dict(handle="@checker-invited", kind="checker", state="invited"), "The diamond stays outlined. The invited word distinguishes standing."),
+    ("checker-removed", "Removed checker", dict(handle="@checker-removed", kind="checker", state="removed"), "Muted outlined diamond and removed; initials stay upright."),
+    ("checker-lapsed", "Lapsed checker invitation", dict(handle="@checker-lapsed", kind="checker", state="lapsed"), "Muted outlined diamond and invitation lapsed."),
     ("controller-unavailable", "Agent controller unavailable", dict(handle="@irrigation", kind="agent", controller=None), "A controller is not guessed from a role or another agent."),
+    ("long-identity", "Long agent identity", dict(handle="@climate-observation-and-room-recovery-for-west-house", kind="agent", controller="@maya-operator-for-the-west-house-growing-rooms"), "The full handle and controller wrap inside the identity target; neither is shortened."),
     ("identity-unavailable", "Identity unavailable", dict(handle=None), "Keep the raw full reference; infer no handle, kind or initials."),
     ("standing-unavailable", "Standing unavailable", dict(state="unknown", eligibility="Eligibility unknown; role unavailable."), "Identity remains readable. No role is inferred."),
     ("eligible", "Action held at this read", dict(eligibility="Holds grow.heat at this read."), "The receiving scope still judges the actual act."),
@@ -71,6 +78,8 @@ CASES = [
     ("live-waiting", "Live waiting", dict(presence=("live", '<span class="badge">waiting</span>')), "Live expression · B4 design only."),
     ("live-blocked", "Live blocked", dict(presence=("live", '<span class="badge">blocked</span>')), "Live expression · B4 design only."),
     ("live-here", "Live focus includes this subject", dict(presence=("live", '<span class="badge">busy</span><span class="here"><span aria-hidden="true">•</span> here</span>')), "Here means the viewer's exact subject is in the reported focus."),
+    ("live-focus-only", "Live focus without a status", dict(presence=("live", '<span class="here"><span aria-hidden="true">•</span> here</span>')), "A focus-only lease supplies here, without inventing available or busy. B4 design only."),
+    ("live-lease", "Live lease within its window", dict(presence=("live", '<span class="badge">busy</span><span class="provenance">seen 12 s ago · lease ends in 18 s</span>')), "Fixed capture at 14:02:30 UTC. This live lease is known to end at 14:02:48 UTC; recorded presence has no freshness."),
     ("live-note", "Live note", dict(presence=("live", '<span class="badge">blocked</span><span class="note">Waiting for the heater decision.</span>')), "A member's reported note is text, not an inferred intention."),
     ("live-projection", "Several live sessions", dict(presence=("live", '<span class="badge">blocked</span><span class="here"><span aria-hidden="true">•</span> here</span><span class="note">Waiting for the heater decision.</span><span class="provenance">projection · 3 sessions</span>')), "Blocked over waiting over busy over available; union of focus; first note."),
     ("recorded-here", "Reported in this room", dict(presence=("recorded", 'in Room A, reported at entry 412 <span class="here"><span aria-hidden="true">•</span> here</span>')), "The room's full scope matches the viewer. Entry 412 comes from reportedAt."),
@@ -127,7 +136,7 @@ for theme in THEMES:
             continue
         role = "agent" if fixture["kind"] == "agent" else "checker" if fixture["kind"] == "checker" else "member"
         raw = E(json.dumps({"membership": MEMBERSHIP, "member": handle}, separators=(",", ":")))
-        keys = 'No active key · invited member' if fixture["state"] in ["invited", "lapsed"] else 'One active '+('agent' if role == 'agent' else 'checker' if role == 'checker' else 'device')+' key'
+        keys = 'Retired key · removed member' if fixture["state"] == "removed" else 'No active key · invited member' if fixture["state"] in ["invited", "lapsed"] else 'One active '+('agent' if role == 'agent' else 'checker' if role == 'checker' else 'device')+' key'
         body = '<p class="eyebrow">Member record · kit-owned</p><h1>'+E(handle)+'</h1>'+member(theme, **fixture)+'<dl class="facts"><dt>Role</dt><dd>'+role+'</dd><dt>Member reference</dt><dd><code>'+raw+'</code></dd><dt>Keys</dt><dd>'+keys+'</dd></dl><p class="muted">Presence unavailable. No status, room or report entry is inferred.</p>'
         page('record-'+handle.lstrip('@'),handle+' member record',body,theme,back='members')
 

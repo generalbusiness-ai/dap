@@ -11,7 +11,14 @@
     "invited",
     "removed",
     "lapsed",
+    "agent-invited",
+    "agent-removed",
+    "agent-lapsed",
+    "checker-invited",
+    "checker-removed",
+    "checker-lapsed",
     "controller-unavailable",
+    "long-identity",
     "identity-unavailable",
     "standing-unavailable",
     "eligible",
@@ -21,6 +28,8 @@
     "live-waiting",
     "live-blocked",
     "live-here",
+    "live-focus-only",
+    "live-lease",
     "live-note",
     "live-projection",
     "recorded-here",
@@ -74,9 +83,51 @@
       "theme": "light",
       "source": "Recorded design"
     },
+    "agent-invited-light.html": {
+      "key": "agent-invited",
+      "title": "Invited agent",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "agent-removed-light.html": {
+      "key": "agent-removed",
+      "title": "Removed agent",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "agent-lapsed-light.html": {
+      "key": "agent-lapsed",
+      "title": "Lapsed agent invitation",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "checker-invited-light.html": {
+      "key": "checker-invited",
+      "title": "Invited checker",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "checker-removed-light.html": {
+      "key": "checker-removed",
+      "title": "Removed checker",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "checker-lapsed-light.html": {
+      "key": "checker-lapsed",
+      "title": "Lapsed checker invitation",
+      "theme": "light",
+      "source": "Recorded design"
+    },
     "controller-unavailable-light.html": {
       "key": "controller-unavailable",
       "title": "Agent controller unavailable",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "long-identity-light.html": {
+      "key": "long-identity",
+      "title": "Long agent identity",
       "theme": "light",
       "source": "Recorded design"
     },
@@ -131,6 +182,18 @@
     "live-here-light.html": {
       "key": "live-here",
       "title": "Live focus includes this subject",
+      "theme": "light",
+      "source": "Live B4 design only"
+    },
+    "live-focus-only-light.html": {
+      "key": "live-focus-only",
+      "title": "Live focus without a status",
+      "theme": "light",
+      "source": "Live B4 design only"
+    },
+    "live-lease-light.html": {
+      "key": "live-lease",
+      "title": "Live lease within its window",
       "theme": "light",
       "source": "Live B4 design only"
     },
@@ -302,9 +365,51 @@
       "theme": "light",
       "source": "Recorded design"
     },
+    "record-agent-invited-light.html": {
+      "key": "record-agent-invited",
+      "title": "@agent-invited member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-agent-removed-light.html": {
+      "key": "record-agent-removed",
+      "title": "@agent-removed member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-agent-lapsed-light.html": {
+      "key": "record-agent-lapsed",
+      "title": "@agent-lapsed member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-checker-invited-light.html": {
+      "key": "record-checker-invited",
+      "title": "@checker-invited member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-checker-removed-light.html": {
+      "key": "record-checker-removed",
+      "title": "@checker-removed member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-checker-lapsed-light.html": {
+      "key": "record-checker-lapsed",
+      "title": "@checker-lapsed member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
     "record-irrigation-light.html": {
       "key": "record-irrigation",
       "title": "@irrigation member record",
+      "theme": "light",
+      "source": "Recorded design"
+    },
+    "record-climate-observation-and-room-recovery-for-west-house-light.html": {
+      "key": "record-climate-observation-and-room-recovery-for-west-house",
+      "title": "@climate-observation-and-room-recovery-for-west-house member record",
       "theme": "light",
       "source": "Recorded design"
     },
@@ -554,9 +659,51 @@
       "theme": "dark",
       "source": "Recorded design"
     },
+    "agent-invited-dark.html": {
+      "key": "agent-invited",
+      "title": "Invited agent",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "agent-removed-dark.html": {
+      "key": "agent-removed",
+      "title": "Removed agent",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "agent-lapsed-dark.html": {
+      "key": "agent-lapsed",
+      "title": "Lapsed agent invitation",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "checker-invited-dark.html": {
+      "key": "checker-invited",
+      "title": "Invited checker",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "checker-removed-dark.html": {
+      "key": "checker-removed",
+      "title": "Removed checker",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "checker-lapsed-dark.html": {
+      "key": "checker-lapsed",
+      "title": "Lapsed checker invitation",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
     "controller-unavailable-dark.html": {
       "key": "controller-unavailable",
       "title": "Agent controller unavailable",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "long-identity-dark.html": {
+      "key": "long-identity",
+      "title": "Long agent identity",
       "theme": "dark",
       "source": "Recorded design"
     },
@@ -611,6 +758,18 @@
     "live-here-dark.html": {
       "key": "live-here",
       "title": "Live focus includes this subject",
+      "theme": "dark",
+      "source": "Live B4 design only"
+    },
+    "live-focus-only-dark.html": {
+      "key": "live-focus-only",
+      "title": "Live focus without a status",
+      "theme": "dark",
+      "source": "Live B4 design only"
+    },
+    "live-lease-dark.html": {
+      "key": "live-lease",
+      "title": "Live lease within its window",
       "theme": "dark",
       "source": "Live B4 design only"
     },
@@ -782,9 +941,51 @@
       "theme": "dark",
       "source": "Recorded design"
     },
+    "record-agent-invited-dark.html": {
+      "key": "record-agent-invited",
+      "title": "@agent-invited member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-agent-removed-dark.html": {
+      "key": "record-agent-removed",
+      "title": "@agent-removed member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-agent-lapsed-dark.html": {
+      "key": "record-agent-lapsed",
+      "title": "@agent-lapsed member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-checker-invited-dark.html": {
+      "key": "record-checker-invited",
+      "title": "@checker-invited member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-checker-removed-dark.html": {
+      "key": "record-checker-removed",
+      "title": "@checker-removed member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-checker-lapsed-dark.html": {
+      "key": "record-checker-lapsed",
+      "title": "@checker-lapsed member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
     "record-irrigation-dark.html": {
       "key": "record-irrigation",
       "title": "@irrigation member record",
+      "theme": "dark",
+      "source": "Recorded design"
+    },
+    "record-climate-observation-and-room-recovery-for-west-house-dark.html": {
+      "key": "record-climate-observation-and-room-recovery-for-west-house",
+      "title": "@climate-observation-and-room-recovery-for-west-house member record",
       "theme": "dark",
       "source": "Recorded design"
     },

@@ -1,0 +1,1757 @@
+{
+  "v": 1,
+  "fictional": true,
+  "native_execution": false,
+  "browser_plugin": "Browser plugin not available",
+  "playwright": "1.63.0",
+  "chromium": "153.0.8010.12",
+  "viewports": [
+    {
+      "width": 1440,
+      "height": 1000
+    },
+    {
+      "width": 390,
+      "height": 1000
+    }
+  ],
+  "page_width_checks": 384,
+  "rendered_main_crops": 192,
+  "issues": [],
+  "local_links_and_assets": 1320,
+  "interaction_checks": [
+    {
+      "theme": "light",
+      "agentRecord": true
+    },
+    {
+      "theme": "light",
+      "keyboardOwnControl": true,
+      "staticDisabled": true
+    },
+    {
+      "theme": "light",
+      "key": "identity-unavailable",
+      "small320": true,
+      "cssZoom200": true
+    },
+    {
+      "theme": "light",
+      "key": "long-identity",
+      "small320": true,
+      "cssZoom200": true
+    },
+    {
+      "theme": "light",
+      "key": "record-agent",
+      "small320": true,
+      "cssZoom200": true
+    },
+    {
+      "theme": "light",
+      "key": "members-overflow",
+      "small320": true,
+      "cssZoom200": true
+    },
+    {
+      "theme": "light",
+      "key": "own-presence",
+      "small320": true,
+      "cssZoom200": true
+    },
+    {
+      "theme": "dark",
+      "agentRecord": true
+    },
+    {
+      "theme": "dark",
+      "keyboardOwnControl": true,
+      "staticDisabled": true
+    },
+    {
+      "theme": "dark",
+      "key": "identity-unavailable",
+      "small320": true,
+      "cssZoom200": true
+    },
+    {
+      "theme": "dark",
+      "key": "long-identity",
+      "small320": true,
+      "cssZoom200": true
+    },
+    {
+      "theme": "dark",
+      "key": "record-agent",
+      "small320": true,
+      "cssZoom200": true
+    },
+    {
+      "theme": "dark",
+      "key": "members-overflow",
+      "small320": true,
+      "cssZoom200": true
+    },
+    {
+      "theme": "dark",
+      "key": "own-presence",
+      "small320": true,
+      "cssZoom200": true
+    }
+  ],
+  "supplementary_zoom": "CSS zoom 200%; not browser-toolbar zoom",
+  "targets": "All anchors, buttons and status-label rectangles measured at least44 by44 CSS pixels at both main widths. Disabled radio inputs use their surrounding44-pixel labels.",
+  "scratch_harness": {
+    "path": "/tmp/artroom-d1-browser-20261019.mjs",
+    "sha256": "093fa073b3cf22f6d3abc181d6bc605104c532375b13093d4d83e70df16b86fa"
+  },
+  "raw_report": {
+    "path": "/tmp/artroom-d1-browser-expanded-20261019/report.json",
+    "sha256": "72fc5bb826102d81be25ce373111a3e51003cace98a804b4060aecd7da37723b"
+  },
+  "raw_log": {
+    "path": "/tmp/artroom-d1-browser-expanded-20261019.log",
+    "sha256": "4ac40139a0d3c97cd769c72f614be67219b044ad12a9533dc458fda341d4f624"
+  },
+  "contrast": [
+    {
+      "theme": "light",
+      "foreground": "--text",
+      "background": "--surface",
+      "ratio": 17.923
+    },
+    {
+      "theme": "light",
+      "foreground": "--text",
+      "background": "--dap-bg",
+      "ratio": 15.859
+    },
+    {
+      "theme": "light",
+      "foreground": "--muted",
+      "background": "--surface",
+      "ratio": 5.452
+    },
+    {
+      "theme": "light",
+      "foreground": "--muted",
+      "background": "--dap-bg",
+      "ratio": 4.824
+    },
+    {
+      "theme": "light",
+      "foreground": "--accent",
+      "background": "--surface",
+      "ratio": 11.854
+    },
+    {
+      "theme": "light",
+      "foreground": "--accent",
+      "background": "--dap-bg",
+      "ratio": 10.488
+    },
+    {
+      "theme": "light",
+      "foreground": "--dap-garnet",
+      "background": "--surface",
+      "ratio": 10.18
+    },
+    {
+      "theme": "light",
+      "foreground": "--dap-garnet",
+      "background": "--dap-bg",
+      "ratio": 9.007
+    },
+    {
+      "theme": "dark",
+      "foreground": "--text",
+      "background": "--surface",
+      "ratio": 15.384
+    },
+    {
+      "theme": "dark",
+      "foreground": "--text",
+      "background": "--dap-bg",
+      "ratio": 15.384
+    },
+    {
+      "theme": "dark",
+      "foreground": "--muted",
+      "background": "--surface",
+      "ratio": 7.2
+    },
+    {
+      "theme": "dark",
+      "foreground": "--muted",
+      "background": "--dap-bg",
+      "ratio": 7.2
+    },
+    {
+      "theme": "dark",
+      "foreground": "--accent",
+      "background": "--surface",
+      "ratio": 6.529
+    },
+    {
+      "theme": "dark",
+      "foreground": "--accent",
+      "background": "--dap-bg",
+      "ratio": 6.529
+    },
+    {
+      "theme": "dark",
+      "foreground": "--dap-garnet",
+      "background": "--surface",
+      "ratio": 7.082
+    },
+    {
+      "theme": "dark",
+      "foreground": "--dap-garnet",
+      "background": "--dap-bg",
+      "ratio": 7.082
+    }
+  ],
+  "source_files": {
+    "build.py": "d15c5ad2e5197b0968c05593702f390901a82b3919309fdeadaf3fb5bb4add21",
+    "examples/agent-active-dark.html": "f13c97d82f2d02fb89cd5745a89d68df49955e652424165ad5f7eb1ab35a3b2c",
+    "examples/agent-active-light.html": "6490415943f774523ef6a194255d28f4eef5601046d4500b81cbd258632617e4",
+    "examples/agent-invited-dark.html": "5e8f4432e5f8eea8bf63d455a12320e97f887c8382b6f1068249c77933f8772c",
+    "examples/agent-invited-light.html": "cca1caaed88cb7b03fdfcf8cbbecc17a53c054834978a0629c9837f9e2fdc467",
+    "examples/agent-lapsed-dark.html": "67efee02e82f18e068001f9c9d346036371c18b11d604561132de9656930a0d0",
+    "examples/agent-lapsed-light.html": "b7a67e02675c3ee692b18e1c40dd8fb341e84d1376cb1de1d4faf6ecff1b03ad",
+    "examples/agent-removed-dark.html": "134174a0b8eadcb990c9b644c0da3d6878557d24357cdd9cbc560f4a04bef176",
+    "examples/agent-removed-light.html": "703aff82c129c4e0a6defdbbca142ee8289fbd0dd89d6ac28f12927faa7c8bba",
+    "examples/checker-active-dark.html": "d516eb0ee67668cd195cbc19cc9877f00a9e424f85d74127e2a216a3e5314c90",
+    "examples/checker-active-light.html": "bd1e1ba32ea20783d565810d2a28ac78774d842556feaef260ffeb4c601533d2",
+    "examples/checker-invited-dark.html": "ff33ed27de99d651251334b490050feb4e6f5ee068b41df994f119ba3c131a91",
+    "examples/checker-invited-light.html": "6d4a9fc01514de90e6044152f4798755d2730fa13c659ec960ce5a7ac087f1dc",
+    "examples/checker-lapsed-dark.html": "e0f1d8b8f0d433c4925317ebaada15eb2b51a978aa885e91880e8fc70416cb85",
+    "examples/checker-lapsed-light.html": "1a09671e594015906792b7bf156cceda229c4ef228bff3729dc185137e5adead",
+    "examples/checker-removed-dark.html": "a1fb5e513f1a628aeb781b8469057c69a373d08435479951b1d9d68a80feaf8b",
+    "examples/checker-removed-light.html": "baf04ae9fcd3c3eac83f529f569eb8cdd465b12d247223131ce46778146e0b5b",
+    "examples/controller-unavailable-dark.html": "b44c7e18b541c68b9bd9964ed3ba525ab1bc3ec5069b6481a57ce5fecbeae9c2",
+    "examples/controller-unavailable-light.html": "734dfc671a48901d986406d89cef158be8a44ccfabb344fd010d47ec5015490a",
+    "examples/eligible-dark.html": "526e2f469d04bd42e21d61d740a300dcac502a8d1d64fc198ba743efcd7394c0",
+    "examples/eligible-light.html": "333ff38c21a3de8b89389bac061bd4a33cba5713c083856f91cb00b4d495c9a6",
+    "examples/identity-unavailable-dark.html": "e0b75401ae2e5d082b496ce54d43795a9f1a3a8a87cc01542a230a98dd9e08df",
+    "examples/identity-unavailable-light.html": "7b72dc3b79632a0d346dc313163ae971eea879c93ce3345d16305aa000c98809",
+    "examples/index-dark.html": "2444c428fb5a6d1517fb5ff76e073d79dae054bad98f700a91795e58a6aa2fc1",
+    "examples/index-light.html": "ee88f75f502524bd0d2496e1ab0ea71e36be0a1b191252c2517133a9019d36d9",
+    "examples/ineligible-dark.html": "a72e960847a58d55b2bd9e1ff2a61c659390112b56f37263e483f5f702937529",
+    "examples/ineligible-light.html": "3a667bb37219ae9f341031dedf08fef2a87071e7f4a6a1b6516f3c6c9b1ecdba",
+    "examples/invited-dark.html": "d0c33eec81f8e29370a7f7b730b86a7e3458c3357d32c96b0e65f9998c803708",
+    "examples/invited-light.html": "8f433e330a29864d31b1b94b55ac554f17ba61baa010425e791319f54f00d63d",
+    "examples/lapsed-dark.html": "39270e8d555a40be82947ea844055b21710bd6917112195a2132f038c6d864d5",
+    "examples/lapsed-light.html": "8f3032bf4677ebfe8098189b2547e3cc16688272cfbc8a0deccc6570b2921c8d",
+    "examples/late-opening-dark.html": "67c0ae4f43f26d80e1b90b6fba139932bb3a4adf8cd784b7da53fb54b9007fee",
+    "examples/late-opening-light.html": "1fb37a7de8097dd8af9337cb8f7e8f80a9980568762ea2187cdfa1e4a1e44362",
+    "examples/live-absent-known-dark.html": "c797c3fd6a89830a3a590736402eea4b5cf835a47d66aef312db2740ddf63a5c",
+    "examples/live-absent-known-light.html": "de330b82ec7a7ea5f3c37f8e6232f768335036a5e845b8d6783b99166205edfe",
+    "examples/live-absent-unknown-dark.html": "fc962aabddb69a566f89c9eba0dbd9ea4ce41d21f6383442de9703befbf8d074",
+    "examples/live-absent-unknown-light.html": "53c991963796b921fd617d94810eef43cd3baf3d137c40b076d160e8ccd9ab14",
+    "examples/live-available-dark.html": "fab868b848dcd589a8e69a71cd6587306de10c9b0977bb4845640f12af4ede12",
+    "examples/live-available-light.html": "286cc5a211a10c0a886eea229d8b7e071a3d7fe1732dd84bd86bce2a2a613551",
+    "examples/live-blocked-dark.html": "5e088cc580602efd559212462b3475a866934d467d6efa8bf38e0a87993e2ff5",
+    "examples/live-blocked-light.html": "ba096b5be321de439bf9c45700244612c7e8334b49e92e09799e3447a635379a",
+    "examples/live-busy-dark.html": "433d5d07ee215fd57897ed1060222795156a6cb1c6d8eb37f5c50c3edbf3ae75",
+    "examples/live-busy-light.html": "2d28c8cdcd3db183b9c71d6e398e9bfde49ea16a11ffb15e940f8306d916ca66",
+    "examples/live-focus-only-dark.html": "aa6d3bb1582f0a994990f24794a20441c6ae9b0051a45b405d980d04b2a0c333",
+    "examples/live-focus-only-light.html": "dd6f581553550a0bfcd1004512c0656a5a62beb0fc48bec2ad1e344f6084eb05",
+    "examples/live-here-dark.html": "bd439005892c20b038058188bb6251bdff1cb415a0edec9e82e2e6d25e8a17d2",
+    "examples/live-here-light.html": "6864c23eacd41833e7e989ed02fcb4617ce8984f0bbd812ee52651d841d71daf",
+    "examples/live-lease-dark.html": "de2e474535601990439959dca87f2ac434e1ecd1f9f1dd7d5e8361365c05ee01",
+    "examples/live-lease-light.html": "1b48352733d88f0ab43c4d0e99860dd3068df3c65521b2e3a9c485599fb4f5c0",
+    "examples/live-note-dark.html": "28222c7ec161922926d30ebde29ec69278b53e7716a2cd19108693d96107724b",
+    "examples/live-note-light.html": "e60ee3ac2bb06086f8d908b4410177ce97fb16d0d660b997625166b2597b901d",
+    "examples/live-projection-dark.html": "eca1469d82681ce444637f927529b78a46cad6f88b3f1ef03e915337318d840e",
+    "examples/live-projection-light.html": "85687abbae1d5b14d46e906ac091cc1b0ad8a6497baabf7f41c10266282aaf8e",
+    "examples/live-waiting-dark.html": "ecdcd34ca9b72cef7eeff2769f0d59b5524d8058339fa68aa1d8f92fde01792a",
+    "examples/live-waiting-light.html": "4491830fe3882414c6fdfcbb17db13563cabbe110db93f132d6d9cfee75e261f",
+    "examples/long-identity-dark.html": "dbaacb94d5a5044b48a02bb92c183815807cd9dcb627b7d926a433bea86fe019",
+    "examples/long-identity-light.html": "f68bc9caa09985c2e65d6a5208851211a1fbea73c4dd832f44550c2993846bb8",
+    "examples/members-dark.html": "1d3546d7e3aafa39ef6c04d7f04311ed17827499b3c9f2f43bf04d022ab5e24b",
+    "examples/members-light.html": "f6f053537979487cc0a32dbb101cc1d80d56695eb387d5d9095331b649f3f7ed",
+    "examples/members-overflow-dark.html": "0f251b7f9068e6d9d27d63f3f180fecf7692740ebeae2c38032594122686b773",
+    "examples/members-overflow-light.html": "8b332cc8f65909c2dbf516845c28368aded9287154684ef6b30eac37dbabd679",
+    "examples/moved-report-dark.html": "bed2f613cf2cc2825c0cb76f2d7563e4eb55c49d84ca20d6b71caf8b5d94530f",
+    "examples/moved-report-light.html": "c2164bcad3fff59c419e0417f5f157cec8e319a0960d49b780eeea00cb22585b",
+    "examples/own-header-dark.html": "2644fbba132329aadbc3f4d42ed4a91d38a7bf1dd9a8ce2a8f78279989e0295f",
+    "examples/own-header-light.html": "c1da65f838c596405f611c5281f377a97f1337277b15504206f0b048df515a2a",
+    "examples/own-presence-dark.html": "81818623f162546829e7a92896b3058e3bec17c2dbbffee58119f0a811d2467b",
+    "examples/own-presence-light.html": "6d218a5ca5b0ab2bda75825d9b6f13e15deb6854fe7c64b79c883a7a55fa367c",
+    "examples/own-recorded-dark.html": "aafaba84a73dac57cc71b329dc7038e2796f2241a5b3c63ca9cf18d0e03aa9d9",
+    "examples/own-recorded-light.html": "23e684fd52bf7faf27d43af291dde8dbd9c63e0b23d0b6c5747d9bc7a7a5e3d0",
+    "examples/person-active-dark.html": "ff9c9e019f0a7533ca3cc687b3368885a1ab90a102f7bb6bd98f0efedc38a0fa",
+    "examples/person-active-light.html": "9bd51bd5c55a2f28444246b86b3971be0ccecce9a7739f89db4469f98d55a561",
+    "examples/presence-unavailable-dark.html": "ac684d79ac8d7a3d18add3fedab535d57c610ec209ac7caa78e3f9928e0d6bfd",
+    "examples/presence-unavailable-light.html": "8c04d5e6a1a200a0a2032f41f2ad440286dd97f6e666662b041c18679818c219",
+    "examples/ready-not-present-dark.html": "ed6a02b8504c7e914272255fb1ec7cbd6bf72a0da57746456a0efd8e8a604e44",
+    "examples/ready-not-present-light.html": "9d8d6394908a854b41995f7342bd5a1b87f4c2d3c4ec4fdb181713ade99e2265",
+    "examples/record-agent-dark.html": "af6eba006ed8a19ab4465040cef54a545908a25d81d08ea334b429f7d3827f36",
+    "examples/record-agent-invited-dark.html": "09de82ee7cddc0f9e169db9f90c16149a1a4f1406216ebd78485b73dc619db95",
+    "examples/record-agent-invited-light.html": "744d7b66a956dce623900a1173c1da4124c9f8ba91a9bc1a831e0439005ea33d",
+    "examples/record-agent-lapsed-dark.html": "5348989fbfacf51335b2f11369b1b453d56df27170d8f0b6c776720c5ecf2228",
+    "examples/record-agent-lapsed-light.html": "3f45fc243d24d7cf37dfd5fe954b4bd8daac9d366b055ac1813b917dbd02681a",
+    "examples/record-agent-light.html": "a610cfadce4a1495d43b8c6a45cc3f5eba3aa9aa969d9eaf62f421012c9845aa",
+    "examples/record-agent-removed-dark.html": "67b9f26c040dd33130a79db9c264235c37a96610ada8346cf45d20314d460d55",
+    "examples/record-agent-removed-light.html": "05d1714ac1fb517a04bd9fefcea3375e1beeb22399e4634c09e0d0bd06b97873",
+    "examples/record-checker-invited-dark.html": "015eb2889a34cab1c66a7f629395e9c514693bdb657bd4453a5d8b1fdad4c54d",
+    "examples/record-checker-invited-light.html": "fba151b8900cf040208f166b53d0ad1133777659fb16a4030a30661d1a40219a",
+    "examples/record-checker-lapsed-dark.html": "b1e9326eb659624fcd16bab23bce17d2d443c882c526c35f5681f6bd69d0236e",
+    "examples/record-checker-lapsed-light.html": "367f070ac21a638b4fa241536255eb3f523adc7b01f7bd74c28b643d8a45122f",
+    "examples/record-checker-removed-dark.html": "5ea6ec02040b0e92d45852b38347995fd53267340216ab082c49f78a19b00c39",
+    "examples/record-checker-removed-light.html": "3e909740b0dcf461774476ba16ed9cb29f1e553b279289ef74e850612f61a370",
+    "examples/record-checks-dark.html": "6b7d9816a5f0c61d4d3e953cd8347b292ff86b6a7a240936a84a68b3f03efdc2",
+    "examples/record-checks-light.html": "5d875bf311010beac8da2434d7dba16675ad243a983eb092298825fcc286a80f",
+    "examples/record-climate-observation-and-room-recovery-for-west-house-dark.html": "9da1e49ed491d2e3edf75e9a8a2fa7e7a867547cf174b373205b352c5a8dde9c",
+    "examples/record-climate-observation-and-room-recovery-for-west-house-light.html": "e0af601abcae968eb209c4d21df6726d4d9b5c9fd9d4f3d4d6f10f9310e92598",
+    "examples/record-guest-01-dark.html": "36ba6f25902727006bb675c1cd3a0dedd3a497dc4f99eb6b74dbe40c1c504f8c",
+    "examples/record-guest-01-light.html": "d26cbd1e4930a9441e4ce2b394eacd0b1fad4d8ddc77eaec476f0fbe08fd577a",
+    "examples/record-guest-02-dark.html": "31d22794885c7babf46af18c4d6634cfb11f756588c2ef2baf28356d4035f81a",
+    "examples/record-guest-02-light.html": "20fd5692cc974b0d8e9d7442c5bd845a80d8656ba986020d6ef51452e65a81b0",
+    "examples/record-guest-03-dark.html": "216f29d59c8f962a41b9711931fdd35ce4ee6e4113a8459d6a8bacf28f236609",
+    "examples/record-guest-03-light.html": "956caf4e3878c73176a82630069e9a1e86d6713af847120c250e0f5e4b8998cc",
+    "examples/record-guest-04-dark.html": "b86d2fe51f377c01a715b4fbbd5aefebe62e82756afdd110f219849b35f1c9e1",
+    "examples/record-guest-04-light.html": "54a15a1811a561ffba23d4e3500abc46fa56eca6dea19d42238e13f869d67141",
+    "examples/record-guest-05-dark.html": "abfa6a83784c86fcbd6b97bb74d4c15b4edbc590a078a995751c6ac9a4b65280",
+    "examples/record-guest-05-light.html": "e61925c8e40b7a308871875e3cb084bceb97c1b6cfa983585e6721477c892153",
+    "examples/record-guest-06-dark.html": "7da6bfa75482f7436ec9cdd45402af1923cce843135fd6de84ac2a5de5551480",
+    "examples/record-guest-06-light.html": "078c235a1c8ebe76eaabb7df9b401a0b273b3f3dd939dcfac5a2c8e86717dcf9",
+    "examples/record-guest-07-dark.html": "3f78f0071e202e0b2edd2a969da3f394efac995f3709d53fe854c8f4ed5f4a40",
+    "examples/record-guest-07-light.html": "809b657ae248c9ac46e4cdc0f18db7ee389f642b029de982bbe9d4a84a8a18a5",
+    "examples/record-guest-08-dark.html": "199ac9d74d8ee935c0dfb30676edcbc45d23bf4afba209af6748eea966b718af",
+    "examples/record-guest-08-light.html": "0bd7c0486de600cd8b2518d8729275826aca94469b7712f5db41cf5109f6b610",
+    "examples/record-guest-09-dark.html": "2cc32cc3be0c14f17f7013019aaabc65ad354736357019e740479804590686c9",
+    "examples/record-guest-09-light.html": "a53e38067368f26dc9dc06aeb1ffc9906d33ba2418678139ff76a845b7a20a06",
+    "examples/record-guest-10-dark.html": "661efbc75fb434d27a718b3806883225445297db444458b22841ff0e1f9d2ab1",
+    "examples/record-guest-10-light.html": "b1182d8263ca9d3d90eed5f8cee28a6a45ad035ba13b2b6d3d48d580ef53c896",
+    "examples/record-guest-11-dark.html": "c16162748a346fdb97e745be7f68b3e627f37f3d1090578d58b40acf8ae19db1",
+    "examples/record-guest-11-light.html": "891888eb7688c1bf6ed3c5d49d9b7db332adf0af04122ecad15356a74a8d420c",
+    "examples/record-guest-12-dark.html": "3f42d6937ce18336befa584a3fbb9ac910335a5212c94c4fd2f5570f79a59fcc",
+    "examples/record-guest-12-light.html": "ef85f554b02dbeececfed7b03996fc11be3e44ae51747712d1b97f891ac7f4ef",
+    "examples/record-guest-13-dark.html": "f620e6df6dafde6a4949628e557bbec73dd44e585a108b80f1cfbebbecbd1dc0",
+    "examples/record-guest-13-light.html": "9863cb3a134e77d88154f056b4dde8169c12f5c22b13e451c27b87f0bc43e11e",
+    "examples/record-guest-14-dark.html": "66f7cf366157a25089229ab30a4afff4861762b6f58ba394ac7649f4e863ff92",
+    "examples/record-guest-14-light.html": "5eaffb799580386ccf4ec94b51296a0bc69561c3158fa12f779c5abb8200112c",
+    "examples/record-guest-15-dark.html": "7edf0186131bc3b93b5b98c18fedaaf2c5f3c9bde3be7084f43d655b02f3ff07",
+    "examples/record-guest-15-light.html": "2ff169ea529aaf71d3277f351bb73c71e3122164f8e577cfa2e6af343f6ae9a7",
+    "examples/record-guest-16-dark.html": "b39bae221e2256d47753181ba18c839f82ddb3a4fdc1f1859055e10860b375b0",
+    "examples/record-guest-16-light.html": "c6e453a79ba43eb6322304691407262ffb0cf8f3874451827ce091116e88cfcb",
+    "examples/record-guest-17-dark.html": "6e607ebfe6896dc47e44b2957cce2f7a9fbb050df5584fc72d3148d76ce0fa5d",
+    "examples/record-guest-17-light.html": "6aeb4653a07be9980b7baac570599e6473354db7df14cbae4ad9c55d3e534b6c",
+    "examples/record-guest-18-dark.html": "6b2919031030e010dfa7ba276f0598263d097f8b4b6cb62f3b0353af05a9e4e4",
+    "examples/record-guest-18-light.html": "cd9a7e52c5938af3f23c5510b422fed271170b2f4c371c790ddc0fd1e013a45a",
+    "examples/record-guest-19-dark.html": "70b6827fdac4476d863fd5b5992e022531f3879f9f3a4bb30db39c684cdf2522",
+    "examples/record-guest-19-light.html": "d6fe705fc330c889c89c547a8ab3d2df70b015dc61766c718669cc8d5f569a15",
+    "examples/record-guest-20-dark.html": "d4a631d81dcb0b75b503c8427e2460ab6107a8883dce297c2c6e6c6c68e7aa7a",
+    "examples/record-guest-20-light.html": "c3405f069e73fac6d6b5d46ed6183294f20106e2e132799ee171da4ca858774f",
+    "examples/record-guest-21-dark.html": "1bda500cdaf040514a21383c97c29ca77d39e2f28f891dfa45e440818b63b320",
+    "examples/record-guest-21-light.html": "c6647dd338264bce61833865e7260e4fe0a416b23273028143b2ee045819fa56",
+    "examples/record-guest-22-dark.html": "cd6e5fa78ebe9e511b2e6b724a5423269cc95989dff9a0875ce12b38ed5c2742",
+    "examples/record-guest-22-light.html": "f109dae8e66f93c10faa20f3b2924f5f6d6bb9c4073b213bdcb3b2d718433b51",
+    "examples/record-guest-23-dark.html": "132969e99868792058ec0ae078ec68b67a0d4a38e4041c618c0764eb278fef08",
+    "examples/record-guest-23-light.html": "d0a94d137905039a88ab3d8061d835cfba35bc332ef7075dd43ec86a4aec295c",
+    "examples/record-guest-24-dark.html": "d6e1ff7dadd0c843a554a05cd0bb1433a623b8c66f4516b1ad47fe96ee23cb67",
+    "examples/record-guest-24-light.html": "2985c77692de59e6199b45eabfdacf7a6aa33d27e73ef8296645193cfff226c9",
+    "examples/record-guest-25-dark.html": "8daeb83869f37aaf482f31e115bcc34a5345f3c182db97eda7b2b328f7cb9ac0",
+    "examples/record-guest-25-light.html": "bf342062a297ef7b1c49b6c32580042da3bf3c5246a7c21a0b8830e4b62b915b",
+    "examples/record-guest-26-dark.html": "5c1b1e9684458fa236f152f6c931cdda383510a49b35cde71466e9b4f8c52335",
+    "examples/record-guest-26-light.html": "ec3c69e1d2f3ac1765f1345c4d539234bf0aaf94cc0c70e28f4e6e285f5578c0",
+    "examples/record-guest-27-dark.html": "70b2313dc2e6c294417fb31a97f2712fb8d0f40ccf36ebec76182c597a3a5370",
+    "examples/record-guest-27-light.html": "b6e5b81fd8b12be5a4590a542721a2bdd73ca1aa893b9c532a79bb3dd6af8207",
+    "examples/record-guest-28-dark.html": "61ab623142263db9065c716b9d3e774ec5f17c76b3cee4340815a32b464d33da",
+    "examples/record-guest-28-light.html": "5d7c3cd4d33b6151d237fb60c266664c4be153d31eab371bf1a518e201307509",
+    "examples/record-guest-29-dark.html": "4788cfdf557e823bd568cd50f4956f018526b4f48e9f4531c671c5f177a3589c",
+    "examples/record-guest-29-light.html": "4e61be4e640c7b2223a307c5ee13c5b69ffe61f1a8a96e372edb8abc00e0a896",
+    "examples/record-guest-30-dark.html": "30458a53fed240a67bef839f16acb17d8868268a0bdea36f5dc67adb80d23955",
+    "examples/record-guest-30-light.html": "faa895c7499a79c6f53dc45a70c493e0c7503fefa1a847ff4cc104a515036a7e",
+    "examples/record-guest-31-dark.html": "6f6520021f10e0326e15ff0d2d27c38a37b994ceedcb495c01a81a5425379a63",
+    "examples/record-guest-31-light.html": "374b0dda1d8bf237adc29bc5c417dcca6fe7790b24ed8009cf3d0de4f4628ea2",
+    "examples/record-guest-32-dark.html": "b4ef8fc4b1c1b235b4e8d6b51f614e75821140b93aeaff531efa0dfb30b52b5e",
+    "examples/record-guest-32-light.html": "f8ec8c400f9317572d6a06b35376262b23212b347d92da34d53512708c9f731a",
+    "examples/record-irrigation-dark.html": "615eb374916aac52c7e95082dbcc195c1d4ba55c26e85114e2d7bdc1cfff6eab",
+    "examples/record-irrigation-light.html": "0101fa0143b0a2d7dd9d58e9391aaa172e2727a603d97cb8ac66a7a17516e3ec",
+    "examples/record-lina-dark.html": "4c5757aa33b7254d1fb5032443f0375bf479aa0a05969e3a94e53646bfc03143",
+    "examples/record-lina-light.html": "566a41107f7a51b424223eacdeb1928b157d4785c56f99bc8cc195fb6d93b3b3",
+    "examples/record-noor-dark.html": "b3b16700aedf01585674b19ce8671d26521d7044c3c736a946ae90a62f09ecae",
+    "examples/record-noor-light.html": "481ae435dc341cefc08c2e0c92bdb70284033d08eebe3896907e5e60bf5c96c2",
+    "examples/record-person-dark.html": "c84bd4d9b96795d4b078c9297002a7ea510edbce82e35f579be15b1f74bc7470",
+    "examples/record-person-light.html": "99cc8a1006bc019b3595b8aa58711802f4e77e203f0db4441626791082c62800",
+    "examples/record-removed-found-dark.html": "29582bc947ec5ac6d2724faeacb51f216e01ebbc8c6ca7fe3f3d504db206f240",
+    "examples/record-removed-found-light.html": "2a52ce44686bbdf9aedcf5f9b2350a43dbf85e040b5b24d02ea025c9a7627a86",
+    "examples/record-removed-old-dark.html": "ade4730f13bca3c73cbbf368527153727b815a451f0731fca442d86570a085fd",
+    "examples/record-removed-old-light.html": "a3af148e095e813f15d762d1e2104f18d4a1a93229f778a59300b2c66eecb037",
+    "examples/record-removed-unavailable-dark.html": "14b63244af12f4b64d71135e1c47eec10ff565cc6a09d6429057b810a0d92575",
+    "examples/record-removed-unavailable-light.html": "5f8ac32af4f28ae6358fc8d3c341478cf4821c9265599430743fe3a9522886c4",
+    "examples/record-rita-dark.html": "8fb580e3691c361b97560e2af1c78fb88a923c8ca252c27038e41292a1214f51",
+    "examples/record-rita-light.html": "240bf6a10b313e051a5564f3de5233c2e900ab764848989147a462f098198c1d",
+    "examples/record-tender-dark.html": "19b8334b0b57ef87a94f6233af6135fb2173aac037d3383c16da234f713857bb",
+    "examples/record-tender-light.html": "49a39a230f8034093e98ecc488b85e428c8fb0700cbedcc9ccd577d1ed90572b",
+    "examples/recorded-elsewhere-dark.html": "16c8945e296a1640b4229ee84e78fb0cdcf33ad25b8773b6312d34a587958d60",
+    "examples/recorded-elsewhere-light.html": "0ef73f0a0153ee2b06d28cee0a331d60bb92d4541af29055aebc91c270f35f0a",
+    "examples/recorded-here-dark.html": "8513e6cc729c046dac111ca2c381107013a43685b520ef32aa61e0d1495459ff",
+    "examples/recorded-here-light.html": "31146f1987b25443a5fecb38cfd3e967096c5e561e9f26c8009952a0292bd2a7",
+    "examples/recorded-left-dark.html": "56f13a3b4c7b6171b0ecd0f7513866d5dbfbfab0ceffd28ea49a510408efc7fd",
+    "examples/recorded-left-light.html": "537d9163596af95d16717d7302e23c13eb5d8c056bfaa1f31cfe86294c42c09c",
+    "examples/recorded-left-report-unavailable-dark.html": "0219c51805e07e80501ae42a1df2c5060ffda1d05648a3afb26ff35b1ce4d9e2",
+    "examples/recorded-left-report-unavailable-light.html": "88f141a011e83f9d6eda65df7a1828a728ab4feed55133baca393e5015cbb5bc",
+    "examples/recorded-not-reported-dark.html": "8dbd46804c4be733eb0515facc725e3c74edcdc5aacdaccf14f17b94c1dcfaef",
+    "examples/recorded-not-reported-light.html": "e7288d2330e26447aca86e773b705b0426bdd5e36467a2c437469a1caa0ea7ed",
+    "examples/recorded-partial-dark.html": "74262823900a485de0aaabde15122ad900a33facf08d391c0aca6663a713782b",
+    "examples/recorded-partial-light.html": "ab62ac2d0a9ab65e401cda4adac403a446c4dccb640a3098eef8617be99fc20e",
+    "examples/recorded-report-unavailable-dark.html": "2f6bc561084f730d62753a021d7f3829a31e04928477341022948206e4b8da24",
+    "examples/recorded-report-unavailable-light.html": "7f2f420ddd0a43575909202b0506f67ca694fc059e8c035e34bf71d528ded94a",
+    "examples/removed-dark.html": "7c8df7cb5c85e247f0069734796eb1be7a750cfd044856a1def486b3e4f444b7",
+    "examples/removed-light.html": "a7c231ec66a81b90896a8e2850eccb0ea2f47f707659c23c24432bf67281b643",
+    "examples/standing-unavailable-dark.html": "bfbedf528677f49e45d35cc1b397a0dcee5d0e6b8f5c2f8e077511c1d19fe48b",
+    "examples/standing-unavailable-light.html": "cf02c923269771ae03795cf5d7590429bfa9ef6840a5c72cc5d731feb94ebe28",
+    "manifest.json": "8eb4ec21a0dc24da45f99828bc46c3c1a0553c3bfb75a85aa7b11ca8066ea474",
+    "mockups.css": "62a6af3be42907aae88b27f8cc8cc931325c2ad7cb5adb6ebff5abec69219f90"
+  },
+  "screenshots": [
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/person-active-light-1440.png",
+      "key": "person-active",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "04ca8036bba52180a1a1fdc044e4aa4525f265ea7cfda47ae1006481a3b92a87"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/agent-active-light-1440.png",
+      "key": "agent-active",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "1aa287122ee7d97f1d942a842676aa073b37deb1ee40fe222c815bf7d838cc1c"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/checker-active-light-1440.png",
+      "key": "checker-active",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "a03d33df9d01bc2bc9de86c34d7a561f9ae452ef834b764b32d224fb925d40d8"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/invited-light-1440.png",
+      "key": "invited",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "15c6774264516d47f4fbd045c7035e08b424503117c495361c5ff7dcdd1c982f"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/removed-light-1440.png",
+      "key": "removed",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "ac71c8d987d700480cc1b4701f28440b0ffedbd5ab64547d25cbea2af6d47299"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/lapsed-light-1440.png",
+      "key": "lapsed",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "7f43c324e726815bf3d82df89a6bdcf976b5b36b4ee7a525a88d6afe7e3324df"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/agent-invited-light-1440.png",
+      "key": "agent-invited",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "98e3dd494cf236638dfe85621096fcc8f8df0a79d4ba8516cd88a60810a77d4d"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/agent-removed-light-1440.png",
+      "key": "agent-removed",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "266e67e955939ce297302e9f969b21126e194277d12e054dfb5f1d5461a390e4"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/agent-lapsed-light-1440.png",
+      "key": "agent-lapsed",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "3499470ecefa5f3b64dcff0fd437b86c88ea6c1496d20af7039b7d4f141f5ab5"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/checker-invited-light-1440.png",
+      "key": "checker-invited",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "63d3f33a891e76a9e2d63f84c1d797302586206645b5b1d1ec213013f5914c7c"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/checker-removed-light-1440.png",
+      "key": "checker-removed",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "d20c3349ae250a2413f75683a513b6a4ab17c8dea71d7a1e858ebe0256da7a87"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/checker-lapsed-light-1440.png",
+      "key": "checker-lapsed",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "3dd98ba80ee3c54db3c7c08a866ed5eadceff3c6eb1a38e8fd6defa3c74c2d2a"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/controller-unavailable-light-1440.png",
+      "key": "controller-unavailable",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "27106bc64142943f4fa65c8024049e12bef9f68c92e32784dfd56484165bfb81"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/long-identity-light-1440.png",
+      "key": "long-identity",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "2be44e8eac0f737af58b3dd45ffdd351bb50186957a32e7dfcb8c4f4ffe863e8"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/identity-unavailable-light-1440.png",
+      "key": "identity-unavailable",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "2e745ee2405a86e0749496cdcb28e602097c28109adcac444d49fe83dd05b623"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/standing-unavailable-light-1440.png",
+      "key": "standing-unavailable",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "cdc132857573d367e74010c16fcdd5fe21a8130801a48b07b019bd68815389b9"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/eligible-light-1440.png",
+      "key": "eligible",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "0039b6d7befacee522616d1800eaa0eae9a7d322c397e470d08ead26e7496d8d"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/ineligible-light-1440.png",
+      "key": "ineligible",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "a59ad1e974c5c5bafcce99f307032af86b48a86ac378104142fc2bb02a2b95c6"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-available-light-1440.png",
+      "key": "live-available",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "4d0e1f6fce3f5f578c634608aff0695e24ec7a6b9d7c1713fffda38b6f40908f"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-busy-light-1440.png",
+      "key": "live-busy",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "7d23a9e0b13abc2f906d886684ec219da17e7aa8007f04e175392628d0856aca"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-waiting-light-1440.png",
+      "key": "live-waiting",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "ad98d4fabcf3481b6bd723f366bfcb2ca5eb2f9f5f5235a277d66c7797acad80"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-blocked-light-1440.png",
+      "key": "live-blocked",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "6945b7dd20fc72a81dfd1d5e0b36032ee00e306da3960d2999363ec9256b964f"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-here-light-1440.png",
+      "key": "live-here",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "c749cf08c4094b9f22d877b8daaafd8abc6c3cb2ef8d9f67ad4f0ac20a4eff05"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-focus-only-light-1440.png",
+      "key": "live-focus-only",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "3e2d428d00389cfa02bbef6f12574dfa8cd79c4306595c2ac2a9b68465364f55"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-lease-light-1440.png",
+      "key": "live-lease",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "4edcb5a2ed45bdff9b371ee67bb343c8929ccc3a34a3b08e2c31c7f1996365a4"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-note-light-1440.png",
+      "key": "live-note",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "7bbdf922be920b3e936e9cc2918aa4571ec52c2e9127b7c3a5c95a30d5263258"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-projection-light-1440.png",
+      "key": "live-projection",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "9404e66ac29a6b285676cb35ac28961d85a1eb498ec4ce7c8ed61beb5a1f1b13"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/recorded-here-light-1440.png",
+      "key": "recorded-here",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "49c0a57b3cf0fa1d814bded3726e9242604c9f4bb227de6c1efc56b5683cb481"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/recorded-elsewhere-light-1440.png",
+      "key": "recorded-elsewhere",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "5b70cce565179d500516f69a9ac4ec41d8d4e561fe5e2f95e1c81b1bde14b0ed"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/recorded-partial-light-1440.png",
+      "key": "recorded-partial",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "85a4a072cc41166ac8a0a5a867d83437aea57a0b37d7b9e4d703a6fabf8944c2"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/recorded-left-light-1440.png",
+      "key": "recorded-left",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "6db5b6f5c6510ccbe940364fa9aced4dd2e33f9aaa299108d99e9e8263e215b1"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/recorded-report-unavailable-light-1440.png",
+      "key": "recorded-report-unavailable",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "adcce5f6659bae5c3cf0e9d8aaf14bd11d5743b0d430cb5bc8985c2fe2c9fe98"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/recorded-left-report-unavailable-light-1440.png",
+      "key": "recorded-left-report-unavailable",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "6ad2581454f4d7c0c881a1d68678c6f3bf68dbfdf265155ab414df102e6bd271"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/recorded-not-reported-light-1440.png",
+      "key": "recorded-not-reported",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "974da8e2f381317f871f03a0b268a83053a95b5f539079f99e90100df82d3ef6"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/presence-unavailable-light-1440.png",
+      "key": "presence-unavailable",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "d4045572b8f576040b7ee1424625e6b8503c49c1a36700e8b7ce70a498c9c69c"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-absent-known-light-1440.png",
+      "key": "live-absent-known",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "781b7536369693aeb71e794f7c1cd57e6b2d254fc15a7ac7fac66a0113d1fd3d"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-absent-unknown-light-1440.png",
+      "key": "live-absent-unknown",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "c8dbbedc694e06f91ed4009cceb9e88b58feeebe07fe9fafc2632f7d6cb87b5b"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/ready-not-present-light-1440.png",
+      "key": "ready-not-present",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "ac41048179415a89f94063512d7c2ab8269d46f76b16e45e39f33c9f4f3bde2c"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/late-opening-light-1440.png",
+      "key": "late-opening",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "0decbe6d8aa811b21b41905cc5274377e231821597c830c0de858fc919d14656"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/moved-report-light-1440.png",
+      "key": "moved-report",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "3eb69dd4f09c8be9a04102c0548e702ed4175d8e657c45df4f5faf65a7e5055f"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/members-light-1440.png",
+      "key": "members",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "4797d3f5fba337ff747ca7ec67151f7fe7d9d4fd6cec23cbf772ffda9511827e"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/record-person-light-1440.png",
+      "key": "record-person",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "f961aefbd74d763a7b04b2f532285bf85ef6537d02633b1ee513732ff4d9af2c"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/record-agent-light-1440.png",
+      "key": "record-agent",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "77502d501df7bf6425cb390510dba19e3791fc949c7707722c035c6701f6af9c"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/record-removed-old-light-1440.png",
+      "key": "record-removed-old",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "9498862d989b8ab40b01450f1ae591d26f4d125133ed54d962c998fec5afc6c7"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/record-removed-unavailable-light-1440.png",
+      "key": "record-removed-unavailable",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "191e965713c320f809130377831625dd72d0655b3082f3c0a26dbfd9a267b758"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/own-presence-light-1440.png",
+      "key": "own-presence",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "082fc453160e69bc720a0dec9b5390517540881041c0bd827365fccb4ad15847"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/own-header-light-1440.png",
+      "key": "own-header",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "4c8b965c31cac903802d00bf04e3290a8e9dfed9278382aab0d207f733668128"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/own-recorded-light-1440.png",
+      "key": "own-recorded",
+      "theme": "light",
+      "width": 1440,
+      "sha256": "d15bce2bd731c05a962bf55ad39171798a609ad8da2670ad95351512b00b0dd0"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/person-active-dark-1440.png",
+      "key": "person-active",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "15de68f8db8580e98be73df2f177b2db61b10a1eaac1f0bab7e6281f051ddf86"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/agent-active-dark-1440.png",
+      "key": "agent-active",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "9aa7a974827b994fcce7741380941470ba5c7263e26fcf4544a82f5e426454d5"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/checker-active-dark-1440.png",
+      "key": "checker-active",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "41148c450575e56604ac33ce6985c5da294eb3eb67347a1cf058a94386baab05"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/invited-dark-1440.png",
+      "key": "invited",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "7b5bb0015f08fac47a08b2d120394e38fe9ab6c6ce272c65736c16fb38c1f588"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/removed-dark-1440.png",
+      "key": "removed",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "10123a8fd56b265d3fab35426eef1636751264c15b14b429378352045d331677"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/lapsed-dark-1440.png",
+      "key": "lapsed",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "15876d4bf15599bc7d2844fd88d4c36e732eb444fe9bd56c905f64816e7cccb8"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/agent-invited-dark-1440.png",
+      "key": "agent-invited",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "d9ef1c826766be781cbfc0edc184ced5654ff460c0f8496360dc353ccc54bf77"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/agent-removed-dark-1440.png",
+      "key": "agent-removed",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "5cd4a09442039ea3ae23f8601228cbfa10044035b1b570377333288ce064632e"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/agent-lapsed-dark-1440.png",
+      "key": "agent-lapsed",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "5acc67591be116940145f16c74c16c52cf43452bb2a8063c17e1000110948eac"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/checker-invited-dark-1440.png",
+      "key": "checker-invited",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "f047c229e98308123dec87d731d419526ec0809d4c6d47983a246fad34edeed4"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/checker-removed-dark-1440.png",
+      "key": "checker-removed",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "0ff6510dabe057a983b1e02529f16702ed48fa888a0614b89f27882ed4edcf1a"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/checker-lapsed-dark-1440.png",
+      "key": "checker-lapsed",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "bcb938309520c6ceb03f77222e6a780aeb9a3324ab768c69d74b834277ab5c78"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/controller-unavailable-dark-1440.png",
+      "key": "controller-unavailable",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "16e623b4fa00bde2d0672778489fd8236579955206d10fcc0910e3dc4fc70c25"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/long-identity-dark-1440.png",
+      "key": "long-identity",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "8ddd6be2028604060c57f2bd01b9395b78c426731991306e69d858af54c8dd5f"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/identity-unavailable-dark-1440.png",
+      "key": "identity-unavailable",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "0898e3f8c77508508966ca9b8c89ed02ef184ced8908e38ae183f5305c8cb815"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/standing-unavailable-dark-1440.png",
+      "key": "standing-unavailable",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "3ef32d8a9b966e1e7bc07d1f3a04d7aca803848c31d30e5111ac5355ef6ece0c"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/eligible-dark-1440.png",
+      "key": "eligible",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "a8d6a88fce98fde8b05434e6c99a3721fa6dc95624d58402a11458012ac2e628"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/ineligible-dark-1440.png",
+      "key": "ineligible",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "6f65e3f60d6221983347c450a929d34b068ff489392fc363ab9ca87f72d1b47f"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-available-dark-1440.png",
+      "key": "live-available",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "cd208600d213ccf339c5c908dd2c6bf806fbf6e46a62341ef0d9aabc19621d45"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-busy-dark-1440.png",
+      "key": "live-busy",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "843882a04ba427d5593c052df3a61d5a51bb9128927435aab9d57cd7d99103fa"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-waiting-dark-1440.png",
+      "key": "live-waiting",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "57dce6bef89d5262d89a7d9e855ded8be511f0354af03f1d59112eac07d13b52"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-blocked-dark-1440.png",
+      "key": "live-blocked",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "377206cad9acb65091b081bf92395c3cde9f896a4ee224e4e8ab0224595f2857"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-here-dark-1440.png",
+      "key": "live-here",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "b16808515af1a75972b838df2198ebc50708ae5de8ed5530e421aa068e3a07c5"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-focus-only-dark-1440.png",
+      "key": "live-focus-only",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "bd6a6c94cf4f6cd6c37ec28e2595abf6b455f209fc7a85da0853e19075f8e578"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-lease-dark-1440.png",
+      "key": "live-lease",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "319b865545b2692c511b9d71f98436a0e64ff079741d1a9debb735faba259d43"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-note-dark-1440.png",
+      "key": "live-note",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "f0fc38c26d984dc9fe5be141e0acd324c246051a896a65d473c3b6d2c8103ced"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-projection-dark-1440.png",
+      "key": "live-projection",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "0272f39390dbc9e9b0a298237d78f8151bbfa8c9724524242c0d3048ab079292"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/recorded-here-dark-1440.png",
+      "key": "recorded-here",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "15bf6217e06f5488d9434ab3393ef1635041bb85898fb601053a684299207b37"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/recorded-elsewhere-dark-1440.png",
+      "key": "recorded-elsewhere",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "cf382b9f31a43d3cd2500b2718d0910d9604701098dfe8650743c8ec07191ca2"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/recorded-partial-dark-1440.png",
+      "key": "recorded-partial",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "9ded7f985b1a2d7567b7e0b28218a101b5173998919703617e60772e95d9d1a2"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/recorded-left-dark-1440.png",
+      "key": "recorded-left",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "8575a4a2b82a469f52d756ef562eef58838f62f06f35e2b065b886b957c0001a"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/recorded-report-unavailable-dark-1440.png",
+      "key": "recorded-report-unavailable",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "40f8be3e37447401eecacfadb4139d7154c9cb75b75e4439a3deb7e5c6240783"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/recorded-left-report-unavailable-dark-1440.png",
+      "key": "recorded-left-report-unavailable",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "c3d22380cd65eff5b457c01036d74ceb5b04c6e0422b43760f9b3b6253d43bb5"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/recorded-not-reported-dark-1440.png",
+      "key": "recorded-not-reported",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "208c25a9c2a815eaca32550347ece80f312da145b5ad2fc174cd44baea2aeddc"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/presence-unavailable-dark-1440.png",
+      "key": "presence-unavailable",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "5b673f77b0692691245b2ceb85e1e0bec11809eec1546f43aed411aa19fe5cff"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-absent-known-dark-1440.png",
+      "key": "live-absent-known",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "7a274051967bf78a982578d16ce96b14c575a0bdee8ded619c7bbd128fb92531"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-absent-unknown-dark-1440.png",
+      "key": "live-absent-unknown",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "781017d7b4722a0351a491f15a1a5959bdb6cc084eead15ec0b0897f25160286"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/ready-not-present-dark-1440.png",
+      "key": "ready-not-present",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "574a5c20543653fc1e57cce9cfb0135b8bdafde0eb2b6769a419d79b4a010e25"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/late-opening-dark-1440.png",
+      "key": "late-opening",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "888a56e8453af74d3bab253eaaaf5fca763e17117ac797cf58b634941aa9da08"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/moved-report-dark-1440.png",
+      "key": "moved-report",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "7c14ac44680d595e0e61a3795daa10f92d8351fcdd52f6d9707a4f1915e0f4c5"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/members-dark-1440.png",
+      "key": "members",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "622353bd3d8f904682ccac5c682c88efcd5f3b018dce6d1a1030d67a82eacc50"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/record-person-dark-1440.png",
+      "key": "record-person",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "716bf992b463e850b6280cb91e2abd239da4da4f8aa7abd53e595635a87701ec"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/record-agent-dark-1440.png",
+      "key": "record-agent",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "0102418dfb41f34de19c3145e5a98c5166ea36d3b26cbc876e62daac3cd567e1"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/record-removed-old-dark-1440.png",
+      "key": "record-removed-old",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "cdebb082351011ea62e9e109bc0d3cc9fd7b724f1389a974a2dbf73f4807dfa4"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/record-removed-unavailable-dark-1440.png",
+      "key": "record-removed-unavailable",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "1fab683d064884c0208be721bd6aee4336427ba1deaa46e85ea3224ee1a2f87b"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/own-presence-dark-1440.png",
+      "key": "own-presence",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "409f8b62a26f5d06f9294e98ba638cfbf709215a7980123e55267be7d1f17e97"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/own-header-dark-1440.png",
+      "key": "own-header",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "49139b021ef03014724f9a5afd45983a1269b6ee79941cb18c0c57cb1b322768"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/own-recorded-dark-1440.png",
+      "key": "own-recorded",
+      "theme": "dark",
+      "width": 1440,
+      "sha256": "0b82cd776103e345fb70b2c6173445431f91f5f5b4b30ac7b4e4dd8f8de78e65"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/person-active-light-390.png",
+      "key": "person-active",
+      "theme": "light",
+      "width": 390,
+      "sha256": "82909749868b04917be90a9c9e58c2ea71462f64cf49dc8921c428577fa9b8b7"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/agent-active-light-390.png",
+      "key": "agent-active",
+      "theme": "light",
+      "width": 390,
+      "sha256": "6ab4255d8dd1ff00cf65cefc821a86b8f9e1ec7e1aca3e85a5b38d996a271e8e"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/checker-active-light-390.png",
+      "key": "checker-active",
+      "theme": "light",
+      "width": 390,
+      "sha256": "cf3eee2bcc2b9b8617a096c2dea0d24899f680350b136860bf612e5a9cd187eb"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/invited-light-390.png",
+      "key": "invited",
+      "theme": "light",
+      "width": 390,
+      "sha256": "0242cd8d1e7f4070feb4659215d0f2f7da62534b2c96a8243b10605bef083ba7"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/removed-light-390.png",
+      "key": "removed",
+      "theme": "light",
+      "width": 390,
+      "sha256": "6f8e8183815d947aae11bc1ab57cb008bc213f56b04bc597f30a8bb689b21cc5"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/lapsed-light-390.png",
+      "key": "lapsed",
+      "theme": "light",
+      "width": 390,
+      "sha256": "176ab4166aa163073b3a853f185c1383282db78ba9e75d5d7d9b9cf6144fe068"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/agent-invited-light-390.png",
+      "key": "agent-invited",
+      "theme": "light",
+      "width": 390,
+      "sha256": "e54076ea2bcb5d6fc82a1e517dd60b417880b5b6aa47438747aa13da3c49dee5"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/agent-removed-light-390.png",
+      "key": "agent-removed",
+      "theme": "light",
+      "width": 390,
+      "sha256": "d233f392aefeb0a86cbc39ea1dbe2fdc7239dc6b3ee3b15f415f08e69876ff38"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/agent-lapsed-light-390.png",
+      "key": "agent-lapsed",
+      "theme": "light",
+      "width": 390,
+      "sha256": "dd580bfe6d3082f38ddadf4ec7fdb85c48b9471e602fb3e1b0130c9d008a9937"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/checker-invited-light-390.png",
+      "key": "checker-invited",
+      "theme": "light",
+      "width": 390,
+      "sha256": "d34c52644504b40f911bfd6fdc6904a67a9e657edaa2749e49a5f5a1c63d8869"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/checker-removed-light-390.png",
+      "key": "checker-removed",
+      "theme": "light",
+      "width": 390,
+      "sha256": "8146f52539be3f88678832f2a82fdd30248999b8360135aeda19fc1ea6a6a4fe"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/checker-lapsed-light-390.png",
+      "key": "checker-lapsed",
+      "theme": "light",
+      "width": 390,
+      "sha256": "7f0964a7d715a53aab3311c45b7ccb2d8ae76c43749ff44e31e6fa3ca59cb856"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/controller-unavailable-light-390.png",
+      "key": "controller-unavailable",
+      "theme": "light",
+      "width": 390,
+      "sha256": "5fc59e9309a6696c1e62afa38874e1431781dfd2c14ea14b07e1d5ef70ce937f"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/long-identity-light-390.png",
+      "key": "long-identity",
+      "theme": "light",
+      "width": 390,
+      "sha256": "53b33d7756be429d2e5c35e0a5ed75fa7414528b021b068d21d712caafe1fc55"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/identity-unavailable-light-390.png",
+      "key": "identity-unavailable",
+      "theme": "light",
+      "width": 390,
+      "sha256": "ab9dab97e230a04d19e6de0907b41799d1774ab1dc3654f9cba40f159c9ab521"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/standing-unavailable-light-390.png",
+      "key": "standing-unavailable",
+      "theme": "light",
+      "width": 390,
+      "sha256": "db7b5ae38d30131f17d984e61bba5fb6051711992a75a458ef4a0e0fa436f482"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/eligible-light-390.png",
+      "key": "eligible",
+      "theme": "light",
+      "width": 390,
+      "sha256": "093446439e088e9097a342196f28c51d18c167660d8a32ce3d5b7f595f2c6e6f"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/ineligible-light-390.png",
+      "key": "ineligible",
+      "theme": "light",
+      "width": 390,
+      "sha256": "65cee8d401ae934d79bae5abb22bc33b0e037613fa84490b27396aa581d191c3"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-available-light-390.png",
+      "key": "live-available",
+      "theme": "light",
+      "width": 390,
+      "sha256": "d35d57b5049061c8d8fc198048709d88c8b4028cb208183c2b1f4f1f1b958ae8"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-busy-light-390.png",
+      "key": "live-busy",
+      "theme": "light",
+      "width": 390,
+      "sha256": "545f9881ce7e9593777d1d27506b9374c4fe5bfea665b33386e104dd1252c4de"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-waiting-light-390.png",
+      "key": "live-waiting",
+      "theme": "light",
+      "width": 390,
+      "sha256": "503606e3652a37012de2ab0e0fc4b09ad7913f3750f4711f577c2652a817a10d"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-blocked-light-390.png",
+      "key": "live-blocked",
+      "theme": "light",
+      "width": 390,
+      "sha256": "0e913e22f1bc9497b1673c326617496ae2512b5ab2554e0ea4f1b60a636ab3c1"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-here-light-390.png",
+      "key": "live-here",
+      "theme": "light",
+      "width": 390,
+      "sha256": "1810e571f17a80be93021bbf9b1d7328ae3161e5d9a22a3bbdff71d11283727c"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-focus-only-light-390.png",
+      "key": "live-focus-only",
+      "theme": "light",
+      "width": 390,
+      "sha256": "d7845689de7c0ad1973d55d96d36f651dabf7f56e64bf8d51f773c8af94ec902"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-lease-light-390.png",
+      "key": "live-lease",
+      "theme": "light",
+      "width": 390,
+      "sha256": "5c9c1f1cd39a57cc4eb80dc73481507eeda3d4ea3e791c8e6072719ab8268e62"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-note-light-390.png",
+      "key": "live-note",
+      "theme": "light",
+      "width": 390,
+      "sha256": "45a9c6cbe49fbfc3b2c6774eb4e538675a6108d02b0a7b3cfa90b2ee0be240a3"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-projection-light-390.png",
+      "key": "live-projection",
+      "theme": "light",
+      "width": 390,
+      "sha256": "eff819740bc3be1a73cede3309cf21e959fbc80083aded7eccb8e4f6bee73ee2"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/recorded-here-light-390.png",
+      "key": "recorded-here",
+      "theme": "light",
+      "width": 390,
+      "sha256": "06c66a1a0e739c292dfb2ebc205beecd1c672b1ca17e8d665e3db8b5b23706f0"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/recorded-elsewhere-light-390.png",
+      "key": "recorded-elsewhere",
+      "theme": "light",
+      "width": 390,
+      "sha256": "31dd8cfb0616f44405c9731a7d6df456d164354ba15d798b091ea48f72e737e9"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/recorded-partial-light-390.png",
+      "key": "recorded-partial",
+      "theme": "light",
+      "width": 390,
+      "sha256": "74c5c51f0d7165521cc25aebe5d27e7b970b0a30bf4c613917a8c7b3ea144e92"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/recorded-left-light-390.png",
+      "key": "recorded-left",
+      "theme": "light",
+      "width": 390,
+      "sha256": "022381bffecc57efcab25b02ec7b3252d32ad0d553506a1fbbfd9342fbfee1fd"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/recorded-report-unavailable-light-390.png",
+      "key": "recorded-report-unavailable",
+      "theme": "light",
+      "width": 390,
+      "sha256": "30c076cd9c79bafdf9116838b378e4d5b8b0e2cae35aa32085cbaea0706f15c6"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/recorded-left-report-unavailable-light-390.png",
+      "key": "recorded-left-report-unavailable",
+      "theme": "light",
+      "width": 390,
+      "sha256": "785b62e888f3515d5d415423fe64ee0858d0cade8bb5469f93f99b4fee7dbdf9"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/recorded-not-reported-light-390.png",
+      "key": "recorded-not-reported",
+      "theme": "light",
+      "width": 390,
+      "sha256": "9df57b31e2058dc673cd8f1598f636cdb4927be157f7947fb6c84f671b974191"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/presence-unavailable-light-390.png",
+      "key": "presence-unavailable",
+      "theme": "light",
+      "width": 390,
+      "sha256": "ac195f053acff55dff09d9a5167ccbd16c30d1362c5d7c254b0af9b3b09792c3"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-absent-known-light-390.png",
+      "key": "live-absent-known",
+      "theme": "light",
+      "width": 390,
+      "sha256": "852aea7ece0e97b8f16cf0cd1664d06f682cf189a69a956338721fd38275374f"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-absent-unknown-light-390.png",
+      "key": "live-absent-unknown",
+      "theme": "light",
+      "width": 390,
+      "sha256": "37f7980bae6241682e222c8b3168649e1de01814ff3db2d486a8892f85b9ebdb"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/ready-not-present-light-390.png",
+      "key": "ready-not-present",
+      "theme": "light",
+      "width": 390,
+      "sha256": "64108561c6a2255cf313de193f454cfa4678606fb3d830f72fca6c8edbf9c882"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/late-opening-light-390.png",
+      "key": "late-opening",
+      "theme": "light",
+      "width": 390,
+      "sha256": "dc03e76ec7dceedafcc9c880624b305d1e810fde02d27544fd168c3f61ed625f"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/moved-report-light-390.png",
+      "key": "moved-report",
+      "theme": "light",
+      "width": 390,
+      "sha256": "714715300188aace6b2bc58035e13ed8568c899f7f8cc6b00418b920c81a80ac"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/members-light-390.png",
+      "key": "members",
+      "theme": "light",
+      "width": 390,
+      "sha256": "f97d403611cec6fc147f9560e8652150728e861528d0ee4e4c848948b19ec514"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/record-person-light-390.png",
+      "key": "record-person",
+      "theme": "light",
+      "width": 390,
+      "sha256": "50a2bd78c40d0b0d2313599a2f9db951b1d455ad10525e8934403d78aab7b544"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/record-agent-light-390.png",
+      "key": "record-agent",
+      "theme": "light",
+      "width": 390,
+      "sha256": "256ebf82e1a89dcf1d50763563020668897808dcb3a63b1636e4934242f2a0d2"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/record-removed-old-light-390.png",
+      "key": "record-removed-old",
+      "theme": "light",
+      "width": 390,
+      "sha256": "3570e196500907e9d9e8870fc46e35023f07d8569eaf08b5603c385ee7b604e7"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/record-removed-unavailable-light-390.png",
+      "key": "record-removed-unavailable",
+      "theme": "light",
+      "width": 390,
+      "sha256": "17d49f28deb99ad0e477ca97ea954e54a5651b81c8f45416a664e7ec3a05df7e"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/own-presence-light-390.png",
+      "key": "own-presence",
+      "theme": "light",
+      "width": 390,
+      "sha256": "f7edac7f3a8d668af172f4c9d9f72bbf24763c22b21ad40740e7a550a53349a4"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/own-header-light-390.png",
+      "key": "own-header",
+      "theme": "light",
+      "width": 390,
+      "sha256": "b817e5f56c5664caa60c1acf0f03ba24690b30ce96b2ebfa3ba7870ad4560174"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/own-recorded-light-390.png",
+      "key": "own-recorded",
+      "theme": "light",
+      "width": 390,
+      "sha256": "1fa28b0375d94841e93ebd1d50f3aa49ca2cab51cae9e1f5995bee72655dcabd"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/person-active-dark-390.png",
+      "key": "person-active",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "19d40aecdf99e7fb0bc701eba83125137cb417e0ba1a41c220b9927f201a4d19"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/agent-active-dark-390.png",
+      "key": "agent-active",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "878d6750749cd5c11f3604452dd9f73c663c22f23e33c50cc995e0567fc72cb5"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/checker-active-dark-390.png",
+      "key": "checker-active",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "6ef835140558d118ac6f78c5ee4af87cf153d5e96f6785db2b0a0f82ed6a8b74"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/invited-dark-390.png",
+      "key": "invited",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "96bfa55cda5347fc5e2276727ada5ab9bbaeabd61b746b70effd215ed3976686"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/removed-dark-390.png",
+      "key": "removed",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "bf4eed8677e2ec547b51c89a36dd710024f1dbbfe595ac2184e9e725d4f1a05c"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/lapsed-dark-390.png",
+      "key": "lapsed",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "ddd2a036a65441eaece8c4b0c1bc155c289fb8bf5f2e6dfccc08748fc12592b2"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/agent-invited-dark-390.png",
+      "key": "agent-invited",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "0d32bb56d741c1d22df65722721d490e75ca367a057fa1e4ea1fbeb0b63046ea"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/agent-removed-dark-390.png",
+      "key": "agent-removed",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "1f9f2fa9767748b4f789f3278a5868d4eaf430a6a14a5716a718cefaa3c32396"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/agent-lapsed-dark-390.png",
+      "key": "agent-lapsed",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "5c1877229df6dc966d401a145d1aa8aa3f5684a7774458cfffdae27dbcf8ff4e"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/checker-invited-dark-390.png",
+      "key": "checker-invited",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "835c9d444a2f72284a11c53a5bc75f164bc477d5afa2f670fe79773ecbd726ae"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/checker-removed-dark-390.png",
+      "key": "checker-removed",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "679aab4bab24d668fd358ba64a926c5a7154e9dca0ed083c9d5241d35acb3699"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/checker-lapsed-dark-390.png",
+      "key": "checker-lapsed",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "976286a58e41e10d1eb6ce4948849aa436449313bf8aa7d446564a335ee4e23e"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/controller-unavailable-dark-390.png",
+      "key": "controller-unavailable",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "de81dd5f4e64c522c04e01e9afdbdcae2e0975af4719de6865bcc5c700b34d0c"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/long-identity-dark-390.png",
+      "key": "long-identity",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "384aa5cab8ab6c21106dd3c13430eb3d9ccf03e1de45ea5a86ac62764be2e658"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/identity-unavailable-dark-390.png",
+      "key": "identity-unavailable",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "be8b6c1e697d221282eb6a9fc2d9416a195ba787b6ecaa4d84da83072693797c"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/standing-unavailable-dark-390.png",
+      "key": "standing-unavailable",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "73baabc3c9f82815b3e1d47d77159ddaad35778dc326986b35bfb80fab6e540d"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/eligible-dark-390.png",
+      "key": "eligible",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "9b993b33a1661ae72d43ced6649b4ff53d5430d9ede75001f3a3c6f41c6c3bc9"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/ineligible-dark-390.png",
+      "key": "ineligible",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "719c27cf582567b44d701f7c1b6b721c960413e98a735c0011e9f210450c2dac"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-available-dark-390.png",
+      "key": "live-available",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "fa81f214c71614441456c08f3623a87ba00b25a9e3fa1c9ef6b08d2707bce959"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-busy-dark-390.png",
+      "key": "live-busy",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "1a565c6ce980cff586bfbe02d0a6e91ad59af4506f55b21aeac116c938d3ea71"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-waiting-dark-390.png",
+      "key": "live-waiting",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "42ca0dec860f423023d36e6dc66b39c7a78e1c13d7d64a9e4385c7fa08b74235"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-blocked-dark-390.png",
+      "key": "live-blocked",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "c998a41a5c9d09728e2e05f643e379f083ccdeeb9e2fda17fbf5fc0236262f5b"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-here-dark-390.png",
+      "key": "live-here",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "61eed768836f99b755125063be1459314b6bd7dfed5634cf0302a096510338ce"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-focus-only-dark-390.png",
+      "key": "live-focus-only",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "8fb7c45feb0629e368c06acdbdf4a9957657be6c09efd88af5f6701e48014eea"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-lease-dark-390.png",
+      "key": "live-lease",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "ad744abf9020dc36a012c8104f1385804c0510c3b828349b9da42dd6eda7e43c"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-note-dark-390.png",
+      "key": "live-note",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "0809ad7bc8b5cc6d9fa44be55a89887867a8588b9738bc0f2d31cf909ecd6bea"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-projection-dark-390.png",
+      "key": "live-projection",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "624abed2b43f8ccf8a76088b658378b0f57402bc2d1a7804f7bfb9aa2c54bb2c"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/recorded-here-dark-390.png",
+      "key": "recorded-here",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "64bf5f20e29fcb924a691e9865cfa6624ac5b19674990622b6da4df430a26396"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/recorded-elsewhere-dark-390.png",
+      "key": "recorded-elsewhere",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "7d4418517c209ce57532373882ecbf9573f142d35f235b7a21ef7e3c2fa5c02d"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/recorded-partial-dark-390.png",
+      "key": "recorded-partial",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "473ecdcb3c2531a47fbf56ca3929325fb576df2a3ec7c12422be485fbb10ce1d"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/recorded-left-dark-390.png",
+      "key": "recorded-left",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "4d0bc99d13373f36071ba9de6f8e4c17e7aab4991f642a0ab04859bdc7d28d4e"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/recorded-report-unavailable-dark-390.png",
+      "key": "recorded-report-unavailable",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "602b20a338e0c9b4a8e6c5e2584514b023d19c639f7b9042251a720b84bbbae2"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/recorded-left-report-unavailable-dark-390.png",
+      "key": "recorded-left-report-unavailable",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "dae6fcb7ea0f93616bc9d4105644d210bcdb0a5ab05c406bed18ef57355a1ce6"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/recorded-not-reported-dark-390.png",
+      "key": "recorded-not-reported",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "21ace0cd773c901763dbaeb099987b49805cf7fc4302dd307a893ccbba847ecb"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/presence-unavailable-dark-390.png",
+      "key": "presence-unavailable",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "dd5f6dbcd4443ce68017ab95fd321603b1a35761217bf5d612dc7c8702a20b34"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-absent-known-dark-390.png",
+      "key": "live-absent-known",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "1fce50434c2509e49361555d824912b3004371d309323f630ab1c896df00f757"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/live-absent-unknown-dark-390.png",
+      "key": "live-absent-unknown",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "dd61399e1276d8ef1ee8ebc15555dd1f7f602b507097f8d31ae8412af947f60a"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/ready-not-present-dark-390.png",
+      "key": "ready-not-present",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "727efc68971e2e005a8bd09608c2cf915bb868fe07abf7fc1f24b48a3f7def11"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/late-opening-dark-390.png",
+      "key": "late-opening",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "34c7fb7a8b6cb8b8c8c24a383fb27dd30e51d5ad9d590c9bffaffa01c76e8a98"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/moved-report-dark-390.png",
+      "key": "moved-report",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "28acb07f456c67da727166e0981c0c86f9279af8920e2172b7e466b897e5ce54"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/members-dark-390.png",
+      "key": "members",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "e5b631c3337df430521ed4d1fdfed7b32e2e124e371f5fdb50563a38b222e9bb"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/record-person-dark-390.png",
+      "key": "record-person",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "79bd12728fe9046365e66cec89411b428d7450d595d273f059698e17be316402"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/record-agent-dark-390.png",
+      "key": "record-agent",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "02c566032366a29cb6218607d67fe9d100ec805720de00227b0cf6b1b900621b"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/record-removed-old-dark-390.png",
+      "key": "record-removed-old",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "e2bd4c87bcd19009145092f7c2d1e99a437aeb5b6f92b2eb2079253425018e2d"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/record-removed-unavailable-dark-390.png",
+      "key": "record-removed-unavailable",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "4bd2b2ced740480a63dc53b19450e03e368a2af45af460d2d8e0ecfa49b5dddf"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/own-presence-dark-390.png",
+      "key": "own-presence",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "a2bf77673137365a6964511f34527b13e2e60bbc7214d95d9e02080fa5c8a39c"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/own-header-dark-390.png",
+      "key": "own-header",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "5d56f765a52b91dea4a5b70eeaa336e0248d6dd005dda5f3401b3927ea2407ad"
+    },
+    {
+      "file": "/tmp/artroom-d1-browser-expanded-20261019/own-recorded-dark-390.png",
+      "key": "own-recorded",
+      "theme": "dark",
+      "width": 390,
+      "sha256": "07677d459f5190ef6dfa900ddb77a032c234ad56ea639c6141830f6e8ec8d08b"
+    }
+  ]
+}
