@@ -407,3 +407,22 @@ unchanged Vitest file before, without cell escaping, and restored. Counts are
 and source bytes match. Evidence is
 `/tmp/artroom-p1-cli-cell-control-20261019/` and its driver/log. This is one
 formatter control, not a sweep. P1 still has no final gate or review.
+
+## G2 incorporation while G3 is reviewed
+
+Merge9dafc6d63857aff1bab30d75ba1bbb852e9d0059 incorporates actual reviewed,
+audited and published G2 Main4b4d58b0. The merge is clean. It preserves P1's
+seven composition places and Native pin/conflict changes, together with G2's
+scalar forms, ordered measurements, fact timestamps, layers and SDK parity.
+The Grow source is63,562bytes, within the unchanged64KiB source bound.
+
+The ten graph cases pass in
+`/tmp/artroom-p1-g2-merge-graph-20261019.log`; the real Core/SQLite Grow
+measurement case passes in `*-measurements-20261019.log` under the same
+prefix. Derive's two and CLI's three compiler targets pass in
+`*-types-20261019.log`. Zero installs and no package/lock mutation.
+
+G3 remains higher priority and in exact-head review49f191c4 at its frozen
+2a80a300f candidate. No G3 original is edited or executed by this P1 work.
+P1 still needs incorporation of later actual landings, remaining proof review
+and its own final gate before Source review. No P1 completion is claimed.
