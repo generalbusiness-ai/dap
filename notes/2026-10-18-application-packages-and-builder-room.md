@@ -1,6 +1,6 @@
 # Application packages, their checks, and the builder room
 
-18 October 2026, draft 3; section 15 lists what changed after the
+18 October 2026, draft 4; section 15 lists what changed after the
 checker's reviews. Design note for review. It makes application
 authoring in dap easier to do and easier to verify, so that an agent can
 build and customize an application on demand and a person can see what
@@ -405,13 +405,14 @@ note follows the scenario form.
 
 ## 9. The sequenced note's draft 2
 
-The sequenced note (request 29e9024d) adopts in its draft 2: finality of
+The sequenced note (request 29e9024d) adopts in its draft 3: finality of
 a member's positions read from the order journal; refusals and expiries
-recorded as holes in the order scope, never in a member's journal;
-resolution recorded at the order scope before the member writes; the
-leave fence as verified absence; `staleness` on reads (4.5); and the lag
-guard withdrawn in favour of 4.1. The slices here depend on those forms
-as that note states them.
+recorded as holes in the order scope, never in a member's journal; a
+member's judgment written as a prepare entry, bound by hash in the order
+scope's resolution, and put into effect by a commit entry, with a write
+fence between; a left member as the one absence; `staleness` on reads
+(4.5); and the lag guard withdrawn in favour of 4.1. The slices here
+depend on those forms as that note states them.
 
 ## 10. What not to do
 
@@ -502,7 +503,10 @@ predecessors land.
 | Q6 | Whether P7 also refuses at `dap pack` | Yes, as the codec does for closure; the install guard remains the rule that holds everywhere |
 | Q7 | Banks in groups: a member definition created several times | Not in version 2; a bank's instances would need names from their creation index, which the sequenced note's `enroll` can carry later |
 
-## 15. Changes in draft 3
+## 15. Changes in drafts 3 and 4
+
+Draft 4 aligns section 9 with the sequenced note's draft 3 (the prepare
+entry, the bound resolution and the commit entry); nothing else changed.
 
 | Finding of review 8afe6c0b (head 82f067e6) | Where answered |
 |---|---|
