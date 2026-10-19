@@ -52,6 +52,9 @@ export function readViewParameters(value: unknown): ApplicationViewParameters {
       // human input unit. Decimal numbers never enter native declarations.
       if (typeof scale !== "number" || !Number.isInteger(scale) || scale < 0 || scale > 6
         || typeof low !== "number" || !Number.isSafeInteger(low) || typeof high !== "number" || !Number.isSafeInteger(high) || low > high) return fail(name);
+      // The tool's human-unit endpoints must round-trip to these exact
+      // native bounds, rather than advertising a rounded maximum/minimum.
+      if (viewScaledInteger(low / 10 ** scale, scale) !== low || viewScaledInteger(high / 10 ** scale, scale) !== high) return fail(name);
     }
   }
   return owned as ApplicationViewParameters;

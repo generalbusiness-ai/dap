@@ -42,7 +42,7 @@ test("carousel order binds only to a complete item source's integer or timestamp
   const declaration = (order: unknown, kind = "carousel") => ({ note: { ...views().note, kind, order } });
   const order = { field: "seen", direction: "asc", missing: "first" }, parts = [{ id: definitionDigest(timed), bytes: canonicalize(timed) }];
   expect(bindApplicationViews(declaration(order), { "room.note": many }, parts)["note"]).toMatchObject({ order });
-  for (const bad of [{ ...order, field: "text" }, { ...order, field: "absent" }, { ...order, direction: "random" }, { ...order, missing: "hide" }, { ...order, script: "sort()" }]) {
+  for (const bad of [{ ...order, field: "text" }, { ...order, field: "absent" }, { ...order, direction: "random" }, { ...order, missing: "hide" }, { ...order, direction: ["asc"] }, { ...order, missing: ["first"] }, { ...order, script: "sort()" }]) {
     expect(() => bindApplicationViews(declaration(bad), { "room.note": many }, parts)).toThrow(ApplicationViewError);
   }
   expect(() => bindApplicationViews(declaration(order, "card"), { "room.note": many }, parts)).toThrow(ApplicationViewError);

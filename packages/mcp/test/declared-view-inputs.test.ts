@@ -36,7 +36,7 @@ async function fixture(ordered = false, direction: "asc" | "desc" = "asc", missi
       note: { kind: "text", label: "Note", max: 64, required: false },
     } }] } } } }, { key: keyIdOfSecret(secret), sign: bytes => sign(secret, bytes) });
   const scope: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "lane" };
-  let held = ["counting.control"], revision = 1, answer = "accepted";
+  let held = ["counting.control"], revision = 1, answer = "accepted", commitUnknown = false;
   const times: Record<string, string | null> = { 2: "2026-10-17T08:00:00Z", 3: null, 4: "2026-10-16T08:00:00Z", 9: "2026-10-16T08:00:00Z" };
   const source = new DeclaredViewSource(packet.bytes, packet.ids.release, {
     installation: async () => ({ scope, directory: { ...scope, kind: "directory" }, membership: { ...scope, kind: "membership" },
@@ -52,12 +52,12 @@ async function fixture(ordered = false, direction: "asc" | "desc" = "asc", missi
   const gate = new Promise<void>(resolve => { release = resolve; });
   const sessions = new ViewSessions(source, { call: async () => { throw Error("No adapter."); } }, async (kind, args, admit) => {
     await admit(); signed.push({ kind, args }); await gate;
-    if (answer === "accepted") { revision++; times[String(args["on"])] = "2026-10-18T08:00:00Z"; }
+    if (answer === "accepted" || commitUnknown) { revision++; times[String(args["on"])] = "2026-10-18T08:00:00Z"; }
     return { structuredContent: { answer, fact: { seq: 2 }, private: "must not reach the model" }, content: [], isError: false };
   }, async () => { throw Error("No unresolved original."); });
   const opening = await sessions.open("measure", "board"), tools = viewTools(sessions, source.screens), tool = tools[viewInputToolName("board", "pause")]!;
   const args = { view: "measure", item: opening.identity!.item, revision: "1", request: "one-reading", values: { moisture: 31, ec: 2.1, note: "leaf edge curl" } };
-  return { source, sessions, tools, tool, args, signed, release, id, scope, held: (value: string[]) => { held = value; }, revision: (value: number) => { revision = value; }, answer: (value: string) => { answer = value; } };
+  return { source, sessions, tools, tool, args, signed, release, id, scope, held: (value: string[]) => { held = value; }, revision: (value: number) => { revision = value; }, answer: (value: string) => { answer = value; }, commitUnknown: () => { commitUnknown = true; } };
 }
 
 test("declared model input converts exact fields once, retains concurrent retries and exposes no private card data", async () => {
@@ -97,7 +97,7 @@ test("changed revision, lost standing and invalid inputs refuse at the current p
 });
 
 test("an unknown measurement retains its original custody request and blocks a new submission", async () => {
-  const f = await fixture(); f.answer("unknown"); f.release();
+  const f = await fixture(true); f.answer("unknown"); f.commitUnknown(); f.release();
   const original = await f.tool.run(f.args);
   expect(original.structuredContent["receipt"]).toContain("outcome unknown; check the original request");
   expect(await f.tool.run(f.args)).toEqual(original);
@@ -106,6 +106,8 @@ test("an unknown measurement retains its original custody request and blocks a n
   let display = await f.sessions.read("measure");
   expect(display.card?.actions).toEqual([{ id: "check-0", label: "Check original request", purpose: "check-original" }]);
   display = await f.sessions.read("measure", display.cut, { position: 0 });
+  expect((await f.source.read({ screen: "board", page: "summary", position: 0 })).card?.identity.item).toBe("4");
+  expect(display.card?.identity.item).toBe("3"); expect(display.card?.identity.revision).toBe("1");
   expect(display.card?.actions[0]?.purpose).toBe("check-original");
   expect(f.signed).toHaveLength(1); expect(f.signed[0]!.args["idempotencyKey"]).toBe(before);
 });

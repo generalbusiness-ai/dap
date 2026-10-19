@@ -157,6 +157,12 @@ export class ViewSessions {
     if (move) {
       this.#admit(instance, cut ?? -1);
       if (instance.busy) throw new ViewError("busy", "The card has an operation in progress. Retry its read.");
+      if (instance.projection.card?.unresolvedOriginal && (move.position === undefined || move.position === instance.projection.position)) {
+        if (move.page !== undefined && move.page !== instance.query.page) throw new ViewError("busy", "Check the original request before changing this item's page.");
+        // A lost reply may follow a committed act that changed carousel
+        // order. Keep its captured card and original check on auto-refresh.
+        return this.#display(instance);
+      }
       const position = move.position ?? instance.projection.position;
       const page = move.page ?? instance.query.page;
       if (!finite(position) || !PAGES.has(page)) throw new ViewError("shape", "The card position or page is malformed.");

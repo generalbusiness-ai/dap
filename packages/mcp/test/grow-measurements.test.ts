@@ -59,6 +59,7 @@ test("typed measurement fields produce one native probe and advance the oldest b
     expect(session.scope.state.item(45)!.refs["moistureAt"]).toBe(124);
     expect(current.card?.reasons).toContain("Moisture age: 2 days ago (2026-10-16T12:00:00Z)");
     expect(current.card?.declared?.data.sources["bench"]?.find(row => row.id === 45)?.fields["moistureTime"]).toBe("2026-10-16T12:00:00Z");
+    expect(current.card?.declared?.data.sources["bench"]?.find(row => row.id === 45)?.fields).toMatchObject({ heightTime: null, insectsTime: null });
     const layers = async (view: string) => {
       expect((await f.service.call(viewToolName("grid", true), { view, scope: session!.scope.at })).isError).toBe(false);
       const reply = await f.service.call("view_read", { view }); expect(reply.isError, JSON.stringify(reply)).toBe(false);
@@ -98,6 +99,8 @@ test("typed measurement fields produce one native probe and advance the oldest b
     expect(sparse.card?.reasons).toContain("Moisture age: 2 days ago (2026-10-18T12:00:00Z)");
     expect(sparse.card?.reasons).toContain("EC age: 0 min ago (2026-10-20T12:00:00Z)");
     expect((await layers("sparse-layer")).fields).toMatchObject({ moisture: 31, moistureTime: "2026-10-18T12:00:00Z", note: "leaf edge curl", noteTime: "2026-10-18T12:00:00Z" });
+    expect((await f.nativeAct("day", "probe", 45, { insects: 0 }, { on: 45 })).answer).toBe("accepted");
+    expect((await layers("later-scouting")).fields).toMatchObject({ note: "leaf edge curl", noteTime: "2026-10-18T12:00:00Z", insects: 0, insectsTime: "2026-10-20T12:00:00Z" });
     const replay = await session.scope.replay(); expect([replay.report.result, replay.why]).toEqual(["consistent", null]);
   } finally { session?.close(); await rm(root, { recursive: true, force: true }); }
 });

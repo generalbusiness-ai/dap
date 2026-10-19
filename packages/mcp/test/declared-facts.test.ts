@@ -11,6 +11,7 @@ test("fixed-point facts preserve exact decimal digits, signs, zero and unavailab
   expect(formatFact(fact, { temperature: null })).toBe("Mean: —");
   for (const value of ["2650", 1.5, Number.MAX_SAFE_INTEGER + 1]) expect(() => formatFact(fact, { temperature: value })).toThrow("integer value");
   expect(formatFact("state", { state: "open" })).toBe("state: open");
+  expect(formatFact("height", { height: null })).toBe("height: —");
 });
 
 test("timestamp ages retain their source time, absent evidence and a clock-before-reading result", () => {

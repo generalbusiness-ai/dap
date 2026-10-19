@@ -135,7 +135,7 @@ export function readApplicationViews(value: unknown): ApplicationViews {
       if (Object.hasOwn(view, "order")) {
         if (view["kind"] !== "carousel") return fail();
         const order = only(view["order"], "direction,field,missing"); name(order["field"]);
-        if (!["asc", "desc"].includes(String(order["direction"])) || !["first", "last"].includes(String(order["missing"]))) return fail();
+        if (order["direction"] !== "asc" && order["direction"] !== "desc" || order["missing"] !== "first" && order["missing"] !== "last") return fail();
       }
       if (Object.hasOwn(view, "links")) {
         const links = view["links"];

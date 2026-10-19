@@ -27,6 +27,7 @@ test("declared human inputs convert to exact native scalars and leave omitted re
 
 test("parameter declarations keep closed bounded kinds, native-compatible ranges and allowed words", () => {
   for (const declaration of [{ x: { kind: "decimal", label: "EC", unit: "", min: 0, max: 10, scale: 7, required: true } },
+    { x: { kind: "decimal", label: "Rounded endpoint", unit: "", min: 0, max: Number.MAX_SAFE_INTEGER, scale: 3, required: false } },
     { x: { kind: "int", label: "Reading", unit: "", min: 0.5, max: 1, required: false } },
     { x: { kind: "text", label: "Note", max: 1024, required: false, script: "no" } }]) {
     expect(() => readViewParameters(declaration)).toThrow(ApplicationViewParameterError);

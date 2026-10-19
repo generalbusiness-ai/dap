@@ -18,12 +18,13 @@ separate semantic form.
 The native probe keeps a fact reference per supplied metric. Its one overall
 probeTime cannot stand for the age of every retained value: omitted metrics
 remain old. The three layers must use their own recorded sources and qualify
-missing age evidence. A bounded same-scope fact-time read or two retained
-per-layer clocks are under consideration; temperature already has summaryTime.
-The test host has no external LLM backend. Its typed-text tool consumer will
-be labelled as scripted and distinguished from a separate actual-model
-invocation. Host parsing will not be presented as model behavior. These form
-boundaries are stated to planner while independent schema work proceeds.
+missing age evidence. Planner decision `2efe6272cfd3d97a475a4cade777f9896cdccc4b`
+selects the bounded same-scope fact-time form with the item's read visibility,
+and scouting's insect fallback/later time. That decision is implemented.
+Temperature retains summaryTime; no native slot, effect or wire allowance is
+raised. The test host has no external LLM backend. Its reproducible typed-text
+consumer is explicitly scripted. Separate actual Codex command-bridge calls
+are labelled observations and are not gates or model API transcripts.
 
 Preparation is a private APFS COW dependency view with zero installs. The
 maintained 106 versions, four nested named manifests and 13 internal workspace
@@ -33,7 +34,8 @@ checkout's Vite caches were removed. Audit
 `006fbddb896e866cba4e405e898f1bd40b5279112913a762d90a576e0a1e8a83`.
 This is a manifest/link copy check, not a tarball-integrity claim.
 
-No G2 code gate, review, landing or acceptance witness exists yet. Routing,
+The focused and browser witnesses below pass. The one complete G2 code gate,
+independent exact-head review and landing are still owed. Routing,
 device-owner outcomes, hosting, photos and custody remain separate work.
 
 ## Scalar declarations and native binding checkpoint
@@ -156,7 +158,7 @@ passes in `...grow-measurement-types-20261019.log`.
 The typed text and consumer fields in this witness are explicitly scripted;
 an actual-model invocation, age layers and browser proof are still owed.
 
-## Fact-time projection checkpoint
+## Fact-time prototype checkpoint (read policy superseded below)
 
 The generic projection may select `from: {kind: "fact-time", name: slot}`.
 Binding requires a native fact ref under this definition's name, time output
@@ -173,8 +175,9 @@ not read entry bodies, scan a recent window, reset a budget, call a peer or
 raise an allowance. Pure checks bind the metadata to the same captured head
 and exact selected refs. This relies on the native owner's immutable entry
 metadata, and is not an independent cryptographic entry-body verification.
-Fact-time requires history access even without a journal source, and the
-native owner's final authority check still runs after metadata reads.
+This prototype required history access even without a journal source;
+planner decision `2efe6272` supersedes that restriction below. The native
+owner's final authority check still runs after metadata reads.
 
 Two owning bytes files pass six cases in
 `/tmp/artroom-g2-fact-time-local-ref-bytes-20261019.log`. The native production
@@ -233,3 +236,84 @@ nine cases in `...age-context-card-resources-20261019.log`.
 
 No G2 gate, browser acceptance, actual-model invocation, review or landing has
 run. The final head still owes those checks and its complete evidence map.
+
+## Decided read policy and final focused witnesses
+
+Planner decision `2efe6272` was read in full and adopted. Fact-time follows
+the item's session visibility, exposing timestamp metadata only. A session
+without history receives the same clock-only projection bytes; removing
+scope visibility refuses both the item and fact-time reads. Journal windows
+still require history. The native scope witness passes in
+`/tmp/artroom-g2-fact-time-same-item-read-20261019.log`. Its first denial
+fixture removed `items` while still granting the `summary` visibility used
+for live rows; the corrected fixture removes all scope-read visibility.
+The older history-control evidence belongs only to the superseded prototype.
+`...fact-time-item-access-control-20261019.log` adds that obsolete restriction
+back: the unchanged same-item-access assertion fails, then source is restored.
+The builder's attempt to ratify the planner assertion was ineffective because
+it lacks the ratifier role; adoption is acknowledged without claiming force
+from that attempt. The planner's addressed decision is the design basis.
+
+Scouting now shows note/insect inputs, including a recorded zero count.
+It uses insectsTime when a note is absent and the later timestamp when both
+exist. The record retains each metric's separate age. Native zero-insect and
+old-note evidence pass in `...scouting-zero-insects-native-20261019.log`.
+The source config is 62,875 bytes, below the unchanged 64 KiB allowance.
+The authoring guide documents parameters, order, fact-time and display ages
+in `docs/application-views.md`; 502 relative links pass with none broken.
+
+Final form inspection corrected coercion of array-shaped order enums and
+refuses decimal bounds whose advertised human-unit endpoints cannot convert
+back exactly. Eleven cases pass in
+`...final-form-boundaries-20261019.log`. Plain absent facts now show a dash,
+and bench facts use explicit percent/mm units.
+
+## Browser and model observations
+
+The production card build includes stable view routing in context, chat
+handoff buttons, Back from a carousel and read-only recovery when a model
+input advances the server display between app polls. Busy automatic reads
+reschedule; stale navigation is not repeated. A lost reply that follows a
+committed probe must retain its captured card/check on automatic refresh,
+even when native sorting has moved that bench. The scripted committed-unknown
+case and existing session cases pass in
+`...unknown-committed-carousel-20261019.log`. Removing this retention gives
+three passing cases and one unchanged item-identity assertion failure in
+`...unknown-committed-carousel-control-20261019.log`, with source restored.
+
+The maintained browser driver is
+`packages/mcp/test/grow-measurements-browser.mjs`. It uses cached Playwright
+1.63.0, Chromium153.0.8010.12, existing tsx4.21.0 and Node26.12.0, with zero
+installs. Browser plugin tools were unavailable. Direct Node strip-only mode
+initially refused TypeScript parameter properties; the existing tsx runner
+is the supported invocation. The first 320 px journey passed its native/UI
+checks but exposed a long select overflowing the card; a flex-width fix
+resolved it. Logs/captures from these attempts are historical.
+
+`/tmp/artroom-g2-browser-decided-20261019/` contains the reproducible final
+scripted 320/592 px captures, proof and report. C4 is oldest among100 benches.
+The typed consumer supplies31/2.1/5.9/note, producing one native `probe` on
+item45/revision3 at entry231 and advancing to A1/item22. Before/after moisture
+is25 at2d then31 at0m; scouting baseline at2d becomes leaf-edge-curl at0m.
+Temperature is24°C at0m. A1 has an older note plus a later insect count;
+A2's zero insects is present, and missing A3 scouting remains striped.
+Layer switches and unchanged refreshes add no model context. Private reads
+are app-only, context has no raw card fields, resize applies, neither width
+overflows, browser errors are empty and the native journal replays.
+
+`/tmp/artroom-g2-live-decided-20261019/` is a separate live observation.
+The current Codex assistant read only the exposed tool schema and public
+context, chose the fixture prompt's human-unit inputs, and called that local
+MCP tool through a command bridge. Its exact request, result and attribution
+are retained beside the browser proof. One signature/native entry231,
+advancement, refreshed layers and replay pass. The host contains no LLM
+backend. This is one labelled observation, not an external model API
+transcript, a prose-accuracy measure or a gate. Earlier live/scripted230
+observations are historical; the extra older A1 note makes the final entry231.
+
+The unchanged G1 browser driver passes both320/592 px six-intent journeys and
+the separate390 px closed-incident case in
+`/tmp/artroom-g2-g1-browser-compat-20261019/`. The prior G1 evidence remains
+immutable; these are new compatibility observations in this checkout.
+All original browser processes have closed successfully. The live bridge
+now pauses stdin after its caller signal so it exits without an EOF prompt.

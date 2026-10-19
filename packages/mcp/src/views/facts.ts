@@ -7,7 +7,7 @@ import { ViewError } from "./session.ts";
 export function formatFact(fact: ApplicationViewFact, values: Record<string, FieldValue | null>, now = Date.now()): string {
   if (typeof fact === "string") {
     const value = values[fact];
-    return `${fact}: ${value === null || value === undefined ? "" : typeof value === "string" ? value : canonicalize(value)}`;
+    return `${fact}: ${value === null || value === undefined ? "—" : typeof value === "string" ? value : canonicalize(value)}`;
   }
   const value = values[fact.field];
   if (value === null || value === undefined) return `${fact.label}: —`;

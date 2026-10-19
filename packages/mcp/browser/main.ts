@@ -32,7 +32,9 @@ function scheduleRefresh() {
   window.clearTimeout(refreshTimer);
   const interval = display?.card?.declared?.refresh ?? display?.surface?.refresh;
   if (alive && display?.active && interval) refreshTimer = window.setTimeout(() => {
-    if (busy) scheduleRefresh(); else void read({ refresh: true }).catch(showError);
+    if (busy) scheduleRefresh(); else void read({ refresh: true }).catch(error => {
+      if (error instanceof AppToolError && error.reason === "busy") scheduleRefresh(); else showError(error);
+    });
   }, interval);
 }
 
@@ -97,7 +99,14 @@ async function read(move?: { page?: PageKind; position?: number; refresh?: boole
   if (busy || !alive) return;
   busy = true; notice = ""; render();
   try {
-    const data = await bridge.tool("view_read", { view, ...(move ? { cut: display?.cut, ...move } : {}) });
+    let data;
+    try { data = await bridge.tool("view_read", { view, ...(move ? { cut: display?.cut, ...move } : {}) }); }
+    catch (error) {
+      // A model input can advance this retained view between app polls.
+      // Recover its current server display; never repeat a stale navigation.
+      if (!(error instanceof AppToolError) || error.reason !== "stale" || !move?.refresh) throw error;
+      data = await bridge.tool("view_read", { view });
+    }
     accept(data);
   } finally { busy = false; render(); }
 }
@@ -209,7 +218,7 @@ function render() {
   }
   const card = display.card;
   const summary = display.query.page === "summary";
-  if (!summary && (!surfaceOf() || card?.declared?.back || display.surface?.back)) {
+  if ((!summary || card?.declared?.kind === "carousel" && card.declared.back) && (!surfaceOf() || card?.declared?.back || display.surface?.back)) {
     const nav = node("nav"); nav.setAttribute("aria-label", "Card navigation");
     nav.append(button("← Back", back, "quiet")); root.append(nav);
   }

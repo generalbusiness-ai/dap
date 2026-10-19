@@ -123,8 +123,12 @@ test("native installed projection reads exact journal state and survives R2 dele
     expect(clock.value).toMatchObject({ ok: true, value: { at: first.value.value.at, sources: { board: [{ fields: {
       seenTime: activity.value.value.sources["events"]![0]!.time,
     } }] } } });
-    // This source has no journal window; fact-time alone owes history access.
-    expect(await read(clockQuery, noHistory)).toMatchObject({ status: 403, value: { ok: false, reason: "forbidden" } });
+    // Fact timestamps expose item metadata, with the same item visibility.
+    // A journal window still requires history, as checked above.
+    expect((await read(clockQuery, noHistory)).raw).toBe(clock.raw);
+    const noScopeRead = readerOf(mintSession(room.sessions, { ...actual.claims, reads: actual.claims.reads.filter(read => !["summary", "items", "query-items"].includes(read)) }));
+    expect(await read(query, noScopeRead)).toMatchObject({ status: 403, value: { ok: false, reason: "forbidden" } });
+    expect(await read(clockQuery, noScopeRead)).toMatchObject({ status: 403, value: { ok: false, reason: "forbidden" } });
     const mcpRead = await life.wait(() => mcp.reads.projection(membership, query));
     expect(canonicalize(mcpRead)).toBe(first.raw);
     expect((await life.wait(() => mcp.call("application_installation", { item: job }))).structuredContent).toMatchObject({ item: job, state: "active", scope: query.scope });
