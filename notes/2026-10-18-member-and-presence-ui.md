@@ -1,12 +1,14 @@
 # Members and presence in the interface
 
-18 October 2026. Design note for review. It sets a common framework for
-showing a member anywhere in a dap interface, and for showing a member's
-presence once the live surface exists. It fixes what the member element
-shows, where its data comes from, and how an application author gets it
-with little effort. The builder designs the element's appearance and the
-screens that use it, following the design system (section 8). Source
-facts cite `path:line` at main `4d8c878c`.
+Draft 2, 19 October 2026. Design note for review. It sets a common
+framework for showing a member anywhere in a dap interface, and for
+showing a member's presence from a recorded source now and from the live
+surface later. It fixes what the member element shows, where its data
+comes from, and how an application author gets it with little effort.
+The builder designs the element's appearance and the screens that use it,
+following the design system (section 8). Source facts cite `path:line` at
+main `4d8c878c`. Draft 2 answers F1 and F2 of the checker's review
+`868bbe12` (section 10).
 
 The presence model is the presence declaration of the
 [volatile acts note](2026-10-09-shared-language-volatile-acts.md),
@@ -39,10 +41,20 @@ membership scope and a member ID (`packages/contract/src/scope.ts:104`).
 So the data exists and the read exists. What is missing is one element
 that every surface uses, and one path that fills it.
 
-Presence is designed and not built. The roadmap's "Durability levels"
-entry says so, and the validator refuses every level but recorded. The
-element must therefore be built against the declaration's shapes now and
-show presence honestly as absent until an executor supplies it.
+Live presence is designed and not built. The roadmap's "Durability
+levels" entry says so, and the validator refuses every level but
+recorded. Recorded presence exists in one place: the grow site's
+`arrive` and `leave` acts, which are signed comments with no effects
+(`examples/grow/site.ts:10,28`), and a projection over the last 100
+entries of the site's journal filtered to those acts
+(`examples/grow/check/dap.application.json`, projection `presence`). That
+projection is recent reported activity. It is not who is in each room
+now: a member whose last arrival is older than the window has no row.
+Decision `72c9d5e5` of 19 October commissions the complete source, a
+presence item per member on the site scope, as the second G3 head of
+plan 033. The element must therefore be built against the declaration's
+shapes, take recorded presence from that item, and show presence honestly
+as unknown wherever no source answers.
 
 ## 2. The member element
 
@@ -53,8 +65,8 @@ more than the record supports.
 | Layer | Source | Shows | When the source cannot answer |
 |---|---|---|---|
 | Identity | The membership scope, recorded | Initials inside the kind's shape, the handle, the kind, and the controller for an agent | "Member unavailable" and the raw reference. Never a guessed name |
-| Standing | The roster and the member's state | Invited, active, removed or lapsed; the role; whether the member holds the action a view needs | The role is omitted. Eligibility reads "unknown" |
-| Presence | The presence declaration, or a declared recorded stand-in (section 5) | Status, whether the viewer's subject is in the member's focus, the note, and how fresh the lease is | "No live surface", or nothing. Absent is never "offline" |
+| Standing | The member item's state and the roster | Invited, active, removed or lapsed; the role; whether the member holds the action a view needs | The role is omitted. Eligibility reads "unknown" |
+| Presence | The presence declaration, or the recorded presence item (section 5) | Live: status, whether the viewer's subject is in the member's focus, the note, and how fresh the lease is. Recorded: the room reported and the entry that reported it | "Presence unavailable", or nothing. Absent is never "offline" |
 
 The shapes keep the convention of the card notes: a circle for a person,
 a square for an agent, an outlined diamond for a checker. Initials sit in
@@ -68,18 +80,22 @@ Each state has one fixed expression, so every surface reads the same:
 |---|---|
 | Invited | An outlined mark and the word "invited" |
 | Active | A filled mark and no state word |
-| Removed | A muted mark and "removed, since entry N" |
+| Removed | A muted mark and the word "removed". The entry that removed the member appears only on the record screen, and only when the bounded read of section 4 finds it |
 | Lapsed | A muted mark and "invitation lapsed" |
 | Agent | The square, and "controlled by @handle" beside every use. An agent whose controller cannot be read shows "controller unavailable" |
-| Present | A small badge with the status word: available, busy, waiting or blocked |
-| Here | A dot and the word "here" when the viewer's current subject is in the member's focus |
-| Note | The note, in muted type, after the status |
-| Several sessions | One badge, by the declaration's rule: blocked over waiting over busy over available, the union of focus, the first note. Labelled "projection" |
-| Absent | No badge. "Last seen" appears only when a lease end is known |
+| Present, live | A small badge with the status word: available, busy, waiting or blocked |
+| Here, live | A dot and the word "here" when the viewer's current subject is in the member's focus |
+| Note, live | The note, in muted type, after the status |
+| Several sessions, live | One badge, by the declaration's rule: blocked over waiting over busy over available, the union of focus, the first note. Labelled "projection" |
+| Reported, recorded | "in Room A, reported at entry N". No status, no note, no freshness, no lease. "Here" when Room A is the viewer's current subject |
+| Left, recorded | "left Room A at entry N" |
+| Not reported, recorded | "no arrival reported". Never "absent" |
+| Absent, live | No badge. "Last seen" appears only when a lease end is known |
 
-The projection rule and the labels come from section 7 of the volatile
-acts note. The element never extends a lease and never claims an intent
-beyond the reported attention.
+The live expressions and the projection rule come from section 7 of the
+volatile acts note. The element never extends a lease and never claims an
+intent beyond the reported attention. A recorded expression never carries
+a status, a freshness or a lease, because the record holds none.
 
 ## 3. What the viewer can do
 
@@ -89,9 +105,13 @@ Interactions belong to a layer.
   the only interaction a package surface gets.
 - **Standing** offers the membership acts (invite a key, set the role,
   remove) only on screens the kit owns, and only to a member whose role
-  holds the action. The shell never signs a room act for a package frame
+  holds the action. The shell signs; a package frame never does
   ([self-contained applications](2026-10-15-self-contained-applications.md),
-  section 5.1).
+  section 5.1). This is a boundary of the surface API: the API exposes no
+  membership act and no presence write for another member, and the
+  builder tests that it refuses them. It is not isolation of hostile
+  code. A declared surface is trusted inline presentation code
+  (`packages/mcp/browser/surface.ts:1-2`).
 - **Presence** offers nothing on another member. Addressing a member is
   the messaging declaration, which is later work. The viewer changes only
   their own presence: status, focus and note, on one control the kit owns.
@@ -101,14 +121,33 @@ Interactions belong to a layer.
 **The service resolves members.** Before projection data crosses to a
 frame, the service resolves every member reference in its rows into a
 display record: handle, kind, state, role, controller, and the entry that
-admitted the member. A projection field says where it comes from: a
+opened the member item. A projection field says where it comes from: a
 `party` field holds a member reference, and a journal source's `signer`
 field holds the signing member
 (`packages/bytes/src/application-projection-types.ts:14,38`). So the
-service knows which fields are members without the author saying so. The
-resolved records travel beside the rows as one bounded table, keyed by
-reference. A reference the service cannot resolve stays raw and is
-marked unavailable.
+service knows which fields are members without the author saying so. A
+field of either kind supplies a typed member reference and nothing more:
+no handle, no state, no presence. The service reads the membership scope
+for the rest, as it does for standing. The resolved records travel beside
+the rows as one bounded table, keyed by reference. A reference the
+service cannot resolve stays raw and is marked unavailable.
+
+**Standing provenance is a separate, bounded read.** A member item
+records its opening entry, its state and its revision, and no position
+of its last state change (`packages/contract/src/read.ts:41-58`).
+`remove-member` sets the state and records nothing else
+(`packages/platform/src/membership.ts:484-491`). So "removed" and
+"invitation lapsed" come from the state alone, and every element shows
+them from the resolved record. The record screen alone may add the entry
+that removed the member, from one read of the last 100 entries of the
+membership scope filtered to `remove-member` on that member. That is the
+window the projection grammar allows
+(`packages/bytes/src/application-projection-types.ts:29-33`). Budget: one
+window read when a record screen opens, and none per element. When the
+removal is older than the window, the record reads "removal entry not in
+the last 100 entries" and keeps the handle, the kind and the state.
+Example: a member removed 5,000 entries ago shows "removed" on every
+element, and that sentence on the record.
 
 **Declared views render it without a declaration.** A party field or a
 signer field renders as the member element. The view's `actor` field is
@@ -133,26 +172,67 @@ and the Counter import. That consolidation is its own request.
 
 ## 5. Where presence comes from, and renewal
 
-The element takes presence from one of two sources, chosen by the view:
+The element takes presence from one of two sources, chosen by the view.
 
 1. **The live scope**, once it exists: the `presentAt` query and the
    actor summary of the declaration (volatile acts note, sections 2 and
    7). Not available at this note.
-2. **A declared recorded projection**, as a stand-in: a projection whose
-   source is the application's own presence items or acts, with an
-   `about` field. The grow site's `arrive` and `leave` acts are the first
-   witness ([grow design](2026-10-17-grow-operation-application-design.md),
-   section 6.1). This source has no lease, so the element shows no
-   freshness and no status badge from it, only "in Room A".
+2. **The recorded presence item**, as the stand-in before the live scope:
+   one item per member on the site scope, which `arrive` opens or moves
+   and `leave` closes. Decision `72c9d5e5` commissions it as the second
+   G3 head of plan 033, after G3's first head lands and before G5. The
+   builder's request `bf420094` asks the planner to file that head. This
+   note does not commission it and does not change the grow schema. The
+   element's recorded layer waits for it.
 
-Renewal rides on the kit's refresh timer
-(`packages/mcp/browser/main.ts:25-29`). The lease is 30 seconds and the
+**What the recorded item means to the element.** The item holds the
+member and the room item. The room item's `scope` ref holds the room's
+address (`examples/grow/site.ts:16`), and that address is the subject the
+element compares with the viewer's current scope for "here". A member
+has one room per site. An arrival in Room B after an arrival in Room A
+moves the member to B. A leave names a room; a leave that names a room
+other than the member's current room is refused by name or leaves the
+item unchanged, as the second G3 head decides, so `arrive A, arrive B,
+leave A` keeps the member in B, as the site test states
+(`examples/grow/site.test.ts:41-43`). The expressions:
+
+- Reported: the item is open and names a room. "in Room A, reported at
+  entry N", where N is the item's revision entry.
+- Partial: the room item has no `scope` yet. "in Room A", and no "here".
+- Left: the item is closed. "left Room A at entry N".
+- Not reported: no item for the member. "no arrival reported".
+- Unavailable: the read refuses, or the member cannot be resolved.
+  "presence unavailable".
+
+No lease, status, note or freshness comes from the item.
+
+**What today's window read is, and is not.** The grow site's `presence`
+projection is the last 100 entries filtered to `arrive` and `leave`,
+with the signer and the room (`examples/grow/check/dap.application.json`,
+projection `presence`). G3's first head reads it for its routing rule
+and answers present, absent or unknown, never showing missing evidence
+as absence (decision `72c9d5e5`). The element does not read this window
+as occupancy. A view that shows it labels it "recent activity, last 100
+entries", and the state of a member with no row in it is "unknown". This
+note does not change G3's routing rule.
+
+**Witness for the recorded layer.** Rita arrives in Room A at entry 2.
+One hundred unrelated entries follow. A client opens at entry 103. The
+presence item shows "Rita, in Room A, reported at entry 2". The window
+read holds no Rita row and shows "unknown". Neither shows Rita as absent,
+and no read scans past the window.
+
+**Renewal is B4, and nothing today provides it.** Enter, Renew and Leave
+are acts judged under the viewer's session, with the declaration's
+ownership, generation and expected checks. A read token writes nothing.
+When the live scope exists, these acts go through a new app-only tool in
+the shape of `view_read` (`packages/mcp/src/views/tools.ts:67`), never
+the model's tool surface, because a chat host may show every tool call.
+The host calls it on the kit's refresh timer
+(`packages/mcp/browser/main.ts:25-29`): the lease is 30 seconds and the
 grow views refresh every 2 seconds, so a view that is open keeps its
-lease. Enter, Renew and Leave must not go through the model's tool
-surface, because a chat host may show every tool call. They go through
-an app-only tool, as `view_read` does today
-(`packages/mcp/src/views/tools.ts:67`), and the service issues the acts
-under the viewer's session. Closing the view leaves presence.
+lease, and closing the view leaves presence. Each call is one act; no
+lease extends without one.
 
 **A decision for review.** Whether opening a card enters presence with
 focus on that subject, as section 12 of the volatile acts note sketches,
@@ -163,21 +243,23 @@ set busy or blocked by hand.
 
 ## 6. Use cases
 
-1. **A member list that says where each member is active.** The grow
-   site overview already shows who is in each room from recorded arrive
-   and leave acts. With the live source it reads "Maya, in Room A, busy,
-   looking at zone 2, seen 12 s ago". It reads the roster and
-   `presentAt` for each room address. This is the G3 routing witness in
-   [plan 033](plans/033-2026-10-18-grow-room-demo.md): tasks go to the
-   tenders whose focus is the room and who hold the tending action.
+1. **A member list that says where each member is reported.** From the
+   presence item it reads "Maya, in Room A, reported at entry 412". With
+   the live source it adds "busy, looking at zone 2, seen 12 s ago". It
+   reads the roster, the presence items, and later `presentAt` for each
+   room address. The G3 routing rule of
+   [plan 033](plans/033-2026-10-18-grow-room-demo.md) is a separate
+   thing: it selects who may take a task, and this note does not change
+   it.
 2. **One member wherever they are identified.** The actor on an alert
    card, the performer on a task, each entry of a log, the requested
    approvers on a decision (people only), an agent with its controller on
    a work row. All one element, all resolved by the service.
-3. **A member's record.** A kit `record` screen over the membership
-   item: handle, kind, role, controller, keys and their states, the entry
-   that admitted the member, and current presence. The membership acts
-   appear here, to an admin.
+3. **A member's record.** A kit `record` screen over the member item:
+   handle, kind, role, controller, keys and their states, the entry that
+   opened the member, the removal entry when the bounded read of section
+   4 finds it, and current presence. The membership acts appear here, to
+   an admin.
 4. **The viewer's own presence.** A control in the kit's header: status
    and note, and a line that says what focus the service holds for them.
 5. **Hosted agents.** "3 requested, 2 ready, 1 needs attention" is
@@ -194,6 +276,8 @@ set busy or blocked by hand.
 | Mounted view | 64 KiB | `packages/mcp/src/views/session.ts:52` |
 | Projection | 8 sources, 32 fields, 100 rows | `packages/contract/src/application-projection.ts:6-7` |
 | Members resolved per view | 32 distinct, with an overflow count | This note |
+| Removal provenance read | The last 100 entries of the membership scope, once per record screen | This note, section 4 |
+| Recorded presence window, not an occupancy source | 100 entries | `examples/grow/check/dap.application.json`, projection `presence` |
 | Focus addresses per session | 8 | Presence declaration |
 | Note | 160 bytes | Presence declaration |
 | Lease | 30 seconds | Presence declaration |
@@ -224,15 +308,20 @@ packet comes first and is reviewed before any build.
    controller, and the grid surface shows a bench's last prober, with no
    change to the grow package's HTML beyond one call.
 3. **B2. Kit-owned member screens.** The member list and the member
-   record, with the membership acts offered by standing.
-4. **B3. The presence layer against the declaration.** The element's
-   presence expressions, fed by the recorded stand-in source. Witness:
-   the grow site overview shows who is in each room through the element.
+   record, with the membership acts offered by standing, the removal
+   provenance read of section 4, and a removed member whose removal is
+   older than the window.
+4. **B3. The recorded presence layer.** The element's recorded
+   expressions, fed by the presence item of the second G3 head. Starts
+   after that head lands. Witnesses: the grow site overview shows who is
+   reported in each room through the element, and the late-opening
+   client of section 5.
 5. **B4. Live presence.** The live source and renewal through the
    app-only tool. Waits for the live scope's executor, which plan 033
    does not commission. Not commissioned by this note.
 
-B1 to B3 need nothing that is not on main.
+B1 and B2 need nothing that is not on main. B3 needs the presence item
+of the second G3 head.
 
 ## 9. Open points
 
@@ -241,9 +330,34 @@ B1 to B3 need nothing that is not on main.
   list is about standing.
 - Where the shared browser package for the element lives, and when the
   Page and the Counter adopt it.
-- Whether a declared view may name a second presence projection for a
-  list, or whether the service derives "where active" from the focus
-  addresses alone.
+- Whether a declared view may name the presence items for a list, or
+  whether the service derives "where reported" from the items alone.
+
+## 10. Changes in draft 2
+
+Review `868bbe12` of draft 1 requested two changes.
+
+- **F1.** Draft 1 took the grow site's `arrive` and `leave` window as
+  the recorded source and said the site overview already shows who is
+  in each room. It does not: the window is the last 100 entries and has
+  no occupancy state. Draft 2 takes the presence item of the second G3
+  head as the recorded source (section 5), states its subject binding,
+  its one-room and leave semantics and its reported, partial, left,
+  not-reported and unavailable expressions (sections 2 and 5), labels the
+  window as recent activity with unknown state outside it, adds the
+  late-opening client witness, commissions no grow change itself, and
+  moves B3 after the second G3 head (section 8). G3's routing and live
+  attention stay as they are.
+- **F2.** Draft 1 wrote "removed, since entry N" with no source for N.
+  Draft 2 shows "removed" from the state alone, adds the bounded removal
+  provenance read for the record screen with its window, its budget and
+  its unavailable sentence, keeps identity and state when that read finds
+  nothing, and adds the example of a removal older than the window
+  (sections 2, 4, 7 and 8).
+- Also from the review: section 4 says a party or signer field supplies
+  only a typed reference; section 3 names the kit-owned controls as an
+  API boundary to test, not hostile-code isolation; section 5 says
+  renewal is B4 and that `view_read` provides none of it.
 
 ## Source
 
@@ -256,7 +370,9 @@ Written by the planner against main `4d8c878c` from the
 [self-contained applications note](2026-10-15-self-contained-applications.md),
 [declared application views](../docs/application-views.md), the card kit
 (`packages/mcp/browser`, `packages/mcp/src/views`), the membership
-definition (`packages/platform/src/membership.ts`), and the gitseq
+definition (`packages/platform/src/membership.ts`), the grow site
+(`examples/grow/site.ts`, `examples/grow/check/dap.application.json`),
+decision `72c9d5e5` and review `868bbe12` in the workroom, and the gitseq
 presence model, whose leased sessions, four statuses, focus and note the
 declaration already follows. Nothing in this note was run against the
 dap runtime.
