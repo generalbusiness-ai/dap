@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bf8a9d1e1f6602784e816e93ead0593461e99c08","text":"Merge retired a covered predecessor; the successor is at packages/cli/test/application-examples.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:e7db27c404c2f2e8457d81174bb5e35d9be0288b","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-19-g3-durable-presence.md."}
