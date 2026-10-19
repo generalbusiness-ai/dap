@@ -53,7 +53,20 @@ export function declarations(definitions: readonly ApplicationDefinition[], boun
     for (const act of Object.values(parsed["acts"])) if (isRecord(act) && typeof act["grant"] === "string") actions.add(act["grant"]);
     for (const handler of [...Object.values(parsed["acts"]), ...Object.values(parsed["receives"])]) {
       if (!isRecord(handler) || !Array.isArray(handler["sends"])) return fail();
-      for (const send of handler["sends"]) {
+      const sends = [...handler["sends"]];
+      if (Object.hasOwn(handler, "late")) {
+        const late = handler["late"];
+        if (!isRecord(late)) return fail();
+        if (Object.hasOwn(late, "then")) {
+          const branch = late["then"];
+          if (!isRecord(branch)) return fail();
+          if (Object.hasOwn(branch, "sends")) {
+            if (!Array.isArray(branch["sends"])) return fail();
+            sends.push(...branch["sends"]);
+          }
+        }
+      }
+      for (const send of sends) {
         if (!isRecord(send)) return fail();
         if (!Object.hasOwn(send, "create")) continue;
         const create = send["create"];

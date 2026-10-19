@@ -19,7 +19,7 @@ export const METRIC_PLACES = ["create", "acts", "preparations", "rpc:create", "r
 const REASONS: Record<RefusalReason | UnavailableReason | MismatchReason | ReadRefusal | SessionRefusal, true> = {
   "revision-moved": true, alias: true, "duplicate-relation": true, "required-unset": true, "scope-full": true,
   "bad-intent": true, misaddressed: true, expired: true, "scope-refused": true, "unknown-act": true, "bad-field": true,
-  "no-item": true, final: true, "fact-mismatch": true, unauthorized: true, "guard-failed": true, "capability-refused": true,
+  "no-item": true, final: true, "fact-mismatch": true, unauthorized: true, "guard-failed": true, "capability-refused": true, late: true,
   "slot-full": true, "type-full": true, "entry-too-large": true, "send-unresolved": true, "unknown-message": true,
   "unsupported-definition": true, "bad-input": true, "dependency-unavailable": true, busy: true, "clock-behind": true,
   "scope-provisional": true, "guard-incomplete": true, "authority-unavailable": true, unavailable: true,

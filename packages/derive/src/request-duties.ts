@@ -2,6 +2,7 @@
 import type { Entry, SendForm } from "@generalbusiness/dap-contract";
 import { isPlatformDefinition } from "@generalbusiness/artroom-bytes";
 import { bound } from "./handlers.ts";
+import { handlerBranch } from "./handler-branch.ts";
 import { AmountError, NOTHING, requestEntries, subtract, type Amount } from "./held.ts";
 import { formOf } from "./sends.ts";
 import type { ValidDefinition } from "./validate/index.ts";
@@ -19,7 +20,11 @@ export function requestReservation(definition: ValidDefinition, entry: Entry, n:
   } else if (input.type === "delivery" && (input.message.class === "request" || input.message.class === "advisory")) {
     const handler = bound(definition, input.message, input.from)?.handler;
     const named = Object.entries(definition.declared.receives).find(([, form]) => form === handler);
-    if (named) { path = `receives.${named[0]}`; forms = named[1].sends; }
+    if (named) {
+      const late = "decision" in input ? input.late : undefined;
+      path = `receives.${named[0]}${late ? ".late.then" : ""}`;
+      forms = handlerBranch(named[1], late)?.sends;
+    }
   } else if (input.type === "outcome") {
     // A native outcome without a data send mark has no result clause,
     // exactly as runClause interprets it. Its owner funds this request.
