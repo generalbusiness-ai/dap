@@ -16,8 +16,9 @@ evidence. The fourth gate passed at the earlier code/test head. Complete
 review `5396f5ed` requested the command-ordering correction. Its gate
 passed, then complete review `0ff93247` found a residual independently
 conditional targetAt write. The current fresh revision addresses that
-finding and two additional self-checks; its new gate is pending. Earlier
-sealed candidates, dependencies and evidence remain frozen forever.
+finding and two additional self-checks; its new whole gate passes. Complete
+exact-head review remains ahead. Earlier sealed candidates, dependencies
+and evidence remain frozen forever.
 
 ## Conditional coupling correction after complete review
 
@@ -97,8 +98,45 @@ checks 127 package.json files including embedded metadata and 28 internal
 links (13 workspace links plus executable links), with zero installs and
 unchanged lock/stamp. Four copied Vite caches are cleared before execution.
 This is no tarball integrity claim. All originals are terminal before each
-source/dependency edit. A new original whole gate and one complete exact-head
-review remain ahead; no landing, push or deployment yet.
+source/dependency edit. The new whole gate passes as recorded below. One
+complete exact-head review remains ahead; no landing, push or deployment yet.
+
+## Passing gate for complete coupling admission
+
+The required whole gate passes at code/test head
+`8a3aad1a5246243da9306714fd29c97d66791589`, tree
+`ab14afc7be9e65ffe97f97d223fd6131852a5574`. Original89038 naturally exits
+zero, clean before/after with the same head and no source/dependency edit,
+install or related execution during the run. Only this evidence note
+changes afterward; no suite is repeated for that note-only follow-up.
+
+Vitest reports 401 files and 1,939 cases passed, one file/three cases
+skipped. Chained Node checks pass 31 and Counting passes 55. Whitespace
+passes; full typecheck is 8.3 seconds elapsed/32.4 CPU and the test step
+is 503.1 seconds elapsed/701.0 CPU. Vitest reports 496.45 seconds.
+
+One actual npm run gate subprocess, measured with Python monotonic time
+and RUSAGE_CHILDREN deltas, takes 511.6560 seconds elapsed and 733.7086
+CPU seconds (632.2517 user + 101.4569 system), excluding pre/post Git
+checks. This is separate from its per-step figures. The shared macOS
+27.0.1 arm64 machine reports 18 CPUs; initial load averages are 1.0000,
+1.5029 and 1.6787. Focused/build caches are warm. There is no isolation,
+product-latency or broad stability claim. The adopted functional scope
+30-second framework allowance and all explicit case, semantic, Node and
+scope-denial limits remain unchanged. Earlier three failed gates, both
+prior passing heads, both complete reviews and their reproductions remain
+separate evidence.
+
+Log `/tmp/artroom-g5a-conditional-complete-gate-20261019.log`, SHA-256
+`f2cba71698d129caf5c72ec8fe266da97ce4d0f91d14d0c98a6842acc0a1d432`.
+Raw directory
+`/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.T09WOik0V2`;
+Counting evidence is sibling `artroom-counting-node-n5trws`.
+Closure `/tmp/artroom-g5a-conditional-gate-process-closure-20261019.json`,
+SHA-256 `9c425f602c408aeec9474ce4fab3997d595a1e8f5d7c49d2a5fdb5f0d4f1781b`.
+Machine receipt `/tmp/artroom-g5a-conditional-gate-machine-20261019.json`.
+Raw warnings and scripted fault output remain evidence; no warning-free
+claim is made. No landing, push, deployment or physical device action occurs.
 
 ## Command-ordering correction after complete review
 
