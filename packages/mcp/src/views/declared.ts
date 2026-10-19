@@ -1,8 +1,8 @@
 /** The generic host interpreter for a verified declared presentation. It
  * runs no package code. Its ports are native reads, not application adapters. */
-import type { ApplicationProjectionData, ApplicationProjectionQuery, ApplicationProjectionRead, ApplicationProjectionRow, Digest, FieldValue, ScopeRef } from "@generalbusiness/dap-contract";
+import type { ApplicationProjectionData, ApplicationProjectionQuery, ApplicationProjectionRead, ApplicationProjectionRow, Digest, FieldValue, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
 import { applicationItemSnapshot } from "@generalbusiness/artroom-client";
-import { canonicalize, isLocalId, parseStrict, unb64url } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isLocalId, isMemberRef, parseStrict, unb64url } from "@generalbusiness/artroom-bytes";
 import type { ApplicationInstallation } from "@generalbusiness/artroom-bytes/application";
 import { applicationProjectionId, applicationViewFactField, isApplicationJournalSource, readApplicationPackage2, type ApplicationView, type ApplicationViewAct, type PackedApplication2 } from "@generalbusiness/artroom-bytes/application-v2";
 import { admit, evaluate, RuleEvalError } from "@generalbusiness/dap-derive/rule";
@@ -26,6 +26,9 @@ export interface DeclaredViewPort {
   projection(query: ApplicationProjectionQuery): Promise<ApplicationProjectionRead>;
   /** Current native role actions. Unknown standing returns no actions. */
   actions(): Promise<readonly string[]>;
+  /** Authenticated native member and current grants; never caller arguments.
+   * Unavailable identity must not select a member's carousel. */
+  viewer?(): Promise<{ member: MemberRef; grants: readonly string[] } | null>;
 }
 const text = (value: unknown): string => value === null || value === undefined ? "" : typeof value === "string" ? value : canonicalize(value);
 const input = (row: ApplicationProjectionRow): Record<string, FieldValue | null> => ({ ...row.fields, id: row.id, type: row.type, state: row.state, revision: row.revision, ...(row.entry ? { time: row.time!, on: row.on! } : {}) });
@@ -51,7 +54,10 @@ export class DeclaredViewSource implements ViewSource {
   }
   constructor(bytes: Uint8Array, release: Digest, readonly port: DeclaredViewPort) {
     this.packet = readApplicationPackage2(bytes, release, { bytes: 4 * 1024 * 1024 });
-    for (const view of Object.values(this.packet.package.presentation.views)) for (const control of view.acts) admit(control.when);
+    for (const view of Object.values(this.packet.package.presentation.views)) {
+      if (view.kind !== "surface" && view.for) admit(view.for);
+      for (const control of view.acts) admit(control.when);
+    }
   }
   #view(query: ViewQuery): ApplicationView {
     const views = this.packet.package.presentation.views;
@@ -83,9 +89,27 @@ export class DeclaredViewSource implements ViewSource {
     if (reply.value.projection !== applicationProjectionId(projection) || canonicalize(reply.value.scope) !== canonicalize(selection.scope)) throw new ViewError("unavailable", "The read does not name this declared projection and scope.");
     const nativeRows = reply.value.sources[view.item];
     if (!nativeRows) throw new ViewError("unavailable", "The read omitted the declared item source.");
-    const rows = view.kind !== "surface" && view.order ? orderedViewRows(nativeRows, view.order) : nativeRows;
+    let rows = view.kind !== "surface" && view.order ? orderedViewRows(nativeRows, view.order) : nativeRows;
     if (rows.some(row => isApplicationJournalSource(projection.sources[view.item]!) !== !!row.entry)) throw new ViewError("unavailable", "The read confused journal entries with native items.");
-    return { view, root: install.scope, scope: selection.scope, definition: projection.definition, reply, rows };
+    const routed = view.kind === "carousel" && !!view.for;
+    if (view.kind === "carousel" && view.for) {
+      const viewer = await this.port.viewer?.();
+      if (!viewer || !isMemberRef(viewer.member) || canonicalize(viewer.member.membership) !== canonicalize(install.membership)
+        || !Array.isArray(viewer.grants) || viewer.grants.some(grant => typeof grant !== "string")) throw new ViewError("unavailable", "The authenticated carousel viewer is unavailable.");
+      const selected: ApplicationProjectionRow[] = [];
+      for (const row of rows) {
+        let result: unknown;
+        try { result = (await evaluate(view.for, { viewer, item: input(row) })).value; }
+        catch (error) {
+          if (!(error instanceof RuleEvalError)) throw error;
+          throw new ViewError("unavailable", "The declared carousel rule is unavailable.");
+        }
+        if (result !== true && result !== false) throw new ViewError("unavailable", "The declared carousel rule must return a boolean.");
+        if (result) selected.push(row);
+      }
+      rows = selected;
+    }
+    return { view, root: install.scope, scope: selection.scope, definition: projection.definition, reply, rows, routed };
   }
   /** Only selected native item metadata and ref slots resolve subjects. This
    * is not an Item read and supplies no opened/attributed or review claim. */
@@ -136,9 +160,10 @@ export class DeclaredViewSource implements ViewSource {
     return { label: series.label, scale: series.scale, unit: series.unit, window, samples, fallback };
   }
   async read(query: ViewQuery): Promise<Projection> {
-    const { view, root, scope, definition, reply, rows } = await this.#read(query);
+    const { view, root, scope, definition, reply, rows, routed } = await this.#read(query);
     const backScope = this.#backScope(view, scope, root), surface = this.#surface(query.screen, view, backScope);
-    if (!rows.length) return { status: "empty", position: 0, count: 0, data: reply.value,
+    const points = [{ scope: scope.scope, ...reply.value.at }];
+    if (!rows.length) return { status: "empty", position: 0, count: 0, scope, points, ...(!routed ? { data: reply.value } : {}),
       ...(surface ? { surface } : {}),
       fallback: view.kind === "log" ? "This declared log has no matching entries in its recent window." : "This declared view has no matching items." };
     if (!Number.isSafeInteger(query.position) || query.position < 0 || query.position >= rows.length) throw new ViewError("shape", "The declared view position is outside its complete projection.");
@@ -153,7 +178,7 @@ export class DeclaredViewSource implements ViewSource {
       reasons: view.kind === "surface" ? [] : view.facts.map(fact => formatFact(fact, values, now)),
       projection: [{ scope: scope.scope, ...reply.value.at }], reviewIntended: [], unavailable: [], waitsOn: waiting ? [waiting] : [], settles: [], actions, fallback,
       declared: { kind: view.kind, source: view.item, context: template(view.context, row, waiting), actor: view.kind === "surface" || view.actor === null ? null : values[view.actor] ?? null,
-        refresh: view.refresh, display: view.display, back: view.back, backScope, data: reply.value,
+        refresh: view.refresh, display: view.display, back: view.back, backScope, scope, ...(routed ? { routed: true } : {}), data: reply.value,
         ...(series ? { series } : {}),
         ...(view.kind !== "surface" && view.links ? { links: view.links.flatMap(link => {
           const id = row.fields[link.field];
@@ -168,7 +193,7 @@ export class DeclaredViewSource implements ViewSource {
         }) } : {}),
         ...(surface ? { resource: surface.resource, opens: surface.opens, surface } : {}) },
     };
-    return { status: "ready", position: query.position, count: rows.length, card, fallback };
+    return { status: "ready", position: query.position, count: rows.length, scope, points, card, fallback };
   }
   /** Called by the mounted-view host inside the custody build, immediately
    * before signing. Native expected revisions and grants still judge submit. */

@@ -74,7 +74,7 @@ function checked(projection: Projection, query: ViewQuery): Projection {
     card.actions = card.actions.filter((action) => {
       if (query.page === "diff") return false;
       if (card.unresolvedOriginal) return action.purpose === "check-original";
-      if (query.page === "summary" && !(card.declared?.kind === "carousel" && action.parameters)) return false;
+      if (query.page === "summary" && !(card.declared?.kind === "carousel" && (action.parameters || card.declared.routed))) return false;
       if (projection.status !== "ready") return false;
       if (query.page === "updates") return action.purpose === "mark-reviewed" && card.unavailable.length === 0 && (card.entries?.length ?? 0) > 0 && canonicalize(mergeRanges(card.reviewIntended)) === canonicalize(ranges(card.entries ?? []));
       if (action.purpose === "mark-reviewed") return false;
@@ -137,7 +137,7 @@ export class ViewSessions {
     const context: CardContext = {
       view: instance.key,
       screen: query.screen, page: query.page, status: projection.status, identity: card ? this.#identity(card) : null,
-      projection: card?.projection.map(({ scope, seq, hash }) => ({ scope, seq, hash })) ?? (projection.data ? [{ scope: projection.data.scope.scope, ...projection.data.at }] : []),
+      projection: card?.projection.map(({ scope, seq, hash }) => ({ scope, seq, hash })) ?? projection.points ?? (projection.data ? [{ scope: projection.data.scope.scope, ...projection.data.at }] : []),
       entriesRead: entries, presented: entries.map((range) => ({ ...range })),
       reviewIntended: query.page === "updates" ? structuredClone(card?.reviewIntended ?? []) : [],
       unavailable: structuredClone(card?.unavailable ?? []), waitsOn: [...(card?.waitsOn ?? [])], settles: [...(card?.settles ?? [])],
@@ -145,8 +145,14 @@ export class ViewSessions {
       ...(card?.declared ? { note: card.declared.context } : {}),
       ...(instance.receipt ? { receipt: instance.receipt } : {}),
     };
+    const displayedCard: Display["card"] = card ? { ...card, actions: card.actions.map(({ id, label, purpose, parameters }) => ({ id, label, purpose, ...(parameters ? { input: "chat" as const } : {}) })) } : undefined;
+    if (displayedCard?.declared?.routed) {
+      const { data: _data, ...declared } = displayedCard.declared;
+      displayedCard.declared = declared;
+    }
     return structuredClone({ view: instance.key, cut: instance.cut, active: this.#active(instance), query, status: projection.status, position: projection.position, count: projection.count,
-      ...(card ? { card: { ...card, actions: card.actions.map(({ id, label, purpose, parameters }) => ({ id, label, purpose, ...(parameters ? { input: "chat" as const } : {}) })) } } : {}), fallback: projection.fallback, context,
+      ...(displayedCard ? { card: displayedCard } : {}), fallback: projection.fallback, context,
+      ...(projection.scope ? { scope: projection.scope } : {}),
       ...(projection.data ? { data: projection.data } : {}),
       ...(projection.surface ? { surface: projection.surface } : {}),
       ...(instance.receipt ? { receipt: instance.receipt } : {}) });

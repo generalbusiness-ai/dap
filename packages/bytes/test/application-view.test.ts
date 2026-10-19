@@ -30,6 +30,15 @@ const views = () => ({ note: {
   context: "Note {id}", fallback: "Note {id}: {text}", waiting: {}, refresh: 2000, display: "inline", back: "note",
 } });
 
+test("member routing is bounded carousel data over a complete native item source", () => {
+  const given = { ...views().note, kind: "carousel", for: "'app.edit' in viewer.grants and item.state = 'open'" };
+  const many = readApplicationProjection({ ...projection, sources: { note: { ...projection.sources["note"]!, read: "many", limit: 10 } } });
+  expect(bindApplicationViews({ note: given }, { "room.note": many }, parts)["note"]).toMatchObject({ for: given.for });
+  expect(() => bindApplicationViews({ note: given }, { "room.note": projection }, parts)).toThrow(ApplicationViewError);
+  for (const kind of ["card", "record", "log", "surface"]) expect(() => readApplicationViews({ note: { ...given, kind } })).toThrow(ApplicationViewError);
+  for (const value of [null, false, {}, "", "a".repeat(2049)]) expect(() => readApplicationViews({ note: { ...given, for: value } })).toThrow(ApplicationViewError);
+});
+
 test("carousel order binds only to a complete item source's integer or timestamp fields", () => {
   const timed = { ...definition, items: { ...definition.items, note: { ...definition.items["note"]!, values: {
     ...definition.items["note"]!.values, seen: { required: false, fixed: false, of: { type: "time" as const } },

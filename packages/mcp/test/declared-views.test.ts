@@ -42,7 +42,7 @@ test("declared fallback and identity open quietly; the app gets the exact projec
   expect(JSON.stringify(opening)).not.toContain("lastNumber");
   expect(JSON.stringify(opening)).not.toContain("42");
   const detail = await f.sessions.read("first", 0, { page: "item" });
-  expect(detail.card?.declared?.data.sources["board"]![0]!.fields).toEqual({ lastNumber: 42 });
+  expect(detail.card?.declared?.data?.sources["board"]![0]!.fields).toEqual({ lastNumber: 42 });
   expect(detail.card?.reasons).toEqual(["lastNumber: 42"]);
   expect(detail.card?.actions.map(action => action.id)).toEqual(["pause"]);
   expect((await f.sessions.act("first", detail.cut, "pause")).result.structuredContent["answer"]).toBe("accepted");

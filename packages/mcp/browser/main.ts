@@ -128,9 +128,9 @@ async function declaredMode() {
   catch (error) { notice = error instanceof Error ? error.message : String(error); }
   render();
 }
-async function openDeclared(screen: string, items?: Readonly<Record<string, number>>, scope: ScopeRef | undefined = display?.card?.declared?.data.scope ?? display?.data?.scope, remember = true) {
+async function openDeclared(screen: string, items?: Readonly<Record<string, number>>, scope: ScopeRef | undefined = display?.card?.declared?.scope ?? display?.scope ?? display?.data?.scope, remember = true) {
   if (busy || !alive) return;
-  const selected = display?.query.scope ?? display?.card?.declared?.data.scope ?? display?.data?.scope;
+  const selected = display?.query.scope ?? display?.card?.declared?.scope ?? display?.scope ?? display?.data?.scope;
   const previous: DeclaredAddress | undefined = display ? { screen: display.query.screen, ...(display.query.items ? { items: display.query.items } : {}), ...(selected ? { scope: selected } : {}) } : undefined;
   const key = crypto.randomUUID();
   busy = true; notice = ""; render();
@@ -227,7 +227,7 @@ function render() {
     try {
       const panel = surfaces.show(surface, data, async (name, items, scope) => {
         if (!busy && alive && display?.active) await openDeclared(surface.opens[name]!, items, scope ?? data.scope);
-      }, () => alive && !!display?.active && surfaceOf()?.screen === surface.screen && scopeKey(display.card?.declared?.data.scope ?? display.data?.scope) === scopeKey(data.scope));
+      }, () => alive && !!display?.active && surfaceOf()?.screen === surface.screen && scopeKey(display.card?.declared?.scope ?? display.scope ?? display.data?.scope) === scopeKey(data.scope));
       panel.inert = busy || !display.active;
       root.append(panel);
     } catch (error) { root.append(node("p", error instanceof Error ? error.message : "The declared surface is unavailable.", "notice")); }

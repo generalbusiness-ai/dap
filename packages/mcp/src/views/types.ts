@@ -68,6 +68,9 @@ export interface Card {
     display: "inline" | "fullscreen";
     back: string | null;
     backScope?: ScopeRef;
+    scope: ScopeRef;
+    /** Server-held native data is omitted from a routed display. */
+    routed?: true;
     data: ApplicationProjectionData;
     series?: { label: string; scale: number; unit: string; window: number; fallback: string;
       samples: readonly { value: number; time: string; entry: Readonly<FactRef> }[] };
@@ -95,6 +98,9 @@ export interface Projection {
   fallback: string;
   /** Empty declared views still retain their exact native data and head. */
   data?: ApplicationProjectionData;
+  /** Exact read metadata remains available without exposing source rows. */
+  scope?: ScopeRef;
+  points?: ReadPoint[];
   surface?: DeclaredSurface;
 }
 /** A trusted application's projection adapter. Reads use the service's normal authenticated tool path. */
@@ -135,9 +141,13 @@ export interface Display {
   status: Projection["status"];
   position: number;
   count: number;
-  card?: Omit<Card, "actions"> & { actions: (Pick<CardAction, "id" | "label" | "purpose"> & { input?: "chat" })[] };
+  card?: Omit<Card, "actions" | "declared"> & {
+    declared?: Omit<NonNullable<Card["declared"]>, "data"> & { data?: ApplicationProjectionData };
+    actions: (Pick<CardAction, "id" | "label" | "purpose"> & { input?: "chat" })[];
+  };
   fallback: string;
   data?: ApplicationProjectionData;
+  scope?: ScopeRef;
   surface?: DeclaredSurface;
   context: CardContext;
   receipt?: string;
