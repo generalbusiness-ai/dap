@@ -127,9 +127,14 @@ try {
     await app.getByRole('button', { name: 'Open heater controls', exact: true }).click();
     await app.getByRole('heading', { name: /^heater 2$/i }).waitFor();
     const fixed = async (label, kind, on, fields) => {
-      const seq = session.scope.state.scope().head.seq + 1;
+      const seq = session.scope.state.scope().head.seq + 1, revision = session.scope.state.item(on).revision + 1;
       await app.getByRole('button', { name: label, exact: true }).click();
       await app.getByText(`accepted (entry ${seq})`, { exact: false }).waitFor();
+      // The receipt precedes the host's post-act refresh. Chaining another
+      // click requires the new native target/revision and the idle card.
+      await app.getByText(`target: ${fields.target}`, { exact: true }).waitFor();
+      await app.locator('.eyebrow code.revision').filter({ hasText: new RegExp(`^${revision}$`) }).waitFor();
+      await app.locator('#card-root[aria-busy=false]').waitFor();
       assert.deepEqual(operator.submitted.at(-1).intent.fields, fields);
       assert.equal(operator.submitted.at(-1).intent.kind, kind); assert.equal(operator.submitted.at(-1).intent.on, on);
     };

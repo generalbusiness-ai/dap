@@ -380,3 +380,45 @@ stable Git snapshot. Its files, sealer, source checkout and dependency view
 freeze at sealing. Unlisted adjacent files and private dependency data are
 outside the grant. Only this note differs from the passing code/test head.
 No checker approval, native landing, publication or deployment is claimed yet.
+
+
+## F1: wait for the completed post-act refresh
+
+Checker report `e5e5fde6355142c63075ed01d05fd46fe7d04f04` requests a narrow
+browser-witness correction. Its unchanged run accepted Close vent at entry
+152, then timed out waiting for entry 153; only five view-act calls occurred.
+The next click raced the post-act display-mode/read refresh. This does not
+show a native admission defect. The earlier owner pass remains a historical
+pass of that run; it does not make the unchanged witness reliable.
+
+The corrected `fixed()` helper waits for the receipt, the exact displayed
+target, the next native item revision and `#card-root[aria-busy=false]` before
+continuing. All six-intent and exact-fields assertions remain. No production
+source or native guard changes. New checkout
+`/tmp/artroom-builder-g1-browser-refresh-20261019` preserves the previous
+candidate, its 608-leaf map and sealer unchanged. Reviewed Main `a93b6359`
+adds only the three approved design-document corrections before this work.
+
+The checker granted exactly ten feedback leaves, map
+`/private/tmp/checker-g1-review-feedback-map-20261019.json`, SHA-256
+`7d58594f55363c0420494734612afc91743bcab600badb5591431b0ba86931b4`.
+All ten, 176,649 bytes, were hash-verified and stable-copied under
+`/tmp/artroom-g1-browser-refresh-feedback-20261019/`; the unchanged failure
+image, text, five calls and empty error/chat lists were inspected. The checker
+also retained an independent passing two-wait experiment and native custody
+probe. No checker driver or sealer was executed.
+
+`/tmp/artroom-g1-browser-refresh-corrected-20261019/` passes both 320/592 px
+journeys, with six exact operator intents, two then three zone samples, native
+incident closure 137–149, Room head 155 replay consistent and Site head 5
+showing zero alerts. The separate 390 px closed scene remains head 163.
+The new dependency view is a private APFS COW copy: the maintained 106-version
+and 13-internal-link audit matches the unchanged lock. Four nested named
+manifests (TypeScript's vendored JSON-RPC and three Blake3 WASM variants)
+also match the donor byte-for-byte; all 110 manifest copies have distinct
+inodes. No packages were installed. The initial recursive audit correctly
+stopped when it counted these four extras instead of 106; the completed audit
+records them explicitly:
+`/tmp/artroom-g1-browser-refresh-dependency-view-20261019.json`, SHA-256
+`121df6b2ecc6279972aaf01d2e481155ae9a1449b7c9f91b0a9a7a1fc5b19098`.
+A gate on the correction head follows; this paragraph does not claim it passed.
