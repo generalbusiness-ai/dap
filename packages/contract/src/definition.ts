@@ -105,6 +105,8 @@ export interface ActType {
 
 /** A handler: what a delivered message of one class and name does, from a scope of one kind (section 6.4). */
 export interface ReceiveType {
+  /** Tell handlers may suppress an older source pair after a newer one applied. */
+  order?: "arrival" | "source";
   message: string;                         // a `tell` message's name, or a relationship's name
   class: "tell" | "relate" | "advisory";   // for an advisory, `message` is its type: `index` or `notify`
   from: { kind: ScopeKind; under?: string };
@@ -164,7 +166,7 @@ export type Operand =
 export type Part = EntryPart | { of: EntryPart; then: "scope" | "seq" };
 export type EntryPart =
   | "ref" | "scope" | "seq"                        // read from the reference; nothing is fetched
-  | "kind" | "intent" | "on"
+  | "kind" | "intent" | "on" | "time"
   | { field: string }
   | { opened: string }
   | { set: { item: Operand; slot: string } }

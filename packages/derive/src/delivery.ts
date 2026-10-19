@@ -184,6 +184,17 @@ function deliveryJudged(view: StateView, definition: ValidDefinition, delivered:
   const given = b.fields;
   if (!given) return refuse({ code: "bad-field" });
 
+  // A handler's dispatch is unique for this message and sender kind. Keep
+  // source incarnations separate; arrival order remains the default.
+  if (message.type === "tell" && handler.order === "source") {
+    const highest = view.sourceOrder(from.at, b.kind);
+    if (highest && (from.seq < highest.seq || (from.seq === highest.seq && n < highest.n))) {
+      // A terminal suppressed request still consumes its numbered receiver
+      // decision. Preserve the same native bookkeeping as a refusal.
+      return decide("superseded", undefined, reserved ? recordEffects(reserved.capability, [reserved.refused]) : [], [], [], false, [], reserved !== null);
+    }
+  }
+
   const platform: Effect[] = [];
   let first = false;
   /** Section 17.3: the update takes a copy that awaits its settlement out of the states that its handler's `settles` lists. */

@@ -205,6 +205,11 @@ export function applyEntry(writer: StateWriter, definition: ValidDefinition, ent
   } else if (input.type === "delivery") {
     // Section 7.3: the owner entry this delivery consumed is recorded, and is never consumed again.
     writer.putDecided(input.from, input.n, entry.seq);
+    if ("decision" in input && input.decision === "applied" && input.message.type === "tell" && isObject(input.message.body)) {
+      const message = input.message.body["message"];
+      const handler = Object.values(definition.declared.receives).find(handler => handler.class === "tell" && handler.message === message && handler.from.kind === input.from.at.kind);
+      if (handler?.order === "source") writer.putSourceOrder({ from: { scope: input.from.at.scope, inc: input.from.at.inc }, handler: handler.message, seq: input.from.seq, n: input.n });
+    }
     if ("clause" in input) {
       const of = input.message.of;
       const request = writer.request(of.from.seq, of.n);
