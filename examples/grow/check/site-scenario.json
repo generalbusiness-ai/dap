@@ -63,7 +63,7 @@
       "label": "Test site"
     }
   },
-  "name": "grow-site-queued-creation",
+  "name": "grow-site-recorded-presence",
   "steps": [
     {
       "projection": {
@@ -132,11 +132,46 @@
     },
     {
       "act": {
+        "actor": "operator",
+        "kind": "provision-presence",
+        "fields": {
+          "member": {
+            "$member": "day"
+          }
+        }
+      },
+      "expect": {
+        "answer": "accepted"
+      }
+    },
+    {
+      "assert": {
+        "item": 4,
+        "state": "unknown",
+        "refs": {
+          "room": null,
+          "reportedAt": null
+        },
+        "parties": {
+          "member": {
+            "$member": "day"
+          }
+        }
+      }
+    },
+    {
+      "act": {
         "actor": "day",
         "fields": {
           "room": 1
         },
-        "kind": "arrive"
+        "kind": "arrive",
+        "on": 4,
+        "expected": {
+          "on": {
+            "$revision": 4
+          }
+        }
       },
       "expect": {
         "answer": "accepted"
@@ -148,7 +183,13 @@
         "fields": {
           "room": 1
         },
-        "kind": "leave"
+        "kind": "leave",
+        "on": 4,
+        "expected": {
+          "on": {
+            "$revision": 4
+          }
+        }
       },
       "expect": {
         "answer": "accepted"
@@ -167,7 +208,7 @@
       "projection": {
         "name": "site",
         "at": {
-          "seq": 5
+          "seq": 6
         },
         "sources": {
           "room": [
@@ -201,14 +242,14 @@
     },
     {
       "projection": {
-        "name": "presence",
+        "name": "presence-activity",
         "at": {
-          "seq": 5
+          "seq": 6
         },
         "sources": {
           "events": [
             {
-              "id": 4,
+              "id": 5,
               "type": "arrive",
               "fields": {
                 "room": 1,
@@ -218,13 +259,37 @@
               }
             },
             {
-              "id": 5,
+              "id": 6,
               "type": "leave",
               "fields": {
                 "room": 1,
                 "actor": {
                   "$member": "day"
                 }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "projection": {
+        "name": "presence",
+        "at": {
+          "seq": 6
+        },
+        "sources": {
+          "people": [
+            {
+              "id": 4,
+              "state": "away",
+              "revision": 3,
+              "fields": {
+                "member": {
+                  "$member": "day"
+                },
+                "room": 1,
+                "reportedAt": 6
               }
             }
           ]

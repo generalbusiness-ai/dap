@@ -61,7 +61,8 @@ test("four-zone climate fault holds, refuses stale authority, authorizes only ta
   expect(benches.size).toBe(100);
   for (const zone of zones) expect(ledger.state.all().items.filter(item => item.type === "bench" && item.refs["zone"] === zone.id)).toHaveLength(25);
   const c4 = benches.get("C4")!, d4 = benches.get("D4")!, benchZone = zones[0]!.id;
-  wrote(await submit(parent, day, "arrive", { fields: { room: rows[0]! } })); expect(sitePresence(parent.entries)).toHaveLength(1);
+  wrote(await submit(parent, operator, "provision-presence", { fields: { member: day.member } })); const dayPresence = parent.last.seq;
+  wrote(await submit(parent, day, "arrive", on(parent, dayPresence, { room: rows[0]! }))); expect(sitePresence(parent.state.all().items, position => parent.fact(position))).toHaveLength(1);
   wrote(await submit(ledger, day, "probe", on(ledger, c4, { moisture: 31, ec: 2100, ph: 590 })));
   wrote(await submit(ledger, operator, "configure-watering", { fields: { opensAt: t(900), closesAt: t(1200), maxMl: 400 } }));
   type Outcome = "confirmed" | "refused" | "unknown";
@@ -121,7 +122,7 @@ test("four-zone climate fault holds, refuses stale authority, authorizes only ta
   expect(new Set(outcomes.map(record => record.command.hash)).size).toBe(8);
   expect(ledger.item(zone.heater).values).not.toHaveProperty("outcome");
   await publishCount(0);
-  parent.now = ledger.now; wrote(await submit(parent, day, "leave", { fields: { room: rows[0]! } })); expect(sitePresence(parent.entries)).toEqual([]);
+  parent.now = ledger.now; wrote(await submit(parent, day, "leave", on(parent, dayPresence, { room: rows[0]! }))); expect(sitePresence(parent.state.all().items, position => parent.fact(position))).toEqual([]);
   ledger.now = t(172800); expect(ledger.drain()).toHaveLength(1); expect(ledger.item(c4).state).toBe("stale"); expect(ledger.item(d4).state).toBe("fresh");
   ledger.now = t(173100); expect(ledger.drain()).toHaveLength(1); expect(ledger.item(d4).state).toBe("stale");
   for (const current of [parent, ...rooms]) { const result = await replay(current, [launcher, parent, ...rooms].filter(other => other !== current)); expect([result.report.result, result.why]).toEqual(["consistent", null]); }

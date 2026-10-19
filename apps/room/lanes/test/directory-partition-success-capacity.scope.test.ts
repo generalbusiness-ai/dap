@@ -87,11 +87,14 @@ test("native initially full Root completes one thousand successful partition bir
       await settle(...r.scopes, P);
       if (generation < 1000) {
         const next = await snapshot(generation + 1);
-        expect(next.row).toMatchObject({ state: "creating", values: { generation: generation + 1 } });
+        expect(next.row).toMatchObject({ values: { generation: generation + 1 } });
         const Q = await createdAt(next.row!.id);
         // Register and run the actual successor before claiming that this
         // handoff has completed, just as the ordinary native handoff fixture.
+        // A scheduled creation result may already have made it active before
+        // the snapshot; only this explicit dispatch boundary requires active.
         await settle(...r.scopes, P, Q);
+        expect((await snapshot(generation + 1)).row).toMatchObject({ state: "active", values: { generation: generation + 1 }, refs: { scope: await Q.at() } });
         const sealed = await P.item(0);
         expect(sealed, sealed.values["handedOff"] ? undefined : JSON.stringify({ generation, root: await snapshot(generation + 1), answers, outbox: await D.stub.outbox("a test reader") })).toMatchObject({ state: "open", values: { sealed: true, handedOff: true, sealRefused: false } });
         P = Q;

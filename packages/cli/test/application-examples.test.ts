@@ -48,17 +48,17 @@ test("maintained Counter and Lending packages bind their current browser definit
 });
 
 // Invariant: maintained Grow reads use the actual Site/Room declarations,
-// retain the complete 100-bench fixture, and expose comment facts honestly.
-test("maintained Grow declarations check site events and the complete room grid at native local heads", async () => {
+// retain the complete 100-bench fixture, and separate current presence from activity.
+test("maintained Grow declarations check durable presence and the complete room grid at native local heads", async () => {
   const root = await prepareGrowCheck();
   try {
     const prepared = await prepareApplicationDirectory(root, secretSigner(new Uint8Array(32).fill(254)));
     expect(prepared.packet.package.v).toBe(2);
     expect(prepared.packet.package.semantic.definitions).toHaveLength(2);
-    for (const [path, steps, through, owners] of [["site-scenario.json", 10, 5, 0], ["fault-scenario.json", 202, 160, 8]] as const) {
+    for (const [path, steps, through, owners, projections] of [["site-scenario.json", 13, 6, 0, 4], ["fault-scenario.json", 202, 160, 8, 3]] as const) {
       const result = await runApplicationScenario(prepared.packet, await readApplicationScenario(root, path));
       expect(result.steps).toBe(steps);
-      expect(result.projectionChecks).toBe(3);
+      expect(result.projectionChecks).toBe(projections);
       expect(result.replay.report).toMatchObject({ result: "consistent", target: { seq: through } });
       expect(result.ownerRecords).toHaveLength(owners);
     }
