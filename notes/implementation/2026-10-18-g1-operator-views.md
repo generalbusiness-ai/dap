@@ -327,3 +327,10 @@ head 5 with zero alerts and replay Room head 155 consistent. The independent
 inspected. All authority and deployment boundaries stated above still apply.
 The Page's owning build ran before the code checkpoint. No final gate result
 or review approval is claimed by this development note yet.
+
+The first gate attempt at `0c06b8f17` stopped in whitespace before any compiler
+or test ran: the extracted field guard had an extra blank line at EOF. The
+log and 0.22 s outer timing remain in
+`/tmp/artroom-g1-final-gate-20261019.log` and
+`/tmp/artroom-g1-final-gate-outer-20261019.time`. The blank line is removed
+before the next code head; this is not a test-suite rerun.

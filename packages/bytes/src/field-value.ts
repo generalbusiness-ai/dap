@@ -34,4 +34,3 @@ export function fitsFieldType(type: FieldType, v: unknown, bounds: Bounds): bool
     case "record": return isRecord(v) && Object.keys(v).every((m) => Object.hasOwn(type.of, m)) && Object.entries(type.of).every(([m, of]) => (Object.hasOwn(v, m) ? fitsFieldType(of, v[m], bounds) : !of.required));
   }
 }
-
