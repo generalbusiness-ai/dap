@@ -1,1 +1,1 @@
-{"kind":"promise","text":"I will review sequenced-order draft 3 at exact f019da60, beginning with the full primary, then the scopes paragraph and authored delta. I will trace all five prior findings against the revised prepare/fence, closure, cut/absence and source-order rules, preserving the stated failure model and documentation-only scope.","body":{"request":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a8ad7daf8521abd62e6e28d34285c1dcb53ab0e1"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:37082f79f494619d55681572a607bf4f4b723ade"}
