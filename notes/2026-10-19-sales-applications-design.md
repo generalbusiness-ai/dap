@@ -297,10 +297,16 @@ The request's documents are usually spreadsheets: a compliance matrix
 of tens to hundreds of rows, each with an identifier, a requirement
 text, a response kind (yes or no, a narrative, an attachment) and
 sometimes a weight, across several sheets. The intake agent takes that
-load. In the first version an import holds at most one hundred rows
-across its sheets, which is the bound of the complete reads a routed
-carousel needs; a larger request is refused at import with its row
-count before any requirement is opened, and larger matrices are
+load. The first version is bounded by the bid room, not by the file: a
+bid room has one import and at most one hundred requirements, which is
+the bound of the complete reads a routed carousel needs, and each
+requirement's text and answer hold at most four thousand characters,
+with an import's texts together under one hundred and twenty-eight
+kibibytes. A request over any of these is refused at import, by name
+and with its count, before any requirement is opened; a second import
+into the same bid room is refused `import-exists`. A spreadsheet that
+changes after import is a new bid room, with the old one `withdrawn`
+and referenced; a small correction is a remap. Larger matrices are
 deferred (section 8). The agent records the import (the file's link and
 digest, its sheets and their row counts), then opens one requirement
 per row with the row's
@@ -335,19 +341,23 @@ source. The agent flags a drafted answer that contradicts a buyer's
 answer or another supplied answer, which puts both in their owners'
 carousels.
 
-Every bid has two approvals, which `intake` creates in state
-`requested`: one for the price, bound to the pricing requirement, and
-one for the terms, bound to the terms requirement. Pricing signs
-`approve-price` at the exact revision of the pricing answer; legal signs
-`approve-terms` the same way. A later supply on either requirement puts
-its approval back to `requested`, so an approval is never older than
-what it approves.
+Every bid has two approvals, one for the price and one for the terms,
+each its own item. An act opens one item, so they are not created with
+the bid: once the pricing requirement exists the owner signs
+`open-price-approval`, and once the terms requirement exists
+`open-terms-approval`, each refused `approval-exists` if the bid already
+has one of that kind, and each bound to the requirement it covers.
+Pricing signs `approve-price` at the exact revision of the pricing
+answer; legal signs `approve-terms` the same way. A later supply on
+either requirement puts its approval back to `requested`, so an
+approval is never older than what it approves.
 
-Assembly is complete or refused. `assemble` is guarded on all of: every
-row of every confirmed import has a requirement that is `reviewed` or
-`declined` with a reason; no mapping is still `proposed`; both
-approvals are `granted` at the current revisions of the requirements
-they cover; and a rendering exists at those exact revisions. The intake
+Assembly is complete or refused. `assemble` is guarded on all of: the
+bid's import is `confirmed`, which it cannot be while any of its
+mappings is `proposed`; every row of that import has a requirement that
+is `reviewed` or `declined` with a reason; both approval items exist
+and are `granted` at the current revisions of the requirements they
+cover; and a rendering exists at those exact revisions. The intake
 agent produces that rendering, the reviewed answers back in the buyer's
 layout, one row per requirement in the sheet's order. `assemble` then
 writes the response as one revision that names the rendering's digest,
@@ -359,16 +369,26 @@ apparently complete submission.
 
 Sealing is local; publication is not. `submit` sends `publish-file`
 with the sealed bytes to the bid's Git destination, and the submission's
-publication is `pending` from that send. It becomes `confirmed` only
-when the destination's receipt, which binds the sending scope and
-incarnation, the source fact, the send ordinal, the path and the
-content digest, is read back into the room and its digest matches the
-sealed bytes. An unknown outcome holds the slot and is not resent; a
-refusal is recorded with its reason; a later submission has its own send
-and its own receipt and never inherits an earlier one. "What went out"
-in this note means the confirmed receipt, not the send. Clarifications
-after submission are new questions; a revised offer is a new assembly
-and a new submission, and the earlier one stays.
+publication is `pending` from that send. No member writes what happens
+next. The send declares a result clause, as the lending library's
+`publish` does: when the destination answers, the host applies the
+clause's effects to the submission with the destination as the
+authenticated sender. The result carries the destination's binding of
+the sending scope and incarnation, the source fact, the send ordinal,
+the path and the content digest; the clause writes them, and sets
+`confirmed` only when every one of them equals the submission's own
+expected values, not the digest alone, since two paths or two sends can
+carry identical text. A refused result sets `refused` with the result's
+reason; a superseding result sets `superseded`; no result leaves it
+`pending` or `unknown`, and an unknown is not resent. No act has an
+effect on the publication slots. A person who wants to see for
+themselves reads the receipt file the destination publishes under its
+public receipt ref for that source fact and ordinal; a member's report
+of such a check is that member's statement, shown with their name, and
+never sets `confirmed`. "What went out" in this note means the
+confirmed result, not the send. Clarifications after submission are new
+questions; a revised offer is a new assembly and a new submission with
+its own send and its own result, and the earlier one stays.
 
 The award or the loss is recorded by the owner with its source. The
 win or loss review reads the entry range from intake to outcome: which
@@ -386,8 +406,9 @@ supply it again or retire it.
 **Items.** `bid` (states `received`, `open`, `assembled`, `submitted`,
 `clarifying`, `awarded`, `lost`, `withdrawn`; values: buyer, deadline,
 document link and digest; refs: the decision, the submission),
-`import` (states `read`, `mapped`, `confirmed`; values: link, digest,
-sheet names, row counts), `requirement` (states `unassigned`,
+`import` (one per bid room; states `read`, `mapped`, `confirmed`,
+`withdrawn`; values: link, digest, sheet names, row counts),
+`requirement` (at most one hundred per bid room; states `unassigned`,
 `assigned`, `drafted`, `asked`, `supplied`, `reviewed`, `declined`;
 values: identifier, row reference, text, kind, weight, domain, due time,
 draft, answer; parties: expert, reviewer; refs: the import, the
@@ -400,14 +421,18 @@ terms, one of each per bid; states `requested`, `granted`, `refused`;
 refs: the requirement it covers and the revision approved),
 `assembly` (the rendering's digest, each answer's revision, both
 approvals' entries), `submission` (the sealed assembly; publication
-states `pending`, `confirmed`, `unknown`, `refused`, `superseded`;
-refs: the assembly, the receipt).
+states `pending`, `confirmed`, `unknown`, `refused`, `superseded`,
+written only by the send's result clause; values: the expected and the
+received sending scope and incarnation, source fact, send ordinal, path
+and content digest; refs: the assembly).
 
-**Acts.** `intake` (also creates the two approvals), `decide-go`,
-`decide-no-go`, `import` (the intake agent; records the digest; guard:
-at most one hundred rows), `open-requirement` (the intake agent; guard:
-an import ref and a row reference, and no requirement with that row,
-refused `row-exists`), `propose-mapping`, `confirm-mapping` and `remap`
+**Acts.** `intake`, `decide-go`, `decide-no-go`, `import` (the intake
+agent; records the digest; guards: no import in this bid room, refused
+`import-exists`; at most one hundred rows and the text bounds above,
+refused by name), `open-requirement` (the intake agent; guards: the
+import ref and a row reference, no requirement with that row, refused
+`row-exists`, and fewer than one hundred requirements, refused
+`bid-full`), `propose-mapping`, `confirm-mapping` and `remap`
 (the owner; a remap names its reason), `assign` (sets the expert and
 reviewer parties), `draft-answer` and `flag` (the drafting agent),
 `ask-expert` (`bid.review`; names the expert party and a due time; moves
@@ -418,15 +443,20 @@ roadmap claims; moves to `supplied`), `review-answer` (`bid.review`;
 guard: the signer is the reviewer party when set; moves to `reviewed`),
 `send-back` (`bid.review`; back to `asked` with a comment),
 `decline-requirement` (`bid.review`; with a reason), `ask-buyer`,
-`record-buyer-answer` (the owner's report with source), `approve-price`
-and `refuse-price` (`bid.price`; at the pricing answer's revision),
+`record-buyer-answer` (the owner's report with source),
+`open-price-approval` and `open-terms-approval` (`bid.own`; guards: the
+covered requirement exists, no approval of that kind, refused
+`approval-exists`), `approve-price` and `refuse-price` (`bid.price`; at
+the pricing answer's revision),
 `approve-terms` and `refuse-terms` (`bid.legal`; at the terms answer's
 revision), `render-response` (the intake agent; guard: every row's
 requirement `reviewed` or `declined`), `assemble` (guards as above;
 writes the assembly), `submit` (`bid.decide`; names the exact assembly
-revision, seals it, sends `publish-file`), `record-publication` (the
-destination's receipt read back: `confirmed` when its digest matches,
-else `refused` or `unknown`), `record-outcome`.
+revision, seals it, sends `publish-file` with a result clause whose
+effects write the submission's publication state and the destination's
+binding from the result, with the destination as sender),
+`withdraw-bid` (`bid.own`; with a reason, naming a successor bid room
+when there is one), `record-outcome`.
 
 **Timed rules.** A requirement asked and not supplied two days before
 its due time: attention to its expert and the sales engineer. A supplied
@@ -444,7 +474,8 @@ carousel (supplied answers to review, with Accept and Send back, and
 technical requirements to supply), the
 approval card for approvers (Grant and Refuse at the named revision),
 the question log, the submission record (the sealed assembly, its
-publication state and the confirmed receipt), and the win or loss log.
+publication state and the destination's binding as received), and the
+win or loss log.
 
 ### 5.4 What it needs
 
@@ -453,11 +484,14 @@ publication state and the confirmed receipt), and the win or loss log.
   landed.
 - Several scopes in one package: the bid room and the answer library
   as two scopes, landed with M2a's interface and M2b's ownership work.
-- Publication of the sealed response: today's Git publication, with the
-  destination's receipt read back as the publication outcome.
-- The intake's bound: one hundred rows per import in the first version,
-  within the complete-read limit of the routed carousel; bigger requests
-  are refused at import and deferred.
+- Publication of the sealed response: today's Git publication, with
+  the destination's result applied by the send's result clause as the
+  publication outcome, and its public receipt file for anyone who wants
+  to look.
+- The bound: one import and at most one hundred requirements per bid
+  room, with the text bounds of 5.2, within the complete-read and
+  payload limits of the routed carousel; bigger requests are refused at
+  import and deferred; a changed spreadsheet is a new bid room.
 - The intake agent as a hosted member: the hosted agent teams design,
   not yet built. Until then the same agent runs from the owner's
   machine under the same grant, and the record does not change.
@@ -511,10 +545,13 @@ comments, the writer revises, and the owner signs `approve` at the
 exact revision. Two days before the date, a post that is drafted and not
 approved appears in the owner's carousel. On the date the owner signs
 `publish`: for the site, the act sends the approved text to the site's
-Git destination as `publish-file`, and the post is `publishing` until
-the destination's receipt for that exact content digest is read back,
-when it becomes `published`; an unknown outcome holds, and a refusal is
-recorded with its reason. A text changed after publication needs a new
+Git destination as `publish-file`, with a result clause as the lending
+library's `publish` has, and the post is `publishing` until the
+destination's result arrives; the clause sets `published` only when the
+result's sending scope and incarnation, source fact, send ordinal, path
+and content digest all equal the post's expected values, sets `refused`
+with the reason otherwise, and leaves an unknown as it is. No act
+writes those slots. A text changed after publication needs a new
 approval and a new `publish` with its own receipt. For a channel dap
 cannot write to, the owner posts it by hand and records that with the
 link, which stays a statement. Retiring a post replaces its file with a
@@ -535,9 +572,9 @@ campaign, the approving entry, the confirmed receipt), `comment`.
 **Acts.** `plan`, `brief`, `draft`, `revise` (resets `approved` to
 `drafted`: a changed text needs a new approval), `comment`, `approve`
 (fixes the revision), `publish` (guard: `approved` at the current
-revision; sends `publish-file` with the text at the post's path; moves
-to `publishing`), `record-publication` (the receipt read back: `published`
-when the digest matches, else refused or unknown), `record-posting`
+revision; sends `publish-file` with the text at the post's path, with a
+result clause that writes the publication state from the destination's
+result; moves to `publishing`), `record-posting`
 (for other channels, with the link), `retire` (sends the notice and the
 index rewrite as publications of their own).
 
@@ -583,7 +620,7 @@ estimates from the grow slices.
 |---|---|---|---|
 | C1 | The marketing calendar: definitions, scenario, views, publication to a site repository | a post planned in the room is approved, published to a test destination and read back; a late post reaches the owner's carousel | 2 days |
 | C2 | The prospect room: definitions, scenario, views; the prospect as an invited member | an account goes from research to a proposal accepted by a member in the test host; the five-day rule reaches the owner | 2 days |
-| C3 | The bid response: definitions in two scopes, the intake agent's decomposition and rendering, routing by domain, approvals, assembly and submission with publication | a two-sheet request of forty rows is decomposed into requirements, three rows remapped by the owner and a duplicate refused, and a one-hundred-and-one-row request refused at import; assembly is refused while a row is unresolved and while the terms approval is stale; then all forty rows are reviewed or declined with reasons, six of them supplied by asked experts across three domains, an unsourced roadmap claim is refused, price and terms are approved at their current revisions, the answers are rendered back in the request's layout, assembled and submitted; the submission stays pending until the destination's receipt for its exact digest is read back, then confirmed | 5 days |
+| C3 | The bid response: definitions in two scopes, the intake agent's decomposition and rendering, routing by domain, approvals, assembly and submission with publication | a two-sheet request of forty rows is decomposed into requirements, three rows remapped by the owner and a duplicate refused; a one-hundred-and-one-row request, an oversized cell and a second import into the same bid room are each refused by name; assembly is refused while a mapping is proposed, while a row is unresolved, while an approval is missing and while the terms approval is stale; then all forty rows are reviewed or declined with reasons, six of them supplied by asked experts across three domains, an unsourced roadmap claim is refused, both approvals are opened and granted at their current revisions, the answers are rendered back in the request's layout, assembled and submitted; the submission stays pending until the destination's result arrives through the result clause, and a result whose binding differs from the expected one does not confirm it | 5 days |
 | C4 | The hosted rooms and a page for each on the homepage, after the demo-room pattern of plan 033 | a person in their AI app takes an act in each | 2 days |
 
 Named and deferred: custody for documents; private price views; the
