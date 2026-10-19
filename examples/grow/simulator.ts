@@ -8,6 +8,7 @@ export interface SimulatorSchedule {
   readonly faultZone: number;
   readonly ventFault: { readonly fromMinute: number; readonly untilMinute: number };
   readonly fanFault: { readonly fromMinute: number; readonly untilMinute: number };
+  readonly autonomousRecovery: { readonly fromMinute: number; readonly description: string };
 }
 export interface SimulatedZone {
   readonly id: number;
@@ -47,7 +48,7 @@ const integer = (value: number, min: number, max: number): boolean => Number.isS
 export function simulatorSchedule(value: unknown): SimulatorSchedule {
   if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error("invalid simulator schedule");
   const s = value as SimulatorSchedule;
-  if (Object.keys(value).sort().join(",") !== "cadenceMinutes,fanFault,faultZone,periodMinutes,v,ventFault" || s.v !== 1
+  if (Object.keys(value).sort().join(",") !== "autonomousRecovery,cadenceMinutes,fanFault,faultZone,periodMinutes,v,ventFault" || s.v !== 1
     || !integer(s.cadenceMinutes, 1, 60) || !integer(s.periodMinutes, 1, 1440) || s.periodMinutes % s.cadenceMinutes !== 0
     || !integer(s.faultZone, 1, 4)) throw new Error("invalid simulator schedule");
   for (const range of [s.ventFault, s.fanFault]) {
@@ -55,6 +56,10 @@ export function simulatorSchedule(value: unknown): SimulatorSchedule {
       || !integer(range.fromMinute, 0, s.periodMinutes - 1) || !integer(range.untilMinute, range.fromMinute + 1, s.periodMinutes)
       || range.fromMinute % s.cadenceMinutes !== 0 || range.untilMinute % s.cadenceMinutes !== 0) throw new Error("invalid simulator fault period");
   }
+  const recovery = s.autonomousRecovery;
+  if (!recovery || typeof recovery !== "object" || Object.keys(recovery).sort().join(",") !== "description,fromMinute"
+    || recovery.fromMinute !== s.ventFault.untilMinute || !integer(recovery.fromMinute, 0, s.periodMinutes - 1)
+    || typeof recovery.description !== "string" || recovery.description.length === 0 || new TextEncoder().encode(recovery.description).length > 1024) throw new Error("invalid simulator recovery schedule");
   return structuredClone(s);
 }
 
@@ -102,7 +107,11 @@ export function simulateRoom(schedule: SimulatorSchedule, now: number, zones: re
     };
     const crossDraft = warmFault ? ordered.filter((_, i) => i === 0 || i === 3).reduce((n, z) => n + Math.floor(activeLevel("vent", z.id) * 0.8), 0) : 0;
     const cooling = warmFault ? activeLevel("fan", zone.id) + crossDraft : 0;
-    const base = zone.setpoint + (warmFault && heater.target === "on" ? 440 - cooling : heater.target === "off" ? -40 : 0);
+    // The obstruction adds ambient heat even if a prior cycle left the
+    // heater off. Thus a later cycle can still raise an incident. Cutting
+    // the heater removes its 200-centidegree contribution; the declared
+    // cross-draft can then bring all cells back into band before minute35.
+    const base = zone.setpoint + (warmFault ? (heater.target === "on" ? 440 : 240) - cooling : heater.target === "off" ? -40 : 0);
     const samples = Array.from({ length: 25 }, (_, i) => Math.max(-4000, Math.min(8000, base + (i - 12) * 5)));
     return { zone: zone.id, min: Math.min(...samples), max: Math.max(...samples), mean: Math.round(samples.reduce((a, b) => a + b, 0) / 25),
       inBand: samples.filter(t => t >= zone.setpoint - zone.band && t <= zone.setpoint + zone.band).length };

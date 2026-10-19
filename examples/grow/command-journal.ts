@@ -48,10 +48,14 @@ export function openCommands(scope: ScopeRef, owner: MemberRef, through: FactRef
         records.set(key, { fact: { at: scope, seq: entry.seq, hash: sealed.hash }, ...binding });
       } else {
         const opened = records.get(key);
-        if (!opened || !["confirmed", "refused", "unknown"].includes(effect.state) || v["decided"] !== 1 || v["answerAt"] !== entry.seq
+        if (!["confirmed", "refused", "unknown"].includes(effect.state) || v["decided"] !== 1 || v["answerAt"] !== entry.seq
           || typeof v["description"] !== "string" || new TextEncoder().encode(v["description"]).length > 1024
-          || Object.keys(v).sort().join(",") !== "answerAt,decided,description,device,kind,level,owner,target,targetAt"
-          || !equal(binding, { device: opened.device, kind: opened.kind, target: opened.target, level: opened.level, owner: opened.owner })) return invalid();
+          || Object.keys(v).sort().join(",") !== "answerAt,decided,description,device,kind,level,owner,target,targetAt") return invalid();
+        // A summary can acknowledge a command whose closing entry lies
+        // after the scanned head. Later windows encounter that closure;
+        // its older key is already covered by the trusted cursor contract.
+        if (!opened) { if (key < from) continue; return invalid(); }
+        if (!equal(binding, { device: opened.device, kind: opened.kind, target: opened.target, level: opened.level, owner: opened.owner })) return invalid();
         records.delete(key);
       }
     }
@@ -62,27 +66,33 @@ export function openCommands(scope: ScopeRef, owner: MemberRef, through: FactRef
 }
 
 /** Current public history cursors accept an explicit decimal entry position
- * (scope reads.ts). Thereafter retain the server's opaque continuation.
- * Four pages and one complete, hash-checked prefix are the whole allowance.
- * Newer entries may arrive during the reads; only the named head is returned. */
+ * (scope reads.ts). Thereafter follow the server's opaque continuation.
+ * A long gap returns a bounded prefix with complete=false, never a fabricated
+ * empty command set for the unscanned remainder. */
 export async function readCommandJournal(reader: Pick<import("@generalbusiness/artroom-client").ScopeHandle, "history">,
-  scope: ScopeRef, owner: MemberRef, through: FactRef | null, head: Head): Promise<{ entries: readonly Sealed[]; open: readonly OpenCommand[] }> {
+  scope: ScopeRef, owner: MemberRef, through: FactRef | null, head: Head): Promise<{ entries: readonly Sealed[]; open: readonly OpenCommand[]; through: FactRef | null; complete: boolean }> {
+  if (through !== null && (!isFactRef(through) || !equal(through.at, scope))) return invalid();
   const start = through === null ? 0 : through.seq + 1;
-  if (!integer(start) || head.seq - start + 1 > COMMAND_SUFFIX_ENTRIES || head.seq < start - 1) return invalid();
+  if (!integer(start) || !integer(head.seq) || head.seq < start - 1) return invalid();
   const entries: Sealed[] = [];
-  let cursor: string | undefined = String(start);
-  for (let page = 0; page < 4 && entries.length < head.seq - start + 1; page++) {
+  let cursor: string | undefined = String(start), records = 0, bytes = 2, limited = false;
+  for (let page = 0; page < 4 && entries.length < head.seq - start + 1 && !limited; page++) {
     const read = await reader.history(cursor);
     if (!read.ok || read.at.seq < head.seq || read.at.seq === head.seq && read.at.hash !== head.hash || read.value.length === 0) return invalid();
     for (const sealed of read.value) {
       if (sealed.entry.seq > head.seq) break;
-      entries.push(sealed);
-      if (entries.length > COMMAND_SUFFIX_ENTRIES) return invalid();
+      const changes = sealed.entry.effects.filter(effect => effect.effect === "record" && effect.capability === CAPABILITY && effect.kind === "command").length;
+      const size = new TextEncoder().encode(canonicalize(sealed)).length + 1;
+      if (entries.length === COMMAND_SUFFIX_ENTRIES || records + changes > COMMAND_SUFFIX_RECORDS || bytes + size > COMMAND_SUFFIX_BYTES) { limited = true; break; }
+      entries.push(sealed); records += changes; bytes += size;
     }
-    if (new TextEncoder().encode(canonicalize(entries)).length > COMMAND_SUFFIX_BYTES) return invalid();
-    if (entries.at(-1)?.entry.seq === head.seq) break;
+    if (entries.at(-1)?.entry.seq === head.seq || limited) break;
     if (read.complete || typeof read.next !== "string" || read.next === cursor) return invalid();
     cursor = read.next;
   }
-  return { entries, open: openCommands(scope, owner, through, head, entries) };
+  const last = entries.at(-1), complete = last?.entry.seq === head.seq || start === head.seq + 1;
+  if (!last && !complete) return invalid();
+  const selected = complete ? head : { seq: last!.entry.seq, hash: last!.hash };
+  const open = openCommands(scope, owner, through, selected, entries);
+  return { entries, open, through: last ? { at: scope, seq: last.entry.seq, hash: last.hash } : through, complete };
 }

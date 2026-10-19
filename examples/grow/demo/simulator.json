@@ -3,6 +3,16 @@
   "cadenceMinutes": 1,
   "periodMinutes": 60,
   "faultZone": 2,
-  "ventFault": { "fromMinute": 10, "untilMinute": 35 },
-  "fanFault": { "fromMinute": 20, "untilMinute": 40 }
+  "ventFault": {
+    "fromMinute": 10,
+    "untilMinute": 35
+  },
+  "fanFault": {
+    "fromMinute": 20,
+    "untilMinute": 40
+  },
+  "autonomousRecovery": {
+    "fromMinute": 35,
+    "description": "At minute 35 the simulated vent vane frees and the room returns to band; the fan trip resets at minute 40. Cross-draft and a working fan reduce the fault heat load. A person cutting the heater can shorten the fault. The climate agent closes the incident and records whether a heater command occurred."
+  }
 }

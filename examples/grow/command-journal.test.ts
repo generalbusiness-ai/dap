@@ -6,7 +6,7 @@ import { entryHash, scopeIdOf } from "@generalbusiness/artroom-bytes";
 import { openCommands, readCommandJournal } from "./command-journal.ts";
 const scope: ScopeRef = { scope: scopeIdOf({ v: 1, kind: "lane", creator: null, cause: `sha256:${"2".repeat(64)}`, ordinal: 0, definition: `sha256:${"1".repeat(64)}` }), inc: "in_aaaaaaaaaaaaaaaaaaaaaaaaaa", kind: "lane" };
 const owner: MemberRef = { membership: { ...scope, kind: "membership" }, member: "@sensors" };
-function history(): Sealed[] {
+function history(extra = 0): Sealed[] {
   const result: Sealed[] = [];
   const append = (effects: unknown[]) => {
     const seq = result.length;
@@ -21,6 +21,10 @@ function history(): Sealed[] {
   append([]); append([record(1, "open", values(1))]); append([record(2, "open", values(2))]);
   append([{ effect: "value", item: 8, slot: "reported", value: "on" }]);
   append([record(1, "confirmed", { ...values(1), decided: 1, description: "TEST late closure", answerAt: 4 })]);
+  if (extra > 0) {
+    append([record(2, "confirmed", { ...values(2), decided: 1, description: "TEST second closure", answerAt: 5 })]);
+    while (result.length < extra) append([]);
+  }
   return result;
 }
 
@@ -32,9 +36,9 @@ test("complete public coverage keeps an old pending command until its own closur
   expect(() => openCommands(scope, { ...owner, member: "@climate" }, null, at(4), journal)).toThrow("coverage");
   expect(() => openCommands(scope, owner, null, { seq: 4, hash: `sha256:${"0".repeat(64)}` }, journal)).toThrow("coverage");
   expect(() => openCommands(scope, owner, null, { seq: 800, hash: journal[4]!.hash }, [])).toThrow("coverage");
-  // A claimed closed prefix ending at2 is false: the later closure of1
-  // exposes it. No progress marker may hide that earlier pending command.
-  expect(() => openCommands(scope, owner, { at: scope, ...at(2) }, at(4), journal.slice(3))).toThrow("coverage");
+  // An acknowledged command may close after the scanned position. That
+  // later closure must not strand a subsequent window or hide command2.
+  expect(openCommands(scope, owner, { at: scope, ...at(1) }, at(4), journal.slice(2)).map(c => c.fact.seq)).toEqual([2]);
   const calls: (string | undefined)[] = [];
   const read = await readCommandJournal({ history: async cursor => {
     calls.push(cursor);
@@ -43,6 +47,15 @@ test("complete public coverage keeps an old pending command until its own closur
   } }, scope, owner, null, at(4));
   expect(calls).toEqual(["0", "TEST-next"]); expect(read.open.map(c => c.fact.seq)).toEqual([2]);
   await expect(readCommandJournal({ history: async () => ({ ok: true, at: at(4), value: journal.slice(0, 3), complete: true }) }, scope, owner, null, at(4))).rejects.toThrow("coverage");
+  const backlog = history(811), last = backlog.at(-1)!, head = { seq: last.entry.seq, hash: last.hash };
+  const publicPages = { history: async (cursor?: string) => {
+    const from = Number(cursor ?? "0"), end = Math.min(from + 200, backlog.length);
+    return { ok: true as const, at: head, value: backlog.slice(from, end), complete: end === backlog.length, ...(end === backlog.length ? {} : { next: String(end) }) };
+  } };
+  const first = await readCommandJournal(publicPages, scope, owner, null, head);
+  expect([first.entries.length, first.through!.seq, first.complete, first.open.length]).toEqual([800, 799, false, 0]);
+  const next = await readCommandJournal(publicPages, scope, owner, first.through, head);
+  expect([next.entries.length, next.through!.seq, next.complete, next.open.length]).toEqual([11, 810, true, 0]);
   const corrupted = structuredClone(journal); corrupted[3]!.entry.prev = journal[0]!.hash;
   expect(() => openCommands(scope, owner, null, at(4), corrupted)).toThrow("coverage");
 });

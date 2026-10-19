@@ -54,7 +54,7 @@ export async function nativeCreatedSite(definition: DeclaredDefinition, permissi
   launcherDefinition.items = { site: definition.items["site"]! };
   launcherDefinition.acts = { [definition.genesis]: structuredClone(definition.acts[definition.genesis]!) };
   launcherDefinition.receives = {}; launcherDefinition.timed = {}; launcherDefinition.rules = {};
-  launcherDefinition.acts[launcherDefinition.genesis]!.sends = [{ create: { kind: "lane", definition: definitionDigest(definition), fields: { label: { field: "label" } }, result: {} } }];
+  launcherDefinition.acts[launcherDefinition.genesis]!.sends = [{ create: { kind: "lane", definition: definitionDigest(definition), fields: Object.fromEntries(Object.keys(definition.acts[definition.genesis]!.fields).map(name => [name, { field: name }])), result: {} } }];
   const launcher = nativeScenario(launcherDefinition, permissions, fields);
   const site = await nativeChild(launcher, 0, definition, permissions, 19);
   expect(deliver(launcher, site, 0).result).toBe("write");

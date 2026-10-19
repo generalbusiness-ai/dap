@@ -17,6 +17,81 @@ the nonsecret trust row, deploys after review, provisions the actual room
 and secrets, runs the runbook and records live acceptance. A person taking
 an operator act in their AI app is actual acceptance, never a fixture claim.
 
+## Current checkpoint after planner decision
+
+Planner report `74c94c4db8e02ac534ada5235fcc18c51a579723`, adopted as
+`c845bc5b52c64439564f6a01cdcd586fff8856c2`, answers the cursor and
+principal decision. The current demo-only declarations now bind fixed
+sensors, climate and operator parties on Site/Room. Site forwards the
+exact assignments at Room creation. Both agents can share the native
+agent role's coarse action list; full-member guards permit only sensors
+reports and climate acts by the assigned climate member or the operator.
+The extra operator party preserves the controller/operator's climate acts.
+Heat remains on the person's admin permission; no agent gains grow.heat.
+A bounded singleton-room range avoids a fifth also subject on raise-alert.
+Maintained Site/Room and shipped platform data are unchanged.
+
+The native validator showed why the original comment form cannot carry the
+needed guard and state effect: comments have no guards, effects or also
+subjects. The demo's existing observe entry is now a transition on its
+existing Room item. Its signed fields carry commandsAnsweredThrough as an
+exact sequence/hash head; the same entry updates that optional Room value,
+lastSampledAt and lastReading. Expected revision and a declared order rule
+fence the write. There is no extra cursor item or entry. This form change
+is demo application data, not a widened host or native validator.
+
+The focused in-memory native witness validates both declarations, creates
+Site through a labelled launcher, creates its actual Room child and checks
+the forwarded fixed parties. With SCRIPTED grants deliberately giving both
+agents the same coarse grow.sense/grow.climate permissions, it refuses
+cross-principal reporting and fan control, records cursor progress and
+refuses a changed hash at the same position. Its helper now forwards every
+declared genesis field; the maintained Site's label-only path remains the
+same. Two focused files/four cases pass in
+`/tmp/artroom-g5-hosted-demo-forward-owning-20261019.log`; compiler passes in
+the matching `...forward-types...log`. The initial fixture compiler used a
+hash on Entry instead of its FactRef, and the initial assertion expected
+the wrong refusal result shape; both stopped before this pass. The rejected
+comment-form attempt and these preparation failures remain in their logs.
+A one-line sensors-principal bypass changes one pass to one unchanged
+cross-principal assertion failure and exactly restores the source,
+`/tmp/artroom-g5-hosted-demo-principal-control-20261019.log`. This is not
+Worker installation, native Membership authority or G5a owner settlement.
+
+Command discovery now makes bounded forward progress after a long gap:
+four pages, up to 800 entries/4 MiB/64 record changes, with complete=false
+for the unscanned remainder. A scripted 811-entry history advances through
+799 and then 810 on the next read. A closing entry can lie after the old
+scanned position even when its command was already answered before the
+summary acknowledged it. The initial reducer rejected that valid case;
+the corrected witness keeps the newer pending command and accepts the
+older acknowledged closure. The supplied closed-prefix cursor is an owned
+summary contract, not something an arbitrary FactRef proves by itself.
+The driver must never pass an unanswered opening. Current focused case
+and compiler pass in `/tmp/artroom-g5-hosted-prefix-owning-20261019.log` and
+`...prefix-types...log`; native long-gap tick proof remains pending.
+
+The signed schedule asset now declares the unattended recovery narrative
+and minute35 vent release/minute40 fan reset. Fault heat includes an ambient
+contribution even if a prior cycle left the heater off; climate-controlled
+cross-draft/fan and a new heater cut can shorten recovery. At minute35 the
+room returns to band without a person's act. The next cycle can still warm
+after an earlier cut. These are explicit simulation values, not real
+physical claims. The demo close-incident act now records a resolution text;
+the driver must distinguish no intervening heater command from an actual
+later target and must never invent a person's authorization. Pure simulation
+and signed-schedule consumer pass two files/three cases in
+`/tmp/artroom-g5-hosted-recovery-owning-20261019.log`, with compiler and
+one-line heater-causality control in the matching recovery logs. The control
+gives two passes → one pass/one unchanged assertion failure → exact restore.
+
+The Worker/tick orchestration, actual reviewed G5a integration, final demo
+packet/publisher, native quota/refusal/catch-up witnesses, final gate and
+complete review are still ahead. The runbook draft must be updated with the
+adopted forms and both-agent-before-install order. No live resources or
+acceptance are claimed. The following sections retain earlier checkpoints
+and their original limits; pending-decision wording below is historical.
+
 ## Existing boundaries checked
 
 - The source package's semantic value is closed. Cadence and story period
