@@ -2,15 +2,17 @@
  * runs no package code. Its ports are native reads, not application adapters. */
 import type { ApplicationProjectionData, ApplicationProjectionQuery, ApplicationProjectionRead, ApplicationProjectionRow, Digest, FieldValue, ScopeRef } from "@generalbusiness/dap-contract";
 import { applicationItemSnapshot } from "@generalbusiness/artroom-client";
-import { canonicalize, parseStrict, unb64url } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isLocalId, parseStrict, unb64url } from "@generalbusiness/artroom-bytes";
 import type { ApplicationInstallation } from "@generalbusiness/artroom-bytes/application";
-import { applicationProjectionId, isApplicationJournalSource, readApplicationPackage2, type ApplicationView, type PackedApplication2 } from "@generalbusiness/artroom-bytes/application-v2";
+import { applicationProjectionId, applicationViewFactField, isApplicationJournalSource, readApplicationPackage2, type ApplicationView, type ApplicationViewAct, type PackedApplication2 } from "@generalbusiness/artroom-bytes/application-v2";
 import { admit, evaluate, RuleEvalError } from "@generalbusiness/dap-derive/rule";
 import { ViewError } from "./session.ts";
 import type { Card, CardAction, DeclaredSurface, Projection, ViewQuery, ViewSource } from "./types.ts";
 import { PRESENTATION } from "./generated.ts";
 import type { DefinitionLike } from "../describe.ts";
 import { effectiveFields, expectedOf } from "../shape.ts";
+import { formatInteger } from "./numbers.ts";
+import { formatFact } from "./facts.ts";
 
 export interface DeclaredViewPort {
   /** The current active native install, read under the configured membership. */
@@ -76,12 +78,12 @@ export class DeclaredViewSource implements ViewSource {
   }
   /** Only selected native item metadata and ref slots resolve subjects. This
    * is not an Item read and supplies no opened/attributed or review claim. */
-  #expected(view: ApplicationView, act: string, row: ApplicationProjectionRow, data: ApplicationProjectionData): Record<string, number> | null {
+  #expected(view: ApplicationView, control: ApplicationViewAct, row: ApplicationProjectionRow, data: ApplicationProjectionData): Record<string, number> | null {
     const projection = this.packet.package.semantic.projections[view.projection]!;
     const part = this.packet.package.semantic.definitions.find(part => part.id === projection.definition)!;
-    const definition = parseStrict(part.bytes) as DefinitionLike, declaration = definition.acts[act]!;
+    const definition = parseStrict(part.bytes) as DefinitionLike, declaration = definition.acts[control.act]!;
     const items = applicationItemSnapshot(projection, data).items;
-    const expected = expectedOf(declaration, items, row.id, effectiveFields(declaration, {}, data.scope));
+    const expected = expectedOf(declaration, items, row.id, effectiveFields(declaration, control.args ?? {}, data.scope));
     // An absent secondary row is not permission to sign an incomplete set.
     const names = Object.entries(declaration.also).filter(([, rule]) => rule["code"] === undefined).map(([name]) => name);
     if (declaration.step === "transition") names.push("on");
@@ -90,16 +92,37 @@ export class DeclaredViewSource implements ViewSource {
   async #allowed(view: ApplicationView, row: ApplicationProjectionRow, data: ApplicationProjectionData, scope: ScopeRef, definition: Digest): Promise<CardAction[]> {
     if (view.kind === "surface" || !view.acts.length) return [];
     const held = await this.port.actions(), actions: CardAction[] = [];
-    for (const control of view.acts) {
+    for (const [index, control] of view.acts.entries()) {
       if (!held.includes(control.needs)) continue;
       let holds = false;
       try { holds = (await evaluate(control.when, input(row))).value === true; }
       catch (error) { if (!(error instanceof RuleEvalError)) throw error; }
-      const at = holds ? this.#expected(view, control.act, row, data) : null;
-      if (at !== null) actions.push({ id: control.act, label: control.label, purpose: "act", kind: control.act,
-        args: { target: scope.scope, on: row.id, at, digest: definition } });
+      const at = holds ? this.#expected(view, control, row, data) : null;
+      if (at !== null) actions.push({ id: view.acts.filter(choice => choice.act === control.act).length > 1 ? `${control.act}:${index}` : control.act, label: control.label, purpose: "act", kind: control.act,
+        args: { target: scope.scope, on: row.id, at, digest: definition, ...(control.args ? { fields: control.args } : {}) } });
     }
     return actions;
+  }
+  #series(view: ApplicationView, row: ApplicationProjectionRow, data: ApplicationProjectionData): NonNullable<Card["declared"]>["series"] {
+    if (view.kind === "surface" || !view.series) return undefined;
+    const series = view.series, projection = this.packet.package.semantic.projections[view.projection]!;
+    const source = projection.sources[series.source]!;
+    if (!isApplicationJournalSource(source)) throw new ViewError("unavailable", "The series needs its declared journal source.");
+    const rows = data.sources[series.source];
+    if (!rows) throw new ViewError("unavailable", "The series journal source is unavailable.");
+    const samples = rows.filter(point => point.on === row.id).slice(-series.last).map(point => {
+      const value = point.fields[series.field];
+      if (!point.entry || !point.time || typeof value !== "number" || !Number.isSafeInteger(value)) throw new ViewError("unavailable", "A series needs explicit native integer samples and source times.");
+      return { value, time: point.time, entry: point.entry };
+    });
+    const window = source.window;
+    let fallback = `${series.label}: no recorded samples in the last ${window} native entries.`;
+    if (samples.length) {
+      const latest = samples.at(-1)!, lowest = samples.reduce((a, b) => b.value < a.value ? b : a), highest = samples.reduce((a, b) => b.value > a.value ? b : a);
+      const text = (sample: typeof latest) => `${formatInteger(sample.value, series.scale, series.unit)} at ${sample.time}`;
+      fallback = `${series.label}: ${samples.length} recorded samples in the last ${window} native entries. Latest ${text(latest)}; lowest ${text(lowest)}; highest ${text(highest)}.`;
+    }
+    return { label: series.label, scale: series.scale, unit: series.unit, window, samples, fallback };
   }
   async read(query: ViewQuery): Promise<Projection> {
     const { view, root, scope, definition, reply, rows } = await this.#read(query);
@@ -110,18 +133,26 @@ export class DeclaredViewSource implements ViewSource {
     if (!Number.isSafeInteger(query.position) || query.position < 0 || query.position >= rows.length) throw new ViewError("shape", "The declared view position is outside its complete projection.");
     const row = rows[query.position]!, values = input(row), waiting = Object.hasOwn(view.waiting, row.state) ? template(view.waiting[row.state]!, row, "") : "";
     const fallback = template(view.fallback, row, waiting), actions = await this.#allowed(view, row, reply.value, scope, definition);
+    const series = this.#series(view, row, reply.value);
     const card: Card = {
       identity: surface ? { item: scope.scope, kind: "scope", revision: String(reply.value.at.seq), subject: { scope: scope.scope }, at: {} }
         : { item: String(row.id), kind: row.entry ? "entry" : row.type, revision: String(row.revision), subject: { scope: scope.scope, ...(row.entry ? {} : { item: row.id }) }, at: row.entry ? {} : { on: row.revision } },
       title: view.kind === "surface" ? query.screen : text(values[view.title]), summary: view.kind === "surface" || view.summary === null ? "" : text(values[view.summary]),
-      reasons: view.kind === "surface" ? [] : view.facts.map(name => `${name}: ${text(values[name])}`),
+      reasons: view.kind === "surface" ? [] : view.facts.map(fact => formatFact(fact, values)),
       projection: [{ scope: scope.scope, ...reply.value.at }], reviewIntended: [], unavailable: [], waitsOn: waiting ? [waiting] : [], settles: [], actions, fallback,
       declared: { kind: view.kind, source: view.item, context: template(view.context, row, waiting), actor: view.kind === "surface" || view.actor === null ? null : values[view.actor] ?? null,
         refresh: view.refresh, display: view.display, back: view.back, backScope, data: reply.value,
+        ...(series ? { series } : {}),
+        ...(view.kind !== "surface" && view.links ? { links: view.links.flatMap(link => {
+          const id = row.fields[link.field];
+          if (id === null || id === undefined) return [];
+          if (!isLocalId(id)) throw new ViewError("unavailable", "The linked native item reference is invalid.");
+          return [{ label: link.label, screen: link.view, items: { [this.packet.package.presentation.views[link.view]!.item]: id } }];
+        }) } : {}),
         ...(view.kind === "log" ? { log: rows.map(row => {
           if (!row.entry || !row.time) throw new ViewError("unavailable", "A log needs explicit sealed entry facts.");
           const values = input(row);
-          return { entry: row.entry, time: row.time, title: text(values[view.title]), summary: view.summary === null ? "" : text(values[view.summary]), facts: view.facts.filter(name => name !== "time").map(name => `${name}: ${text(values[name])}`) };
+          return { entry: row.entry, time: row.time, title: text(values[view.title]), summary: view.summary === null ? "" : text(values[view.summary]), facts: view.facts.filter(fact => applicationViewFactField(fact) !== "time").map(fact => formatFact(fact, values)) };
         }) } : {}),
         ...(surface ? { resource: surface.resource, opens: surface.opens, surface } : {}) },
     };

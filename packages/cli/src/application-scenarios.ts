@@ -37,20 +37,23 @@ export interface ScenarioOwnerRecord { readonly label: "non-native-scenario-owne
 export interface ApplicationScenarioResult { readonly name: string; readonly definition: Digest; readonly steps: number; readonly projectionChecks: number; readonly replay: Verification; readonly authority: "scripted-test-grants"; readonly ownerRecords: readonly ScenarioOwnerRecord[] }
 export interface ApplicationDevelopmentActor extends LocalActor { readonly name: string; readonly seed: string }
 export interface ApplicationDevelopmentSession { readonly result: ApplicationScenarioResult; readonly scope: LocalApplicationScope; readonly time: string; readonly actors: readonly ApplicationDevelopmentActor[] }
+/** Explicit developer fixture injection. Its scope must be actually judged;
+ * this is no application-supplied hook or host installation permission. */
+export type ApplicationScenarioScopeFactory = typeof LocalApplicationScope.found;
 
 export async function runApplicationScenario(packet: AnyPackedApplication, value: unknown): Promise<ApplicationScenarioResult> {
   return executeScenario(packet, value);
 }
 /** A caller that opens a development session owns closing its native scope.
  * Only explicit public TEST actors are exposed, never operator custody. */
-export async function openApplicationScenario(packet: AnyPackedApplication, value: unknown): Promise<ApplicationDevelopmentSession> {
+export async function openApplicationScenario(packet: AnyPackedApplication, value: unknown, factory?: ApplicationScenarioScopeFactory): Promise<ApplicationDevelopmentSession> {
   let session: Omit<ApplicationDevelopmentSession, "result"> | undefined;
-  const result = await executeScenario(packet, value, (scope, time, actors) => { session = { scope, time, actors }; });
+  const result = await executeScenario(packet, value, (scope, time, actors) => { session = { scope, time, actors }; }, factory);
   if (!session) throw new ApplicationScenarioError("The local scenario did not open a session.");
   return { ...session, result };
 }
 async function executeScenario(packet: AnyPackedApplication, value: unknown,
-  retain?: (scope: LocalApplicationScope, time: string, actors: readonly ApplicationDevelopmentActor[]) => void): Promise<ApplicationScenarioResult> {
+  retain?: (scope: LocalApplicationScope, time: string, actors: readonly ApplicationDevelopmentActor[]) => void, factory?: ApplicationScenarioScopeFactory): Promise<ApplicationScenarioResult> {
   if (!supportsLocalSqlite(process.versions.node)) return fail("Local scenarios require unflagged Node SQLite: Node 22.13+, 23.4+, or 24+. Other CLI commands retain Node 22.0 support.");
   // The caller supplies bounded, strict JSON from readApplicationScenario.
   // Own that parsed value before signing/import awaits or caller edits.
@@ -106,7 +109,7 @@ async function executeScenario(packet: AnyPackedApplication, value: unknown,
     const signed = await signedIntent(actor(founding["actor"]).signer, { to: null, kind: "found", fields: fields(founding["fields"]) }, { now: timeMs(time)! });
     const runtime = await import("./application-local.ts");
     const held: LocalActor[] = [...actors.values()].map(who => ({ key: who.signer.key, member: who.member, actions: who.actions, principal: who.principal === null ? null : actor(who.principal).member }));
-    scope = await runtime.LocalApplicationScope.found(packet, signed, held, time, definition).catch(error => {
+    scope = await (factory ?? runtime.LocalApplicationScope.found)(packet, signed, held, time, definition).catch(error => {
       if (error instanceof runtime.LocalApplicationError) return fail(`${name}: ${error.message}`);
       throw error;
     });

@@ -7,3 +7,8 @@ export { Reads } from "./reads.ts";
 export { ReadPreparation } from "./read-preparation.ts";
 export { applicationProjectionData } from "./applications/projection-data.ts";
 export type { Store } from "./store.ts";
+export { Deliveries } from "./delivery.ts";
+export { namespace, sourced, declaredBy, sentText, type Peer, type Binding } from "./namespace.ts";
+export { nativeBirth } from "./native-birth.ts";
+export { projectionScopeOwned } from "./applications/projection-ownership.ts";
+export { PreparationFlights } from "./preparation-flight.ts";

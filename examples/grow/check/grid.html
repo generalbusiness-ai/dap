@@ -1,9 +1,11 @@
 <!doctype html>
 <html lang="en">
 <head><meta charset="utf-8"><title>Grow bench grid</title><style>
+#attention:not(:empty){border:1px solid #c9a16b;background:#fff8e9;border-radius:8px;padding:12px;margin:0 0 16px}#attention h2{font-size:1.1rem;margin:0 0 8px}#attention p{overflow-wrap:anywhere}#attention blockquote{margin:8px 0;padding-left:10px;border-left:3px solid #d4ba8e}#attention button{margin-top:6px}#attention .closed{color:#286c48}#zones button{width:100%;text-align:left;margin:5px 0}
 :host{display:block;font:inherit;color:inherit}*{box-sizing:border-box}h1{font-size:1.4rem;margin:0 0 8px}p{line-height:1.5;margin:8px 0}button{font:inherit;color:inherit;cursor:pointer;border:1px solid #a0aaa3;border-radius:6px;background:transparent;padding:8px;min-height:44px}button:disabled,select:disabled{opacity:.55;cursor:default}button:focus-visible{outline:3px solid #286c48;outline-offset:2px}.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.toolbar button[aria-pressed=true]{background:#dceadd;color:#183e28;border-color:#286c48}.scroll{max-width:100%;overflow:auto;padding:3px}#benches{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:4px;padding-bottom:6px}.bench{border:1px solid #a0aaa3;border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:3px;min-height:40px;background:#f0f2f0;color:#183126}.bench small{font-size:11px}.bench[data-stale=true]{border-style:dashed}.bench[data-selected=true]{outline:3px solid #286c48;outline-offset:-3px}.bench[data-missing=true]{background:repeating-linear-gradient(135deg,#f1f1ed,#f1f1ed 6px,#e4e5df 6px,#e4e5df 8px)}#selection{font-weight:600}.muted{color:var(--color-text-secondary,#58635c)}#zones{padding-left:20px}#error{color:#a22}.bench span{white-space:nowrap}@media(max-width:360px){.bench{font-size:10px;min-height:34px;padding:2px}.bench small{font-size:9px}}
 </style></head>
 <body>
+<section id="attention" aria-label="Operator attention"></section>
 <h1>Bench grid</h1><p id="room-label"></p><p id="head" class="muted"></p>
 <div class="toolbar" role="group" aria-label="Bench metric"><button data-metric="moisture" aria-pressed="true">Moisture</button><button data-metric="ec" aria-pressed="false">EC</button><button data-metric="ph" aria-pressed="false">pH</button></div>
 <p id="legend" class="muted"></p><p class="muted">Dashed borders mark stale benches. Stripes mark missing readings.</p>
@@ -16,8 +18,27 @@ const api=window.dapSurface,root=api.root,grid=root.querySelector('#benches'),ch
 let data,metric='moisture',selected=null;
 const metrics={moisture:{label:'Moisture',unit:'%',scale:1,max:100},ec:{label:'EC',unit:' mS/cm',scale:1000,max:10000},ph:{label:'pH',unit:'',scale:100,max:1400}};
 const value=(raw,scale=1,unit='')=>raw===null||raw===undefined?'No reading':String(raw/scale)+unit;
+function openView(name,items){root.querySelector('#error').textContent='';void api.open(name,items).catch(error=>{root.querySelector('#error').textContent=error.message})}
+function renderAttention(){
+ const panel=root.querySelector('#attention');panel.replaceChildren();
+ const alerts=(data.sources.alert||[]).filter(row=>row.state!=='closed').sort((a,b)=>({open:0,held:1,authorized:2}[a.state]-({open:0,held:1,authorized:2}[b.state])||b.id-a.id));
+ const alert=alerts[0];
+ if(alert){
+  const title=document.createElement('h2');title.textContent=alert.state==='held'?'Operator alert · held':alert.state==='authorized'?'Operator alert · authorized':'Operator authorization needed';panel.append(title);
+  const text=document.createElement('p');text.textContent=alert.fields.text;panel.append(text);
+  const proposal=document.createElement('p');proposal.textContent=alert.fields.proposal;panel.append(proposal);
+  for(const device of data.sources.device.filter(row=>row.fields.zone===alert.fields.zone&&row.fields.reported==='error')){
+   const quote=document.createElement('blockquote');quote.textContent=device.fields.label+': “'+device.fields.description+'” — sensor report';panel.append(quote);
+  }
+  const state=document.createElement('p');state.textContent=alert.state==='held'?'Held until '+alert.fields.holdUntil+'.':alert.state==='authorized'?'The operator signed the target change. A sensor report is separate.':'Heater targets require the operator’s authority.';panel.append(state);
+  const button=document.createElement('button');button.type='button';button.textContent='Open alert';button.onclick=()=>openView('alert',{alert:alert.id});panel.append(button);
+ }else{
+  const incident=(data.sources.incident||[]).filter(row=>row.state==='closed').sort((a,b)=>b.id-a.id)[0];
+  if(incident){const status=document.createElement('p');status.className='closed';status.textContent='Incident '+incident.id+' closed · entries '+incident.fields.first+'–'+incident.fields.last;panel.append(status);const button=document.createElement('button');button.type='button';button.textContent='Open incident record';button.onclick=()=>openView('incident',{incident:incident.id});panel.append(button)}
+ }
+}
 function render(){
- if(!data)return;const spec=metrics[metric];
+ if(!data)return;renderAttention();const spec=metrics[metric];
  root.querySelector('#room-label').textContent=data.sources.room?.[0]?.fields.label||'';
  root.querySelector('#head').textContent='Native head '+data.at.seq+' · '+data.sources.bench.length+' bench'+(data.sources.bench.length===1?'':'es');
  root.querySelector('#legend').textContent=spec.label+': darker green means a higher reading. Values use '+(metric==='moisture'?'percent':metric==='ec'?'mS/cm':'the pH scale')+'.';
@@ -33,7 +54,7 @@ function render(){
   const option=document.createElement('option');option.value=String(bench.id);option.textContent=f.label+', '+bench.state+', '+spec.label+' '+value(raw,spec.scale,spec.unit);choose.append(option);grid.append(button);
  }
  if(selected!==null)choose.value=String(selected);choose.disabled=!benches.length;root.querySelector('#open-bench').disabled=!benches.length;
- const zones=root.querySelector('#zones');zones.replaceChildren();if(!data.sources.zone.length){const li=document.createElement('li');li.textContent='No zones in this projection.';zones.append(li)}for(const zone of data.sources.zone){const li=document.createElement('li'),f=zone.fields;li.textContent=f.label+': '+zone.state+' · mean '+value(f.mean,100,' °C')+' · setpoint '+value(f.setpoint,100,' °C');zones.append(li)}
+ const zones=root.querySelector('#zones');zones.replaceChildren();if(!data.sources.zone.length){const li=document.createElement('li');li.textContent='No zones in this projection.';zones.append(li)}for(const zone of data.sources.zone){const li=document.createElement('li'),f=zone.fields,button=document.createElement('button');button.type='button';button.textContent=f.label+': '+zone.state+' · mean '+value(f.mean,100,' °C')+' · setpoint '+value(f.setpoint,100,' °C');button.onclick=()=>openView('zone',{zone:zone.id});li.append(button);zones.append(li)}
  const samples=data.sources.samples;root.querySelector('#samples').textContent=samples.length?'Recent observation samples: '+samples.map(row=>row.fields.sampledAt).join(', ')+'. Samples are limited to the last 100 journal entries.':'No observation samples in the last 100 journal entries.';
 }
 for(const button of root.querySelectorAll('[data-metric]'))button.onclick=()=>{metric=button.dataset.metric;for(const peer of root.querySelectorAll('[data-metric]'))peer.setAttribute('aria-pressed',String(peer===button));render()};
