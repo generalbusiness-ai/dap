@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at homepage/test/home.test.mjs","body":{"commit":"9060775ee32c934086bca8b481c1e0d328036385","path":"homepage/test/home.test.mjs"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2c007ff2171fd82060744ac4543e85693e632f7e","text":"Merge retired a covered predecessor; the successor is at homepage/src/index.html."}
