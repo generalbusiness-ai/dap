@@ -4,9 +4,10 @@ Request `78fba9fca56a28dc75cca37f88a0fbea334bdc2a`, promise
 `e60fe0660ce663c14afe242ad6614bacbe91610a`. This separate preparation
 starts from reviewed Main `3ed2a08a`. Actual reviewed G5a must land before
 the integration witness and final gate. The frozen G5a views have not been
-imported, executed or edited. This has no release packet, private dependency
-view, simulator, whole gate, review, deployment or live acceptance yet. The
-static landing-page portion and its focused checks are now prepared below.
+imported, executed or edited. The static page, pure simulation, bounded public
+journal reconstruction and per-tick HTTP allowance are prepared and checked
+below. Release packet, native tick/catch-up, whole gate, Source/review,
+deployment and live acceptance remain pending.
 
 The commissioned Source contains a separate signed demo release, a stateless
 bounded cron Worker beside the package, an operator runbook, and the Grow
@@ -161,3 +162,38 @@ checks 127 manifest bytes/distinct inodes and 28 contained links, including
 13 workspaces. Lock/stamp stays `3546b538…`; zero installs, no copied Vite
 caches to clear. This is not a tarball-integrity check. No whole gate,
 Source/review, provider resource, deployment or live acceptance is claimed.
+
+## Public read and per-tick allowance
+
+`readCommandJournal` now reads at most four public history pages through
+one named head. It starts at the current native read interface's explicit
+decimal position cursor, then follows the server's opaque continuations.
+It accepts no missing page as completion and passes the whole selected
+chain to the reducer. Newer entries can arrive while it reads; they do not
+replace the named head or advance its acknowledged prefix. Native coverage
+and the application cursor are still integration obligations.
+
+The per-invocation HTTP wrapper allows only the configured service origin,
+named scopes and the required public summary, query, history, entry,
+session, settlement, act and preparation routes. Preliminary limits are
+96 reads, 48 mutations, 256 KiB of request bodies, 4 MiB of retained reply
+chunks and a 45-second wall window. The driver will also use a five-second
+SDK per-request deadline. After the wall window no new request begins and
+a late reply is discarded; an already-started remote act can still have
+taken effect. The first chunk crossing the byte allowance is not retained,
+cancellation is requested, and the local send fence closes immediately,
+even if cancellation waits. This is not a claim that the remote act was
+cancelled or that no over-limit chunk crossed the network.
+
+Focused command/public-page and HTTP-budget checks pass (two files/two
+cases), log `/tmp/artroom-g5-hosted-public-budget-owning-20261019.log`;
+compiler log has the same prefix with `types`. The budget witness uses
+scripted HTTP bytes. It proves no native bounds refusal or owner step.
+An initial control selection was ambiguous and changed nothing; the next
+exact one-line control exposed an assertion but the helper classified its
+promise rejection as inconclusive. The test now joins its pending read
+before asserting the fence. The same precise one-line bypass then gives
+one pass → one unchanged boolean assertion failure → exact restore,
+`/tmp/artroom-g5-hosted-budget-control-joined-20261019.log`. Earlier control
+logs remain retained; only the joined control is distinguishing evidence.
+No whole suite or mutation sweep was run.

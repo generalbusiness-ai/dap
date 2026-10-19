@@ -60,3 +60,29 @@ export function openCommands(scope: ScopeRef, owner: MemberRef, through: FactRef
   if (previous !== head.hash) return invalid();
   return [...records.values()];
 }
+
+/** Current public history cursors accept an explicit decimal entry position
+ * (scope reads.ts). Thereafter retain the server's opaque continuation.
+ * Four pages and one complete, hash-checked prefix are the whole allowance.
+ * Newer entries may arrive during the reads; only the named head is returned. */
+export async function readCommandJournal(reader: Pick<import("@generalbusiness/artroom-client").ScopeHandle, "history">,
+  scope: ScopeRef, owner: MemberRef, through: FactRef | null, head: Head): Promise<{ entries: readonly Sealed[]; open: readonly OpenCommand[] }> {
+  const start = through === null ? 0 : through.seq + 1;
+  if (!integer(start) || head.seq - start + 1 > COMMAND_SUFFIX_ENTRIES || head.seq < start - 1) return invalid();
+  const entries: Sealed[] = [];
+  let cursor: string | undefined = String(start);
+  for (let page = 0; page < 4 && entries.length < head.seq - start + 1; page++) {
+    const read = await reader.history(cursor);
+    if (!read.ok || read.at.seq < head.seq || read.at.seq === head.seq && read.at.hash !== head.hash || read.value.length === 0) return invalid();
+    for (const sealed of read.value) {
+      if (sealed.entry.seq > head.seq) break;
+      entries.push(sealed);
+      if (entries.length > COMMAND_SUFFIX_ENTRIES) return invalid();
+    }
+    if (new TextEncoder().encode(canonicalize(entries)).length > COMMAND_SUFFIX_BYTES) return invalid();
+    if (entries.at(-1)?.entry.seq === head.seq) break;
+    if (read.complete || typeof read.next !== "string" || read.next === cursor) return invalid();
+    cursor = read.next;
+  }
+  return { entries, open: openCommands(scope, owner, through, head, entries) };
+}
