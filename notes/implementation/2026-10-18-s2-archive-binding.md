@@ -192,3 +192,31 @@ Only the clone's Vite caches were removed. Audit
 unchanged lock SHA-256
 `3546b5384c9245fb646c4f7c22cabde0f4351b05dfcec704d1bdeb170666361a`.
 This checks versions and links, not tarball integrity or private trees.
+
+## First gate: shipped-version boundary
+
+The first final gate at `68c3a48b784fd3b6494b40e9292fdd6d256a6c8c`, tree
+`503cb643d818e0bf5d28eafdf52994ad30bb586c`, failed. Original process 88908
+closed with exit one. Whitespace and the full workspace typecheck passed;
+installation was skipped. Vitest reported 402 files: 396 passed, five
+failed, one skipped; 1,934 cases: 1,926 passed, five failed, three skipped.
+The later Node and Counting phases did not run.
+
+The five failures are MCP tool-reference inventory, the role-budget
+snapshot, membership observation actions, shipped platform-version digests,
+and the native CLI story's directory act list. These are real maintained
+expectations, not an infrastructure-only failure. In particular, the
+version test records the planner's 7 October rule: changed definitions get
+new versions, and existing scopes keep the meaning they pinned. The first
+implementation changed shared base data in place. Before changing a golden
+expectation, correction must preserve that version boundary with a separate
+explicit archive cohort. Assertions `020a9d0b` and `16b45b2c` record the
+finding and proposed correction against the later no-migration direction.
+
+Complete evidence: `/tmp/artroom-s2-final-gate-20261019.log`, SHA-256
+`22909700e1cddd079da95c1b72d59c84ebf4309bef9d2809486b03646441ae60`;
+raw directory `/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.LoHhqNbqEy`;
+outer timing `/tmp/artroom-s2-final-gate-20261019.outer.time`: 626.50 seconds
+elapsed, 862.68 seconds CPU (741.26 user, 121.42 system). These are warm,
+shared-machine measurements. No source or dependency changed while the
+original gate ran. No retry, review, seal, or completion is implied.
