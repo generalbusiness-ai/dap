@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1cc97ef369f4209afcf0e95ec33aed609dbd3830","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-18-m2b-owned-scopes.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2055f92fe866595272443895b92add7ce757ecb5","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/views/tools.ts."}
