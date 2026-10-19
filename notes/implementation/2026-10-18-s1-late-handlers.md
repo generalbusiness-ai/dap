@@ -1,8 +1,9 @@
 # S1: late handlers
 
-This implementation passed its final gate and awaits review under request `4353d842ce797515e7a369ceae6515c9efaa547b`,
+This correction awaits its gate and review under request `4353d842ce797515e7a369ceae6515c9efaa547b`,
 promise `6201d371095659784d6c68f4e5dfbeb5c4c5eac6`, and parent S1 request
-`b42d3b741986eb8f171e353ad3cb3704f202be9b`. It has no review,
+`b42d3b741986eb8f171e353ad3cb3704f202be9b`. The first review requested the
+reservation-identity correction below; this correction has no approval,
 landing, publication or deployment. The initial base was `b44a8e255`, the
 earlier source-order candidate. Its F1 correction and audited Main
 `1da3f4ca79ad034286ca4d8988bed9dee022369e` are incorporated.
@@ -162,7 +163,7 @@ classified it inconclusive. That diagnostic remains in
 result. Page assets were regenerated from the final validator source;
 `/tmp/artroom-s1-late-page-build-20261019.log` records the build.
 
-## Final gate
+## Original candidate's gate
 
 The one final gate passed at code/test head
 `e82eb8ff4d62f03de6e2b5725ec1434bf13e0a2f`, tree
@@ -189,3 +190,55 @@ Counter's explicit evidence is under the same temporary root at
 listed owned regular files, including historical diagnostics. It grants
 no adjacent or private dependency-tree access. All listed files and this
 checkout's source and dependencies stay frozen during review.
+
+## Review correction: reservation identities
+
+Checker report `93243e05` requested F1 on exact candidate
+`376937614a56a8e425b6f53100bcf18e65cab2e3` (read in full and acknowledged by
+ratification `001dc0a8`). A real handler named `sample.late.then` can collide
+with the synthetic body identity for `sample`'s replacement. It overwrote
+the amount used by both the ordinary request plan and trusted platform
+plan: an expensive result actually creates one native record but can be
+quoted and folded with zero. The passing original gate did not cover this
+case and does not prove the corrected code.
+
+The correction is in a fresh checkout,
+`/tmp/artroom-builder-s1-late-reservation-identity-20261019`, based on that
+reviewed candidate. The old finite map
+`/private/tmp/artroom-s1-late-review-evidence-map-20261019.json`, SHA-256
+`04d24f4da15c2ccd582c33d4ed4f13b9561a77f140f03863c4bb0ecc7df33557`, all
+165 leaves, its sealer and its source/dependency view remain frozen.
+
+Validation now refuses the ambiguous name combination with
+`handler-body-collision`, before either capacity map is built. This is a
+combination restriction, not a new character rule for names: the same real
+name remains valid when the other handler has no replacement body. Planning
+and folded lookup retain the same existing paths; no second handler run or
+journal scan was added.
+
+`derive/test/late-reservation-identity.test.ts` adapts the checker's real
+validator/judge/fold/MemoryState regression. Its two cases cover ordinary
+and trusted platform definitions. With distinct names the declared quote
+and folded pending request both reserve one record; the authentic result
+then runs the native hold license effect and creates receiver-pin record
+99. The colliding counterpart is refused. Removing the replacement admits
+that local name again. Declarations, per-key grants and clock are scripted;
+the Directory-kind MemoryState roots prove no live install, enrollment,
+native object authority or provider action.
+
+All sixteen cases across the late and new identity files pass in
+`/tmp/artroom-s1-late-identity-focused-initial-20261019.log`; owning Derive
+test typecheck passes in `/tmp/artroom-s1-late-identity-type-initial-20261019.log`.
+The focused control disables only the collision guard: both unchanged
+identity cases fail by wrongly admitting the ambiguous declaration; the
+source is restored. See `/tmp/artroom-s1-late-identity-control-20261019.log`.
+Page was rebuilt from the corrected source, recorded in
+`/tmp/artroom-s1-late-identity-page-build-20261019.log`.
+
+The correction has a private APFS COW dependency view copied from idle S2,
+106 checked versions and thirteen relative internal links, zero installs,
+unchanged lock `3546b5384c9245fb646c4f7c22cabde0f4351b05dfcec704d1bdeb170666361a`.
+Audit `/tmp/artroom-s1-late-identity-dependency-view-20261019.json`, SHA-256
+`6b07aaa76127187373c5c8b60914b493ca0734e186719a85e9fc2b8fb9867b04`.
+This verifies versions and links, not tarball integrity or private trees.
+No correction gate, approval or completion is claimed at this checkpoint.

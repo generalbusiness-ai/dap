@@ -287,6 +287,9 @@ export function receives(d: Defining, v: unknown, top: Rec): void {
         const seconds = within && int(within["seconds"], at(at(latePath, "within"), "seconds"));
         if (seconds !== null && seconds * 1000 > LAST_MS) bad("bound", at(latePath, "within"), "is longer than the span a timestamp can name");
         if ("then" in late) {
+          // Reservation paths name this synthetic body. A real handler with
+          // that same identity would overwrite its quoted result closure.
+          if (Object.hasOwn(members(v), `${name}.late.then`)) bad("handler-body-collision", at(latePath, "then"), "a real handler has the replacement body's reservation identity");
           // Match the listed capability's reserved request, as delivery does;
           // the local handler key is not part of that protocol.
           if ([...d.capabilities.values()].some(capability => declaredBy(capability)?.reserved.some(reserved => reserved.request.class === cls && reserved.request.message === message))) {
