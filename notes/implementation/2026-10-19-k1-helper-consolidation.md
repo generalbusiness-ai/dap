@@ -358,3 +358,53 @@ gate will use that stable adopted view. Both logs are retained as
 `pre-gate-pool-compat` and `pre-gate-pool-verified`. No package was installed
 and no lock or dependency manifest changed; the patch is to the private
 copy, outside any original process and before its gate snapshot.
+
+## Required gate: natural pass
+
+Original session 94836 naturally closed zero at clean code/test head
+`b1f611d78eabb01ffe7adbcb2fee458647645283`, tree
+`df1999f52724e7f4642c1658b111d347a798c4f1`. This is K1's first and only
+whole gate. It passes whitespace, the shared-helper check and the full
+typecheck, then 399 Vitest files and 1,926 cases; one recording file and
+three existing cases skip. The built-in Node list passes 33 cases,
+including the two new guard cases, and Counter's separate Node witnesses
+pass all 55. Existing test source/assertions and case deadlines are exact.
+The skips are Page and demo recording without their opt-in flags, and the
+Darwin exclusion for the long ARTROOM_HOME dead-reclaimer witness.
+
+`/tmp/artroom-k1-gate-20261019.log`, `...gate-time...log` and
+`...gate-process-closure...json` retain the original result and exact
+inputs. The raw step directory is
+`/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.5f5kEHAG8C`.
+Outer observed wall time is 483.89 seconds; user 601.91 plus system 100.47
+gives 702.38 seconds CPU for that actual pipeline. These are not sums of
+separate runs. Machine: macOS 27.0.1, Darwin 27.0.0, arm64, 18 reported
+logical CPUs; start load averages 1.554, 1.370 and 1.471. Private installed
+dependencies and recent focused/build caches were warm or partly warm.
+Other host work was not controlled. No product latency claim follows.
+
+Before/after snapshots retain all 2,300 tracked file hashes, 5,499 dependency
+regular-file hashes and 31 contained links. Head, tree, clean state, all
+tracked files, all 5,498 installed dependency files and every link are
+exact. The sole changed dependency-directory file is Vitest's existing
+results output cache at
+`node_modules/.vite/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/results.json`.
+It is reported explicitly, not silently excluded. The matching lock stamp
+skips installation. Pretest confirms the adopted cd50 pool bundle is
+unchanged. No source or installed dependency is edited during the gate.
+
+The raw passing log retains scripted reset and SQLite retention-fault
+injections, four Git advertisement text-decoding warnings, and one
+different-Durable-Object I/O / RefcountedCanceler diagnostic in Vitest's
+abort code. That last diagnostic is not attributed to a case. It remains
+an honest unclassified diagnostic, not an assertion failure or a general
+stability conclusion; there is no extra gate or broad rerun to relabel it.
+
+Gate assertion `799916a2c8aee02cb538fa1628b82c5977c7c1bf` records the natural
+pass and these qualifications. The final reporting candidate changes only
+this primary note after the passing code/test head. Its exact commit/tree,
+evidence map and SHA-256 are supplied by the Source artifact and formal
+review request, avoiding a self-referential hash in this note. The review
+must cover all changed paths against actual Main dba3e762, the complete
+helper semantic map and the original gate. No approval, landing, GitHub
+push or deployment has occurred for K1.
