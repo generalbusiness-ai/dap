@@ -126,7 +126,9 @@ package and cached binary were used from scratch. All 384 page/width checks
 found meaningful content, correct titles, no horizontal overflow, no
 framework overlay, no relevant console errors and 44-pixel targets. The
 member-record click and own-control keyboard route passed in both themes,
-including visible focus. Five stress screens also fit 320 px and CSS
+including visible focus. Identity links use their visible handle, kind,
+standing word and controller as their accessible names; no shortened label
+hides those words. Five stress screens also fit 320 px and CSS
 zoom 200%; this is not browser-toolbar zoom.
 
 Text, muted text, accent and removal text pass 4.5:1 against both surfaces.
@@ -155,5 +157,8 @@ The retained scratch renderer is
 rendering.json and the review evidence. It served repository files only on
 loopback, used the existing pinned browser, and installed no dependency.
 The first sandboxed server attempt was refused before a browser opened.
-The allowed original render and expanded final render both ended normally.
+The allowed original, expanded and accessible-name follow-up renders all
+ended normally. The final follow-up recaptured all pages after removing
+shortened aria-labels; all 192 primary PNGs match the preceding capture
+byte for byte, including the committed previews.
 No hosted service, membership act, deployment or native receipt was produced.

@@ -83,3 +83,13 @@ retained separately. No package dependency was installed or added.
 No final gate, Source or exact-head review has been claimed. Production
 source/tests are unchanged. G5a/G5 retain priority; this is the saved static
 preparation while the native review is pending.
+
+
+A final accessibility correction removes the shortened identity aria-label,
+so the link's accessible name includes the visible handle, kind, standing
+word and agent controller. The local agent-record click now selects that
+full name. The original follow-up process ended 0 with all 384 checks and 192
+crops; all 192 PNGs match the preceding expanded capture byte for byte.
+The current rendering.json hashes the final generated sources and follow-up
+raw report/log/images. No screen-reader execution is claimed. Evidence is
+`/tmp/artroom-d1-browser-accessible-20261019.log` and its sibling directory.

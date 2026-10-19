@@ -36,7 +36,7 @@ def member(theme, handle="@maya", kind="person", state="active", presence=None, 
     controlled = '<span class="controller">' + (f'controlled by {E(controller)}' if controller else 'controller unavailable') + '</span>' if kind == "agent" else ""
     mark = f'<span class="mark {kind} {state}" aria-hidden="true"><span>{E(initials)}</span></span>'
     target = {"@maya": "record-person", "@climate": "record-agent", "@eli": "record-removed-found"}.get(handle, "record-" + handle.lstrip("@"))
-    identity = f'<a class="member-identity" href="{target}-{theme}.html" aria-label="Open {E(handle, quote=True)} member record">{mark}<span class="identity-copy"><strong>{E(handle)}</strong><span class="kind-line">{detail}</span>{controlled}</span></a>'
+    identity = f'<a class="member-identity" href="{target}-{theme}.html">{mark}<span class="identity-copy"><strong>{E(handle)}</strong><span class="kind-line">{detail}</span>{controlled}</span></a>'
     extra = ""
     if presence:
         mode, text = presence
