@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"The homepage test expects four destinations (Room, Library, Counter, Documentation) and no /jam/ target on the homepage; the five built pages are otherwise unchanged.","body":{"commit":"b3a9cc3fa71af62026a16c9045b01a30424a5584","path":"homepage/test/home.test.mjs"}}
+{"kind":"artifact","text":"The homepage without the Jam destination card: Room, Library, Counter and Documentation remain; nothing else changes.","body":{"commit":"b3a9cc3fa71af62026a16c9045b01a30424a5584","path":"homepage/src/index.html"}}
