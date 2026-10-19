@@ -8,6 +8,8 @@ import { declarations, fail, limits, only, presentation as presentation1, releas
 import { bindApplicationProjection } from "./application-projection-binding.ts";
 import { bindApplicationViews } from "./application-view-binding.ts";
 import { isApplicationViewResource } from "./application-view.ts";
+import { emptyPackageComposition, PackageCompositionError, readPackageComposition } from "@generalbusiness/artroom-package-graph";
+import { ApplicationPackageValidationError } from "./application-v2-types.ts";
 import type { Signer } from "./signer.ts";
 import type { ApplicationPackage2, ApplicationPackageInput2, ApplicationPresentation2, ApplicationRelease2, ApplicationReleaseProof2, ApplicationSemantics2, PackedApplication2 } from "./application-v2-types.ts";
 export * from "./application-v2-types.ts";
@@ -23,11 +25,18 @@ function binding<T>(work: () => T): T {
   catch (error) { if (error instanceof ApplicationPackageError) throw error; return fail(); }
 }
 function semantics(value: unknown, bounds: ApplicationPackageLimits): ApplicationSemantics2 {
-  const body = only(value, "capabilities,creates,definitions,entry,host,predecessor,projections,roles,v");
+  const body = only(value, "capabilities,connections,creates,definitions,derivation,entry,exercises,groups,host,order,parameters,predecessor,projections,rights,roles,v");
   if (body["v"] !== 2 || !isRecord(body["projections"])) return fail();
   // Reuse the unchanged closure, requirements and role validation. Only this
   // explicit v2 entry point supplies the separately checked projection place.
-  const base = semantics1({ ...body, v: 1, projections: {} }, bounds);
+  const { connections, rights, exercises, groups, order, derivation, parameters, ...legacy } = body;
+  const base = semantics1({ ...legacy, v: 1, projections: {} }, bounds);
+  let composition;
+  try { composition = readPackageComposition({ connections, rights, exercises, groups, order, derivation, parameters }, new Set(base.definitions.map(part => part.id))); }
+  catch (error) {
+    if (error instanceof PackageCompositionError) throw new ApplicationPackageValidationError([{ definition: null, row: error.path, check: "composition", reason: error.reason, severity: "refusal", message: error.message }]);
+    throw error;
+  }
   const projections = body["projections"];
   if (Object.keys(projections).length > 32) return fail("limit");
   const covered = new Set<Digest>();
@@ -38,7 +47,7 @@ function semantics(value: unknown, bounds: ApplicationPackageLimits): Applicatio
     binding(() => bindApplicationProjection(given, parseStrict(part.bytes) as DeclaredDefinition)); covered.add(part.id);
   }
   if (base.definitions.some(part => !covered.has(part.id))) return fail("closure");
-  applicationJson({ host: base.host, roles: base.roles, capabilities: base.capabilities, projections }, bounds.metadataBytes);
+  applicationJson({ host: base.host, roles: base.roles, capabilities: base.capabilities, projections, ...composition }, bounds.metadataBytes);
   return body as unknown as ApplicationSemantics2;
 }
 function presentation(value: unknown, semantic: ApplicationSemantics2, semanticId: Digest, bounds: ApplicationPackageLimits): ApplicationPresentation2 {
@@ -103,10 +112,10 @@ export async function packApplication2(input: ApplicationPackageInput2, signer: 
   const bounds = limits(overrides), publisher = signer.key;
   const owned = parseStrict(applicationJson(input, bounds.bytes)) as ApplicationPackageInput2;
   only(owned, "name,presentation,semantic,version");
-  only(owned.semantic, "capabilities,definitions,entry,host,predecessor,projections,roles,v");
+  only({ ...emptyPackageComposition(), ...owned.semantic }, "capabilities,connections,definitions,derivation,entry,exercises,groups,host,order,parameters,predecessor,projections,rights,roles,v");
   only(owned.presentation, "assets,descriptions,entry,resources,v,views");
   const definitions = [...owned.semantic.definitions].sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
-  const checked = semantics({ ...owned.semantic, definitions, creates: declarations(definitions, bounds).creates,
+  const checked = semantics({ ...emptyPackageComposition(), ...owned.semantic, definitions, creates: declarations(definitions, bounds).creates,
     roles: Object.fromEntries(Object.entries(owned.semantic.roles).map(([role, actions]) => [role, [...actions].sort()])),
     capabilities: [...owned.semantic.capabilities].sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0),
     host: { ...owned.semantic.host, profiles: [...owned.semantic.host.profiles].sort() } }, bounds);

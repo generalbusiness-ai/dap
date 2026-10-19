@@ -114,3 +114,68 @@ unchanged lock SHA-256
 This checks versions/links, not tarball integrity or private dependency trees.
 The date in early log names records the worktree's preparation day; the
 native witness ran after local midnight on 19 October.
+
+## Composition checkpoint
+
+Planner assertion `3af37117` confirms the Q1 decision `e43b913f`: exercises
+remains signed manifest metadata. There is no new definition mark and no
+claim that the manifest discovers all writers of a business constraint.
+
+The v2 writer emits all seven composition places. The reader requires
+them, checks bounded closed forms and references, and explicitly refuses
+nonempty groups, derivation and parameters as `unsupported-form` until
+their slices. Default empty composition preserves writer ergonomics, not
+old wire compatibility. Named composition findings retain the existing
+package-invalid error boundary. Native names, including an own property
+named `__proto__`, retain their existing spelling rules. Three codec cases
+pass in `/tmp/artroom-p1-composition-codec-own-names-20261019.log`.
+
+A new internal workspace, `@generalbusiness/artroom-package-graph`, holds
+the pure composition reader and graph checks so the codec and Derive can
+share them without a dependency cycle. Its checks are not yet wired into
+the codec or a public `validatePackage` entry point. Port field typing,
+cycle acknowledgement, the complete projected-bound report, CLI rows and
+the remaining Grow pairs are unfinished. Current graph code checks scope
+endpoint declarations and allowed writers, explicit failure clauses,
+default grants, declared ownership, order, pending states with written
+timed exits, connected handler names/pins, and lifetime fan-in. The pending
+and port checks still need their full witnesses. No full P1 claim follows.
+
+`derive/test/package-graph.test.ts` checks actual Grow declarations with
+native whole-definition validation before the component graph check. All
+four cases pass in `/tmp/artroom-p1-grow-graph-all-endpoints-20261019.log`.
+The hand count is one Site and three successful Rooms, each contributing
+one retained key. Copies 2 fails. Two nonfinal related items per Room give
+six keys: copies 3 fails and copies 6 passes. A creation conflict that
+enters `failed`, or a related type with any final state, leaves fan-in
+unproved. The other cases distinguish signer-selected endpoints and a
+wrong declared child, missing result coverage, default grants, missing
+order, wrong right ownership and an admitted `unowned-bound` warning.
+These are component witnesses, not package-byte or installation evidence.
+The owning Derive test typecheck passes in
+`/tmp/artroom-p1-grow-obligations-type-20261019.log`.
+
+The successful-creation control removes final states from that lifetime
+proof. The unchanged conflict witness then fails because the graph wrongly
+admits the bound; source is restored. See
+`/tmp/artroom-p1-grow-final-state-lifetime-control-20261019.log`.
+An earlier control disabled only the special conflict test and survived:
+the general final-writer restriction still refused that same own-item
+conflict. That is not distinguishing evidence for the special alias case;
+the diagnostic remains in
+`/tmp/artroom-p1-grow-conflict-lifetime-control-20261019.log`.
+
+The new workspace is an intentional source dependency change, with no
+third-party additions. An offline lock-only run in a manifests-only scratch
+tree produced exactly the same lock JSON and created no node_modules;
+`/tmp/artroom-p1-lock-only-offline-20261019.log` and
+`/tmp/artroom-p1-lock-scratch-20261019.txt` record it. No install ran in a
+checkout. The refreshed private view keeps the same 106 external versions
+and adds the fourteenth internal relative workspace link. Audit
+`/tmp/artroom-p1-composition-dependency-view-20261019.json`, SHA-256
+`ae009c6c1b26e02cf12becb503cc7d24beed578ab232156de71b344da97c3907`;
+new lock SHA-256
+`a2bc75bcef45041b9ef8110e145680005a41ab39047183858524a13fbbe725c0`.
+Earlier dependency evidence remains historical. Graph, Bytes and Scope
+owning typechecks passed before the latest component checks; no complete
+gate, review, landing or completion is claimed.

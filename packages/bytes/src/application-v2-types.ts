@@ -3,7 +3,13 @@ import type { Base64Url } from "@generalbusiness/dap-contract";
 import type { ApplicationIds, ApplicationManifest, ApplicationPresentation, ApplicationSemantics, PackedApplication } from "./application-types.ts";
 import type { ApplicationReadProjection } from "./application-projection-types.ts";
 import type { ApplicationViews } from "./application-view.ts";
-export interface ApplicationSemantics2 extends Omit<ApplicationSemantics, "v" | "projections"> {
+import { ApplicationPackageError } from "./application-types.ts";
+import type { PackageComposition, PackageFinding } from "@generalbusiness/artroom-package-graph";
+export type { PackageComposition, PackageFinding } from "@generalbusiness/artroom-package-graph";
+export class ApplicationPackageValidationError extends ApplicationPackageError {
+  constructor(readonly findings: readonly PackageFinding[]) { super("invalid"); }
+}
+export interface ApplicationSemantics2 extends Omit<ApplicationSemantics, "v" | "projections">, PackageComposition {
   readonly v: 2;
   readonly projections: Readonly<Record<string, ApplicationReadProjection>>;
 }
@@ -29,6 +35,6 @@ export type AnyPackedApplication = PackedApplication | PackedApplication2;
 export interface ApplicationPackageInput2 {
   readonly name: string;
   readonly version: string;
-  readonly semantic: Omit<ApplicationSemantics2, "creates">;
+  readonly semantic: Omit<ApplicationSemantics2, "creates" | keyof PackageComposition> & Partial<PackageComposition>;
   readonly presentation: Omit<ApplicationPresentation2, "semantic">;
 }

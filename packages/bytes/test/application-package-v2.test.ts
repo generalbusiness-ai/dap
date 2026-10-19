@@ -3,7 +3,7 @@ import type { DeclaredDefinition } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, definitionDigest, digestBytes, keyIdOfSecret, sign, utf8 } from "../src/index.ts";
 import { definition as empty, secret } from "./fixtures.ts";
 import { packApplication, readApplicationPackage, readApplicationReleaseProof } from "../src/application-package.ts";
-import { packApplication2, readApplicationPackage2, readApplicationReleaseProof2, type ApplicationPackageInput2 } from "../src/application-package-v2.ts";
+import { ApplicationPackageValidationError, packApplication2, readApplicationPackage2, readApplicationReleaseProof2, type ApplicationPackageInput2 } from "../src/application-package-v2.ts";
 import { readApplicationProjection } from "../src/application-projection.ts";
 const signer = { key: keyIdOfSecret(secret), sign: (bytes: Uint8Array) => sign(secret, bytes) };
 // Small made-up schema, real package hashes and signatures. This is no
@@ -74,4 +74,24 @@ test("v2 refuses changed signatures, missing projections and unbound views befor
   Object.defineProperty(getter.semantic, "projections", { enumerable: true, get() { gets++; return {}; } });
   await expect(packApplication2(getter, tracked)).rejects.toThrow("application-package-invalid");
   expect(calls).toBe(0); expect(gets).toBe(0);
+});
+
+test("v2 signs explicit composition, refuses ambiguous references and keeps later forms unsupported", async () => {
+  const plain = await packApplication2(input(), signer), id = definitionDigest(definition);
+  expect(plain.package.semantic).toMatchObject({ connections: [], rights: {}, exercises: [], groups: [], order: [], derivation: {}, parameters: {} });
+  const composed: ApplicationPackageInput2 = { ...input(), semantic: { ...input().semantic,
+    rights: { ["__proto__"]: { owner: id } }, exercises: [{ definition: id, row: "acts.touch", right: "__proto__" }],
+  } };
+  const packet = await packApplication2(composed, signer);
+  expect(packet.ids.semantic).not.toBe(plain.ids.semantic);
+  expect(readApplicationPackage2(packet.bytes, packet.ids.release).package.semantic.exercises).toEqual(composed.semantic.exercises);
+  for (const exercises of [[...composed.semantic.exercises!, ...composed.semantic.exercises!], [{ definition: digestBytes(utf8("not in this package")), row: "acts.touch", right: "__proto__" }]]) {
+    await expect(packApplication2({ ...composed, semantic: { ...composed.semantic, exercises } }, signer)).rejects.toMatchObject({ findings: [{ reason: "bounds" }] });
+  }
+  for (const future of [{ groups: [{ name: "group", members: [{ name: "member", definition: id }], lifetime: { seconds: 60 } }] },
+    { parameters: { rooms: { type: "int" as const, default: 3, min: 1, max: 10 } } }, { derivation: { [id]: { parent: id, patch: {} } } }]) {
+    const refused = packApplication2({ ...input(), semantic: { ...input().semantic, ...future } }, signer);
+    await expect(refused).rejects.toBeInstanceOf(ApplicationPackageValidationError);
+    await expect(refused).rejects.toMatchObject({ findings: [{ reason: "unsupported-form" }] });
+  }
 });
