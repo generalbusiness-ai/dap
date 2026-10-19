@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3637b19d6d4e26749914749af6eb784226349d0c","text":"Merge retired a covered predecessor; the successor is at examples/grow/check/grid.html."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:372b1312f35ca54b2c435145558408352ecfb23b","text":"Merge retired a covered predecessor; the successor is at packages/client/test/signed-read.test.ts."}
