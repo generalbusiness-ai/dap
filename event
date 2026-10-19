@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/2026-10-19-sales-applications-design.md","body":{"commit":"3ed2a08a50f31e84ea42b4f6027684e14a8cedb8","path":"notes/2026-10-19-sales-applications-design.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:369e53d5e57d383d74b766e04154d19557c0a2cb","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-19-sales-applications-design.md."}
