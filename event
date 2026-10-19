@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:963f194876e33e1eec1c81886af6192f53a85199","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/application-files.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:97f12d8cd983437689d5586c85690323c7b77244","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/declared-views-browser.mjs."}
