@@ -11,6 +11,7 @@ import { namespace } from "../src/namespace.ts";
 import type { NativeItemQuery } from "../src/item-queries.ts";
 import { mintSession, readerOf } from "../src/sessions.ts";
 import { sessionRoom } from "./support/session-room.ts";
+import { rita } from "./repository.ts";
 
 test("native creator chain and fixed directory/destination records resolve the same single archive repository", async () => {
   const room = await sessionRoom();
@@ -20,6 +21,14 @@ test("native creator chain and fixed directory/destination records resolve the s
     const directory = await room.D.at(), genesis = (await room.D.entries())[0]!;
     if (genesis.input.type !== "genesis") return expect.fail("native directory birth missing");
     const expected = (await room.D.item(0)).values["repository"];
+    expect(await resolver.resolve(directory, genesis.input.seed, new ArchiveBudget())).toBeNull();
+    const membership = room.children[0]!;
+    // This fixture's manually minted read token enrolls no acting key.
+    // Enroll the founder through the actual native Membership acts.
+    const seat = await membership.did(rita, "seat", { expected: await membership.expected({ roster: 0 }) });
+    await membership.did(rita, "first-key", { fields: { member: seat }, expected: await membership.expected({ roster: 0, member: seat }) });
+    expect(await membership.stub.observe({ of: await membership.at(), key: rita.key })).toMatchObject({ keyState: "active", role: "admin", actions: expect.arrayContaining(["directory.archive"]) });
+    await room.D.did(rita, "bind-archive", { on: 0, expected: { on: (await room.D.item(0)).revision }, fields: { archive: "journal" } });
     const head = (await room.D.summary()).at;
     expect(await resolver.resolve(directory, genesis.input.seed, new ArchiveBudget())).toEqual(expected);
     const child = room.children[0]!, childBirth = (await child.entries())[0]!;
@@ -35,8 +44,8 @@ test("native creator chain and fixed directory/destination records resolve the s
 
 // Corrupt only the scripted reply boundary after genuine native reads. A
 // missing/ambiguous/different target is unavailable, with no summary fallback.
-test("target resolution refuses truncated or mismatched records and spends the original budget before RPC", async () => {
-  const room = await sessionRoom();
+test("a claim-bound archive target refuses truncated or mismatched records and spends the original budget before RPC", async () => {
+  const room = await sessionRoom(undefined, "journal");
   try {
     const reader = readerOf(mintSession(room.sessions, { ...room.claims, reads: ["summary", "items"] }));
     const directory = await room.D.at(), opening = (await room.D.entries())[0]!;
@@ -59,6 +68,7 @@ test("target resolution refuses truncated or mismatched records and spends the o
       },
     };
     const resolver = fixtureArchiveTarget(reads);
+    expect(await resolver.resolve(directory, seed, new ArchiveBudget())).toEqual((await room.D.item(0)).values["repository"]);
     for (fault of ["truncated", "missing", "ambiguous", "repository", "directory", "oversized"]) expect(await resolver.resolve(directory, seed, new ArchiveBudget())).toBeNull();
     const before = calls;
     await expect(resolver.resolve(directory, seed, new ArchiveBudget({ calls: 0 }))).rejects.toThrow("archive-limit");

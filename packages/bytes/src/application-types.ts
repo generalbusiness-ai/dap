@@ -19,7 +19,7 @@ export interface ApplicationSemantics {
   readonly entry: Digest;
   readonly definitions: readonly ApplicationDefinition[];
   readonly creates: readonly ApplicationCreation[];
-  readonly host: { readonly execution: "recorded-do"; readonly profiles: readonly string[] };
+  readonly host: { readonly execution: "recorded-do"; readonly profiles: readonly string[]; readonly requires?: readonly "archive"[] };
   /** Projection syntax belongs to M2a; v1 M1 admits this empty place only. */
   readonly projections: Readonly<Record<string, never>>;
   readonly capabilities: readonly ApplicationCapability[];

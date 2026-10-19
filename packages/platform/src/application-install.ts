@@ -32,7 +32,7 @@ export const applicationInstallRulesScope: PlatformData = {
       membership: { fixed: false, required: false, to: { type: "scope", kind: "membership" } },
       destination: { fixed: false, required: false, to: { type: "scope", kind: "destination" } } },
     values: { uri: { ...fixed, of: { type: "text", max: 4096 } }, release: { ...fixed, of: digest }, semantic: { ...fixed, of: digest },
-      needsDestination: { ...fixed, of: { type: "bool" } },
+      requirements: { ...fixed, of: { type: "record", of: { destination: { type: "bool", required: true }, archive: { type: "bool", required: true } } } },
       presentation: { ...fixed, of: digest }, definition: { ...fixed, of: digest }, publisher: { ...fixed, of: { type: "text", max: 64 } },
       additions: { ...fixed, of: { type: "text", max: INSTALL_ADDITIONS_BYTES } },
       declarations: { ...fixed, of: installDeclarationsType }, genesis: { ...fixed, of: { type: "text", max: 16 * 1024 } },
@@ -173,7 +173,7 @@ export const applicationInstallRules: Rules = {
     return [
       { effect: "value", item: given.resolved.self, slot: "declarations", value: checked.semantic.definitions.map(part => ({ digest: part.id, text: textDigest(part.bytes), name: (parseStrict(part.bytes) as DeclaredDefinition).name })) },
       { effect: "value", item: given.resolved.self, slot: "additions", value: additions },
-      { effect: "value", item: given.resolved.self, slot: "needsDestination", value: genesis.needsDestination },
+      { effect: "value", item: given.resolved.self, slot: "requirements", value: { destination: genesis.needsDestination, archive: checked.semantic.host.requires?.includes("archive") === true } },
       { effect: "value", item: given.resolved.self, slot: "genesis", value: canonicalize(genesis.fields) },
       { effect: "value", item: given.resolved.self, slot: "definition", value: checked.semantic.entry },
       { effect: "value", item: given.resolved.self, slot: "presentation", value: checked.ids.presentation },
@@ -220,7 +220,7 @@ export const applicationInstallRules: Rules = {
     if (!job || !isScopeRef(directory) || !isMemberRef(installer)) throw Error("original checked install authority required");
     return { to: directory, message: { class: "request", type: "tell", body: { message: "application-create", fields: {
       job: job.id, definition: job.values["definition"], release: job.values["release"], semantic: job.values["semantic"], presentation: job.values["presentation"],
-      installer, genesis: job.values["genesis"], needsDestination: job.values["needsDestination"],
+      installer, genesis: job.values["genesis"], needsDestination: isRecord(job.values["requirements"]) && job.values["requirements"]["destination"] === true,
     } } } };
   } },
   "application-creation-matches": { place: "guard", refusals: ["invalid-application-result"], run: given => {
@@ -241,7 +241,7 @@ export const applicationInstallRules: Rules = {
     if (!job || !isScopeRef(directory)) throw Error("install retains its room directory");
     if (!activationAvailable(given, job)) return null;
     return { to: directory, message: { class: "request", type: "tell", body: { message: "application-stage", fields: {
-      name: rootName(job), declarations: job.values["declarations"],
+      name: rootName(job), declarations: job.values["declarations"], needsArchive: isRecord(job.values["requirements"]) && job.values["requirements"]["archive"] === true,
       ...Object.fromEntries((job.values["declarations"] as unknown as { text: string }[]).map((part, index) => [`definitionText${index}`, part.text])),
       definition: job.values["definition"], job: job.id, release: job.values["release"], semantic: job.values["semantic"], additions: job.values["additions"],
     } } } };
@@ -260,7 +260,8 @@ export const applicationInstallRules: Rules = {
     const delivered = original?.type === "delivery" && original.message.class === "request" && isRecord(original.message.body) && isRecord(original.message.body["fields"]) ? original.message.body["fields"]["job"] : null;
     const job = original?.type === "outcome" ? installation(given, original.operation) : typeof delivered === "number" ? given.state.item(delivered) : null;
     if (!job || job.state !== "pending") return [];
-    return [{ effect: "state", item: job.id, state: "refused" }, { effect: "value", item: job.id, slot: "reason", value: "install-route-refused" }];
+    const reason = original?.type === "outcome" && isRecord(job.values["requirements"]) && job.values["requirements"]["archive"] === true && given.input.message.reason?.name === "archive-unavailable" ? "archive-unavailable" : "install-route-refused";
+    return [{ effect: "state", item: job.id, state: "refused" }, { effect: "value", item: job.id, slot: "reason", value: reason }];
   } },
   "application-fetch": { place: "outcome", rules: {
     selects: true, read: true,

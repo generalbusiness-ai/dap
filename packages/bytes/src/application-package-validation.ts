@@ -83,8 +83,9 @@ export function semantics(value: unknown, bounds: ApplicationPackageLimits): App
     for (const edge of edges) if (edge.from === next && !reached.has(edge.to)) queue.push(edge.to);
   }
   if (reached.size !== ids.size) return fail("closure");
-  const host = only(body["host"], "execution,profiles");
+  const host = only(body["host"], isRecord(body["host"]) && Object.hasOwn(body["host"], "requires") ? "execution,profiles,requires" : "execution,profiles");
   if (host["execution"] !== "recorded-do") return fail();
+  if (Object.hasOwn(host, "requires") && (!Array.isArray(host["requires"]) || host["requires"].length !== 1 || host["requires"][0] !== "archive")) return fail();
   const profiles = list(host["profiles"], 16).map(profile => text(profile, 64, /^[a-z][a-z0-9-]*@[1-9][0-9]*$/)); ordered(profiles);
   if ([...declared.profiles].some(profile => !profiles.includes(profile))) return fail("integrity");
   if (!isRecord(body["projections"]) || Object.keys(body["projections"]).length !== 0) return fail();

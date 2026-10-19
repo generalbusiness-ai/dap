@@ -19,11 +19,11 @@ import { declaredApplicationPublicationOrigin, installedApplicationPublicationOr
 import { applicationAnnouncement } from "../src/application-install-creation.ts";
 import { applicationProjectionDeclaration } from "../src/application-projection-reader.ts";
 
-async function fixture() {
+async function fixture(requireArchive = false) {
   const id = definitionDigest(countingCommitments), declaration = canonicalize(countingCommitments);
   const input = { name: "test.declared-install", version: "1", semantic: {
     v: 2 as const, entry: id, definitions: [{ id, bytes: declaration }],
-    host: { execution: "recorded-do" as const, profiles: ["restricted@1"] }, capabilities: [], roles: { member: ["counting.fulfill"] }, predecessor: null,
+    host: { execution: "recorded-do" as const, profiles: ["restricted@1"], ...(requireArchive ? { requires: ["archive"] as const } : {}) }, capabilities: [], roles: { member: ["counting.fulfill"] }, predecessor: null,
     projections: { board: readApplicationProjection({ v: 1, definition: id, revision: "revision", sources: {
       board: { item: "board", read: "one", states: ["finished", "open", "paused"], limit: 1, fields: {
         lastNumber: { from: { kind: "value", name: "lastNumber" }, of: { type: "int", min: 0, max: 100 }, nullable: false },
@@ -41,13 +41,13 @@ async function fixture() {
   return { input, signer, packet, legacy, fields, values, texts };
 }
 test("new native pin retains exact v2 proof and projection while Rules5 refuses the new wire", async () => {
-  const { input, signer, packet, legacy, fields, values, texts } = await fixture();
+  const { input, signer, packet, legacy, fields, values, texts } = await fixture(true);
   const next = new Rulebook(true, membership.scope, DECLARED_APPLICATION_RULES), old = new Rulebook(true, membership.scope, APPLICATION_INSTALL_RULES);
   expect(old.act(keys.rita, "install-application", { fields }, { values, texts }).result).not.toBe("write");
   expect(next.act(keys.rita, "install-application", { fields }, { values, texts: () => undefined }).result).not.toBe("write");
   const written = next.act(keys.rita, "install-application", { fields }, { values, texts });
   expect(written.result, JSON.stringify(written)).toBe("write");
-  expect(next.item(next.head.seq)).toMatchObject({ state: "pending", values: { phase: "fetch", semantic: packet.ids.semantic } });
+  expect(next.item(next.head.seq)).toMatchObject({ state: "pending", values: { phase: "fetch", semantic: packet.ids.semantic, requirements: { archive: true } } });
   expect(next.state.operation(`${next.head.seq}:0`)).toMatchObject({ owner: DECLARED_APPLICATION_RULES, kind: "fetch-application" });
   expect(written.result === "write" ? written.draft.values : []).toHaveLength(2);
   expect(written.result === "write" ? written.draft.values : []).toEqual(expect.arrayContaining([

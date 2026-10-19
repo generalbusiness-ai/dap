@@ -72,7 +72,7 @@ export const applicationInstallRules2: Rules = {
     return [
       { effect: "value", item: given.resolved.self, slot: "declarations", value: checked.semantic.definitions.map(part => ({ digest: part.id, text: textDigest(part.bytes), name: (parseStrict(part.bytes) as DeclaredDefinition).name })) },
       { effect: "value", item: given.resolved.self, slot: "additions", value: additions },
-      { effect: "value", item: given.resolved.self, slot: "needsDestination", value: genesis.needsDestination },
+      { effect: "value", item: given.resolved.self, slot: "requirements", value: { destination: genesis.needsDestination, archive: checked.semantic.host.requires?.includes("archive") === true } },
       { effect: "value", item: given.resolved.self, slot: "genesis", value: canonicalize(genesis.fields) },
       { effect: "value", item: given.resolved.self, slot: "definition", value: checked.semantic.entry },
       { effect: "value", item: given.resolved.self, slot: "presentation", value: checked.ids.presentation },

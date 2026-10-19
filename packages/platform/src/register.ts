@@ -67,6 +67,8 @@ const KEY = { type: "text", max: 64 } as const;
 const NAME = { type: "text", max: 256 } as const;
 const POLICY = { type: "enum", of: ["keys", "open"] } as const;
 const CREATORS = { type: "list", of: KEY, max: 32 } as const;
+/** Room archive binding; absence means the room is not bound. */
+export const ARCHIVE = { type: "enum", of: ["journal"] } as const;
 
 /** The record of a repository at the Git host: its host, namespace, name and ID (section 12.1.1, the slot `claim.repository`). The directory and the destination hold the same record. */
 export const REPOSITORY = {
@@ -146,6 +148,7 @@ export const register: PlatformData = {
         "founderHandle": { ...NAME, required: true },
         recoveryKey: { ...KEY, required: true },
         import: { type: "text", max: 2048, required: false },
+        archive: { ...ARCHIVE, required: false },
       },
       // The row's one guard (section 12.1.1, stated in revision 24): `founderHandle` is a handle, or `bad-field`, named `bad-handle`.
       guards: [{ code: "handle-form", row: "P27" }],
@@ -423,6 +426,7 @@ export const registerRules: Rules = {
         claim: { at: given.resolved.at, seq: opening.entry.seq, hash: opening.hash },
         repository: { host: held.values["host"]!, namespace: held.values["namespace"]!, name: body["name"] as string, id: body["id"] as string },
         branch, "founderHandle": creatorHandle, recoveryKey, ...(intent.fields["import"] === undefined ? {} : { import: intent.fields["import"] }),
+        ...(intent.fields["archive"] === undefined ? {} : { archive: intent.fields["archive"] }),
       };
       return { to: seed, message: { class: "request", type: "create", body: { fields } } };
     },

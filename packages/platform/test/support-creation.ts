@@ -118,10 +118,10 @@ export class Directory extends Ledger {
   /** The references of the scripted children that answered, by kind. */
   readonly children: Partial<Record<"membership" | "rules" | "destination", ScopeRef>> = {};
 
-  constructor(over: { import?: string; confirmed?: boolean; children?: readonly ("membership" | "rules" | "destination")[] } = {}) {
+  constructor(over: { import?: string; archive?: "journal"; confirmed?: boolean; children?: readonly ("membership" | "rules" | "destination")[] } = {}) {
     super(directoryDefinition, "platform:directory");
     const R = (this.register = new Register());
-    const creation = R.intent(rita, "found", { expected: { register: R.item(0).revision }, fields: { branch: "main", "founderHandle": "@rita", recoveryKey: sam.key, ...(over.import === undefined ? {} : { import: over.import }) } });
+    const creation = R.intent(rita, "found", { expected: { register: R.item(0).revision }, fields: { branch: "main", "founderHandle": "@rita", recoveryKey: sam.key, ...(over.import === undefined ? {} : { import: over.import }), ...(over.archive === undefined ? {} : { archive: over.archive }) } });
     if (R.submit(creation, { platform: registerPlatform, grants: [] }).result !== "write") throw new Error("the founding was not admitted");
     const matched = R.head.seq;
     this.claim = R.fact(matched);

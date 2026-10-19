@@ -662,7 +662,7 @@ describe("the rows of `observes`, replayed: the origin, the subject lists, the g
 // its fixture judge/authority is a stand-in, not a runtime admission witness.
 // Invariant: replay never interprets an unsupported durability pin as Recorded.
 test("a well-hashed journal declaring unsupported durability is unsupported at its genesis", async () => {
-  for (const name of ["live", "archived"] as const) {
+  for (const name of ["live", "sequenced"] as const) {
     const declared = { ...notesDefinition.declared, level: { name, version: 1 as const } };
     const unchecked = { ...notesDefinition, declared, digest: definitionDigest(declared) };
     const L = created(unchecked, {}, `unsupported-${name}`);
