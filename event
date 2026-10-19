@@ -1,1 +1,1 @@
-{"kind":"promise","text":"I will publish the audited durable G3 landing f6d402b0 and the workroom ref once from the clean shared checkout, after landing the approved expert-scenarios draft 2 (0edc7540) on top of it so one push carries both, and report the exact origin/main head and workroom result. No duplicate push; no hosting action."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:0edc754078e2def95b7f21e65e29bc2b389f9aa0"}
