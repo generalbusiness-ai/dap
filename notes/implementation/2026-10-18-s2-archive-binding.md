@@ -416,3 +416,57 @@ provide Device grants and later archive binding in the same demo room:
 frozen G5a's cohort has no archive binding, while these archive cohorts
 have no Device grant protocol. No proposed combined cohort is implemented
 or authorized by this checkpoint, and no frozen G5a source is changed.
+
+## Adopted combined Device/archive cohort
+
+Planner report `7e93abadb8623a9ca10e9c4dca1857e07bc904c8`, adopted by
+`e02cbad6f7fe798e04d33ac62bd480b5cecca7df`, now requires a distinct
+combined cohort on actual reviewed G5a Main: Register17, Directory16,
+Membership8, Rules10 and Destination12, with Inbox1. It adds four names to
+S2a's existing nine. G5a's unused Membership9 remains reserved. The
+ordinary archive cohorts do not gain the Device protocol, and G5a's
+Device-only cohort does not gain archive binding. Existing bodies,
+digests and default cohort selections stay exact.
+
+The composition will use this explicit spread order, rather than copying
+and manually combining definition bodies:
+
+- Register17 starts from the Device cohort's Register data, then adds the
+  same optional archive claim field used by S2a's archive registers.
+- Directory16 starts from `deviceApplicationDirectory`, then applies the
+  archive Directory transform: spread that base first, then its repository
+  values with the archive slot, establish fields/effects with archive
+  retention and Membership8 creation, the bind-archive act, and the
+  application-stage archive guard. The base's application-create Device
+  relay fields and guard stay intact. Its native rules start from
+  `deviceApplicationDirectoryRules`.
+- Rules10 starts from `deviceApplicationRulesScope`, then applies the
+  archive Rules transform. The installation's `needsDestination` value
+  becomes the existing typed destination/archive requirements record;
+  Device owner observation, proof guards and wrapped genesis stay intact.
+  Native rule composition preserves the Device proof and owner relay,
+  and records the combined requirements in the identity effect before the
+  existing staging/grant/create sequence. Old Rules pins keep their exact
+  outputs. The existing twelve-value bound is not raised.
+- Destination12 starts from the Device destination's data and native rules
+  (the same `destination4`/`destinationRules4` data family), then supplies
+  the new exact combined-cohort publication-origin policy. It never
+  broadens another destination's identity policy.
+
+These are implementation requirements, not completed source or validation.
+The source facts above were read through Git objects of frozen G5a
+candidate 7f15e2be; no frozen file, dependency or sealer was executed or
+changed. Implementation waits for G5a's actual reviewed Main landing.
+Combined-cohort witnesses must cover owner-granted install, command open
+and answer, binding at claim and later, and archive-required install
+refused unbound then admitted by a new request after binding. The exact
+CLI pair, session/invitation routes, MCP codec, native screen metadata,
+target resolution and publication policy also need the combined cohort.
+
+The landing order is now G5a, S2a, then G5's integration head. G5's final
+head includes landed S2a; its first hosted room uses this combined cohort,
+so archive binding can occur later on the same running room. G5 may
+continue code/review preparation against the Device-only cohort, but no
+Device-only hosted room is provisioned. No deployment or source mutation
+of G5a's sealed views is granted. This note-only update changes no current
+code, test, asset or configuration and claims no new gate or runtime result.
