@@ -5,7 +5,8 @@ Request `c8c6ff6b6277fd103c30f80d0b76fd40a60ca8bb`, promise
 reviewed Main `3ed2a08a50f31e84ea42b4f6027684e14a8cedb8`. It adds explicit
 fixture source metadata, separate policy checks, direct-copy inventory,
 immutable rebuilds and structural archive readback. No whole gate, review
-or landing is claimed. The installed-application export is still pending.
+or landing is claimed. Final installed-application integration on the
+required reviewed Main remains pending.
 Actual reviewed G5a and S2a landings must be incorporated before final
 S2b integration. Neither unreviewed branch is imported here.
 
@@ -337,3 +338,53 @@ and makes no second mint or send. The native head is unchanged. Original
 `/tmp/artroom-s2b-foreign-alarm-owning-20261019.log`; its source/test compiler
 passes in `...foreign-alarm-types...log`. This is a real alarm/storage
 witness with a scripted host, not evidence of a provider adapter or token.
+
+## Installed native fixture preparation
+
+`archive-installed.test.ts` installs the existing signed TEST root/child
+package through the real MCP installer, native Rules/Directory/Membership,
+create/confirm dispatch and SQLite. Its root genuinely creates its child
+from the declared genesis form; neither birth, identity, source nor grant
+is handmade. The package peer, clock, scheduler and archive review policy
+remain explicit fixtures. The native membership issues the read session.
+That session reads each installed journal and every source birth at zero
+through the existing HTTP reader before inventory opens. The source map
+owns at most `ARCHIVE_SOURCE_PINS` (64) unique full references, built only
+from the actually used graph sources. Policy remains a separate exact-pin
+table over validated declarations and finite actual native owner rules.
+
+Both root and child perform later native `bump` acts before archive
+configuration is supplied. Planning includes their original genesis zero
+and all entries through the issued-session cutoff. The existing structural
+reader opens the resulting SHA-1 object sets, returns the source basis and
+matches every entry byte against the native session read. This is late
+fixture configuration, with no provider or deployment. It does not replace
+the actual S2a directory binding, the G5 Grow graph or final integration on
+reviewed G5a/S2a Main. All existing pin refusals, including the exact
+membership cohort restriction, remain unchanged.
+
+The first compiler caught a millisecond clock passed where Mark needs a
+timestamp; `timeOf` supplies the existing representation. The first native
+run, original 26238 exit 1, stopped at the later `bump`: the root's child
+confirmation had already advanced its item revision. The corrected fixture
+reads that actual revision instead of assuming one. No archive assertion
+ran in that failed setup; its log is
+`/tmp/artroom-s2b-installed-first-owning-20261019.log`.
+The corrected native run, original 26093 exit 0, passes one case in 423 ms
+tests/3.08 s overall (`...installed-native-revision-owning...log`). Adding
+complete issued-history and structural-readback checks passes, original
+51627 exit 0, one case in 443 ms/3.10 s
+(`/tmp/artroom-s2b-installed-readback-owning-20261019.log`). Source/test
+compiler passes in `...installed-readback-types...log`. The case's explicit
+30 s functional allowance bounds its native installation and reads; no
+existing timeout was changed and no speed/stability claim follows.
+
+The direct-copy witness also extends an existing archive after a later
+native act introduces a second real producer. A new immutable source map
+preserves the old source's pair and adds the new birth. In both Git formats
+the cumulative archive names two sources while parent validation retains
+the parent's original single-source basis. Manual component confirmation
+stands in for host custody and writes no journal entry. Original 73312
+exit 0, two cases, 259 ms tests/2.87 s overall, in
+`/tmp/artroom-s2b-foreign-parent-basis-owning-20261019.log`; source/test
+compiler passes in `...foreign-parent-basis-types...log`.

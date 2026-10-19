@@ -190,6 +190,32 @@ test.each(["sha1", "sha256"] as const)("foreign copies retain their source basis
   expect(read.archive.foreignSources).toEqual(planned.archive.manifest.foreignSources);
   expect(read.archive.head).toEqual(through);
   expect(read.archive.retained.filter(input => input.kind === "entry").map(input => input.digest).sort()).toEqual(f.uses.map(use => use.content).sort());
+  // A later native act introduces another real producer. The cumulative
+  // archive adds its basis while the checked parent keeps only its own.
+  const laterProducer = await create();
+  wired.set(f.consumer.name, () => ({ resolver: namespace(env.SCOPES).resolver }));
+  try {
+    await f.consumer.restart();
+    await f.consumer.did(rita, "remark", { on: 0, fields: { text: "later producer", proof: laterProducer.genesis.fact } });
+  } finally { wired.delete(f.consumer.name); }
+  const laterBirth = await laterProducer.stub.entry(reader, 0);
+  expect(laterBirth.ok).toBe(true); if (!laterBirth.ok) return;
+  const nextSources = new FixtureArchiveSourcePins([
+    { at: f.producer.at, birth: { bytes: canonicalize(f.birth.entry), hash: f.birth.hash }, declaration: canonicalize(definition.declared) },
+    { at: laterProducer.at, birth: { bytes: canonicalize(laterBirth.value.entry), hash: laterBirth.value.hash }, declaration: canonicalize(definition.declared) },
+  ], PROPOSED_BOUNDS, new ArchiveBudget());
+  const nextHead = await f.consumer.head();
+  const extended = await f.consumer.inside(state => {
+    const sql = archiveSql(state);
+    // Component confirmation stands in for host custody, as in the owning
+    // local build witness. It writes no journal entry.
+    new ArchiveRows(sql, f.consumer.at).confirm(planned.mark.commit);
+    return planArchive(sql, { at: f.consumer.at, through: nextHead, bounds: PROPOSED_BOUNDS, policies: f.policies, format, parent: { id: planned.archive.commit, source: { object } }, markedAt: at(1), fixtureSources: nextSources }, new ArchiveBudget());
+  });
+  expect(extended.ok, JSON.stringify(extended)).toBe(true); if (!extended.ok) return;
+  expect(extended.archive.newInterval).toEqual([through.seq + 1, nextHead.seq]);
+  expect(extended.archive.manifest.foreignSources).toHaveLength(2);
+  expect(planned.archive.manifest.foreignSources).toHaveLength(1);
   // A validly shaped selection still cannot invent a different consumer
   // fact. Layout must refuse it before asking for any retained copy body.
   const altered = JSON.parse(planned.mark.manifest);
