@@ -350,3 +350,22 @@ makes its unchanged `fan-in-unproved` assertion fail, then restores the source
 (`...pre-failure-related-key-control-20261019.log`). No final P1 gate or review
 yet. This work used P1's private view while the G1 correction gate was frozen
 and running; it changed no G1 source or dependency file.
+
+## P1 refusal reasons through both byte paths (checkpoint)
+
+The actual Grow matrix now pairs passing and failing packages for twelve
+additional graph reasons: copies exceeded, unbound endpoint, wrong peer,
+unhandled result, ungranted act, wrong right owner, undeclared order, unknown
+message, field mismatch, unreachable handler, unacknowledged cycle and
+unsettled pending work. Each pair keeps native definitions valid. A validly
+signed unchecked wire preserves the sole refusal reason at public validation;
+the production packer refuses before any signer call. The cycle and pending
+fixtures are shared with their existing component witnesses. This supplements
+the five unproved lifetime variants and the staged-form matrix; it is not a
+whole-suite or final P1 acceptance claim.
+
+Two files pass 11 cases in
+`/tmp/artroom-p1-refusal-byte-matrix-initial-20261019.log`; the owning compiler
+passes in `...refusal-byte-matrix-type-20261019.log`. G1's correction is now
+approved, so this checkpoint is saved before its landing. Warning/report byte
+witnesses, the remaining CLI diagnostics and the final P1 review gate remain.

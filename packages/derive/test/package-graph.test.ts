@@ -220,48 +220,52 @@ test("the public package byte validator checks signed Grow bytes and preserves t
   await expect(rejected).rejects.toMatchObject({ findings: [expect.objectContaining({ reason: "fan-in-exceeds-copies" })] });
 });
 
+function automaticCycle(guarded: boolean) {
+  const input = grow((parent, child) => {
+    const creator = structuredClone(parent.acts["create-room"]!.sends[0]!);
+    parent.acts["create-room"]!.sends = [];
+    const handler = parent.receives["room-summary"]!;
+    handler.opens = "room"; handler.copies = 6;
+    handler.fields["label"] = { type: "text", max: 80, required: true };
+    handler.effects = [{ value: { slot: "label", from: { field: "label" } } }, ...handler.effects];
+    handler.sends = [creator];
+    if (!guarded) handler.guards = handler.guards.filter(guard => !("state" in guard));
+    const siteRoom = child.items["room"]!.refs["siteRoom"]!.to, incoming = child.acts["establish"]!.fields["siteRoom"]!;
+    if (siteRoom.type === "fact") siteRoom.kind = ["create-room", "room-summary"];
+    if (incoming.type === "fact") { incoming.kind = ["create-room", "room-summary"]; incoming.required = true; }
+    const summary = parent.items["room"]!.refs["summaryAt"]!.to;
+    if (summary.type === "fact") summary.kind = ["establish", "report-site"];
+    const report = child.acts["report-site"]!.sends[0]!;
+    if (!("relate" in report)) throw new Error("Grow report must relate");
+    report.relate.detail["label"] = { slot: "label" };
+    const atBirth = structuredClone(report);
+    atBirth.relate.detail = { room: { field: "siteRoom" }, openAlerts: { const: 0 }, label: { field: "label" } };
+    child.acts["establish"]!.sends = [atBirth];
+  });
+  return { ...input, composition: { ...input.composition, rights: { rooms: { owner: input.entry } }, exercises: [{ definition: input.entry, row: "receives.room-summary", right: "rooms" }] } };
+}
+
 test("Grow's automatic create/report cycle needs an explicit state condition, without claiming termination", () => {
-  const cyclic = (guarded: boolean) => {
-    const input = grow((parent, child) => {
-      const creator = structuredClone(parent.acts["create-room"]!.sends[0]!);
-      parent.acts["create-room"]!.sends = [];
-      const handler = parent.receives["room-summary"]!;
-      handler.opens = "room"; handler.copies = 6;
-      handler.fields["label"] = { type: "text", max: 80, required: true };
-      handler.effects = [{ value: { slot: "label", from: { field: "label" } } }, ...handler.effects];
-      handler.sends = [creator];
-      if (!guarded) handler.guards = handler.guards.filter(guard => !("state" in guard));
-      const siteRoom = child.items["room"]!.refs["siteRoom"]!.to, incoming = child.acts["establish"]!.fields["siteRoom"]!;
-      if (siteRoom.type === "fact") siteRoom.kind = ["create-room", "room-summary"];
-      if (incoming.type === "fact") { incoming.kind = ["create-room", "room-summary"]; incoming.required = true; }
-      const summary = parent.items["room"]!.refs["summaryAt"]!.to;
-      if (summary.type === "fact") summary.kind = ["establish", "report-site"];
-      const report = child.acts["report-site"]!.sends[0]!;
-      if (!("relate" in report)) throw new Error("Grow report must relate");
-      report.relate.detail["label"] = { slot: "label" };
-      const atBirth = structuredClone(report);
-      atBirth.relate.detail = { room: { field: "siteRoom" }, openAlerts: { const: 0 }, label: { field: "label" } };
-      child.acts["establish"]!.sends = [atBirth];
-    });
-    return { ...input, composition: { ...input.composition, rights: { rooms: { owner: input.entry } }, exercises: [{ definition: input.entry, row: "receives.room-summary", right: "rooms" }] } };
-  };
-  expect(checkPackageGraph(cyclic(true)).findings).toEqual([]);
-  expect(checkPackageGraph(cyclic(false)).findings.map(finding => finding.reason)).toEqual(["cycle-unacknowledged"]);
+  expect(checkPackageGraph(automaticCycle(true)).findings).toEqual([]);
+  expect(checkPackageGraph(automaticCycle(false)).findings.map(finding => finding.reason)).toEqual(["cycle-unacknowledged"]);
 });
 
-test("Grow's declared pending creation work needs its own timed exit without recycling a successful child slot", () => {
-  const pending = (timer: boolean) => grow(parent => {
-    parent.items["room"]!.values["deadline"] = { fixed: false, required: false, of: { type: "time" } };
-    const create = parent.acts["create-room"]!;
-    create.effects = [...create.effects, { value: { slot: "deadline", from: { time: { plusSeconds: 30 } } } }];
-    parent.acts["settle-room"] = { step: "transition", on: "room", grant: "grow.configure", also: {}, fields: {},
-      guards: [{ state: ["pending"] }], settles: { of: "on", in: ["pending"] }, effects: [{ state: "active" }], sends: [], attention: [] };
-    if (timer) parent.timed["creation-expired"] = { on: "room", states: ["pending"], deadline: "deadline", effects: [{ state: "conflicted" }], attention: [] };
+function pendingCreation(timer: boolean) {
+  return grow(parent => {
+  parent.items["room"]!.values["deadline"] = { fixed: false, required: false, of: { type: "time" } };
+  const create = parent.acts["create-room"]!;
+  create.effects = [...create.effects, { value: { slot: "deadline", from: { time: { plusSeconds: 30 } } } }];
+  parent.acts["settle-room"] = { step: "transition", on: "room", grant: "grow.configure", also: {}, fields: {},
+    guards: [{ state: ["pending"] }], settles: { of: "on", in: ["pending"] }, effects: [{ state: "active" }], sends: [], attention: [] };
+  if (timer) parent.timed["creation-expired"] = { on: "room", states: ["pending"], deadline: "deadline", effects: [{ state: "conflicted" }], attention: [] };
   });
-  const settled = checkPackageGraph(pending(true));
+}
+
+test("Grow's declared pending creation work needs its own timed exit without recycling a successful child slot", () => {
+  const settled = checkPackageGraph(pendingCreation(true));
   expect(settled.findings).toEqual([]);
   expect(settled.instances[1]!.maximum).toBe(3);
-  expect(checkPackageGraph(pending(false)).findings.map(finding => finding.reason)).toEqual(["unsettled-pending"]);
+  expect(checkPackageGraph(pendingCreation(false)).findings.map(finding => finding.reason)).toEqual(["unsettled-pending"]);
 });
 
 // These intentional future-form inputs bypass native validation in the
@@ -287,5 +291,50 @@ test("planned definition forms refuse by name before signing and from correctly 
     expect(validatePackage(signed.bytes, PROPOSED_BOUNDS, RULE_PROFILES, {}, signed.release), variant.name).toMatchObject({
       ok: false, kind: "codec", reason: "invalid", findings: [expect.objectContaining({ reason: "unsupported-form" })],
     });
+  }
+});
+
+// The paired inputs pass whole native validation. This protects the two byte
+// boundaries separately from the component cases: no signature for authoring
+// refusals, and a named refusal even for an unchecked but validly signed wire.
+test("P1 graph refusals retain their sole reason through packing and signed package validation", async () => {
+  const base = grow(), right = { ...base, composition: { ...base.composition, rights: { rooms: { owner: base.entry } },
+    exercises: [{ definition: base.entry, row: "acts.create-room", right: "rooms" }] } };
+  const alternate = structuredClone(room), label = alternate.items["room"]!.values["label"]!.of;
+  if (label.type !== "text") return expect.fail("Grow label must be text.");
+  label.max = 81;
+  const unreachable = grow(parent => { parent.receives["unused-summary"] = { ...structuredClone(parent.receives["room-summary"]!), message: "unused-summary" }; });
+  const unowned = { ...unreachable, composition: { ...unreachable.composition, order: [...unreachable.composition.order,
+    { definition: unreachable.entry, handler: "unused-summary", by: "any" as const }] } };
+  const cases: { reason: string; good: PackageGraphInput; bad: PackageGraphInput }[] = [
+    { reason: "fan-in-exceeds-copies", good: base, bad: grow(parent => { parent.receives["room-summary"]!.copies = 2; }) },
+    { reason: "unbound-endpoint", good: base, bad: grow(parent => {
+      parent.acts["rebind-room"] = { step: "transition", on: "room", grant: "grow.configure", fields: { peer: { type: "scope", kind: "lane", required: true } }, also: {},
+        guards: [{ state: ["active"] }], effects: [{ ref: { slot: "scope", from: { field: "peer" } } }], sends: [], attention: [] };
+    }) },
+    { reason: "wrong-peer", good: base, bad: grow(() => {}, definitionDigest(alternate)) },
+    { reason: "unhandled-result", good: base, bad: grow((_parent, child) => { const send = child.acts["report-site"]!.sends[0]!; if ("relate" in send) delete send.relate.result.undelivered; }) },
+    { reason: "ungranted-act", good: base, bad: { ...base, roles: { operator: base.roles["operator"]!.filter(action => action !== "grow.tend") } } },
+    { reason: "right-not-owned", good: right, bad: { ...right, composition: { ...right.composition, rights: { rooms: { owner: base.definitions[1]!.id } } } } },
+    { reason: "order-undeclared", good: base, bad: { ...base, composition: { ...base.composition, order: [] } } },
+    { reason: "unknown-message", good: base, bad: grow((_parent, child) => {
+      const send = structuredClone(child.acts["report-site"]!.sends[0]!); if ("relate" in send) send.relate.name = "unknown-summary";
+      child.acts["report-site"]!.sends = [...child.acts["report-site"]!.sends, send];
+    }) },
+    { reason: "field-mismatch", good: base, bad: grow(parent => { const field = parent.receives["room-summary"]!.fields["openAlerts"]!; if (field.type === "int") field.max = 3; }) },
+    { reason: "unreachable-handler", good: base, bad: unowned },
+    { reason: "cycle-unacknowledged", good: automaticCycle(true), bad: automaticCycle(false) },
+    { reason: "unsettled-pending", good: pendingCreation(true), bad: pendingCreation(false) },
+  ];
+  for (const pair of cases) {
+    const good = signedGrowWire(pair.good), bad = signedGrowWire(pair.bad);
+    expect(validatePackage(good.bytes, PROPOSED_BOUNDS, RULE_PROFILES, {}, good.release), pair.reason).toMatchObject({ ok: true, kind: "graph", findings: [] });
+    const refused = validatePackage(bad.bytes, PROPOSED_BOUNDS, RULE_PROFILES, {}, bad.release);
+    expect(refused, pair.reason).toMatchObject({ ok: false, kind: "codec", reason: "invalid" });
+    expect(new Set(refused.findings.map(finding => finding.reason)), pair.reason).toEqual(new Set([pair.reason]));
+    let signatures = 0;
+    await expect(packApplication2(packageInput(pair.bad), { key: keys.rita.key, sign: bytes => { signatures++; return sign(keys.rita.secret, bytes); } }), pair.reason)
+      .rejects.toMatchObject({ findings: expect.arrayContaining([expect.objectContaining({ reason: pair.reason })]) });
+    expect(signatures, pair.reason).toBe(0);
   }
 });
