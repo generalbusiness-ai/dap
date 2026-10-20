@@ -5,8 +5,9 @@ Request `f54185fb5b7ccacdf932248552127e4985b3f956`, promise
 incorporates reviewed G5a Main `a00eda3b` and implements the combined Device
 and archive cohort. The focused native checks pass. The latest whole gate
 has one stale unsupported-version assertion failure. Its exact correction
-and the gate's unrun phases pass separately. Planner decision `2777f28e`
-must amend the gate condition before this composite can be used for review.
+and the gate's unrun phases pass separately. Planner report `1186535b`,
+adopted through `cc0d3536`, amends the gate condition for this exact sum
+of runs. It does not turn the failed original into one passing gate.
 Exact-head Source review and landing audit remain. The first gate failed
 five shipped-version assertions; it remains failed evidence. No S2a
 publication, deployment or completion is claimed.
@@ -203,14 +204,39 @@ links are exact. Again, only the Vitest results cache changes.
 
 This is a failed whole gate followed by a focused fixture correction and
 the originally unrun phases. It is not one passing gate, and no unchanged
-whole suite is repeated. Decision request
-`2777f28e1d940913be1f4aed1e8c2a85c0c844bb` asks the planner to amend
-the original gate-pass condition for this exact composite or name further
-affected verification. Complete exact-head independent review remains
-required. The earlier prepared
+whole suite is repeated. Planner report
+`1186535bdb4933bfdcfb2c614d8c95439be6b545` answers decision request
+`2777f28e1d940913be1f4aed1e8c2a85c0c844bb`. It was read in full and
+adopted through `cc0d353662a2968541056e982018fbc519eb923a`. It amends
+the original gate-pass condition for this exact composite. The checker
+must verify the sole test correction and the subsequent documents-only
+delta. Any later source or test change requires a new gate under that
+decision. Complete exact-head independent review remains required.
+
+The added Rules7, Rules8 and Rules10 are already positive supported-pin
+witnesses in `platform/test/versions.test.ts`. The complete golden digest
+comparison requires all three named entries to exist, and the subsequent
+loop checks that `platform(named)` resolves each golden name to its own
+`VERSIONS` entry. Both cases passed in the original whole gate. No extra
+assertion or new test change is needed for the decision's third condition.
+
+The complete path delta from the original failed gate to the checked
+correction is `packages/platform/test/rules-scope.test.ts` only: the two
+literal/comment substitutions above. The complete subsequent document
+delta is `docs/cli.md`, `docs/write-an-application.md` and this note. No
+source, test, asset or dependency changes follow the checked correction.
+The final Source head and tree are bound in the supplied Source record
+and `/private/tmp/artroom-s2a-composite-review-evidence-map-20261020.json`
+as `candidate` and `tree`. That map binds this note's exact bytes. Keeping
+the final tree in that external record avoids a self-referential tree hash
+inside the note itself.
+
+The earlier prepared
 `/tmp/artroom-s2a-seal-combined-review-20261019.py` assumes a passing gate
-and remains unrun. It must be replaced after the decision, not used to
-relabel the failed original.
+and remains unrun. The new composite sealer replaces it. Its first text
+preparation stopped on a duplicate-field occurrence guard before writing
+a script or map. That tool-preparation failure is retained and changes
+no source, dependencies or validation result.
 
 Evidence includes:
 
