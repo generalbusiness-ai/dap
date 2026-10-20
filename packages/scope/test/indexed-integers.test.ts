@@ -9,7 +9,7 @@ import { gateRules, gateWith } from "../../derive/test/fixtures-marks.ts";
 import { SqliteStore } from "../src/sqlite.ts";
 import { controls } from "../src/testing.ts";
 import { wired } from "./outside.ts";
-import { START, at, objectOf, rita, stubOf } from "./support.ts";
+import { START, at, objectOf, rita, stubOf } from "./fixtures-native.ts";
 
 test("native integer indexes retain exact duplicate and boundary keys across finality and restart; invalid values and fixed-slot faults change no item/index", async () => {
   const MADE = "platform:task@1" as PlatformDefinition;

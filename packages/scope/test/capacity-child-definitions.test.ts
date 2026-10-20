@@ -12,7 +12,7 @@ import { route } from "../src/worker.ts";
 import type { NativeBirth } from "../src/native-birth.ts";
 import type { ProofBody } from "../src/proof-bytes.ts";
 import { wired } from "./outside.ts";
-import { Lane, START, at, objectOf, reader, rita, stubOf } from "./support.ts";
+import { Lane, START, at, objectOf, reader, rita, stubOf } from "./fixtures-native.ts";
 
 function setup(under: ValidDefinition, bounds: Partial<Bounds> = {}) {
   const signed = signIntent({ v: 1, to: null, actor: rita.key, kind: "found", on: null, expected: {}, fields: {}, idempotencyKey: crypto.randomUUID(), notAfter: at(60) }, rita.secret);

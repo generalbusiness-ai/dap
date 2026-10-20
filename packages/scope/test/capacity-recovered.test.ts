@@ -9,7 +9,7 @@ import { controls } from "../src/testing.ts";
 import { SqliteStore } from "../src/index.ts";
 import { route } from "../src/worker.ts";
 import { wired } from "./outside.ts";
-import { Lane, START, at, reader, rita, stubOf } from "./support.ts";
+import { Lane, START, at, reader, rita, stubOf } from "./fixtures-native.ts";
 
 const NAMED = "platform:task@1" as PlatformDefinition;
 

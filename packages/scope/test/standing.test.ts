@@ -13,7 +13,7 @@ import type { ScopeObject } from "../src/object.ts";
 import { SqliteStore } from "../src/sqlite.ts";
 import { controls } from "../src/testing.ts";
 import { wired } from "./outside.ts";
-import { START, at, objectOf, rita, stubOf } from "./support.ts";
+import { START, at, objectOf, rita, stubOf } from "./fixtures-native.ts";
 
 const MADE = "platform:task@1" as PlatformDefinition;
 

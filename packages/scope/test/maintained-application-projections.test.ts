@@ -14,15 +14,11 @@ import { nativeGateway, type CommandStore } from "../../../apps/counter/browser/
 import { lendingGateway } from "../../../examples/lending/browser/client.ts";
 import type { Kept } from "../../../examples/lending/browser/custody.ts";
 import { outsideOf as hostOutside } from "../src/worker.ts";
-import { applicationResolverFixture } from "./support/application-fixture.ts";
-import { applicationHttpPeer } from "./support/application-http-peer.ts";
-import { sessionRoom } from "./support/session-room.ts";
-import { dispatchFixture, driveFixture, effectFixture } from "./support/native-fixture-lifetime.ts";
+import { applicationResolverFixture, applicationHttpPeer, sessionRoom, dispatchFixture, driveFixture, effectFixture, applicationWorkerBindings } from "./fixtures-native.ts";
 import { rita, routed } from "./repository.ts";
 import { soon } from "./net.ts";
 import { TEST_DEPLOYMENT } from "./worker.ts";
 import type {} from "./support/maintained-applications.ts";
-import { applicationWorkerBindings } from "./fixtures.ts";
 
 test.each(["counter", "lending"] as const)("maintained %s package installs and its browser adapter reads native declared state", async name => {
   const captured = inject("maintainedApplications")[name], bytes = unb64url(captured.bytes);

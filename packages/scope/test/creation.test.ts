@@ -9,7 +9,7 @@ import { inbox, platform } from "@generalbusiness/dap-platform";
 import { httpSource, platformCode, verify } from "@generalbusiness/artroom-replay";
 import { controls, scriptedCapability, type CapabilityScript } from "../src/testing.ts";
 import { Node, creation as creationIn, net, routed, soon } from "./net.ts";
-import { HOLD, START, at, definition, create, creation, reader, rita, stubOf, una } from "./support.ts";
+import { HOLD, START, at, definition, create, creation, reader, rita, stubOf, una } from "./fixtures-native.ts";
 
 describe("founding a directory (sections 2.2, 2.3 and 7.1)", () => {
   test("an opted-in declaration with an unbounded native snapshot producer is refused before genesis; the same legacy declaration still creates", async () => {

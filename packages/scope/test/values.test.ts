@@ -13,7 +13,7 @@ import { httpSource, verify } from "@generalbusiness/artroom-replay";
 import { route } from "../src/worker.ts";
 import { SqliteStore } from "../src/sqlite.ts";
 import type { LateAnswers } from "../src/operations.ts";
-import { START, at, objectOf, reader, rita, stubOf } from "./support.ts";
+import { START, at, objectOf, reader, rita, stubOf } from "./fixtures-native.ts";
 
 // Scope contract, revision 19, sections 6.2 and 9.2; witness 18.35, cases 1 to 3 and 5, and 18.45, case 6 (I3 deltas, entries EX6
 // and FC7). STAND-INS: the platform data and its rules are derive's made-up fixture `gate`, supplied under a name and version that

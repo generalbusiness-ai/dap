@@ -9,7 +9,7 @@ import { packApplication } from "@generalbusiness/artroom-client";
 import { countingCommitments } from "../../../apps/counter/commitments.ts";
 import { APPLICATION_HOST_PACKAGE_BYTES, readApplicationTrust } from "../src/applications/admission.ts";
 import { ApplicationContentStore, applicationReleaseKey } from "../src/applications/content.ts";
-import { applicationTrust, fixedSigner } from "./fixtures.ts";
+import { applicationTrust, fixedSigner } from "./fixtures-native.ts";
 const signer = fixedSigner(63);
 async function fixture(version: string) {
   const definition = definitionDigest(countingCommitments);

@@ -21,13 +21,8 @@ import { applicationScreenPath, readApplicationScreenAddress, readApplicationScr
 import { secretSigner, signedApplicationInstall } from "@generalbusiness/artroom-client";
 import { outsideOf as hostOutside } from "../src/worker.ts";
 import nativeWorker from "../../../apps/room/worker.ts";
-import { applicationHttpPeer } from "./support/application-http-peer.ts";
-import { applicationResolverFixture } from "./support/application-fixture.ts";
-import { sessionRoom } from "./support/session-room.ts";
-import { dispatchFixture, driveFixture, effectFixture } from "./support/native-fixture-lifetime.ts";
-import { reader } from "./support.ts";
+import { applicationHttpPeer, applicationResolverFixture, sessionRoom, dispatchFixture, driveFixture, effectFixture, reader, applicationContentBindings, applicationWorkerBindings } from "./fixtures-native.ts";
 import { rita, sam, routed } from "./repository.ts";
-import { applicationContentBindings, applicationWorkerBindings } from "./fixtures.ts";
 
 const refusesAtBirth = { ...countingCommitments, acts: { ...countingCommitments.acts, establish: { ...countingCommitments.acts["establish"]!, guards: [{ rule: "install-refusal" }] } }, rules: { ...countingCommitments.rules, "install-refusal": "false" } };
 const installations = [

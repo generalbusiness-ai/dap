@@ -3,14 +3,13 @@ import type { ItemQuery, ItemQueryRead, SessionAnswer, SessionClaims } from "@ge
 import { canonicalize, encodeItemQueryParameter, itemQueryArgument } from "@generalbusiness/artroom-bytes";
 import { secretSigner, signedReader, sessionRequest, ScopeHandle, httpTransport, bindingTransport, signedReads } from "@generalbusiness/artroom-client";
 import type { NativeItemQuery } from "../src/item-queries.ts";
-import { sessionRoom } from "./support/session-room.ts";
+import { sessionRoom, at, create, rita, una, type Lane } from "./fixtures-native.ts";
 import { mintSession, readerOf } from "../src/sessions.ts";
 import { command, memoryStore } from "../../cli/src/index.ts";
 import { api } from "../src/worker.ts";
 import { env } from "cloudflare:workers";
 import { net, soon } from "./net.ts";
 import { rita as memberRita, routed } from "./repository.ts";
-import { at, create, rita, una, type Lane } from "./support.ts";
 
 const queryOf = (scope: Lane, over: Partial<ItemQuery> = {}): ItemQuery => ({ v: 1, scope: scope.at, type: "commitment", states: ["accepted"], ids: null, limit: 100, cursor: null, ...over });
 const read = (scope: Lane, query: ItemQuery, reader: unknown) => (scope.object as unknown as {

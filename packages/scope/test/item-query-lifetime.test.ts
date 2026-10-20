@@ -19,8 +19,7 @@ import type { ProofSource } from "../src/proof-bytes.ts";
 import { mintSession, readerOf, sessionsOf } from "../src/sessions.ts";
 import { SqliteStore, type Sql, type SqlValue } from "../src/sqlite.ts";
 import { net } from "./net.ts";
-import { fixedSigner } from "./fixtures.ts";
-import { sessionRoom } from "./support/session-room.ts";
+import { fixedSigner, sessionRoom } from "./fixtures-native.ts";
 import { rita } from "./repository.ts";
 const deferred = <T>() => { let resolve!: (value: T) => void; const promise = new Promise<T>(done => { resolve = done; }); return { promise, resolve }; };
 class Timer {

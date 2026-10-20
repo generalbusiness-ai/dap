@@ -10,7 +10,7 @@ import { SqliteStore } from "../src/index.ts";
 import { CAPABILITY_CODE } from "../src/ports.ts";
 import { controls } from "../src/testing.ts";
 import { wired } from "./outside.ts";
-import { Lane, START, at, creation, definition, stubOf, reader, una, vic } from "./support.ts";
+import { Lane, START, at, creation, definition, stubOf, reader, una, vic } from "./fixtures-native.ts";
 
 test("native capacity admits a hold reader without local holds and preserves its empty owner reservation through eviction and replay", async () => {
   const under = variant(definition.declared, d => {

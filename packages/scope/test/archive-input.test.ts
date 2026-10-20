@@ -5,7 +5,7 @@ import { canonicalize, utf8 } from "@generalbusiness/artroom-bytes";
 import { archiveInput } from "../src/archive-input.ts";
 import type { ArchiveInputSelection } from "../src/archive-input.ts";
 import { ArchiveBudget } from "../src/archive-budget.ts";
-import { create, definition } from "./support.ts";
+import { create, definition } from "./fixtures-native.ts";
 
 // Invariant: rebuild input reads exactly named positions and keys, even after
 // a native turn appends new entries; every other request performs no SQL read.

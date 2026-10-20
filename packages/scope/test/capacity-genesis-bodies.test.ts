@@ -12,7 +12,7 @@ import { SqliteStore } from "../src/index.ts";
 import { controls } from "../src/testing.ts";
 import { route } from "../src/worker.ts";
 import { wired } from "./outside.ts";
-import { Lane, START, at, objectOf, reader, rita, stubOf } from "./support.ts";
+import { Lane, START, at, objectOf, reader, rita, stubOf } from "./fixtures-native.ts";
 
 function setup(under: ValidDefinition, fields: Intent["fields"]) {
   const signed = signIntent({ v: 1, to: null, actor: rita.key, kind: "found", on: null, expected: {}, fields, idempotencyKey: crypto.randomUUID(), notAfter: at(60) }, rita.secret);

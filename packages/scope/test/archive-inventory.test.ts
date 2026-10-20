@@ -11,7 +11,7 @@ import { MemorySource, verify } from "@generalbusiness/artroom-replay";
 import { variant } from "@generalbusiness/dap-derive/testing";
 import { ArchiveBudget, type ArchiveCost } from "../src/archive-budget.ts";
 import { inventoryArchive, type ArchivePolicyRegistry, type ReviewedArchivePolicy } from "../src/archive-inventory.ts";
-import { definition, create, rita, type Lane } from "./support.ts";
+import { definition, create, rita, type Lane } from "./fixtures-native.ts";
 
 const variants = ["genesis", "act", "delivery", "timed", "diagnosis", "outcome", "preparation", "checkpoint"] as const;
 const base = variant(definition.declared, data => {

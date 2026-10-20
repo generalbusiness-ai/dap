@@ -1,7 +1,7 @@
 /** Real local R2 and strict host admission, not a provider deployment or a
  * native install. Package, signature and native schema checks are real. */
 import { env } from "cloudflare:test";
-import { applicationCounterPacket2 } from "./fixtures.ts";
+import { applicationCounterPacket2 } from "./fixtures-native.ts";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { readTrustedApplication } from "../src/applications/admission.ts";

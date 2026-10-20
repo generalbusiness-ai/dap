@@ -14,7 +14,7 @@ import { SessionPreparation } from "../src/session-preparation.ts";
 import { mintSession, readerOf, sessionsOf } from "../src/sessions.ts";
 import { SqliteStore, type Sql } from "../src/sqlite.ts";
 import { net, soon } from "./net.ts";
-import { sessionRoom } from "./support/session-room.ts";
+import { sessionRoom } from "./fixtures-native.ts";
 import type { PlatformScope } from "./worker.ts";
 
 class Timer implements ProofTimer {

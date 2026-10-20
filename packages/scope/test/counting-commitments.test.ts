@@ -13,7 +13,7 @@ import { soon } from "./net.ts";
 import { outsideOf } from "./outside.ts";
 import { Platform, rita, routed } from "./repository.ts";
 import { beginSessionFixture } from "./session-settings.ts";
-import { dispatchFixture, effectFixture, nativeFixtureLifetime } from "./support/native-fixture-lifetime.ts";
+import { dispatchFixture, effectFixture, nativeFixtureLifetime } from "./fixtures-native.ts";
 
 const SERVICE = "https://scopes.test";
 

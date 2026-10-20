@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import type { Entry, KeyId, Observation, ObservationUse, ScopeRef } from "@generalbusiness/dap-contract";
 import { WINDOWS, agrees } from "@generalbusiness/dap-derive";
 import { d, membership } from "@generalbusiness/dap-derive/testing";
-import { HOLD, at, definition, create, rita, una, type Lane } from "./support.ts";
+import { HOLD, at, definition, create, rita, una, type Lane } from "./fixtures-native.ts";
 
 const actions = Object.values(definition.declared.acts).map((a) => a.grant);
 const UNAVAILABLE = { answer: "unavailable", reason: "authority-unavailable" };

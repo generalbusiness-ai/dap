@@ -7,10 +7,9 @@ import { httpSource, verify } from "@generalbusiness/artroom-replay";
 import { soon } from "./net.ts";
 import { outsideOf } from "./outside.ts";
 import { initialPublication } from "./publication.ts";
-import { reader } from "./support.ts";
+import { reader, dispatchFixture, effectFixture, nativeFixtureLifetime } from "./fixtures-native.ts";
 import { beginSessionFixture } from "./session-settings.ts";
 import { Platform, rita, routed, sam } from "./repository.ts";
-import { dispatchFixture, effectFixture, nativeFixtureLifetime } from "./support/native-fixture-lifetime.ts";
 
 const { paul } = keys;
 const SERVICE = "https://scopes.test";

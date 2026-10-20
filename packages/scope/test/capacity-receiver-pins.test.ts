@@ -11,7 +11,7 @@ import { CAPABILITY_CODE } from "../src/ports.ts";
 import { controls } from "../src/testing.ts";
 import { route } from "../src/worker.ts";
 import { wired } from "./outside.ts";
-import { Lane, START, at, creation, objectOf, reader, rita, stubOf } from "./support.ts";
+import { Lane, START, at, creation, objectOf, reader, rita, stubOf } from "./fixtures-native.ts";
 
 test("native receiver pins fund item and request transfers at full scope ceilings, retain an over-limit body once, and replay their real child results after eviction", async () => {
   // Two actual scopes and journals, native hold code, SQLite and routes.

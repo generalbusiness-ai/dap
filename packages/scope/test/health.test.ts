@@ -5,7 +5,7 @@ import { intentDigest, scopeIdOf, signIntent } from "@generalbusiness/artroom-by
 import { health, HealthProbe } from "../src/health.ts";
 import { LATE } from "../src/turn.ts";
 import { controls } from "../src/testing.ts";
-import { at, create, rita, type Remote } from "./support.ts";
+import { at, create, rita, type Remote } from "./fixtures-native.ts";
 
 const version = "01234567-89ab-cdef-0123-456789abcdef";
 const settings = { SESSION_SECRET: "an ephemeral test secret longer than 32 bytes", DEPLOYMENT: "health-test", VERSION_METADATA: { id: version } };

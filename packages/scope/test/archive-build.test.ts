@@ -8,7 +8,7 @@ import { planArchive, rebuildArchive } from "../src/archive-build.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
 import { ArchiveBudget } from "../src/archive-budget.ts";
 import type { Sql } from "../src/sqlite.ts";
-import { at, create, rita, una, type Lane } from "./support.ts";
+import { at, create, rita, una, type Lane } from "./fixtures-native.ts";
 import { archiveDefinition as base, archivePolicies as policies, archiveRepository as repository, archiveSql as sqlOf } from "./support/archive.ts";
 
 async function first(lane: Lane, format: JournalFormat) {

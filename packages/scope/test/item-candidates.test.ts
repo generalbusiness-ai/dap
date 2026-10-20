@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 import { canonicalize, utf8 } from "@generalbusiness/artroom-bytes";
 import { itemCandidates, ITEM_CANDIDATE_BOUNDS as B } from "../src/item-candidates.ts";
 import type { Sql } from "../src/sqlite.ts";
-import { create } from "./support.ts";
+import { create } from "./fixtures-native.ts";
 
 const allowance = { rows: B.rows, candidates: B.candidates, metadataBytes: B.metadataBytes };
 

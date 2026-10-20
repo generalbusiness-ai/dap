@@ -6,7 +6,7 @@ import { signIntent } from "@generalbusiness/artroom-bytes";
 import { grantOf } from "@generalbusiness/dap-derive/testing";
 import type { Created } from "../src/index.ts";
 import { route, type Api } from "../src/worker.ts";
-import { definition } from "./support.ts";
+import { definition } from "./fixtures-native.ts";
 import { creation, rita, soon } from "./net.ts";
 
 test("one real route: a founding, an act and a request for a step through the Worker's fetch; the exact retry through the service binding returns the same receipt; a read states its position", async () => {

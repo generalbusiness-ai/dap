@@ -8,7 +8,7 @@ import { packApplication, type ApplicationPackageInput } from "@generalbusiness/
 import { countingCommitments } from "../../../apps/counter/commitments.ts";
 import { lending } from "../../../examples/lending/definition.ts";
 import { APPLICATION_HOST_PACKAGE_BYTES, ApplicationAdmissionError, readApplicationTrust, readTrustedApplication } from "../src/applications/admission.ts";
-import { applicationTrust, fixedSigner } from "./fixtures.ts";
+import { applicationTrust, fixedSigner } from "./fixtures-native.ts";
 const signer = fixedSigner(61);
 const input = (definition: DeclaredDefinition): ApplicationPackageInput => ({ name: "test.example.admission", version: "1", semantic: {
   v: 1, entry: definitionDigest(definition), definitions: [{ id: definitionDigest(definition), bytes: canonicalize(definition) }], host: { execution: "recorded-do", profiles: ["restricted@1"] }, roles: {}, projections: {}, predecessor: null, capabilities: [],

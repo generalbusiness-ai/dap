@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { otherLane } from "@generalbusiness/dap-derive/testing";
 import type { Digest, Read, RetainedInput } from "@generalbusiness/dap-contract";
-import { HOLD, at, definition, create, reader, rita } from "./support.ts";
+import { HOLD, at, definition, create, reader, rita } from "./fixtures-native.ts";
 
 describe("reads (section 9.1)", () => {
   test("a summary lists live items and counts every item exactly, retained final ones included; a page marked incomplete is not the whole", async () => {

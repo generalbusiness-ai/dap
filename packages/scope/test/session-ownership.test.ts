@@ -4,7 +4,7 @@ import { command, memoryStore } from "@generalbusiness/dap-cli";
 import { Gate, net } from "../src/testing.ts";
 import { routed } from "./repository.ts";
 import { beginSessionChild, beginSessionFixture, observeSessionReads, sessionSettings, type SessionReadChoice } from "./session-settings.ts";
-import { nativeFixtureLifetime } from "./support/native-fixture-lifetime.ts";
+import { nativeFixtureLifetime } from "./fixtures-native.ts";
 import { NO_OUTSIDE } from "../src/index.ts";
 import { wired } from "./outside.ts";
 import { platformOutside } from "./worker.ts";

@@ -13,7 +13,7 @@ import { operational, type Operational } from "../src/operational.ts";
 import { controls, testPorts } from "../src/testing.ts";
 import { FENCE, MINT, mint, outsideOf, owners, pushOf, wired, type OutsideDouble } from "./outside.ts";
 import { open } from "./operation-opening.ts";
-import { HOLD, Lane, START, at, definition, create, creation, reader, rita, stubOf } from "./support.ts";
+import { HOLD, Lane, START, at, definition, create, creation, reader, rita, stubOf } from "./fixtures-native.ts";
 
 /** The delay before the second attempt of an operation. */
 const RETRY = PROPOSED_BOUNDS.dispatchRetrySeconds;

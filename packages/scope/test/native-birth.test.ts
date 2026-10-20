@@ -6,7 +6,7 @@ import { intentDigest, newIncarnation, scopeIdOf, signIntent } from "@generalbus
 import { readNativeBirth, type NativeBirth } from "../src/native-birth.ts";
 import { namespace } from "../src/namespace.ts";
 import { controls } from "../src/testing.ts";
-import { at, definition, create, rita, type Remote } from "./support.ts";
+import { at, definition, create, rita, type Remote } from "./fixtures-native.ts";
 type Peer = Remote & { nativeBirth(at: unknown, milliseconds: number, maxBytes?: number): Promise<NativeBirth | null> };
 
 // Actual native register genesis, preparation, code pin and SQLite. Clock/key

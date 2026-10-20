@@ -12,7 +12,7 @@ import { gitHubOutside, type GitHubBindings } from "../src/github-wiring.ts";
 import { net } from "../src/testing.ts";
 import { soon } from "./net.ts";
 import { Platform, rita, routed, sam, settle } from "./repository.ts";
-import { reader } from "./support.ts";
+import { reader } from "./fixtures-native.ts";
 import { beginSessionFixture } from "./session-settings.ts";
 import { TEST_DEPLOYMENT, platformNet, platformOutside } from "./worker.ts";
 

@@ -11,14 +11,10 @@ import { ScopeHandle, httpTransport, requestSession, secretSigner, sessionReques
 import { httpSource, verify } from "@generalbusiness/artroom-replay";
 import nativeWorker from "../../../apps/room/worker.ts";
 import { outsideOf as hostOutside } from "../src/worker.ts";
-import { applicationResolverFixture } from "./support/application-fixture.ts";
-import { applicationHttpPeer } from "./support/application-http-peer.ts";
-import { sessionRoom } from "./support/session-room.ts";
-import { dispatchFixture, driveFixture, effectFixture } from "./support/native-fixture-lifetime.ts";
+import { applicationResolverFixture, applicationHttpPeer, sessionRoom, dispatchFixture, driveFixture, effectFixture, applicationWorkerBindings } from "./fixtures-native.ts";
 import { rita, routed } from "./repository.ts";
 import { soon } from "./net.ts";
 import type {} from "./support/maintained-applications.ts";
-import { applicationWorkerBindings } from "./fixtures.ts";
 
 // Invariant: one installed Site owns its genuinely created Room and selected
 // Room projections/views; Site and Room retain their distinct native records.

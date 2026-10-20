@@ -8,7 +8,7 @@ import { OperatorRecord } from "../src/operator.ts";
 import { desk, later, net, settle, ticket, una, type Node } from "./net.ts";
 import type { MetricPoint } from "../src/metrics.ts";
 import { metricBindings } from "./worker.ts";
-import { reader } from "./support.ts";
+import { reader } from "./fixtures-native.ts";
 
 // The plan's T41 (authority note, section 12, G13 and G17; the contract's section 7.4). Real scopes in the namespace `NET`, with the test
 // authority and the test readers, both STAND-INS. That an incident with no entry is written to the record by the runtime that found

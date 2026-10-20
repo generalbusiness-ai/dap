@@ -6,7 +6,7 @@ import { messageDigest, parseStrict, scopeIdOf } from "@generalbusiness/artroom-
 import { reserved, timeMs } from "@generalbusiness/dap-derive";
 import { deskDefinition, ticketDefinition, variant } from "@generalbusiness/dap-derive/testing";
 import { SqliteStore } from "../src/index.ts";
-import { reader } from "./support.ts";
+import { reader } from "./fixtures-native.ts";
 import { Node, desk, later, net, rita, settle, ticket, una } from "./net.ts";
 
 /** What each entry of a history is: its input's type and, for a delivery, the message's class. */

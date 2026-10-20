@@ -4,10 +4,9 @@ import { env } from "cloudflare:test";
 import { newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/artroom-bytes";
 import { applicationScreenPath } from "@generalbusiness/artroom-client/application";
 import type { ScopeKind, ScopeRef } from "@generalbusiness/dap-contract";
-import { applicationResolverFixture } from "./support/application-fixture.ts";
+import { applicationResolverFixture, applicationWorkerBindings } from "./fixtures-native.ts";
 import { expect, test } from "vitest";
 import worker, { type Env } from "../../../apps/room/worker.ts";
-import { applicationWorkerBindings } from "./fixtures.ts";
 test("Room refuses retired application paths and still rejects URL credentials before dispatch", async () => {
   const get = (path: string, method = "GET") => worker.fetch(new Request("https://scopes.test" + path, { method, headers: { authorization: "Bearer TEST-header", cookie: "private=TEST-cookie" } }), {} as Env);
   for (const path of ["/counting", "/counting/", "/counting/counting.js", "/counting/brand/dap-wordmark.svg", "/lending", "/lending/", "/lending/lending.css", "/lending/keys.json"]) {

@@ -14,8 +14,7 @@ import { applicationHostOutside } from "../src/applications/wiring.ts";
 import { applicationOutside } from "../src/applications/outside.ts";
 import { ApplicationContentStore } from "../src/applications/content.ts";
 import type { EffectRequest } from "../src/operations.ts";
-import { applicationResolverFixture } from "./support/application-fixture.ts";
-import { applicationContentBindings } from "./fixtures.ts";
+import { applicationResolverFixture, applicationContentBindings } from "./fixtures-native.ts";
 
 async function fixture(format: "sha1" | "sha256" = "sha1") {
   const f = await applicationResolverFixture(format), r = new Rulebook(true, membership.scope, APPLICATION_INSTALL_RULES);

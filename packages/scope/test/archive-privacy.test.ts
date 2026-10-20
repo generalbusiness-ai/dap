@@ -9,7 +9,7 @@ import type { OperationRules } from "@generalbusiness/dap-derive";
 import { ArchiveBudget } from "../src/archive-budget.ts";
 import { archivePrefixMetadata } from "../src/archive-prefix.ts";
 import { archivePrivacyMetadata, type ArchiveSupport } from "../src/archive-privacy.ts";
-import { definition, create, rita, type Lane } from "./support.ts";
+import { definition, create, rita, type Lane } from "./fixtures-native.ts";
 
 const support: ArchiveSupport = { named: definition.digest, definition, owners: new Map(), records: new Map(), preparations: new Map() };
 async function scan(lane: Lane, supplied: ArchiveSupport = support, calls = 16384) {

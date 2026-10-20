@@ -4,7 +4,7 @@ import { canonicalize, digestBytes, rawRetainedJSON, textDigest, utf8 } from "@g
 import { AmountError, MemoryState, applyEntry, checkpointOf, reserved, stateDigest, timeMs } from "@generalbusiness/dap-derive";
 import { SqliteStore, Turns, Wakes, production } from "../src/index.ts";
 import { variant } from "@generalbusiness/dap-derive/testing";
-import { HOLD, at, definition, create, rita, una, vic } from "./support.ts";
+import { HOLD, at, definition, create, rita, una, vic } from "./fixtures-native.ts";
 
 // The shared lane's unused link form names a dummy child digest. These
 // settlement/storage witnesses need a closed opt-in birth, so omit only

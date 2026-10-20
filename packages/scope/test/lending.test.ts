@@ -13,11 +13,9 @@ import { lending } from "../../../examples/lending/definition.ts";
 import { LENDING_DEFINITION } from "../../../examples/lending/pin.ts";
 import { NO_OUTSIDE } from "../src/index.ts";
 import { soon } from "./net.ts";
-import { reader as inspector } from "./support.ts";
+import { reader as inspector, dispatchFixture, siteFixtureLifetime } from "./fixtures-native.ts";
 import { outsideOf, wired } from "./outside.ts";
 import { Platform, rita, routed, sam } from "./repository.ts";
-import { dispatchFixture } from "./support/native-fixture-lifetime.ts";
-import { siteFixtureLifetime } from "./support/site-fixture-lifetime.ts";
 import { legacyLendingProjection } from "./support/legacy-lending-projection.ts";
 
 const SERVICE = "https://scopes.test";

@@ -16,7 +16,7 @@ import { soon } from "./net.ts";
 import { outsideOf, wired } from "./outside.ts";
 import { Platform, rita, routed, sam, settle } from "./repository.ts";
 import { beginSessionChild, beginSessionFixture } from "./session-settings.ts";
-import { reader } from "./support.ts";
+import { reader } from "./fixtures-native.ts";
 import { platformOutside } from "./worker.ts";
 import { localClone } from "./support/local-clone.ts";
 

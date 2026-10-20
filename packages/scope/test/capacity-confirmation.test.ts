@@ -13,7 +13,7 @@ import type { ProofBody } from "../src/proof-bytes.ts";
 import { controls } from "../src/testing.ts";
 import { route } from "../src/worker.ts";
 import { wired } from "./outside.ts";
-import { Lane, START, at, objectOf, reader, rita, stubOf } from "./support.ts";
+import { Lane, START, at, objectOf, reader, rita, stubOf } from "./fixtures-native.ts";
 
 const bounds = { ...PROPOSED_BOUNDS, entryBytes: 4096 };
 const source = () => httpSource("https://scope.test", { reader, fetch: async (url, init) => {

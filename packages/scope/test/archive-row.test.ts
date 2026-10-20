@@ -4,7 +4,7 @@ import { expect, test } from "vitest";
 import { canonicalize } from "@generalbusiness/artroom-bytes";
 import { ARCHIVE_ROW_BYTES, ArchiveRows, type ArchiveMark } from "../src/archive-row.ts";
 import { ArchiveBudget } from "../src/archive-budget.ts";
-import { at, create, type Lane } from "./support.ts";
+import { at, create, type Lane } from "./fixtures-native.ts";
 
 const repository = { host: "fixture-host", namespace: "fixture-room", name: "archive-fixture", id: "fixture-repository" };
 const rows = <T>(lane: Lane, work: (store: ArchiveRows) => T) => lane.inside(state => work(new ArchiveRows({ exec: (query, ...args) => state.storage.sql.exec(query, ...args), transaction: action => state.storage.transactionSync(action) }, lane.at)));

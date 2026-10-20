@@ -13,9 +13,8 @@ import { SqliteStore, type Sealed, type Summary } from "../src/index.ts";
 import { soon } from "./net.ts";
 import { outsideOf } from "./outside.ts";
 import { Platform, rita, routed, sam } from "./repository.ts";
-import { reader } from "./support.ts";
+import { reader, dispatchFixture, effectFixture, nativeFixtureLifetime } from "./fixtures-native.ts";
 import { beginSessionChild, beginSessionFixture, sessionSettings } from "./session-settings.ts";
-import { dispatchFixture, effectFixture, nativeFixtureLifetime } from "./support/native-fixture-lifetime.ts";
 
 const { paul } = keys;
 const SERVICE = "https://scopes.test";

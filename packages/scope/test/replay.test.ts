@@ -6,7 +6,7 @@ import { canonicalize, definitionDigest, intentDigest, scopeIdOf } from "@genera
 import { variant } from "@generalbusiness/dap-derive/testing";
 import { TRUSTS, httpSource, verify } from "@generalbusiness/artroom-replay";
 import type { Checkpointed } from "../src/index.ts";
-import { HOLD, definition } from "./support.ts";
+import { HOLD, definition } from "./fixtures-native.ts";
 import { Node, desk, creation, later, net, rita, routed, settle, ticket, una } from "./net.ts";
 
 /**

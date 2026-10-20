@@ -8,7 +8,7 @@ import { grantOf } from "@generalbusiness/dap-derive/testing";
 import { MemorySource, TRUSTS, httpSource, platformCode, verify, type MemoryScope } from "@generalbusiness/artroom-replay";
 import { later, net, soon } from "./net.ts";
 import { copied, inboxConfirmation, notify, office, repository, rewritten, rita, routed, settle, una, vic, type Platform } from "./repository.ts";
-import { reader } from "./support.ts";
+import { reader } from "./fixtures-native.ts";
 import { platformNet } from "./worker.ts";
 
 // Every scope here is on real Durable Object storage, in the namespace `PLATFORM`, under the PRODUCTION authority: no test authority

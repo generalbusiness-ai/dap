@@ -10,7 +10,7 @@ import { publicationJourney } from "../../platform/test/support-publication-jour
 import { HEAD, TREE } from "../../platform/test/support-destination.ts";
 import { sitePublishedCommit } from "../src/site/publication.ts";
 import { SqliteStore } from "../src/sqlite.ts";
-import { objectOf } from "./support.ts";
+import { objectOf } from "./fixtures-native.ts";
 
 test("D1 immutable publication selects the file receipt's integer publication pointer and exact file reservation", async () => {
   const journey = publicationJourney(destination5, DESTINATION_5, destinationRules5), ledger = journey.make();

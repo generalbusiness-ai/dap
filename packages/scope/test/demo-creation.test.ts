@@ -9,9 +9,8 @@ import type { Seed } from "@generalbusiness/dap-contract";
 import type { Binding } from "../src/namespace.ts";
 import { demoCreationConfig, demoCreationRoute, type DemoCreationOffer } from "../../../apps/room/demo-creation.ts";
 import { beginSessionFixture } from "./session-settings.ts";
-import { nativeFixtureLifetime } from "./support/native-fixture-lifetime.ts";
+import { nativeFixtureLifetime, reader } from "./fixtures-native.ts";
 import { routed } from "./repository.ts";
-import { reader } from "./support.ts";
 
 test("demo offer exposes only its configured register and admits a previously unseen founding key without changing protected reads or waking parked work", async () => {
   const owner=beginSessionFixture({secret:b64url(crypto.getRandomValues(new Uint8Array(32))),sessions:true,inspector:reader});

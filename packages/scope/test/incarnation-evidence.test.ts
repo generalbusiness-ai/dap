@@ -3,7 +3,7 @@ import { canonicalize, newIncarnation, scopeIdOf } from "@generalbusiness/artroo
 import { incarnationEvidence } from "../src/incarnation-evidence.ts";
 import { PREPARATION_BOUNDS as B, PreparationBudget } from "../src/preparation-budget.ts";
 import { SqliteStore, type Sql } from "../src/sqlite.ts";
-import { create } from "./support.ts";
+import { create } from "./fixtures-native.ts";
 
 const sqlOf = (state: DurableObjectState): Sql => ({ exec: (query, ...args) => state.storage.sql.exec(query, ...args), transaction: work => state.storage.transactionSync(work) });
 const inc = (n: number) => newIncarnation(new Uint8Array(16).fill(n));
