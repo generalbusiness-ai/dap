@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9f50df192db0d1080e5492258081e844ffd2265d","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/archive-foreign.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a6a2de3cd98c60813ab3fb7a289c63bef54ffc5a","text":"Merge retired a covered predecessor; the successor is at packages/git/src/journal-manifest.ts."}
