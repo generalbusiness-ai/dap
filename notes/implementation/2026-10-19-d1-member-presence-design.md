@@ -2,10 +2,58 @@
 
 The static packet is complete: 40 member-state examples in both themes,
 their supporting member records and kit-owned screens make 192 HTML pages.
-All 384 desktop/phone browser checks pass, with 192 retained primary crops
-and 12 committed previews. The full names of identity links retain the
+The original 384 desktop/phone browser checks passed, with 192 retained
+primary crops and 12 committed previews. The full names of identity links retain the
 visible kind, standing and controller. All data and controls are fictional;
 no runtime, authority, membership or live presence behavior changes.
+
+## Lapsed Keys wording correction
+
+Complete review `20ab767749dd56c82672af04897cd47ed51682ff` returned one
+required finding, F1: six lapsed-member records called the member invited
+in their Keys row. The generator now handles lapsed and invited separately.
+All three member kinds in both themes say “No active key · invitation
+lapsed”; invited records keep their original caption.
+
+The repair uses a fresh checkout, leaving every original published source,
+tool, dependency and evidence file untouched. Before reporting changes,
+exactly seven of 209 packet leaves changed: build.py and those six HTML
+records. The other 202 leaves, including every committed preview, match.
+An independently copied generator reproduced all 192 HTML files, manifest
+and generator bytes exactly (194 files). Rendering metadata now gives the
+current 195 source hashes and retains the original hashes for the seven
+changed inputs. Original primary crops depict unchanged inputs; the six
+supporting records have fresh full-page screenshots.
+
+The same targeted browser harness first reproduced 12 wording failures
+and naturally exited one, then passed all 12 checks and naturally exited
+zero after correction. It clicks each lapsed element through to its own
+record at 1440×1000 and 390×1000, in both themes. Identity standing, Keys,
+page title and handle agree. No horizontal overflow, blank main, undersized
+link target, overlay, resource failure or console error was found. The
+dark checker phone and light agent desktop screenshots were inspected.
+No screen-reader, runtime or native acceptance is claimed.
+
+Browser plugin not available. Existing pinned Playwright 1.63.0 and Chromium
+153.0.8010.12 distributions were copied into a private scratch tool view
+with full byte/mode/link equality before use. No original tool was executed,
+package installed or user profile opened. This verifies the copied view,
+not independent package-registry integrity. Evidence uses
+`/tmp/artroom-d1-lapsed-*20261019*`; rendering.json binds individual files.
+
+The clean correction checkpoint is
+`2f8c0b6de3cf0b26f52619341f0960d0e55f00e2`, tree
+`0bdc9aa3950128a9f7d400515ea4e8d2cf0e6a5a`. Its complete delta from the
+original candidate tree `2a10ea1001da942653c60c9efd645eb4a42426f1` is nine
+packet paths: build.py, six record HTML files, README and rendering.json.
+This outcome note is the only further change. All production source and
+tests remain exact, including against the original passing-gate tree
+`4c0f0b73c6264ec83e76a936f71f8270175c6985`. Under docs/testing.md's
+document-only rule, the full gate is retained rather than repeated. The
+Python generator is documentation source under notes, and was regenerated
+and checked separately as described above. No new passing gate is claimed.
+
+The sections below retain the original preparation and gate history.
 
 The saved packet has been brought onto actual Main
 `dba3e76237250b6ce205d511691554de3d809baf` at integration checkpoint
