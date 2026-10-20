@@ -15,6 +15,9 @@ import { formatInteger } from "./numbers.ts";
 import { formatFact } from "./facts.ts";
 import { orderedViewRows } from "./ordering.ts";
 import { decodeViewParameters } from "@generalbusiness/artroom-bytes/application-v2";
+import { projectionMemberFacts, projectionMembers } from "./members.ts";
+import type { MemberTable, MembershipDisplayRead } from "./member-types.ts";
+import { memberValueText } from "./member-text.ts";
 
 const controlId = (view: ApplicationView, control: ApplicationViewAct, index: number) => view.acts.filter(choice => choice.act === control.act).length > 1 ? `${control.act}:${index}` : control.act;
 
@@ -26,15 +29,20 @@ export interface DeclaredViewPort {
   projection(query: ApplicationProjectionQuery): Promise<ApplicationProjectionRead>;
   /** Current native role actions. Unknown standing returns no actions. */
   actions(): Promise<readonly string[]>;
+  /** Authenticated bounded display reads only; never native authority. */
+  members?: MembershipDisplayRead;
   /** Authenticated native member and current grants; never caller arguments.
    * Unavailable identity must not select a member's carousel. */
   viewer?(): Promise<{ member: MemberRef; grants: readonly string[] } | null>;
 }
 const displayText = (value: unknown): string => value === null || value === undefined ? "" : typeof value === "string" ? value : canonicalize(value);
 const input = (row: ApplicationProjectionRow): Record<string, FieldValue | null> => ({ ...row.fields, id: row.id, type: row.type, state: row.state, revision: row.revision, ...(row.entry ? { time: row.time!, on: row.on! } : {}) });
-const template = (source: string, row: ApplicationProjectionRow, waiting: string): string => {
+const template = (source: string, row: ApplicationProjectionRow, waiting: string, members?: MemberTable): string => {
   const values = { ...input(row), waiting };
-  return source.replace(/\{([^{}]+)\}/g, (_whole, key: string) => displayText(Object.hasOwn(values, key) ? values[key as keyof typeof values] : null));
+  return source.replace(/\{([^{}]+)\}/g, (_whole, key: string) => {
+    const value = Object.hasOwn(values, key) ? values[key as keyof typeof values] : null;
+    return memberValueText(value, members) ?? displayText(value);
+  });
 };
 export class DeclaredViewSource implements ViewSource {
   readonly declared = true;
@@ -167,16 +175,18 @@ export class DeclaredViewSource implements ViewSource {
     let fallback = `${series.label}: no recorded samples in the last ${window} native entries.`;
     if (samples.length) {
       const latest = samples.at(-1)!, lowest = samples.reduce((a, b) => b.value < a.value ? b : a), highest = samples.reduce((a, b) => b.value > a.value ? b : a);
-      const text = (sample: typeof latest) => `${formatInteger(sample.value, series.scale, series.unit)} at ${sample.time}`;
-      fallback = `${series.label}: ${samples.length} recorded samples in the last ${window} native entries. Latest ${text(latest)}; lowest ${text(lowest)}; highest ${text(highest)}.`;
+      const seriesText = (sample: typeof latest) => `${formatInteger(sample.value, series.scale, series.unit)} at ${sample.time}`;
+      fallback = `${series.label}: ${samples.length} recorded samples in the last ${window} native entries. Latest ${seriesText(latest)}; lowest ${seriesText(lowest)}; highest ${seriesText(highest)}.`;
     }
     return { label: series.label, scale: series.scale, unit: series.unit, window, samples, fallback };
   }
   async read(query: ViewQuery): Promise<Projection> {
     const { view, root, scope, definition, reply, rows, routed, points, unknown } = await this.#read(query);
+    const declaration = this.packet.package.semantic.projections[view.projection]!;
     const backScope = this.#backScope(view, scope, root), surface = this.#surface(query.screen, view, backScope);
     const navigation = view.back ? { back: { screen: view.back, scope: backScope } } : {};
     if (!rows.length) return { status: "empty", position: 0, count: 0, scope, points, refresh: view.refresh, ...navigation, ...(!routed ? { data: reply.value } : {}),
+      members: await projectionMembers(declaration, routed ? { ...reply.value, sources: {} } : reply.value, this.port.members),
       ...(surface ? { surface } : {}),
       fallback: view.kind === "log" ? "This declared log has no matching entries in its recent window." : "This declared view has no matching items." };
     const position = routed && query.refresh === true && Number.isSafeInteger(query.position) && query.position >= rows.length ? 0 : query.position;
@@ -193,17 +203,22 @@ export class DeclaredViewSource implements ViewSource {
       };
       return { status: "unavailable", position, count: rows.length, scope, points, refresh: view.refresh, ...navigation, card, fallback };
     }
-    const values = input(row), waiting = Object.hasOwn(view.waiting, row.state) ? template(view.waiting[row.state]!, row, "") : "";
-    const fallback = template(view.fallback, row, waiting), actions = await this.#allowed(view, row, reply.value, scope, definition);
+    const values = input(row);
+    // A routed card resolves only the row it actually discloses. Other
+    // source rows and rejected assignments never become an identity table.
+    const members = await projectionMembers(declaration, routed ? { ...reply.value, sources: { [view.item]: [row] } } : reply.value, this.port.members);
+    const waiting = Object.hasOwn(view.waiting, row.state) ? template(view.waiting[row.state]!, row, "", members) : "";
+    const fallback = template(view.fallback, row, waiting, members), actions = await this.#allowed(view, row, reply.value, scope, definition);
     const now = this.port.now?.() ?? Date.now();
     const series = this.#series(view, row, reply.value);
     const card: Card = {
       identity: surface ? { item: scope.scope, kind: "scope", revision: String(reply.value.at.seq), subject: { scope: scope.scope }, at: {} }
         : { item: String(row.id), kind: row.entry ? "entry" : row.type, revision: String(row.revision), subject: { scope: scope.scope, ...(row.entry ? {} : { item: row.id }) }, at: row.entry ? {} : { on: row.revision } },
-      title: view.kind === "surface" ? query.screen : displayText(values[view.title]), summary: view.kind === "surface" || view.summary === null ? "" : displayText(values[view.summary]),
-      reasons: view.kind === "surface" ? [] : view.facts.map(fact => formatFact(fact, values, now)),
+      title: view.kind === "surface" ? query.screen : memberValueText(values[view.title], members) ?? displayText(values[view.title]), summary: view.kind === "surface" || view.summary === null ? "" : memberValueText(values[view.summary], members) ?? displayText(values[view.summary]),
+      reasons: view.kind === "surface" ? [] : view.facts.map(fact => formatFact(fact, values, now, members)),
       projection: points, reviewIntended: [], unavailable: [], waitsOn: waiting ? [waiting] : [], settles: [], actions, fallback,
-      declared: { kind: view.kind, source: view.item, context: template(view.context, row, waiting), actor: view.kind === "surface" || view.actor === null ? null : values[view.actor] ?? null,
+      declared: { kind: view.kind, source: view.item, context: template(view.context, row, waiting, members), actor: view.kind === "surface" || view.actor === null ? null : values[view.actor] ?? null,
+        ...(view.kind !== "surface" ? { memberFacts: projectionMemberFacts(declaration.sources[view.item]!, view.facts, values) } : {}),
         refresh: view.refresh, display: view.display, back: view.back, backScope, scope, ...(routed ? { routed: true } : {}), data: reply.value,
         ...(series ? { series } : {}),
         ...(view.kind !== "surface" && view.links ? { links: view.links.flatMap(link => {
@@ -215,11 +230,13 @@ export class DeclaredViewSource implements ViewSource {
         ...(view.kind === "log" ? { log: rows.map(row => {
           if (!row.entry || !row.time) throw new ViewError("unavailable", "A log needs explicit sealed entry facts.");
           const values = input(row);
-          return { entry: row.entry, time: row.time, title: displayText(values[view.title]), summary: view.summary === null ? "" : displayText(values[view.summary]), facts: view.facts.filter(fact => applicationViewFactField(fact) !== "time").map(fact => formatFact(fact, values)) };
+          const facts = view.facts.filter(fact => applicationViewFactField(fact) !== "time");
+          return { entry: row.entry, time: row.time, title: memberValueText(values[view.title], members) ?? displayText(values[view.title]), summary: view.summary === null ? "" : memberValueText(values[view.summary], members) ?? displayText(values[view.summary]),
+            facts: facts.map(fact => formatFact(fact, values, now, members)), memberFacts: projectionMemberFacts(declaration.sources[view.item]!, facts, values) };
         }) } : {}),
         ...(surface ? { resource: surface.resource, opens: surface.opens, surface } : {}) },
     };
-    return { status: "ready", position, count: rows.length, scope, points, refresh: view.refresh, ...navigation, card, fallback };
+    return { status: "ready", position, count: rows.length, scope, points, refresh: view.refresh, ...navigation, card, fallback, members };
   }
   /** Called by the mounted-view host inside the custody build, immediately
    * before signing. Native expected revisions and grants still judge submit. */

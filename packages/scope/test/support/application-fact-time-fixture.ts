@@ -15,8 +15,12 @@ export async function applicationCounterFactTimePacket2() {
   const projections = Object.fromEntries(Object.entries(semantic.projections).map(([name, projection]) => [name, { ...projection, definition: id }]));
   const source = projections["board"]!.sources["board"]!;
   if (isApplicationJournalSource(source)) throw Error("Item fixture required.");
-  const clock = { ...source, fields: { seenTime: { from: { kind: "fact-time" as const, name: "seen" }, of: { type: "time" as const }, nullable: true } } };
+  const clock = { ...source, fields: {
+    seenTime: { from: { kind: "fact-time" as const, name: "seen" }, of: { type: "time" as const }, nullable: true },
+    seenBy: { from: { kind: "fact-signer" as const, name: "seen" }, of: { type: "member" as const }, nullable: true },
+  } };
   projections["clock"] = { ...projections["board"]!, sources: { board: clock } };
+  projections["signer"] = { ...projections["board"]!, sources: { board: { ...source, fields: { seenBy: clock.fields.seenBy } } } };
   return packApplication2({ name: "test.fact-time", version: "native", semantic: { ...semantic, entry: id,
     definitions: [{ id, bytes: canonicalize(definition) }], projections }, presentation }, fixedSigner(67));
 }

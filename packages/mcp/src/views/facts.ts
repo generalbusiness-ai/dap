@@ -4,10 +4,12 @@ import { canonicalize, timeMs } from "@generalbusiness/artroom-bytes";
 import type { ApplicationViewFact } from "@generalbusiness/artroom-bytes/application-v2";
 import { formatInteger } from "./numbers.ts";
 import { ViewError } from "./session.ts";
-export function formatFact(fact: ApplicationViewFact, values: Record<string, FieldValue | null>, now = Date.now()): string {
+import type { MemberTable } from "./member-types.ts";
+import { memberValueText } from "./member-text.ts";
+export function formatFact(fact: ApplicationViewFact, values: Record<string, FieldValue | null>, now = Date.now(), members?: MemberTable): string {
   if (typeof fact === "string") {
     const value = values[fact];
-    return `${fact}: ${value === null || value === undefined ? "—" : typeof value === "string" ? value : canonicalize(value)}`;
+    return `${fact}: ${value === null || value === undefined ? "—" : memberValueText(value, members) ?? (typeof value === "string" ? value : canonicalize(value))}`;
   }
   const value = values[fact.field];
   if (value === null || value === undefined) return `${fact.label}: —`;

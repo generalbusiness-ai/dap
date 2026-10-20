@@ -119,6 +119,8 @@ Interactions belong to a layer.
 
 ## 4. How it reaches each surface
 
+An item's `fact-signer` field also supplies the member recorded on its named local fact; absent retained evidence or a mismatched hash gives unavailable, without a current-key lookup.
+
 **The service resolves members.** Before projection data crosses to a
 frame, the service resolves every member reference in its rows into a
 display record: handle, kind, state, role, controller, and the entry that

@@ -49,6 +49,32 @@ test("fact-time uses only exact same-scope refs at the captured head and preserv
   expect(() => read(metadata, [{ ...row(1), refs: { seen: { ...fact, at: { ...scope, scope: `sc_${"b".repeat(52)}` } } } }])).toThrow();
 });
 
+// Invariant: signer metadata must match the captured local fact/head/hash,
+// and missing or unavailable evidence cannot invent a member.
+test("fact-signer uses only exact local recorded signer metadata and keeps absent facts null", () => {
+  const native: DeclaredDefinition = { ...definition, items: { note: { ...definition.items["note"]!, refs: {
+    seen: { required: false, fixed: false, to: { type: "fact", under: definition.name, kind: ["touch"] } },
+  } } } };
+  const signed = readApplicationProjection({ v: 1, definition: definitionDigest(native), revision: "revision", sources: { all: {
+    item: "note", read: "many", states: ["open"], limit: 20,
+    fields: { seenBy: { from: { kind: "fact-signer", name: "seen" }, of: { type: "member" }, nullable: true } },
+  } } });
+  const query = applicationProjectionQueries(signed, scope, {})["all"]!;
+  const fact = { at: scope, seq: 7, hash: textDigest("PUBLIC TEST original signed fact") };
+  const signer = { membership: { ...scope, kind: "membership" }, member: "@recorded" };
+  const rows: Item[] = [{ ...row(1), refs: { seen: fact } }, { ...row(2), refs: { seen: 7 } }, { ...row(3), refs: { seen: null } }];
+  const metadata = { scope, at: head, entries: [{ seq: 7, hash: fact.hash, signer }] };
+  const read = (signers: unknown = metadata, items = rows) => projectApplicationQueryReads(signed, native, scope, {}, { all: reply(query, items) }, {}, {}, { all: signers });
+  expect(read().sources["all"]!.map(row => row.fields["seenBy"])).toEqual([signer, signer, null]);
+  expect(() => read({ ...metadata, at: { ...head, seq: 13 } })).toThrow("application-projection-unavailable");
+  expect(read({ ...metadata, entries: [{ ...metadata.entries[0]!, hash: head.hash }] }).sources["all"]!.map(row => row.fields["seenBy"])).toEqual([null, null, null]);
+  expect(read({ ...metadata, entries: [{ seq: 7, hash: null, signer: null }] }).sources["all"]!.map(row => row.fields["seenBy"])).toEqual([null, null, null]);
+  expect(() => read({ ...metadata, entries: [{ ...metadata.entries[0]!, signer: { member: "@guessed" } }] })).toThrow("application-projection-unavailable");
+  expect(() => read({ ...metadata, entries: [] })).toThrow("application-projection-unavailable");
+  expect(() => read(metadata, [{ ...row(1), refs: { seen: { ...fact, seq: 13 } } }])).toThrow("application-projection-unavailable");
+  expect(() => read(metadata, [{ ...row(1), refs: { seen: { ...fact, at: { ...scope, inc: `in_${"b".repeat(25)}a` } } } }])).toThrow("application-projection-unavailable");
+});
+
 // Invariant: selected fields and native row identity at one exact head form
 // the complete result; final rows survive, while unselected content does not.
 test("one canonical projection keeps final rows and revisions while selecting only declared fields", () => {

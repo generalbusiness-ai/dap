@@ -839,3 +839,57 @@ the lock stamp matches and no package installs. Exact commands, source
 inputs, logs and closure are `/tmp/p1-s2b-main-focused-20261020*`.
 These separate phases are not a gate. P1's first ordinary final gate and
 complete exact-head Source review remain required.
+
+## Combine the approved member surface before the first gate
+
+P1 and the then-pending immutable B1 repair `9b7896c2` overlap in four
+paths. The isolated P1 merge closes naturally one with three actual
+conflicts and preserves all nine original stages before any resolution.
+The remaining MCP declared-view file merges automatically. Original
+commands and stage manifest are
+`/tmp/p1-b1-candidate-integration-20261020*` and
+`/tmp/p1-b1-candidate-original-stages-20261020/manifest.json`. This never
+changes or executes the permanently frozen B1 originals or shared Main.
+B1 is subsequently approved by `c0ff23d8` and lands at actual Main
+`9c6d344cbf498835c2811c98d9981e4a55930b36`, tree `d04e2d4b`, under
+native receipt `466651e2`; the integrated B1 candidate is unchanged.
+
+The Grow source manifest combines all seven P1 composition values with
+exactly the four B1 nullable `lastProber` fact-signer fields. Removing
+those four additions recovers the entire P1 JSON value. The native story
+combines P1's explicit published-package reader with B1's text digest and
+journal-source imports; the merged scenario's assertions, limits and
+timeouts are untouched. The generated Page conflict first keeps exact
+P1 bytes only as a temporary starting point. After all conflict markers
+and unmerged stages are cleared, the actual Page and four-card generators
+rebuild both served modules from combined source. No minified module is
+hand-merged. Resolution: `/tmp/p1-b1-candidate-resolution-20261020.json`.
+
+The first combined pipeline passes both generators, ten Scope/MCP/Page
+compiler configurations and 23 owning Node cases in five files, including
+both generated-resource freshness checks. Its native fixture preparation
+fails before any case starts: the resolution's whole-file two-space JSON
+format expands the Grow source from 64,356 to 144,783 bytes, beyond its
+existing allowance. It is not a native assertion failure. That exact
+oversized source and both full 2,611-file generation/validation inputs are
+physically preserved. The first compact-format helper then stops at an
+inline-object formatting guard before writing a file. The separate
+corrected helper inserts only the four compact member properties into
+the original P1 text, producing 64,776 bytes with an exactly equal JSON
+value. Every other source byte and every limit stays unchanged. Records:
+`/tmp/p1-b1-combined-focused-20261020*`,
+`/tmp/p1-b1-combined-focused-inputs-20261020/{generation,validation}` and
+`/tmp/p1-b1-compact-grow-source-v2-20261020.json`.
+
+The separate corrected native-only run passes six cases in four files:
+the owned Grow member surface, native projection and SQLite boundary,
+both installed-archive cases, and declared member resolution. Original
+`13139` closes naturally zero in 12.501363708 wall / 14.064925 CPU seconds
+on shared warm macOS 27.0.1 arm64, initial load
+1.3931/1.6470/1.7993. All recorded source bytes/modes remain exact, the
+lock stamp matches and no package installs. Its full 2,611-file source
+input is preserved separately. The preceding pipeline's start load is
+1.9463/1.8262/1.9448; each phase has its own wall/CPU record, not a sum
+called one passing pipeline. Exact later logs and closure are
+`/tmp/p1-b1-native-v2-20261020*`. No unchanged compiler or Node suite is
+repeated. P1's first ordinary gate and full Source review remain due.
