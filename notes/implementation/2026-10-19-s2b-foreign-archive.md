@@ -267,3 +267,23 @@ assertion to fail. Source and mode restore exactly. Original `62374`
 naturally exits zero, distinguishing the guard; this is no sweep.
 Snapshots/logs/closure are `/tmp/s2b-reader-repair-basis-control-20261020*`.
 The new changed-code gate and complete fresh review remain required.
+
+
+The repaired branch now incorporates actual reviewed Main
+`7a14832586ae2760d742b0e6d8e4b65c8908977c`, tree `4b5a2fa1`, including
+both the homepage wording and market design/documentation landings. The
+original merge closes naturally zero in 0.031567083 seconds with no
+conflicts. All twelve imported paths match Main and all nineteen authored
+paths retain their bytes/modes. Exact command, output and preservation
+record are `/tmp/s2b-reader-repair-incorporate-main-20261020*`.
+The permanent repair source and test assertions are unchanged by that
+merge. The temporary reviewer probe is preserved externally and removed
+before this clean gate checkpoint; it is not an extra committed case.
+
+The separate corrected focused run and targeted control record their
+actual phase wall/child CPU values. Their starting host load was not
+captured and is not reconstructed from a later sample. They use the same
+shared warm macOS arm64/Node26.12 environment observed in the first
+pipeline, without an exclusive-host or fresh-cache claim. No timing sum
+is presented as one measured pipeline. The new ordinary gate will record
+its own machine/load/cache and original natural closure.
