@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/2026-10-19-record-and-event-identifiers.md","body":{"commit":"2fcd50ab1b5b3282621ccdb9ecd2d3aa9dcab396","path":"notes/2026-10-19-record-and-event-identifiers.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6bb241c748741739b8c9f82ca810f5e089ad87c5","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-19-record-and-event-identifiers.md."}
