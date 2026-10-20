@@ -1,8 +1,7 @@
 # Sequence and event identifiers
 
-19 October 2026, draft 5. Design note for review. Part one is the
-protocol. It stands alone, and it is the text to publish. Part two is
-the adoption of the protocol by dap.
+Part one specifies a protocol for sequence and event identifiers. Part
+two describes how dap adopts this protocol.
 
 ## Sequences, services and rules
 
