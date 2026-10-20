@@ -219,8 +219,7 @@ boundaries and make no provider or browser acceptance claim.
 Original source, assertion map, selection, compiler/runtime logs and the
 clean matching checkpoint use
 `/tmp/artroom-k2-scope-final-builders-*20261019*`. This is a focused
-follow-up after real source changes, not a repeated gate. Final K2 gate,
-fixture-layout decision and Source remain ahead.
+follow-up after real source changes, not a repeated gate. Final K2 fixture-entry work, gate and Source remain ahead.
 
 ## Scope and counts
 
@@ -245,16 +244,27 @@ Full per-file baseline counts/hashes are in
 `/tmp/artroom-k2-before-lines-20261019.json`; the selected assertion
 inventories and tool are `/tmp/artroom-k2-expect-*20261019*`.
 
-The remaining work covers the other duplicated builders and the requested
-final fixture module layout. The planner has been asked whether one
-supported package fixture entry may retain private domain modules and
-separate runtime boundaries. Scope's pure packet helpers are imported by
-Node MCP tests; its native lifetime code imports Worker-only APIs and
-ownership hooks. An eager physical merge would change which runtime can
-load those helpers. The independent Node peer extraction does not depend
-on that choice. The read-only inventory and concrete Node consumers are
-recorded in `/tmp/artroom-k2-fixture-survey-20261019.json` and
-`/tmp/artroom-k2-fixture-runtime-boundary-20261019.json`.
+Planner decision `134333f22cd6e60b5f689add41e6f75068f1b611`, adopted by
+`efba35a7075db6e440ddc2bcbfff2d07944989c0`, confirms one supported fixture
+entry per package, with private domain modules. Two named entries are
+allowed where needed: Node-safe builders and Worker-only lifetime helpers.
+The final note must name which tests use each and why. Distinct scenario
+data stays distinct; a builder used by one file only need not move.
+
+The remaining work finishes those entries and removes the remaining
+hand-built binding/peer copies named by the request. Scope's pure packet
+helpers are imported by Node MCP tests; native lifetime code imports Worker
+APIs and ownership hooks. Node script consumers must also avoid eager
+Vitest imports. Shared builders need a private core where re-exporting
+scenario modules would otherwise create initialization cycles. Derive's
+existing testing entry is also a public SDK input, so distinct private
+scenario data must not be pulled into that package accidentally.
+
+The read-only inventory and concrete Node consumers are recorded in
+`/tmp/artroom-k2-fixture-survey-20261019.json` and
+`/tmp/artroom-k2-fixture-runtime-boundary-20261019.json`. The decision
+changes no assertion, case, limit or deadline requirement. Final K2 gate
+and complete Source still remain ahead, behind G5a, S2a and G5.
 
 Actual Main's passing Vitest count is 1,926 with three existing skips. The
 request's survey cites the unlanded G5a head's 1,939; its extra cases are
