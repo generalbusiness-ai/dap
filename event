@@ -1,1 +1,1 @@
-{"kind":"promise","text":"Planner writes the OAuth design note on the schedule this request states, files it for checker review, lands it when approved, then commissions the implementation to the builder. Promise 7ed8a8ff on the stale b04b0e79 is replaced by this one."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1ad49570f2f11644706654a959b138e9498fd88a"}
