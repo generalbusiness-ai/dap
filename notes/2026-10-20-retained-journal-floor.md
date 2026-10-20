@@ -69,8 +69,8 @@ range does not start at 0 (`packages/git/src/journal-manifest.ts:33-41`).
 It also refuses any path that the one manifest does not list
 (`packages/git/src/journal-reader.ts:85-95`).
 
-So A3 cannot archive or read a scope of more than 4,096 entries. Room A
-passed 4,096 entries on 21 October 2026 at the rate above. A pass from
+So A3 cannot archive or read a scope of more than 4,096 entries. At the
+rate above, Room A reaches 4,096 entries on 21 October 2026. A pass from
 position 0 also cannot work after a floor, because the rows below the
 floor are gone.
 
@@ -83,9 +83,14 @@ its meaning.
 | Path | Content |
 |---|---|
 | `journal/v2/head.json` | `{ v: 2, scope: <ScopeRef>, through: <seq>, hash: <entry hash> }` |
-| `journal/v2/passes/<first>.json` | One pass manifest for each pass, with the v1 manifest's fields and `entries: [first, last]`. `first` is 12 decimal digits. |
-| `journal/v2/segments/<first>.jsonl` | Entries from `first` on, one canonical entry for each line. |
+| `journal/v2/passes/<a>/<b>/<first>.json` | One pass manifest for each pass, with the v1 manifest's fields and `entries: [first, last]`. |
+| `journal/v2/segments/<a>/<b>/<first>.jsonl` | Entries from `first` on, one canonical entry for each line. |
 | `journal/v2/retained/...` | As in v1. |
+
+`<first>` is 12 decimal digits. `<a>` is its first six digits and `<b>`
+its next three. So a `<b>` directory holds the files of 1,000
+positions, and an `<a>` directory holds at most 1,000 `<b>` directories.
+No directory of passes or segments lists more than 1,000 names.
 
 Each pass manifest carries the S2b fields for its own entries: the
 retained inputs that its entries name, and the `foreignSources` basis of
@@ -101,16 +106,20 @@ each entry copy that it retains.
    chain check starts there, not at genesis.
 4. The commit's parent is the receipt's commit. Its tree is the
    parent's tree plus the pass's manifest, segments and retained files,
-   and a new `head.json`. No other path changes.
+   and a new `head.json`. No other file changes.
 5. A segment closes at 1,000 entries, at the object bound of 15.4, or at
    the pass's cutoff. So a pass never rewrites a segment of an earlier
    pass, and never reads an entry before its first.
 6. A retained input that an earlier pass already wrote is listed again
    in the new pass manifest when a new entry names it. The file is not
    written twice.
-7. The cost of a pass depends on its new entries and on the tree paths
-   it changes. It does not depend on the number of entries already
-   archived.
+7. A pass rewrites only the tree objects on the paths of the files it
+   adds. Each of those trees lists at most 1,000 names under `passes/`
+   and `segments/`, and a fixed number elsewhere. The pass reads those
+   trees from its parent and charges their names and bytes to the
+   archive budget (`nodes` and `metadata`, `archive-budget.ts:6`). So the
+   work of a pass has a bound that does not grow with the number of
+   earlier passes.
 8. A room bound to an archive after it starts, as Room A is, archives
    from position 0 in as many passes as it needs.
 
@@ -128,11 +137,35 @@ each entry copy that it retains.
    `foreignSources` basis in the same pass manifest.
 5. The chain check runs across passes: the first entry of a pass names
    the last entry of the pass before.
-6. The reader's total work is bounded by an option: at most 1,000,000
+6. A file under `passes/` or `segments/` whose directories do not match
+   its `<first>` is refused.
+7. The reader's total work is bounded by an option: at most 1,000,000
    entries by default. A larger clone is refused `limit`, not read in
    part.
-7. A2's replay reads a v2 clone through the same `gitSource`
+8. A2's replay reads a v2 clone through the same `gitSource`
    (`packages/replay/src/git.ts:13-15`).
+
+### 2.5 From a v1 archive to v2
+
+A scope with a confirmed v1 archive moves to v2 in one conversion
+commit, before its first v2 pass:
+
+1. A pending v1 pass is first confirmed or abandoned by the v1 rules.
+   Conversion starts only from a confirmed v1 receipt with no pending
+   pass.
+2. The conversion commit's parent is the confirmed v1 commit. Its tree
+   holds `journal/v2` only.
+3. Its one pass manifest is the v1 manifest with `v: 2`, at the path of
+   first position 0. The v1 manifest already covers positions 0 to
+   `through`, so it is a complete first pass.
+4. The v1 segments and retained files keep their bytes at their v2
+   paths. Each v1 segment ends at 1,000 entries, at the object bound or
+   at `through`, so it meets rule 5 of 2.3.
+5. The conversion reads at most 4,096 entries, the v1 bound. It is a
+   pass with no new entries, and its receipt is the v1 receipt's
+   `through` with the new commit.
+
+No floor entry relies on a v1 commit. A floor needs a v2 receipt.
 
 ## 3. Floor entry
 
@@ -151,6 +184,7 @@ definition has the same floor.
 interface FloorInput {
   floor: number;                       // the new floor F
   receipt: { commit: string; through: { seq: number; hash: Digest } };
+  keep: number[];                      // positions below F that bookkeeping still needs; at most 1,024, ascending
 }
 ```
 
@@ -159,30 +193,32 @@ interface FloorInput {
 The host chooses F in this order:
 
 1. The target T is the smaller of `receipt.through.seq + 1` and
-   `head.seq + 1 - margin`. The margin is policy. For the grow demo it
-   is 10,000 entries.
+   `head.seq + 1 - margin`.
 2. F is the smaller of T and `currentFloor + 4096`.
 3. If entry F - 1 is less than `intentLifetimeSeconds` older than the
    floor entry's time, F moves down to the highest position that meets
    the rule.
-4. If F is less than `currentFloor + 1000`, the host writes no floor
-   entry. Each floor entry adds one entry, so without this minimum the
+4. If F is less than `currentFloor + minimum`, the host writes no floor
+   entry. Each floor entry adds one entry, so without a minimum the
    target would rise by one after each floor and invite another.
+
+The margin and the minimum are policy. For the grow demo the margin is
+10,000 entries and the minimum is 1,000. The judge does not check them.
 
 ### 3.4 Three checks, three places
 
-The receipt says that a commit holds the journal up to `through`. Three
-parts check it, and each one checks only what it can see.
+A floor entry depends on facts that the journal does not hold: that a
+commit exists, and which old entries the host's bookkeeping still reads.
+Three parts check them, and each one checks only what it can see.
 
 | Where | It checks | It reads |
 |---|---|---|
-| Writer (the scope, before the entry is judged) | The input equals the `confirmed` value of the scope's own archive row. That row names this scope and incarnation (`archive-row.ts:49`), and it is set only after the ref read back equal to the commit. | The archive row. It is bookkeeping, not state, and it never reaches the judge. |
-| Judge (the scope and replay) | The rules of 3.5. | The journal and current state only. |
+| Writer (the scope, before the entry is judged) | The receipt equals the `confirmed` value of the scope's own archive row. That row names this scope and incarnation (`archive-row.ts:49`), and it is set only after the ref read back equal to the commit. The `keep` list holds every position below F of section 4.2. The local signer control is `ready`. | The archive row, the outbox acknowledgements, the local signer tables and the signed-read claim index. These are bookkeeping, not state, and they never reach the judge. |
+| Judge (the scope and replay) | The rules of 3.5. | The journal, current state and the floor input only. |
 | Verifier (offline, with a clone) | The clone holds a commit with this ID, and its `head.json` names the same `through`. Otherwise it reports `floor-commit-missing` or `floor-commit-mismatch`. | The clone only. |
 
-The judge cannot prove that a commit exists outside the scope. The
-journal records the writer's statement, and a clone verifies it. Replay
-never reads provider state or the archive row.
+The journal records the writer's statements in the floor input. Replay
+reads them from there. It never reads provider state or bookkeeping.
 
 ### 3.5 Judge rules
 
@@ -196,8 +232,8 @@ fails.
 | `floor-back` | F is not greater than the current floor. |
 | `floor-step` | F is more than 4,096 positions above the current floor. |
 | `floor-recent` | Fewer than 100 entries stay above F. Or entry F - 1 is less than `intentLifetimeSeconds` (900) older than the floor entry. |
-| `floor-kept` | The kept set of section 4 has more than 4,096 entries. |
-| `floor-signers` | The scope has a local signer control, and its phase is not `ready`. Section 4, rule 7, keeps its anchors. |
+| `floor-keep` | `keep` has more than 1,024 positions, is not ascending, or names a position that is not below F or that the scope does not hold. |
+| `floor-kept` | The new kept set of section 4 has more than 4,096 entries. |
 
 The first limit in `floor-recent` keeps the journal window of an
 application projection above the floor. That window is at most 100
@@ -205,17 +241,22 @@ entries (`packages/bytes/src/application-projection.ts:83`). The second
 limit keeps every entry that a signed read or an unexpired intent can
 still need (`packages/scope/src/signed-reads.ts:332-338`).
 
+**Admission at the bound.** A floor entry is admitted when the counted
+entries after its effect are below `scopeEntries`, even when the count
+before it is not. Every other input keeps today's admission. So a scope
+at its bound can still write the floor entry that makes room.
+
 ### 3.6 Effect
 
 In the same turn as the floor entry, the scope:
 
-1. computes the new kept set of section 4 from current state;
+1. computes the new kept set of section 4;
 2. deletes each entry row in the old kept set or between the old floor
    and F that is not in the new kept set;
 3. moves the accepted key of each deleted entry to the accepted-key
    table (section 6.4);
-4. folds the text bounds that the deleted entries proved into the
-   proven-bound table (section 6.6);
+4. adds the size proofs of the deleted entries to the size-proof table
+   (section 6.6);
 5. stores F, the receipt and the new kept set in state.
 
 One floor entry deletes at most 8,192 rows: 4,096 by `floor-step` and
@@ -224,23 +265,22 @@ above the floor and counts as an entry.
 
 ## 4. What the scope keeps below the floor
 
-The kept set is a function of current state at the floor entry. Replay
-computes the same set from its own state. The scope stores the set as a
+The kept set has two parts. The first part is a function of current
+state. The second part is the floor input's `keep` list. Replay computes
+the first part from its own state and reads the second from the journal.
+So the scope and replay keep the same set. The scope stores the set as a
 table of positions, so it survives a restart. The set does not change
 until the next floor entry computes it again.
 
-The scope keeps these entries below the floor:
+### 4.1 From state
 
 1. Genesis, position 0. Many readers need it: for example
    `core.ts:377`, `object.ts:183`, `signed-reads.ts:355` and
    `archive-pin.ts:63`.
 2. The opening entry of each open operation (`operations.ts:411`,
    `:544`; settle origins, `packages/derive/src/settle.ts:226-233`).
-3. The sending entry of each outbox row that is not acknowledged or
-   diagnosed, and of each pending request (`sqlite.ts:118`, `:517`;
-   `outbox.ts:202`; `operator.ts:189-191`). A delivery's deciding entry
-   is the sending entry of its result, so this rule keeps it until the
-   sender acknowledges the result.
+3. The sending entry of each pending request: an outbox request row with
+   no result and no diagnosis in state (`sqlite.ts:118`).
 4. The opening entry of each live item. An item's ID is the position of
    its opening entry (`packages/derive/src/fold.ts:104`).
 5. Each own position that a value in current state names: a fact field
@@ -248,13 +288,32 @@ The scope keeps these entries below the floor:
    carries a position. F2's report lists each such row kind.
 6. Each entry that the `prepared` table names
    (`packages/derive/src/prepare.ts:316-319`).
-7. The latest entry of each local signer
-   (`packages/scope/src/local-signers.ts:140`), and the local signer
-   control's `cutoff` and `next - 1` entries (`local-signers.ts:121-127`).
+
+### 4.2 From the writer's `keep` list
+
+The writer lists every position below F that bookkeeping still reads:
+
+1. The sending entry of each outbox row that transport has not
+   acknowledged (`outbox.ts:6-12`, `:179`, `:202`; `sqlite.ts:517`,
+   `:524-525`; `operator.ts:189-191`). A delivery's deciding entry is the
+   sending entry of its result, so this keeps it until the sender
+   acknowledges the result.
+2. The local signer control's `cutoff` and `next - 1` entries, and the
+   latest entry of each local signer (`local-signers.ts:121-127`,
+   `:140`).
+3. For each claim in the signed-read claim index, the entry that
+   delivered its directory genesis. `Chains` learned the claim from that
+   entry (`signed-reads.ts:275-292`). `Reads.#open` needs that index for an
+   authenticated membership session (`reads.ts:123`).
+
+An acknowledgement that arrives after a floor entry releases nothing
+until the next floor entry. So the rule errs toward keeping. Two scopes
+with the same journal and different acknowledgement timing write
+different `keep` lists. Each journal records its own list, so replay of
+each agrees with its scope.
 
 Kept entries count against `scopeEntries` (section 5), so a large kept
-set shows as capacity used. `floor-kept` refuses a floor whose kept set
-exceeds 4,096 entries.
+set shows as capacity used.
 
 ## 5. Capacity counting
 
@@ -359,7 +418,7 @@ intent digest. Then:
 ### 6.5 Delivery repeats
 
 A repeat of a delivery reads its deciding entry today
-(`delivery.ts:285`). Section 4, rule 3, keeps that entry until the
+(`delivery.ts:285`). Section 4.2, item 1, keeps that entry until the
 sender acknowledges the result. A repeat after that is a stale
 duplicate. The inbox row answers it alone: the deciding position, its
 hash and the decision. The inbox row stores these three values for that
@@ -370,20 +429,36 @@ purpose.
 Each walk that starts at position 0 today reads the kept entries and
 then the entries from F, in the scope and in replay:
 
-- `Chains`, on each object start (`signed-reads.ts:252`, `:282`). A
-  link from an outcome to an opening entry at an archived position is
-  complete. The receipt covers that entry.
+- `Chains`, on each object start (`signed-reads.ts:252`, `:282`). It
+  rebuilds its claim index from the discovery entries that section 4.2,
+  item 3, keeps. A link from an outcome to an opening entry at an
+  archived position is complete; the receipt covers that entry. Archive
+  coverage grants no authority: a membership whose discovery entry is
+  not kept and not above F has no claim.
 - `#carried` for a limited reader (`reads.ts:186-191`). A kept entry
   that the reader can still read through `#mine` (`reads.ts:139-143`)
   still carries its retained inputs.
 - `LocalSigners` backfill and proofs (`local-signers.ts:98`,
-  `:121-127`, `:156-166`). `floor-signers` keeps its anchors.
-- `priorDetachedBounds` (`packages/derive/src/handlers.ts:124-131`). It
-  uses earlier successful checks as evidence of a text's size bound
-  (`handlers.ts:164-168`). The floor entry folds the bounds that deleted
-  entries proved into a proven-bound table: one row for each text digest
-  that a held entry names, with the smallest bound. The walk reads that
-  table, the kept entries and the entries from F.
+  `:121-127`, `:156-166`). Section 4.2, item 2, keeps its anchors, and
+  the writer offers no floor while the control is not `ready`.
+- `priorDetachedBounds` (`packages/derive/src/handlers.ts:124-131`).
+
+`priorDetachedBounds(n)` uses only checks at positions before n. A
+later proof never decides an earlier binding (`handlers.ts:153-159`).
+So the floor keeps each proof with its position, in a size-proof table:
+
+- A row holds a text digest, a position and a bound: the entry at that
+  position proved that the text is at most that many bytes.
+- For one digest, the table keeps a row only when its bound is smaller
+  than every row at an earlier position. A later, larger bound can never
+  be the smallest bound before any n, so it is dropped.
+- The table holds rows only for digests that held entries name.
+- The walk for n reads the table rows with a position below n, the kept
+  entries below n and the entries from F to n - 1. It takes the smallest
+  bound.
+
+The bounds come from the definition's text field limits, so one digest
+has at most as many rows as the definition has distinct text limits.
 
 ### 6.7 State digest
 
@@ -392,8 +467,8 @@ The checkpoint digest is `stateDigest(view.all())`
 table (`sqlite.ts:375`) and requests through a join on it
 (`sqlite.ts:118`). After a floor entry, `all()` reads accepted intents
 from the entry table and the accepted-key table together, so the set is
-unchanged. Section 4, rule 3, keeps the entry of each pending request,
-so the join still finds it. The kept set and the proven-bound table are
+unchanged. Section 4.1, item 3, keeps the entry of each pending request,
+so the join still finds it. The kept set and the size-proof table are
 state, and replay builds them the same way.
 
 ## 7. Replay, clients and the archive
@@ -414,7 +489,7 @@ service's `log` from `through.seq + 1`:
    repeats step 2. After three repeats it reports `incomplete`.
 
 Replay applies each floor entry as the scope does. It computes the kept
-set and the proven-bound table from its state, answers later reads of
+set and the size-proof table from its state, answers later reads of
 archived positions `archived`, and counts entries from F. So its
 capacity judgments and its state digest equal the scope's.
 
@@ -439,64 +514,87 @@ Each witness runs on a test host with the native store.
    only its new entries. The clone reads past 4,096 entries and replays
    offline through A2. A pass on a room bound after it started begins
    at 0.
-2. **v2 reader refusals.** A gap between passes, an overlap, a retained
+2. **Tree work.** After 10,000 confirmed passes of one entry each, one
+   more pass rewrites at most the trees on its paths. A probe counts the
+   tree names it reads and writes, and the count stays within the bound
+   of 2.3, rule 7.
+3. **v2 reader refusals.** A gap between passes, an overlap, a retained
    file that no pass lists, an entry copy without its `foreignSources`
-   basis in its pass, and a broken chain between passes are each
-   refused. Every existing v1 reader test passes unchanged.
-3. **Choice of F.** A scope at 30,000 entries, with a receipt through
-   29,000, a margin of 10,000 and a step of 4,096, moves its floor in
-   steps of 4,096 to the target, about 20,000, in five floor entries.
-   It then writes no floor entry until the target has risen by at least
-   1,000.
-4. **Judge rules.** One refused floor entry for each reason of 3.5,
+   basis in its pass, a file in the wrong directory and a broken chain
+   between passes are each refused. Every existing v1 reader test passes
+   unchanged.
+4. **From v1.** A scope with a confirmed v1 archive through 99 converts
+   and continues in v2 from 100; the clone reads and replays from 0. A
+   scope with a pending v1 pass first confirms it, then converts. A
+   floor entry that names a v1 commit is not offered.
+5. **Choice of F.** A scope at 30,000 entries, with a receipt through
+   29,000, a margin of 10,000, a minimum of 1,000 and a step of 4,096,
+   moves its floor in steps of 4,096 to the target, about 20,000, in
+   five floor entries. It then writes no floor entry until the target
+   has risen by at least 1,000.
+6. **Judge rules.** One refused floor entry for each reason of 3.5,
    with the head unchanged. Then one accepted floor entry, with the
    deleted rows counted by a direct store probe.
-5. **Verifier.** A floor entry whose commit is not in the clone reports
+7. **Verifier.** A floor entry whose commit is not in the clone reports
    `floor-commit-missing`. A commit whose `head.json` names another
    `through` reports `floor-commit-mismatch`. A floor entry from another
    scope's receipt is refused `floor-receipt`.
-6. **Capacity.** With `scopeEntries` set to 1,000 in the test host's
-   bounds, a scope without a floor is refused `scope-full` at 1,000
-   entries. The same scope with archive and floor runs to 5,000 entries
-   with no `scope-full` refusal. A scope with retained inputs and a
-   byte reservation keeps their byte charges across a floor.
-7. **Kept entries.** After a floor passes them: an operation opened
-   below the floor settles; an unacknowledged send is sent again; a
-   pending request still reads; a fact field of a live item still
-   resolves; a local signer's next proof passes; a kept entry still
-   carries its retained input to a limited reader.
-8. **Reclaim.** A first floor keeps an open operation's opening entry.
-   The operation closes. A second floor deletes that entry, and the
-   store probe and the counted entries agree.
-9. **Accepted keys.** After a floor: the exact retry of an archived
-   intent is answered `archived`; a new intent that reuses the key is
-   refused `idempotency-mismatch`; both hold after a restart and in
-   replay.
-10. **Archived answers.** `entry` of an archived position answers
+8. **Capacity.** The test host sets `scopeEntries` to 2,000 and a test
+   policy of margin 200 and minimum 500; the judge's limits stay as
+   written, and the test clock passes `intentLifetimeSeconds` between
+   floors. A scope without a floor is refused `scope-full` at 2,000
+   entries. The same scope with archive and floor runs to 10,000 entries
+   with no `scope-full` refusal. A scope held exactly at its bound
+   writes a floor entry and then admits new entries. A scope with
+   retained inputs and a byte reservation keeps their byte charges
+   across a floor.
+9. **Kept entries.** After a floor passes them: an operation opened
+   below the floor settles; a pending request still reads; a fact field
+   of a live item still resolves; a kept entry still carries its
+   retained input to a limited reader.
+10. **Keep list.** Two runs of the same journal differ only in when
+    transport acknowledges a send. The floor entry of each lists what
+    its own bookkeeping needs. In both, no entry that an unacknowledged
+    send needs is deleted, the send is sent again after a restart, and
+    replay of each journal agrees with its scope.
+11. **Signers and claims.** After two floors and a restart: a local
+    signer's next proof passes; an established membership session reads
+    its register; a membership whose claim was never discovered is
+    refused.
+12. **Size proofs.** A kept bad-field deciding entry at 100 and a
+    first proof for its text at 200: after a floor deletes 200, the
+    binding at 100 stays unresolved. With an earlier proof at 50, it
+    resolves. Both hold after a restart and in replay.
+13. **Reclaim.** A first floor keeps an open operation's opening entry.
+    The operation closes. A second floor deletes that entry, and the
+    store probe and the counted entries agree.
+14. **Accepted keys.** After a floor: the exact retry of an archived
+    intent is answered `archived`; a new intent that reuses the key is
+    refused `idempotency-mismatch`; both hold after a restart and in
+    replay.
+15. **Archived answers.** `entry` of an archived position answers
     `archived`. `history` from cursor 0 answers `archived` and then
     pages from F with no gap. A foreign read answers `archived`. An act
     that names an archived position is refused `archived`. A stale
-    delivery repeat is answered from the inbox row. A redacted delivery
-    binding that needs an earlier size proof resolves from the
-    proven-bound table after a restart.
-11. **Clients.** A client with a clone through 1,000 and a service
+    delivery repeat is answered from the inbox row.
+16. **Clients.** A client with a clone through 1,000 and a service
     floor at 9,000 fetches the newer commit and continues. A floor that
     moves during the fetch makes the client repeat. Two floors and a
     restart answer every archived position with the current receipt.
-12. **Replay.** A clone plus the service tail replays with equal
+17. **Replay.** A clone plus the service tail replays with equal
     judgments and an equal state digest at each floor entry. The run
     includes an act refused `archived` and a capacity check that the
     floor decides.
-13. **No floor, no change.** A scope with no floor entry passes the
+18. **No floor, no change.** A scope with no floor entry passes the
     existing capacity, archive and replay tests unchanged.
 
 ## 9. Slices
 
 | Slice | Content | Needs | Done when |
 |---|---|---|---|
-| F1 | Incremental archive passes and the v2 layout and reader (section 2) | A3, S2b | Witnesses 1 and 2 pass, and plan 033 slice 9 can archive a room of more than 4,096 entries. |
-| F2 | Floor entry, kept set, counting, accepted keys, reads, walks and replay (sections 3 to 7) | F1 | Witnesses 3 to 13 pass on the test host. |
-| F3 | The floor enabled for Room A in the dap-grow archive policy, with a margin of 10,000 entries; the deployment and the hosted readbacks | F2, slice 9 deployed | Room A's counted entries fall after a confirmed pass, and the `/grow/` page says that old entries are in the archive. |
+| F1 | Incremental archive passes, the v2 layout and reader, and the v1 conversion (section 2) | A3, S2b | Witnesses 1 to 4 pass, and plan 033 slice 9 can archive a room of more than 4,096 entries. |
+| F2 | Floor entry, kept set and `keep` list, counting, accepted keys, size proofs, reads, walks and replay (sections 3 to 7) | F1 | Witnesses 5 to 18 pass on the test host. |
+| F3 | The floor enabled for Room A in the dap-grow archive policy, with a margin of 10,000 and a minimum of 1,000; the deployment and the hosted readbacks | F2, slice 9 deployed | Room A's counted entries fall after a confirmed pass, and the `/grow/` page says that old entries are in the archive. |
 
 F1 comes before slice 9's deployment, because Room A already holds more
 than 4,096 entries when slice 9 deploys. F2 lands by 4 November 2026,
