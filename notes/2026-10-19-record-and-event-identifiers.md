@@ -86,7 +86,7 @@ This note defines each term before it uses the term.
 |---|---|
 | Sequence | An ordered list of events that one system writes under one set of rules. There is one event at each position and one event after each: a line, not a tree. |
 | Event | One item of a sequence: the bytes that the system wrote for it. Each event after the first carries the digest of the event before it. |
-| Format | The written description, in the shape of section 3.1, of how one system writes, hashes, links and signs its events. Each format has a token. |
+| Format | The written description, in the shape of section 3, of how one system writes, hashes, links and signs its events. Each format has a token. |
 | Genesis | The first event of a sequence. Its bytes state the rules that the sequence starts with. |
 | Digest | The hash of an event, computed and written as its format states. |
 | Position | The number of events before an event in its sequence. The genesis is at position 0. |
@@ -102,10 +102,16 @@ This note defines each term before it uses the term.
 did:seq:<format>:<genesis>
 ```
 
-- `seq` is the DID method.
+- `seq` is the DID method. The identifier is a DID for two reasons. It
+  resolves to a document with addresses (section 5.3), and the event is
+  a path that the resolver receives. The method is not registered yet.
+  On 19 October 2026 the W3C DID method registry listed about 270
+  methods, and none of them was `seq`. Registration follows the first
+  implementation.
 - `format` is the token of the format that the system of the sequence
-  uses (section 3). A token has one to sixteen characters from `a` to
-  `z` and `0` to `9`, and the first character is a letter.
+  uses (section 3 and appendix A). A token has one to sixteen
+  characters from `a` to `z` and `0` to `9`, and the first character is
+  a letter.
 - `genesis` is the digest of the genesis event, computed and written as
   that format states.
 
@@ -157,8 +163,6 @@ did:seq:git:5d2622748872b7e2dec3fe5c59e4be73a35e0bc8/557/cc7eb5a129850990652c553
 
 ## 3. Formats
 
-### 3.1 What a format defines
-
 Each system writes its events in its own way. It has its own
 serialization, its own hash, its own place for the link to the previous
 event, and its own place for signatures. This protocol changes none of
@@ -191,87 +195,10 @@ answers is not a format.
    genesis, not in the format.
 9. **Vectors.** The test files of section 7 for this format.
 
-### 3.2 Format registry
-
-The format registry is the list of format tokens, kept with this
-specification. Each token has a definition in the shape of 3.1 and the
-vectors of section 7. A reader looks up the `format` segment of an
-identifier in the registry. A verifier supports the tokens whose
-definitions it implements. A project proposes a token with its
-definition. The registry allocates the token when the definition and its
-vectors are in the registry.
-
-| Token | Sequences it covers | An event is | Defined in |
-|---|---|---|---|
-| `dap1` | The journal of a dap scope | One journal entry, as canonical JSON, hashed with SHA-256 | 3.3 |
-| `git` | A chain of commits in a repository with SHA-1 object names: a gitseq workroom, an Open Integrity Forge repository | One commit object, with the object hash of Git | 3.4 |
-| `git256` | The same, with SHA-256 object names | The same | 3.4 |
-| `at` | An atseq app | One `ai.generalbusiness.atseq.entry` record, with its CIDv1 in base32 lowercase as the digest. The record carries its genesis, its predecessor and its position | Owed by atseq |
-| `nostr` | A noseq instance | One kind 8792 ordered entry, with its event ID in hex as the digest. The `h` tag carries the genesis, and the entry carries `previous` and `position` | Owed by noseq |
-
-One sequence identifier for each token. The `git` identifier is a real
-gitseq workroom. The others show only the shape.
-
-```
-did:seq:dap1:242b636eb1c3a66a185a5abc0c1fdca448143d13449b06533653d6178a7d0f14
-did:seq:git:5d2622748872b7e2dec3fe5c59e4be73a35e0bc8
-did:seq:git256:6320f109df9ff94238c96c7a1c732aa7b9614589e74ef51bf382451f1c9e64a1
-did:seq:at:bafyreibsn3sfnzsbbgrwhzema7zazsmf7c5pfbc4psb6dystcwk3ibm27i
-did:seq:nostr:f4bbd1343f86e8f3d6cfe51df3eea65f3f8e64ed7f18a04ce6fdfff130650c57
-```
-
-### 3.3 `dap1`
-
-1. **Serialization.** The canonical JSON of one entry, RFC 8785, as
-   UTF-8.
-2. **Digest input.** The ASCII bytes `artroom-entry-1`, one line feed,
-   then the serialized entry.
-3. **Hash and text form.** SHA-256, written as 64 lowercase hexadecimal
-   characters. In an entry, the same digest has the prefix `sha256:`.
-4. **Genesis.** `seq` is 0 and `input.type` is `genesis`. The genesis
-   input carries the creation parameters of the scope and `nonce`, 26
-   base32 characters of 16 random bytes. The nonce makes two sequences
-   with the same parameters hash differently.
-5. **Sequence member.** Every entry after the genesis carries `genesis`:
-   `sha256:` and then the digest of the genesis entry.
-6. **Predecessor.** `prev`, the digest of the previous entry, with the
-   prefix. The genesis has `prev: null`.
-7. **Position.** `seq`.
-8. **Signatures.** An entry whose input is an act, a preparation or a
-   founding carries the request that the participant signed. The
-   signature is Ed25519, by the key that the request states. It covers
-   the ASCII bytes `artroom-intent-1`, a line feed and the RFC 8785 JSON
-   of the request. The position, the predecessor, the effects and the sends
-   of the entry are the statement of the host. The chain and the replay
-   of dap cover them. No signature covers them.
-9. **Vectors.** `vectors/dap1/`, produced with the change of section 8.
-
-### 3.4 `git` and `git256`
-
-1. **Serialization.** The content of a commit object, without the object
-   header.
-2. **Digest input.** The object header, then the content: `commit`, a
-   space, the content length in decimal, a NUL byte, and the content.
-   This is the object hash of Git.
-3. **Hash and text form.** `git`: SHA-1, 40 lowercase hexadecimal
-   characters. `git256`: SHA-256, 64. A `git` verifier uses the
-   collision detection of Git, or Git itself. A sequence that cannot
-   accept that risk uses `git256`.
-4. **Genesis.** A commit with no parent that the system of the sequence
-   designates. For gitseq, it is the first commit under
-   `refs/seq/<genesis>`. For the forge, it is the inception commit.
-5. **Sequence member.** None. A commit does not carry the digest of its
-   genesis.
-6. **Predecessor.** The first parent. A commit that is reachable only
-   through a second parent is content that an event brings in. It is not
-   an event.
-7. **Position.** Not carried. The position is the number of first-parent
-   steps from the genesis to the event. The verifier ignores grafts and
-   replace refs. A shallow clone verifies as far as its depth.
-8. **Signatures.** A `gpgsig` header over the commit object, or trailers
-   in the message, as the convention of the genesis states. gitseq signs
-   in trailers. The forge signs in `gpgsig` with an SSH signature.
-9. **Vectors.** `vectors/git/` and `vectors/git256/`.
+Appendix A lists the formats that are declared at the date of this
+note, each with its definition in this shape and an example identifier.
+A system declares a format when it publishes the definition and the
+vectors.
 
 ## 4. Verification
 
@@ -383,8 +310,8 @@ is the identifier without the prefix `did:seq:`, so `<format>:<genesis>`.
 | `GET <base>/<id>/<position>?n=<count>` | A page: `{ "events": [ <up to count such objects, from position upwards> ], "next": <the position after the last one returned, or null at the head> }`. The host can return fewer than `count`. |
 
 A host answers `404` for a sequence or a position that it does not hold,
-and `403` for a reader that it refuses. These answers carry nothing
-else. Who can read is a rule of the host, outside this protocol.
+and `403` for a reader that it refuses (section 5.4). These answers
+carry nothing else.
 
 **From Git.** For `git` and `git256`, a remote is an address, and the
 reads are Git operations. The reader gets the genesis by its hash, the
@@ -418,6 +345,17 @@ and deactivate its identifiers. For `seq`: to create is to write a
 genesis, to read is the three reads, and update and deactivate do not
 exist. An identifier never changes. A sequence document changes only in
 the addresses and the head that a host states.
+
+### 5.4 Authorization
+
+This protocol does not define who can resolve a sequence or an event,
+or read a sequence document. A host applies its own rules, and some
+applications have rules about this. A host that refuses a reader
+answers `403` over HTTP, or refuses the Git operation, with no more
+detail. The host controls the read, not the verification. A reader that
+has the bytes can verify a citation without the host. A reader that one
+host refuses can read the same sequence from another host that permits
+it.
 
 ## 6. Security considerations
 
@@ -478,6 +416,81 @@ For each format, under `vectors/<format>/`:
 An implementation conforms when it passes the vectors of the formats
 that it claims and states the levels that it runs.
 
+# Appendix A. Declared formats
+
+This appendix is informational. It lists the formats that are declared
+at the date of this note, with their definitions in the shape of
+section 3. A format that a system declares later goes here with its
+definition and its vectors.
+
+| Token | Sequences it covers | An event is | Defined in |
+|---|---|---|---|
+| `dap1` | The journal of a dap scope | One journal entry, as canonical JSON, hashed with SHA-256 | A.1 |
+| `git` | A chain of commits in a repository with SHA-1 object names: a gitseq workroom, an Open Integrity Forge repository | One commit object, with the object hash of Git | A.2 |
+| `git256` | The same, with SHA-256 object names | The same | A.2 |
+
+One sequence identifier for each token. The `git` identifier is a real
+gitseq workroom. The others show only the shape.
+
+```
+did:seq:dap1:242b636eb1c3a66a185a5abc0c1fdca448143d13449b06533653d6178a7d0f14
+did:seq:git:5d2622748872b7e2dec3fe5c59e4be73a35e0bc8
+did:seq:git256:6320f109df9ff94238c96c7a1c732aa7b9614589e74ef51bf382451f1c9e64a1
+```
+
+### A.1 `dap1`
+
+1. **Serialization.** The canonical JSON of one entry, RFC 8785, as
+   UTF-8.
+2. **Digest input.** The ASCII bytes `artroom-entry-1`, one line feed,
+   then the serialized entry.
+3. **Hash and text form.** SHA-256, written as 64 lowercase hexadecimal
+   characters. In an entry, the same digest has the prefix `sha256:`.
+4. **Genesis.** `seq` is 0 and `input.type` is `genesis`. The genesis
+   input carries the creation parameters of the scope and `nonce`, 26
+   base32 characters of 16 random bytes. The nonce makes two sequences
+   with the same parameters hash differently.
+5. **Sequence member.** Every entry after the genesis carries `genesis`:
+   `sha256:` and then the digest of the genesis entry.
+6. **Predecessor.** `prev`, the digest of the previous entry, with the
+   prefix. The genesis has `prev: null`.
+7. **Position.** `seq`.
+8. **Signatures.** An entry whose input is an act, a preparation or a
+   founding carries the request that the participant signed. The
+   signature is Ed25519, by the key that the request states. It covers
+   the ASCII bytes `artroom-intent-1`, a line feed and the RFC 8785 JSON
+   of the request. The position, the predecessor, the effects and the sends
+   of the entry are the statement of the host. The chain and the replay
+   of dap cover them. No signature covers them.
+9. **Vectors.** `vectors/dap1/`, produced with the change of section 8.
+
+### A.2 `git` and `git256`
+
+1. **Serialization.** The content of a commit object, without the object
+   header.
+2. **Digest input.** The object header, then the content: `commit`, a
+   space, the content length in decimal, a NUL byte, and the content.
+   This is the object hash of Git.
+3. **Hash and text form.** `git`: SHA-1, 40 lowercase hexadecimal
+   characters. `git256`: SHA-256, 64. A `git` verifier uses the
+   collision detection of Git, or Git itself. A sequence that cannot
+   accept that risk uses `git256`.
+4. **Genesis.** A commit with no parent that the system of the sequence
+   designates. For gitseq, it is the first commit under
+   `refs/seq/<genesis>`. For the forge, it is the inception commit.
+5. **Sequence member.** None. A commit does not carry the digest of its
+   genesis.
+6. **Predecessor.** The first parent. A commit that is reachable only
+   through a second parent is content that an event brings in. It is not
+   an event.
+7. **Position.** Not carried. The position is the number of first-parent
+   steps from the genesis to the event. The verifier ignores grafts and
+   replace refs. A shallow clone verifies as far as its depth.
+8. **Signatures.** A `gpgsig` header over the commit object, or trailers
+   in the message, as the convention of the genesis states. gitseq signs
+   in trailers. The forge signs in `gpgsig` with an SSH signature.
+9. **Vectors.** `vectors/git/` and `vectors/git256/`.
+
 # Part two: adoption
 
 ## 8. What changes in dap
@@ -526,7 +539,9 @@ creation, and the scope ID of a child is still known before the child
 exists.
 
 **Fact text and refs.** The fact text that receipt commits carry becomes
-the citation. Public refs keep the event hash as one component.
+the citation. Public refs keep the event hash as one component. The
+event that opens an item is the citation of the item. A URL for the
+current state of an item is an address, not a citation.
 
 **Reads.** dap serves the HTTP binding of 5.2 at the base
 `https://<host>/v1/sequences`. The routes under `/v1/scopes/<scope ID>`
@@ -546,73 +561,6 @@ the change is mechanical. Five places need thought:
 - the `head.json` of the archive;
 - every test fixture that builds references by hand.
 
-## 9. Cost for the other systems
-
-| System | What matches already | What changes | Cost | Who decides |
-|---|---|---|---|---|
-| gitseq | `git:sha1:<genesis>#git:sha1:<event>`, a root genesis and a first-parent chain under `refs/seq/<genesis>`, one-based tickets | The syntax of section 2. Positions with the genesis at 0, to confirm against its tickets. One parser and one formatter in Go. The identifier appears in trailers, body fields, command arguments and MCP tools | Low to moderate. gitseq is live infrastructure for this repository, so it accepts both forms for a time | We do, with a transition |
-| atseq | A genesis CID, a receipt of genesis, position and entry CID, a predecessor link | The `at` definition in the shape of 3.1, with vectors. Nothing in its records changes | Low. Its native design has no runtime yet | We do, on paper |
-| noseq | A genesis event ID, an ordered entry with position and previous, the `h` tag | The `nostr` definition in the shape of 3.1, with vectors. Levels 0 to 2 run on ciphertext, with no group key | Low. There is no runtime | We do, on paper |
-| Open Integrity Forge | `did:repo:<inception sha1>`, policy judged at the first parent, verification from any clone | The method name, a sequence document, and positions as first-parent distance along `main`. Its `did:repo` has no method specification and no resolver. This note gives it both | Low technical cost. It is the project of another organisation | They do. Propose it after dap adopts the protocol and the vectors exist |
-
-## 10. Signed request on these identifiers
-
-The next protocol is the signed request and its four answers. It imports
-this note and adds nothing to it:
-
-- `to` is the identifier of the sequence, with the address as a hint.
-- `expected` states item revisions as today, inside that sequence.
-- `presented` facts are citations.
-- The receipt is a citation, with the effects and the sends that the
-  entry made.
-- A refusal carries the citation of the head that the judgment used.
-- The idempotency key is scoped to the signing key. The signature covers
-  the canonical bytes under a domain tag. The unsigned bytes identify an
-  act. An exact retry gets the first receipt as its answer.
-
-## 11. Decisions
-
-1. The digest of its genesis identifies a sequence. An address is a URL
-   or a remote. The two are kept apart, and the identifier does not
-   locate.
-2. One DID method, `seq`, with a format token as the first segment, and
-   a format defined by the nine parts of 3.1. Decided by Hugh on 19
-   October 2026.
-3. A citation is `/<position>/<digest>` as a path, never a fragment.
-4. Level 2 shows membership. Level 1 is what the event states about
-   itself. Level 3 takes its signature rule from the genesis. Judgment
-   under the rules of the sequence is outside the protocol.
-5. Vectors come from independent code, are committed with the
-   specification, and are never regenerated from an implementation.
-6. dap changes its references to `{ scope, genesis }` and
-   `{ at, seq, hash }` in one change. The incarnation and the kind leave
-   references. The scope ID stays in the reference as the address.
-   Decided by Hugh on 19 October 2026.
-
-## 12. Open points
-
-- **The word "sequence".** Draft 5 says sequence where draft 4 said
-  record. A record is usually one row, and the method is named `seq`. Log, stream and journal were weighed. Draft 5 also drops
-  "identity": the genesis digest identifies a sequence, and the thing
-  that is not an address is the identifier. To confirm.
-- **Why a DID and not a URN or a CID.** A DID gives three things: a
-  resolution step to a document with addresses, a method registry, and
-  a fragment-free path for the event. A CID identifies bytes and not a chain or a resolver. A
-  URN has no resolution. The choice is made. The paragraph that says so
-  in the published text is owed.
-- **The positions of gitseq.** Whether its tickets map to positions with
-  the genesis at 0 is to confirm before its formatter is written.
-- **`at` and `nostr`.** Their definitions in the shape of 3.1 are owed
-  by their projects. The registry rows say what is known.
-- **Items.** The event that opens an item is its citation. A URL for the
-  current state of an item is an address of the host that serves it. It
-  is not a citation, and it stays with the read routes.
-- **Registration of the method.** On 19 October 2026 the W3C DID method
-  registry listed about 270 methods. None of them was `seq`, `repo` or
-  `git`. Registration comes after dap adopts the protocol.
-- **A record of changes.** Removed in draft 5 as premature. Something
-  like it returns if the published text needs to track its revisions.
-
 ## Sources
 
 - In this repository: [the contract's references](../packages/contract/src/scope.ts),
@@ -628,9 +576,6 @@ this note and adds nothing to it:
   its glossary's definitions of event and ticket, and the first-parent
   walk of 19 October 2026 under `refs/seq/5d262274…` in its own
   workroom: a root genesis, 557 steps to the example event.
-- atseq: `docs/protocol.md` on records and receipts, and `lexicons/` for
-  the entry and genesis records.
-- noseq: `docs/protocol-v0.md`, the context tags and the ordered entry.
 - Open Integrity Forge: its README on `did:repo` and the inception
   commit, and `apps/forge/authority/verify.ts` for judgment at the first
   parent.
