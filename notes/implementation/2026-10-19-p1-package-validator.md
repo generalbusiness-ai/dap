@@ -3,9 +3,11 @@
 Request `4e63c67c30e866555e9efcfdf49af75a2c2f92e1`, promise
 `0afa98af9294045f7906395d0bc8a206ebf1aa90`. This owned preparation
 incorporates reviewed Main `248aab8f`, with landed K1, K2, G5a, S2a and
-Grow host-link work. The changed-code ordinary gate at `a4967d67` passes
-after the two failed gates recorded below. Complete review and landing
-remain due.
+Grow host-link work. The first complete review `3e5b110a` of `1a1ede43`
+requested two graph corrections and one runbook correction. This private
+repair addresses all three after adopting that complete verdict as
+`de2c14f4`. Its new changed-code gate and fresh complete review remain due;
+the earlier passing gate at `a4967d67` is historical.
 The earlier `32f7537e` integration on Main `8aad37bb` is historical.
 
 Planner decision `b966ef3f`, adopted as `48471bbb`, now governs the format
@@ -1040,3 +1042,110 @@ sender-pin behavior, original failed runs, later repairs and TEST limits.
 No source, publication, deployed-release, Cloudflare, provider or hosted
 acceptance is inferred from a passing test gate. The planner alone owns
 Cloudflare deployment.
+
+
+## Repair the complete review findings
+
+The first complete review `3e5b110a` covers all 86 authored paths at
+`1a1ede43fdb4f36f52b0565d2c132a629d2be666`. It returns all three findings
+together: duplicate reporting acts overcount the same relation keys;
+an optional state branch hides an unconditional automatic cycle; and
+the lending runbook keeps old byte counts beside its new pin. The full
+verdict is read and adopted as `de2c14f4`. All originals remain frozen.
+
+New worktree `/tmp/artroom-builder-p1-graph-repair-20261020` verifies all
+2,611 source leaves against the original finite grant and Git head,
+with distinct regular inodes and exact bytes, hashes and modes. It copies
+5,499 dependency leaves and 32 contained relative links independently,
+with stable originals, exact lock stamp and no installs. The reviewer's
+closed manifest is verified before opening any copied row; 47 explicit
+top-level evidence leaves are copied as data. Original commands and
+receipt are `/tmp/p1-graph-repair-physical-preparation-20261020*`.
+
+Before any repair, copied reviewer probes run with unchanged assertions
+and only their absolute output directories retargeted. Original `78499`
+returns Vitest natural one: four intended graph/public-byte assertion
+failures and one passing native key/replay case. It takes 1.576562958
+wall / 2.169458 CPU seconds on shared warm macOS 27.0.1 arm64, initial
+load 1.7480/1.7920/2.0000. The native witness retains exactly
+1,1,2,2,3,3 copies after six deliveries and replays Site plus three Rooms
+consistently. This is native in-memory judgment/fold/replay under TEST
+grants, not SQLite, enrollment, installation or provider evidence. All
+2,614 tracked-plus-probe input bytes/modes remain exact; the lock stamp
+matches and no package installs. The helper's expected-failure verification
+zero is not a test pass. Original report, log and closure are
+`/tmp/p1-graph-repair-baseline-20261020*`; all input files are physically
+preserved at `/tmp/p1-graph-repair-baseline-inputs-20261020`.
+
+Lifetime fan-in now unions the full retained item domains, keyed by the
+sender's exact definition and item type. Repeated acts in the same sender
+instance update that domain's existing keys. Distinct sender definitions
+and item types remain additive. The per-domain maximum still multiplies
+the proved sender-instance count by its non-recyclable item bound using
+exact bigint arithmetic. Missing bounds and final/recyclable item types
+still refuse as unproved. The permanent lifetime witness accepts repeated
+reporting through both packing and public validation, keeps the existing
+two-item/six-key checks, and distinguishes separate Room/Probe domains:
+three Rooms with one Room and two Probe keys require nine copies, so eight
+refuses. Existing pre-result/recycling variants remain unchanged.
+
+Cycle acknowledgement now requires a state condition in every written
+alternative of a disjunction. An unconditional alternate path keeps the
+edge in the cycle graph. The same distinction recurses through nested
+alternatives; a conjunction may still supply a mandatory state condition.
+Permanent native-valid graph and public-byte pairs include both direct
+and nested unconditional alternatives, and all-state counterparts. Bad
+packages keep the cycle refusal before signing and through independently
+TEST-signed public validation. This remains a structural acknowledgement
+check, not a termination or native traffic-storm claim. No solver or
+later-slice semantics are added.
+
+The lending runbook now names 4,603 canonical bytes and a 4,604-byte
+authoring file, matching its one trailing LF and already changed pin.
+No definition, pin, signed demo packet, publisher key or release changes.
+
+The first owning pipeline `92897` passes both actual resource generators
+and package-graph typechecking, then stops at Derive test compilation.
+Its diagnostics include an own fixture's `.push` on readonly guards and
+unshipped copied reviewer probes with unused imports/readonly-array
+operations. No case runs in that pipeline. Its complete generation and
+validation inputs are preserved separately at
+`/tmp/p1-graph-repair-owning-v1-inputs-20261020`. The fixture now assigns
+a new guard array with identical declaration contents. Unshipped probes
+are temporarily outside the checkout for the original compiler command
+and restored byte-exact for execution; no compiler configuration, flag or
+candidate test is excluded or weakened.
+
+The corrected separate run `24031` passes Derive source/test compilation
+and nineteen cases in six files, including all permanent graph/public
+pairs, existing native pre-result ordering, the unchanged reviewer graph
+assertions, native duplicate-key/replay witness and Page/MCP freshness.
+Its owning test phase takes 2.541850833 wall / 5.577695 CPU seconds;
+initial shared warm load is 1.5581/1.5864/1.7705. All validation source
+bytes/modes and lock stamp remain exact, with no installs. Original
+records are `/tmp/p1-graph-repair-owning-v2-20261020*`; all 2,611 type
+inputs and 2,614 runtime/probe inputs are separately preserved at
+`/tmp/p1-graph-repair-owning-v2-inputs-20261020/{type,validation}`.
+Passed generators and package-graph compilation are not repeated. These
+separate outcomes are not called one passing first pipeline.
+
+Two targeted controls `64662` each run one unchanged permanent case:
+adding the send path to the domain key reproduces the duplicate-key
+assertion failure, and replacing all alternatives with any alternative
+reproduces the cycle assertion failure. Each fixed baseline exits zero,
+each one-line wrong behavior exits one at the intended assertion, each
+selects one case with ten filtered skips, and both restore exact source,
+test bytes and modes. All tracked source and the lock stamp are exact
+after restoration. Original records and source copies are
+`/tmp/p1-graph-repair-targeted-controls-20261020`. No mutation sweep or
+unchanged whole-suite replay runs.
+
+The original copied public cycle probe intentionally awaits erroneous
+successful packing before checking the validation result. Correct refusal
+now throws earlier, so that original probe is not claimed to pass after
+the repair. The permanent paired witness checks the required refusal and
+zero signatures directly. All three temporary copied probes are preserved
+externally and removed before the final gate; no duplicate reviewer cases
+are shipped. The new ordinary gate and complete fresh Source review remain
+due. Earlier source/report-parser and absent-filename preparation errors
+are retained as metadata errors, not case failures or extra verification.

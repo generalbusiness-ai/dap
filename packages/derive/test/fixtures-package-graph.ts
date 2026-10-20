@@ -39,7 +39,7 @@ export function grow(change: (site: DeclaredDefinition, room: DeclaredDefinition
 
 /** A Room can relate a probe while its independent Leaf creation is pending.
  * A refused creation may free a failed probe, but cannot erase its relation. */
-export function preFailureRelation(failedFinal: boolean): PackageGraphInput {
+export function preFailureRelation(failedFinal: boolean, copies = 9): PackageGraphInput {
   const leaf: DeclaredDefinition = { format: "artroom-definition-1", name: "test.grow-probe-leaf", profile: { name: "restricted", version: 1 }, capabilities: [], genesis: "establish",
     items: { leaf: { many: false, max: 1, initial: "open", states: { open: { final: false } }, parties: {}, refs: {},
       values: { label: { fixed: true, required: true, of: { type: "text", max: 80 } } } } },
@@ -47,7 +47,7 @@ export function preFailureRelation(failedFinal: boolean): PackageGraphInput {
       effects: [{ value: { slot: "label", from: { const: "Probe leaf" } } }], sends: [], attention: [] } }, receives: {}, timed: {}, rules: {},
   };
   return grow((parent, child) => {
-    parent.receives["room-summary"]!.copies = 9;
+    parent.receives["room-summary"]!.copies = copies;
     const summary = parent.items["room"]!.refs["summaryAt"]!.to;
     if (summary.type === "fact") summary.kind = ["open-probe", "report-site"];
     child.items["probe"] = { many: true, max: 2, initial: "pending", states: { pending: { final: false }, failed: { final: failedFinal }, conflicted: { final: false } }, parties: {}, refs: {}, values: {} };

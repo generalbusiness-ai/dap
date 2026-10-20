@@ -6,8 +6,11 @@ import type { PackageFinding } from "./types.ts";
 
 const stateCondition = (guards: unknown): boolean => array(guards).some(value => {
   const guard = record(value);
+  const alternatives = array(guard["anyOf"]);
   return Array.isArray(guard["state"]) && guard["state"].length > 0
-    || array(guard["anyOf"]).some(stateCondition)
+    // Every alternative must contain a state condition. A state predicate
+    // on one optional branch cannot acknowledge an unconditional path.
+    || alternatives.length > 0 && alternatives.every(stateCondition)
     || stateCondition(record(guard["each"])["guards"])
     || stateCondition(record(guard["has"])["guards"]);
 });

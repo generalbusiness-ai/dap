@@ -106,7 +106,7 @@ Its pin is
 `sha256:0c43dd56cf6d96a8051cbb0386be71737d04925e5db917a7c316c20d660b7993`.
 The checked-in authoring file has one trailing LF. `--value` sends a file
 unchanged, so remove that authoring newline before activation or establishment.
-The current canonical input is 4,458 bytes, not the 4,459-byte authoring file.
+The current canonical input is 4,603 bytes. The authoring file is 4,604 bytes.
 
 ```sh
 umask 077

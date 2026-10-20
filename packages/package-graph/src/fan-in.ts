@@ -54,10 +54,19 @@ export function instanceBounds(entry: Digest, definitions: readonly PackageGraph
   return done;
 }
 
-export function relateKeyBound(send: GraphSend): bigint | null {
+export interface RelateKeyDomain {
+  readonly sender: Digest;
+  readonly item: string;
+  readonly maximum: bigint;
+}
+
+/** All acts that report one item type share its lifetime identity domain.
+ * Different item types remain disjoint even within the same sender scope. */
+export function relateKeyDomain(send: GraphSend): RelateKeyDomain | null {
   if (send.kind !== "relate") return null;
   const item = send.data["item"];
   const type = item === "self" && send.row.opens ? send.row.primary : subjectType(send.row, record(item)["item"] ?? null);
   if (!type || finalStates(send.row.owner, type).size !== 0) return null;
-  return countOf(record(own(record(send.row.owner.definition.items), type))["max"]);
+  const maximum = countOf(record(own(record(send.row.owner.definition.items), type))["max"]);
+  return maximum === null ? null : { sender: send.row.owner.id, item: type, maximum };
 }

@@ -4,7 +4,7 @@
 import type { Bounds, Digest } from "@generalbusiness/dap-contract";
 import type { PackageComposition, PackageFinding, PackageGraphDefinition } from "./types.ts";
 import { array, graphCreates, graphRows, graphSends, graphWriters, own, record, reportedCount, subjectType, type GraphRow, type GraphWriter } from "./model.ts";
-import { instanceBounds, relateKeyBound } from "./fan-in.ts";
+import { instanceBounds, relateKeyDomain } from "./fan-in.ts";
 import { packagePorts } from "./ports.ts";
 import { portFieldFindings, type PackageValueRules } from "./port-fields.ts";
 import { graphBudget } from "./budget.ts";
@@ -137,14 +137,18 @@ export function checkPackageGraph(input: PackageGraphInput): PackageGraphReport 
   findings.push(...cycleFindings(rows, ports.links, creations));
   for (const handler of rows) {
     if (handler.family !== "receives" || handler.path !== handler.logical || handler.data["class"] !== "relate") continue;
-    const incoming = ports.links.filter(link => link.handler === handler), parts = incoming.map(({ send }) => {
-      const instances = bounds.get(send.row.owner.id) ?? null, keys = relateKeyBound(send);
-      return instances === null || keys === null ? null : instances * keys;
-    });
-    if (parts.some(part => part === null)) {
+    const incoming = ports.links.filter(link => link.handler === handler), domains = new Map<string, bigint>();
+    let unproved = false;
+    for (const { send } of incoming) {
+      const instances = bounds.get(send.row.owner.id) ?? null, domain = relateKeyDomain(send);
+      if (instances === null || domain === null) { unproved = true; break; }
+      // Repeated sends of the same sender/item domain update existing keys.
+      domains.set(JSON.stringify([domain.sender, domain.item]), instances * domain.maximum);
+    }
+    if (unproved) {
       add(handler.owner.id, handler.path, "port-typing", "fan-in-unproved", "Lifetime sender instances and related keys are not both proved.");
     } else {
-      const maximum = parts.reduce<bigint>((sum, part) => sum + part!, 0n), copies = handler.data["copies"];
+      const maximum = [...domains.values()].reduce((sum, part) => sum + part, 0n), copies = handler.data["copies"];
       if (typeof copies === "number" && maximum > BigInt(copies)) add(handler.owner.id, handler.path, "port-typing", "fan-in-exceeds-copies", `Lifetime fan-in ${maximum} exceeds copies ${copies}.`);
     }
   }

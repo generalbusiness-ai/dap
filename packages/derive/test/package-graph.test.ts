@@ -2,13 +2,13 @@ import { expect, test } from "vitest";
 import { readFileSync } from "node:fs";
 import { b64url, canonicalize, definitionDigest, digestBytes, sign, utf8, verify } from "@generalbusiness/artroom-bytes";
 import { ApplicationPackageValidationError, packApplication2, readApplicationProjection, readApplicationPackage2, readPublishedApplicationPackage2, readPublishedApplicationReleaseProof2, type ApplicationPackageInput2 } from "@generalbusiness/artroom-bytes/application-v2";
-import { PROPOSED_BOUNDS, type DeclaredDefinition } from "@generalbusiness/dap-contract";
+import { PROPOSED_BOUNDS, type DeclaredDefinition, type Guard } from "@generalbusiness/dap-contract";
 import { checkPackageGraph, type PackageGraphInput } from "@generalbusiness/artroom-package-graph";
 import { validateDefinition, validatePackage } from "../src/index.ts";
 import { RULE_PROFILES } from "../src/rule/index.ts";
 import { room } from "../../../examples/grow/room.ts";
 import { keys } from "./fixtures.ts";
-import { grow } from "./fixtures-package-graph.ts";
+import { grow, preFailureRelation } from "./fixtures-package-graph.ts";
 import { DEMO_RELEASE, DEMO_PUBLISHER } from "../../../examples/grow/demo-release.ts";
 const maintained = JSON.parse(readFileSync(new URL("../../../examples/grow/check/dap.application.json", import.meta.url), "utf8")) as {
   capabilities: ApplicationPackageInput2["semantic"]["capabilities"];
@@ -120,6 +120,15 @@ test("published consumption preserves the exact old Grow packet while new pack a
   expect(readPublishedApplicationPackage2(complete.bytes, complete.release).ids).toEqual(readApplicationPackage2(complete.bytes, complete.release).ids);
 });
 
+function repeatedReporter(copies = 3) {
+  return grow((parent, child) => {
+    parent.receives["room-summary"]!.copies = copies;
+    child.acts["report-again"] = { ...structuredClone(child.acts["report-site"]!), effects: [] };
+    const summary = parent.items["room"]!.refs["summaryAt"]!.to;
+    if (summary.type === "fact") summary.kind = [...summary.kind, "report-again"];
+  });
+}
+
 test("Grow's three retained child slots prove three lifetime relation keys, rather than live maxima alone", async () => {
   const input = grow(), checked = checkPackageGraph(input);
   expect(checked.findings).toEqual([]);
@@ -138,6 +147,14 @@ test("Grow's three retained child slots prove three lifetime relation keys, rath
   expect(twoItems(3).findings.map(finding => finding.reason)).toEqual(["fan-in-exceeds-copies"]);
   expect(twoItems(3).findings[0]!.message).toContain("fan-in 6 exceeds copies 3");
   expect(twoItems(6).findings).toEqual([]);
+  const repeated = repeatedReporter();
+  expect(checkPackageGraph(repeated).findings, "Both reporting acts update the same three sender/item keys").toEqual([]);
+  const packet = await packApplication2(packageInput(repeated), { key: keys.rita.key, sign: bytes => sign(keys.rita.secret, bytes) });
+  expect(validatePackage(packet.bytes, PROPOSED_BOUNDS, RULE_PROFILES, {}, packet.ids.release)).toMatchObject({ ok: true, kind: "graph" });
+  // Each Room has one Room key and two Probe keys: the domains are disjoint.
+  const separate = checkPackageGraph(preFailureRelation(false, 8));
+  expect(separate.findings.map(finding => finding.reason)).toEqual(["fan-in-exceeds-copies"]);
+  expect(separate.findings[0]!.message).toContain("fan-in 9 exceeds copies 8");
   const conflicted = checkPackageGraph(grow(parent => {
     const send = parent.acts["create-room"]!.sends[0]!;
     if ("create" in send) send.create.result["conflict"] = [{ state: "failed" }];
@@ -274,7 +291,7 @@ test("the public package byte validator checks signed Grow bytes and preserves t
   await expect(rejected).rejects.toMatchObject({ findings: [expect.objectContaining({ reason: "fan-in-exceeds-copies" })] });
 });
 
-function automaticCycle(guarded: boolean) {
+function automaticCycle(guarded: boolean, additional: readonly Guard[] = []) {
   const input = grow((parent, child) => {
     const creator = structuredClone(parent.acts["create-room"]!.sends[0]!);
     parent.acts["create-room"]!.sends = [];
@@ -284,6 +301,7 @@ function automaticCycle(guarded: boolean) {
     handler.effects = [{ value: { slot: "label", from: { field: "label" } } }, ...handler.effects];
     handler.sends = [creator];
     if (!guarded) handler.guards = handler.guards.filter(guard => !("state" in guard));
+    handler.guards = [...handler.guards, ...additional];
     const siteRoom = child.items["room"]!.refs["siteRoom"]!.to, incoming = child.acts["establish"]!.fields["siteRoom"]!;
     if (siteRoom.type === "fact") siteRoom.kind = ["create-room", "room-summary"];
     if (incoming.type === "fact") { incoming.kind = ["create-room", "room-summary"]; incoming.required = true; }
@@ -299,9 +317,26 @@ function automaticCycle(guarded: boolean) {
   return { ...input, composition: { ...input.composition, rights: { rooms: { owner: input.entry } }, exercises: [{ definition: input.entry, row: "receives.room-summary", right: "rooms" }] } };
 }
 
+function cycleAlternatives() {
+  const state: Guard = { of: "also.room", state: ["active"] };
+  const always: Guard = { equals: { a: { const: true }, b: { const: true } } };
+  return [
+    { name: "one unconditional alternative",
+      good: automaticCycle(false, [{ anyOf: [[state], [state]] }]),
+      bad: automaticCycle(false, [{ anyOf: [[state], [always]] }]) },
+    { name: "a nested unconditional alternative",
+      good: automaticCycle(false, [{ anyOf: [[state], [{ anyOf: [[state], [state]] }]] }]),
+      bad: automaticCycle(false, [{ anyOf: [[state], [{ anyOf: [[state], [always]] }]] }]) },
+  ];
+}
+
 test("Grow's automatic create/report cycle needs an explicit state condition, without claiming termination", () => {
   expect(checkPackageGraph(automaticCycle(true)).findings).toEqual([]);
   expect(checkPackageGraph(automaticCycle(false)).findings.map(finding => finding.reason)).toEqual(["cycle-unacknowledged"]);
+  for (const pair of cycleAlternatives()) {
+    expect(checkPackageGraph(pair.good).findings, pair.name).toEqual([]);
+    expect(checkPackageGraph(pair.bad).findings.map(finding => finding.reason), pair.name).toEqual(["cycle-unacknowledged"]);
+  }
 });
 
 function pendingCreation(timer: boolean) {
@@ -360,8 +395,9 @@ test("P1 graph refusals retain their sole reason through packing and signed pack
   const unreachable = grow(parent => { parent.receives["unused-summary"] = { ...structuredClone(parent.receives["room-summary"]!), message: "unused-summary" }; });
   const unowned = { ...unreachable, composition: { ...unreachable.composition, order: [...unreachable.composition.order,
     { definition: unreachable.entry, handler: "unused-summary", by: "any" as const }] } };
-  const cases: { reason: string; good: PackageGraphInput; bad: PackageGraphInput }[] = [
+  const cases: { name?: string; reason: string; good: PackageGraphInput; bad: PackageGraphInput }[] = [
     { reason: "fan-in-exceeds-copies", good: base, bad: grow(parent => { parent.receives["room-summary"]!.copies = 2; }) },
+    { name: "repeated reporting of the same keys", reason: "fan-in-exceeds-copies", good: repeatedReporter(), bad: repeatedReporter(2) },
     { reason: "unbound-endpoint", good: base, bad: grow(parent => {
       parent.acts["rebind-room"] = { step: "transition", on: "room", grant: "grow.configure", fields: { peer: { type: "scope", kind: "lane", required: true } }, also: {},
         guards: [{ state: ["active"] }], effects: [{ ref: { slot: "scope", from: { field: "peer" } } }], sends: [], attention: [] };
@@ -378,17 +414,19 @@ test("P1 graph refusals retain their sole reason through packing and signed pack
     { reason: "field-mismatch", good: base, bad: grow(parent => { const field = parent.receives["room-summary"]!.fields["openAlerts"]!; if (field.type === "int") field.max = 3; }) },
     { reason: "unreachable-handler", good: base, bad: unowned },
     { reason: "cycle-unacknowledged", good: automaticCycle(true), bad: automaticCycle(false) },
+    ...cycleAlternatives().map(pair => ({ ...pair, reason: "cycle-unacknowledged" })),
     { reason: "unsettled-pending", good: pendingCreation(true), bad: pendingCreation(false) },
   ];
   for (const pair of cases) {
+    const name = pair.name ?? pair.reason;
     const good = signedGrowWire(pair.good), bad = signedGrowWire(pair.bad);
-    expect(validatePackage(good.bytes, PROPOSED_BOUNDS, RULE_PROFILES, {}, good.release), pair.reason).toMatchObject({ ok: true, kind: "graph", findings: [] });
+    expect(validatePackage(good.bytes, PROPOSED_BOUNDS, RULE_PROFILES, {}, good.release), name).toMatchObject({ ok: true, kind: "graph", findings: [] });
     const refused = validatePackage(bad.bytes, PROPOSED_BOUNDS, RULE_PROFILES, {}, bad.release);
-    expect(refused, pair.reason).toMatchObject({ ok: false, kind: "codec", reason: "invalid" });
-    expect(new Set(refused.findings.map(finding => finding.reason)), pair.reason).toEqual(new Set([pair.reason]));
+    expect(refused, name).toMatchObject({ ok: false, kind: "codec", reason: "invalid" });
+    expect(new Set(refused.findings.map(finding => finding.reason)), name).toEqual(new Set([pair.reason]));
     let signatures = 0;
-    await expect(packApplication2(packageInput(pair.bad), { key: keys.rita.key, sign: bytes => { signatures++; return sign(keys.rita.secret, bytes); } }), pair.reason)
+    await expect(packApplication2(packageInput(pair.bad), { key: keys.rita.key, sign: bytes => { signatures++; return sign(keys.rita.secret, bytes); } }), name)
       .rejects.toMatchObject({ findings: expect.arrayContaining([expect.objectContaining({ reason: pair.reason })]) });
-    expect(signatures, pair.reason).toBe(0);
+    expect(signatures, name).toBe(0);
   }
 });
