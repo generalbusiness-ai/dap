@@ -15,8 +15,9 @@ import { formatInteger } from "./numbers.ts";
 import { formatFact } from "./facts.ts";
 import { orderedViewRows } from "./ordering.ts";
 import { decodeViewParameters } from "@generalbusiness/artroom-bytes/application-v2";
-import { projectionMembers } from "./members.ts";
-import type { MembershipDisplayRead } from "./member-types.ts";
+import { projectionMemberFacts, projectionMembers } from "./members.ts";
+import type { MemberTable, MembershipDisplayRead } from "./member-types.ts";
+import { memberValueText } from "./member-text.ts";
 
 const controlId = (view: ApplicationView, control: ApplicationViewAct, index: number) => view.acts.filter(choice => choice.act === control.act).length > 1 ? `${control.act}:${index}` : control.act;
 
@@ -36,9 +37,12 @@ export interface DeclaredViewPort {
 }
 const text = (value: unknown): string => value === null || value === undefined ? "" : typeof value === "string" ? value : canonicalize(value);
 const input = (row: ApplicationProjectionRow): Record<string, FieldValue | null> => ({ ...row.fields, id: row.id, type: row.type, state: row.state, revision: row.revision, ...(row.entry ? { time: row.time!, on: row.on! } : {}) });
-const template = (source: string, row: ApplicationProjectionRow, waiting: string): string => {
+const template = (source: string, row: ApplicationProjectionRow, waiting: string, members?: MemberTable): string => {
   const values = { ...input(row), waiting };
-  return source.replace(/\{([^{}]+)\}/g, (_whole, key: string) => text(Object.hasOwn(values, key) ? values[key as keyof typeof values] : null));
+  return source.replace(/\{([^{}]+)\}/g, (_whole, key: string) => {
+    const value = Object.hasOwn(values, key) ? values[key as keyof typeof values] : null;
+    return memberValueText(value, members) ?? text(value);
+  });
 };
 export class DeclaredViewSource implements ViewSource {
   readonly declared = true;
@@ -199,20 +203,22 @@ export class DeclaredViewSource implements ViewSource {
       };
       return { status: "unavailable", position, count: rows.length, scope, points, refresh: view.refresh, ...navigation, card, fallback };
     }
-    const values = input(row), waiting = Object.hasOwn(view.waiting, row.state) ? template(view.waiting[row.state]!, row, "") : "";
+    const values = input(row);
     // A routed card resolves only the row it actually discloses. Other
     // source rows and rejected assignments never become an identity table.
     const members = await projectionMembers(declaration, routed ? { ...reply.value, sources: { [view.item]: [row] } } : reply.value, this.port.members);
-    const fallback = template(view.fallback, row, waiting), actions = await this.#allowed(view, row, reply.value, scope, definition);
+    const waiting = Object.hasOwn(view.waiting, row.state) ? template(view.waiting[row.state]!, row, "", members) : "";
+    const fallback = template(view.fallback, row, waiting, members), actions = await this.#allowed(view, row, reply.value, scope, definition);
     const now = this.port.now?.() ?? Date.now();
     const series = this.#series(view, row, reply.value);
     const card: Card = {
       identity: surface ? { item: scope.scope, kind: "scope", revision: String(reply.value.at.seq), subject: { scope: scope.scope }, at: {} }
         : { item: String(row.id), kind: row.entry ? "entry" : row.type, revision: String(row.revision), subject: { scope: scope.scope, ...(row.entry ? {} : { item: row.id }) }, at: row.entry ? {} : { on: row.revision } },
-      title: view.kind === "surface" ? query.screen : text(values[view.title]), summary: view.kind === "surface" || view.summary === null ? "" : text(values[view.summary]),
-      reasons: view.kind === "surface" ? [] : view.facts.map(fact => formatFact(fact, values, now)),
+      title: view.kind === "surface" ? query.screen : memberValueText(values[view.title], members) ?? text(values[view.title]), summary: view.kind === "surface" || view.summary === null ? "" : memberValueText(values[view.summary], members) ?? text(values[view.summary]),
+      reasons: view.kind === "surface" ? [] : view.facts.map(fact => formatFact(fact, values, now, members)),
       projection: points, reviewIntended: [], unavailable: [], waitsOn: waiting ? [waiting] : [], settles: [], actions, fallback,
-      declared: { kind: view.kind, source: view.item, context: template(view.context, row, waiting), actor: view.kind === "surface" || view.actor === null ? null : values[view.actor] ?? null,
+      declared: { kind: view.kind, source: view.item, context: template(view.context, row, waiting, members), actor: view.kind === "surface" || view.actor === null ? null : values[view.actor] ?? null,
+        ...(view.kind !== "surface" ? { memberFacts: projectionMemberFacts(declaration.sources[view.item]!, view.facts, values) } : {}),
         refresh: view.refresh, display: view.display, back: view.back, backScope, scope, ...(routed ? { routed: true } : {}), data: reply.value,
         ...(series ? { series } : {}),
         ...(view.kind !== "surface" && view.links ? { links: view.links.flatMap(link => {
@@ -224,7 +230,9 @@ export class DeclaredViewSource implements ViewSource {
         ...(view.kind === "log" ? { log: rows.map(row => {
           if (!row.entry || !row.time) throw new ViewError("unavailable", "A log needs explicit sealed entry facts.");
           const values = input(row);
-          return { entry: row.entry, time: row.time, title: text(values[view.title]), summary: view.summary === null ? "" : text(values[view.summary]), facts: view.facts.filter(fact => applicationViewFactField(fact) !== "time").map(fact => formatFact(fact, values)) };
+          const facts = view.facts.filter(fact => applicationViewFactField(fact) !== "time");
+          return { entry: row.entry, time: row.time, title: memberValueText(values[view.title], members) ?? text(values[view.title]), summary: view.summary === null ? "" : memberValueText(values[view.summary], members) ?? text(values[view.summary]),
+            facts: facts.map(fact => formatFact(fact, values, now, members)), memberFacts: projectionMemberFacts(declaration.sources[view.item]!, facts, values) };
         }) } : {}),
         ...(surface ? { resource: surface.resource, opens: surface.opens, surface } : {}) },
     };

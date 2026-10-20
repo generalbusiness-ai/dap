@@ -36,7 +36,7 @@ try {
     await page.waitForFunction(() => window.proof.mode === 'fullscreen' && window.proof.contexts.length > 0);
     assert.equal(await app.getByRole('button', { name: /^Participant / }).count(), 3);
     const api = await app.locator('html').evaluate(() => ({ keys: window.surfaceProof.keys, slotRemoved: !Object.hasOwn(window, 'dapSurface') }));
-    assert.deepEqual(api.keys.sort(), ['onData', 'open', 'root', 'signal']); assert.equal(api.slotRemoved, true);
+    assert.deepEqual(api.keys.sort(), ['member', 'onData', 'open', 'root', 'signal']); assert.equal(api.slotRemoved, true);
     await app.getByRole('button', { name: 'Invalid opening', exact: true }).click();
     await app.getByText('This surface declares no such opening.', { exact: true }).waitFor();
     assert.equal(await page.evaluate(() => window.proof.calls.filter(call => call.name !== 'view_read').length), 0);

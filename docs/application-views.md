@@ -207,8 +207,9 @@ A surface view names that resource, its projection and its permitted opens:
 The host validates projection names, source names, resource ownership and
 opening targets when it reads the package. A surface declares no acts.
 The kit retains its MCP connection, context reporting and native act
-dispatch. The surface receives the same projection object as the SDK and
-MCP read, including its native scope and head. It supplies no read adapter.
+dispatch. The surface receives the native projection, including its scope
+and head, with a member display table beside its rows. It supplies no read
+adapter. The table is display evidence; it grants no authority.
 
 ## Browser API
 
@@ -221,13 +222,35 @@ and inline styles in a shadow root. During script initialization,
 | --- | --- |
 | `root` | The resource's shadow root |
 | `signal` | An abort signal for resource teardown |
-| `onData(render)` | Registers one callback for cloned native projection data |
-| `open(name, items?)` | Opens a name in the view's `opens` map |
+| `onData(render)` | Registers one callback for cloned native projection data and `data.members` |
+| `member(ref)` | Returns the kit's identity and standing element for a full member reference |
+| `open(name, items?, scope?)` | Opens a name in the view's `opens` map, optionally at a full scope reference |
 
 The initialization property is removed after the scripts run. A resource
 keeps its API reference in a closure. It does not receive a signer, token
 or arbitrary tool callback. The integration assumes trusted package code.
 Hostile-code containment is outside this contract.
+
+The service resolves typed party and journal signer fields into
+`data.members.records`, keyed by the canonical full member reference.
+Membership incarnation is part of that key. The table holds at most 32
+distinct references, including controllers. `data.members.overflow` counts
+references beyond the limit, and the kit shows that count. A reference
+outside the table, or one the service cannot read, renders as Member
+unavailable with its full raw reference. The element never guesses a name.
+
+Use `surface.member(row.fields.lastProber)` for a projected party field.
+The kit shares its stylesheet with the shadow root and inherits the host's
+fonts and tokens. `onData` runs again when the display table changes, even
+when the native projection has not changed. The API offers no membership
+act or presence write. Member-record screens and their controls are the
+separate B2 milestone.
+
+Resolution uses one authenticated membership window of at most 100 member
+items, including final states, and one roster item. It follows no cursor.
+A member outside that window remains unavailable. A roster from another
+read head leaves action eligibility unknown. These limits do not turn the
+table into a complete membership list or admission evidence.
 
 ```html
 <p id="head"></p>

@@ -1,5 +1,5 @@
 import type { PresentationPackage, ViewKind } from "./resources.ts";
-import type { ApplicationProjectionData, FactRef, FieldValue, ScopeRef } from "@generalbusiness/dap-contract";
+import type { ApplicationProjectionData, FactRef, FieldValue, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
 import type { ApplicationView, ApplicationViewParameters } from "@generalbusiness/artroom-bytes/application-v2";
 import type { MemberTable } from "./member-types.ts";
 
@@ -16,6 +16,7 @@ export interface CardIdentity {
   at: Record<string, number>;
 }
 export interface ActorChip { kind: "person" | "agent" | "checker"; name: string; controller?: string }
+export type MemberFacts = Readonly<Record<number, { label: string; refs: readonly MemberRef[] }>>;
 export interface CardAction {
   id: string;
   label: string;
@@ -65,6 +66,7 @@ export interface Card {
     source: string;
     context: string;
     actor: FieldValue | null;
+    memberFacts?: MemberFacts;
     refresh: number;
     display: "inline" | "fullscreen";
     back: string | null;
@@ -76,7 +78,7 @@ export interface Card {
     series?: { label: string; scale: number; unit: string; window: number; fallback: string;
       samples: readonly { value: number; time: string; entry: Readonly<FactRef> }[] };
     links?: readonly { label: string; screen: string; items: Readonly<Record<string, number>> }[];
-    log?: readonly { entry: Readonly<FactRef>; time: string; title: string; summary: string; facts: readonly string[] }[];
+    log?: readonly { entry: Readonly<FactRef>; time: string; title: string; summary: string; facts: readonly string[]; memberFacts?: MemberFacts }[];
     resource?: string;
     opens?: Readonly<Record<string, string>>;
     surface?: DeclaredSurface;

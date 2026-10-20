@@ -1,11 +1,22 @@
 /** Bounded display resolution from typed projection sources. No writes or history scans. */
 import type { ApplicationProjectionData, FieldValue, MemberRef } from "@generalbusiness/dap-contract";
 import { canonicalize, isMemberRef, isDigest, isLocalId, utf8 } from "@generalbusiness/artroom-bytes";
-import { isApplicationJournalSource, type ApplicationReadProjection } from "@generalbusiness/artroom-bytes/application-v2";
+import { applicationViewFactField, isApplicationJournalSource, type ApplicationProjectionSource, type ApplicationReadProjection, type ApplicationViewFact } from "@generalbusiness/artroom-bytes/application-v2";
 import { isActions, ROLE_LISTS, type Role } from "@generalbusiness/dap-platform";
 import type { MemberDisplay, MemberTable, MembershipDisplayRead, MembershipDisplaySnapshot } from "./member-types.ts";
 
 export const VIEW_MEMBER_LIMIT = 32;
+
+export function projectionMemberFacts(source: ApplicationProjectionSource, facts: readonly ApplicationViewFact[], values: Record<string, FieldValue | null>): Record<number, { label: string; refs: MemberRef[] }> {
+  const result: Record<number, { label: string; refs: MemberRef[] }> = {};
+  for (const [index, fact] of facts.entries()) {
+    const field = applicationViewFactField(fact), declaration = source.fields[field];
+    if (!declaration || declaration.from.kind !== (isApplicationJournalSource(source) ? "signer" : "party")) continue;
+    const value = values[field], refs = isMemberRef(value) ? [value] : Array.isArray(value) && value.every(isMemberRef) ? value : [];
+    if (refs.length) result[index] = { label: typeof fact === "string" ? fact : fact.label, refs };
+  }
+  return result;
+}
 
 function displayMember(ref: MemberRef, snapshot: MembershipDisplaySnapshot | null): MemberDisplay {
   const unavailable: MemberDisplay = { ref, identity: null, standing: null, controller: null, opened: null };

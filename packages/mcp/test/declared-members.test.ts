@@ -5,6 +5,7 @@ import { canonicalize, isMemberRef } from "@generalbusiness/artroom-bytes";
 import type { ApplicationReadProjection } from "@generalbusiness/artroom-bytes/application-v2";
 import { projectionMembers } from "../src/views/members.ts";
 import type { MembershipDisplaySnapshot } from "../src/views/member-types.ts";
+import { memberText } from "../src/views/member-text.ts";
 
 const membership: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "membership" };
 const at = { seq: 200, hash: `sha256:${"a".repeat(64)}` as const };
@@ -38,10 +39,12 @@ test("party and signer resolve once with controller evidence; arbitrary values n
   expect(Object.keys(table.records)).toEqual([canonicalize(agent), canonicalize(owner)]);
   expect(table.records[canonicalize(agent)]).toMatchObject({ identity: { handle: "@prober", kind: "agent" }, controller: owner,
     standing: { state: "active", role: "agent", actions: ["grow.probe"] }, opened: { seq: 3, hash: at.hash } });
+  expect(memberText(agent, table)).toBe("@prober (agent · controlled by @maya · role agent)");
   const other = { ...agent, membership: { ...membership, inc: `in_${"b".repeat(25)}a` as const } };
   expect(isMemberRef(other)).toBe(true);
   const unknown = await projectionMembers(declaration, data([other]), async () => snapshot);
   expect(unknown.records[canonicalize(other)]?.identity).toBeNull();
+  expect(memberText(other, unknown)).toBe(`Member unavailable (${canonicalize(other)}); eligibility unknown`);
 });
 
 // Invariant: the table and its lookups never silently exceed 32 distinct
@@ -64,6 +67,7 @@ test("removed and lapsed stay explicit; refused reads and different-head actions
     members: [item(removed, "person", "removed"), item(lapsed, "person", "lapsed"), item(active)], roster: { item: roster, at: { ...at, seq: 201 } } }));
   expect(table.records[canonicalize(removed)]?.standing).toMatchObject({ state: "removed", actions: [] });
   expect(table.records[canonicalize(lapsed)]?.standing).toMatchObject({ state: "lapsed", actions: [] });
+  expect(memberText(lapsed, table)).toBe("@lapsed (person · invitation lapsed · role member)");
   expect(table.records[canonicalize(active)]).toMatchObject({ identity: { handle: "@active" }, standing: { actions: null } });
   const refused = await projectionMembers(declaration, data([active]), async () => { throw Error("scripted unavailable membership read"); });
   expect(refused.records[canonicalize(active)]).toMatchObject({ identity: null, standing: null, opened: null });
