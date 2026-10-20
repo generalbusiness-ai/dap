@@ -2,7 +2,9 @@
 
 Request: `5aae9b0ab67909ee49118dc49d465fe881a8037a`.
 Promise: `79f23cb727ca2ae086f49764b6b8ab7a69d2f950`.
-Base: reviewed Main `3ed2a08a50f31e84ea42b4f6027684e14a8cedb8`.
+Base: actual Main `dba3e76237250b6ce205d511691554de3d809baf`.
+The earlier reviewed candidate used Main `3ed2a08a50f31e84ea42b4f6027684e14a8cedb8`;
+the new integration adds only Main's corrected sprint report.
 The first three gate attempts and historical baseline comparisons ran on
 Main2127. The later
 Main adds only the approved sales-design note; receiptbcfbc8dc and its
@@ -16,11 +18,90 @@ evidence. The fourth gate passed at the earlier code/test head. Complete
 review `5396f5ed` requested the command-ordering correction. Its gate
 passed, then complete review `0ff93247` found a residual independently
 conditional targetAt write. The current fresh revision addresses that
-finding and two additional self-checks; its new whole gate passes. Complete
-exact-head review remains ahead. Earlier sealed candidates, dependencies
-and evidence remain frozen forever.
+finding and two additional self-checks, and its whole gate passed. The
+complete third review `b8d8dda2` then found a skippable allowed-kind guard.
+The current fresh revision corrects that execution-context proof and a
+related open-effect self-check. Its focused checks pass; its new whole
+gate is still ahead. Complete exact-head review remains owed. Earlier
+sealed candidates, dependencies and evidence remain frozen forever.
 
-## Conditional coupling correction after complete review
+## Execution context after the complete third review
+
+Complete review `b8d8dda25abd045d6c792031f4b0676e23cd7826`, adopted by
+`f6b606bfef01eabd89b50310b3bcefd5d4b339a5`, reports one required F1.
+The kind operand can name the commanded device while the guard's own
+`of` names another optional, unbound item. Runtime skips that guard before
+reading its operand. The old admission proof accepted the declaration,
+and an out-of-grant fan target was written without a command.
+
+The local proof now checks execution subjects as well as the kind source.
+The guard and command effect must use the primary transition item or the
+commanded device as their own execution subject. A transition's primary
+item is bound; binding the command's own device suffices too. An unrelated
+subject does not prove execution, even if another argument names the right
+device. This conservatively refuses the unsafe declaration. It preserves
+Grow authorize's primary alert guard with a kind operand from the actual
+heater. No runtime, grant, owner, native declaration, pin or default changes.
+
+A builder self-check found the same mismatch on the open effect itself:
+its own optional `of` could skip while `with.device.of` still named the
+written target. A heater target was accepted at on/80 with zero command
+records. The same binding proof now covers that effect. Shared if/unless,
+written ordering, final-before-open refusal, no-grant behavior and answer
+reservation/current/late semantics stay in place.
+
+Fresh view `/tmp/artroom-builder-g5a-guard-context-20261019` starts from
+exact reviewed `7f15e2be2d4db9acd262f18d242a1ee6e6d718c6`. Merge
+`f2f9acd00a227818196468bd91355d72d759ba14` integrates actual Main; its
+only delta from that candidate is `notes/reports/2026-10-19-sprint-report.md`.
+Dependencies are a private COW copy of unsealed Main, with the repository's
+exact pool compatibility adoption before checks; no installation occurred.
+Only the checker's manifest and six granted regular files were read and
+stable-copied to `/tmp/artroom-g5a-guard-context-checker-evidence-20261019`.
+Every size and SHA-256 matches. Original sealed views and tools were neither
+edited nor executed; no adjacent checker directory was read.
+
+The exact copied probe independently reproduces the guard failure: one
+selected case fails directly with write instead of refused, and six cases
+are deliberately unselected. The additional effect-context probe fails
+its direct command-count assertion, zero instead of one, after the target
+assertion passes; seven other probe cases are unselected. Both original
+commands naturally close with exit 1 and unchanged source hashes.
+Parent grant metadata and identity are SCRIPTED; the validator, native
+capability, judges and fold are real. This is no provider execution.
+
+The strengthened maintained admission case now includes both unsafe
+contexts. All earlier assertion text and five case declarations remain;
+no case or deadline is added. The first test compiler caught a readonly
+array push in the new witness and two such mutations in the temporary
+checker probe. The maintained witness now replaces its readonly array.
+Both owning compiler targets pass with temporary probes absent. Exact
+probe copies are placed only after compilation closes and removed only
+after runtime closes; no compiler setting was widened.
+
+The final four-file pure command passes 22 cases: 14 maintained cases and
+the checker's seven exact cases plus the additional builder case. Unsafe
+probe cases pass by declaration refusal, not by an observed act refusal.
+One control makes only the shared binding proof always true: both concrete
+probes fail directly, then source is restored byte-for-byte. This is one
+focused control, not a sweep.
+
+Six existing native/CLI/pin files pass 19 cases, including real native
+install/SQLite/restart, Grow set-heater/authorize/current/late answers,
+recorded projections/replays and local CLI scenarios. Their TEST
+repository/package/clock/scheduler and recorded or SCRIPTED parent identity
+boundaries remain. These are this run's six selected files and 19 cases,
+not the checker's separately reported six-file/20-case selection. Outer
+runtime was 15.00 seconds wall/21.28 CPU. The two existing asset files pass
+four cases in 1.29 seconds wall/2.10 CPU. Normal Page generation updates the
+embedded validator; MCP generation reproduces its existing module.
+
+Logs, source hashes, copied evidence, intermediate failure, controls and
+closures use `/tmp/artroom-g5a-guard-context-*20261019*`. Temporary probe
+sources are retained outside the checkout, with exact hashes. The new
+normal gate and complete Source are still ahead at this checkpoint.
+
+## Historical conditional coupling correction
 
 Complete checker report `0ff93247576b4ef9fc8ca384b3f8e6ca128a0cfb`,
 adopted by `a14b9630`, confirms both prior unsafe orderings are refused.

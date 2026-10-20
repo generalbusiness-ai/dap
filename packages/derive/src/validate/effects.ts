@@ -273,14 +273,21 @@ export function effects(d: Defining, v: unknown, path: string, ctx: Ctx, later: 
         const device = isObject(cap["with"]) ? cap["with"]["device"] : undefined;
         const subject = String(isObject(device) ? (device["of"] ?? e["of"] ?? "on") : (e["of"] ?? "on"));
         commandSubjects.set(subject, i);
+        // A different optional subject could skip a guard or the open effect
+        // before either reads the device argument. The primary transition
+        // item is bound; the device's own binding also suffices.
+        const boundWithDevice = (of: unknown) => of === undefined || of === "on" || of === subject;
+        if (!boundWithDevice(e["of"])) bad("capability", at(path, i), "a device command cannot depend on another subject's binding");
         // A direct conjunct guards the actual device kind. A disjunction or
         // a constant cannot prove that an out-of-grant target is refused.
         const allowed = Array.isArray(actGuards) && actGuards.some(guard => {
           const cap = isObject(guard) ? guard["capability"] : null;
+          const guardSubject = String(isObject(guard) ? (guard["of"] ?? "on") : "on");
           const kind = isObject(cap) && isObject(cap["with"]) ? cap["with"]["kind"] : null;
           return isObject(cap) && cap["name"] === "device-command" && cap["guard"] === "allowed"
             && isObject(kind) && kind["slot"] === "kind" && Object.keys(kind).every(key => key === "slot" || key === "of")
-            && String(kind["of"] ?? (guard as Rec)["of"] ?? "on") === subject;
+            && boundWithDevice(guardSubject)
+            && String(kind["of"] ?? guardSubject) === subject;
         });
         if (!allowed) bad("capability", at(path, i), "a device command needs an act guard allowing that same device's kind");
       }

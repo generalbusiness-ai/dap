@@ -211,4 +211,19 @@ test("a device command follows all target writes, binds one device and opens at 
     const checked = validateDefinition(input, PROPOSED_BOUNDS);
     expect(checked.ok ? [] : checked.problems.map(problem => problem.code)).toContain("capability");
   }
+  // A correct kind operand is no proof if runtime can skip the guard itself.
+  const skippable = structuredClone(scope), command = skippable.acts["command"]!;
+  command.fields["optionalDevice"] = { type: "item", of: "device", required: false };
+  command.also["optionalDevice"] = { item: "device", by: "optionalDevice" };
+  command.guards = [...command.guards.filter(guard => !("capability" in guard)),
+    { of: "also.optionalDevice", capability: { name: "device-command", guard: "allowed", with: { kind: { slot: "kind", of: "on" } } } }];
+  const refused = validateDefinition(skippable, PROPOSED_BOUNDS);
+  expect(refused.ok ? [] : refused.problems.map(problem => problem.code)).toContain("capability");
+  // The open effect's own subject must not skip an otherwise allowed command.
+  command.guards = scope.acts["command"]!.guards;
+  command.effects = command.effects.map((effect, i) => i === 3 ? {
+    of: "also.optionalDevice", capability: { name: "device-command", do: "open", with: { device: { slot: "kind", of: "on" } } },
+  } : effect);
+  const skippedOpen = validateDefinition(skippable, PROPOSED_BOUNDS);
+  expect(skippedOpen.ok ? [] : skippedOpen.problems.map(problem => problem.code)).toContain("capability");
 });
