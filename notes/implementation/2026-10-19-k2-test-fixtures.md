@@ -1,628 +1,252 @@
 # Shared test fixtures
 
-K2 now has supported internal fixture entries for Derive and Platform,
-plus separate Node-safe and Worker-only entries for Scope and MCP.
-Actual reviewed and published Grow Main `7594822c` is integrated at
-`055a54d9`, after S2a Main `fb390d88` at `f856a6ee9`.
-The newer Device/archive consumers use the same entries and explicit
-builders. All four owning compiler groups, a portable Node entry import,
-nine selected Node cases and 25 selected native cases pass after integration.
-The final Grow native consumers also pass after integration. These are
-focused checks; the K2 gate and complete Source/review remain ahead. The earlier grouped MCP HTTP failure
-remains unclassified; its isolated pass is a separate observation.
-
-The following preparation history starts from the original Main baseline.
-
-The first preparation moved the identical loopback transport out of
-`http.test.ts` and `wire.test.ts`. Each caller keeps its own stand-in, server, hook,
-configuration holds and close order. The factory returns the server before
-the listen gate is awaited, preserving the caller's retained server during
-setup. Request-body concatenation, JSON response header, streamed response
-copy and loopback address stay the same. This is real Node HTTP over the
-existing SCRIPTED scope service, not native scope evidence.
+K2 gives Derive and Platform one supported internal fixture entry each.
+Scope and MCP have separate Node-safe and Worker entries because their
+runtime dependencies and lifetime ownership differ. Tests use those entries;
+private domain data and adapters retain their own files and meanings.
+The original public testing exports retain their existing roles.
 
 Request: `6578efa9e9da839bf0bbb0961ba00b243a8ea06c`.
 Builder promise: `d387f722298edf53bf9d6776d9445b930900d422`.
-Original base: Main `dba3e76237250b6ce205d511691554de3d809baf`.
-Current integrated base: reviewed and published Grow Main `7594822c`.
-This is interruptible work behind G5a, S2a and G5. No frozen review view
-was executed or changed. Dependencies are a private COW copy of unsealed
-Main; no package was installed.
-
-The AST-based source inventory finds all 77 outer `expect` chains in the
-HTTP file and all 68 in the wire file byte-for-byte unchanged. It parses
-TypeScript with the already locked Rolldown parser and executes no test or
-repository source. This protects the selected assertion text; it is not a
-runtime case-count or complete assertion-helper proof. Imports and setup
-are the only changes to those existing test files. No case or deadline is
-added or changed.
-
-The owning MCP Node-test TypeScript project passes, and both unchanged
-files pass all 21 cases at code/test checkpoint
-`4558659714b49d721e07869585bd87ffcb35ff6a`, tree
-`41a85b1b8225960d5f65f49721308886f61466ef`. Original process 84481 naturally
-exited zero. It ran after the CLI listing's failed gate and documentation
-follow-up had closed, with loopback allowed. The raw log reports 4.98
-seconds wall and 6.85 summed test time; these are not a measured whole
-pipeline or CPU figure. Logs: `/tmp/artroom-k2-mcp-peer-types-20261019.log`
-and `/tmp/artroom-k2-mcp-peer-focused-20261019.log`.
-
-These are real Node HTTP/stdio transports and clients over the existing
-SCRIPTED scope service. They prove no native scope judgment, provider or
-deployment. K2 has no final gate, Source, review, approval or landing.
-
-## Shared MCP room and recipe builders
-
-Matching code checkpoint `7d2779561c6472dfdf6f87f3bff5aafbeb916813`, tree
-`2a4610b0dc5117d35363f3e52a2830cb702fdd43`, adds the common room-claim and
-recipe builders. Counter and lending keep their explicit distinct cohorts,
-activation, role actions, configuration bytes, idempotency keys, clock
-advance and scenario bodies. The two identical setup assertions move
-unchanged into the common helper, called once by each original room builder.
-All remaining expectation expressions and complete actual test-call source
-are exact. The Node files retain all 145 expectation chains. The AST
-mapping is `/tmp/artroom-k2-mcp-shared-assertion-map-20261019.json`; it is
-source evidence, not a runtime case-count proof.
-
-The shared module receives Node's server constructor explicitly. It has no
-runtime Node-server or Worker-implementation import. An initial type-only
-import of native `Room`/`Agent` still pulled Worker-only source into the
-Node compiler. That actual compiler failure is retained in
-`/tmp/artroom-k2-mcp-shared-node-types-20261019.log`. Narrow structural
-tool/room interfaces corrected the dependency graph; no compiler setting
-or ambient type allowance was widened. Both Node-test and native-story
-compiler targets now pass.
-
-Original process 40444 naturally exited zero after two sequential focused
-commands: HTTP/wire, two files and 21 cases; Counter/lending, two files and
-five native cases. Their unchanged case bodies still exercise the real
-Node clients/transports and native MCP/scopes respectively, with their
-existing scope-service, Git host, scheduler, clock and ownership boundaries
-labelled. Private pool adoption ran before the native checks, changing
-`8d3d1150…` to `cd50d18a…`, without an install.
-
-Measured outer Node command: 5.26 seconds wall and 4.62 CPU. Native command:
-6.92 seconds wall and 6.96 CPU. These are separate commands, not a summed
-pipeline. The working source stayed unchanged during them; the matching
-code checkpoint was saved afterward. Its starting Git HEAD did not yet
-contain those uncommitted edits. Exact final file hashes and this limit
-are in `/tmp/artroom-k2-mcp-shared-checkpoint-20261019.json`. Raw compiler,
-runtime and timing logs use `/tmp/artroom-k2-mcp-shared-*20261019*`.
-
-## Portable Scope application inputs
-
-Matching code checkpoint `4d0cd3d7e3559515bee396ddbf75274cde88a56c`, tree
-`f30bf58d8dd3728635aa8f7311289566e5314029`, adds portable Scope builders
-for content-host bindings, Worker bindings, one explicit release/publisher
-trust setting and fixed TEST signers. It introduces no Worker global,
-implicit trust, default cohort or shared fixture ownership.
-
-Each binding call returns a fresh environment and retains the caller's
-namespace/bucket references and exact trust string, including deliberately
-invalid strings. Existing tests keep their own environment lifetime and
-extra fields. Trust serialization retains release/publisher order and the
-explicit publisher argument; a provided packet still uses its own manifest
-publisher. Fixed seeds 61, 62, 63, 64 and 254 retain their exact keys. The
-malformed/partial trust inputs remain explicit. The later follow-up below
-factors the remaining three inline Worker environments.
-
-All expectation-expression hashes in the 121 existing Scope case files
-remain exact. The owning Scope compiler passes. Original process 8671
-naturally exits zero: 11 existing affected files/fixture consumers, 28
-cases passed. Before/after hashes match every changed draft source. The
-outer command took 22.49 seconds wall and 24.43 CPU (22.85 user plus 1.58
-system). These checks use their existing native/workerd, local R2,
-scripted peer/clock and host boundaries; they imply no provider operation.
-No case or deadline was added or changed.
-
-A separate Node portability probe initially used strip-only TypeScript
-loading and failed on an existing client parameter-property class. It
-did not show a fixture/runtime bug. The existing installed esbuild0.28.1
-then bundled the unchanged fixture module as Node ESM, which imports
-successfully with all four exports. No tool package was installed or added.
-
-The failed standalone probe also prevented its chained commit. A subsequent
-metadata command incorrectly called the unchanged old Git head a matching
-saved checkpoint. That original record is retained as failed metadata at
-`/tmp/artroom-k2-scope-builders-checkpoint-20261019.json`; it is not an
-accepted checkpoint claim. The corrected
-`/tmp/artroom-k2-scope-builders-checkpoint-v2-20261019.json` names the actual
-saved commit and verifies all original focused-run source hashes. The
-working draft was checked before that matching commit was saved.
-
-Original logs, source hashes, timing, failed/corrected probe and bundle use
-`/tmp/artroom-k2-scope-builders-*20261019*`. Selected assertion inventories
-use `/tmp/artroom-k2-scope-expect-*20261019*`. No final gate or complete
-K2 Source is claimed.
-
-## Shared Platform fixture judgments
-
-Code checkpoint `eac9e7ed5f61c7482e1e9698958a1bdac6a3a0d7`, tree
-`36fb62301038a15ee0c610d9103c35a427b3c124`, gives four identical `written`
-helpers one home. It returns the original draft by reference and preserves
-the exact refusal message. Three identical validation-result acceptors
-also share one implementation. Creation's cloned-data validation retains
-its distinct profile/options and data-named refusal in a separate builder.
-Each labelled scenario keeps its data, grants and ownership. No eager
-scenario barrel or fixture cycle is introduced by this step.
-
-The owning compiler passes. All 28 Platform case files are byte-for-byte
-unchanged. Original process 22783 naturally exits zero with 18 affected
-files and 170 cases passing. Selection follows relative support imports;
-no Platform test uses the package-testing alias fallback. The exact
-original draft stayed unchanged during the run. Outer time was 2.61
-seconds wall and 9.72 CPU (8.41 user plus 1.31 system). These are in-memory
-judgment/fixture witnesses with their existing boundaries, not native
-storage or provider acceptance.
-
-The first commit check found one extra final blank line in each of three
-support files and stopped before committing. A following metadata command
-incorrectly called the previous Git head a matching checkpoint. That
-record is retained as failed metadata at
-`/tmp/artroom-k2-platform-shared-checkpoint-20261019.json`.
-The exact passing draft is retained at
-`/tmp/artroom-k2-platform-checked-draft-20261019/`. The only later source
-differences are those three final newlines, with every non-newline byte
-exact. Tests were not repeated for that formatting correction. The corrected
-`/tmp/artroom-k2-platform-shared-checkpoint-v2-20261019.json` requires a
-clean tree and checks the committed blob of every file before naming the
-head. Source snapshots, correction map, compiler and runtime logs use
-`/tmp/artroom-k2-platform-*20261019*`. No final gate or Source is claimed.
-
-## Shared Derive draft mutation
-
-Code checkpoint `34538a82613d91a07bf83b932e094acb6a608d5a`, tree
-`84f152f978054ac087b0b0479b2628cde0d0b1f3`, shares four copies of the
-native clone-and-change step. Each caller retains its existing bounds,
-profiles, platform flag, validation result or accepted-definition return.
-Default no-op callbacks and ignored callback return values are unchanged.
-The helper uses native `structuredClone`, preserving its values and
-failure behavior. It does not substitute a JSON round trip. The local
-clone declaration is generic, matching that native operation.
-
-The owning Derive compiler passes. All 42 existing Derive case files are
-byte-for-byte unchanged. The original focused command naturally exits
-zero with 40 affected files and 406 passing cases. Selection follows
-relative support imports and resolves the package testing alias to the
-main fixture module. The four draft source hashes match before and after
-the run and match their saved Git blobs. Outer time was 1.58 seconds wall
-and 11.87 CPU (11.00 user plus 0.87 system). These are existing in-memory
-Derive witnesses, with no new native storage or provider claim.
-
-Logs, selection, source hashes and the clean matching checkpoint use
-`/tmp/artroom-k2-derive-draft-*20261019*`. No case, assertion or deadline
-changed. No final K2 gate or Source is claimed.
-
-## Remaining Scope binding and signer copies
-
-Code checkpoint `01c9446866b6cefa2a0b8bf4c3192c79911dabed`, tree
-`43e3251797f14f506ce57cbdf155062a3200d292`, replaces the last three
-identical application Worker environments with the shared builder. It
-also shares the fixed signer construction in the v2, owned-scope and
-fact-time packet helpers and the unrelated native query signer. Seeds
-67 and 5 stay exact. The existing client's `secretSigner` implementation
-is the same key/sign closure those packet helpers previously built by
-hand. Each caller keeps its original initialization time and fresh seed.
-
-All 14 native cases in five affected files and all 17 Node cases in three
-MCP packet-consumer files pass. Both owning compiler projects pass. The
-original command naturally exits zero, with all five changed source
-hashes exact before/after and equal to their saved Git blobs. Native time
-was 10.53 seconds wall/12.24 CPU; Node time was 1.39 wall/2.66 CPU.
-No case, deadline, native ownership or peer behavior changed.
-
-Of the 82 expectation expressions in the install-custody file, three
-change only the inline environment argument. Substituting the exact
-shared builder makes every complete expression byte-exact; requests,
-expected statuses and matchers are unchanged. All 14 expressions in the
-query-lifetime file remain byte-exact. The assertion map explicitly
-retains the original and replacement hashes; it does not claim raw text
-identity for those three expressions. Other affected case files are
-unchanged. These checks retain the existing native and scripted-peer
-boundaries and make no provider or browser acceptance claim.
-
-Original source, assertion map, selection, compiler/runtime logs and the
-clean matching checkpoint use
-`/tmp/artroom-k2-scope-final-builders-*20261019*`. This is a focused
-follow-up after real source changes, not a repeated gate. Final K2 fixture-entry work, gate and Source remain ahead.
-
-## MCP entry boundaries
-
-Code checkpoint `4d9676e14f68dbf8e224ef0e82f782d6aa9fb347`, tree
-`fecd5cf71aedef3e5a5d0d067ecf695df2b9673a`, implements the adopted two-entry
-boundary. `packages/mcp/test/fixtures.ts` supplies the Node-safe loopback
-peer and recipe parser. It has no Worker or test-framework runtime import.
-`fixtures-native.ts` supplies the common claim builder and re-exports the
-existing private room/story adapters. All eleven native consumers import
-that entry; its private modules retain their ownership and lifetimes.
-Counter/lending keep their explicit cohorts and activation steps.
-
-The common claim's implementation is byte-exact except one final EOF blank
-line; its two setup assertions remain exact. All 569 outer expectation
-expressions in the eleven consumer files are byte-for-byte exact. Both
-owning compiler projects pass. The Node compiler excludes only the new
-Worker fixture entry beside its existing Worker adapters; the Worker
-project checks that entry. No ambient type allowance or production
-compiler option is widened.
-
-Original process 76785 naturally exits zero. The two existing Node
-transport files pass 21 cases, 5.36 seconds wall/4.61 CPU. All eleven
-changed native consumers pass 30 cases, 46.74 seconds wall/50.07 CPU.
-The raw native log retains the deliberately scripted complete-reset fault;
-these local tests retain their existing TEST/stand-in boundaries. No case,
-assertion, limit or deadline changes.
-
-The existing pinned esbuild bundles the Node entry as standalone ESM,
-which imports successfully under Node outside Vitest and exports exactly
-`activityRecipe` and `loopbackScopePeer`. No tool is installed. This is a
-module-loading check, not browser, provider or native admission evidence.
-All fourteen changed draft hashes match before/after the focused command
-and their saved Git blobs; the checkpoint is verified clean. Logs, source
-snapshots, assertion inventories and checkpoint use
-`/tmp/artroom-k2-mcp-entries-*20261019*`. No final K2 gate or Source yet.
-
-## MCP deterministic signer builders
-
-Code checkpoint `55fc061f257c6b9736fcc33a79f7a38e2bded0a9`, tree
-`ef0767c4b55c5465d2ca4158f46c16b76e1d41c5`, adds `fixedSigner` and
-`scenarioSigner` to the same Node-safe fixture entry. Fifteen inline
-fixed-seed constructions and four identical hex-seed parses now call those
-builders. Every fill byte and scenario seed stays at its original call site;
-hex matching/parsing is unchanged. Random keys and raw arrays shared with
-other assertions stay local. No setup ownership or cleanup moves.
-
-All 384 outer expectation expressions in the nine changed case files are
-exact. Both owning compilers pass. Original grouped process99684 reports
-75 passes and two actual HTTP replacement assertions failed, in eleven
-files. One expected four streams with incumbent B but observed three and
-no incumbent B; the following case failed waiting for a held stream.
-The unchanged whole HTTP file alone then passes all nine cases in original
-process69584. No cause is established and neither result is discarded;
-this is no general stability conclusion. No assertion or deadline changes.
-
-The remaining steps, not reached after that failure, complete in original
-process99615: both native recipe consumers pass five cases, 5.82 seconds
-wall/7.08 CPU. Standalone bundling and Node import outside Vitest pass with
-all four exported builders. The copied seed17 and repeated hex11 identities
-agree. A standalone local fixture host returns HTTP200 and its expected
-title in normal and declared modes, then closes both peers. This checks
-Node loading and the existing host lifetime, not rendered browser behavior.
-No package is installed. Source hashes stay exact through all runs and
-match the clean checkpoint's Git blobs. The first grouped Node command
-took11.07seconds wall/36.39CPU; separate timings are retained in the logs.
-
-Evidence uses `/tmp/artroom-k2-mcp-signers-*20261019*`. The first redundant
-assertion-inventory invocation stopped at its output-exists guard; its
-existing results were not overwritten. A fresh v2 output after import
-placement cleanup reconfirms all384exact expressions. No whole suite or
-final gate has been repeated. K2 entry consolidation and final review
-remain ahead.
-
-## Scope fixture entries
-
-Node entry checkpoint `f48547d7aee58737672a98044ad092cbe33f73e1`, tree
-`841b0b08850871b1431924d6115b7100dde61008`, exposes the four common
-input builders and five pure packet builders through test/fixtures.ts.
-The private fixtures-core.ts is byte-exact to the prior portable builder
-module. Private packet and native resolver adapters import that core,
-preventing an eager re-export initialization cycle. Distinct packet
-scenarios and defaults remain separate. Three Scope cases, three Node MCP
-cases and the scripted browser host now import the supported pure entry.
-All232outerexpectation expressions remain exact.
-
-Original process81341 naturally exits zero: both owning compilers pass,
-three MCP files pass17cases (1.58seconds wall/2.98CPU), three native Scope
-files pass3cases (6.85/8.27). Standalone bundle/import of the Scope entry
-and a standalone local MCP host both pass outside Vitest. Normal and
-declared fixture modes return200/expectedtitle and close their peers.
-No rendered-browser, provider or native admission conclusion follows.
-
-Worker entry checkpoint `6d452d9abf0162d90b89e15df1c6886dd7116a1d`, tree
-`996c74268e707fa238a35b0124f5d2570c5b3269`, adds a nine-line
-fixtures-native.ts. It re-exports the same private support, lifetime,
-resolver, HTTP peer and session builders, plus the portable entry. All98
-changed Scope case files only change/coalesce their imports;2961outer
-expectation expressions remain exact. Private implementation, clocks,
-owners, hooks, cohorts, case-specific limits and cleanup are unchanged.
-Node MCP and script consumers keep using fixtures.ts and do not load the
-Worker entry or Vitest runtime.
-
-Original process7601 naturally exits zero: owning Scope compiler passes,
-main Scope project runs97changedfiles and343cases, all pass. It takes
-58.62seconds wall/63.36CPU. The original labelled scripted SQLite retention
-faults remain in its log. Its98thselectedfile is intentionally excluded by
-that project and belongs to scope-denial. Original process24771 naturally
-exits zero in that owning project: one file, one case passes. The first
-selector attempt used the nonexistent project name denial and ran no test;
-its failed log remains. The root configuration supplied the corrected
-scope-denial name. No test or config change was needed.
-Source hashes stay exact through both phases and match their clean Git
-checkpoints. Evidence uses `/tmp/artroom-k2-scope-node-entry-*20261019*`
-and `/tmp/artroom-k2-scope-native-entry-*20261019*`. Final gate and Source
-remain ahead.
-
-## Pre-Main-integration scope and counts
-
-The following table compares saved checkpoint `7aec0e789` with the original
-survey at `dba3e762`. It includes every `.ts` file under each package's
-`test/` directory, both cases and support. Current integrated-base counts
-are recorded below. These are inventories, not claims that every domain
-scenario is duplicated.
-
-| Package | Original survey | Saved 7aec0e789 | Change |
-| --- | ---: | ---: | ---: |
-| Derive | 10,312 | 10,309 | -3 |
-| Platform | 5,851 | 5,848 | -3 |
-| Scope | 21,402 | 21,411 | +9 |
-| MCP | 7,829 | 7,852 | +23 |
-
-The first peer extraction adds five lines overall; the portable shared
-MCP module now adds 21 in total, including explicit runtime ports and
-boundary comments. The Scope application builders add 29; the Platform
-helpers remove 10; the Derive helper adds four. The combined
-increase at `7aec0e789` is 26 after the four packages' fixture-entry work. The Scope Node
-entry adds four lines and the Worker entry removes27 by coalescing imports;
-MCP signer sharing adds eight. No overall line reduction is claimed.
-Full per-file baseline counts/hashes are in
-`/tmp/artroom-k2-before-lines-20261019.json`; the selected assertion
-inventories and tool are `/tmp/artroom-k2-expect-*20261019*`.
-
-Planner decision `134333f22cd6e60b5f689add41e6f75068f1b611`, adopted by
-`efba35a7075db6e440ddc2bcbfff2d07944989c0`, confirms one supported fixture
-entry per package, with private domain modules. Two named entries are
-allowed where needed: Node-safe builders and Worker-only lifetime helpers.
-The final note must name which tests use each and why. Distinct scenario
-data stays distinct; a builder used by one file only need not move.
-
-The remaining work finishes those entries and removes the remaining
-hand-built binding/peer copies named by the request. Scope's pure packet
-helpers are imported by Node MCP tests; native lifetime code imports Worker
-APIs and ownership hooks. Node script consumers must also avoid eager
-Vitest imports. Shared builders need a private core where re-exporting
-scenario modules would otherwise create initialization cycles. Derive's
-existing testing entry is also a public SDK input, so distinct private
-scenario data must not be pulled into that package accidentally.
-
-The read-only inventory and concrete Node consumers are recorded in
-`/tmp/artroom-k2-fixture-survey-20261019.json` and
-`/tmp/artroom-k2-fixture-runtime-boundary-20261019.json`. The decision
-changes no assertion, case, limit or deadline requirement. Final K2 gate
-and complete Source still remain ahead, behind G5a, S2a and G5.
-
-The original Main baseline's passing Vitest count was 1,926 with three existing skips. The
-request's survey cites the unlanded G5a head's 1,939; its extra cases are
-not silently imported or claimed here. The final gate must retain the
-actual integrated base's case count and all existing assertions/limits.
-
-
-## Derive internal fixture entry
-
-`packages/derive/test/fixtures-entry.ts` is the supported internal case
-entry. It re-exports the existing public core and explicitly names the
-private domain builders. The public `fixtures.ts` and all 13 private
-modules remain byte-exact to this phase's baseline `d97bb5ea3`; the SDK's
-existing `./testing` export is unchanged. Private modules keep importing
-the core directly, so the new entry creates no re-export initialization
-cycle. Distinct forms and held-work data are named `formsWorks`,
-`holdsWorks` and their definition aliases; the held-work class and owner
-are `HoldsWorks` and `HOLDS_OWNER`. Tests retain their original local names.
-
-All 40 affected cases now use one entry, replacing 63 fixture import
-statements. The parser verifies every local binding still resolves to the
-same original module and exported name, with its original type-only flag.
-Removing the old/new fixture imports leaves byte-exact case source. Thus
-case bodies, assertions, comments, clocks and deadlines remain unchanged.
-Fourteen original fixture files, including the public core, hash exactly.
-The new entry adds 16 lines and import coalescing removes 23, for seven
-fewer lines in this phase; Derive now has 10,309 test TypeScript lines,
-three fewer than the original 10,312-line inventory. This is no overall
-line-reduction claim for K2.
-
-Original process 62620 naturally exits zero. The owning Derive source/test
-compilers pass and all 40 changed files/406 existing cases pass. Cost is
-2.2698 seconds outer elapsed and 13.9532 seconds child CPU on the shared
-warm macOS arm64 host. The parser/provenance record is
-`/tmp/artroom-k2-derive-canonical-entry-20261020.json`; original compiler,
-case and compatibility-guard logs and closure use
-`/tmp/artroom-k2-derive-canonical-focused-20261020-`. The TypeScript 7 package
-exports version metadata at its default root rather than the previous
-parser API; the transformation uses the checkout's already pinned
-Rolldown TypeScript parser, as the earlier K2 preservation tools do. No
-package was installed. Platform's internal entry and actual Main/G5
-integration remain ahead of the final gate and Source.
-
-
-## Platform internal fixture entry
-
-`packages/platform/test/fixtures-entry.ts` re-exports the small judgment
-core and the private domain builders used by cases. All nine original
-fixture/support modules remain byte-exact to this phase's saved Derive
-checkpoint `fc05a99a1`. Private modules continue importing their own core;
-the existing Platform `./testing` export is unchanged. The new entry is
-internal to this checkout's cases and is not a public SDK expansion.
-
-All 20 affected files use one entry, replacing 23 fixture imports. Actor
-bindings keep their original source: `membershipRita`, `creationRita` and
-`destinationRita`, with the corresponding other actors, explicitly
-re-export the original domain module's names. Each case aliases them back
-to its original locals. The rules-scope rules also retain their distinct
-name. The parser verifies every original module/name/type-only binding;
-all nonfixture-import source remains byte-exact. No case, assertion,
-clock, deadline, grant or domain data changes.
-
-Original process 61365 naturally exits zero. Platform's owning source/test
-compilers and all 20 affected files/179 existing cases pass. Cost is
-3.3492 seconds outer elapsed and 12.4888 seconds child CPU on the shared
-warm macOS arm64 host. Raw logs/closure use
-`/tmp/artroom-k2-platform-canonical-focused-20261020-`; the exact source and
-binding-preservation record is
-`/tmp/artroom-k2-platform-canonical-entry-20261020.json`.
-The new entry has ten lines and import coalescing removes three, adding
-seven in this phase. Platform now has 5,848 test TypeScript lines, three
-fewer than the original 5,851-line inventory. Across all four packages,
-K2 remains 26 lines larger before actual Main/G5 integration. Clarity of
-the supported entries, rather than an overall line reduction, is the result.
-
-The supported entries are now Derive/Platform `test/fixtures-entry.ts`,
-Scope `test/fixtures.ts` for portable Node consumers plus
-`test/fixtures-native.ts` for Worker lifetimes, and MCP `test/fixtures.ts`
-for Node consumers plus `test/fixtures-native.ts` for native consumers.
-Existing public testing entries and private domain modules retain their
-separate roles. Actual Main/S2a/G5 integration, accounting for their newer
-cases and import consumers, remains ahead of K2's final gate and complete
-Source. The earlier grouped MCP HTTP failure remains unclassified; its
-unchanged isolated file pass is a separate observation.
-
-
-## Actual S2a Main integration
-
-Merge `f856a6ee98513175f0feb986fbf7d7c2f1059d53`, tree
-`1e9d80752637fc577cb45e28a2445191927f3834`, integrates actual reviewed,
-audited and pushed Main `fb390d88` into K2. It includes G5a and S2a;
-no unlanded G5 code is imported. The original merge stops with four
-conflicts, and all 12 base/ours/theirs stage blobs are retained under
-`/tmp/artroom-k2-integrate-s2a-conflicts-20261020/` before resolution.
-The three case conflicts preserve Main's nonimport source byte-exact:
-versions, archive privacy and archive target. K2's supported-entry imports
-remain, along with Main's exact repository actor import. The application
-fixture keeps K2's identical fixed signer/trust builders and Main's new
-`requireArchive` parameter and host requirement. Main's new version bodies,
-cohorts, case matrices, assertions and deadlines remain.
-
-New Main consumers now use the internal entries: Derive's Device-command
-case, Platform's archive-binding case and four native archive/Device
-installation cases. The entry additions name the existing private builders;
-case imports are coalesced. Fresh content/Worker environments use the
-existing exact bindings builders and the Device packet keeps its public
-TEST seed 81 through the private signer core. All 165 outer expectation
-chains in the ten affected files remain exact. The parser report is
-`/tmp/artroom-k2-main-entry-followup-20261020.json`; the three conflict-case
-body comparisons are in
-`/tmp/artroom-k2-integrated-conflict-case-preservation-20261020.json`.
-
-Original process 95191 naturally exits zero. Derive, Platform, Scope and
-MCP owning compiler groups all pass. The portable Scope entry loads in
-plain Node without Worker/Vitest runtime. Its loader's existing DEP0205
-warning remains in the log. Three selected Node files/nine cases pass;
-eight selected native files/25 cases pass, including both archive-target
-cohorts, all Device installation variants, archive contexts/privacy,
-installation custody and the maintained Grow installation. This checks
-both resolved conflicts and the new entry consumers. Cost is 22.0705
-seconds outer elapsed and 34.0911 seconds child CPU on the shared warm
-macOS arm64 host. No install or repeated whole gate. Original phase logs
-and natural closure use
-`/tmp/artroom-k2-main-integration-focused-20261020-`.
-
-The current line inventory compares the same actual Main before/after,
-so G5a/S2a's new cases are counted on both sides:
-
-| Package | Actual Main fb390d88 | Integrated K2 | Change |
-| --- | ---: | ---: | ---: |
-| Derive | 10,632 | 10,629 | -3 |
-| Platform | 5,942 | 5,940 | -2 |
-| Scope | 21,942 | 21,933 | -9 |
-| MCP | 7,831 | 7,853 | +22 |
-
-The combined increase is eight lines after the named native-entry follow-up below. No overall line reduction is claimed.
-`/tmp/artroom-k2-integrated-line-counts-20261020.json` records the counts.
-At that S2a checkpoint, actual Main's passing Vitest count is 1,963 with three existing
-skips; the original 1,926 count above belongs to the earlier baseline.
-G5's 1,977-case passing code head remains unlanded and is not counted as
-current Main. Actual G5 Main integration still precedes K2's final gate
-and complete Source. The grouped HTTP failure remains unclassified.
-
-
-## Final runtime entry boundaries
-
-The exact static consumer inventory at `865e4d5f1` names every case, private
-adapter and Node script using each supported entry in
-`/tmp/artroom-k2-supported-entry-consumers-20261020.json`. It found one
-Scope file importing its native entry twice, and the Counter/lending native
-MCP stories separately importing their portable recipe helper. Those three
-files now coalesce their fixture imports, with all nonimport bytes exact.
-MCP's native entry explicitly re-exports only `activityRecipe` from the
-portable entry. That portable module imports Node HTTP and the stand-in
-only as types; its runtime dependency is the client. Node consumers do not
-load a Worker or test-framework entry. Native consumers can use one entry
-without an extra Node runtime port or eager ownership hook.
-
-The current case consumers and reasons are:
-
-| Entry | Case files | Why |
+Planner's adopted layout decision: `134333f2`, adopted by `efba35a7`.
+The decision allows private modules behind supported entries, separate
+Node and Worker entries where required, and builders used by one file to
+remain local. This is development work behind the Grow demo.
+
+The final code checkpoint is `de45e45a41a1118ec0d1125fbb3ce8fbb4197d0c`,
+tree `c149ed10a33f20a39aca9d5e6d25b277858e20e9`. It includes actual reviewed,
+audited and published Grow Main
+`7594822ca12d7d2ade130045f966110aaa434569`. The only change after its gate
+is this implementation note. The complete candidate has 217 changed paths
+against that Main: 189 case files, 27 fixture/compiler-support files and
+this note. No production runtime source or package lock changes.
+
+## Supported entries
+
+| Package and entry | Case files | Reason |
 | --- | ---: | --- |
-| Derive `fixtures-entry.ts` | 41 | Internal pure cases share core and distinct labelled domain data; public SDK core stays unchanged |
-| Platform `fixtures-entry.ts` | 21 | Pure platform cases share judgment/domain builders and keep each original actor binding |
-| Scope `fixtures.ts` | 3 | Declared-view Node MCP cases need portable packets without Worker/Vitest runtime; Node host and capture adapters also use it |
-| Scope `fixtures-native.ts` | 102 | Native Scope cases need Worker ports and explicit lifetime ownership |
-| MCP `fixtures.ts` | 10 | Node cases need portable signers, recipe parsing and caller-owned loopback transport; private adapters also use it |
-| MCP `fixtures-native.ts` | 11 | Native stories need actual Room ownership/hooks plus their portable recipe parser |
+| Derive `test/fixtures-entry.ts` | 41 | Pure cases share core helpers and explicitly named domain data; the public SDK core stays separate |
+| Platform `test/fixtures-entry.ts` | 21 | Pure cases share judgment/domain builders and keep their original actor bindings |
+| Scope `test/fixtures.ts` | 3 | Node MCP consumers need portable packets without Worker or Vitest runtime |
+| Scope `test/fixtures-native.ts` | 103 | Native Scope cases need Worker ports and explicit lifetime ownership |
+| MCP `test/fixtures.ts` | 10 | Node cases need portable signers, recipe parsing and caller-owned loopback transport |
+| MCP `test/fixtures-native.ts` | 11 | Native stories need Room ownership/hooks and their portable recipe parser |
 
-Some native stories also import production/test Worker ports as the thing
-being exercised. Those are distinct from copying a fixture builder. The
-complete path/symbol inventory is recorded after this follow-up in
-`/tmp/artroom-k2-supported-entry-consumers-v2-20261020.json`; these counts
-are static consumer files, not runtime test cases.
+These are static consumer-file counts, not runtime case counts. Private
+Node host and capture adapters also use the portable entries. The complete
+current symbol/path inventory is
+`/tmp/artroom-k2-final-entry-consumers-20261020.json`.
 
-Original 99569 passes Scope/MCP compilers and all three selected native
-files/eight cases, naturally zero in 9.4594 seconds wall/17.5377 CPU, then
-prints `EnvironmentTeardownError: Closing rpc while "resolve" was pending`.
-Its first version re-exported all portable helpers. Choosing the explicit
-named recipe export keeps the native API narrow; it is not claimed as a
-fix for that diagnostic. Original 44218 passes the owning MCP compiler and
-the same eight affected cases, naturally zero in 8.3613 seconds wall/12.9778
-CPU, and retains the same teardown diagnostic. No attribution, clean-output,
-physical-draining or general stability claim is made. Both original logs
-remain; neither diagnostic is relabelled an infrastructure result. Shared
-warm macOS arm64 host, no installs, unchanged assertions/deadlines. Raw
-records use `/tmp/artroom-k2-single-entry-` and
-`/tmp/artroom-k2-named-native-entry-owning-20261020-`.
-The change saves one net MCP line and one Scope line. The actual Main
-comparison above is now net plus eight. Final integrated G5 Main, the one
-K2 gate and independent review remain required.
+Private modules import their core directly, preventing re-export cycles.
+The Node entries do not import Worker or Vitest runtime. MCP's native
+entry re-exports only the portable `activityRecipe` helper. The Node-test
+compiler excludes that Worker entry alongside its existing Worker adapters;
+the native compiler checks it. No ambient allowance or production compiler
+option is widened.
 
+Derive shares four copies of clone-and-change through `changedDraft`, using
+native `structuredClone` and preserving profiles, bounds, no-op callbacks
+and ignored return values. Platform shares four `written` judgments and
+three identical checked-definition acceptors. Creation's distinct validation
+profile and error wording remain separate. Actor aliases preserve the
+original source module, including `membershipRita`, `creationRita` and
+`destinationRita`. Distinct Derive forms/held-work data likewise retain
+explicit aliases and their original local names in cases.
 
-## Published Grow Main integration and final consumer
+Scope shares fresh content/Worker bindings, explicit trust serialization
+and deterministic TEST signers. Callers retain namespace/bucket references,
+trust strings, invalid inputs, initialization times and extra fields.
+Seeds 5, 61, 62, 63, 64, 67, 81 and 254 remain explicit and unchanged.
+Packet variants, HTTP peer behavior and native lifetime adapters remain
+distinct private implementations.
 
-Actual reviewed and independently audited Grow code Main
-`7594822ca12d7d2ade130045f966110aaa434569` is published. Its code landing
-and publication are separate from Planner's still-open hosted acceptance
-milestone `cc069da1` / `2fcf3c3a`; this K2 work performs no CF operation.
-Clean merge `055a54d900d4d7b0a17000c17f6d59d523b03b2d` incorporates that
-actual Main without conflicts or shared Main mutation. The capture still
-reads the exact committed signed demo packet; K2 retains its identical
-fresh TEST signer for the other maintained packages. No frozen original
-Grow checkout, dependency or tool is executed or edited.
+MCP shares its HTTP/wire loopback transport, Counter/lending room claim and
+recipe parser, fifteen fixed-seed constructions and four scenario-seed
+parses. Each caller retains its own server, peer, hooks, close order,
+configuration holds, cohort, activation, role actions and clock advances.
+The transport returns the server before awaiting readiness, preserving the
+caller's retained server during setup. Node HTTP/stdio over a SCRIPTED scope
+service proves that transport boundary; it is not native scope evidence.
+Native stories retain their real Room ownership and labelled peer boundaries.
 
-The new Grow native file now uses the supported Worker entry and the
-existing exact fresh bindings factory. Five fixture imports become one;
-all 94 parsed expect-call source nodes remain exact, as do both cases,
-their deadlines, owner/principal checks and public allowances. The type-only
-maintained-context import stays in place. Its preservation record is
-`/tmp/artroom-k2-g5-entry-preservation-20261020.json`.
-Original 40416 naturally exits zero: Scope source/test/Node-support and
-Grow compilers pass, both native demo cases pass, and the portable entry
-still loads in Node without Worker runtime. Cost is 16.1719 seconds outer
-elapsed and 22.3322 seconds child CPU on the shared warm macOS arm64 host.
-Native duration is 11.09 seconds tests / 13.91 seconds total. Original logs
-and closure use `/tmp/artroom-k2-g5-integration-focused-20261020-`.
+## Preservation and actual Main integration
 
-The final before/after line inventory uses that same actual Main:
+The final source-only parser comparison against published Main covers all
+420 tracked `.test.ts` paths. The path set is exact. For the 189 changed
+case files, registration names, callback parameters, inline case matrices
+and deadlines are exact. All outer `expect` chains are exact after two
+explicit setup mappings:
 
-| Package | Main 7594822c | Integrated K2 | Change |
+- Counter and lending each move the same two setup assertions unchanged
+  into `claimApplicationRoom`, called once by each original room builder.
+  Every remaining expectation stays exact.
+- Three install-custody expressions replace an inline Worker environment
+  argument with the identical fresh bindings builder. Requests, expected
+  statuses and matchers stay exact; this is not raw source identity for
+  those three expressions.
+
+The complete map is
+`/tmp/artroom-k2-prepared-case-preservation-20261020.json`, produced by its
+adjacent `.mjs` source-only tool using the already pinned Rolldown parser.
+It is not a runtime count, complete assertion-helper equivalence, load
+stability or hosted-acceptance proof. No case, assertion result, case-specific
+limit, deadline, grant, owner or scenario boundary is weakened.
+
+S2a Main `fb390d88` was integrated at `f856a6ee9`. The initial merge's
+four conflicts have all twelve stage blobs retained in
+`/tmp/artroom-k2-integrate-s2a-conflicts-20261020/`. Three case conflicts
+preserve Main's nonimport source byte-exact: Platform versions, archive
+privacy and archive target. The application fixture keeps Main's new
+`requireArchive` parameter and host requirement, plus K2's identical signer
+and trust builders. Main's newer Device/archive consumers then adopt the
+same entries. All 165 outer expectations in that follow-up remain exact.
+
+Published Grow Main was integrated cleanly at `055a54d9`, without a shared
+Main mutation. The final Grow file coalesces five fixture imports and uses
+the exact fresh bindings builder. Its 94 parsed expect-call nodes and both
+cases retain their original source. Capture still reads the exact committed
+signed demo packet. No frozen review original, dependency or tool was
+executed or edited during either integration.
+
+## Line counts
+
+Both sides count the same test TypeScript paths from published Grow Main,
+including its newer S2a/G5 cases. This avoids comparing different feature
+sets or the request's older, then-unlanded 1,939-case reference.
+
+| Package | Main 7594822c | K2 | Change |
 | --- | ---: | ---: | ---: |
 | Derive | 10,632 | 10,629 | -3 |
 | Platform | 5,942 | 5,940 | -2 |
-| Scope | 22,162 | 22,149 | -13 |
+| Scope | 22,162 | 22,151 | -11 |
 | MCP | 7,831 | 7,853 | +22 |
 
-Net change is plus four lines. The result is one supported entry per
-runtime boundary and fewer copied builders; no overall line reduction is
-claimed. `/tmp/artroom-k2-g5-line-counts-20261020.json` records the counts.
-The new Grow case file makes 103 Scope native case consumers; the earlier
-v2 consumer inventory's 102 count belongs to its pre-Grow checkpoint.
-All existing Main cases remain: the current Main reference is 1,977
-passing Vitest cases and three existing skips, Node31 and Counter55.
-The final K2 gate must establish its own result at its saved head. The
-older grouped HTTP failure and the selected native resolve-pending teardown
-diagnostic remain separate, unresolved observations; no stability or
-physical-draining result is inferred from these focused passes.
+The net change is plus six lines. The result is clearer supported entries
+and fewer copied builders; no overall line reduction is claimed. Exact
+counts are in `/tmp/artroom-k2-prepared-line-counts-20261020.json`. The original
+baseline was Main `dba3e762`, whose actual gate had 1,926 passing Vitest cases
+and three skips. Later Main additions explain the current count.
+
+## Native lending preparation after the first gate
+
+The first ordinary gate at `f1d18820` naturally exits one: 1,976 Vitest
+passes, one failed native lending case and three existing skips. Whitespace
+and all type checks pass; later Node and Counter phases are not reached.
+The second `g.look()` expects current but receives behind/no-query-reply.
+Its original exception is hidden by the transport; the 621ms case duration
+is not evidence of a ten-second query deadline. Cost is 521.9888 seconds
+elapsed / 752.5481 child CPU. All 2,349 tracked source rows stay exact;
+5,530 private dependency rows differ only in allowed Vitest results output.
+Lock/stamp stay exact, the checkout is clean and no package is installed.
+Original gate logs/closure/inventories use
+`/tmp/artroom-k2-final-gate-20261020`; full phases are retained from
+`/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.uMvZ6Xz6br`.
+
+A focused run `59291` with bounded exception logging passes the unchanged
+case and recovers no exception. A controlled native interleave `48436`
+then dispatches only real pending L/G replies between item reads and
+history, without scripting replies or adding an act. Both item queries
+read head20; an existing publication reply advances it to21; history reads21.
+The projector refuses `application-projection-stale`, and the original
+unchanged current-status assertion fails with the same behind/no-query-reply
+message. This establishes an actual fixture preparation defect. It does
+not recover or conclusively identify the original gate's hidden exception.
+
+The saved repair `de45e45a` adds one existing `settle(L, G)` call and its
+comment before the first historical multi-read projection. It finishes
+earlier publication replies before the fixture expects a static view.
+No assertion, case, deadline, native runtime or projection refusal changes.
+The same prepared interleave `28068` passes the whole case naturally zero;
+its passing log does not expose console head markers. Separate explicit
+head capture `49714` therefore intentionally stops after the second read:
+queries, before/after dispatch and history all read the identical head21,
+and readStatus is current. That natural-one diagnostic stop is not a
+passing case or gate. Every diagnostic edit is restored byte-exact.
+Raw helpers/logs/closures use `/tmp/artroom-k2-lending-*20261020*`.
+The negative control requires its recorded pre-repair inputs; the prepared
+controls require their recorded repaired inputs. Independent execution must
+copy the matching historical bytes and retarget all original paths.
+
+The final source-only comparison above includes this preparation and
+reconfirms all 420 test paths, 189 changed case files, original registration
+metadata and explicitly mapped expectations. The setup change warrants a
+new ordinary gate; no unchanged whole suite was repeated. No general load
+stability or physical-draining conclusion follows from these controls.
+
+## Verification and retained limits
+
+The changed-preparation ordinary gate `32605` naturally exits zero at
+`de45e45a` / tree `c149ed10`: 413 Vitest files pass, one file is skipped;
+1,977 cases pass and three existing cases are skipped. The later Node phase
+passes 31 cases and Counter passes 55. All compilers and whitespace pass.
+This matches the actual published Main case counts without adding cases.
+Gate cost is 510.5506 seconds elapsed / 741.3214 child CPU; outer elapsed
+including inventories is 511.9225 seconds. Shared warm macOS27.0.1 arm64,
+Node26.12.0/npm11.20.0, load averages 1.948/1.900/1.950; no exclusive-host
+claim. No package is installed.
+
+All 2,349 tracked source rows stay exact before/after. All 5,530 private
+dependency rows stay exact except one Vitest results-cache file. The lock
+and private dependency stamp stay exact; the checkout stays clean.
+The raw test log retains the deliberately scripted reset/retention faults
+and Git binary-body warnings. The two earlier resolve-pending diagnostics
+remain separate observations; this successful gate makes no general
+stability or physical-draining claim.
+
+Original gate helper, log, natural closure and inventories use
+`/tmp/artroom-k2-prepared-gate-20261020`. Complete phase output is under
+`/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.BhmBrkrQQu`;
+Counter's evidence is under
+`/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/artroom-counting-node-uDPFMC`.
+Every named leaf is retained in the finite review map. No whole suite is
+repeated after the final note-only edit.
+
+Focused checks ran while each fixture boundary changed. The final
+integration check `95191` passes all four owning compiler groups, portable
+Node entry loading, three selected Node files/nine cases and eight native
+files/25 cases. It covers resolved conflicts, all Device installation
+variants, archive contexts/targets/privacy, custody and maintained Grow.
+Final Grow check `40416` passes Scope/Grow compilers, portable Node entry
+loading and both native demo cases: 16.1719 seconds outer elapsed and
+22.3322 child CPU. Earlier owning checks include Derive's 40 files/406 cases,
+Platform's 20 files/179 cases, Scope's 97 files/343 cases plus its separately
+owned denial case, and MCP's eleven native files/30 cases. These are
+separate focused observations, not an aggregated gate or stability claim.
+
+Original failures and diagnostics remain available:
+
+- Grouped MCP signer check `99684` passes 75 cases and fails two HTTP
+  replacement assertions. One expects four streams with incumbent B but
+  observes three and no B; the next cannot open its initial held streams.
+  The unchanged entire HTTP file alone passes all nine cases in `69584`.
+  The cause remains unclassified. Neither result is discarded.
+- Selected native checks `99569` and `44218` each pass three files/eight
+  cases and naturally exit zero, but print a late
+  `EnvironmentTeardownError: Closing rpc while "resolve" was pending`.
+  Narrowing the export is not claimed to fix it. No clean-output,
+  physical-draining or general stability conclusion is drawn.
+- An early type-only native Room import pulled Worker source into the
+  Node compiler; narrow structural test ports corrected that dependency.
+  A strip-only Node portability probe failed on an existing parameter
+  property; bundling with installed esbuild then loaded the same module.
+  TypeScript 7's default package root lacked the previous parser API, so
+  source tools use the already pinned Rolldown parser.
+- Early metadata files incorrectly named a previous Git head after a
+  stopped commit. They remain marked as failed observations; corrected v2
+  records require a clean checkpoint and exact committed bytes. Platform's
+  final-newline correction is explicitly separated from its passing draft.
+  A wrong `denial` selector ran no test before the owning `scope-denial`
+  selector passed. Output-exists guards retain earlier evidence unchanged.
+
+Raw focused logs, compiler output, source inventories, failed/corrected
+metadata, assertion maps and natural process closures use the finite
+`/tmp/artroom-k2-*` leaves named in the review evidence map. The gated
+code's older implementation note is retained as an exact historical Git
+snapshot, including its full preparation history. No original result was
+removed or relabelled as infrastructure.
+
+This work performs no provider operation, package installation, publication
+of an SDK or Cloudflare deployment. Planner's actual hosted Grow acceptance
+remains open under `cc069da1` / `2fcf3c3a`; local code landing and this fixture
+work do not settle it. Complete K2 review, native landing and publication
+remain separate actions after this note.
