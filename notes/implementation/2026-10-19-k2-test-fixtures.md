@@ -199,8 +199,12 @@ Original gate helper, log, natural closure and inventories use
 `/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.BhmBrkrQQu`;
 Counter's evidence is under
 `/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/artroom-counting-node-uDPFMC`.
-Every named leaf is retained in the finite review map. No whole suite is
-repeated after the final note-only edit.
+Every named leaf is retained in the finite review map. The first sealer
+stopped at a stale 28-link assertion copied from an older view. K2 actually
+has 31 contained dependency links, all exact to the passing gate inventory;
+the corrected v2 sealer checks their paths and target hashes against that
+inventory. The failed tool observation and original script remain retained.
+No whole suite is repeated for this packaging correction or final note edits.
 
 Focused checks ran while each fixture boundary changed. The final
 integration check `95191` passes all four owning compiler groups, portable
