@@ -129,7 +129,7 @@ Every block has these members:
 | `title` | Optional text, 1 to 80 bytes. |
 | `projection` | The name of a projection of the installation's package. |
 | `source` | The name of a source in that projection. |
-| `item` | Required when the source reads one chosen item (`read: "item"`): that item's id. Refused for other sources. |
+| `items` | An object with one member for each source of the projection that reads one chosen item (`read: "item"`), and for no other source. Each member gives the source name and the item's id. Required when the projection has such a source, and refused when it has none (section 8.1). |
 | `filter` | Optional. A list of 1 to 8 conditions (section 8). |
 
 Each kind adds its own members (section 5). A block names projections,
@@ -161,14 +161,16 @@ for each source shape (section 10).
 | Member | Value |
 | --- | --- |
 | `x` | A `time` field (a `fact-time` selection is one), or the `time` of a journal row. |
-| `y` | An `int` field, or an aggregate `{ "op": ..., "field": ... }` when `bucket` is present. |
+| `y` | An `int` field without `bucket`. An aggregate `{ "op": ..., "field": ... }` with `bucket`. |
 | `bucket` | Optional. `hour`, `day`, `week` or `month`, in UTC. Weeks start on Monday. |
 | `color` | Optional. An `enum` field, or `"item"` for one series for each item. At most 4 series. |
-| `band` | Optional. `{ "source": ..., "item": ..., "low": ..., "high": ... }`: two `int` fields of a source of the same projection that reads one item. `item` is required when that source reads a chosen item. |
+| `band` | Optional. `{ "source": ..., "low": ..., "high": ... }`: two `int` fields of a source of the same projection that reads one item. When that source reads a chosen item, the block's `items` gives it. |
 | `events` | Optional. `{ "source": ..., "label": ... }`: a journal source of the same projection. Each row draws a marker at its time. |
 
-Without `bucket`, each row is one point. With `bucket`, each bucket is one
-point. The frame labels the latest value at the end of each line, instead
+Without `bucket`, each row is one point. With `bucket`, `y` is an
+aggregate, and each bucket of each series is one point (section 8.3). A
+raw `int` `y` with `bucket` refuses the block with `aggregate`. An
+aggregate without `bucket` refuses it with `bucket`. The frame labels the latest value at the end of each line, instead
 of a legend.
 
 ### 5.2 `bar`
@@ -361,8 +363,32 @@ the declaration with `scope`. For Grow, the Site is the installation's
 application scope, and the Site created Room A, so Room A belongs to the
 installation.
 
-A source that reads one chosen item takes the block's `item` as its item
-selection. A missing or unknown item refuses the read with `item`.
+A block selects items with one map, `items`. The current read path needs
+one item id for each source of the projection that reads one chosen item,
+and it reads every source of the projection
+(`packages/bytes/src/application-projection-read.ts:28-35`). So `items`
+names each such source once, including a source that the block does not
+draw, and it names no other source. The session gives the map to that
+read path as it is. It adds no item and leaves out no source.
+
+The block draws from its `source`, and from its `band` and `events`
+sources when it has them. A `band` source takes its item from the same
+map. So a block has one selection for each source, and two selections in
+one block cannot conflict. Two blocks over one projection can select
+different items. Each block reads on its own.
+
+For example, a projection has a `many` source `bench` and a chosen-item
+source `zone`. A plan over `bench` declares `"items": { "zone": 3 }`.
+
+These refuse the block with `item`:
+
+- no member for a chosen-item source. `allowed` lists the missing source
+  names;
+- a member for any other source. `allowed` lists the chosen-item source
+  names;
+- an id that is not an integer, or that names no open item of the
+  source's type in the scope at the read head. `allowed` lists the open
+  items from the catalogue (section 10.1).
 
 The view session reads the named projection through the current read
 path, at one head for all sources of the block. The current bounds apply
@@ -442,6 +468,15 @@ Edge rules:
   block summary names it as having no values.
 - A bucket starts at its first instant and ends before the next bucket
   starts, in UTC.
+- With a `bucket`, a `line` groups its rows by bucket and by series. The
+  series is the `color` field's value, or the item for `"item"`, or one
+  series when the block has no `color`. Each group gives one point: its x
+  is the bucket's start, and its y is the aggregate of the group's rows.
+  For example, two rows of one series on one day, with values 10 and 20,
+  give one point at that day's start: 15 for `mean`, 30 for `sum`.
+- A `bar` groups its rows by `x`: the value, or the bucket for a time
+  field. Each group gives one bar, and its value is the aggregate of the
+  group's rows.
 - Line points sort by x. Equal x values sort by item id, then by journal
   position. Series sort by the declared order of the colour field's values,
   or by item id for `"item"`. More than 4 series refuses the block with
@@ -507,6 +542,10 @@ needs to write a declaration:
   row limit;
 - each field, with its type, bounds, enum values in declared order,
   nullability, and the label, scale and unit that the presentation gives;
+- for each source that reads one chosen item: the item type, and the open
+  items of that type in each listed scope, by id and label. The list has
+  at most 64 items for each source, with a count of the rest. A model
+  takes `items` from it;
 - the position pairs and location fields, and the outlines;
 - the default kind for each source (below);
 - the acts that the viewer holds, with their labels and parameters. The
@@ -593,8 +632,9 @@ The next Rules version adds a `view` item type with three acts:
 A name is unique among the open views of one installation. A Rules scope
 holds at most 256 open views.
 
-The declaration holds its `scope` and any `item` values, so a kept view
-reads the same scope and items each time it opens.
+The declaration holds its `scope` and its `items` map, so a kept view
+reads the same scope and items each time it opens. When a selected item
+has closed, `view_open` shows the `item` error.
 
 The native act stores the declaration as text. It does not check the
 declaration. `view_open` checks it each time it mounts the view, against the
@@ -674,6 +714,15 @@ Each question runs three times. The check reports:
 
 Targets: 85% on the first pass, 95% after repair, and at most 10% wrong
 charts in the reviewed sample.
+
+Two declaration cases also pass before the check runs:
+
+- A plan over a `many` source of a projection that also has a chosen-item
+  source passes when `items` names that source. It refuses with `item` when
+  `items` leaves that source out, and when it names any other source.
+- A bucketed `line` with a raw `int` `y` refuses with `aggregate`. Two rows
+  of one series on one day, with values 10 and 20 and `mean`, draw one
+  point of 15 at that day's start.
 
 The Grow plan is a separate pass condition. A composed plan over the
 `bench` source draws 100 benches in a 10 by 10 layout, coloured by
