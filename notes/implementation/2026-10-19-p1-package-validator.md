@@ -893,3 +893,12 @@ input is preserved separately. The preceding pipeline's start load is
 called one passing pipeline. Exact later logs and closure are
 `/tmp/p1-b1-native-v2-20261020*`. No unchanged compiler or Node suite is
 repeated. P1's first ordinary gate and full Source review remain due.
+
+Actual Main `9c6d344c` is then incorporated through a separate no-commit
+merge after the combined checks. It closes naturally zero in
+0.024168000 seconds. All 2,611 tracked source bytes/modes and the exact
+index tree remain unchanged at `021dd9764b02de071ce5a7e881f8fa3cf59d49ca`;
+this imports the native landing ancestry of code already present, with
+no regenerated, runtime or test change. Original command, pre-execution
+inventory and closure are `/tmp/p1-b1-actual-main-integration-20261020*`.
+This report update records that boundary before P1's first ordinary gate.
