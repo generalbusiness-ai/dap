@@ -11,6 +11,9 @@ import { applicationInstallRulesScope, applicationInstallRules } from "./applica
 import { INSTALL_DEFINITION_BYTES, INSTALL_DEFINITIONS, readInstallAdditions } from "./application-install-wire.ts";
 import { applicationValues } from "./application.ts";
 export { DECLARED_APPLICATION_RULES } from "./application-install-v2-wire.ts";
+import { pinnedBy } from "./versions.ts";
+import { archiveInstallPin } from "./archive-binding-wire.ts";
+const archiveInstall = (given: RuleGiven): boolean => archiveInstallPin(pinnedBy(given));
 
 export const APPLICATION_SEMANTIC_VALUE2 = { domain: "dap-application-semantics-2", max: PROPOSED_BOUNDS.definitionBytes } as const;
 export const APPLICATION_RELEASE_VALUE2 = { domain: "dap-application-release-2", max: 4096 } as const;
@@ -29,7 +32,7 @@ function proof(given: RuleGiven): ApplicationReleaseProof2 | null {
   const release = given.value(APPLICATION_RELEASE_VALUE2.domain, fields["release"], APPLICATION_RELEASE_VALUE2.max);
   if (semantic === undefined || release === undefined) return null;
   const checked = readApplicationReleaseProof2(semantic, release, fields["release"], { bytes: APPLICATION_SEMANTIC_VALUE2.max + APPLICATION_RELEASE_VALUE2.max });
-  if (checked.ids.semantic !== fields["semantic"] || checked.semantic.capabilities.length || checked.semantic.host.profiles.some(profile => profile !== "restricted@1")) throw Error("unsupported install proof");
+  if (checked.ids.semantic !== fields["semantic"] || checked.semantic.capabilities.length || (!archiveInstall(given) && checked.semantic.host.requires !== undefined) || checked.semantic.host.profiles.some(profile => profile !== "restricted@1")) throw Error("unsupported install proof");
   for (let index = 0; index < checked.semantic.definitions.length; index++) {
     const part = checked.semantic.definitions[index]!;
     if (utf8(part.bytes).length > INSTALL_DEFINITION_BYTES || fields[`definitionText${index}`] !== textDigest(part.bytes)) throw Error("exact native declaration text required");
@@ -72,7 +75,7 @@ export const applicationInstallRules2: Rules = {
     return [
       { effect: "value", item: given.resolved.self, slot: "declarations", value: checked.semantic.definitions.map(part => ({ digest: part.id, text: textDigest(part.bytes), name: (parseStrict(part.bytes) as DeclaredDefinition).name })) },
       { effect: "value", item: given.resolved.self, slot: "additions", value: additions },
-      { effect: "value", item: given.resolved.self, slot: "needsDestination", value: genesis.needsDestination },
+      { effect: "value", item: given.resolved.self, slot: archiveInstall(given) ? "requirements" : "needsDestination", value: archiveInstall(given) ? { destination: genesis.needsDestination, archive: checked.semantic.host.requires?.includes("archive") === true } : genesis.needsDestination },
       { effect: "value", item: given.resolved.self, slot: "genesis", value: canonicalize(genesis.fields) },
       { effect: "value", item: given.resolved.self, slot: "definition", value: checked.semantic.entry },
       { effect: "value", item: given.resolved.self, slot: "presentation", value: checked.ids.presentation },

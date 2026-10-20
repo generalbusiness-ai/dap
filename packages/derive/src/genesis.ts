@@ -168,7 +168,7 @@ function genesisJudged(view: StateView, definition: ValidDefinition, asked: Sign
   // The source proved the whole message above. Reserved metadata is separate
   // from domain fields; an invalid opt-in is a terminal refusal, with no
   // declared child sends. An absent marker preserves the legacy judgment.
-  if (child && creationContextOf(child.message.body).kind === "invalid") return refuse({ code: "bad-field" });
+  if (child && creationContextOf(child.message.body, definition.digest).kind === "invalid") return refuse({ code: "bad-field" });
 
   // The genesis act, with the opener's parties from the creation message, or with the creation intent's fields. It has no signer:
   // nobody signs for a scope that does not exist yet, and the creation rule is the authority note's.

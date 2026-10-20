@@ -1,6 +1,6 @@
 /** Item types: their states and their party, reference and value slots (scope contract, section 6.3). */
 
-import type { FieldType } from "@generalbusiness/dap-contract";
+import { DEVICE_COMMAND, type CapabilityName, type FieldType } from "@generalbusiness/dap-contract";
 import { isValue } from "../values.ts";
 import { held, indexes } from "./binding.ts";
 import type { Defining, Slot } from "./context.ts";
@@ -41,16 +41,28 @@ export function itemTypes(d: Defining, v: unknown): void {
           type = so["list"] ? { type: "list", of: { type: "member" }, max: (so["max"] as number | undefined) ?? bounds.partyMembers } : { type: "member" };
         } else type = fieldType(d, so[kind === "ref" ? "to" : "of"], at(p, kind === "ref" ? "to" : "of"), [], false, kind === "value", true);
         if (!type) continue;
+        const capability = so["capability"];
+        if (capability !== undefined) {
+          if (capability !== DEVICE_COMMAND || d.capabilities.get("device-command") !== DEVICE_COMMAND) bad("capability", at(p, "capability"), "names no listed capability that owns item slots");
+          const outcome = kind === "value" && s === "outcome" && type.type === "enum"
+            && type.of.length === 3 && ["confirmed", "refused", "unknown"].every(state => type.of.includes(state));
+          const atAnswer = kind === "ref" && s === "outcomeAt" && type.type === "fact" && type.under === d.name
+            && type.kind.length === 1 && type.kind[0] === "device-command@1:answer";
+          if ((!outcome && !atAnswer) || so["fixed"] || so["required"] || "default" in so) bad("capability-slot-owned", p, "device-command@1 owns only optional mutable outcome and outcomeAt, with their declared answer types and no default");
+        }
         // Section 6.2: a detached text is kept under its digest for the slot that names it. A default would name bytes that nothing holds.
         if (type.type === "text" && type.detached && "default" in so) bad("shape", at(p, "default"), "a detached text has no default: no bytes would come with it");
         // Section 6.1: only its rule says whether a value is of a type that is a mark, so such a slot has no default.
         if ("default" in so && (codeOf(type) !== null || !isValue(type, so["default"], bounds))) bad("shape", at(p, "default"), "is not a value of the slot's type");
-        slots.set(s, { kind, fixed: so["fixed"] as boolean, required: so["required"] as boolean, list: so["list"] === true, type, hasDefault: "default" in so });
+        slots.set(s, { kind, fixed: so["fixed"] as boolean, required: so["required"] as boolean, list: so["list"] === true, type, hasDefault: "default" in so,
+          ...(capability !== undefined ? { capability: capability as CapabilityName } : {}) });
       }
     };
     slot("party", bounds.parties, ["list", "author"], ["max"]);
-    slot("ref", bounds.refs, ["to"], []);
-    slot("value", bounds.values, ["of"], ["default"]);
+    slot("ref", bounds.refs, ["to"], ["capability"]);
+    slot("value", bounds.values, ["of"], ["default", "capability"]);
+    if ([...slots.values()].some(slot => slot.capability === DEVICE_COMMAND)
+      && (slots.get("outcome")?.capability !== DEVICE_COMMAND || slots.get("outcomeAt")?.capability !== DEVICE_COMMAND)) bad("capability-slot-owned", path, "device-command@1 declares both outcome and outcomeAt on the same item type");
     const keyed = "indexes" in o ? indexes(d, o["indexes"], at(path, "indexes"), slots) : null;
     const counts = "holds" in o ? held(d, o["holds"], at(path, "holds")) : null;
     if (problems.length === before) d.types.set(name, { name, states, initial: o["initial"] as string, slots, ...(keyed ? { indexes: keyed } : {}), ...(counts && counts.size > 0 ? { decisions: counts } : {}) });

@@ -9,7 +9,7 @@
 
 import type { ActType, Answer, Beside, Bounds, ScopeBoundName, CapabilityName, DeclaredDefinition, Digest, OutboxId, Entry, FactRef, Created, Grant, ObservationUse, PlatformDefinition, Receipt, RefusalReason, ScopeId, Seed, Settlement, SignedIntent, UnavailableReason } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, intentDigest, isDigest, isGrant, isPlatformDefinition, newIncarnation, parseStrict, platformName, retainedValueKey, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
-import { actNeeds, actionOf, outcomeValueDomains, checkpointOf, clockOf, counted, derivable, factsNamed, genesisBodiesPresent, ownersOf, inputTexts, isObject, judgeAct, judgeCheckpoint, judgeGenesis, judgePreparation, own, placesOf, prepareRules, presentedTypes, readFields, runnable, stepsOf, validateDefinition, windowOf } from "@generalbusiness/dap-derive";
+import { actNeeds, actionOf, outcomeValueDomains, checkpointOf, clockOf, counted, derivable, factsNamed, genesisBodiesPresent, ownersOf, inputTexts, isObject, judgeAct, judgeCheckpoint, judgeGenesis, judgePreparation, own, placesOf, preparationScopeGrant, prepareRules, presentedTypes, readFields, runnable, stepsOf, validateDefinition, windowOf } from "@generalbusiness/dap-derive";
 import type { ActJudgment, Clock as Reading, Draft, Fetched, SignedCreation, GrantDecision, JudgeContext, Needed, Observing, Own, Owners, Placed, PlatformRules, Presented, Snapshots, StateView, Texts, ValidDefinition, Window } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { ReceiverReads } from "./receiver-reads.ts";
@@ -682,6 +682,7 @@ export class Scope {
     if (!isSigned(signed)) return { answer: "refused", reason: "bad-intent", judgedAt: scope.head };
     const steps = stepsOf(this.#ports.capabilities);
     const asked = { signed, capability, step };
+    const scopeGrant = preparationScopeGrant(definition, capability, step);
 
     // Section 5.1, held authority, phase one: one read for this request, before the turn, as for an act. The action and the window
     // are the ones that the capability names for the step: ten seconds for a step that a write outside the service follows, and the
@@ -697,15 +698,15 @@ export class Scope {
       needs = null;   // a request that the rules cannot read names no action
     }
     const given = (Array.isArray(grants) ? grants : []).filter(isGrant);
-    const standing = needs === null ? null : await this.#standing({ scope: scope.at, signed, action: needs.action, grants: given, window: needs.window });
+    const standing = needs === null ? null : await this.#standing({ scope: scope.at, signed, action: needs.action, grants: given, window: needs.window, ...(scopeGrant ? { scopeGrant: true } : {}) });
     // Phase two, in the commit: the decision on the grant. It is the grant guard of `derive/src/grant.ts`, which the port's second
     // phase runs on the observation that the read obtained, at the commit's head and on the commit's one reading (section 16.1, "The
     // guards, in the commit"). The read was made for one action and one window. A commit that asks another is not judged on it.
     const granted = (view: StateView, clock: Reading): GrantDecision => (wanted) => {
-      if (standing === null || needs === null || wanted.action !== needs.action || wanted.window.seconds !== needs.window.seconds || wanted.window.once !== needs.window.once) return { result: "unavailable" };
+      if (standing === null || needs === null || (wanted.scopeGrant === true) !== scopeGrant || wanted.action !== needs.action || wanted.window.seconds !== needs.window.seconds || wanted.window.once !== needs.window.once) return { result: "unavailable" };
       const held = heldBy(standing, view, clock);
       if (held === null) return { result: "unavailable" };
-      const matched = held.find(({ grant, current }) => current && grant.key === wanted.key && grant.actions.includes(wanted.action));
+      const matched = held.find(({ grant, current }) => current && grant.key === wanted.key && (scopeGrant || grant.actions.includes(wanted.action)));
       return matched ? { result: "granted", grant: matched.grant } : { result: "refused" };
     };
 

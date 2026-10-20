@@ -1,7 +1,7 @@
 /** One native application-install envelope. Keep it unchanged for submission
  * and settlement; host fetch/admission remains a separate authority. */
-import type { Beside, Digest, FieldValue, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
-import { isDigest, isRecord, isScopeRef, parseStrict, textDigest } from "@generalbusiness/artroom-bytes";
+import type { Beside, Digest, FieldValue, MemberRef, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
+import { isDigest, isMemberRef, isRecord, isScopeRef, parseStrict, textDigest } from "@generalbusiness/artroom-bytes";
 import { applicationJson } from "./application-json.ts";
 import { readApplicationPackage } from "./application-package.ts";
 import { readApplicationReleaseUri } from "./application-uri.ts";
@@ -24,6 +24,8 @@ export interface SignedApplicationInstall {
   readonly beside: Beside;
   readonly ids: ApplicationIds;
 }
+/** Selected at install, never carried in the signed package requirements. */
+export interface DeviceApplicationInstallOptions extends ApplicationInstallOptions { readonly owner: MemberRef }
 const roles: readonly string[] = ["admin", "maintainer", "member", "agent", "checker"];
 const invalid = (): never => { throw new ApplicationPackageError("invalid"); };
 
@@ -36,6 +38,13 @@ export function readApplicationInstallOptions(value: unknown): ApplicationInstal
     || owned.roles.some(role => !roles.includes(role)) || !isRecord(owned.values)) return invalid();
   try { readApplicationReleaseUri(owned.uri); } catch { return invalid(); }
   return owned;
+}
+
+export function readDeviceApplicationInstallOptions(value: unknown): DeviceApplicationInstallOptions {
+  const owned = parseStrict(applicationJson(value, 32 * 1024));
+  if (!isRecord(owned) || !isMemberRef(owned["owner"])) return invalid();
+  const { owner, ...ordinary } = owned;
+  return { ...readApplicationInstallOptions(ordinary), owner };
 }
 
 /** Verify owned package bytes and bounded inputs before asking for one
@@ -56,12 +65,20 @@ export async function signedApplicationInstall2(signer: Signer, bytes: Uint8Arra
   return signApplicationInstall(signer, packet, owned, signing);
 }
 
-async function signApplicationInstall(signer: Signer, packet: AnyPackedApplication, owned: ApplicationInstallOptions, signing: Signing): Promise<SignedApplicationInstall> {
+/** Device cohort only. Native Rules verifies the owner's current membership. */
+export async function signedDeviceApplicationInstall(signer: Signer, bytes: Uint8Array, options: DeviceApplicationInstallOptions, signing: Signing = {}): Promise<SignedApplicationInstall> {
+  const owned = readDeviceApplicationInstallOptions(options);
+  const packet = readApplicationPackage2(bytes, owned.release, { bytes: 4 * 1024 * 1024, definitionBytes: 64 * 1024 });
+  return signApplicationInstall(signer, packet, owned, signing, owned.owner);
+}
+
+async function signApplicationInstall(signer: Signer, packet: AnyPackedApplication, owned: ApplicationInstallOptions, signing: Signing, owner?: MemberRef): Promise<SignedApplicationInstall> {
   const semantic = applicationJson(packet.package.semantic, 256 * 1024), release = applicationJson(packet.package.release, 4096);
   const values = applicationJson(owned.values, 16 * 1024);
   const texts = packet.package.semantic.definitions.map(part => part.bytes);
   const signed = await signedIntent(signer, { to: owned.rules, kind: "install-application", fields: {
     uri: owned.uri, release: packet.ids.release, semantic: packet.ids.semantic, roles: [...owned.roles], values,
+    ...(owner ? { owner } : {}),
     ...Object.fromEntries(texts.map((text, index) => [`definitionText${index}`, textDigest(text)])),
   } }, signing);
   return { signed, beside: { values: [semantic, release], texts }, ids: packet.ids };

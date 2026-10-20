@@ -7,6 +7,7 @@ export type * from "./definition.ts";
 export type * from "./platform.ts";
 export type * from "./observes.ts";
 export * from "./capability.ts";
+export * from "./device-command.ts";
 export * from "./read.ts";
 export * from "./item-query.ts";
 export * from "./application-projection.ts";

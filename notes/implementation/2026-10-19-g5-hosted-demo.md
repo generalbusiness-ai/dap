@@ -1,0 +1,846 @@
+# G5: hosted Grow demo — preparation
+
+Request `78fba9fca56a28dc75cca37f88a0fbea334bdc2a`, promise
+`e60fe0660ce663c14afe242ad6614bacbe91610a`. This separate development
+checkout integrates actual reviewed S2a Main `fb390d88`, including G5a,
+at clean merge `776ff23b`. S2a is independently audited and pushed.
+The combined-cohort native lifecycle and long-gap witnesses pass with the
+exact committed demo packet. The signed release, separate cron Worker,
+runbook and static homepage path are implemented and checked locally.
+The final whole gate passes at `74e325128`. Source/review, actual
+deployment and hosted acceptance remain pending. No frozen original has been executed or edited.
+
+The commissioned Source contains a separate signed demo release, a stateless
+bounded cron Worker beside the package, an operator runbook, and the Grow
+landing page/home card. G5 precedes P1–P3 and S2b runtime; S2a continues.
+Builder local/dry runs create no Cloudflare resource. The operator supplies
+the nonsecret trust row, deploys after review, provisions the actual room
+and secrets, runs the runbook and records live acceptance. A person taking
+an operator act in their AI app is actual acceptance, never a fixture claim.
+
+## Current integrated release and local checks
+
+The immutable demo packet is `examples/grow/demo/application.dap.json`.
+A separate fresh publisher key was kept owner-only outside this checkout;
+no existing operator custody was read. The actual `dap pack` command
+completed naturally with exit 0. It printed:
+
+```text
+Semantic: sha256:bc098820edffe4061f7f0ff3d007ef67748307dd96fcbbe2dd5f464dfa7c9497
+Presentation: sha256:5bd818a796771c0b6bdd6eac7d5b0fe6ed70358ddc2c33dec82bfd11cd558cf4
+Release: sha256:71e10ca9499e926a4de1d8294ed83a772051dff677d8b1687bbd8e28e61802fa
+Publisher: key_gg4rXwy4v-kVqveN37_W_FW_-Wvsn3fgsal5z6gxfS0
+```
+
+`demo-release.ts` supplies those exact public pins to the separate Worker.
+No key or host trust setting is committed. Its Text module rule preserves
+the signed packet bytes. The maintained TEST packages still use their
+public TEST signer; only the distinct demo capture now reads and verifies
+this exact committed packet. Its local native trust row and agent keys are
+explicit fixtures. `examples/grow/check` is unchanged.
+
+The combined native fixture checks the actual Directory16, Membership8,
+Rules10 and Destination12 sibling digests. Owning Scope compilers and both
+native scenarios pass in original 51470. After switching the capture to
+the committed packet, both whole-file scenarios pass again in original
+2187: 11.28 seconds tests, 14.67 seconds outer elapsed, 16.37 seconds CPU,
+on the shared warm macOS arm64 host. The original lifecycle assertions
+and all public allowances remain. No earlier TEST release is presented as
+this signed release.
+
+The signed-release consumer and Grow/Scope compilers pass in original
+25313. An earlier compiler run stopped before tests: manifest name was
+read at the wrong property, and TypeScript inferred JSON rather than the
+explicit Worker Text module. The corrected test reads the release
+manifest; Grow's compiler explicitly disables JSON module inference so
+its text declaration matches Wrangler. No JSON data assertion was weakened.
+
+Pinned Wrangler 4.147.0 ran only from its new scratch directory, with
+`deploy --dry-run`. It bundled 421.57 KiB, gzip 93.42 KiB, with no bindings
+and no deployment. The exact resulting Text packet matches committed
+bytes, SHA-256
+`b1563c946435c2aad7173b5ae8a32da52c33d2a03b90faee80784c79ebcd96e9`.
+The bundle starts in local workerd, returns 404 from its fetch route and
+accepts a scheduled invocation. With no binding or secrets, that callback
+records `stopped` at configuration and makes zero outbound requests. This
+is an entry/configuration check, not a native admitted tick or a deployed
+cron claim. The first two scratch harnesses stopped at constructor
+validation before startup; the installed Miniflare 5 alpha requires its
+explicit `convertV4MiniflareOptions` adapter. The third harness passes.
+All three original logs remain under
+`/tmp/artroom-g5-wrangler-build-20261020/`.
+
+The built homepage test passes its six-page invariants and five destination
+cards. Rendered QA uses the frontend testing skill's Playwright fallback:
+Browser plugin not available. All 134 pinned tool leaves were independently
+copied and verified against the frozen D1 manifest; no original tool was
+executed. Playwright 1.63.0/Chromium 153.0.8010.12 ran the actual local built
+assets at `http://127.0.0.1:63766`, with outbound navigation blocked.
+At 1440×1000 and 390×844, clicking Grow opens `/grow/`, whose title, story,
+invitation URL and AI-app link are correct. Both viewports pass nonblank,
+overlay, console, asset and horizontal-overflow checks. Six screenshots
+are retained in `/tmp/artroom-g5-home-qa-v2-20261020/`; desktop home/Grow
+and mobile home/full Grow were visually inspected without a layout finding.
+The first scratch browser run timed out on a nonexistent homepage h1;
+the existing homepage uses a description paragraph. Correcting only that
+selector made the same checks pass; the original timeout remains retained.
+The external Room invitation was not opened. No tender enrollment,
+hosted navigation or person-in-AI acceptance is inferred. Public uninvited
+tender seats remain zero; the page asks for an operator-issued invitation.
+
+The runbook now uses landed `archive-device-application`, the committed
+release/publisher and the separate reviewed Worker configuration. Planner
+supplies public Room bindings and the two distinct agent secrets after
+review and publication. Its per-step proving reads, operator custody and
+hosted acceptance remain operational obligations. The first hosted Room
+must use the combined cohort; no Device-only room has been provisioned.
+
+## Final gate and the complete commissioned Room
+
+Original gate process 89795 naturally exits 0 at
+`74e3251288b9ff3bfecbb0abfb73ec9b76e4d017`, tree
+`fa5160955b82eef67591342476d61998a5f589a4`. Whitespace and full typechecking
+pass. Vitest reports 413 passed files and one skipped file: 1,977 passed
+cases and three existing skips, 1,980 total. The separate Node checks pass
+31 and the Counter witness passes 55. No unchanged whole suite was rerun.
+The gate takes 513.7744 seconds elapsed and 740.2576 seconds child CPU;
+outer inventory/command work takes 515.5998 seconds. The machine is shared,
+warm macOS 27.0.1 arm64, Node 26.12.0/npm 11.20.0, initial load averages
+1.739/1.629/1.740. This is not an exclusive-host timing.
+
+All 2,340 tracked source rows match before and after. All 5,527 private
+dependency rows match except the one actual Vitest results-cache output;
+lock and install stamp remain exact. Zero installs. The checkout is clean.
+No competing builder native checks ran during the gate. Raw logs retain
+the expected scripted faults and existing runtime diagnostics; passing
+does not mean empty diagnostic output. The original closure and validation
+use `/tmp/artroom-g5-final-gate-20261020-`. Raw phases are in
+`/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.Ya9Es1vu4E`;
+the gate's original Counter output is
+`/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/artroom-counting-node-p23n1d`.
+
+After the gate, a new independent physical checkout checks the runbook's
+complete commissioning shape. Every source/dependency input is verified
+against the gate's postflight inventory, with distinct inodes and original
+modes; no dependency is installed and no original project/tool is executed.
+Its setup adds all 100 benches, 25 per quadrant, plus four real operator
+`set-heater` commands. The existing native lifecycle scenario then runs
+with the exact committed packet and combined cohort. Its original
+assertions and deadline remain; the driver journal slice starts after the
+actual operator commissioning frontier. Thus the no-human-command check
+covers simulator activity after those explicit operator setup commands.
+The genuine native duplicate, owner answers, wrong-agent guards, missed
+minutes, SQLite restart, concurrent refusal fence and proven replay all
+pass. Original 85884 exits 0, 5.82 seconds tests, 11.0068 seconds outer
+elapsed and 11.2891 seconds child CPU, on the same shared warm host. The
+long-gap case is excluded by that focused selection, not run a second time.
+This is a separate full-commissioning configuration, not another gate.
+
+Two earlier probe preparations remain. The first stops before execution
+because Git checkout gives the public packet mode 0644 rather than its
+original physical 0600; the next view preserves every physical mode. That
+second probe reaches the native ticks and recovery but its original
+whole-journal no-heater assertion counts the four intentionally recorded
+operator setup commands. The third probe uses the actual commissioning
+frontier for its driver-only journal slice and keeps the same assertions.
+Neither failure is relabelled a production defect or a full pass. Original
+probe scripts, inventories, fixture bytes, logs and natural closures are
+retained under `/tmp/artroom-g5-full-room-probe-`, including v2 and v3.
+
+This closure changes only this implementation note after the passing gate.
+The Source record binds the final note-only candidate and the exact gated
+code head/tree above. No source, test, configuration, asset or packet bytes
+change after the ordinary pass, so the documents-only rule requires no
+repeat. All 33 changed paths are presented for complete review against
+actual S2a Main `fb390d88`.
+
+G5's live acceptance is still open. Operational handoff request
+`cc069da1712f290d0998d8e0162d834f9d0faddf` asks planner to preserve the
+post-review deployment/runbook milestone separately: host trust, combined
+first-room creation/install/enrollment, actual Worker/cron version,
+visitor navigation, person-in-AI operator action and autonomous ticks
+between visits. No local test or code landing claims those results.
+S2b archive export and A0b production admission remain separate.
+
+## Earlier native demo ticks on the local reviewed Device cohort
+
+The separate demo now has one genuine native integration story in
+`scope/test/grow-demo-tick.test.ts`. It enrolls two distinct agents in
+actual Membership7, controlled by the founder, before installing. The
+same coarse agent role grants both sensing and climate actions, while
+the signed demo's full-member guards refuse cross-principal acts. The
+native install names the sensors agent as Device owner. Its actual Site
+creates and confirms Room with the delegated grant and exact principals.
+The operator commissions four zones and twelve devices.
+
+The production scheduled-host factory runs over the real Worker's HTTP
+routes and issued sessions. A tick at minute 0 succeeds, and a duplicate
+submits zero writes. Later ticks open and answer actual Device commands
+under the sensors key. After a real SQLite restart, minute 35 recovers
+without a heater authorization or fabricated intermediate observations.
+Only minutes 0, 10, 11 and 35 are recorded. A separately signed concurrent
+sensor observation makes the driver's original request fail with
+`revision-moved`; no later HTTP request crosses its local refusal fence.
+Site and Room then replay consistently with proven native grants, using
+an actually issued operator read session.
+
+This runs on the local reviewed Device cohort as permitted preparation.
+It is not a Device-only hosted room. Actual landed S2a and the final
+combined-cohort integration remain required before G5's final gate and
+Source. Long-gap native quota/catch-up and rendered/live acceptance remain
+separate obligations. The clock, package/Git peer, scheduler and setup
+inspection remain labelled TEST fixtures; the runtime driver uses public
+reads and native authority.
+
+The integration exposed three runtime gaps. First, the session-expiry
+check used `.000Z`, which the contract's canonical time parser rejects.
+It now calls `timeOf(now)`. Second, the actual Worker rejects
+`Request.redirect: "error"`. A temporary native probe confirms that
+failure before any network request. The driver now uses `manual` and
+explicitly refuses every 3xx response, setting the fence before body
+cancellation. The unchanged actual two-server witness still proves one
+origin request, zero forwarded requests and refusal of every later send.
+Third, the old tick always sent `report-site`, even for an unchanged
+callback. It now reads the existing `lastSiteReport` fact and reuses it
+only for the same native reading, signer and alert count. No private
+cursor, new item or declaration change is added.
+
+Failed setup attempts remain in the evidence. The first new compiler
+run needed proper host-result narrowing and ES2022 array access. The first
+agent enrollment omitted the native roster subject and revisions.
+Sessions then stopped before any forwarded request; a temporary exception
+probe was restored exactly, and a separate temporary Request probe was
+removed in `finally`. An initial report-reuse check wrongly assumed the
+report was the journal's last entry. Native Site acknowledgments can
+follow it, so the existing declared report ref is the correct source.
+The new native test also initially expected the head never to advance
+during a duplicate callback. It now verifies zero client writes and
+allows only the legitimate Site delivery in that interval. The four
+previous in-memory scenario bodies are unchanged. A final closed-alert
+read initially used the live-only helper; it now reads retained rows.
+
+Original process82124 passes the complete native story, compiler and
+proven replay. A later whole-file run adds the explicit sampled-minute
+assertion and also passes. The four unchanged in-memory tick cases pass
+separately in original6451. All case and protocol bounds remain unchanged.
+Three selected controls each fail an unchanged assertion naturally one
+without a timeout: remove the 3xx fence, restore the noncanonical session
+time, or bypass report reuse. Every source is restored byte-for-byte.
+These are three targeted controls, not a mutation sweep or another whole
+suite. Evidence uses `/tmp/artroom-g5-native-*20261020*`, with the control
+closure in `/tmp/artroom-g5-native-compatibility-controls-20261020.json`.
+
+## Earlier reviewed G5a integration checkpoint
+
+Merge `dadd7e48b3efc7d87f2aa4989dbe3ee1450e0cd3`, tree
+`eb83603b25f7cf2300a6ed6f5820b07d2e6ecd03`, incorporates actual Main
+`2fcd50ab1b5b3282621ccdb9ecd2d3aa9dcab396` into this separate G5
+preparation. The merge has no conflicts. Main includes the audited and
+pushed G5a landing `a00eda3b` and the reviewed identifier design note.
+No Main ref changes here, and no hosted room is provisioned.
+
+The owning Grow compiler passes. Of seven focused cases in three files,
+five initially pass and two tick scenarios stop at minute 10. Their old
+fixture supplies no Device grant and its owner-answer port deliberately
+fails. That boundary was explicit before G5a existed; it cannot execute
+the now-maintained Device command forms. The production simulator is
+unchanged by this fixture correction.
+
+The corrected tick fixture constructs a made-up parent and retains its
+TEST Device grant in the actual sealed creation message. The grant names
+the sensors member and the three allowed kinds. The existing native child
+helper validates and judges Room genesis, retains prepared rule inputs,
+and the parent and Room complete their actual creation confirmation.
+Command acts use the native Device capability. The answer port calls the
+native preparation judge and folds its sealed owner result. Public reads,
+the parent grant and per-key membership grants remain scripted TEST
+authority. This is no installed-room, Membership admission, HTTP or
+physical-provider proof.
+
+Two setup failures remain recorded. The first adapted child omitted the
+creation confirmation and correctly refused acts as `scope-provisional`.
+The next confirmed child was made directly, outside the shared helper's
+prepared-input registry. It failed while retaining a rule input. Reusing
+the existing native child helper fixes that setup. All four scenario
+bodies are byte-for-byte unchanged, including every original assertion
+and deadline. The former no-owner failure sentinel in the fixture's
+answer port is replaced by the native preparation path.
+
+The owning compiler and whole four-case tick file now pass. Original
+process30154 naturally exits zero: 1.55 elapsed seconds and 2.74 CPU
+seconds on the warm shared machine. Evidence is under
+`/tmp/artroom-g5-g5a-integration-*20261020*` and
+`/tmp/artroom-g5-owned-tick-*20261020*`. The exact four-body preservation
+record is `/tmp/artroom-g5-owned-tick-assertion-preservation-20261020.json`.
+These are focused integration results, not a final gate or a claim that
+S2a has landed. The first hosted Grow room still requires the combined
+Device and archive cohort on actual reviewed S2a Main.
+
+## Current checkpoint after planner decision
+
+### Separate demo packet capture
+
+The native test capture now prepares the demo alongside the three
+maintained packages. It uses the existing public TEST publisher, supplies
+no owner identity or host trust, and removes only its own generated
+temporary source directory after capture. The first capture fails before
+packing the demo: pretty-printing its source config exceeds the existing
+metadata-file allowance. The generator now writes canonical JSON instead.
+Its parsed fields and every source/package allowance are unchanged.
+
+The corrected Node capture naturally exits zero in original process41175,
+1.15 elapsed seconds and 1.52 CPU seconds. It captures all four packages.
+The separate TEST demo release is
+`sha256:e07a41b23809aeccdcae4a31b9a933155e292cfd72e9052a735c57eab02168b9`.
+Evidence is `/tmp/artroom-g5-demo-native-capture-*20261020*`; the original
+failed capture and empty stdout remain. This is a signed TEST packet,
+not the public demo publisher, an installed Room or host admission.
+
+The owning Scope and Grow compiler targets pass after that capture change.
+The existing maintained Grow native install story also passes with the
+extended setup: one case, original process45592 naturally exits zero,
+10.11 elapsed seconds and 14.88 CPU seconds. It proves the maintained
+Site and Room still install, command and replay with that setup. It does
+not substitute for the separate demo's installed native tick witness.
+Evidence uses `/tmp/artroom-g5-demo-capture-*20261020*`.
+
+The following planner-decision checkpoint is historical.
+
+Planner report `74c94c4db8e02ac534ada5235fcc18c51a579723`, adopted as
+`c845bc5b52c64439564f6a01cdcd586fff8856c2`, answers the cursor and
+principal decision. The current demo-only declarations now bind fixed
+sensors, climate and operator parties on Site/Room. Site forwards the
+exact assignments at Room creation. Both agents can share the native
+agent role's coarse action list; full-member guards permit only sensors
+reports and climate acts by the assigned climate member or the operator.
+The extra operator party preserves the controller/operator's climate acts.
+Heat remains on the person's admin permission; no agent gains grow.heat.
+A bounded singleton-room range avoids a fifth also subject on raise-alert.
+Maintained Site/Room and shipped platform data are unchanged.
+
+The native validator showed why the original comment form cannot carry the
+needed guard and state effect: comments have no guards, effects or also
+subjects. The demo's existing observe entry is now a transition on its
+existing Room item. Its signed fields carry commandsAnsweredThrough as an
+exact sequence/hash head; the same entry updates that optional Room value,
+lastSampledAt and lastReading. Expected revision and a declared order rule
+fence the write. There is no extra cursor item or entry. This form change
+is demo application data, not a widened host or native validator.
+
+The focused in-memory native witness validates both declarations, creates
+Site through a labelled launcher, creates its actual Room child and checks
+the forwarded fixed parties. With SCRIPTED grants deliberately giving both
+agents the same coarse grow.sense/grow.climate permissions, it refuses
+cross-principal reporting and fan control, records cursor progress and
+refuses a changed hash at the same position. Its helper now forwards every
+declared genesis field; the maintained Site's label-only path remains the
+same. Two focused files/four cases pass in
+`/tmp/artroom-g5-hosted-demo-forward-owning-20261019.log`; compiler passes in
+the matching `...forward-types...log`. The initial fixture compiler used a
+hash on Entry instead of its FactRef, and the initial assertion expected
+the wrong refusal result shape; both stopped before this pass. The rejected
+comment-form attempt and these preparation failures remain in their logs.
+A one-line sensors-principal bypass changes one pass to one unchanged
+cross-principal assertion failure and exactly restores the source,
+`/tmp/artroom-g5-hosted-demo-principal-control-20261019.log`. This is not
+Worker installation, native Membership authority or G5a owner settlement.
+
+Command discovery now makes bounded forward progress after a long gap:
+four pages, up to 800 entries/4 MiB/64 record changes, with complete=false
+for the unscanned remainder. A scripted 811-entry history advances through
+799 and then 810 on the next read. A closing entry can lie after the old
+scanned position even when its command was already answered before the
+summary acknowledged it. The initial reducer rejected that valid case;
+the corrected witness keeps the newer pending command and accepts the
+older acknowledged closure. The supplied closed-prefix cursor is an owned
+summary contract, not something an arbitrary FactRef proves by itself.
+The driver must never pass an unanswered opening. Current focused case
+and compiler pass in `/tmp/artroom-g5-hosted-prefix-owning-20261019.log` and
+`...prefix-types...log`; native long-gap tick proof remains pending.
+
+The signed schedule asset now declares the unattended recovery narrative
+and minute35 vent release/minute40 fan reset. Fault heat includes an ambient
+contribution even if a prior cycle left the heater off; climate-controlled
+cross-draft/fan and a new heater cut can shorten recovery. At minute35 the
+room returns to band without a person's act. The next cycle can still warm
+after an earlier cut. These are explicit simulation values, not real
+physical claims. The demo close-incident act now records a resolution text;
+the driver must distinguish no intervening heater command from an actual
+later target and must never invent a person's authorization. Pure simulation
+and signed-schedule consumer pass two files/three cases in
+`/tmp/artroom-g5-hosted-recovery-owning-20261019.log`, with compiler and
+one-line heater-causality control in the matching recovery logs. The control
+gives two passes → one pass/one unchanged assertion failure → exact restore.
+
+The tick orchestration and scheduled-host factory are now prepared in the
+latest section below. Actual reviewed G5a integration, final packet/publisher,
+installed native quota/refusal/catch-up witnesses, final gate and complete
+review remain ahead. The runbook now uses the adopted forms and
+both-agents-before-install order. No live resources or acceptance are claimed. The following sections retain earlier checkpoints
+and their original limits; pending-decision wording below is historical.
+
+## Existing boundaries checked
+
+- The source package's semantic value is closed. Cadence and story period
+  must be included in the signed packet without adding an unreviewed host
+  semantic field. A presentation JSON asset is a possible existing form:
+  asset media types admit application/json. The exact asset and simulator
+  configuration must be bound by the packet-verification witness. Values
+  will be whole minutes and the cron must respect its one-minute floor.
+- The public SDK has bounded item queries, entry and history reads. It has
+  no direct capability-record query. Reading open commands therefore needs
+  a bounded journal reconstruction through public reads, with explicit
+  coverage and a refusal to infer absence from an incomplete scan. No
+  private SQLite inspection or new host read authority is implied.
+- The simulator writes sensor summaries, report-device acts and owner
+  answers under one real sensors member. Its catch-up and fault state come
+  from the clock, declared period, current targets and journal, without
+  private progress state. Native read, act, byte and time bounds, exact
+  signed-request recovery and the stop-after-refusal fence still need their
+  design and witnesses. Separate those from local physical cancellation.
+- Current checked package roles declare admin only. The demo must explicitly
+  declare and verify the intended sensor, climate, tender, operator and head
+  grower permissions. Controlling an agent is not assumed to grant its
+  controller's domain actions. The runbook must prove the actual member/key,
+  controller and effective actions through native reads.
+- The browser Room join screen redeems an existing person invitation or
+  connects an existing config/key. It cannot issue a tender invitation by
+  itself. Its uninvited tender-seat count is therefore zero. The Grow page
+  will ask visitors to obtain a tender invitation; operator and sensors
+  credentials will never be offered. Existing native admin issuance can
+  create an explicit bounded invitation; that is different from public
+  self-service seating.
+- The existing browser page reads its own service and saved connection;
+  it offers invitation joining, not a public arbitrary-room query setting.
+  The final Grow link must be checked against the actual provisioned room
+  and same-origin invitation flow. A generic /page/ address is not yet proof
+  of selecting Grow. The deployment/runbook receipt must close that gap.
+- Five built pages already exist: home, Room, Library, Counter and Jam.
+  The homepage has four destination cards (Room, Library, Counter and docs);
+  Jam is built but is not a current card. Adding Grow preserves those five
+  pages and produces six built pages with five cards. Nothing commissions
+  removing Jam. The strengthened existing build invariant will cover both
+  the retained pages and the new Grow page.
+
+## Delivery sequence
+
+Prepare the separate package source/cadence asset, pure simulation and
+bounded public-interface tick plan, runbook with a proving read after each
+step, and static page using existing brand/header/style. Incorporate actual
+G5a Main, then exercise real local native scopes and owner preparations,
+including missed ticks and refusal fences. Verify the signed packet's exact
+printed publisher/release, build-page invariants and rendered layout, then
+run one exact-head gate and request complete independent review.
+
+The operator's post-review receipt must record trust/deployment identity,
+actual native room/install and first ticks, actual page-to-room navigation,
+and person-in-AI operator act. Until then there is no hosted-demo completion
+claim. Archive exit-test work follows the separate demo-room archive slice.
+
+## Static landing page prepared
+
+The Grow page reuses the existing child-page utility header, shared style,
+brand masters and link-preview metadata. The home card links to `/grow/`.
+The build retains home, Room, Library, Counter and Jam, adding Grow as the
+sixth page and fifth destination card. The existing Node built-output
+invariant was strengthened and passed; its first original log is
+`/tmp/artroom-g5-hosted-home-first-20261019.log`. No checkout dependency was
+installed or changed.
+
+Rendered validation used cached pinned Playwright 1.63.0 and Chromium
+153.0.8010.12 because the Browser plugin was not available. The scratch
+script `/tmp/artroom-g5-hosted-home-browser-20261019.mjs` builds into its
+own scratch directory and serves only those files on local loopback. At
+1440×1000 and 390×844, home → Grow renders the expected title, heading,
+shared header, separate-fact explanation and invitation guidance without
+horizontal overflow, framework overlays or console/page errors. Both
+screenshots were inspected; desktop retains the two-column hero and phone
+stacks the workflow below the introduction. The browser process and local
+server completed naturally with exit 0. Evidence is the matching `.log`
+and `report.json`, `grow-1440.png`, `grow-390.png` under the script's
+same-named output directory.
+
+The primary link's exact existing Room invitation URL was checked and
+clicked through a locally intercepted destination. No external request,
+actual Grow room selection, invitation redemption or hosted acceptance was
+proved. Actual post-review provisioned-room navigation remains an operator
+receipt obligation. No public tender seats or credentials are offered.
+
+## Simulator preparation and public coverage
+
+Two dependent design points are with planner in request `771e183a`,
+assertions `c96ffedc` and `9a0f62a3`: an application-journal cursor for
+bounded command discovery, and separate sensors/climate principals. Native
+Membership has five fixed roles; all agent principals have role `agent`.
+A second key alone does not separate their role permissions. The proposed
+demo declarations bind fixed principal party slots and exact signer guards,
+with Site forwarding them to Room. That proposal and the cursor declaration
+are not implemented yet. Owner enrollment must precede G5a installation;
+the runbook must use that actual dependency.
+
+The pure simulator now computes transient samples afresh from whole-minute
+clock time, the declared one-minute cadence/sixty-minute period, current
+zone bands and current device targets. Vent obstruction runs at minutes
+10–34 and fan trip at minutes 20–39 of each UTC hour, in zone 2. The clock
+clears these fictional faults; no person's repair is inferred. Vents 1 and
+4 provide cross-draft; a working local fan cools; cutting the heater cools
+the zone during the fault. Only min/max/mean/in-band summaries and reports
+are returned; no raw samples or private progress state are retained. A
+missed invocation produces the next current reading and does not invent
+observations for missing times. This is not the pending native tick/catch-up
+witness. The schedule file is prepared under `examples/grow/demo/` but is
+not yet a verified signed packet.
+
+The separate public-journal reducer takes a caller-proved closed prefix and
+one exact head, then checks every entry's scope, position, predecessor and
+computed hash. Its limits are 800 entries, 4 MiB of canonical suffix bytes
+and 64 command-record changes. It keeps all open commands, including an
+older target superseded by a newer one; only that command's own complete
+closure removes it. Wrong full owner identity, gaps, incomplete suffixes,
+head mismatch or a false closed-prefix claim refuse. It reads no native
+record table. The caller's durable prefix proof and public read/tick wiring
+are still pending. The reconstruction test scripts journal entries and
+effects; it is no proof of native issuance or settlement.
+
+Focused pure checks passed: two files/three cases in
+`/tmp/artroom-g5-hosted-pure-owning-20261019.log`, plus the Grow TypeScript
+compiler (`...command-types-final...log`). Preparation compiler failures
+remain in the first/corrected/second type logs: the pre-G5a capability union,
+a digest fixture's inferred string type and an incorrectly shaped fixture
+Seed; they were corrected before the focused pass. The maintained simulator
+witness distinguishes ignoring the recorded heater cut (two cases pass,
+then one unchanged assertion fails, exact restore). The command witness
+distinguishes ignoring the full owner identity (one case passes, then its
+unchanged assertion fails, exact restore). Full logs are respectively
+`/tmp/artroom-g5-hosted-simulator-control-20261019.log` and
+`/tmp/artroom-g5-hosted-command-owner-control-20261019.log`; the standard
+helper deletes its disposable JSON directory at exit. No mutation sweep.
+
+Private APFS COW dependencies were copied from the idle clean S2b checkout,
+without executing or modifying the donor. Audit
+`/tmp/artroom-g5-hosted-dependency-view-20261019.json`, SHA-256
+`1c2795792c513f27cf91b558b8f24ef42bc9f324aeada6372bdef772dd59fd8f`,
+checks 127 manifest bytes/distinct inodes and 28 contained links, including
+13 workspaces. Lock/stamp stays `3546b538…`; zero installs, no copied Vite
+caches to clear. This is not a tarball-integrity check. No whole gate,
+Source/review, provider resource, deployment or live acceptance is claimed.
+
+## Public read and per-tick allowance
+
+`readCommandJournal` now reads at most four public history pages through
+one named head. It starts at the current native read interface's explicit
+decimal position cursor, then follows the server's opaque continuations.
+It accepts no missing page as completion and passes the whole selected
+chain to the reducer. Newer entries can arrive while it reads; they do not
+replace the named head or advance its acknowledged prefix. Native coverage
+and the application cursor are still integration obligations.
+
+The per-invocation HTTP wrapper allows only the configured service origin,
+named scopes and the required public summary, query, history, entry,
+session, settlement, act and preparation routes. Preliminary limits are
+96 reads, 48 mutations, 256 KiB of request bodies, 4 MiB of retained reply
+chunks and a 45-second wall window. The driver will also use a five-second
+SDK per-request deadline. After the wall window no new request begins and
+a late reply is discarded; an already-started remote act can still have
+taken effect. The first chunk crossing the byte allowance is not retained,
+cancellation is requested, and the local send fence closes immediately,
+even if cancellation waits. This is not a claim that the remote act was
+cancelled or that no over-limit chunk crossed the network.
+
+Focused command/public-page and HTTP-budget checks pass (two files/two
+cases), log `/tmp/artroom-g5-hosted-public-budget-owning-20261019.log`;
+compiler log has the same prefix with `types`. The budget witness uses
+scripted HTTP bytes. It proves no native bounds refusal or owner step.
+An initial control selection was ambiguous and changed nothing; the next
+exact one-line control exposed an assertion but the helper classified its
+promise rejection as inconclusive. The test now joins its pending read
+before asserting the fence. The same precise one-line bypass then gives
+one pass → one unchanged boolean assertion failure → exact restore,
+`/tmp/artroom-g5-hosted-budget-control-joined-20261019.log`. Earlier control
+logs remain retained; only the joined control is distinguishing evidence.
+No whole suite or mutation sweep was run.
+
+## Signed schedule consumer prepared
+
+`simulatorRelease` uses the existing package-v2 reader to verify an exact
+expected release and signature, checks the exact expected publisher, then
+loads only the signed `simulator.json` asset with media type
+`application/json` and at most 1024 decoded bytes. The strict schedule
+reader checks the whole-minute cadence and period. No deployment trust row
+or publisher secret is stored in this Source.
+
+Its focused witness uses real package codecs/signatures, the public TEST
+publisher and temporary maintained fixture declarations. It verifies the
+prepared schedule, refuses a wrong expected publisher or release, and
+refuses an invalid schedule even when it is validly signed. This is not
+verification of the final demo packet; that packet and its actual printed
+publisher/release still need to be produced after the dependent declaration
+decisions and actual G5a integration. The initial compiler caught the
+nullable base64 decoder result, and the first witness setup incorrectly
+passed already-derived package fields into the strict pack input. Both
+preparation failures remain in their original logs and were corrected.
+The focused case and compiler then passed, logs
+`/tmp/artroom-g5-hosted-release-corrected-owning-20261019.log` and
+`/tmp/artroom-g5-hosted-release-types-final-20261019.log`. The one-line
+publisher-comparison bypass distinguishes one pass → one unchanged
+assertion failure → exact restore, retained in
+`/tmp/artroom-g5-hosted-release-publisher-control-20261019.log`.
+
+## Operator runbook draft
+
+`examples/grow/runbook.md` now records the known native cohort, immutable
+packet URI shape, retained request/enrollment recovery, proving reads at
+each phase and live visitor/person acceptance. It uses the actual configured
+repository origin (`generalbusiness-ai/artroom.git`) and records the
+owner-before-install dependency. It explicitly marks the pending principal,
+cursor, final packet and Worker commands as unfinished; no placeholder is
+presented as an executed step. It offers no public tender seat and separates
+the existing Room invitation destination from actual provisioned-room
+navigation. The runbook is preparation, not a deployment receipt. This
+addition changes documents only and runs no tests or provider command.
+
+## Tick and scheduled-host preparation
+
+The stateless driver is now implemented in simulator-tick.ts. Its only
+ports are public member summary/history/entry reads, signed acts and owner
+preparations. It checks the fixed principals and recorded cursor provenance,
+answers at most eight commands in journal order and acknowledges only the
+covered prefix in the existing observe transition. An observation includes
+its exact targetBasis head. Duplicate same-minute observations are reused;
+a later callback reconciles an uncertain accepted write from the journal.
+Every other refusal or unknown reply closes the local HTTP allowance.
+
+The native in-memory witness runs actual validation, restricted rules,
+judgments, sealing and folding. Public read adapters and per-key authority
+are explicitly SCRIPTED: no Worker, native enrollment/install, transport or
+owned command settlement is claimed. Four cases cover duplicate/restarted
+callbacks, skipped minutes, unattended and later-cycle incidents, a lost
+reply after sealing, person-only cut/restoration, timeout with heat left off,
+and an actual room-refusal branch stopping later writes. The one-line
+stop-fence control changes four passes to two unchanged assertion failures
+and restores the source exactly; original process exits0. Evidence:
+`/tmp/artroom-g5-hosted-tick-stop-control-20261019.log`.
+
+The signed schedule now includes restorationWindowMinutes=5. Only an actual
+recorded heat-cut authorization earns a restoration proposal once the vent
+responds. A person can restore; otherwise the incident closes at minute40
+of its original cycle with heat left as commanded. No callback state or
+fabricated human authorization is used. The updated tick/pure cases passed;
+the same owning run caught one stale literal expected schedule in the
+signed-consumer witness. That expectation was updated, and its corrected
+one-file/one-case run passed. Both original logs remain:
+`/tmp/artroom-g5-hosted-tick-restoration-owning-20261019.log` and
+`/tmp/artroom-g5-hosted-restoration-release-owning-20261019.log`.
+
+simulator-host.ts prepares the separate scheduled Worker factory. It uses
+only public SDK HTTP/session calls, verifies both sessions' exact members
+and distinct keys, and compares the retained Room birth's owner metadata
+to the committed signed graph. It holds two agent secrets and no private
+progress, operator key, host authority or public control endpoint. Its SDK
+deadline is five seconds inside the existing per-tick budget. The actual
+Worker entry module, committed signed packet and Wrangler configuration
+remain pending G5a's reviewed landing, as does installed native execution.
+The first compiler run caught a missing judgedAt in the new scripted
+refusal adapter; corrected compiler exits0 in
+`/tmp/artroom-g5-hosted-host-corrected-types-20261019.log`.
+
+The runbook now reflects the adopted three fixed principals, both agents
+before install, signed restoration timing, exact public configuration and
+two secret names. It still marks final deploy commands and installed proof
+as unfinished. No package key, trust row, deployment or live acceptance has
+been created by this preparation.
+
+The refusal witness now creates a real concurrent, separately signed sensors
+observation before submitting the original envelope; the native judge
+refuses that stale revision. The first updated assertion forgot that the
+attempted refused request now appears in the send list and failed; corrected
+it asserts that exact request is last and all preceding driver requests are
+device reports. Four cases and compiler pass in
+`/tmp/artroom-g5-hosted-native-revision-tick-corrected-owning-20261019.log`
+and `...native-revision-types...log`. The earlier stop-fence control used the
+previous explicitly scripted revision refusal; its lost-reply case and
+stop assertions are unchanged. This is still in-memory Native evidence,
+not installed owner settlement or remote transport.
+
+
+## Native preparation receipt and reply headroom
+
+Self-review caught a native protocol distinction before installed execution:
+receiptOf leaves intent null for a preparation. The driver now checks the
+exact receipt scope/definition and reads its sealed entry, matching the
+whole signed owner request, capability and answer step. An act receipt
+still binds its intent digest. The focused receipt witness runs the real
+native receipt projection over a clearly SCRIPTED unjudged wire entry;
+current Main does not yet admit the G5a capability name. No owner judgment,
+authority, installation or reservation is claimed by that case. The initial
+compiler correctly rejected the future capability's typed literal on old
+Main; the fixture now scripts wire JSON explicitly, like the existing
+public-journal fixture, and the production comparison uses a string until
+reviewed G5a lands. Actual maintained type/owner integration is still required.
+
+The journal's canonical retained-prefix limit is now 1 MiB inside the 4 MiB
+total HTTP reply allowance. It can receive an extra bounded public history
+page before filling the prefix, leaving room for owner-entry proofs and
+other tick reads/replies. Entry/page/record bounds remain 800/four/64. The
+scripted journal witness now includes large entries under a public-like
+one-MiB page bound: it retains a bounded prefix and resumes at its exact
+next position. This is no native large-history integration claim.
+
+The owning three files/six cases pass in
+`/tmp/artroom-g5-hosted-receipt-headroom-owning-20261019.log`; corrected
+compiler passes in `...receipt-headroom-corrected-types...log`. A one-line
+whole-signed-request binding bypass first produced an inconclusive control:
+Vitest printed AssertionError, but the helper classified its promise-reject
+assertion as Error. No distinction was claimed. The same assertion now
+joins the result and checks a boolean: one pass to one unchanged assertion
+failure, exact restoration, original exit 0 in
+`/tmp/artroom-g5-hosted-owner-receipt-joined-control-20261019.log`. The earlier
+inconclusive log is retained separately.
+
+The runbook now gives actual MCP setup acts and proving reads, with retained
+request keys and native assigned IDs: Site child Room, four zones, twelve
+devices, bindings, one hundred quadrant benches and four explicit initial
+heater commands. Initial commissioning targets are not presented as command
+records. Only the later set-heater entries open command reservations. No
+provisioning command has been executed against a service.
+
+The runbook also keeps the claimed operator's existing identity when
+connecting its AI app. It now starts generic MCP against that operator's
+original owner-only `DAP_HOME` before commissioning and asks for the same
+full MemberRef/current key readback. Head grower and tender invitations
+remain separate. This removes wording that could suggest inviting a new
+operator after the fixed Site/Room operator was already assigned. The
+command uses the existing CLI's `mcp --generic` and `DAP_HOME` resolution;
+`packages/cli/src/mcp.ts` reads the retained config's key and passes that
+signer to the server, as `docs/mcp.md` states. A missing task-specific path
+variable stops the shell command before CLI startup. Source/docs were read
+to check this change; no private custody was read, no connection was
+started, and no native or hosted acceptance is claimed. This is a documents
+only clarification, with no production/test/config/asset change or new test
+run. The final integrated G5 gate and review remain pending actual G5a Main.
+
+## Keep HTTP redirects inside the tick's transport boundary
+
+The budget checked the requested service origin, scope and route, but the
+SDK's small Fetch port did not disable redirects. The runtime's default
+fetch could therefore follow a 307 response and forward a signed POST to
+an unchecked second origin, outside the tick's request accounting. The
+budget now passes `redirect: "error"` to fetch while preserving the SDK's
+method, body, headers and abort signal. A redirect rejects the call and
+closes the existing local fence; remote acceptance remains unknown.
+
+The new case in `tick-budget.test.ts` starts two actual local HTTP peers
+and uses the runtime's real fetch. The first peer returns 307. With the
+refusal enabled, only that peer receives a request, the second receives
+zero, and a later attempted mutation sends nothing. Both HTTP peers have
+scripted responses and dummy TEST envelopes. This proves the client
+transport boundary, not native authority, an install or provider behavior.
+
+`/tmp/artroom-g5-http-redirect-owning-20261019.log` passes both budget cases
+(12 ms tests, 119 ms total). `...redirect-types...log` passes Grow's compiler.
+One paired control, original 85153 closed zero, passes the selected redirect
+case and then removes only its refusal option. The unchanged assertion
+fails with one actual forwarded request, `refused: false` and
+`stopped: false`. No timeout occurs. The script restores exact source in
+`finally`, SHA-256
+`60743822ed4df3b3b95b5fdb7e943f29d297d9b6683396a4fde78f2db93c9254`.
+Its script, summary and baseline/without-refusal logs use prefix
+`/tmp/artroom-g5-http-redirect-control-`, date 20261019. All originals have
+terminated. No whole gate, Source publication, deployment or live result
+is claimed; actual reviewed G5a Main remains required for integration.
+
+## Adopted combined-cohort provisioning order
+
+Planner report `7e93abadb8623a9ca10e9c4dca1857e07bc904c8`, adopted by
+`e02cbad6f7fe798e04d33ac62bd480b5cecca7df`, changes the first hosted
+provisioning sequence. Landing order is G5a, then S2a, then G5's integration
+head. S2a adds a distinct combined Device/archive cohort at Register17,
+Directory16, Membership8, Rules10 and Destination12. G5's preparation may
+continue against G5a's Device-only cohort, but its final head includes
+landed S2a and the first hosted demo room uses the combined cohort. No
+Device-only hosted room is provisioned. This lets the running room gain
+the archive binding later without replacing it.
+
+The runbook now requires these exact combined pins and Membership8
+enrolment receipts. Its selector remains an explicit required input from
+reviewed S2a because that CLI selector is not yet implemented here. A
+missing input stops the example shell command. Existing cohorts and all
+reserved IDs retain their meaning; in particular G5a's unused Membership9
+remains reserved. No runtime, test, asset or configuration changed for this
+documentation update, so focused evidence at 12bf35bbe is unchanged.
+Actual native combined-cohort integration remains required. This is no
+gate, Source, deployment or live result. G5a's frozen views stay read-only.
+
+## Native owner ticks and Worker compatibility
+
+G5a Main `2fcd50ab` was integrated at `dadd7e48b`. The original four
+in-memory tick scenarios now use the real Device owner code and native
+preparation judgments over their scripted membership grant and in-memory
+journals. Their scenario bodies remain byte-exact; this is not native
+admission evidence. The owning four cases and compiler pass. The distinct
+installed demo packet is also captured through the maintained application
+fixture. Canonical JSON keeps it within the existing metadata-file bound;
+the maintained Site and Room files are not replaced.
+
+The new native lifecycle witness uses actual platform scopes, enrolled
+sensor and climate agents, a signed MCP installation whose sensors owner
+differs from its operator installer, native Site and Room creation, public
+HTTP sessions and the production driver. It commissions four zones and
+12 devices. Its fixed clock covers a duplicate callback, heat and native
+owner answers, wrong-agent refusals despite a shared role, SQLite restart,
+missed minutes and a real concurrent revision refusal. Recorded sample
+minutes are exactly 0, 10, 11 and 35. A concurrent native sensor act at
+minute 36 makes the driver's original request fail with `revision-moved`;
+no later request crosses that fence. Site and Room replay with proven
+grants. The scheduler, clock, packet signer and test peers are TEST ports;
+this remains local native evidence, not hosted acceptance.
+
+That witness found three production compatibility defects. The host now
+uses canonical `timeOf` for session expiry. The transport uses
+`redirect: "manual"` and explicitly refuses every 3xx response, because
+Workers rejects `redirect: "error"`. The original two-peer Node witness
+still proves that no signed request reaches the second origin. Finally,
+the driver reads the existing `lastSiteReport` reference before reporting
+the same reading again. Native delivery acknowledgments can follow that
+report, so the last journal entry alone cannot identify it. A duplicate
+callback submits zero writes; its later native delivery tail is checked
+separately. No allowance, declaration or private cursor was added.
+
+The native lifecycle and owning compiler passed in original process
+82124. The explicit sample-minute version passed in 67726; the original
+four Node tick cases passed in 6451. Three selected compatibility controls
+in original 64094 each remove one fix: the existing redirect assertion,
+native initial-session assertion and native zero-write duplicate assertion
+respectively fail, without a timeout. All source bytes were restored
+exactly. Raw results are under `/tmp/artroom-g5-native-compatibility-controls-20261020`.
+Earlier setup, compiler, transport and live-only alert-inspector failures
+remain in their original logs; they are not passing native evidence.
+
+## Bounded native history recovery
+
+A second native scenario shares the installation setup but owns a separate
+Room. It records 811 real sensor reports, then 12 real climate commands,
+and runs stateless ticks through public HTTP. Every tick checks the public
+read/write/byte allowances, at most eight owner answers, a retained cursor
+hash, strictly advancing prefixes of at most 800 entries, and a cursor
+that stays before any unanswered command. The scenario reaches the whole
+frontier and answers all 12 commands over at least two ticks. It reads no
+private cursor or native reservation table. The existing lifecycle body
+after setup remains byte-exact to `30bc7cc80`; the preservation report is
+`/tmp/artroom-g5-long-gap-lifecycle-preservation-20261020.json`.
+
+The first preparation stopped at an unused binding in the compiler; no
+native case ran. Corrected process 4661 passed the owning compiler and
+original lifecycle but refused the new fixture's first report: successful
+device reports require an empty description. Correcting that fixture field
+left every assertion and limit intact. Selected new-case process 8841
+then passed naturally: 6.82 seconds tests, 10.36 seconds outer elapsed,
+11.91 seconds CPU, on the shared warm macOS arm64 development host. The
+other lifecycle case was excluded by that selection, not rerun. Original
+logs use `/tmp/artroom-g5-native-long-gap-`, with v2 and v3 suffixes.
+
+These saved native observations use the local Device cohort. S2a has now
+landed at actual Main `fb390d88` with the exact approved combined cohort.
+The final G5 integration must merge that Main, use the combined cohort,
+run both native scenarios there and complete its own gate and review.
+No demo room has been provisioned or deployed.

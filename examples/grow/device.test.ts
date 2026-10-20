@@ -7,7 +7,7 @@ import { deviceForms } from "./device.ts";
 import { nativeScenario, on, operator, climate, sensors, devicePermissions, replay, submit, type Ledger } from "./test-support.ts";
 
 const under = "grow-device-fixture", forms = deviceForms(under);
-const definition: DeclaredDefinition = { format: "artroom-definition-1", name: under, profile: { name: "restricted", version: 1 }, capabilities: [], genesis: "establish",
+const definition: DeclaredDefinition = { format: "artroom-definition-1", name: under, profile: { name: "restricted", version: 1 }, capabilities: [{ name: "device-command", version: 1 }], genesis: "establish",
   items: { root: { many: false, max: 1, states: { open: { final: false } }, initial: "open", parties: {}, refs: {}, values: {} }, device: forms.item },
   acts: { establish: { step: "open", on: "root", grant: "grow.configure", also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [] }, ...forms.acts }, receives: {}, timed: {}, rules: forms.rules };
 const make = (): Ledger => nativeScenario(definition, devicePermissions);
@@ -36,7 +36,8 @@ test("device target, sensor report and scenario-owner outcome keep separate writ
   expect(afterCommand.values).toMatchObject({ target: "off", reported: "on" }); expect(afterCommand.refs["reportedAt"]).toEqual(reportedAt);
   const scenarioOwnerOutcomes = [{ label: "non-native-scenario-owner", command, device: heater, outcome: "confirmed" }];
   expect(scenarioOwnerOutcomes[0]!.command).toEqual(command); expect(ledger.item(heater)).toEqual(afterCommand);
-  expect(ledger.item(heater).values).not.toHaveProperty("outcome");
+  expect(ledger.item(heater).values["outcome"]).toBeNull();
+  expect(ledger.state.recordCount("device-command@1", "command")).toBe(0); // no installed grant in this fixture
   expect(await submit(ledger, climate, "set-heater", on(ledger, heater, { target: "on", level: 100 }))).toMatchObject({ result: "refused", reason: "unauthorized" });
   expect(await submit(ledger, climate, "set-vent", on(ledger, heater, { target: "open", level: 100 }))).toMatchObject({ result: "refused", reason: "guard-failed", name: "wrong-device-kind" });
   expect(explanation).toMatchObject({ revision: failed.revision, description });
