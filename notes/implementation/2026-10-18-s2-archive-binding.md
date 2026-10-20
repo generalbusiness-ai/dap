@@ -116,6 +116,13 @@ remain exact to the passing gate, so the document-only rule does not
 require another run. The supplied Source record and evidence map bind
 the final report head and tree separately.
 
+The observed outer gate costs 510.41 elapsed seconds and 735.39 CPU
+seconds on macOS arm64 with the warm private view and preceding focused
+checks. There is no exclusive-host claim; no other builder native check
+runs during this gate. The exact initial load and tool versions are
+retained in its preflight. Earlier failed gates and focused checks are
+separate runs, not part of this one observed cost.
+
 The previous failed gate and accepted sum remain qualified history. This
 new ordinary pass is the validation for F1. Full replacement review and
 native landing audit remain. S2b export and A0b production admission
