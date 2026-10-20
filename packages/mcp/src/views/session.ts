@@ -157,6 +157,7 @@ export class ViewSessions {
       ...(projection.refresh ? { refresh: projection.refresh } : {}),
       ...(projection.data ? { data: projection.data } : {}),
       ...(projection.surface ? { surface: projection.surface } : {}),
+      ...(projection.members ? { members: projection.members } : {}),
       ...(instance.receipt ? { receipt: instance.receipt } : {}) });
   }
   display(key: string) { return this.#display(this.#instance(key)); }

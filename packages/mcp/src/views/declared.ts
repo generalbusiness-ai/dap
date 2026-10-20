@@ -15,6 +15,8 @@ import { formatInteger } from "./numbers.ts";
 import { formatFact } from "./facts.ts";
 import { orderedViewRows } from "./ordering.ts";
 import { decodeViewParameters } from "@generalbusiness/artroom-bytes/application-v2";
+import { projectionMembers } from "./members.ts";
+import type { MembershipDisplayRead } from "./member-types.ts";
 
 const controlId = (view: ApplicationView, control: ApplicationViewAct, index: number) => view.acts.filter(choice => choice.act === control.act).length > 1 ? `${control.act}:${index}` : control.act;
 
@@ -26,6 +28,8 @@ export interface DeclaredViewPort {
   projection(query: ApplicationProjectionQuery): Promise<ApplicationProjectionRead>;
   /** Current native role actions. Unknown standing returns no actions. */
   actions(): Promise<readonly string[]>;
+  /** Authenticated bounded display reads only; never native authority. */
+  members?: MembershipDisplayRead;
   /** Authenticated native member and current grants; never caller arguments.
    * Unavailable identity must not select a member's carousel. */
   viewer?(): Promise<{ member: MemberRef; grants: readonly string[] } | null>;
@@ -174,9 +178,11 @@ export class DeclaredViewSource implements ViewSource {
   }
   async read(query: ViewQuery): Promise<Projection> {
     const { view, root, scope, definition, reply, rows, routed, points, unknown } = await this.#read(query);
+    const declaration = this.packet.package.semantic.projections[view.projection]!;
     const backScope = this.#backScope(view, scope, root), surface = this.#surface(query.screen, view, backScope);
     const navigation = view.back ? { back: { screen: view.back, scope: backScope } } : {};
     if (!rows.length) return { status: "empty", position: 0, count: 0, scope, points, refresh: view.refresh, ...navigation, ...(!routed ? { data: reply.value } : {}),
+      members: await projectionMembers(declaration, routed ? { ...reply.value, sources: {} } : reply.value, this.port.members),
       ...(surface ? { surface } : {}),
       fallback: view.kind === "log" ? "This declared log has no matching entries in its recent window." : "This declared view has no matching items." };
     const position = routed && query.refresh === true && Number.isSafeInteger(query.position) && query.position >= rows.length ? 0 : query.position;
@@ -194,6 +200,9 @@ export class DeclaredViewSource implements ViewSource {
       return { status: "unavailable", position, count: rows.length, scope, points, refresh: view.refresh, ...navigation, card, fallback };
     }
     const values = input(row), waiting = Object.hasOwn(view.waiting, row.state) ? template(view.waiting[row.state]!, row, "") : "";
+    // A routed card resolves only the row it actually discloses. Other
+    // source rows and rejected assignments never become an identity table.
+    const members = await projectionMembers(declaration, routed ? { ...reply.value, sources: { [view.item]: [row] } } : reply.value, this.port.members);
     const fallback = template(view.fallback, row, waiting), actions = await this.#allowed(view, row, reply.value, scope, definition);
     const now = this.port.now?.() ?? Date.now();
     const series = this.#series(view, row, reply.value);
@@ -219,7 +228,7 @@ export class DeclaredViewSource implements ViewSource {
         }) } : {}),
         ...(surface ? { resource: surface.resource, opens: surface.opens, surface } : {}) },
     };
-    return { status: "ready", position, count: rows.length, scope, points, refresh: view.refresh, ...navigation, card, fallback };
+    return { status: "ready", position, count: rows.length, scope, points, refresh: view.refresh, ...navigation, card, fallback, members };
   }
   /** Called by the mounted-view host inside the custody build, immediately
    * before signing. Native expected revisions and grants still judge submit. */

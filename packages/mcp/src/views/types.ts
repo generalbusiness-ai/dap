@@ -1,6 +1,7 @@
 import type { PresentationPackage, ViewKind } from "./resources.ts";
 import type { ApplicationProjectionData, FactRef, FieldValue, ScopeRef } from "@generalbusiness/dap-contract";
 import type { ApplicationView, ApplicationViewParameters } from "@generalbusiness/artroom-bytes/application-v2";
+import type { MemberTable } from "./member-types.ts";
 
 export type PageKind = "summary" | "item" | "diff" | "updates";
 export interface EntryRange { scope: string; from: number; to: number }
@@ -92,6 +93,7 @@ export interface ViewQuery {
   refresh?: true;
 }
 export interface Projection {
+  members?: MemberTable;
   status: "ready" | "empty" | "unavailable" | "denied" | "absent" | "incomplete" | "stale";
   position: number;
   count: number;
@@ -138,6 +140,7 @@ export interface CardContext {
 }
 /** App data excludes executable action inputs: only opaque action IDs and labels cross to the browser. */
 export interface Display {
+  members?: MemberTable;
   view: string;
   cut: number;
   active: boolean;
