@@ -258,6 +258,43 @@ and their saved Git blobs; the checkpoint is verified clean. Logs, source
 snapshots, assertion inventories and checkpoint use
 `/tmp/artroom-k2-mcp-entries-*20261019*`. No final K2 gate or Source yet.
 
+## MCP deterministic signer builders
+
+Code checkpoint `55fc061f257c6b9736fcc33a79f7a38e2bded0a9`, tree
+`ef0767c4b55c5465d2ca4158f46c16b76e1d41c5`, adds `fixedSigner` and
+`scenarioSigner` to the same Node-safe fixture entry. Fifteen inline
+fixed-seed constructions and four identical hex-seed parses now call those
+builders. Every fill byte and scenario seed stays at its original call site;
+hex matching/parsing is unchanged. Random keys and raw arrays shared with
+other assertions stay local. No setup ownership or cleanup moves.
+
+All 384 outer expectation expressions in the nine changed case files are
+exact. Both owning compilers pass. Original grouped process99684 reports
+75 passes and two actual HTTP replacement assertions failed, in eleven
+files. One expected four streams with incumbent B but observed three and
+no incumbent B; the following case failed waiting for a held stream.
+The unchanged whole HTTP file alone then passes all nine cases in original
+process69584. No cause is established and neither result is discarded;
+this is no general stability conclusion. No assertion or deadline changes.
+
+The remaining steps, not reached after that failure, complete in original
+process99615: both native recipe consumers pass five cases, 5.82 seconds
+wall/7.08 CPU. Standalone bundling and Node import outside Vitest pass with
+all four exported builders. The copied seed17 and repeated hex11 identities
+agree. A standalone local fixture host returns HTTP200 and its expected
+title in normal and declared modes, then closes both peers. This checks
+Node loading and the existing host lifetime, not rendered browser behavior.
+No package is installed. Source hashes stay exact through all runs and
+match the clean checkpoint's Git blobs. The first grouped Node command
+took11.07seconds wall/36.39CPU; separate timings are retained in the logs.
+
+Evidence uses `/tmp/artroom-k2-mcp-signers-*20261019*`. The first redundant
+assertion-inventory invocation stopped at its output-exists guard; its
+existing results were not overwritten. A fresh v2 output after import
+placement cleanup reconfirms all384exact expressions. No whole suite or
+final gate has been repeated. K2 entry consolidation and final review
+remain ahead.
+
 ## Scope and counts
 
 Before counts include every `.ts` file under each package's `test/`
@@ -269,14 +306,14 @@ inventory, not a claim that every domain scenario is duplicated.
 | Derive | 10,312 | 10,316 | +4 |
 | Platform | 5,851 | 5,841 | -10 |
 | Scope | 21,402 | 21,434 | +32 |
-| MCP | 7,829 | 7,844 | +15 |
+| MCP | 7,829 | 7,852 | +23 |
 
 The first peer extraction adds five lines overall; the portable shared
 MCP module now adds 21 in total, including explicit runtime ports and
 boundary comments. The Scope application builders add 29; the Platform
 helpers remove 10; the Derive helper adds four. The current combined
-increase is 41 after the Scope follow-up adds three lines and the MCP
-entry split removes six. No overall line reduction is claimed.
+increase is 49 after the Scope follow-up adds three lines, the MCP
+entry split removes six and deterministic signer sharing adds eight. No overall line reduction is claimed.
 Full per-file baseline counts/hashes are in
 `/tmp/artroom-k2-before-lines-20261019.json`; the selected assertion
 inventories and tool are `/tmp/artroom-k2-expect-*20261019*`.
