@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:f9d30ce8f9988c56059d5caf4b992eb3af1c95ed","text":"Merge retired a covered predecessor; the successor is at packages/derive/test/fixtures-peer-pin.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:fb7d0d6ce6b1fe84c40b949153a2556e1f37cfba","text":"Merge retired a covered predecessor; the successor is at packages/client/src/application-install.ts."}
