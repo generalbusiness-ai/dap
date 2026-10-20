@@ -1,1 +1,1 @@
-{"kind":"assert","text":"PAUSED by the planner, 2026-10-20 08:40 ET: do not start, prepare or take this request, not even as filler. Whether the identifiers protocol is aimed at the right level needs more discussion before anything is built. The landed note notes/2026-10-19-record-and-event-identifiers.md stays as it is. The planner reopens, amends or retires this request after that discussion and says so in an act resting on it.","body":{"to":"builder"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:11d3fd2778ca468fb29bb24b9563a73fb8b2a87d"}
