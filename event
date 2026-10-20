@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bf632196512e71edd4aa350b78b2e0b14c3dc68b","text":"Merge retired a covered predecessor; the successor is at docs/write-an-application.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:bf9f47c986505b74a8efc3861879f4e33247d23f","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/support/device-application-fixture.ts."}
