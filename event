@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:425f20ec06ec6827d41007b040a0646d848ea699","text":"Merge retired a covered predecessor; the successor is at packages/platform/src/publication-standing.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:42ffc907c9f3ffc7e3e857663915af19e16f6b97","text":"Merge retired a covered predecessor; the successor is at scripts/check-shared-helpers.test.mjs."}
