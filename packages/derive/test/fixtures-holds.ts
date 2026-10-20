@@ -24,7 +24,7 @@ import type { Entry, OperationId, PlatformData, PlatformDefinition, Request } fr
 import { entryHash, factRefOf } from "@generalbusiness/artroom-bytes";
 import { PROFILES, applyEntry, clockOf, entryOf, fits, judgeDelivery, owed, settleOutcome, validateDefinition } from "../src/index.ts";
 import type { Draft, Operation, OutcomeGives, PlatformRule, PlatformRules, RuleEffect, RuleGiven, RuleRequest, ValidDefinition, Validation } from "../src/index.ts";
-import { Scope, arriving, forged, keys, otherLane, valid, type Over } from "./fixtures.ts";
+import { Scope, arriving, changedDraft, forged, keys, otherLane, valid, type Over } from "./fixtures.ts";
 
 const OPENER = { opener: { fixed: true, required: true, list: false, author: false } } as const;
 const NO = { parties: {}, refs: {}, values: {} } as const;
@@ -78,8 +78,7 @@ export const validated = (data: unknown): Validation => validateDefinition(data,
 /** One of the two values with one change, validated with the platform option. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const changed = (data: PlatformData, change: (data: any) => void = () => {}): Validation => {
-  const copy = structuredClone(data);
-  change(copy);
+  const copy = changedDraft(data, change);
   return validated(copy);
 };
 

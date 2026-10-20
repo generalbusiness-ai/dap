@@ -18,7 +18,7 @@ import { MemoryState, actionOf, applyEntry, clockOf, entryOf, judgeAct, judgeDel
 import type { ActJudgment, Creation, Delivered, DeliveryContext, Draft, Fetched, JudgeContext, Judgment, Presented, Source, TimedJudgment, ValidDefinition, Validation } from "../src/index.ts";
 
 // This fixture uses the runtime's native clone. Keep its type local to this module.
-declare function structuredClone(value: DeclaredDefinition): DeclaredDefinition;
+declare function structuredClone<T>(value: T): T;
 
 export const d = (c: string): Digest => `sha256:${c.repeat(64)}`;
 export const T0 = "2026-10-04T12:00:00Z";
@@ -206,11 +206,18 @@ export function valid(v: Validation): ValidDefinition {
   if (!v.ok) throw new Error(`the fixture definition is refused: ${JSON.stringify(v.problems)}`);
   return v.definition;
 }
+/** One native clone and explicit fixture mutation. Callers retain their own
+ * validation options and choice of validation result or accepted definition. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function changedDraft<T>(base: T, change: (definition: any) => void): T {
+  const definition = structuredClone(base);
+  change(definition);
+  return definition;
+}
 /** A fixture definition with one change, validated. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function variant(base: DeclaredDefinition, change: (definition: any) => void): ValidDefinition {
-  const definition = structuredClone(base);
-  change(definition);
+  const definition = changedDraft(base, change);
   return valid(validateDefinition(definition, PROPOSED_BOUNDS));
 }
 export const laneDefinition = valid(validateDefinition(lane, PROPOSED_BOUNDS));
