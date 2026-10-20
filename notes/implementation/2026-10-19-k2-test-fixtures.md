@@ -3,8 +3,9 @@
 K2's MCP preparation shares the scope-service loopback transport, native
 application-room claim and recipe-row parser in `test/fixtures.ts`.
 The current selected checks pass 21 Node cases and five native cases,
-with both owning compiler targets passing. Derive, Platform and Scope
-consolidation and the final module layout remain ahead.
+with both owning compiler targets passing. Scope's explicit application
+builders also pass 28 existing cases in 11 files. Derive, Platform,
+remaining Scope consolidation and the final module layout remain ahead.
 
 The first preparation moved the identical loopback transport out of
 `http.test.ts` and `wire.test.ts`. Each caller keeps its own stand-in, server, hook,
@@ -81,22 +82,69 @@ contain those uncommitted edits. Exact final file hashes and this limit
 are in `/tmp/artroom-k2-mcp-shared-checkpoint-20261019.json`. Raw compiler,
 runtime and timing logs use `/tmp/artroom-k2-mcp-shared-*20261019*`.
 
+## Portable Scope application inputs
+
+Matching code checkpoint `4d0cd3d7e3559515bee396ddbf75274cde88a56c`, tree
+`f30bf58d8dd3728635aa8f7311289566e5314029`, adds portable Scope builders
+for content-host bindings, Worker bindings, one explicit release/publisher
+trust setting and fixed TEST signers. It introduces no Worker global,
+implicit trust, default cohort or shared fixture ownership.
+
+Each binding call returns a fresh environment and retains the caller's
+namespace/bucket references and exact trust string, including deliberately
+invalid strings. Existing tests keep their own environment lifetime and
+extra fields. Trust serialization retains release/publisher order and the
+explicit publisher argument; a provided packet still uses its own manifest
+publisher. Fixed seeds 61, 62, 63, 64 and 254 retain their exact keys. The
+malformed/partial trust inputs remain explicit. Three inline Worker
+environments inside existing assertion expressions are not yet factored.
+
+All expectation-expression hashes in the 121 existing Scope case files
+remain exact. The owning Scope compiler passes. Original process 8671
+naturally exits zero: 11 existing affected files/fixture consumers, 28
+cases passed. Before/after hashes match every changed draft source. The
+outer command took 22.49 seconds wall and 24.43 CPU (22.85 user plus 1.58
+system). These checks use their existing native/workerd, local R2,
+scripted peer/clock and host boundaries; they imply no provider operation.
+No case or deadline was added or changed.
+
+A separate Node portability probe initially used strip-only TypeScript
+loading and failed on an existing client parameter-property class. It
+did not show a fixture/runtime bug. The existing installed esbuild0.28.1
+then bundled the unchanged fixture module as Node ESM, which imports
+successfully with all four exports. No tool package was installed or added.
+
+The failed standalone probe also prevented its chained commit. A subsequent
+metadata command incorrectly called the unchanged old Git head a matching
+saved checkpoint. That original record is retained as failed metadata at
+`/tmp/artroom-k2-scope-builders-checkpoint-20261019.json`; it is not an
+accepted checkpoint claim. The corrected
+`/tmp/artroom-k2-scope-builders-checkpoint-v2-20261019.json` names the actual
+saved commit and verifies all original focused-run source hashes. The
+working draft was checked before that matching commit was saved.
+
+Original logs, source hashes, timing, failed/corrected probe and bundle use
+`/tmp/artroom-k2-scope-builders-*20261019*`. Selected assertion inventories
+use `/tmp/artroom-k2-scope-expect-*20261019*`. No final gate or complete
+K2 Source is claimed.
+
 ## Scope and counts
 
 Before counts include every `.ts` file under each package's `test/`
 directory, including case files and support files. They are an explicit
 inventory, not a claim that every domain scenario is duplicated.
 
-| Package | Before | First peer checkpoint | Shared MCP checkpoint |
-| --- | ---: | ---: | ---: |
-| Derive | 10,312 | 10,312 | 10,312 |
-| Platform | 5,851 | 5,851 | 5,851 |
-| Scope | 21,402 | 21,402 | 21,402 |
-| MCP | 7,829 | 7,834 | 7,850 |
+| Package | Before | First peer | Shared MCP | Scope builders |
+| --- | ---: | ---: | ---: | ---: |
+| Derive | 10,312 | 10,312 | 10,312 | 10,312 |
+| Platform | 5,851 | 5,851 | 5,851 | 5,851 |
+| Scope | 21,402 | 21,402 | 21,402 | 21,431 |
+| MCP | 7,829 | 7,834 | 7,850 | 7,850 |
 
 The first peer extraction adds five lines overall; the portable shared
 MCP module now adds 21 in total, including explicit runtime ports and
-boundary comments. No overall line reduction is claimed.
+boundary comments. The Scope application builders add 29. No overall
+line reduction is claimed.
 Full per-file baseline counts/hashes are in
 `/tmp/artroom-k2-before-lines-20261019.json`; the selected assertion
 inventories and tool are `/tmp/artroom-k2-expect-*20261019*`.
