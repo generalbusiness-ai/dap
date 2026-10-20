@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:3669b7e9c2984eb72f3fea12e0c2501c5e0f4969","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/card-actions.scope.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:370a93a4d1ab10532bd1dfe4f3360a81b479ac86","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/reads.test.ts."}
