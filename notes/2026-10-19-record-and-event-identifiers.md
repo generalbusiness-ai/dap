@@ -2,53 +2,54 @@
 
 19 October 2026, draft 5. Design note for review. Part one is the
 protocol, written to stand alone and to be published as it is. Part two
-is dap's adoption of it. Section 13 lists what changed in each draft.
+is dap's adoption of it.
 
-## The systems this is for
+## Sequences, services and rules
 
 A sequence is an ordered list of signed events. Each event is a block of
-bytes. It names the event before it, and it carries the signature of
-whoever asked for it. The first event, the genesis, fixes the rules the
-sequence runs under. There is one event at each position and one event
-after each. A sequence is a line, not a tree.
+bytes. It carries the digest of the event before it, and it carries the
+signature of whoever asked for it. The first event, the genesis, states
+the rules the sequence starts under. The rules may let later events
+change them, and such a change is itself an event in the sequence. There
+is one event at each position and one event after each. A sequence is a
+line, not a tree.
 
-Services store sequences and run their rules. A service judges each
-request under the rules, appends an event if it passes, and answers
-with a receipt that names the event. The rules also define the state
-that the events add up to, and what the sequence sends to other
-sequences. A sequence takes in what it is sent as events of its own,
-under its own rules. Rules written this way are an application. The
-sequences that run them, and the sends between them, are the
-application running.
+Services are actor components that process and store sequences of
+events. A service judges each incoming message under the rules, appends
+an event if it passes, and answers with a receipt that identifies the
+event. The rules also define the state derived from the events, and the
+messages the sequence sends to other sequences. A sequence with its
+rules is one actor. An application is built from such actors and the
+messages between them.
 
-Several systems have this shape, each with its own bytes. Each needs
-the same two names: one for a sequence, and one for an event in it.
-Receipts, references between sequences and reviews are made of those
-names, and today each system spells them its own way.
+Several systems have this shape, each with different types of events
+and different rules. Each needs the same two identifiers: one for a
+sequence, and one for an event in it. Receipts, references between
+sequences and reviews are made of these two identifiers.
 
-The shape of the systems fixes the shape of the names:
+The shape of the systems fixes the shape of the identifiers:
 
-- The genesis fixes the rules, and every later event descends from it.
-  So the digest of the genesis names the sequence. It is the same in
-  every copy, and no one can issue it for another genesis.
-- The sequence is a line. So a position and a digest name one event
+- The genesis states the rules, and every later event descends from it.
+  So the digest of the genesis identifies the sequence. It is the same
+  in every copy, and no one can produce it for a different genesis.
+- The sequence is a line. So a position and a digest identify one event
   exactly. A walk from the event back to the genesis shows that the
   event belongs, without trusting the host.
-- Services hold copies, and any copy verifies. So where a sequence is
-  served is kept apart from what it is called.
+- Services hold copies, and any copy can be verified. So where a
+  sequence is served is kept apart from its identifier.
 
 ## What an implementer gains
 
 An application or a platform that implements this note gains:
 
-- **A permanent name for every sequence it keeps.** The name is the same
-  on every host and in every copy, and no one can issue it for another
-  genesis.
+- **A permanent identifier for every sequence it keeps.** It is the same
+  on every host and in every copy, and no one can produce it for a
+  different genesis.
 - **A citation for any one event** that a reader anywhere can fetch and
   check, without trusting the host that served it.
 - **Citations that cross systems.** Its sequences can cite events kept
   by other implementations, and be cited by them, with one syntax and
-  one check. A review in one system can name the exact change it judged
+  one check. A review in one system can cite the exact change it judged
   in another.
 - **Verification from any copy.** Whoever holds the bytes, from a service
   or from a Git clone, runs the same checks with the same tool and gets
@@ -82,7 +83,7 @@ Each term is defined before it is used.
 | Term | Meaning |
 |---|---|
 | Sequence | An ordered list of events, written by one system under one set of rules. One event at each position, and one event after each: a line, not a tree. |
-| Event | One item of a sequence: the bytes the system wrote for it. Every event after the first names the event before it. |
+| Event | One item of a sequence: the bytes the system wrote for it. Every event after the first carries the digest of the event before it. |
 | Format | The written description, in the shape of section 3.1, of how one system writes, hashes, links and signs its events. Each format has a token. |
 | Genesis | The first event of a sequence. Its bytes fix the sequence's rules. |
 | Digest | The hash of an event, computed and written as its format says. |
@@ -143,7 +144,7 @@ event, so `/0/<genesis>` is a valid citation, and its two digests are
 the same.
 
 The event is a path segment, never a fragment. In a DID URL a fragment
-names something inside the resolved document and is not sent to the
+refers to something inside the resolved document and is not sent to the
 resolver. An event is its own resource.
 
 Example, the event 557 first-parent steps after that genesis:
@@ -178,7 +179,8 @@ answers is not a format.
 5. **Sequence member.** Whether an event carries the digest of its
    genesis, and where. A format without one has the walk of part 6 as
    its only membership check.
-6. **Predecessor.** Where an event names the event before it.
+6. **Predecessor.** Where an event carries the digest of the event
+   before it.
 7. **Position.** Whether an event carries its position, and where.
    Otherwise, how a reader computes it.
 8. **Signatures.** Where signatures sit and which bytes they cover.
@@ -186,18 +188,34 @@ answers is not a format.
    genesis, not in the format.
 9. **Vectors.** The test files of section 7 for this format.
 
-### 3.2 The registry
+### 3.2 Format registry
 
-| Token | Defined in | Covers |
-|---|---|---|
-| `dap1` | 3.3 | dap scopes after the change of section 8 |
-| `git` | 3.4 | Any sequence whose events are commits, SHA-1 object format: gitseq workrooms, Open Integrity Forge repositories |
-| `git256` | 3.4 | The same, SHA-256 object format |
-| `at` | Owed by atseq | atseq apps. An event is an `ai.generalbusiness.atseq.entry` record, and a digest is a CIDv1 in base32 lowercase. The entry carries its genesis, its predecessor and its position |
-| `nostr` | Owed by noseq | noseq instances. An event is a kind 8792 ordered entry, and a digest is the event ID in hex. The `h` tag carries the genesis, and the entry carries `previous` and `position` |
+The format registry is the list of format tokens, kept with this
+specification. Each token has a definition in the shape of 3.1 and the
+vectors of section 7. The `format` segment of an identifier is looked up
+here, and a verifier supports the tokens whose definitions it has
+implemented. A project proposes a token with its definition, and the
+token is allocated when the definition and its vectors are in the
+registry.
 
-A project proposes a token with its definition. The token is allocated
-when the definition and its vectors are in this registry.
+| Token | Sequences it covers | An event is | Defined in |
+|---|---|---|---|
+| `dap1` | A dap scope's journal | One journal entry, as canonical JSON, hashed with SHA-256 | 3.3 |
+| `git` | A chain of commits in a repository with SHA-1 object names: a gitseq workroom, an Open Integrity Forge repository | One commit object, with Git's own object hash | 3.4 |
+| `git256` | The same, with SHA-256 object names | The same | 3.4 |
+| `at` | An atseq app | One `ai.generalbusiness.atseq.entry` record, with its CIDv1 in base32 lowercase as the digest. The record carries its genesis, its predecessor and its position | Owed by atseq |
+| `nostr` | A noseq instance | One kind 8792 ordered entry, with its event ID in hex as the digest. The `h` tag carries the genesis, and the entry carries `previous` and `position` | Owed by noseq |
+
+One sequence identifier for each token. The `git` one is a real gitseq
+workroom. The others show the shape only.
+
+```
+did:seq:dap1:242b636eb1c3a66a185a5abc0c1fdca448143d13449b06533653d6178a7d0f14
+did:seq:git:5d2622748872b7e2dec3fe5c59e4be73a35e0bc8
+did:seq:git256:6320f109df9ff94238c96c7a1c732aa7b9614589e74ef51bf382451f1c9e64a1
+did:seq:at:bafyreibsn3sfnzsbbgrwhzema7zazsmf7c5pfbc4psb6dystcwk3ibm27i
+did:seq:nostr:f4bbd1343f86e8f3d6cfe51df3eea65f3f8e64ed7f18a04ce6fdfff130650c57
+```
 
 ### 3.3 `dap1`
 
@@ -219,7 +237,7 @@ when the definition and its vectors are in this registry.
 7. **Position.** `seq`.
 8. **Signatures.** An entry whose input is an act, a preparation or a
    founding carries the request that the participant signed. The
-   signature is Ed25519, by the key the request names, over the ASCII
+   signature is Ed25519, by the key the request states, over the ASCII
    bytes `artroom-intent-1`, a line feed and the RFC 8785 JSON of the
    request. The entry's position, predecessor, effects and sends are the
    host's statement. The chain and dap's replay cover them, and no
@@ -240,7 +258,8 @@ when the definition and its vectors are in this registry.
 4. **Genesis.** A commit with no parent that the sequence's system
    designates: gitseq's first commit under `refs/seq/<genesis>`, the
    forge's inception commit.
-5. **Sequence member.** None. A commit does not name its sequence.
+5. **Sequence member.** None. A commit does not carry the digest of
+   its genesis.
    Membership is the walk of part 6 reaching the genesis.
 6. **Predecessor.** The first parent. A commit reachable only through a
    second parent is content that an event brings in, not an event.
@@ -255,7 +274,8 @@ when the definition and its vectors are in this registry.
 ## 4. Verification
 
 Verification answers one question about a citation: is this event the
-one the citation names, and does it belong to that sequence? The answer
+one the citation identifies, and does it belong to that sequence? The
+answer
 comes in levels. Each level is a stronger statement than the one
 before, and each needs more of the sequence to hand. A verifier runs
 the levels in order, stops at the first failure, and reports the level
@@ -265,15 +285,15 @@ it reached and what it took on trust.
 says. The result must equal the digest in the citation. Passing shows
 that these bytes are the ones cited. This level needs only the event.
 
-**Level 1, names.** Where the format has a sequence member, the event
+**Level 1, fields.** Where the format has a sequence member, the event
 must carry the cited genesis digest. Where the format carries the
 position, the event must carry the cited one. Passing shows what the
 event says about itself, and no more. Anyone can write bytes that say
 this. Level 1 is a cheap refusal, not a proof of membership.
 
-**Level 2, chain.** Walk backwards from the event. Each event names its
-predecessor. Fetch the predecessor, hash it, and compare the result with
-the digest the event names. The position must fall by one at each step.
+**Level 2, chain.** Walk backwards from the event. Each event carries
+the digest of its predecessor. Fetch the predecessor, hash it, and
+compare the result with that digest. The position must fall by one at each step.
 The walk ends at the genesis, or at an event the verifier already holds
 and trusts. Passing shows that the event is on a chain from that
 genesis. It also shows that nothing between the end of the walk and the
@@ -281,13 +301,13 @@ event was replaced. Membership is shown here. For `git`, which has no sequence
 member and no carried position, levels 1 and 2 are the same walk.
 
 **Level 3, authorship.** For each event on the walk, check the
-signatures where the format says they sit. The genesis names the rule
+signatures where the format says they sit. The genesis states the rule
 for whose signature counts. Passing shows that the signed parts were
-signed by the keys they name.
+signed by the keys they state.
 
 Levels 0 to 2 need the format alone. Level 3 also needs the signature
 rule from the genesis, because the format says where a signature is and
-the genesis says whose counts. A verifier without that rule stops at
+the genesis says whose signature counts. A verifier without that rule stops at
 level 2 and says so.
 
 Judging the event under the sequence's rules is the step after these.
@@ -298,7 +318,8 @@ does it with its own replay, outside this protocol.
 **The report.** A verifier reports JSON with these members:
 
 - `citation`: what was checked.
-- `result`: `ok`, or the name of the level that failed.
+- `result`: `ok`, or the level that failed: `bytes`, `fields`, `chain`
+  or `authorship`.
 - `reached`: the highest level passed.
 - `anchor`: where the walk of level 2 ended: `genesis`, or the citation
   of the held event.
@@ -310,8 +331,8 @@ the chain:
 
 ```
 git cat-file -t cc7eb5a129850990652c553adffbfd2f4f726f83
-# "commit". Git names an object by the hash of its bytes, so an object
-# that a clone holds under this name has passed level 0.
+# "commit". Git stores an object under the hash of its bytes, so an
+# object that a clone holds under this hash has passed level 0.
 git rev-list --first-parent cc7eb5a129850990652c553adffbfd2f4f726f83 | tail -1
 # 5d2622748872b7e2dec3fe5c59e4be73a35e0bc8: the first-parent walk ends
 # at the genesis.
@@ -331,7 +352,8 @@ needs an address.
 
 ### 5.1 Addresses are supplied, not derived
 
-An identifier names a sequence. It does not say where the sequence is.
+An identifier says which sequence. It does not say where the sequence
+is.
 A reader learns an address from whoever gave it the citation, from a
 sequence document it has already fetched, or from its own
 configuration. A host that holds no copy answers not-found. A host that
@@ -339,7 +361,7 @@ holds a copy serves it under the same identifier as every other host.
 The addresses a host lists are its own statement. A reader checks them
 only by reading from them.
 
-### 5.2 The three reads
+### 5.2 Three reads
 
 A host answers three reads:
 
@@ -370,7 +392,7 @@ may also keep a sequence of another format in a Git repository and
 serve the three reads from a clone. dap's archive does this (section
 8).
 
-### 5.3 The sequence document
+### 5.3 Sequence document
 
 Resolving a sequence identifier yields a document. It tells the reader
 where the sequence is served, and it lets the reader check that it has
@@ -407,7 +429,7 @@ A citation that passes every level still does not prove any of these:
 
 A position means nothing outside its own sequence.
 
-**Forks.** The identifier names the genesis. If a host appends two
+**Forks.** The identifier is made from the genesis. If a host appends two
 different events after the same predecessor, both chains carry the
 same identifier, and an event on either passes every level. Two
 different events that both verify at one position of one sequence are
@@ -460,7 +482,7 @@ compatible, so nothing is dual-written and nothing is translated.
 
 | Term here | In dap |
 |---|---|
-| Sequence | One incarnation of a scope's journal. A scope ID can name several sequences, one for each incarnation. |
+| Sequence | One incarnation of a scope's journal. A scope ID can cover several sequences, one for each incarnation. |
 | Genesis digest | The hash of the genesis entry, carried as `genesis` |
 | Address | The scope ID, `sc_…`, the digest of the seed |
 | Event, position | Entry, `seq` |
@@ -493,8 +515,8 @@ stays `artroom-entry-1`.
 **Routing.** A send to another sequence under the same scope ID is
 refused as today. The object compares the send's `genesis` with its own
 genesis hash instead of comparing incarnations. `wrong-incarnation` and
-`incarnation-conflict` are renamed. A seed still names a creation, and a
-child's scope ID is still known before the child exists.
+`incarnation-conflict` are renamed. A seed still identifies a creation,
+and a child's scope ID is still known before the child exists.
 
 **Text and ref names.** The fact text that receipt commits carry becomes
 the citation. Public ref names keep the event hash as one component.
@@ -526,24 +548,24 @@ of the change is mechanical. Five places need thought:
 | noseq | Genesis event ID, an ordered entry with position and previous, the `h` tag | The `nostr` definition in the shape of 3.1, with vectors. Levels 0 to 2 run on ciphertext, with no group key | Low. There is no runtime | Yes, on paper |
 | Open Integrity Forge | `did:repo:<inception sha1>`, policy judged at the first parent, verification from any clone | The method name, a sequence document, and positions as first-parent distance along `main`. Its `did:repo` has no method specification and no resolver. This note gives it both | Low technical cost. It is another organisation's project | No. Propose it after dap has adopted the protocol and the vectors exist |
 
-## 10. The signed request, on these identifiers
+## 10. Signed request on these identifiers
 
 The next protocol is the signed request and its four answers. It imports
 this note and adds nothing to it:
 
-- `to` names a sequence by its identifier, with the address as a hint.
-- `expected` names item revisions as today, inside that sequence.
+- `to` is the sequence's identifier, with the address as a hint.
+- `expected` states item revisions as today, inside that sequence.
 - `presented` facts are citations.
 - The receipt is a citation, with the effects and sends the entry made.
-- A refusal names the head it was judged at as a citation.
+- A refusal carries the citation of the head it was judged at.
 - The idempotency key is scoped to the signing key. The signature covers
   the canonical bytes under a domain tag. An act is identified by its
   unsigned bytes. An exact retry is answered with the first receipt.
 
 ## 11. Decisions
 
-1. A sequence is named by the digest of its genesis. An address is a URL
-   or a remote. The two are kept apart, and the identifier does not
+1. A sequence is identified by the digest of its genesis. An address is
+   a URL or a remote. The two are kept apart, and the identifier does not
    locate.
 2. One DID method, `seq`, with a format token as the first segment, and
    a format defined by the nine parts of 3.1. Decided by Hugh on 19
@@ -564,54 +586,25 @@ this note and adds nothing to it:
 - **The word "sequence".** Draft 5 says sequence where draft 4 said
   record, because a record is usually one row, and the method is named
   `seq`. Log, stream and journal were weighed. Draft 5 also drops
-  "identity": a sequence is named by its genesis digest, and the thing
-  that is not an address is the identifier. To be confirmed.
+  "identity": a sequence is identified by its genesis digest, and the
+  thing that is not an address is the identifier. To be confirmed.
 - **Why a DID and not a URN or a CID.** A DID gives a resolution step to
   a document with addresses, a method registry, and a fragment-free path
-  for the event. A CID names bytes and not a chain or a resolver. A URN
+  for the event. A CID identifies bytes and not a chain or a resolver. A URN
   has no resolution. The choice is made. The paragraph that says so in
   the published text is owed.
 - **gitseq's positions.** Whether its tickets map to positions with the
   genesis at 0 is to be confirmed before its formatter is written.
 - **`at` and `nostr`.** Their definitions in the shape of 3.1 are owed by
-  their projects. The registry rows name what is known.
+  their projects. The registry rows say what is known.
 - **Items.** An item is cited by its opening event. A URL for an item's
   current state is an address of the serving host, not a citation, and
   stays with the read routes.
 - **Registration of the method.** A read of the W3C DID method registry
   on 19 October 2026 found no `seq`, `repo` or `git` entry among about
   270 methods. Registration comes after dap has adopted the protocol.
-
-## 13. Changes in drafts
-
-- Draft 2: the introduction states what an implementer gains and
-  nothing else.
-- Draft 3: the note is split into the protocol and its adoption, and dap
-  leaves the protocol part except as a format. The HTTP and Git bindings
-  of the three reads are stated. Level 3 takes its signature rule from
-  the genesis. A real example from gitseq. The method name and the scope
-  ID in the reference are decided.
-- Draft 4, after an outsider's review of draft 2. A format is defined
-  by nine parts. `dap1` and `git` are defined in full, with the digest
-  input stated apart from the served bytes. `at` and `nostr` are
-  registered with their definitions owed. Level 1 is a claim and
-  membership is level 2. Forks, discovery and privacy are stated under
-  security considerations. The report, the vector files and the method
-  operations have shapes. "Life" is gone: a dap scope ID names one record
-  for each incarnation. The worked verification example is added.
-- Draft 5, after Hugh's reading of draft 4. An opening section says what
-  kind of system the protocol is for and why the names have this shape.
-  "Record" becomes "sequence" and "identity" is dropped. The terms are
-  ordered so that each is defined before it is used, and host is a term.
-  Sections 2.1 and 2.2 are headed as identifiers, and the sentence on
-  position and digest is unpacked. Section 3.1 says what a format
-  definition describes before it lists the nine parts, and the parts are
-  named as the questions a definition answers. Level 1 is "names", not
-  "claim". Sections 4 to 7 each say what they are for before their
-  mechanics: the levels are paragraphs, and resolution, the sequence
-  document, method operations and test vectors are explained where they
-  first appear. dap's entry member is `genesis`, not `rec`, and the
-  reference is `SequenceRef`.
+- **A record of changes.** Removed in draft 5 as premature. Something
+  like it returns if the published text needs to track its revisions.
 
 ## Sources
 
