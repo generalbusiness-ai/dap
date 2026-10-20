@@ -4,7 +4,7 @@ import type { MemberRef } from "@generalbusiness/dap-contract";
 import { isDigest, isMemberRef, parseStrict } from "@generalbusiness/artroom-bytes";
 import type { ApplicationFactSignerRead, ApplicationProjectionFactRef } from "@generalbusiness/artroom-bytes/application-v2";
 import type { PreparedRead } from "../read-preparation.ts";
-import type { Sql } from "../sqlite.ts";
+import type { Sql, SqlValue } from "../sqlite.ts";
 import type { ItemQueryBudget } from "../item-query-budget.ts";
 
 export function applicationProjectionFactSigners(sql: Pick<Sql, "exec">, frame: Pick<PreparedRead, "scope">, refs: readonly ApplicationProjectionFactRef[], budget: ItemQueryBudget): ApplicationFactSignerRead | null {
@@ -15,7 +15,13 @@ export function applicationProjectionFactSigners(sql: Pick<Sql, "exec">, frame: 
     // One indexed entry key and one indexed signer key per fact. Reserve
     // the bounded output before SQL; full entry bytes are never selected.
     budget.spend("page", { candidates: chunk.length, metadata: chunk.length * 768 });
-    const rows = reader.exec(`SELECT e.seq,e.hash,CASE WHEN s.hash=e.hash AND octet_length(s.member)<=512 THEN s.member ELSE NULL END AS signer FROM entry e LEFT JOIN entry_fact_signer s ON s.seq=e.seq WHERE e.seq IN (${chunk.map(() => "?").join(",")}) AND e.seq<=? ORDER BY e.seq`, ...chunk.map(ref => ref.seq), frame.scope.head.seq).toArray();
+    const rows: Record<string, SqlValue>[] = [];
+    // Native SQLite allows 100 bindings, including the captured head.
+    // Reserve the whole chunk above before either of its indexed reads.
+    for (let start = 0; start < chunk.length; start += 99) {
+      const keys = chunk.slice(start, start + 99);
+      rows.push(...reader.exec(`SELECT e.seq,e.hash,CASE WHEN s.hash=e.hash AND octet_length(s.member)<=512 THEN s.member ELSE NULL END AS signer FROM entry e LEFT JOIN entry_fact_signer s ON s.seq=e.seq WHERE e.seq IN (${keys.map(() => "?").join(",")}) AND e.seq<=? ORDER BY e.seq`, ...keys.map(ref => ref.seq), frame.scope.head.seq).toArray());
+    }
     const found = new Map(rows.map(row => [row["seq"], row]));
     if (found.size !== rows.length) return null;
     for (const ref of chunk) {

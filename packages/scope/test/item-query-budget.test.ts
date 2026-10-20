@@ -37,7 +37,7 @@ test("fact-signer metadata admits no entry bodies and cannot top up the source a
   const budget = new ItemQueryBudget("session", () => true);
   budget.spend("page", { bodies: 100, payloadBytes: 200000, metadata: 16000 });
   expect(applicationProjectionFactSigners(sql, frame, refs, budget)?.entries[99]?.signer).toEqual(signer);
-  expect(budget.admitted().total).toMatchObject({ bodies: 100, payloadBytes: 200000, metadata: 92800, candidates: 100, calls: 1 });
+  expect(budget.admitted().total).toMatchObject({ bodies: 100, payloadBytes: 200000, metadata: 92800, candidates: 100, calls: 2 });
   expect(queries.every(query => !/\bbytes\b/.test(query))).toBe(true);
   queries.length = 0;
   const exhausted = new ItemQueryBudget("session", () => true);

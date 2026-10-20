@@ -25,6 +25,35 @@ import { ApplicationProjections } from "../src/applications/projection.ts";
 import { applicationDeclarationsIn } from "../src/applications/projection-source.ts";
 import { SqliteStore, type SqlValue } from "../src/sqlite.ts";
 import { authenticateSession, mintSession, readerOf, type Sessions } from "../src/sessions.ts";
+import { create } from "./support.ts";
+import { ItemQueryBudget } from "../src/item-query-budget.ts";
+import { applicationProjectionFactSigners } from "../src/applications/projection-fact-signers.ts";
+
+// Invariant: all 100 exact local fact references fit native SQLite's binding
+// limit, without entry bodies or more than the existing source allowance.
+// Authenticated remarks use the repository's TEST authority and clock.
+test("fact signer metadata reads 100 exact references on native SQLite", async () => {
+  const lane = await create();
+  for (let i = 0; i < 100; i++) await lane.did(rita, "remark", { on: 0, fields: { text: `TEST signer fact ${i}` } });
+  const head = await lane.head();
+  await lane.inside(state => {
+    const sql = state.storage.sql;
+    const refs = sql.exec("SELECT seq,hash FROM entry WHERE seq>0 ORDER BY seq LIMIT 100").toArray().map(row => ({ seq: row["seq"] as number, hash: row["hash"] as `sha256:${string}` }));
+    expect(refs).toHaveLength(100);
+    const reader = { exec(query: string, ...args: SqlValue[]) {
+      expect(query).not.toMatch(/\bbytes\b/);
+      return sql.exec(query, ...args);
+    } };
+    const frame = { scope: { at: lane.at, head } } as Parameters<typeof applicationProjectionFactSigners>[1];
+    const budget = new ItemQueryBudget("session", () => true);
+    let result: ReturnType<typeof applicationProjectionFactSigners> = null, failure: unknown = null;
+    try { result = applicationProjectionFactSigners(reader, frame, refs, budget); }
+    catch (error) { failure = error; }
+    expect(failure, "100 exact references must fit native SQLite's binding limit").toBeNull();
+    expect(result?.entries.map(({ seq, hash }) => ({ seq, hash }))).toEqual(refs);
+    expect(budget.admitted().total).toMatchObject({ candidates: 100, metadata: 76800, calls: 2, bodies: 0, payloadBytes: 0 });
+  });
+}, 30000);
 
 test("native installed projection reads exact journal state and survives R2 deletion and eviction", async () => {
   const room = await sessionRoom(C.register), { life, R, D, children } = room, [M, A, G] = children;

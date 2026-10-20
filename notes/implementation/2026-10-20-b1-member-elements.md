@@ -218,3 +218,69 @@ grant no additional files or links. No operator/publisher/agent private
 custody, browser profile, shared cache, provider or deployment grant is
 included. Return all findings together in one complete exact-head review
 of all forty-four paths. Planner alone owns Cloudflare and hosted work.
+# Repair after the complete review
+
+Complete review `006d18d41a9309339cd1022dd4342cee3228660b` was read in
+full and adopted by `4d106f89ee6a92e40a115c68be591389df588a0b`. Its one
+P2 finding is native SQLite's 100-binding limit: 100 fact references plus
+the captured-head binding issue 101 parameters. The independent native
+probe returns 99 references but fails at 100; the earlier budget witness
+used stand-in SQL and did not cover this native boundary. The rest of the
+44-path review found no further blocker. Original source, dependencies,
+tools and review evidence remain permanently frozen.
+
+A new worktree independently copies all 2,580 source files, 5,499
+dependency files and 31 contained relative links from the finite grant.
+Every byte/hash/mode matches, regular inodes differ, originals are
+rechecked and the lock stamp matches; no package installs. The first
+preparation cannot create its branch lock under the sandbox and leaves
+no branch or worktree. A separate preparation with Git metadata access closes
+naturally zero; original logs remain separate at
+`/tmp/b1-fact-signer-repair-preparation-20261020-worktree.log` and
+`/tmp/b1-fact-signer-repair-preparation-v2-20261020*`. The complete receipt
+is `/tmp/b1-fact-signer-repair-physical-preparation-v2-20261020.json`.
+All 39 reviewer leaves are hash/size/mode verified and physically
+stable-copied, with distinct inodes and unchanged originals; receipt
+`/tmp/builder-b1-complete-review-readback-20261020.json`.
+
+The repair keeps the public 100-reference limit, the captured-head SQL
+predicate, exact seq/hash lookup and all existing page/call/candidate and
+metadata ceilings. It reserves the full chunk's 768 bytes per reference
+before any query, then reads at most 99 sequence keys plus the head per
+query. The existing budget witness now charges two actual calls for 100
+references; its exhausted allowance still must prevent every SQL call.
+The native projection test adds 100 authenticated TEST remarks and reads
+100 exact existing seq/hash pairs through the production helper on real
+Durable Object SQLite, without selecting entry bodies. Existing signer
+absence, mismatch, deletion and legacy cases remain unchanged.
+
+The first focused run stops at a type error in the permanent test's
+partial frame; no native phase runs. Its exact 2,581 source inputs are
+physically preserved, including the unchanged new reviewer probe. A
+separate corrected run passes all three Scope compiler configurations,
+the pool guard and seven native cases in three files, including that
+unchanged probe. Native wall/CPU is 7.933184458/8.145074 seconds, on shared
+warm macOS 27.0.1 arm64, starting load 1.8438/2.1855/2.2480. Full source
+bytes/modes remain unchanged, the lock stamp matches and no package
+installs. Exact commands/logs/closures and both pre-execution source
+snapshots are `/tmp/b1-fact-signer-repair-focused-20261020*`,
+`/tmp/b1-fact-signer-repair-focused-v2-20261020*` and
+`/tmp/b1-fact-signer-repair-focused-inputs-20261020/{v1,v2}`. This is not
+one combined passing pipeline. These project checks start only after
+the S2b gate closes.
+
+The permanent native test explicitly asserts that the 100-reference
+read throws no error before checking every returned seq/hash and the
+unchanged budget ceilings. One selected-case control passes its unchanged
+baseline, then allows 100 sequence bindings plus the head. Real SQLite
+rejects that query and the unchanged no-error boundary assertion fails;
+source bytes/mode and test restore exactly. Original `24044` closes
+naturally zero. Separate baseline and faulty-child wall/CPU values are
+4.372498416/5.272389 and 4.098326500/5.228926 seconds, starting load
+3.0508/2.7656/2.4795 on the shared warm host; no sum is one pipeline.
+Source/test snapshots, raw JSON/logs and closure are
+`/tmp/b1-fact-signer-repair-sql-control-20261020*`. This is one targeted
+control, not a sweep. The temporary duplicate reviewer probe is preserved
+externally and removed before the committed candidate; the permanent
+regression remains. The changed-code gate and complete fresh review are
+still required before any approval or publication claim.
