@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:44f682369ae549694eeb27bfb3a1f4f23022f1d9","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-20-b1-member-elements.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:467aeca8599989922d23446833aefade45a8c185","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/views/members.ts."}
