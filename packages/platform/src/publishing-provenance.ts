@@ -1,7 +1,7 @@
 /** Native identities are established by immutable creation facts, not declared names. */
 import type { Digest, FactRef, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, deliveryCauseDigest, intentDigest, isMemberRef, messageDigest, parseStrict, isDigest, isPlatformDefinition, isSeed, platformName, scopeIdOf, verifySignedIntent } from "@generalbusiness/artroom-bytes";
-import { isEntryOf, isFactRef, isObject, isScopeRef, sentBy, type Fetched } from "@generalbusiness/dap-derive";
+import { creationContextOf, isEntryOf, isFactRef, isObject, isScopeRef, sentBy, type Fetched } from "@generalbusiness/dap-derive";
 
 export const PUBLISHING_LANE_DIGESTS = [
   "sha256:3f0389ba644e6d58e96a352debcc77d01661ffcf349c6db53d0645c2513eae70",
@@ -150,7 +150,7 @@ export function applicationPublicationOrigin(from: FactRef, directory: ScopeRef,
 /** M1's new Directory handler factory. Destination7 alone adopts this policy;
  * destination4 keeps its original signed-act factory boundary. */
 function installedApplicationOrigin(from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly Fetched[],
-  pins: Readonly<{ directory: string; rules: string; destination: string }>): boolean | null {
+  pins: Readonly<{ directory: string; rules: string; destination: string; membership?: string; deviceCommand?: true }>): boolean | null {
   try {
     const genesis = facts.find(copy => copy.fact.seq === 0 && same(copy.fact.at, from.at));
     if (!genesis) return null;
@@ -176,10 +176,15 @@ function installedApplicationOrigin(from: FactRef, directory: ScopeRef, destinat
     const requested = made.message.body["fields"];
     if (requested["definition"] !== seed.definition || !isMemberRef(requested["installer"]) || typeof requested["genesis"] !== "string"
       || typeof requested["needsDestination"] !== "boolean" || deliveryCauseDigest({ v: 1, from: made.from, n: made.n, message: messageDigest(made.message) }) !== seed.cause) return false;
-    if (!sibling("membership", "platform:membership@7", requested["installer"].membership)) return false;
+    if (!sibling("membership", pins.membership ?? "platform:membership@7", requested["installer"].membership)) return false;
     const body = born.message.body;
     if (!isObject(body) || !same(body["directory"], directory) || !same(body["membership"], requested["installer"].membership)
-      || !same(body["creationContext"], { v: 1 }) || !isObject(body["fields"])) return false;
+      || !isObject(body["fields"])) return false;
+    if (pins.deviceCommand) {
+      const context = creationContextOf(body, seed.definition);
+      if (context.kind !== "marked" || context.delegate !== true || !context.deviceCommand || typeof requested["deviceGrant"] !== "string"
+        || canonicalize(context.deviceCommand) !== requested["deviceGrant"]) return false;
+    } else if (!same(body["creationContext"], { v: 1 })) return false;
     const fields = parseStrict(requested["genesis"]);
     if (!isObject(fields) || canonicalize(fields) !== requested["genesis"] || Object.hasOwn(fields, "destination")
       || Object.hasOwn(fields, "opener") && !same(fields["opener"], requested["installer"])) return false;
@@ -195,4 +200,21 @@ export function installedApplicationPublicationOrigin(from: FactRef, directory: 
 /** Only Destination8 adopts the declared-projection cohort's factory. */
 export function declaredApplicationPublicationOrigin(from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly Fetched[]): boolean | null {
   return installedApplicationOrigin(from, directory, destination, facts, { directory: "platform:directory@12", rules: "platform:rules@6", destination: "platform:destination@8" });
+}
+/** Only the explicit archive destinations adopt the new factory pins. */
+export function archiveApplicationPublicationOrigin(from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly Fetched[]): boolean | null {
+  return installedApplicationOrigin(from, directory, destination, facts, { directory: "platform:directory@13", rules: "platform:rules@7", destination: "platform:destination@9", membership: "platform:membership@8" });
+}
+export function archiveDeclaredApplicationPublicationOrigin(from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly Fetched[]): boolean | null {
+  return installedApplicationOrigin(from, directory, destination, facts, { directory: "platform:directory@14", rules: "platform:rules@8", destination: "platform:destination@10", membership: "platform:membership@8" });
+}
+
+/** Only Destination11 adopts Directory15's authenticated device grant. */
+export function deviceApplicationPublicationOrigin(from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly Fetched[]): boolean | null {
+  return installedApplicationOrigin(from, directory, destination, facts, { directory: "platform:directory@15", rules: "platform:rules@9", destination: "platform:destination@11", deviceCommand: true });
+}
+
+/** Only Destination12 combines Directory16's device grant and Membership8 archive authority. */
+export function archiveDeviceApplicationPublicationOrigin(from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly Fetched[]): boolean | null {
+  return installedApplicationOrigin(from, directory, destination, facts, { directory: "platform:directory@16", rules: "platform:rules@10", destination: "platform:destination@12", membership: "platform:membership@8", deviceCommand: true });
 }

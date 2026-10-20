@@ -7,6 +7,14 @@ const declaration = () => ({ v: 1, definition: textDigest("PUBLIC TEST projectio
     raisedBy: { from: { kind: "party", name: "raisedBy" }, of: { type: "member" }, nullable: false },
   } },
 } });
+
+test("fact fields admit only declared native preparation kinds beside ordinary act names", () => {
+  const make = (kind: string) => ({ ...declaration(), sources: { alert: { ...declaration().sources.alert,
+    fields: { answer: { from: { kind: "ref", name: "outcomeAt" }, of: { type: "fact", under: "room", kind: [kind] }, nullable: true } },
+  } } });
+  expect(readApplicationProjection(make("device-command@1:answer")).sources["alert"]!.fields["answer"]!.of).toMatchObject({ kind: ["device-command@1:answer"] });
+  for (const kind of ["device-command@1:execute", "device-command@2:answer", "invented@1:answer", "device-command@1:constructor"]) expect(() => readApplicationProjection(make(kind))).toThrow(ApplicationProjectionError);
+});
 // Invariant: declaration identity covers the exact typed read and is owned,
 // so later caller changes cannot alter the shared projection contract.
 test("a typed declaration owns its complete input and changes identity when the read changes", () => {

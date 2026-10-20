@@ -90,7 +90,7 @@ test("explicit recorded durability has its own native pin and replay; unsupporte
   expect(replayed.report).toMatchObject({ result: "consistent", target: { seq: 0 }, coverage: [{ scope: await L.at(), from: 0, through: 0 }] });
   expect([canonicalize(definition.declared), definitionDigest(definition.declared), Object.hasOwn(definition.declared, "level")]).toEqual([implicitBytes, implicitPin, false]);
 
-  for (const level of ["live", "archived"] as const) {
+  for (const level of ["live", "sequenced"] as const) {
     const declared = { ...explicit.declared, level: { name: level, version: 1 as const } };
     const seed: Seed = { v: 1, kind: "directory", definition: definitionDigest(declared), creator: null, cause: intentDigest(signed.intent), ordinal: 0 };
     const rejected = new Node(scopeIdOf(seed), declared);

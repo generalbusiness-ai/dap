@@ -11,9 +11,9 @@ import { ApplicationContentStore, applicationReleaseKey } from "../../src/applic
 import type { OpenApplicationSource } from "../../src/applications/resolve.ts";
 import { applicationTrust, fixedSigner } from "../fixtures-core.ts";
 const signer = fixedSigner(64), utf8 = new TextEncoder();
-export async function applicationResolverFixture(format: "sha1" | "sha256", bytes?: Uint8Array, roles: Readonly<Record<string, readonly string[]>> = {}, declared: DeclaredDefinition = countingCommitments, provided?: AnyPackedApplication) {
+export async function applicationResolverFixture(format: "sha1" | "sha256", bytes?: Uint8Array, roles: Readonly<Record<string, readonly string[]>> = {}, declared: DeclaredDefinition = countingCommitments, provided?: AnyPackedApplication, requireArchive = false) {
   const definition = definitionDigest(declared), packet = provided ?? await packApplication({ name: "test.example.resolve", version: format, semantic: { v: 1, entry: definition,
-    definitions: [{ id: definition, bytes: canonicalize(declared) }], host: { execution: "recorded-do", profiles: ["restricted@1"] }, roles, projections: {}, capabilities: [], predecessor: null },
+    definitions: [{ id: definition, bytes: canonicalize(declared) }], host: { execution: "recorded-do", profiles: ["restricted@1"], ...(requireArchive ? { requires: ["archive"] as const } : {}) }, roles, projections: {}, capabilities: [], predecessor: null },
     presentation: { v: 1, entry: "index.html", assets: [{ path: "index.html", mediaType: "text/html", bytes: "VEVTVA" }], descriptions: {} } }, signer);
   const objects = new Map<string, ApplicationGitObject>();
   const add = async (type: string, data: Uint8Array) => {

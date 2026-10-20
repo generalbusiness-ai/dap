@@ -3,12 +3,12 @@
  * test fail-closed classification, not history integrity or authority. */
 import { expect, test } from "vitest";
 import type { Entry } from "@generalbusiness/dap-contract";
-import { DOMAINS, PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
+import { DEVICE_COMMAND, DOMAINS, PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize } from "@generalbusiness/artroom-bytes";
 import type { OperationRules } from "@generalbusiness/dap-derive";
 import { ArchiveBudget } from "../src/archive-budget.ts";
 import { archivePrefixMetadata } from "../src/archive-prefix.ts";
-import { archivePrivacyMetadata, type ArchiveSupport } from "../src/archive-privacy.ts";
+import { DEVICE_COMMAND_ARCHIVE_PREPARATIONS, DEVICE_COMMAND_ARCHIVE_RECORDS, archivePrivacyMetadata, type ArchiveSupport } from "../src/archive-privacy.ts";
 import { definition, create, rita, type Lane } from "./fixtures-native.ts";
 
 const support: ArchiveSupport = { named: definition.digest, definition, owners: new Map(), records: new Map(), preparations: new Map() };
@@ -67,6 +67,20 @@ test("unknown operation owners and declared custom owner domains in a last posit
   expect((await scan(lane, { ...support, owners })).reason).toBe("unsupported-custom-domain");
   const known: OperationRules = { ...rules, valueDomains: [{ domain: DOMAINS.definition, max: 32 }] };
   expect((await scan(lane, { ...support, owners: new Map([["hold@1", new Map([["check", known]])]]) })).reason).toBe("admitted");
+});
+
+test("the native device-command metadata admits only its command record and answer step, and grants no outside-operation support", async () => {
+  const lane = await create();
+  await lane.did(rita, "remark", { on: 0, fields: { text: "finite device metadata classification" } });
+  // Synthetic record in a damaged row: classification only, no command,
+  // installation, authority, replay or export success is claimed here.
+  await damageLast(lane, entry => { entry.effects = [...entry.effects, { effect: "record", capability: DEVICE_COMMAND, kind: "command", key: [entry.seq], state: "open", values: {} }]; });
+  const native = { ...support, records: new Map([[DEVICE_COMMAND, DEVICE_COMMAND_ARCHIVE_RECORDS]]), preparations: new Map([[DEVICE_COMMAND, DEVICE_COMMAND_ARCHIVE_PREPARATIONS]]) };
+  expect((await scan(lane)).reason).toBe("unsupported-archive-cohort");
+  expect((await scan(lane, native)).reason).toBe("admitted");
+  expect((await scan(lane, { ...native, preparations: new Map([[DEVICE_COMMAND, new Set(["execute"]) ]]) })).reason).toBe("unsupported-archive-cohort");
+  await damageLast(lane, entry => { entry.effects = [...entry.effects, { effect: "operation", k: 0, owner: DEVICE_COMMAND, kind: "execute", attempts: 1 }]; });
+  expect((await scan(lane, native)).reason).toBe("unsupported-archive-cohort");
 });
 
 test("changed incarnation, an unknown consumer variant and a stopped scan never publish partial privacy admission", async () => {

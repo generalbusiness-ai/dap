@@ -4,7 +4,7 @@
 import { expect } from "vitest";
 import { PROPOSED_BOUNDS, type DeclaredDefinition, type Digest, type FieldValue, type RetainedInput } from "@generalbusiness/dap-contract";
 import { canonicalBytes, canonicalize, definitionDigest, digestBytes } from "@generalbusiness/artroom-bytes";
-import { clockOf, judgeGenesis, prepareRules, validateDefinition, type Fetched } from "@generalbusiness/dap-derive";
+import { clockOf, deviceCommand, judgeGenesis, prepareRules, validateDefinition, type Fetched } from "@generalbusiness/dap-derive";
 import { evaluateRules, RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { created, creation, deliver, grantOf, keys, valid, Ledger, type Actor, type Over } from "@generalbusiness/dap-derive/testing";
 import { MemorySource, verify } from "@generalbusiness/artroom-replay";
@@ -13,6 +13,7 @@ export const operator = keys.paul, climate = keys.una, sensors: Actor = { ...key
 export const devicePermissions = [[operator, ["grow.configure", "grow.climate", "grow.heat"]], [climate, ["grow.climate"]], [sensors, ["grow.sense"]]] as const;
 type Permission = readonly [Actor, readonly string[]];
 const retained = new WeakMap<Ledger, Map<Digest, RetainedInput>>();
+const capabilities = deviceCommand();
 
 export function nativeScenario(definition: DeclaredDefinition, permissions: readonly Permission[], fields: Record<string, FieldValue> = {}, foundingKey = "found"): Ledger {
   const checked = validateDefinition(definition, PROPOSED_BOUNDS, RULE_PROFILES);
@@ -29,7 +30,7 @@ export async function nativeChild(parent: Ledger, seq: number, definition: Decla
   expect(checked.ok ? [] : checked.problems).toEqual([]);
   const child = new Ledger(valid(checked)), { asked, source } = creation(parent, seq, 0, mint);
   child.now = parent.now;
-  const context = { clock: clockOf(child.state, parent.now), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source };
+  const context = { clock: clockOf(child.state, parent.now), bounds: PROPOSED_BOUNDS, facts: [], prepared: [], source, capabilities };
   const inputs = prepareRules(child.state, child.definition, { genesis: asked, context }), prepared = await evaluateRules(inputs);
   const result = judgeGenesis(child.state, child.definition, asked, { ...context, prepared });
   expect(result, JSON.stringify(result.result === "write" ? result.draft.sends.map(send => send.message.class === "result" ? send.message : send.message.class) : result)).toMatchObject({ result: "write", draft: { input: { decision: "applied" } } });
@@ -63,9 +64,9 @@ export async function nativeCreatedSite(definition: DeclaredDefinition, permissi
   return { launcher, site };
 }
 export async function submit(ledger: Ledger, who: Actor, kind: string, over: Over = {}, facts: readonly Fetched[] = []) {
-  const signed = ledger.intent(who, kind, over), context = ledger.context({ facts });
+  const signed = ledger.intent(who, kind, over), context = ledger.context({ facts, capabilities });
   const inputs = prepareRules(ledger.state, ledger.definition, { act: signed, context }), prepared = await evaluateRules(inputs);
-  const result = ledger.submit(signed, { prepared, facts });
+  const result = ledger.submit(signed, { prepared, facts, capabilities });
   if (result.result === "write") for (const input of inputs) {
     const digest = digestBytes(canonicalBytes(input.input));
     if (result.draft.prepared.some(prepared => prepared.input === digest)) retained.get(ledger)!.set(digest, { kind: "rule", digest, bytes: canonicalize(input.input) });
@@ -88,5 +89,5 @@ export function replay(ledger: Ledger, others: readonly Ledger[] = []) {
     return { scope: current.at, entries: current.entries.map(({ entry, hash }) => ({ seq: entry.seq, hash, bytes: canonicalize(entry) })),
       retained: [{ kind: "definition", digest: current.definition.digest, bytes: canonicalize(current.definition.declared) }, ...retained.get(current)!.values(), ...foreign.values()] };
   }));
-  return verify(source, { mode: "replay", scope: ledger.at.scope, grants: "as-recorded", bounds: PROPOSED_BOUNDS });
+  return verify(source, { mode: "replay", scope: ledger.at.scope, grants: "as-recorded", bounds: PROPOSED_BOUNDS, capabilities, owners: capabilities });
 }

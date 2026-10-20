@@ -15,15 +15,16 @@ import { APPLICATION_RELEASE_VALUE2, APPLICATION_SEMANTIC_VALUE2, DECLARED_APPLI
 import { APPLICATION_INSTALL_RULES } from "../src/application-install.ts";
 import { Rulebook } from "./fixtures-entry.ts";
 import { DECLARED_APPLICATION_COHORT } from "../src/application-install-v2-wire.ts";
-import { declaredApplicationPublicationOrigin, installedApplicationPublicationOrigin } from "../src/publishing-provenance.ts";
+import { ARCHIVE_DECLARED_APPLICATION_COHORT } from "../src/archive-binding-wire.ts";
+import { declaredApplicationPublicationOrigin, installedApplicationPublicationOrigin, archiveDeclaredApplicationPublicationOrigin } from "../src/publishing-provenance.ts";
 import { applicationAnnouncement } from "../src/application-install-creation.ts";
 import { applicationProjectionDeclaration } from "../src/application-projection-reader.ts";
 
-async function fixture() {
+async function fixture(requireArchive = false) {
   const id = definitionDigest(countingCommitments), declaration = canonicalize(countingCommitments);
   const input = { name: "test.declared-install", version: "1", semantic: {
     v: 2 as const, entry: id, definitions: [{ id, bytes: declaration }],
-    host: { execution: "recorded-do" as const, profiles: ["restricted@1"] }, capabilities: [], roles: { member: ["counting.fulfill"] }, predecessor: null,
+    host: { execution: "recorded-do" as const, profiles: ["restricted@1"], ...(requireArchive ? { requires: ["archive"] as const } : {}) }, capabilities: [], roles: { member: ["counting.fulfill"] }, predecessor: null,
     projections: { board: readApplicationProjection({ v: 1, definition: id, revision: "revision", sources: {
       board: { item: "board", read: "one", states: ["finished", "open", "paused"], limit: 1, fields: {
         lastNumber: { from: { kind: "value", name: "lastNumber" }, of: { type: "int", min: 0, max: 100 }, nullable: false },
@@ -75,12 +76,15 @@ test("new native pin retains exact v2 proof and projection while Rules5 refuses 
   }).result).toBe("refused");
 });
 
-test("declared cohort creates its exact native siblings and routes selected role additions", async () => {
+test.each([
+  { name: "declared", cohort: DECLARED_APPLICATION_COHORT, origin: declaredApplicationPublicationOrigin, other: archiveDeclaredApplicationPublicationOrigin,
+    pins: ["platform:register@13", "platform:directory@12", "platform:membership@7", "platform:rules@6", "platform:destination@8"] },
+  { name: "archive declared", cohort: ARCHIVE_DECLARED_APPLICATION_COHORT, origin: archiveDeclaredApplicationPublicationOrigin, other: declaredApplicationPublicationOrigin,
+    pins: ["platform:register@15", "platform:directory@14", "platform:membership@8", "platform:rules@8", "platform:destination@10"] },
+])("$name cohort creates its exact native siblings and routes selected role additions", async ({ cohort, origin, other, pins }) => {
   const { installGraph } = await import("./support-application-install.ts");
-  const { R, D, M, A, G, send } = installGraph(DECLARED_APPLICATION_COHORT);
-  expect([R.named, D.named, M.named, A.named, G.named]).toEqual([
-    "platform:register@13", "platform:directory@12", "platform:membership@7", "platform:rules@6", "platform:destination@8",
-  ]);
+  const { R, D, M, A, G, send } = installGraph(cohort);
+  expect([R.named, D.named, M.named, A.named, G.named]).toEqual(pins);
   const { fields, values, texts, packet } = await fixture();
   const installer = { ...keys.rita, member: { membership: M.at, member: "@rita" as const } };
   expect(A.act(installer, "install-application", { fields }, { values, texts, membership: M.at,
@@ -109,9 +113,10 @@ test("declared cohort creates its exact native siblings and routes selected role
   const born = judgeGenesis(app.state, app.definition, asked, { clock: clockOf(app.state, T0), bounds: app.bounds, facts: facts(), prepared: [], source });
   expect(born.result, JSON.stringify(born)).toBe("write"); if (born.result !== "write") return;
   expect(born.draft.input).toMatchObject({ type: "genesis", decision: "applied" }); app.seal(born.draft);
-  expect(declaredApplicationPublicationOrigin(app.fact(0), D.at, G.at, facts())).toBe(true);
+  expect(origin(app.fact(0), D.at, G.at, facts())).toBe(true);
+  expect(other(app.fact(0), D.at, G.at, facts())).toBe(false);
   expect(installedApplicationPublicationOrigin(app.fact(0), D.at, G.at, facts())).toBe(false);
-  expect(declaredApplicationPublicationOrigin(app.fact(0), D.at, { ...G.at, scope: M.at.scope }, facts())).toBe(false);
+  expect(origin(app.fact(0), D.at, { ...G.at, scope: M.at.scope }, facts())).toBe(false);
   const retained = (domain: string, digest: string, most: number) => {
     const bytes = domain === APPLICATION_SEMANTIC_VALUE2.domain && digest === packet.ids.semantic ? values[0]
       : domain === APPLICATION_RELEASE_VALUE2.domain && digest === packet.ids.release ? values[1] : undefined;
@@ -135,4 +140,18 @@ test("declared cohort creates its exact native siblings and routes selected role
   expect(applicationProjectionDeclaration(A.state, APPLICATION_INSTALL_RULES, D.at, job, "board", retained)).toBeNull();
   expect(applicationProjectionDeclaration(A.state, A.named, D.at, job, "board", () => undefined)).toBeNull();
   for (const node of nodes) expect(node.replay().snapshot()).toEqual(node.state.snapshot());
+});
+
+// Invariant: only the explicit archive pin admits a signed archive requirement.
+test("archive v2 admission retains the requirement while the shipped Rules6 pin refuses it", async () => {
+  const { ARCHIVE_DECLARED_APPLICATION_COHORT: C } = await import("../src/index.ts");
+  const { packet, fields, values, texts } = await fixture(true);
+  const next = new Rulebook(true, membership.scope, C.rules), old = new Rulebook(true, membership.scope, DECLARED_APPLICATION_RULES);
+  const before = old.state.snapshot();
+  expect(old.act(keys.rita, "install-application", { fields }, { values, texts })).toMatchObject({ result: "refused" });
+  expect(old.state.snapshot()).toEqual(before);
+  expect(next.act(keys.rita, "install-application", { fields }, { values, texts })).toMatchObject({ result: "write" });
+  expect(next.item(next.head.seq)).toMatchObject({ state: "pending", values: { semantic: packet.ids.semantic, requirements: { archive: true, destination: false } } });
+  expect(next.state.operation(`${next.head.seq}:0`)).toMatchObject({ owner: C.rules, kind: "fetch-application" });
+  expect(next.replay().snapshot()).toEqual(next.state.snapshot());
 });

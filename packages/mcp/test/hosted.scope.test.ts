@@ -359,12 +359,12 @@ test("H5, H6 and H7: eviction and reconciliation, custody across a lost reply an
     const S = await legacySession(bot.bearer);
     expect((await list(S)).status).toBe(200);
     const open1 = stream(bot.bearer, S);
-    await settle();
+    await until(() => open1.text().includes(": stream"));
     expect(open1.text()).toContain(": stream");
     expect(told(open1), "nothing told before a change").toBe(0);
     expect((await rita.ok("rules.activate", { fields: { digest: DEMO_DIGESTS.change, name: "change" }, values: [canonicalize(changeDemo)], idempotencyKey: "activate-change" }))["answer"]).toBe("accepted");
     expect(await stub.tick()).toBe(true);
-    await settle();
+    await until(() => told(open1) > 0);
     expect(told(open1), "told once with the stream open").toBe(1);
     expect(await stub.tick()).toBe(true);
     await settle();
@@ -373,7 +373,7 @@ test("H5, H6 and H7: eviction and reconciliation, custody across a lost reply an
     open1.stop();
     await stub.reset();
     const open2 = stream(bot.bearer, S);
-    await settle();
+    await until(() => told(open2) > 0);
     expect(open2.text(), "the session survived the reset").toContain(": stream");
     expect(told(open2), "reconciliation tells the unlisted change once").toBe(1);
     // It lists (listed = B); a further reconnect without a change receives nothing.
@@ -381,6 +381,7 @@ test("H5, H6 and H7: eviction and reconciliation, custody across a lost reply an
     open2.stop();
     await stub.reset();
     const open3 = stream(bot.bearer, S);
+    await until(() => open3.text().includes(": stream"));
     await settle();
     expect(open3.text()).toContain(": stream");
     expect(told(open3), "nothing to reconcile after listing").toBe(0);
@@ -391,10 +392,11 @@ test("H5, H6 and H7: eviction and reconciliation, custody across a lost reply an
     expect((await rita.ok("rules.activate", { fields: { digest: COUNTING_DEFINITION, name: "counting" }, values: [canonicalize(counting)], idempotencyKey: "activate-counting" }))["answer"]).toBe("accepted");
     await stub.tick();
     const open4 = stream(bot.bearer, S);
-    await settle();
+    // Opening awaits an inventory snapshot before its reconciliation message.
+    await until(() => told(open4) > 0);
     expect(told(open4), "a change while no stream was open is told once at the next stream").toBe(1);
     const open5 = stream(bot.bearer, S);
-    await settle();
+    await until(() => told(open5) > 0);
     expect(await open4.ended, "the first stream closed on replacement").toBe(200);
     expect(open5.text()).toContain(": stream");
     expect((await stub.counts()).streams).toBe(1);
@@ -407,7 +409,7 @@ test("H5, H6 and H7: eviction and reconciliation, custody across a lost reply an
     expect(opened["answer"], JSON.stringify(opened)).toBe("accepted");
     expect((await rita.ok("wait", { scope: "directory", entry: (opened["fact"] as FactRef).seq }))["timedOut"]).toBe(false);
     await stub.tick();
-    await settle();
+    await until(() => told(open5) > 1);
     expect(told(open5), "the replacement receives the later change").toBe(2);
     expect(told(open4), "the closed stream receives nothing").toBe(1);
     open5.stop();

@@ -9,6 +9,8 @@ import { expect, test, vi } from "vitest";
 import type { DeclaredDefinition, FactRef, FieldValue, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest } from "@generalbusiness/artroom-bytes";
 import { packApplication, secretSigner, signedIntent } from "@generalbusiness/artroom-client";
+import { packApplication2, readApplicationProjection } from "@generalbusiness/artroom-bytes/application-v2";
+import { deviceCommandFixture } from "../../derive/test/fixtures-device-command.ts";
 import { LocalApplicationScope } from "../src/application-local.ts";
 import { ApplicationScenarioError, openApplicationScenario, runApplicationScenario, supportsLocalSqlite } from "../src/application-scenarios.ts";
 
@@ -249,4 +251,52 @@ test("a mismatched or integrity-only verifier report cannot become a successful 
     try { expect(await refused(() => runApplicationScenario(packed, scenario()))).toBeInstanceOf(ApplicationScenarioError); }
     finally { spy.mockRestore(); }
   }
+});
+
+// Invariant: local native preparations require an explicit scripted grant;
+// its anchor stays visible, while the actual child and answer are replayed.
+// Genuine issuance and Membership are covered separately by the native
+// Worker witness in scope/test/device-command-install.test.ts.
+test("scripted-parent device scenarios keep their anchor explicit and execute native owner preparations once", async () => {
+  const id = definitionDigest(deviceCommandFixture);
+  const packed = await packApplication2({ name: "test.local-device", version: "1", semantic: {
+    v: 2, entry: id, definitions: [{ id, bytes: canonicalize(deviceCommandFixture) }],
+    host: { execution: "recorded-do", profiles: ["restricted@1"] }, capabilities: [{ name: "device-command@1", bounds: { kinds: ["heater"], owners: 1 } }],
+    roles: {}, predecessor: null, projections: { root: readApplicationProjection({ v: 1, definition: id, revision: "revision",
+      sources: { root: { item: "root", read: "one", states: ["ready"], limit: 1, fields: {} } } }) },
+  }, presentation: { v: 2, entry: "index.html", assets: [{ path: "index.html", mediaType: "text/html", bytes: "VEVTVA" }], descriptions: {}, views: {}, resources: {} } }, secretSigner(new Uint8Array(32).fill(83)));
+  const position = (name: string) => ({ $position: name }), revision = (name: string) => ({ $revision: position(name) });
+  const prepare = (actor: string, command: string, name?: string) => ({ prepare: { actor, capability: "device-command@1", step: "answer",
+    fields: { command: { $fact: command }, outcome: "confirmed", description: "TEST owner answer" } },
+    expect: name ? { answer: "refused", reason: "capability-refused", name } : { answer: "accepted" },
+  });
+  const input = { v: 1, name: "device-local", time: "2026-10-19T12:00:00Z", deviceOwner: "owner", actors: {
+    operator: { seed: "11".repeat(32), member: "@operator", actions: ["command", "start"] },
+    owner: { seed: "22".repeat(32), member: "@device-owner", actions: [] },
+  }, founding: { actor: "operator", fields: {} }, steps: [
+    { act: { actor: "operator", kind: "commission", fields: { kind: "heater" } }, expect: { answer: "accepted" }, save: "heater" },
+    { act: { actor: "operator", kind: "command", on: position("heater"), expected: { on: revision("heater") }, fields: { target: "on", level: 80 } }, expect: { answer: "accepted" }, save: "command" },
+    { record: { capability: "device-command@1", kind: "command", key: [position("command")], state: "open", values: { decided: 0 } } },
+    { act: { actor: "operator", kind: "report", on: position("heater"), expected: { on: revision("heater") }, fields: { reported: 20 } }, expect: { answer: "accepted" } },
+    prepare("operator", "command", "device-command-not-owner"), prepare("owner", "heater", "device-command-unknown"),
+    { ...prepare("owner", "command"), save: "answer" }, { retry: "answer", expect: { answer: "accepted" } },
+    { record: { capability: "device-command@1", kind: "command", key: [position("command")], state: "confirmed", values: { decided: 1 } } },
+    { assert: { item: position("heater"), values: { target: "on", reported: 20, outcome: "confirmed" }, refs: { targetAt: position("command"), outcomeAt: position("answer") } } },
+    prepare("owner", "command", "device-command-closed"),
+    { act: { actor: "operator", kind: "commission", fields: { kind: "fan" } }, expect: { answer: "accepted" }, save: "fan" },
+    { act: { actor: "operator", kind: "command", on: position("fan"), expected: { on: revision("fan") }, fields: { target: "on", level: 50 } }, expect: { answer: "refused", reason: "capability-refused", name: "device-kind-ungranted" } },
+  ] };
+  const result = await runApplicationScenario(packed, input);
+  expect(result).toMatchObject({ preparations: 1, ownerRecords: [], capabilityGrant: { authority: "scripted-parent-creation", nativeIssuanceWitness: "packages/scope/test/device-command-install.test.ts" } });
+  expect(result.capabilityGrant!.anchors).toHaveLength(2);
+  expect(result.replay.report.anchors).toHaveLength(2);
+  expect(result.replay.report.result).toBe("consistent");
+  const { deviceOwner: _owner, ...ungranted } = input;
+  const noGrant = await runApplicationScenario(packed, { ...ungranted, steps: [input.steps[0], input.steps[1],
+    { record: { capability: "device-command@1", kind: "command", key: [position("command")], absent: true } },
+    prepare("owner", "command", "device-command-ungranted"),
+  ] });
+  expect(noGrant.capabilityGrant).toBeNull();
+  expect(noGrant.preparations).toBe(0);
+  expect(noGrant.replay.report.anchors).toEqual([]);
 });

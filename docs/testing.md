@@ -331,6 +331,16 @@ answers, and nothing about a real host, a real tree or a runner.
   that write get their own. The packages share one fixture set, exported by
   `@generalbusiness/dap-derive/testing`.
 
+The functional `scope` project sets a thirty-second framework allowance in
+`packages/scope/vitest.worker.config.ts` for cases without an explicit
+limit. Its multi-scope stories share one Worker isolate on a shared machine.
+Case-specific limits and modeled protocol, read, clock, capacity and latency
+assertions keep their own bounds. Pure Node projects and the separate
+`scope-denial` project keep their existing budgets. This allowance describes
+the harness and makes no product latency or general stability claim. A
+committed budget change needs a new exact-head gate; earlier failed runs
+and their original limits remain evidence.
+
 ## While you work
 
 At the repository root, `npm test` and `npm run test:changed` first apply the narrow Cloudflare

@@ -27,7 +27,7 @@ export function readApplicationScreenContext(value: unknown, address: Pick<Appli
   let body: unknown;
   try { body = parseStrict(applicationJson(value, 16 * 1024)); } catch { return invalid(); }
   if (!isRecord(body) || Object.keys(body).sort().join() !== "definition,deployment,destination,directory,ids,item,membership,membershipDefinition,origin,rules,scope,v" || body["v"] !== 1 || body["origin"] !== origin
-    || typeof body["deployment"] !== "string" || !body["deployment"] || body["deployment"].length > 128 || body["membershipDefinition"] !== "platform:membership@7"
+    || typeof body["deployment"] !== "string" || !body["deployment"] || body["deployment"].length > 128 || (body["membershipDefinition"] !== "platform:membership@7" && body["membershipDefinition"] !== "platform:membership@8")
     || body["item"] !== address.item || !isDigest(body["definition"])) return invalid();
   for (const [field, kind] of Object.entries({ directory: "directory", rules: "rules", membership: "membership", destination: "destination", scope: "lane" })) {
     const ref = body[field]; if (!isScopeRef(ref) || ref.kind !== kind) return invalid(); Object.freeze(ref);

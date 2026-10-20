@@ -35,10 +35,14 @@ export async function checkCommand(argv: readonly string[], cwd = process.cwd())
       `Native definitions: ${prepared.packet.package.semantic.definitions.length} validated.`, "Local authority: explicit scripted TEST grants; replay trusts authority as recorded."];
     for (const path of prepared.scenarios) {
       const result = await runApplicationScenario(prepared.packet, await readApplicationScenario(prepared.root, path));
-      lines.push(`Local root definition: ${result.definition}; scripted directory fixture, without child transport.`);
+      lines.push(result.capabilityGrant
+        ? `Local definition: ${result.definition}; scripted parent creation proof with explicit replay anchor, then actual Core/SQLite child genesis. This is not a native install.`
+        : `Local root definition: ${result.definition}; scripted directory fixture, without child transport.`);
       lines.push(`Scenario ${result.name}: ${result.steps} steps passed; native replay consistent through ${result.replay.report.target.seq}.`);
       if (result.projectionChecks) lines.push(`Declared projection checks: ${result.projectionChecks} passed at native journal heads.`);
       if (result.ownerRecords.length) lines.push(`Non-native scenario-owner records: ${result.ownerRecords.length}; outside the journal and native replay claim.`);
+      if (result.capabilityGrant) lines.push(`Scripted device owner: ${canonicalize(result.capabilityGrant.owner)}. Replay anchors: ${canonicalize(result.capabilityGrant.anchors)}. Genuine native issuance witness: ${result.capabilityGrant.nativeIssuanceWitness}.`);
+      if (result.preparations) lines.push(`Native owner preparations in the journal: ${result.preparations}.`);
     }
     const requested = prepared.packet.package.semantic.capabilities;
     lines.push(`Declared capability requirements: ${requested.length ? requested.map(capability => capability.name).join(", ") : "none"}.`);

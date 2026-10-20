@@ -11,10 +11,10 @@ import { act, acts, claim, clone, edit, install, installPlanned, invite, issueAs
 
 export const USAGE = [
   "Usage:",
-  "  dap install <base-url> [--host <git-host>] [--namespace <name>] [--cohort application|application-publication|trusted-application|declared-application|invitation-key]",
-  "  dap install --plan <base-url> [--host <git-host>] [--namespace <name>] [--cohort application|application-publication|trusted-application|declared-application|invitation-key]",
-  "  dap install --planned [--cohort application|application-publication|trusted-application|declared-application|invitation-key]",
-  "  dap install <git+https-uri> --release <release-id> --request <kept-key> [--role <default-role> ...] [--values <genesis-JSON>]",
+  "  dap install <base-url> [--host <git-host>] [--namespace <name>] [--cohort application|application-publication|trusted-application|declared-application|device-application|archive-application|archive-declared-application|archive-device-application|invitation-key]",
+  "  dap install --plan <base-url> [--host <git-host>] [--namespace <name>] [--cohort application|application-publication|trusted-application|declared-application|device-application|archive-application|archive-declared-application|archive-device-application|invitation-key]",
+  "  dap install --planned [--cohort application|application-publication|trusted-application|declared-application|device-application|archive-application|archive-declared-application|archive-device-application|invitation-key]",
+  "  dap install <git+https-uri> --release <release-id> --request <kept-key> [--role <default-role> ...] [--values <genesis-JSON>] [--owner <full-member-JSON>]",
   "  dap application <install-item>",
   "  dap check [<directory>] [--config <relative-file>]",
   "  dap dev [<directory>] [--config <relative-file>] [--port <loopback-port>] [--scenario <listed-file>]",
@@ -72,7 +72,7 @@ export function parse(argv: readonly string[]): { words: string[]; flags: Map<st
 }
 
 const KNOWN: Record<string, readonly string[]> = {
-  install: ["host", "namespace", "plan", "planned", "cohort", "release", "request", "role", "values"], application: [], create: ["handle", "branch", "again"], claim: ["handle", "branch", "again"], invite: ["role", "acts", "hours", "keep", "check", "continue"], join: ["check"], acts: [], act: ["on", "target", "set", "value"], log: ["limit"], items: ["query"], show: [], verify: ["all"], status: ["request"], remote: [], clone: ["hours"], edit: ["file", "title", "closes"], propose: ["title"], merge: ["closes"], issue: ["title", "body"], issues: [],
+  install: ["host", "namespace", "plan", "planned", "cohort", "release", "request", "role", "values", "owner"], application: [], create: ["handle", "branch", "again"], claim: ["handle", "branch", "again"], invite: ["role", "acts", "hours", "keep", "check", "continue"], join: ["check"], acts: [], act: ["on", "target", "set", "value"], log: ["limit"], items: ["query"], show: [], verify: ["all"], status: ["request"], remote: [], clone: ["hours"], edit: ["file", "title", "closes"], propose: ["title"], merge: ["closes"], issue: ["title", "body"], issues: [],
 };
 
 /** Runs one command line with the given context. */
@@ -91,15 +91,15 @@ export async function command(ctx: Context, argv: readonly string[]): Promise<Ou
       if (first?.startsWith("git+")) {
         if (["host", "namespace", "plan", "planned", "cohort"].some(name => parsed.flags.has(name))
           || (parsed.flags.get("release")?.length ?? 0) !== 1 || (parsed.flags.get("request")?.length ?? 0) !== 1
-          || (parsed.flags.get("values")?.length ?? 0) > 1) return needs("an immutable Git URI, one --release and one --request, with application options only");
-        let values: unknown = {};
-        try { if (flag("values") !== undefined) values = parseStrict(flag("values")!); }
-        catch { return needs("valid genesis JSON in --values"); }
-        return installApplication(ctx, first, { release: flag("release")!, request: flag("request")!, roles: parsed.flags.get("role") ?? [], values });
+          || (parsed.flags.get("values")?.length ?? 0) > 1 || (parsed.flags.get("owner")?.length ?? 0) > 1) return needs("an immutable Git URI, one --release and one --request, with application options only");
+        let values: unknown = {}, owner: unknown;
+        try { if (flag("values") !== undefined) values = parseStrict(flag("values")!); if (flag("owner") !== undefined) owner = parseStrict(flag("owner")!); }
+        catch { return needs("valid JSON in --values and --owner"); }
+        return installApplication(ctx, first, { release: flag("release")!, request: flag("request")!, roles: parsed.flags.get("role") ?? [], values, ...(owner === undefined ? {} : { owner }) });
       }
-      if (["release", "request", "role", "values"].some(name => parsed.flags.has(name))) return needs("a git+https URI for application options");
+      if (["release", "request", "role", "values", "owner"].some(name => parsed.flags.has(name))) return needs("a git+https URI for application options");
       const cohorts = parsed.flags.get("cohort");
-      if (cohorts && (cohorts.length !== 1 || (cohorts[0] !== "application" && cohorts[0] !== "application-publication" && cohorts[0] !== "trusted-application" && cohorts[0] !== "declared-application" && cohorts[0] !== "invitation-key"))) return { code: 2, lines: ["--cohort takes exactly one value: application, application-publication, trusted-application, declared-application or invitation-key.", USAGE] };
+      if (cohorts && (cohorts.length !== 1 || (cohorts[0] !== "application" && cohorts[0] !== "application-publication" && cohorts[0] !== "trusted-application" && cohorts[0] !== "declared-application" && cohorts[0] !== "device-application" && cohorts[0] !== "archive-application" && cohorts[0] !== "archive-declared-application" && cohorts[0] !== "archive-device-application" && cohorts[0] !== "invitation-key"))) return { code: 2, lines: ["--cohort takes exactly one value: application, application-publication, trusted-application, declared-application, device-application, archive-application, archive-declared-application, archive-device-application or invitation-key.", USAGE] };
       const cohort = cohorts?.[0] as InstallCohort | undefined;
       const host = flag("host"), namespace = flag("namespace");
       const where = { ...((cohort ? host !== undefined : !!host) ? { host: host! } : {}), ...((cohort ? namespace !== undefined : !!namespace) ? { namespace: namespace! } : {}), ...(cohort ? { cohort } : {}) };
