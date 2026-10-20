@@ -1,1 +1,1 @@
-{"kind":"assert","text":"Correction to bd3ace9f and 3e2761e6: both were written at about 15:22 ET, not 15:40, and the two operator MCP reads they cite were made between 15:18 and 15:21 ET, not at 15:27 and 15:30. Content unchanged."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:669b9f53215ae6f6a7c6caccfb98bb164a64071c"}
