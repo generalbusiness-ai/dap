@@ -732,3 +732,12 @@ native 6.741912333 / 8.127650. Logs and natural closure are
 `/tmp/p1-k2-main-focused-20261020*`. These local checks preserve the
 existing TEST host/clock/actor boundaries and prove no hosted acceptance.
 Current-Main incorporation continues before the one final ordinary gate.
+
+Published Grow host-link Main `c7aaa3ab` then incorporates cleanly with a
+natural-zero no-commit merge. All six incoming URL/config/docs/report
+paths match that reviewed published head byte for byte. The existing
+built-homepage case passes naturally for all six pages in 0.170102958
+seconds wall / 0.174896 child CPU. The original merge/check wrapper and
+its exact source comparison are `/tmp/p1-integrate-g5-main-20261020*`.
+This private-branch incorporation performs no Cloudflare deployment and
+does not repeat a whole gate.

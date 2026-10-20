@@ -10,6 +10,22 @@ A deployment serves rooms of every definition version that its platform
 package has shipped, each by the version that its genesis pinned
 ([scopes.md](scopes.md), "Definition versions").
 
+## Grow demo Worker
+
+The Grow demo uses Worker `dap-grow` at
+`https://dap-grow.inguz.workers.dev`, configured by
+[`apps/room/wrangler.grow.jsonc`](../apps/room/wrangler.grow.jsonc).
+Its Durable Objects and Register17 are specific to this Worker. It shares
+the `artroom-demo` Artifacts namespace and application-content bucket.
+The config records `DEPLOYMENT=dap-grow-v1`, the exact register/Artifacts
+settings and the single signed demo release/publisher trust row.
+Set `SESSION_SECRET` separately from stdin.
+
+For a reviewed deployment, use pinned Wrangler 4.147.0 from a scratch
+directory and pass the absolute path to `wrangler.grow.jsonc`. The
+[Grow runbook](../examples/grow/runbook.md) gives the command, the planner's
+20 October provisioning status and the remaining hosted acceptance work.
+
 ## Settings and secrets
 
 A setting is a plain value. A secret is stored by the host and is never
