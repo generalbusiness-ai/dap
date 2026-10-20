@@ -2,12 +2,13 @@
 
 K2 now has supported internal fixture entries for Derive and Platform,
 plus separate Node-safe and Worker-only entries for Scope and MCP.
-Actual reviewed S2a Main `fb390d88` is integrated at `f856a6ee9`.
+Actual reviewed and published Grow Main `7594822c` is integrated at
+`055a54d9`, after S2a Main `fb390d88` at `f856a6ee9`.
 The newer Device/archive consumers use the same entries and explicit
 builders. All four owning compiler groups, a portable Node entry import,
 nine selected Node cases and 25 selected native cases pass after integration.
-These are focused checks. Actual G5 Main integration, the final gate and
-complete Source/review remain ahead. The earlier grouped MCP HTTP failure
+The final Grow native consumers also pass after integration. These are
+focused checks; the K2 gate and complete Source/review remain ahead. The earlier grouped MCP HTTP failure
 remains unclassified; its isolated pass is a separate observation.
 
 The following preparation history starts from the original Main baseline.
@@ -23,7 +24,7 @@ existing SCRIPTED scope service, not native scope evidence.
 Request: `6578efa9e9da839bf0bbb0961ba00b243a8ea06c`.
 Builder promise: `d387f722298edf53bf9d6776d9445b930900d422`.
 Original base: Main `dba3e76237250b6ce205d511691554de3d809baf`.
-Current integrated base: reviewed S2a Main `fb390d88`.
+Current integrated base: reviewed and published Grow Main `7594822c`.
 This is interruptible work behind G5a, S2a and G5. No frozen review view
 was executed or changed. Dependencies are a private COW copy of unsealed
 Main; no package was installed.
@@ -524,7 +525,7 @@ so G5a/S2a's new cases are counted on both sides:
 
 The combined increase is eight lines after the named native-entry follow-up below. No overall line reduction is claimed.
 `/tmp/artroom-k2-integrated-line-counts-20261020.json` records the counts.
-Current actual Main's passing Vitest count is 1,963 with three existing
+At that S2a checkpoint, actual Main's passing Vitest count is 1,963 with three existing
 skips; the original 1,926 count above belongs to the earlier baseline.
 G5's 1,977-case passing code head remains unlanded and is not counted as
 current Main. Actual G5 Main integration still precedes K2's final gate
@@ -578,3 +579,50 @@ records use `/tmp/artroom-k2-single-entry-` and
 The change saves one net MCP line and one Scope line. The actual Main
 comparison above is now net plus eight. Final integrated G5 Main, the one
 K2 gate and independent review remain required.
+
+
+## Published Grow Main integration and final consumer
+
+Actual reviewed and independently audited Grow code Main
+`7594822ca12d7d2ade130045f966110aaa434569` is published. Its code landing
+and publication are separate from Planner's still-open hosted acceptance
+milestone `cc069da1` / `2fcf3c3a`; this K2 work performs no CF operation.
+Clean merge `055a54d900d4d7b0a17000c17f6d59d523b03b2d` incorporates that
+actual Main without conflicts or shared Main mutation. The capture still
+reads the exact committed signed demo packet; K2 retains its identical
+fresh TEST signer for the other maintained packages. No frozen original
+Grow checkout, dependency or tool is executed or edited.
+
+The new Grow native file now uses the supported Worker entry and the
+existing exact fresh bindings factory. Five fixture imports become one;
+all 94 parsed expect-call source nodes remain exact, as do both cases,
+their deadlines, owner/principal checks and public allowances. The type-only
+maintained-context import stays in place. Its preservation record is
+`/tmp/artroom-k2-g5-entry-preservation-20261020.json`.
+Original 40416 naturally exits zero: Scope source/test/Node-support and
+Grow compilers pass, both native demo cases pass, and the portable entry
+still loads in Node without Worker runtime. Cost is 16.1719 seconds outer
+elapsed and 22.3322 seconds child CPU on the shared warm macOS arm64 host.
+Native duration is 11.09 seconds tests / 13.91 seconds total. Original logs
+and closure use `/tmp/artroom-k2-g5-integration-focused-20261020-`.
+
+The final before/after line inventory uses that same actual Main:
+
+| Package | Main 7594822c | Integrated K2 | Change |
+| --- | ---: | ---: | ---: |
+| Derive | 10,632 | 10,629 | -3 |
+| Platform | 5,942 | 5,940 | -2 |
+| Scope | 22,162 | 22,149 | -13 |
+| MCP | 7,831 | 7,853 | +22 |
+
+Net change is plus four lines. The result is one supported entry per
+runtime boundary and fewer copied builders; no overall line reduction is
+claimed. `/tmp/artroom-k2-g5-line-counts-20261020.json` records the counts.
+The new Grow case file makes 103 Scope native case consumers; the earlier
+v2 consumer inventory's 102 count belongs to its pre-Grow checkpoint.
+All existing Main cases remain: the current Main reference is 1,977
+passing Vitest cases and three existing skips, Node31 and Counter55.
+The final K2 gate must establish its own result at its saved head. The
+older grouped HTTP failure and the selected native resolve-pending teardown
+diagnostic remain separate, unresolved observations; no stability or
+physical-draining result is inferred from these focused passes.
