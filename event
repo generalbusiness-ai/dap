@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6eb5b005f2191104266a2a7d862c01d78e520724","text":"Merge retired a covered predecessor; the successor is at packages/contract/src/index.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6f6ada802891fd962690a793ac16962416b4b12a","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/support/grow-owned-fault-scenario.json."}
