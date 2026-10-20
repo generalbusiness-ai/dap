@@ -1,4 +1,5 @@
 /** C1's bounded singleton selection and shared prospective counter check. */
+import { natural } from "@generalbusiness/artroom-bytes";
 import type { Effect, StandingReservation } from "@generalbusiness/dap-contract";
 import { NOTHING, amountMath, type Amount } from "./held.ts";
 import { changeItem, newItem } from "./item-effects.ts";
@@ -8,7 +9,6 @@ import { isObject, own } from "./values.ts";
 
 export class StandingError extends Error { override readonly name = "StandingError"; }
 const invalid = (message: string): never => { throw new StandingError(message); };
-const natural = (value: unknown): value is number => typeof value === "number" && Number.isSafeInteger(value) && value >= 0 && !Object.is(value, -0);
 export interface StandingCounter { readonly item: Item | null; readonly count: number }
 
 /** No state reads for an old definition. For C1, count each declared state

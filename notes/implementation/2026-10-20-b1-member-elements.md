@@ -310,3 +310,59 @@ These local checks keep their TEST Git/clock/scheduler and native-owner
 fault boundaries. They do not repeat a full gate or establish a browser,
 provider, hosted, stability or drain result. Current-Main incorporation
 continues before B1's one final ordinary gate and complete Source review.
+
+## Incorporate K1 shared helpers, 20 October
+
+From clean B1 `a8663925`, the private worktree incorporates actual Main
+`13193f31`. The original merge naturally exits one with three conflicts:
+the fact-time collector, projection reader and declared-view interpreter.
+All nine original stages remain in
+`/tmp/b1-k1-main-conflict-stages-20261020/manifest.json`.
+
+The resolution keeps B1's fact-signer selection, MemberRef types, member
+table and member-aware template/title/fact/log rendering. It takes Main's
+`unavailableProjection`, shared projection failure and owned-JSON freezer,
+and `displayText` name. The first preparation stops after two files when
+it detects remaining MCP calls; the partial files are preserved and no
+project code or commit runs with conflict markers. The completed marker
+check and original conflict blocks are in
+`/tmp/b1-k1-main-conflict-resolution-20261020.json`.
+
+The helper guard passes. The first full compiler run catches an unused
+local series formatter: a broad name substitution had crossed a different
+meaning. Its failed source snapshot is
+`/tmp/b1-k1-main-compiler-v1-input-20261020.ts`. The series formatter stays
+separate as `seriesText`, retaining scale, unit and source-time formatting;
+all three scoped calls use it. The unchanged literal series assertion
+then passes with all seven declared-view cases. A first correction probe
+assumes the wrong helper signature and stops before writing; its input and
+the final correction receipt remain. No matcher, role, limit or guard
+changes.
+
+The corrected five affected workspace compiler groups pass. The six
+script/app/browser compiler projects that the first failed workspace
+command never reached also pass separately. Their logs are
+`/tmp/b1-k1-main-corrected-checks-v2-20261020*` and
+`/tmp/b1-k1-main-remaining-types-v3-20261020*`. The v2 test filter also names
+an absent `member-elements.test.ts`; only the seven actual declared-view
+cases execute. No member case is credited to that selection.
+
+The next explicit member/resource selection passes all three actual member
+cases and two resource cases, but the exact generated-resource witness
+fails after helper relocation. Its old 176,421-byte module is retained at
+`/tmp/b1-k1-main-stale-resource-input-20261020.ts`, SHA-256
+`7114e1c40b3e2e3dcde9c194706a2dcaba615429644c8f6a58cc149f8023c130`.
+The owned generator rebuilds all four resources from the combined source.
+The unchanged freshness witness then passes; its two other cases are
+outside that explicit follow-up selection, having passed before rebuilding.
+
+The remaining owning checks pass eight byte cases and three actual native
+files/cases, including declared member resolution, retained/hash/legacy
+fact-signer faults and the maintained Grow person prober. Native time is
+11.069858750 seconds wall / 12.805774 child CPU on the shared warm macOS
+arm64/Node 26.12/npm 11.20 host. These are local TEST-labelled boundaries,
+not a performance generalization or hosted result. Original runtime
+processes and natural closures are
+`/tmp/b1-k1-main-runtime-checks-20261020*` and `...runtime-checks-v2-20261020*`.
+The earlier failed selections are retained as their actual outcomes, not
+one passing pipeline. No full gate has run at this integration checkpoint.

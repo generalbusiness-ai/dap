@@ -1,14 +1,15 @@
 /** Whole-prefix native metadata classification. No entry/value/text/foreign
  * body is returned here. Successful classification is not integrity,
  * replay, access/consent admission or permission to export. */
+import { natural } from "@generalbusiness/artroom-bytes";
 import { DEVICE_COMMAND, DOMAINS } from "@generalbusiness/dap-contract";
 import type { Digest, Input, PlatformDefinition } from "@generalbusiness/dap-contract";
 import { isDigest, isPlatformDefinition, platformName } from "@generalbusiness/artroom-bytes";
 import { declarationValueDomains, type Capabilities, type OperationRules, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { platform } from "@generalbusiness/dap-platform";
 import { ArchiveBudget } from "./archive-budget.ts";
-import { ArchivePrefixStopped, type ArchivePrefix, type ArchivePosition } from "./archive-prefix.ts";
-import type { Sql } from "./sqlite.ts";
+import { stopArchivePrefix as stop, type ArchivePrefix, type ArchivePosition } from "./archive-prefix.ts";
+import { sqlJsonText as text, type Sql } from "./sqlite.ts";
 
 /** Trusted native code/registry metadata. A request cannot supply this map;
  * unknown owners/capability steps fail closed. No dynamic package runs. */
@@ -22,19 +23,16 @@ export interface ArchiveSupport {
 }
 export interface ArchivePrivacyPosition extends ArchivePosition { readonly input: Input["type"] }
 export interface ArchivePrivacyPrefix extends Omit<ArchivePrefix, "positions"> { readonly positions: readonly ArchivePrivacyPosition[] }
-const stop = (reason: ConstructorParameters<typeof ArchivePrefixStopped>[0]): never => { throw new ArchivePrefixStopped(reason); };
 const variants = ["genesis", "act", "delivery", "timed", "diagnosis", "outcome", "preparation", "checkpoint"] as const;
 const nativeDomains: ReadonlySet<string> = new Set(Object.values(DOMAINS));
 // Each expression executes at most three JSON inspections of its bounded
 // entry/effect input. The complete header + owner queries use fewer than
 // the 64 full-entry equivalents reserved by archivePrefixMetadata.
-const text = (path: string, max: number, source = "bytes") => `CASE WHEN typeof(json_extract(${source}, '${path}')) = 'text' AND octet_length(json_extract(${source}, '${path}')) <= ${max} THEN json_extract(${source}, '${path}') ELSE NULL END`;
 const HEADER = `SELECT json_extract(bytes, '$.seq') AS seq, ${text("$.at.scope", 71)} AS scope, ${text("$.at.inc", 64)} AS inc, ${text("$.at.kind", 16)} AS kind, ${text("$.input.type", 16)} AS input, ${text("$.prev", 71)} AS prev, json_type(bytes, '$.prev') AS prevType, json_type(bytes, '$.uses') AS usesType, json_array_length(bytes, '$.uses') AS uses, json_type(bytes, '$.effects') AS effectsType, json_array_length(bytes, '$.effects') AS effects FROM entry WHERE seq = ? AND hash = ? AND size = ? AND octet_length(bytes) = ? LIMIT 1`;
 const OWNER_LIMIT = 65;
 /** Finite native metadata. Device commands own no outside operation kind. */
 export const DEVICE_COMMAND_ARCHIVE_RECORDS: ReadonlySet<string> = new Set(["command"]);
 export const DEVICE_COMMAND_ARCHIVE_PREPARATIONS: ReadonlySet<string> = new Set(["answer"]);
-const natural = (n: unknown): n is number => typeof n === "number" && Number.isSafeInteger(n) && n >= 0 && !Object.is(n, -0);
 
 /** Complete trusted support metadata, including owners/domains on selected
  * declarations with no entries in this prefix. The registry is finite;

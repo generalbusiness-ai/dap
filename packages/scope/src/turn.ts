@@ -36,7 +36,7 @@ export const isSigned = (signed: SignedIntent): boolean => verifySignedIntent(si
 export const LATE = Symbol("late");
 
 /** The result of `work`, or `LATE` when it takes longer than `seconds` or fails. */
-export async function within<T>(work: () => Promise<T>, seconds: number): Promise<T | typeof LATE> {
+export async function turnDeadline<T>(work: () => Promise<T>, seconds: number): Promise<T | typeof LATE> {
   let stop = (): void => undefined;
   const late = new Promise<typeof LATE>((resolve) => {
     const timer = setTimeout(() => resolve(LATE), seconds * 1000);
@@ -59,7 +59,7 @@ export async function within<T>(work: () => Promise<T>, seconds: number): Promis
  */
 export async function fetchFacts(resolver: Resolver, bounds: Bounds, named: readonly FactRef[]): Promise<Fetched[] | null> {
   const read = await Promise.all(named.map(async (fact): Promise<Fetched | null> => {
-    const matched = await within(() => resolver.read(fact, bounds.fetchSeconds), bounds.fetchSeconds);
+    const matched = await turnDeadline(() => resolver.read(fact, bounds.fetchSeconds), bounds.fetchSeconds);
     return matched !== LATE && matched !== null && "entry" in matched && isEntryOf(matched.entry, fact) ? carryProducerName({ fact, entry: matched.entry, under: matched.under }, matched) : null;
   }));
   return read.every((f) => f !== null) ? read : null;
@@ -209,7 +209,7 @@ export class Turns {
       const step: End<A> | Attempt = await this.#queue.run(() => this.#section(creation, waiting, turn, attempt));
       if ("end" in step) return step;
       // Step 5: the rules are evaluated over the snapshot, within the time limit. The queue is free meanwhile.
-      const prepared = await within(() => this.#ports.rules.evaluate(step.asks), this.#bounds.preparationSeconds);
+      const prepared = await turnDeadline(() => this.#ports.rules.evaluate(step.asks), this.#bounds.preparationSeconds);
       if (prepared === LATE) return this.#queue.run(() => this.#close<A>(this.#definition(creation), turn, { end: "unavailable" }));
       resume = { ...step, prepared };
     }
@@ -423,3 +423,5 @@ export class Turns {
     await this.#ports.alarm.set(timeMs(next.due)! > now ? next.due : timeOf(now + this.#bounds.drainRetrySeconds * 1000));
   }
 }
+
+export { turnDeadline as within };

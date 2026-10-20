@@ -1,5 +1,6 @@
 /** Resolve one archive repository through existing bounded native reads.
  * Wiring and read authority are explicit fixture ports in this milestone. */
+import { same } from "@generalbusiness/artroom-bytes";
 import { ITEM_QUERY_BOUNDS, type Item, type ItemQuery, type ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, encodeItemQueryParameter, isRecord, isScopeRef, isSeed, readItemQueryReply, scopeIdOf, utf8 } from "@generalbusiness/artroom-bytes";
 import { isOf } from "@generalbusiness/dap-platform";
@@ -12,7 +13,6 @@ import { namespace, type Binding } from "./namespace.ts";
 import { proofEntry } from "./proof-bytes.ts";
 
 const BIRTH_BYTES = 256 * 1024, HOPS = 8;
-const same = (a: unknown, b: unknown) => canonicalize(a) === canonicalize(b);
 export interface FixtureArchiveTargetReads {
   readonly fixture: "archive-target-reads";
   readonly births: NativeBirthSource;

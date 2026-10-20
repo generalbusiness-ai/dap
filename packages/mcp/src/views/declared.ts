@@ -35,13 +35,13 @@ export interface DeclaredViewPort {
    * Unavailable identity must not select a member's carousel. */
   viewer?(): Promise<{ member: MemberRef; grants: readonly string[] } | null>;
 }
-const text = (value: unknown): string => value === null || value === undefined ? "" : typeof value === "string" ? value : canonicalize(value);
+const displayText = (value: unknown): string => value === null || value === undefined ? "" : typeof value === "string" ? value : canonicalize(value);
 const input = (row: ApplicationProjectionRow): Record<string, FieldValue | null> => ({ ...row.fields, id: row.id, type: row.type, state: row.state, revision: row.revision, ...(row.entry ? { time: row.time!, on: row.on! } : {}) });
 const template = (source: string, row: ApplicationProjectionRow, waiting: string, members?: MemberTable): string => {
   const values = { ...input(row), waiting };
   return source.replace(/\{([^{}]+)\}/g, (_whole, key: string) => {
     const value = Object.hasOwn(values, key) ? values[key as keyof typeof values] : null;
-    return memberValueText(value, members) ?? text(value);
+    return memberValueText(value, members) ?? displayText(value);
   });
 };
 export class DeclaredViewSource implements ViewSource {
@@ -175,8 +175,8 @@ export class DeclaredViewSource implements ViewSource {
     let fallback = `${series.label}: no recorded samples in the last ${window} native entries.`;
     if (samples.length) {
       const latest = samples.at(-1)!, lowest = samples.reduce((a, b) => b.value < a.value ? b : a), highest = samples.reduce((a, b) => b.value > a.value ? b : a);
-      const text = (sample: typeof latest) => `${formatInteger(sample.value, series.scale, series.unit)} at ${sample.time}`;
-      fallback = `${series.label}: ${samples.length} recorded samples in the last ${window} native entries. Latest ${text(latest)}; lowest ${text(lowest)}; highest ${text(highest)}.`;
+      const seriesText = (sample: typeof latest) => `${formatInteger(sample.value, series.scale, series.unit)} at ${sample.time}`;
+      fallback = `${series.label}: ${samples.length} recorded samples in the last ${window} native entries. Latest ${seriesText(latest)}; lowest ${seriesText(lowest)}; highest ${seriesText(highest)}.`;
     }
     return { label: series.label, scale: series.scale, unit: series.unit, window, samples, fallback };
   }
@@ -214,7 +214,7 @@ export class DeclaredViewSource implements ViewSource {
     const card: Card = {
       identity: surface ? { item: scope.scope, kind: "scope", revision: String(reply.value.at.seq), subject: { scope: scope.scope }, at: {} }
         : { item: String(row.id), kind: row.entry ? "entry" : row.type, revision: String(row.revision), subject: { scope: scope.scope, ...(row.entry ? {} : { item: row.id }) }, at: row.entry ? {} : { on: row.revision } },
-      title: view.kind === "surface" ? query.screen : memberValueText(values[view.title], members) ?? text(values[view.title]), summary: view.kind === "surface" || view.summary === null ? "" : memberValueText(values[view.summary], members) ?? text(values[view.summary]),
+      title: view.kind === "surface" ? query.screen : memberValueText(values[view.title], members) ?? displayText(values[view.title]), summary: view.kind === "surface" || view.summary === null ? "" : memberValueText(values[view.summary], members) ?? displayText(values[view.summary]),
       reasons: view.kind === "surface" ? [] : view.facts.map(fact => formatFact(fact, values, now, members)),
       projection: points, reviewIntended: [], unavailable: [], waitsOn: waiting ? [waiting] : [], settles: [], actions, fallback,
       declared: { kind: view.kind, source: view.item, context: template(view.context, row, waiting, members), actor: view.kind === "surface" || view.actor === null ? null : values[view.actor] ?? null,
@@ -231,7 +231,7 @@ export class DeclaredViewSource implements ViewSource {
           if (!row.entry || !row.time) throw new ViewError("unavailable", "A log needs explicit sealed entry facts.");
           const values = input(row);
           const facts = view.facts.filter(fact => applicationViewFactField(fact) !== "time");
-          return { entry: row.entry, time: row.time, title: memberValueText(values[view.title], members) ?? text(values[view.title]), summary: view.summary === null ? "" : memberValueText(values[view.summary], members) ?? text(values[view.summary]),
+          return { entry: row.entry, time: row.time, title: memberValueText(values[view.title], members) ?? displayText(values[view.title]), summary: view.summary === null ? "" : memberValueText(values[view.summary], members) ?? displayText(values[view.summary]),
             facts: facts.map(fact => formatFact(fact, values, now, members)), memberFacts: projectionMemberFacts(declaration.sources[view.item]!, facts, values) };
         }) } : {}),
         ...(surface ? { resource: surface.resource, opens: surface.opens, surface } : {}) },

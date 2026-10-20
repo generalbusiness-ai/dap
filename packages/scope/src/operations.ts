@@ -171,7 +171,7 @@ export interface Outside {
  */
 export const NO_OUTSIDE: Outside = { accepts: () => false, send: () => Promise.resolve(null) };
 
-const keyOf = (operation: OperationId, attempt: number) => `${operation}#${attempt}`;
+const attemptKey = (operation: OperationId, attempt: number) => `${operation}#${attempt}`;
 /**
  * An answer as the contract's outcome can hold it: a decisive result, and evidence with a basis and a body (`isEvidence`). Anything
  * else is no answer. That the evidence has canonical bytes is the ledger's check, in the turn (`derive/src/ledger.ts`, `settleOutcome`).
@@ -401,9 +401,9 @@ export class Operations {
         }
         // The request may have left: its durable mark has no outcome. An answer in hand wins; otherwise only an accepted safe
         // recovery read may obtain one. With neither, unknown is offered. The original mutation is never sent again.
-        const input = this.#held.get(keyOf(id, attempt));
+        const input = this.#held.get(attemptKey(id, attempt));
         const recovery = input ? null : this.#recovery(row);
-        offered.add(keyOf(id, attempt));
+        offered.add(attemptKey(id, attempt));
         work.push(() => recovery ? this.#answer(row, recovery.request, now, recovery.read) : this.#offer(row, input ?? this.#unknown(id, attempt), now));
         continue;
       }
@@ -415,10 +415,10 @@ export class Operations {
       const rules = operation ? this.#scope.owners()?.rules(operation.owner, operation.kind) : null;
       if (!operation || !origin || !this.#outside.accepts(operation.owner, operation.kind) || !rules) {
         if (row.next !== null) store.postpone(id, attempt, null);
-        if (operation && origin && rules) this.#refused.set(keyOf(id, attempt), { owner: operation.owner, kind: operation.kind });
+        if (operation && origin && rules) this.#refused.set(attemptKey(id, attempt), { owner: operation.owner, kind: operation.kind });
         continue;
       }
-      this.#refused.delete(keyOf(id, attempt));
+      this.#refused.delete(attemptKey(id, attempt));
       // The owner's rule on when the request may leave, such as the tokens of an attempt of a staging. Not ready: recorded and not
       // sent, with no wake-up, until a committed entry starts the walk again.
       if (!await this.#publicationReady(operation) || rules.ready && !rules.ready(store, operation, attempt)) {
@@ -476,7 +476,7 @@ export class Operations {
     }
     let offered = 0;
     for (const reply of answers) {
-      if (this.#held.has(keyOf(reply.operation, reply.attempt))) continue;
+      if (this.#held.has(attemptKey(reply.operation, reply.attempt))) continue;
       await this.answered(reply.operation, reply.attempt, reply.answer);
       offered++;
     }
@@ -598,7 +598,7 @@ export class Operations {
    */
   async #offer(row: Sending, input: Outcome, now: number): Promise<void> {
     const { operation, attempt } = row;
-    const key = keyOf(operation, attempt);
+    const key = attemptKey(operation, attempt);
     let recorded = await this.#record(input);
     if (recorded.recorded === "refused" && input.result !== "unknown") recorded = await this.#record({ ...this.#unknown(operation, attempt), retain: undefined });
     if (recorded.recorded === "unavailable") {
@@ -627,7 +627,7 @@ export class Operations {
     if (!isAnswer(answer)) return { recorded: "refused", detail: "bad-input: not an answer" };
     const row = isOperationId(operation) && Number.isSafeInteger(attempt) ? this.#store.sending(operation, attempt) : null;
     if (!row || row.sent === null) return { recorded: "refused", detail: "no request of that attempt was sent" };
-    const key = keyOf(operation, attempt);
+    const key = attemptKey(operation, attempt);
     const input: Outcome = { type: "outcome", operation, attempt, result: answer.result, evidence: answer.evidence, retain: answer.retain };
     const recorded = await this.#record(input);
     if (recorded.recorded === "unavailable") {
