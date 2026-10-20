@@ -189,9 +189,10 @@ All 2,349 tracked source rows stay exact before/after. All 5,530 private
 dependency rows stay exact except one Vitest results-cache file. The lock
 and private dependency stamp stay exact; the checkout stays clean.
 The raw test log retains the deliberately scripted reset/retention faults
-and Git binary-body warnings. The two earlier resolve-pending diagnostics
-remain separate observations; this successful gate makes no general
-stability or physical-draining claim.
+and Git binary-body warnings. It also prints an unclassified RPC-result
+disposal diagnostic. That observation and the two earlier resolve-pending
+diagnostics remain retained; no clean-output, general stability or
+physical-draining claim is made.
 
 Original gate helper, log, natural closure and inventories use
 `/tmp/artroom-k2-prepared-gate-20261020`. Complete phase output is under
