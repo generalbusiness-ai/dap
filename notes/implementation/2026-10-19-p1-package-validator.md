@@ -815,3 +815,27 @@ lock or permission changes. Exact original argv/log/closure and protected
 hashes are `/tmp/p1-integrate-tagline-main-20261020*`; shared preparation
 is `/tmp/builder-incorporate-tagline-main-20261020.py` and its closed result.
 The final source gate remains due at this clean integration checkpoint.
+
+## Incorporate reviewed S2b and market Main
+
+The isolated P1 branch now incorporates actual reviewed and published
+Main `7bc1490c286a360a1198d144674998b704c167ad`, tree `d6782922`.
+Original no-commit merge closes naturally zero in 0.037244334 seconds,
+without conflicts. All 23 incoming S2b and market design/docs paths match
+Main exactly; all 79 authored paths keep their bytes and modes. Original
+argv/log/closure and preserved path sets are
+`/tmp/p1-integrate-s2b-main-20261020*`. This changes no shared Main/ref,
+credential, provider or deployment state.
+
+The owning integration check passes all three Scope compiler
+configurations, the pool prerequisite and both native installed-archive
+cases, including Grow. That new S2b witness therefore works with P1's
+strict package composition and existing maintained-package selection;
+no test or published-package exception is added. Original `91329`
+closes naturally zero. Native wall/CPU is 6.013669791/6.957035 seconds
+on shared warm macOS 27.0.1 arm64, starting load
+1.3823/1.7119/2.1406. Every recorded source byte/mode remains unchanged,
+the lock stamp matches and no package installs. Exact commands, source
+inputs, logs and closure are `/tmp/p1-s2b-main-focused-20261020*`.
+These separate phases are not a gate. P1's first ordinary final gate and
+complete exact-head Source review remain required.
