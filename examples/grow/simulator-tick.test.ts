@@ -1,23 +1,43 @@
 /** Actual in-memory native rules, judgments and folding. Public reads and
- * per-key grants are SCRIPTED adapters; this does not prove native install,
- * membership/session admission, HTTP transport or owned command settlement. */
+ * per-key and parent Device grants are SCRIPTED adapters; this does not
+ * prove native install, membership/session admission or HTTP transport. */
 import { readFile } from "node:fs/promises";
 import { expect, test } from "vitest";
-import type { SignedIntent } from "@generalbusiness/dap-contract";
+import { DEVICE_COMMAND, PROPOSED_BOUNDS, type DeviceCommandGrant, type SignedIntent } from "@generalbusiness/dap-contract";
+import { definitionDigest } from "@generalbusiness/artroom-bytes";
 import { secretSigner } from "@generalbusiness/artroom-client";
-import { prepareRules } from "@generalbusiness/dap-derive";
+import { clockOf, deviceCommand, judgePreparation, prepareRules, validateDefinition } from "@generalbusiness/dap-derive";
 import { evaluateRules } from "@generalbusiness/dap-derive/rule";
 import { receiptOf } from "@generalbusiness/artroom-scope/runtime";
-import { t } from "@generalbusiness/dap-derive/testing";
+import { created, deliver, grantOf, t, valid } from "@generalbusiness/dap-derive/testing";
+import { deviceCommandRow as row } from "../../packages/derive/test/fixtures-device-command.ts";
 import { demoDefinitions } from "./demo-definitions.ts";
 import { simulatorSchedule } from "./simulator.ts";
 import { simulatorTick, type SimulatorPorts } from "./simulator-tick.ts";
-import { nativeScenario, devicePermissions, operator, climate, sensors, submit } from "./test-support.ts";
+import { nativeChild, devicePermissions, operator, climate, sensors, submit } from "./test-support.ts";
 
 async function fixture() {
-  const { room } = demoDefinitions(), ledger = nativeScenario(room, devicePermissions, {
+  const { room } = demoDefinitions(), fields = {
     label: "TEST hosted room", sensors: sensors.member, climate: climate.member, operator: operator.member,
-  });
+  };
+  // A made-up parent supplies the TEST grant in its actual sealed create
+  // message. The Room then uses the native capability, judges and fold.
+  const parentDefinition = valid(validateDefinition({ ...room, name: "test.grow-tick-parent", capabilities: [], genesis: "start",
+    items: { root: { many: false, max: 1, initial: "ready", states: { ready: { final: false } }, parties: {}, refs: {}, values: {} } },
+    acts: { start: row({ step: "open", on: "root", grant: "found", guards: [] }),
+      spawn: row({ on: "root", grant: "found", guards: [], sends: [{ create: { kind: "lane", definition: definitionDigest(room),
+        fields: Object.fromEntries(Object.entries(fields).map(([name, value]) => [name, { const: value }])), result: {} } }] }) },
+    receives: {}, timed: {}, rules: {},
+  }, PROPOSED_BOUNDS));
+  const parent = created(parentDefinition, {}), code = deviceCommand();
+  const spawning = parent.judge(parent.intent(operator, "spawn", { on: 0, expected: { on: 1 } }));
+  if (spawning.result !== "write") throw Error("The TEST parent must create its Room.");
+  const grant: DeviceCommandGrant = { capability: DEVICE_COMMAND, owner: sensors.member, bounds: { kinds: ["fan", "heater", "vent"], owners: 1 },
+    root: parentDefinition.digest, definitions: [definitionDigest(room)] };
+  parent.seal({ ...spawning.draft, sends: spawning.draft.sends.map(send => ({ ...send, message: { class: "request", type: "create",
+    body: { ...(send.message as { body: object }).body, membership: sensors.member.membership, creationContext: { v: 2, deviceCommand: grant, delegate: false } } } })) });
+  const ledger = await nativeChild(parent, parent.last.seq, room, devicePermissions);
+  if (deliver(parent, ledger, 0).result !== "write" || deliver(ledger, parent, parent.last.seq).result !== "write") throw Error("The TEST parent and Room must confirm the actual creation.");
   const wrote = (result: unknown) => expect(result, JSON.stringify(result)).toMatchObject({ result: "write" });
   for (let ordinal = 1; ordinal <= 4; ordinal++) {
     wrote(await submit(ledger, operator, "commission-zone", { fields: { label: `Zone ${ordinal}`, setpoint: 2400, band: 200 } }));
@@ -49,13 +69,24 @@ async function fixture() {
     },
     submit: async signed => {
       sent.push(signed);
-      const context = ledger.context(), prepared = await evaluateRules(prepareRules(ledger.state, ledger.definition, { act: signed, context }));
-      const result = ledger.submit(signed, { prepared });
+      const context = ledger.context({ capabilities: code }), prepared = await evaluateRules(prepareRules(ledger.state, ledger.definition, { act: signed, context }));
+      const result = ledger.submit(signed, { prepared, capabilities: code });
       if (result.result === "write") return { answer: "accepted", receipt: receiptOf(ledger.entries.at(-1)!, ledger.definition.digest) };
       if (result.result === "refused") return { answer: "refused", reason: result.reason, ...(result.name ? { name: result.name } : {}), judgedAt: ledger.head };
       expect.fail(`Unexpected native judgment: ${JSON.stringify(result)}`);
     },
-    answer: async () => { expect.fail("this fixture has no native device-command owner"); },
+    answer: async signed => {
+      const result = judgePreparation(ledger.state, ledger.definition, { signed, capability: DEVICE_COMMAND, step: "answer" }, {
+        clock: clockOf(ledger.state, ledger.now), bounds: PROPOSED_BOUNDS, steps: code, own: ledger.own,
+        granted: () => ({ result: "granted", grant: grantOf(sensors, ledger.at, []) }),
+      });
+      if (result.result === "write") {
+        ledger.seal(result.draft);
+        return { answer: "accepted", receipt: receiptOf(ledger.entries.at(-1)!, ledger.definition.digest) };
+      }
+      if (result.result === "refused") return { answer: "refused", reason: result.reason, ...(result.name ? { name: result.name } : {}), judgedAt: ledger.head };
+      expect.fail(`Unexpected native preparation: ${JSON.stringify(result)}`);
+    },
     stop: () => { stopped = true; },
   };
   const schedule = simulatorSchedule(JSON.parse(await readFile(new URL("./demo/simulator.json", import.meta.url), "utf8")));

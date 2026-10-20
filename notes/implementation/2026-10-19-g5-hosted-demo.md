@@ -2,9 +2,11 @@
 
 Request `78fba9fca56a28dc75cca37f88a0fbea334bdc2a`, promise
 `e60fe0660ce663c14afe242ad6614bacbe91610a`. This separate preparation
-starts from reviewed Main `3ed2a08a`. Actual reviewed G5a must land before
-the integration witness and final gate. The frozen G5a views have not been
-imported, executed or edited. The static page, pure simulation, bounded public
+starts from reviewed Main `3ed2a08a` and now integrates actual reviewed
+G5a Main through `2fcd50ab`. The frozen G5a original files and dependencies
+have not been executed or edited. This separate mutable checkout reads
+the reviewed Git commits. Landed S2a still precedes the final combined
+integration witness and gate. The static page, pure simulation, bounded public
 journal reconstruction, stateless tick and scheduled-host factory are prepared
 and checked below. Release packet, installed native tick/catch-up, whole gate, Source/review,
 deployment and live acceptance remain pending.
@@ -16,6 +18,52 @@ Builder local/dry runs create no Cloudflare resource. The operator supplies
 the nonsecret trust row, deploys after review, provisions the actual room
 and secrets, runs the runbook and records live acceptance. A person taking
 an operator act in their AI app is actual acceptance, never a fixture claim.
+
+## Reviewed G5a integration and native in-memory owner path
+
+Merge `dadd7e48b3efc7d87f2aa4989dbe3ee1450e0cd3`, tree
+`eb83603b25f7cf2300a6ed6f5820b07d2e6ecd03`, incorporates actual Main
+`2fcd50ab1b5b3282621ccdb9ecd2d3aa9dcab396` into this separate G5
+preparation. The merge has no conflicts. Main includes the audited and
+pushed G5a landing `a00eda3b` and the reviewed identifier design note.
+No Main ref changes here, and no hosted room is provisioned.
+
+The owning Grow compiler passes. Of seven focused cases in three files,
+five initially pass and two tick scenarios stop at minute 10. Their old
+fixture supplies no Device grant and its owner-answer port deliberately
+fails. That boundary was explicit before G5a existed; it cannot execute
+the now-maintained Device command forms. The production simulator is
+unchanged by this fixture correction.
+
+The corrected tick fixture constructs a made-up parent and retains its
+TEST Device grant in the actual sealed creation message. The grant names
+the sensors member and the three allowed kinds. The existing native child
+helper validates and judges Room genesis, retains prepared rule inputs,
+and the parent and Room complete their actual creation confirmation.
+Command acts use the native Device capability. The answer port calls the
+native preparation judge and folds its sealed owner result. Public reads,
+the parent grant and per-key membership grants remain scripted TEST
+authority. This is no installed-room, Membership admission, HTTP or
+physical-provider proof.
+
+Two setup failures remain recorded. The first adapted child omitted the
+creation confirmation and correctly refused acts as `scope-provisional`.
+The next confirmed child was made directly, outside the shared helper's
+prepared-input registry. It failed while retaining a rule input. Reusing
+the existing native child helper fixes that setup. All four scenario
+bodies are byte-for-byte unchanged, including every original assertion
+and deadline. The former no-owner failure sentinel in the fixture's
+answer port is replaced by the native preparation path.
+
+The owning compiler and whole four-case tick file now pass. Original
+process30154 naturally exits zero: 1.55 elapsed seconds and 2.74 CPU
+seconds on the warm shared machine. Evidence is under
+`/tmp/artroom-g5-g5a-integration-*20261020*` and
+`/tmp/artroom-g5-owned-tick-*20261020*`. The exact four-body preservation
+record is `/tmp/artroom-g5-owned-tick-assertion-preservation-20261020.json`.
+These are focused integration results, not a final gate or a claim that
+S2a has landed. The first hosted Grow room still requires the combined
+Device and archive cohort on actual reviewed S2a Main.
 
 ## Current checkpoint after planner decision
 
