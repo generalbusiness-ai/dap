@@ -8,13 +8,29 @@ import { JournalWork, refuseJournal } from "./journal-work.ts";
 interface Change { readonly files: Map<string, string>; readonly children: Map<string, Change> }
 const change = (): Change => ({ files: new Map(), children: new Map() });
 
+/** Pre-I/O maxima from the path grammar, including SHA-256 IDs. Isolated
+ * reads reserve the whole maximum, so fixed root paths must not reserve
+ * a thousand 255-byte names that cannot occur at those paths. */
+export function journalV2TreeBytes(prefix: string): number {
+  if (prefix === "" || prefix === "journal/") return 295;
+  if (prefix === "journal/v2/") return 4 * 295;
+  if (/^journal\/v2\/(passes|segments|retained)\/(?:[0-9]{3}\/){0,2}$/.test(prefix)) return 1000 * 43;
+  if (/^journal\/v2\/(passes|segments|retained)\/(?:[0-9]{3}\/){3}$/.test(prefix)) return 1000 * 58;
+  if (/^journal\/v2\/retained\/(?:[0-9]{3}\/){3}[0-9]{12}\/$/.test(prefix)) return 5 * 295;
+  if (/^journal\/v2\/retained\/(?:[0-9]{3}\/){3}[0-9]{12}\/(definition|entry|rule|snapshot)\/$/.test(prefix)) return 512 * 104;
+  if (/^journal\/v2\/retained\/(?:[0-9]{3}\/){3}[0-9]{12}\/value\/[^/]+\/$/.test(prefix)) return 512 * 104;
+  // Encoded value domains may use a complete 255-byte component.
+  return 1000 * 295;
+}
+
 /** Resolve one fixed v2 path. No directory recursion or manifest scan. */
 export async function journalV2File(reader: JournalObjectReader, tree: string, path: string, work: JournalWork): Promise<string | null> {
   if (!readJournalV2Path(path)) return refuseJournal("tree", path);
   const parts = path.split("/");
   for (let i = 0; i < parts.length; i++) {
     work.budget.spend({ nodes: 1 });
-    const rows = reader.tree(await reader.read(tree, "tree", 1000 * 295));
+    const prefix = i === 0 ? "" : parts.slice(0, i).join("/") + "/";
+    const rows = reader.tree(await reader.read(tree, "tree", journalV2TreeBytes(prefix)));
     if (rows.length > 1000) return work.stop();
     const row = rows.find(row => row.name === parts[i]);
     if (!row) return null;
@@ -50,7 +66,7 @@ export async function patchJournalV2Tree(reader: JournalObjectReader | null, par
     work.depth(depth); work.budget.spend({ nodes: 1 });
     // At most 1,000 rows; a legal component may use all 255 bytes, plus
     // mode/separators and a SHA-256 ID. The name cap is checked below too.
-    const before = previous === null ? [] : reader!.tree(await reader!.read(previous, "tree", 1000 * 295));
+    const before = previous === null ? [] : reader!.tree(await reader!.read(previous, "tree", journalV2TreeBytes(prefix)));
     const maximum = prefix === "" || prefix === "journal/" ? 1 : prefix === "journal/v2/" ? 4 : 1000;
     if (before.length > maximum) return work.stop();
     const rows = new Map<string, JournalTreeRow>(before.map(row => [row.name, row]));

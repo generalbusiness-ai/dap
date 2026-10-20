@@ -5,8 +5,9 @@ floor design at Main `d92cd85e`, section 2 and witnesses 1 to 4. This work
 starts from that Main in an isolated checkout. It contains no 9a admission
 changes and no floor entry or deployment configuration.
 
-This is work in progress. There is no full gate, review, landing, native
-confirmation or native offline replay acceptance yet.
+This is work in progress. There is no full gate, review, landing or complete
+F1 acceptance. Test-host confirmation and replay below use explicit TEST
+host, policy and authority.
 
 ## Implemented boundary
 
@@ -209,3 +210,88 @@ expectation remains acceptance, and its direct assertion is preserved as a
 failure, not recast as a passing witness. No original cap or cache debit
 was changed. Witness 2 needs a planner decision; other integration can
 continue within the existing counters.
+
+## Driver, exact transport and append validation
+
+The driver now writes v2 from its first pass. It selects a contiguous new
+interval from scalar size metadata, with no entry JSON or old-prefix read.
+Its current conservative cutoff is at most 128 entries or 128 KiB of body
+bytes, with a single larger first entry left to normal admission. These are
+lower scheduling limits inside the unchanged 4,096-entry and original work
+ceilings. Inventory still performs full privacy admission; cutoff sizing is
+no permission or prepaid body read. A position above the twelve-digit
+layout bound reports `limit`.
+
+After a confirmed v2 receipt, both pin loading and inventory avoid entry
+zero. Pending attempts rebuild from their exact stored selection. A pending
+v1 attempt follows its original rules first. Its confirmation schedules a
+separate same-cutoff v1 conversion even if no new entry arrived. Only after
+that v2 receipt does a new incremental interval follow. All receipt, retry,
+ref read-back, credential and native-turn fences remain in place.
+
+The parent port reads exact objects rather than a complete old closure.
+Actual fixture adapters use explicit isolated upload-pack negotiation with
+no closure fallback. The original pass allowance reserves bounded wire work
+before identity/HTTP I/O. Fixed root tree paths now reserve their finite
+name grammar, rather than a thousand maximal names; larger tree paths keep
+their legal bounds. No archive cap or whole-pass attempt debit increased.
+
+A v2 append's send validator compares hash-checked old and new tree edges.
+An old edge may remain unread only at the same path, mode and ID. Every
+changed edge needs its supplied, hash-checked object. No old file except
+head.json may change, and no old edge may disappear. It takes no arbitrary
+caller stop set or complete-closure certificate. Initial v2 and conversion
+sends still use the generic full-new-closure send. Generic destination
+sends keep their original rule. Credential/ref/incarnation binding and the
+final smart-HTTP send fence apply to both paths.
+
+| Original attempt | Actual result | Wall seconds | Child CPU seconds |
+| --- | --- | ---: | ---: |
+| `53734`, append edges | Both Git compilers and one exact-parent-edge case pass, including missing new body and overwritten old manifest refusals | 2.988090917 | 3.393511 |
+| `63423`, bounded provider | Four compilers, two Git cases (including changed path maxima after 10,000 mechanical passes) and two native adapter read cases pass | 36.307991917 | 43.611017 |
+| `54446`, append adapters | Both Scope compilers and all twelve owning adapter cases pass, including native-body append send and expiry fence | 4.975032083 | 8.544444 |
+| `21371`, native driver | Both Scope compilers and eleven driver cases pass, including 10,000 actual checkpoint entries and replay | 11.421463500 | 15.200512 |
+| `77230`, v1 handoff | Test compiler and the new pending-v1/confirmation/conversion/v2 case pass | 4.567422166 | 7.502227 |
+| `30461`, old-path control | Fixed 0; omitted old-file guard causes the direct overwritten-manifest assertion to fail; original source restored | 6.882776084 | 8.650130 |
+| `59647`, wire-work control | Fixed 0; zeroed work reservation makes the direct pre-I/O limit assertion fail; original source restored | 10.747915541 | 18.534680 |
+| `80089`, final classification | Source compiler passes after classifying an overlarge cutoff position as `limit`; compiler only | 0.613076458 | 1.133638 |
+
+Timing qualification for this section: the helper's elapsed window starts
+after its initial source snapshot. It includes command-boundary unchanged
+checks, commands and final checks, but excludes initial snapshot creation.
+Its child CPU counter excludes the Python helper's own work. These are
+phase-window elapsed and child CPU figures; full outer elapsed and total CPU
+were not measured. The conversion-section helper figures have the same
+boundary. Future acceptance runs must measure the complete outer invocation.
+The closed data view predates this clarification; its original receipts
+remain unchanged and this paragraph corrects their interpretation.
+
+These independent attempts preserve full physical source snapshots, source
+modes and lock stamps, with zero installs. Counts grow from 2,633 to 2,635
+files. Each control phase has its own full snapshot. Measurements use the
+shared macOS arm64 host and uncontrolled OS caches, with actual tools and
+load recorded in each input receipt. The adapter read fixture's text-body
+console warnings in `63423` are retained; the fixture now decodes protocol
+bytes explicitly and the later owning adapter log has no such warning.
+
+The native large-history case creates 9,999 checkpoints through the real
+Scope object, yielding 10,000 entries. Multiple original bounded passes
+confirm through its head, including an eviction after the thirtieth pass.
+A SQL guard refuses any entry query at or before the confirmed receipt.
+The host records zero complete-parent-closure reads. The v2 reader and
+Replay reach `consistent` through the actual final head. This uses a TEST
+object repository, credentials, policy and authority, with grants explicitly
+`as-recorded`. Its raw report confirms the case passed; console forwarding
+did not retain the proposed detailed receipt line, so no exact measured
+pass count or receipt list is claimed. The separate adapter cases use real
+transport/send/pack code with TEST HTTP replies; they do not establish that
+the entire large-history driver used that adapter or one combined measured
+network budget. A real Git clone of the native closure is still outstanding.
+
+The current remaining boundaries include a full-budget driver run through
+the actual adapter, 10,000 confirmed native one-entry passes, the 512-new-key
+witness decision (`03faada8`), later reuse of key 3,700 across restart,
+9a integration and its omitted-text decision (`d072cb9b`), and complete F1
+acceptance followed by one gate and review. Neither planner request has
+been answered at this checkpoint. No deployed or provider acceptance is
+claimed. No formal Source, review request, landing or push is filed here.

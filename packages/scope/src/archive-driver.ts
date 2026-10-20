@@ -3,11 +3,12 @@
 import { same } from "@generalbusiness/artroom-bytes";
 import type { Bounds, Head, ScopeRef, Seed, Timestamp } from "@generalbusiness/dap-contract";
 import { isScopeRef, timeMs, timeOf } from "@generalbusiness/artroom-bytes";
-import { journalId, journalRef, type JournalArchive, type JournalFormat, type JournalObject } from "@generalbusiness/artroom-git/journal";
+import { journalId, journalRef, type JournalArchive, type JournalPassArchive, type JournalFormat, type JournalObject, type JournalObjectSource } from "@generalbusiness/artroom-git/journal";
 import { ArchiveBudget, ArchiveStopped } from "./archive-budget.ts";
-import { planArchive, rebuildArchive } from "./archive-build.ts";
+import { planArchivePass, planArchiveConversion, rebuildArchive, rebuildArchivePass } from "./archive-build.ts";
+import { archiveCutoff } from "./archive-cutoff.ts";
 import type { FixtureArchiveSourcePins } from "./archive-source-pins.ts";
-import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, readArchivePin } from "./archive-pin.ts";
+import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, readArchivePin, readArchivePinAfterReceipt } from "./archive-pin.ts";
 import type { ArchivePolicyRegistry } from "./archive-inventory.ts";
 import { ArchiveRows, type ArchiveRow } from "./archive-row.ts";
 import type { DestinationRepository } from "./destination-host.ts";
@@ -18,6 +19,9 @@ export interface ArchiveSend {
   readonly repository: DestinationRepository; readonly at: ScopeRef; readonly ref: string;
   readonly old: string | null; readonly commit: string; readonly objects: readonly JournalObject[];
   readonly credential: ArchiveCredential; readonly allowed: () => boolean;
+  /** Only a v2 append uses old tree edges. Validation spends the same pass
+   * allowance and derives its own unchanged edges from the exact parent. */
+  readonly incremental?: { readonly budget: ArchiveBudget };
 }
 /** These are trusted bounded I/O ports. Actual adapters must enforce the
  * scope/ref binding again at send, not rely on the driver's earlier check. */
@@ -25,6 +29,7 @@ export interface ArchiveProvider {
   format(repository: DestinationRepository, allowed: () => boolean): Promise<JournalFormat>;
   ref(repository: DestinationRepository, ref: string, allowed: () => boolean): Promise<string | null>;
   objects(repository: DestinationRepository, commit: string, most: { readonly bytes: number; readonly objects: number }, allowed: () => boolean): Promise<readonly JournalObject[]>;
+  readObject?(repository: DestinationRepository, object: { readonly id: string; readonly type: JournalObject["type"]; readonly maximum: number }, allowed: () => boolean, budget: ArchiveBudget): ReturnType<JournalObjectSource["object"]>;
   mintArchive(repository: DestinationRepository, at: ScopeRef, allowed: () => boolean): Promise<ArchiveCredential | null>;
   sendArchive(request: ArchiveSend): Promise<unknown>;
   revokeArchive(credential: ArchiveCredential): Promise<void>;
@@ -115,6 +120,31 @@ export class ArchiveDriver {
   }
   async #parent(row: ArchiveRow, budget: ArchiveBudget, allowed: () => boolean) {
     const id = row.pending?.parent ?? row.confirmed?.commit ?? null;
+    if (row.pending?.layout === 2 || !row.pending) {
+      const held = new Map<string, JournalObject>(), used = new Set<string>(); let bytes = 0;
+      if (id === null) return { parent: null, held, used };
+      const read = this.#options.provider.readObject;
+      if (!read) return budget.stop("unavailable");
+      const source: JournalObjectSource = {
+        object: async (key, maximum) => {
+          const object = held.get(key);
+          return object ? { type: object.type, size: object.data.length, data: object.data.length <= maximum ? object.data : null } : null;
+        },
+        boundedObject: async (key, type, maximum) => {
+          budget.check(); let object = held.get(key);
+          if (!object) {
+            const got = await budget.wait(() => read.call(this.#options.provider, { ...row.repository }, { id: key, type, maximum }, allowed, budget));
+            if (got === null) return null;
+            if (!(got.data instanceof Uint8Array) || got.type !== type || got.size !== got.data.length || got.size > maximum || got.size > this.#maximum - bytes) return budget.stop("unavailable");
+            object = this.#copy([{ id: key, type, data: got.data }], row.format, budget).get(key)!;
+            bytes += object.data.length; held.set(key, object);
+          }
+          used.add(key);
+          return { type: object.type, size: object.data.length, data: object.data.length <= maximum ? object.data : null };
+        },
+      };
+      return { parent: { id, source }, held, used };
+    }
     const held = id === null ? new Map<string, JournalObject>() : this.#copy(await budget.wait(() => this.#options.provider.objects({ ...row.repository }, id, { bytes: this.#maximum, objects: 8192 }, allowed)), row.format, budget);
     const used = new Set<string>();
     const parent = id === null ? null : { id, source: { object: async (key: string, most: number) => {
@@ -135,13 +165,14 @@ export class ArchiveDriver {
       budget.spend({ inputWork: 4 * (ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES) });
       const current = this.#options.current()!;
       const at = { ...current.at }, through = { ...current.head };
-      const pin = readArchivePin(budget.native(this.#options.sql, () => ({ metadata: ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES, inputWork: 0 })), at);
+      let row = rows.load(budget);
+      if (row?.stopped) return { state: "stopped", next: null, reason: row.stopped.reason };
+      const readPin = row?.confirmed?.layout === 2 ? readArchivePinAfterReceipt : readArchivePin;
+      const pin = readPin(budget.native(this.#options.sql, () => ({ metadata: ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES, inputWork: 0 })), at);
       budget.check();
       if (!pin) return { state: "retry", next: this.#later(0), reason: "unavailable" };
       const policy = this.#options.policies.registry.get(pin.seed.definition);
       if (!policy || !policy.review || policy.support.named !== pin.seed.definition) { this.#disabled = true; return { state: "disabled", next: null }; }
-      let row = rows.load(budget);
-      if (row?.stopped) return { state: "stopped", next: null, reason: row.stopped.reason };
       const now = timeMs(this.#options.clock());
       if (now === null) { budget.stop("unavailable"); return { state: "retry", next: null, reason: "unavailable" }; }
       if (row?.next && timeMs(row.next)! > now) return { state: "retry", next: row.next };
@@ -167,7 +198,7 @@ export class ArchiveDriver {
         const seen = await budget.wait(() => this.#options.provider.ref({ ...row!.repository }, ref, allowed));
         if (seen === row.pending!.commit) return this.#confirmed(rows, row, budget);
         if (seen !== row.pending!.parent) { rows.stop("conflict", ref, budget); return { state: "stopped", next: null, reason: "conflict" }; }
-      } else if (row.confirmed && row.confirmed.through.seq >= through.seq) {
+      } else if (row.confirmed?.layout === 2 && row.confirmed.through.seq >= through.seq) {
         rows.clearWake(budget); this.#fallback = null; return { state: "idle", next: null };
       }
       if (!row.pending) {
@@ -176,13 +207,20 @@ export class ArchiveDriver {
         rows.defer(scheduled, budget);
       }
       const previous = await this.#parent(row, budget, allowed);
-      let archive: JournalArchive;
+      let archive: JournalArchive | JournalPassArchive;
       if (row.pending) {
-        const rebuilt = await rebuildArchive(this.#options.sql, row, previous.parent, budget, this.#options.fixtureSources);
+        const rebuild = row.pending.layout === 2 ? rebuildArchivePass : rebuildArchive;
+        const rebuilt = await rebuild(this.#options.sql, row, previous.parent, budget, this.#options.fixtureSources);
         if (!rebuilt.ok) { rows.stop(rebuilt.reason, "where" in rebuilt ? rebuilt.where ?? null : null, budget); return { state: "stopped", next: null, reason: rebuilt.reason }; }
         archive = rebuilt.archive;
       } else {
-        const planned = await planArchive(this.#options.sql, { at, through, bounds: this.#options.bounds, policies: this.#options.policies.registry, format: row.format, parent: previous.parent, markedAt: this.#options.clock(), ...(this.#options.fixtureSources ? { fixtureSources: this.#options.fixtureSources } : {}) }, budget);
+        const common = { bounds: this.#options.bounds, policies: this.#options.policies.registry, parent: previous.parent,
+          markedAt: this.#options.clock(), ...(this.#options.fixtureSources ? { fixtureSources: this.#options.fixtureSources } : {}) };
+        const planned = row.confirmed && row.confirmed.layout !== 2
+          ? await planArchiveConversion(this.#options.sql, { ...common, row }, budget)
+          : await planArchivePass(this.#options.sql, { ...common, at,
+            through: archiveCutoff(this.#options.sql, through, row.confirmed?.through ?? null, this.#options.bounds, budget),
+            after: row.confirmed?.through ?? null, format: row.format }, budget);
         if (!planned.ok) { rows.stop(planned.reason, "where" in planned ? planned.where ?? null : null, budget); return { state: "stopped", next: null, reason: planned.reason }; }
         archive = planned.archive; row = rows.mark(planned.mark, budget);
       }
@@ -199,7 +237,8 @@ export class ArchiveDriver {
       const sendingAt = timeMs(this.#options.clock());
       if (timeMs(credential.ends) === null || sendingAt === null || timeMs(credential.ends)! <= sendingAt) budget.stop("unavailable");
       // The own send reply never substitutes for read-back, including loss.
-      await budget.wait(() => this.#options.provider.sendArchive({ repository: { ...row!.repository }, at: { ...at }, ref, old: row!.pending!.parent, commit: archive.commit, objects, credential: credential!, allowed }));
+      await budget.wait(() => this.#options.provider.sendArchive({ repository: { ...row!.repository }, at: { ...at }, ref, old: row!.pending!.parent, commit: archive.commit, objects, credential: credential!, allowed,
+        ...(row!.confirmed?.layout === 2 ? { incremental: { budget } } : {}) }));
       const seen = await budget.wait(() => this.#options.provider.ref({ ...row!.repository }, ref, allowed));
       if (seen === archive.commit) return this.#confirmed(rows, row, budget);
       if (seen !== row.pending!.parent) { rows.stop("conflict", ref, budget); return { state: "stopped", next: null, reason: "conflict" }; }
@@ -214,7 +253,7 @@ export class ArchiveDriver {
   }
   #confirmed(rows: ArchiveRows, row: ArchiveRow, budget: ArchiveBudget): ArchivePass {
     const mark = row.pending!, latest = this.#options.current();
-    const next = latest && latest.head.seq > mark.through.seq ? this.#options.clock() : null;
+    const next = mark.layout !== 2 || latest && latest.head.seq > mark.through.seq ? this.#options.clock() : null;
     rows.confirm(mark.commit, budget, next); this.#fallback = null;
     return { state: "confirmed", next };
   }

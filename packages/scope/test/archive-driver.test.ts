@@ -2,18 +2,21 @@
  * admission/authority are explicit stand-ins. Actual adapter enforcement
  * and alarm wiring have separate obligations. No external provider runs. */
 import { expect, onTestFinished, test } from "vitest";
+import { runInDurableObject } from "cloudflare:test";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, timeMs, timeOf } from "@generalbusiness/artroom-bytes";
 import { journalRef, type JournalFormat, type JournalObject } from "@generalbusiness/artroom-git/journal";
-import { readJournalArchive } from "@generalbusiness/artroom-git/journal-reader";
+import { readJournalRepositoryArchive } from "@generalbusiness/artroom-git/journal-reader";
 import { archiveSource, verifyArchive } from "@generalbusiness/artroom-replay";
 import { ArchiveBudget } from "../src/archive-budget.ts";
 import { ArchiveDriver, type ArchiveCredential, type FixtureArchiveProvider, type ArchiveSend } from "../src/archive-driver.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
+import { planArchive } from "../src/archive-build.ts";
 import { at, create, rita, una, type Lane } from "./fixtures-native.ts";
 import { archiveDefinition, archivePolicies, archiveRepository, archiveSql } from "./support/archive.ts";
 import { fixtureArchiveWiring } from "./worker.ts";
+import type { TestScope } from "./worker.ts";
 
 function gate() { let release!: () => void; const promise = new Promise<void>(resolve => { release = resolve; }); return { promise, release }; }
 class ScriptedHost implements FixtureArchiveProvider {
@@ -29,12 +32,19 @@ class ScriptedHost implements FixtureArchiveProvider {
   mintCalls = 0;
   targets = 0;
   revoked = 0;
+  closureReads = 0;
+  objectReads: string[] = [];
   blocked: ReturnType<typeof gate> | null = null;
   lastAllowed: (() => boolean) | null = null;
   constructor(format: JournalFormat) { this.formatName = format; }
   async format() { return this.formatName; }
   async ref() { return this.pointer; }
-  async objects() { return [...this.data.values()]; }
+  async objects() { this.closureReads++; return [...this.data.values()]; }
+  async readObject(_repository: unknown, requested: { id: string; type: JournalObject["type"]; maximum: number }, allowed: () => boolean) {
+    expect(allowed()).toBe(true); this.objectReads.push(requested.id);
+    const object = this.data.get(requested.id);
+    return object ? { type: object.type, size: object.data.length, data: object.data.length <= requested.maximum ? new Uint8Array(object.data) : null } : null;
+  }
   async mintArchive(_repository: unknown, at: ScopeRef, allowed: () => boolean) {
     expect(allowed()).toBe(true); this.mintCalls++;
     if (this.missingMint) { this.missingMint = false; return null; }
@@ -56,9 +66,13 @@ class ScriptedHost implements FixtureArchiveProvider {
   async revokeArchive(credential: ArchiveCredential) { this.tokens.delete(credential); this.revoked++; }
 }
 const atTime = at(0);
-function driver(lane: Lane, state: DurableObjectState, host: ScriptedHost, budget?: () => ArchiveBudget) {
+function driver(lane: Lane, state: DurableObjectState, host: ScriptedHost, budget?: () => ArchiveBudget, after?: number) {
+  const sql = archiveSql(state);
   return new ArchiveDriver({
-    sql: archiveSql(state), current: () => {
+    sql: after === undefined ? sql : { transaction: sql.transaction, exec(query, ...args) {
+      if (/\bFROM entry\b/.test(query)) { expect(typeof args[0]).toBe("number"); expect(args[0] as number).toBeGreaterThan(after); }
+      return sql.exec(query, ...args);
+    } }, current: () => {
       const value = state.storage.sql.exec<{ v: string }>("SELECT v FROM meta WHERE k = 'scope'").one();
       const scope = JSON.parse(value.v); return { at: scope.at, head: scope.head };
     }, clock: () => lane.c.clock.now, bounds: PROPOSED_BOUNDS, policies: { fixture: "archive-policies", registry: archivePolicies },
@@ -156,7 +170,7 @@ test.each(["sha1", "sha256"] as const)("resumes marked %s bytes after eviction a
   expect(await lane.alarm()).toBe(true);
   expect(host.sends).toHaveLength(2); expect(host.sends[1]).not.toBe(marked.commit); expect(host.targets).toBe(1);
   expect((await row(lane))?.confirmed?.through).toEqual(later); expect(await lane.head()).toEqual(later);
-  const source = archiveSource({ open: (scope, work) => readJournalArchive({
+  const source = archiveSource({ open: (scope, work) => readJournalRepositoryArchive({
     format: async () => format, resolve: async ref => ref === journalRef(lane.at.scope) ? host.pointer : null,
     object: async (id, most) => { const object = host.data.get(id); return object ? { type: object.type, size: object.data.length, data: object.data.length <= most ? object.data : null } : null; },
   }, scope, work) });
@@ -196,3 +210,69 @@ test("a late host continuation cannot send or record after the original deadline
   const pending = await row(lane); expect(pending?.pending).not.toBeNull(); expect(pending?.confirmed).toBeNull();
   expect(canonicalize(pending)).not.toContain("TEST ARCHIVE TOKEN");
 });
+
+// Actual checkpoint turns/SQLite, bounded driver passes, native receipt and
+// eviction. TEST host/token/policy/read authority; no hosted or real Git I/O.
+test("the native driver archives ten thousand entries in bounded passes without rereading a confirmed prefix", async () => {
+  const lane = await create({}, {}, archiveDefinition), host = new ScriptedHost("sha1");
+  const written = await runInDurableObject(lane.object, async instance => {
+    const object = instance as TestScope; let count = 0;
+    for (let seq = 1; seq < 10_000; seq++) {
+      const answer = await object.checkpoint();
+      if (answer.answer !== "written") { expect(answer).toMatchObject({ answer: "written" }); return count; }
+      if (answer.fact.seq !== seq) { expect(answer.fact.seq).toBe(seq); return count; }
+      count++;
+    }
+    return count;
+  });
+  expect(written).toBe(9999);
+  const head = await lane.head(); expect(head.seq).toBe(9999);
+  const receipts: number[] = []; let previous = -1;
+  while (previous < head.seq && receipts.length < 128) {
+    const result = await lane.inside(state => driver(lane, state, host, undefined, previous < 0 ? undefined : previous).run());
+    expect(result).toMatchObject({ state: "confirmed" });
+    if (result.state !== "confirmed") return;
+    const confirmed = (await row(lane))!.confirmed!;
+    expect(confirmed.layout).toBe(2); expect(confirmed.through.seq).toBeGreaterThan(previous);
+    expect(confirmed.through.seq - previous).toBeLessThanOrEqual(4096);
+    previous = confirmed.through.seq; receipts.push(previous);
+    if (receipts.length === 30) await lane.restart();
+  }
+  expect(previous).toBe(head.seq); expect(receipts.length).toBeGreaterThan(2);
+  expect(host.closureReads).toBe(0); expect(host.objectReads.length).toBeGreaterThan(0);
+  const offline = await verifyArchive(archiveSource({ open: (scope, work) => readJournalRepositoryArchive({
+    format: async () => "sha1", resolve: async () => host.pointer,
+    object: async (id, maximum) => { const object = host.data.get(id); return object ? { type: object.type, size: object.data.length, data: object.data.length <= maximum ? object.data : null } : null; },
+  }, scope, work) }), { mode: "replay", scope: lane.at.scope, head, grants: "as-recorded" });
+  expect(offline).toMatchObject({ kind: "verification", verification: { report: { result: "consistent", anchors: [] } } });
+  expect(await lane.head()).toEqual(head);
+  console.info("TEST native incremental archive", JSON.stringify({ entries: head.seq + 1, confirmedPasses: receipts.length, receipts,
+    oldClosureReads: host.closureReads, exactObjectReads: host.objectReads.length,
+    qualification: "Actual native checkpoint turns/SQLite/receipt/restart and offline replay; TEST host/token/policy/authority, as-recorded grants. No real Git clone, provider or deployment acceptance.",
+  }));
+}, 120_000);
+
+test("the native driver confirms a pending v1 attempt before a separate same-cutoff conversion and new v2 pass", async () => {
+  const lane = await create({}, {}, archiveDefinition), host = new ScriptedHost("sha1"), head = await lane.head();
+  const old = await lane.inside(state => planArchive(archiveSql(state), { at: lane.at, through: head, bounds: PROPOSED_BOUNDS,
+    policies: archivePolicies, format: "sha1", parent: null, markedAt: at(0) }, new ArchiveBudget()));
+  expect(old.ok ? "accepted" : old).toBe("accepted"); if (!old.ok) return;
+  await lane.inside(state => { const rows = new ArchiveRows(archiveSql(state), lane.at); rows.target(archiveRepository, "sha1"); rows.mark(old.mark); });
+  await lane.restart();
+  expect(await lane.inside(state => driver(lane, state, host).run())).toMatchObject({ state: "confirmed" });
+  expect(host.sends).toEqual([old.mark.commit]);
+  expect((await row(lane))!.confirmed).toEqual({ commit: old.mark.commit, through: head });
+  // Conversion must still be scheduled when no new entry arrived.
+  expect(await lane.inside(state => new ArchiveRows(archiveSql(state), lane.at).wake())).not.toBeNull();
+  await lane.restart();
+  expect(await lane.inside(state => driver(lane, state, host).run())).toMatchObject({ state: "confirmed" });
+  const converted = (await row(lane))!.confirmed!;
+  expect(converted).toMatchObject({ through: head, layout: 2 }); expect(converted.commit).not.toBe(old.mark.commit);
+  expect(new Set(host.objectReads)).toEqual(new Set([old.mark.commit]));
+  expect(host.sends).toHaveLength(2); expect(await lane.head()).toEqual(head);
+  await lane.submit(lane.remark("first post-conversion native entry"));
+  const later = await lane.head(); await lane.restart();
+  expect(await lane.inside(state => driver(lane, state, host, undefined, head.seq).run())).toMatchObject({ state: "confirmed" });
+  expect((await row(lane))!.confirmed).toMatchObject({ through: later, layout: 2 });
+  expect(host.sends).toHaveLength(3); expect(host.closureReads).toBe(0); expect(await lane.head()).toEqual(later);
+}, 20_000);
