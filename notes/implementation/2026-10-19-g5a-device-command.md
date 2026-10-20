@@ -21,8 +21,8 @@ conditional targetAt write. The current fresh revision addresses that
 finding and two additional self-checks, and its whole gate passed. The
 complete third review `b8d8dda2` then found a skippable allowed-kind guard.
 The current fresh revision corrects that execution-context proof and a
-related open-effect self-check. Its focused checks pass; its new whole
-gate is still ahead. Complete exact-head review remains owed. Earlier
+related open-effect self-check. Its focused checks and new whole gate
+pass. Complete exact-head review remains owed. Earlier
 sealed candidates, dependencies and evidence remain frozen forever.
 
 ## Execution context after the complete third review
@@ -41,7 +41,8 @@ item is bound; binding the command's own device suffices too. An unrelated
 subject does not prove execution, even if another argument names the right
 device. This conservatively refuses the unsafe declaration. It preserves
 Grow authorize's primary alert guard with a kind operand from the actual
-heater. No runtime, grant, owner, native declaration, pin or default changes.
+heater. Capability execution, grant/owner records, native declarations,
+pins and defaults remain unchanged; admission is stricter.
 
 A builder self-check found the same mismatch on the open effect itself:
 its own optional `of` could skip while `with.device.of` still named the
@@ -98,8 +99,60 @@ embedded validator; MCP generation reproduces its existing module.
 
 Logs, source hashes, copied evidence, intermediate failure, controls and
 closures use `/tmp/artroom-g5a-guard-context-*20261019*`. Temporary probe
-sources are retained outside the checkout, with exact hashes. The new
-normal gate and complete Source are still ahead at this checkpoint.
+sources are retained outside the checkout, with exact hashes. The gate
+outcome follows; complete Source and exact-head review remain ahead.
+
+## Current execution-context gate
+
+Original process 69768 naturally exits zero at clean code/test head
+`8e1968a47d14c7e0213e1e493b36b0d9c05fad67`, tree
+`09ac23cb2e1dce87c0b20e2e680d8a80bb20cf7a`. Native assertion
+`ab6a92c3274fc0a18fd906edc9f797f2977204a7` records the result.
+Whitespace, typechecking and tests pass: 401 Vitest files and 1,939 cases,
+with three existing recorder skips; the chained Node and Counter steps
+pass 31 and 55. Temporary probes were removed before this gate. Existing
+case/model/Node/denial limits, including the adopted functional Scope
+allowance, remain unchanged.
+
+Outer cost was 501.80 seconds wall and 723.01 CPU (621.28 user plus 101.73
+system). Typechecking reported 8.4 seconds wall/32.0 CPU and the test step
+493.2/690.8; these are separate, rounded step measurements. Host:
+arm64 macOS 27.0.1 / Darwin 27.0.0, 18 logical CPUs, starting load
+1.5513/1.7900/1.8428. Focused compilers, native/CLI checks, regeneration
+and filesystem reads made caches warm or partly warm. Other host work
+was uncontrolled. Separate-checkout documentation and read-only evidence
+work ran concurrently; no competing builder native tests ran. These are
+no product-latency or stability-under-load figures.
+
+All 2,306 tracked files, 5,498 installed regular files and 31 contained
+links remain exact before/after. Only the named Vitest results cache
+changes among 5,499 dependency-directory files. Installation is skipped
+under the verified lock stamp. The exact pool adoption preceded the gate;
+no source or installed dependency changed while it ran. Raw output
+retains an unclassified different-Durable-Object/RefcountedCanceler warning;
+it is not relabelled as expected or a stability fix.
+
+Raw gate directory:
+`/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.4a9vl2KLcP`.
+Counter output: its sibling `artroom-counting-node-svqu9g`. Logs, snapshots,
+comparison, diagnostic index, timing and closed-process receipt use
+`/tmp/artroom-g5a-guard-context-gate-*20261019*`.
+
+The prior frozen map's 2,248 leaves / 60,902,723 bytes and separately
+granted 25,623-byte closed Source CLI log were rehashed unchanged; the
+audit is `/tmp/artroom-g5a-guard-context-previous-evidence-audit-20261019.json`.
+Earlier failed gates, passing gates, complete reviews, packaging and
+instrumentation failures remain their own history. They are not this
+changed-head acceptance. No original frozen project, dependency, tool or
+checker view was executed or edited.
+
+This outcome update changes only the primary note after the passing
+code/test head. Source and tests remain byte-identical; no gate is
+repeated for the document update. The Source record binds the resulting
+candidate and tree beside the passing tree above. The complete delivery
+still covers all 83 paths against its actual Main base dba3. No approval,
+native landing, push, hosted Device/archive integration, physical-device,
+provider or deployment acceptance is claimed here.
 
 ## Historical conditional coupling correction
 
