@@ -14,10 +14,11 @@
 
 import type { Digest, PlatformDefinition, ScopeKind } from "./scope.ts";
 import type { FieldValue } from "./intent.ts";
+import type { CapabilityName } from "./capability.ts";
 
 /** One pinned durability requirement. Unsupported levels refuse whole-definition admission. */
 export interface DurabilityLevel {
-  name: "live" | "recorded" | "archived";
+  name: "live" | "recorded" | "sequenced";
   version: 1;
 }
 
@@ -29,13 +30,13 @@ export interface CapacityVersion {
 
 export interface DeclaredDefinition {
   format: "artroom-definition-1";
-  /** Absent means recorded. Explicit recorded has its own bytes and digest; live/archived execution is not yet supported. */
+  /** Absent means recorded. Explicit recorded has its own bytes and digest; live/sequenced execution is not yet supported. */
   level?: DurabilityLevel;
   /** Omission keeps entries-only admission and replay. Whole-scope counts all five logical dimensions. */
   capacity?: CapacityVersion;
   name: string;                          // what `under` compares with
   profile: { name: string; version: number };
-  capabilities: readonly { name: "hold" | "git-read"; version: number }[];
+  capabilities: readonly { name: "hold" | "git-read" | "device-command"; version: number }[];
   genesis: string;                       // the act kind that opens the scope
   items: Record<string, ItemType>;       // at most 16
   acts: Record<string, ActType>;         // at most 64
@@ -85,7 +86,7 @@ export interface ItemType {
   refs: Record<string, SlotRule & { to: FieldType }>;        // at most 12
   values: Record<string, SlotRule & { of: FieldType; default?: FieldValue }>;  // at most 12
 }
-export interface SlotRule { fixed: boolean; required: boolean }
+export interface SlotRule { fixed: boolean; required: boolean; capability?: CapabilityName }
 
 // ---------------------------------------------------------------- section 6.4
 
@@ -208,7 +209,7 @@ export type Guard = { of?: Subject; ifPresent?: boolean; reason?: string } & (
   | { distinct: { list: Operand; as: string; key: Operand } }
   | { sameSet: { list: Operand; as: string; key: Operand; items: Range;
                  match?: readonly Where[]; ordered?: boolean } }
-  | { capability: { name: "hold" | "git-read"; guard: string; with: Record<string, CapabilityArg> } }
+  | { capability: { name: "hold" | "git-read" | "device-command"; guard: string; with: Record<string, CapabilityArg> } }
 );
 
 // ---------------------------------------------------------------- sections 6.6 to 6.8
@@ -227,7 +228,7 @@ export type EffectForm = { of?: Subject } & Condition & (
   | { attribute: { slot: string; of: Subject; with?: readonly AuthorSource[] } }      // section 6.7
   | { hold: { do: "open" | "renew" | "end"; extent?: Operand } }                      // platform code; section 6.8
   | { redact: { slot: string } }
-  | { capability: { name: "hold" | "git-read"; do: string; with: Record<string, Operand> } }   // section 6.11
+  | { capability: { name: "hold" | "git-read" | "device-command"; do: string; with: Record<string, Operand> } }   // section 6.11
 );
 
 /** A further source of an `attribute` effect (section 6.7). */

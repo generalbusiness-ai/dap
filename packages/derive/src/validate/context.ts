@@ -10,7 +10,7 @@ import { isObject } from "../values.ts";
 import type { Underived } from "./capability.ts";
 import type { Shapes } from "./shape.ts";
 
-export interface Slot { kind: "party" | "ref" | "value"; fixed: boolean; required: boolean; list: boolean; type: FieldType; hasDefault: boolean }
+export interface Slot { kind: "party" | "ref" | "value"; fixed: boolean; required: boolean; list: boolean; type: FieldType; hasDefault: boolean; capability?: CapabilityName }
 /**
  * An item type as it was read. `indexes`: the slots that the type declares as indexed, in platform data (section 17.2a, revision
  * 23). `decisions`: for each message name that the type's `holds` lists in `decisions`, its count (revision 21). Each is absent

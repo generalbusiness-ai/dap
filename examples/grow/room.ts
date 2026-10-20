@@ -1,5 +1,4 @@
-/** G0 room data. No view, provider operation or device-command capability.
- * Native target/report writers compose here; scenario outcomes stay separate. */
+/** Grow room data with independent targets, reports and installed command answers. */
 import type { ActType, DeclaredDefinition, Guard, ItemType, Subject } from "@generalbusiness/dap-contract";
 import { deviceForms, deviceNotFailed } from "./device.ts";
 import { zoneForms } from "./zone.ts";
@@ -45,7 +44,7 @@ const heaterProposal: Guard = { reason: "invalid-heater-proposal", anyOf: [
 ] };
 
 export const room: DeclaredDefinition = {
-  format: "artroom-definition-1", name: ROOM, profile: { name: "restricted", version: 1 }, capabilities: [], genesis: "establish",
+  format: "artroom-definition-1", name: ROOM, profile: { name: "restricted", version: 1 }, capabilities: [{ name: "device-command", version: 1 }], genesis: "establish",
   items: { room: { many: false, max: 1, initial: "open", states: { open: { final: false } }, parties: {}, refs: {
     site: { fixed: true, required: false, to: { type: "scope", kind: "lane" } }, siteRoom: { fixed: true, required: false, to: { type: "fact", under: SITE, kind: ["create-room"] } }, lastSiteReport: { ...optional, to: fact(["report-site"]) },
   }, values: { label: { ...fixed, of: { type: "text", max: 80 } } } }, zone: zone.item, device: device.item, alert, incident, ...work.items, ...watering.items },
@@ -85,9 +84,11 @@ export const room: DeclaredDefinition = {
       effects: [{ state: "held" }, { party: { slot: "heldBy", from: { signer: true } } }, { value: { slot: "holdUntil", from: { time: { plusSeconds: 60 } } } }],
     }),
     authorize: act({ step: "transition", on: "alert", grant: "grow.heat", also: { heater: { item: "device", via: { of: "on", slot: "heater" } } },
-      guards: [live("on", ["open"]), live("also.heater", ["active"]), eq({ slot: "kind", of: "also.heater" }, { const: "heater" }), deviceNotFailed("also.heater"), { rule: "authorized-target", reason: "device-limit" }],
+      guards: [live("on", ["open"]), live("also.heater", ["active"]), eq({ slot: "kind", of: "also.heater" }, { const: "heater" }), deviceNotFailed("also.heater"), { rule: "authorized-target", reason: "device-limit" },
+        { capability: { name: "device-command", guard: "allowed", with: { kind: { slot: "kind", of: "also.heater" } } } }],
       effects: [{ state: "authorized" }, { party: { slot: "authorizedBy", from: { signer: true } } },
-        { of: "also.heater", value: { slot: "target", from: { slot: "target", of: "on" } } }, { of: "also.heater", value: { slot: "level", from: { slot: "level", of: "on" } } }, { of: "also.heater", ref: { slot: "targetAt", from: "self" } }],
+        { of: "also.heater", value: { slot: "target", from: { slot: "target", of: "on" } } }, { of: "also.heater", value: { slot: "level", from: { slot: "level", of: "on" } } }, { of: "also.heater", ref: { slot: "targetAt", from: "self" } },
+        { of: "also.heater", capability: { name: "device-command", do: "open", with: { device: { slot: "kind" } } } }],
     }),
     "propose-restoration": act({ step: "transition", on: "alert", grant: "grow.climate", fields: { text: proposal.text, proposal: proposal.proposal },
       also: { zone: { item: "zone", via: { of: "on", slot: "zone" } }, vent: { item: "device", via: { of: "also.zone", slot: "vent" } } },

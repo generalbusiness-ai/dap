@@ -42,7 +42,7 @@ import type { Bounds, CapabilityName, Digest, Entry, FactRef, Grant, Head, KeyId
 import { rawRetainedJSON, domainRetainedJSON, canonicalize, intentDigest, isDigest, isEntry, isObservationUse, isPlatformDefinition, parseStrict, platformName, scopeIdOf, utf8, verifySignedIntent } from "@generalbusiness/artroom-bytes";
 import {
   AmountError, ByteUsage, capacityFull, namedDeclarations, amountMath, subtract, NOTHING, reserved, actValueDependencies, observedValueDependencies, detachedTextDependencies, outcomeValueDependencies, outcomeSnapshotDependencies, requiredDependency, textDependency, MISMATCHES, MemoryState, WINDOWS, actionOf, agrees, applyEntry, drawsOf, clockOf, contentStates, entryOf, fits, observedName, headsOf, highestHead, isFactRef, isLocalId, isObject, isScopeRef, isUnprovenDecisionBinding, judgeAct, judgeCheckpoint, judgeDelivery,
-  judgeDiagnosis, outcomeValueDomains, fixedBy, judgeGenesis, judgeGrant, judgeOutcome, judgePreparation, judgeTimed, membershipOf, nextDue, observedOf, own, ownersOf, ruleAt, same, snapshotRead, stepsOf, timeMs, updateOf, sentBy, validateDefinition, windowOf, checkedTextBounds,
+  judgeDiagnosis, outcomeValueDomains, fixedBy, judgeGenesis, judgeGrant, judgeOutcome, judgePreparation, judgeTimed, membershipOf, nextDue, observedOf, own, ownersOf, preparationScopeGrant, ruleAt, same, snapshotRead, stepsOf, timeMs, updateOf, sentBy, validateDefinition, windowOf, checkedTextBounds,
 } from "@generalbusiness/dap-derive";
 import type { DependencyOrigin, RequiredDependency, ActJudgment, Capabilities, Clock, DrawOptions, Fetched, Judgment, Observing, Owners, PlatformRules, PreparationJudgment, RecordedRef, Retains, Rules, StateView, Texts, TimedJudgment, ValidDefinition, Window } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES, evaluateRules } from "@generalbusiness/dap-derive/rule";
@@ -1152,7 +1152,7 @@ class Verifier {
    * is a `mismatch`, unless the caller said that the history was written
    * under the test authority, a stand-in: then it is taken as recorded.
    */
-  async #granted(run: Run, entry: Entry, grant: Grant, asked: { key: KeyId; action: string | null; window: Window | null }, where: FactRef, depth: number): Promise<void> {
+  async #granted(run: Run, entry: Entry, grant: Grant, asked: { key: KeyId; action: string | null; window: Window | null; scopeGrant?: true }, where: FactRef, depth: number): Promise<void> {
     const mismatch = (why: string): Stop => new Stop("mismatch", why, where);
     const use: unknown = grant.fresh;
     if (use === null && this.#grants === "as-recorded") {
@@ -1170,6 +1170,7 @@ class Verifier {
     const judged = judgeGrant(use, {
       scope: run.at!, membership, key: asked.key, action, window, clock: { reading: entry.time, behind: false, asOf: entry.time },
       last: run.reads.get(`${use.read.run}:${use.read.n}`) ?? null, highest: highestHead(run.state, o),
+      ...(asked.scopeGrant ? { scopeGrant: true } : {}),
     });
     if (judged.result !== "current") {
       const name = judged.result === "authority-unavailable" ? MISMATCHES[judged.failed] : undefined;
@@ -1717,11 +1718,12 @@ class Verifier {
         try {
           needs = steps.grant(capability, step, { view: state, definition, scope: state.scope()!, self: entry.seq, intent: input.signed.intent, digest: intentDigest(input.signed.intent), clock, own: reading.own });
         } catch { /* a request that the rules cannot read names no action, and the judge refuses it */ }
-        if (needs) await this.#granted(run, entry, grant, { key: input.signed.intent.actor, ...needs }, where, depth);
+        const scopeGrant = preparationScopeGrant(definition, capability, step);
+        if (needs) await this.#granted(run, entry, grant, { key: input.signed.intent.actor, ...needs, ...(scopeGrant ? { scopeGrant: true } : {}) }, where, depth);
         this.#trusts.add("dispatched");
         judged = judgePreparation(state, definition, { signed: input.signed, capability, step }, {
           clock, bounds, steps, own: reading.own, membership: fixedIn(run, input),
-          granted: (wanted) => (needs !== null && wanted.action === needs.action && wanted.window.seconds === needs.window.seconds && wanted.window.once === needs.window.once ? { result: "granted", grant } : { result: "unavailable" }),
+          granted: (wanted) => (needs !== null && (wanted.scopeGrant === true) === scopeGrant && wanted.action === needs.action && wanted.window.seconds === needs.window.seconds && wanted.window.once === needs.window.once ? { result: "granted", grant } : { result: "unavailable" }),
         });
         break;
       }

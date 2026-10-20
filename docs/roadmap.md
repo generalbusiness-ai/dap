@@ -110,21 +110,25 @@ amount, with replay of both scopes.
 
 **What it is.** A scope's definition declares one of three levels.
 **Live**: no record is kept, and the scope can reset. **Recorded**: the
-scope keeps its journal, as every scope does today. **Archived**: the
-journal is also written to Git, so that it can be checked from a clone
-without the service.
+scope keeps its journal, as every scope does today. **Sequenced**: scopes
+that share an order use an order scope. An archive is a separate room
+binding; it is no longer a durability level.
 
-**Today.** Every scope is recorded. Only a publication's receipt reaches
-Git.
+**Today.** Execution supports Recorded only. Explicit archive cohorts let
+the Directory bind a journal archive, and a signed package can require
+that binding before installation. Existing cohorts retain their old pins.
+Binding does not establish export. The archive engine's current acceptance
+remains fixture-only, with production admission and consent still outstanding.
 
 **Use cases.** Practice counting that keeps no record (44); presence and
 hypotheses during an incident (36); the drafts and tentative options in
 every card of the catalogue.
 
-**State.** Designed in
-[the volatile acts note](../notes/2026-10-09-shared-language-volatile-acts.md),
-whose sections on levels and the journal archive are reviewed and on
-main. Not built.
+**State.** The
+[sequenced level note](../notes/2026-10-18-sequenced-level-and-order-scope.md)
+supersedes the earlier Archived level. The room binding and manifest
+requirement are separate from the sequenced runtime and foreign-source
+archive work.
 
 ### A fork for each hold
 

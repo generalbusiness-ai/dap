@@ -4,4 +4,4 @@ export const INVITATION_KEY_MEMBERSHIP = "platform:membership@6" satisfies Platf
 export const INVITATION_PROOF_DOMAIN = "artroom-invitation-proof-1";
 
 /** Exact native pins that redeem a private invitation seed by signature. */
-export const INVITATION_KEY_MEMBERSHIPS = [INVITATION_KEY_MEMBERSHIP, "platform:membership@7"] as const satisfies readonly PlatformDefinition[];
+export const INVITATION_KEY_MEMBERSHIPS = [INVITATION_KEY_MEMBERSHIP, "platform:membership@7", "platform:membership@8"] as const satisfies readonly PlatformDefinition[];

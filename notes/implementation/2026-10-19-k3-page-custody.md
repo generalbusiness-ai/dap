@@ -155,3 +155,42 @@ forever at publication. Reviewers read or make independent private copies;
 they never execute or edit originals. The sealer excludes its own open
 output, which can be granted separately after closure. No review approval,
 landing, publication or deployment acceptance is claimed.
+
+
+## Published Grow Main integration
+
+This independent integration keeps the approved K3 implementation and legacy
+compatibility records while incorporating actual reviewed and published
+Grow Main `7594822ca12d7d2ade130045f966110aaa434569`. Approval `0f310cc1`
+for the older candidate remains historical; it does not approve this new
+integrated head. The native read-only merge plan refuses that older
+candidate because Main changed the generated page asset. Main stays clean
+and unchanged; no native landing or approval consumption occurred.
+
+The original K3 checkout, dependencies and tools remain permanently frozen.
+New owned worktree `/tmp/artroom-builder-k3-main-integration-20261020`
+materializes the approved Git commit independently. Exactly 5,499 dependency
+regular leaves and 31 contained links are copied from the finite old grant
+with all bytes/hashes checked, current physical modes preserved and distinct
+copy inodes. Frozen originals are rechecked unchanged, never executed.
+Only the owned copy's output cache is cleared; no package is installed.
+The first copy tool stopped before copying because the older manifest has
+no mode field. Corrected v2 observes current modes without inventing
+historical mode metadata; both observations are retained.
+
+The owned merge naturally stops with the one expected `assets.ts` conflict.
+All three original stages are saved before resolution. The existing page
+build then regenerates that module from the actual merged source with
+copied pinned esbuild. It is 846,725 bytes, SHA-256
+`acf9705461e64723ebfce413337d7822fa9735aec49122b7651d52859f26f251`.
+The four custody implementation modules, compatibility case and legacy
+fixture remain exact to approved `ed140d42`; only the integrated generated
+asset and this note differ from its eight-path Source. No assertion,
+legacy record, storage key, refusal, default, pin, grant or deadline changes.
+
+Build/provenance records use `/tmp/builder-k3-main-*20261020*` and
+`/tmp/builder-k3-integrate-main-20261020*`. Owning Page compilers and selected
+custody/workflow/asset checks, the new integrated-head gate and complete
+review remain ahead. K2 review remains separately open at frozen `cbe0d44d`.
+Actual hosted Grow acceptance remains Planner's separate `cc069da1` /
+`2fcf3c3a` milestone; this work performs no Cloudflare operation.

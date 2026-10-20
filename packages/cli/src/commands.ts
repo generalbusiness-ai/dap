@@ -1,4 +1,4 @@
-import { INVITATION_KEY_COHORT } from "@generalbusiness/dap-platform";
+import { INVITATION_KEY_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { invitationIssueFields, invitationRedemptionFields } from "@generalbusiness/artroom-client";
 /**
  * The commands, as functions over a scope service's base URL and a signing
@@ -36,7 +36,7 @@ import {
   type Fetch, type Session, type CreationOffer, type ReadSigning, type Signing, type Transport,
 } from "@generalbusiness/artroom-client";
 import { TOKENS_FLOOR, capabilitiesOf, gitRead, holdCapability } from "@generalbusiness/dap-derive";
-import { APPLICATION_COHORT, FILE_PUBLICATION_COHORT, COUNTING_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, DIRECTORY_OF, SIBLINGS_OF, READ_TOKEN_HOURS, NEWEST, ROLE_LISTS, platform, type Role } from "@generalbusiness/dap-platform";
+import { APPLICATION_COHORT, FILE_PUBLICATION_COHORT, COUNTING_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, DIRECTORY_OF, SIBLINGS_OF, READ_TOKEN_HOURS, NEWEST, ROLE_LISTS, platform, type Role, DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { SourceError, httpSource, render, verify as replay, type HistorySource } from "@generalbusiness/artroom-replay";
 import { enrolAgentKey } from "./invitations.ts";
 import { AGENT_KEY_LINK } from "@generalbusiness/artroom-client";
@@ -368,7 +368,7 @@ async function createdBy(handle: ScopeHandle, seq: number): Promise<{ n: number;
 // ---------------------------------------------------------------- the commands
 
 /** Explicit selection only; omission retains the installed default cohort. */
-export type InstallCohort = "application" | "application-publication" | "trusted-application" | "declared-application" | "invitation-key";
+export type InstallCohort = "application" | "application-publication" | "trusted-application" | "declared-application" | "device-application" | "archive-application" | "archive-device-application" | "archive-declared-application" | "invitation-key";
 export interface InstallOptions { host?: string; namespace?: string; cohort?: InstallCohort }
 const INSTALL_COHORTS: Readonly<Record<InstallCohort, PlatformDefinition>> = {
   "invitation-key": INVITATION_KEY_COHORT.register,
@@ -376,6 +376,10 @@ const INSTALL_COHORTS: Readonly<Record<InstallCohort, PlatformDefinition>> = {
   "application-publication": FILE_PUBLICATION_COHORT.register,
   "trusted-application": TRUSTED_APPLICATION_COHORT.register,
   "declared-application": DECLARED_APPLICATION_COHORT.register,
+  "archive-application": ARCHIVE_APPLICATION_COHORT.register,
+  "archive-declared-application": ARCHIVE_DECLARED_APPLICATION_COHORT.register,
+  "archive-device-application": ARCHIVE_DEVICE_APPLICATION_COHORT.register,
+  "device-application": DEVICE_APPLICATION_COHORT.register,
 };
 function selectedRegister(cohort: unknown): PlatformDefinition | undefined {
   if (cohort === undefined) return undefined;
@@ -383,11 +387,15 @@ function selectedRegister(cohort: unknown): PlatformDefinition | undefined {
   if (cohort === "application-publication") return INSTALL_COHORTS["application-publication"];
   if (cohort === "application") return INSTALL_COHORTS.application;
   if (cohort === "trusted-application") return INSTALL_COHORTS["trusted-application"];
+  if (cohort === "device-application") return INSTALL_COHORTS["device-application"];
   if (cohort === "declared-application") return INSTALL_COHORTS["declared-application"];
-  return stop(usage("--cohort takes exactly application, application-publication, trusted-application, declared-application or invitation-key; nothing was signed or sent."));
+  if (cohort === "archive-application") return INSTALL_COHORTS["archive-application"];
+  if (cohort === "archive-declared-application") return INSTALL_COHORTS["archive-declared-application"];
+  if (cohort === "archive-device-application") return INSTALL_COHORTS["archive-device-application"];
+  return stop(usage("--cohort takes exactly application, application-publication, trusted-application, declared-application, device-application, archive-application, archive-declared-application, archive-device-application or invitation-key; nothing was signed or sent."));
 }
 const selectedPlan = (definition: PlatformDefinition): boolean =>
-  definition === APPLICATION_COHORT.register || definition === FILE_PUBLICATION_COHORT.register || definition === TRUSTED_APPLICATION_COHORT.register || definition === DECLARED_APPLICATION_COHORT.register || definition === INVITATION_KEY_COHORT.register;
+  Object.values(INSTALL_COHORTS).includes(definition);
 
 /** Ordinary installs keep their legacy path; selected installs use exact planned custody. */
 export function install(ctx: Context, service: string, options: InstallOptions = {}): Promise<Outcome> {
@@ -551,7 +559,7 @@ async function executePlannedInstall(ctx: Context, cohort?: InstallCohort, expec
   const attempt = installAttemptOf(plan);
   if (plan.attempted !== undefined && plan.attempted !== attempt) return failed("Refused: plan-mismatch. The attempted marker belongs to another service, operator, envelope, version or register. The pending plan is kept; nothing was sent.");
   if (plan.attempted === undefined && now >= timeMs(plan["founding"].intent.notAfter)!) {
-    const label = plan.definition === APPLICATION_COHORT.register ? "application" : plan.definition === FILE_PUBLICATION_COHORT.register ? "application-publication" : plan.definition === INVITATION_KEY_COHORT.register ? "invitation-key" : plan.definition === DECLARED_APPLICATION_COHORT.register ? "declared-application" : "trusted-application";
+    const label = Object.entries(INSTALL_COHORTS).find(([, pin]) => pin === plan.definition)?.[0] ?? "trusted-application";
     return failed(`Refused: plan-expired. The planned install could be created until ${plan["founding"].intent.notAfter}. ${strictCustody
       ? `No request was sent by this run. Keep this original config directory unchanged. For a new ${label} plan, set DAP_HOME to a separate empty directory. If ARTROOM_HOME is set, unset it or set it to that same new directory; different directories refuse before configuration is read. Configure the host with that new plan's register ID before installing.`
       : "Nothing was sent. Plan again, and set the new register ID."}`);
