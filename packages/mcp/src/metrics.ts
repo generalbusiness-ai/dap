@@ -1,4 +1,5 @@
 /** Closed operational MCP observations. No metric is a native input. */
+import { natural } from "@generalbusiness/artroom-bytes";
 import { AsyncLocalStorage } from "node:async_hooks";
 import type { Fetch } from "@generalbusiness/artroom-client";
 import type { MismatchReason, ReadRefusal, RefusalReason, SessionRefusal, UnavailableReason } from "@generalbusiness/dap-contract";
@@ -22,7 +23,7 @@ const NATIVE: Record<RefusalReason | UnavailableReason | MismatchReason | ReadRe
 };
 const REASONS = new Set([...Object.keys(NATIVE), ...PHASES, ...STEP_PHASES, "none", "exception", "shape", "stale-descriptor", "restart", "transport", "custody", "credential", "target", "unknown-tool", "read", "conflicting", "full", "locked", "unreadable", "terminal", "unkept"]);
 const ENDS = new Set(["ok", "refused", "error", "unavailable"]);
-const integer = (n: number): boolean => Number.isInteger(n) && !Object.is(n, -0) && n >= 0 && n <= MAX;
+const metricInteger = (n: number): boolean => natural(n) && n <= MAX;
 const uuid = (s: string): boolean => /^(?:unknown|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/.test(s);
 export interface McpMetricPoint { indexes: string[]; blobs: string[]; doubles: number[] }
 export interface McpMetricOptions {
@@ -41,7 +42,7 @@ const local = new AsyncLocalStorage<Operation>();
 const active = (): Operation | undefined => { const op = local.getStore(); return op?.open ? op : undefined; };
 function lost(op: Operation, mask = 2): void { op.mask |= mask; if (op.lost < MAX) op.lost++; else op.mask |= 16; }
 function emit(op: Operation, kind: "tools-list" | "tool-call" | "custody", end: string, reason: string, numbers: number[], terminal = false): void {
-  if (!op.tool || !ENDS.has(end) || !REASONS.has(reason) || numbers.length !== 5 || !numbers.every(integer)) { lost(op); return; }
+  if (!op.tool || !ENDS.has(end) || !REASONS.has(reason) || numbers.length !== 5 || !numbers.every(metricInteger)) { lost(op); return; }
   if (op.points.length >= (terminal ? 249 : 248)) { lost(op, 1); return; }
   op.points.push({ indexes: [], blobs: [kind, op.deployment, op.version, op.tool, end, reason, op.request, "none", MCP_METRIC_SCHEMA], doubles: [1, ...numbers] });
 }

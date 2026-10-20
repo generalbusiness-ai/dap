@@ -34,6 +34,7 @@ fi
 # -B: a path whose file was rewritten whole is read as a new file, so only this branch's lines are checked.
 base=$(git merge-base HEAD origin/main 2>/dev/null)
 if [ -n "$base" ]; then step whitespace git diff --check -B "$base"; fi
+[ "$failed" = 0 ] && step helpers node scripts/check-shared-helpers.mjs
 [ "$failed" = 0 ] && step typecheck npm run typecheck
 [ "$failed" = 0 ] && step test npm test
 if [ "$failed" = 0 ]; then

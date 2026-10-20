@@ -2,7 +2,7 @@
  * its acknowledged prefix from the application's own recorded cursor. This
  * does not read a native record table or infer absence from a short suffix. */
 import type { Digest, FactRef, Head, MemberRef, ScopeRef, Sealed } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, isFactRef, isMemberRef } from "@generalbusiness/artroom-bytes";
+import { isLocalId as integer, canonicalize, entryHash, isFactRef, isMemberRef } from "@generalbusiness/artroom-bytes";
 import type { SimulatedDevice } from "./simulator.ts";
 
 const CAPABILITY: string = "device-command@1";
@@ -21,7 +21,6 @@ export interface OpenCommand {
   readonly owner: MemberRef;
 }
 const equal = (a: unknown, b: unknown): boolean => canonicalize(a) === canonicalize(b);
-const integer = (v: unknown): v is number => Number.isSafeInteger(v) && (v as number) >= 0;
 const invalid = (): never => { throw new Error("incomplete or invalid device-command journal coverage"); };
 
 /** A complete chain through one exact head, after a previously acknowledged

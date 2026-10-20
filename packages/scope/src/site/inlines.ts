@@ -63,7 +63,7 @@ interface Bracket {
   bracketAfter: boolean;
 }
 
-const text = (literal: string): Node => new Node("text", literal);
+const textNode = (literal: string): Node => new Node("text", literal);
 
 export class InlineParser {
   /** GFM's strikethrough: `~` and `~~` delimit. Without it a tilde is text. */
@@ -122,7 +122,7 @@ export class InlineParser {
     }
     if (!res) {
       this.pos += 1;
-      block.appendChild(text(c));
+      block.appendChild(textNode(c));
     }
     return true;
   }
@@ -148,10 +148,10 @@ export class InlineParser {
       this.pos += 1;
       block.appendChild(new Node("linebreak"));
     } else if (c !== undefined && ESCAPABLE_CHAR.test(c)) {
-      block.appendChild(text(c));
+      block.appendChild(textNode(c));
       this.pos += 1;
     } else {
-      block.appendChild(text("\\"));
+      block.appendChild(textNode("\\"));
     }
     return true;
   }
@@ -169,7 +169,7 @@ export class InlineParser {
       }
     }
     this.pos = after;
-    block.appendChild(text(ticks));
+    block.appendChild(textNode(ticks));
     return true;
   }
 
@@ -211,7 +211,7 @@ export class InlineParser {
     if (!scanned) return false;
     const start = this.pos;
     this.pos += scanned.numdelims;
-    const node = text(this.subject.slice(start, this.pos));
+    const node = textNode(this.subject.slice(start, this.pos));
     block.appendChild(node);
     this.delimiters = { cc, numdelims: scanned.numdelims, origdelims: scanned.numdelims, node, previous: this.delimiters, next: null, canOpen: scanned.canOpen, canClose: scanned.canClose };
     if (this.delimiters.previous) this.delimiters.previous.next = this.delimiters;
@@ -297,7 +297,7 @@ export class InlineParser {
   parseOpenBracket(block: Node): boolean {
     const start = this.pos;
     this.pos += 1;
-    const node = text("[");
+    const node = textNode("[");
     block.appendChild(node);
     this.addBracket(node, start, false);
     return true;
@@ -308,11 +308,11 @@ export class InlineParser {
     this.pos += 1;
     if (this.peek() === "[") {
       this.pos += 1;
-      const node = text("![");
+      const node = textNode("![");
       block.appendChild(node);
       this.addBracket(node, start + 1, true);
     } else {
-      block.appendChild(text("!"));
+      block.appendChild(textNode("!"));
     }
     return true;
   }
@@ -322,11 +322,11 @@ export class InlineParser {
     const start = this.pos;
     let opener = this.brackets;
     if (opener === null) {
-      block.appendChild(text("]"));
+      block.appendChild(textNode("]"));
       return true;
     }
     if (!opener.active) {
-      block.appendChild(text("]"));
+      block.appendChild(textNode("]"));
       this.brackets = opener.previous;
       return true;
     }
@@ -368,7 +368,7 @@ export class InlineParser {
     if (!matched) {
       this.brackets = opener.previous;
       this.pos = start;
-      block.appendChild(text("]"));
+      block.appendChild(textNode("]"));
       return true;
     }
     const node = new Node(image ? "image" : "link");
@@ -437,7 +437,7 @@ export class InlineParser {
       const address = m.slice(1, -1);
       const node = new Node("link");
       node.destination = normalizeURI(`mailto:${address}`);
-      node.appendChild(text(address));
+      node.appendChild(textNode(address));
       block.appendChild(node);
       return true;
     }
@@ -446,7 +446,7 @@ export class InlineParser {
       const address = m.slice(1, -1);
       const node = new Node("link");
       node.destination = normalizeURI(address);
-      node.appendChild(text(address));
+      node.appendChild(textNode(address));
       block.appendChild(node);
       return true;
     }
@@ -463,14 +463,14 @@ export class InlineParser {
   parseEntity(block: Node): boolean {
     const m = this.match(ENTITY_HERE);
     if (m === null) return false;
-    block.appendChild(text(decodeEntity(m)));
+    block.appendChild(textNode(decodeEntity(m)));
     return true;
   }
 
   parseString(block: Node): boolean {
     const m = this.match(MAIN);
     if (m === null) return false;
-    block.appendChild(text(m));
+    block.appendChild(textNode(m));
     return true;
   }
 

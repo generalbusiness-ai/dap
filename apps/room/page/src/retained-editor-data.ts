@@ -1,4 +1,5 @@
 /** One loaded-Page text proposal task. No automatic merge, durable outbox or replacement signature. */
+import { freeze } from "@generalbusiness/artroom-bytes";
 import type { Answer, Beside, DeclaredDefinition, Digest, FactRef, FieldValue, Grant, Head, KeyId, ScopeId, ScopeRef, Seed, SignedIntent, Summary } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, digestBytes, entryHash, isFactRef, scopeIdOf, utf8, verifySignedIntent, wellFormed } from "@generalbusiness/artroom-bytes";
 import { ScopeHandle, declaredHandle, httpTransport, secretSigner, shapeDeclaredAct, signedIntent, signedReads } from "@generalbusiness/artroom-client";
@@ -21,7 +22,6 @@ export interface EditTask {
 export interface EditOptions { current(): boolean; changed?(): void; pause?(scopes: readonly string[]): Promise<void> }
 const handle = (room: Room, scope: ScopeId) => new ScopeHandle(signedReads(httpTransport(room.session.service, room.session.fetch ? { fetch: room.session.fetch } : {}), secretSigner(room.session.secret), room.session.now ? { now: room.session.now } : {}), scope, room.reader?.reader() ?? null);
 async function summary(h: ScopeHandle): Promise<{ value: Summary; at: Head }> { const r = await h.summary(); if (!r.ok) throw new Unreadable(`Cannot read ${h.scope}: ${r.reason}.`); if (!r.complete || r.next !== undefined) throw new Unreadable(`Incomplete read of ${h.scope}.`); return { value: r.value, at: r.at }; }
-function freeze<T>(value: T): T { if (value && typeof value === "object") { for (const child of Object.values(value)) freeze(child); Object.freeze(value); } return value; }
 const check = (options: EditOptions) => { if (!options.current()) throw new Unreadable("The room or key changed. Nothing new was sent; return to the original task."); };
 export function editFields(draft: EditDraft, base: string): Record<string, FieldValue> {
   if (!wellFormed(draft.content) || draft.content.includes("\0")) throw new Unreadable("Only well-formed UTF-8 text without NUL is supported.");

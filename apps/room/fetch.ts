@@ -1,3 +1,4 @@
+import { jsonReply as json } from "../../packages/scope/src/response.ts";
 import { applicationPage } from "../../packages/scope/src/applications/route.ts";
 import { health } from "../../packages/scope/src/health.ts";
 /** Application dispatch. Imported framework functions are used only when fetch runs. */
@@ -9,7 +10,6 @@ import { isSite, site } from "../../packages/scope/src/site/route.ts";
 import { isPage, page } from "./page/route.ts";
 import { isBrand, brand } from "./brand/route.ts";
 import { measuredRequest } from "../../packages/scope/src/operational.ts";
-const json = (status: number, body: unknown): Response => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json", "cache-control": "no-store" } });
 
 export default {
   fetch: async (request: Request, env: Env & Partial<Pick<McpEnv, "REGISTRIES" | "AGENTS">>): Promise<Response> => {

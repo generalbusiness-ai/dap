@@ -1,3 +1,4 @@
+import { isLocalId } from "@generalbusiness/artroom-bytes";
 import { isScopeRef } from "@generalbusiness/artroom-bytes";
 import type { ScopeRef } from "@generalbusiness/dap-contract";
 import type { Tool } from "../catalogue.ts";
@@ -32,9 +33,9 @@ const string = (args: Args, name: string): string => {
   if (typeof args[name] !== "string") throw new ViewError("shape", `${name} must be a string.`);
   return args[name];
 };
-const integer = (args: Args, name: string): number => {
+const integerArgument = (args: Args, name: string): number => {
   const value = args[name];
-  if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 0) throw new ViewError("shape", `${name} must be a nonnegative safe integer.`);
+  if (!isLocalId(value)) throw new ViewError("shape", `${name} must be a nonnegative safe integer.`);
   return value;
 };
 
@@ -72,11 +73,11 @@ export function viewTools(sessions: ViewSessions, screens?: readonly { name: str
     const page = args["page"];
     if (page !== undefined && !["summary", "item", "diff", "updates"].includes(String(page))) throw new ViewError("shape", "page is not a card page.");
     const moving = page !== undefined || args["position"] !== undefined || args["refresh"] === true;
-    const display = await sessions.read(string(args, "view"), moving ? integer(args, "cut") : undefined, moving ? { ...(args["refresh"] === true ? { refresh: true } : {}), ...(page === undefined ? {} : { page: page as PageKind }), ...(args["position"] === undefined ? {} : { position: integer(args, "position") }) } : undefined);
+    const display = await sessions.read(string(args, "view"), moving ? integerArgument(args, "cut") : undefined, moving ? { ...(args["refresh"] === true ? { refresh: true } : {}), ...(page === undefined ? {} : { page: page as PageKind }), ...(args["position"] === undefined ? {} : { position: integerArgument(args, "position") }) } : undefined);
     return result({ display }, JSON.stringify(display));
   });
   add("view_act", "Dispatch one server-retained act of an exact displayed card. The server checks the instance and display cut and signs its captured native revisions under ordinary custody. Duplicate dispatch returns its first outcome. This tool returns private card and receipt data to the app.", { view: key, cut, action: key }, ["view", "cut", "action"], true, undefined, async (args) => {
-    const answer = await sessions.act(string(args, "view"), integer(args, "cut"), string(args, "action"));
+    const answer = await sessions.act(string(args, "view"), integerArgument(args, "cut"), string(args, "action"));
     return result(answer, JSON.stringify(answer));
   });
   for (const action of sessions.source.inputActs ?? []) {

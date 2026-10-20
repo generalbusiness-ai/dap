@@ -1,4 +1,5 @@
 /** C1's closed platform declaration and its bounded native read plan. */
+import { natural } from "@generalbusiness/artroom-bytes";
 import type { StandingReservation } from "@generalbusiness/dap-contract";
 import { AmountError, type Amount } from "../held.ts";
 import { StandingError, standingAmount } from "../standing.ts";
@@ -6,7 +7,6 @@ import { byteOrder, isObject, own } from "../values.ts";
 import type { Defining } from "./context.ts";
 
 export interface Standing extends StandingReservation { readonly states: readonly string[] }
-const natural = (value: unknown): value is number => typeof value === "number" && Number.isSafeInteger(value) && value >= 0 && !Object.is(value, -0);
 
 export function standingOf(d: Defining, value: unknown, rawItems: unknown, entry: Amount): Standing | null {
   const o = d.rec(value, "standing", ["item", "slot", "entries", "max"]);

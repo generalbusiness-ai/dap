@@ -1,5 +1,6 @@
 /** Closed archive v1 file schemas. The cumulative manifest indexes the
  * represented tree, distinct from the new interval processed by a pass. */
+import { decodeGitText } from "./wire-text.ts";
 import type { Digest, Head, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isScopeRef, parseStrict } from "@generalbusiness/artroom-bytes";
 import type { ArchiveRetainedName } from "./journal-path.ts";
@@ -17,14 +18,13 @@ export interface JournalManifest {
   readonly omitted: readonly { readonly kind: "text"; readonly digest: Digest; readonly reason: "detached-text" }[];
 }
 export interface JournalHead { readonly v: 1; readonly scope: ScopeRef; readonly through: number; readonly hash: Digest }
-const text = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 export function journalJSON(body: Uint8Array, maximum: number, work: JournalWork): unknown {
   work.size(body.length);
   if (body.length > maximum) return work.stop();
   work.metadata(body.length * 3); work.input(body.length, 8);
   let value: unknown;
   try {
-    const bytes = text.decode(body); value = parseStrict(bytes);
+    const bytes = decodeGitText(body); value = parseStrict(bytes);
     if (canonicalize(value) !== bytes) return refuseJournal("manifest");
   } catch { return refuseJournal("manifest"); }
   work.check();

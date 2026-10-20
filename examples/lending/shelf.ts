@@ -67,7 +67,7 @@ export function shelfPage(thing: Omit<Thing, "seq">, record: ScopePointer): stri
   ].join("\n");
 }
 
-const text = (value: unknown): string => typeof value === "string" ? value : "";
+const shelfText = (value: unknown): string => typeof value === "string" ? value : "";
 
 /**
  * Every thing, live or gone, from the lending scope's complete record in order.
@@ -82,7 +82,7 @@ export function thingsOf(entries: readonly Entry[]): Thing[] {
     const { intent } = entry.input.signed;
     const signer = entry.input.authority[0]?.subject.member ?? "";
     if (intent.kind === "donate") {
-      things.set(seq, { id: seq, page: text(intent.fields["page"]), revision: 1, state: "available", name: text(intent.fields["name"]), description: text(intent.fields["description"]), donor: signer, borrower: null, reason: null, seq });
+      things.set(seq, { id: seq, page: shelfText(intent.fields["page"]), revision: 1, state: "available", name: shelfText(intent.fields["name"]), description: shelfText(intent.fields["description"]), donor: signer, borrower: null, reason: null, seq });
       return;
     }
     const thing = typeof intent.on === "number" ? things.get(intent.on) : undefined;
@@ -90,7 +90,7 @@ export function thingsOf(entries: readonly Entry[]): Thing[] {
     if (["borrow", "return", "cancel"].includes(intent.kind)) thing.revision++;
     if (intent.kind === "borrow") Object.assign(thing, { state: "lent", borrower: signer, seq });
     else if (intent.kind === "return") Object.assign(thing, { state: "available", borrower: null, seq });
-    else if (intent.kind === "cancel") Object.assign(thing, { state: "gone", borrower: null, reason: text(intent.fields["reason"]), seq });
+    else if (intent.kind === "cancel") Object.assign(thing, { state: "gone", borrower: null, reason: shelfText(intent.fields["reason"]), seq });
   });
   return [...things.values()];
 }
