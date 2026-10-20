@@ -139,10 +139,29 @@ The first combined catalog tool correctly observed 62 valid definitions,
 exited one because its final total still said 54. Its output and failed
 closure remain evidence; it is not called a passing tool run. The final
 catalog observation uses the immutable 58-literal integration commit as
-its baseline and expects 62. Its result will be recorded after the clean
-checkpoint. Evidence uses `/tmp/artroom-s2a-combined-*20261019*`, with
+its baseline and expects 62. That final observation naturally exits zero
+at `aaba491e353d160ae93d2036b0fde04ba35c7fa2`, tree
+`f54e976f411d34c90cbc875120ee216d8959ce66`: all 62 definitions validate,
+all 58 historical literals are unchanged, and the only additions are
+the four combined pins. Its report SHA-256 is
+`552a98a0f058eb16adcfee1a622ac83f945c5ad74414e565aab7872f413ab83b`.
+Evidence uses `/tmp/artroom-s2a-combined-*20261019*`, with
 the guard closure in
 `/tmp/artroom-s2a-combined-control-closure-20261019.json`.
+
+The clean code checkpoint is `0781ad65c04bfef8431815b95d91e1ccfbe80b24`,
+tree `111eb5667312afe5279d4342b76e5758f19fd410`. Main's subsequent
+identifier design note is integrated at `aaba491e`; it changes no code.
+The corrected gate process56509 naturally exits one there after 8.22
+elapsed seconds and 31.39 CPU seconds. Whitespace passes, the existing
+stamped dependency view is used without an install, and the whole
+typecheck stops on two Lending browser errors. No tests run. Routing
+already returns Membership8, but Lending's joining adapter still permits
+only Membership4 and Membership7. The correction adds the exact
+Membership8 literal to that adapter's type. The existing scripted browser
+joining recovery story also exercises Membership8 with all original
+receipt, signature, custody and no-resend assertions unchanged. This
+typing correction does not change a runtime default or shipped data.
 
 ## Historical checkpoints
 
