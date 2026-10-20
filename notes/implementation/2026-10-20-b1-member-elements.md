@@ -1,410 +1,220 @@
-# B1: member resolution and display
+# B1: bounded member identity and display
 
-B1 request `7b7cfef1`, under compound request `11b2f711`.
-Builder promise `cc7e6e17`. Planner issued the separate milestone through
-report `03e9ea14`, adopted by `05ed8b2a`, before any Source filing.
-The approved D1 design is on published Main `8aad37bb`.
+Request `7b7cfef1abb0808614ad0d153e7f4914279b8896`, builder promise
+`cc7e6e17c265c3d2c34415c309efecad49971f9a`, under compound `11b2f711`.
+Planner created the separate milestone through `03e9ea14`, adopted as
+`05ed8b2a`. The D1 design is already on Main. This implementation now
+incorporates reviewed Main `248aab8f`, including K1, K2 and Grow hosting.
+It imports no pending P1 or K3 implementation.
 
-This worktree starts from that reviewed design and now incorporates actual
-reviewed Main `248aab8f`, including the landed K1/K2 and Grow host-link work.
-It imports no pending K3 or P1 source. The signed Grow demo packet and its
-release `sha256:71e10ca9…` remain byte-identical to Main; maintained package
-witnesses are separate.
+The one original ordinary gate passes at
+`a2ffbf6720b1bd30c5393eeaebd6b308793216d2`, tree
+`c8bea473b80698e5c3d4f4fc68c3b2cce5ca2a44`. The final change updates only
+this report. Complete forty-four-path Source review and native landing
+audits remain due. This is B1, not completion of B2 or B3.
 
-## Resolve recorded identity within a bound
+## Resolve only disclosed, typed references
 
-The service resolves typed party, exact-fact signer and journal signer fields from the
-captured declared projection. Canonical full member references include the
-membership incarnation. Repeated references share one membership read.
-The table considers at most 32 references; controllers consume that same
-budget after primary references. Its visible overflow counts distinct
-references outside the table. Arbitrary values trigger no member read.
+The resolver considers typed party, exact-fact signer and journal signer
+fields from the captured declared projection. It retains each canonical
+full member reference, including membership incarnation. Repeated
+references share a membership read. At most 32 distinct references enter
+the table; controllers consume that same budget after primary references.
+Visible overflow counts distinct references outside the table. Arbitrary
+values cause no identity lookup, and routed displays resolve only their
+disclosed row. Rejected rows cause no lookup.
 
-Display records preserve identity, standing, controller, opening fact and
-membership read head separately. Missing or refused reads leave identity
-unavailable. Final removed and lapsed states stay explicit. A roster read
-from another head cannot establish actions. Those actions are display
-evidence and never native admission.
+Identity, current standing, controller, opening fact and membership read
+head remain separate. A roster answer at another head establishes no
+action. Displayed actions are evidence, never native admission. Unknown,
+missing or refused reads preserve the full recorded reference and an
+explicit unavailable identity; they do not guess a name or current key.
 
-The native adapter requires a read session bound to the exact membership
-and current key. It reads one native member query, including all four
-states, with at most 100 rows, plus one roster query with at most one row.
-It follows no cursor, widens no lookup and makes no signed fallback or
-retry. A member outside that window remains unavailable. This is a bounded
-identity read, not a complete membership listing. No key or invitation
-field enters the display record.
+The actual native adapter requires a read session bound to the exact
+membership and current key. It reads at most 100 member rows, covering all
+four standing states, plus one roster row. It follows no cursor and makes
+no retry, wider lookup or signed fallback. References outside that window
+stay unknown. No key or invitation body enters the display record. The
+member table travels beside native data inside the existing 64 KiB view
+allowance; it grants no new read or write authority.
 
-Routed displays resolve only their disclosed row. Rejected rows never enter
-the table; unknown assignments cause no identity read. Mounted displays
-carry the table beside native data, within the existing 64 KiB view bound.
+## One element and text representation
 
-## Render the same element and text
+Party, recorded signer and declared-view actor presentations use the same
+member mark and text. Person initials use a circle, agents a square and
+checkers a diamond, with upright initials. The mark is 32 px inside a
+44 px target. Names and full-reference fallbacks wrap. Invited, removed,
+lapsed, current-controller and unavailable states remain visible; removed
+uses the garnet word treatment, not an unlabeled color. Measured removed
+text contrast is 7.31/7.86 in its two tested palettes.
 
-The kit renders party and recorded signer facts and a declared view's actor through
-one element. A person's initials sit in a circle, an agent's in a square,
-and a checker's upright initials inside an outlined diamond. Invited,
-removed and lapsed remain words. Every agent names its recorded controller
-or says controller unavailable. An unavailable identity prints its full
-reference without a guessed name. Shared text gives chat context, fallback,
-titles and facts the same identity and standing words.
+The public surface API has exactly five names: `member`, `onData`, `open`,
+`root`, `signal`. The member factory returns a real HTMLElement with its
+styles in the actual shadow root. Native data and member tables are
+cloned for callbacks. Abort/context fences prevent late reads, callbacks
+or elements from reviving a stale session. A display or an open callback
+is not an enrollment, presence write, invitation or grant. This primitive
+and its documented use do not claim a general view framework or B2/B3.
 
-`member(ref)` returns that element to a declared surface. `onData` carries
-`data.members`; a change to that table triggers the callback even if the
-native projection is unchanged. The kit shares one stylesheet into the
-shadow root and inherits host fonts and tokens. It makes no font request.
-The API exposes no membership act or presence write. B2 owns member-record
-screens and their controls; B3 and the live B4 executor remain separate.
-The API is documented in `docs/application-views.md`.
+## Exact local-fact signer metadata
 
-## Retain the last-prober constraint
+Planner decision `656d21f5`, adopted as `3879c591`, adds the declared
+`fact-signer` source for an existing local fact slot. Contract, byte codec,
+client, native projection and renderer carry its nullable member result.
+The reference must match the exact scope, sequence and hash. Missing
+retention, missing legacy index or hash mismatch yields null for that
+field. The reader does not scan old entries, backfill them or infer their
+author from today's key/member mapping.
 
-The current maintained bench records `lastProbe` as a fact and has no
-member party for the prober. An attempted party plus signer effect fails
-validation: `probe` already uses all 16 effects. Six independent measurement
-and provenance pairs use 12; state, probe time, stale time and last probe
-use four. Adding another effect makes 17.
+SQLite records `entry_fact_signer(seq, hash, member)` when an authenticated
+act is appended, using the matching recorded authority. The entry-delete
+trigger clears its index row. It changes no old journal or signed packet.
+The indexed left join matches both sequence and hash, reads no entry body
+and handles at most 100 references. Each reference reserves 768 bytes of
+metadata and its existing call/page budget before SQL. The client removes
+this derived signer from ordinary party/ref/value adapters so only the
+declared source exposes it. Retained identity and present standing remain
+different facts.
 
-Original process `71867` naturally exits one. All five selected cases fail
-at that exact bound before scenario work: three Grow validation assertions
-and two MCP package-preparation errors. Raw output and natural closure are
-`/tmp/b1-maintained-grow-focused-20261020*`. Exact changed source input is
-retained under `/tmp/b1-maintained-grow-effect17-input-20261020` before the
-four attempted Grow files are restored byte-exact to the checkpoint/Main.
-No effect bound, assertion, measurement provenance, grant or default changes.
+The native witnesses cover exact retained authorship, missing retention,
+legacy absence and changed-hash refusal. A targeted hash-join bypass makes
+the unchanged mismatch assertion fail; the exact source is restored. The
+resolver's separate bound control also distinguishes the read ceiling.
+Neither is a mutation sweep or an unchanged full-suite rerun.
 
-Planner report `656d21f5`, adopted by `3879c591`, approves an exact-local-fact
-`fact-signer` field beside `fact-time`. The bench projects `lastProber`
-from its existing `lastProbe` fact. Its HTML adds one `member(ref)` call;
-a null signer reads "Last prober unavailable". No native effect changes.
+## Grow and the authority boundary
 
-The owner writes a separate `entry_fact_signer` metadata row in the entry's
-transaction, from the recorded authority subject matching its actor key.
-It joins the exact retained entry sequence and hash. A deletion trigger
-removes that metadata with its entry. Activation creates an empty index;
-it scans and backfills no legacy history. Unindexed legacy entries remain
-unavailable. The read selects no entry bodies and spends the existing
-source's metadata, candidate and SQL-call allowance before execution.
-A full 100-item page leaves its body allowance unchanged. There is no
-current membership/key inference, history window, foreign lookup or retry.
+Planner decision `8d3585a3`, adopted as `b572b939`, keeps the maintained
+default role map byte-exact to Main: administrator only, with no new agent
+`grow.tend` grant. The required real native probe uses the person Rita.
+Agent/controller examples stay available in an alert card. The browser's
+agent-prober example has an explicit TEST grant and roster; it is a
+presentation stand-in, not evidence of production agent admission.
 
-The generic field is always nullable, including when the native fact slot
-is required. Missing retention, an absent recorded member/index or a
-mismatched fact hash gives null for that field; the other selected item
-fields remain. Malformed, foreign, future or changed-head metadata still
-refuses the projection. The client adapter keeps this derived member out
-of native party/ref/value slots, so it supplies no invented subject or
-guard input. Existing fact-time and journal completeness rules stay in
-force: if other selected evidence is unavailable, those rules can still
-refuse the whole projection.
+The Grow grid uses one member element in its last-prober column. It reads
+all four declared benchmark fields, including `layers`, and shows missing
+signer data as unavailable. `work.ts`, the existing sixteen-effect budget
+and metric meanings remain unchanged. No extra operational effect or
+default role is added to obtain a screenshot. The signed public Grow demo
+packet and its release `sha256:71e10ca9…` remain byte-identical to Main.
+Maintained package fixtures are separate. No live demo release, operator
+key, invitation, deployment or hosted visitor acceptance is part of B1.
 
-Planner report `8d3585a3`, adopted by `b572b939`, amends the required
-last-prober witnesses to a person, missing retained history and a mismatched
-fact hash. The maintained role map stays byte-exact Main; agents gain no
-`grow.tend` by default. The actual native Grow witness therefore uses its
-existing person/admin and restores the original unmodified membership and
-installation grants. The raising agent and controller stay witnessed by
-the actual card renderer over the explicitly scripted Core/identity fixture.
-The browser's extra agent probe is a TEST grant stand-in, not admission by
-the maintained package. No production packet, release or custody changes.
+## Owning checks and browser evidence
 
-## Focused verification
+Focused checks cover resolver bounds/context, routed disclosure, native
+member sessions, exact signer reads, client filtering, declared views,
+resource freshness, real native application projections and Grow probes.
+Their exact original commands, natural closures and TEST boundaries are
+retained. A native signer read is not a browser-persistence or provider
+result; a browser's fixture identity/grant is not native authority.
 
-Three pure resolver cases pass. Changing the bound from 32 to 33 makes the
-unchanged overflow assertion fail: all three cases run, two pass and one
-fails by assertion. Exact source and test bytes are restored. Original raw
-logs, JSON reports and matching input snapshots are retained under
-`/tmp/b1-resolver-bound-control-20261020`.
+The actual Chromium captures cover member/actor states, real mounted API
+elements and Grow displays at both widths and palettes. The final Grow
+run is original `98919`, naturally zero, with eight PNGs inspected. It
+uses actual Core/Node SQLite application data, 100 commissioned benches
+and explicitly fictional presentation identities/rosters/grants. The
+separate declared-surface browser run also passes. Earlier failed and
+intermediate captures remain distinct, including the provisional v5 and
+final v6 Grow outputs; no failed setup is called a passing screenshot.
 
-After source/session integration, four selected declared-view files pass
-20 cases. The additional routed-disclosure witness then passes with the
-existing six routing cases. Later text and browser work passes the selected
-member, routing and fact files: 12 cases across three files. The generated
-resource file also passes its three existing resource checks. All four
-owning MCP compiler projects pass.
-No whole gate has run; it is due once before full review.
+The Browser plugin was unavailable, so the recorded fallback uses pinned
+Playwright 1.63.0 and Chromium 153.0.8010.12 in a private test profile.
+Exactly 134 explicit browser-tool regular files were physically copied
+from the D1 finite grant, with exact bytes, hashes and current modes,
+distinct inodes and originals rechecked unchanged. That is 218,115,377
+bytes and zero installs. Browser profiles, adjacent caches and private
+custody are not part of any review grant. The finite Source map names only
+those explicit tools, closed artifacts and screenshots.
 
-Original process `33389` naturally exits zero for the actual PLATFORM
-membership, HTTP and session witness. A real MCP-created room adds an agent
-with its controller. The adapter makes two GET queries and signs no act.
-After a real removal, it reads the retained removed member. A foreign
-incarnation returns no data without a query; an unjoined key makes no GET
-and signs no act. The shared fixture's Git host and scheduler retain their
-labelled stand-in boundaries. Native phase cost is 5.1346 seconds elapsed
-and 5.3473 child CPU. Its closure and raw log remain under
-`/tmp/b1-native-member-read-20261020*`.
+## Main integration and retained failures
 
-Original browser process `15646` passes the existing surface navigation,
-stale-opening, empty, broken-resource and teardown checks. Actual card
-widths are 320 and 592 px, with empty and broken checks at 390 px. It uses
-scripted native ports; it is not a native-authentication witness.
+The owned checkout is `/tmp/artroom-builder-b1-member-elements-20261020`,
+branch `request/b1-member-elements-20261020`. Its current code includes
+actual reviewed K2/G5/K1 Main. Original conflict stages remain: the earlier
+fact-time fixture conflict has three stages, and the K1 integration has
+three conflicts with nine stages. No conflict exit is reported as a clean
+merge. The former keeps Main's fixture signer plus B1's extra field; the
+latter keeps B1's member-aware projections with Main's shared helpers.
 
-Original browser process `12788` passes the new identity states, visible
-overflow and `member(ref)` interaction. Screenshot review then corrects a
-D1 mismatch: only the removed word uses garnet, rather than its entire
-description. Exact first-run source input is saved before that change.
-Original process `75721` passes the changed build, all owning compilers,
-selected pure tests and the same browser flow with contrast assertions.
-The card widths are 390 and 592 px in host viewports 422 and 1,112 px,
-in both themes. Upright initials and 32 px shapes fit without horizontal
-overflow. The removal word measures 7.3157:1 in light and 7.8623:1 in dark.
-A surface's Show raising agent control displays its agent and controller.
-The API is frozen, rejects a partial reference, exposes no membership write
-and signs no act. Screenshots are inspected at full size. Identity and
-projection ports remain explicitly fictional fixtures.
+The first K1 resolution driver writes two files and stops at its MCP
+replacement assertion. A subsequent staging step briefly includes the
+unresolved MCP markers, but no project execution or commit uses them.
+All three are corrected before checking. The partial files, stages and
+final resolution are retained. The first full compiler then fails on an
+unused local series `text` helper. The correction names it `seriesText`
+and uses it for latest/lowest/highest samples, preserving units and times;
+Main's global `displayText` keeps its different meaning. One initial
+correction assumes the wrong signature and stops before writing. The
+failed input and corrected hashes remain evidence.
 
-Browser plugin not available; the runs use independent copies of pinned
-Playwright 1.63.0 and Chromium 153.0.8010.12. Output is outside the checkout:
-`/tmp/b1-member-element-browser-v2-20261020`. No relevant browser error,
-warning or framework overlay is observed. The Node loader's DEP0205 warning
-remains in raw output; no general clean-output claim follows.
+Affected workspace compilers then pass in v2; the six configurations that
+the first failed pipeline never reached pass separately in v3. The v2
+Node command names a nonexistent member-elements file and actually runs
+only seven declared-view cases; no member cases are claimed for it. The
+subsequent real selection passes three member cases and two resource cases
+but fails generated-resource freshness. The old generated module is
+retained, the owned generator rebuilds all four cards, and the unchanged
+freshness case passes separately. Two byte files/eight cases and three
+native files/three cases then pass. These are separate runs, not one
+passing pipeline. Their logs use `/tmp/b1-k1-main-*20261020*`.
 
-The first focused command stops before tests because it resolves the
-configuration relative to the wrong root. The corrected command then
-exposes an invalid incarnation in the new fixture. Its final base32 symbol
-is not canonical, so the reference is correctly rejected. The fixture now
-uses a different valid incarnation and explicitly checks validity before
-the unchanged unknown-identity assertion. Both failures remain recorded.
+Earlier failures also remain: the native Grow fixture tries an unplanned
+seventeenth effect; the agent probe is refused by the unchanged role map;
+several person/captured-session/browser setups require correction; a
+missing `layers` field stops the first grid fixture. Each corrected run
+keeps its actual scope. A whitespace error is mistakenly committed after
+a printed failing check; the next document-only commit removes it. No
+gate or Source is issued at that failed-check checkpoint.
 
-## Keep inputs and acceptance separate
+The Page generator then refreshes its module for the combined source,
+SHA-256 `d5afe13249a20b4a53ebe4187ad4ec2ce331b5d2473d8687bc10a2d900f2ec93`.
+This happens before B1's first gate, with the old module saved. Main
+`248aab8f` incorporates cleanly with no conflicts: all nine imported paths
+match Main and all forty-four authored paths retain their bytes/modes.
+Its three affected homepage/Jam Node cases pass. The old gate helper,
+prepared for `f489ac8b`/43 paths, remains unrun; a new independently copied
+and retargeted helper runs the actual current-head gate below.
 
-Dependencies are a physical copy of exactly 5,499 granted regular leaves
-and 31 contained links. Browser tools are 134 granted regular leaves.
-Bytes, hashes, modes and distinct inodes are checked; frozen originals are
-rechecked unchanged and never executed or edited. Older grants lack mode
-history, so browser-tool modes are current physical observations. Only owned
-output caches are removed. Lock and stamp match; no package is installed.
+## One original gate and full review
 
-This preparation is not complete B1 delivery. No Source, review, Main
-landing, push, Cloudflare operation, browser persistence or hosted acceptance
-is claimed. Planner owns deployment and the separate hosted Grow milestone.
+Original process `75657` naturally exits zero at clean `a2ffbf6720b1`,
+tree `c8bea473`: all compilers, helper and whitespace checks pass. There
+are 415 passed Vitest files and one skipped file, 1,985 passed cases and
+three existing skips. All 33 Node and 55 Counter Node cases pass. No
+full-suite retry or package install occurs.
 
-## Exact-fact signer checks in progress
+Measured `npm run gate` wall time is 540.967489250 seconds; child CPU is
+787.204203000 seconds. Its test step reports 531.2 seconds wall and 752.6
+CPU; these are that run's step figures, not sums of separate runs. The
+shared warm macOS 27.0.1 arm64 host runs Node 26.12.0/npm 11.20.0, initial
+load 2.56/2.56/2.99. All 2,580 tracked source rows retain exact bytes and
+modes; all 5,530 dependency rows remain exact except the owned Vitest
+result cache. The lock stamp remains exact and the checkout stays clean.
+Original argv, full inputs/outputs and natural closure are
+`/tmp/b1-current-main-gate-v2-20261020*`; raw phase logs are under
+`/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.fwSnGp2b3f`.
 
-The original pure prototype passes two files/eight cases and bytes' two
-compiler projects (`/tmp/b1-fact-signer-pure-prototype-20261020*`). The first
-owner compiler run catches the client adapter's missing derived-field case
-and naturally exits one; the next changed run passes Scope's three compiler
-projects, MCP's four, the client projection file and all five selected
-Grow/operator/measurement cases (`/tmp/b1-fact-signer-owner-focused-v2-20261020*`).
-The required-ref nullable witness and native fault fixture then catch
-SQL-row bracket-access type errors; the corrected v4 compilation and eight
-pure cases pass. These failures remain retained, rather than being replaced
-by later successes.
+Raw output retains deliberate reset/retention faults, four Git body text
+warnings and an unclassified different-Durable-Object I/O /
+RefcountedCanceler diagnostic in the runner's abort path. A passing
+assertion or zero exit supplies no case attribution, infrastructure
+classification, clean-output, general stability or physical-draining
+conclusion. The final candidate changes only this report after the gate;
+its two tree hashes are recorded, without repeating unchanged suites.
 
-Original native process `22084` naturally exits one: the four budget cases
-and original installed projection case pass, while maintained Grow refuses
-the undeclared agent-role installation before its probe witness. Its exact
-23 changed/untracked input leaves are saved under
-`/tmp/b1-native-agent-role-refusal-input-20261020` against checkpoint
-`ad407f12`. No package role grant is widened to make it pass.
+The full earlier report is preserved by Git at `a2ffbf67` and as
+`/tmp/b1-prior-primary-20261020.md`. Closed failure inputs, controls,
+raw logs, conflicts, copies, tools and captures remain in the explicit
+finite Source map. Path prefixes above are locators, not adjacent grants.
+No unrecorded old mode or full input is invented from today's files.
 
-After adding actual retained-entry/index/hash controls, original native
-process `86939` naturally exits zero. The installed Counter fixture reads
-its recorded member over the issued session, with history access removed;
-it survives eviction. Deleting its signer index and restarting leaves the
-field null, so activation does not reconstruct historical authority. An
-actual item fact hash change gives null. Deleting its actual retained entry
-also gives null and removes its index row. Entry, index and item bytes are
-restored before the original scenario and assertions continue. This proves
-the native generic field; the maintained Grow agent-role witness remains
-separate. Raw output and natural closure are
-`/tmp/b1-fact-signer-native-v2-20261020*`.
-
-The hash control distinguishes: the unchanged four-case pure read file
-passes before removing only the hash-match guard; afterwards three cases
-pass and the signer case fails by its null-versus-recorded-member assertion.
-No timeout or startup error establishes this result. Exact source and test
-bytes are restored. Matching inputs, both raw logs and reports, and the
-closed result are `/tmp/b1-fact-signer-hash-control-20261020`.
-
-The maintained Grow browser witness uses the real kit, package HTML,
-owned Core/SQLite, native probe entries and a 100-bench room. Its identity,
-controller, roster, grants, sessions and installation answers are explicit
-TEST fixtures. At widths 390 and 592, original `39403` naturally exits zero
-and shows the sensors agent with its controller, a person prober, an
-unprobed bench's unavailable signer, and a climate-agent alert with its
-controller. It signs no UI act. Light mobile grid and desktop alert captures
-were inspected. Logs and eight captures are
-`/tmp/b1-grow-members-browser-v5-20261020*` and
-`/tmp/b1-grow-members-browser-output-v5-20261020`.
-
-Earlier browser attempts remain failures: the first alert fixture omits
-required subjects and receives `bad-intent`; after supplying them the room's
-zone/device guards correctly refuse the unprepared alert. Reusing the
-existing native fault scene establishes those guards. Its next timeout
-catches the missing `lastProber` in the separate layers declaration used by
-the grid. Adding that field makes the sensor visible; the next timeout
-catches the incomplete scripted membership fixture, whose missing roster
-correctly leaves eligibility unknown. An explicit same-head TEST roster
-then supplies the intended known display. None of those failures is a
-passing witness. Their raw outputs, natural closures and earlier script
-inputs remain retained. The final label explicitly says "Last prober";
-the final fixture clock follows its actual scene time.
-
-Final browser original `98919` naturally exits zero in 3.188605375 seconds
-at the final HTML label and scene clock. Its eight captures and report are
-`/tmp/b1-grow-members-browser-output-v6-20261020`; raw log and closed result
-are `/tmp/b1-grow-members-browser-v6-20261020*`. The final mobile grid was
-inspected. The raw Node `DEP0205` warning remains; this is not a clean-output
-or stability claim. Source and tests for the actual native Grow agent,
-raising-agent display and bench hash/retention/legacy boundary are prepared
-but remain unrun pending the role-map decision. The bench fault checks use
-a signer-only selection at the native owner boundary; other selected
-journal and timestamp completeness rules can still refuse a full grid.
-
-## Apply the planner's authority boundary
-
-After checkpoint `fbc7b1ac`, report `8d3585a3` resolves the role question.
-The native witness drops its attempted agent enrollment/roster grant and
-returns to the original admin-only installation. Its actual person probe
-feeds the declared layers field and resolved member table. The same real
-bench is selected at the native owner boundary for restored hash,
-retention and legacy-index faults. This source is now ready for its
-focused native run. The earlier agent-role refusal remains in its
-retained logs and source snapshot; it is not relabelled as a pass. The
-existing native membership/controller read and the raising-agent browser
-witness retain their separate authority and fixture qualifications.
-
-Final native person witness: original `57127` naturally exits one at the
-member-table assertion because the test reads the grid snapshot opened
-before the probe. `ViewSessions.read` retains that captured display unless
-navigation/refresh is requested. The expected current identity is not
-weakened: the test opens a fresh grid after the new fact. Its exact earlier
-input is `/tmp/b1-person-view-captured-snapshot-input-20261020.ts`.
-Original `69853` then naturally exits zero: the one unchanged owning Grow
-scenario, including the new native person projection/member resolution,
-actual-bench hash/retention/legacy-index faults with transaction rollback,
-and every original Device/related-view/replay assertion. Native wall/CPU
-are 8.003437334 / 9.388839 seconds. Scope's three compiler projects pass.
-Logs and natural closures are `/tmp/b1-final-grow-person-native-20261020*`
-and `/tmp/b1-final-grow-person-native-v2-20261020*`.
-
-The maintained descriptor's role map is checked equal to Main. `work.ts`,
-the committed signed demo packet and `DEMO_RELEASE` remain byte-exact Main.
-All B1 owning checks are now prepared/passing with the qualifications above;
-the full gate and exact-head Source review remain due. This mutable
-checkpoint is saved while the builder handles the commissioned public Grow
-host-link/config follow-up in a separate head with no runtime changes.
-## Incorporate published Main, 20 October
-
-From B1 checkpoint `0217aaa8`, the private worktree incorporates reviewed
-and published Main `c7aaa3ab`, retaining K2's fixture consolidation and
-the Grow host-link/config follow-up. The original no-commit merge exits
-one at the fact-time package fixture. All three original stages are in
-`/tmp/b1-current-main-conflict-stages-20261020/manifest.json`.
-
-The resolution starts from exact incoming Main. It keeps `fixedSigner(67)`
-and adds only B1's nullable `seenBy` fact-signer field and separate signer
-projection. All other incoming fixture bytes are unchanged. The receipt
-is `/tmp/b1-current-main-conflict-resolution-20261020.json`. No native
-assertion, role, case matrix, deadline, limit or grant is removed.
-
-The full project typecheck passes naturally, original process 69303
-(`/tmp/b1-current-main-types-20261020.log`). Original owning process 51955
-then passes both native files and both cases: the retained/hash/legacy
-fact-signer witness and actual maintained Grow person-prober/member
-display scenario. Native wall time is 11.322250208 seconds; child CPU is
-12.694892 seconds. The pool guard recognizes the existing copied pinned
-bundle without changing it. Logs and natural closure are
-`/tmp/b1-current-main-focused-20261020*`.
-
-These local checks keep their TEST Git/clock/scheduler and native-owner
-fault boundaries. They do not repeat a full gate or establish a browser,
-provider, hosted, stability or drain result. Current-Main incorporation
-continues before B1's one final ordinary gate and complete Source review.
-
-## Incorporate K1 shared helpers, 20 October
-
-From clean B1 `a8663925`, the private worktree incorporates actual Main
-`13193f31`. The original merge naturally exits one with three conflicts:
-the fact-time collector, projection reader and declared-view interpreter.
-All nine original stages remain in
-`/tmp/b1-k1-main-conflict-stages-20261020/manifest.json`.
-
-The resolution keeps B1's fact-signer selection, MemberRef types, member
-table and member-aware template/title/fact/log rendering. It takes Main's
-`unavailableProjection`, shared projection failure and owned-JSON freezer,
-and `displayText` name. The first preparation stops after two files when
-it detects remaining MCP calls; the partial files are preserved and no
-project code or commit runs with conflict markers. The completed marker
-check and original conflict blocks are in
-`/tmp/b1-k1-main-conflict-resolution-20261020.json`.
-
-The helper guard passes. The first full compiler run catches an unused
-local series formatter: a broad name substitution had crossed a different
-meaning. Its failed source snapshot is
-`/tmp/b1-k1-main-compiler-v1-input-20261020.ts`. The series formatter stays
-separate as `seriesText`, retaining scale, unit and source-time formatting;
-all three scoped calls use it. The unchanged literal series assertion
-then passes with all seven declared-view cases. A first correction probe
-assumes the wrong helper signature and stops before writing; its input and
-the final correction receipt remain. No matcher, role, limit or guard
-changes.
-
-The corrected five affected workspace compiler groups pass. The six
-script/app/browser compiler projects that the first failed workspace
-command never reached also pass separately. Their logs are
-`/tmp/b1-k1-main-corrected-checks-v2-20261020*` and
-`/tmp/b1-k1-main-remaining-types-v3-20261020*`. The v2 test filter also names
-an absent `member-elements.test.ts`; only the seven actual declared-view
-cases execute. No member case is credited to that selection.
-
-The next explicit member/resource selection passes all three actual member
-cases and two resource cases, but the exact generated-resource witness
-fails after helper relocation. Its old 176,421-byte module is retained at
-`/tmp/b1-k1-main-stale-resource-input-20261020.ts`, SHA-256
-`7114e1c40b3e2e3dcde9c194706a2dcaba615429644c8f6a58cc149f8023c130`.
-The owned generator rebuilds all four resources from the combined source.
-The unchanged freshness witness then passes; its two other cases are
-outside that explicit follow-up selection, having passed before rebuilding.
-
-The remaining owning checks pass eight byte cases and three actual native
-files/cases, including declared member resolution, retained/hash/legacy
-fact-signer faults and the maintained Grow person prober. Native time is
-11.069858750 seconds wall / 12.805774 child CPU on the shared warm macOS
-arm64/Node 26.12/npm 11.20 host. These are local TEST-labelled boundaries,
-not a performance generalization or hosted result. Original runtime
-processes and natural closures are
-`/tmp/b1-k1-main-runtime-checks-20261020*` and `...runtime-checks-v2-20261020*`.
-The earlier failed selections are retained as their actual outcomes, not
-one passing pipeline. No full gate has run at this integration checkpoint.
-
-
-## Generated Page module before the final gate
-
-The owned Page generator closes naturally zero before this branch's first
-final gate. It refreshes `apps/room/page/assets.ts` for this combined source.
-The old Main module is retained at `/tmp/b1-k1-main-page-module-before-20261020.ts`,
-SHA-256 `d3ca772c082c78a456657eae9119d78b01d59290018427c1383f9ce449d4cab7`. The fresh module is SHA-256
-`d5afe13249a20b4a53ebe4187ad4ec2ce331b5d2473d8687bc10a2d900f2ec93`. No Page source, test, assertion, budget,
-permission or signed package changes. Raw build output is
-`/tmp/b1-k1-main-page-build-20261020.log`; natural wall/child CPU are
-0.306929167 / 0.219096000 seconds.
-The closed preflight result is
-`/tmp/builder-current-main-page-assets-preflight-20261020.json`.
-
-This adds the generated module to this branch's changed paths. The earlier
-prepared gate helper still names the pre-refresh head and remains unrun;
-it must not be used as a result for this source. The one ordinary final
-gate and full exact-head Source review remain due. No failed full gate is
-claimed or concealed on this branch, and no unchanged suite is repeated.
-
-
-## Reviewed homepage wording Main incorporation
-
-The owned merge of actual Main `248aab8f`, tree `ba40d47e`, closes
-naturally zero in 0.040229500 seconds, with no conflicts. All nine imported
-wording/preview paths match that reviewed Main exactly. All 44 authored
-source, test, generated and prior-report paths keep their bytes and modes
-during the merge. No runtime implementation, assertion, deadline, package,
-lock or permission changes. Exact original argv/log/closure and protected
-hashes are `/tmp/b1-integrate-tagline-main-20261020*`; shared preparation
-is `/tmp/builder-incorporate-tagline-main-20261020.py` and its closed result.
-The final source gate remains due at this clean integration checkpoint.
-
-The three affected homepage/Jam Node cases also pass in one original tool
-invocation: managed public bodies/security configuration, stale/unlisted
-asset refusal and all six homepage pages/links. Its exact tool transcript
-is retained separately; no CPU measurement was recorded and it is not
-claimed as an original raw process log. The build and tests are not
-repeated to create logs.
+Every granted original source, dependency, script, helper, sealer and log
+is permanently frozen: never execute or edit originals, including after
+approval or landing. Physically copy only named regular leaves and
+contained links, preserve modes and distinct inodes, retarget every path
+and use matching historical inputs before copied execution. Nested maps
+grant no additional files or links. No operator/publisher/agent private
+custody, browser profile, shared cache, provider or deployment grant is
+included. Return all findings together in one complete exact-head review
+of all forty-four paths. Planner alone owns Cloudflare and hosted work.
