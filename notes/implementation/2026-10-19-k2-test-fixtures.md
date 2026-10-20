@@ -5,8 +5,9 @@ application-room claim and recipe-row parser in `test/fixtures.ts`.
 The current selected checks pass 21 Node cases and five native cases,
 with both owning compiler targets passing. Scope's explicit application
 builders pass 28 existing cases in 11 files. Platform's common judgment
-helpers pass 170 existing cases in 18 affected files. Derive, remaining
-fixture consolidation and the final module layout remain ahead.
+helpers pass 170 existing cases in 18 affected files. Derive shares its
+native clone-and-change setup and passes 406 cases in 40 affected files.
+Remaining fixture consolidation and the final module layout remain ahead.
 
 The first preparation moved the identical loopback transport out of
 `http.test.ts` and `wire.test.ts`. Each caller keeps its own stand-in, server, hook,
@@ -163,23 +164,48 @@ clean tree and checks the committed blob of every file before naming the
 head. Source snapshots, correction map, compiler and runtime logs use
 `/tmp/artroom-k2-platform-*20261019*`. No final gate or Source is claimed.
 
+## Shared Derive draft mutation
+
+Code checkpoint `34538a82613d91a07bf83b932e094acb6a608d5a`, tree
+`84f152f978054ac087b0b0479b2628cde0d0b1f3`, shares four copies of the
+native clone-and-change step. Each caller retains its existing bounds,
+profiles, platform flag, validation result or accepted-definition return.
+Default no-op callbacks and ignored callback return values are unchanged.
+The helper uses native `structuredClone`, preserving its values and
+failure behavior. It does not substitute a JSON round trip. The local
+clone declaration is generic, matching that native operation.
+
+The owning Derive compiler passes. All 42 existing Derive case files are
+byte-for-byte unchanged. The original focused command naturally exits
+zero with 40 affected files and 406 passing cases. Selection follows
+relative support imports and resolves the package testing alias to the
+main fixture module. The four draft source hashes match before and after
+the run and match their saved Git blobs. Outer time was 1.58 seconds wall
+and 11.87 CPU (11.00 user plus 0.87 system). These are existing in-memory
+Derive witnesses, with no new native storage or provider claim.
+
+Logs, selection, source hashes and the clean matching checkpoint use
+`/tmp/artroom-k2-derive-draft-*20261019*`. No case, assertion or deadline
+changed. No final K2 gate or Source is claimed.
+
 ## Scope and counts
 
 Before counts include every `.ts` file under each package's `test/`
 directory, including case files and support files. They are an explicit
 inventory, not a claim that every domain scenario is duplicated.
 
-| Package | Before | First peer | Shared MCP | Scope builders | Platform helpers |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| Derive | 10,312 | 10,312 | 10,312 | 10,312 | 10,312 |
-| Platform | 5,851 | 5,851 | 5,851 | 5,851 | 5,841 |
-| Scope | 21,402 | 21,402 | 21,402 | 21,431 | 21,431 |
-| MCP | 7,829 | 7,834 | 7,850 | 7,850 | 7,850 |
+| Package | Before | First peer | Shared MCP | Scope builders | Platform helpers | Derive draft |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Derive | 10,312 | 10,312 | 10,312 | 10,312 | 10,312 | 10,316 |
+| Platform | 5,851 | 5,851 | 5,851 | 5,851 | 5,841 | 5,841 |
+| Scope | 21,402 | 21,402 | 21,402 | 21,431 | 21,431 | 21,431 |
+| MCP | 7,829 | 7,834 | 7,850 | 7,850 | 7,850 | 7,850 |
 
 The first peer extraction adds five lines overall; the portable shared
 MCP module now adds 21 in total, including explicit runtime ports and
 boundary comments. The Scope application builders add 29; the Platform
-helpers remove 10. The current combined increase is 40. No overall line
+helpers remove 10; the Derive helper adds four. The current combined
+increase is 44. No overall line
 reduction is claimed.
 Full per-file baseline counts/hashes are in
 `/tmp/artroom-k2-before-lines-20261019.json`; the selected assertion
