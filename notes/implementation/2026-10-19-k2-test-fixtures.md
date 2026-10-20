@@ -295,6 +295,49 @@ placement cleanup reconfirms all384exact expressions. No whole suite or
 final gate has been repeated. K2 entry consolidation and final review
 remain ahead.
 
+## Scope fixture entries
+
+Node entry checkpoint `f48547d7aee58737672a98044ad092cbe33f73e1`, tree
+`841b0b08850871b1431924d6115b7100dde61008`, exposes the four common
+input builders and five pure packet builders through test/fixtures.ts.
+The private fixtures-core.ts is byte-exact to the prior portable builder
+module. Private packet and native resolver adapters import that core,
+preventing an eager re-export initialization cycle. Distinct packet
+scenarios and defaults remain separate. Three Scope cases, three Node MCP
+cases and the scripted browser host now import the supported pure entry.
+All232outerexpectation expressions remain exact.
+
+Original process81341 naturally exits zero: both owning compilers pass,
+three MCP files pass17cases (1.58seconds wall/2.98CPU), three native Scope
+files pass3cases (6.85/8.27). Standalone bundle/import of the Scope entry
+and a standalone local MCP host both pass outside Vitest. Normal and
+declared fixture modes return200/expectedtitle and close their peers.
+No rendered-browser, provider or native admission conclusion follows.
+
+Worker entry checkpoint `6d452d9abf0162d90b89e15df1c6886dd7116a1d`, tree
+`996c74268e707fa238a35b0124f5d2570c5b3269`, adds a nine-line
+fixtures-native.ts. It re-exports the same private support, lifetime,
+resolver, HTTP peer and session builders, plus the portable entry. All98
+changed Scope case files only change/coalesce their imports;2961outer
+expectation expressions remain exact. Private implementation, clocks,
+owners, hooks, cohorts, case-specific limits and cleanup are unchanged.
+Node MCP and script consumers keep using fixtures.ts and do not load the
+Worker entry or Vitest runtime.
+
+Original process7601 naturally exits zero: owning Scope compiler passes,
+main Scope project runs97changedfiles and343cases, all pass. It takes
+58.62seconds wall/63.36CPU. The original labelled scripted SQLite retention
+faults remain in its log. Its98thselectedfile is intentionally excluded by
+that project and belongs to scope-denial. Original process24771 naturally
+exits zero in that owning project: one file, one case passes. The first
+selector attempt used the nonexistent project name denial and ran no test;
+its failed log remains. The root configuration supplied the corrected
+scope-denial name. No test or config change was needed.
+Source hashes stay exact through both phases and match their clean Git
+checkpoints. Evidence uses `/tmp/artroom-k2-scope-node-entry-*20261019*`
+and `/tmp/artroom-k2-scope-native-entry-*20261019*`. Final gate and Source
+remain ahead.
+
 ## Scope and counts
 
 Before counts include every `.ts` file under each package's `test/`
@@ -305,15 +348,16 @@ inventory, not a claim that every domain scenario is duplicated.
 | --- | ---: | ---: | ---: |
 | Derive | 10,312 | 10,316 | +4 |
 | Platform | 5,851 | 5,841 | -10 |
-| Scope | 21,402 | 21,434 | +32 |
+| Scope | 21,402 | 21,411 | +9 |
 | MCP | 7,829 | 7,852 | +23 |
 
 The first peer extraction adds five lines overall; the portable shared
 MCP module now adds 21 in total, including explicit runtime ports and
 boundary comments. The Scope application builders add 29; the Platform
 helpers remove 10; the Derive helper adds four. The current combined
-increase is 49 after the Scope follow-up adds three lines, the MCP
-entry split removes six and deterministic signer sharing adds eight. No overall line reduction is claimed.
+increase is 26 after the Scope and MCP entry work. The Scope Node
+entry adds four lines and the Worker entry removes27 by coalescing imports;
+MCP signer sharing adds eight. No overall line reduction is claimed.
 Full per-file baseline counts/hashes are in
 `/tmp/artroom-k2-before-lines-20261019.json`; the selected assertion
 inventories and tool are `/tmp/artroom-k2-expect-*20261019*`.
