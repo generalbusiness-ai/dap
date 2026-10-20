@@ -5,8 +5,9 @@ in `apps/room/page/src/custody.ts`. The connection, join and Start adapters
 declare their record kind, exact storage prefix, byte bound, decoder and
 public view. Their workflows and existing test assertions are unchanged.
 The current owned integration incorporates reviewed and published Main
-`9c6d344c`. Its generated build and affected checks pass. The final gate
-and complete fresh review are still due. The original frozen implementation and its earlier passing
+`9c6d344c`. Its generated build, affected checks and current integration
+gate pass. The final candidate changes this report only after that gate;
+complete fresh review remains due. The original frozen implementation and its earlier passing
 gate below are historical, not approval or verification of this new tree.
 Its first required gate passed at code/test head `1e6aaa994c2a344d980746fbbcd1b5112ce2f370`, tree
 `3098ed1bb185f51160443ceab760433b5e3e36e5`: 1,927 Vitest cases passed,
@@ -319,3 +320,55 @@ No frozen review original, dependency or helper is edited or executed.
 This integration needs its own final ordinary gate and fresh complete
 eight-path review before a landing. P1's separate pending approval is
 not extended or imported here; no push or Cloudflare action occurs.
+
+
+## Current integration gate and complete review
+
+Original `71884` closes naturally zero at
+`70f41c07a981af63adf4954b697abc5f8aa22793`, tree
+`8b53df0d553778a2255295bc49dffd29465a5613`. Whitespace, shared helpers,
+all compiler configurations, 1,997 Vitest cases, 33 Node checks and 55
+Counting Node checks pass. Vitest retains three existing skips, with
+419 passed files and one skipped. Whole pipeline time is
+533.825765584 wall / 767.412807000 child CPU seconds on shared warm
+macOS 27.0.1 arm64, Node 26.12.0 and npm 11.20.0; initial load is
+1.0942/1.7612/2.1797. These are whole-pipeline measurements, not a sum
+of phases or an exclusive-host result.
+
+All 2,592 tracked source files retain their bytes and modes. The checkout
+remains clean at the same head and the lock stamp matches. Of 5,530
+dependency rows, only the owned Vite results cache changes; no package
+installs. Original command, source/dependency inventories, logs and
+closure are `/tmp/k3-b1-main-gate-20261020*`. Every current gate source
+input is preserved at `/tmp/k3-current-main-gate-inputs-20261020`.
+Counting evidence is
+`/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/artroom-counting-node-wTxOYQ`.
+Raw scripted faults and runtime/Git warnings remain unclassified; a
+passing gate proves neither general stability nor physical draining.
+The final candidate changes only this report after that gate. No suite
+is repeated for this report update.
+
+Historical approval `0f310cc1`, read in full, remains for exact `ed140d42`
+only. The full current eight-path source requires a fresh complete
+review, including this report, the actual combined generated asset and
+its independently checked imported Main. Earlier guard/control evidence
+is read-only history; no original frozen source, dependency, tool or
+helper is executed or edited. The older evidence manifest records no
+modes. New observations of those leaves' current modes do not invent
+historical mode metadata.
+
+One older input reconstruction has a documented report-only gap. The
+K1-integration focused inventory records a 14,565-byte primary report,
+SHA-256 `35b1bfbd1690546059cbad5eca97cabfafbb722e673c6c4766c09b5b49761dfd`.
+Its exact bytes were not recovered from the retained Git versions,
+paragraph assembly or matching-size object-store search. The first
+reconstruction stops after 1,482 files; later metadata probes retain
+their missing-note, absent-path and hash-mismatch outcomes. No software
+test is run by those probes. All other 2,571 recorded post-build files,
+including all runtime, test and configuration source, match `441ab210`
+exactly and are physically saved with their recorded modes. This is not
+a complete matching original input or evidence of a replayed historical
+command. Details are `/tmp/k3-k1-main-recorded-source-note-gap-20261020.json`;
+the separately captured current generation, validation and gate inputs
+are each complete and exact. The gap does not change the original
+focused run's recorded status or claim extra verification for it.
