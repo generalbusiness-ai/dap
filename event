@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8048287df6845f0281ed064a651d976b86660be6","text":"Merge retired a covered predecessor; the successor is at packages/cli/src/application-local.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:81bf26cf6f56d5007b805c787e9cf052d7bb0f36","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-19-g5a-device-command.md."}
