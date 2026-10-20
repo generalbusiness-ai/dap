@@ -3,7 +3,7 @@ import { expect, test } from "vitest";
 import type { ApplicationProjectionData, Item, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, isMemberRef } from "@generalbusiness/artroom-bytes";
 import type { ApplicationReadProjection } from "@generalbusiness/artroom-bytes/application-v2";
-import { projectionMembers } from "../src/views/members.ts";
+import { projectionMemberFacts, projectionMembers } from "../src/views/members.ts";
 import type { MembershipDisplaySnapshot } from "../src/views/member-types.ts";
 import { memberText } from "../src/views/member-text.ts";
 
@@ -19,6 +19,7 @@ const roster: Item = { id: 0, type: "roster", state: "open", revision: 1, opened
 const declaration: ApplicationReadProjection = { v: 1, definition: at.hash, revision: "revision", sources: {
   benches: { item: "bench", read: "many", states: ["open"], limit: 100, fields: {
     prober: { from: { kind: "party", name: "prober" }, of: { type: "member" }, nullable: true },
+    lastProber: { from: { kind: "fact-signer", name: "lastProbe" }, of: { type: "member" }, nullable: true },
     arbitrary: { from: { kind: "value", name: "arbitrary" }, of: { type: "member" }, nullable: true },
   } },
   events: { read: "entries", acts: ["probe"], window: 100, limit: 100, latestBy: null, fields: {
@@ -40,6 +41,11 @@ test("party and signer resolve once with controller evidence; arbitrary values n
   expect(table.records[canonicalize(agent)]).toMatchObject({ identity: { handle: "@prober", kind: "agent" }, controller: owner,
     standing: { state: "active", role: "agent", actions: ["grow.probe"] }, opened: { seq: 3, hash: at.hash } });
   expect(memberText(agent, table)).toBe("@prober (agent · controlled by @maya · role agent)");
+  const onlyFact = { ...data([]), sources: {
+    benches: [{ id: 2, type: "bench", state: "open", revision: 1, fields: { prober: null, lastProber: agent } }], events: [],
+  } };
+  expect((await projectionMembers(declaration, onlyFact, async () => snapshot)).records[canonicalize(agent)]?.controller).toEqual(owner);
+  expect(projectionMemberFacts(declaration.sources["benches"]!, ["lastProber"], { lastProber: agent })).toEqual({ 0: { label: "lastProber", refs: [agent] } });
   const other = { ...agent, membership: { ...membership, inc: `in_${"b".repeat(25)}a` as const } };
   expect(isMemberRef(other)).toBe(true);
   const unknown = await projectionMembers(declaration, data([other]), async () => snapshot);

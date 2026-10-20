@@ -1,6 +1,6 @@
 /** One pure projection over exact native query replies. The host must own
  * read authorization and the definition pin before obtaining those replies. */
-import { ITEM_QUERY_BOUNDS, type DeclaredDefinition, type Head, type ItemQuery, type ScopeRef } from "@generalbusiness/dap-contract";
+import { ITEM_QUERY_BOUNDS, type DeclaredDefinition, type Head, type ItemQuery, type MemberRef, type ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, isRecord, parseStrict } from "./index.ts";
 import { encodeItemQuery } from "./item-query.ts";
 import { itemQueryReadFor } from "./item-query-read.ts";
@@ -11,6 +11,7 @@ import { APPLICATION_PROJECTION_LIMITS as B, ApplicationProjectionError, applica
 import { isApplicationJournalSource } from "./application-projection-types.ts";
 import { projectApplicationJournalRead } from "./application-journal-projection.ts";
 import { applicationProjectionFactRefs, readApplicationFactTimes } from "./application-fact-times.ts";
+import { readApplicationFactSigners } from "./application-fact-signers.ts";
 
 const fail = (reason: ApplicationProjectionError["reason"] = "invalid"): never => { throw new ApplicationProjectionError(reason); };
 const own = (value: unknown, most: number): unknown => {
@@ -45,7 +46,7 @@ export function applicationProjectionQueries(projection: ApplicationReadProjecti
  * A truncated page never becomes a successful partial projection. Retained
  * final rows are supplied by the query, rather than omitted via Summary. */
 export function projectApplicationQueryReads(value: unknown, definition: DeclaredDefinition, scope: ScopeRef,
-  items: Readonly<Record<string, number>>, replies: unknown, journals: Readonly<Record<string, unknown>> = {}, factTimes: Readonly<Record<string, unknown>> = {}): ApplicationProjectionData {
+  items: Readonly<Record<string, number>>, replies: unknown, journals: Readonly<Record<string, unknown>> = {}, factTimes: Readonly<Record<string, unknown>> = {}, factSigners: Readonly<Record<string, unknown>> = {}): ApplicationProjectionData {
   const projection = bindApplicationProjection(value, definition), queries = applicationProjectionQueries(projection, scope, items);
   const owned = own(replies, ITEM_QUERY_BOUNDS.payloadBytes * B.sources + B.metadataBytes);
   if (!isRecord(owned) || Object.keys(owned).sort().join() !== Object.keys(queries).sort().join()) return fail();
@@ -58,6 +59,10 @@ export function projectApplicationQueryReads(value: unknown, definition: Declare
     && Object.values(source.fields).some(field => field.from.kind === "fact-time")).map(([name]) => name).sort();
   const timeReads = own(factTimes, B.metadataBytes * B.sources);
   if (!isRecord(timeReads) || Object.keys(timeReads).sort().join() !== timedNames.join()) return fail();
+  const signedNames = Object.entries(projection.sources).filter(([, source]) => !isApplicationJournalSource(source)
+    && Object.values(source.fields).some(field => field.from.kind === "fact-signer")).map(([name]) => name).sort();
+  const signerReads = own(factSigners, B.metadataBytes * B.sources);
+  if (!isRecord(signerReads) || Object.keys(signerReads).sort().join() !== signedNames.join()) return fail();
   for (const [name, source] of Object.entries(projection.sources)) {
     if (isApplicationJournalSource(source)) {
       const result = projectApplicationJournalRead(source, definition, scope, journalReads[name]);
@@ -73,12 +78,15 @@ export function projectApplicationQueryReads(value: unknown, definition: Declare
     if (source.read !== "many" && reply.value.items.length !== 1) return fail("incomplete");
     const times = timedNames.includes(name) ? readApplicationFactTimes(timeReads[name], scope, reply.at,
       applicationProjectionFactRefs(source, scope, reply.at, reply.value.items)) : new Map<number, string>();
+    const signers = signedNames.includes(name) ? readApplicationFactSigners(signerReads[name], scope, reply.at,
+      applicationProjectionFactRefs(source, scope, reply.at, reply.value.items, "fact-signer")) : new Map<number, MemberRef | null>();
     sources[name] = reply.value.items.map(item => {
       const fields: Record<string, ApplicationProjectionRow["fields"][string]> = {};
       for (const [alias, field] of Object.entries(source.fields)) {
-        const slots = field.from.kind === "party" ? item.parties : field.from.kind === "ref" || field.from.kind === "fact-time" ? item.refs : item.values;
+        const slots = field.from.kind === "party" ? item.parties : field.from.kind === "ref" || field.from.kind === "fact-time" || field.from.kind === "fact-signer" ? item.refs : item.values;
         const ref = slots[field.from.name];
-        const value = field.from.kind === "fact-time" && ref !== null ? times.get(typeof ref === "number" ? ref : (ref as { seq: number }).seq) : ref;
+        const position = ref !== null && (field.from.kind === "fact-time" || field.from.kind === "fact-signer") ? typeof ref === "number" ? ref : (ref as { seq: number }).seq : null;
+        const value = position !== null ? field.from.kind === "fact-time" ? times.get(position) : signers.get(position) : ref;
         if (value === undefined || value === null && !field.nullable) return fail();
         fields[alias] = value;
       }

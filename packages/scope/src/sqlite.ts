@@ -79,6 +79,8 @@ export interface Sql {
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT NOT NULL) WITHOUT ROWID;
 CREATE TABLE IF NOT EXISTS entry (seq INTEGER PRIMARY KEY, hash TEXT NOT NULL, time TEXT NOT NULL, bytes TEXT NOT NULL, size INTEGER NOT NULL, actor TEXT, idem TEXT, intent TEXT);
+CREATE TABLE IF NOT EXISTS entry_fact_signer (seq INTEGER PRIMARY KEY, hash TEXT NOT NULL, member TEXT NOT NULL);
+CREATE TRIGGER IF NOT EXISTS forget_entry_fact_signer AFTER DELETE ON entry BEGIN DELETE FROM entry_fact_signer WHERE seq=OLD.seq; END;
 CREATE UNIQUE INDEX IF NOT EXISTS entry_by_key ON entry (actor, idem) WHERE actor IS NOT NULL;
 CREATE TABLE IF NOT EXISTS item (id INTEGER PRIMARY KEY, type TEXT NOT NULL, state TEXT NOT NULL, record TEXT NOT NULL);
 CREATE INDEX IF NOT EXISTS item_by_state ON item (type, state, id);
@@ -450,6 +452,13 @@ export class SqliteStore implements Store {
 
   append(entry: Entry, hash: Digest, bytes: string, size: number): void {
     this.#run("INSERT INTO entry (seq, hash, time, bytes, size) VALUES (?, ?, ?, ?, ?)", entry.seq, hash, entry.time, bytes, size);
+    // Derived metadata is written with the entry, not reconstructed on a
+    // read. Legacy entries stay unavailable: activation scans no history.
+    if (entry.input.type === "act") {
+      const actor = entry.input.signed.intent.actor;
+      const grants = entry.input.authority.filter(grant => grant.key === actor);
+      if (grants.length === 1) this.#run("INSERT INTO entry_fact_signer (seq, hash, member) VALUES (?, ?, ?)", entry.seq, hash, canonicalize(grants[0]!.subject));
+    }
     const pin = archivePinBytes(entry, hash);
     if (pin !== null) this.#run("INSERT INTO meta (k, v) VALUES (?, ?) ON CONFLICT (k) DO UPDATE SET v = excluded.v", ARCHIVE_PIN_KEY, pin);
     this.localSigners.appended(entry, hash);

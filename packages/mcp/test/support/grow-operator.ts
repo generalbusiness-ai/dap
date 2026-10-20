@@ -11,9 +11,10 @@ import type { openOwnedGrowScenario } from "./grow-owned-session.ts";
 import { room } from "../../../../examples/grow/room.ts";
 import { McpService, memoryStore } from "../../src/index.ts";
 import { DeclaredViewSource } from "../../src/views/declared.ts";
+import type { MembershipDisplayRead } from "../../src/views/member-types.ts";
 import { SERVICE, StandIn } from "./standin.ts";
 
-export function growOperator(packet: AnyPackedApplication, session: Awaited<ReturnType<typeof openOwnedGrowScenario>>, action = "grow.heat", name?: string) {
+export function growOperator(packet: AnyPackedApplication, session: Awaited<ReturnType<typeof openOwnedGrowScenario>>, action = "grow.heat", name?: string, members?: MembershipDisplayRead) {
   const actor = session.actors.find(actor => actor.actions.includes(action) && (name === undefined || actor.name === name));
   if (!actor) throw Error(`The maintained scene needs an explicit TEST actor for ${action}${name ? ` named ${name}` : ""}.`);
   const signer = secretSigner(Uint8Array.from(actor.seed.match(/../g)!, byte => Number.parseInt(byte, 16)));
@@ -42,6 +43,7 @@ export function growOperator(packet: AnyPackedApplication, session: Awaited<Retu
     return json({ ok: false, reason: "not-found" });
   };
   const source = new DeclaredViewSource(packet.bytes, packet.ids.release, {
+    ...(members ? { members } : {}),
     now: () => now,
     installation: async () => ({ scope: session.site.at, directory: session.directory.at, rules: stand.rules, membership: actor.member.membership, destination: stand.destination,
       item: 7, definition: packet.package.semantic.entry, ids: packet.ids }),

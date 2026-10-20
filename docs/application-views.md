@@ -143,7 +143,7 @@ item revision. A reader can resolve that known position directly to its
 entry and hash; a refused, missing or unavailable lookup supplies no fact.
 Provisioning leaves the room and report slots null.
 
-## Fact timestamps and display ages
+## Fact timestamps, signers and display ages
 
 An item projection can select the recorded time of one native fact-ref slot:
 
@@ -167,6 +167,27 @@ projection head, within the source's existing budget. There is no journal
 window or foreign lookup. This relies on the owner's immutable metadata;
 it does not independently verify an entry body. The timestamp remains
 projected data and does not become a new native value or ref slot.
+
+An item can also select the member recorded as signing its named local fact:
+
+```json
+"lastProber": {
+  "from": { "kind": "fact-signer", "name": "lastProbe" },
+  "of": { "type": "member" },
+  "nullable": true
+}
+```
+
+The same native fact-slot and scope rules apply. A signer field must be
+nullable even when its native fact slot is required. This field uses the
+entry's recorded authority subject for its actor key. It never resolves a
+key through current membership. A missing fact, mismatched hash, absent
+recorded member or unavailable index gives null; the surface should say
+"Last prober unavailable". The rest of the item remains visible.
+The native owner writes this bounded metadata with new entries and removes
+it when the entry is deleted. Existing entries are not scanned or backfilled;
+their signer remains unavailable. Reads use the source's existing metadata
+budget, select no entry bodies, and require the same item visibility.
 
 A view fact can display a timestamp as an age:
 
@@ -239,7 +260,7 @@ references beyond the limit, and the kit shows that count. A reference
 outside the table, or one the service cannot read, renders as Member
 unavailable with its full raw reference. The element never guesses a name.
 
-Use `surface.member(row.fields.lastProber)` for a projected party field.
+Use `surface.member(row.fields.lastProber)` for a projected member field.
 The kit shares its stylesheet with the shadow root and inherits the host's
 fonts and tokens. `onData` runs again when the display table changes, even
 when the native projection has not changed. The API offers no membership

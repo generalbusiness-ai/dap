@@ -13,9 +13,9 @@ export interface ApplicationFactTimeRead {
 }
 const fail = (): never => { throw new ApplicationProjectionError("unavailable"); };
 export interface ApplicationProjectionFactRef { readonly seq: number; readonly hash: Digest | null }
-export function applicationProjectionFactRefs(source: ApplicationItemProjectionSource, scope: ScopeRef, at: Head, items: readonly Pick<Item, "refs">[]): readonly ApplicationProjectionFactRef[] {
+export function applicationProjectionFactRefs(source: ApplicationItemProjectionSource, scope: ScopeRef, at: Head, items: readonly Pick<Item, "refs">[], kind: "fact-time" | "fact-signer" = "fact-time"): readonly ApplicationProjectionFactRef[] {
   const refs = new Map<number, ApplicationProjectionFactRef>();
-  const fields = Object.values(source.fields).filter(field => field.from.kind === "fact-time");
+  const fields = Object.values(source.fields).filter(field => field.from.kind === kind);
   if (items.length > B.rows || fields.length > B.fields) return fail();
   for (const item of items) for (const field of fields) {
     const value = item.refs[field.from.name];

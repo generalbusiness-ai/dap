@@ -11,7 +11,8 @@ export function projectionMemberFacts(source: ApplicationProjectionSource, facts
   const result: Record<number, { label: string; refs: MemberRef[] }> = {};
   for (const [index, fact] of facts.entries()) {
     const field = applicationViewFactField(fact), declaration = source.fields[field];
-    if (!declaration || declaration.from.kind !== (isApplicationJournalSource(source) ? "signer" : "party")) continue;
+    if (!declaration || (isApplicationJournalSource(source) ? declaration.from.kind !== "signer"
+      : declaration.from.kind !== "party" && declaration.from.kind !== "fact-signer")) continue;
     const value = values[field], refs = isMemberRef(value) ? [value] : Array.isArray(value) && value.every(isMemberRef) ? value : [];
     if (refs.length) result[index] = { label: typeof fact === "string" ? fact : fact.label, refs };
   }
@@ -48,7 +49,8 @@ export async function projectionMembers(declaration: ApplicationReadProjection, 
     else if (Array.isArray(value)) for (const element of value) collect(element);
   };
   for (const [name, source] of Object.entries(declaration.sources)) {
-    const fields = Object.entries(source.fields).filter(([, field]) => field.from.kind === (isApplicationJournalSource(source) ? "signer" : "party")).map(([field]) => field);
+    const fields = Object.entries(source.fields).filter(([, field]) => isApplicationJournalSource(source)
+      ? field.from.kind === "signer" : field.from.kind === "party" || field.from.kind === "fact-signer").map(([field]) => field);
     for (const row of data.sources[name] ?? []) for (const field of fields) collect(row.fields[field]);
   }
   const selected = [...distinct.values()].slice(0, VIEW_MEMBER_LIMIT);

@@ -53,6 +53,7 @@ function reading(bench){
 function select(bench){
  selected=bench.id;const r=reading(bench),spec=metrics[metric];
  root.querySelector('#selection').textContent=bench.fields.label+' · '+spec.label+' '+(r.missing?'No reading':metric==='scouting'?(r.raw||'Empty note'):value(r.raw,spec.scale,spec.unit))+' · '+r.age.full;
+ root.querySelector('#selection').append(' · Last prober ',bench.fields.lastProber?api.member(bench.fields.lastProber):'unavailable');
 }
 function openBench(bench){
  select(bench);const r=reading(bench);

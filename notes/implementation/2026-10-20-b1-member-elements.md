@@ -11,7 +11,7 @@ byte-identical to that Main. Maintained package witnesses are separate.
 
 ## Resolve recorded identity within a bound
 
-The service resolves typed party and journal signer fields from the
+The service resolves typed party, exact-fact signer and journal signer fields from the
 captured declared projection. Canonical full member references include the
 membership incarnation. Repeated references share one membership read.
 The table considers at most 32 references; controllers consume that same
@@ -38,7 +38,7 @@ carry the table beside native data, within the existing 64 KiB view bound.
 
 ## Render the same element and text
 
-The kit renders party and signer facts and a declared view's actor through
+The kit renders party and recorded signer facts and a declared view's actor through
 one element. A person's initials sit in a circle, an agent's in a square,
 and a checker's upright initials inside an outlined diamond. Invited,
 removed and lapsed remain words. Every agent names its recorded controller
@@ -70,12 +70,37 @@ retained under `/tmp/b1-maintained-grow-effect17-input-20261020` before the
 four attempted Grow files are restored byte-exact to the checkpoint/Main.
 No effect bound, assertion, measurement provenance, grant or default changes.
 
-Planner decision request `ace7a2e9` proposes a generic exact-local-fact
-signer projection beside the existing fact-time form. It would read the
-recorded signer of `lastProbe` at its exact scope, captured head and hash,
-rather than infer a member from a recent journal window. That projection
-extension is not implemented or approved yet. The maintained Grow alert
-and grid witnesses remain to do. No new production release is signed.
+Planner report `656d21f5`, adopted by `3879c591`, approves an exact-local-fact
+`fact-signer` field beside `fact-time`. The bench projects `lastProber`
+from its existing `lastProbe` fact. Its HTML adds one `member(ref)` call;
+a null signer reads "Last prober unavailable". No native effect changes.
+
+The owner writes a separate `entry_fact_signer` metadata row in the entry's
+transaction, from the recorded authority subject matching its actor key.
+It joins the exact retained entry sequence and hash. A deletion trigger
+removes that metadata with its entry. Activation creates an empty index;
+it scans and backfills no legacy history. Unindexed legacy entries remain
+unavailable. The read selects no entry bodies and spends the existing
+source's metadata, candidate and SQL-call allowance before execution.
+A full 100-item page leaves its body allowance unchanged. There is no
+current membership/key inference, history window, foreign lookup or retry.
+
+The generic field is always nullable, including when the native fact slot
+is required. Missing retention, an absent recorded member/index or a
+mismatched fact hash gives null for that field; the other selected item
+fields remain. Malformed, foreign, future or changed-head metadata still
+refuses the projection. The client adapter keeps this derived member out
+of native party/ref/value slots, so it supplies no invented subject or
+guard input. Existing fact-time and journal completeness rules stay in
+force: if other selected evidence is unavailable, those rules can still
+refuse the whole projection.
+
+Planner request `49f0b30b` remains open. The maintained package currently
+declares only admin, so the actual native fixture's attempted agent-role
+installation refuses. Adding `grow.tend` to the TEST membership roster
+alone cannot bypass the package role declaration. Builder requests a
+specific decision before changing those maintained role grants. The signed
+demo packet and `DEMO_RELEASE` remain unchanged.
 
 ## Focused verification
 
@@ -147,3 +172,77 @@ output caches are removed. Lock and stamp match; no package is installed.
 This preparation is not complete B1 delivery. No Source, review, Main
 landing, push, Cloudflare operation, browser persistence or hosted acceptance
 is claimed. Planner owns deployment and the separate hosted Grow milestone.
+
+## Exact-fact signer checks in progress
+
+The original pure prototype passes two files/eight cases and bytes' two
+compiler projects (`/tmp/b1-fact-signer-pure-prototype-20261020*`). The first
+owner compiler run catches the client adapter's missing derived-field case
+and naturally exits one; the next changed run passes Scope's three compiler
+projects, MCP's four, the client projection file and all five selected
+Grow/operator/measurement cases (`/tmp/b1-fact-signer-owner-focused-v2-20261020*`).
+The required-ref nullable witness and native fault fixture then catch
+SQL-row bracket-access type errors; the corrected v4 compilation and eight
+pure cases pass. These failures remain retained, rather than being replaced
+by later successes.
+
+Original native process `22084` naturally exits one: the four budget cases
+and original installed projection case pass, while maintained Grow refuses
+the undeclared agent-role installation before its probe witness. Its exact
+23 changed/untracked input leaves are saved under
+`/tmp/b1-native-agent-role-refusal-input-20261020` against checkpoint
+`ad407f12`. No package role grant is widened to make it pass.
+
+After adding actual retained-entry/index/hash controls, original native
+process `86939` naturally exits zero. The installed Counter fixture reads
+its recorded member over the issued session, with history access removed;
+it survives eviction. Deleting its signer index and restarting leaves the
+field null, so activation does not reconstruct historical authority. An
+actual item fact hash change gives null. Deleting its actual retained entry
+also gives null and removes its index row. Entry, index and item bytes are
+restored before the original scenario and assertions continue. This proves
+the native generic field; the maintained Grow agent-role witness remains
+separate. Raw output and natural closure are
+`/tmp/b1-fact-signer-native-v2-20261020*`.
+
+The hash control distinguishes: the unchanged four-case pure read file
+passes before removing only the hash-match guard; afterwards three cases
+pass and the signer case fails by its null-versus-recorded-member assertion.
+No timeout or startup error establishes this result. Exact source and test
+bytes are restored. Matching inputs, both raw logs and reports, and the
+closed result are `/tmp/b1-fact-signer-hash-control-20261020`.
+
+The maintained Grow browser witness uses the real kit, package HTML,
+owned Core/SQLite, native probe entries and a 100-bench room. Its identity,
+controller, roster, grants, sessions and installation answers are explicit
+TEST fixtures. At widths 390 and 592, original `39403` naturally exits zero
+and shows the sensors agent with its controller, a person prober, an
+unprobed bench's unavailable signer, and a climate-agent alert with its
+controller. It signs no UI act. Light mobile grid and desktop alert captures
+were inspected. Logs and eight captures are
+`/tmp/b1-grow-members-browser-v5-20261020*` and
+`/tmp/b1-grow-members-browser-output-v5-20261020`.
+
+Earlier browser attempts remain failures: the first alert fixture omits
+required subjects and receives `bad-intent`; after supplying them the room's
+zone/device guards correctly refuse the unprepared alert. Reusing the
+existing native fault scene establishes those guards. Its next timeout
+catches the missing `lastProber` in the separate layers declaration used by
+the grid. Adding that field makes the sensor visible; the next timeout
+catches the incomplete scripted membership fixture, whose missing roster
+correctly leaves eligibility unknown. An explicit same-head TEST roster
+then supplies the intended known display. None of those failures is a
+passing witness. Their raw outputs, natural closures and earlier script
+inputs remain retained. The final label explicitly says "Last prober";
+the final fixture clock follows its actual scene time.
+
+Final browser original `98919` naturally exits zero in 3.188605375 seconds
+at the final HTML label and scene clock. Its eight captures and report are
+`/tmp/b1-grow-members-browser-output-v6-20261020`; raw log and closed result
+are `/tmp/b1-grow-members-browser-v6-20261020*`. The final mobile grid was
+inspected. The raw Node `DEP0205` warning remains; this is not a clean-output
+or stability claim. Source and tests for the actual native Grow agent,
+raising-agent display and bench hash/retention/legacy boundary are prepared
+but remain unrun pending the role-map decision. The bench fault checks use
+a signer-only selection at the native owner boundary; other selected
+journal and timestamp completeness rules can still refuse a full grid.
