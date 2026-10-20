@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b6c835ed00816ebedf1843c958e0a312360c39e5","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/errors.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:b6e8dd9d00a294feacf0927f640b54f847420ea7","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/peer-pin.test.ts."}
