@@ -259,3 +259,16 @@ module are `/tmp/k3-k1-main-owned-page-checks-20261020*`. Original session
 The SCRIPTED service/storage/locks boundary remains; no browser persistence
 or native admission result follows. The final full gate and fresh complete
 review are still due at the eventual clean integration head.
+
+
+## Reviewed homepage wording Main incorporation
+
+The owned merge of actual Main `248aab8f`, tree `ba40d47e`, closes
+naturally zero in 0.035090334 seconds, with no conflicts. All nine imported
+wording/preview paths match that reviewed Main exactly. All 8 authored
+source, test, generated and prior-report paths keep their bytes and modes
+during the merge. No runtime implementation, assertion, deadline, package,
+lock or permission changes. Exact original argv/log/closure and protected
+hashes are `/tmp/k3-integrate-tagline-main-20261020*`; shared preparation
+is `/tmp/builder-incorporate-tagline-main-20261020.py` and its closed result.
+The final source gate remains due at this clean integration checkpoint.
