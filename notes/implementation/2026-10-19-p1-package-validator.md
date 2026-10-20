@@ -3,8 +3,9 @@
 Request `4e63c67c30e866555e9efcfdf49af75a2c2f92e1`, promise
 `0afa98af9294045f7906395d0bc8a206ebf1aa90`. This owned preparation
 incorporates reviewed Main `248aab8f`, with landed K1, K2, G5a, S2a and
-Grow host-link work. Two ordinary P1 gates have failed; complete review
-and landing remain due.
+Grow host-link work. The changed-code ordinary gate at `a4967d67` passes
+after the two failed gates recorded below. Complete review and landing
+remain due.
 The earlier `32f7537e` integration on Main `8aad37bb` is historical.
 
 Planner decision `b966ef3f`, adopted as `48471bbb`, now governs the format
@@ -39,9 +40,10 @@ physical memory or provider quota.
 The current boundary's eleven graph cases and recorded owning byte,
 consumer, archive and native-demo checks pass, with affected compiler
 configurations. Their exact heads, failures, corrections and TEST limits
-are recorded below. Earlier peer-pin and reservation checks and controls
-remain separate. These runs are not one whole gate or a single measured
-pipeline; the one final ordinary gate and complete Source review are due.
+are recorded below. Earlier focused checks remain separate from the
+changed-code ordinary gate `67790`, which passes at `a4967d67`. The final
+candidate changes this report only after that gate; complete exact-head
+Source review remains due.
 
 ## Historical checkpoints
 
@@ -1003,3 +1005,38 @@ all 2,611 source inputs are preserved at
 `/tmp/p1-lending-ordered-refusal-inputs-20261020`. The new changed-code
 ordinary gate and complete review remain due; no unchanged whole-suite
 replay or mutation sweep is run.
+
+
+## Changed-code ordinary gate before complete review
+
+Original `67790` closes naturally zero at
+`a4967d67da019fd71f4796e988baaf1876efd592`, tree
+`7497d49447b11b1649d6076897d53ca319a7c6f4`. Whitespace, shared helpers,
+all compiler configurations, 2,015 Vitest cases, 33 Node checks and 55
+Counting Node checks pass. Vitest retains three existing skips, with
+422 passed files and one skipped. Both raw Node executable loading and
+the strengthened lending refusal scenario pass in this original full
+pipeline. The preceding failed gates remain failed records.
+
+The gate takes 526.234608583 wall / 766.545813000 child CPU seconds on
+shared warm macOS 27.0.1 arm64, Node 26.12.0 and npm 11.20.0; initial
+load is 1.8818/2.2729/2.2930. These are whole-pipeline measurements, not
+the sum of phases or an exclusive-host result. All 2,611 tracked source
+files retain their bytes and modes. The checkout remains clean and at
+the same head; the lock stamp matches. Of 5,531 dependency rows, only
+the owned Vite results cache changes; no package installs. Raw scripted
+faults, different-DO/RefcountedCanceler and Git warnings remain available
+without cause, stability or physical-draining attribution.
+
+Original helper, source/dependency inventories, raw phase outputs and
+closure are `/tmp/p1-b1-main-gate-v3-20261020*`. The exact 2,611-file
+source input is `/tmp/p1-third-gate-inputs-20261020`. Counting evidence
+is `/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/artroom-counting-node-5wk3xv`.
+The final candidate changes only this primary report after the passing
+gate. No suite is repeated for this report update. All 86 authored paths
+against incorporated Main `9c6d344c` require complete review together,
+with the public validator, strict/published format boundary, native
+sender-pin behavior, original failed runs, later repairs and TEST limits.
+No source, publication, deployed-release, Cloudflare, provider or hosted
+acceptance is inferred from a passing test gate. The planner alone owns
+Cloudflare deployment.
