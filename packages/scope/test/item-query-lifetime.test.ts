@@ -19,6 +19,7 @@ import type { ProofSource } from "../src/proof-bytes.ts";
 import { mintSession, readerOf, sessionsOf } from "../src/sessions.ts";
 import { SqliteStore, type Sql, type SqlValue } from "../src/sqlite.ts";
 import { net } from "./net.ts";
+import { fixedSigner } from "./fixtures.ts";
 import { sessionRoom } from "./support/session-room.ts";
 import { rita } from "./repository.ts";
 const deferred = <T>() => { let resolve!: (value: T) => void; const promise = new Promise<T>(done => { resolve = done; }); return { promise, resolve }; };
@@ -78,7 +79,7 @@ test("native signed query hides a clock fault after causal bodies from an unrela
   const f = await sessionRoom();
   try {
     const child = f.children[1]!, selection = queryOf(f), originalClock = net.clock.now;
-    const unrelated = secretSigner(new Uint8Array(32).fill(5));
+    const unrelated = fixedSigner(5);
     const readers = await Promise.all([unrelated, secretSigner(rita.secret)].map(signer =>
       signedReader(signer, selection.scope.scope, "query-items", itemQueryArgument(selection)!, { now: () => Date.parse(originalClock) })));
     const observations = await f.life.wait(() => runInDurableObject(child.object, async (_instance, state) => {

@@ -1,9 +1,10 @@
 /** Public TEST Counter packet with one declared board read. No native
  * install or browser is constructed by this fixture. */
-import { b64url, canonicalize, definitionDigest, keyIdOfSecret, sign, utf8 } from "@generalbusiness/artroom-bytes";
+import { b64url, canonicalize, definitionDigest, utf8 } from "@generalbusiness/artroom-bytes";
 import { packApplication2, readApplicationProjection } from "@generalbusiness/artroom-bytes/application-v2";
 import { countingCommitments } from "../../../../apps/counter/commitments.ts";
-const secret = new Uint8Array(32).fill(67), signer = { key: keyIdOfSecret(secret), sign: (bytes: Uint8Array) => sign(secret, bytes) };
+import { fixedSigner } from "../fixtures.ts";
+const signer = fixedSigner(67);
 export async function applicationCounterPacket2(when = "state = 'open'", version = "1") {
   const id = definitionDigest(countingCommitments);
   return packApplication2({ name: "test.declared-host", version, semantic: {

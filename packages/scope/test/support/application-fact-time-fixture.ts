@@ -1,9 +1,10 @@
 /** Counter-only Native fixture extension: initialize/reset retain their own
  * entry ref. The production Counter definition is unchanged. */
 import type { DeclaredDefinition } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, keyIdOfSecret, parseStrict, sign } from "@generalbusiness/artroom-bytes";
+import { canonicalize, definitionDigest, parseStrict } from "@generalbusiness/artroom-bytes";
 import { isApplicationJournalSource, packApplication2 } from "@generalbusiness/artroom-bytes/application-v2";
 import { applicationCounterJournalPacket2 } from "./application-v2-fixture.ts";
+import { fixedSigner } from "../fixtures.ts";
 
 export async function applicationCounterFactTimePacket2() {
   const base = await applicationCounterJournalPacket2("state = 'open'", "native");
@@ -16,7 +17,6 @@ export async function applicationCounterFactTimePacket2() {
   if (isApplicationJournalSource(source)) throw Error("Item fixture required.");
   const clock = { ...source, fields: { seenTime: { from: { kind: "fact-time" as const, name: "seen" }, of: { type: "time" as const }, nullable: true } } };
   projections["clock"] = { ...projections["board"]!, sources: { board: clock } };
-  const secret = new Uint8Array(32).fill(67);
   return packApplication2({ name: "test.fact-time", version: "native", semantic: { ...semantic, entry: id,
-    definitions: [{ id, bytes: canonicalize(definition) }], projections }, presentation }, { key: keyIdOfSecret(secret), sign: bytes => sign(secret, bytes) });
+    definitions: [{ id, bytes: canonicalize(definition) }], projections }, presentation }, fixedSigner(67));
 }
