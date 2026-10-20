@@ -9,9 +9,9 @@ import { change, change3, changeDemo, changeDemo3, issue, issueDemo } from "@gen
 import { USAGE } from "../../cli/src/line.ts";
 import { counting } from "../../../apps/counter/definition.ts";
 import { DESCRIPTION_CHARS, WORDS, actTool, bindingsOf, checkWords, describeAct, listed, surfaceOf, McpService, memoryStore, type DefinitionLike, type Words } from "../src/index.ts";
-import { secretSigner } from "@generalbusiness/artroom-client";
 import { ACTIVE_DEMO, declared, demoInventory, platformData } from "./support/catalogue.ts";
 import { garden } from "./support/garden.ts";
+import { fixedSigner } from "./fixtures.ts";
 
 const DOC = readFileSync(new URL("../../../docs/mcp.md", import.meta.url), "utf8");
 const repositoryDefinitions = (): [string, DefinitionLike][] => [
@@ -74,7 +74,7 @@ describe("every activity is reachable, and every act renders", () => {
     const rows = table.split("\n").filter((l) => l.startsWith("| ") && !l.startsWith("| Activity") && !l.startsWith("|---"));
     for (const command of commands.filter((c) => c !== "dap mcp")) expect(rows.some((r) => r.includes(`\`${command}`)), command).toBe(true);
     for (const action of ["Join with an invitation link", "Create issue", "Comment", "Review", "Merge", "Propose an edit", "Rules editor", "Create room", "Check status", "Record inspection"]) expect(rows.some((r) => r.includes(action)), action).toBe(true);
-    const mcp = new McpService({ service: "https://x", signer: secretSigner(new Uint8Array(32)), config: { read: async () => ({ service: "https://x" }), addRoot: async () => {} }, custody: memoryStore(), mode: "add" });
+    const mcp = new McpService({ service: "https://x", signer: fixedSigner(0), config: { read: async () => ({ service: "https://x" }), addRoot: async () => {} }, custody: memoryStore(), mode: "add" });
     const generic = (await mcp.page()).tools.map((t) => t.name);
     const inventory = demoInventory("admin");
     const tools = new Set([...generic, ...bindingsOf(inventory, WORDS).filter((b) => listed(b, inventory)).map((b) => actTool(b, inventory, "default").name)]);
@@ -88,7 +88,7 @@ describe("every activity is reachable, and every act renders", () => {
   // Invariant: the tool reference of docs/mcp.md is what tools/list sends: each generic tool's description and schemas verbatim,
   // and docs/mcp-tools.json the whole list for an admin of the demo room. MCP_WRITE_DOCS=1 writes the file from the derivation.
   test("the tool reference is the list as sent", async () => {
-    const mcp = new McpService({ service: "https://x", signer: secretSigner(new Uint8Array(32)), config: { read: async () => ({ service: "https://x" }), addRoot: async () => {} }, custody: memoryStore(), mode: "add" });
+    const mcp = new McpService({ service: "https://x", signer: fixedSigner(0), config: { read: async () => ({ service: "https://x" }), addRoot: async () => {} }, custody: memoryStore(), mode: "add" });
     const generic = (await mcp.page()).tools;
     for (const t of generic) {
       expect(DOC, t.name).toContain(`### \`${t.name}\`\n\n${t.description}\n`);

@@ -5,7 +5,6 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import type { Intent } from "@generalbusiness/dap-contract";
 import { DOMAINS } from "@generalbusiness/dap-contract";
-import { secretSigner } from "@generalbusiness/artroom-client";
 import { firstExtents } from "@generalbusiness/dap-platform";
 import { LEGACY, MODERN, McpService, Wire, memoryStore, newSession, type Card, type Message, type ResourcePolicy, type ViewSource } from "../../src/index.ts";
 import { StandIn, SERVICE } from "./standin.ts";
@@ -13,10 +12,11 @@ import { applicationCounterNavigationPacket2 } from "../../../scope/test/support
 import { viewToolName } from "../../src/views/names.ts";
 import { applicationProjectionId, applicationProjectionQueryDigest } from "@generalbusiness/artroom-bytes/application-v2";
 import { DeclaredViewSource } from "../../src/views/declared.ts";
+import { fixedSigner } from "../fixtures.ts";
 
 const fields = { approvals: 0, ownerMayReview: false, checks: [], labels: [], extents: firstExtents({ approvals: 0, checks: [] }) };
 function fixture(mode: string) {
-  const signer = secretSigner(new Uint8Array(32).fill(17)), scope = new StandIn(signer.key);
+  const signer = fixedSigner(17), scope = new StandIn(signer.key);
   const completed = new Set<number>();
   let revision = 0, lose = mode === "loss";
   const signed: Intent[] = [];
@@ -82,7 +82,7 @@ async function declaredFixture() {
       projection: applicationProjectionId(packet.package.semantic.projections["board"]!), at: { seq: 1, hash: `sha256:${"a".repeat(64)}` },
       sources: { board: [{ id: 2, type: "board", state: "open", revision: 1, fields: { lastNumber: 42 } }] } } }),
   });
-  const signer = secretSigner(new Uint8Array(32).fill(17));
+  const signer = fixedSigner(17);
   const service = new McpService({ service: SERVICE, signer, custody: memoryStore(), views: source, fetch: base.scope.fetch,
     config: { read: async () => base.scope.config(), addRoot: async () => {} } });
   return { ...base, service };

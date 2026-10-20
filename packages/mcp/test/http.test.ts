@@ -6,14 +6,13 @@
  */
 import { createServer, request, type Server } from "node:http";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
-import { secretSigner } from "@generalbusiness/artroom-client";
 import { McpService, MODERN, LEGACY, memoryStore, type McpConfig } from "../src/index.ts";
 import { HEADER_MISMATCH, SESSIONS_MOST, STREAMS_MOST } from "../src/http.ts";
 import { serveHttp, type HttpServing } from "../src/node.ts";
 import { StandIn } from "./support/standin.ts";
-import { loopbackScopePeer } from "./fixtures.ts";
+import { loopbackScopePeer, fixedSigner } from "./fixtures.ts";
 
-const signer = secretSigner(new Uint8Array(32).fill(7));
+const signer = fixedSigner(7);
 const META = { "io.modelcontextprotocol/protocolVersion": MODERN, "io.modelcontextprotocol/clientCapabilities": {} };
 let standIn: StandIn;
 let scopes: Server;

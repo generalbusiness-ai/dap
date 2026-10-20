@@ -4,17 +4,18 @@
 import type { DeclaredDefinition, ScopeId, Timestamp } from "@generalbusiness/dap-contract";
 import { canonicalize, factRefOf, isEntry, isScopeRef, isSeed, parseStrict, scopeIdOf } from "@generalbusiness/artroom-bytes";
 import type { AnyPackedApplication } from "@generalbusiness/artroom-bytes/application-v2";
-import { secretSigner, signedIntent } from "@generalbusiness/artroom-client";
+import { signedIntent } from "@generalbusiness/artroom-client";
 import type { HistorySource } from "@generalbusiness/artroom-replay";
 import type { Peer } from "@generalbusiness/artroom-scope/runtime";
 import { LocalApplicationScope } from "../../../cli/src/application-local.ts";
 import { openApplicationScenario } from "../../../cli/src/application-scenarios.ts";
+import { scenarioSigner } from "../fixtures.ts";
 
 export async function openOwnedGrowScenario(packet: AnyPackedApplication, value: unknown) {
   const scene = parseStrict(canonicalize(value)) as { actors: Record<string, { seed: string }>; founding: { actor: string } };
   const seed = scene.actors[scene.founding.actor]?.seed;
   if (!seed || !/^[0-9a-f]{64}$/.test(seed)) throw Error("The owned Grow fixture needs its public TEST founding actor.");
-  const signer = secretSigner(Uint8Array.from(seed.match(/../g)!, byte => Number.parseInt(byte, 16)));
+  const signer = scenarioSigner(seed);
   const scopes = new Map<ScopeId, LocalApplicationScope>(), peers = new Map<ScopeId, Peer>();
   let directory!: LocalApplicationScope, site!: LocalApplicationScope;
   let deliverNative!: (sender: LocalApplicationScope, seq: number, n: number) => Promise<LocalApplicationScope>;
@@ -67,7 +68,7 @@ export async function openOwnedGrowScenario(packet: AnyPackedApplication, value:
     const reportSite = async (time: Timestamp = session.time) => {
       const sensor = session.actors.find(actor => actor.name === "sensors" && actor.actions.includes("grow.sense"));
       if (!sensor) throw Error("The owned scene needs its separate public TEST sensor.");
-      const signer = secretSigner(Uint8Array.from(sensor.seed.match(/../g)!, byte => Number.parseInt(byte, 16)));
+      const signer = scenarioSigner(sensor.seed);
       const alerts = session.scope.developmentProjection("grid").sources["alert"]?.filter(row => ["open", "held", "authorized"].includes(row.state)).length ?? 0;
       await site.advance(time);
       const answer = await session.scope.submit(await signedIntent(signer, { to: session.scope.at, kind: "report-site", on: 0,

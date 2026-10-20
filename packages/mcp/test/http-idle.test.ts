@@ -1,14 +1,14 @@
 import { expect, test } from "vitest";
-import { secretSigner } from "@generalbusiness/artroom-client";
 import { McpService, memoryStore } from "../src/index.ts";
 import { McpHttp, SESSION_IDLE_MS, type SessionRow } from "../src/http.ts";
 import { LEGACY, MODERN, PROTOCOL_META, Wire } from "../src/wire.ts";
 import { SERVICE, StandIn } from "./support/standin.ts";
+import { fixedSigner } from "./fixtures.ts";
 
 // The shared HTTP layer and Wire are real; scope reads and durable session storage are labelled STAND-INs.
 function setup() {
   let now = Date.parse("2099-01-01T00:00:00Z"), serial = 0;
-  const signer = secretSigner(new Uint8Array(32).fill(22));
+  const signer = fixedSigner(22);
   const scopes = new StandIn(signer.key);
   scopes.sessionEnds = "2100-01-01T00:00:00Z";
   const config = scopes.config();

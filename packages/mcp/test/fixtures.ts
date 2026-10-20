@@ -1,6 +1,11 @@
 /** Node-safe fixture entry: no Worker or test-framework runtime import. */
 import type { createServer as ServerFactory } from "node:http";
+import { secretSigner } from "@generalbusiness/artroom-client";
 import type { StandIn } from "./support/standin.ts";
+
+/** Fresh deterministic TEST keys; the fill and scenario seed remain caller-owned. */
+export const fixedSigner = (fill: number) => secretSigner(new Uint8Array(32).fill(fill));
+export const scenarioSigner = (seed: string) => secretSigner(Uint8Array.from(seed.match(/../g)!, byte => Number.parseInt(byte, 16)));
 
 /** A real Node loopback transport over the SCRIPTED scope service. Each caller
  * owns its peer, hook and close order; this supplies no native scope evidence. */

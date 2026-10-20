@@ -6,17 +6,18 @@ import type { Beside, Digest, FieldValue, SignedIntent } from "@generalbusiness/
 import { DOMAINS } from "@generalbusiness/dap-contract";
 import { canonicalize, parseStrict } from "@generalbusiness/artroom-bytes";
 import { applicationProjectionQueryDigest, type AnyPackedApplication } from "@generalbusiness/artroom-bytes/application-v2";
-import { secretSigner, signedIntent, type Fetch } from "@generalbusiness/artroom-client";
+import { signedIntent, type Fetch } from "@generalbusiness/artroom-client";
 import type { openOwnedGrowScenario } from "./grow-owned-session.ts";
 import { room } from "../../../../examples/grow/room.ts";
 import { McpService, memoryStore } from "../../src/index.ts";
 import { DeclaredViewSource } from "../../src/views/declared.ts";
 import { SERVICE, StandIn } from "./standin.ts";
+import { scenarioSigner } from "../fixtures.ts";
 
 export function growOperator(packet: AnyPackedApplication, session: Awaited<ReturnType<typeof openOwnedGrowScenario>>, action = "grow.heat", name?: string) {
   const actor = session.actors.find(actor => actor.actions.includes(action) && (name === undefined || actor.name === name));
   if (!actor) throw Error(`The maintained scene needs an explicit TEST actor for ${action}${name ? ` named ${name}` : ""}.`);
-  const signer = secretSigner(Uint8Array.from(actor.seed.match(/../g)!, byte => Number.parseInt(byte, 16)));
+  const signer = scenarioSigner(actor.seed);
   const stand = new StandIn(signer.key, "admin", actor.actions);
   stand.activate(room);
   let now = Date.parse(session.time), held = [...actor.actions], signatures = 0;
@@ -67,7 +68,7 @@ export function growOperator(packet: AnyPackedApplication, session: Awaited<Retu
     nativeAct: async (name: string, kind: string, on: number | null, fields: Record<string, FieldValue>, subjects: Record<string, number>, target: "room" | "site" = "room") => {
       const actor = session.actors.find(actor => actor.name === name);
       if (!actor) throw Error("Unknown public TEST actor.");
-      const signer = secretSigner(Uint8Array.from(actor.seed.match(/../g)!, byte => Number.parseInt(byte, 16)));
+      const signer = scenarioSigner(actor.seed);
       const selected = target === "site" ? session.site : session.scope;
       const expected = Object.fromEntries(Object.entries(subjects).map(([name, id]) => {
         const item = selected.state.item(id); if (!item) throw Error("No native expected subject.");
