@@ -6,8 +6,9 @@ incorporates reviewed Main `248aab8f`, with landed K1, K2, G5a, S2a and
 Grow host-link work. The first complete review `3e5b110a` of `1a1ede43`
 requested two graph corrections and one runbook correction. This private
 repair addresses all three after adopting that complete verdict as
-`de2c14f4`. Its new changed-code gate and fresh complete review remain due;
-the earlier passing gate at `a4967d67` is historical.
+`de2c14f4`. Its changed-code ordinary gate at `9b167c12` passes. The final
+candidate changes this report only afterward; fresh complete review remains
+due. The earlier passing gate at `a4967d67` is historical.
 The earlier `32f7537e` integration on Main `8aad37bb` is historical.
 
 Planner decision `b966ef3f`, adopted as `48471bbb`, now governs the format
@@ -1149,3 +1150,34 @@ externally and removed before the final gate; no duplicate reviewer cases
 are shipped. The new ordinary gate and complete fresh Source review remain
 due. Earlier source/report-parser and absent-filename preparation errors
 are retained as metadata errors, not case failures or extra verification.
+
+
+## Repaired-source ordinary gate before fresh review
+
+Original `52605` closes naturally zero at
+`9b167c12a419aa5b8e6e2fe2817f8e62050ffcfc`, tree
+`8e009d2210b9de0a21f760b79fef0fd3680b52c2`. Whitespace, shared helpers,
+all compiler configurations, 2,015 Vitest cases, 33 Node checks and 55
+Counting Node checks pass. Vitest retains three existing skips, with
+422 passed files and one skipped. Both repaired graph invariants and
+their native-valid public-byte pairs run in this complete pipeline.
+
+Whole pipeline time is 530.630832834 wall / 769.546052 child CPU seconds
+on shared warm macOS 27.0.1 arm64, Node 26.12.0 and npm 11.20.0;
+initial load is 1.2217/1.6089/1.7534. This is neither the sum of phases
+nor an exclusive-host measurement. All 2,611 tracked source bytes and
+modes remain exact, the checkout stays clean at the same head, and the
+lock stamp matches. Of 5,531 dependency rows, only the owned Vite results
+cache changes; no packages install. All raw scripted/runtime/Git warnings
+remain available without cause, stability or physical-draining attribution.
+
+Original helper, preparation, source/dependency inventories, raw phase
+outputs and closure are `/tmp/p1-graph-repair-gate-20261020*`. The exact
+2,611-file input is `/tmp/p1-graph-repair-gate-inputs-20261020`.
+The final candidate changes this primary report only after the passing
+gate. No suite or old control is repeated for this update. All 86 authored
+paths require fresh complete review, including the original P1 scope and
+all three adopted findings together. No prior approval is extended; no
+new release, key, provider, hosted acceptance, landing, publication or
+Cloudflare operation follows from a test pass. The planner alone owns
+Cloudflare deployment.
