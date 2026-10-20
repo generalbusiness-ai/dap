@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:2abd6700bd7b33b6e791d0d0cf33a16b40e12655","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/restart.test.ts."}
+{"kind":"artifact","text":"examples/grow/runbook.md at exact 59cb184810b15387ed7dbd1113ea99c5636e560f on request/g5-grow-host-link-20261020, under promise git:sha1…51eb168 on request git:sha1…75973a2","body":{"commit":"59cb184810b15387ed7dbd1113ea99c5636e560f","path":"examples/grow/runbook.md"}}
