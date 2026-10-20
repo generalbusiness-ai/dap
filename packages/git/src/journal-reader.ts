@@ -117,6 +117,7 @@ export async function readJournalArchive(repository: JournalReadRepository, scop
           if (entry.input.type !== "genesis" || scopeIdOf(entry.input.seed) !== scope || entry.input.inc !== head.scope.inc || entry.input.seed.kind !== head.scope.kind) mismatch("archive genesis identity differs");
         } else if (entry.input.type === "genesis") mismatch("archive contains a second genesis");
         lastTime = timeMs(entry.time);
+        if (entry.uses.length && !manifest.foreignSources) mismatch("foreign uses lack a classified source basis");
         if (manifest.foreignSources) {
           work.metadata(entry.uses.length * 512);
           for (const use of entry.uses) {

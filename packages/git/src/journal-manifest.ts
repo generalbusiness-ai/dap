@@ -57,7 +57,7 @@ export function journalManifest(body: Uint8Array, expected: JournalFormat, work:
   validateOrder(retained, journalKeyName); validateOrder(omitted, journalKeyName);
   const present = new Set(retained.map(journalKeyName));
   if (omitted.some(key => present.has(journalKeyName(key)))) return refuseJournal("manifest");
-  if (foreignSources.length && !retained.some(key => key.kind === "entry")) return refuseJournal("manifest");
+  if ((foreignSources.length > 0) !== retained.some(key => key.kind === "entry")) return refuseJournal("manifest");
   work.check();
   return { v: 1, through: { seq: head["seq"], hash: head["hash"] }, parent, format: expected, entries: [0, head["seq"]], retained, omitted, ...(foreignSources.length ? { foreignSources } : {}) };
 }

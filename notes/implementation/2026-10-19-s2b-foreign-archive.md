@@ -6,10 +6,13 @@ Request `c8c6ff6b6277fd103c30f80d0b76fd40a60ca8bb`, builder promise
 This implementation selects explicitly covered, directly retained foreign
 entries in an archive without traversing their producers' other history.
 It includes actual late-bound installed application journals from genesis
-zero. Its one ordinary gate passes at `05224c900f50907154df444e44f4d34c4f8b8ddb`,
-tree `cc3bb6456c41ef6cf6925bff50ec01356d9b1b57`. This final change updates
-only this report. Complete exact-head Source review and native landing
-audits remain due. Production admission and consent remain A0b work.
+zero. The complete review of frozen `250a3966` requests one reader repair,
+F1 in `05dd919b`, adopted as `8776beed`. This new owned checkout is
+`/tmp/artroom-builder-s2b-reader-repair-20261020`; it addresses that finding
+without executing or editing any frozen original. The earlier gate at
+`05224c90` is historical, not a pass for this changed parser/reader. A new
+exact-head gate, full Source review and native landing audits remain due.
+Production admission and consent remain A0b work.
 
 ## Identity and admission
 
@@ -203,3 +206,64 @@ grant no additional paths. Unrecorded older historical modes or exact
 inputs are not invented from current copies. No private operator,
 publisher or agent custody, provider, deployment, A0b admission/consent or
 hosted acceptance is part of this work. Planner owns Cloudflare.
+
+
+## Complete-review repair: a basis is required for copies and uses
+
+The full nineteen-path review `05dd919b3dde23afd80afd6113e91cccdc390aca`
+finds one P2 integrity gap: deleting optional `foreignSources` from a valid
+foreign-copy archive disables the reader's direct-use, fact/pin/genesis
+and completeness checks. Normal readback passes and a wrong pin refuses,
+but the erased-field archive is accepted after valid Git hashes are
+re-encoded. The original independent probe naturally fails its refusal
+assertion; its orchestration observer's zero is not a passing probe.
+The rest of the complete source, policy, budget, identity, immutable mark,
+installed and historical evidence review is consistent. No production
+admission or privacy-export bypass is claimed for F1.
+
+The original `250a3966` source, dependencies and tools remain permanently
+frozen. A new worktree independently materializes all 2,575 tracked files;
+5,499 dependency files and 31 contained links are physically copied from
+only the explicit finite grant. Every byte/hash/mode matches, regular
+inodes differ, originals are rechecked, only the new output cache is
+removed, the lock stamp matches and zero packages install. Preparation is
+`/tmp/s2b-reader-repair-physical-preparation-20261020.json`.
+All eighteen exact reviewer leaves are independently hash/mode/size
+verified and stable-copied; no adjacent or nested path is authorized.
+Receipt: `/tmp/builder-s2b-complete-review-readback-20261020.json`.
+
+The manifest parser now requires a nonempty source basis exactly when
+retained entry copies are listed. Independently, actual direct uses require
+that basis even if an attacker deletes the copy files and their retained
+keys too. The reader never chooses the local-only path from an erased
+field. Local-only v1 bytes and optional-field omission remain unchanged;
+wrong-pin and existing direct-use checks remain intact. No budget, grant,
+cohort, deadline or native export policy changes.
+
+The existing SHA-1/SHA-256 native archive case retains its wrong-pin check
+and adds two mechanically valid Git variants: remove only the basis, and
+remove both the basis and copied files/keys while leaving actual native
+uses. Both refuse; the second names its missing source basis. The new
+owned copy of checker's unchanged probe also passes. The duplicate probe
+fixture is preserved externally and removed from the committed candidate;
+the permanent regression strengthens the existing case instead.
+
+The first focused pipeline passes helper/Git compiler checks but fails
+Scope's compiler on unused imports in the temporary reviewer probe. No
+Node or native phase runs there. Its exact inputs/logs/closure remain
+`/tmp/s2b-reader-repair-focused-20261020*`. The separate corrected pipeline
+moves only that unchanged untracked probe outside the compiler tree,
+passes all permanent Scope compiler configurations, restores the exact
+probe and passes five Git reader cases plus eight native cases in two
+files, including the unchanged reviewer assertion. It installs nothing
+and restores the exact source bytes/modes. Those separate phases are not
+one passing gate. Raw commands/closure are
+`/tmp/s2b-reader-repair-focused-v2-20261020*`.
+
+One targeted control selects the permanent SHA-1 case. Baseline passes;
+bypassing only the actual-use missing-basis refusal, with the manifest
+parser still intact, causes its unchanged erased-basis-and-copy-files
+assertion to fail. Source and mode restore exactly. Original `62374`
+naturally exits zero, distinguishing the guard; this is no sweep.
+Snapshots/logs/closure are `/tmp/s2b-reader-repair-basis-control-20261020*`.
+The new changed-code gate and complete fresh review remain required.

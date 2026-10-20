@@ -236,14 +236,25 @@ test.each(["sha1", "sha256"] as const)("foreign copies retain their source basis
   // Mechanically alter only the archive's descriptive pin. Re-encode valid
   // Git hashes/trees/commit so the independent reader must detect the
   // retained genesis disagreement, rather than an object hash corruption.
-  const work = new JournalWork(new ArchiveBudget()), maker = new JournalObjects(format, work), parser = new JournalObjectReader(format, { object }, work);
-  const manifest = { ...rebuilt.archive.manifest, foreignSources: [{ at: f.producer.at, pin: receiver.digest }] };
-  const blob = maker.make("blob", utf8(canonicalize(manifest)));
-  const change = (tree: string, path: readonly string[]): string => maker.tree(parser.tree(objects.get(tree)!.data).map(row => row.name === path[0] ? { ...row, id: path.length === 1 ? blob.id : change(row.id, path.slice(1)) } : row)).id;
-  const original = parser.commit(objects.get(rebuilt.archive.commit)!.data), tree = change(original.tree, ["journal", "v1", "manifest.json"]);
-  const corrupted = maker.commit(tree, original.parent, original.seconds);
-  for (const made of maker.objects()) objects.set(made.id, made);
-  expect(await open(corrupted.id)).toMatchObject({ ok: false, result: "mismatch", reason: "foreign copy birth differs from its classified source pin" });
+  const alterManifest = (manifest: typeof rebuilt.archive.manifest, omitCopies = false): string => {
+    const work = new JournalWork(new ArchiveBudget()), maker = new JournalObjects(format, work), parser = new JournalObjectReader(format, { object }, work);
+    const blob = maker.make("blob", utf8(canonicalize(manifest)));
+    const change = (tree: string, prefix = ""): string => maker.tree(parser.tree(objects.get(tree)!.data).flatMap(row => {
+      const path = prefix + row.name;
+      if (omitCopies && path === "journal/v1/retained/entry") return [];
+      return [{ ...row, id: row.mode === "40000" ? change(row.id, path + "/") : path === "journal/v1/manifest.json" ? blob.id : row.id }];
+    })).id;
+    const original = parser.commit(objects.get(rebuilt.archive.commit)!.data), corrupted = maker.commit(change(original.tree), original.parent, original.seconds);
+    for (const made of maker.objects()) objects.set(made.id, made);
+    return corrupted.id;
+  };
+  expect(await open(alterManifest({ ...rebuilt.archive.manifest, foreignSources: [{ at: f.producer.at, pin: receiver.digest }] }))).toMatchObject({ ok: false, result: "mismatch", reason: "foreign copy birth differs from its classified source pin" });
+  // Erasing the optional field must not select the local-only v1 path for
+  // genuine copies. Removing the copied files as well still leaves actual
+  // direct uses, so they must require their source basis independently.
+  const erased = { ...rebuilt.archive.manifest }; delete erased.foreignSources;
+  expect((await open(alterManifest(erased))).ok).toBe(false);
+  expect(await open(alterManifest({ ...erased, retained: erased.retained.filter(key => key.kind !== "entry") }, true))).toMatchObject({ ok: false, result: "mismatch", reason: "foreign uses lack a classified source basis" });
 });
 
 test("native alarm stops a marked foreign archive after source configuration disappears without another mint", async () => {
