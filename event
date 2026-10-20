@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c2162837e4dfa057c1736b1b9357a0b25d15384d","text":"Merge retired a covered predecessor; the successor is at packages/mcp/browser/main.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c22f66716b8f1fe455ac4d797c1cd4f8875773c2","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-18-member-and-presence-ui.md."}
