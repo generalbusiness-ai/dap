@@ -107,10 +107,14 @@ The scope finds the pass that holds a retained file without reading the
 archive. Each row of `retained_input` and `retained_value`
 (`sqlite.ts:106-107`) gains a column `pass`: the `first` of the
 confirmed pass that wrote its file, or null when no confirmed pass wrote
-it. The scope keeps every retained row for its life (section 5), so each
-retained key has one row. The column is archive bookkeeping, as the
-archive row is. It is not state, and the state digest does not include
-it. Section 2.3, rules 6 and 9, keep it.
+it. A retained row of a kind that the archive writes stays for the
+scope's life. The only delete, `forget` (`sqlite.ts:485`), removes the
+text of a redaction (`turn.ts:401`). The archive writes no texts: its
+kinds are definition, entry, rule, snapshot and value
+(`journal-path.ts:10`, `:51`). So each archived key has one row. A
+later design that archives texts says what a redaction does to its row.
+The column is archive bookkeeping, as the archive row is. It is not
+state, and the state digest does not include it. Section 2.3, rules 6 and 9, keep it.
 
 Each pass manifest carries the S2b fields for its own entries: the
 retained inputs that its entries name, and the `foreignSources` basis of
