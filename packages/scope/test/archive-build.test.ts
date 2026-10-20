@@ -4,7 +4,7 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { JournalArchive, JournalFormat } from "@generalbusiness/artroom-git/journal";
-import { planArchive, planArchivePass, rebuildArchive, rebuildArchivePass } from "../src/archive-build.ts";
+import { planArchive, planArchivePass, planArchiveConversion, rebuildArchive, rebuildArchivePass } from "../src/archive-build.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
 import { ArchiveBudget } from "../src/archive-budget.ts";
 import type { Sql } from "../src/sqlite.ts";
@@ -139,4 +139,49 @@ test("v2 native inventory and restart read only the marked new interval and keep
   expect(rebuilt.archive.objects).toEqual(next.archive.objects);
   await lane.inside(state => new ArchiveRows(sqlOf(state), lane.at).confirm(next.mark.commit));
   expect(await lane.head()).not.toEqual(through);
+}, 20_000);
+
+test("native v1 conversion waits for its receipt, rebuilds unchanged after eviction and confirms pass zero before appending", async () => {
+  const lane = await create({}, {}, base), planned = await first(lane, "sha1"), parent = parentOf(planned.archive);
+  const pending = await lane.inside(state => planArchiveConversion(sqlOf(state), {
+    row: new ArchiveRows(sqlOf(state), lane.at).load()!, bounds: PROPOSED_BOUNDS, policies, parent, markedAt: at(1),
+  }, new ArchiveBudget()));
+  expect(pending).toEqual({ ok: false, reason: "manifest" });
+  await lane.inside(state => new ArchiveRows(sqlOf(state), lane.at).confirm(planned.mark.commit));
+  await lane.submit(lane.remark("after v1 receipt"));
+  const calls: string[] = [];
+  const conversionParent = { id: parent.id, source: { object: async (id: string, limit: number) => {
+    calls.push(id); return parent.source.object(id, limit);
+  } } };
+  const converted = await lane.inside(state => planArchiveConversion(sqlOf(state), {
+    row: new ArchiveRows(sqlOf(state), lane.at).load()!, bounds: PROPOSED_BOUNDS, policies, parent: conversionParent, markedAt: at(1),
+  }, new ArchiveBudget()));
+  expect(converted.ok ? "accepted" : converted).toBe("accepted"); if (!converted.ok) return;
+  expect(new Set(calls)).toEqual(new Set([planned.mark.commit]));
+  expect(converted.mark.through).toEqual(planned.mark.through);
+  expect(converted.mark.parent).toBe(planned.mark.commit);
+  expect(converted.archive.manifest.retained.every(key => key.pass === 0)).toBe(true);
+  await lane.inside(state => new ArchiveRows(sqlOf(state), lane.at).mark(converted.mark));
+  await lane.submit(lane.remark("after conversion mark"));
+  await lane.restart();
+  const rebuilt = await lane.inside(state => rebuildArchivePass(sqlOf(state), new ArchiveRows(sqlOf(state), lane.at).load()!, parent, new ArchiveBudget()));
+  expect(rebuilt.ok ? "accepted" : rebuilt).toBe("accepted"); if (!rebuilt.ok) return;
+  expect(rebuilt.archive.objects).toEqual(converted.archive.objects);
+  expect(rebuilt.archive.commit).toBe(converted.archive.commit);
+  const confirmation = await lane.inside(state => {
+    const rows = new ArchiveRows(sqlOf(state), lane.at), before = state.storage.sql.exec("SELECT pass FROM retained_input WHERE kind = 'definition' AND digest = ?", base.digest).one();
+    const row = rows.confirm(converted.mark.commit);
+    const after = state.storage.sql.exec("SELECT pass FROM retained_input WHERE kind = 'definition' AND digest = ?", base.digest).one();
+    return { before, after, row };
+  });
+  expect(confirmation.before).toEqual({ pass: null }); expect(confirmation.after).toEqual({ pass: 0 });
+  expect(confirmation.row.confirmed).toEqual({ commit: converted.mark.commit, through: planned.mark.through, layout: 2 });
+  const through = await lane.head();
+  const appended = await lane.inside(state => planArchivePass(sqlOf(state), { at: lane.at, through, after: planned.mark.through,
+    bounds: PROPOSED_BOUNDS, policies, parent: parentOf(converted.archive), format: "sha1", markedAt: at(2),
+  }, new ArchiveBudget()));
+  expect(appended.ok ? "accepted" : appended).toBe("accepted"); if (!appended.ok) return;
+  expect(appended.archive.newInterval).toEqual([planned.mark.through.seq + 1, through.seq]);
+  expect(appended.archive.selection.objects.find(key => key.key.kind === "definition")?.pass).toBe(0);
+  expect(await lane.head()).toEqual(through);
 }, 20_000);

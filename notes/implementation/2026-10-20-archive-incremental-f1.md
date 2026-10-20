@@ -154,3 +154,58 @@ witnesses are explicit TEST stand-ins. No provider runs, no actual v1
 conversion is built, and the commissioned 10,000-entry and 10,000-confirmed-
 pass native scenarios remain unrun. Every attempt used zero installs and
 kept source, modes and lock stamp exact after execution.
+
+## V1 conversion and the 512-key witness boundary
+
+`convertJournalArchiveV1` now re-admits the bounded local prefix of a
+confirmed v1 receipt. It reads only the old commit object. It regenerates
+the complete canonical v1 tree, including the original manifest parent,
+omissions and S2b basis, and requires its ID to equal that commit's tree.
+This binds every old file and byte without fetching old payloads or Git
+ancestry. It then writes exactly those segment and retained bytes under
+v2 paths, with the old commit as parent and the same cutoff. Conversion
+adds no native journal entry. Both constructions spend the original budget.
+
+Native `planArchiveConversion` refuses an outstanding v1 attempt. A marked
+conversion rebuilds from its stored selection after eviction and later
+native turns. Its confirmation sets the written keys' pass to zero in the
+same native transaction as the v2 receipt. A later v2 pass uses that receipt
+and those original retained paths. This is a tested component boundary;
+the asynchronous driver and actual provider are still not wired to it.
+
+| Original attempt | Actual result | Wall seconds | Child CPU seconds |
+| --- | --- | ---: | ---: |
+| `53607`, Git conversion v1 | Compilers pass; positive conversion passes; corrupt-parent negative used an unreserved test budget and fails with `input` | 2.893891709 | 3.372054 |
+| `18701`, Git conversion v2 | Compilers and conversion/append/integrity case pass after fixing the test budget | 3.711792875 | 4.113436 |
+| `32388`, native conversion | Both Scope compilers and two native cases pass: conversion/restart/confirmation and existing marked-interval reconstruction | 5.203660292 | 8.525980 |
+| `98143`, one tree-binding control | Outer 0; fixed 0; missing-comparison mutant fails at direct corrupt-parent assertion; all source restored | 7.610860833 | 9.441573 |
+| `83744`, 512-key diagnostic | Outer 0; expected child 1, direct acceptance assertion fails with `limit`; all original source restored | 2.154997791 | 3.150489 |
+
+Each ordinary/control phase captures 2,631 complete source files with modes.
+The temporary 512-key diagnostic captures 2,632, including its diagnostic
+test, and then removes that temporary test. All original source bytes and
+modes and the dependency lock stamp remain exact, with zero installs.
+Each input receipt records machine, tools and load; OS caches are uncontrolled.
+The measurements are separate attempts, not one gate. The Git conversion
+case uses actual local Git, strict fsck and the v2 reader, with synthetic
+admitted selections. The native cases use actual SQLite, native turns and
+eviction, with TEST policy/authority/manual confirmation. No real provider,
+10,000 confirmed native passes, deployed closure or complete F1 acceptance
+is claimed.
+
+The 512-key diagnostic exposes a contract conflict before any accounting
+change. The unchanged original allowance is 512 attempts for the whole pass.
+Inventory's retained reader spends one attempt per key, including cache
+hits and probes. `archiveInput.entry` also spends an attempt per native
+entry; layout spends another per selected retained input, and the native
+retained port spends an attempt again. Therefore a pass cannot write 512
+new keys inside that allowance. The diagnostic understates the full native
+cost: one synthetic genesis, 512 small valid rule bodies, only the inventory's
+512 minimum debits reserved, and a synthetic input port charging no native
+read attempts. `buildJournalPass` still refuses `limit` at its first retained
+attempt. Its measured used counters are attempts 512, entries 1, calls 1,
+nodes 0, metadata 898,133 and input-work 9,123,801. The temporary test's
+expectation remains acceptance, and its direct assertion is preserved as a
+failure, not recast as a passing witness. No original cap or cache debit
+was changed. Witness 2 needs a planner decision; other integration can
+continue within the existing counters.
