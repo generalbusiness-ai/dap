@@ -11,5 +11,8 @@ export default defineConfig({
     // One isolate for every file: the Worker is loaded once. Each test creates its own scope, which is its own object and storage.
     isolate: false,
     maxWorkers: 1,
+    // Bounded harness allowance for multi-scope functional stories in one
+    // isolate. Explicit case limits and modeled protocol assertions still apply.
+    testTimeout: 30_000,
   },
 });

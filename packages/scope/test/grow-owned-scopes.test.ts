@@ -1,12 +1,16 @@
 /** Maintained Grow package on real native install, create/confirm, SQLite,
  * issued sessions, generic views and replay. TEST package peer, scheduler,
  * clock and setup inspector; no browser, device/provider or deployment. */
-import { env } from "cloudflare:test";
+import { env, runInDurableObject } from "cloudflare:test";
 import { expect, inject, test } from "vitest";
 import { canonicalize, isScopeRef, isSeed, scopeIdOf, unb64url } from "@generalbusiness/artroom-bytes";
 import { readApplicationPackage2 } from "@generalbusiness/artroom-bytes/application-v2";
-import { DECLARED_APPLICATION_COHORT as C, platform } from "@generalbusiness/dap-platform";
+import { DEVICE_APPLICATION_COHORT as C, platform } from "@generalbusiness/dap-platform";
 import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-mcp";
+import { DEVICE_COMMAND, PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
+import { ownerReservations, validateDefinition } from "@generalbusiness/dap-derive";
+import { SqliteStore } from "../src/sqlite.ts";
+import { CAPABILITY_CODE } from "../src/ports.ts";
 import { ScopeHandle, httpTransport, requestSession, secretSigner, sessionRequest } from "@generalbusiness/artroom-client";
 import { httpSource, verify } from "@generalbusiness/artroom-replay";
 import nativeWorker from "../../../apps/room/worker.ts";
@@ -39,12 +43,13 @@ test("maintained Grow Site creates a native Room and opens its owned grid throug
       config: { read: async () => ({ service: "https://scopes.test", repository: { directory, membership, rules: A.name, destination: G.name } }), addRoot: async () => { throw Error("Use the installed Site."); } },
       applicationFetch: peer.fetch, fetch: (url, init) => life.wait(() => routed(url, init)) };
     const mcp = new McpService(port);
-    const installed = await life.wait(() => mcp.call("install_application", { uri: f.uri, release: packet.ids.release, roles: ["admin"], values: { label: "Native grow site" }, idempotencyKey: "TEST-grow-site-install" }));
+    const installed = await life.wait(() => mcp.call("install_application", { uri: f.uri, release: packet.ids.release, roles: ["admin"], values: { label: "Native grow site" }, owner: { membership, member: "@rita" }, idempotencyKey: "TEST-grow-site-install" }));
     expect(installed.structuredContent).toMatchObject({ answer: "accepted", phase: "recorded" });
     const job = Number(installed.structuredContent["item"]);
     await effectFixture([A], life.wait); await dispatchFixture([R, D, M, A, G], life.wait);
     const siteCreate = (await life.wait(() => D.entries())).flatMap(entry => entry.sends).find(send => isSeed(send.to) && send.to.definition === siteId);
     if (!siteCreate || !isSeed(siteCreate.to)) throw Error("The native installation must create Site.");
+    expect(siteCreate.message).toMatchObject({ body: { creationContext: { v: 2, delegate: true, deviceCommand: { owner: { membership, member: "@rita" }, root: siteId, definitions: [roomId] } } } });
     const site = life.platform(scopeIdOf(siteCreate.to)); await driveFixture([R, D, M, A, G, site], life.wait);
     const siteAt = await life.wait(() => site.at()); expect(siteAt.kind).toBe("lane");
     expect(await life.wait(() => A.item(job))).toMatchObject({ state: "active", refs: { scope: siteAt } });
@@ -53,6 +58,7 @@ test("maintained Grow Site creates a native Room and opens its owned grid throug
     await dispatchFixture([R, D, M, A, G, site], life.wait);
     const roomCreate = (await life.wait(() => site.entries())).flatMap(entry => entry.sends).find(send => isSeed(send.to) && send.to.definition === roomId);
     if (!roomCreate || !isSeed(roomCreate.to)) throw Error("Site must create Room through its maintained declaration.");
+    expect(roomCreate.message).toMatchObject({ body: { creationContext: { v: 2, delegate: false, deviceCommand: { owner: { membership, member: "@rita" }, root: siteId, definitions: [roomId] } } } });
     const room = life.platform(scopeIdOf(roomCreate.to)); await driveFixture([R, D, M, A, G, site, room], life.wait);
     const roomAt = await life.wait(() => room.at()); expect(roomAt.kind).toBe("lane");
     const siteRows = (await life.wait(() => site.summary())).value.items.filter(item => item.type === "room");
@@ -87,10 +93,47 @@ test("maintained Grow Site creates a native Room and opens its owned grid throug
     expect((await life.wait(() => views.call("view_alerts", { view: "native-member-alerts", scope: roomAt }))).structuredContent).toMatchObject({ status: "empty" });
     expect((await life.wait(() => views.call("view_grid", { view: "wrong-site", scope: siteAt }))).structuredContent).toMatchObject({ status: "unavailable" });
     expect((await life.wait(() => A.entries())).filter(entry => entry.input.type === "act" && entry.input.signed.intent.kind === "install-application")).toHaveLength(1);
+    // Real installed Site -> Room delegation. Native answers close the
+    // command they name; intervening reports and newer targets stay distinct.
+    const heater = await life.wait(async () => room.did(rita, "commission-device", { expected: await room.expected({ zone }), fields: { zone, kind: "heater", label: "Heater A", minLevel: 0, maxLevel: 100, target: "off", level: 0 } }));
+    const command = async (target: "on" | "off") => life.wait(async () => room.did(rita, "set-heater", { on: heater, expected: await room.expected({ on: heater }), fields: { target, level: target === "on" ? 100 : 0 } }));
+    const checked = validateDefinition(JSON.parse(packet.package.semantic.definitions.find(part => part.id === roomId)!.bytes), PROPOSED_BOUNDS);
+    if (!checked.ok) throw Error("The maintained Room must validate.");
+    const pending = (position: number) => life.wait(() => runInDurableObject(room.object, (_instance, state) => {
+      const store = new SqliteStore({ exec: (query, ...bindings) => state.storage.sql.exec(query, ...bindings), transaction: work => state.storage.transactionSync(work) });
+      return { record: store.record(DEVICE_COMMAND, "command", [position]), answers: ownerReservations(CAPABILITY_CODE, store, checked.definition).entries };
+    }));
+    const oldCommand = await command("on"), currentCommand = await command("off");
+    expect(await pending(currentCommand)).toMatchObject({ answers: 2, record: { state: "open", values: { device: heater, targetAt: currentCommand, decided: 0 } } });
+    await life.wait(async () => room.did(rita, "report-device", { on: heater, expected: await room.expected({ on: heater }), fields: { reported: "on", level: 100, description: "" } }));
+    const answer = async (position: number, outcome: "confirmed" | "refused") => {
+      const sealed = (await life.wait(() => room.sealed())).find(entry => entry.entry.seq === position)!;
+      return life.wait(() => mcp.call("prepare", { resource: room.name, capability: DEVICE_COMMAND, step: "answer", fields: { command: { at: roomAt, seq: position, hash: sealed.hash }, outcome, description: "TEST installed owner answer" }, idempotencyKey: `TEST-grow-answer-${position}` }));
+    };
+    expect((await answer(oldCommand, "confirmed")).structuredContent).toMatchObject({ step: { answer: { answer: "accepted" } } });
+    expect(await life.wait(() => room.item(heater))).toMatchObject({ values: { target: "off", reported: "on", outcome: null }, refs: { targetAt: currentCommand, outcomeAt: null } });
+    expect((await answer(currentCommand, "refused")).structuredContent).toMatchObject({ step: { answer: { answer: "accepted" } } });
+    expect(await life.wait(() => room.item(heater))).toMatchObject({ values: { target: "off", reported: "on", outcome: "refused" }, refs: { targetAt: currentCommand, outcomeAt: (await life.wait(() => room.last())).seq } });
+    expect(await pending(currentCommand)).toMatchObject({ answers: 0, record: { state: "refused", values: { decided: 1 } } });
+    const devices: Record<string, number> = { heater };
+    for (const kind of ["vent", "fan"] as const) devices[kind] = await life.wait(async () => room.did(rita, "commission-device", { expected: await room.expected({ zone }), fields: { zone, kind, label: `${kind} A`, minLevel: 0, maxLevel: 100, target: kind === "vent" ? "open" : "on", level: 100 } }));
+    await life.wait(async () => room.did(rita, "bind-zone-devices", { on: zone, expected: await room.expected({ on: zone, ...devices }), fields: devices }));
+    const sampledAt = new Date(life.now()).toISOString().replace(".000Z", "Z"), zones = [{ zone, min: 2300, max: 2740, mean: 2650, inBand: 10 }];
+    const observed = await life.wait(() => room.did(rita, "observe", { fields: { sampledAt, zones } }));
+    const observedFact = (await life.wait(() => room.sealed())).find(entry => entry.entry.seq === observed)!;
+    await life.wait(async () => room.did(rita, "report-zone", { on: zone, expected: await room.expected({ on: zone }), fields: { summary: { at: roomAt, seq: observed, hash: observedFact.hash }, sampledAt, zones, min: 2300, max: 2740, mean: 2650, inBand: 10 } }));
+    const alert = await life.wait(async () => room.did(rita, "raise-alert", { expected: await room.expected({ zone, ...devices }), fields: { zone, text: "TEST hot zone", proposal: "TEST restore heater", target: "on", level: 100 } }));
+    const authorized = await life.wait(async () => room.did(rita, "authorize", { on: alert, expected: await room.expected({ on: alert, heater }), fields: {} }));
+    expect(await pending(authorized)).toMatchObject({ answers: 1, record: { state: "open", values: { device: heater, targetAt: authorized, target: "on", level: 100, decided: 0 } } });
+    expect((await answer(authorized, "confirmed")).structuredContent).toMatchObject({ step: { answer: { answer: "accepted" } } });
+    expect(await pending(authorized)).toMatchObject({ answers: 0, record: { state: "confirmed", values: { decided: 1 } } });
+    expect(await life.wait(() => room.item(heater))).toMatchObject({ values: { target: "on", reported: "on", outcome: "confirmed" }, refs: { targetAt: authorized } });
+    expect(await life.owner.required(() => handle.applicationProjection({ ...query, projection: "device", items: { device: heater } })))
+      .toMatchObject({ ok: true, value: { sources: { device: [{ id: heater, fields: { target: "on", reported: "on", outcome: "confirmed", outcomeAt: (await life.wait(() => room.last())).seq } }] } } });
     for (const node of [site, room]) {
       const summary = await life.wait(() => node.summary());
       expect(isScopeRef(summary.value.scope)).toBe(true);
-      const replay = await life.wait(() => verify(httpSource(port.service, { fetch: routed, reader: issued.session.reader() }), { mode: "replay", platform, grants: "proven", scope: node.name, head: summary.at }));
+      const replay = await life.wait(() => verify(httpSource(port.service, { fetch: routed, reader: issued.session.reader() }), { mode: "replay", platform, capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE, grants: "proven", scope: node.name, head: summary.at }));
       expect([replay.report.result, replay.why]).toEqual(["consistent", null]);
     }
     expect(canonicalize(packet.package.semantic.creates)).toBe(canonicalize([{ from: siteId, to: roomId }]));

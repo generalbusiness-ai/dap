@@ -25,10 +25,12 @@ import type { HoldEffect } from "./hold.ts";
 import type { Most } from "./ledger.ts";
 import type { Item, StateView } from "./state.ts";
 import type { ValidDefinition } from "./validate/index.ts";
-import { own } from "./values.ts";
+import { isValue, own } from "./values.ts";
 
 /** One change of one record, as a capability's effect derives it. The entry records it as a `record` effect of that capability. */
 export interface Recorded { kind: string; key: readonly FieldValue[]; state: string; values: Readonly<Record<string, unknown>> }
+export type CapabilityItemEffect = Extract<Effect, { effect: "value" | "ref" }>;
+export interface CapabilityDerived { records: readonly Recorded[]; itemEffects?: readonly CapabilityItemEffect[] }
 
 /**
  * What a capability's rule is given beside its arguments (sections 6.11 and
@@ -55,7 +57,11 @@ export interface Recorded { kind: string; key: readonly FieldValue[]; state: str
  *   member. The effect `pin-release` finds its pin by it (authority note,
  *   section 5.7, "Which pin a commit alone releases").
  */
-export type CapabilityGiven = Pick<Judging, "view" | "definition" | "scope" | "self" | "kind" | "fields" | "signer" | "intent" | "facts" | "source" | "own" | "snapshot" | "clock"> & { from?: Readonly<Record<string, number>> };
+export type CapabilityGiven = Pick<Judging, "view" | "definition" | "scope" | "self" | "kind" | "fields" | "signer" | "intent" | "facts" | "source" | "own" | "snapshot" | "clock"> & {
+  from?: Readonly<Record<string, number>>;
+  /** Bound slot subjects as preceding ordinary effects left them. */
+  fromItems?: Readonly<Record<string, Item>>;
+};
 
 /**
  * One declared maximum of a capability version's code (section 6.1, "A
@@ -94,9 +100,11 @@ export interface Capabilities {
    */
   implements(form: CapabilityForm): boolean;
   /** One guard: true when it holds, or the name of the refusal that the version declares for it. */
-  guard(capability: CapabilityName, guard: string, args: Readonly<Record<string, unknown>>, given: CapabilityGiven): true | string;
+  guard(capability: CapabilityName, guard: string, args: Readonly<Record<string, unknown>>, given: CapabilityGiven): true | string | { unavailable: true };
   /** One effect: the records it changes, in order. */
   effect(capability: CapabilityName, effect: string, args: Readonly<Record<string, unknown>>, given: CapabilityGiven): readonly Recorded[];
+  /** A version with declared item slots derives those together with its records. */
+  deriveEffect?(capability: CapabilityName, effect: string, args: Readonly<Record<string, unknown>>, given: CapabilityGiven): CapabilityDerived | { unavailable: true };
   /**
    * What an entry with `hold` effects also derives when the definition's
    * holds have a workspace (authority note, section 5.7, "What is derived,
@@ -223,6 +231,7 @@ export function capabilityGuard(j: Judging, g: Extract<Guard, { capability: unkn
   }
   const answer = matched.rules.guard(matched.version, guard, Object.fromEntries(args), given(j));
   if (answer === true) return "pass";
+  if (typeof answer !== "string") return "unavailable";
   if (!own(matched.declared.guards, guard)?.refusals.includes(answer)) throw new Error(`${matched.version} declares no refusal ${answer} for its guard ${guard}`);
   (j.declined ??= new Map()).set(g, answer);
   return "fail";
@@ -233,7 +242,7 @@ export function capabilityGuard(j: Judging, g: Extract<Guard, { capability: unkn
  * capability derives from the arguments. `unavailable`: the judge was given
  * no rules for that capability.
  */
-export function capabilityEffect(j: Judging, form: { name: string; do: string; with: Readonly<Record<string, Operand>> }, item: Item | null): Extract<Effect, { effect: "record" }>[] | UnavailableReason {
+export function capabilityEffect(j: Judging, form: { name: string; do: string; with: Readonly<Record<string, Operand>> }, item: Item | null): Effect[] | UnavailableReason {
   const matched = rulesFor(j, form.name, "effect", form.do);
   if (!matched) return "unavailable";
   const args = Object.fromEntries(Object.entries(form.with).map(([arg, from]) => [arg, operand(j, from, item)]));
@@ -243,13 +252,43 @@ export function capabilityEffect(j: Judging, form: { name: string; do: string; w
     const of = o.of === undefined ? item : o.of === "each" ? (j.each ?? null) : (j.subjects.get(o.of) ?? null);
     return of ? [[arg, of.id]] : [];
   }));
-  const made = matched.rules.effect(matched.version, form.do, args, { ...given(j), from });
+  const fromItems = Object.fromEntries(Object.entries(from).flatMap(([arg, id]): [string, Item][] => {
+    const read = id === item?.id ? item : [...j.subjects.values()].find(subject => subject.id === id);
+    return read ? [[arg, read]] : [];
+  }));
+  const reading = { ...given(j), from, fromItems };
+  const made = matched.rules.deriveEffect ? matched.rules.deriveEffect(matched.version, form.do, args, reading)
+    : matched.rules.effect(matched.version, form.do, args, reading);
+  if ("unavailable" in made) return "unavailable";
+  const records = "records" in made ? made.records : made;
+  const items = "records" in made ? (made.itemEffects ?? []) : [];
   // Section 6.1, "In the commit": code that returns more than it declared has a fault, and the input is not judged.
   const most = maximumOf(matched.rules, "effect", matched.version, form.do);
-  if (most && made.length > most.effects) throw new Error(`${matched.version} declares at most ${most.effects} effects for its effect ${form.do}, and it returned ${made.length}`);
-  return made.map((r) => {
+  if (most && records.length + items.length > most.effects) throw new Error(`${matched.version} declares at most ${most.effects} effects for its effect ${form.do}, and it returned ${records.length + items.length}`);
+  const recorded = records.map((r): Extract<Effect, { effect: "record" }> => {
     const kind = own(matched.declared.records, r.kind);
     if (!kind?.states.includes(r.state)) throw new Error(`${matched.version} declares no record ${r.kind} with the state ${r.state}`);
     return { effect: "record", capability: matched.version, kind: r.kind, key: r.key, state: r.state, values: r.values };
   });
+  return [...recorded, ...capabilityItemEffects(j.view, j.definition, matched.version, items, j.self, j.kind, j.bounds)];
+}
+
+/** Only the version's declared item slots, at its answer or cleared by its opening. */
+export function capabilityItemEffects(view: StateView, definition: ValidDefinition, capability: CapabilityName,
+  effects: readonly CapabilityItemEffect[], self: number, kind: string | null, bounds: Bounds): readonly CapabilityItemEffect[] {
+  const declared = declaredBy(capability), seen = new Set<string>();
+  for (const effect of effects) {
+    const item = view.item(effect.item), type = item && own(definition.declared.items, item.type);
+    const slot = effect.effect === "value" ? own(type?.values, effect.slot) : own(type?.refs, effect.slot);
+    const key = `${effect.item}:${effect.slot}`;
+    if (!item || !type || !slot || slot.capability !== capability || declared?.itemSlots?.[effect.slot] !== effect.effect
+      || slot.fixed || slot.required || type.states[item.state]?.final || seen.has(key)) throw new Error(`${capability}: capability-slot-owned: invalid item-slot effect`);
+    seen.add(key);
+    const value = effect.effect === "ref" ? effect.to : effect.value;
+    if (value !== null) {
+      if (kind !== `${capability}:answer`) throw new Error(`${capability}: capability-slot-owned: only its answer writes a nonempty outcome`);
+      if (effect.effect === "ref" ? value !== self : !("of" in slot) || !isValue(slot.of, value, bounds)) throw new Error(`${capability}: capability-slot-owned: invalid answer value`);
+    }
+  }
+  return effects;
 }

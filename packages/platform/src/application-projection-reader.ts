@@ -1,3 +1,4 @@
+import { DEVICE_APPLICATION_COHORT as D } from "./device-application-wire.ts";
 /** Read only a completed Rules6 install's immutable native proof. This is
  * declaration metadata, never authority, item data or a fallback to R2/Git. */
 import type { Digest, ScopeRef } from "@generalbusiness/dap-contract";
@@ -9,7 +10,7 @@ import { APPLICATION_RELEASE_VALUE2, APPLICATION_SEMANTIC_VALUE2 } from "./appli
 import { DECLARED_APPLICATION_COHORT as C } from "./application-install-v2-wire.ts";
 export function applicationProjectionDeclaration(state: StateView, named: string, directory: ScopeRef, item: number, name: string,
   value: (domain: string, digest: Digest, most: number) => unknown | undefined): ApplicationProjectionDeclaration | null {
-  if (named !== C.rules || typeof name !== "string" || !/^[A-Za-z][A-Za-z0-9_.-]{0,127}$/.test(name)) return null;
+  if ((named !== C.rules && named !== D.rules) || typeof name !== "string" || !/^[A-Za-z][A-Za-z0-9_.-]{0,127}$/.test(name)) return null;
   const installation = applicationInstallation(state, named, directory, item);
   if (!installation) return null;
   try {

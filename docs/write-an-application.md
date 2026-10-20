@@ -269,6 +269,44 @@ Validation, pins and creation check the declaration and its record. They
 do not establish that a host, an outside adapter or a whole application
 journey works. A live run is separate evidence.
 
+## Declare a device command
+
+A package v2 may require the host's finite `device-command@1` capability:
+
+```json
+{"name":"device-command@1","bounds":{"kinds":["fan","heater","vent"],"owners":1}}
+```
+
+List kinds in sorted order. The requirement names no owner identity. Install
+in the explicit device-application cohort and choose an existing full
+MemberRef with `--owner`; the native install checks its current membership.
+This cohort runs host capability code, never code supplied by the package.
+At most eight package definitions may use the capability. The installed
+root may delegate its grant to one permitted child generation, as Grow's
+Site does for Room.
+
+The definition declares device-command version 1. A target-writing effect
+sets target, level and its own targetAt, then opens the bound device's
+command through the capability. Only the capability may write the optional
+outcome and outcomeAt slots. Its owner's `answer` preparation names the
+full command fact and closes it as confirmed, refused or unknown. Each
+open command reserves one answer. A sensor report changes reported fields
+independently. An older answer closes its own command without replacing
+the current outcome; a missing answer leaves outcome empty. Without an
+installed grant, target acts open no command. See the maintained
+[Grow device forms](../examples/grow/device.ts).
+
+Local `dap check` scenarios may explicitly name a public TEST actor with
+`deviceOwner` and use `prepare` steps for native answers. This developer
+fixture scripts the parent creation proof and exposes its creation and
+confirmation facts as replay anchors. The child genesis and preparations
+run through Core and SQLite. The report labels this boundary and cites the
+separate native install witness; it proves no production grant or physical
+device action. `$position` resolves a saved accepted receipt's position,
+while `$fact` resolves its full fact. The maintained
+[Grow fault scenario](../examples/grow/check/fault-scenario.json) uses these
+references and checks native command records.
+
 ## Publish a file from an act
 
 Create a room with `dap install --cohort application-publication` to use

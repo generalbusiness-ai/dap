@@ -208,6 +208,8 @@ export interface GrantAsked {
   /** The signing key, and the action that the act's row names in `grant`. */
   key: KeyId;
   action: string;
+  /** A trusted capability step supplies its own scope grant; retain current identity without inventing role actions. */
+  scopeGrant?: true;
   /** The window for this kind of commit: `windowOf`. */
   window: Window;
   /** The commit's one reading, or in a replay the entry's time, which is never clamped. */
@@ -303,7 +305,7 @@ export function judgeGrant(use: ObservationUse, asked: GrantAsked): GrantJudgmen
   if (asked.highest !== null && o.head.seq < asked.highest) return discard("older");
 
   if (o.keyState !== "active") return refuse("key-state");
-  if (!o.actions.includes(asked.action)) return refuse("action");
+  if (!asked.scopeGrant && !o.actions.includes(asked.action)) return refuse("action");
   if (!covers(o.within, asked.scope, membership)) return refuse("within");
   if (o.notAfter !== null && timeMs(clock.asOf)! >= (timeMs(o.notAfter) ?? -Infinity)) return refuse("not-after");
   if ((o.controller !== null || o.controllerActive !== null) && o.controllerActive !== true && !COMMENTS.includes(asked.action)) return refuse("controller");

@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
-import { PROPOSED_BOUNDS, type DeclaredDefinition, type ScopeKind } from "@generalbusiness/dap-contract";
-import { canonicalize, isSeed } from "@generalbusiness/artroom-bytes";
+import { PROPOSED_BOUNDS, type DeclaredDefinition, type DeviceCommandGrant, type ScopeKind } from "@generalbusiness/dap-contract";
+import { canonicalize, isSeed, newIncarnation } from "@generalbusiness/artroom-bytes";
 import { clockOf, judgeGenesis, validateDefinition, type ValidDefinition } from "../src/index.ts";
 import { Ledger, T0, creation, deliver, created, keys, valid } from "./fixtures.ts";
 
@@ -89,4 +89,38 @@ test("marked declared genesis does not stamp a platform creation, and membership
   expect(bodyOf(received.child)).toEqual({ fields: {} });
   const self = incoming({ creationContext: { v: 1 }, membership }, definition, "membership");
   expect(bodyOf(self.child)).toEqual({ fields: { creationContext: { v: 99 } }, directory: self.parent.at, membership: self.child.at });
+});
+
+test("a recorded device grant reaches only an allowed first child and cannot be delegated again", () => {
+  const grant: DeviceCommandGrant = { capability: "device-command@1", owner: keys.rita.member,
+    bounds: { kinds: ["fan", "heater", "vent"], owners: 1 }, root: definition.digest, definitions: [definition.digest] };
+  const { parent, child, judgment } = incoming({ creationContext: { v: 2, deviceCommand: grant, delegate: true }, membership });
+  expect(judgment.result).toBe("write");
+  const delegated = { fields: { creationContext: { v: 99 } }, directory: parent.at, membership,
+    creationContext: { v: 2, deviceCommand: grant, delegate: false } };
+  expect(bodyOf(child)).toEqual(delegated);
+  const nested = receive(child, 0, 1).child;
+  expect(bodyOf(nested)).toEqual({ fields: { creationContext: { v: 99 } }, directory: parent.at, membership, creationContext: { v: 1 } });
+  confirm(parent, child);
+  child.did(keys.rita, "spawn", { on: 0, expected: { on: child.item(0).revision } });
+  expect(bodyOf(child, child.last.seq, 0)).toEqual(delegated);
+
+  const other = valid(validateDefinition({ ...declared, name: "other-device-definition" }, PROPOSED_BOUNDS));
+  const unlisted = incoming({ creationContext: { v: 2, deviceCommand: { ...grant, definitions: [other.digest] }, delegate: true }, membership });
+  expect(unlisted.judgment.result).toBe("write");
+  expect(bodyOf(unlisted.child)).toEqual({ fields: { creationContext: { v: 99 } }, directory: unlisted.parent.at, membership, creationContext: { v: 1 } });
+});
+
+test("a device grant for another membership incarnation or definition refuses before any child send", () => {
+  const grant: DeviceCommandGrant = { capability: "device-command@1", owner: keys.rita.member,
+    bounds: { kinds: ["heater"], owners: 1 }, root: definition.digest, definitions: [definition.digest] };
+  const other = valid(validateDefinition({ ...declared, name: "foreign-device-definition" }, PROPOSED_BOUNDS));
+  const foreignOwner = { ...grant, owner: { ...grant.owner, membership: { ...membership, inc: newIncarnation(new Uint8Array(16).fill(93)) } } };
+  for (const marker of [{ v: 2, deviceCommand: foreignOwner, delegate: true },
+    { v: 2, deviceCommand: { ...grant, root: other.digest }, delegate: true },
+    { v: 2, deviceCommand: { ...grant, definitions: [other.digest] }, delegate: false }]) {
+    const { child, judgment } = incoming({ creationContext: marker, membership });
+    expect(judgment).toMatchObject({ result: "write", draft: { input: { decision: "refused" }, sends: [{ n: 0, message: { class: "result", outcome: "refused", reason: { code: "bad-field" } } }] } });
+    expect(child.last.sends).toHaveLength(1);
+  }
 });

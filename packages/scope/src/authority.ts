@@ -216,7 +216,7 @@ export function observing(config: Observing): Authority {
   return {
     further,
     async read(asked: Asked, seconds: number): Promise<Standing | null> {
-      const { window, action, scope } = asked;
+      const { window, action, scope, scopeGrant } = asked;
       // No act of that kind, or no window stated for it: no commit could judge on a read, so none is made.
       const of = action === null || window === null ? null : config.membership(scope);
       if (action === null || window === null || !of) return null;
@@ -227,7 +227,7 @@ export function observing(config: Observing): Authority {
        * this run's entries retain are enough to decide whether to read again, and the commit decides.
        */
       const judge = (read: Read, clock: Reading, view?: StateView, recorded: RecordedRef = of): GrantJudgment =>
-        judgeGrant(useOf(read), { scope, membership: recorded, key, action, window, clock, last: read.last, highest: view ? highestHead(view, read.observation) : (retained.get(key) ?? null) });
+        judgeGrant(useOf(read), { scope, membership: recorded, key, action, window, clock, last: read.last, highest: view ? highestHead(view, read.observation) : (retained.get(key) ?? null), ...(scopeGrant ? { scopeGrant: true } : {}) });
       /** An observation that failed a guard is not used again: the next act of the key reads again. A revoked answer fails none. */
       const discard = (read: Read): void => { if (kept.get(key) === read) kept.delete(key); };
 

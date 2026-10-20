@@ -6,7 +6,7 @@ import { canonicalize, isDigest, isKeyId, isRecord, parseStrict, parseStrictByte
 import { ApplicationPackageError, readApplicationPackage } from "@generalbusiness/artroom-bytes/application";
 import { readApplicationPackage2, type AnyPackedApplication } from "@generalbusiness/artroom-bytes/application-v2";
 import { validateDefinition } from "@generalbusiness/dap-derive";
-import { INSTALL_DEFINITION_BYTES, INSTALL_SEMANTIC_BYTES } from "@generalbusiness/dap-platform";
+import { deviceApplicationRequirement, INSTALL_DEFINITION_BYTES, INSTALL_SEMANTIC_BYTES } from "@generalbusiness/dap-platform";
 import { admit, RuleEvalError, RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 
 /** This host's finite packet allowance, below the portable 16 MiB codec
@@ -48,10 +48,10 @@ export function readTrustedApplication(bytes: Uint8Array, release: Digest, trust
   else if (version === 2) packet = readApplicationPackage2(owned, release, { bytes: APPLICATION_HOST_PACKAGE_BYTES });
   else throw new ApplicationPackageError("invalid");
   if (packet.package.release.manifest.publisher !== allowed.publisher) return fail("untrusted-release");
-  // M1 adds trusted ordinary definitions, not arbitrary capability code or M2's
-  // capability-bound enforcement. Native sends to the room destination remain
-  // the existing runtime's factory/delivery work, not a new declared capability.
-  if (packet.package.semantic.host.execution !== "recorded-do" || packet.package.semantic.host.profiles.some(profile => profile !== "restricted@1") || packet.package.semantic.capabilities.length > 0) return fail("unsupported-host");
+  // Only the finite native device-command version is supported beside ordinary
+  // packages. Native installation separately binds an existing owner.
+  if (packet.package.semantic.host.execution !== "recorded-do" || packet.package.semantic.host.profiles.some(profile => profile !== "restricted@1")
+    || packet.package.semantic.capabilities.length > 0 && (packet.package.v !== 2 || !deviceApplicationRequirement(packet.package.semantic))) return fail("unsupported-host");
   if (utf8(canonicalize(packet.package.semantic)).length > INSTALL_SEMANTIC_BYTES) return fail("unsupported-definition");
   for (const part of packet.package.semantic.definitions) {
     if (utf8(part.bytes).length > INSTALL_DEFINITION_BYTES) return fail("unsupported-definition");

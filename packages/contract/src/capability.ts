@@ -16,7 +16,7 @@
  * answers `unsupported-definition` for a definition that needs one.
  */
 
-export type CapabilityName = `${"hold" | "git-read"}@${number}`;
+export type CapabilityName = `${"hold" | "git-read" | "device-command"}@${number}`;
 
 /** A kind of local state that is not an item. Its key and its values are the capability's to define. */
 export interface CapabilityRecord {
@@ -42,6 +42,8 @@ export interface CapabilityEffect {
 /** Preparation the capability performs before an act (section 5.5). A step is asked for with a signed intent, and no definition writes one. */
 export interface CapabilityStep {
   foreign: boolean;                      // the intent may be addressed to another scope than the one that prepares
+  scopeGrant?: true;                      // current identity plus this scope's authenticated capability grant, rather than a role action
+  refusals?: readonly string[];
 }
 
 /**
@@ -51,7 +53,8 @@ export interface CapabilityStep {
 export interface ReservedRequests {
   record: string;
   while: string;
-  request: { class: "tell"; message: string; number: string };   // the message, and the field that carries its number
+  request: { class: "tell"; message: string; number: string }
+    | { class: "preparation"; step: string };                  // one answer to the named pending command
   bound: number;                         // the highest number a request may carry
   count: string;                         // the value of the record that holds the highest number decided
 }
@@ -62,6 +65,7 @@ export interface Capability {
   effects: Record<string, CapabilityEffect>;
   steps: Record<string, CapabilityStep>;
   reserved: readonly ReservedRequests[];
+  itemSlots?: Readonly<Record<string, "value" | "ref">>;
 }
 
 /** What `hold@1` and `git-read@1` declare (section 6.11). The item form of `hold@1`, with its `hold` effect, is section 6.8. */
@@ -105,5 +109,13 @@ export const CAPABILITIES = {
     // `job-read` is the authority note's, sections 3.11 and 5.7: the checker's request to the change lane that owns the job.
     steps: { "job-read": { foreign: false } },
     reserved: [],
+  },
+  "device-command@1": {
+    records: { command: { states: ["open", "confirmed", "refused", "unknown"], final: ["confirmed", "refused", "unknown"] } },
+    guards: { allowed: { with: ["kind"], refusals: ["device-kind-ungranted"] } },
+    effects: { open: { with: [["device"]] } },
+    steps: { answer: { foreign: false, scopeGrant: true, refusals: ["device-command-ungranted", "device-command-not-owner", "device-command-unknown", "device-command-closed", "device-kind-ungranted"] } },
+    reserved: [{ record: "command", while: "open", request: { class: "preparation", step: "answer" }, bound: 1, count: "decided" }],
+    itemSlots: { outcome: "value", outcomeAt: "ref" },
   },
 } as const satisfies Record<CapabilityName, Capability>;

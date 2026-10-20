@@ -29,7 +29,7 @@ import { CAPABILITIES } from "@generalbusiness/dap-contract";
 import type { Capability, CapabilityName, Digest, Effect, FactRef, FieldValue, Grant, Head, Intent, KeyId, OperationId, RefusalReason, ScopeRef, SignedIntent, UnavailableReason } from "@generalbusiness/dap-contract";
 import { intentDigest, isScopeRef, verifySignedIntent } from "@generalbusiness/artroom-bytes";
 import type { Signer } from "./attribution.ts";
-import { maximumOf, type Capabilities, type Maximum, type Recorded } from "./capability.ts";
+import { capabilityItemEffects, maximumOf, type Capabilities, type CapabilityItemEffect, type Maximum, type Recorded } from "./capability.ts";
 import { isIntent, type Own, type Reading } from "./fields.ts";
 import { covers, type Window } from "./grant.ts";
 import type { Draft } from "./judge.ts";
@@ -51,7 +51,7 @@ import { withinCounts } from "./draws.ts";
  * written outside, and the ordinary window of an act serves (section 6.11,
  * the step `check`).
  */
-export interface StepGrantAsked { key: KeyId; action: string; scope: ScopeRef; window: Window; clock: Clock }
+export interface StepGrantAsked { key: KeyId; action: string; scope: ScopeRef; window: Window; clock: Clock; scopeGrant?: true }
 
 /**
  * The decision on the grant of one preparation, in the commit. `granted`:
@@ -96,7 +96,11 @@ export type StepRefusal = { reason: "capability-refused"; name: string } | { rea
  * `operationId(self, k)`, so a record may name the operation that its own
  * entry opens.
  */
-export interface StepDerived { records: readonly Recorded[]; opens: readonly Opening[] }
+export interface StepDerived {
+  records: readonly Recorded[]; opens: readonly Opening[]; itemEffects?: readonly CapabilityItemEffect[];
+  /** The one pending record this preparation answers; checked against the version's table and actual transition. */
+  reservation?: { record: string; key: readonly FieldValue[] };
+}
 
 /** The rules of the capability steps that a runtime or a verifier has code for. Each is a pure function of what it is given. */
 export interface Steps {
@@ -111,6 +115,8 @@ export interface Steps {
   grant(capability: CapabilityName, step: string, given: Omit<StepGiven, "signer">): { action: string; window: Window } | null;
   /** The capability's guards for the step, over local state, and what the step derives. */
   derive(capability: CapabilityName, step: string, given: StepGiven): StepDerived | { refused: StepRefusal };
+  /** Required local proof is available. Absent: the step needs no extra proof. */
+  available?(capability: CapabilityName, step: string, given: StepGiven): boolean;
   /** The maxima that this code declares, among them the most that each step derives in its preparation entry (section 6.1). Absent: it declares none. */
   maxima?: readonly Maximum[];
 }
@@ -149,12 +155,15 @@ export type PreparationJudgment =
   | { result: "due"; next: Due };                 // section 5.2, step 6.3: nothing is written; the drain runs first
 
 /** The step that a request names, when the definition lists its capability and that version declares the step. */
-function declaredStep(definition: ValidDefinition, capability: unknown, step: unknown): { capability: CapabilityName; foreign: boolean } | null {
+function declaredStep(definition: ValidDefinition, capability: unknown, step: unknown): { capability: CapabilityName; foreign: boolean; scopeGrant: boolean } | null {
   if (typeof capability !== "string" || typeof step !== "string") return null;
   const listed = definition.declared.capabilities.some((c) => `${c.name}@${c.version}` === capability);
   const declared = own((own(CAPABILITIES as Readonly<Record<string, Capability>>, capability))?.steps, step);
-  return listed && declared ? { capability: capability as CapabilityName, foreign: declared.foreign } : null;
+  return listed && declared ? { capability: capability as CapabilityName, foreign: declared.foreign, scopeGrant: declared.scopeGrant === true } : null;
 }
+
+/** Computed from the trusted version table, never selected by an intent or transport. */
+export const preparationScopeGrant = (definition: ValidDefinition, capability: unknown, step: unknown): boolean => declaredStep(definition, capability, step)?.scopeGrant === true;
 
 /**
  * The judge of one preparation (section 5.5, "What is judged"; section 9.3,
@@ -175,8 +184,8 @@ function declaredStep(definition: ValidDefinition, capability: unknown, step: un
  *    observation of the kind that the step needs.
  * 8. The capability's guards for the step, over local state.
  *
- * Capacity is asked after the fold, as for any new work (`fits`, in
- * `reserve.ts`): a preparation is never a settling entry.
+ * Capacity is asked after the fold. Only a preparation bound to a pending
+ * record by its version's reserved-request table spends that reservation.
  */
 export function judgePreparation(view: StateView, definition: ValidDefinition, asked: PreparationAsked, context: PreparationContext): PreparationJudgment {
   const scope = view.scope();
@@ -219,26 +228,52 @@ export function judgePreparation(view: StateView, definition: ValidDefinition, a
   const given = { view, definition, scope, self, intent, digest, clock, own: context.own };
   const needs = steps.grant(capability, step, given);
   if (!needs) return refused("unauthorized", "the step names no action of this scope for this request");
-  const decided = context.granted({ key: intent.actor, action: needs.action, scope: scope.at, window: needs.window, clock });
+  if (named.scopeGrant && context.own?.(0)?.entry.input.type !== "genesis") return { result: "unavailable", reason: "unavailable" };
+  const decided = context.granted({ key: intent.actor, action: needs.action, scope: scope.at, window: needs.window, clock, ...(named.scopeGrant ? { scopeGrant: true } : {}) });
   if (decided.result === "unavailable") return { result: "unavailable", reason: "authority-unavailable" };
   // The judge keeps its own check of the grant, as the judge of an act does: the key, the action, the scope and its end time.
   const grant = decided.result === "granted" ? decided.grant : null;
-  if (!grant || grant.key !== intent.actor || !grant.actions.includes(needs.action) || !covers(grant.within, scope.at, context.membership ?? null)
+  if (!grant || grant.key !== intent.actor || (!named.scopeGrant && !grant.actions.includes(needs.action)) || !covers(grant.within, scope.at, context.membership ?? null)
     || (grant.notAfter !== null && asOf >= (timeMs(grant.notAfter) ?? -Infinity))) return refused("unauthorized", `no current grant of ${needs.action} to this key in this scope`);
 
-  const derived = steps.derive(capability, step, { ...given, signer: { member: grant.subject, principal: grant.principal } });
-  if ("refused" in derived) return derived.refused.reason === "capability-refused" ? refused("capability-refused", `the step's guard ${derived.refused.name} does not hold`, derived.refused.name) : refused(derived.refused.reason, derived.refused.detail);
+  const stepGiven = { ...given, signer: { member: grant.subject, principal: grant.principal } };
+  if (steps.available?.(capability, step, stepGiven) === false) return { result: "unavailable", reason: "unavailable" };
+  const derived = steps.derive(capability, step, stepGiven);
+  if ("refused" in derived) {
+    const names = own(own(CAPABILITIES as Readonly<Record<string, Capability>>, capability)?.steps, step)?.refusals;
+    if (derived.refused.reason === "capability-refused" && names && !names.includes(derived.refused.name)) throw new Error(`${capability} declares no refusal ${derived.refused.name} for its step ${step}`);
+    return derived.refused.reason === "capability-refused" ? refused("capability-refused", `the step's guard ${derived.refused.name} does not hold`, derived.refused.name) : refused(derived.refused.reason, derived.refused.detail);
+  }
 
   // Section 5.3: a preparation judges its `notAfter` and its grant on the commit clock, so none is written while the clock is behind.
   if (clock.behind) return { result: "unavailable", reason: "clock-behind" };
-  const effects: Effect[] = [...recordEffects(capability, derived.records), ...derived.opens.flatMap((open, k) => operationOpening(k, open))];
+  const effects: Effect[] = [...recordEffects(capability, derived.records),
+    ...capabilityItemEffects(view, definition, capability, derived.itemEffects ?? [], self, `${capability}:${step}`, bounds),
+    ...derived.opens.flatMap((open, k) => operationOpening(k, open))];
   // Section 6.1, "In the commit": a step that returns more than it declared has a fault, and the request is not judged. A
   // preparation entry that would still pass the bound on derived effects is refused, by the bound's name.
   const most = maximumOf(steps, "step", capability, step);
   if (most && (effects.length > most.effects || derived.opens.length > most.operations)) throw new Error(`${capability} declares at most ${most.effects} effects for its step ${step}, and it returned ${effects.length}`);
   if (effects.length > bounds.derivedEffects) return refused("entry-too-large", "the effects that the step derives pass the bound on one entry", "derivedEffects");
-  const judged = { result: "write", draft: { input: { type: "preparation", signed, authority: [grant], capability, step }, uses: [], prepared: [], effects, sends: [], judgesTime: true } } as const;
+  const settles = preparationReservation(view, capability, step, derived);
+  const judged = { result: "write", draft: { input: { type: "preparation", signed, authority: [grant], capability, step }, uses: [], prepared: [], effects, sends: [], judgesTime: true, ...(settles ? { settles: true } : {}) } } as const;
   return definition.standing ? withinCounts(view, definition, judged) : judged;
+}
+
+/** A preparation spends only its named, pending, one-answer reservation. */
+function preparationReservation(view: StateView, capability: CapabilityName, step: string, derived: StepDerived): boolean {
+  if (!derived.reservation) return false;
+  const binding = derived.reservation;
+  const declared = own(CAPABILITIES as Readonly<Record<string, Capability>>, capability);
+  const term = declared?.reserved.find(term => term.record === binding.record && term.request.class === "preparation" && term.request.step === step);
+  const before = view.record(capability, binding.record, binding.key);
+  const after = derived.records.length === 1 ? derived.records[0] : null;
+  if (!term || term.bound !== 1 || !before || before.state !== term.while || before.values[term.count] !== 0
+    || !after || after.kind !== binding.record || !same(after.key, binding.key) || after.values[term.count] !== 1
+    || !declared?.records[binding.record]?.final.includes(after.state) || derived.opens.length !== 0) {
+    throw new Error(`${capability}: invalid reserved preparation ${step}`);
+  }
+  return true;
 }
 
 /**
