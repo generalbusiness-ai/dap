@@ -175,7 +175,12 @@ export async function simulatorTick(config: SimulatorTick, port: SimulatorPorts)
     current = await climate(await snapshot(), reading.minute);
     report.phase = "report-site";
     if (isScopeRef(current.root.refs["site"]) && current.root.refs["siteRoom"] != null) {
-      await act("sensors", current, "report-site", current.root.id, { openAlerts: current.alerts.length }, { on: current.root.id });
+      const reportAt = current.root.refs["lastSiteReport"], last = reportAt == null ? null : await fact(seqOf(reportAt, config.scope)), input = last?.entry.input;
+      // Reuse the declared last report for this reading and alert count.
+      // Native delivery acknowledgments may follow it in the journal.
+      const alreadyReported = last !== null && last.fact.seq > summaryFact.seq && input?.type === "act" && input.signed.intent.kind === "report-site"
+        && input.signed.intent.actor === config.signers.sensors.key && input.signed.intent.fields["openAlerts"] === current.alerts.length;
+      if (!alreadyReported) await act("sensors", current, "report-site", current.root.id, { openAlerts: current.alerts.length }, { on: current.root.id });
     }
     report.result = "complete"; report.phase = "complete";
     return report;

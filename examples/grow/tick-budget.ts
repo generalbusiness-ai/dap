@@ -32,8 +32,13 @@ export function tickBudget(service: string, scopes: readonly ScopeId[], send: Fe
     let response: Awaited<ReturnType<Fetch>>;
     // A followed redirect would leave the checked origin and bypass this
     // invocation's request allowance. Preserve the SDK abort signal.
-    const request = { ...init, redirect: "error" as const };
+    const request = { ...init, redirect: "manual" as const };
     try { response = await send(url, request); active(); } catch { return refuse(); }
+    if (response.status >= 300 && response.status < 400) {
+      stop();
+      if (response.body) await response.body.getReader().cancel().catch(() => {});
+      return refuse();
+    }
     const original = response.body;
     const body: ByteStream | null = original === null ? null : { getReader() {
       const reader = original.getReader();

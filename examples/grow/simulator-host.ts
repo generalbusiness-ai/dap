@@ -1,7 +1,7 @@
 /** Separate scheduled Worker. All progress lives in the application's
  * journal. Environment bindings contain public references and two secrets. */
 import type { Digest, KeyId, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, entryHash, isMemberRef, isRecord, isScopeRef, parseStrict, unb64url } from "@generalbusiness/artroom-bytes";
+import { canonicalize, definitionDigest, entryHash, isMemberRef, isRecord, isScopeRef, parseStrict, timeOf, unb64url } from "@generalbusiness/artroom-bytes";
 import { httpTransport, newIdempotencyKey, requestSession, ScopeHandle, secretSigner, sessionRequest, type Fetch, type Signer, type Transport } from "@generalbusiness/artroom-client";
 import { demoDefinitions } from "./demo-definitions.ts";
 import { simulatorRelease } from "./simulator-release.ts";
@@ -69,7 +69,7 @@ export function simulatorHost(packetText: string, expectedRelease: Digest, expec
         const until = new Date(Math.floor(now / 1000) * 1000 + 120_000).toISOString().replace(".000Z", "Z");
         const answer = await requestSession(config.service, membership.scope, sessionRequest(membership, bytes, until, newIdempotencyKey()), { fetch: budget.fetch, seconds: 5 });
         if (!answer.ok || !same(answer.session.claims.membership, membership) || answer.session.claims.member !== config.members[who].member
-          || answer.session.claims.key !== signer.key || answer.session.endedBy(new Date(now).toISOString())) throw new Error("demo-session-mismatch");
+          || answer.session.claims.key !== signer.key || answer.session.endedBy(timeOf(now))) throw new Error("demo-session-mismatch");
         return answer.session;
       }
       const sensorsSession = await memberSession("sensors", sensorsSecret, signers.sensors);

@@ -8,8 +8,9 @@ have not been executed or edited. This separate mutable checkout reads
 the reviewed Git commits. Landed S2a still precedes the final combined
 integration witness and gate. The static page, pure simulation, bounded public
 journal reconstruction, stateless tick and scheduled-host factory are prepared
-and checked below. Release packet, installed native tick/catch-up, whole gate, Source/review,
-deployment and live acceptance remain pending.
+and checked below. The TEST release and local native tick path now pass.
+Production publisher, native long-gap catch-up, final combined integration,
+whole gate, Source/review, deployment and live acceptance remain pending.
 
 The commissioned Source contains a separate signed demo release, a stateless
 bounded cron Worker beside the package, an operator runbook, and the Grow
@@ -19,7 +20,75 @@ the nonsecret trust row, deploys after review, provisions the actual room
 and secrets, runs the runbook and records live acceptance. A person taking
 an operator act in their AI app is actual acceptance, never a fixture claim.
 
-## Reviewed G5a integration and native in-memory owner path
+## Native demo ticks on the local reviewed Device cohort
+
+The separate demo now has one genuine native integration story in
+`scope/test/grow-demo-tick.test.ts`. It enrolls two distinct agents in
+actual Membership7, controlled by the founder, before installing. The
+same coarse agent role grants both sensing and climate actions, while
+the signed demo's full-member guards refuse cross-principal acts. The
+native install names the sensors agent as Device owner. Its actual Site
+creates and confirms Room with the delegated grant and exact principals.
+The operator commissions four zones and twelve devices.
+
+The production scheduled-host factory runs over the real Worker's HTTP
+routes and issued sessions. A tick at minute 0 succeeds, and a duplicate
+submits zero writes. Later ticks open and answer actual Device commands
+under the sensors key. After a real SQLite restart, minute 35 recovers
+without a heater authorization or fabricated intermediate observations.
+Only minutes 0, 10, 11 and 35 are recorded. A separately signed concurrent
+sensor observation makes the driver's original request fail with
+`revision-moved`; no later HTTP request crosses its local refusal fence.
+Site and Room then replay consistently with proven native grants, using
+an actually issued operator read session.
+
+This runs on the local reviewed Device cohort as permitted preparation.
+It is not a Device-only hosted room. Actual landed S2a and the final
+combined-cohort integration remain required before G5's final gate and
+Source. Long-gap native quota/catch-up and rendered/live acceptance remain
+separate obligations. The clock, package/Git peer, scheduler and setup
+inspection remain labelled TEST fixtures; the runtime driver uses public
+reads and native authority.
+
+The integration exposed three runtime gaps. First, the session-expiry
+check used `.000Z`, which the contract's canonical time parser rejects.
+It now calls `timeOf(now)`. Second, the actual Worker rejects
+`Request.redirect: "error"`. A temporary native probe confirms that
+failure before any network request. The driver now uses `manual` and
+explicitly refuses every 3xx response, setting the fence before body
+cancellation. The unchanged actual two-server witness still proves one
+origin request, zero forwarded requests and refusal of every later send.
+Third, the old tick always sent `report-site`, even for an unchanged
+callback. It now reads the existing `lastSiteReport` fact and reuses it
+only for the same native reading, signer and alert count. No private
+cursor, new item or declaration change is added.
+
+Failed setup attempts remain in the evidence. The first new compiler
+run needed proper host-result narrowing and ES2022 array access. The first
+agent enrollment omitted the native roster subject and revisions.
+Sessions then stopped before any forwarded request; a temporary exception
+probe was restored exactly, and a separate temporary Request probe was
+removed in `finally`. An initial report-reuse check wrongly assumed the
+report was the journal's last entry. Native Site acknowledgments can
+follow it, so the existing declared report ref is the correct source.
+The new native test also initially expected the head never to advance
+during a duplicate callback. It now verifies zero client writes and
+allows only the legitimate Site delivery in that interval. The four
+previous in-memory scenario bodies are unchanged. A final closed-alert
+read initially used the live-only helper; it now reads retained rows.
+
+Original process82124 passes the complete native story, compiler and
+proven replay. A later whole-file run adds the explicit sampled-minute
+assertion and also passes. The four unchanged in-memory tick cases pass
+separately in original6451. All case and protocol bounds remain unchanged.
+Three selected controls each fail an unchanged assertion naturally one
+without a timeout: remove the 3xx fence, restore the noncanonical session
+time, or bypass report reuse. Every source is restored byte-for-byte.
+These are three targeted controls, not a mutation sweep or another whole
+suite. Evidence uses `/tmp/artroom-g5-native-*20261020*`, with the control
+closure in `/tmp/artroom-g5-native-compatibility-controls-20261020.json`.
+
+## Earlier reviewed G5a integration checkpoint
 
 Merge `dadd7e48b3efc7d87f2aa4989dbe3ee1450e0cd3`, tree
 `eb83603b25f7cf2300a6ed6f5820b07d2e6ecd03`, incorporates actual Main
