@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:66002ddbcc46a52ecfed80fd4eadd432b56be695","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-19-k1-helper-consolidation.md."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:664138dd4ba662e4e042a6dba0066e12f3d62822","text":"Merge retired a covered predecessor; the successor is at apps/room/fetch.ts."}
