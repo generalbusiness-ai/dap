@@ -11,7 +11,7 @@ import type { ArchiveMark, ArchiveRow } from "./archive-row.ts";
 import type { Sql } from "./sqlite.ts";
 import { ArchivePrefixStopped, type ArchivePrefixReason } from "./archive-prefix.ts";
 import type { FixtureArchiveSourcePins } from "./archive-source-pins.ts";
-import { archiveReplayAnchors } from "./archive-anchors.ts";
+import { ArchiveReplayAnchors } from "./archive-anchors.ts";
 
 type LayoutFailure = Extract<JournalLayoutResult, { ok: false }>;
 export type ArchiveBuildFailure = LayoutFailure | { readonly ok: false; readonly reason: ArchivePrefixReason | "rebuild-mismatch" | "manifest" };
@@ -53,8 +53,8 @@ export async function planArchive(sql: Sql, context: { readonly at: ScopeRef; re
   const fixtureSources = context.fixtureSources;
   const selected = inventoryArchive(sql, at, through, context.bounds, context.policies, budget, fixtureSources);
   if (!selected.ok) return selected;
-  let anchors: readonly FactRef[] | undefined;
-  try { if (context.replayScopes) anchors = archiveReplayAnchors(selected.inventory, context.replayScopes, budget); }
+  let collector: ArchiveReplayAnchors | undefined;
+  try { if (context.replayScopes) collector = new ArchiveReplayAnchors(selected.inventory, context.replayScopes, budget, fixtureSources); }
   catch (error) {
     if (error instanceof ArchivePrefixStopped || error instanceof ArchiveStopped) return { ok: false, reason: error.reason };
     throw error;
@@ -62,8 +62,26 @@ export async function planArchive(sql: Sql, context: { readonly at: ScopeRef; re
   budget.spend({ inputWork: JOURNAL_SELECTION_BYTES * 3 });
   const manifest = canonicalize(selected.inventory);
   if (manifest.length > JOURNAL_SELECTION_BYTES || utf8(manifest).length > JOURNAL_SELECTION_BYTES) budget.stop("limit");
-  const built = await buildJournalArchive({ format, selection: manifest, input: archiveInput(sql, selected.inventory, budget, fixtureSources), parent, budget });
+  const native = archiveInput(sql, selected.inventory, budget, fixtureSources);
+  const gathered = collector, failed: { reason?: ArchiveBuildFailure["reason"] } = {};
+  const input = gathered ? { ...native, entry: async (seq: number, limit: number) => {
+    const bytes = await native.entry(seq, limit);
+    try { if (bytes !== null) gathered.entry(bytes, limit); }
+    catch (error) {
+      if (error instanceof ArchivePrefixStopped || error instanceof ArchiveStopped) failed.reason = error.reason;
+      throw error;
+    }
+    return bytes;
+  } } : native;
+  const built = await buildJournalArchive({ format, selection: manifest, input, parent, budget });
+  if (failed.reason) return { ok: false, reason: failed.reason };
   if (!built.ok) return built;
+  let anchors: readonly FactRef[] | undefined;
+  try { anchors = collector?.finish(); }
+  catch (error) {
+    if (error instanceof ArchivePrefixStopped || error instanceof ArchiveStopped) return { ok: false, reason: error.reason };
+    throw error;
+  }
   return { ...built, mark: { commit: built.archive.commit, parent: parent?.id ?? null, through: { ...selected.inventory.through }, manifest, markedAt }, ...(anchors ? { anchors } : {}) };
 }
 

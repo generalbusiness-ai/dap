@@ -36,7 +36,7 @@ export function render(report: Report, why: string | null = null): string {
   lines.push(`Target: ${scope(report.target.at)}, ${report.result === "consistent" ? "through" : "aiming for"} entry ${report.target.seq} (${report.target.hash}).`);
   lines.push(report.coverage.length === 0 ? "Coverage: no entry." : "Coverage:");
   for (const c of report.coverage) lines.push(`  - ${scope(c.scope)}: entries ${c.from} to ${c.through}`);
-  lines.push(report.anchors.length === 0 ? "Anchors: none." : "Anchors, taken on the caller's word:");
+  lines.push(report.anchors.length === 0 ? "Anchors: none." : "Anchors, taken on the caller's word (including values observed at these heads):");
   for (const a of report.anchors) lines.push(`  - ${fact(a)}`);
   const { verified, anchored, missing } = report.dependencies;
   lines.push(`Foreign facts: ${verified} shown by replay of their source scope, ${anchored} taken from an anchor, ${missing.length} missing.`);

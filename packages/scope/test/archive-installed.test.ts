@@ -307,10 +307,11 @@ test.each(["fixture", "Grow"])("installed %s scopes export genesis zero after a 
     const anchorFacts = [...new Map([...passAnchors.values()].flat().map(fact => [canonicalize(fact), fact])).values()]
       .sort((a, b) => a.at.scope < b.at.scope ? -1 : a.at.scope > b.at.scope ? 1 : a.seq - b.seq);
     const registerEntries = await life.wait(() => R.sealed()), memberEntries = await life.wait(() => M.sealed());
-    // Independent fixture facts: three Register copies and two public
-    // Membership copies. Neither whole source journal enters the archive.
+    // Independent fixture facts: three Register copies, two public
+    // Membership copies and actual retained observation heads 4 and 6. These
+    // expected fixture reads do not feed the export-derived anchor list.
     const expectedAnchors = [1, 2, 3].map(seq => registerEntries.find(entry => entry.entry.seq === seq)!)
-      .concat([0, 5].map(seq => memberEntries.find(entry => entry.entry.seq === seq)!))
+      .concat([0, 4, 5, 6].map(seq => memberEntries.find(entry => entry.entry.seq === seq)!))
       .map(sealed => ({ at: sealed.entry.at, seq: sealed.entry.seq, hash: sealed.hash }))
       .sort((a, b) => a.at.scope < b.at.scope ? -1 : a.at.scope > b.at.scope ? 1 : a.seq - b.seq);
     expect(anchorFacts).toEqual(expectedAnchors);
@@ -318,13 +319,14 @@ test.each(["fixture", "Grow"])("installed %s scopes export genesis zero after a 
     expect(anchorFacts.every(fact => !diagnosticArchives.has(fact.at.scope))).toBe(true);
     const anchors = anchorFacts.map(fact => ({ scope: fact.at.scope, seq: fact.seq, hash: fact.hash }));
     // A2 reads exactly the five self-journal archives,
-    // without a service. All private-source copied facts are explicitly
-    // caller-trusted; copied bodies supply no source proof.
+    // without a service. Private facts and values observed at their heads
+    // are caller-trusted; copied bodies supply no source proof.
     const diagnosticObjects = new Map([...diagnosticArchives.values()].flatMap(archive => archive.objects.map(object => [object.id, object] as const)));
     const diagnosticRefs = new Map([...diagnosticArchives].map(([scope, archive]) => [journalRef(scope), archive.commit]));
     const probe = allHistories[0]!;
-    const missing = expectedAnchors.find(fact => fact.at.scope === claim.at.scope && fact.seq === 1)!;
-    for (const wrong of [false, true]) {
+    const memberHead = expectedAnchors.find(fact => fact.at.scope === M.name && fact.seq === 4)!;
+    const rulesEntry = allHistories.find(history => history.scope.name === A.name)!.read.value[2]!;
+    for (const missing of [expectedAnchors.find(fact => fact.at.scope === claim.at.scope && fact.seq === 1)!, memberHead]) for (const wrong of [false, true]) {
       const supplied = anchors.flatMap(anchor => anchor.scope === missing.at.scope && anchor.seq === missing.seq
         ? wrong ? [{ ...anchor, hash: textDigest("TEST wrong private source anchor") }] : [] : [anchor]);
       const offline = await life.wait(() => verifyArchive(archiveSource({ open: (at, work) => readJournalArchive({
@@ -334,6 +336,7 @@ test.each(["fixture", "Grow"])("installed %s scopes export genesis zero after a 
       expect(offline.kind).toBe("verification"); if (offline.kind !== "verification") return;
       if (!wrong) expect(offline.verification.report).toMatchObject({ result: "missing-dependency", dependencies: { missing: [missing] } });
       else expect(offline.verification.report).toMatchObject({ result: "mismatch", dependencies: { missing: [] } });
+      if (missing === memberHead) expect(offline.verification.report.at).toEqual({ at: rulesEntry.entry.at, seq: 2, hash: rulesEntry.hash });
     }
     const offlineResults = [];
     for (const { scope, read } of allHistories) {
@@ -344,6 +347,7 @@ test.each(["fixture", "Grow"])("installed %s scopes export genesis zero after a 
       offlineResults.push({ scope: scope.name, head: read.at, offline });
       if (offline.kind === "verification" && offline.verification.report.result === "consistent") {
         expect(offline.verification.report.anchors.every(fact => anchorFacts.some(anchor => canonicalize(anchor) === canonicalize(fact)))).toBe(true);
+        expect(offline.verification.report.trusts.some(trust => trust.includes("value observed at an anchored head"))).toBe(true);
       }
     }
     const rootCopies = allHistories.flatMap(({ scope, read }) => read.value.flatMap(sealed => sealed.entry.uses
@@ -351,10 +355,17 @@ test.each(["fixture", "Grow"])("installed %s scopes export genesis zero after a 
       .map(use => ({ journal: scope.name, consumer: { at: sealed.entry.at, seq: sealed.entry.seq, hash: sealed.hash }, source: use.fact, content: use.content }))));
     expect(offlineResults.every(result => result.offline.kind === "verification" && result.offline.verification.report.result === "consistent"),
       JSON.stringify({ kind, exported: allHistories.map(({ scope, read }) => ({ scope: scope.name, entries: read.value.length, head: read.at })),
-        copyMetadataPassed: credentialCopies.length, domainRefusalsPassed: 2, credentialRefusalsPassed: 3, anchorRefusalsPassed: 2,
+        copyMetadataPassed: credentialCopies.length, domainRefusalsPassed: 2, credentialRefusalsPassed: 3, anchorRefusalsPassed: 4,
         discovery, discoveryCost: discoveryBudget.admitted(),
         anchorFacts, passAnchors: [...passAnchors], anchors, rootCopies, offlineResults })).toBe(true);
     expect(new Set(offlineResults.flatMap(result => result.offline.kind === "verification" ? result.offline.verification.report.anchors.map(canonicalize) : [])))
       .toEqual(new Set(anchorFacts.map(canonicalize)));
+    console.info("TEST native archive closure", JSON.stringify({
+      scopes: discovery!.scopes, repository: discovery!.repository, anchorFacts,
+      results: offlineResults.map(result => ({ scope: result.scope, head: result.head,
+        result: result.offline.kind === "verification" ? result.offline.verification.report.result : result.offline.kind })),
+      copies: credentialCounts, refusedDomains: 2, refusedCredentials: 3, anchorRefusals: 4,
+      qualification: "Native test-host journals and issued reads; TEST package/owner/scheduler/policy/object repository. Explicit private facts and observed values on caller trust; no live private source read by collector, real Git clone, provider or deployment acceptance.",
+    }));
   } finally { life.release(); }
 }, 30_000);

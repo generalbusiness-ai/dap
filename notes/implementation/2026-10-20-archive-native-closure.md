@@ -12,14 +12,21 @@ single-anchor rule with an explicit list of admitted Register and Membership
 copies taken on the caller's word. The builder adopted it as `53576fd6`.
 The old single-anchor failures below remain evidence of the old contract.
 
-The new list contains Register positions 1, 2 and 3 and Membership positions
-0 and 5 in the native Grow fixture. All five journals export. Without the
-Register-1 anchor, replay reports that missing fact; a wrong hash reports
-`mismatch`. Complete replay now reaches Membership position 4 at Rules
-entry 2: this is an observation head, not one of the exported copies.
-Four target journals stop there; Destination alone replays `consistent`.
-No observation anchor, private journal or copied-body proof was added.
-The new finding must go back to planner under point 6 of `5a642337`.
+Decision `066e49b3`, adopted as `fede8616`, extends that list to every
+exact Register or Membership fact referenced in the exported bytes,
+including observation heads. Values at those heads also remain on caller
+trust. The current export-derived list contains Register positions 1, 2
+and 3 and Membership positions 0, 4, 5 and 6. It contains no archived
+scope. All five journals export, both missing-anchor cases report the
+expected missing fact, and both wrong-hash cases report `mismatch`.
+The Membership-4 cases stop at Rules entry 2 as required.
+
+Complete replay is still unaccepted. After fixing a lost private definition
+name in the archive adapter, Room, Site, Directory and Rules now stop with
+`incomplete`: they need detached text that the current format deliberately
+omits. Destination replays `consistent`. No detached text was exported or
+supplied by a fixture side channel. This new contract gap goes back to the
+planner before changing the export or acceptance contract.
 
 Read-only discovery finds Room, Site, Directory@16, Rules@10 and
 Destination@12 from the actual creator chain and bound Directory records.
@@ -391,3 +398,49 @@ trust report, the actual clone-only replay pairs, required controls and one
 ordinary gate before complete exact-head review. Slice 9 deployment still
 waits for F1 and reviewed 9a. Provisioning, binding, credentials, deployment
 and hosted readbacks remain with planner.
+
+## Exact observation anchors and the next replay boundary
+
+The collector reads only selected local entry bytes after privacy admission.
+It gathers exact fact references and serialized observation heads, deduplicates
+by full scope/incarnation/position/hash, and excludes archived scopes.
+Native source classification uses already prepared metadata, with the original
+budget. It reads no private source journal or export-time observed head.
+
+The first observation-list attempt (`96262`) passed four compilers and the
+existing Replay anchor case, then failed the fixture list assertion because
+Membership 6 was also present. With the independent fixture expectation
+corrected, attempt `74497` passed both Scope compilers and all export/refusal
+checks, then failed four complete replays at Rules entry 7. A separate
+enum-only diagnostic (`13909`, outer wrapper 0, expected child 1) found that
+the adapter discarded the copied Membership entry's definition name when
+that private journal was absent. The derived grant reply became
+`unknown-message`. The diagnostic restored all 2,621 source bytes and modes.
+
+The adapter now retains a name only when an exact caller anchor names the
+copied entry and its full source reference has the admitted descriptive
+Membership8 or Register17 basis. This does not prove source birth or history.
+The replay trust statement explicitly includes retained definition names.
+Direct reads without caller anchors keep their former behavior.
+
+| Original attempt | Actual boundary | Wall seconds | Child CPU seconds |
+| --- | --- | ---: | ---: |
+| `96262` | Final fixture list assertion, expected six facts but actual seven | 8.091709708 | 13.263124 |
+| `74497` | All export and negative checks pass; four replays mismatch at Rules 7 | 8.515046375 | 12.438878 |
+| `13909` | Temporary diagnostic identifies missing source name; original source restored | 8.857788959 | 13.159781 |
+| `16531` | Four compilers and existing exact-anchor case pass; native runtime cannot open sandbox loopback listener | 3.081196792 | 7.579496 |
+| `81594` | Native test starts with listener permission; four replays incomplete for omitted text, Destination consistent | 7.346617125 | 8.538783 |
+
+Each attempt has its own full 2,621-file physical input snapshot, original
+log and closure receipt. Zero installs; source bytes, modes and lock stamps
+remain exact after each attempt. These are separate focused runs on the
+shared macOS arm64 host with uncontrolled OS caches. Actual load and tool
+versions are in the input receipts. No full gate, successful whole closure,
+real Git clone, provider, hosted read or deployment is claimed.
+
+The first missing detached digest is
+`sha256:9e0a5a28346594dcd3a95794d1d66951691e6de65adc1582e788ba5ef3085530`.
+Room, Site and Directory report it at Directory entry 5; Rules reports it
+at Rules entry 2. The archive inventory records detached-text omissions;
+the test gives Replay no external text port. The missing-body result is
+preserved rather than silently satisfying it from the live test host.
