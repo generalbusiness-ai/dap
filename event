@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/implementation/2026-10-20-g5-grow-host-link.md","body":{"commit":"c7aaa3ab93dd0165ba3271e2afb83560a7327412","path":"notes/implementation/2026-10-20-g5-grow-host-link.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:076e1d72ceed4b6a11df4811ae9b729eaf9d9386","text":"Merge retired a covered predecessor; the successor is at homepage/test/home.test.mjs."}
