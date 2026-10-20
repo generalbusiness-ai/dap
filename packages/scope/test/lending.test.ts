@@ -228,6 +228,8 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
     const scopeOfLending = await L.at(), skew = { ms: 0 };
     const application = { scope: scopeOfLending, directory: await D.at(), item: 0, definition: LENDING_DEFINITION };
     const countThings = async () => (await things()).length;
+    // Finish earlier publication replies before this fixture's multi-read projection.
+    await settle(L, G);
     const his = browser(nasruddin, "@nasruddin"), g = his.open();
     { const seen = await g.look(); if (seen.status !== "current") throw new Error(`look: ${JSON.stringify(seen).slice(0, 300)}`);
       expect(seen.actions).toContain("lending.member"); expect(seen.actions).not.toContain("lending.staff"); }
