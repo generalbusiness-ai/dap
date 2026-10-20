@@ -240,6 +240,25 @@ has been made. Planner disposition is required before changing that
 contract. Automatic closure discovery and per-scope archiver wiring remain
 unfinished; the witness selects the five known fixture journals explicitly.
 
+The exact five-field row comparison is now the pure Git policy function
+`admitArchiveNativeValuePlace`; the Scope classifier calls it. The existing
+one-case policy witness pairs the actual Rules release place with a wrong
+place, unlisted domain, wrong pin, wrong native data digest and wrong bound.
+This adds no permanent case. Original control `21847` passes the Git and
+Scope source/test compilers and the fixed case, then changes only the place
+comparison to `true`. That same case fails by the direct wrong-place
+assertion. The original source bytes, modes and stamp are restored exactly
+across all 2,615 files, with zero installs. Fixed and wrong-line phases each
+have complete physical inputs.
+
+The measured owning/control interval is 3.173885833 wall / 6.614332 child
+CPU seconds. The fixed case alone is 0.778738917 / 0.896579; the wrong-place
+case is 0.710982458 / 0.907668. This is one targeted control, not a mutation
+sweep. The full Grow witness has not been repeated after extracting this
+unchanged predicate; its earlier missing-Register result is not a passing
+replay for the new head. Request `b315bb35` asks planner to dispose of that
+actual first cutoff before any source-proof change.
+
 ## Original checks
 
 The dependency preparation verified 2,589 Git source blobs, 5,499 newly

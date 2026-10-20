@@ -38,6 +38,13 @@ export const ARCHIVE_NATIVE_VALUE_PLACES = Object.freeze([
  * must separately match pin, data, domain and place before selecting bytes. */
 export const ARCHIVE_NATIVE_VALUE_DOMAINS: ReadonlySet<string> = new Set(ARCHIVE_NATIVE_VALUE_PLACES.map(row => row.domain));
 
+/** One complete native exception row. The owning inventory separately
+ * proves the installed declaration identity before calling this decision. */
+export function admitArchiveNativeValuePlace(pin: string, data: Digest, domain: string, max: number, place: string): boolean {
+  return ARCHIVE_NATIVE_VALUE_PLACES.some(row => row.pin === pin && row.data === data
+    && row.domain === domain && row.max === max && row.place === place);
+}
+
 /** Certified digests are trusted reviewer configuration, never request input.
  * The future inventory must inspect the whole cohort; it cannot omit entries.
  * Passing this policy establishes no history integrity or replay completeness. */

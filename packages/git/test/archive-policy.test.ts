@@ -1,7 +1,7 @@
 import { expect, test, vi } from "vitest";
 import { INVITATION_KEY_MEMBERSHIP } from "@generalbusiness/dap-contract";
 import { textDigest } from "@generalbusiness/artroom-bytes";
-import { ARCHIVE_NATIVE_DATA, admitArchiveExport } from "../src/archive-policy.ts";
+import { ARCHIVE_NATIVE_DATA, admitArchiveExport, admitArchiveNativeValuePlace } from "../src/archive-policy.ts";
 
 // Policy only, with a SCRIPTED inventory and trusted certificate stand-in.
 // No archive writer, native inventory, export permission or Git write runs.
@@ -31,4 +31,13 @@ test("export admission checks exact reviewed native pin and data together, prese
   expect(admitArchiveExport(declaration, certified, inventory)).toEqual({ ok: true });
   expect(admitArchiveExport(INVITATION_KEY_MEMBERSHIP, certified, () => ({ customDomains: true, foreignCopies: false }))).toEqual({ ok: false, reason: "unsupported-custom-domain" });
   expect(admitArchiveExport(INVITATION_KEY_MEMBERSHIP, certified, () => ({ customDomains: false, foreignCopies: true }))).toEqual({ ok: false, reason: "unsupported-foreign-copy" });
+  // Invariant: a public native domain stays confined to its reviewed
+  // declaration identity, exact place and bound; a TEST table cannot move it.
+  const rules = "platform:rules@10", data = ARCHIVE_NATIVE_DATA[rules]!, domain = "dap-application-release-2", place = "acts.install-application.fields.release.value";
+  expect(admitArchiveNativeValuePlace(rules, data, domain, 4096, place)).toBe(true);
+  expect(admitArchiveNativeValuePlace(rules, data, domain, 4096, "owners.platform:rules@10.fetch-application")).toBe(false);
+  expect(admitArchiveNativeValuePlace(rules, data, "TEST-unlisted-native-value", 4096, place)).toBe(false);
+  expect(admitArchiveNativeValuePlace("platform:rules@9", data, domain, 4096, place)).toBe(false);
+  expect(admitArchiveNativeValuePlace(rules, declaration, domain, 4096, place)).toBe(false);
+  expect(admitArchiveNativeValuePlace(rules, data, domain, 8192, place)).toBe(false);
 });

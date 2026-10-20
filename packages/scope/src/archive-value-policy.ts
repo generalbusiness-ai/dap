@@ -3,15 +3,14 @@
 import { DOMAINS } from "@generalbusiness/dap-contract";
 import { isRecord } from "@generalbusiness/artroom-bytes";
 import { declarationValueDomains } from "@generalbusiness/dap-derive";
-import { ARCHIVE_NATIVE_VALUE_PLACES } from "@generalbusiness/artroom-git/archive-policy";
+import { ARCHIVE_NATIVE_VALUE_PLACES, admitArchiveNativeValuePlace } from "@generalbusiness/artroom-git/archive-policy";
 import type { ArchiveSupport } from "./archive-entry-metadata.ts";
 import type { ArchiveBudget } from "./archive-budget.ts";
 import { stopArchivePrefix as stop } from "./archive-prefix.ts";
 
 const known: ReadonlySet<string> = new Set(Object.values(DOMAINS));
 export function archiveValuePlace(support: ArchiveSupport, domain: string, max: number, place: string): boolean {
-  return known.has(domain) || ARCHIVE_NATIVE_VALUE_PLACES.some(row => row.pin === support.named
-    && row.data === support.definition.digest && row.domain === domain && row.max === max && row.place === place);
+  return known.has(domain) || admitArchiveNativeValuePlace(support.named, support.definition.digest, domain, max, place);
 }
 
 /** Native/root identity was already checked against installed platform data.
