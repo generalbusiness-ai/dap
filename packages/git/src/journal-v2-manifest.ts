@@ -1,6 +1,6 @@
 /** A v2 manifest describes one bounded pass. It never indexes old passes. */
-import type { Digest, Head, ScopeRef } from "@generalbusiness/dap-contract";
-import { isDigest, isScopeRef } from "@generalbusiness/artroom-bytes";
+import type { Digest, Head, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
+import { isDigest, isScopeId, isScopeRef } from "@generalbusiness/artroom-bytes";
 import type { ArchiveRetainedName } from "./journal-path.ts";
 import { journalJSON } from "./journal-manifest.ts";
 import { journalFormat, journalId, type JournalFormat } from "./journal-objects.ts";
@@ -9,6 +9,7 @@ import { JOURNAL_V2_LAST_POSITION } from "./journal-v2-path.ts";
 import { JournalWork, refuseJournal } from "./journal-work.ts";
 
 export type JournalPassRetained = ArchiveRetainedName & { readonly pass: number };
+export interface JournalTextOmission { readonly digest: Digest; readonly bytes: number; readonly first: { readonly scope: ScopeId; readonly seq: number } }
 export interface JournalPassManifest {
   readonly v: 2;
   readonly through: Head;
@@ -16,7 +17,7 @@ export interface JournalPassManifest {
   readonly format: JournalFormat;
   readonly entries: readonly [number, number];
   readonly retained: readonly JournalPassRetained[];
-  readonly omitted: readonly { readonly kind: "text"; readonly digest: Digest; readonly reason: "detached-text" }[];
+  readonly omitted: readonly { readonly kind: "text"; readonly digest: Digest; readonly reason: "detached-text"; readonly bytes?: number; readonly first?: JournalTextOmission["first"] }[];
   readonly foreignSources?: readonly JournalForeignSource[];
 }
 export interface JournalV2Head { readonly v: 2; readonly scope: ScopeRef; readonly through: number; readonly hash: Digest }
@@ -33,7 +34,7 @@ export function journalPassManifest(body: Uint8Array, expected: JournalFormat, w
   const through = journalRecord(row["through"], ["seq", "hash"]), range = journalList(row["entries"], 2, work);
   if (row["v"] !== 2 || journalFormat(row["format"]) !== expected || !journalNatural(through["seq"]) || through["seq"] > JOURNAL_V2_LAST_POSITION
     || !isDigest(through["hash"]) || range.length !== 2 || !journalNatural(range[0]) || range[0] > through["seq"] || through["seq"] - range[0] >= 4096 || range[1] !== through["seq"]) return refuseJournal("manifest");
-  const first = range[0], parent = row["parent"] === null ? null : journalId(expected, row["parent"]);
+  const first = range[0], last = through["seq"], parent = row["parent"] === null ? null : journalId(expected, row["parent"]);
   const retained = journalList(row["retained"], 512, work).map(raw => {
     if (!raw || typeof raw !== "object" || Array.isArray(raw)) return refuseJournal("manifest");
     const record = raw as Record<string, unknown>;
@@ -43,9 +44,15 @@ export function journalPassManifest(body: Uint8Array, expected: JournalFormat, w
     return { ...journalRetainedKey(key), pass };
   });
   const omitted = journalList(row["omitted"], 8192, work).map(raw => {
-    const key = journalRecord(raw, ["kind", "digest", "reason"]);
+    const measured = raw !== null && typeof raw === "object" && (Object.hasOwn(raw, "bytes") || Object.hasOwn(raw, "first"));
+    const key = journalRecord(raw, ["kind", "digest", "reason", ...(measured ? ["bytes", "first"] : [])]);
     if (key["kind"] !== "text" || !isDigest(key["digest"]) || key["reason"] !== "detached-text") return refuseJournal("manifest");
-    return { kind: "text" as const, digest: key["digest"], reason: "detached-text" as const };
+    const omission = { kind: "text" as const, digest: key["digest"], reason: "detached-text" as const };
+    if (!measured) return omission;
+    work.metadata(256);
+    const named = journalRecord(key["first"], ["scope", "seq"]);
+    if (!journalNatural(key["bytes"]) || key["bytes"] < 2 || !isScopeId(named["scope"]) || !journalNatural(named["seq"]) || named["seq"] < first || named["seq"] > last) return refuseJournal("manifest");
+    return { ...omission, bytes: key["bytes"], first: { scope: named["scope"], seq: named["seq"] } };
   });
   const checkOrder = <T>(rows: readonly T[], key: (row: T) => string): void => {
     const names = rows.map(key), ordered = journalOrdered(rows, key, work).map(key);
@@ -63,6 +70,7 @@ export function manifestOfPass(selection: JournalPassSelection, format: JournalF
   return { v: 2, through: { ...selection.through }, parent, format,
     entries: [selection.after ? selection.after.seq + 1 : 0, selection.through.seq],
     retained: selection.objects.map(row => ({ ...row.key, pass: row.pass })),
-    omitted: selection.omitted.map(row => ({ kind: row.kind, digest: row.digest, reason: row.reason })),
+    omitted: selection.omitted.map(row => ({ kind: row.kind, digest: row.digest, reason: row.reason,
+      ...(row.bytes === undefined ? {} : { bytes: row.bytes, first: { scope: selection.at.scope, seq: Math.min(...row.consumers.map(consumer => consumer.origin.at.seq)) } }) })),
     ...(selection.foreignSources?.length ? { foreignSources: selection.foreignSources.map(source => ({ at: { ...source.at }, pin: source.pin })) } : {}) };
 }

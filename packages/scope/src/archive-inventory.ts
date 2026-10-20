@@ -15,6 +15,7 @@ import type { Sql } from "./sqlite.ts";
 import { ArchiveForeignMetadata } from "./archive-foreign.ts";
 import type { ArchiveSourceBasis, FixtureArchiveSourcePins } from "./archive-source-pins.ts";
 import { readRetainedArchivePass } from "./archive-retained-pass.ts";
+import { readArchiveTextBytes } from "./archive-text.ts";
 
 /** Loaded only from trusted reviewer/native configuration, never request
  * input. `entryTypes` is the reviewed coverage of inline signed fields and
@@ -42,7 +43,7 @@ export interface ArchiveInventory {
   readonly through: Head;
   readonly entries: readonly { readonly seq: number; readonly hash: Digest; readonly bytes: number }[];
   readonly objects: readonly ArchiveSelectedObject[];
-  readonly omittedTexts: readonly TextDependency[];
+  readonly omittedTexts: readonly (TextDependency & { readonly bytes?: number })[];
   readonly ancestryUnwalked: readonly DependencyOrigin[];
   readonly replay: "unchecked";
   readonly retention: "observed-local";
@@ -177,7 +178,7 @@ export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: 
         } else if (dependency.mode === "probe") for (const { key } of dependency.choices) if (key.kind === "definition") closureOf(key.digest);
       }
       const objects = new Map<string, { key: RetainedKey; bytes: number; consumers: RetainedDependency[]; foreign?: { fact: FactRef; pin: Digest | PlatformDefinition }; pass?: number }>();
-      const omittedTexts: TextDependency[] = [], ancestryUnwalked: DependencyOrigin[] = [];
+      const omittedTexts: (TextDependency & { readonly bytes?: number })[] = [], ancestryUnwalked: DependencyOrigin[] = [];
       const add = (key: RetainedKey, bytes: number, consumer: RetainedDependency) => {
         const name = nameOf(key), prior = objects.get(name);
         if (prior) prior.consumers.push(consumer);
@@ -207,7 +208,14 @@ export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: 
       for (const { origin, plan } of plans) {
         for (const { dependency, max } of plan.dependencies) {
           budget.check();
-          if (dependency.mode === "text") { omittedTexts.push(dependency); continue; }
+          if (dependency.mode === "text") {
+            if (after === undefined) omittedTexts.push(dependency);
+            else {
+              const bytes = readArchiveTextBytes(sql, dependency.key.digest, budget);
+              if (bytes !== null) omittedTexts.push({ ...dependency, bytes });
+            }
+            continue;
+          }
           if (dependency.mode === "probe") {
             const selected = readArchiveProbe(reader, dependency, max, bounds.definitionBytes);
             if (!selected) return stop("incomplete");

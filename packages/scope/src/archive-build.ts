@@ -12,6 +12,7 @@ import type { Sql } from "./sqlite.ts";
 import { ArchivePrefixStopped, type ArchivePrefixReason } from "./archive-prefix.ts";
 import type { FixtureArchiveSourcePins } from "./archive-source-pins.ts";
 import { ArchiveReplayAnchors } from "./archive-anchors.ts";
+import { readArchiveTextBytes } from "./archive-text.ts";
 
 type LayoutFailure = Extract<JournalLayoutResult, { ok: false }>;
 export type ArchiveBuildFailure = LayoutFailure | { readonly ok: false; readonly reason: ArchivePrefixReason | "rebuild-mismatch" | "manifest" };
@@ -27,13 +28,22 @@ export async function planArchiveConversion(sql: Sql, context: { readonly row: A
   if (!confirmed || confirmed.layout === 2 || row.pending || row.stopped || context.parent?.id !== confirmed.commit) return { ok: false, reason: "manifest" };
   const at = { ...row.at }, through = { ...confirmed.through }, commit = confirmed.commit, format = row.format;
   const parent = { ...context.parent }, markedAt = context.markedAt, fixtureSources = context.fixtureSources;
-  const selected = inventoryArchive(sql, at, through, context.bounds, context.policies, budget, fixtureSources, null);
+  // Keep the complete legacy omission set for the old-tree comparison,
+  // including texts redacted since that receipt. Count available bodies by
+  // scalar metadata only; no missing historical count is invented.
+  const selected = inventoryArchive(sql, at, through, context.bounds, context.policies, budget, fixtureSources);
   if (!selected.ok) return selected;
+  const omittedTexts = selected.inventory.omittedTexts.map(text => {
+    const bytes = readArchiveTextBytes(sql, text.key.digest, budget);
+    return bytes === null ? text : { ...text, bytes };
+  });
+  const inventory = { ...selected.inventory, format: "artroom-local-inventory-2" as const, after: null,
+    objects: selected.inventory.objects.map(object => ({ ...object, pass: 0 })), omittedTexts, cost: budget.admitted() };
   budget.spend({ inputWork: JOURNAL_SELECTION_BYTES * 3 });
-  const manifest = canonicalize(selected.inventory);
+  const manifest = canonicalize(inventory);
   if (manifest.length > JOURNAL_SELECTION_BYTES || utf8(manifest).length > JOURNAL_SELECTION_BYTES) budget.stop("limit");
   const built = await convertJournalArchiveV1({ format, selection: manifest,
-    input: archiveInput(sql, selected.inventory, budget, fixtureSources), parent, budget });
+    input: archiveInput(sql, inventory, budget, fixtureSources), parent, budget });
   if (!built.ok) return built;
   return { ...built, mark: { commit: built.archive.commit, parent: commit, through, manifest, markedAt, layout: 2 } };
 }

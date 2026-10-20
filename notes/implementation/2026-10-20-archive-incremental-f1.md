@@ -374,3 +374,43 @@ checks any journal-recorded size agreement, and still refuses unreferenced
 rows or reports `incomplete` for an unexplained missing text. This is a
 new implementation boundary for 9a integration, not work already done.
 The original incomplete replay and resource findings remain evidence.
+
+## Integrated omission metadata, first boundary
+
+Local integration merges the F1 checkpoint `dae5549e` with 9a `7c70f19f`
+as `3a20501c`. The two conflicts combine incremental positions and actual
+native-pin admission. Fresh preparation physically copied 5,499 dependency
+files and 32 contained relative links, verified all 2,640 source files and
+workspace bindings, and installed nothing. Original preparation `25824`
+exits zero, full outer 2.71 seconds / 2.19 CPU seconds. Baseline `19150`
+passes six compiler closures and three selected existing replay/conversion
+cases, full outer 9.98 / 14.81, with exact source modes and lock stamp.
+
+The v2 inventory now records the UTF-8 length of the native canonical
+retained JSON string for a detached text, using only SQLite scalar size
+metadata. This is the existing native retainedSize/ByteUsage measure.
+It is not the decoded field's length, and must not be used to pretend its
+field bound was derived. The new omission trust will state that limit.
+A missing retained row invents no count; its actual journal tombstone or
+an incomplete result must answer for it. Every metadata request spends
+an original attempt and fixed metadata work.
+
+V2 selection and pass schemas carry the count and first naming position.
+Their v1 equivalents retain their closed original shape. A conversion
+re-admits the complete legacy omission set to match the original v1 tree,
+then adds available count metadata; tombstones already in the converted
+journal remove the corresponding new omission rows. No text body is read
+for that operation. Native test `archive-text.test.ts` writes an actual
+detached text beside a signed native act, verifies encoded and decoded
+byte counts differ, guards every SQL result against returning either text
+body, checks fresh v2 metadata and unchanged v1 omission, and checks exact
+legacy conversion. Policy and authority are TEST stand-ins.
+
+The first metadata attempt `77330` stopped at the Git compiler's callback
+narrowing error before any native test (full outer 1.29 / 1.19 CPU).
+After fixing it and preserving conversion's legacy set, `85927` passes four
+Git/Scope compiler closures and the native metadata case (6.27 / 10.95).
+Each captures all 2,642 source files, exact modes and lock stamp, zero
+installs. These are complete outer time measurements, not phase sums.
+No omission-aware reader, Replay trust, completed Grow closure or adaptive
+cutoff is claimed at this boundary; those remain implementation work.

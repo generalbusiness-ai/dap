@@ -46,7 +46,13 @@ export async function convertJournalArchiveV1(options: JournalPassOptions): Prom
     // S2b basis, omissions and original manifest parent. A local prefix or
     // metadata certificate alone could not establish this equality.
     if (oldTree !== previous.tree) return refuseJournal("parent");
-    const manifest = manifestOfPass(selection, format, parent.id, work);
+    const redacted = new Set<string>();
+    for (const row of entries) for (const effect of row.entry.effects) if (effect.effect === "redact") for (const digest of effect.texts) {
+      work.metadata(128); redacted.add(digest);
+    }
+    // The old manifest remains exact above. The new one needs no omission
+    // row when this converted journal already supplies its tombstone.
+    const manifest = manifestOfPass({ ...selection, omitted: selection.omitted.filter(row => !redacted.has(row.digest)) }, format, parent.id, work);
     const manifestBytes = canonicalize(manifest);
     const headBytes = canonicalize({ v: 2, scope: selection.at, through: selection.through.seq, hash: selection.through.hash });
     if (utf8(manifestBytes).length > JOURNAL_SELECTION_BYTES) return work.stop();
