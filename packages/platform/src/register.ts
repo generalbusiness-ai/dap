@@ -54,7 +54,7 @@ import { pinnedBy } from "./versions.ts";
  * `platform:directory@2` (`versions.ts`). The `operation` effects of its
  * rules state the scope's own version as their owner.
  */
-export const DIRECTORY_OF: Readonly<Record<string, PlatformDefinition>> = { "platform:register@1": "platform:directory@1", "platform:register@2": "platform:directory@2", "platform:register@3": "platform:directory@3", "platform:register@5": "platform:directory@5", "platform:register@6": "platform:directory@6", "platform:register@7": "platform:directory@3", "platform:register@8": "platform:directory@7", "platform:register@9": "platform:directory@8", "platform:register@10": "platform:directory@9", "platform:register@11": "platform:directory@10", "platform:register@12": "platform:directory@11", "platform:register@13": "platform:directory@12", "platform:register@16": "platform:directory@15" };
+export const DIRECTORY_OF: Readonly<Record<string, PlatformDefinition>> = { "platform:register@1": "platform:directory@1", "platform:register@2": "platform:directory@2", "platform:register@3": "platform:directory@3", "platform:register@5": "platform:directory@5", "platform:register@6": "platform:directory@6", "platform:register@7": "platform:directory@3", "platform:register@8": "platform:directory@7", "platform:register@9": "platform:directory@8", "platform:register@10": "platform:directory@9", "platform:register@11": "platform:directory@10", "platform:register@12": "platform:directory@11", "platform:register@13": "platform:directory@12", "platform:register@14": "platform:directory@13", "platform:register@15": "platform:directory@14", "platform:register@16": "platform:directory@15", "platform:register@17": "platform:directory@16" };
 /** The newest version of the register: the one under which `install` creates a register. */
 export const REGISTER = "platform:register@2" satisfies PlatformDefinition;
 /** The directory that the newest register creates. */
@@ -67,6 +67,8 @@ const KEY = { type: "text", max: 64 } as const;
 const NAME = { type: "text", max: 256 } as const;
 const POLICY = { type: "enum", of: ["keys", "open"] } as const;
 const CREATORS = { type: "list", of: KEY, max: 32 } as const;
+/** Room archive binding; absence means the room is not bound. */
+export const ARCHIVE = { type: "enum", of: ["journal"] } as const;
 
 /** The record of a repository at the Git host: its host, namespace, name and ID (section 12.1.1, the slot `claim.repository`). The directory and the destination hold the same record. */
 export const REPOSITORY = {
@@ -423,6 +425,7 @@ export const registerRules: Rules = {
         claim: { at: given.resolved.at, seq: opening.entry.seq, hash: opening.hash },
         repository: { host: held.values["host"]!, namespace: held.values["namespace"]!, name: body["name"] as string, id: body["id"] as string },
         branch, "founderHandle": creatorHandle, recoveryKey, ...(intent.fields["import"] === undefined ? {} : { import: intent.fields["import"] }),
+        ...(intent.fields["archive"] === undefined ? {} : { archive: intent.fields["archive"] }),
       };
       return { to: seed, message: { class: "request", type: "create", body: { fields } } };
     },

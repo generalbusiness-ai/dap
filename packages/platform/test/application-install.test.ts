@@ -13,11 +13,11 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { Rulebook } from "./support-rules.ts";
 
-async function fixture() {
+async function fixture(requireArchive = false) {
   const id = definitionDigest(countingCommitments);
   const packet = await packApplication({ name: "test.install", version: "1", semantic: {
     v: 1, entry: id, definitions: [{ id, bytes: canonicalize(countingCommitments) }],
-    host: { execution: "recorded-do", profiles: ["restricted@1"] }, capabilities: [],
+    host: { execution: "recorded-do", profiles: ["restricted@1"], ...(requireArchive ? { requires: ["archive"] as const } : {}) }, capabilities: [],
     roles: { member: ["counting.fulfill"] }, projections: {}, predecessor: null,
   }, presentation: { v: 1, entry: "index.html", assets: [{ path: "index.html", mediaType: "text/html", bytes: "VEVTVA" }], descriptions: {} } }, { key: keyIdOfSecret(new Uint8Array(32).fill(64)), sign: bytes => sign(new Uint8Array(32).fill(64), bytes) });
   const declarationText = canonicalize(countingCommitments);
@@ -145,6 +145,32 @@ test.each([false, true])("checked native grant route stages exact custody before
   expect(M.item(0).values["adminActions"]).not.toContain("counting.fulfill");
   expect(A.replay().snapshot()).toEqual(A.state.snapshot());
   expect(M.replay().snapshot()).toEqual(M.state.snapshot());
+});
+
+test.each([false, true])("an archive requirement checks the room binding before grants (bound=%s)", async bound => {
+  const { installGraph } = await import("./support-application-install.ts");
+  const { ARCHIVE_APPLICATION_COHORT } = await import("../src/index.ts");
+  const { A, D, M, send } = installGraph(ARCHIVE_APPLICATION_COHORT);
+  const { packet, values, texts, fields } = await fixture(true);
+  const installer = { ...keys.rita, member: { membership: M.at, member: "@rita" as const } };
+  if (bound) expect(D.act(installer, "bind-archive", { on: 0, expected: { on: D.item(0).revision }, fields: { archive: "journal" } }, { membership: M.at })).toMatchObject({ result: "write" });
+  expect(A.act(installer, "install-application", { fields }, { values, texts, membership: M.at })).toMatchObject({ result: "write" });
+  const job = A.head.seq, before = M.state.snapshot();
+  const stored = A.outcome(`${job}:0`, { uri: fields.uri, ...packet.ids, publisher: packet.package.release.manifest.publisher, policy: d("c") });
+  const accepted = A.outcome(`${stored}:0`, { uri: fields.uri, ...packet.ids, publisher: packet.package.release.manifest.publisher, policy: d("c") });
+  A.texts = texts; send(D, A, accepted);
+  expect(M.state.snapshot()).toEqual(before);
+  if (bound) {
+    expect(D.last.input).toMatchObject({ decision: "applied" });
+    expect(D.state.page("application-catalog", ["retained"], null, 16).items).toHaveLength(1);
+  } else {
+    expect(D.last.input).toMatchObject({ decision: "refused", reason: { name: "archive-unavailable" } });
+    expect(D.state.page("application-catalog", ["retained"], null, 16).items).toHaveLength(0);
+    const deciding = D.head.seq, answer = D.last.sends.find(send => send.message.class === "result")!;
+    send(A, D, deciding, answer.n);
+    expect(A.item(job)).toMatchObject({ state: "refused", values: { reason: "archive-unavailable" } });
+    expect(send(A, D, deciding, answer.n, false)).toMatchObject({ result: "repeat" });
+  }
 });
 
 

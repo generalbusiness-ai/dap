@@ -100,9 +100,10 @@ Each card describes three kinds of content:
 - **Custody** is a kept copy of the documents themselves, in Git or with
   another keeper.
 
-The [roadmap](roadmap.md#durability-levels) calls the matching levels
-live, recorded and archived. A journal entry that points at a document by
-its hash does not keep the document. Keeping it needs the bytes, rules
+The [roadmap](roadmap.md#durability-levels) distinguishes scope durability
+from the room's archive binding. Execution currently supports Recorded;
+Live and Sequenced remain unsupported. A journal entry that points at a
+document by its hash does not keep the document. Keeping it needs the bytes, rules
 about who may read them, and a retention period. Sensitive documents need
 private custody.
 

@@ -31,7 +31,7 @@ test("the client's invitation link is the command line's", async () => {
   }
   // A person link must reject unusable proof input before touching private custody, just as an agent link does.
   const seed = b64url(new Uint8Array(32));
-  for (const definition of ["platform:membership@6", "platform:membership@7"]) {
+  for (const definition of ["platform:membership@6", "platform:membership@7", "platform:membership@8"]) {
   for (const secret of ["not-a-seed", b64url(new Uint8Array(31)), seed.slice(0, -1) + "B", seed + "="]) {
     expect(await command(ctx, ["join", text({ ...link, definition, secret })])).toMatchObject({ code: 2 });
   }

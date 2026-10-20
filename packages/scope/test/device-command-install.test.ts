@@ -5,15 +5,15 @@ import { env, runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { DEVICE_COMMAND, PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { ownerReservations, reserved, validateDefinition } from "@generalbusiness/dap-derive";
-import { canonicalize, definitionDigest, isSeed, scopeIdOf } from "@generalbusiness/artroom-bytes";
-import { packApplication2, readApplicationProjection } from "@generalbusiness/artroom-bytes/application-v2";
+import { b64url, canonicalize, definitionDigest, isSeed, scopeIdOf, timeOf, utf8 } from "@generalbusiness/artroom-bytes";
 import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-mcp";
-import { DEVICE_APPLICATION_COHORT as C, platform } from "@generalbusiness/dap-platform";
-import { secretSigner } from "@generalbusiness/artroom-client";
+import { DEVICE_APPLICATION_COHORT as C, ARCHIVE_DEVICE_APPLICATION_COHORT as AC, platform } from "@generalbusiness/dap-platform";
+import { secretSigner, applicationScreenPath, invitationIssueFields, readApplicationInvitation, readApplicationScreenAddress, readApplicationScreenContext } from "@generalbusiness/artroom-client";
 import { httpSource, verify } from "@generalbusiness/artroom-replay";
 import { CAPABILITY_CODE } from "../src/ports.ts";
 import { net } from "../src/testing.ts";
 import { SqliteStore } from "../src/sqlite.ts";
+import { deviceApplicationPacket } from "./support/device-application-fixture.ts";
 import { deviceCommandFixture } from "../../derive/test/fixtures-device-command.ts";
 import { outsideOf as hostOutside } from "../src/worker.ts";
 import { applicationResolverFixture } from "./support/application-fixture.ts";
@@ -22,17 +22,12 @@ import { sessionRoom } from "./support/session-room.ts";
 import { dispatchFixture, driveFixture, effectFixture } from "./support/native-fixture-lifetime.ts";
 import { rita, routed } from "./repository.ts";
 import { reader } from "./support.ts";
+import worker from "../../../apps/room/worker.ts";
 
-test("a native install checks its existing owner and preserves its command grant through SQLite restart", async () => {
+test.each([["device", C, undefined, false], ["device/archive bound", AC, "journal", true], ["device/archive unbound", AC, undefined, false]] as const)("a native install checks its existing owner and preserves its command grant through SQLite restart (%s)", async (_label, C, archive, requiresArchive) => {
   const id = definitionDigest(deviceCommandFixture);
-  const packet = await packApplication2({ name: "test.device-native", version: "1", semantic: {
-    v: 2, entry: id, definitions: [{ id, bytes: canonicalize(deviceCommandFixture) }],
-    host: { execution: "recorded-do", profiles: ["restricted@1"] },
-    capabilities: [{ name: DEVICE_COMMAND, bounds: { kinds: ["heater"], owners: 1 } }],
-    roles: { admin: ["command", "start"] }, projections: { root: readApplicationProjection({ v: 1, definition: id, revision: "revision",
-      sources: { root: { item: "root", read: "one", states: ["ready"], limit: 1, fields: {} } } }) }, predecessor: null,
-  }, presentation: { v: 2, entry: "index.html", assets: [{ path: "index.html", mediaType: "text/html", bytes: "VEVTVA" }], descriptions: {}, views: {}, resources: {} } }, secretSigner(new Uint8Array(32).fill(81)));
-  const room = await sessionRoom(C.register), { life, R, D, children } = room, [M, A, G] = children;
+  const packet = await deviceApplicationPacket(requiresArchive, C === AC);
+  const room = await sessionRoom(C.register, archive), { life, R, D, children } = room, [M, A, G] = children;
   if (!M || !A || !G) throw Error("The device cohort needs its exact siblings.");
   const f = await applicationResolverFixture("sha1", undefined, {}, undefined, packet), peer = applicationHttpPeer(f);
   const bindings = { SCOPES: env.PLATFORM, APPLICATION_CONTENT: env.APPLICATION_CONTENT, APPLICATION_TRUST: JSON.stringify(f.trust) };
@@ -78,7 +73,42 @@ test("a native install checks its existing owner and preserves its command grant
     expect(await life.wait(() => app.stub.deliver({ to: creation.to, from: birth.from, n: creation.n, message: creation.message }))).toMatchObject({ answer: "recorded" });
     await driveFixture([R, D, M, A, G, app], life.wait);
     const scope = await life.wait(() => app.at());
+    const nativeRoom = await life.wait(() => (D.object as unknown as { applicationRoom(): Promise<unknown> }).applicationRoom());
+    expect(nativeRoom).toEqual({ directory, rules: await life.wait(() => A.at()) });
+    const projection = await life.wait(() => (A.object as unknown as { applicationProjectionDeclaration(directory: import("@generalbusiness/dap-contract").ScopeRef, item: number, name: string): Promise<unknown> }).applicationProjectionDeclaration(directory, job, "root"));
+    expect(projection).toMatchObject({ projection: packet.package.semantic.projections["root"] });
+    const metadata = await life.wait(() => mcp.call("application_installation", { item: job }));
+    expect(metadata.isError, JSON.stringify(metadata.structuredContent)).toBe(false);
+    expect(metadata.structuredContent).toMatchObject({ item: job, state: "active", scope, semantic: packet.ids.semantic, release: packet.ids.release, presentation: packet.ids.presentation });
+    expect(metadata.structuredContent["screen"]).toBe("https://scopes.test" + applicationScreenPath(directory.scope, job, packet.ids.presentation));
+    // Invariant: the combined cohort serves the signed declared record from
+    // its actual native installation, projection and membership standing.
+    if (C === AC) {
+      const views = new McpService({ ...port, custody: memoryStore(), declaredViews: { bytes: packet.bytes, release: packet.ids.release, item: job } });
+      const opened = await life.wait(() => views.call("view_root", { view: "TEST-combined-device" }));
+      expect(opened.isError, JSON.stringify(opened.structuredContent)).toBe(false);
+      const detail = await life.wait(() => views.call("view_read", { view: "TEST-combined-device" }));
+      expect(detail.isError, JSON.stringify(detail.structuredContent)).toBe(false);
+      expect(detail.structuredContent).toMatchObject({ display: { status: "ready", card: {
+        identity: { item: "0", kind: "root", revision: "1", subject: { scope: scope.scope, item: 0 }, at: { on: 1 } },
+        declared: { kind: "record", scope, data: { scope, sources: { root: [{ id: 0, type: "root", state: "ready", revision: 1 }] } } },
+      } } });
+    }
     expect(await life.wait(() => A.item(job))).toMatchObject({ state: "active", refs: { scope } });
+    // Invariant: the real HTTP context names this cohort's Membership pin,
+    // so its production invitation reader accepts an actually issued link.
+    // Parsing a link here is not enrollment; the native CLI owns that story.
+    const screen = applicationScreenPath(directory.scope, job, packet.ids.presentation);
+    const response = await life.wait(() => worker.fetch(new Request(port.service + screen + "_/context"), bindings));
+    expect(response.status).toBe(200);
+    const context = readApplicationScreenContext(await response.json(), readApplicationScreenAddress(screen)!, port.service);
+    expect(context).toMatchObject({ directory, membership, scope, membershipDefinition: C.membership });
+    const secret = b64url(new Uint8Array(32).fill(79)), handle = "@screen-join";
+    const invitation = await life.wait(() => M.did(rita, "invite-member", { fields: { handle, role: "member", inviteEnds: timeOf(life.now() + 3_600_000), ...invitationIssueFields(C.membership, secret) } }));
+    const link = { v: 1, service: port.service, definition: C.membership, repository: { directory, membership, rules: A.name, destination: G.name }, invitation, secret, handle };
+    const encoded = (value: unknown) => "artroom-invite:" + b64url(utf8(canonicalize(value)));
+    expect(readApplicationInvitation(context, encoded(link))).toMatchObject({ ok: true, seat: { directory, membership, handle } });
+    expect(readApplicationInvitation(context, encoded({ ...link, definition: C === AC ? "platform:membership@7" : "platform:membership@8" })).ok).toBe(false);
     const device = await life.wait(() => app.did(rita, "commission", { fields: { kind: "heater" } }));
     const command = await life.wait(async () => app.did(rita, "command", { on: device, expected: await app.expected({ on: device }), fields: { target: "on", level: 80 } }));
     const commandFact = (await life.wait(() => app.sealed())).find(sealed => sealed.entry.seq === command);
@@ -90,6 +120,9 @@ test("a native install checks its existing owner and preserves its command grant
     const origin = platform(C.destination)!.applicationPublicationOrigin!;
     expect(origin({ at: scope, seq: command, hash: commandFact.hash }, directory, await life.wait(() => G.at()), facts)).toBe(true);
     expect(platform("platform:destination@8")!.applicationPublicationOrigin!({ at: scope, seq: command, hash: commandFact.hash }, directory, await life.wait(() => G.at()), facts)).toBe(false);
+    if (C === AC) for (const pin of ["platform:destination@10", "platform:destination@11"] as const) {
+      expect(platform(pin)!.applicationPublicationOrigin!({ at: scope, seq: command, hash: commandFact.hash }, directory, await life.wait(() => G.at()), facts)).toBe(false);
+    }
     for (let n = 0; n < bounds.scopeEntries - 7; n++) await life.wait(async () => app.did(rita, "report", { on: device, expected: await app.expected({ on: device }), fields: { reported: 20 } }));
     const checked = validateDefinition(deviceCommandFixture, bounds);
     if (!checked.ok) throw Error("The native fixture declaration must validate.");

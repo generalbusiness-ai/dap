@@ -18,7 +18,7 @@ import type { CapabilityName } from "./capability.ts";
 
 /** One pinned durability requirement. Unsupported levels refuse whole-definition admission. */
 export interface DurabilityLevel {
-  name: "live" | "recorded" | "archived";
+  name: "live" | "recorded" | "sequenced";
   version: 1;
 }
 
@@ -30,7 +30,7 @@ export interface CapacityVersion {
 
 export interface DeclaredDefinition {
   format: "artroom-definition-1";
-  /** Absent means recorded. Explicit recorded has its own bytes and digest; live/archived execution is not yet supported. */
+  /** Absent means recorded. Explicit recorded has its own bytes and digest; live/sequenced execution is not yet supported. */
   level?: DurabilityLevel;
   /** Omission keeps entries-only admission and replay. Whole-scope counts all five logical dimensions. */
   capacity?: CapacityVersion;
