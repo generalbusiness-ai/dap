@@ -10,7 +10,9 @@ repair addresses all three after adopting that complete verdict as
 fresh review `8c0c866f` of final `183c444d` confirmed those corrections and
 requested one further cycle correction for vacuous universal list guards.
 This new physical copy addresses that finding after adoption `6e1ae250`.
-Owning checks pass; its new ordinary gate remains due. All prior gates are
+Owning checks and its new ordinary gate at `ba17ce7e` pass. The final
+candidate changes this report only afterward; complete fresh review remains
+due. All prior gates are
 historical for this changed code, including the pass at `a4967d67`.
 The earlier `32f7537e` integration on Main `8aad37bb` is historical.
 
@@ -1226,8 +1228,8 @@ Every subsequent phase preserves its own complete physical source input.
 There were zero installations and the lock stamp stayed exact.
 
 The first new baseline, `70030`, naturally failed two fixture-validity
-assertions, with nine filter skips. An unneeded positive `has` fixture was
-not native-valid. This is not evidence of the reported graph fault. Its
+assertions, with nine filter skips. An unneeded positive `has` fixture omitted its required `where` field and
+was not native-valid. This is not evidence of the reported graph fault. Its
 full 2,611-file input and results remain separate. The positive fixture was
 replaced with the already valid unfiltered nonempty `each` form; the native
 validity assertions were unchanged.
@@ -1293,3 +1295,39 @@ preserves all other bytes from code commit `03af6f9c`. This source now has
 2,612 tracked files and all current Main paths. The forthcoming gate runs
 this integrated source rather than claiming that an earlier gate tested
 a later composition. The report update after integration changes no code.
+
+
+### Original integrated quantifier gate
+
+Original process `83219` closed naturally with exit 0 and verification 0
+at `ba17ce7e89b5bd54fec693b94a40d0f3fc30a070`, tree
+`f5813d6933fbf55bbf39a7032a6b116a07b67e2b`. All compiler, helper and
+whitespace checks pass. Vitest passes 2,015 cases with three existing skips,
+422 passed files and one skipped file; the chained 33 Node and 55 Counter
+checks also pass. The ordinary gate ran once for this changed code.
+
+Whole pipeline: 508.936438416 wall / 751.775997 child CPU seconds, shared
+warm macOS 27.0.1 arm64, Node 26.12/npm 11.20, initial load
+1.3062/1.2085/1.3447. It is not an exclusive-host or stability measurement.
+All 2,612 source bytes and modes stayed exact, the checkout stayed clean at
+the same head, the lock stamp matched and all 5,531 dependency rows stayed
+exact apart from the owned Vite results cache. There were zero installs.
+The full physical input was captured before launch at
+`/tmp/p1-quantifier-repair-gate-inputs-20261020`; this is not a later
+reconstruction or a replay.
+
+The original phase directory is
+`/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.4uC37ED5DL`.
+Its test log is 17,584 bytes, SHA-256
+`24881ee2b279f8c2c5df1f3056ec041239d82f4b70282256b5d1b1aedaefe973`.
+All eight phase files have recorded sizes, hashes and modes in the
+closure. Raw runtime, storage and Git diagnostics remain unclassified.
+The helper's observed external exit 0 is retained separately from the
+original npm gate closure.
+
+Final report-only publication will preserve this exact tested source and
+current Main's History note. Complete fresh review still covers all 86
+authored paths, with this primary first in full and all findings together.
+No prior approval is extended. Independent native source/lifecycle and
+original-process audits still precede any authorized publication. Planner
+alone owns Cloudflare deployment.
