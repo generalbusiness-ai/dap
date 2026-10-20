@@ -283,3 +283,31 @@ All B1 owning checks are now prepared/passing with the qualifications above;
 the full gate and exact-head Source review remain due. This mutable
 checkpoint is saved while the builder handles the commissioned public Grow
 host-link/config follow-up in a separate head with no runtime changes.
+# Incorporate published Main, 20 October
+
+From B1 checkpoint `0217aaa8`, the private worktree incorporates reviewed
+and published Main `c7aaa3ab`, retaining K2's fixture consolidation and
+the Grow host-link/config follow-up. The original no-commit merge exits
+one at the fact-time package fixture. All three original stages are in
+`/tmp/b1-current-main-conflict-stages-20261020/manifest.json`.
+
+The resolution starts from exact incoming Main. It keeps `fixedSigner(67)`
+and adds only B1's nullable `seenBy` fact-signer field and separate signer
+projection. All other incoming fixture bytes are unchanged. The receipt
+is `/tmp/b1-current-main-conflict-resolution-20261020.json`. No native
+assertion, role, case matrix, deadline, limit or grant is removed.
+
+The full project typecheck passes naturally, original process 69303
+(`/tmp/b1-current-main-types-20261020.log`). Original owning process 51955
+then passes both native files and both cases: the retained/hash/legacy
+fact-signer witness and actual maintained Grow person-prober/member
+display scenario. Native wall time is 11.322250208 seconds; child CPU is
+12.694892 seconds. The pool guard recognizes the existing copied pinned
+bundle without changing it. Logs and natural closure are
+`/tmp/b1-current-main-focused-20261020*`.
+
+These local checks keep their TEST Git/clock/scheduler and native-owner
+fault boundaries. They do not repeat a full gate or establish a browser,
+provider, hosted, stability or drain result. Current-Main incorporation
+continues before B1's one final ordinary gate and complete Source review.
+

@@ -3,9 +3,7 @@
 import { expect, test } from "vitest";
 import { factRefOf } from "@generalbusiness/artroom-bytes";
 import { capacityFull, holdCapability, judgeDelivery, ownerReservations, validateDefinition } from "../src/index.ts";
-import { arriving, created, forged, keys, valid } from "./fixtures.ts";
-import { receiverPinData, PIN_BOUNDS } from "./fixtures-receiver-pins.ts";
-import { boundRecordData } from "./fixtures-bound-records.ts";
+import { arriving, created, forged, keys, valid, receiverPinData, PIN_BOUNDS, boundRecordData } from "./fixtures-entry.ts";
 
 test("suppressing a reserved export decision settles its pin, fits the reserved boundary and repeats without another debit", () => {
   for (const order of ["source", "arrival"] as const) {

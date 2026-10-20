@@ -1,17 +1,17 @@
 import { readFile } from "node:fs/promises";
 import { expect, test } from "vitest";
 import { digestBytes, utf8 } from "@generalbusiness/artroom-bytes";
-import { secretSigner } from "@generalbusiness/artroom-client";
 import { LEGACY, MODERN, McpService, ViewResources, Wire, memoryStore, newSession, type PresentationPackage } from "../src/index.ts";
 import { sandboxDomain } from "../src/views/hosts.ts";
 import { PRESENTATION } from "../src/views/generated.ts";
 import { MODULE, viewModule } from "../scripts/views.mjs";
 import { StandIn, SERVICE } from "./support/standin.ts";
+import { fixedSigner } from "./fixtures.ts";
 
 // Invariant: each wire serves the actual single-file package bytes with its policy; corrupt bytes are never served.
 test("both MCP revisions serve package-checked resources and preserve declared policy", async () => {
   const fixture: PresentationPackage = { domain: "policy-fixture", resources: [{ uri: "ui://fixture/card", name: "fixture", description: "A policy fixture", text: "<!doctype html><p>fixture</p>", digest: digestBytes(utf8("<!doctype html><p>fixture</p>")), ui: { csp: { connectDomains: ["https://data.example"], resourceDomains: ["https://assets.example"], frameDomains: ["https://frames.example"], baseUriDomains: ["https://base.example"] }, permissions: { camera: {} }, prefersBorder: false } }] };
-  const signer = secretSigner(new Uint8Array(32).fill(11));
+  const signer = fixedSigner(11);
   for (const version of [LEGACY, MODERN]) {
     const service = new McpService({ service: "https://scopes.test", signer, custody: memoryStore(), config: { read: async () => ({ service: "https://scopes.test" }), addRoot: async () => {} }, presentation: fixture });
     const wire = new Wire(service), session = newSession(null);
@@ -55,7 +55,7 @@ test("the four production resources are fresh self-contained HTML", async () => 
 
 // Invariant: capability negotiation changes the listed surface and cursor profile, not native authority or private data.
 test("both revisions provide text fallback and bind paging to the host's UI capability", async () => {
-  const signer = secretSigner(new Uint8Array(32).fill(12));
+  const signer = fixedSigner(12);
   const standIn = new StandIn(signer.key); // Scripted inventory, not a native authority witness.
   const service = new McpService({ service: SERVICE, signer, fetch: standIn.fetch, config: { read: async () => standIn.config(), addRoot: async () => {} }, custody: memoryStore(), listPageBytes: 4096, views: { read: async () => ({ status: "empty", position: 0, count: 0, fallback: "Nothing needs you." }) } });
   const capable = { extensions: { "io.modelcontextprotocol/ui": { mimeTypes: ["text/html;profile=mcp-app"] } } };

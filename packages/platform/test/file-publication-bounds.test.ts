@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { publicationJourney } from "./support-publication-journey.ts";
+import { publicationJourney } from "./fixtures-entry.ts";
 const { make, file, answer, reserve } = publicationJourney();
 const changeReceipt = (ledger: ReturnType<typeof make>) => { const { publication, push } = reserve(ledger); answer(ledger, push, { send: "accepted", seen: publication.values["integration"]! }); expect(ledger.state.count("receipt", "owed")).toBe(1); };
 

@@ -6,7 +6,7 @@ import { env } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { resolveAndStoreApplication, resolveTrustedApplication } from "../src/applications/resolve.ts";
-import { applicationResolverFixture as fixture } from "./support/application-fixture.ts";
+import { applicationResolverFixture as fixture } from "./fixtures-native.ts";
 const utf8 = new TextEncoder();
 // Invariant: immutable URI resolution and trust precede any private store write;
 // existing cached bytes cannot substitute for checking the requested Git URI.

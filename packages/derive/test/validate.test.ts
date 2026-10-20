@@ -3,7 +3,7 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { DeclaredDefinition } from "@generalbusiness/dap-contract";
 import { canonicalBytes, definitionDigest } from "@generalbusiness/artroom-bytes";
 import { timedGraph, validateDefinition, type ProblemCode } from "../src/index.ts";
-import { Scope, desk, fields, keys, lane, laneDefinition, member, on, small, smallDefinition, t, ticket, valid } from "./fixtures.ts";
+import { Scope, desk, fields, keys, lane, laneDefinition, member, on, small, smallDefinition, t, ticket, valid } from "./fixtures-entry.ts";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Change = (d: any) => void;

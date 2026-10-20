@@ -6,7 +6,7 @@ import { sendOnce } from "../src/github-host.ts";
 import type { DestinationProvider } from "../src/destination-host.ts";
 import { SqliteStore, type EffectRequest } from "../src/index.ts";
 import { pushOf, wired } from "./outside.ts";
-import { type Lane, START, create } from "./support.ts";
+import { type Lane, START, create } from "./fixtures-native.ts";
 import { open } from "./operation-opening.ts";
 
 const surface = (s: Lane) => s.object as unknown as { effect(): Promise<number> };

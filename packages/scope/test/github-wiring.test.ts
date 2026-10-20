@@ -9,7 +9,7 @@ import { gitHubOutside, type GitHubBindings } from "../src/github-wiring.ts";
 import { outsideOf } from "../src/worker.ts";
 import type { OutsideGiven } from "../src/object.ts";
 import { NO_OUTSIDE, type EffectRequest } from "../src/operations.ts";
-import { create } from "./support.ts";
+import { create } from "./fixtures-native.ts";
 
 const ACCOUNT = { id: 285042784, login: "generalbusiness-ai", type: "Organization" } as const;
 const CONFIG = { issuer: "Iv1.scripted", installationId: 99, account: ACCOUNT, maxBytes: 1024 * 1024, privateRepositories: true, publicReads: false, credentialIdentity: "adapter-attempt" };

@@ -11,7 +11,7 @@ import { archiveSource, verifyArchive } from "@generalbusiness/artroom-replay";
 import { ArchiveBudget } from "../src/archive-budget.ts";
 import { ArchiveDriver, type ArchiveCredential, type FixtureArchiveProvider, type ArchiveSend } from "../src/archive-driver.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
-import { at, create, rita, una, type Lane } from "./support.ts";
+import { at, create, rita, una, type Lane } from "./fixtures-native.ts";
 import { archiveDefinition, archivePolicies, archiveRepository, archiveSql } from "./support/archive.ts";
 import { fixtureArchiveWiring } from "./worker.ts";
 

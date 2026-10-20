@@ -18,8 +18,7 @@ import { partitionApplicationPublicationOrigin } from "../../platform/src/partit
 import { counting } from "../../../apps/counter/definition.ts";
 import { COUNTING_DEFINITION } from "../../../apps/counter/pin.ts";
 import { rita, una } from "./repository.ts";
-import { sessionRoom } from "./support/session-room.ts";
-import { dispatchFixture } from "./support/native-fixture-lifetime.ts";
+import { sessionRoom, dispatchFixture } from "./fixtures-native.ts";
 
 // Actual register11/root10/M6/R3/D6/partition1 scopes, production Authority,
 // data, rules, SQLite, dispatch and restart. Existing sessionRoom's register

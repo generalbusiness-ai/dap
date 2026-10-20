@@ -10,7 +10,7 @@ import { sessionReferencesIn } from "../src/namespace.ts";
 import { mintSession, readerOf, sessionsOf } from "../src/sessions.ts";
 import { SqliteStore, type Sql } from "../src/sqlite.ts";
 import { testPorts } from "../src/testing.ts";
-import { at, create, rita, type Lane } from "./support.ts";
+import { at, create, rita, type Lane } from "./fixtures-native.ts";
 
 const sqlOf = (state: DurableObjectState): Sql => ({ exec: (query, ...args) => state.storage.sql.exec(query, ...args), transaction: work => state.storage.transactionSync(work) });
 const sessions = sessionsOf("a synthetic bounded reference test secret", "bounded-reference-test")!;

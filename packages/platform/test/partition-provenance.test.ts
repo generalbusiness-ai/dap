@@ -3,7 +3,7 @@ import { definitionDigest, isPlatformDefinition, newIncarnation } from "@general
 import { sourceName } from "../src/publishing-provenance.ts";
 import { partitionApplicationPublicationOrigin, partitionPublishingLaneOrigin, partitionSourceName, partitionCreationPolicy, partitionDeclaredCreationPolicy, type PartitionNativeFrame } from "../src/partition-provenance.ts";
 import { small } from "@generalbusiness/dap-derive/testing";
-import { scriptedPartitionOrigin } from "./support-partition-origin.ts";
+import { scriptedPartitionOrigin } from "./fixtures-entry.ts";
 
 const raw = (sample: ReturnType<typeof scriptedPartitionOrigin>): PartitionNativeFrame[] => sample.frames.map(copy => {
   const born = sample.frames.find(row => row.fact.seq === 0 && row.fact.at.scope === copy.fact.at.scope)!.entry.input;

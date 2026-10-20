@@ -12,7 +12,7 @@ import { CAPABILITY_CODE } from "../src/ports.ts";
 import { controls } from "../src/testing.ts";
 import { route } from "../src/worker.ts";
 import { wired } from "./outside.ts";
-import { Lane, START, at, objectOf, reader, rita, stubOf } from "./support.ts";
+import { Lane, START, at, objectOf, reader, rita, stubOf } from "./fixtures-native.ts";
 
 test.each([false, true])("a native bound decision reserves only its actual record producer and settles at the record ceiling (first key %s)", async firstKey => {
   // Real scopes, native holder binding/capability code, SQLite and HTTP

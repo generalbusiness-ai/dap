@@ -3,8 +3,7 @@ import type { FactRef } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest } from "@generalbusiness/artroom-bytes";
 import { firstExtents } from "@generalbusiness/dap-platform";
 import { pantry } from "./support/pantry.ts";
-import { mcpRoom, type Agent, type Room } from "./support/room.ts";
-import { created } from "./support/story.ts";
+import { mcpRoom, type Agent, type Room, created } from "./fixtures-native.ts";
 
 /** Whether `name` is an own property of `v`, with that value: not lost to the prototype setter, and not the prototype. */
 const own = (v: unknown, name: string): unknown => (v !== null && typeof v === "object" && Object.hasOwn(v, name) ? Object.getOwnPropertyDescriptor(v, name)!.value : "(not own)");

@@ -5,7 +5,7 @@ import { intentDigest, isSealed } from "@generalbusiness/artroom-bytes";
 import { JOB_READ_ACTION, WINDOWS, capabilitiesOf, clockOf, gitRead, holdCapability, judgePreparation, ownerReservations, preparationStatus, reserved, settleOutcome } from "../src/index.ts";
 import type { GrantDecision, Steps, Window } from "../src/index.ts";
 import { kindOf } from "../src/operand.ts";
-import { Scope, grantOf, keys, lane, laneDefinition, on, otherLane, t, variant } from "./fixtures.ts";
+import { Scope, grantOf, keys, lane, laneDefinition, on, otherLane, t, variant } from "./fixtures-entry.ts";
 
 const { una, vic, paul, sam } = keys;
 

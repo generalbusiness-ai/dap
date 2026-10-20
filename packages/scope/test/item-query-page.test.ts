@@ -11,7 +11,7 @@ import { production } from "../src/ports.ts";
 import { ReadPreparation } from "../src/read-preparation.ts";
 import { SqliteStore, type Sql } from "../src/sqlite.ts";
 import { testPorts } from "../src/testing.ts";
-import { at, create, rita, type Lane } from "./support.ts";
+import { at, create, rita, type Lane } from "./fixtures-native.ts";
 
 const sqlOf = (state: DurableObjectState): Sql => ({ exec: (query, ...args) => state.storage.sql.exec(query, ...args), transaction: work => state.storage.transactionSync(work) });
 function frameOf(lane: Lane, state: DurableObjectState) {

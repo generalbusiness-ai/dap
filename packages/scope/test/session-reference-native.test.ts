@@ -8,7 +8,7 @@ import { sessionReferenceReply } from "../src/session-reference.ts";
 import type { QueryVisibility } from "../src/session-preparation.ts";
 import { PreparationBudget, type PreparationCost } from "../src/preparation-budget.ts";
 import { net } from "./net.ts";
-import { sessionCohorts, sessionRoom } from "./support/session-room.ts";
+import { sessionCohorts, sessionRoom } from "./fixtures-native.ts";
 import { TEST_DEPLOYMENT, type PlatformScope } from "./worker.ts";
 
 /** Native register/directory/membership/rules/destination judgments and RPC.

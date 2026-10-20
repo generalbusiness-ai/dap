@@ -23,7 +23,7 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Digest, Entry, KeyId, MemberId, ObservationUse, Observe, PlatformData, PlatformDefinition, RulesContent, ScopeRef, Seed } from "@generalbusiness/dap-contract";
 import { newIncarnation, scopeIdOf } from "@generalbusiness/artroom-bytes";
 import { PROFILES, validateDefinition, type ContentStates, type FirstStep, type OutcomeRule, type PlatformRules, type RuleEffect, type RuleGiven, type Rules, type ValidDefinition } from "../src/index.ts";
-import { T0, d, membership, valid } from "./fixtures.ts";
+import { T0, changedDraft, d, membership, valid } from "./fixtures.ts";
 
 const MEMBER = { type: "member" } as const;
 const LANE_FACT = { type: "fact", kind: ["decide"], under: "lane" } as const;
@@ -124,8 +124,7 @@ export const WEIGHER = "platform:task@1" as PlatformDefinition;
 /** What validating the made-up data with one change gives, with the platform option or as a declared definition. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const weighed = (change: (data: any) => void = () => {}, platform = true) => {
-  const data = structuredClone(weigher);
-  change(data);
+  const data = changedDraft(weigher, change);
   return validateDefinition(data, PROPOSED_BOUNDS, PROFILES, { platform });
 };
 /** The made-up data with one change, validated with the platform option. */

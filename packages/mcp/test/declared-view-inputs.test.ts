@@ -4,7 +4,7 @@ import { expect, test } from "vitest";
 import type { DeclaredDefinition, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, keyIdOfSecret, parseStrict, sign } from "@generalbusiness/artroom-bytes";
 import { applicationProjectionId, applicationProjectionQueryDigest, isApplicationJournalSource, packApplication2 } from "@generalbusiness/artroom-bytes/application-v2";
-import { applicationCounterPacket2 } from "../../scope/test/support/application-v2-fixture.ts";
+import { applicationCounterPacket2 } from "../../scope/test/fixtures.ts";
 import { DeclaredViewSource } from "../src/views/declared.ts";
 import { ViewSessions } from "../src/views/session.ts";
 import { viewTools, toolsForHost } from "../src/views/tools.ts";

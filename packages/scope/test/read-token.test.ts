@@ -14,7 +14,7 @@ import { net } from "../src/testing.ts";
 import { soon } from "./net.ts";
 import { outsideOf, wired } from "./outside.ts";
 import { Platform, rita, routed, sam, settle, una, vic } from "./repository.ts";
-import { reader } from "./support.ts";
+import { reader } from "./fixtures-native.ts";
 import { beginSessionFixture } from "./session-settings.ts";
 import { platformOutside } from "./worker.ts";
 

@@ -1,18 +1,18 @@
 import { expect, test } from "vitest";
 import { readFile, rm } from "node:fs/promises";
-import { secretSigner } from "@generalbusiness/artroom-client";
 import { prepareGrowCheck } from "../../../examples/grow/prepare-check.ts";
 import { prepareApplicationDirectory } from "../../cli/src/application-files.ts";
 import { openOwnedGrowScenario } from "./support/grow-owned-session.ts";
 import { growOperator } from "./support/grow-operator.ts";
 import { viewToolName } from "../src/views/names.ts";
 import type { Display } from "../src/views/types.ts";
+import { fixedSigner } from "./fixtures.ts";
 
 test("Grow's displayed alert refuses lost standing and stale revisions before custody, then signs only the heater target once", async () => {
   const root = await prepareGrowCheck();
   let session: Awaited<ReturnType<typeof openOwnedGrowScenario>> | undefined;
   try {
-    const { packet } = await prepareApplicationDirectory(root, secretSigner(new Uint8Array(32).fill(254)));
+    const { packet } = await prepareApplicationDirectory(root, fixedSigner(254));
     // Literal owned-lane positions include the native confirmation at 1.
     const input = JSON.parse(await readFile(new URL("./support/grow-owned-fault-scenario.json", import.meta.url), "utf8")) as { steps: { act?: { kind: string }; expect?: { answer: string } }[] };
     const end = input.steps.findIndex(step => step.act?.kind === "open-incident" && step.expect?.answer === "accepted");

@@ -11,7 +11,7 @@ import { gitHubOutside, type GitHubBindings } from "../src/github-wiring.ts";
 import type { OutsideGiven } from "../src/object.ts";
 import { NO_OUTSIDE, type EffectAnswer, type EffectRequest } from "../src/operations.ts";
 import { outsideOf } from "../src/worker.ts";
-import { create } from "./support.ts";
+import { create } from "./fixtures-native.ts";
 
 // Cloudflare Artifacts is a STAND-IN here: a scripted binding
 // double whose every answer the test writes. No repository or token exists.

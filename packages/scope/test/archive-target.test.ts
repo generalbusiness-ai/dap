@@ -11,7 +11,7 @@ import { fixtureArchiveTarget, fixtureArchiveTargetIn, type FixtureArchiveTarget
 import { namespace } from "../src/namespace.ts";
 import type { NativeItemQuery } from "../src/item-queries.ts";
 import { mintSession, readerOf } from "../src/sessions.ts";
-import { sessionRoom } from "./support/session-room.ts";
+import { sessionRoom } from "./fixtures-native.ts";
 import { rita } from "./repository.ts";
 
 test.each([["archive", C], ["device/archive", DC]] as const)("native creator chain and fixed directory/destination records resolve the same single archive repository (%s)", async (_label, C) => {

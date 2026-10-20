@@ -7,7 +7,7 @@ import { d, desk, deskDefinition, directory, keys, membership, ticket, ticketDef
 import { CONFIGURATION_BYTES, CONFIGURATION_DOMAIN, DEFINITION_DOMAIN, PUBLISH, RULES_EXTENTS_VALUE, RULES_SCOPE, extentsOf, firstExtents, membershipId, platform, revisionOf, rulesScope } from "../src/index.ts";
 import type { Extent } from "../src/index.ts";
 import { rulesScope2, rulesScopeRules } from "../src/rules-scope.ts";
-import { BRANCH, Rulebook, lanePointingAt, memberOf, standing } from "./support-rules.ts";
+import { BRANCH, Rulebook, lanePointingAt, memberOf, standing } from "./fixtures-entry.ts";
 
 // Every scope here is a `Rulebook` of test support: a rules scope in memory, below a STAND-IN registrar, whose acts are judged on the
 // test authority of derive's fixture set. The data and the six rules that are tested are the platform package's, and no rule is a
