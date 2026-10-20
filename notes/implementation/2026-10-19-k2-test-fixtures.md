@@ -24,10 +24,19 @@ runtime case-count or complete assertion-helper proof. Imports and setup
 are the only changes to those existing test files. No case or deadline is
 added or changed.
 
-No compiler or runtime result is claimed for this first checkpoint. The
-CLI listing's first required gate is still running; K2's affected tests
-will run after that process closes. K2 has no final gate, Source, review,
-approval or landing.
+The owning MCP Node-test TypeScript project passes, and both unchanged
+files pass all 21 cases at code/test checkpoint
+`4558659714b49d721e07869585bd87ffcb35ff6a`, tree
+`41a85b1b8225960d5f65f49721308886f61466ef`. Original process 84481 naturally
+exited zero. It ran after the CLI listing's failed gate and documentation
+follow-up had closed, with loopback allowed. The raw log reports 4.98
+seconds wall and 6.85 summed test time; these are not a measured whole
+pipeline or CPU figure. Logs: `/tmp/artroom-k2-mcp-peer-types-20261019.log`
+and `/tmp/artroom-k2-mcp-peer-focused-20261019.log`.
+
+These are real Node HTTP/stdio transports and clients over the existing
+SCRIPTED scope service. They prove no native scope judgment, provider or
+deployment. K2 has no final gate, Source, review, approval or landing.
 
 ## Scope and counts
 
