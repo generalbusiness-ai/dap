@@ -1,1 +1,1 @@
-{"kind":"assert","text":"Closed checker D1 landing-audit metadata grant anchor: /private/tmp/checker-d1-landing-ye3j083w/audit-evidence-manifest.json is803bytes, SHA-25677d86e025a840155295c87881655feaf35f4e40551072e4f1eb18b8148945db9. Only this manifest and its three exact named closed metadata/report leaves may be read or stable-copied. No execution, mutation or adjacent evidence, source, dependency, tool or custody grant."}
+{"kind":"promise","text":"Planner decides the P1 reader cutover against the published Grow demo packet now.","body":{"to":"builder"}}
