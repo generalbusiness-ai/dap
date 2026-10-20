@@ -83,18 +83,31 @@ its meaning.
 | Path | Content |
 |---|---|
 | `journal/v2/head.json` | `{ v: 2, scope: <ScopeRef>, through: <seq>, hash: <entry hash> }` |
-| `journal/v2/passes/<a>/<b>/<first>.json` | One pass manifest for each pass, with the v1 manifest's fields and `entries: [first, last]`. |
-| `journal/v2/segments/<a>/<b>/<first>.jsonl` | Entries from `first` on, one canonical entry for each line. |
-| `journal/v2/retained/...` | As in v1. |
+| `journal/v2/passes/<a>/<b>/<c>/<first>.json` | One pass manifest for each pass, with the v1 manifest's fields and `entries: [first, last]`. |
+| `journal/v2/segments/<a>/<b>/<c>/<first>.jsonl` | Entries from `first` on, one canonical entry for each line. |
+| `journal/v2/retained/<a>/<b>/<c>/<first>/<kind>/<digest>` | A retained input that the pass from `first` wrote. A value has a `<domain>` directory before its digest, as in v1 (`packages/git/src/journal-path.ts:45-54`). |
 
-`<first>` is 12 decimal digits. `<a>` is its first six digits and `<b>`
-its next three. So a `<b>` directory holds the files of 1,000
-positions, and an `<a>` directory holds at most 1,000 `<b>` directories.
-No directory of passes or segments lists more than 1,000 names.
+`<first>` is 12 decimal digits. `<a>`, `<b>` and `<c>` are its first,
+second and third groups of three digits. So a `<c>` directory holds the
+files of 1,000 positions, and each directory above it holds at most
+1,000 names. The highest position is 999,999,999,999. The writer and the
+reader refuse a higher position with `limit`.
+
+A retained file stays at the path of the pass that wrote it. A later
+pass never moves it. One pass writes at most 512 retained inputs
+(section 2.4, rule 2), so a pass's retained directory holds at most 512
+files and at most 512 domain directories. v1 instead chooses a path from
+the complete set of retained names, and moves every old file into digest
+directories when that set passes 4,096 names
+(`packages/git/src/journal-files.ts:26-48`,
+`packages/git/src/journal-segments.ts:65-88`). v2 does not use that
+rule.
 
 Each pass manifest carries the S2b fields for its own entries: the
 retained inputs that its entries name, and the `foreignSources` basis of
-each entry copy that it retains.
+each entry copy that it retains. Each retained input in a pass manifest
+also names `pass`, the `first` of the pass whose directory holds its
+file.
 
 ### 2.3 Writer rules
 
@@ -111,12 +124,12 @@ each entry copy that it retains.
    the pass's cutoff. So a pass never rewrites a segment of an earlier
    pass, and never reads an entry before its first.
 6. A retained input that an earlier pass already wrote is listed again
-   in the new pass manifest when a new entry names it. The file is not
-   written twice.
+   in the new pass manifest when a new entry names it, with the `pass`
+   of the earlier pass. The file is not written twice and does not move.
 7. A pass rewrites only the tree objects on the paths of the files it
-   adds. Each of those trees lists at most 1,000 names under `passes/`
-   and `segments/`, and a fixed number elsewhere. The pass reads those
-   trees from its parent and charges their names and bytes to the
+   adds. Each of those trees lists at most 1,000 names under `passes/`,
+   `segments/` and `retained/`, and a fixed number elsewhere. The pass
+   reads those trees from its parent and charges their names and bytes to the
    archive budget (`nodes` and `metadata`, `archive-budget.ts:6`). So the
    work of a pass has a bound that does not grow with the number of
    earlier passes.
@@ -131,18 +144,22 @@ each entry copy that it retains.
    `through`.
 2. Each pass manifest holds at most 4,096 entries and 512 retained
    inputs, as a v1 manifest does.
-3. Each retained file in the tree is listed by at least one pass
-   manifest. A file that no pass lists is refused, as in v1.
-4. The S2b checks run for each pass: an entry copy needs its
+3. Each retained file in the tree lies in the directory of the pass that
+   wrote it, and that pass's manifest lists it with its own `first` as
+   `pass`. A file that no pass lists is refused, as in v1.
+4. Each retained input in a pass manifest names a `pass` that is this
+   pass or an earlier one, and that pass's directory holds the file. Any
+   other `pass` is refused.
+5. The S2b checks run for each pass: an entry copy needs its
    `foreignSources` basis in the same pass manifest.
-5. The chain check runs across passes: the first entry of a pass names
+6. The chain check runs across passes: the first entry of a pass names
    the last entry of the pass before.
-6. A file under `passes/` or `segments/` whose directories do not match
-   its `<first>` is refused.
-7. The reader's total work is bounded by an option: at most 1,000,000
+7. A file under `passes/`, `segments/` or `retained/` whose directories
+   do not match its `<first>` is refused.
+8. The reader's total work is bounded by an option: at most 1,000,000
    entries by default. A larger clone is refused `limit`, not read in
    part.
-8. A2's replay reads a v2 clone through the same `gitSource`
+9. A2's replay reads a v2 clone through the same `gitSource`
    (`packages/replay/src/git.ts:13-15`).
 
 ### 2.5 From a v1 archive to v2
@@ -160,7 +177,10 @@ commit, before its first v2 pass:
    `through`, so it is a complete first pass.
 4. The v1 segments and retained files keep their bytes at their v2
    paths. Each v1 segment ends at 1,000 entries, at the object bound or
-   at `through`, so it meets rule 5 of 2.3.
+   at `through`, so it meets rule 5 of 2.3. Each v1 retained file goes to
+   the retained directory of the pass from 0, and the manifest lists it
+   with `pass` 0. A v1 manifest lists at most 512 retained inputs, so
+   that directory meets the bound of 2.2.
 5. The conversion reads at most 4,096 entries, the v1 bound. It is a
    pass with no new entries, and its receipt is the v1 receipt's
    `through` with the new commit.
@@ -255,9 +275,11 @@ In the same turn as the floor entry, the scope:
    and F that is not in the new kept set;
 3. moves the accepted key of each deleted entry to the accepted-key
    table (section 6.4);
-4. adds the size proofs of the deleted entries to the size-proof table
-   (section 6.6);
-5. stores F, the receipt and the new kept set in state.
+4. copies the hash of each deleted sending entry into its outbox
+   request rows (section 6.5);
+5. adds the size proofs of the deleted entries to the size-proof table
+   (section 6.7);
+6. stores F, the receipt and the new kept set in state.
 
 One floor entry deletes at most 8,192 rows: 4,096 by `floor-step` and
 4,096 from the old kept set by `floor-kept`. The floor entry itself is
@@ -415,7 +437,36 @@ intent digest. Then:
 - the accepted set in state does not change, so the state digest of
   `settle.ts:290-293` does not change at a floor entry.
 
-### 6.5 Delivery repeats
+### 6.5 Request rows
+
+Each request that the scope sends has an outbox row. The row holds the
+target, the request, and the result or diagnosis (`sqlite.ts:91-92`).
+Request reads take the sending entry's hash through a join on the entry
+table (`REQUEST_ROWS`, `sqlite.ts:118`). Request rows are state. The
+SQLite store exports every one, with or without a result
+(`sqlite.ts:376`). Replay's memory state keeps every one
+(`packages/derive/src/state.ts:543-547`) and exports it (`:578`), and
+the state digest hashes them. Neither store deletes a request row
+today.
+
+A pending request keeps its sending entry (section 4.1, item 3). A
+completed request does not need its sending entry, but its row needs the
+entry's hash. So the floor keeps the row and drops the entry:
+
+- Before the floor deletes a sending entry, it copies the entry's hash
+  into each outbox request row of that entry, in a new `hash` column.
+- Request reads take the hash from the entry row when the scope holds
+  it, and from the request row otherwise. `request(seq, n)`
+  (`sqlite.ts:251-253`), `pendingRequests` (`:255-256`) and the export
+  answer as before.
+- A floor adds no request row and removes none. Completed requests stay
+  in state for the life of the scope, as they do today. They are not
+  kept entries, so they do not count toward `floor-kept`.
+
+So the store and replay export the same request set, before and after a
+floor entry.
+
+### 6.6 Delivery repeats
 
 A repeat of a delivery reads its deciding entry today
 (`delivery.ts:285`). Section 4.2, item 1, keeps that entry until the
@@ -424,7 +475,7 @@ duplicate. The inbox row answers it alone: the deciding position, its
 hash and the decision. The inbox row stores these three values for that
 purpose.
 
-### 6.6 Walks from position 0
+### 6.7 Walks from position 0
 
 Each walk that starts at position 0 today reads the kept entries and
 then the entries from F, in the scope and in replay:
@@ -460,16 +511,16 @@ So the floor keeps each proof with its position, in a size-proof table:
 The bounds come from the definition's text field limits, so one digest
 has at most as many rows as the definition has distinct text limits.
 
-### 6.7 State digest
+### 6.8 State digest
 
 The checkpoint digest is `stateDigest(view.all())`
 (`settle.ts:290-293`). `all()` reads accepted intents from the entry
 table (`sqlite.ts:375`) and requests through a join on it
 (`sqlite.ts:118`). After a floor entry, `all()` reads accepted intents
 from the entry table and the accepted-key table together, so the set is
-unchanged. Section 4.1, item 3, keeps the entry of each pending request,
-so the join still finds it. The kept set and the size-proof table are
-state, and replay builds them the same way.
+unchanged. It reads every request row with the hash of section 6.5, so
+the request set is unchanged too. The kept set and the size-proof table
+are state, and replay builds them the same way.
 
 ## 7. Replay, clients and the archive
 
@@ -517,12 +568,16 @@ Each witness runs on a test host with the native store.
 2. **Tree work.** After 10,000 confirmed passes of one entry each, one
    more pass rewrites at most the trees on its paths. A probe counts the
    tree names it reads and writes, and the count stays within the bound
-   of 2.3, rule 7.
+   of 2.3, rule 7. Then nine passes each add 512 new retained inputs of
+   one kind, 4,608 in all, and one more pass adds one. That pass writes
+   one retained file in its own directory, no earlier retained path
+   changes, and the probe count stays within the same bound.
 3. **v2 reader refusals.** A gap between passes, an overlap, a retained
-   file that no pass lists, an entry copy without its `foreignSources`
-   basis in its pass, a file in the wrong directory and a broken chain
-   between passes are each refused. Every existing v1 reader test passes
-   unchanged.
+   file that no pass lists, a retained input whose `pass` is later or
+   does not hold its file, an entry copy without its `foreignSources`
+   basis in its pass, a file in the wrong directory, a position above
+   999,999,999,999 and a broken chain between passes are each refused.
+   Every existing v1 reader test passes unchanged.
 4. **From v1.** A scope with a confirmed v1 archive through 99 converts
    and continues in v2 from 100; the clone reads and replays from 0. A
    scope with a pending v1 pass first confirms it, then converts. A
@@ -572,20 +627,26 @@ Each witness runs on a test host with the native store.
     intent is answered `archived`; a new intent that reuses the key is
     refused `idempotency-mismatch`; both hold after a restart and in
     replay.
-15. **Archived answers.** `entry` of an archived position answers
+15. **Completed requests.** A request sent at 100 is acknowledged and
+    completes at 150, and nothing else keeps entry 100. Two floors pass
+    150, and the scope restarts. Entry 100 is not held and is not in the
+    kept set. `request(100, n)` still answers the completed request with
+    entry 100's hash, the export still lists it, and the checkpoint
+    digest equals replay's at each floor entry.
+16. **Archived answers.** `entry` of an archived position answers
     `archived`. `history` from cursor 0 answers `archived` and then
     pages from F with no gap. A foreign read answers `archived`. An act
     that names an archived position is refused `archived`. A stale
     delivery repeat is answered from the inbox row.
-16. **Clients.** A client with a clone through 1,000 and a service
+17. **Clients.** A client with a clone through 1,000 and a service
     floor at 9,000 fetches the newer commit and continues. A floor that
     moves during the fetch makes the client repeat. Two floors and a
     restart answer every archived position with the current receipt.
-17. **Replay.** A clone plus the service tail replays with equal
+18. **Replay.** A clone plus the service tail replays with equal
     judgments and an equal state digest at each floor entry. The run
     includes an act refused `archived` and a capacity check that the
     floor decides.
-18. **No floor, no change.** A scope with no floor entry passes the
+19. **No floor, no change.** A scope with no floor entry passes the
     existing capacity, archive and replay tests unchanged.
 
 ## 9. Slices
@@ -593,7 +654,7 @@ Each witness runs on a test host with the native store.
 | Slice | Content | Needs | Done when |
 |---|---|---|---|
 | F1 | Incremental archive passes, the v2 layout and reader, and the v1 conversion (section 2) | A3, S2b | Witnesses 1 to 4 pass, and plan 033 slice 9 can archive a room of more than 4,096 entries. |
-| F2 | Floor entry, kept set and `keep` list, counting, accepted keys, size proofs, reads, walks and replay (sections 3 to 7) | F1 | Witnesses 5 to 18 pass on the test host. |
+| F2 | Floor entry, kept set and `keep` list, counting, accepted keys, size proofs, reads, walks and replay (sections 3 to 7) | F1 | Witnesses 5 to 19 pass on the test host. |
 | F3 | The floor enabled for Room A in the dap-grow archive policy, with a margin of 10,000 and a minimum of 1,000; the deployment and the hosted readbacks | F2, slice 9 deployed | Room A's counted entries fall after a confirmed pass, and the `/grow/` page says that old entries are in the archive. |
 
 F1 comes before slice 9's deployment, because Room A already holds more
