@@ -15,6 +15,7 @@ import { applicationOutside } from "../src/applications/outside.ts";
 import { ApplicationContentStore } from "../src/applications/content.ts";
 import type { EffectRequest } from "../src/operations.ts";
 import { applicationResolverFixture } from "./support/application-fixture.ts";
+import { applicationContentBindings } from "./fixtures.ts";
 
 async function fixture(format: "sha1" | "sha256" = "sha1") {
   const f = await applicationResolverFixture(format), r = new Rulebook(true, membership.scope, APPLICATION_INSTALL_RULES);
@@ -84,7 +85,7 @@ test("admission port records unsupported format without network and leaves trans
 test("host wiring refuses absent storage and invalid whole trust settings before network", async () => {
   const { f, request } = await fixture(); let calls = 0;
   const send = async () => { calls++; throw Error("TEST configuration must refuse before transport"); };
-  for (const setting of [{ APPLICATION_TRUST: JSON.stringify(f.trust) }, { APPLICATION_CONTENT: env.APPLICATION_CONTENT, APPLICATION_TRUST: "not JSON" }]) {
+  for (const setting of [{ APPLICATION_TRUST: JSON.stringify(f.trust) }, applicationContentBindings(env.APPLICATION_CONTENT, "not JSON")]) {
     const port = applicationHostOutside(setting, PROPOSED_BOUNDS, send);
     expect(await port.send(request)).toMatchObject({ result: "refused", evidence: { basis: "read", body: { reason: "unsupported-host" } } });
   }

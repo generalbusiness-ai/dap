@@ -18,6 +18,7 @@ import { dispatchFixture, driveFixture, effectFixture } from "./support/native-f
 import { rita, routed } from "./repository.ts";
 import { soon } from "./net.ts";
 import type {} from "./support/maintained-applications.ts";
+import { applicationWorkerBindings } from "./fixtures.ts";
 
 // Invariant: one installed Site owns its genuinely created Room and selected
 // Room projections/views; Site and Room retain their distinct native records.
@@ -29,7 +30,7 @@ test("maintained Grow Site creates a native Room and opens its owned grid throug
   const { life, R, D, children } = await sessionRoom(C.register), [M, A, G] = children;
   if (!M || !A || !G) throw Error("The declared cohort needs its three siblings.");
   const f = await applicationResolverFixture("sha1", undefined, {}, undefined, packet), peer = applicationHttpPeer(f);
-  const bindings = { SCOPES: env.PLATFORM, APPLICATION_CONTENT: env.APPLICATION_CONTENT, APPLICATION_TRUST: JSON.stringify(f.trust) };
+  const bindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(f.trust));
   try {
     const seat = await life.wait(() => M.did(rita, "seat", { expected: { roster: 1 } }));
     await life.wait(async () => M.did(rita, "first-key", { fields: { member: seat }, expected: await M.expected({ roster: 0, member: seat }) }));

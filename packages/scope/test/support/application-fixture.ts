@@ -2,14 +2,15 @@
 import { env } from "cloudflare:test";
 import { PROPOSED_BOUNDS, type DeclaredDefinition } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, hex } from "@generalbusiness/artroom-bytes";
-import { packApplication, secretSigner, type ApplicationReleaseUri } from "@generalbusiness/artroom-client";
+import { packApplication, type ApplicationReleaseUri } from "@generalbusiness/artroom-client";
 import type { AnyPackedApplication } from "@generalbusiness/artroom-bytes/application-v2";
 import type { ApplicationGitObject } from "@generalbusiness/artroom-git";
 import { countingCommitments } from "../../../../apps/counter/commitments.ts";
 import { readApplicationTrust } from "../../src/applications/admission.ts";
 import { ApplicationContentStore, applicationReleaseKey } from "../../src/applications/content.ts";
 import type { OpenApplicationSource } from "../../src/applications/resolve.ts";
-const signer = secretSigner(new Uint8Array(32).fill(64)), utf8 = new TextEncoder();
+import { applicationTrust, fixedSigner } from "../fixtures.ts";
+const signer = fixedSigner(64), utf8 = new TextEncoder();
 export async function applicationResolverFixture(format: "sha1" | "sha256", bytes?: Uint8Array, roles: Readonly<Record<string, readonly string[]>> = {}, declared: DeclaredDefinition = countingCommitments, provided?: AnyPackedApplication) {
   const definition = definitionDigest(declared), packet = provided ?? await packApplication({ name: "test.example.resolve", version: format, semantic: { v: 1, entry: definition,
     definitions: [{ id: definition, bytes: canonicalize(declared) }], host: { execution: "recorded-do", profiles: ["restricted@1"] }, roles, projections: {}, capabilities: [], predecessor: null },
@@ -26,7 +27,7 @@ export async function applicationResolverFixture(format: "sha1" | "sha256", byte
   const blob = await add("blob", bytes ?? packet.bytes), nested = await add("tree", entry("100644", "application.dap.json", blob)), tree = await add("tree", entry("40000", "packages", nested));
   const commit = await add("commit", utf8.encode(`tree ${tree}\nauthor TEST <test@example.invalid> 0 +0000\ncommitter TEST <test@example.invalid> 0 +0000\n\nTEST release\n`));
   const uri = `git+https://git.example/packages.git/@${commit}/packages/application.dap.json`;
-  const trust = readApplicationTrust(JSON.stringify([{ release: packet.ids.release, publisher: packet.package.release.manifest.publisher }])), opened: ApplicationReleaseUri[] = []; let closed = 0;
+  const trust = readApplicationTrust(applicationTrust(packet, packet.package.release.manifest.publisher)), opened: ApplicationReleaseUri[] = []; let closed = 0;
   const open: OpenApplicationSource = async address => {
     opened.push(address);
     return { source: { object: async (id, most) => { const value = objects.get(id); return value ? { ...value, data: value.size <= most ? value.data : null } : null; } }, close: async () => { closed++; } };

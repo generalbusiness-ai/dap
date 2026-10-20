@@ -4,12 +4,12 @@ import { rm } from "node:fs/promises";
 import { prepareGrowCheck } from "../../../../examples/grow/prepare-check.ts";
 import { fileURLToPath } from "node:url";
 import { b64url } from "@generalbusiness/artroom-bytes";
-import { secretSigner } from "@generalbusiness/artroom-client";
 import { prepareApplicationDirectory } from "../../../cli/src/application-files.ts";
 import type { MaintainedApplicationInputs } from "./maintained-applications.ts";
+import { fixedSigner } from "../fixtures.ts";
 
 const root = fileURLToPath(new URL("../../../../", import.meta.url));
-const signer = secretSigner(new Uint8Array(32).fill(254));
+const signer = fixedSigner(254);
 const counter = await prepareApplicationDirectory(root, signer, { config: "apps/counter/dap.application.json" });
 const lending = await prepareApplicationDirectory(root, signer, { config: "examples/lending/dap.application.json" });
 const growRoot = await prepareGrowCheck();

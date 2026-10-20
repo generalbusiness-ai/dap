@@ -29,12 +29,13 @@ import { ApplicationProjections } from "../src/applications/projection.ts";
 import { applicationDeclarationsIn } from "../src/applications/projection-source.ts";
 import { SqliteStore, type SqlValue } from "../src/sqlite.ts";
 import { authenticateSession, mintSession, readerOf, type Sessions } from "../src/sessions.ts";
+import { applicationWorkerBindings } from "./fixtures.ts";
 
 test("native installed projection reads exact journal state and survives R2 deletion and eviction", async () => {
   const room = await sessionRoom(C.register), { life, R, D, children } = room, [M, A, G] = children;
   if (!M || !A || !G) throw Error("The native cohort needs its three siblings.");
   const packet = await applicationCounterFactTimePacket2(), f = await applicationResolverFixture("sha1", undefined, {}, undefined, packet);
-  const peer = applicationHttpPeer(f), bindings = { SCOPES: env.PLATFORM, APPLICATION_CONTENT: env.APPLICATION_CONTENT, APPLICATION_TRUST: JSON.stringify(f.trust) };
+  const peer = applicationHttpPeer(f), bindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(f.trust));
   try {
     const seat = await life.wait(() => M.did(rita, "seat", { expected: { roster: 1 } }));
     await life.wait(async () => M.did(rita, "first-key", { fields: { member: seat }, expected: await M.expected({ roster: 0, member: seat }) }));

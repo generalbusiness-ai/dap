@@ -5,17 +5,18 @@ import { env } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest } from "@generalbusiness/artroom-bytes";
-import { packApplication, secretSigner } from "@generalbusiness/artroom-client";
+import { packApplication } from "@generalbusiness/artroom-client";
 import { countingCommitments } from "../../../apps/counter/commitments.ts";
 import { APPLICATION_HOST_PACKAGE_BYTES, readApplicationTrust } from "../src/applications/admission.ts";
 import { ApplicationContentStore, applicationReleaseKey } from "../src/applications/content.ts";
-const signer = secretSigner(new Uint8Array(32).fill(63));
+import { applicationTrust, fixedSigner } from "./fixtures.ts";
+const signer = fixedSigner(63);
 async function fixture(version: string) {
   const definition = definitionDigest(countingCommitments);
   const packet = await packApplication({ name: "test.example.content", version, semantic: { v: 1, entry: definition, definitions: [{ id: definition, bytes: canonicalize(countingCommitments) }],
     host: { execution: "recorded-do", profiles: ["restricted@1"] }, capabilities: [], roles: {}, projections: {}, predecessor: null },
     presentation: { v: 1, entry: "index.html", assets: [{ path: "index.html", mediaType: "text/html", bytes: "VEVTVA" }], descriptions: {} } }, signer);
-  const trust = readApplicationTrust(JSON.stringify([{ release: packet.ids.release, publisher: signer.key }]));
+  const trust = readApplicationTrust(applicationTrust(packet, signer.key));
   return { packet, trust, key: applicationReleaseKey(packet.ids.release), store: new ApplicationContentStore(env.APPLICATION_CONTENT, trust, PROPOSED_BOUNDS) };
 }
 

@@ -22,6 +22,7 @@ import { rita, routed } from "./repository.ts";
 import { soon } from "./net.ts";
 import { TEST_DEPLOYMENT } from "./worker.ts";
 import type {} from "./support/maintained-applications.ts";
+import { applicationWorkerBindings } from "./fixtures.ts";
 
 test.each(["counter", "lending"] as const)("maintained %s package installs and its browser adapter reads native declared state", async name => {
   const captured = inject("maintainedApplications")[name], bytes = unb64url(captured.bytes);
@@ -30,7 +31,7 @@ test.each(["counter", "lending"] as const)("maintained %s package installs and i
   const room = await sessionRoom(C.register), { life, R, D, children } = room, [M, A, G] = children;
   if (!M || !A || !G) throw Error("The declared cohort needs its three siblings.");
   const f = await applicationResolverFixture("sha1", undefined, {}, undefined, packet), peer = applicationHttpPeer(f);
-  const bindings = { SCOPES: env.PLATFORM, APPLICATION_CONTENT: env.APPLICATION_CONTENT, APPLICATION_TRUST: JSON.stringify(f.trust) };
+  const bindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(f.trust));
   const now = life.now(), date = vi.spyOn(Date, "now").mockReturnValue(now);
   let dispose = () => {};
   let observation: Observation | undefined;

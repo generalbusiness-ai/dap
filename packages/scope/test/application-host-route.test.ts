@@ -7,6 +7,7 @@ import type { ScopeKind, ScopeRef } from "@generalbusiness/dap-contract";
 import { applicationResolverFixture } from "./support/application-fixture.ts";
 import { expect, test } from "vitest";
 import worker, { type Env } from "../../../apps/room/worker.ts";
+import { applicationWorkerBindings } from "./fixtures.ts";
 test("Room refuses retired application paths and still rejects URL credentials before dispatch", async () => {
   const get = (path: string, method = "GET") => worker.fetch(new Request("https://scopes.test" + path, { method, headers: { authorization: "Bearer TEST-header", cookie: "private=TEST-cookie" } }), {} as Env);
   for (const path of ["/counting", "/counting/", "/counting/counting.js", "/counting/brand/dap-wordmark.svg", "/lending", "/lending/", "/lending/lending.css", "/lending/keys.json"]) {
@@ -44,7 +45,7 @@ test("two pending packet loads coalesce while a third distinct release refuses b
     };
     return typeof value === "function" ? value.bind(target) : value;
   } });
-  const bindings = { SCOPES: scopes as unknown as Env["SCOPES"], APPLICATION_CONTENT: bucket, APPLICATION_TRUST: trust };
+  const bindings = applicationWorkerBindings(scopes as unknown as Env["SCOPES"], bucket, trust);
   const get = (item: number) => worker.fetch(new Request("https://cache.test" + applicationScreenPath(directory.scope, item, fixtures[item]!.packet.ids.presentation) + "index.html"), bindings);
   const outstanding: Promise<Response>[] = [];
   try {
