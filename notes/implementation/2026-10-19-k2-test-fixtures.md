@@ -4,8 +4,9 @@ K2's MCP preparation shares the scope-service loopback transport, native
 application-room claim and recipe-row parser in `test/fixtures.ts`.
 The current selected checks pass 21 Node cases and five native cases,
 with both owning compiler targets passing. Scope's explicit application
-builders also pass 28 existing cases in 11 files. Derive, Platform,
-remaining Scope consolidation and the final module layout remain ahead.
+builders pass 28 existing cases in 11 files. Platform's common judgment
+helpers pass 170 existing cases in 18 affected files. Derive, remaining
+fixture consolidation and the final module layout remain ahead.
 
 The first preparation moved the identical loopback transport out of
 `http.test.ts` and `wire.test.ts`. Each caller keeps its own stand-in, server, hook,
@@ -128,23 +129,58 @@ Original logs, source hashes, timing, failed/corrected probe and bundle use
 use `/tmp/artroom-k2-scope-expect-*20261019*`. No final gate or complete
 K2 Source is claimed.
 
+## Shared Platform fixture judgments
+
+Code checkpoint `eac9e7ed5f61c7482e1e9698958a1bdac6a3a0d7`, tree
+`36fb62301038a15ee0c610d9103c35a427b3c124`, gives four identical `written`
+helpers one home. It returns the original draft by reference and preserves
+the exact refusal message. Three identical validation-result acceptors
+also share one implementation. Creation's cloned-data validation retains
+its distinct profile/options and data-named refusal in a separate builder.
+Each labelled scenario keeps its data, grants and ownership. No eager
+scenario barrel or fixture cycle is introduced by this step.
+
+The owning compiler passes. All 28 Platform case files are byte-for-byte
+unchanged. Original process 22783 naturally exits zero with 18 affected
+files and 170 cases passing. Selection follows relative support imports;
+no Platform test uses the package-testing alias fallback. The exact
+original draft stayed unchanged during the run. Outer time was 2.61
+seconds wall and 9.72 CPU (8.41 user plus 1.31 system). These are in-memory
+judgment/fixture witnesses with their existing boundaries, not native
+storage or provider acceptance.
+
+The first commit check found one extra final blank line in each of three
+support files and stopped before committing. A following metadata command
+incorrectly called the previous Git head a matching checkpoint. That
+record is retained as failed metadata at
+`/tmp/artroom-k2-platform-shared-checkpoint-20261019.json`.
+The exact passing draft is retained at
+`/tmp/artroom-k2-platform-checked-draft-20261019/`. The only later source
+differences are those three final newlines, with every non-newline byte
+exact. Tests were not repeated for that formatting correction. The corrected
+`/tmp/artroom-k2-platform-shared-checkpoint-v2-20261019.json` requires a
+clean tree and checks the committed blob of every file before naming the
+head. Source snapshots, correction map, compiler and runtime logs use
+`/tmp/artroom-k2-platform-*20261019*`. No final gate or Source is claimed.
+
 ## Scope and counts
 
 Before counts include every `.ts` file under each package's `test/`
 directory, including case files and support files. They are an explicit
 inventory, not a claim that every domain scenario is duplicated.
 
-| Package | Before | First peer | Shared MCP | Scope builders |
-| --- | ---: | ---: | ---: | ---: |
-| Derive | 10,312 | 10,312 | 10,312 | 10,312 |
-| Platform | 5,851 | 5,851 | 5,851 | 5,851 |
-| Scope | 21,402 | 21,402 | 21,402 | 21,431 |
-| MCP | 7,829 | 7,834 | 7,850 | 7,850 |
+| Package | Before | First peer | Shared MCP | Scope builders | Platform helpers |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Derive | 10,312 | 10,312 | 10,312 | 10,312 | 10,312 |
+| Platform | 5,851 | 5,851 | 5,851 | 5,851 | 5,841 |
+| Scope | 21,402 | 21,402 | 21,402 | 21,431 | 21,431 |
+| MCP | 7,829 | 7,834 | 7,850 | 7,850 | 7,850 |
 
 The first peer extraction adds five lines overall; the portable shared
 MCP module now adds 21 in total, including explicit runtime ports and
-boundary comments. The Scope application builders add 29. No overall
-line reduction is claimed.
+boundary comments. The Scope application builders add 29; the Platform
+helpers remove 10. The current combined increase is 40. No overall line
+reduction is claimed.
 Full per-file baseline counts/hashes are in
 `/tmp/artroom-k2-before-lines-20261019.json`; the selected assertion
 inventories and tool are `/tmp/artroom-k2-expect-*20261019*`.
