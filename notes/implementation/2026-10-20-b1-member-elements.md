@@ -5,9 +5,11 @@ Builder promise `cc7e6e17`. Planner issued the separate milestone through
 report `03e9ea14`, adopted by `05ed8b2a`, before any Source filing.
 The approved D1 design is on published Main `8aad37bb`.
 
-This worktree starts there. It imports no pending K1, K2 or K3 source.
-The signed Grow demo packet and its release `sha256:71e10ca9…` remain
-byte-identical to that Main. Maintained package witnesses are separate.
+This worktree starts from that reviewed design and now incorporates actual
+reviewed Main `248aab8f`, including the landed K1/K2 and Grow host-link work.
+It imports no pending K3 or P1 source. The signed Grow demo packet and its
+release `sha256:71e10ca9…` remain byte-identical to Main; maintained package
+witnesses are separate.
 
 ## Resolve recorded identity within a bound
 
@@ -386,3 +388,23 @@ prepared gate helper still names the pre-refresh head and remains unrun;
 it must not be used as a result for this source. The one ordinary final
 gate and full exact-head Source review remain due. No failed full gate is
 claimed or concealed on this branch, and no unchanged suite is repeated.
+
+
+## Reviewed homepage wording Main incorporation
+
+The owned merge of actual Main `248aab8f`, tree `ba40d47e`, closes
+naturally zero in 0.040229500 seconds, with no conflicts. All nine imported
+wording/preview paths match that reviewed Main exactly. All 44 authored
+source, test, generated and prior-report paths keep their bytes and modes
+during the merge. No runtime implementation, assertion, deadline, package,
+lock or permission changes. Exact original argv/log/closure and protected
+hashes are `/tmp/b1-integrate-tagline-main-20261020*`; shared preparation
+is `/tmp/builder-incorporate-tagline-main-20261020.py` and its closed result.
+The final source gate remains due at this clean integration checkpoint.
+
+The three affected homepage/Jam Node cases also pass in one original tool
+invocation: managed public bodies/security configuration, stale/unlisted
+asset refusal and all six homepage pages/links. Its exact tool transcript
+is retained separately; no CPU measurement was recorded and it is not
+claimed as an original raw process log. The build and tests are not
+repeated to create logs.
