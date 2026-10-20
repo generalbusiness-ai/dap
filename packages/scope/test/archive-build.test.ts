@@ -4,7 +4,7 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { JournalArchive, JournalFormat } from "@generalbusiness/artroom-git/journal";
-import { planArchive, rebuildArchive } from "../src/archive-build.ts";
+import { planArchive, planArchivePass, rebuildArchive, rebuildArchivePass } from "../src/archive-build.ts";
 import { ArchiveRows } from "../src/archive-row.ts";
 import { ArchiveBudget } from "../src/archive-budget.ts";
 import type { Sql } from "../src/sqlite.ts";
@@ -18,7 +18,7 @@ async function first(lane: Lane, format: JournalFormat) {
   await lane.inside(state => { const rows = new ArchiveRows(sqlOf(state), lane.at); rows.target(repository, format); rows.mark(planned.mark); });
   return planned;
 }
-function parentOf(archive: JournalArchive) {
+function parentOf(archive: Pick<JournalArchive, "objects" | "commit">) {
   const objects = new Map(archive.objects.map(object => [object.id, object]));
   return {
     id: archive.commit,
@@ -88,3 +88,55 @@ test("an empty policy registry still refuses planning before any archive is retu
   const refused = await lane.inside(state => planArchive(sqlOf(state), { at: lane.at, through, bounds: PROPOSED_BOUNDS, policies: new Map(), format: "sha1", parent: null, markedAt: at(0) }, new ArchiveBudget()));
   expect(refused).toEqual({ ok: false, reason: "unsupported-archive-cohort" });
 });
+
+// Invariant: a confirmed v2 receipt bounds both initial inventory and exact
+// restart reconstruction to the new interval, even after another turn.
+test("v2 native inventory and restart read only the marked new interval and keep earlier retained paths", async () => {
+  const lane = await create({}, {}, base), initial = await lane.head();
+  const first = await lane.inside(state => planArchivePass(sqlOf(state), { at: lane.at, through: initial, after: null,
+    bounds: PROPOSED_BOUNDS, policies, format: "sha1", parent: null, markedAt: at(0) }, new ArchiveBudget()));
+  expect(first.ok, JSON.stringify(first)).toBe(true); if (!first.ok) return;
+  await lane.inside(state => { const rows = new ArchiveRows(sqlOf(state), lane.at); rows.target(repository, "sha1"); rows.mark(first.mark); rows.confirm(first.mark.commit); });
+  await lane.submit(lane.remark("first new entry"));
+  await lane.submit(lane.remark("second new entry"));
+  const through = await lane.head(), parent = parentOf(first.archive);
+  const planned = await lane.inside(async state => {
+    const sql = sqlOf(state), queried: number[] = [];
+    const exact: Sql = { transaction: action => state.storage.transactionSync(action), exec(query, ...args) {
+      if (/\bFROM entry\b/.test(query)) {
+        expect(typeof args[0]).toBe("number");
+        expect(args[0] as number).toBeGreaterThan(initial.seq);
+        queried.push(args[0] as number);
+      }
+      return sql.exec(query, ...args);
+    } };
+    const value = await planArchivePass(exact, { at: lane.at, through, after: initial, bounds: PROPOSED_BOUNDS,
+      policies, format: "sha1", parent, markedAt: at(1) }, new ArchiveBudget());
+    return { value, queried };
+  });
+  const next = planned.value;
+  expect(next.ok, JSON.stringify(next)).toBe(true); if (!next.ok) return;
+  expect(planned.queried.length).toBeGreaterThan(0);
+  expect(next.archive.newInterval).toEqual([initial.seq + 1, through.seq]);
+  expect(next.archive.selection.objects.find(object => object.key.kind === "definition" && object.key.digest === base.digest)?.pass).toBe(0);
+  const oldBlobs = new Set(first.archive.objects.filter(object => object.type === "blob").map(object => object.id));
+  expect(next.archive.objects.filter(object => object.type === "blob").some(object => oldBlobs.has(object.id))).toBe(false);
+  await lane.inside(state => new ArchiveRows(sqlOf(state), lane.at).mark(next.mark));
+  await lane.submit(lane.remark("later unselected native entry"));
+  await lane.restart();
+  const rebuilt = await lane.inside(async state => {
+    const sql = sqlOf(state), row = new ArchiveRows(sql, lane.at).load()!, selected = JSON.parse(row.pending!.manifest);
+    const positions = new Set(selected.entries.map((entry: { seq: number }) => entry.seq));
+    const exact: Sql = { transaction: action => state.storage.transactionSync(action), exec(query, ...args) {
+      if (/\bFROM entry\b/.test(query)) expect(positions.has(args[0])).toBe(true);
+      else if (!query.includes(" FROM retained_input ") && !query.includes(" FROM retained_value ")) expect.fail(`unselected rebuild query: ${query}`);
+      return sql.exec(query, ...args);
+    } };
+    return rebuildArchivePass(exact, row, parent, new ArchiveBudget());
+  });
+  expect(rebuilt.ok, JSON.stringify(rebuilt)).toBe(true); if (!rebuilt.ok) return;
+  expect(rebuilt.archive.commit).toBe(next.archive.commit);
+  expect(rebuilt.archive.objects).toEqual(next.archive.objects);
+  await lane.inside(state => new ArchiveRows(sqlOf(state), lane.at).confirm(next.mark.commit));
+  expect(await lane.head()).not.toEqual(through);
+}, 20_000);

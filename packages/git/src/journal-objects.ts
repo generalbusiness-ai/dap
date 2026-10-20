@@ -10,6 +10,10 @@ export interface JournalObject { readonly id: string; readonly type: JournalObje
 export interface JournalObjectSource {
   /** limit zero is a metadata probe. Nonempty bodies must not be loaded. */
   object(id: string, limit: number): Promise<{ type: string; size: number; data: Uint8Array | null } | null>;
+  /** An isolated transport may lack metadata-only reads. The reader first
+   * reserves the whole explicit maximum, then this port may load one body.
+   * It never substitutes a closure fetch or an unbounded object request. */
+  boundedObject?(id: string, type: JournalObjectType, maximum: number): ReturnType<JournalObjectSource["object"]>;
 }
 export interface JournalTreeRow { readonly mode: "100644" | "40000"; readonly name: string; readonly id: string }
 export interface JournalCommit { readonly tree: string; readonly parent: string | null; readonly seconds: number }
@@ -146,6 +150,21 @@ export class JournalObjectReader {
     journalId(this.format, id);
     this.work.maximumSize(maximum);
     this.work.spend({ objects: 1 });
+    if (this.source.boundedObject) {
+      this.work.budget.spend({ attempts: 1, calls: 1, metadata: 128, inputWork: maximum * 4 + 128 });
+      const got = await this.work.budget.wait(() => this.source.boundedObject!(id, type, maximum));
+      if (!got) return refuseJournal("missing-object");
+      const gotType = got.type, size = got.size;
+      if (gotType !== type || !Number.isSafeInteger(size) || size < 0 || Object.is(size, -0)) return refuseJournal("object-mismatch");
+      this.work.size(size);
+      if (size > maximum) return this.work.stop();
+      const data = got.data;
+      if (!(data instanceof Uint8Array) || byteCount(data) !== size) return refuseJournal("object-mismatch");
+      const body = ownedCopy(data, size);
+      if (hash(this.format, type, body) !== id) return refuseJournal("object-mismatch");
+      this.work.check();
+      return body;
+    }
     this.work.budget.spend({ attempts: 1, calls: 1, metadata: 128, inputWork: 128 });
     const probe = await this.work.budget.wait(() => this.source.object(id, 0));
     if (!probe) return refuseJournal("missing-object");

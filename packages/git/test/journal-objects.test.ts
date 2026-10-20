@@ -143,6 +143,32 @@ test("the original native allowance is not reset, object metadata precedes body 
   } }, new JournalWork(new ArchiveBudget({}, () => 0), { objectBytes: 16 }));
   const captured = await getters.read(bigId, "blob").then(() => "accepted", error => error instanceof JournalLayoutRefusal ? error.reason : "unexpected-error");
   expect(captured).toBe("object-mismatch"); expect(dataReads).toBe(1);
+  // Isolated HTTP has no metadata-only body probe. Reserve its complete
+  // maximum before the one read, without changing preceding inventory cost.
+  const isolatedBudget = new ArchiveBudget({}, () => 0), observed: number[] = [], wire = new Uint8Array(blob.data);
+  isolatedBudget.spend({ entries: 7, inputWork: 100 });
+  const isolatedSource: JournalObjectSource = { object: async () => expect.fail("isolated read must use its bounded port"),
+    boundedObject: async (id, type, maximum) => {
+      expect([id, type, maximum]).toEqual([blob.id, "blob", 64]);
+      observed.push(isolatedBudget.admitted().inputWork);
+      return { type, size: wire.length, data: wire };
+    },
+  };
+  const isolated = await new JournalObjectReader("sha256", isolatedSource, work(isolatedBudget)).read(blob.id, "blob", 64);
+  expect(observed[0]).toBeGreaterThanOrEqual(100 + 64 * 4);
+  expect(isolatedBudget.admitted()).toMatchObject({ entries: 7, attempts: 1, calls: 1 });
+  wire[0] = 0;
+  expect(isolated[0]).toBe(blob.data[0]);
+  const corruptIsolated = new JournalObjectReader("sha256", { ...isolatedSource,
+    boundedObject: async () => ({ type: "blob", size: blob.data.length, data: new Uint8Array(blob.data.length) }),
+  }, work());
+  await expect(corruptIsolated.read(blob.id, "blob", 64)).rejects.toMatchObject({ reason: "object-mismatch" });
+  let isolatedCalls = 0;
+  const blockedIsolated = new JournalObjectReader("sha256", { ...isolatedSource,
+    boundedObject: async () => { isolatedCalls++; return null; },
+  }, work(new ArchiveBudget({ inputWork: 128 }, () => 0)));
+  await expect(blockedIsolated.read(blob.id, "blob", 64)).rejects.toBeInstanceOf(ArchiveStopped);
+  expect(isolatedCalls).toBe(0);
   const limited = new JournalWork(new ArchiveBudget({}, () => 0), { outputWork: 7 });
   const tiny = new JournalObjects("sha1", limited);
   expect(tiny.make("blob", new Uint8Array()).data.length).toBe(0); // seven header bytes.

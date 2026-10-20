@@ -4,9 +4,10 @@ import { natural } from "@generalbusiness/artroom-bytes";
 import type { Bounds, Digest, Head, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isFactRef, isHead, isRecord, isScopeRef, parseStrict, utf8 } from "@generalbusiness/artroom-bytes";
 import { admitArchivePin, type ArchiveExportRefusal } from "@generalbusiness/artroom-git/archive-policy";
+import { JOURNAL_V2_LAST_POSITION } from "@generalbusiness/artroom-git/journal";
 import { timeMs, type ScopeState } from "@generalbusiness/dap-derive";
 import { ARCHIVE_BOUNDS, ArchiveBudget } from "./archive-budget.ts";
-import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, readArchivePin, type ArchivePin } from "./archive-pin.ts";
+import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, readArchivePin, readArchivePinAfterReceipt, type ArchivePin } from "./archive-pin.ts";
 import type { Sql } from "./sqlite.ts";
 
 /** Reserve up front for the later fixed metadata JSON expressions and
@@ -24,22 +25,25 @@ export interface ArchivePrefix {
   readonly through: Head;
   readonly positions: readonly ArchivePosition[];
   readonly bytes: number;
+  readonly after?: Head | null;
 }
 
 /** `expected` and certificates come from native caller-owned context and
  * trusted reviewer configuration, never a request's claimed safe flags. */
-export function archivePrefixMetadata(sql: Pick<Sql, "exec">, expected: ScopeRef, through: Head, bounds: Pick<Bounds, "entryBytes" | "sendsPerEntry">, budget: ArchiveBudget, certified: Pick<ReadonlySet<Digest>, "has">): ArchivePrefix {
+export function archivePrefixMetadata(sql: Pick<Sql, "exec">, expected: ScopeRef, through: Head, bounds: Pick<Bounds, "entryBytes" | "sendsPerEntry">, budget: ArchiveBudget, certified: Pick<ReadonlySet<Digest>, "has">, after?: Head | null): ArchivePrefix {
   budget.check();
+  if (after !== undefined && after !== null && (!isHead(after) || after.seq >= JOURNAL_V2_LAST_POSITION)) return stopArchivePrefix("unavailable");
+  const predecessor = after ? { ...after } : null, first = predecessor ? predecessor.seq + 1 : 0;
   // Reserve validation as well as raw metadata replies, including cache hits.
   budget.spend({ inputWork: 4 * (ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES) });
   const pinSql = budget.native(sql, () => ({ metadata: ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES, inputWork: 0 }));
-  const pin = readArchivePin(pinSql, expected);
+  const pin = predecessor ? readArchivePinAfterReceipt(pinSql, expected) : readArchivePin(pinSql, expected);
   if (!pin) { budget.check(); return stopArchivePrefix("unavailable"); }
   const admittedPin = admitArchivePin(pin.seed.definition, certified);
   if (!admittedPin.ok) return stopArchivePrefix(admittedPin.reason);
-  if (!natural(through.seq) || !isDigest(through.hash) || !natural(bounds.entryBytes) || bounds.entryBytes === 0) return stopArchivePrefix("unavailable");
+  if (!natural(through.seq) || through.seq < first || !isDigest(through.hash) || !natural(bounds.entryBytes) || bounds.entryBytes === 0) return stopArchivePrefix("unavailable");
   // At most one overflow sentinel; never scan an arbitrary future range.
-  if (through.seq > ARCHIVE_BOUNDS.entries) return stopArchivePrefix("limit");
+  if (through.seq - first > ARCHIVE_BOUNDS.entries || after !== undefined && through.seq > JOURNAL_V2_LAST_POSITION) return stopArchivePrefix("limit");
   const sizeSql = budget.native(sql, () => ({ metadata: 64, inputWork: 0 }));
   const sizes = sizeSql.exec("SELECT octet_length(v) AS size, typeof(v) AS type FROM meta WHERE k = 'scope' LIMIT 1").toArray();
   const size = sizes[0]?.["size"];
@@ -55,22 +59,26 @@ export function archivePrefixMetadata(sql: Pick<Sql, "exec">, expected: ScopeRef
   const head = frame["head"];
   if (through.seq > head.seq) return stopArchivePrefix("incomplete");
   if (through.seq === head.seq && through.hash !== head.hash) return stopArchivePrefix("mismatch");
-  const limit = Math.min(through.seq + 1, ARCHIVE_BOUNDS.entries + 1);
+  const limit = Math.min(through.seq - first + 1, ARCHIVE_BOUNDS.entries + 1);
   const positionsSql = budget.native(sql, () => ({ metadata: limit * POSITION_METADATA_BYTES, inputWork: 0 }));
   // Column byte lengths use SQLite metadata. No entry JSON operation or
   // value projection occurs until the whole input work has been admitted.
-  const rows = positionsSql.exec("SELECT seq, CASE WHEN typeof(hash) = 'text' AND octet_length(hash) = 71 THEN hash ELSE NULL END AS hash, CASE WHEN typeof(size) = 'integer' THEN size ELSE NULL END AS size, octet_length(bytes) AS actual, typeof(bytes) AS type FROM entry WHERE seq >= 0 AND seq <= ? ORDER BY seq LIMIT ?", through.seq, limit).toArray();
+  const columns = "SELECT seq, CASE WHEN typeof(hash) = 'text' AND octet_length(hash) = 71 THEN hash ELSE NULL END AS hash, CASE WHEN typeof(size) = 'integer' THEN size ELSE NULL END AS size, octet_length(bytes) AS actual, typeof(bytes) AS type FROM entry ";
+  const rows = (after === undefined
+    ? positionsSql.exec(columns + "WHERE seq >= 0 AND seq <= ? ORDER BY seq LIMIT ?", through.seq, limit)
+    : positionsSql.exec(columns + "WHERE seq >= ? AND seq <= ? ORDER BY seq LIMIT ?", first, through.seq, limit)).toArray();
   if (rows.length > ARCHIVE_BOUNDS.entries) return stopArchivePrefix("limit");
-  if (rows.length !== through.seq + 1) return stopArchivePrefix("incomplete");
+  if (rows.length !== through.seq - first + 1) return stopArchivePrefix("incomplete");
   const positions: ArchivePosition[] = []; let bytes = 0;
-  for (const [seq, row] of rows.entries()) {
+  for (const [offset, row] of rows.entries()) {
+    const seq = first + offset;
     if (row["seq"] !== seq || !isDigest(row["hash"]) || row["type"] !== "text" || !natural(row["size"]) || row["size"] === 0 || row["size"] > bounds.entryBytes || row["size"] !== row["actual"]) return stopArchivePrefix("mismatch");
     bytes += row["size"];
     if (!Number.isSafeInteger(bytes)) return stopArchivePrefix("limit");
     positions.push({ seq, hash: row["hash"], bytes: row["size"] });
   }
-  if (positions[0]?.hash !== pin.genesis || positions.at(-1)?.hash !== through.hash) return stopArchivePrefix("mismatch");
+  if (first === 0 && positions[0]?.hash !== pin.genesis || positions.at(-1)?.hash !== through.hash) return stopArchivePrefix("mismatch");
   budget.spend({ entries: positions.length, inputWork: bytes * ARCHIVE_PRIVACY_JSON_PASSES });
   budget.check();
-  return { pin, frame: frame as unknown as ScopeState, through, positions, bytes };
+  return { pin, frame: frame as unknown as ScopeState, through, positions, bytes, ...(after === undefined ? {} : { after: predecessor }) };
 }

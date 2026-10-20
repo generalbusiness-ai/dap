@@ -7,6 +7,7 @@ import { canonicalize, isDigest, isRecord, isScopeRef, parseStrict, timeMs, utf8
 import type { DestinationRepository } from "./destination-host.ts";
 import { ArchiveBudget } from "./archive-budget.ts";
 import type { Sql } from "./sqlite.ts";
+import { confirmRetainedArchivePass } from "./archive-retained-pass.ts";
 
 const KEY = "archive-row-1";
 const WAKE = "archive-wake-1";
@@ -14,7 +15,7 @@ const MANIFEST_BYTES = 1024 * 1024;
 // A canonical manifest's quotes and escapes can double when embedded in JSON.
 export const ARCHIVE_ROW_BYTES = 2 * MANIFEST_BYTES + 16 * 1024;
 type Format = "sha1" | "sha256";
-export interface ArchivedPosition { readonly commit: string; readonly through: Head }
+export interface ArchivedPosition { readonly commit: string; readonly through: Head; readonly layout?: 2 }
 export interface ArchiveMark extends ArchivedPosition {
   readonly parent: string | null;
   /** Immutable selection metadata only; no input or entry bodies. */
@@ -40,7 +41,8 @@ const refuse = (reason: ArchiveRowRefusal["reason"]): never => { throw new Archi
 const fields = (value: Record<string, unknown>, expected: string): boolean => Object.keys(value).sort().join(",") === expected;
 const objectId = (value: unknown, format: Format): value is string => typeof value === "string" && (format === "sha1" ? /^[0-9a-f]{40}$/ : /^[0-9a-f]{64}$/).test(value);
 function position(value: unknown, format: Format): value is ArchivedPosition {
-  if (!isRecord(value) || !fields(value, "commit,through") || !objectId(value["commit"], format)) return false;
+  if (!isRecord(value) || !fields(value, Object.hasOwn(value, "layout") ? "commit,layout,through" : "commit,through")
+    || Object.hasOwn(value, "layout") && value["layout"] !== 2 || !objectId(value["commit"], format)) return false;
   const head = value["through"];
   return isRecord(head) && fields(head, "hash,seq") && natural(head["seq"]) && isDigest(head["hash"]);
 }
@@ -57,12 +59,15 @@ function checked(value: unknown, at: ScopeRef, budget: ArchiveBudget): ArchiveRo
   if (pending === null && (attempts !== 0 || next !== null)) return refuse("unavailable");
   if (confirmed !== null && !position(confirmed, format)) return refuse("unavailable");
   if (pending !== null) {
-    if (!isRecord(pending) || !fields(pending, "commit,manifest,markedAt,parent,through") || !position({ commit: pending["commit"], through: pending["through"] }, format) || pending["parent"] !== null && !objectId(pending["parent"], format) || typeof pending["manifest"] !== "string" || pending["manifest"].length === 0 || pending["manifest"].length > MANIFEST_BYTES || typeof pending["markedAt"] !== "string" || timeMs(pending["markedAt"]) === null) return refuse("unavailable");
+    if (!isRecord(pending) || !fields(pending, Object.hasOwn(pending, "layout") ? "commit,layout,manifest,markedAt,parent,through" : "commit,manifest,markedAt,parent,through")
+      || Object.hasOwn(pending, "layout") && pending["layout"] !== 2
+      || !position({ commit: pending["commit"], through: pending["through"] }, format) || pending["parent"] !== null && !objectId(pending["parent"], format) || typeof pending["manifest"] !== "string" || pending["manifest"].length === 0 || pending["manifest"].length > MANIFEST_BYTES || typeof pending["markedAt"] !== "string" || timeMs(pending["markedAt"]) === null) return refuse("unavailable");
     budget.spend({ inputWork: pending["manifest"].length * 8 });
     if (utf8(pending["manifest"]).length > MANIFEST_BYTES) return refuse("limit");
     if (pending["parent"] !== (confirmed === null ? null : confirmed.commit)) return refuse("unavailable");
     const through = pending["through"] as Head;
-    if (confirmed !== null && through.seq <= confirmed.through.seq) return refuse("unavailable");
+    if (confirmed !== null && (confirmed.layout === 2 && pending["layout"] !== 2
+      || through.seq <= confirmed.through.seq && !(pending["layout"] === 2 && confirmed.layout !== 2 && same(through, confirmed.through)))) return refuse("unavailable");
   }
   return value as unknown as ArchiveRow;
 }
@@ -127,7 +132,8 @@ export class ArchiveRows {
       checked({ ...previous, pending: mark }, this.#at, budget);
       budget.spend({ inputWork: mark.manifest.length * 12 + 4096 });
       if (previous.pending) { if (!same(previous.pending, mark)) return refuse("outstanding"); return previous; }
-      if (mark.parent !== (previous.confirmed?.commit ?? null) || previous.confirmed && mark.through.seq <= previous.confirmed.through.seq) return refuse("conflict");
+      const converting = previous.confirmed && previous.confirmed.layout !== 2 && mark.layout === 2 && same(mark.through, previous.confirmed.through);
+      if (mark.parent !== (previous.confirmed?.commit ?? null) || previous.confirmed && mark.through.seq <= previous.confirmed.through.seq && !converting) return refuse("conflict");
       return this.#save({ ...previous, pending: mark }, budget);
     });
   }
@@ -137,7 +143,8 @@ export class ArchiveRows {
       if (!previous?.pending || previous.pending.commit !== commit) return refuse("conflict");
       if (previous.stopped) return refuse("stopped");
       if (afterConfirmation !== null && timeMs(afterConfirmation) === null) return refuse("unavailable");
-      return this.#save({ ...previous, confirmed: { commit, through: previous.pending.through }, pending: null, attempts: 0, next: null }, budget, afterConfirmation);
+      if (previous.pending.layout === 2) confirmRetainedArchivePass(this.#sql, previous.pending.manifest, budget);
+      return this.#save({ ...previous, confirmed: { commit, through: previous.pending.through, ...(previous.pending.layout === 2 ? { layout: 2 } : {}) }, pending: null, attempts: 0, next: null }, budget, afterConfirmation);
     });
   }
   attempt(next: Timestamp, budget = new ArchiveBudget()): ArchiveRow {

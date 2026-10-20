@@ -56,12 +56,12 @@ OS caches are uncontrolled; each receipt records its observed load.
 
 ## Work remaining
 
-Connect native interval inventory,
-retained-row `pass` columns, atomic confirmation and deterministic rebuild.
 Replace the writer's whole-parent provider read with bounded object reads
 and verify unchanged parent edges at send. Implement v1 conversion, then
 run the commissioned native witnesses and the gate once before review.
-The separate 9a observation-head proof decision remains with planner.
+The large-history driver and density-aware cutoff remain to be connected.
+Planner decision `066e49b3` now answers the separate 9a observation-head
+finding; that branch still needs its positive replay check.
 
 ## Complete clone reader
 
@@ -102,3 +102,55 @@ between layout versions. The original v1 reader's checks are unchanged.
 These are integrity and corruption checks over synthetic entry judgments
 and real Git objects. They do not establish native replay or confirmation,
 production export permission, provider behavior or deployment readiness.
+
+## Native interval and confirmation
+
+The native inventory now has a separate v2 interval mode. After a confirmed
+receipt it uses the stored append-derived pin and scope metadata, starts at
+the next position and checks the first new entry's previous hash against the
+receipt. It does not query the old genesis entry. V1 still starts at genesis.
+Reconstruction decodes the marked interval and retained-pass references;
+it does not inventory today's entries or retained set.
+
+Both retained tables gain a nullable `pass` column. Existing schemas migrate
+without changing folded state. Each lookup uses the exact primary key and a
+fixed metadata reservation. Confirmation updates only the new pass's keys,
+in the same native transaction as the archive receipt. A reused key keeps
+its original pass. V2 receipts cannot return to v1. The bookkeeping permits
+the same-cutoff v1-to-v2 confirmation, but the actual conversion builder is
+not implemented yet.
+
+The Git object reader also has an explicit bounded-body port for isolated
+transports that cannot probe metadata alone. It reserves the full maximum
+before the one read, validates the returned size/type/hash and owns its
+bytes. The existing metadata-first port is unchanged.
+
+- The bounded-body owning check passed both Git compilers and the existing
+  strengthened budget witness: 1.243210292 wall seconds, 2.111053 child CPU.
+  A single removed-reservation control passed fixed code, failed by
+  assertion and restored all bytes, modes and the lock stamp: 2.339820042
+  wall seconds, 3.117805 child CPU. The later native owning check also
+  verifies the witness after its assertion was narrowed to the required
+  reservation lower bound.
+- Native bookkeeping passed four Git/Scope compilers and four focused
+  cases: 6.611932875 wall seconds, 10.207228 child CPU. The existing row
+  witness now simulates old schemas, checks unchanged folded state, forces
+  a receipt-save failure after key updates and proves atomic rollback.
+- The strengthened confirmation witness also checks reused and new keys,
+  repository conflict, restart persistence and refusal to return to v1.
+  Removing the confirmation updates fails by assertion; fixed code passes
+  and the control restores all inputs: 9.117292542 wall seconds, 14.399880
+  child CPU.
+- Native interval inventory and exact reconstruction pass alongside one
+  existing v1 reconstruction case: 5.401619416 wall seconds, 9.815736 child
+  CPU. A later turn and eviction do not alter the marked commit. Its query
+  port refuses every old entry read, including a genesis-hash lookup.
+  Forcing that old lookup fails by assertion, with fixed and mutant inputs
+  preserved and restored: 9.004768083 wall seconds, 14.505001 child CPU.
+
+The SQLite storage, turns, transaction and restart are real. The policy,
+authority, component confirmations and conversion metadata in these small
+witnesses are explicit TEST stand-ins. No provider runs, no actual v1
+conversion is built, and the commissioned 10,000-entry and 10,000-confirmed-
+pass native scenarios remain unrun. Every attempt used zero installs and
+kept source, modes and lock stamp exact after execution.

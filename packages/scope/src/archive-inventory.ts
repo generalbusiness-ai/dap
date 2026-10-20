@@ -7,13 +7,14 @@ import type { DependencyOrigin, LocalRetainedPlan, RequiredDependency, RetainedD
 import { platform } from "@generalbusiness/dap-platform";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { ArchiveBudget, ArchiveStopped, type ArchiveCost } from "./archive-budget.ts";
-import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, readArchivePin } from "./archive-pin.ts";
+import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, readArchivePin, readArchivePinAfterReceipt } from "./archive-pin.ts";
 import { stopArchivePrefix as stop, archivePrefixMetadata, ArchivePrefixStopped, type ArchivePrefixReason } from "./archive-prefix.ts";
 import { archivePrivacyMetadata, archiveSupportMetadata, type ArchiveSupport } from "./archive-privacy.ts";
 import { ArchiveRetainedReader, readArchiveProbe } from "./archive-retained.ts";
 import type { Sql } from "./sqlite.ts";
 import { ArchiveForeignMetadata } from "./archive-foreign.ts";
 import type { ArchiveSourceBasis, FixtureArchiveSourcePins } from "./archive-source-pins.ts";
+import { readRetainedArchivePass } from "./archive-retained-pass.ts";
 
 /** Loaded only from trusted reviewer/native configuration, never request
  * input. `entryTypes` is the reviewed coverage of inline signed fields and
@@ -32,9 +33,10 @@ export interface ArchiveSelectedObject {
   readonly bytes: number;
   readonly consumers: readonly RetainedDependency[];
   readonly foreign?: { readonly fact: FactRef; readonly pin: Digest | PlatformDefinition };
+  readonly pass?: number;
 }
 export interface ArchiveInventory {
-  readonly format: "artroom-local-inventory-1";
+  readonly format: "artroom-local-inventory-1" | "artroom-local-inventory-2";
   readonly at: ScopeRef;
   readonly through: Head;
   readonly entries: readonly { readonly seq: number; readonly hash: Digest; readonly bytes: number }[];
@@ -45,6 +47,7 @@ export interface ArchiveInventory {
   readonly retention: "observed-local";
   readonly cost: ArchiveCost;
   readonly foreignSources?: readonly ArchiveSourceBasis[];
+  readonly after?: Head | null;
 }
 export type ArchiveInventoryResult = { readonly ok: true; readonly inventory: ArchiveInventory } | { readonly ok: false; readonly reason: ArchivePrefixReason | "timeout" };
 interface DefinitionMetadata { readonly definition: ValidDefinition; readonly bytes: number }
@@ -55,12 +58,12 @@ const nameOf = (key: RetainedKey) => JSON.stringify(key.kind === "value" ? [key.
  * context. The caller supplies its real Sql.transaction (transactionSync).
  * All work is synchronous: no provider task can outlive this frame. The
  * same one budget is used across every stage and every cache hit. */
-export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: Bounds, reviewed: ArchivePolicyRegistry, budget = new ArchiveBudget(), fixtureSources?: FixtureArchiveSourcePins): ArchiveInventoryResult {
+export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: Bounds, reviewed: ArchivePolicyRegistry, budget = new ArchiveBudget(), fixtureSources?: FixtureArchiveSourcePins, after?: Head | null): ArchiveInventoryResult {
   try {
     return sql.transaction(() => {
       budget.check();
       const certified = { has: (digest: Digest) => reviewed.has(digest) };
-      const prefix = archivePrefixMetadata(sql, at, through, bounds, budget, certified);
+      const prefix = archivePrefixMetadata(sql, at, through, bounds, budget, certified, after);
       const rootPolicy = reviewed.get(prefix.pin.seed.definition);
       if (!rootPolicy || !rootPolicy.review || rootPolicy.review.length > 512 || rootPolicy.support.named !== prefix.pin.seed.definition) return stop("unsupported-archive-cohort");
       let reader = new ArchiveRetainedReader(sql, budget);
@@ -106,7 +109,6 @@ export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: 
         }
         const value = { root, nodes, complete }; closures.set(root, value); return value;
       };
-      const rootOrigin: DependencyOrigin = { at: { at, seq: 0, hash: prefix.pin.genesis }, input: "genesis" };
       let definition = rootPolicy.support.definition;
       let platformClosure: Closure | null = null;
       if (isDigest(prefix.pin.seed.definition)) {
@@ -130,6 +132,8 @@ export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: 
       }
       const foreign = fixtureSources ? new ArchiveForeignMetadata(sql, fixtureSources, reviewed, bounds, budget, visited) : undefined;
       const admitted = archivePrivacyMetadata(sql, prefix, { ...rootPolicy.support, definition }, budget, foreign);
+      const firstPosition = admitted.positions[0]!;
+      const rootOrigin: DependencyOrigin = { at: { at, seq: firstPosition.seq, hash: firstPosition.hash }, input: firstPosition.input };
       // First finish admission of ALL inline local-entry classes. A trusted
       // owner table/root certificate alone cannot authorize their bodies.
       if (admitted.positions.some(position => !rootPolicy.entryTypes.has(position.input))) return stop("unsupported-archive-cohort");
@@ -171,7 +175,7 @@ export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: 
           if (!closureOf(dependency.key.digest).complete) return stop("incomplete");
         } else if (dependency.mode === "probe") for (const { key } of dependency.choices) if (key.kind === "definition") closureOf(key.digest);
       }
-      const objects = new Map<string, { key: RetainedKey; bytes: number; consumers: RetainedDependency[]; foreign?: { fact: FactRef; pin: Digest | PlatformDefinition } }>();
+      const objects = new Map<string, { key: RetainedKey; bytes: number; consumers: RetainedDependency[]; foreign?: { fact: FactRef; pin: Digest | PlatformDefinition }; pass?: number }>();
       const omittedTexts: TextDependency[] = [], ancestryUnwalked: DependencyOrigin[] = [];
       const add = (key: RetainedKey, bytes: number, consumer: RetainedDependency) => {
         const name = nameOf(key), prior = objects.get(name);
@@ -179,7 +183,9 @@ export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: 
         else {
           const copy = key.kind === "entry" ? foreign?.get(key.digest) : null;
           if (key.kind === "entry" && (!copy || copy.bytes !== bytes)) return stop("foreign-source-mismatch");
-          objects.set(name, { key, bytes, consumers: [consumer], ...(copy ? { foreign: { fact: copy.fact, pin: copy.pin } } : {}) });
+          const pass = after === undefined ? undefined : readRetainedArchivePass(sql, key, budget) ?? firstPosition.seq;
+          if (pass !== undefined && pass > firstPosition.seq) return stop("mismatch");
+          objects.set(name, { key, bytes, consumers: [consumer], ...(copy ? { foreign: { fact: copy.fact, pin: copy.pin } } : {}), ...(pass === undefined ? {} : { pass }) });
         }
       };
       const selectClosure = (digest: Digest, consumer: RequiredDependency | Extract<RetainedDependency, { mode: "probe" }>) => {
@@ -226,14 +232,14 @@ export function inventoryArchive(sql: Sql, at: ScopeRef, through: Head, bounds: 
       // Rebind native scope/pin/cutoff before the only result. No await or
       // mutation can occur between this fence and returning the descriptor.
       budget.spend({ inputWork: 4 * (ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES) });
-      const finalPin = readArchivePin(budget.native(sql, () => ({ metadata: ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES, inputWork: 0 })), at);
+      const finalPin = (after ? readArchivePinAfterReceipt : readArchivePin)(budget.native(sql, () => ({ metadata: ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES, inputWork: 0 })), at);
       budget.check();
       if (!finalPin || canonicalize(finalPin) !== canonicalize(prefix.pin)) return stop("mismatch");
       const cutoff = budget.native(sql, () => ({ metadata: 128, inputWork: 0 })).exec("SELECT hash, size, octet_length(bytes) AS actual FROM entry WHERE seq = ? AND typeof(hash) = 'text' AND octet_length(hash) = 71 LIMIT 1", through.seq).toArray(), last = admitted.positions.at(-1)!;
       if (cutoff.length !== 1 || cutoff[0]?.["hash"] !== through.hash || cutoff[0]?.["size"] !== last.bytes || cutoff[0]?.["actual"] !== last.bytes) return stop("mismatch");
       const foreignSources = foreign?.basis() ?? [];
       budget.check();
-      return { ok: true as const, inventory: { format: "artroom-local-inventory-1" as const, at, through, entries: prefix.positions, objects: [...objects.values()], omittedTexts, ancestryUnwalked, replay: "unchecked" as const, retention: "observed-local" as const, cost: budget.admitted(), ...(foreignSources.length ? { foreignSources } : {}) } };
+      return { ok: true as const, inventory: { format: after === undefined ? "artroom-local-inventory-1" as const : "artroom-local-inventory-2" as const, at, through, entries: prefix.positions, objects: [...objects.values()], omittedTexts, ancestryUnwalked, replay: "unchecked" as const, retention: "observed-local" as const, cost: budget.admitted(), ...(foreignSources.length ? { foreignSources } : {}), ...(after === undefined ? {} : { after: prefix.after ?? null }) } };
     });
   } catch (error) {
     if (error instanceof ArchiveStopped || error instanceof ArchivePrefixStopped) return { ok: false, reason: error.reason };
