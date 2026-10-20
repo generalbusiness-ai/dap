@@ -1,0 +1,81 @@
+// Grow's scope Worker at https://dap-grow.inguz.workers.dev.
+// Deploy from a scratch directory with the pinned tool:
+// npx -y wrangler@4.147.0 deploy --config /absolute/path/to/artroom/apps/room/wrangler.grow.jsonc
+// Set SESSION_SECRET separately from stdin.
+// Durable Objects and Register17 belong to this Worker. The artroom-demo
+// Artifacts namespace and application-content bucket are shared.
+{
+  "name": "dap-grow",
+  "main": "worker.ts",
+  "compatibility_date": "2026-08-15",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "invocation_logs": false
+    }
+  },
+  "analytics_engine_datasets": [
+    {
+      "binding": "METRICS",
+      "dataset": "artroom_metrics_v1"
+    }
+  ],
+  "version_metadata": {
+    "binding": "VERSION_METADATA"
+  },
+  "r2_buckets": [
+    {
+      "binding": "APPLICATION_CONTENT",
+      "bucket_name": "artroom-application-content"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "SCOPES",
+        "class_name": "DeployedScope"
+      },
+      {
+        "name": "REGISTRIES",
+        "class_name": "McpRegistry"
+      },
+      {
+        "name": "AGENTS",
+        "class_name": "McpAgent"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "DeployedScope"
+      ]
+    },
+    {
+      "tag": "v2",
+      "new_sqlite_classes": [
+        "McpRegistry",
+        "McpAgent"
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "binding": "ARTIFACTS",
+      "namespace": "artroom-demo",
+      "remote": true
+    }
+  ],
+  "vars": {
+    "DEPLOYMENT": "dap-grow-v1",
+    "ARTIFACTS_CONFIG": "{\"registerScope\":\"sc_yatkl7kuktl2gauvjrt7b2zy7nr6nu55vkzorot2bm5n2umgpbnq\",\"namespace\":\"artroom-demo\",\"host\":\"6e953d231f1c9aadffbf59537a82e13a.artifacts.cloudflare.net\",\"maxBytes\":10485760,\"credentialIdentity\":\"adapter-attempt\"}",
+    "APPLICATION_TRUST": "[{\"release\":\"sha256:71e10ca9499e926a4de1d8294ed83a772051dff677d8b1687bbd8e28e61802fa\",\"publisher\":\"key_gg4rXwy4v-kVqveN37_W_FW_-Wvsn3fgsal5z6gxfS0\"}]"
+  }
+}
