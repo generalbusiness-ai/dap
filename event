@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:dc89d5c8e650c7d2f3114b34a8852074db1a1e99","text":"Merge retired a covered predecessor; the successor is at packages/scope/test/support/application-fact-time-fixture.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:dcede029f9bd4fe16610dca55749716be36c4300","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/inventory.test.ts."}
