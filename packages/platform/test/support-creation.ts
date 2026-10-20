@@ -18,20 +18,16 @@
  */
 
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
-import type { Digest, Entry, FactRef, PlatformData, Request, ScopeRef, Seed, Send, SignedIntent } from "@generalbusiness/dap-contract";
+import type { Digest, Entry, FactRef, Request, ScopeRef, Seed, Send, SignedIntent } from "@generalbusiness/dap-contract";
 import { factRefOf, intentDigest, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/artroom-bytes";
-import { PROFILES, clockOf, judgeDelivery, judgeGenesis, judgeOutcome, ownersOf, validateDefinition } from "@generalbusiness/dap-derive";
+import { clockOf, judgeDelivery, judgeGenesis, judgeOutcome, ownersOf } from "@generalbusiness/dap-derive";
 import type { ActJudgment, Judgment, PlatformRules, Source, ValidDefinition } from "@generalbusiness/dap-derive";
 import { Ledger, T0, forged, keys, t, type Actor, type Context, type Over } from "@generalbusiness/dap-derive/testing";
 import { DIRECTORY, REGISTER, directoryRules, directorySeed, platform, registerRules, repositoryName } from "../src/index.ts";
+import { checkedPlatformData as checked, written } from "./fixtures.ts";
 
 export const { rita, una, vic, paul, sam } = keys;
 
-const checked = (data: PlatformData): ValidDefinition => {
-  const result = validateDefinition(JSON.parse(JSON.stringify(data)), PROPOSED_BOUNDS, PROFILES, { platform: true });
-  if (!result.ok) throw new Error(`${data.name} is refused: ${JSON.stringify(result.problems)}`);
-  return result.definition;
-};
 /** The register's and the directory's data, of the newest version of each, validated as a runtime validates them. */
 export const registerDefinition = checked(platform(REGISTER)!.data);
 export const directoryDefinition = checked(platform(DIRECTORY)!.data);
@@ -42,10 +38,6 @@ export const registerPlatform: PlatformRules = { named: REGISTER, rules: registe
 /** The directory's rules, as the package supplies them: what a judge of these tests is given. */
 export const directoryPlatform: PlatformRules = { named: DIRECTORY, rules: directoryRules };
 
-function written(judgment: Judgment): Extract<Judgment, { result: "write" }>["draft"] {
-  if (judgment.result !== "write") throw new Error(`not written: ${JSON.stringify(judgment)}`);
-  return judgment.draft;
-}
 
 /** The creation intent of a register: an `install`, signed by that key, with `to: null`. */
 export const installing = (who: Actor, policy: "keys" | "open", creators: readonly string[] | undefined, kind = "install"): SignedIntent =>

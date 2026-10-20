@@ -4,7 +4,7 @@
 import type { Digest, Input } from "@generalbusiness/dap-contract";
 import { isDigest, platformName } from "@generalbusiness/artroom-bytes";
 import { ArchiveBudget } from "./archive-budget.ts";
-import { ArchivePrefixStopped, type ArchivePrefix, type ArchivePosition } from "./archive-prefix.ts";
+import { stopArchivePrefix as stop, type ArchivePrefix, type ArchivePosition } from "./archive-prefix.ts";
 import type { Sql } from "./sqlite.ts";
 import type { ArchiveForeignMetadata } from "./archive-foreign.ts";
 import { archiveEntryHeader, archiveEntryPrivacy, archiveSupportMetadata, type ArchiveSupport } from "./archive-entry-metadata.ts";
@@ -14,7 +14,6 @@ export type { ArchiveSupport } from "./archive-entry-metadata.ts";
 
 export interface ArchivePrivacyPosition extends ArchivePosition { readonly input: Input["type"] }
 export interface ArchivePrivacyPrefix extends Omit<ArchivePrefix, "positions"> { readonly positions: readonly ArchivePrivacyPosition[] }
-const stop = (reason: ConstructorParameters<typeof ArchivePrefixStopped>[0]): never => { throw new ArchivePrefixStopped(reason); };
 
 export function archivePrivacyMetadata(sql: Pick<Sql, "exec">, prefix: ArchivePrefix, support: ArchiveSupport, budget: ArchiveBudget, foreign?: ArchiveForeignMetadata): ArchivePrivacyPrefix {
   budget.check();

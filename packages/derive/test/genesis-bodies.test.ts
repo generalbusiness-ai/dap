@@ -2,8 +2,7 @@ import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Intent, type Seed } from "@generalbusiness/dap-contract";
 import { intentDigest, newIncarnation, scopeIdOf, signIntent, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
 import { clockOf, judgeGenesis } from "../src/index.ts";
-import { Ledger, T0, keys, t } from "./fixtures.ts";
-import { genesisBodyDefinition } from "./fixtures-genesis-bodies.ts";
+import { Ledger, T0, keys, t, genesisBodyDefinition } from "./fixtures-entry.ts";
 
 test("opt-in signed genesis requires every named body before recording even a refused birth, while legacy and repeat judgments keep their paths", () => {
   const body = "é\n", other = "other", digest = textDigest(body), second = textDigest(other);

@@ -6,11 +6,11 @@ import { lane as deriveLane } from "@generalbusiness/dap-derive/testing";
 import { countingCommitments } from "../../../apps/counter/commitments.ts";
 import { counting } from "../../../apps/counter/definition.ts";
 import type { DeclaredDefinition, ScopeId } from "@generalbusiness/dap-contract";
-import { secretSigner } from "@generalbusiness/artroom-client";
 import { DESCRIPTION_CHARS, McpService, memoryStore, actTool, bindingsOf, describeAct, describedOf, generationOf, guardSentences, inline, listed, WORDS, type ActLike, type DefinitionLike, type Held, type Inventory } from "../src/index.ts";
 import { ACTIVE_DEMO, MEMBERSHIP, declared, demoInventory, heldOf, lane, standingOf } from "./support/catalogue.ts";
 import { garden } from "./support/garden.ts";
 import { SERVICE, StandIn } from "./support/standin.ts";
+import { fixedSigner } from "./fixtures.ts";
 
 const DOC = readFileSync(new URL("../../../docs/mcp.md", import.meta.url), "utf8");
 
@@ -59,7 +59,7 @@ describe("descriptions are derived from the whole declaration", () => {
     const definition = { ...garden, acts: { ...garden.acts, plant: { ...plant, guards: [...plant.guards,
       { unknownForm: payload, reason: payload }, payload, { fact: { future: payload }, reason: payload }, { anyOf: [payload] },
     ] } } } as unknown as DeclaredDefinition;
-    const signer = secretSigner(new Uint8Array(32).fill(27));
+    const signer = fixedSigner(27);
     const standIn = new StandIn(signer.key, "member", ["issue.comment"]);
     const scope = standIn.lane(definition);
     const config = standIn.config();

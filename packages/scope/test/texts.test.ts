@@ -8,7 +8,7 @@ import { grantOf, variant } from "@generalbusiness/dap-derive/testing";
 import { create, httpTransport, secretSigner, signedIntent } from "@generalbusiness/artroom-client";
 import { TRUSTS, httpSource, verify } from "@generalbusiness/artroom-replay";
 import { Node, creation, later, net, rita, routed, settle } from "./net.ts";
-import { reader } from "./support.ts";
+import { reader } from "./fixtures-native.ts";
 
 /**
  * A made-up definition with one detached text (section 6.2): a note whose

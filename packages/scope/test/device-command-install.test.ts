@@ -13,15 +13,10 @@ import { httpSource, verify } from "@generalbusiness/artroom-replay";
 import { CAPABILITY_CODE } from "../src/ports.ts";
 import { net } from "../src/testing.ts";
 import { SqliteStore } from "../src/sqlite.ts";
-import { deviceApplicationPacket } from "./support/device-application-fixture.ts";
+import { deviceApplicationPacket, applicationResolverFixture, applicationHttpPeer, sessionRoom, dispatchFixture, driveFixture, effectFixture, reader, applicationWorkerBindings } from "./fixtures-native.ts";
 import { deviceCommandFixture } from "../../derive/test/fixtures-device-command.ts";
 import { outsideOf as hostOutside } from "../src/worker.ts";
-import { applicationResolverFixture } from "./support/application-fixture.ts";
-import { applicationHttpPeer } from "./support/application-http-peer.ts";
-import { sessionRoom } from "./support/session-room.ts";
-import { dispatchFixture, driveFixture, effectFixture } from "./support/native-fixture-lifetime.ts";
 import { rita, routed } from "./repository.ts";
-import { reader } from "./support.ts";
 import worker from "../../../apps/room/worker.ts";
 
 test.each([["device", C, undefined, false], ["device/archive bound", AC, "journal", true], ["device/archive unbound", AC, undefined, false]] as const)("a native install checks its existing owner and preserves its command grant through SQLite restart (%s)", async (_label, C, archive, requiresArchive) => {
@@ -30,7 +25,7 @@ test.each([["device", C, undefined, false], ["device/archive bound", AC, "journa
   const room = await sessionRoom(C.register, archive), { life, R, D, children } = room, [M, A, G] = children;
   if (!M || !A || !G) throw Error("The device cohort needs its exact siblings.");
   const f = await applicationResolverFixture("sha1", undefined, {}, undefined, packet), peer = applicationHttpPeer(f);
-  const bindings = { SCOPES: env.PLATFORM, APPLICATION_CONTENT: env.APPLICATION_CONTENT, APPLICATION_TRUST: JSON.stringify(f.trust) };
+  const bindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(f.trust));
   try {
     const seat = await life.wait(() => M.did(rita, "seat", { expected: { roster: 1 } }));
     await life.wait(async () => M.did(rita, "first-key", { fields: { member: seat }, expected: await M.expected({ roster: 0, member: seat }) }));

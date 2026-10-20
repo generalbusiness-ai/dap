@@ -1,13 +1,31 @@
 # Provision and run the Grow demo
 
-Run status: local implementation. The signed demo packet, separate Worker
-entry/configuration and installed native tick witnesses are prepared.
-No hosted Grow room, simulator deployment or live tick has been created.
-The final integrated gate and exact-head review remain required.
-The final head must include landed S2a and its combined Device/archive
-cohort. Provision no hosted room from the earlier Device-only cohort.
-Planner deploys and runs this procedure after that review. Local builder
-checks and dry runs create no Cloudflare resources.
+Run status, 20 October 2026, 07:20 ET: planner provisioning record
+`740b21d9` reports the `dap-grow` scope Worker and `dap-grow-simulator`
+provisioned from published Main `8aad37bb`. The Register17 room has
+confirmed Directory16, Membership8, Rules10 and Destination12 siblings.
+Install item 2 is active; its Site and Room A are created. The operator
+and two controlled agents are enrolled. The simulator runs every UTC
+minute; the record includes its 07:18 tick and native device answers.
+The homepage deployment, visitor invitation journey, a person's authorize
+act and missed-tick recovery remain open under the operational milestone.
+
+The scope service is `https://dap-grow.inguz.workers.dev`, with deployment
+identity `dap-grow-v1`. Its public settings are committed in
+[`apps/room/wrangler.grow.jsonc`](../../apps/room/wrangler.grow.jsonc).
+It has its own Durable Objects and register
+`sc_yatkl7kuktl2gauvjrt7b2zy7nr6nu55vkzorot2bm5n2umgpbnq`, and shares
+the `artroom-demo` Artifacts namespace and application-content bucket.
+`SESSION_SECRET` is set separately from stdin. For a reviewed maintenance
+deployment, run the pinned tool from a scratch directory:
+
+```sh
+ARTROOM_REPO=/absolute/path/to/artroom
+cd "$(mktemp -d)"
+npx -y wrangler@4.147.0 deploy --config "$ARTROOM_REPO/apps/room/wrangler.grow.jsonc"
+```
+
+Planner owns deployment and the remaining hosted acceptance procedure.
 
 Use the reviewed, landed checkout and preserve each original request and
 receipt. The committed packet is `examples/grow/demo/application.dap.json`.

@@ -1,7 +1,7 @@
 /** Counting application: scope-verified field proposals, native Join order, no outside effects. */
 import type { ActType, DeclaredDefinition, EffectForm, FieldType, FieldValue, Guard, ItemType, Range, Subject } from
   "@generalbusiness/dap-contract";
-const integer = (min:number,max:number) => ({type:"int",min,max} as const);
+const integerField = (min:number,max:number) => ({type:"int",min,max} as const);
 const field = (type:FieldType, required=true): FieldType & {required:boolean} => ({...type,required});
 const value = (of:FieldType, required=false, defaultValue?:FieldValue): ItemType["values"][string] =>
   ({fixed:false,required,of,...(defaultValue===undefined?{}:{default:defaultValue})});
@@ -31,8 +31,8 @@ const issue = (numberField:string,unless?:Guard[]):EffectForm[] => [
   {value:{slot:"basis",from:{field:"basis"}},...(unless?{unless}:{})},
   {value:{slot:"number",from:{field:numberField}},...(unless?{unless}:{})},
   {value:{slot:"until",from:{time:{plusSeconds:15}}},...(unless?{unless}:{})}];
-const leaveFields = {generation:field(integer(0,1000000)), serial:field(integer(0,1000000)),
-  nextSerial:field(integer(1,1000000)), basis:field(basis), replace:field({type:"bool"}), next:field(id,false)};
+const leaveFields = {generation:field(integerField(0,1000000)), serial:field(integerField(0,1000000)),
+  nextSerial:field(integerField(1,1000000)), basis:field(basis), replace:field({type:"bool"}), next:field(id,false)};
 const leaveEffects:EffectForm[] = [
   {state:"left"},
   {of:"also.board",value:{slot:"serial",from:{field:"nextSerial"}},if:[current]},
@@ -50,20 +50,20 @@ export const counting:DeclaredDefinition = {
   capabilities:[],genesis:"establish",
   items:{
     configuration:{many:false,max:1,states:{ready:{final:false}},initial:"ready",
-      parties:{controller:party(true,true)},refs:{},values:{target:{fixed:true,required:true,of:integer(1,100)}}},
+      parties:{controller:party(true,true)},refs:{},values:{target:{fixed:true,required:true,of:integerField(1,100)}}},
     board:{many:false,max:1,states:{paused:{final:false},running:{final:false},finished:{final:false}},
       initial:"paused",parties:{controller:party(true,true),speaker:party(),lastSpeaker:party()},
       refs:{lastSpokenAt:{fixed:false,required:false,to:{type:"fact",under:"counting",kind:["spoken"]}}},
-      values:{target:{fixed:true,required:true,of:integer(1,100)},
-        generation:value(integer(0,1000000),true,0),serial:value(integer(0,1000000),true,0),
-        lastNumber:value(integer(0,100),true,0),number:value(integer(1,100)),
+      values:{target:{fixed:true,required:true,of:integerField(1,100)},
+        generation:value(integerField(0,1000000),true,0),serial:value(integerField(0,1000000),true,0),
+        lastNumber:value(integerField(0,100),true,0),number:value(integerField(1,100)),
         basis:value(basis),until:value({type:"time"})}},
     participant:{many:true,max:8,states:{joined:{final:false},left:{final:true}},initial:"joined",
       parties:{agent:party(true,true)},refs:{},values:{}}
   },
   acts:{
     establish:{...base("open","configuration","counting.establish"),
-      fields:{opener:field({type:"member"}),target:field(integer(1,100))},
+      fields:{opener:field({type:"member"}),target:field(integerField(1,100))},
       effects:[{party:{slot:"controller",from:{field:"opener"}}},
         {value:{slot:"target",from:{field:"target"}}}]},
     initialize:{...base("open","board","counting.control"),
@@ -80,20 +80,20 @@ export const counting:DeclaredDefinition = {
       fields:{...leaveFields,reason:field({type:"enum",of:["disconnect","media-error"]})}},
     start:{...base("transition","board","counting.control"),
       also:{next:{item:"participant",by:"next"}},
-      fields:{n:field(integer(1,100)),nextSerial:field(integer(1,1000000)),basis:field(basis),next:field(id)},
+      fields:{n:field(integerField(1,100)),nextSerial:field(integerField(1,1000000)),basis:field(basis),next:field(id)},
       guards:[{state:["paused"]},controller,{of:"also.next",state:["joined"]},roster(),rule("start-plan")],
       effects:[{state:"running"},{value:{slot:"serial",from:{field:"nextSerial"}}},...issue("n")]},
-    pause:{...base("transition","board","counting.control"),fields:{nextSerial:field(integer(1,1000000))},
+    pause:{...base("transition","board","counting.control"),fields:{nextSerial:field(integerField(1,1000000))},
       guards:[{state:["running"]},controller,rule("serial-plan")],
       effects:[{state:"paused"},{value:{slot:"serial",from:{field:"nextSerial"}}},...clear()]},
-    reset:{...base("transition","board","counting.control"),fields:{generation:field(integer(1,1000000))},
+    reset:{...base("transition","board","counting.control"),fields:{generation:field(integerField(1,1000000))},
       guards:[{state:["paused","running","finished"]},controller,rule("reset-plan")],effects:[{state:"paused"},
         {value:{slot:"generation",from:{field:"generation"}}},{value:{slot:"serial",from:{const:0}}},
         {value:{slot:"lastNumber",from:{const:0}}},{party:{slot:"lastSpeaker",from:null}},
         {ref:{slot:"lastSpokenAt",from:null}},...clear()]},
     spoken:{...base("transition","board","counting.spoken"),also:{next:{item:"participant",by:"next"}},
-      fields:{generation:field(integer(0,1000000)),serial:field(integer(1,1000000)),n:field(integer(1,100)),
-        nextN:field(integer(1,100)),nextSerial:field(integer(1,1000000)),basis:field(basis),next:field(id)},
+      fields:{generation:field(integerField(0,1000000)),serial:field(integerField(1,1000000)),n:field(integerField(1,100)),
+        nextN:field(integerField(1,100)),nextSerial:field(integerField(1,1000000)),basis:field(basis),next:field(id)},
       guards:[{state:["running"]},{signer:["speaker"]},
         {some:{...range(),where:[{equals:{a:{slot:"agent"},b:{signer:true}}}]}},
         {of:"also.next",state:["joined"]},roster(),rule("spoken-plan")],

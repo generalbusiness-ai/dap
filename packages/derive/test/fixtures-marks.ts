@@ -20,7 +20,7 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { PlatformData, PlatformDefinition } from "@generalbusiness/dap-contract";
 import { textDigest } from "@generalbusiness/artroom-bytes";
 import { PROFILES, validateDefinition, type PlatformRule, type PlatformRules, type RuleGiven, type Rules, type ValidDefinition } from "../src/index.ts";
-import { valid } from "./fixtures.ts";
+import { changedDraft, valid } from "./fixtures.ts";
 
 const NO = { parties: {}, refs: {} } as const;
 const EVEN = { code: "even", row: "P22", type: "code" } as const;
@@ -83,8 +83,7 @@ export const GATE = "platform:gate@1" as PlatformDefinition;
 /** The made-up data with one change, validated with the platform option, as the platform package's data is. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function gateWith(change: (data: any) => void = () => {}): ValidDefinition {
-  const data = structuredClone(gate);
-  change(data);
+  const data = changedDraft(gate, change);
   return valid(validateDefinition(data, PROPOSED_BOUNDS, PROFILES, { platform: true }));
 }
 

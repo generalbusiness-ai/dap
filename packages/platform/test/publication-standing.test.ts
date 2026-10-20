@@ -6,7 +6,7 @@ import type { Entry, FactRef, FieldValue, Input, KeyId } from "@generalbusiness/
 import { entryHash, keyIdOfSecret, newIncarnation } from "@generalbusiness/artroom-bytes";
 import type { Item, Operation } from "@generalbusiness/dap-derive";
 import { d, directory, otherLane, t } from "@generalbusiness/dap-derive/testing";
-import { MEMBERSHIP, keyObserved, retained, rita } from "./support-destination.ts";
+import { MEMBERSHIP, keyObserved, retained, destinationRita as rita } from "./fixtures-entry.ts";
 import { publicationStandingKeys, publicationStandingRecord, type PublicationStandingContext, type PublicationStandingRecord, type StandingCheck } from "../src/publication-standing.ts";
 
 const at = { ...directory, kind: "destination" as const }, from = (seq: number): FactRef => ({ at: otherLane, seq, hash: d("a") });

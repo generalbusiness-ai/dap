@@ -6,9 +6,8 @@ import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { applicationHttpSource } from "../src/applications/http-source.ts";
 import { resolveAndStoreApplication } from "../src/applications/resolve.ts";
-import { applicationResolverFixture as fixture } from "./support/application-fixture.ts";
+import { applicationResolverFixture as fixture, applicationHttpPeer, packetLine as packet, concatBytes as concat } from "./fixtures-native.ts";
 const utf8 = new TextEncoder();
-import { applicationHttpPeer, packetLine as packet, concatBytes as concat } from "./support/application-http-peer.ts";
 
 test("the host resolves only four exact isolated objects with no credentials or closure fallback", async () => {
   const f = await fixture("sha1"), peer = applicationHttpPeer(f);

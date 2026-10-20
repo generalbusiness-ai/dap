@@ -2,12 +2,12 @@
  * A verified header/pin is metadata, never reviewed privacy coverage,
  * production provenance, consent or permission to export a payload. */
 import type { Bounds, Digest, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, entryHash, isDigest, isEntry, isRecord, isScopeRef, parseStrict, scopeIdOf, utf8 } from "@generalbusiness/artroom-bytes";
+import { same, canonicalize, definitionDigest, entryHash, isDigest, isEntry, isRecord, isScopeRef, parseStrict, scopeIdOf, utf8 } from "@generalbusiness/artroom-bytes";
 import { outcomeValueDomains, validateDefinition } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { platform } from "@generalbusiness/dap-platform";
 import { ArchiveBudget } from "./archive-budget.ts";
-import { ArchivePrefixStopped } from "./archive-prefix.ts";
+import { stopArchivePrefix as stop } from "./archive-prefix.ts";
 
 export const ARCHIVE_SOURCE_PINS = 64;
 export interface FixtureArchiveSourceBirth {
@@ -21,8 +21,6 @@ export interface FixtureArchiveSourceBirth {
 }
 export interface ArchiveSourceBasis { readonly at: ScopeRef; readonly pin: Digest | PlatformDefinition }
 export interface ArchiveSourcePin extends ArchiveSourceBasis { readonly genesis: Digest; readonly declaration: string }
-const same = (a: unknown, b: unknown) => canonicalize(a) === canonicalize(b);
-const stop = (reason: "mismatch" | "unavailable" | "unsupported-archive-cohort"): never => { throw new ArchivePrefixStopped(reason); };
 const json = (bytes: string): unknown => { try { return parseStrict(bytes); } catch { return stop("mismatch"); } };
 const birthInput = (value: unknown): value is FixtureArchiveSourceBirth => isRecord(value) && isRecord(value["birth"])
   && isScopeRef(value["at"]) && isDigest(value["birth"]["hash"]) && typeof value["birth"]["bytes"] === "string";

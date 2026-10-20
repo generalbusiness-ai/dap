@@ -1,7 +1,7 @@
 /** Separate scheduled Worker. All progress lives in the application's
  * journal. Environment bindings contain public references and two secrets. */
 import type { Digest, KeyId, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, entryHash, isMemberRef, isRecord, isScopeRef, parseStrict, timeOf, unb64url } from "@generalbusiness/artroom-bytes";
+import { same, definitionDigest, entryHash, isMemberRef, isRecord, isScopeRef, parseStrict, timeOf, unb64url } from "@generalbusiness/artroom-bytes";
 import { httpTransport, newIdempotencyKey, requestSession, ScopeHandle, secretSigner, sessionRequest, type Fetch, type Signer, type Transport } from "@generalbusiness/artroom-client";
 import { demoDefinitions } from "./demo-definitions.ts";
 import { simulatorRelease } from "./simulator-release.ts";
@@ -16,7 +16,6 @@ export interface SimulatorEnvironment {
   GROW_CLIMATE_SECRET: string;
 }
 interface Binding { service: string; room: ScopeRef; members: { sensors: MemberRef; climate: MemberRef; operator: MemberRef } }
-const same = (a: unknown, b: unknown) => canonicalize(a) === canonicalize(b);
 const exact = (value: unknown, keys: string): value is Record<string, unknown> => isRecord(value) && Object.keys(value).sort().join(",") === keys;
 function binding(text: string): Binding {
   if (text.length > 8192) throw new Error("invalid-demo-binding");

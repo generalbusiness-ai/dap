@@ -1,4 +1,5 @@
 /** Two explicit demo roots at most. This projection grants nothing and wakes no work. */
+import { isRecord as record } from "@generalbusiness/artroom-bytes";
 import type { Head, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, parseStrict, utf8 } from "@generalbusiness/artroom-bytes";
 import { isScopeRef } from "@generalbusiness/dap-derive";
@@ -12,7 +13,6 @@ export interface DemoCreationOffer extends Omit<DemoCreationConfig, "deployment"
   at: Head;
   registerItem: { id: number; revision: number; state: "open"; host: string; namespace: string; policy: "open"; purpose: typeof DEMO_PURPOSE };
 }
-const record = (value: unknown): value is Record<string, unknown> => !!value && typeof value === "object" && !Array.isArray(value);
 export const registerRef = (value: unknown): value is ScopeRef => record(value) && Object.keys(value).length === 3 && isScopeRef(value) && value.kind === "register";
 export function demoCreationConfig(raw: string | undefined, deployment: string | undefined): DemoCreationSettings | null {
   try {

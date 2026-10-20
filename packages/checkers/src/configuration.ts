@@ -48,11 +48,11 @@ export interface Configuration {
   limits: { seconds: number; outputBytes: number };
 }
 
-const text = (v: unknown, max: number): v is string => typeof v === "string" && v !== "" && wellFormed(v) && utf8(v).length <= max && !v.includes("\u0000");
+const configurationText = (v: unknown, max: number): v is string => typeof v === "string" && v !== "" && wellFormed(v) && utf8(v).length <= max && !v.includes("\u0000");
 const whole = (v: unknown, min: number, max: number): v is number => typeof v === "number" && Number.isSafeInteger(v) && v >= min && v <= max;
 /** A record with exactly these members. `outcome.ts` reads a runner's report with it. */
 export const exactly = (v: unknown, names: readonly string[]): v is Record<string, unknown> => isRecord(v) && Object.keys(v).length === names.length && names.every((name) => Object.hasOwn(v, name));
-const judged = (v: unknown): v is Judged => exactly(v, ["status", "line"]) && whole(v["status"], 0, 255) && text(v["line"], 1024) && !/[\r\n]/.test(v["line"] as string);
+const judged = (v: unknown): v is Judged => exactly(v, ["status", "line"]) && whole(v["status"], 0, 255) && configurationText(v["line"], 1024) && !/[\r\n]/.test(v["line"] as string);
 
 /** The digest of a configuration value, in its domain. */
 export const configurationDigest = (value: unknown): Digest => digestOfHash(sha256(domainBytes(CONFIGURATION_DOMAIN as DomainTag, value)));
@@ -82,7 +82,7 @@ export function readConfiguration(bytes: unknown, digest: Digest): Configuration
   if (configurationDigest(value) !== digest) return null;
   if (!exactly(value, ["name", "image", "environment", "steps", "judged", "limits"])) return null;
   const { name, image, environment, steps, judged: by, limits } = value;
-  if (!text(name, 128) || !isDigest(image)) return null;
+  if (!configurationText(name, 128) || !isDigest(image)) return null;
   if (!Array.isArray(environment) || environment.length > 64 || !environment.every((v) => exactly(v, ["name", "value"]) && typeof v["name"] === "string" && /^[A-Za-z_][A-Za-z0-9_]{0,127}$/.test(v["name"]) && typeof v["value"] === "string" && wellFormed(v["value"]) && !v["value"].includes("\u0000"))) return null;
   if (new Set(environment.map((v: Variable) => v.name)).size !== environment.length) return null;
   if (!Array.isArray(steps) || steps.length < 1 || steps.length > 32 || !steps.every((step) => Array.isArray(step) && step.length >= 1 && step.length <= 256 && step.every((arg) => typeof arg === "string" && wellFormed(arg) && !arg.includes("\u0000")) && step[0] !== "")) return null;

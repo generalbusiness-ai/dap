@@ -1,8 +1,7 @@
 import { expect, test } from "vitest";
 import { canonicalBytes } from "@generalbusiness/artroom-bytes";
 import { validateDefinition } from "../src/index.ts";
-import { boundRecordData, boundRecordDefinition } from "./fixtures-bound-records.ts";
-import { PIN_BOUNDS } from "./fixtures-receiver-pins.ts";
+import { boundRecordData, boundRecordDefinition, PIN_BOUNDS } from "./fixtures-entry.ts";
 
 test.each([false, true])("a bound decision quotes actual first-key producers, not its generic effect ceiling (native key %s)", firstKey => {
   const definition = boundRecordDefinition(firstKey);

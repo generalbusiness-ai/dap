@@ -52,6 +52,7 @@
  * entries EQ1 to EQ11 and FB1 to FB5.
  */
 
+import { isRecord } from "@generalbusiness/artroom-bytes";
 import type { DeclaredDefinition, Digest, MemberId, MemberObservation, ObservationRequest, PlatformData, PlatformDefinition, RulesObservation, ScopeId } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isMemberRef, utf8 } from "@generalbusiness/artroom-bytes";
@@ -408,7 +409,6 @@ export function revisionOf(state: Pick<StateView, "page">): number | null {
   return published ?? 0;
 }
 
-const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value);
 const PAGE = 100;
 
 /**

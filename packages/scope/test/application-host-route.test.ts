@@ -4,7 +4,7 @@ import { env } from "cloudflare:test";
 import { newIncarnation, scopeIdOf, textDigest } from "@generalbusiness/artroom-bytes";
 import { applicationScreenPath } from "@generalbusiness/artroom-client/application";
 import type { ScopeKind, ScopeRef } from "@generalbusiness/dap-contract";
-import { applicationResolverFixture } from "./support/application-fixture.ts";
+import { applicationResolverFixture, applicationWorkerBindings } from "./fixtures-native.ts";
 import { expect, test } from "vitest";
 import worker, { type Env } from "../../../apps/room/worker.ts";
 test("Room refuses retired application paths and still rejects URL credentials before dispatch", async () => {
@@ -44,7 +44,7 @@ test("two pending packet loads coalesce while a third distinct release refuses b
     };
     return typeof value === "function" ? value.bind(target) : value;
   } });
-  const bindings = { SCOPES: scopes as unknown as Env["SCOPES"], APPLICATION_CONTENT: bucket, APPLICATION_TRUST: trust };
+  const bindings = applicationWorkerBindings(scopes as unknown as Env["SCOPES"], bucket, trust);
   const get = (item: number) => worker.fetch(new Request("https://cache.test" + applicationScreenPath(directory.scope, item, fixtures[item]!.packet.ids.presentation) + "index.html"), bindings);
   const outstanding: Promise<Response>[] = [];
   try {

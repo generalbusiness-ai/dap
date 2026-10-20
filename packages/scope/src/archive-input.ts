@@ -1,6 +1,7 @@
 /** Exact immutable-selection reads for a build or rebuild. No head read,
  * inventory, retention enumeration or detached-text fallback. Foreign copies
  * require their marked source/pin pairs to match the fixture configuration. */
+import { natural } from "@generalbusiness/artroom-bytes";
 import { RETAINED_INPUT_BYTES, type Digest, type FactRef, type PlatformDefinition } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isFactRef, isPlatformDefinition, isScopeRef, utf8 } from "@generalbusiness/artroom-bytes";
 import { checkedRetainedKey, type RetainedKey } from "@generalbusiness/dap-derive";
@@ -15,7 +16,6 @@ export interface ArchiveInputSelection {
   readonly objects: readonly { readonly key: RetainedKey; readonly bytes: number; readonly foreign?: { readonly fact: FactRef; readonly pin: Digest | PlatformDefinition } }[];
   readonly foreignSources?: readonly ArchiveSourceBasis[];
 }
-const natural = (value: number): boolean => Number.isSafeInteger(value) && value >= 0 && !Object.is(value, -0);
 const nameOf = (key: RetainedKey): string => JSON.stringify(key.kind === "value" ? [key.kind, key.domain, key.digest] : [key.kind, key.digest]);
 export interface ArchiveInput {
   entry(seq: number, limit: number): Promise<string | null>;

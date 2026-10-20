@@ -1,5 +1,6 @@
 /** Canonical trusted packages. These checks establish content/signatures and
  * closure, never native definition admission, installation or screen isolation. */
+import { freeze } from "./values.ts";
 import type { Digest } from "@generalbusiness/dap-contract";
 import { isDigest, parseStrict, parseStrictBytes, utf8, verify } from "./index.ts";
 import type { Signer } from "./signer.ts";
@@ -8,7 +9,6 @@ import { ApplicationPackageError, type ApplicationIds, type ApplicationPackage, 
 import { declarations, domain, fail, id, limits, only, presentation, release, semantics } from "./application-package-validation.ts";
 export * from "./application-types.ts";
 
-function freeze(value: unknown): void { if (value && typeof value === "object") { for (const child of Object.values(value)) freeze(child); Object.freeze(value); } }
 function checked(value: unknown, expected: Digest | null, bounds: ApplicationPackageLimits): { package: ApplicationPackage; ids: ApplicationIds } {
   const body = only(value, "presentation,release,semantic,v"); if (body["v"] !== 1) return fail();
   const semantic = semantics(body["semantic"], bounds), semanticId = id("semantic", semantic, bounds);

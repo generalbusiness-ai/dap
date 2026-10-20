@@ -8,7 +8,7 @@ import { preparedSessionAllows, type QueryVisibility } from "../src/session-prep
 import { mintSession, readerOf, sessionsOf } from "../src/sessions.ts";
 import { SqliteStore, type Sql } from "../src/sqlite.ts";
 import { testPorts } from "../src/testing.ts";
-import { at, create, rita } from "./support.ts";
+import { at, create, rita } from "./fixtures-native.ts";
 
 test("bounded session policy preserves manually restricted live/final/mixed and unresolved-birth summary claims with fresh MAC and clock", async () => {
   const scope = await create();

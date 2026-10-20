@@ -1,14 +1,16 @@
 /** Shared bounded classification of local rows and retained foreign copies.
  * Returns headers/classes only. Payload reads and export admission belong
  * to the owning whole-prefix inventory, inside its synchronous frame. */
+import { natural } from "@generalbusiness/artroom-bytes";
 import { DEVICE_COMMAND, DOMAINS, RETAINED_INPUT_BYTES } from "@generalbusiness/dap-contract";
 import type { Digest, Input, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
 import { isDigest, isPlatformDefinition, isScopeRef } from "@generalbusiness/artroom-bytes";
 import { ArchiveBudget } from "./archive-budget.ts";
-import { ARCHIVE_PRIVACY_JSON_PASSES, ArchivePrefixStopped, type ArchivePosition } from "./archive-prefix.ts";
+import { ARCHIVE_PRIVACY_JSON_PASSES, stopArchivePrefix as stop, type ArchivePosition } from "./archive-prefix.ts";
 import { declarationValueDomains, type Capabilities, type OperationRules, type ValidDefinition } from "@generalbusiness/dap-derive";
 import { platform } from "@generalbusiness/dap-platform";
-import type { Sql } from "./sqlite.ts";
+import { sqlJsonText as text, type Sql } from "./sqlite.ts";
+export { sqlJsonText as archiveMetadataText } from "./sqlite.ts";
 
 /** Trusted native code/registry metadata. A request cannot supply this map;
  * unknown owners/capability steps fail closed. No dynamic package runs. */
@@ -27,16 +29,12 @@ export interface ArchiveEntryHeader {
   readonly seq: number; readonly at: ScopeRef; readonly input: Input["type"];
   readonly prev: Digest | null; readonly uses: number; readonly effects: number;
 }
-const stop = (reason: ConstructorParameters<typeof ArchivePrefixStopped>[0]): never => { throw new ArchivePrefixStopped(reason); };
 const variants: readonly unknown[] = ["genesis", "act", "delivery", "timed", "diagnosis", "outcome", "preparation", "checkpoint"];
 const nativeDomains: ReadonlySet<string> = new Set(Object.values(DOMAINS));
-const natural = (v: unknown): v is number => typeof v === "number" && Number.isSafeInteger(v) && v >= 0 && !Object.is(v, -0);
 const OWNER_LIMIT = 65;
 /** Finite native metadata. Device commands own no outside operation kind. */
 export const DEVICE_COMMAND_ARCHIVE_RECORDS: ReadonlySet<string> = new Set(["command"]);
 export const DEVICE_COMMAND_ARCHIVE_PREPARATIONS: ReadonlySet<string> = new Set(["answer"]);
-export const archiveMetadataText = (path: string, max: number, source = "bytes") => `CASE WHEN typeof(json_extract(${source}, '${path}')) = 'text' AND octet_length(json_extract(${source}, '${path}')) <= ${max} THEN json_extract(${source}, '${path}') ELSE NULL END`;
-const text = archiveMetadataText;
 const HEADER = `json_extract(bytes, '$.seq') AS seq, ${text("$.at.scope", 71)} AS scope, ${text("$.at.inc", 64)} AS inc, ${text("$.at.kind", 16)} AS kind, ${text("$.input.type", 16)} AS input, ${text("$.prev", 71)} AS prev, json_type(bytes, '$.prev') AS prevType, json_type(bytes, '$.uses') AS usesType, json_array_length(bytes, '$.uses') AS uses, json_type(bytes, '$.effects') AS effectsType, json_array_length(bytes, '$.effects') AS effects`;
 function location(source: ArchiveMetadataSource) {
   return source.kind === "local" ? {

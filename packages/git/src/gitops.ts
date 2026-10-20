@@ -33,6 +33,7 @@
  * to the request it forwards (section 5.3).
  */
 
+import { utf8 } from "@generalbusiness/artroom-bytes";
 import { hex } from "@generalbusiness/artroom-bytes";
 import { sha1 } from "@noble/hashes/legacy.js";
 import { GitRefusal, branchRef, objectId, refName, remoteUrl, type ObjectId } from "./names.ts";
@@ -68,7 +69,6 @@ export interface GitOptions {
   refusals?: readonly string[];
 }
 
-const text = new TextEncoder();
 
 export class Git {
   readonly #git: GitProgram;
@@ -99,7 +99,7 @@ export class Git {
 
   /** The local bare repository for a remote, made on first use. Its name is a hash of the remote, so two remotes never share one. */
   async repository(remote: string): Promise<string> {
-    const dir = `${this.#workdir}/${hex(sha1(text.encode(this.#remote(remote))))}.git`;
+    const dir = `${this.#workdir}/${hex(sha1(utf8(this.#remote(remote))))}.git`;
     const probe = await this.#git.run(["-C", dir, "rev-parse", "--is-bare-repository"]);
     if (probe.code !== 0 || new TextDecoder().decode(probe.stdout).trim() !== "true") await this.#git.ok("init", ["init", "-q", "--bare", "--", dir]);
     return dir;
@@ -179,7 +179,7 @@ export class Git {
     const ids = new TextDecoder().decode(listed.stdout).split("\n").filter((l) => l !== "");
     if (ids.length > this.#sendObjects) throw new GitRefusal("too-large", "commit");
     for (const id of ids) objectId(id, "object");
-    const present = await this.#git.ok("cat-file", ["-C", dir, "cat-file", "--batch-check"], text.encode(ids.map((id) => `${id}\n`).join("")));
+    const present = await this.#git.ok("cat-file", ["-C", dir, "cat-file", "--batch-check"], utf8(ids.map((id) => `${id}\n`).join("")));
     const lines = present.split("\n").filter((l) => l !== "");
     if (lines.length !== ids.length || lines.some((l, i) => !new RegExp(`^${ids[i]} (commit|tree|blob|tag) [0-9]+$`).test(l))) throw new GitRefusal("incomplete", "commit");
 

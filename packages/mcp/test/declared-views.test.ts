@@ -5,7 +5,7 @@ import type { DeclaredDefinition, ScopeRef } from "@generalbusiness/dap-contract
 import { canonicalize, definitionDigest, keyIdOfSecret, parseStrict, sign } from "@generalbusiness/artroom-bytes";
 import type { ApplicationInstallation } from "@generalbusiness/artroom-bytes/application";
 import { applicationProjectionId, applicationProjectionQueryDigest, packApplication2, readApplicationProjection } from "@generalbusiness/artroom-bytes/application-v2";
-import { applicationCounterPacket2, applicationCounterNavigationPacket2 } from "../../scope/test/support/application-v2-fixture.ts";
+import { applicationCounterPacket2, applicationCounterNavigationPacket2 } from "../../scope/test/fixtures.ts";
 import { DeclaredViewSource } from "../src/views/declared.ts";
 import { ViewSessions } from "../src/views/session.ts";
 import type { CallResult } from "../src/service.ts";

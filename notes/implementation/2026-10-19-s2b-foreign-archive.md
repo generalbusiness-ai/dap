@@ -2,9 +2,10 @@
 
 Request `c8c6ff6b6277fd103c30f80d0b76fd40a60ca8bb`, promise
 `ea3d761900e434f096adbb83e46ff1af3a86fe1f`. Current development incorporates
-actual reviewed Main `8aad37bb` in the separate owned worktree
-`/tmp/artroom-builder-s2b-main-integration-20261020`. Merge `18e15a75`
-includes the required G5a and S2a landings. The integrated metadata,
+actual reviewed Main `13193f31` in the separate owned worktree
+`/tmp/artroom-builder-s2b-main-integration-20261020`, including K1, K2 and
+the Grow public host link. Earlier merge `18e15a75` incorporated Main
+`8aad37bb` with required G5a and S2a landings. The integrated metadata,
 foreign-copy and installed-scope checks pass. The installed witnesses now
 use actual Membership8 archive cohorts and native late directory binding;
 the maintained Grow Site and Room include a real DeviceCommand record and
@@ -513,3 +514,50 @@ compiler projects pass. Native wall / CPU are 5.278303250 / 6.452376 seconds.
 Raw output and closure are `/tmp/s2b-integrated-focused-v5-20261020*`.
 A full gate remains due once before Source review. The checkpoint stays
 mutable while the builder returns to B1's now-decided source boundary.
+
+
+## Current K1, K2 and host-link Main incorporation
+
+The original merge of Main `13193f31`, tree `2bee1aff`, into checkpoint
+`bb90233f` closes naturally one in 1.004551666 seconds: five conflicts,
+fifteen original stages. Exact argv/log/closure are
+`/tmp/s2b-integrate-k1-main-20261020*`; all stages are retained under
+`/tmp/s2b-k1-main-conflict-stages-20261020`. The helper's old pending-audit
+caption is historical: independent K1 native audit was already adopted as
+`2aa5c91b` before this merge. This changes no receiving Main ref.
+
+Resolution retains S2b's local/foreign metadata, exact source map and copy
+selection. It incorporates Main's `decodeGitText`, `natural`, shared
+`stopArchivePrefix` and `sqlJsonText`. The new entry-metadata module keeps
+its public text helper as an alias of the shared SQL helper. Both new
+foreign/source-pin readers also use Main's shared canonical JSON equality.
+No budget, pin, credential-cohort exclusion, permission or test deadline
+changes. Resolution and subsequent import ordering are recorded in
+`/tmp/s2b-k1-main-conflict-resolution-20261020.json` and
+`/tmp/s2b-k1-main-import-order-20261020.json`.
+
+The first focused process naturally fails at the helper guard: the two
+new readers still defined canonical equality locally. No compiler, Node
+or native phase ran. Its exact source inventory, diagnostic and closure
+remain `/tmp/s2b-k1-main-focused-20261020*`; the two failed inputs are saved
+under `/tmp/s2b-k1-main-helper-v1-input-20261020`. The correction uses the
+existing shared implementation with identical canonical-refusal semantics.
+Receipt: `/tmp/s2b-k1-main-shared-equality-correction-20261020.json`.
+
+The separate corrected process closes naturally zero. The helper guard,
+all Git/Replay/Scope compiler configurations, two Node files with twelve
+cases and seven native files with thirty-two cases pass. Native checks
+include source pins, foreign classification, input/retained/inventory/
+privacy boundaries and both actual late-bound Membership8 application
+exports. Native wall and child CPU are 7.471352959 and 8.803412 seconds.
+All 2,575 tracked files keep their bytes and modes throughout this run;
+the lock stamp stays exact and zero packages are installed. The warm
+owned dependency copy runs on shared macOS 27.0.1 arm64, Node 26.12.0,
+initial load 2.65/3.17/3.04; no exclusive-host claim. Closed raw argv,
+logs, input inventory and natural result are
+`/tmp/s2b-k1-main-focused-v2-20261020*`.
+
+One ordinary gate and complete exact-head Source review remain due.
+Earlier failed runs remain failed; separate focused phases are not one
+passing gate. No production admission, consent, provider, deployment or
+offline replay result follows from these fixture exports.

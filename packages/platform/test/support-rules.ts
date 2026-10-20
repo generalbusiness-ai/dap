@@ -25,14 +25,11 @@
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { DeclaredDefinition, MemberId, MemberRef, ObservationUse, PlatformDefinition, ScopeId, ScopeRef } from "@generalbusiness/dap-contract";
 import { PROFILES, clockOf, judgeDelivery, judgeGenesis, validateDefinition } from "@generalbusiness/dap-derive";
-import type { Judgment, PlatformRules, ValidDefinition } from "@generalbusiness/dap-derive";
+import type { Judgment, PlatformRules } from "@generalbusiness/dap-derive";
 import { Ledger, Scope, T0, arriving, creation, d, created, keys, membership, sent } from "@generalbusiness/dap-derive/testing";
 import { RULES_SCOPE, platform } from "../src/index.ts";
+import { checkedDefinition as checked, written } from "./fixtures.ts";
 
-const checked = (result: ReturnType<typeof validateDefinition>): ValidDefinition => {
-  if (!result.ok) throw new Error(`a definition of test support is refused: ${JSON.stringify(result.problems)}`);
-  return result.definition;
-};
 
 /** STAND-IN: a made-up directory, for the creator of a rules scope. Its creation creates one, and it has no other act and no handler. */
 export const registrar: DeclaredDefinition = {
@@ -176,8 +173,3 @@ export const standing = (member: string, n: number, over: Partial<Extract<Observ
   },
   read: { run: "r1", n }, use: "fresh", prior: null,
 });
-
-function written(judgment: Judgment): Extract<Judgment, { result: "write" }>["draft"] {
-  if (judgment.result !== "write") throw new Error(`not written: ${JSON.stringify(judgment)}`);
-  return judgment.draft;
-}

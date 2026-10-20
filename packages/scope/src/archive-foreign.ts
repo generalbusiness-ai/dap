@@ -1,24 +1,21 @@
 /** Direct retained-copy metadata only. No payload body, recursive source
  * history, policy certificate or production admission is supplied here. */
+import { natural, same } from "@generalbusiness/artroom-bytes";
 import { INVITATION_KEY_MEMBERSHIP } from "@generalbusiness/dap-contract";
 import type { Bounds, Digest, FactRef, PlatformDefinition } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isFactRef, platformName } from "@generalbusiness/artroom-bytes";
 import { derivable } from "@generalbusiness/dap-derive";
 import { ArchiveBudget } from "./archive-budget.ts";
-import { archiveEntryHeader, archiveEntryPrivacy, archiveMetadataText, archiveSupportMetadata } from "./archive-entry-metadata.ts";
+import { archiveEntryHeader, archiveEntryPrivacy, archiveSupportMetadata } from "./archive-entry-metadata.ts";
 import type { ArchivePolicyRegistry, ReviewedArchivePolicy } from "./archive-inventory.ts";
-import { ArchivePrefixStopped, type ArchivePosition, type ArchivePrefixReason } from "./archive-prefix.ts";
+import { stopArchivePrefix as stop, type ArchivePosition } from "./archive-prefix.ts";
 import type { FixtureArchiveSourcePins, ArchiveSourceBasis, ArchiveSourcePin } from "./archive-source-pins.ts";
-import type { Sql } from "./sqlite.ts";
+import { sqlJsonText as text, type Sql } from "./sqlite.ts";
 
 export interface ArchiveForeignCopy {
   readonly content: Digest; readonly bytes: number; readonly fact: FactRef;
   readonly pin: Digest | PlatformDefinition; readonly under: string;
 }
-const same = (a: unknown, b: unknown) => canonicalize(a) === canonicalize(b);
-const natural = (v: unknown): v is number => typeof v === "number" && Number.isSafeInteger(v) && v >= 0 && !Object.is(v, -0);
-const stop = (reason: ArchivePrefixReason): never => { throw new ArchivePrefixStopped(reason); };
-const text = archiveMetadataText;
 
 /** The fixture supplies source pins before this synchronous pass opens.
  * Policy is separate and keyed by exact pin; neither a source name nor a

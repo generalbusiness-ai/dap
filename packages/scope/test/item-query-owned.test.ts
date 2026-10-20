@@ -5,10 +5,9 @@ import { secretSigner, signedReader } from "@generalbusiness/artroom-client";
 import { ItemQueryBudget, type ItemQueryPhase, type ItemQueryCost } from "../src/item-query-budget.ts";
 import type { NativeItemQuery } from "../src/item-queries.ts";
 import { runInDurableObject } from "cloudflare:test";
-import { sessionRoom } from "./support/session-room.ts";
+import { sessionRoom, at, create, rita } from "./fixtures-native.ts";
 import { mintSession, readerOf } from "../src/sessions.ts";
 import { net } from "./net.ts";
-import { at, create, rita } from "./support.ts";
 
 /** Passive native SQL observation only while the real object's query runs.
  * Constructor/setup/background work is excluded, not advertised as bounded. */

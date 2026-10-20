@@ -4,14 +4,14 @@
  * handle. They read the scope's own history only. No configuration, key,
  * token or plaintext is read or written here.
  */
+import { same } from "@generalbusiness/artroom-bytes";
 import type { Entry, FieldValue, ScopeId } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, isDigest, isFactRef, isOperationId, parseStrict } from "@generalbusiness/artroom-bytes";
+import { entryHash, isDigest, isFactRef, isOperationId, parseStrict } from "@generalbusiness/artroom-bytes";
 import { isEntryOf, valueDigest } from "@generalbusiness/dap-derive";
 import { DESTINATION_KINDS, destinationBranch, destinationWrite, directoryIdOf, isOf } from "@generalbusiness/dap-platform";
 import type { DestinationBinding, DestinationRepository } from "./destination-host.ts";
 import type { OutsideGiven } from "./object.ts";
 
-export const same = (a: unknown, b: unknown): boolean => canonicalize(a) === canonicalize(b);
 export function exact(value: unknown, keys: readonly string[]): Record<string, unknown> | null {
   if (typeof value !== "object" || value === null || Array.isArray(value)) return null;
   return Object.keys(value).length === keys.length && keys.every((key) => Object.hasOwn(value, key)) ? value as Record<string, unknown> : null;
@@ -91,3 +91,5 @@ export function credentialHandle(given: OutsideGiven, repository: DestinationRep
   const digest = valueDigest(domain, { scope: scope.at, operation: mint.id, attempt: binding.attempt, origin: origin.hash, repository, write: binding.write, writeAttempt: binding.writeAttempt } as unknown as FieldValue);
   return `adapter:${digest}`;
 }
+
+export { same };
