@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at scripts/gate.sh","body":{"commit":"13193f318ca39c66daf8528c27cf9f8a6e1c6708","path":"scripts/gate.sh"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:009067dce98bd1266d34bf86aa4d8ebdf9e39f09","text":"Merge retired a covered predecessor; the successor is at packages/scope/src/archive-input.ts."}
