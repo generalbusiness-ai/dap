@@ -259,6 +259,15 @@ unchanged predicate; its earlier missing-Register result is not a passing
 replay for the new head. Request `b315bb35` asks planner to dispose of that
 actual first cutoff before any source-proof change.
 
+After the control, local commit `757a790c` preserves the tested predicate
+and report. An ordinary local merge of published, independently approved
+K3 Main `13da4cc6` exits 0, producing `3d5e6e35` in 0.416227083 wall /
+0.039165 child CPU seconds. All 12 authored archive paths retain their
+exact blobs and executable modes. All nine incoming K3/report paths match
+Main exactly, with no overlap. The checkout is clean before and after the
+merge. Earlier 2,615-file execution inputs remain historical for their
+original composition; this integration is not a new test or gate result.
+
 ## Original checks
 
 The dependency preparation verified 2,589 Git source blobs, 5,499 newly
