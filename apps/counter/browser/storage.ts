@@ -4,7 +4,7 @@ import { terminalJournal, validAudioStart, validReport, type AttemptJournal } fr
 import { deviceSigner, type SavedDevice } from "./device-key.ts";
 import type { ActorIdentity, AudioStart, CustodyLock, PendingReport, PendingStore, PreparedEnvelope } from "./voice-controller.ts";
 const MOST=64*1024, IDENTITIES=32;
-const keyOf=(identity:ActorIdentity)=>digestBytes(utf8(canonicalize(identity)));
+const identityStorageKey=(identity:ActorIdentity)=>digestBytes(utf8(canonicalize(identity)));
 const ORIGIN_LOCK = "artroom-counting-device-custody";
 const custodyError = () => new Error("The remembered device custody is unavailable or no longer current.");
 const validEpoch = (value: unknown): value is string => typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(value);
@@ -53,7 +53,7 @@ function privateDatabase(): Promise<IDBDatabase> {
   return opening;
 }
 function privateSlot<T>(identity:ActorIdentity,purpose:"voice"|"command") {
-  const key=keyOf(identity)+":"+purpose;
+  const key=identityStorageKey(identity)+":"+purpose;
   const open=privateDatabase;
   const transact=async<T>(mode:IDBTransactionMode,work:(store:IDBObjectStore,set:(value:T)=>void,reject:(error:Error)=>void)=>void):Promise<T>=>{
     const db=await open();return new Promise<T>((resolve,reject)=>{const transaction=db.transaction("pending",mode);let value:T;transaction.oncomplete=()=>resolve(value!);transaction.onerror=transaction.onabort=()=>reject(new Error("Private pending storage did not commit."));work(transaction.objectStore("pending"),v=>{value=v;},error=>{transaction.abort();reject(error);});});
@@ -71,7 +71,7 @@ function privateSlot<T>(identity:ActorIdentity,purpose:"voice"|"command") {
           try {
           const record=read.result as {identity?:ActorIdentity;pending?:T}|undefined;
           if(!record||utf8(canonicalize(record)).length>MOST||canonicalize(record.identity)!==canonicalize(identity)||canonicalize(record.pending)!==canonicalize(pending)){reject(new Error("The exact terminal record changed before archive."));return;}
-          const archiveKey=keyOf(identity)+":archive:"+digestBytes(utf8(canonicalize({purpose,pending})));
+          const archiveKey=identityStorageKey(identity)+":archive:"+digestBytes(utf8(canonicalize({purpose,pending})));
           const old=store.get(archiveKey);old.onsuccess=()=>{
             try {
             if(old.result!==undefined){if(canonicalize(old.result)!==canonicalize(record)){reject(new Error("The private archive does not match."));return;}store.delete(key);set(undefined);return;}

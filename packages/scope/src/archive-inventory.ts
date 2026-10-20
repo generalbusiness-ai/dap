@@ -8,7 +8,7 @@ import { platform } from "@generalbusiness/dap-platform";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { ArchiveBudget, ArchiveStopped, type ArchiveCost } from "./archive-budget.ts";
 import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, readArchivePin } from "./archive-pin.ts";
-import { archivePrefixMetadata, ArchivePrefixStopped, type ArchivePrefixReason } from "./archive-prefix.ts";
+import { stopArchivePrefix as stop, archivePrefixMetadata, ArchivePrefixStopped, type ArchivePrefixReason } from "./archive-prefix.ts";
 import { archivePrivacyMetadata, archiveSupportMetadata, type ArchiveSupport } from "./archive-privacy.ts";
 import { ArchiveRetainedReader, readArchiveProbe } from "./archive-retained.ts";
 import type { Sql } from "./sqlite.ts";
@@ -46,7 +46,6 @@ export type ArchiveInventoryResult = { readonly ok: true; readonly inventory: Ar
 interface DefinitionMetadata { readonly definition: ValidDefinition; readonly bytes: number }
 interface Closure { readonly root: Digest; readonly nodes: readonly Digest[]; readonly complete: boolean }
 const nameOf = (key: RetainedKey) => JSON.stringify(key.kind === "value" ? [key.kind, key.domain, key.digest] : [key.kind, key.digest]);
-const stop = (reason: ArchivePrefixReason): never => { throw new ArchivePrefixStopped(reason); };
 
 /** Native Bounds and reviewed policies belong to the caller's trusted
  * context. The caller supplies its real Sql.transaction (transactionSync).

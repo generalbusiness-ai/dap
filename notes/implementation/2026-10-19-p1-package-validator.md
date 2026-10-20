@@ -741,3 +741,34 @@ seconds wall / 0.174896 child CPU. The original merge/check wrapper and
 its exact source comparison are `/tmp/p1-integrate-g5-main-20261020*`.
 This private-branch incorporation performs no Cloudflare deployment and
 does not repeat a whole gate.
+
+## Incorporate K1 shared helpers, 20 October
+
+From clean P1 `9cc60d14`, the private integration takes actual Main
+`13193f31`. The original no-commit merge naturally exits one at
+`application-package-v2.ts`; all three original stages are retained in
+`/tmp/p1-k1-main-conflict-stages-20261020/manifest.json`.
+
+The resolution keeps P1's complete strict composition checks, explicit
+published-release selection and common consumption types. It imports
+Main's owned-JSON `freeze` helper and removes only the old duplicate
+freezer. All calls still freeze the parsed caller-owned JSON in place.
+The exact two conflict blocks and resolution hash are in
+`/tmp/p1-k1-main-conflict-resolution-20261020.json`.
+
+The shared-helper guard passes (542 source files, 177 byte exports), as
+does the full project typecheck. Original process 19449 naturally closes
+zero; logs are `/tmp/p1-k1-main-checks-20261020*`.
+Original runtime process 3953 then naturally passes five byte cases,
+eleven graph cases and both native demo-tick cases. The native phase uses
+15.473643792 seconds wall / 17.118584 child CPU, on the same shared warm
+macOS arm64/Node 26.12/npm 11.20 host. No exclusivity or performance
+generalization follows. Logs and natural closure are
+`/tmp/p1-k1-main-runtime-checks-20261020*`.
+
+The common runtime wrapper's B1-specific member-selection sentence does
+not describe this P1 invocation: its actual four listed phases are bytes,
+graph, pool and the signed native demo. No member-display case is claimed
+here. No frozen original, actual publisher key or provider was executed
+or accessed, and no whole gate was repeated. One final ordinary gate and
+complete Source review remain ahead.

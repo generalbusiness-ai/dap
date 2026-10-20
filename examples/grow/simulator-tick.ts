@@ -1,7 +1,7 @@
 /** One stateless invocation over public member reads and signed requests.
  * The caller supplies HTTP allowances and real member/session bindings. */
 import type { Answer, Digest, FactRef, FieldValue, Head, Item, MemberRef, ScopeRef, SignedIntent, Summary } from "@generalbusiness/dap-contract";
-import { canonicalize, entryHash, intentDigest, isDigest, isFactRef, isMemberRef, isRecord, isScopeRef } from "@generalbusiness/artroom-bytes";
+import { isLocalId as integer, same, entryHash, intentDigest, isDigest, isFactRef, isMemberRef, isRecord, isScopeRef } from "@generalbusiness/artroom-bytes";
 import { signedIntent, type ScopeHandle, type Signer } from "@generalbusiness/artroom-client";
 import { readCommandJournal, type OpenCommand } from "./command-journal.ts";
 import { simulateRoom, type SimulatedDevice, type SimulatedZone, type SimulatorSchedule } from "./simulator.ts";
@@ -37,15 +37,13 @@ export interface TickReport {
 }
 interface Snapshot { summary: Summary; head: Head; root: Item; zones: Item[]; devices: Item[]; alerts: Item[]; incidents: Item[]; tasks: Item[] }
 class TickStop extends Error {}
-const same = (a: unknown, b: unknown): boolean => canonicalize(a) === canonicalize(b);
-const fail = (reason: string): never => { throw new TickStop(reason); };
-const integer = (v: unknown): v is number => typeof v === "number" && Number.isSafeInteger(v) && v >= 0;
-const number = (v: unknown): number => typeof v === "number" && Number.isSafeInteger(v) ? v : fail("invalid-room-number");
-const text = (v: unknown): string => typeof v === "string" ? v : fail("invalid-room-text");
+const tickFailure = (reason: string): never => { throw new TickStop(reason); };
+const number = (v: unknown): number => typeof v === "number" && Number.isSafeInteger(v) ? v : tickFailure("invalid-room-number");
+const tickText = (v: unknown): string => typeof v === "string" ? v : tickFailure("invalid-room-text");
 const headOf = (value: unknown): Head | null => value == null ? null : isRecord(value) && integer(value["seq"]) && isDigest(value["hash"])
-  && Object.keys(value).sort().join(",") === "hash,seq" ? { seq: value["seq"], hash: value["hash"] } : fail("invalid-command-cursor");
-const seqOf = (value: unknown, scope: ScopeRef): number => integer(value) ? value : isFactRef(value) && same(value.at, scope) ? value.seq : fail("invalid-room-fact");
-const itemOf = (snapshot: Snapshot, id: number): Item => snapshot.summary.items.find(item => item.id === id) ?? fail("room-item-unavailable");
+  && Object.keys(value).sort().join(",") === "hash,seq" ? { seq: value["seq"], hash: value["hash"] } : tickFailure("invalid-command-cursor");
+const seqOf = (value: unknown, scope: ScopeRef): number => integer(value) ? value : isFactRef(value) && same(value.at, scope) ? value.seq : tickFailure("invalid-room-fact");
+const itemOf = (snapshot: Snapshot, id: number): Item => snapshot.summary.items.find(item => item.id === id) ?? tickFailure("room-item-unavailable");
 
 /** Native preparation receipts have intent=null. Bind an owner's accepted
  * answer by reading its exact sealed preparation, rather than mistaking it
@@ -53,13 +51,13 @@ const itemOf = (snapshot: Snapshot, id: number): Item => snapshot.summary.items.
 export async function acceptedTickFact(answer: Extract<Answer, { answer: "accepted" }>, scope: ScopeRef, definition: Digest,
   signed: SignedIntent, owner: boolean, reader: Pick<ScopeHandle, "entry">): Promise<FactRef> {
   const receipt = answer.receipt;
-  if (!same(receipt.fact.at, scope) || receipt.definition !== definition || receipt.intent !== (owner ? null : intentDigest(signed.intent))) return fail("accepted-receipt-mismatch");
+  if (!same(receipt.fact.at, scope) || receipt.definition !== definition || receipt.intent !== (owner ? null : intentDigest(signed.intent))) return tickFailure("accepted-receipt-mismatch");
   if (owner) {
     const read = await reader.entry(receipt.fact.seq);
     if (!read.ok || !read.complete || read.next !== undefined || read.value.hash !== receipt.fact.hash || entryHash(read.value.entry) !== receipt.fact.hash
-      || read.value.entry.seq !== receipt.fact.seq || !same(read.value.entry.at, scope)) return fail("owner-preparation-unavailable");
+      || read.value.entry.seq !== receipt.fact.seq || !same(read.value.entry.at, scope)) return tickFailure("owner-preparation-unavailable");
     const input = read.value.entry.input;
-    if (input.type !== "preparation" || input.capability !== DEVICE_OWNER || input.step !== "answer" || !same(input.signed, signed)) return fail("owner-preparation-mismatch");
+    if (input.type !== "preparation" || input.capability !== DEVICE_OWNER || input.step !== "answer" || !same(input.signed, signed)) return tickFailure("owner-preparation-mismatch");
   }
   return receipt.fact;
 }
@@ -74,39 +72,39 @@ export async function simulatorTick(config: SimulatorTick, port: SimulatorPorts)
   let lastRequest: SignedIntent | undefined, climateActs = 0;
   async function snapshot(): Promise<Snapshot> {
     const read = await port.reader.summary();
-    if (!read.ok || !read.complete || read.next !== undefined || !same(read.value.scope, config.scope) || read.value.definition !== config.definition || read.value.status !== "active") return fail("room-snapshot-unavailable");
+    if (!read.ok || !read.complete || read.next !== undefined || !same(read.value.scope, config.scope) || read.value.definition !== config.definition || read.value.status !== "active") return tickFailure("room-snapshot-unavailable");
     const root = read.value.items.find(item => item.type === "room" && item.state === "open");
-    if (!root) return fail("room-root-unavailable");
-    for (const role of ["sensors", "climate", "operator"] as const) if (!isMemberRef(root.parties[role]) || !same(root.parties[role], config.members[role])) return fail("demo-principal-mismatch");
+    if (!root) return tickFailure("room-root-unavailable");
+    for (const role of ["sensors", "climate", "operator"] as const) if (!isMemberRef(root.parties[role]) || !same(root.parties[role], config.members[role])) return tickFailure("demo-principal-mismatch");
     const rows = (type: string) => read.value.items.filter(item => item.type === type);
     const result = { summary: read.value, head: read.at, root, zones: rows("zone"), devices: rows("device"), alerts: rows("alert"), incidents: rows("incident"), tasks: rows("task") };
-    if (result.zones.length !== 4 || result.devices.length !== 12) return fail("demo-room-not-commissioned");
+    if (result.zones.length !== 4 || result.devices.length !== 12) return tickFailure("demo-room-not-commissioned");
     return result;
   }
   async function fact(position: number): Promise<{ fact: FactRef; entry: import("@generalbusiness/dap-contract").Entry }> {
     const read = await port.reader.entry(position);
     if (!read.ok || !read.complete || read.next !== undefined || read.value.entry.seq !== position || !same(read.value.entry.at, config.scope)
-      || entryHash(read.value.entry) !== read.value.hash) return fail("room-fact-unavailable");
+      || entryHash(read.value.entry) !== read.value.hash) return tickFailure("room-fact-unavailable");
     return { fact: { at: config.scope, seq: position, hash: read.value.hash }, entry: read.value.entry };
   }
   async function send(role: "sensors" | "climate", kind: string, on: number | null, fields: Record<string, FieldValue>, expected: Record<string, number>, owner = false): Promise<FactRef | "already-closed"> {
     lastRequest = await signedIntent(config.signers[role], { to: config.scope, kind, on, fields, expected }, { now: config.now, lifetimeSeconds: 120 });
     const answer = await (owner ? port.answer(lastRequest) : port.submit(lastRequest));
     if (owner && answer.answer === "refused" && answer.reason === "capability-refused" && answer.name === "device-command-closed") { report.alreadyClosed++; return "already-closed"; }
-    if (answer.answer !== "accepted") return fail(`${answer.answer}:${answer.reason}${"name" in answer && answer.name ? ":" + answer.name : ""}`);
+    if (answer.answer !== "accepted") return tickFailure(`${answer.answer}:${answer.reason}${"name" in answer && answer.name ? ":" + answer.name : ""}`);
     const accepted = await acceptedTickFact(answer, config.scope, config.definition, lastRequest, owner, port.reader);
     report.accepted.push({ kind, fact: accepted }); return accepted;
   }
   async function act(role: "sensors" | "climate", current: Snapshot, kind: string, on: number | null, fields: Record<string, FieldValue>, subjects: Record<string, number>): Promise<FactRef> {
-    if (role === "climate" && ++climateActs > TICK_CLIMATE_ACTS) return fail("climate-act-limit");
+    if (role === "climate" && ++climateActs > TICK_CLIMATE_ACTS) return tickFailure("climate-act-limit");
     const expected = Object.fromEntries(Object.entries(subjects).map(([name, id]) => [name, itemOf(current, id).revision]));
     const result = await send(role, kind, on, fields, expected);
-    return result === "already-closed" ? fail("unexpected-closed-act") : result;
+    return result === "already-closed" ? tickFailure("unexpected-closed-act") : result;
   }
   function simulation(current: Snapshot) {
     const zones: SimulatedZone[] = current.zones.map(zone => ({ id: zone.id, setpoint: number(zone.values["setpoint"]), band: number(zone.values["band"]) }));
-    const devices: SimulatedDevice[] = current.devices.map(device => ({ id: device.id, zone: number(device.refs["zone"]), kind: text(device.values["kind"]) as SimulatedDevice["kind"],
-      target: text(device.values["target"]) as SimulatedDevice["target"], level: number(device.values["level"]) }));
+    const devices: SimulatedDevice[] = current.devices.map(device => ({ id: device.id, zone: number(device.refs["zone"]), kind: tickText(device.values["kind"]) as SimulatedDevice["kind"],
+      target: tickText(device.values["target"]) as SimulatedDevice["target"], level: number(device.values["level"]) }));
     return simulateRoom(config.schedule, config.now, zones, devices);
   }
   function outcome(command: OpenCommand, current: Snapshot) {
@@ -127,8 +125,8 @@ export async function simulatorTick(config: SimulatorTick, port: SimulatorPorts)
       previous = await fact(seqOf(current.root.refs["lastReading"], config.scope));
       const input = previous.entry.input;
       if (input.type !== "act" || input.signed.intent.kind !== "observe" || !same(input.signed.intent.fields["commandsAnsweredThrough"], acknowledged)
-        || !same(input.signed.intent.fields["sampledAt"], current.root.values["lastSampledAt"]) || !acknowledged || acknowledged.seq >= previous.fact.seq) return fail("reading-cursor-provenance-mismatch");
-    } else if (acknowledged !== null || current.root.values["lastSampledAt"] != null) return fail("reading-cursor-provenance-mismatch");
+        || !same(input.signed.intent.fields["sampledAt"], current.root.values["lastSampledAt"]) || !acknowledged || acknowledged.seq >= previous.fact.seq) return tickFailure("reading-cursor-provenance-mismatch");
+    } else if (acknowledged !== null || current.root.values["lastSampledAt"] != null) return tickFailure("reading-cursor-provenance-mismatch");
     const through = acknowledged ? { at: config.scope, ...acknowledged } : null;
     const window = await readCommandJournal(port.reader, config.scope, config.members.sensors, through, current.head);
     report.scannedThrough = window.through; report.completeWindow = window.complete;
@@ -142,9 +140,9 @@ export async function simulatorTick(config: SimulatorTick, port: SimulatorPorts)
     const firstPending = pending[0]?.fact.seq;
     const selected = window.entries.filter(sealed => firstPending === undefined || sealed.entry.seq < firstPending).at(-1);
     const advance = selected ? { seq: selected.entry.seq, hash: selected.hash } : acknowledged;
-    if (!advance) return fail("no-closed-command-prefix");
+    if (!advance) return tickFailure("no-closed-command-prefix");
     current = await snapshot();
-    if (!same(headOf(current.root.values["commandsAnsweredThrough"]), acknowledged)) return fail("concurrent-tick-progress");
+    if (!same(headOf(current.root.values["commandsAnsweredThrough"]), acknowledged)) return tickFailure("concurrent-tick-progress");
     const reading = simulation(current), readingBasis = current.head;
     report.phase = "report-device";
     for (const desired of reading.devices) {
@@ -163,7 +161,7 @@ export async function simulatorTick(config: SimulatorTick, port: SimulatorPorts)
         commandsAnsweredThrough: { ...advance }, targetBasis: { ...readingBasis } }, { on: current.root.id });
       report.acknowledgedThrough = advance;
     }
-    if (!summaryFact) return fail("reading-fact-unavailable");
+    if (!summaryFact) return tickFailure("reading-fact-unavailable");
     report.phase = "report-zone";
     for (const stats of reading.zones) {
       const zone = itemOf(current, stats.zone), state = stats.inBand === 25 ? "in-band" : "out-of-band";
@@ -200,20 +198,20 @@ export async function simulatorTick(config: SimulatorTick, port: SimulatorPorts)
     };
     const faultActive = minute >= config.schedule.ventFault.fromMinute && minute < config.schedule.autonomousRecovery.fromMinute;
     if (faultActive && fault.state === "out-of-band") {
-      const fan = current.devices.find(device => device.id === fault.refs["fan"]) ?? fail("fault-fan-unavailable");
+      const fan = current.devices.find(device => device.id === fault.refs["fan"]) ?? tickFailure("fault-fan-unavailable");
       await command(fan, "on", number(fan.values["maxLevel"]));
       for (const zone of [...current.zones].sort((a, b) => a.id - b.id).filter((_, i) => i === 0 || i === 3)) {
-        const vent = current.devices.find(device => device.id === zone.refs["vent"]) ?? fail("cross-draft-vent-unavailable");
+        const vent = current.devices.find(device => device.id === zone.refs["vent"]) ?? tickFailure("cross-draft-vent-unavailable");
         await command(vent, "open", number(vent.values["maxLevel"]));
       }
     }
     let zone = itemOf(current, fault.id), alert = current.alerts.find(alert => alert.refs["zone"] === zone.id);
-    const vent = current.devices.find(device => device.id === zone.refs["vent"]) ?? fail("fault-vent-unavailable");
-    const fan = current.devices.find(device => device.id === zone.refs["fan"]) ?? fail("fault-fan-unavailable");
-    const heater = current.devices.find(device => device.id === zone.refs["heater"]) ?? fail("fault-heater-unavailable");
+    const vent = current.devices.find(device => device.id === zone.refs["vent"]) ?? tickFailure("fault-vent-unavailable");
+    const fan = current.devices.find(device => device.id === zone.refs["fan"]) ?? tickFailure("fault-fan-unavailable");
+    const heater = current.devices.find(device => device.id === zone.refs["heater"]) ?? tickFailure("fault-heater-unavailable");
     const exhausted = (device: Item) => device.values["reported"] === "error" || number(device.values["level"]) >= number(device.values["maxLevel"]);
     if (!alert && zone.state === "out-of-band" && exhausted(vent) && exhausted(fan)) {
-      await act("climate", current, "raise-alert", null, { zone: zone.id, text: `Zone ${config.schedule.faultZone} is out of band. ${text(vent.values["description"])} ${text(fan.values["description"])}`,
+      await act("climate", current, "raise-alert", null, { zone: zone.id, text: `Zone ${config.schedule.faultZone} is out of band. ${tickText(vent.values["description"])} ${tickText(fan.values["description"])}`,
         proposal: heater.values["target"] === "on" ? "Cut the heater and keep it off until the room returns to band. A person must authorize heat control." : "Keep the heater off while the climate devices recover.", target: "off", level: 0 },
       { zone: zone.id, vent: vent.id, fan: fan.id, heater: heater.id });
       current = await snapshot(); alert = current.alerts.find(alert => alert.refs["zone"] === zone.id);
@@ -235,8 +233,8 @@ export async function simulatorTick(config: SimulatorTick, port: SimulatorPorts)
         // Only a recorded human authorization earns a restoration proposal.
         // Its window belongs to the incident's cycle, so a missed invocation
         // cannot postpone unattended closure into another story period.
-        const raised = Date.parse(text(alert.values["raisedTime"])), period = config.schedule.periodMinutes * 60_000;
-        if (!Number.isFinite(raised)) return fail("invalid-alert-time");
+        const raised = Date.parse(tickText(alert.values["raisedTime"])), period = config.schedule.periodMinutes * 60_000;
+        if (!Number.isFinite(raised)) return tickFailure("invalid-alert-time");
         const restorationEnd = Math.floor(raised / period) * period + (config.schedule.autonomousRecovery.fromMinute + config.schedule.autonomousRecovery.restorationWindowMinutes) * 60_000;
         const beforeEnd = config.now < restorationEnd;
         if (alert.state === "authorized" && alert.values["target"] === "off" && heater.values["target"] === "off") {

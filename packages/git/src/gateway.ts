@@ -61,6 +61,7 @@
  * checked by the sender, before it sends (`gitops.ts`).
  */
 
+import { ascii } from "./ascii.ts";
 import { GitRefusal, ZERO_ID, objectId, refName, remoteUrl, type ObjectId, type Transport } from "./names.ts";
 
 export type GatewayReason =
@@ -125,11 +126,6 @@ export const MAX_COMMAND_BYTES = 64 * 1024;
 
 interface Command { old: string; new: string; ref: string }
 
-const ascii = (bytes: Uint8Array): string => {
-  let out = "";
-  for (const b of bytes) out += String.fromCharCode(b);
-  return out;
-};
 
 /**
  * Read the ref-update commands at the start of a receive-pack request

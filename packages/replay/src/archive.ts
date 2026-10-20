@@ -1,5 +1,6 @@
 /** Portable archive adaptation. The trusted read port owns object parsing
  * and I/O. This module imports neither Git nor Node and changes no judge. */
+import { natural } from "@generalbusiness/artroom-bytes";
 import { DOMAINS, type Digest, type FactRef, type Head, type RetainedInput, type ScopeId, type ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isEntry, isFactRef, isScopeId, rawRetainedJSON, utf8 } from "@generalbusiness/artroom-bytes";
 import { PAGE_ENTRIES, PAGE_REPLY_BYTES, READ_SECONDS, RETAINED_REPLY_BYTES, type Allow, type HistorySource, type Page, type Stored, type Unread } from "./source.ts";
@@ -51,7 +52,6 @@ class Stopped extends Error {
   readonly reason: "limit" | "timeout" | "unavailable";
   constructor(reason: "limit" | "timeout" | "unavailable") { super(`archive-${reason}`); this.reason = reason; }
 }
-const natural = (value: number): boolean => Number.isSafeInteger(value) && value >= 0 && !Object.is(value, -0);
 const costKeys: readonly (keyof ArchiveCost)[] = ["entries", "attempts", "nodes", "calls", "metadata", "inputWork"];
 class Work implements ArchiveReadWork {
   #stopped: Stopped | null = null;

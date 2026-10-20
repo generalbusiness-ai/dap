@@ -1,4 +1,6 @@
 /** The current metadata row is bounded before any transfer or parsing. */
+import { isLocalId as integer } from "@generalbusiness/artroom-bytes";
+import { freeze } from "@generalbusiness/artroom-bytes";
 import { canonicalize, isDigest, isFactRef, isScopeRef, parseStrict } from "@generalbusiness/artroom-bytes";
 import { isObject, timeMs, type ScopeState } from "@generalbusiness/dap-derive";
 import { PreparationBudget } from "./preparation-budget.ts";
@@ -6,9 +8,7 @@ import type { Sql } from "./sqlite.ts";
 
 export const PREPARATION_SCOPE_BYTES = 4096;
 export type PreparationScope = { kind: "scope"; scope: ScopeState } | { kind: "missing" | "unavailable" };
-const integer = (n: unknown): n is number => typeof n === "number" && Number.isSafeInteger(n) && n >= 0;
 const keys = (v: object, expected: string) => Object.keys(v).sort().join() === expected;
-const freeze = (value: unknown): void => { if (value && typeof value === "object") { for (const child of Object.values(value)) freeze(child); Object.freeze(value); } };
 
 export function preparationScope(sql: Pick<Sql, "exec">, budget: PreparationBudget): PreparationScope {
   const unavailable = (): PreparationScope => { budget.invalidate(); return { kind: "unavailable" }; };

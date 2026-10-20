@@ -1,6 +1,6 @@
 /** Values of the field types of section 6.2, as they appear in an intent, a slot and an effect. */
 
-import { SCOPE_KINDS, byteOrder, canonicalize, isFactRef, isLocalId, isMemberRef, isRecord, isScopeRef } from "@generalbusiness/artroom-bytes";
+import { SCOPE_KINDS, byteOrder, isFactRef, isLocalId, isMemberRef, isRecord, isScopeRef } from "@generalbusiness/artroom-bytes";
 
 /** The scope kinds, from the bytes package, which holds the one guard of each identifier. */
 export { SCOPE_KINDS };
@@ -44,9 +44,7 @@ export function memberOf(held: (name: string) => unknown, name: string): unknown
 }
 
 /** Equality of two values: equal canonical JSON. An empty slot or an absent field is `null`, and equals only another. */
-export function same(a: unknown, b: unknown): boolean {
-  return canonicalize(a) === canonicalize(b);
-}
+export { same } from "@generalbusiness/artroom-bytes";
 
 /** Byte order of two strings: by their UTF-8 bytes (section 5.2). */
 export { byteOrder };

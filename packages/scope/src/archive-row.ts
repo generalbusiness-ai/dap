@@ -1,6 +1,7 @@
 /** Internal archive bookkeeping, never an entry or an export certificate.
  * The planner must validate/admit a manifest before marking it; this store
  * only preserves its exact bytes and compares outstanding identities. */
+import { natural, same } from "@generalbusiness/artroom-bytes";
 import type { Head, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isRecord, isScopeRef, parseStrict, timeMs, utf8 } from "@generalbusiness/artroom-bytes";
 import type { DestinationRepository } from "./destination-host.ts";
@@ -36,10 +37,8 @@ export class ArchiveRowRefusal extends Error {
   constructor(reason: ArchiveRowRefusal["reason"]) { super(`archive-row-${reason}`); this.reason = reason; }
 }
 const refuse = (reason: ArchiveRowRefusal["reason"]): never => { throw new ArchiveRowRefusal(reason); };
-const natural = (value: unknown): value is number => typeof value === "number" && Number.isSafeInteger(value) && value >= 0 && !Object.is(value, -0);
 const fields = (value: Record<string, unknown>, expected: string): boolean => Object.keys(value).sort().join(",") === expected;
 const objectId = (value: unknown, format: Format): value is string => typeof value === "string" && (format === "sha1" ? /^[0-9a-f]{40}$/ : /^[0-9a-f]{64}$/).test(value);
-const same = (left: unknown, right: unknown): boolean => canonicalize(left) === canonicalize(right);
 function position(value: unknown, format: Format): value is ArchivedPosition {
   if (!isRecord(value) || !fields(value, "commit,through") || !objectId(value["commit"], format)) return false;
   const head = value["through"];

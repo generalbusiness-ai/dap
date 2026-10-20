@@ -1,5 +1,6 @@
 /** Bounded advisory navigation for the explicit partition cohort. These
  * reads locate indexes; they do not attest Native provenance or grant acts. */
+import { same } from "@generalbusiness/artroom-bytes";
 import type { Head, Item, ItemQuery, ItemQueryRead, Read, ScopeId, ScopeRef, Summary } from "@generalbusiness/dap-contract";
 import { canonicalize, isScopeRef, itemQueryReadFor, utf8, within, LATE } from "@generalbusiness/artroom-bytes";
 
@@ -29,7 +30,6 @@ export interface DirectoryInventory {
   calls: number;
 }
 class Incomplete extends Error {}
-const same = (a: unknown, b: unknown) => canonicalize(a) === canonicalize(b);
 
 /** One operation shares all page, byte and time allowances. Reads are
  * sequential. Logical expiry cannot cancel an uncooperative transport. */

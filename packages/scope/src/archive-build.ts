@@ -1,5 +1,6 @@
 /** Selection-to-layout boundary. A rebuild spends a new pass's finite
  * allowance on the stored manifest and exact immutable dependencies. */
+import { same } from "@generalbusiness/artroom-bytes";
 import type { Bounds, Head, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
 import { canonicalize, isRecord, parseStrict, utf8 } from "@generalbusiness/artroom-bytes";
 import { buildJournalArchive, JOURNAL_SELECTION_BYTES, journalSelection, JournalWork, type JournalArchive, type JournalCost, type JournalFormat, type JournalLayoutResult, type JournalObjectSource } from "@generalbusiness/artroom-git/journal";
@@ -14,7 +15,6 @@ type LayoutFailure = Extract<JournalLayoutResult, { ok: false }>;
 export type ArchiveBuildFailure = LayoutFailure | { readonly ok: false; readonly reason: ArchivePrefixReason | "rebuild-mismatch" | "manifest" };
 export type ArchiveBuildResult = { readonly ok: true; readonly archive: JournalArchive } | ArchiveBuildFailure;
 type Parent = { readonly id: string; readonly source: JournalObjectSource } | null;
-const same = (a: unknown, b: unknown): boolean => canonicalize(a) === canonicalize(b);
 
 /** Bounds the metadata before parsing or encoding it. The recorded inventory
  * cost is a work reservation on restart, not evidence of privacy admission.

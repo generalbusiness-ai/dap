@@ -1,5 +1,6 @@
 /** Versioned projections and presentation declarations. The legacy reader
  * is never widened; neither codec admits native execution or viewer rights. */
+import { freeze } from "./values.ts";
 import { PROPOSED_BOUNDS, type DeclaredDefinition, type Digest } from "@generalbusiness/dap-contract";
 import { digestBytes, fitsFieldType, isDigest, isRecord, parseStrict, parseStrictBytes, utf8, verify } from "./index.ts";
 import { applicationJson } from "./application-json.ts";
@@ -97,9 +98,6 @@ function release(value: unknown, semantic: Digest, presentation: Digest): Applic
   if (manifest["v"] !== 2) return fail();
   release1({ ...body, manifest: { ...manifest, v: 1 } }, semantic, presentation);
   return body as unknown as ApplicationRelease2;
-}
-function freeze(value: unknown): void {
-  if (value !== null && typeof value === "object") { for (const part of Object.values(value)) freeze(part); Object.freeze(value); }
 }
 function signed(semantic: PublishedApplicationSemantics2, value: unknown, expected: Digest | null, bounds: ApplicationPackageLimits): { release: ApplicationRelease2; ids: ApplicationIds } {
   const semanticId = id("semantic", semantic, bounds), body = only(value, "manifest,sig");

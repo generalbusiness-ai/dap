@@ -750,7 +750,7 @@ const opened = (given: Pick<RuleGiven, "input" | "own">, k: number, kind: string
 
 const isObject = (value: unknown): value is Record<string, FieldValue> => typeof value === "object" && value !== null && !Array.isArray(value);
 /** True when the record has each required member, no member that is not named, and each member that it has is of its kind. */
-const record = (value: unknown, required: Readonly<Record<string, (member: unknown) => boolean>>, optional: Readonly<Record<string, (member: unknown) => boolean>> = {}): boolean =>
+const matchesRecordMembers = (value: unknown, required: Readonly<Record<string, (member: unknown) => boolean>>, optional: Readonly<Record<string, (member: unknown) => boolean>> = {}): boolean =>
   isObject(value) && Object.keys(required).every((name) => Object.hasOwn(value, name)) && Object.entries(value).every(([name, member]) => {
     const check = Object.hasOwn(required, name) ? required[name] : Object.hasOwn(optional, name) ? optional[name] : undefined;
     return check?.(member) === true;
@@ -764,7 +764,7 @@ const record = (value: unknown, required: Readonly<Record<string, (member: unkno
  * nothing of a link's entry.
  */
 const COLLECTED_RECORD: Readonly<Record<keyof typeof COLLECT_MOST, (value: unknown) => boolean>> = {
-  links: (value) => record(value, { link: isFactRef, issue: (issue) => isScopeRef(issue) && issue.kind === "lane" }),
+  links: (value) => matchesRecordMembers(value, { link: isFactRef, issue: (issue) => isScopeRef(issue) && issue.kind === "lane" }),
 };
 
 // ---------------------------------------------------------------- what an operation is for
@@ -2677,7 +2677,7 @@ export const destinationRules4: Rules = (() => {
     wellFormed: (result: "confirmed" | "refused" | "unknown", evidence: import("@generalbusiness/dap-contract").Evidence, given: RuleGiven) => {
       const item = given.input.type === "outcome" ? given.state.operation(given.input.operation) : null;
       if (!item || targetOf(given.state, given.own, item)?.type !== "file-publication") return oldPush.rules.wellFormed!(result, evidence, given);
-      return record(evidence.body, { send: value => SENDS[result]!.includes(value as string), seen: isSeen }, { supersededBy: value => isObject(value) && isFactRef(value["from"]) && typeof value["n"] === "number" && Number.isSafeInteger(value["n"]) && value["n"] >= 0 });
+      return matchesRecordMembers(evidence.body, { send: value => SENDS[result]!.includes(value as string), seen: isSeen }, { supersededBy: value => isObject(value) && isFactRef(value["from"]) && typeof value["n"] === "number" && Number.isSafeInteger(value["n"]) && value["n"] >= 0 });
     },
     derives: (given: RuleGiven, operation: Operation, selected: boolean | null) => {
       const item = targetOf(given.state, given.own, operation);
@@ -2715,7 +2715,7 @@ export const destinationRules4: Rules = (() => {
     "file-judge": { place: "outcome", clock: true, rules: {
       selects: false, read: false, most: { effects: 14, requests: 0, operations: 3 }, retries: () => false,
       origin: ({ state }) => destinationPublicationAt(state, branchOf(state)?.refs["judging"])?.id ?? null,
-      wellFormed: (result, evidence) => result === "confirmed" && record(evidence.body, { head: isObjectId, present: value => typeof value === "boolean", tree: value => value === null || isObjectId(value) }),
+      wellFormed: (result, evidence) => result === "confirmed" && matchesRecordMembers(evidence.body, { head: isObjectId, present: value => typeof value === "boolean", tree: value => value === null || isObjectId(value) }),
       derives: given => { const decided = fileJudge(given); return { effects: decided.effects, sends: [], opens: decided.opens }; },
     } },
     receipt: { ...(destinationRules3["receipt"] as Extract<PlatformRule, { place: "outcome" }>), rules: {

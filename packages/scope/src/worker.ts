@@ -1,3 +1,4 @@
+import { jsonReply as json } from "./response.ts";
 import { applicationPage } from "./applications/route.ts";
 import { applicationHostOutside } from "./applications/wiring.ts";
 import { applicationAnnouncementOutside } from "./applications/announce.ts";
@@ -245,7 +246,6 @@ export function api(binding: Binding, address: string | null = null): Api {
 /** The most bytes a request body may have: more than one entry, which is the most an act can become. */
 const BODY_BYTES = 1024 * 1024;
 
-const json = (status: number, body: unknown): Response => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json", "cache-control": "no-store" } });
 
 /** The status of an answer to a creation or an act (section 4.2). The body says which. */
 function answered(answer: Created | Answer, accepted: number): Response {

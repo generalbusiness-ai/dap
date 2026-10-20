@@ -15,7 +15,7 @@ export interface StartOptions extends Pick<ClaimOptions, "locks" | "current" | "
   now?: () => number;
 }
 export interface StartedRoom extends ClaimedRoom { key: KeyId; configured: ClaimRegister; handle: "@founder"; /** Private verified-settings handoff only. */ secret?: Uint8Array }
-const keyOf = (origin: string) => `artroom-page-start:${origin}`;
+const startStorageKey = (origin: string) => `artroom-page-start:${origin}`;
 const unavailable = () => new Error("The original private Start key or claim is unavailable. Nothing was replaced or submitted.");
 function originOf(origin: string): void {
   const url = new URL(origin);
@@ -24,7 +24,7 @@ function originOf(origin: string): void {
 }
 function read(origin: string, storage: ClaimStorage): KeptStart | null {
   originOf(origin);
-  const raw = storage.getItem(keyOf(origin));
+  const raw = storage.getItem(startStorageKey(origin));
   if (raw === null) return null;
   let secret: Uint8Array | null = null;
   try {
@@ -46,8 +46,8 @@ function save(row: KeptStart, storage: ClaimStorage, options: StartOptions): Kep
   current(options);
   const bytes = canonicalize(row);
   read(row.origin, { getItem: () => bytes, setItem: () => { throw unavailable(); } });
-  storage.setItem(keyOf(row.origin), bytes);
-  if (storage.getItem(keyOf(row.origin)) !== bytes) throw unavailable();
+  storage.setItem(startStorageKey(row.origin), bytes);
+  if (storage.getItem(startStorageKey(row.origin)) !== bytes) throw unavailable();
   current(options);
   return read(row.origin, storage)!;
 }
@@ -87,7 +87,7 @@ export async function startRoom(origin: string, storage: ClaimStorage, options: 
     const secret = unb64url(held.secret)!;
     try {
       const status = publicOf(held, storage);
-      const stillCurrent = () => options.current?.() !== false && storage.getItem(keyOf(origin)) === canonicalize(held);
+      const stillCurrent = () => options.current?.() !== false && storage.getItem(startStorageKey(origin)) === canonicalize(held);
       if (!stillCurrent()) throw unavailable();
       if (options.mode === "check" && !status.operation) return { key: status.key, configured: status.configured, handle: held.handle, operation: "", label: held.label, repository: null, pending: true, outcome: { code: 1, lines: ["The Start key is retained, but no original claim has been prepared. Check sent nothing. Continue explicitly to prepare the first request."] } };
       const result = await claimRoom({ service: origin, secret, ...(options.fetch ? { fetch: options.fetch } : {}), ...(options.now ? { now: options.now } : {}) }, held.configured, storage, held.label, {
