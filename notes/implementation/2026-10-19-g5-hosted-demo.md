@@ -7,8 +7,8 @@ at clean merge `776ff23b`. S2a is independently audited and pushed.
 The combined-cohort native lifecycle and long-gap witnesses pass with the
 exact committed demo packet. The signed release, separate cron Worker,
 runbook and static homepage path are implemented and checked locally.
-The final whole gate, Source/review, actual deployment and hosted
-acceptance remain pending. No frozen original has been executed or edited.
+The final whole gate passes at `74e325128`. Source/review, actual
+deployment and hosted acceptance remain pending. No frozen original has been executed or edited.
 
 The commissioned Source contains a separate signed demo release, a stateless
 bounded cron Worker beside the package, an operator runbook, and the Grow
@@ -94,6 +94,73 @@ supplies public Room bindings and the two distinct agent secrets after
 review and publication. Its per-step proving reads, operator custody and
 hosted acceptance remain operational obligations. The first hosted Room
 must use the combined cohort; no Device-only room has been provisioned.
+
+## Final gate and the complete commissioned Room
+
+Original gate process 89795 naturally exits 0 at
+`74e3251288b9ff3bfecbb0abfb73ec9b76e4d017`, tree
+`fa5160955b82eef67591342476d61998a5f589a4`. Whitespace and full typechecking
+pass. Vitest reports 413 passed files and one skipped file: 1,977 passed
+cases and three existing skips, 1,980 total. The separate Node checks pass
+31 and the Counter witness passes 55. No unchanged whole suite was rerun.
+The gate takes 513.7744 seconds elapsed and 740.2576 seconds child CPU;
+outer inventory/command work takes 515.5998 seconds. The machine is shared,
+warm macOS 27.0.1 arm64, Node 26.12.0/npm 11.20.0, initial load averages
+1.739/1.629/1.740. This is not an exclusive-host timing.
+
+All 2,340 tracked source rows match before and after. All 5,527 private
+dependency rows match except the one actual Vitest results-cache output;
+lock and install stamp remain exact. Zero installs. The checkout is clean.
+No competing builder native checks ran during the gate. Raw logs retain
+the expected scripted faults and existing runtime diagnostics; passing
+does not mean empty diagnostic output. The original closure and validation
+use `/tmp/artroom-g5-final-gate-20261020-`. Raw phases are in
+`/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.Ya9Es1vu4E`;
+the gate's original Counter output is
+`/private/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/artroom-counting-node-p23n1d`.
+
+After the gate, a new independent physical checkout checks the runbook's
+complete commissioning shape. Every source/dependency input is verified
+against the gate's postflight inventory, with distinct inodes and original
+modes; no dependency is installed and no original project/tool is executed.
+Its setup adds all 100 benches, 25 per quadrant, plus four real operator
+`set-heater` commands. The existing native lifecycle scenario then runs
+with the exact committed packet and combined cohort. Its original
+assertions and deadline remain; the driver journal slice starts after the
+actual operator commissioning frontier. Thus the no-human-command check
+covers simulator activity after those explicit operator setup commands.
+The genuine native duplicate, owner answers, wrong-agent guards, missed
+minutes, SQLite restart, concurrent refusal fence and proven replay all
+pass. Original 85884 exits 0, 5.82 seconds tests, 11.0068 seconds outer
+elapsed and 11.2891 seconds child CPU, on the same shared warm host. The
+long-gap case is excluded by that focused selection, not run a second time.
+This is a separate full-commissioning configuration, not another gate.
+
+Two earlier probe preparations remain. The first stops before execution
+because Git checkout gives the public packet mode 0644 rather than its
+original physical 0600; the next view preserves every physical mode. That
+second probe reaches the native ticks and recovery but its original
+whole-journal no-heater assertion counts the four intentionally recorded
+operator setup commands. The third probe uses the actual commissioning
+frontier for its driver-only journal slice and keeps the same assertions.
+Neither failure is relabelled a production defect or a full pass. Original
+probe scripts, inventories, fixture bytes, logs and natural closures are
+retained under `/tmp/artroom-g5-full-room-probe-`, including v2 and v3.
+
+This closure changes only this implementation note after the passing gate.
+The Source record binds the final note-only candidate and the exact gated
+code head/tree above. No source, test, configuration, asset or packet bytes
+change after the ordinary pass, so the documents-only rule requires no
+repeat. All 33 changed paths are presented for complete review against
+actual S2a Main `fb390d88`.
+
+G5's live acceptance is still open. Operational handoff request
+`cc069da1712f290d0998d8e0162d834f9d0faddf` asks planner to preserve the
+post-review deployment/runbook milestone separately: host trust, combined
+first-room creation/install/enrollment, actual Worker/cron version,
+visitor navigation, person-in-AI operator action and autonomous ticks
+between visits. No local test or code landing claims those results.
+S2b archive export and A0b production admission remain separate.
 
 ## Earlier native demo ticks on the local reviewed Device cohort
 
