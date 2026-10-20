@@ -12,8 +12,7 @@ import type { MetricEnvironment } from "../src/operational.ts";
 import type { MetricPoint } from "../src/metrics.ts";
 import type { Delivered } from "@generalbusiness/dap-derive";
 import { metricBindings, metricWiring, type TestScope } from "./worker.ts";
-import type { Remote } from "./fixtures-native.ts";
-import { at, reader } from "./fixtures-native.ts";
+import { type Remote, at, reader } from "./fixtures-native.ts";
 
 type Peer = Remote & { observed(...args: Parameters<TestScope["observed"]>): Promise<{ value: unknown; turn: boolean }>; dispatch(): Promise<number> };
 

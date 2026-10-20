@@ -1,4 +1,5 @@
 /** Worker-only fixture entry. Native room ownership stays in its adapter. */
+export { activityRecipe } from "./fixtures.ts";
 import { expect } from "vitest";
 import type { FactRef, PlatformDefinition, ScopeId } from "@generalbusiness/dap-contract";
 import { keyIdOfSecret } from "@generalbusiness/artroom-bytes";

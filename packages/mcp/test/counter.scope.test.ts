@@ -5,8 +5,7 @@ import { valueDigest } from "@generalbusiness/dap-derive";
 import { APPLICATION_COHORT, CONFIGURATION_DOMAIN, FIRST_ACTIONS_OF } from "@generalbusiness/dap-platform";
 import { countingCommitments } from "../../../apps/counter/commitments.ts";
 import { COUNTING_COMMITMENTS_DEFINITION } from "../../../apps/counter/commitments-pin.ts";
-import { mcpRoom, type Agent, type Room, exercises, claimApplicationRoom } from "./fixtures-native.ts";
-import { activityRecipe } from "./fixtures.ts";
+import { mcpRoom, type Agent, type Room, exercises, claimApplicationRoom, activityRecipe } from "./fixtures-native.ts";
 import DOC from "../../../docs/mcp.md?raw";
 
 /** The Counter's definition name: the name room lists and the prefix of its act tools. */

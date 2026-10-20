@@ -388,7 +388,7 @@ The read-only inventory and concrete Node consumers are recorded in
 changes no assertion, case, limit or deadline requirement. Final K2 gate
 and complete Source still remain ahead, behind G5a, S2a and G5.
 
-Actual Main's passing Vitest count is 1,926 with three existing skips. The
+The original Main baseline's passing Vitest count was 1,926 with three existing skips. The
 request's survey cites the unlanded G5a head's 1,939; its extra cases are
 not silently imported or claimed here. The final gate must retain the
 actual integrated base's case count and all existing assertions/limits.
@@ -519,13 +519,62 @@ so G5a/S2a's new cases are counted on both sides:
 | --- | ---: | ---: | ---: |
 | Derive | 10,632 | 10,629 | -3 |
 | Platform | 5,942 | 5,940 | -2 |
-| Scope | 21,942 | 21,934 | -8 |
-| MCP | 7,831 | 7,854 | +23 |
+| Scope | 21,942 | 21,933 | -9 |
+| MCP | 7,831 | 7,853 | +22 |
 
-The combined increase is ten lines. No overall line reduction is claimed.
+The combined increase is eight lines after the named native-entry follow-up below. No overall line reduction is claimed.
 `/tmp/artroom-k2-integrated-line-counts-20261020.json` records the counts.
 Current actual Main's passing Vitest count is 1,963 with three existing
 skips; the original 1,926 count above belongs to the earlier baseline.
 G5's 1,977-case passing code head remains unlanded and is not counted as
 current Main. Actual G5 Main integration still precedes K2's final gate
 and complete Source. The grouped HTTP failure remains unclassified.
+
+
+## Final runtime entry boundaries
+
+The exact static consumer inventory at `865e4d5f1` names every case, private
+adapter and Node script using each supported entry in
+`/tmp/artroom-k2-supported-entry-consumers-20261020.json`. It found one
+Scope file importing its native entry twice, and the Counter/lending native
+MCP stories separately importing their portable recipe helper. Those three
+files now coalesce their fixture imports, with all nonimport bytes exact.
+MCP's native entry explicitly re-exports only `activityRecipe` from the
+portable entry. That portable module imports Node HTTP and the stand-in
+only as types; its runtime dependency is the client. Node consumers do not
+load a Worker or test-framework entry. Native consumers can use one entry
+without an extra Node runtime port or eager ownership hook.
+
+The current case consumers and reasons are:
+
+| Entry | Case files | Why |
+| --- | ---: | --- |
+| Derive `fixtures-entry.ts` | 41 | Internal pure cases share core and distinct labelled domain data; public SDK core stays unchanged |
+| Platform `fixtures-entry.ts` | 21 | Pure platform cases share judgment/domain builders and keep each original actor binding |
+| Scope `fixtures.ts` | 3 | Declared-view Node MCP cases need portable packets without Worker/Vitest runtime; Node host and capture adapters also use it |
+| Scope `fixtures-native.ts` | 102 | Native Scope cases need Worker ports and explicit lifetime ownership |
+| MCP `fixtures.ts` | 10 | Node cases need portable signers, recipe parsing and caller-owned loopback transport; private adapters also use it |
+| MCP `fixtures-native.ts` | 11 | Native stories need actual Room ownership/hooks plus their portable recipe parser |
+
+Some native stories also import production/test Worker ports as the thing
+being exercised. Those are distinct from copying a fixture builder. The
+complete path/symbol inventory is recorded after this follow-up in
+`/tmp/artroom-k2-supported-entry-consumers-v2-20261020.json`; these counts
+are static consumer files, not runtime test cases.
+
+Original 99569 passes Scope/MCP compilers and all three selected native
+files/eight cases, naturally zero in 9.4594 seconds wall/17.5377 CPU, then
+prints `EnvironmentTeardownError: Closing rpc while "resolve" was pending`.
+Its first version re-exported all portable helpers. Choosing the explicit
+named recipe export keeps the native API narrow; it is not claimed as a
+fix for that diagnostic. Original 44218 passes the owning MCP compiler and
+the same eight affected cases, naturally zero in 8.3613 seconds wall/12.9778
+CPU, and retains the same teardown diagnostic. No attribution, clean-output,
+physical-draining or general stability claim is made. Both original logs
+remain; neither diagnostic is relabelled an infrastructure result. Shared
+warm macOS arm64 host, no installs, unchanged assertions/deadlines. Raw
+records use `/tmp/artroom-k2-single-entry-` and
+`/tmp/artroom-k2-named-native-entry-owning-20261020-`.
+The change saves one net MCP line and one Scope line. The actual Main
+comparison above is now net plus eight. Final integrated G5 Main, the one
+K2 gate and independent review remain required.

@@ -4,8 +4,7 @@ import { canonicalize } from "@generalbusiness/artroom-bytes";
 import { FILE_PUBLICATION_COHORT, FIRST_ACTIONS_OF } from "@generalbusiness/dap-platform";
 import { lending } from "../../../examples/lending/definition.ts";
 import { LENDING_DEFINITION } from "../../../examples/lending/pin.ts";
-import { mcpRoom, type Agent, type Room, claimApplicationRoom } from "./fixtures-native.ts";
-import { activityRecipe } from "./fixtures.ts";
+import { mcpRoom, type Agent, type Room, claimApplicationRoom, activityRecipe } from "./fixtures-native.ts";
 import DOC from "../../../docs/mcp.md?raw";
 
 /** The library's definition name: the name room lists and the prefix of its act tools. */
