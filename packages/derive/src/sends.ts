@@ -114,7 +114,7 @@ export function deriveSends(j: Judging, forms: readonly SendForm[], working: Rea
     if (j.scope.at.kind === "membership") return { kind: "legacy" };
     const genesis = j.self === 0 ? j.judged : j.own?.(0)?.entry.input;
     return genesis?.type === "genesis" && isDigest(genesis.seed.definition)
-      ? creationContextOf(genesis.message?.body) : { kind: "legacy" };
+      ? creationContextOf(genesis.message?.body, j.definition.digest) : { kind: "legacy" };
   };
 
   /**
@@ -268,7 +268,13 @@ export function deriveSends(j: Judging, forms: readonly SendForm[], working: Rea
       // never into a platform sibling or a membership creation. Ordinary
       // legacy bodies remain byte-for-byte unchanged when the marker is absent.
       const forward = membership && context.kind === "marked" && isDigest(definition) && form.create.kind !== "membership";
-      sends.push({ n: next(), to: seed, message: { class: "request", type: "create", body: { fields: fields(form.create.fields), ...(lanes ? { directory: lanes } : {}), ...(membership ? { membership } : {}), ...(forward ? { creationContext: { v: 1 } } : {}) } } });
+      // Native installation grants one bounded Root-to-child delegation.
+      // Domain fields cannot choose it, and a child cannot delegate it again.
+      const grant = context.kind === "marked" ? context.deviceCommand : undefined;
+      const delegated = forward && grant && context.kind === "marked" && context.delegate === true
+        && j.definition.digest === grant.root && isDigest(definition) && grant.definitions.includes(definition);
+      const marker = delegated ? { v: 2, deviceCommand: grant, delegate: false } : { v: 1 };
+      sends.push({ n: next(), to: seed, message: { class: "request", type: "create", body: { fields: fields(form.create.fields), ...(lanes ? { directory: lanes } : {}), ...(membership ? { membership } : {}), ...(forward ? { creationContext: marker } : {}) } } });
     } else if ("tell" in form) {
       // Section 6.4: a send whose subject is unbound is not made.
       if (readsUnbound(reading(null), form.tell.to)) continue;

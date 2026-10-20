@@ -64,7 +64,7 @@ authorization to install a register remains unimplemented.
 The examples are from one run of the test in
 `packages/cli/test/story.scope.test.ts`, with long IDs cut short.
 
-**`dap install <base-url> [--host <git-host>] [--namespace <name>] [--cohort application|application-publication|trusted-application|declared-application|invitation-key]`**
+**`dap install <base-url> [--host <git-host>] [--namespace <name>] [--cohort application|application-publication|trusted-application|declared-application|device-application|invitation-key]`**
 creates the register with an `install` intent, signed by a new operator
 key, which is also the one creator key. The host defaults to `github.com`
 and the namespace to `artroom`. For the demo's host, the hosting's own Git
@@ -76,7 +76,7 @@ Installed: register sc_hinqqbm4....
 The operator key key_baqzbaDy... is kept in the config directory, readable only by you. It is the one founder key.
 ```
 
-**`dap install --plan <base-url> [--host <git-host>] [--namespace <name>] [--cohort application|application-publication|trusted-application|declared-application|invitation-key]`**
+**`dap install --plan <base-url> [--host <git-host>] [--namespace <name>] [--cohort application|application-publication|trusted-application|declared-application|device-application|invitation-key]`**
 signs the same `install` intent and creates nothing. A register's ID is a
 function of its seed, and the seed of the intent and the register's
 version alone, so the command prints the ID that the install will create,
@@ -93,7 +93,7 @@ Planned: register sc_4kq2v7..., under platform:register@2, on host artifacts, na
 Set registerScope to sc_4kq2v7... in the Worker's host setting, then run dap install --planned before 2026-10-08T09:14:00Z.
 ```
 
-**`dap install --planned [--cohort application|application-publication|trusted-application|declared-application|invitation-key]`** creates the planned register, with the kept
+**`dap install --planned [--cohort application|application-publication|trusted-application|declared-application|device-application|invitation-key]`** creates the planned register, with the kept
 intent and no other argument. Before anything is sent it checks the plan:
 a plan whose ID is not the one its intent and version make, or whose
 version is not supported by the installed catalog, is refused as
@@ -108,7 +108,7 @@ or delete the original config or keys.
 
 For example, set `DAP_HOME` to a new private directory, then run
 `dap install --plan <base-url> --cohort <cohort> --host <host>
---namespace <namespace>`, using `application`, `application-publication`, `trusted-application`, `declared-application` or `invitation-key`
+--namespace <namespace>`, using `application`, `application-publication`, `trusted-application`, `declared-application`, `device-application` or `invitation-key`
 for `<cohort>`. After configuring the new register ID,
 run `dap install --planned --cohort <cohort>` with the same
 `DAP_HOME`. This creates separate custody and a new operator key; it
@@ -135,7 +135,11 @@ destination@2 and inbox@1, each with the `platform:` prefix.
 register@12, directory@11, membership@7, rules@5, destination@7 and inbox@1.
 `--cohort declared-application` selects `DECLARED_APPLICATION_COHORT`:
 register@13, directory@12, membership@7, rules@6, destination@8 and inbox@1.
-Package v2 declared projections use this explicit cohort. Package v1 keeps
+`--cohort device-application` selects `DEVICE_APPLICATION_COHORT`: register@16,
+directory@15, membership@7, rules@9, destination@11 and inbox@1. It accepts
+package v2 with the finite `device-command@1` requirement and an explicit
+existing owner. Other package v2 declared projections use the
+declared-application cohort. Package v1 keeps
 the trusted-application cohort and its original proof format.
 The retired register@6, directory@6 and membership@5 cohort remains readable;
 new installs cannot select it. `--cohort application-publication`
@@ -216,10 +220,15 @@ retained. The native application case was unchanged and was not repeated.
 The corrected Counter parent remains intact. A new ordinary gate and
 an independent review of the code are still required for this follow-up.
 
-**`dap install <git+https-uri> --release <release-id> --request <kept-key> [--role <default-role> ...] [--values <genesis-JSON>]`**
+**`dap install <git+https-uri> --release <release-id> --request <kept-key> [--role <default-role> ...] [--values <genesis-JSON>] [--owner <full-member-JSON>]`**
 records one application install in a room created with
 `--cohort trusted-application` for package v1, or
-`--cohort declared-application` for package v2. The caller needs the native
+`--cohort declared-application` for ordinary package v2. A device-command
+package uses `--cohort device-application` and requires `--owner` as the
+full JSON MemberRef, including its membership scope, incarnation and member
+handle. The native install checks that this member is active in the room
+membership. The signed package declares kinds and one owner requirement;
+it supplies no member identity or authority. The caller needs the native
 `application.install` action. The package must be a regular Git blob at an
 exact commit, and its release and publisher must be listed by the host
 operator. The host fetches and verifies that URI independently.
@@ -252,7 +261,7 @@ A later refusal can leave earlier activation and grants in force. The install
 records no rollback; ordinary authorized acts can change those effects.
 
 The equivalent MCP tools are `install_application` (with `uri`, `release`,
-`roles`, `values`, and `idempotencyKey`) and `application_installation`
+`roles`, `values`, `idempotencyKey`, and `owner` for device packages) and `application_installation`
 (with `item`). Existing `settle` also reads the retained envelope by its key
 and Rules target.
 

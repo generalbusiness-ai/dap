@@ -257,6 +257,10 @@
       "inputSchema": {
         "type": "object",
         "properties": {
+          "owner": {
+            "type": "object",
+            "description": "Existing full MemberRef chosen for a device package. Native installation checks its current membership."
+          },
           "uri": {
             "type": "string",
             "maxLength": 4096

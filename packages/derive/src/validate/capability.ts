@@ -20,6 +20,7 @@ import { range } from "./guards.ts";
 import { operand } from "./operands.ts";
 import { at } from "./shape.ts";
 import { nativeLicense } from "./native-capacity.ts";
+import { deviceCommandOpen } from "./device-command.ts";
 
 /**
  * One form of a definition that this package does not derive by itself,
@@ -106,6 +107,7 @@ export function capabilityEffect(d: Defining, x: unknown, p: string, ctx: Ctx, o
   if (!declared.with.some((allowed) => written.every(([name]) => allowed.includes(name)))) bad("capability", at(p, "with"), `is no set of arguments that the effect ${String(r["do"])} of ${cap.version} takes`);
   const reads = new Map(written.map(([name, arg]) => [name, operand(d, arg, at(at(p, "with"), name), ctx, owner, false)]));
   if (cap.version === "hold@1" && r["do"] === "license") nativeLicense(d, p, isObject(r["with"]) ? r["with"] : {}, reads, ctx);
+  if (cap.version === "device-command@1" && r["do"] === "open") deviceCommandOpen(d, r["with"], at(p, "with"), ctx, owner);
   // Section 6.4: a timed rule's effects are total, and what a capability's effect does is not this package's to show.
   if (ctx.timed) bad("timed-partial", p, "a timed rule has no capability effect");
   d.underived.push({ path: p, capability: cap.version, form: "effect", name: String(r["do"]) });

@@ -459,9 +459,16 @@ export function capabilitiesOf<T extends Capabilities>(first: T, ...others: read
     implements: ((...args: unknown[]) => asked.some((implemented) => implemented(...args))) as T["implements"],
     guard: (capability, guard, args, given) => by(capability, "guard", guard).guard(capability, guard, args, given),
     effect: (capability, effect, args, given) => by(capability, "effect", effect).effect(capability, effect, args, given),
+    ...(parts.some(p => p.deriveEffect) ? {
+      deriveEffect: ((capability, effect, args, given) => {
+        const part = by(capability, "effect", effect);
+        return part.deriveEffect?.(capability, effect, args, given) ?? { records: part.effect(capability, effect, args, given) };
+      }) satisfies NonNullable<Capabilities["deriveEffect"]>,
+    } : {}),
     ...(stepped.length === 0 ? {} : {
       grant: ((capability, step, given) => stepOf(capability, step).grant(capability, step, given)) satisfies Steps["grant"],
       derive: ((capability, step, given) => stepOf(capability, step).derive(capability, step, given)) satisfies Steps["derive"],
+      available: ((capability, step, given) => stepOf(capability, step).available?.(capability, step, given) ?? true) satisfies NonNullable<Steps["available"]>,
     }),
     ...(owning.length === 0 ? {} : {
       rules: ((owner, kind) => owning.map((p) => p.rules(owner, kind)).find((rules) => rules !== null) ?? null) satisfies Owners["rules"],

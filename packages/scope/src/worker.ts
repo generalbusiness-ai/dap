@@ -429,8 +429,8 @@ export function outsideOf(given: OutsideGiven, sql: Pick<SqlStorage, "exec">, en
     return NO_OUTSIDE;
   };
   const selected = (owner: string, kind: string): Outside => {
-    if ((owner === "platform:rules@5" || owner === "platform:rules@6") && ["fetch-application", "admit-application"].includes(kind)) return wiring("application", [env.APPLICATION_CONTENT, env.APPLICATION_TRUST], () => applicationHostOutside(env, PROPOSED_BOUNDS, fetch));
-    if ((owner === "platform:directory@11" || owner === "platform:directory@12") && kind === "announce-application") return announcement;
+    if ((owner === "platform:rules@5" || owner === "platform:rules@6" || owner === "platform:rules@9") && ["fetch-application", "admit-application"].includes(kind)) return wiring("application", [env.APPLICATION_CONTENT, env.APPLICATION_TRUST], () => applicationHostOutside(env, PROPOSED_BOUNDS, fetch));
+    if ((owner === "platform:directory@11" || owner === "platform:directory@12" || owner === "platform:directory@15") && kind === "announce-application") return announcement;
     return pick();
   };
   return {

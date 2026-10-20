@@ -77,6 +77,7 @@ export { DIRECTORY };
  * definition-byte places shipped by actual main at1eed91aa.
  */
 export const SIBLINGS_OF: Readonly<Record<string, { membership: PlatformDefinition; rules: PlatformDefinition; destination: PlatformDefinition }>> = {
+  "platform:directory@15": { membership: "platform:membership@7", rules: "platform:rules@9", destination: "platform:destination@11" },
   "platform:directory@12": { membership: "platform:membership@7", rules: "platform:rules@6", destination: "platform:destination@8" },
   "platform:directory@11": { membership: "platform:membership@7", rules: "platform:rules@5", destination: "platform:destination@7" },
   "platform:directory@10": { membership: "platform:membership@6", rules: "platform:rules@3", destination: "platform:destination@6" },

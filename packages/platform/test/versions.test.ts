@@ -3,7 +3,7 @@ import type { DeclaredDefinition, PlatformDefinition, Seed } from "@generalbusin
 import { definitionDigest } from "@generalbusiness/artroom-bytes";
 import type { PlatformRule, RuleGiven } from "@generalbusiness/dap-derive";
 import { d } from "@generalbusiness/dap-derive/testing";
-import { TRUSTED_APPLICATION_COHORT, INVITATION_KEY_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, PARTITION_COHORT, COUNTING_COHORT, DEMO_REGISTER, FIRST_ACTIONS_OF, NEWEST, ROLE_LISTS, ROLE_TABLE_OF, VERSIONS, WEB_DEMO_COHORT, WEB_DEMO_REGISTER, directorySeed, platform, versionOf, type Role } from "../src/index.ts";
+import { DEVICE_APPLICATION_COHORT, TRUSTED_APPLICATION_COHORT, INVITATION_KEY_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, PARTITION_COHORT, COUNTING_COHORT, DEMO_REGISTER, FIRST_ACTIONS_OF, NEWEST, ROLE_LISTS, ROLE_TABLE_OF, VERSIONS, WEB_DEMO_COHORT, WEB_DEMO_REGISTER, directorySeed, platform, versionOf, type Role } from "../src/index.ts";
 import { rita } from "./support-creation.ts";
 import { DECLARED_APPLICATION_RULES } from "../src/application-install-v2.ts";
 import { DECLARED_APPLICATION_COHORT } from "../src/application-install-v2-wire.ts";
@@ -22,6 +22,10 @@ import { DECLARED_APPLICATION_COHORT } from "../src/application-install-v2-wire.
 // Evidence: /tmp/artroom-cohort25-generation-one/result.json
 // SHA-256: e2a2052d23705690ec4b884786f453718875f6505d515fdda88a20191eb64269.
 const DIGESTS: Readonly<Record<string, string>> = {
+  "platform:register@16": "sha256:4f85c4f4ad35ffc3580cba3fc3ec17f29b59cfc9ccb9eee84b7ad355125926d6",
+  "platform:directory@15": "sha256:8d6ca8dadb088163720a190743d96aaba212e8aff7291ab6677777aecda20705",
+  "platform:rules@9": "sha256:6c9ca1c653e92049a45d4b21a6875cbf73dad0c503871041f3ee80e3b1f57d09",
+  "platform:destination@11": "sha256:f29353b2ca1f551ab6a7d622bbd57aa6dfc7fc3748358ce709ccee728e4c15df",
   // Complete45-entry generation: /tmp/artroom-m2a-cohort-catalog-validation-20261018.json
   // SHA-25690034cde46e86a1f; all42 previously recorded bodies unchanged.
   "platform:register@13": "sha256:4f85c4f4ad35ffc3580cba3fc3ec17f29b59cfc9ccb9eee84b7ad355125926d6",
@@ -91,7 +95,7 @@ test("every shipped version resolves to its own data, pinned by digest, and vers
   // Explicit application and demo pins do not replace the existing default cohort.
   const supporting = new Set<string>([...Object.values(TRUSTED_APPLICATION_COHORT).filter(pin => pin !== "platform:inbox@1"), PARTITION_COHORT.register, PARTITION_COHORT.directory, PARTITION_COHORT.partition, PARTITION_COHORT.destination, ...Object.values(INVITATION_KEY_COHORT).filter(pin => pin !== "platform:inbox@1" && pin !== "platform:destination@2"), FILE_PUBLICATION_COHORT.register, FILE_PUBLICATION_COHORT.directory, FILE_PUBLICATION_COHORT.destination, APPLICATION_COHORT.register, APPLICATION_COHORT.directory, APPLICATION_COHORT.membership, APPLICATION_COHORT.rules, COUNTING_COHORT.register, COUNTING_COHORT.directory, COUNTING_COHORT.membership, "platform:rules@4", "platform:destination@5", DEMO_REGISTER, WEB_DEMO_REGISTER, WEB_DEMO_COHORT.directory]);
   supporting.add(DECLARED_APPLICATION_RULES);
-  for (const pin of Object.values(DECLARED_APPLICATION_COHORT)) if (pin !== "platform:inbox@1") supporting.add(pin);
+  for (const pin of [...Object.values(DEVICE_APPLICATION_COHORT), ...Object.values(DECLARED_APPLICATION_COHORT)]) if (pin !== "platform:inbox@1") supporting.add(pin);
   const highest = Object.keys(VERSIONS).filter((named) => !supporting.has(named)).reduce<Record<string, number>>((most, named) => ({ ...most, [named.slice(0, named.lastIndexOf("@"))]: Math.max(most[named.slice(0, named.lastIndexOf("@"))] ?? 0, versionOf(named as PlatformDefinition)) }), {});
   expect(Object.fromEntries(Object.entries(NEWEST).map(([name, named]) => [name, versionOf(named)]))).toEqual(highest);
   // Version 2 adds the act `read-token` and its operation `mint-read` to the destination, and nothing to version 1.
@@ -109,6 +113,7 @@ test("a rule reads its own version from the scope's genesis: the register of eac
   const at = { kind: "register", scope: `sc_${"r".repeat(51)}a`, inc: `in_${"r".repeat(25)}a` };
   const create = (definition: PlatformDefinition) => ({ input: { type: "act", signed }, own: (seq: number) => (seq === 0 ? { entry: { input: { type: "genesis", seed: genesisOf(definition) } } } : null), resolved: { at } }) as unknown as RuleGiven;
   expect((["platform:register@1", "platform:register@2", "platform:register@3"] as const).map((named) => directorySeed(create(named)).definition)).toEqual(["platform:directory@1", "platform:directory@2", "platform:directory@3"]);
+  expect(directorySeed(create(DEVICE_APPLICATION_COHORT.register)).definition).toBe(DEVICE_APPLICATION_COHORT.directory);
   expect(directorySeed(create(FILE_PUBLICATION_COHORT.register)).definition).toBe(FILE_PUBLICATION_COHORT.directory);
   expect(directorySeed(create(PARTITION_COHORT.register)).definition).toBe(PARTITION_COHORT.directory);
   expect([DEMO_REGISTER, WEB_DEMO_REGISTER].map(named => directorySeed(create(named)).definition)).toEqual(["platform:directory@3", WEB_DEMO_COHORT.directory]);

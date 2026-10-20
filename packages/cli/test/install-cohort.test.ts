@@ -2,12 +2,13 @@ import { expect, test } from "vitest";
 import type { PlatformDefinition, Receipt, SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, intentDigest, newIncarnation, scopeIdOf, textDigest, timeMs } from "@generalbusiness/artroom-bytes";
 import type { Fetch } from "@generalbusiness/artroom-client";
-import { INVITATION_KEY_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
+import { INVITATION_KEY_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { command, install, installPlanned, memoryStore, planInstall, type Config, type Context, type Store } from "../src/index.ts";
 
 const SERVICE = "https://cohort.test";
 const COHORT = "trusted-application" as const;
 const COHORTS = [
+  { name: "device-application", definition: DEVICE_APPLICATION_COHORT.register, other: COHORT },
   { name: "declared-application", definition: DECLARED_APPLICATION_COHORT.register, other: COHORT },
   { name: "invitation-key", definition: INVITATION_KEY_COHORT.register, other: COHORT },
   { name: COHORT, definition: TRUSTED_APPLICATION_COHORT.register, other: "application" },
