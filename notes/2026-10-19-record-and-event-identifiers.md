@@ -69,8 +69,9 @@ did:seq:<format>:<genesis>                        a sequence
 did:seq:<format>:<genesis>/<position>/<event>     an event in it
 ```
 
-Not provided here: judging events against a sequence's rules, requests
-and messages, and who may read. Each sits on these identifiers.
+Three things sit on these identifiers and are not covered here. They
+are judging an event under a sequence's rules, the requests and messages
+that produce events, and who may read a sequence.
 
 # Part one: the protocol
 
@@ -192,8 +193,8 @@ answers is not a format.
 | `dap1` | 3.3 | dap scopes after the change of section 8 |
 | `git` | 3.4 | Any sequence whose events are commits, SHA-1 object format: gitseq workrooms, Open Integrity Forge repositories |
 | `git256` | 3.4 | The same, SHA-256 object format |
-| `at` | Owed by atseq | atseq apps: the `ai.generalbusiness.atseq.entry` record, CIDv1 in base32 lowercase, the entry's genesis member and predecessor CID, the position from its record key |
-| `nostr` | Owed by noseq | noseq instances: the kind 8792 ordered entry, the event ID in hex, the `h` tag as the sequence member, the `previous` and `position` members |
+| `at` | Owed by atseq | atseq apps. An event is an `ai.generalbusiness.atseq.entry` record, and a digest is a CIDv1 in base32 lowercase. The entry carries its genesis, its predecessor and its position |
+| `nostr` | Owed by noseq | noseq instances. An event is a kind 8792 ordered entry, and a digest is the event ID in hex. The `h` tag carries the genesis, and the entry carries `previous` and `position` |
 
 A project proposes a token with its definition. The token is allocated
 when the definition and its vectors are in this registry.
@@ -253,47 +254,69 @@ when the definition and its vectors are in this registry.
 
 ## 4. Verification
 
-A verifier runs the levels in order, stops at the first failure, and
-reports the level it reached and what it took on trust.
+Verification answers one question about a citation: is this event the
+one the citation names, and does it belong to that sequence? The answer
+comes in levels. Each level is a stronger statement than the one
+before, and each needs more of the sequence to hand. A verifier runs
+the levels in order, stops at the first failure, and reports the level
+it reached and what it took on trust.
 
-| Level | Check | What passing shows |
-|---|---|---|
-| 0, bytes | The digest input of the event's bytes hashes to the cited digest | These bytes are the ones cited |
-| 1, names | The event carries the cited genesis digest, where the format has a sequence member, and the cited position, where it carries one | The event says it belongs to that sequence at that position |
-| 2, chain | From the event, each predecessor hashes to the event before it, positions fall by one, and the walk reaches the genesis or an event the verifier already holds | The event is on a chain from that genesis, and nothing between the held event and this one was replaced |
-| 3, authorship | The signed parts of each event on the walk hold under the rule the genesis names | Those parts were signed by the keys they name |
+**Level 0, bytes.** Hash the event's bytes as the format's digest input
+says. The result must equal the digest in the citation. Passing shows
+that these bytes are the ones cited. This level needs only the event.
 
-Level 1 is a cheap refusal and nothing more: anyone can write bytes that
-pass levels 0 and 1. Membership is shown at level 2. For `git`, which
-has no sequence member and no carried position, levels 1 and 2 are one
-walk.
+**Level 1, names.** Where the format has a sequence member, the event
+must carry the cited genesis digest. Where the format carries the
+position, the event must carry the cited one. Passing shows what the
+event says about itself, and no more. Anyone can write bytes that say
+this. Level 1 is a cheap refusal, not a proof of membership.
+
+**Level 2, chain.** Walk backwards from the event. Each event names its
+predecessor. Fetch the predecessor, hash it, and compare the result with
+the digest the event names. The position must fall by one at each step.
+The walk ends at the genesis, or at an event the verifier already holds
+and trusts. Passing shows that the event is on a chain from that
+genesis. It also shows that nothing between the end of the walk and the
+event was replaced. Membership is shown here. For `git`, which has no sequence
+member and no carried position, levels 1 and 2 are the same walk.
+
+**Level 3, authorship.** For each event on the walk, check the
+signatures where the format says they sit. The genesis names the rule
+for whose signature counts. Passing shows that the signed parts were
+signed by the keys they name.
 
 Levels 0 to 2 need the format alone. Level 3 also needs the signature
-rule the genesis names, because the format says where a signature is and
+rule from the genesis, because the format says where a signature is and
 the genesis says whose counts. A verifier without that rule stops at
-level 2 and says so. Whether a key was entitled to sign is a question
-for the sequence's rules, which is level 4: each system's own replay,
-outside this protocol.
+level 2 and says so.
 
-The verifier's report is JSON with these members:
+Judging the event under the sequence's rules is the step after these.
+It asks whether the key was entitled to sign, and whether the event was
+a valid step from the state before it. That is level 4. Each system
+does it with its own replay, outside this protocol.
+
+**The report.** A verifier reports JSON with these members:
 
 - `citation`: what was checked.
-- `result`: `ok`, or the name of the failed level.
+- `result`: `ok`, or the name of the level that failed.
 - `reached`: the highest level passed.
-- `anchor`: `genesis`, or the citation of the held event the walk
-  reached.
-- `trusts`: what was taken on trust, such as the anchor.
+- `anchor`: where the walk of level 2 ended: `genesis`, or the citation
+  of the held event.
+- `trusts`: what the verifier took on trust and did not check, such as
+  the chain behind the anchor.
 
-Worked example, for the citation of 2.2, in a clone that holds the
-chain:
+**Worked example.** The citation of 2.2, checked in a clone that holds
+the chain:
 
 ```
 git cat-file -t cc7eb5a129850990652c553adffbfd2f4f726f83
-# "commit": Git hashed the object as it read it. Level 0.
+# "commit". Git names an object by the hash of its bytes, so an object
+# that a clone holds under this name has passed level 0.
 git rev-list --first-parent cc7eb5a129850990652c553adffbfd2f4f726f83 | tail -1
-# 5d2622748872b7e2dec3fe5c59e4be73a35e0bc8: the walk ends at the genesis.
+# 5d2622748872b7e2dec3fe5c59e4be73a35e0bc8: the first-parent walk ends
+# at the genesis.
 git rev-list --first-parent --count 5d2622748872b7e2dec3fe5c59e4be73a35e0bc8..cc7eb5a129850990652c553adffbfd2f4f726f83
-# 557: the position. Levels 1 and 2.
+# 557: the position. Levels 1 and 2 pass.
 ```
 
 Level 3 then checks the trailers of each of the 558 commits under
@@ -301,16 +324,24 @@ gitseq's rule.
 
 ## 5. Resolution
 
+Resolution turns an identifier into bytes. For a sequence identifier,
+the bytes are the sequence document of 5.3. For a citation, they are
+the event. A reader resolves against a host, and to reach a host it
+needs an address.
+
 ### 5.1 Addresses are supplied, not derived
 
 An identifier names a sequence. It does not say where the sequence is.
 A reader learns an address from whoever gave it the citation, from a
-sequence document it has already fetched, or from configuration. A host
-that holds no copy answers not-found. A host that holds a copy serves it
-under the same identifier as every other host. The addresses a host
-lists are its statement and are checked only by reading from them.
+sequence document it has already fetched, or from its own
+configuration. A host that holds no copy answers not-found. A host that
+holds a copy serves it under the same identifier as every other host.
+The addresses a host lists are its own statement. A reader checks them
+only by reading from them.
 
 ### 5.2 The three reads
+
+A host answers three reads:
 
 | Read | Returns |
 |---|---|
@@ -318,67 +349,76 @@ lists are its statement and are checked only by reading from them.
 | One event, by position | Its bytes and its digest |
 | A page of events, from a position | Bytes and digests, in ascending position |
 
-**Over HTTP.** A host publishes one base URL. With `<id>` for
-`<format>:<genesis>`:
+**Over HTTP.** A host publishes one base URL. In the paths below,
+`<id>` is the identifier without its `did:seq:` prefix, so
+`<format>:<genesis>`.
 
 | Request | Answer, `application/json` |
 |---|---|
 | `GET <base>/<id>` | The sequence document |
-| `GET <base>/<id>/<position>` | `{ "id": "<citation>", "position": <n>, "digest": "<text form>", "encoding": "utf-8" or "base64", "bytes": "<the event>" }` |
-| `GET <base>/<id>/<position>?n=<count>` | `{ "events": [ <at most count such objects, from position on> ], "next": <the next position, or null> }`. The host may return fewer than `count`. |
+| `GET <base>/<id>/<position>` | One event: `{ "id": "<citation>", "position": <n>, "digest": "<text form>", "encoding": "utf-8" or "base64", "bytes": "<the event>" }` |
+| `GET <base>/<id>/<position>?n=<count>` | A page: `{ "events": [ <up to count such objects, from position upwards> ], "next": <the position after the last one returned, or null at the head> }`. The host may return fewer than `count`. |
 
-A sequence or position the host does not hold is `404`. A reader the
-host refuses is `403`. Neither answer carries anything else, and this
-protocol does not say who may read.
+A host answers `404` for a sequence or a position it does not hold, and
+`403` for a reader it refuses. Neither answer carries anything else.
+Who may read is the host's rule, outside this protocol.
 
-**From Git.** For `git` and `git256` a remote is an address. The reads
-are Git operations: the genesis by its hash, the event at a position by
-the first-parent walk, and any commit by its hash. A host may also keep
-a sequence of another format in a Git repository and serve the three
-reads from a clone. dap's archive does this (section 8).
+**From Git.** For `git` and `git256`, a remote is an address, and the
+reads are Git operations. The genesis is read by its hash, the event at
+a position by the first-parent walk, and any commit by its hash. A host
+may also keep a sequence of another format in a Git repository and
+serve the three reads from a clone. dap's archive does this (section
+8).
 
 ### 5.3 The sequence document
 
-A DID document with these members:
+Resolving a sequence identifier yields a document. It tells the reader
+where the sequence is served, and it lets the reader check that it has
+the right sequence. It is a DID document with these members:
 
 - `id`: the sequence's identifier.
 - `service`: one entry of type `SeqHost` for each address, with the base
   URL or the remote as `serviceEndpoint`.
-- `sequence`, a property this method defines: `format`, the genesis as
-  `{ "encoding", "bytes" }`, and `head`, the highest position the host
-  serves.
+- `sequence`, a property this method defines, with three members:
+  `format`, the genesis as `{ "encoding", "bytes" }`, and `head`, the
+  highest position the host serves.
 
-The genesis bytes are the one fact in the document. A reader hashes them
-and compares the result with the identifier before it trusts anything
-else. `head` is the host's statement. The method defines no verification
-methods in this version.
+The genesis bytes are the one fact in the document. A reader hashes
+them and compares the result with the identifier before it trusts
+anything else in the document. The addresses and `head` are the host's
+statements. The document carries no keys. Keys belong to the sequence's
+rules, not to this method.
 
-**Method operations.** Create: write a genesis. Read: the three reads.
-Update and deactivate: none. An identifier is immutable, and a sequence
-document changes only in the addresses and the head a host states.
+**Method operations.** A DID method says how its identifiers are
+created, read, updated and deactivated. For `seq`: create is writing a
+genesis, read is the three reads, and update and deactivate do not
+exist. An identifier never changes, and a sequence document changes
+only in the addresses and the head a host states.
 
 ## 6. Security considerations
 
-A citation does not prove any of these:
+A citation that passes every level still does not prove any of these:
 
 - that the event took effect in any other sequence;
-- that it is the head;
+- that it is the head of its sequence;
 - that the host will keep it;
 - that its content is true;
-- what time it was.
+- when it was written.
 
 A position means nothing outside its own sequence.
 
-**Forks.** An identifier names a genesis. Two chains from one genesis
-share it, and an event on either passes every level. Two different
-events that both verify at one position of one sequence are proof of a
-fork. A reader who keeps citations detects this. A reader with one
-citation and one host cannot. This protocol has no signed head and no
-consistency proof. A system that wants one adds it in its own protocol.
+**Forks.** The identifier names the genesis. If a host appends two
+different events after the same predecessor, both chains carry the
+same identifier, and an event on either passes every level. Two
+different events that both verify at one position of one sequence are
+proof of a fork. A reader who keeps the citations it has seen can
+detect this. A reader with one citation and one host cannot. This
+protocol has no signed head and no consistency proof. A system that
+needs one adds it in its own protocol.
 
-**Discovery.** The identifier does not locate. The first host is trusted
-for nothing but the bytes it serves, which the reader checks. The
-addresses it lists are hints.
+**Discovery.** The identifier does not locate. The first host a reader
+reaches is trusted for nothing but the bytes it serves, and the reader
+checks those. The addresses that host lists are hints.
 
 **Privacy.** An identifier and a citation reveal digests and a position,
 nothing else. A host decides who may read and answers `403` or `404`
@@ -386,24 +426,30 @@ with no further detail.
 
 ## 7. Conformance and vectors
 
+A test vector is a published input with its expected output. An
+implementation passes a vector when it produces that output. Code that
+is not any implementation under test produces the vectors, so that no
+implementation's mistake becomes the standard. An implementation's
+tests compare its output with the vectors and never regenerate them.
+
 For each format, under `vectors/<format>/`:
 
-- `sequence.json`: `{ "id", "genesis": { "encoding", "bytes" },
-  "events": [ { "position", "digest", "encoding", "bytes" } ] }`, with
-  the genesis and at least three events after it.
-- `cases.json`: a list of `{ "name", "citation", "event", "expect" }`.
-  `event` is an object of the shape above or `null`. `expect` is the
-  report of section 4 without `trusts`. The cases include:
-  - the three citations, and the HTTP URL of one of them;
+- `sequence.json`: a short sequence, with the genesis and at least three
+  events after it: `{ "id", "genesis": { "encoding", "bytes" },
+  "events": [ { "position", "digest", "encoding", "bytes" } ] }`.
+- `cases.json`: a list of checks, each `{ "name", "citation", "event",
+  "expect" }`. `event` is an object of the shape above, or `null` when
+  the case is about the citation alone. `expect` is the report of
+  section 4 without `trusts`. The cases include:
+  - a valid citation for each event in `sequence.json`, and one of them
+    written as the HTTP path of 5.2;
   - one event with one changed byte;
   - one citation with the wrong position;
   - one event from another sequence;
   - one chain with a replaced middle event.
 
-Code that is not any implementation under test produces the vectors.
-An implementation's tests compare its output with the vectors and never
-regenerate them. A conforming implementation passes the vectors of the
-formats it claims and states the levels it runs.
+A conforming implementation passes the vectors of the formats it claims
+and states the levels it runs.
 
 # Part two: adoption
 
@@ -503,9 +549,9 @@ this note and adds nothing to it:
    a format defined by the nine parts of 3.1. Decided by Hugh on 19
    October 2026.
 3. A citation is `/<position>/<digest>` as a path, never a fragment.
-4. Membership is level 2. Level 1 is what the event says of itself.
-   Level 3 takes its rule from the genesis. Judgment is outside the
-   protocol.
+4. Membership is shown at level 2. Level 1 is what the event says of
+   itself. Level 3 takes its signature rule from the genesis. Judgment
+   under the sequence's rules is outside the protocol.
 5. Vectors from independent code, committed with the specification and
    never regenerated from an implementation.
 6. dap changes its references to `{ scope, genesis }` and
@@ -561,8 +607,11 @@ this note and adds nothing to it:
   position and digest is unpacked. Section 3.1 says what a format
   definition describes before it lists the nine parts, and the parts are
   named as the questions a definition answers. Level 1 is "names", not
-  "claim". dap's entry member is `genesis`, not `rec`, and the reference
-  is `SequenceRef`.
+  "claim". Sections 4 to 7 each say what they are for before their
+  mechanics: the levels are paragraphs, and resolution, the sequence
+  document, method operations and test vectors are explained where they
+  first appear. dap's entry member is `genesis`, not `rec`, and the
+  reference is `SequenceRef`.
 
 ## Sources
 
