@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:79a94a3640fb36cf73792cc3add987fe575ff263","text":"Merge retired a covered predecessor; the successor is at packages/bytes/test/application-projection-binding.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8276e965bad866db3b82c68dbf726d84de168e77","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/declared-surfaces-browser.mjs."}
