@@ -5,7 +5,7 @@
 import { env, runInDurableObject } from "cloudflare:test";
 import { expect, inject, test } from "vitest";
 import { DEVICE_COMMAND, PROPOSED_BOUNDS, type DeclaredDefinition, type Digest, type Input, type PlatformDefinition, type ScopeId } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isEntry, isSeed, parseStrict, scopeIdOf, timeOf, unb64url } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isDigest, isEntry, isSeed, parseStrict, scopeIdOf, textDigest, timeOf, unb64url } from "@generalbusiness/artroom-bytes";
 import { readApplicationPackage2 } from "@generalbusiness/artroom-bytes/application-v2";
 import { outcomeValueDomains, ownersOf, validateDefinition, type OperationRules } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
@@ -277,6 +277,16 @@ test.each(["fixture", "Grow"])("installed %s scopes export genesis zero after a 
     // without a service, with only the actual root-register claim anchor.
     const diagnosticObjects = new Map([...diagnosticArchives.values()].flatMap(archive => archive.objects.map(object => [object.id, object] as const)));
     const diagnosticRefs = new Map([...diagnosticArchives].map(([scope, archive]) => [journalRef(scope), archive.commit]));
+    const probe = allHistories[0]!;
+    for (const supplied of [[], [{ ...anchors[0]!, hash: textDigest("TEST wrong root creation anchor") }]]) {
+      const offline = await life.wait(() => verifyArchive(archiveSource({ open: (at, work) => readJournalArchive({
+        format: async () => "sha1", resolve: async ref => diagnosticRefs.get(ref) ?? null,
+        object: async (id, limit) => { const object = diagnosticObjects.get(id); return object ? { type: object.type, size: object.data.length, data: object.data.length <= limit ? object.data : null } : null; },
+      }, at, work) }), { mode: "replay", platform, capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE, grants: "proven", scope: probe.scope.name, head: probe.read.at, anchors: supplied }));
+      expect(offline.kind).toBe("verification"); if (offline.kind !== "verification") return;
+      if (supplied.length === 0) expect(offline.verification.report).toMatchObject({ result: "missing-dependency", dependencies: { missing: [claim] } });
+      else expect(offline.verification.report).toMatchObject({ result: "mismatch", anchors: [], dependencies: { missing: [] } });
+    }
     const offlineResults = [];
     for (const { scope, read } of allHistories) {
       const offline = await life.wait(() => verifyArchive(archiveSource({ open: (at, work) => readJournalArchive({
@@ -290,7 +300,7 @@ test.each(["fixture", "Grow"])("installed %s scopes export genesis zero after a 
       .map(use => ({ journal: scope.name, consumer: { at: sealed.entry.at, seq: sealed.entry.seq, hash: sealed.hash }, source: use.fact, content: use.content }))));
     expect(offlineResults.every(result => result.offline.kind === "verification" && result.offline.verification.report.result === "consistent"),
       JSON.stringify({ kind, exported: allHistories.map(({ scope, read }) => ({ scope: scope.name, entries: read.value.length, head: read.at })),
-        copyMetadataPassed: credentialCopies.length, domainRefusalsPassed: 2, credentialRefusalsPassed: 3,
+        copyMetadataPassed: credentialCopies.length, domainRefusalsPassed: 2, credentialRefusalsPassed: 3, anchorRefusalsPassed: 2,
         anchors, rootCopies, offlineResults })).toBe(true);
   } finally { life.release(); }
 }, 30_000);

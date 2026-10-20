@@ -178,6 +178,12 @@ entry used, the verifier does one of two things:
   read. The scope's incarnation and kind must be the ones the reference
   names.
 
+If the source cannot be read and a supplied anchor names the required
+scope and position with a different hash, the result is `mismatch`.
+Without an anchor for that position, it remains `missing-dependency`.
+A different-hash anchor does not prevent a readable source from being
+replayed; an anchor trusts only the exact entry it names.
+
 Each scope is checked once, as far as the highest entry any reference
 needs. Two scopes may use each other at different positions.
 
@@ -198,7 +204,7 @@ service being checked.
 | Result | When |
 |---|---|
 | `consistent` | Everything the mode checks holds, through the head, for the coverage and trusts stated. |
-| `mismatch` | An entry is not what its bytes, its chain, its signature or its replay say; or a reference names another entry, incarnation or kind than its source scope has; or the history does not reach or match the known head. `at` names the entry. |
+| `mismatch` | An entry is not what its bytes, its chain, its signature or its replay say; or a reference names another entry, incarnation or kind than its source scope has; or the history does not reach or match the known head; or an unreadable source has a required position whose supplied anchor names a different hash. `at` names the entry. |
 | `missing-dependency` | A source history cannot be read, or does not reach the entry a reference names, and no anchor names it. `at` names the entry that used it. |
 | `incomplete` | A retained input is missing or is not the bytes its digest names; or a detached text is gone and no later entry redacts it; or the history holds an ancestry record, whose walk the replay does not derive; or a limit was reached. |
 | `unsupported-definition` | The scope pins a platform definition for which the caller gave no data and rules (`platform`), or gave them without a rule for one mark of the data; or a declaration that does not pass validation under the bounds given, or a declaration that needs a capability version the caller gave no rules for. `at` names the genesis. Also a `preparation` entry of a step, or an `outcome` entry of an owner, that the caller gave no rules for, and an observation for which its platform version supplies no reference or answer code: `at` names that entry. |

@@ -268,6 +268,34 @@ Main exactly, with no overlap. The checkout is clean before and after the
 merge. Earlier 2,615-file execution inputs remain historical for their
 original composition; this integration is not a new test or gate result.
 
+The commissioned anchor negatives now run on that K3 composition. With no
+anchor, object-only replay reports the actual Register creation-source
+entry 2 as missing. With that position but a wrong hash, it reports
+`mismatch`. The verifier changes only that failed proof's classification
+when the source cannot be opened. A readable source may still be replayed
+despite an unused different-hash anchor. No additional fact becomes proved
+or trusted. Generic multi-anchor support is unchanged; enforcing 9a's sole
+root-anchor policy remains part of the unfinished source-proof integration.
+
+Original owning attempt `12545` passes compatibility, Replay and Scope
+source/test compilers and the strengthened existing Replay case: one pass,
+52 filter skips. The native Grow case passes both anchor negatives, all
+five exports, both domain negatives and all three credential negatives,
+then every positive replay still reports first missing Register entry 1.
+The whole attempt naturally exits 1: 8.995271000 wall / 14.661288 child CPU
+seconds. The pure Replay phase is 1.176905208 / 1.575685; native phase
+6.324433583 / 7.464104. All 2,620 prelaunch physical source inputs, modes
+and lock stamp remain exact; zero installs. This is not a passing replay
+or a gate.
+
+Original pre-change baseline `91268` substitutes the actual verifier blob
+from Git at `382fd7fa`, with that same strengthened case. It fails by the
+direct expected-mismatch versus actual-missing-dependency assertion:
+1.149829416 wall / 1.593058 child CPU seconds. Its full 2,620-file physical
+input precedes execution. Every fixed source byte, mode and the stamp are
+restored exactly, and the wrapper verifies the expected failure with exit
+0. This separate baseline is not combined into a passing pipeline.
+
 ## Original checks
 
 The dependency preparation verified 2,589 Git source blobs, 5,499 newly

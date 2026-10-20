@@ -1027,7 +1027,14 @@ class Verifier {
     if (depth >= this.#limits.depth) throw new Stop("incomplete", `the limit of ${this.#limits.depth} on the depth of foreign facts was reached`, user);
     const opened = run ?? await this.#open(fact.at.scope);
     const source = typeof opened === "string" ? null : opened;
-    if (!source) throw new Stop("missing-dependency", `the history of the source scope ${fact.at.scope} cannot be read, and no anchor names its entry ${fact.seq}`, user, fact);
+    if (!source) {
+      // An unused anchor does not constrain a readable, replayable history.
+      // When that history is absent, distinguish a conflicting caller hash
+      // at the required position from having no anchor for the position.
+      const conflict = this.#anchors.find(anchor => anchor.scope === fact.at.scope && anchor.seq === fact.seq);
+      if (conflict) throw new Stop("mismatch", `the caller's anchor for entry ${fact.seq} of ${fact.at.scope} names hash ${conflict.hash}, but the required reference names ${fact.hash}`, user);
+      throw new Stop("missing-dependency", `the history of the source scope ${fact.at.scope} cannot be read, and no anchor names its entry ${fact.seq}`, user, fact);
+    }
     try {
       await this.#advance(source, fact.seq, depth + 1, { hash: fact.hash, user });
     } catch (error) {
