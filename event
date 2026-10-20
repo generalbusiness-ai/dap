@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/2026-10-20-retained-journal-floor.md","body":{"commit":"d92cd85e0f16e68b2f7c7cb57767bc9f0a1e62cc","path":"notes/2026-10-20-retained-journal-floor.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:d66bf6e84718c4b8a426819129dcb58c2b7c9209","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-20-retained-journal-floor.md."}
