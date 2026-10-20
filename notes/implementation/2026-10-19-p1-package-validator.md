@@ -6,9 +6,12 @@ incorporates reviewed Main `248aab8f`, with landed K1, K2, G5a, S2a and
 Grow host-link work. The first complete review `3e5b110a` of `1a1ede43`
 requested two graph corrections and one runbook correction. This private
 repair addresses all three after adopting that complete verdict as
-`de2c14f4`. Its changed-code ordinary gate at `9b167c12` passes. The final
-candidate changes this report only afterward; fresh complete review remains
-due. The earlier passing gate at `a4967d67` is historical.
+`de2c14f4`. Its changed-code ordinary gate at `9b167c12` passed. Complete
+fresh review `8c0c866f` of final `183c444d` confirmed those corrections and
+requested one further cycle correction for vacuous universal list guards.
+This new physical copy addresses that finding after adoption `6e1ae250`.
+Owning checks pass; its new ordinary gate remains due. All prior gates are
+historical for this changed code, including the pass at `a4967d67`.
 The earlier `32f7537e` integration on Main `8aad37bb` is historical.
 
 Planner decision `b966ef3f`, adopted as `48471bbb`, now governs the format
@@ -1181,3 +1184,102 @@ all three adopted findings together. No prior approval is extended; no
 new release, key, provider, hosted acceptance, landing, publication or
 Cloudflare operation follows from a test pass. The planner alone owns
 Cloudflare deployment.
+
+## Complete-review correction: universal list guards
+
+Complete fresh review `8c0c866f` read primary `6678009c` first in full and
+reviewed all 86 authored paths at `183c444d`. It confirmed all three
+`3e5b110a` corrections, with one remaining P2 finding. A state predicate
+inside `each` is bypassed when the list is empty or its filter selects no
+elements. Such a guard cannot acknowledge an otherwise unconditional cycle.
+The native list evaluator explicitly passes an empty universal list.
+
+The graph now counts a state condition below `each` only for a nonempty
+constant array with no filter. Its nested condition must still pass the
+existing mandatory-condition analysis. Other universal forms retain their
+edges. This is a conservative structural rule; it does not solve arbitrary
+filters, prove dynamic nonemptiness, termination, traffic or memory use.
+The `has`, AND and corrected OR rules are unchanged.
+
+The existing automatic-cycle witness and existing public package pairs now
+include an empty list and a nonempty list filtered to empty. Their positive
+partners use an unfiltered nonempty constant list. Every variant goes
+through the existing native definition validator. The public pair requires
+rejection of independently TEST-signed bad bytes and pack refusal with zero
+signer calls. The number of permanent test cases is unchanged.
+
+Original preparation `56077` copied and verified the 2,611 source files,
+5,499 dependency files and 32 contained links, then failed on a checker
+manifest schema assumption: its regular rows use `regular`, not `files`.
+No candidate code ran. A separate corrected helper, `37073`, reverified
+those existing physical copies and copied only 34 explicitly listed checker
+top-level leaves as data. The checked closed manifest is 16,969,564 bytes,
+SHA-256 `955e476aafad0a5e3954d952998489b7e3e9ff2920f6488865893b5896d81618`.
+No nested reviewer input is granted transitively. Original frozen source,
+dependencies, helpers and probes were never executed or edited.
+
+The intended test extension followed the preparation's per-file source
+checks and preceded its final summary. A separate read-only recertification
+found 2,610 exact Git blobs/modes and only that intended test change. This
+is not a claim that the dirty worktree is a whole `183c444d` snapshot.
+Every subsequent phase preserves its own complete physical source input.
+There were zero installations and the lock stamp stayed exact.
+
+The first new baseline, `70030`, naturally failed two fixture-validity
+assertions, with nine filter skips. An unneeded positive `has` fixture was
+not native-valid. This is not evidence of the reported graph fault. Its
+full 2,611-file input and results remain separate. The positive fixture was
+replaced with the already valid unfiltered nonempty `each` form; the native
+validity assertions were unchanged.
+
+Corrected baseline `18531` naturally failed the two intended existing
+cases, with nine filter skips. The graph accepted the empty universal list
+with no findings; independently TEST-signed bytes were accepted as a graph
+where refusal was required. This original run is 1.553608875 wall /
+1.984269 child CPU seconds. It is a failing baseline, not a passing wrapper.
+The full input is `/tmp/p1-quantifier-repair-baseline-v2-inputs-20261020`.
+The checker independently reproduced both empty and filtered-empty cases,
+including pack success with one signer call; those are reviewer-origin
+observations retained as data, not new builder execution claims.
+
+After the repair, original owning process `80834` passed the graph source,
+derive source and derive test compiler targets, then both strengthened
+existing graph/public cases: two passes and nine filter skips. Whole
+pipeline: 2.521477750 wall / 3.823110 child CPU seconds; test phase alone:
+1.521409792 / 2.038349. All 2,611 input source bytes/modes and the lock stamp
+were exact afterward. Full input:
+`/tmp/p1-quantifier-repair-owning-inputs-20261020`.
+
+The actual Page and MCP generators then exited 0. Only Page `assets.ts`
+changed; MCP's generated module stayed exact. This separate generation
+pipeline is 0.470337209 wall / 0.154457 child CPU seconds, with its full
+2,611-file input in `/tmp/p1-quantifier-repair-generation-inputs-20261020`.
+Original freshness process `35871` passed the actual Page build check and
+the four-resource production MCP freshness check: two executed cases, with two
+other MCP cases filtered out. Whole pipeline: 1.264315333 wall / 1.912736
+child CPU seconds; test phase: 1.165617792 / 1.912736. Full inputs, source
+modes and lock stamp were preserved exactly.
+
+One targeted control, original process `62921`, removes the universal-list
+nonvacuity condition and restores the old raw recursion. The fixed version
+passes the one selected existing graph case in 0.938184042 wall / 1.323276
+child CPU seconds. The wrong line fails the direct empty-list assertion in
+0.931566417 / 1.317510. Each runs one case with ten filter-only skips. All
+2,611 tracked source/test bytes, modes and the dependency lock stamp are
+restored exactly. The complete source input, wrong line, both unchanged
+case results and closure are in `/tmp/p1-quantifier-repair-control-20261020`.
+This is one control, with no sweep or unchanged whole-suite replay.
+
+These measurements use shared warm macOS 27.0.1 arm64, Node 26.12 and the
+verified physical dependency copy. OS caches and other host work were
+uncontrolled. The control's initial load was 1.3267/1.2686/1.4155. Each
+phase's own initial load is retained in its input receipt. Separate owning,
+generation, freshness and control times are not one observed gate.
+
+The original sealer `66572` external exit/CPU gap remains unchanged: its
+internal final verification summary is retained, and separate read-only
+postclosure `98127` captured exit 0. No missing original status is invented
+or replayed. The new finite grant and complete fresh Source submission
+must include these qualifications alongside every earlier failed and
+passing boundary. Main's later disjoint History note also remains a
+landing preservation obligation; no composed-tree gate is claimed.

@@ -327,6 +327,13 @@ function cycleAlternatives() {
     { name: "a nested unconditional alternative",
       good: automaticCycle(false, [{ anyOf: [[state], [{ anyOf: [[state], [state]] }]] }]),
       bad: automaticCycle(false, [{ anyOf: [[state], [{ anyOf: [[state], [always]] }]] }]) },
+    { name: "an empty universal list",
+      good: automaticCycle(false, [{ each: { list: { const: [true] }, as: "x", guards: [state] } }]),
+      bad: automaticCycle(false, [{ each: { list: { const: [] }, as: "x", guards: [state] } }]) },
+    { name: "a universal list filtered to empty",
+      good: automaticCycle(false, [{ each: { list: { const: [true] }, as: "x", guards: [state] } }]),
+      bad: automaticCycle(false, [{ each: { list: { const: [true] }, as: "x",
+        where: [{ equals: { a: { const: true }, b: { const: false } } }], guards: [state] } }]) },
   ];
 }
 
