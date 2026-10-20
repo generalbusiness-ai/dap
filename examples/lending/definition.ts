@@ -254,7 +254,7 @@ export const lending: DeclaredDefinition = {
                 "field": "content"
               }
             },
-            "result": {}
+            "result": { "refused": [], "undelivered": [] }
           }
         }
       ],
@@ -313,7 +313,7 @@ export const lending: DeclaredDefinition = {
                 "field": "content"
               }
             },
-            "result": {}
+            "result": { "refused": [], "undelivered": [] }
           }
         }
       ],
@@ -370,7 +370,7 @@ export const lending: DeclaredDefinition = {
                 "field": "content"
               }
             },
-            "result": {}
+            "result": { "refused": [], "undelivered": [] }
           }
         }
       ],
@@ -441,7 +441,7 @@ export const lending: DeclaredDefinition = {
                 "field": "content"
               }
             },
-            "result": {}
+            "result": { "refused": [], "undelivered": [] }
           }
         }
       ],
@@ -487,7 +487,7 @@ export const lending: DeclaredDefinition = {
                 "field": "content"
               }
             },
-            "result": {}
+            "result": { "refused": [], "undelivered": [] }
           }
         }
       ],

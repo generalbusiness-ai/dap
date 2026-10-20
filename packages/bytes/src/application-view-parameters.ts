@@ -13,7 +13,13 @@ export type ApplicationViewParameter = Base & (
 );
 export type ApplicationViewParameters = Readonly<Record<string, ApplicationViewParameter>>;
 export class ApplicationViewParameterError extends Error {
-  constructor(readonly field: string, readonly reason: "invalid" | "limit" = "invalid") { super(`Invalid declared input ${field}.`); }
+  readonly field: string;
+  readonly reason: "invalid" | "limit";
+  constructor(field: string, reason: "invalid" | "limit" = "invalid") {
+    super(`Invalid declared input ${field}.`);
+    this.field = field;
+    this.reason = reason;
+  }
 }
 const viewParameterFailure = (field: string, reason: "invalid" | "limit" = "invalid"): never => { throw new ApplicationViewParameterError(field, reason); };
 /** Decimal input is shifted in base ten and never rounded. JSON's number

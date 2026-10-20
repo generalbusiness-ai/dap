@@ -9,7 +9,8 @@ export const APPLICATION_PACKAGE_LIMITS = Object.freeze({
 /** These are package-format caller allowances, not platform or heap quotas. */
 export type ApplicationPackageLimits = { readonly [K in keyof typeof APPLICATION_PACKAGE_LIMITS]: number };
 export class ApplicationPackageError extends Error {
-  constructor(readonly reason: "invalid" | "limit" | "integrity" | "signature" | "closure") { super(`application-package-${reason}`); }
+  readonly reason: "invalid" | "limit" | "integrity" | "signature" | "closure";
+  constructor(reason: "invalid" | "limit" | "integrity" | "signature" | "closure") { super(`application-package-${reason}`); this.reason = reason; }
 }
 export interface ApplicationDefinition { readonly id: Digest; readonly bytes: string }
 export interface ApplicationCreation { readonly from: Digest; readonly to: Digest }

@@ -4,7 +4,7 @@
 import { env, runInDurableObject } from "cloudflare:test";
 import { expect, inject, test } from "vitest";
 import { canonicalize, isScopeRef, isSeed, scopeIdOf, textDigest, unb64url } from "@generalbusiness/artroom-bytes";
-import { isApplicationJournalSource, readApplicationPackage2 } from "@generalbusiness/artroom-bytes/application-v2";
+import { isApplicationJournalSource, readPublishedApplicationPackage2 } from "@generalbusiness/artroom-bytes/application-v2";
 import { DEVICE_APPLICATION_COHORT as C, platform } from "@generalbusiness/dap-platform";
 import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-mcp";
 import { DEVICE_COMMAND, PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
@@ -26,7 +26,7 @@ import type {} from "./support/maintained-applications.ts";
 test("maintained Grow Site creates a native Room and opens its owned grid through the same installation", async () => {
   const captured = inject("maintainedApplications").grow, bytes = unb64url(captured.bytes);
   if (!bytes) throw Error("The maintained Grow packet must be captured.");
-  const packet = readApplicationPackage2(bytes, captured.release), siteId = packet.package.semantic.entry;
+  const packet = readPublishedApplicationPackage2(bytes, captured.release), siteId = packet.package.semantic.entry;
   const roomId = packet.package.semantic.projections["grid"]!.definition;
   const { life, R, D, children } = await sessionRoom(C.register), [M, A, G] = children;
   if (!M || !A || !G) throw Error("The declared cohort needs its three siblings.");

@@ -1,3 +1,4 @@
+import { emptyPackageComposition } from "@generalbusiness/artroom-package-graph";
 /** Real native v2 proof admission and fold in memory. Rulebook's registrar,
  * authority, host answers and declaration-text availability are labelled
  * fixtures. No object storage, network, driver or browser runs here; the
@@ -23,8 +24,10 @@ import { applicationProjectionDeclaration } from "../src/application-projection-
 async function fixture(requireArchive = false) {
   const id = definitionDigest(countingCommitments), declaration = canonicalize(countingCommitments);
   const input = { name: "test.declared-install", version: "1", semantic: {
-    v: 2 as const, entry: id, definitions: [{ id, bytes: declaration }],
-    host: { execution: "recorded-do" as const, profiles: ["restricted@1"], ...(requireArchive ? { requires: ["archive"] as const } : {}) }, capabilities: [], roles: { member: ["counting.fulfill"] }, predecessor: null,
+    ...emptyPackageComposition(), v: 2 as const, entry: id, definitions: [{ id, bytes: declaration }],
+    host: { execution: "recorded-do" as const, profiles: ["restricted@1"], ...(requireArchive ? { requires: ["archive"] as const } : {}) }, capabilities: [], roles: { member: ["counting.fulfill"],
+      setup: ["counting.activity", "counting.commit", "counting.control", "counting.establish", "counting.fail", "counting.participate"],
+    }, predecessor: null,
     projections: { board: readApplicationProjection({ v: 1, definition: id, revision: "revision", sources: {
       board: { item: "board", read: "one", states: ["finished", "open", "paused"], limit: 1, fields: {
         lastNumber: { from: { kind: "value", name: "lastNumber" }, of: { type: "int", min: 0, max: 100 }, nullable: false },
@@ -34,7 +37,8 @@ async function fixture(requireArchive = false) {
   const secret = new Uint8Array(32).fill(64), signer = { key: keyIdOfSecret(secret), sign: (bytes: Uint8Array) => sign(secret, bytes) };
   const packet = await packApplication2(input, signer);
   const { views: _views, resources: _resources, ...presentation } = input.presentation;
-  const legacy = await packApplication({ ...input, semantic: { ...input.semantic, v: 1, projections: {} }, presentation: { ...presentation, v: 1 } }, signer);
+  const { connections: _connections, rights: _rights, exercises: _exercises, groups: _groups, order: _order, derivation: _derivation, parameters: _parameters, ...legacySemantic } = input.semantic;
+  const legacy = await packApplication({ ...input, semantic: { ...legacySemantic, v: 1, projections: {} }, presentation: { ...presentation, v: 1 } }, signer);
   const fields = { definitionText0: textDigest(declaration), uri: `git+https://git.example/test.git/@${"a".repeat(40)}/application.dap.json`, release: packet.ids.release,
     semantic: packet.ids.semantic, roles: ["member"], values: '{"target":7}' };
   const values = [canonicalize(packet.package.semantic), canonicalize(packet.package.release)];

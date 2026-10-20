@@ -23,28 +23,7 @@ const FIELD_SHAPES: Readonly<Record<string, readonly string[]>> = {
  * `from` is one of `to`, and `to` requires none that `from` may lack. A copy
  * needs this; a comparison does not.
  */
-export function assignable(from: FieldType, to: FieldType): boolean {
-  // Section 6.1: a value of a type that is a mark is assignable to that type only: the type that the same rule checks.
-  const [a, b] = [codeOf(from), codeOf(to)];
-  if (a !== null || b !== null) return a === b;
-  switch (from.type) {
-    // A detached text is held as its digest, and a plain one as its bytes: neither is a value of the other.
-    case "text": return to.type === "text" && from.max <= to.max && (from.detached === true) === (to.detached === true);
-    case "int": return to.type === "int" && from.min >= to.min && from.max <= to.max;
-    case "enum": return to.type === "enum" && from.of.every((v) => to.of.includes(v));
-    case "item": return to.type === "item" && from.of === to.of;
-    case "scope": return to.type === "scope" && from.kind === to.kind;
-    case "fact": return to.type === "fact" && from.kind.every((k) => to.kind.includes(k)) && from.under === to.under;
-    case "list": return to.type === "list" && from.max <= to.max && assignable(from.of, to.of);
-    case "record": {
-      if (to.type !== "record") return false;
-      const members = to.of;
-      return Object.entries(from.of).every(([m, of]) => Object.hasOwn(members, m) && assignable(of, members[m]!))
-        && Object.entries(members).every(([m, of]) => !of.required || own(from.of, m)?.required === true);
-    }
-    default: return from.type === to.type;
-  }
-}
+export { fieldAssignable as assignable } from "@generalbusiness/artroom-package-graph";
 
 /** The rule that checks a type which is a mark, in platform data (section 6.1, place 3). Null: the type is one that the forms write. */
 export const codeOf = (type: FieldType | null | undefined): string | null => (marked(type) ? String((type as Record<string, unknown>)["code"]) : null);

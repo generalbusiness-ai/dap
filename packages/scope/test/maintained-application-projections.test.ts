@@ -5,7 +5,7 @@
 import { env } from "cloudflare:test";
 import { expect, inject, onTestFinished, test, vi } from "vitest";
 import { canonicalize, isSeed, scopeIdOf, unb64url } from "@generalbusiness/artroom-bytes";
-import { readApplicationPackage2 } from "@generalbusiness/artroom-bytes/application-v2";
+import { readPublishedApplicationPackage2 } from "@generalbusiness/artroom-bytes/application-v2";
 import { DECLARED_APPLICATION_COHORT as C } from "@generalbusiness/dap-platform";
 import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-mcp";
 import { ScopeHandle, httpTransport, requestSession, secretSigner, sessionRequest, type Fetch, type Observation } from "@generalbusiness/artroom-client";
@@ -23,7 +23,7 @@ import type {} from "./support/maintained-applications.ts";
 test.each(["counter", "lending"] as const)("maintained %s package installs and its browser adapter reads native declared state", async name => {
   const captured = inject("maintainedApplications")[name], bytes = unb64url(captured.bytes);
   if (!bytes) throw Error("The maintained source packet was not captured.");
-  const packet = readApplicationPackage2(bytes, captured.release);
+  const packet = readPublishedApplicationPackage2(bytes, captured.release);
   const room = await sessionRoom(C.register), { life, R, D, children } = room, [M, A, G] = children;
   if (!M || !A || !G) throw Error("The declared cohort needs its three siblings.");
   const f = await applicationResolverFixture("sha1", undefined, {}, undefined, packet), peer = applicationHttpPeer(f);

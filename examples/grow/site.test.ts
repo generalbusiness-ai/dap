@@ -15,6 +15,7 @@ async function setup(childDefinition = room) {
   const parentDefinition = structuredClone(site), send = parentDefinition.acts["create-room"]!.sends[0]!;
   if (!("create" in send)) throw new Error("site fixture requires a declared create send");
   send.create.definition = definitionDigest(childDefinition);
+  parentDefinition.receives["room-summary"]!.from.pin = definitionDigest(childDefinition);
   const { launcher, site: parent } = await nativeCreatedSite(parentDefinition, permissions, { label: "Test grow site" });
   const rooms: Ledger[] = [], rows: number[] = [];
   for (const label of ["Room A", "Room B", "Room C"]) {

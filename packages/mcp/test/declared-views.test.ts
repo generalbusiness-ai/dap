@@ -1,3 +1,4 @@
+import { emptyPackageComposition } from "@generalbusiness/artroom-package-graph";
 /** Pure presentation and mounted-view custody-boundary fixtures. The native
  * install/projection/standing ports below are explicit in-memory answers. */
 import { expect, test } from "vitest";
@@ -92,7 +93,7 @@ test("declared controls capture different subject sets and repeat secondary revi
   const board = base.package.presentation.views["board"]!;
   if (board.kind === "surface") throw Error("This fixture needs a board.");
   const packet = await packApplication2({ name: "test.declared-subjects", version: "1", semantic: {
-    v: 2, entry: id, definitions: [{ id, bytes: canonicalize(definition) }], host: base.package.semantic.host,
+    ...emptyPackageComposition(), v: 2, entry: id, definitions: [{ id, bytes: canonicalize(definition) }], host: base.package.semantic.host,
     capabilities: [], roles: base.package.semantic.roles, predecessor: null, projections: { board: readApplicationProjection({
       v: 1, definition: id, revision: "revision", sources: {
         board: { item: "board", read: "one", states: ["finished", "open", "paused"], limit: 1, fields: {

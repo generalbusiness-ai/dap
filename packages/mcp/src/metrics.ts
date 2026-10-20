@@ -11,6 +11,7 @@ const TOOLS = new Set(["list", "room", "inspect", "create", "join", "prepare", "
 const PHASES = new Set(["prepared", "sent", "unknown", "accepted", "refused", "mismatch", "settled"]);
 const STEP_PHASES = new Set(["prepared", "sent", "unknown", "answered"]);
 const NATIVE: Record<RefusalReason | UnavailableReason | MismatchReason | ReadRefusal | SessionRefusal, true> = {
+  "wrong-pin": true,
   late: true,
   "revision-moved": true, alias: true, "duplicate-relation": true, "required-unset": true, "scope-full": true,
   "bad-intent": true, misaddressed: true, expired: true, "scope-refused": true, "unknown-act": true, "bad-field": true,

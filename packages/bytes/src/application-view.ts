@@ -70,7 +70,8 @@ export interface ApplicationSurfaceView extends ViewBase {
 export type ApplicationView = ApplicationItemView | ApplicationSurfaceView;
 export type ApplicationViews = Readonly<Record<string, ApplicationView>>;
 export class ApplicationViewError extends Error {
-  constructor(readonly reason: "invalid" | "limit" | "binding") { super("application-view-" + reason); }
+  readonly reason: "invalid" | "limit" | "binding";
+  constructor(reason: "invalid" | "limit" | "binding") { super("application-view-" + reason); this.reason = reason; }
 }
 const B = APPLICATION_VIEW_LIMITS;
 const viewFailure = (reason: ApplicationViewError["reason"] = "invalid"): never => { throw new ApplicationViewError(reason); };

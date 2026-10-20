@@ -4,7 +4,7 @@ import type { DeclaredDefinition, FieldValue, PlatformData } from "@generalbusin
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize, isDigest, isRecord, parseStrict, textDigest, utf8 } from "@generalbusiness/artroom-bytes";
 import { readApplicationReleaseUri } from "@generalbusiness/artroom-bytes/application";
-import { readApplicationReleaseProof2, type ApplicationReleaseProof2 } from "@generalbusiness/artroom-bytes/application-v2";
+import { readPublishedApplicationReleaseProof2, type PublishedApplicationReleaseProof2 } from "@generalbusiness/artroom-bytes/application-v2";
 import { validateDefinition, type GuardRule, type RuleGiven, type Rules } from "@generalbusiness/dap-derive";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { applicationInstallRulesScope, applicationInstallRules } from "./application-install.ts";
@@ -25,13 +25,13 @@ export const applicationInstallRulesScope2: PlatformData = {
     release: { type: "digest", required: true, value: APPLICATION_RELEASE_VALUE2 },
   } } },
 };
-function proof(given: RuleGiven): ApplicationReleaseProof2 | null {
+function proof(given: RuleGiven): PublishedApplicationReleaseProof2 | null {
   const fields = given.resolved.fields;
   if (!isDigest(fields["semantic"]) || !isDigest(fields["release"])) throw Error("install proof digests required");
   const semantic = given.value(APPLICATION_SEMANTIC_VALUE2.domain, fields["semantic"], APPLICATION_SEMANTIC_VALUE2.max);
   const release = given.value(APPLICATION_RELEASE_VALUE2.domain, fields["release"], APPLICATION_RELEASE_VALUE2.max);
   if (semantic === undefined || release === undefined) return null;
-  const checked = readApplicationReleaseProof2(semantic, release, fields["release"], { bytes: APPLICATION_SEMANTIC_VALUE2.max + APPLICATION_RELEASE_VALUE2.max });
+  const checked = readPublishedApplicationReleaseProof2(semantic, release, fields["release"], { bytes: APPLICATION_SEMANTIC_VALUE2.max + APPLICATION_RELEASE_VALUE2.max });
   if (checked.ids.semantic !== fields["semantic"] || checked.semantic.capabilities.length || (!archiveInstall(given) && checked.semantic.host.requires !== undefined) || checked.semantic.host.profiles.some(profile => profile !== "restricted@1")) throw Error("unsupported install proof");
   for (let index = 0; index < checked.semantic.definitions.length; index++) {
     const part = checked.semantic.definitions[index]!;
@@ -42,7 +42,7 @@ function proof(given: RuleGiven): ApplicationReleaseProof2 | null {
   for (let index = checked.semantic.definitions.length; index < INSTALL_DEFINITIONS; index++) if (fields[`definitionText${index}`] !== undefined) throw Error("unrelated declaration text");
   return checked;
 }
-function initialFields(given: RuleGiven, checked: ApplicationReleaseProof2): { fields: Record<string, FieldValue>; needsDestination: boolean } | null {
+function initialFields(given: RuleGiven, checked: PublishedApplicationReleaseProof2): { fields: Record<string, FieldValue>; needsDestination: boolean } | null {
   const signer = given.resolved.signer;
   if (!signer) return null;
   const root = parseStrict(checked.semantic.definitions.find(part => part.id === checked.semantic.entry)!.bytes) as DeclaredDefinition;

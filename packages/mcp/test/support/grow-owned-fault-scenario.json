@@ -57,7 +57,7 @@
       "seed": "0303030303030303030303030303030303030303030303030303030303030303"
     }
   },
-  "definition": "sha256:8a05c53fe4e36b70417f0508ef7b135e56d0d71e474c4942e5a06a3d0a837736",
+  "definition": "sha256:5e2d34fa9965662aa508aaaffd83bdcd4198746ae8d4a8dd24654d74289529a4",
   "founding": {
     "actor": "operator",
     "fields": {

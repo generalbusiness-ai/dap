@@ -1,3 +1,4 @@
+import { emptyPackageComposition } from "@generalbusiness/artroom-package-graph";
 /** Public TEST package. Root genesis creates its child through the existing
  * native create form; no handmade genesis, identity or grant stands behind it. */
 import type { DeclaredDefinition, Digest } from "@generalbusiness/dap-contract";
@@ -18,7 +19,7 @@ function definition(name: string, child?: Digest): DeclaredDefinition {
       establish: { step: "open", on: "root", grant, also: {}, fields: { opener: { type: "member", required: true } }, guards: [],
         effects: [{ party: { slot: "controller", from: { field: "opener" } } }, { value: { slot: "count", from: { const: 0 } } }],
         sends: child ? [{ create: { kind: "lane", definition: child, fields: { opener: { field: "opener" } },
-          result: { applied: [{ ref: { slot: "child", from: { sender: true } } }], refused: [], conflict: [] },
+          result: { applied: [{ ref: { slot: "child", from: { sender: true } } }], refused: [], conflict: [], undelivered: [] },
         } }] : [], attention: [],
       },
       bump: { step: "transition", on: "root", grant, also: {}, fields: {}, guards: [{ state: ["open"] }, { signer: ["controller"] }],
@@ -38,7 +39,8 @@ export async function applicationOwnedScopesPacket(label = "test-owned-root", ve
     context: "Owned row {id} v{revision}: {count}", fallback: "Owned row {id}: {count}", waiting: {}, refresh: 2000, display: "inline" as const, back: null };
   const signer = fixedSigner(67);
   const packet = await packApplication2({ name: "test.owned-scopes", version, semantic: {
-    v: 2, entry: rootId, definitions: [{ id: rootId, bytes: canonicalize(root) }, { id: childId, bytes: canonicalize(child) }],
+    ...emptyPackageComposition(), v: 2, entry: rootId, definitions: [{ id: rootId, bytes: canonicalize(root) }, { id: childId, bytes: canonicalize(child) }],
+    connections: [{ from: rootId, item: "root", slot: "child", to: childId }],
     host: { execution: "recorded-do", profiles: ["restricted@1"] }, capabilities: [], roles: { admin: [grant] }, predecessor: null,
     projections: { root: projection(rootId, true), child: projection(childId, false) },
   }, presentation: { v: 2, entry: "index.html", assets: [{ path: "index.html", mediaType: "text/html", bytes: "VEVTVA" }], descriptions: {}, resources: {}, views: {

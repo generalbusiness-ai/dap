@@ -174,6 +174,127 @@ and its bounds. Resolve its reported problems before pinning.
 Validation checks the declaration's form. It does not establish that a
 host, an outside adapter or an application journey works.
 
+## Validate the package connections
+
+A version 2 package describes how its definitions fit together. Each
+scope still pins its own whole definition. Package metadata names the
+connections and responsibilities between those definitions; it does not
+give a member an action or replace a native guard.
+
+The signed semantic value carries seven composition places:
+
+| Place | What it declares |
+|---|---|
+| `connections` | A scope slot, identified by definition, item type and slot, and the definition it reaches, or `outside`. |
+| `rights` | A name and the one definition that owns it. |
+| `exercises` | The act or handler rows that exercise each declared right. |
+| `order` | Each handler's ordering choice: `any` or a declared right. |
+| `groups` | Reserved for sequenced groups; use an empty array in this slice. |
+| `derivation` | Reserved for derived definitions; use an empty object. |
+| `parameters` | Reserved for parameter bindings; use an empty object. |
+
+In `dap.application.json`, references to definitions are paths already
+listed in `definitions`. Packing resolves them to the captured definitions'
+exact digests. Include all seven composition places in the source file and
+the signed version 2 value, using explicit empty arrays or objects where
+appropriate. Both `packApplication2` and `validatePackage` refuse a missing
+place. Packing never fills in omitted places.
+
+For example, the [Grow source](../examples/grow/check/dap.application.json)
+connects the Site's child slot to the Room definition:
+
+```json
+{
+  "connections": [
+    { "from": "site.json", "item": "room", "slot": "scope", "to": "room.json" },
+    { "from": "room.json", "item": "room", "slot": "site", "to": "site.json" }
+  ],
+  "rights": { "room-count": { "owner": "site.json" } },
+  "exercises": [
+    { "definition": "site.json", "row": "acts.create-room", "right": "room-count" }
+  ],
+  "order": [
+    { "definition": "site.json", "handler": "room-summary", "by": "any" }
+  ],
+  "groups": [],
+  "derivation": {},
+  "parameters": {}
+}
+```
+
+This excerpt shows the composition shape, not a complete package. A
+connected handler's `from.under` names its sender definition and its
+`from.pin` names that definition's exact digest. Runtime delivery checks
+the pin against verified native birth metadata. A same-name definition
+with another digest cannot take the declared peer's place.
+
+The package codec checks composition during packing, before signing, and
+when reading signed bytes. `validatePackage(bytes, bounds, profiles)`
+from `@generalbusiness/dap-derive` also validates every native definition
+and returns the graph findings and projected counts. Pass the same bounds
+and rule profiles you use for whole-definition validation.
+
+The graph checks endpoint writers, port field types, handler reachability,
+result clauses, timed exits for pending work, default-role action coverage,
+declared right ownership and handler order. Automatic send/create cycles
+need a stated state condition. This structural check gives no storm or
+termination bound. Rights and exercises describe the listed rows; they
+do not discover every writer of a business constraint.
+
+A relation's `copies` counts retained keys over its lifetime. A live item
+maximum alone cannot prove that count: a final item may free a slot for
+another key. The validator refuses an unproved count as `fan-in-unproved`
+and a proved count above `copies` as `fan-in-exceeds-copies`. Grow's three
+retained Room slots prove three senders for its singleton Room item, so
+`copies: 3` passes and `copies: 2` refuses. If each Room instead relates
+two nonfinal items, the required count is six.
+
+Run `dap check <directory>` to validate a source package and its listed
+local scenarios. `dap pack <directory>` refuses the same composition
+findings before writing a release. Both print findings as rows naming the
+definition, row, check, severity, reason and message. Control characters
+and table separators in names are escaped. A `refusal` stops validation;
+a `warning`, such as `unowned-bound`, is reported on an admitted package.
+Resolve a warning in the application's design or explain why it is safe.
+
+Check also reports live item allowances, successful-creation entry and
+item-key ceilings, and any unproved lifetime totals. Creation-path figures
+exclude failures, repeated inputs, timed work and outside scopes. They do
+not promise admission under a scope's retained bounds or measure physical
+memory or provider quotas.
+
+Groups, group ordering, declared reads, sequenced definitions, row `states`,
+handler `spacing`, timed sends, derivation and parameters refuse with
+`unsupported-form` until their owning slices are implemented. Existing
+native `late` handlers remain available. Package validation here does not
+claim the later install-time activation guard; a local scenario's TEST
+authority is separate from installation, live membership and a provider.
+
+### Consume the existing published Grow release
+
+The existing signed [Grow demo](../examples/grow/demo/application.dap.json)
+predates these seven places. Its exact release `71e10ca9` and publisher
+are recorded in [demo-release.ts](../examples/grow/demo-release.ts).
+Consumption uses `readPublishedApplicationPackage2` or
+`readPublishedApplicationReleaseProof2` for verification, installation,
+screens and replay. The earlier shape must have its exact nine semantic
+keys and match that one full release digest and publisher. The reader
+still checks canonical bytes, all hashes, signature, closure, bounds,
+projections and views. It adds no fields to the signed value.
+
+This is an explicit shape selection before validation. There is no retry
+after a strict failure, publisher-only exception or caller option to admit
+another earlier-shaped release. Complete composition shapes still pass
+all graph checks. New authoring and `validatePackage` use the strict
+reader and cannot produce or admit the earlier shape. The simulator also
+keeps the published release's exact Site and Room definition pins; other
+releases keep its current-source identity check.
+
+Retire this bounded consumption path only after a separately reviewed
+replacement release, its trust row and the installed-room upgrade have
+been commissioned. P1 changes no existing signed packet, release identity,
+private publisher key or deployed installation.
+
 ## Pin the definition's bytes
 
 Pin the canonical JSON of the validated definition and its definition

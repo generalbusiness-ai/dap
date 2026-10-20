@@ -6,7 +6,7 @@ import { applicationJson } from "./application-json.ts";
 import { readApplicationPackage } from "./application-package.ts";
 import { readApplicationReleaseUri } from "./application-uri.ts";
 import { ApplicationPackageError, type ApplicationIds } from "./application-types.ts";
-import { readApplicationPackage2, type AnyPackedApplication } from "@generalbusiness/artroom-bytes/application-v2";
+import { readPublishedApplicationPackage2, type AnyPackedApplication } from "@generalbusiness/artroom-bytes/application-v2";
 import { signedIntent, type Signer, type Signing } from "./intent.ts";
 
 export type ApplicationInstallRole = "admin" | "maintainer" | "member" | "agent" | "checker";
@@ -61,14 +61,14 @@ export async function signedApplicationInstall(signer: Signer, bytes: Uint8Array
  * Calling this does not authorize that cohort or select its native pin. */
 export async function signedApplicationInstall2(signer: Signer, bytes: Uint8Array, options: ApplicationInstallOptions, signing: Signing = {}): Promise<SignedApplicationInstall> {
   const owned = readApplicationInstallOptions(options);
-  const packet = readApplicationPackage2(bytes, owned.release, { bytes: 4 * 1024 * 1024, definitionBytes: 64 * 1024 });
+  const packet = readPublishedApplicationPackage2(bytes, owned.release, { bytes: 4 * 1024 * 1024, definitionBytes: 64 * 1024 });
   return signApplicationInstall(signer, packet, owned, signing);
 }
 
 /** Device cohort only. Native Rules verifies the owner's current membership. */
 export async function signedDeviceApplicationInstall(signer: Signer, bytes: Uint8Array, options: DeviceApplicationInstallOptions, signing: Signing = {}): Promise<SignedApplicationInstall> {
   const owned = readDeviceApplicationInstallOptions(options);
-  const packet = readApplicationPackage2(bytes, owned.release, { bytes: 4 * 1024 * 1024, definitionBytes: 64 * 1024 });
+  const packet = readPublishedApplicationPackage2(bytes, owned.release, { bytes: 4 * 1024 * 1024, definitionBytes: 64 * 1024 });
   return signApplicationInstall(signer, packet, owned, signing, owned.owner);
 }
 

@@ -370,6 +370,7 @@
   },
   "roles": {
     "admin": [
+      "counting.establish",
       "counting.control",
       "counting.activity",
       "counting.commit",
@@ -583,5 +584,12 @@
   },
   "scenarios": [
     "apps/counter/scenarios/application.json"
-  ]
+  ],
+  "connections": [],
+  "rights": {},
+  "exercises": [],
+  "groups": [],
+  "order": [],
+  "derivation": {},
+  "parameters": {}
 }

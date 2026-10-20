@@ -14,7 +14,7 @@ import { CAPABILITY_CODE } from "../src/ports.ts";
 import { net } from "../src/testing.ts";
 import { SqliteStore } from "../src/sqlite.ts";
 import { deviceApplicationPacket, applicationResolverFixture, applicationHttpPeer, sessionRoom, dispatchFixture, driveFixture, effectFixture, reader, applicationWorkerBindings } from "./fixtures-native.ts";
-import { deviceCommandFixture } from "../../derive/test/fixtures-device-command.ts";
+import { devicePackageFixture as deviceCommandFixture } from "../../derive/test/fixtures-device-command.ts";
 import { outsideOf as hostOutside } from "../src/worker.ts";
 import { rita, routed } from "./repository.ts";
 import worker from "../../../apps/room/worker.ts";

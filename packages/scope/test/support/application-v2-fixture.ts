@@ -1,3 +1,4 @@
+import { emptyPackageComposition } from "@generalbusiness/artroom-package-graph";
 /** Public TEST Counter packet with one declared board read. No native
  * install or browser is constructed by this fixture. */
 import { b64url, canonicalize, definitionDigest, utf8 } from "@generalbusiness/artroom-bytes";
@@ -8,8 +9,10 @@ const signer = fixedSigner(67);
 export async function applicationCounterPacket2(when = "state = 'open'", version = "1") {
   const id = definitionDigest(countingCommitments);
   return packApplication2({ name: "test.declared-host", version, semantic: {
-    v: 2, entry: id, definitions: [{ id, bytes: canonicalize(countingCommitments) }],
-    host: { execution: "recorded-do", profiles: ["restricted@1"] }, capabilities: [], roles: { admin: ["counting.control"], member: ["counting.fulfill"] }, predecessor: null,
+    ...emptyPackageComposition(), v: 2, entry: id, definitions: [{ id, bytes: canonicalize(countingCommitments) }],
+    host: { execution: "recorded-do", profiles: ["restricted@1"] }, capabilities: [], roles: { admin: ["counting.control"], member: ["counting.fulfill"],
+      setup: ["counting.activity", "counting.commit", "counting.establish", "counting.fail", "counting.participate"],
+    }, predecessor: null,
     projections: { board: readApplicationProjection({ v: 1, definition: id, revision: "revision", sources: {
       board: { item: "board", read: "one", states: ["finished", "open", "paused"], limit: 1, fields: {
         lastNumber: { from: { kind: "value", name: "lastNumber" }, of: { type: "int", min: 0, max: 100 }, nullable: false },

@@ -241,9 +241,11 @@ test("the lending library on real scopes: Nasruddin and the pot, its refusals, a
     // An act that takes effect: kept before it is sent, verified in the record, then released.
     expect(await g.act("donate", { name: "Kettle", description: "Whistles." })).toEqual({ status: "recorded" });
     expect([his.posts(), his.kept(), await countThings()]).toEqual([1, null, 3]);
-    // A refusal is final, in plain words with the scope's reason, and changes nothing.
-    await g.look();
+    // Drain the donation's publication replies before the multi-read projection.
+    // A current list is the precondition for testing an authorization refusal.
     await settle(L, G);
+    expect(await g.look()).toMatchObject({ status: "current" });
+    // A refusal is final, in plain words with the scope's reason, and changes nothing.
     const beforeRefusal = await head();
     expect(await g.act("cancel", { thing: small, reason: "The pot died" })).toEqual({ status: "refused", reason: "Only staff can cancel a thing. (unauthorized)" });
     expect([his.kept(), await head()]).toEqual([null, beforeRefusal]);

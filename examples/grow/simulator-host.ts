@@ -7,6 +7,7 @@ import { demoDefinitions } from "./demo-definitions.ts";
 import { simulatorRelease } from "./simulator-release.ts";
 import { simulatorTick } from "./simulator-tick.ts";
 import { tickBudget } from "./tick-budget.ts";
+import { DEMO_RELEASE, DEMO_PUBLISHER } from "./demo-release.ts";
 
 export interface SimulatorEnvironment {
   /** JSON: service origin, full Room ref and the three fixed principals. */
@@ -36,8 +37,14 @@ function binding(text: string): Binding {
  * and publisher. This sets no hosting trust and creates no hosted resource. */
 export function simulatorHost(packetText: string, expectedRelease: Digest, expectedPublisher: KeyId) {
   const verified = simulatorRelease(new TextEncoder().encode(packetText), expectedRelease, expectedPublisher);
-  const definitions = demoDefinitions(), roomDefinition = definitionDigest(definitions.room);
-  if (verified.packet.package.semantic.entry !== definitionDigest(definitions.site)
+  // P1's current maintained declarations may have new package metadata.
+  // The unchanged deployed release retains its exact signed declaration pins;
+  // every other (including TEST) release keeps the current-source comparison.
+  const definitions = demoDefinitions(), published = verified.packet.ids.release === DEMO_RELEASE
+    && verified.packet.package.release.manifest.publisher === DEMO_PUBLISHER;
+  const roomDefinition = published ? "sha256:b89e7f84740dfd8b24f78e8b52aff5aa8d4181750a7b5f385c1ef6f993846787" : definitionDigest(definitions.room);
+  const siteDefinition = published ? "sha256:d2bc830e74caaabab32dbad17adae6812050fb4d36b67e97145d39c2a4cfe2ea" : definitionDigest(definitions.site);
+  if (verified.packet.package.semantic.entry !== siteDefinition
     || !verified.packet.package.semantic.definitions.some(part => part.id === roomDefinition)
     || verified.schedule.cadenceMinutes !== 1) throw new Error("unexpected-demo-package");
   const commandDefinitions = verified.packet.package.semantic.definitions.filter(part => {

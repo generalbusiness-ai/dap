@@ -1,6 +1,6 @@
 {
   "actors": {"climate":{"actions":["grow.climate"],"member":"@test-2","principal":"operator","seed":"0202020202020202020202020202020202020202020202020202020202020202"},"day":{"actions":["grow.tend"],"member":"@test-4","seed":"0404040404040404040404040404040404040404040404040404040404040404"},"head":{"actions":["grow.water","grow.water-more","grow.apply"],"member":"@test-6","seed":"0606060606060606060606060606060606060606060606060606060606060606"},"irrigation":{"actions":["grow.water"],"member":"@test-7","principal":"head","seed":"0707070707070707070707070707070707070707070707070707070707070707"},"night":{"actions":["grow.tend"],"member":"@test-5","seed":"0505050505050505050505050505050505050505050505050505050505050505"},"operator":{"actions":["grow.configure","grow.climate","grow.heat"],"member":"@test-1","seed":"0101010101010101010101010101010101010101010101010101010101010101"},"sensors":{"actions":["grow.sense"],"member":"@test-3","principal":"operator","seed":"0303030303030303030303030303030303030303030303030303030303030303"},"simulator":{"seed":"0808080808080808080808080808080808080808080808080808080808080808","member":"@test-device-owner","actions":[]}},
-  "definition": "sha256:8a05c53fe4e36b70417f0508ef7b135e56d0d71e474c4942e5a06a3d0a837736",
+  "definition": "sha256:5e2d34fa9965662aa508aaaffd83bdcd4198746ae8d4a8dd24654d74289529a4",
   "founding": {"actor":"operator","fields":{"label":"Room A"}},
   "name": "grow-fault",
   "steps": [

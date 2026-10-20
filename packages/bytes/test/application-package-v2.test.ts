@@ -1,9 +1,10 @@
+import { emptyPackageComposition } from "@generalbusiness/artroom-package-graph";
 import { expect, test } from "vitest";
 import type { DeclaredDefinition } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, definitionDigest, digestBytes, keyIdOfSecret, sign, utf8 } from "../src/index.ts";
 import { definition as empty, secret } from "./fixtures.ts";
 import { packApplication, readApplicationPackage, readApplicationReleaseProof } from "../src/application-package.ts";
-import { packApplication2, readApplicationPackage2, readApplicationReleaseProof2, type ApplicationPackageInput2 } from "../src/application-package-v2.ts";
+import { ApplicationPackageValidationError, packApplication2, readApplicationPackage2, readApplicationReleaseProof2, type ApplicationPackageInput2 } from "../src/application-package-v2.ts";
 import { readApplicationProjection } from "../src/application-projection.ts";
 const signer = { key: keyIdOfSecret(secret), sign: (bytes: Uint8Array) => sign(secret, bytes) };
 // Small made-up schema, real package hashes and signatures. This is no
@@ -19,7 +20,7 @@ function input() {
     } },
   } });
   return { name: "ai.generalbusiness.projection-fixture", version: "0.1.0", semantic: {
-    v: 2, entry: definitionDigest(definition), definitions: [{ id: definitionDigest(definition), bytes: canonicalize(definition) }],
+    ...emptyPackageComposition(), v: 2, entry: definitionDigest(definition), definitions: [{ id: definitionDigest(definition), bytes: canonicalize(definition) }],
     host: { execution: "recorded-do", profiles: ["restricted@1"] }, projections: { "room.note": projection },
     capabilities: [], roles: { member: ["app.edit"] }, predecessor: null,
   }, presentation: {
@@ -30,6 +31,11 @@ function input() {
       context: "Note {id} v{revision}", fallback: "Note {id} ({state}): {text}", waiting: {}, refresh: 2000, display: "inline", back: null,
     } },
   } } satisfies ApplicationPackageInput2;
+}
+function legacySemantic() {
+  const { connections: _connections, rights: _rights, exercises: _exercises, groups: _groups,
+    order: _order, derivation: _derivation, parameters: _parameters, ...semantic } = input().semantic;
+  return semantic;
 }
 test("v2 binds projections to semantic identity and views only to presentation identity", async () => {
   const first = await packApplication2(input(), signer), repeated = await packApplication2(input(), signer);
@@ -48,7 +54,7 @@ test("v2 binds projections to semantic identity and views only to presentation i
   expect(() => readApplicationPackage(first.bytes, null)).toThrow("application-package-invalid");
   expect(() => readApplicationReleaseProof(first.package.semantic, first.package.release, first.ids.release)).toThrow("application-package-invalid");
   const { views: _views, resources: _resources, ...presentation } = input().presentation;
-  const legacy = await packApplication({ ...input(), semantic: { ...input().semantic, v: 1, projections: {} }, presentation: { ...presentation, v: 1 } }, signer);
+  const legacy = await packApplication({ ...input(), semantic: { ...legacySemantic(), v: 1, projections: {} }, presentation: { ...presentation, v: 1 } }, signer);
   expect(() => readApplicationPackage2(legacy.bytes, null)).toThrow("application-package-invalid");
   // A correctly signed legacy proof with nonempty projections must still
   // refuse. Failure cannot be attributed to a bad signature or envelope v2.
@@ -76,6 +82,26 @@ test("v2 refuses changed signatures, missing projections and unbound views befor
   expect(calls).toBe(0); expect(gets).toBe(0);
 });
 
+test("v2 signs explicit composition, refuses ambiguous references and keeps later forms unsupported", async () => {
+  const plain = await packApplication2(input(), signer), id = definitionDigest(definition);
+  expect(plain.package.semantic).toMatchObject({ connections: [], rights: {}, exercises: [], groups: [], order: [], derivation: {}, parameters: {} });
+  const composed: ApplicationPackageInput2 = { ...input(), semantic: { ...input().semantic,
+    rights: { ["__proto__"]: { owner: id } }, exercises: [{ definition: id, row: "acts.touch", right: "__proto__" }],
+  } };
+  const packet = await packApplication2(composed, signer);
+  expect(packet.ids.semantic).not.toBe(plain.ids.semantic);
+  expect(readApplicationPackage2(packet.bytes, packet.ids.release).package.semantic.exercises).toEqual(composed.semantic.exercises);
+  for (const exercises of [[...composed.semantic.exercises!, ...composed.semantic.exercises!], [{ definition: digestBytes(utf8("not in this package")), row: "acts.touch", right: "__proto__" }]]) {
+    await expect(packApplication2({ ...composed, semantic: { ...composed.semantic, exercises } }, signer)).rejects.toMatchObject({ findings: [{ reason: "bounds" }] });
+  }
+  for (const future of [{ groups: [{ name: "group", members: [{ name: "member", definition: id }], lifetime: { seconds: 60 } }] },
+    { parameters: { rooms: { type: "int" as const, default: 3, min: 1, max: 10 } } }, { derivation: { [id]: { parent: id, patch: {} } } }]) {
+    const refused = packApplication2({ ...input(), semantic: { ...input().semantic, ...future } }, signer);
+    await expect(refused).rejects.toBeInstanceOf(ApplicationPackageValidationError);
+    await expect(refused).rejects.toMatchObject({ findings: [{ reason: "unsupported-form" }] });
+  }
+});
+
 test("a signed host requirement names archive explicitly and refuses unknown or ambiguous requirements", async () => {
   const original = await packApplication2(input(), signer);
   const requested: ApplicationPackageInput2 = { ...input(), semantic: { ...input().semantic, host: { ...input().semantic.host, requires: ["archive"] } } };
@@ -97,7 +123,7 @@ test("a child created only by a late replacement belongs to the signed package c
   // The shared declaration-closure reader is exercised through v1 here;
   // v2 additionally requires a bound projection for each definition.
   const { views: _views, resources: _resources, ...presentation } = input().presentation;
-  const packet: Parameters<typeof packApplication>[0] = { ...input(), semantic: { ...input().semantic, v: 1, entry: parentId, projections: {}, roles: {},
+  const packet: Parameters<typeof packApplication>[0] = { ...input(), semantic: { ...legacySemantic(), v: 1, entry: parentId, projections: {}, roles: {},
     definitions: [{ id: parentId, bytes: canonicalize(parent) }] }, presentation: { ...presentation, v: 1 } };
   let calls = 0; const tracked = { key: signer.key, sign: (bytes: Uint8Array) => { calls++; return signer.sign(bytes); } };
   await expect(packApplication(packet, tracked)).rejects.toThrow("application-package-closure");

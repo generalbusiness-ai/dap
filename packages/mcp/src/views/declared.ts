@@ -4,7 +4,7 @@ import type { ApplicationProjectionData, ApplicationProjectionQuery, Application
 import { applicationItemSnapshot } from "@generalbusiness/artroom-client";
 import { canonicalize, isLocalId, isMemberRef, parseStrict, unb64url } from "@generalbusiness/artroom-bytes";
 import type { ApplicationInstallation } from "@generalbusiness/artroom-bytes/application";
-import { applicationProjectionId, applicationViewFactField, isApplicationJournalSource, readApplicationPackage2, type ApplicationView, type ApplicationViewAct, type PackedApplication2 } from "@generalbusiness/artroom-bytes/application-v2";
+import { applicationProjectionId, applicationViewFactField, isApplicationJournalSource, readPublishedApplicationPackage2, type ApplicationView, type ApplicationViewAct, type PublishedPackedApplication2 } from "@generalbusiness/artroom-bytes/application-v2";
 import { admit, evaluate, RuleEvalError } from "@generalbusiness/dap-derive/rule";
 import { ViewError } from "./session.ts";
 import type { Card, CardAction, DeclaredSurface, Projection, ViewQuery, ViewSource } from "./types.ts";
@@ -46,7 +46,7 @@ const template = (source: string, row: ApplicationProjectionRow, waiting: string
 };
 export class DeclaredViewSource implements ViewSource {
   readonly declared = true;
-  readonly packet: PackedApplication2;
+  readonly packet: PublishedPackedApplication2;
   get inputActs() {
     return Object.entries(this.packet.package.presentation.views).flatMap(([screen, view]) => view.acts.flatMap((control, index) =>
       control.parameters ? [{ screen, id: controlId(view, control, index), label: control.label, parameters: control.parameters }] : []));
@@ -61,7 +61,7 @@ export class DeclaredViewSource implements ViewSource {
     return view.kind === "record" || view.kind === "log" || view.kind === "surface" ? "item" as const : "summary" as const;
   }
   constructor(bytes: Uint8Array, release: Digest, readonly port: DeclaredViewPort) {
-    this.packet = readApplicationPackage2(bytes, release, { bytes: 4 * 1024 * 1024 });
+    this.packet = readPublishedApplicationPackage2(bytes, release, { bytes: 4 * 1024 * 1024 });
     for (const view of Object.values(this.packet.package.presentation.views)) {
       if (view.kind !== "surface" && view.for) admit(view.for);
       for (const control of view.acts) admit(control.when);
