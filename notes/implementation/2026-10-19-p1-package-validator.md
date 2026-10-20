@@ -2,9 +2,13 @@
 
 Request `4e63c67c30e866555e9efcfdf49af75a2c2f92e1`, promise
 `0afa98af9294045f7906395d0bc8a206ebf1aa90`. This mutable preparation
-incorporates reviewed Main `3ed2a08a`. It has no final gate, review or
-landing. G5a and S2a remain ahead of final P1 integration. No package or
-code from the frozen G5a review view has been imported or executed here.
+incorporates reviewed Main `8aad37bb` in a new owned integration worktree,
+`/tmp/artroom-builder-p1-main-integration-20261020`. Merge checkpoint
+`32f7537e` preserves the newer archive and native ownership checks.
+There is no P1 full gate, review or landing. Planner decision `b32b2f16`
+now governs the production demo's format cutover; the published packet is
+unchanged and currently fails the new strict reader. No frozen review
+original is edited or executed here.
 
 The implemented slice contains the seven explicit version 2 composition
 places, strict codec checks, the public byte-based `validatePackage`,
@@ -537,3 +541,68 @@ install-time guard and from native or provider authority. The text is
 checked against the current codec, source resolver, graph, public validator
 and command output. This documentation-only addition runs no further
 suite or gate; final dependency incorporation and the P1 gate remain ahead.
+
+## Actual Main integration and release cutover, 20 October
+
+The private integration starts from P1 `0a09b8c5` and incorporates actual
+Main `8aad37bb`. The uncommitted merge naturally exits one, with six
+conflicts. All available stages are retained under
+`/tmp/p1-current-main-conflict-stages-20261020`; the raw merge log and
+closed result are `/tmp/p1-integrate-current-main-20261020*`.
+
+The Grow manifest is parsed-equal to current Main plus P1's seven
+composition places and the nonfinal `conflicted` Site room projection
+state. Its 64,356 source bytes stay below the unchanged 64 KiB limit.
+The two room fault scenarios preserve every Main step and assertion; only
+their selected definition digest changes to the actual merged Room,
+`sha256:5e2d34fa9965662aa508aaaffd83bdcd4198746ae8d4a8dd24654d74289529a4`.
+The Site scenario selects the package entry and has no definition member.
+The first digest refresh stops on that absent member after updating the
+first room file; the corrected refresh starts from exact canonical Main
+for both room scenes. Receipts retain this boundary.
+
+The bytes conflict keeps both complete test cases, for P1 composition and
+Main's archive requirement. The platform fixture keeps Main's conditional
+archive requirement and P1's explicit complete setup role. Replay keeps
+Main's `preparationScopeGrant` and P1's `bound`, with all other merged
+hunks. The first compiler run catches the omitted P1 error-class import
+when the bytes test is reconstructed from Main; restoring that import
+preserves both unchanged cases. The failed original remains retained.
+
+Dependencies are a physical copy of the current K1 finite grant: 5,499
+regular files, matching bytes, hashes and modes, with distinct inodes, and
+31 contained links. The source originals are rechecked unchanged. The
+lock delta is proved to contain exactly four workspace nodes: the new
+package graph workspace, its link, and the bytes/derive consumer edges.
+Every external dependency record is unchanged. Only then is the owned
+copy's lock stamp retargeted and its one contained project-workspace link
+added. This installs nothing and changes no external dependency version.
+The copy receipt is `/tmp/p1-private-dependency-copy-20261020.json`.
+
+The changed integration checks pass the bytes, derive, CLI and replay
+owning typechecks. The selected five Node files first run 34 cases: 29
+pass and five graph cases fail because their old package fixture declares
+no capabilities while the current maintained Room declares DeviceCommand.
+The fixture now takes the actual capability metadata from maintained Grow;
+no production guard or assertion is weakened. Its unchanged ten graph
+cases then pass, as does the owning derive compiler. These separate runs
+are a composite, not one passing pipeline. Raw output and natural closure
+are `/tmp/p1-integrated-focused-v2-20261020*` and `...v3-20261020*`.
+
+A separate read-only probe naturally exits one: the new strict v2 reader
+requires the seven composition members, and rejects the published signed
+Grow packet `71e10ca9` with `application-package-invalid`. The packet and
+`DEMO_RELEASE` remain byte-exact Main. The probe signs or rewrites nothing.
+Its raw output, exact maintained digests and closed result are
+`/tmp/p1-current-main-preflight-20261020*`. Planner request `b32b2f16`
+asks for the explicit earlier-v2 reader boundary or a separately reviewed
+release/custody cutover before the old reader is retired. Until that
+choice, this checkpoint claims no native Worker run, full gate, Source,
+activation, publication or deployment. The known failure is not removed
+from test selection or relabelled as acceptance.
+
+The new graph workspace's owning compiler and Scope's three owning
+compiler projects also pass naturally in
+`/tmp/p1-integrated-focused-v4-20261020*`. These compile the merged native
+sender-pin path but do not execute it. Source remains distinct from the
+pending production format transition and from a native runtime witness.

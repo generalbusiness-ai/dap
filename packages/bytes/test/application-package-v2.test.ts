@@ -3,7 +3,7 @@ import type { DeclaredDefinition } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, definitionDigest, digestBytes, keyIdOfSecret, sign, utf8 } from "../src/index.ts";
 import { definition as empty, secret } from "./fixtures.ts";
 import { packApplication, readApplicationPackage, readApplicationReleaseProof } from "../src/application-package.ts";
-import { packApplication2, readApplicationPackage2, readApplicationReleaseProof2, type ApplicationPackageInput2 } from "../src/application-package-v2.ts";
+import { ApplicationPackageValidationError, packApplication2, readApplicationPackage2, readApplicationReleaseProof2, type ApplicationPackageInput2 } from "../src/application-package-v2.ts";
 import { readApplicationProjection } from "../src/application-projection.ts";
 const signer = { key: keyIdOfSecret(secret), sign: (bytes: Uint8Array) => sign(secret, bytes) };
 // Small made-up schema, real package hashes and signatures. This is no

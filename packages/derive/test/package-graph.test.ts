@@ -1,4 +1,5 @@
 import { expect, test } from "vitest";
+import { readFileSync } from "node:fs";
 import { b64url, canonicalize, definitionDigest, digestBytes, sign, utf8, verify } from "@generalbusiness/artroom-bytes";
 import { ApplicationPackageValidationError, packApplication2, readApplicationProjection, type ApplicationPackageInput2 } from "@generalbusiness/artroom-bytes/application-v2";
 import { PROPOSED_BOUNDS, type DeclaredDefinition } from "@generalbusiness/dap-contract";
@@ -8,6 +9,9 @@ import { RULE_PROFILES } from "../src/rule/index.ts";
 import { room } from "../../../examples/grow/room.ts";
 import { keys } from "./fixtures.ts";
 import { grow } from "./fixtures-package-graph.ts";
+const maintained = JSON.parse(readFileSync(new URL("../../../examples/grow/check/dap.application.json", import.meta.url), "utf8")) as {
+  capabilities: ApplicationPackageInput2["semantic"]["capabilities"];
+};
 
 // Graph components use actual Grow declarations and native validation.
 // The final case also crosses the signed package codec and public validator.
@@ -205,7 +209,7 @@ test("Grow ports check the actual peer digest, message reachability and transmit
 function packageInput(input: PackageGraphInput): ApplicationPackageInput2 {
   return { name: "ai.generalbusiness.grow-graph-test", version: "0.1.0", semantic: {
     v: 2, entry: input.entry, definitions: input.definitions.map(part => ({ id: part.id, bytes: canonicalize(part.definition) })).sort((a, b) => a.id.localeCompare(b.id)),
-    ...input.composition, host: { execution: "recorded-do", profiles: ["restricted@1"] }, capabilities: [], predecessor: null,
+    ...input.composition, host: { execution: "recorded-do", profiles: ["restricted@1"] }, capabilities: maintained.capabilities, predecessor: null,
     roles: Object.fromEntries(Object.entries(input.roles).map(([role, actions]) => [role, [...actions].sort()])),
     projections: Object.fromEntries(input.definitions.map((part, index) => {
       const type = part.definition.acts[part.definition.genesis]!.on!;
