@@ -67,6 +67,34 @@ Device and archive cohort on actual reviewed S2a Main.
 
 ## Current checkpoint after planner decision
 
+### Separate demo packet capture
+
+The native test capture now prepares the demo alongside the three
+maintained packages. It uses the existing public TEST publisher, supplies
+no owner identity or host trust, and removes only its own generated
+temporary source directory after capture. The first capture fails before
+packing the demo: pretty-printing its source config exceeds the existing
+metadata-file allowance. The generator now writes canonical JSON instead.
+Its parsed fields and every source/package allowance are unchanged.
+
+The corrected Node capture naturally exits zero in original process41175,
+1.15 elapsed seconds and 1.52 CPU seconds. It captures all four packages.
+The separate TEST demo release is
+`sha256:e07a41b23809aeccdcae4a31b9a933155e292cfd72e9052a735c57eab02168b9`.
+Evidence is `/tmp/artroom-g5-demo-native-capture-*20261020*`; the original
+failed capture and empty stdout remain. This is a signed TEST packet,
+not the public demo publisher, an installed Room or host admission.
+
+The owning Scope and Grow compiler targets pass after that capture change.
+The existing maintained Grow native install story also passes with the
+extended setup: one case, original process45592 naturally exits zero,
+10.11 elapsed seconds and 14.88 CPU seconds. It proves the maintained
+Site and Room still install, command and replay with that setup. It does
+not substitute for the separate demo's installed native tick witness.
+Evidence uses `/tmp/artroom-g5-demo-capture-*20261020*`.
+
+The following planner-decision checkpoint is historical.
+
 Planner report `74c94c4db8e02ac534ada5235fcc18c51a579723`, adopted as
 `c845bc5b52c64439564f6a01cdcd586fff8856c2`, answers the cursor and
 principal decision. The current demo-only declarations now bind fixed

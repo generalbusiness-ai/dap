@@ -1,7 +1,9 @@
-/** Fixed Node capture of three complete maintained packages. Public TEST key;
+/** Fixed Node capture of three maintained packages and the separate Grow
+ * demo. Public TEST key;
  * no operator config, network, checkout writes or package installation. */
 import { rm } from "node:fs/promises";
 import { prepareGrowCheck } from "../../../../examples/grow/prepare-check.ts";
+import { prepareGrowDemo } from "../../../../examples/grow/prepare-demo.ts";
 import { fileURLToPath } from "node:url";
 import { b64url } from "@generalbusiness/artroom-bytes";
 import { secretSigner } from "@generalbusiness/artroom-client";
@@ -16,8 +18,15 @@ const growRoot = await prepareGrowCheck();
 let grow;
 try { grow = await prepareApplicationDirectory(growRoot, signer); }
 finally { await rm(growRoot, { recursive: true, force: true }); }
+// Separate demo declarations and signed schedule. The same public TEST
+// publisher supplies no real host trust or agent identity.
+const demoRoot = await prepareGrowDemo();
+let growDemo;
+try { growDemo = await prepareApplicationDirectory(demoRoot, signer); }
+finally { await rm(demoRoot, { recursive: true, force: true }); }
 process.stdout.write(JSON.stringify({
   counter: { bytes: b64url(counter.packet.bytes), release: counter.packet.ids.release },
   grow: { bytes: b64url(grow.packet.bytes), release: grow.packet.ids.release },
+  growDemo: { bytes: b64url(growDemo.packet.bytes), release: growDemo.packet.ids.release },
   lending: { bytes: b64url(lending.packet.bytes), release: lending.packet.ids.release },
 } satisfies MaintainedApplicationInputs));

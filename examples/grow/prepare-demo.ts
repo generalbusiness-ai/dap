@@ -29,7 +29,7 @@ export async function prepareGrowDemo(destination?: string): Promise<string> {
   config["scenarios"] = [];
   config["presentation"]["assets"] = [...config["presentation"]["assets"], { file: "simulator.json", path: "simulator.json", mediaType: "application/json" }];
   await writeFile(join(root, "simulator.json"), await readFile(new URL("./demo/simulator.json", import.meta.url)), { flag: "wx", mode: 0o600 });
-  await writeFile(join(root, "dap.application.json"), JSON.stringify(config, null, 2) + "\n", { mode: 0o600 });
+  await writeFile(join(root, "dap.application.json"), canonicalize(config) + "\n", { mode: 0o600 });
   return root;
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
