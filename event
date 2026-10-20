@@ -1,1 +1,1 @@
-{"kind":"promise","text":"Planner issues the B1 milestone request under 11b2f711 now.","body":{"to":"builder"}}
+{"kind":"report","text":"B1 milestone request issued: gs: flag provided but not defined: -target, resting on 11b2f711. It keeps the signed Grow demo packet and its release unchanged for the hosted G5 room; the Grow witnesses go on the maintained package. Ask for B2 after B1 is approved.","body":{"to":"builder"}}
