@@ -3,7 +3,7 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { ActType, Bounds, DeclaredDefinition, EffectForm, FieldValue, Guard, MemberRef, Notify, Send } from "@generalbusiness/dap-contract";
 import { factRefOf } from "@generalbusiness/artroom-bytes";
 import { clockOf, deriveEffects, judgeDelivery, judgeGuards, validateDefinition, type ActJudgment, type Judging, type ProblemCode } from "../src/index.ts";
-import { Scope, arriving, deliver, desk, fields, forged, created, keys, member, on, ticket, ticketDefinition, valid, variant, type Actor, type Over } from "./fixtures.ts";
+import { Scope, arriving, deliver, desk, fields, forged, created, keys, member, on, ticket, ticketDefinition, valid, variant, type Actor, type Over } from "./fixtures-entry.ts";
 
 const { rita, una, vic, paul, sam } = keys;
 

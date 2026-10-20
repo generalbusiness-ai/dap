@@ -2,8 +2,7 @@ import { expect, test } from "vitest";
 import type { Entry } from "@generalbusiness/dap-contract";
 import { entryHash } from "@generalbusiness/artroom-bytes";
 import { FoldError, applyEntry, drawsOf, heldReserved, stateDigest } from "../src/index.ts";
-import { on, valid } from "./fixtures.ts";
-import { OWNER, TELL, Works, changed, opened, works } from "./fixtures-holds.ts";
+import { on, valid, HOLDS_OWNER as OWNER, TELL, HoldsWorks as Works, changed, opened, holdsWorks as works } from "./fixtures-entry.ts";
 
 // Made-up platform data and callback rules in memory. These witnesses run
 // the real judges, admission and fold; no Artroom platform scope or host is reached.

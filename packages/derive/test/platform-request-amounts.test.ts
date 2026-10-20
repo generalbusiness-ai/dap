@@ -1,9 +1,8 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type PlatformData, type PlatformSend } from "@generalbusiness/dap-contract";
 import { clockOf, fits, judgeDelivery, judgeGenesis, reserved, validateDefinition } from "../src/index.ts";
-import { Ledger, T0, creation, sent, arriving, created, keys, on } from "./fixtures.ts";
+import { Ledger, T0, creation, sent, arriving, created, keys, on, platformRequests as fixture, futurePlatformRequests, settlingPlatformMarks, platformRequestRules } from "./fixtures-entry.ts";
 
-import { platformRequests as fixture, futurePlatformRequests, settlingPlatformMarks, platformRequestRules } from "./fixtures-platform-requests.ts";
 
 const E = PROPOSED_BOUNDS.entryBytes;
 

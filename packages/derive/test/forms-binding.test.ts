@@ -4,7 +4,7 @@ import type { FactRef, FieldValue, Input, PlatformDefinition, ScopeKind, ScopeRe
 import { canonicalBytes, entryHash, factRefOf, newIncarnation, parseStrictBytes, scopeIdOf } from "@generalbusiness/artroom-bytes";
 import { MemoryState, PROFILES, applyEntry, clockOf, decisionCounts, entryOf, fits, indexItems, itemAwaits, judgeDelivery, keyOf, owed, validateDefinition } from "../src/index.ts";
 import type { Counts, Draft, Fetched, Indexed, Judgment, PlatformRule, PlatformRules, RuleEffect, ValidDefinition } from "../src/index.ts";
-import { Scope, arriving, d, forged, keys, on, valid, type Over } from "./fixtures.ts";
+import { Scope, arriving, d, forged, keys, on, valid, type Over } from "./fixtures-entry.ts";
 
 /**
  * A request that is bound to the pending item that it settles, and the

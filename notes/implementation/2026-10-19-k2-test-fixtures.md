@@ -346,7 +346,7 @@ inventory, not a claim that every domain scenario is duplicated.
 
 | Package | Before | Current | Change |
 | --- | ---: | ---: | ---: |
-| Derive | 10,312 | 10,316 | +4 |
+| Derive | 10,312 | 10,309 | -3 |
 | Platform | 5,851 | 5,841 | -10 |
 | Scope | 21,402 | 21,411 | +9 |
 | MCP | 7,829 | 7,852 | +23 |
@@ -355,7 +355,7 @@ The first peer extraction adds five lines overall; the portable shared
 MCP module now adds 21 in total, including explicit runtime ports and
 boundary comments. The Scope application builders add 29; the Platform
 helpers remove 10; the Derive helper adds four. The current combined
-increase is 26 after the Scope and MCP entry work. The Scope Node
+increase is 19 after the Scope, MCP and Derive entry work. The Scope Node
 entry adds four lines and the Worker entry removes27 by coalescing imports;
 MCP signer sharing adds eight. No overall line reduction is claimed.
 Full per-file baseline counts/hashes are in
@@ -388,3 +388,40 @@ Actual Main's passing Vitest count is 1,926 with three existing skips. The
 request's survey cites the unlanded G5a head's 1,939; its extra cases are
 not silently imported or claimed here. The final gate must retain the
 actual integrated base's case count and all existing assertions/limits.
+
+
+## Derive internal fixture entry
+
+`packages/derive/test/fixtures-entry.ts` is the supported internal case
+entry. It re-exports the existing public core and explicitly names the
+private domain builders. The public `fixtures.ts` and all 13 private
+modules remain byte-exact to this phase's baseline `d97bb5ea3`; the SDK's
+existing `./testing` export is unchanged. Private modules keep importing
+the core directly, so the new entry creates no re-export initialization
+cycle. Distinct forms and held-work data are named `formsWorks`,
+`holdsWorks` and their definition aliases; the held-work class and owner
+are `HoldsWorks` and `HOLDS_OWNER`. Tests retain their original local names.
+
+All 40 affected cases now use one entry, replacing 63 fixture import
+statements. The parser verifies every local binding still resolves to the
+same original module and exported name, with its original type-only flag.
+Removing the old/new fixture imports leaves byte-exact case source. Thus
+case bodies, assertions, comments, clocks and deadlines remain unchanged.
+Fourteen original fixture files, including the public core, hash exactly.
+The new entry adds 16 lines and import coalescing removes 23, for seven
+fewer lines in this phase; Derive now has 10,309 test TypeScript lines,
+three fewer than the original 10,312-line inventory. This is no overall
+line-reduction claim for K2.
+
+Original process 62620 naturally exits zero. The owning Derive source/test
+compilers pass and all 40 changed files/406 existing cases pass. Cost is
+2.2698 seconds outer elapsed and 13.9532 seconds child CPU on the shared
+warm macOS arm64 host. The parser/provenance record is
+`/tmp/artroom-k2-derive-canonical-entry-20261020.json`; original compiler,
+case and compatibility-guard logs and closure use
+`/tmp/artroom-k2-derive-canonical-focused-20261020-`. The TypeScript 7 package
+exports version metadata at its default root rather than the previous
+parser API; the transformation uses the checkout's already pinned
+Rolldown TypeScript parser, as the earlier K2 preservation tools do. No
+package was installed. Platform's internal entry and actual Main/G5
+integration remain ahead of the final gate and Source.

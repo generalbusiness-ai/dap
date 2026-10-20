@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type Digest } from "@generalbusiness/dap-contract";
 import { canonicalize, parseStrict } from "@generalbusiness/artroom-bytes";
 import { namedDeclarations, validateDefinition } from "../src/index.ts";
-import { childDefinitions } from "./fixtures-child-definitions.ts";
+import { childDefinitions } from "./fixtures-entry.ts";
 
 test("opt-in birth requires the bounded transitive child closure once per digest; legacy absence stays optional", async () => {
   const { root, branch, leaf } = childDefinitions(), reads: Digest[] = [];

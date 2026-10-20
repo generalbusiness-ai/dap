@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { MemoryState, type Item, type OwnRequest } from "../src/index.ts";
-import { otherLane } from "./fixtures.ts";
+import { otherLane } from "./fixtures-entry.ts";
 
 test("logical counts keep final item and record keys, replace each key once, and keep a request pending through delivery-unavailable until its recorded settlement", () => {
   // Direct in-memory writer boundary; not native storage, a signed entry or transport evidence.

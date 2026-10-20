@@ -3,8 +3,7 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { DeclaredDefinition } from "@generalbusiness/dap-contract";
 import { newIncarnation } from "@generalbusiness/artroom-bytes";
 import { validateDefinition } from "../src/index.ts";
-import { created, deliver, keys, t } from "./fixtures.ts";
-import { sourceOrderDefinition, sourceOrderFixture } from "./fixtures-source-order.ts";
+import { created, deliver, keys, t, sourceOrderDefinition, sourceOrderFixture } from "./fixtures-entry.ts";
 
 test("source order applies increasing pairs and suppresses lower pairs only after a higher delivery applied", () => {
   for (const arrivals of [[[1, 0], [1, 1], [2, 0], [2, 1]], [[2, 1], [1, 0], [2, 0], [1, 1]]]) {

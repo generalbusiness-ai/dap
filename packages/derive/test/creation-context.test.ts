@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS, type DeclaredDefinition, type ScopeKind } from "@generalbusiness/dap-contract";
 import { canonicalize, isSeed } from "@generalbusiness/artroom-bytes";
 import { clockOf, judgeGenesis, validateDefinition, type ValidDefinition } from "../src/index.ts";
-import { Ledger, T0, creation, deliver, created, keys, valid } from "./fixtures.ts";
+import { Ledger, T0, creation, deliver, created, keys, valid } from "./fixtures-entry.ts";
 
 // Pure judge/send boundary. Parent metadata and authority are SCRIPTED in a
 // draft before it seals; no native emitter/membership/session proof is claimed.

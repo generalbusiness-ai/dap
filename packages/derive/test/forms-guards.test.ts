@@ -3,7 +3,7 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { ActType, Bounds, DeclaredDefinition, FieldValue, Guard, Operand, Range, Send } from "@generalbusiness/dap-contract";
 import { factRefOf } from "@generalbusiness/artroom-bytes";
 import { judgeDelivery, validateDefinition, type ActJudgment, type Fetched, type ProblemCode } from "../src/index.ts";
-import { Scope, arriving, desk, fields, forged, created, keys, on, t, ticketDefinition, valid, variant } from "./fixtures.ts";
+import { Scope, arriving, desk, fields, forged, created, keys, on, t, ticketDefinition, valid, variant } from "./fixtures-entry.ts";
 
 const { rita } = keys;
 

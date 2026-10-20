@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import type { Observation, ObservationUse } from "@generalbusiness/dap-contract";
 import { MISMATCHES, MemoryState, WINDOWS, actionsOf, agrees, covers, headsOf, highestHead, judgeGrant, observationOf, prefer, windowOf, type GrantAsked, type GrantJudgment, type RoleTable } from "../src/index.ts";
-import { d, keys, laneDefinition, membership, otherLane, t } from "./fixtures.ts";
+import { d, keys, laneDefinition, membership, otherLane, t } from "./fixtures-entry.ts";
 
 const { rita, una } = keys;
 

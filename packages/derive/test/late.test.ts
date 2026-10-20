@@ -4,11 +4,7 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { PlatformData } from "@generalbusiness/dap-contract";
 import { holdCapability, judgeDelivery, ownerReservations, prepareRules, validateDefinition } from "../src/index.ts";
 import { RULE_PROFILES } from "../src/rule/index.ts";
-import { arriving, created, deliver, forged, keys, sent, t, valid } from "./fixtures.ts";
-import { sourceOrderDefinition, sourceOrderFixture } from "./fixtures-source-order.ts";
-import { lateDefinition, lateFixture } from "./fixtures-late.ts";
-import { boundRecordData } from "./fixtures-bound-records.ts";
-import { PIN_BOUNDS, receiverPinData } from "./fixtures-receiver-pins.ts";
+import { arriving, created, deliver, forged, keys, sent, t, valid, sourceOrderDefinition, sourceOrderFixture, lateDefinition, lateFixture, boundRecordData, PIN_BOUNDS, receiverPinData } from "./fixtures-entry.ts";
 
 test.each([false, true])("late branch=%s: fresh and boundary run normal forms; strictly late replaces or refuses with an authenticated result", branch => {
   for (const seconds of [29.999, 30, 30.001]) {

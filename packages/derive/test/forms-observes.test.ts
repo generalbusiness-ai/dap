@@ -3,8 +3,7 @@ import { PROPOSED_BOUNDS, RETAINED_INPUT_BYTES } from "@generalbusiness/dap-cont
 import type { FactUse, Input, KeyId, MemberId, Observation, ObservationUse, OperationId, Send } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, factRefOf, isEntry, isObservationUse, signIntent } from "@generalbusiness/artroom-bytes";
 import { PROFILES, actNeeds, clockOf, contentChecked, contentStates, judgeDelivery, observationBytes, retainable, retainableByRequest, rowsOfAct, rowsOfKind, settleOutcome, validateDefinition, valueDigest, type ActJudgment, type Fetched, type Judgment, type Observing, type OutcomeJudgment, type RuleGiven, type Subject } from "../src/index.ts";
-import { Scope, T0, arriving, forged, grantOf, keys, membership, otherLane, t } from "./fixtures.ts";
-import { EXTENTS, EXTENTS_MAX, RULEBOOK, STEP_ROWS, holdersSeen, keySeen, memberSeen, rulebook, rulesSeen, signers, stating, weighed, weigher, weigherRules, weigherWith, type Seen } from "./fixtures-observes.ts";
+import { Scope, T0, arriving, forged, grantOf, keys, membership, otherLane, t, EXTENTS, EXTENTS_MAX, RULEBOOK, STEP_ROWS, holdersSeen, keySeen, memberSeen, rulebook, rulesSeen, signers, stating, weighed, weigher, weigherRules, weigherWith, type Seen } from "./fixtures-entry.ts";
 
 // Scope contract, revisions 20 and 21, sections 6.1 and 16.1; witnesses 18.46, 18.48, 18.50 and 18.52; source rows I3-39, I3-41,
 // I3-42, I3-43, I3-53 and I3-56. STAND-INS: the platform data `weigher` and every rule of it are made up (`fixtures-observes.ts`),

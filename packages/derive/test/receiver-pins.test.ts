@@ -1,8 +1,7 @@
 import { expect, test } from "vitest";
 import { factRefOf, textDigest } from "@generalbusiness/artroom-bytes";
 import { holdCapability, judgeDelivery, ownerReservations, reserved, validateDefinition } from "../src/index.ts";
-import { arriving, created, forged, keys, valid } from "./fixtures.ts";
-import { PIN_BOUNDS, receiverPinData, receiverPinDefinition } from "./fixtures-receiver-pins.ts";
+import { arriving, created, forged, keys, valid, PIN_BOUNDS, receiverPinData, receiverPinDefinition } from "./fixtures-entry.ts";
 
 const owner = holdCapability({ tokensPerHold: 2, rootRetentionSeconds: 600 });
 const zero = { entries: 0, items: 0, records: 0, bytes: 0, requests: 0 };

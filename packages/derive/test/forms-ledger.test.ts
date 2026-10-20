@@ -5,7 +5,7 @@ import { entryHash } from "@generalbusiness/artroom-bytes";
 import { AmountError, FoldError, applyEntry, capabilitiesOf, checkpointOf, clockOf, gitRead, holdCapability, ownerReservations, operationId, operationOpening, operationStanding, owed, reserved as reservedAmount, settleOutcome, tokenPast } from "../src/index.ts";
 import type { Opening, OperationRules, Owners } from "../src/index.ts";
 import { kindOf } from "../src/operand.ts";
-import { Scope, t, ticketDefinition, variant } from "./fixtures.ts";
+import { Scope, t, ticketDefinition, variant } from "./fixtures-entry.ts";
 
 test("a hold reader without local holds owes no record work", () => {
   const reader = variant(ticketDefinition.declared, data => {

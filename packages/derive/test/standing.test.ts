@@ -7,9 +7,8 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { entryHash, factRefOf } from "@generalbusiness/artroom-bytes";
 import { AmountError, MemoryState, NOTHING, PROFILES, StandingError, applyEntry, checkStandingEntry, entryOf, fits, judgeCheckpoint, judgeDelivery, judgeDiagnosis, owed, reserved, standingCounter, standingEntries, standingReserved, checkpointOf, validateDefinition } from "../src/index.ts";
 import type { PlatformRules, StateView } from "../src/index.ts";
-import { arriving, desk, forged, created, keys, on, valid } from "./fixtures.ts";
+import { arriving, desk, forged, created, keys, on, valid, standingData } from "./fixtures-entry.ts";
 
-import { standingData } from "./fixtures-standing.ts";
 const definition = () => valid(validateDefinition(standingData(), PROPOSED_BOUNDS, PROFILES, { platform: true }));
 const total = (s: ReturnType<typeof created>) => s.head.seq + 1 + owed(s.state, s.definition, s.last.input);
 const projected = (s: ReturnType<typeof created>, effects: readonly Effect[]) => checkStandingEntry(s.state, s.definition, effects, s.head.seq + 1);

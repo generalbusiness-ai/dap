@@ -3,8 +3,7 @@ import type { ObservationUse, Send } from "@generalbusiness/dap-contract";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { factRefOf } from "@generalbusiness/artroom-bytes";
 import { judgeDelivery } from "../src/index.ts";
-import { Scope, arriving, forged, keys, membership, otherLane, t, valid } from "./fixtures.ts";
-import { memberSeen, weighed, weigherRules } from "./fixtures-observes.ts";
+import { Scope, arriving, forged, keys, membership, otherLane, t, valid, memberSeen, weighed, weigherRules } from "./fixtures-entry.ts";
 
 // Revision 24, binding amendment 335ef3ea: conditional same-name sends
 // must have identical result effects and observation rows. Observations

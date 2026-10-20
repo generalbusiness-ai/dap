@@ -4,8 +4,7 @@ import { factRefOf, intentDigest } from "@generalbusiness/artroom-bytes";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { boundLicense, counted, hasWorkspace, holdCapability, judgeDelivery, preparationStatus, recordEffects } from "../src/index.ts";
 import type { Fetched } from "../src/index.ts";
-import { arriving, d, decided, forged, keys, laneDefinition, otherLane, t, variant, lane } from "./fixtures.ts";
-import { C, Staging, cap, clean, staging } from "./fixtures-hold.ts";
+import { arriving, d, decided, forged, keys, laneDefinition, otherLane, t, variant, lane, C, Staging, cap, clean, staging } from "./fixtures-entry.ts";
 
 const { rita, una, vic } = keys;
 const X = C("a");

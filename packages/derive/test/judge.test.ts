@@ -3,7 +3,7 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { Effect, MemberRef, RefusalReason } from "@generalbusiness/dap-contract";
 import { canonicalBytes, digestBytes, intentDigest } from "@generalbusiness/artroom-bytes";
 import { LAST_MS, type ActJudgment } from "../src/index.ts";
-import { Scope, d, directory, fields, grantOf, keys, lane, laneDefinition, on, otherLane, small, smallDefinition, t, variant, type Actor } from "./fixtures.ts";
+import { Scope, d, directory, fields, grantOf, keys, lane, laneDefinition, on, otherLane, small, smallDefinition, t, variant, type Actor } from "./fixtures-entry.ts";
 
 const { rita, una, vic, paul, sam } = keys;
 const names = (list: unknown) => (list as readonly MemberRef[]).map((m) => m.member);

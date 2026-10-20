@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { creates, validateDefinition } from "../src/index.ts";
-import { d, desk, valid } from "./fixtures.ts";
+import { d, desk, valid } from "./fixtures-entry.ts";
 
 test("native create-definition edges are typed direct sends from acts/receives, deduplicated and ordered; self/platform/other digests add no edge", () => {
   // The fixture is declared data, not a registry or foreign-history proof.

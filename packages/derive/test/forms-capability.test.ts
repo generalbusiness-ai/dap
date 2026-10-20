@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { isSealed } from "@generalbusiness/artroom-bytes";
 import { derivable, validateDefinition, type Capabilities, type ProblemCode } from "../src/index.ts";
-import { Scope, keys, laneDefinition, on, small, smallDefinition, variant } from "./fixtures.ts";
+import { Scope, keys, laneDefinition, on, small, smallDefinition, variant } from "./fixtures-entry.ts";
 
 const { rita } = keys;
 /* eslint-disable @typescript-eslint/no-explicit-any */
