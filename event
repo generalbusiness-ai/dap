@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:983d7642a8057e15711cef8299d4085b34303935","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/views/generated.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a0616171a526e92a6243f95192d5a71fa67232b6","text":"Merge retired a covered predecessor; the successor is at examples/grow/check/dap.application.json."}
