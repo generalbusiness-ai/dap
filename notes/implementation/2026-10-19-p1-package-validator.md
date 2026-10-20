@@ -1283,3 +1283,13 @@ or replayed. The new finite grant and complete fresh Source submission
 must include these qualifications alongside every earlier failed and
 passing boundary. Main's later disjoint History note also remains a
 landing preservation obligation; no composed-tree gate is claimed.
+
+Before the new ordinary gate, original integration helper imported actual
+Main `2a77bc5fe4458d219f2eca1d25ac2ff709ff30b2` into the local P1 branch.
+It closed naturally 0 in 0.029250917 wall / 0.029814 child CPU seconds.
+The sole incoming path is the already reviewed History note; it has no
+overlap with the 86 authored paths. Merge `20b19814`, tree `05eaa292`,
+preserves all other bytes from code commit `03af6f9c`. This source now has
+2,612 tracked files and all current Main paths. The forthcoming gate runs
+this integrated source rather than claiming that an earlier gate tested
+a later composition. The report update after integration changes no code.
