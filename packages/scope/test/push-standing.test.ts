@@ -17,7 +17,7 @@ import { SqliteStore } from "../src/sqlite.ts";
 import { controls, net } from "../src/testing.ts";
 import { wired } from "./outside.ts";
 import { repository, rita, una } from "./repository.ts";
-import { objectOf, reader, stubOf } from "./support.ts";
+import { objectOf, reader, stubOf } from "./fixtures-native.ts";
 import { room as realRoom } from "../../../apps/room/lanes/test/support/room.ts";
 
 test.each(["effective", "absent", "unavailable", "active", "root-full", "file-superseded", "file-unknown"] as const)("D1 native standing and inherited file safety: %s (scripted creator/rules/Git)", async seen => {

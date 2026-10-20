@@ -4,7 +4,7 @@ import type { Attempt, Input, Result, ScopeRef, Seed, Send } from "@generalbusin
 import { deliveryCauseDigest, entryHash, factRefOf, intentDigest, messageDigest, newIncarnation, scopeIdOf, seedDigest } from "@generalbusiness/artroom-bytes";
 import { MemoryState, applyEntry, checkpointOf, clockOf, entryOf, fits, judgeCheckpoint, judgeDelivery, judgeDiagnosis, judgeGenesis, owed, prepareRules, stateDigest, useOf } from "../src/index.ts";
 import type { Creation, DeliveryContext, Draft, Fetched, Judged, Source, ValidDefinition } from "../src/index.ts";
-import { Ledger, Scope, T0, arriving, born, creation, d, deliver, deskDefinition, fields, forged, created, judged, keys, laneDefinition, on, sent, t, ticket, ticketDefinition, variant, type Over } from "./fixtures.ts";
+import { Ledger, Scope, T0, arriving, born, creation, d, deliver, deskDefinition, fields, forged, created, judged, keys, laneDefinition, on, sent, t, ticket, ticketDefinition, variant, type Over } from "./fixtures-entry.ts";
 
 const { rita, una } = keys;
 const unverified = { result: "source-unverified" };

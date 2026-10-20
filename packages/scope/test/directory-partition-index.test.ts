@@ -4,7 +4,7 @@ import { canonicalize, entryHash, factRefOf, newIncarnation, scopeIdOf, seedDige
 import { applyEntry, PROFILES, validateDefinition, type RuleGiven } from "@generalbusiness/dap-derive";
 import { directoryPartition1, directoryPartitionRules1, partitionGeneration, partitionLane, partitionNumber, PARTITION_COHORT } from "../../platform/src/directory-partitions.ts";
 import { SqliteStore, type Sql } from "../src/sqlite.ts";
-import { create } from "./support.ts";
+import { create } from "./fixtures-native.ts";
 
 // Actual Durable Object SQLite and production lookup code. Item/index rows
 // are explicit storage fixtures; no new factory or Authority path ran here.

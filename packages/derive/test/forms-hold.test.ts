@@ -2,8 +2,7 @@ import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { DeclaredDefinition } from "@generalbusiness/dap-contract";
 import { judgeTimed, nextDue, owed, validateDefinition, type ProblemCode, type ValidDefinition } from "../src/index.ts";
-import { Scope, fields, keys, on, t, variant } from "./fixtures.ts";
-import { works, worksDefinition } from "./fixtures-f.ts";
+import { Scope, fields, keys, on, t, variant, formsWorks as works, formsWorksDefinition as worksDefinition } from "./fixtures-entry.ts";
 
 const { rita, una, vic } = keys;
 /* eslint-disable @typescript-eslint/no-explicit-any */

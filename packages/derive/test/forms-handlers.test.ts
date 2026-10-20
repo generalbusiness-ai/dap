@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { ActType, DeclaredDefinition, FieldValue, Request, Result } from "@generalbusiness/dap-contract";
 import { MemoryState, messageFacts, validateDefinition, type Fetched, type ProblemCode } from "../src/index.ts";
-import { Scope, arrive, decided, deliver, fields, keys, on, ticket, ticketDefinition, valid, variant } from "./fixtures.ts";
+import { Scope, arrive, decided, deliver, fields, keys, on, ticket, ticketDefinition, valid, variant } from "./fixtures-entry.ts";
 
 const { rita } = keys;
 

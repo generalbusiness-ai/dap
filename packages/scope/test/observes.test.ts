@@ -13,7 +13,7 @@ import type { Delivery } from "../src/index.ts";
 import { controls, type Controls } from "../src/testing.ts";
 import { outsideOf, wired } from "./outside.ts";
 import { copied, repository, rewritten } from "./repository.ts";
-import { START, at, objectOf, reader, stubOf } from "./support.ts";
+import { START, at, objectOf, reader, stubOf } from "./fixtures-native.ts";
 import { route } from "../src/worker.ts";
 
 // Scope contract, revisions 20 and 21, sections 5.2 (step 1) and 16.1; source rows I3-40, I3-41 and I3-53; witnesses 18.46 (cases 4,

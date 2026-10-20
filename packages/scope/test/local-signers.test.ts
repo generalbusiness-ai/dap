@@ -6,7 +6,7 @@ import { signerOf } from "../src/entry-signer.ts";
 import { LocalSigners, SIGNER_INDEX_BOUNDS as B } from "../src/local-signers.ts";
 import { SqliteStore, type Sql } from "../src/sqlite.ts";
 import { Wakes } from "../src/outbox.ts";
-import { at, create, rita, una, vic, type Lane } from "./support.ts";
+import { at, create, rita, una, vic, type Lane } from "./fixtures-native.ts";
 
 const sqlOf = (state: DurableObjectState): Sql => ({ exec: (query, ...args) => state.storage.sql.exec(query, ...args), transaction: work => state.storage.transactionSync(work) });
 const resetLegacy = (state: DurableObjectState) => {

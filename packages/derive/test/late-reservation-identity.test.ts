@@ -1,8 +1,7 @@
 import { expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { holdCapability, judgeDelivery, validateDefinition } from "../src/index.ts";
-import { arriving, created, deliver, keys, sent, t, valid } from "./fixtures.ts";
-import { lateDefinition } from "./fixtures-late.ts";
+import { arriving, created, deliver, keys, sent, t, valid, lateDefinition } from "./fixtures-entry.ts";
 
 function declaration(platform: boolean, collision: boolean) {
   const data = { ...lateDefinition(true), name: platform ? "platform:late-collision" : "test.late-collision",

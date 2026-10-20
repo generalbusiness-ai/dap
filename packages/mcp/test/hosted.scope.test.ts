@@ -18,8 +18,7 @@ import worker from "../../../apps/room/worker.ts";
 import { hostedTest } from "../../scope/test/worker.ts";
 import { BOUNDS, COMPLETION_BYTES, MODERN, MODERN_RESULT_EXTRA } from "../src/index.ts";
 import { INVITATION_LINK } from "@generalbusiness/artroom-client";
-import { mcpRoom, SERVICE, type Agent, type Room } from "./support/room.ts";
-import { created as createRoom } from "./support/story.ts";
+import { mcpRoom, SERVICE, type Agent, type Room, created as createRoom } from "./fixtures-native.ts";
 import { MCP_METRIC_SCHEMA, type McpMetricPoint } from "../src/metrics.ts";
 
 /** Production default dispatch, in this isolate. The actual native PLATFORM namespace is this fixture's Scope binding;

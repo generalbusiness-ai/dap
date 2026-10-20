@@ -7,7 +7,7 @@ import { api, route } from "../src/worker.ts";
 import { measuredRequest, operationContext, measured } from "../src/operational.ts";
 import type { MetricPoint } from "../src/metrics.ts";
 import { metricBindings } from "./worker.ts";
-import { at, definition, creation, rita } from "./support.ts";
+import { at, definition, creation, rita } from "./fixtures-native.ts";
 
 // Invariant: the real HTTP boundary reports actual native entry into Turns.run,
 // while direct RPC cannot balance HTTP counts; correlation stays operational.

@@ -12,11 +12,7 @@ import { requestSession, sessionRequest, ScopeHandle, httpTransport, bindingTran
 import { McpService, memoryStore as custodyStore, type ServerPort } from "@generalbusiness/dap-mcp";
 import nativeWorker from "../../../apps/room/worker.ts";
 import { outsideOf as hostOutside } from "../src/worker.ts";
-import { applicationCounterFactTimePacket2 } from "./support/application-fact-time-fixture.ts";
-import { applicationResolverFixture } from "./support/application-fixture.ts";
-import { applicationHttpPeer } from "./support/application-http-peer.ts";
-import { sessionRoom } from "./support/session-room.ts";
-import { dispatchFixture, driveFixture, effectFixture } from "./support/native-fixture-lifetime.ts";
+import { applicationCounterFactTimePacket2, applicationWorkerBindings, applicationResolverFixture, applicationHttpPeer, sessionRoom, dispatchFixture, driveFixture, effectFixture } from "./fixtures-native.ts";
 import { rita, routed } from "./repository.ts";
 import { soon, net } from "./net.ts";
 import { Scope } from "../src/core.ts";
@@ -34,7 +30,7 @@ test("native installed projection reads exact journal state and survives R2 dele
   const room = await sessionRoom(C.register), { life, R, D, children } = room, [M, A, G] = children;
   if (!M || !A || !G) throw Error("The native cohort needs its three siblings.");
   const packet = await applicationCounterFactTimePacket2(), f = await applicationResolverFixture("sha1", undefined, {}, undefined, packet);
-  const peer = applicationHttpPeer(f), bindings = { SCOPES: env.PLATFORM, APPLICATION_CONTENT: env.APPLICATION_CONTENT, APPLICATION_TRUST: JSON.stringify(f.trust) };
+  const peer = applicationHttpPeer(f), bindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(f.trust));
   try {
     const seat = await life.wait(() => M.did(rita, "seat", { expected: { roster: 1 } }));
     await life.wait(async () => M.did(rita, "first-key", { fields: { member: seat }, expected: await M.expected({ roster: 0, member: seat }) }));

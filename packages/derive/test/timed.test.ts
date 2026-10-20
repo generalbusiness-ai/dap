@@ -1,8 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { clockOf, fits, judgeTimed, nextDue, owed, validateDefinition } from "../src/index.ts";
-import { Scope, fields, keys, laneDefinition, on, t, valid } from "./fixtures.ts";
-import { board } from "./fixtures-f.ts";
+import { Scope, fields, keys, laneDefinition, on, t, valid, board } from "./fixtures-entry.ts";
 
 const { rita, una, vic, sam } = keys;
 

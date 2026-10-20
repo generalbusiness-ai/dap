@@ -8,7 +8,7 @@ import { canonicalize, digestBytes, utf8 } from "@generalbusiness/artroom-bytes"
 import { d, otherLane } from "@generalbusiness/dap-derive/testing";
 import { editCommit, editObjects, editPath, editTree, type DestinationObject } from "../src/destination-objects.ts";
 import { judgeReservation, type EditFile, type Statement } from "../src/reservation.ts";
-import { CREATED, HEAD, TREE, reading } from "./support-destination.ts";
+import { CREATED, HEAD, TREE, reading } from "./fixtures-entry.ts";
 
 // A one-file edit (i5 edit; plan 025, section 2). The objects are checked against a real local Git repository in each object
 // format: the facts are made up, and no host, push or creation is shown. The judgment is the plain function, with a reading
