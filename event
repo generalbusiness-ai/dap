@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:802e3f8a6af6e20eb4256a17021b10d2e6d2e5be","text":"Merge retired a covered predecessor; the successor is at apps/room/page/src/start-custody.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:9c3acd57f4a15d90d2edc3e23afc68972e56f9db","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-19-k3-page-custody.md."}
