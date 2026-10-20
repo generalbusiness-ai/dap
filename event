@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6b5648d87aa4c73da178af91f1cd697f6969e613","text":"Merge retired a covered predecessor; the successor is at apps/counter/browser/storage.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:6bdf281642c4ae0118b9e629f79439048207b4b3","text":"Merge retired a covered predecessor; the successor is at apps/room/page/src/start-custody.ts."}
