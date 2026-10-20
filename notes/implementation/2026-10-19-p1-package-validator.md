@@ -9,9 +9,11 @@ The earlier `32f7537e` integration on Main `8aad37bb` is historical.
 Planner decision `b966ef3f`, adopted as `48471bbb`, now governs the format
 boundary. New pack/validation requires all seven explicit version 2
 composition places. Strict readers still refuse the old published packet.
-The separate published-packet reader accepts only the exact maintained
-release and publisher identity, with its existing signed bytes unchanged;
-actual consumers select that reader explicitly. There is no generic old
+For the incomplete published shape, the separate published-packet reader's
+exception accepts only the exact maintained release and publisher identity,
+with existing signed bytes unchanged. Complete composition packets still
+use the strict reader and graph checks. Actual consumers select the
+published-packet reader explicitly. There is no generic old
 format fallback, publisher-only exception, new publisher key, re-signing
 or release. Future replacement and retirement need a separate reviewed
 release, trust and upgrade commission. No frozen review original is edited
