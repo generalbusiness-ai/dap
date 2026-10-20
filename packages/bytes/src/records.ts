@@ -151,7 +151,7 @@ const send = record({ n: isLocalId, to: (v) => scopeRef(v) || seed(v), message }
 export const isSend = (v: unknown): v is Send => send(v);
 
 /** A capability's name and version, of the one form `name@version`. */
-const capabilityName: Check = (v) => typeof v === "string" && /^(hold|git-read)@(0|[1-9][0-9]*)$/.test(v);
+const capabilityName: Check = (v) => typeof v === "string" && /^(hold|git-read|device-command)@(0|[1-9][0-9]*)$/.test(v);
 
 const effect = variant("effect", {
   open: record({ effect: any, item: isLocalId, type: text, state: text }),

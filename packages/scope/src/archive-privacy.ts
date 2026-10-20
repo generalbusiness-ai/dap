@@ -9,7 +9,7 @@ import type { Sql } from "./sqlite.ts";
 import type { ArchiveForeignMetadata } from "./archive-foreign.ts";
 import { archiveEntryHeader, archiveEntryPrivacy, archiveSupportMetadata, type ArchiveSupport } from "./archive-entry-metadata.ts";
 
-export { archiveSupportMetadata } from "./archive-entry-metadata.ts";
+export { archiveSupportMetadata, DEVICE_COMMAND_ARCHIVE_RECORDS, DEVICE_COMMAND_ARCHIVE_PREPARATIONS } from "./archive-entry-metadata.ts";
 export type { ArchiveSupport } from "./archive-entry-metadata.ts";
 
 export interface ArchivePrivacyPosition extends ArchivePosition { readonly input: Input["type"] }

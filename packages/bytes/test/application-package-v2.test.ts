@@ -76,6 +76,18 @@ test("v2 refuses changed signatures, missing projections and unbound views befor
   expect(calls).toBe(0); expect(gets).toBe(0);
 });
 
+test("a signed host requirement names archive explicitly and refuses unknown or ambiguous requirements", async () => {
+  const original = await packApplication2(input(), signer);
+  const requested: ApplicationPackageInput2 = { ...input(), semantic: { ...input().semantic, host: { ...input().semantic.host, requires: ["archive"] } } };
+  const required = await packApplication2(requested, signer);
+  expect(required.ids.semantic).not.toBe(original.ids.semantic);
+  expect(readApplicationPackage2(required.bytes, required.ids.release).package.semantic.host.requires).toEqual(["archive"]);
+  for (const requires of [[], ["unknown"], ["archive", "archive"], "archive", null]) {
+    const bad: ApplicationPackageInput2 = input(); Reflect.set(bad.semantic.host, "requires", requires);
+    await expect(packApplication2(bad, signer)).rejects.toThrow("application-package-invalid");
+  }
+});
+
 test("a child created only by a late replacement belongs to the signed package closure", async () => {
   const child: DeclaredDefinition = { ...empty, name: "test.late-child" }, childId = definitionDigest(child);
   const parent: DeclaredDefinition = { ...empty, name: "test.late-parent", receives: {

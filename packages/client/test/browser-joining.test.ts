@@ -5,7 +5,7 @@ import type { Entry, Receipt, ScopeKind, ScopeRef, SignedIntent } from "@general
 import { b64url, canonicalize, entryHash, intentDigest, keyIdOfSecret, newIncarnation, scopeIdOf, textDigest, utf8, verifyInvitationProof, verifySignedIntent } from "@generalbusiness/artroom-bytes";
 import { browserJoining, generateBrowserDeviceKey, readBrowserInvitation, storedWebCryptoSigner, type BrowserJoinStore, type BrowserKeptJoin, type Fetch, type InvitationLink } from "../src/index.ts";
 const origin = "https://browser.test", start = Date.parse("2026-10-18T12:00:00Z"), seed = new Uint8Array(32).fill(66);
-type Version = "platform:membership@4" | "platform:membership@6" | "platform:membership@7";
+type Version = "platform:membership@4" | "platform:membership@6" | "platform:membership@7" | "platform:membership@8";
 const reference = (kind: ScopeKind): ScopeRef => ({ scope: scopeIdOf({ v: 1, kind, definition: textDigest("TEST browser joining " + kind), creator: null, cause: textDigest("TEST browser joining address"), ordinal: 0 }), inc: newIncarnation(new Uint8Array(16).fill(2)), kind });
 function invitation(definition: Version): InvitationLink {
   return { v: 1, service: origin, repository: { directory: reference("directory"), membership: reference("membership"), rules: reference("rules").scope, destination: reference("destination").scope },
@@ -54,7 +54,7 @@ async function fixture(definition: Version = "platform:membership@6") {
 }
 
 test("a kept browser join recovers by reads and checks its original receipt, member and exact recorded signature", async () => {
-  for (const version of ["platform:membership@4", "platform:membership@6", "platform:membership@7"] as const) {
+  for (const version of ["platform:membership@4", "platform:membership@6", "platform:membership@7", "platform:membership@8"] as const) {
     const f = await fixture(version);
     expect(await f.api.join(f.link, f.seat)).toMatchObject({ status: "unknown" });
     expect(f.posts).toHaveLength(1); expect(f.calls.slice(0, 3)).toEqual(["save prepared", "save inflight", "post"]);

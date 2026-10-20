@@ -1,6 +1,5 @@
-/** G0 device declarations, composed into the room later. Targets and reports
- * have separate writers. Command outcomes belong only to the separately
- * labelled scenario owner until the commissioned G5a native form exists. */
+/** Independent targets, sensor reports and capability-owned command answers. */
+import { DEVICE_COMMAND } from "@generalbusiness/dap-contract";
 import type { ActType, Guard, ItemType, Subject } from "@generalbusiness/dap-contract";
 
 const act = (body: Pick<ActType, "step" | "on" | "grant"> & Partial<ActType>): ActType => ({ also: {}, fields: {}, guards: [], effects: [], sends: [], attention: [], ...body });
@@ -22,20 +21,24 @@ export function deviceForms(under: string, additionalTargetActs: readonly string
   const command = (kind: "vent" | "fan" | "heater", grant: string): ActType => act({
     step: "transition", on: "device", grant,
     fields: { target: { ...targets, required: true }, level: { ...level, required: true } },
-    guards: [{ state: ["active"] }, { equals: { a: { slot: "kind" }, b: { const: kind } }, reason: "wrong-device-kind" }, notFailed, { rule: "device-target", reason: "device-limit" }],
-    effects: [{ value: { slot: "target", from: { field: "target" } } }, { value: { slot: "level", from: { field: "level" } } }, { ref: { slot: "targetAt", from: "self" } }],
+    guards: [{ state: ["active"] }, { equals: { a: { slot: "kind" }, b: { const: kind } }, reason: "wrong-device-kind" }, notFailed, { rule: "device-target", reason: "device-limit" },
+      { capability: { name: "device-command", guard: "allowed", with: { kind: { slot: "kind" } } } }],
+    effects: [{ value: { slot: "target", from: { field: "target" } } }, { value: { slot: "level", from: { field: "level" } } }, { ref: { slot: "targetAt", from: "self" } },
+      { capability: { name: "device-command", do: "open", with: { device: { slot: "kind" } } } }],
   });
   return {
     item: { many: true, max: 12, initial: "active", states: { active: { final: false } }, parties: {},
       refs: {
         targetAt: { ...mutable, to: { type: "fact", under, kind: ["commission-device", "set-vent", "set-fan", "set-heater", ...additionalTargetActs] } },
         reportedAt: { ...optional, to: { type: "fact", under, kind: ["report-device"] } },
+        outcomeAt: { ...optional, capability: DEVICE_COMMAND, to: { type: "fact", under, kind: ["device-command@1:answer"] } },
       },
       values: { kind: { ...fixed, of: kinds }, label: { ...fixed, of: { type: "text", max: 80 } },
         minLevel: { ...fixed, of: level }, maxLevel: { ...fixed, of: level },
         target: { ...mutable, of: targets }, level: { ...mutable, of: level },
         reported: { ...optional, of: reported }, reportedLevel: { ...optional, of: level },
         description: { ...optional, of: { type: "text", max: 1024 } }, reportedTime: { ...optional, of: { type: "time" } },
+        outcome: { ...optional, capability: DEVICE_COMMAND, of: { type: "enum", of: ["confirmed", "refused", "unknown"] } },
       },
     },
     acts: {

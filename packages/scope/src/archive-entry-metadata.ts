@@ -1,7 +1,7 @@
 /** Shared bounded classification of local rows and retained foreign copies.
  * Returns headers/classes only. Payload reads and export admission belong
  * to the owning whole-prefix inventory, inside its synchronous frame. */
-import { DOMAINS, RETAINED_INPUT_BYTES } from "@generalbusiness/dap-contract";
+import { DEVICE_COMMAND, DOMAINS, RETAINED_INPUT_BYTES } from "@generalbusiness/dap-contract";
 import type { Digest, Input, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
 import { isDigest, isPlatformDefinition, isScopeRef } from "@generalbusiness/artroom-bytes";
 import { ArchiveBudget } from "./archive-budget.ts";
@@ -32,6 +32,9 @@ const variants: readonly unknown[] = ["genesis", "act", "delivery", "timed", "di
 const nativeDomains: ReadonlySet<string> = new Set(Object.values(DOMAINS));
 const natural = (v: unknown): v is number => typeof v === "number" && Number.isSafeInteger(v) && v >= 0 && !Object.is(v, -0);
 const OWNER_LIMIT = 65;
+/** Finite native metadata. Device commands own no outside operation kind. */
+export const DEVICE_COMMAND_ARCHIVE_RECORDS: ReadonlySet<string> = new Set(["command"]);
+export const DEVICE_COMMAND_ARCHIVE_PREPARATIONS: ReadonlySet<string> = new Set(["answer"]);
 export const archiveMetadataText = (path: string, max: number, source = "bytes") => `CASE WHEN typeof(json_extract(${source}, '${path}')) = 'text' AND octet_length(json_extract(${source}, '${path}')) <= ${max} THEN json_extract(${source}, '${path}') ELSE NULL END`;
 const text = archiveMetadataText;
 const HEADER = `json_extract(bytes, '$.seq') AS seq, ${text("$.at.scope", 71)} AS scope, ${text("$.at.inc", 64)} AS inc, ${text("$.at.kind", 16)} AS kind, ${text("$.input.type", 16)} AS input, ${text("$.prev", 71)} AS prev, json_type(bytes, '$.prev') AS prevType, json_type(bytes, '$.uses') AS usesType, json_array_length(bytes, '$.uses') AS uses, json_type(bytes, '$.effects') AS effectsType, json_array_length(bytes, '$.effects') AS effects`;
@@ -116,10 +119,13 @@ export function archiveSupportMetadata(support: ArchiveSupport, budget: ArchiveB
     }
   }
   for (const table of [support.preparations, support.records]) for (const [name, kinds] of table) {
-    if (!["hold@1", "git-read@1"].includes(name)) return stop("unsupported-archive-cohort");
+    if (!["hold@1", "git-read@1", DEVICE_COMMAND].includes(name)) return stop("unsupported-archive-cohort");
     if (kinds.size > 64) return stop("limit");
-    for (const kind of kinds) { budget.spend({ inputWork: 256 }); if (!kind || kind.length > 128) return stop("unavailable"); }
+    for (const kind of kinds) {
+      budget.spend({ inputWork: 256 });
+      if (!kind || kind.length > 128) return stop("unavailable");
+      if (name === DEVICE_COMMAND && !(table === support.records ? DEVICE_COMMAND_ARCHIVE_RECORDS : DEVICE_COMMAND_ARCHIVE_PREPARATIONS).has(kind)) return stop("unsupported-archive-cohort");
+    }
   }
   budget.check();
 }
-

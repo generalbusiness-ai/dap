@@ -1,12 +1,13 @@
 /** Declarative local scenarios. No scenario module or application server code
  * is imported. TEST keys and authority are local stand-ins, stated in reports. */
 import type { AnyPackedApplication } from "@generalbusiness/artroom-bytes/application-v2";
-import type { Answer, Digest, FactRef, FieldValue, MemberId, MemberRef, ScopeKind, ScopeRef, SignedIntent } from "@generalbusiness/dap-contract";
+import { CAPABILITIES, type Answer, type CapabilityName, type Digest, type FactRef, type FieldValue, type MemberId, type MemberRef, type ScopeKind, type ScopeRef, type SignedIntent } from "@generalbusiness/dap-contract";
 import { canonicalize, isRecord, newIncarnation, parseStrict, scopeIdOf } from "@generalbusiness/artroom-bytes";
 import { secretSigner, signedIntent, type Asked, type Signer } from "@generalbusiness/artroom-client";
 import { timeMs } from "@generalbusiness/dap-derive";
 import type { Verification } from "@generalbusiness/artroom-replay";
 import type { LocalActor, LocalApplicationScope } from "./application-local.ts";
+import type { ScriptedDeviceGrantEvidence } from "./application-local-device-fixture.ts";
 
 export class ApplicationScenarioError extends Error {}
 const fail = (message: string): never => { throw new ApplicationScenarioError(message); };
@@ -34,7 +35,7 @@ function reference(kind: ScopeKind): ScopeRef {
 }
 interface Actor { signer: Signer; member: MemberRef; actions: string[]; principal: string | null }
 export interface ScenarioOwnerRecord { readonly label: "non-native-scenario-owner"; readonly owner: string; readonly command: FactRef; readonly outcome: "confirmed" | "refused" | "unknown" }
-export interface ApplicationScenarioResult { readonly name: string; readonly definition: Digest; readonly steps: number; readonly projectionChecks: number; readonly replay: Verification; readonly authority: "scripted-test-grants"; readonly ownerRecords: readonly ScenarioOwnerRecord[] }
+export interface ApplicationScenarioResult { readonly name: string; readonly definition: Digest; readonly steps: number; readonly projectionChecks: number; readonly replay: Verification; readonly authority: "scripted-test-grants"; readonly ownerRecords: readonly ScenarioOwnerRecord[]; readonly capabilityGrant: ScriptedDeviceGrantEvidence | null; readonly preparations: number }
 export interface ApplicationDevelopmentActor extends LocalActor { readonly name: string; readonly seed: string }
 export interface ApplicationDevelopmentSession { readonly result: ApplicationScenarioResult; readonly scope: LocalApplicationScope; readonly time: string; readonly actors: readonly ApplicationDevelopmentActor[] }
 /** Explicit developer fixture injection. Its scope must be actually judged;
@@ -57,7 +58,7 @@ async function executeScenario(packet: AnyPackedApplication, value: unknown,
   if (!supportsLocalSqlite(process.versions.node)) return fail("Local scenarios require unflagged Node SQLite: Node 22.13+, 23.4+, or 24+. Other CLI commands retain Node 22.0 support.");
   // The caller supplies bounded, strict JSON from readApplicationScenario.
   // Own that parsed value before signing/import awaits or caller edits.
-  const scenario = object(parseStrict(canonicalize(value)), ["v", "name", "time", "actors", "founding", "steps"], ["definition"]);
+  const scenario = object(parseStrict(canonicalize(value)), ["v", "name", "time", "actors", "founding", "steps"], ["definition", "deviceOwner"]);
   if (scenario["v"] !== 1) return fail("Expected scenario version 1.");
   const name = label(scenario["name"]); let time = timestamp(scenario["time"]);
   const selected = Object.hasOwn(scenario, "definition") ? scenario["definition"] : packet.package.semantic.entry;
@@ -69,6 +70,7 @@ async function executeScenario(packet: AnyPackedApplication, value: unknown,
   const accepted = new Map<string, FactRef>(), ownerRecords: ScenarioOwnerRecord[] = [], recorded = new Set<string>();
   let checkedBehavior = false;
   let projectionChecks = 0;
+  let preparations = 0;
   let scope: LocalApplicationScope | null = null;
   try {
     for (const [name, actor] of Object.entries(given)) {
@@ -92,13 +94,14 @@ async function executeScenario(packet: AnyPackedApplication, value: unknown,
       if (Object.keys(value).length === 1) {
         if (Object.hasOwn(value, "$member")) return actor(value["$member"]).member;
         if (Object.hasOwn(value, "$fact")) return accepted.get(label(value["$fact"])) ?? fail("The saved request has no accepted native fact.");
+        if (Object.hasOwn(value, "$position")) return accepted.get(label(value["$position"]))?.seq ?? fail("The saved request has no accepted native position.");
         if (Object.hasOwn(value, "$scope")) return value["$scope"] === "self" && scope ? scope.at : fail("Only an existing local self scope can be named.");
         if (Object.hasOwn(value, "$reference")) {
           const kind = value["$reference"];
           return kind === "destination" || kind === "membership" ? reference(kind) : fail("Only labelled membership/destination reference stand-ins are supported.");
         }
         if (Object.hasOwn(value, "$revision")) {
-          const id = value["$revision"];
+          const id = resolve(value["$revision"], depth + 1);
           return typeof id === "number" && Number.isSafeInteger(id) && scope?.state.item(id) ? scope.state.item(id)!.revision : fail("Revision reference names no local item.");
         }
       }
@@ -109,15 +112,19 @@ async function executeScenario(packet: AnyPackedApplication, value: unknown,
     const signed = await signedIntent(actor(founding["actor"]).signer, { to: null, kind: "found", fields: fields(founding["fields"]) }, { now: timeMs(time)! });
     const runtime = await import("./application-local.ts");
     const held: LocalActor[] = [...actors.values()].map(who => ({ key: who.signer.key, member: who.member, actions: who.actions, principal: who.principal === null ? null : actor(who.principal).member }));
-    scope = await (factory ?? runtime.LocalApplicationScope.found)(packet, signed, held, time, definition).catch(error => {
+    const deviceOwner = Object.hasOwn(scenario, "deviceOwner") ? actor(scenario["deviceOwner"]).member : undefined;
+    scope = await (factory ?? runtime.LocalApplicationScope.found)(packet, signed, held, time, definition, deviceOwner).catch(error => {
       if (error instanceof runtime.LocalApplicationError) return fail(`${name}: ${error.message}`);
       throw error;
     });
+    if (deviceOwner && (!scope.fixtureGrant || canonicalize(scope.fixtureGrant.owner) !== canonicalize(deviceOwner))) return fail("The chosen developer fixture did not supply the explicitly scripted device grant.");
     const saved = new Map<string, SignedIntent>();
+    const savedPreparation = new Map<string, { capability: string; step: string }>(), preparationEntries = new Set<number>();
     const expected = (answer: Answer, wanted: unknown): void => {
-      const body = object(wanted, ["answer"], ["reason"]);
+      const body = object(wanted, ["answer"], ["reason", "name"]);
       if (body["answer"] !== "accepted" && body["answer"] !== "refused" || body["answer"] === "accepted" && Object.hasOwn(body, "reason") || body["answer"] === "refused" && (typeof body["reason"] !== "string" || !/^[a-z][a-z0-9-]{0,63}$/.test(body["reason"]))) return fail("Expect accepted, or refused with its exact native reason.");
       if (answer.answer !== body["answer"] || body["answer"] === "refused" && (answer.answer !== "refused" || answer.reason !== body["reason"])) return fail(`Expected ${body["answer"]}${body["reason"] ? ` (${body["reason"]})` : ""}; native answer was ${answer.answer}${"reason" in answer ? ` (${answer.reason})` : ""}.`);
+      if (Object.hasOwn(body, "name") && (body["answer"] !== "refused" || typeof body["name"] !== "string" || !/^[a-z][a-z0-9-]{0,63}$/.test(body["name"]) || answer.answer !== "refused" || answer.name !== body["name"])) return fail("Expected the exact named native refusal.");
       checkedBehavior = true;
     };
     for (let index = 0; index < steps.length; index++) {
@@ -132,7 +139,7 @@ async function executeScenario(packet: AnyPackedApplication, value: unknown,
           if (typeof ask["kind"] !== "string" || !/^[A-Za-z][A-Za-z0-9_.-]{0,127}$/.test(ask["kind"])) return fail("Expected an act name.");
           const expectedRevisions = resolve(dictionary(Object.hasOwn(ask, "expected") ? ask["expected"] : {}, 64)) as Record<string, number>;
           if (Object.values(expectedRevisions).some(value => !Number.isSafeInteger(value) || value < 0)) return fail("Expected revisions must be nonnegative native revisions.");
-          const on = ask["on"] ?? null;
+          const on = resolve(ask["on"] ?? null);
           if (on !== null && (typeof on !== "number" || !Number.isSafeInteger(on) || on < 0)) return fail("Expected a local item number.");
           const asked: Asked = { to: scope.at, kind: ask["kind"], on, expected: expectedRevisions, fields: fields(Object.hasOwn(ask, "fields") ? ask["fields"] : {}) };
           const signed = await signedIntent(actor(ask["actor"]).signer, asked, { now: timeMs(time)! });
@@ -144,16 +151,32 @@ async function executeScenario(packet: AnyPackedApplication, value: unknown,
           if (deferred) continue;
           const answer = await scope.submit(signed); expected(answer, step["expect"]);
           if (Object.hasOwn(step, "save") && answer.answer === "accepted") accepted.set(label(step["save"]), parseStrict(canonicalize(answer.receipt.fact)) as FactRef);
+        } else if (Object.hasOwn(step, "prepare")) {
+          object(step, ["prepare", "expect"], ["save"]);
+          const ask = object(step["prepare"], ["actor", "capability", "step", "fields"]);
+          const capability = ask["capability"], name = ask["step"];
+          if (typeof capability !== "string" || capability.length > 64 || !/^[a-z][a-z0-9.-]*@[1-9][0-9]*$/.test(capability)
+            || typeof name !== "string" || !/^[a-z][a-z0-9-]{0,31}$/.test(name)) return fail("Expected a bounded native capability and step.");
+          const signed = await signedIntent(actor(ask["actor"]).signer, { to: scope.at, kind: `${capability}:${name}`, on: null, expected: {}, fields: fields(ask["fields"]) }, { now: timeMs(time)! });
+          const answer = await scope.prepare(signed, capability, name); expected(answer, step["expect"]);
+          if (answer.answer === "accepted") { preparationEntries.add(answer.receipt.fact.seq); preparations = preparationEntries.size; }
+          if (Object.hasOwn(step, "save")) {
+            const name = label(step["save"]); if (saved.has(name)) return fail("A saved request name is already used."); saved.set(name, signed);
+            savedPreparation.set(name, { capability, step: ask["step"] as string });
+            if (answer.answer === "accepted") accepted.set(name, parseStrict(canonicalize(answer.receipt.fact)) as FactRef);
+          }
         } else if (Object.hasOwn(step, "retry")) {
           object(step, ["retry", "expect"]); const signed = saved.get(label(step["retry"]));
           if (!signed) return fail("A retry names no saved signed request.");
-          const answer = await scope.submit(signed); expected(answer, step["expect"]);
+          const preparation = savedPreparation.get(label(step["retry"]));
+          const answer = preparation ? await scope.prepare(signed, preparation.capability, preparation.step) : await scope.submit(signed); expected(answer, step["expect"]);
+          if (preparation && answer.answer === "accepted") { preparationEntries.add(answer.receipt.fact.seq); preparations = preparationEntries.size; }
           if (answer.answer === "accepted") accepted.set(label(step["retry"]), parseStrict(canonicalize(answer.receipt.fact)) as FactRef);
         } else if (Object.hasOwn(step, "advance")) {
           object(step, ["advance"]); time = timestamp(step["advance"]); await scope.advance(time);
         } else if (Object.hasOwn(step, "assert")) {
           object(step, ["assert"]); const wanted = object(step["assert"], ["item"], ["state", "revision", "values", "parties", "refs"]);
-          const id = wanted["item"];
+          const id = resolve(wanted["item"]);
           if (typeof id !== "number" || !Number.isSafeInteger(id) || id < 0 || Object.keys(wanted).length < 2) return fail("An assertion needs an item and a state, revision or slot expectation.");
           if (!["state", "revision"].some(key => Object.hasOwn(wanted, key)) && !["values", "parties", "refs"].some(key => Object.hasOwn(wanted, key) && Object.keys(dictionary(wanted[key], 64)).length > 0)) return fail("An assertion must test at least one state, revision or slot.");
           const item = scope.state.item(id); if (!item) return fail(`Asserted item ${id} is absent.`);
@@ -162,11 +185,30 @@ async function executeScenario(packet: AnyPackedApplication, value: unknown,
             if (!Object.hasOwn(item[key], slot) || canonicalize(item[key][slot]) !== canonicalize(resolve(wantedValue))) return fail(`Item ${id} has an unexpected ${key}.${slot}.`);
           }
           checkedBehavior = true;
+        } else if (Object.hasOwn(step, "record")) {
+          object(step, ["record"]);
+          const wanted = object(step["record"], ["capability", "kind", "key"], ["state", "values", "absent"]);
+          const capability = wanted["capability"], kind = wanted["kind"], key = resolve(wanted["key"]);
+          if (typeof capability !== "string" || !Object.hasOwn(CAPABILITIES, capability) || typeof kind !== "string" || kind.length > 64
+            || !Array.isArray(key) || key.length > 8 || Object.hasOwn(wanted, "absent") && wanted["absent"] !== true) return fail("Expected a bounded native capability record assertion.");
+          const known = CAPABILITIES as Readonly<Record<string, { records: Readonly<Record<string, unknown>> }>>;
+          if (!Object.hasOwn(known[capability]!.records, kind)) return fail("The capability declares no such record kind.");
+          const actual = scope.state.record(capability as CapabilityName, kind, key as FieldValue[]);
+          if (wanted["absent"] === true) {
+            if (Object.keys(wanted).length !== 4 || actual !== null) return fail("The capability record must be absent.");
+          } else {
+            if (!actual || !Object.hasOwn(wanted, "state") && !Object.hasOwn(wanted, "values")) return fail("The capability record assertion needs a present state or value.");
+            if (Object.hasOwn(wanted, "state") && actual.state !== wanted["state"]) return fail("The capability record has an unexpected state.");
+            if (Object.hasOwn(wanted, "values")) for (const [name, value] of Object.entries(dictionary(wanted["values"], 32))) {
+              if (!Object.hasOwn(actual.values, name) || canonicalize(actual.values[name]) !== canonicalize(resolve(value))) return fail(`The capability record has an unexpected value ${name}.`);
+            }
+          }
+          checkedBehavior = true;
         } else if (Object.hasOwn(step, "projection")) {
           object(step, ["projection"]);
           const wanted = object(step["projection"], ["name", "sources"], ["items", "at"]);
           if (typeof wanted["name"] !== "string" || !/^[A-Za-z][A-Za-z0-9_.-]{0,127}$/.test(wanted["name"])) return fail("Expected a declared projection name.");
-          const items = Object.hasOwn(wanted, "items") ? dictionary(wanted["items"], 8) : {};
+          const items = Object.hasOwn(wanted, "items") ? resolve(dictionary(wanted["items"], 8)) as Record<string, unknown> : {};
           if (Object.entries(items).some(([name, id]) => !/^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(name) || typeof id !== "number" || !Number.isSafeInteger(id) || id < 0 || Object.is(id, -0))) return fail("Projection selections need source names and nonnegative item IDs.");
           const data = scope.developmentProjection(wanted["name"], items as Record<string, number>), sources = dictionary(wanted["sources"], 8);
           if (!Object.keys(sources).length) return fail("A projection assertion must check at least one complete source.");
@@ -176,7 +218,7 @@ async function executeScenario(packet: AnyPackedApplication, value: unknown,
             for (let i = 0; i < expected.length; i++) {
               const row = rows[i]!, wanted = object(expected[i], ["id"], ["type", "state", "revision", "fields"]);
               if (Object.keys(wanted).length < 2 || !["type", "state", "revision"].some(key => Object.hasOwn(wanted, key)) && (!Object.hasOwn(wanted, "fields") || !Object.keys(dictionary(wanted["fields"], 32)).length)) return fail("A projected row assertion needs its ID and a state, revision, type or field expectation.");
-              for (const key of ["id", "type", "state", "revision"] as const) if (Object.hasOwn(wanted, key) && canonicalize(row[key]) !== canonicalize(wanted[key])) return fail(`Projection ${name} row ${i} has an unexpected ${key}.`);
+              for (const key of ["id", "type", "state", "revision"] as const) if (Object.hasOwn(wanted, key) && canonicalize(row[key]) !== canonicalize(resolve(wanted[key]))) return fail(`Projection ${name} row ${i} has an unexpected ${key}.`);
               if (Object.hasOwn(wanted, "fields")) for (const [field, value] of Object.entries(dictionary(wanted["fields"], 32))) {
                 if (!Object.hasOwn(row.fields, field) || canonicalize(row.fields[field]) !== canonicalize(resolve(value))) return fail(`Projection ${name} row ${i} has an unexpected field ${field}.`);
               }
@@ -199,7 +241,7 @@ async function executeScenario(packet: AnyPackedApplication, value: unknown,
           const key = canonicalize(command);
           if (recorded.has(key)) return fail("The scenario owner already recorded this command."); recorded.add(key);
           ownerRecords.push({ label: "non-native-scenario-owner", owner, command: parseStrict(key) as FactRef, outcome });
-        } else return fail("Expected act, sign, retry, advance, assert, projection or owner-record.");
+        } else return fail("Expected act, prepare, sign, retry, advance, assert, projection or owner-record.");
       } catch (error) {
         if (error instanceof ApplicationScenarioError || error instanceof runtime.LocalApplicationError) throw new ApplicationScenarioError(`${name}, step ${index + 1}: ${error.message}`);
         throw error;
@@ -207,8 +249,8 @@ async function executeScenario(packet: AnyPackedApplication, value: unknown,
     }
     if (!checkedBehavior) return fail("Each scenario needs an expected act or retry answer, or a nonempty state assertion.");
     const replay = await scope.replay();
-    if (replay.report.mode !== "replay" || replay.report.result !== "consistent") return fail(`${name}: native replay ${replay.report.result}.`);
-    const result: ApplicationScenarioResult = { name, definition, steps: steps.length, projectionChecks, replay, authority: "scripted-test-grants", ownerRecords };
+    if (replay.report.mode !== "replay" || replay.report.result !== "consistent") return fail(`${name}: native replay ${replay.report.result}${replay.why ? `: ${replay.why}` : "."}`);
+    const result: ApplicationScenarioResult = { name, definition, steps: steps.length, projectionChecks, replay, authority: "scripted-test-grants", ownerRecords, capabilityGrant: scope.fixtureGrant, preparations };
     if (retain) {
       retain(scope, time, [...actors].map(([name, who]) => ({ name, seed: (given[name] as Record<string, unknown>)["seed"] as string, key: who.signer.key, member: who.member, actions: [...who.actions], principal: who.principal === null ? null : actor(who.principal).member })));
       scope = null;

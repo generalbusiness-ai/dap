@@ -32,7 +32,7 @@ export class InstallNode extends Ledger {
     this.take(judged); return this.head.seq;
   }
 }
-export function installGraph(cohort: Readonly<{ register: PlatformDefinition }> = C) {
+export function installGraph(cohort: Readonly<{ register: PlatformDefinition }> = C, archive?: "journal") {
   const nodes: InstallNode[] = [], R = new InstallNode(cohort.register); nodes.push(R);
   const allFacts = () => nodes.flatMap(node => node.entries.map(({ entry }, seq) => ({ fact: node.fact(seq), entry, under: node.under })));
   const send = (to: InstallNode, from: InstallNode, seq: number, n = 0, write = true) => {
@@ -55,7 +55,7 @@ export function installGraph(cohort: Readonly<{ register: PlatformDefinition }> 
   const signed = installing(keys.rita, "keys", [keys.rita.key]), seed: Seed = { v: 1, kind: "register", definition: cohort.register, creator: null, cause: intentDigest(signed.intent), ordinal: 0 };
   R.take(judgeGenesis(R.state, R.definition, { name: scopeIdOf(seed), inc: newIncarnation(new Uint8Array(16).fill(7)), seed, creation: signed },
     { clock: clockOf(R.state, T0), bounds: R.bounds, facts: [], prepared: [], source: null, platform: R.authority }));
-  const found = R.act(keys.rita, "found", { expected: { register: R.item(0).revision }, fields: { branch: "main", "founderHandle": "@rita", recoveryKey: keys.sam.key } }, { grants: [] });
+  const found = R.act(keys.rita, "found", { expected: { register: R.item(0).revision }, fields: { branch: "main", "founderHandle": "@rita", recoveryKey: keys.sam.key, ...(archive === undefined ? {} : { archive }) } }, { grants: [] });
   if (found.result !== "write") throw Error(JSON.stringify(found));
   const claim = R.head.seq;
   const made = judgeOutcome(R.state, R.definition, { type: "outcome", operation: `${claim}:0`, attempt: 1, result: "confirmed", evidence: { basis: "own-answer", body: { name: repositoryName(R.item(claim).values["seed"] as never, 1), id: "TEST application room" } } },
