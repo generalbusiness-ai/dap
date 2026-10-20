@@ -284,3 +284,15 @@ control, not a sweep. The temporary duplicate reviewer probe is preserved
 externally and removed before the committed candidate; the permanent
 regression remains. The changed-code gate and complete fresh review are
 still required before any approval or publication claim.
+
+The repair candidate incorporates actual reviewed Main
+`7a14832586ae2760d742b0e6d8e4b65c8908977c`, tree `4b5a2fa1`, including
+the three newer market design/docs paths. The first merge attempt cannot
+lock `ORIG_HEAD` under the sandbox and changes no source or merge stage.
+A separate attempt with Git metadata access closes naturally zero in
+0.032857209 seconds, with no conflicts: all 44 authored paths keep their
+bytes/modes and all three imported paths match Main exactly. Original
+commands/logs/closures are
+`/tmp/b1-fact-signer-repair-incorporate-main-20261020*` and
+`/tmp/b1-fact-signer-repair-incorporate-main-v2-20261020*`. No compiler,
+native test or build runs during either isolated merge preparation.
