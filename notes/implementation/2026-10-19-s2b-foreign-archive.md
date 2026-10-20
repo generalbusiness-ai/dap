@@ -287,3 +287,34 @@ shared warm macOS arm64/Node26.12 environment observed in the first
 pipeline, without an exclusive-host or fresh-cache claim. No timing sum
 is presented as one measured pipeline. The new ordinary gate will record
 its own machine/load/cache and original natural closure.
+
+The first repair gate at `c26f2ac90`, tree `926d86a7`, closes naturally
+one: 1,980 Vitest cases pass, seven fail and three skip; Node and Counter
+are not reached. It takes 510.042615500 wall and 748.153611 CPU seconds
+on shared warm macOS 27.0.1 arm64, Node 26.12/npm 11.20, starting load
+1.2246/1.5024/2.0493. All 2,576 source files retain their bytes/modes;
+only the owned Vitest result cache changes among 5,530 dependency rows,
+the lock stamp matches and no package installs. Original commands, logs,
+inputs, outputs and closure remain `/tmp/s2b-reader-repair-gate-20261020*`.
+
+Five failures expose the replay test helper's mechanical manifests:
+foreign entry copies and uses lacked the newly required source basis.
+The helper now takes the explicit fixture journals and records their
+genesis definition pins for the sources actually used, in canonical
+order. These descriptors remain fixture-authored, not native export
+admission. Reader checks and every test assertion remain unchanged,
+including intentionally missing definitions, values and snapshots and
+the missing foreign-journal diagnosis. Replay's compiler configurations
+and all seven archive-Git cases pass after this change.
+
+The other two gate failures are MCP HTTP stream-replacement assertions.
+A separate unchanged-file investigation first cannot bind its loopback
+server under the sandbox (`listen EPERM`); no case runs there. With local
+server access, all nine unchanged cases pass in 3.576710792 wall and
+2.044152 CPU seconds, starting load 1.9575/1.9736/2.1016 on the shared warm
+host. No MCP runtime, test, cohort or timing bound changes. The focused
+pass does not establish the original failure's cause or replace a gate.
+Exact source input inventories and natural closures are
+`/tmp/s2b-reader-repair-fixture-and-http-20261020*` and
+`/tmp/s2b-reader-repair-http-loopback-20261020*`. The changed fixture
+candidate still needs its own ordinary gate and complete fresh review.
