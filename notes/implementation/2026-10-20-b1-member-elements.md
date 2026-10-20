@@ -366,3 +366,23 @@ processes and natural closures are
 `/tmp/b1-k1-main-runtime-checks-20261020*` and `...runtime-checks-v2-20261020*`.
 The earlier failed selections are retained as their actual outcomes, not
 one passing pipeline. No full gate has run at this integration checkpoint.
+
+
+## Generated Page module before the final gate
+
+The owned Page generator closes naturally zero before this branch's first
+final gate. It refreshes `apps/room/page/assets.ts` for this combined source.
+The old Main module is retained at `/tmp/b1-k1-main-page-module-before-20261020.ts`,
+SHA-256 `d3ca772c082c78a456657eae9119d78b01d59290018427c1383f9ce449d4cab7`. The fresh module is SHA-256
+`d5afe13249a20b4a53ebe4187ad4ec2ce331b5d2473d8687bc10a2d900f2ec93`. No Page source, test, assertion, budget,
+permission or signed package changes. Raw build output is
+`/tmp/b1-k1-main-page-build-20261020.log`; natural wall/child CPU are
+0.306929167 / 0.219096000 seconds.
+The closed preflight result is
+`/tmp/builder-current-main-page-assets-preflight-20261020.json`.
+
+This adds the generated module to this branch's changed paths. The earlier
+prepared gate helper still names the pre-refresh head and remains unrun;
+it must not be used as a result for this source. The one ordinary final
+gate and full exact-head Source review remain due. No failed full gate is
+claimed or concealed on this branch, and no unchanged suite is repeated.
