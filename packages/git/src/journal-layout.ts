@@ -1,6 +1,6 @@
 /** Internal selected-prefix layout only. No route, alarm, exporter,
  * certificate, provider/write token or history/replay verdict. */
-import type { Entry } from "@generalbusiness/dap-contract";
+import type { Entry, Head } from "@generalbusiness/dap-contract";
 import { DOMAINS } from "@generalbusiness/dap-contract";
 import { canonicalize, domainRetainedJSON, entryHash, isEntry, parseStrict, rawRetainedJSON, scopeIdOf, timeMs, utf8 } from "@generalbusiness/artroom-bytes";
 import { journalObjectClosure, type JournalClosure } from "./journal-closure.ts";
@@ -54,7 +54,7 @@ async function namedBytes(work: JournalWork, size: number, where: string, read: 
   if (typeof bytes !== "string" || bytes.length > size || utf8(bytes).length !== size) return refuseJournal("input-mismatch", where);
   return bytes;
 }
-async function selectedEntries(selection: JournalSelection, input: JournalInputSource, work: JournalWork): Promise<readonly SelectedEntry[]> {
+export async function selectedEntries(selection: JournalSelection & { readonly after?: Head | null }, input: JournalInputSource, work: JournalWork): Promise<readonly SelectedEntry[]> {
   work.metadata(selection.entries.length * 128);
   const rows: SelectedEntry[] = [];
   for (const descriptor of selection.entries) {
@@ -63,7 +63,7 @@ async function selectedEntries(selection: JournalSelection, input: JournalInputS
     let entry: unknown;
     try { entry = parseStrict(bytes); if (canonicalize(entry) !== bytes) return refuseJournal("input-mismatch", where); }
     catch { return refuseJournal("input-mismatch", where); }
-    if (!isEntry(entry) || entry.seq !== descriptor.seq || !sameJournalScope(entry.at, selection.at) || entryHash(entry) !== descriptor.hash || entry.prev !== (rows.at(-1)?.descriptor.hash ?? null)) return refuseJournal("input-mismatch", where);
+    if (!isEntry(entry) || entry.seq !== descriptor.seq || !sameJournalScope(entry.at, selection.at) || entryHash(entry) !== descriptor.hash || entry.prev !== (rows.at(-1)?.descriptor.hash ?? selection.after?.hash ?? null)) return refuseJournal("input-mismatch", where);
     if (descriptor.seq === 0) {
       if (entry.input.type !== "genesis" || scopeIdOf(entry.input.seed) !== entry.at.scope || entry.input.seed.kind !== entry.at.kind || entry.input.inc !== entry.at.inc) return refuseJournal("input-mismatch", where);
     } else if (entry.input.type === "genesis") return refuseJournal("input-mismatch", where);
@@ -79,12 +79,12 @@ async function selectedEntries(selection: JournalSelection, input: JournalInputS
   // its actual native input variant, without running a dependency planner.
   for (const origin of origins) {
     work.check();
-    if (rows[origin.at.seq]?.entry.input.type !== origin.input) return refuseJournal("input-mismatch", `origin:${origin.at.seq}`);
+    if (rows[origin.at.seq - (selection.after ? selection.after.seq + 1 : 0)]?.entry.input.type !== origin.input) return refuseJournal("input-mismatch", `origin:${origin.at.seq}`);
   }
   const copies = new Map(selection.objects.filter(object => object.key.kind === "entry").map(object => [object.key.digest, object]));
   const bindings = new Set<string>();
   for (const [content, copy] of copies) for (const consumer of copy.consumers) {
-    const entry = rows[consumer.origin.at.seq]?.entry;
+    const entry = rows[consumer.origin.at.seq - (selection.after ? selection.after.seq + 1 : 0)]?.entry;
     if (!copy.foreign || !entry?.uses.some(use => use.content === content && canonicalize(use.fact) === canonicalize(copy.foreign!.fact))) return refuseJournal("input-mismatch", `foreign-use:${consumer.origin.at.seq}`);
     bindings.add(`${consumer.origin.at.seq}:${content}`);
   }
@@ -95,7 +95,7 @@ async function selectedEntries(selection: JournalSelection, input: JournalInputS
   }
   return rows;
 }
-async function selectedRetained(selection: JournalSelection, input: JournalInputSource, work: JournalWork): Promise<ReadonlyMap<string, JournalRetainedFile>> {
+export async function selectedRetained(selection: JournalSelection, input: JournalInputSource, work: JournalWork): Promise<ReadonlyMap<string, JournalRetainedFile>> {
   const rows = new Map<string, JournalRetainedFile>();
   for (const selected of selection.objects) {
     const key = selected.key, where = journalKeyName(key);
