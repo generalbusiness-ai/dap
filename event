@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4e43a09c8fa1bd318c78d09dd1ee7d8aaaa688b9","text":"Merge retired a covered predecessor; the successor is at packages/mcp/src/metrics.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:4fe69d3c0c5631c7977ebeecbae03c7488ef13df","text":"Merge retired a covered predecessor; the successor is at packages/package-graph/src/fan-in.ts."}
