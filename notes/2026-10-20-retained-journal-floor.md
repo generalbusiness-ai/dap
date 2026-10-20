@@ -103,6 +103,15 @@ directories when that set passes 4,096 names
 `packages/git/src/journal-segments.ts:65-88`). v2 does not use that
 rule.
 
+The scope finds the pass that holds a retained file without reading the
+archive. Each row of `retained_input` and `retained_value`
+(`sqlite.ts:106-107`) gains a column `pass`: the `first` of the
+confirmed pass that wrote its file, or null when no confirmed pass wrote
+it. The scope keeps every retained row for its life (section 5), so each
+retained key has one row. The column is archive bookkeeping, as the
+archive row is. It is not state, and the state digest does not include
+it. Section 2.3, rules 6 and 9, keep it.
+
 Each pass manifest carries the S2b fields for its own entries: the
 retained inputs that its entries name, and the `foreignSources` basis of
 each entry copy that it retains. Each retained input in a pass manifest
@@ -123,9 +132,13 @@ file.
 5. A segment closes at 1,000 entries, at the object bound of 15.4, or at
    the pass's cutoff. So a pass never rewrites a segment of an earlier
    pass, and never reads an entry before its first.
-6. A retained input that an earlier pass already wrote is listed again
-   in the new pass manifest when a new entry names it, with the `pass`
-   of the earlier pass. The file is not written twice and does not move.
+6. For each retained key that a new entry names, the pass reads that
+   key's row by its primary key. When `pass` is null, the pass writes
+   the file in its own directory. Otherwise it lists the key with that
+   `pass`, and does not write or move the file. A pass reads at most 512
+   rows, and each read is charged a fixed amount to the archive budget's
+   `metadata`. No pass reads an older pass's manifest or tree to find a
+   key.
 7. A pass rewrites only the tree objects on the paths of the files it
    adds. Each of those trees lists at most 1,000 names under `passes/`,
    `segments/` and `retained/`, and a fixed number elsewhere. The pass
@@ -135,6 +148,19 @@ file.
    earlier passes.
 8. A room bound to an archive after it starts, as Room A is, archives
    from position 0 in as many passes as it needs.
+9. The `pass` column changes only in these places:
+   - In the transaction that confirms a pass (`archive-row.ts:134-140`),
+     the scope sets `pass` to that pass's `first` for each key that the
+     pending manifest lists as written by that pass. That is at most 512
+     rows.
+   - An abandoned pass sets nothing, so its keys stay null and the next
+     pass writes them.
+   - The confirmation of a v1 conversion (2.5) sets `pass` to 0 for each
+     key that the v1 manifest lists.
+   - A new archive binding starts again from position 0 and sets every
+     `pass` to null.
+   The column and the archive row are in the same store, so a restart
+   keeps both, and they always agree.
 
 ### 2.4 Reader rules
 
@@ -565,13 +591,19 @@ Each witness runs on a test host with the native store.
    only its new entries. The clone reads past 4,096 entries and replays
    offline through A2. A pass on a room bound after it started begins
    at 0.
-2. **Tree work.** After 10,000 confirmed passes of one entry each, one
-   more pass rewrites at most the trees on its paths. A probe counts the
-   tree names it reads and writes, and the count stays within the bound
-   of 2.3, rule 7. Then nine passes each add 512 new retained inputs of
+2. **Tree work.** A scope makes 10,000 confirmed passes of one entry
+   each, and the pass from position 3,700 also writes one retained
+   input. One more pass then rewrites at most the trees on its paths. A
+   probe counts the tree names that this pass reads and writes, and the
+   count stays within the bound of 2.3, rule 7. Then nine passes each add 512 new retained inputs of
    one kind, 4,608 in all, and one more pass adds one. That pass writes
    one retained file in its own directory, no earlier retained path
-   changes, and the probe count stays within the same bound.
+   changes, and the probe count stays within the same bound. Then the
+   scope restarts, and one more pass names a key that the pass from
+   position 3,700 wrote and a key that no pass wrote. It lists the first
+   key with `pass` 3,700 and writes the second in its own directory. It
+   reads two key rows and no manifest or tree of an older pass, and no
+   file is written twice or moved.
 3. **v2 reader refusals.** A gap between passes, an overlap, a retained
    file that no pass lists, a retained input whose `pass` is later or
    does not hold its file, an entry copy without its `foreignSources`
@@ -579,7 +611,9 @@ Each witness runs on a test host with the native store.
    999,999,999,999 and a broken chain between passes are each refused.
    Every existing v1 reader test passes unchanged.
 4. **From v1.** A scope with a confirmed v1 archive through 99 converts
-   and continues in v2 from 100; the clone reads and replays from 0. A
+   and continues in v2 from 100; the clone reads and replays from 0. The
+   converted keys have `pass` 0, and a v2 pass that names one of them
+   lists it and does not write it again. A
    scope with a pending v1 pass first confirms it, then converts. A
    floor entry that names a v1 commit is not offered.
 5. **Choice of F.** A scope at 30,000 entries, with a receipt through
