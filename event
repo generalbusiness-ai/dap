@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at notes/2026-10-20-chat-composed-views.md","body":{"commit":"a9094eb1de83d1f2038f050d1015cce2ea12f99d","path":"notes/2026-10-20-chat-composed-views.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:a34928d0adb60fb0c4c37396609053ad5c8851c0","text":"Merge retired a covered predecessor; the successor is at notes/2026-10-20-chat-composed-views.md."}
