@@ -8,7 +8,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { deflateSync } from "node:zlib";
-import { canonicalize, utf8 } from "@generalbusiness/artroom-bytes";
+import { canonicalize, isEntry, utf8 } from "@generalbusiness/artroom-bytes";
 import { JournalObjects, type JournalFormat, type JournalObject } from "../../git/src/journal-objects.ts";
 import { JournalWork, type JournalBudget, type JournalCost } from "../../git/src/journal-work.ts";
 import { archiveSegments } from "../../git/src/journal-segments.ts";
@@ -42,12 +42,24 @@ const keyOf = (input: MemoryScope["retained"][number]): ArchiveRetainedName => {
   return input.kind === "value" ? { kind: input.kind, domain: input.domain!, digest: input.digest } : { kind: input.kind, digest: input.digest };
 };
 
-export function mechanicalCommit(dir: string, scope: MemoryScope, format: JournalFormat): string {
+export function mechanicalCommit(dir: string, scope: MemoryScope, format: JournalFormat, sources: readonly MemoryScope[]): string {
   const work = new JournalWork(budget()), objects = new JournalObjects(format, work), held = new Map<string, { key: ArchiveRetainedName; data: Uint8Array }>();
   for (const input of scope.retained) { const key = keyOf(input); held.set(journalKeyName(key), { key, data: utf8(input.bytes) }); }
   const retained = [...held].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([, value]) => value), last = scope.entries.at(-1)!;
   const head = { v: 1, scope: scope.scope, through: last.seq, hash: last.hash };
-  const manifest = { v: 1, through: { seq: last.seq, hash: last.hash }, parent: null, format, entries: [0, last.seq], retained: retained.map(input => input.key), omitted: [] };
+  const used = new Set(scope.entries.flatMap(row => {
+    const entry: unknown = JSON.parse(row.bytes); assert.ok(isEntry(entry));
+    return entry.uses.map(use => canonicalize(use.fact.at));
+  }));
+  // These are fixture-authored descriptors, not native export admission.
+  // Keep the consumer's direct copies and source birth pins in the wire input.
+  const foreignSources = sources.filter(source => used.has(canonicalize(source.scope))).map(source => {
+    const birth: unknown = JSON.parse(source.entries[0]!.bytes);
+    assert.ok(isEntry(birth) && birth.input.type === "genesis");
+    return { at: source.scope, pin: birth.input.seed.definition };
+  }).sort((a, b) => canonicalize(a.at) < canonicalize(b.at) ? -1 : 1);
+  assert.equal(foreignSources.length, used.size, "each fixture use has its source journal");
+  const manifest = { v: 1, through: { seq: last.seq, hash: last.hash }, parent: null, format, entries: [0, last.seq], retained: retained.map(input => input.key), omitted: [], ...(foreignSources.length ? { foreignSources } : {}) };
   const segments = archiveSegments(scope.entries, 8 * 1024 * 1024);
   const files = journalPhysicalFiles(segments, retained, utf8(canonicalize(head)), utf8(canonicalize(manifest)), work);
   const tree = journalFileTree(files, objects, work), seconds = Math.floor(Date.parse(JSON.parse(last.bytes).time) / 1000), commit = objects.commit(tree, null, seconds);
@@ -57,7 +69,7 @@ export function mechanicalCommit(dir: string, scope: MemoryScope, format: Journa
 export function clone(scopes: readonly MemoryScope[], format: JournalFormat): string {
   const root = scratch(), upstream = join(root, "upstream.git"), target = join(root, "clone.git");
   git(root, ["init", "-q", "--bare", `--object-format=${format}`, upstream]);
-  for (const scope of scopes) mechanicalCommit(upstream, scope, format);
+  for (const scope of scopes) mechanicalCommit(upstream, scope, format, scopes);
   git(root, ["-c", "protocol.file.allow=always", "clone", "--mirror", "--no-hardlinks", "--quiet", upstream, target]);
   git(target, ["remote", "remove", "origin"]); assert.equal(git(target, ["remote"]), ""); git(target, ["fsck", "--full", "--strict"]);
   return target;

@@ -12,14 +12,17 @@ import type { CallResult } from "../src/service.ts";
 const scope: ScopeRef = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "lane" };
 const membership: ScopeRef = { ...scope, kind: "membership" };
 const rule = "'counting.control' in viewer.grants and item.state = 'open' and ((viewer.member.member = '@alice' and item.id = 2) or (viewer.member.member = '@bob' and item.id = 4))";
-async function fixture(condition = rule, related = false, outcome: "accepted" | "unknown" = "accepted") {
+async function fixture(condition = rule, related = false, outcome: "accepted" | "unknown" = "accepted", withMembers = false) {
   const base = await applicationCounterPacket2(), board = base.package.presentation.views["board"]!;
   if (board.kind === "surface") throw Error("Item fixture required.");
   const definition = parseStrict(base.package.semantic.definitions[0]!.bytes) as DeclaredDefinition;
   definition.items["board"] = { ...definition.items["board"]!, many: true, max: 4 };
+  if (withMembers) definition.items["board"]!.parties = { ...definition.items["board"]!.parties,
+    worker: { fixed: false, required: false, list: false, author: false } };
   const id = definitionDigest(definition), { creates: _creates, ...semantic } = base.package.semantic;
   const { semantic: _semantic, ...presentation } = base.package.presentation;
-  const fields = { lastNumber: { from: { kind: "value", name: "lastNumber" }, of: { type: "int", min: 0, max: 100 }, nullable: false } };
+  const fields = { lastNumber: { from: { kind: "value", name: "lastNumber" }, of: { type: "int", min: 0, max: 100 }, nullable: false },
+    ...(withMembers ? { worker: { from: { kind: "party", name: "worker" }, of: { type: "member" }, nullable: true } } : {}) };
   const projections = Object.fromEntries(["queue", "record", "related"].map(name => [name, readApplicationProjection({ v: 1, definition: id, revision: "revision", sources: {
     board: { item: "board", read: name === "record" ? "item" : "many", states: ["finished", "open", "paused"], limit: name === "record" ? 1 : 4, fields },
   } })]));
@@ -35,12 +38,16 @@ async function fixture(condition = rule, related = false, outcome: "accepted" | 
     { id: 3, type: "board", state: "paused", revision: 1, fields: { lastNumber: 93 } },
     { id: 4, type: "board", state: "open", revision: 1, fields: { lastNumber: 44 } },
   ];
+  if (withMembers) rows = rows.map(row => ({ ...row, fields: { ...row.fields,
+    worker: { membership, member: row.id === 2 ? "@alice" : row.id === 3 ? "@hidden" : "@bob" } } }));
   const queries: ApplicationProjectionQuery[] = [];
+  const memberReads: ScopeRef[] = [];
   let relatedFailure: "scope" | "projection" | "forbidden" | null = null, head = 9;
   const source = new DeclaredViewSource(packet.bytes, packet.ids.release, {
     installation: async () => ({ scope, membership, directory: { ...scope, kind: "directory" }, rules: { ...scope, kind: "rules" },
       destination: { ...scope, kind: "destination" }, definition: id, ids: packet.ids, item: 7 }),
     viewer: async () => viewer, actions: async () => viewer?.grants ?? [],
+    members: async reference => { memberReads.push(reference); return null; },
     projection: async query => {
       queries.push(structuredClone(query));
       const related = query.projection === "related";
@@ -57,9 +64,25 @@ async function fixture(condition = rule, related = false, outcome: "accepted" | 
     await admit(); signed++;
     return { structuredContent: { answer: outcome }, content: [], isError: false } satisfies CallResult;
   }, async () => { throw Error("No original request is unresolved."); });
-  return { source, sessions, queries, signed: () => signed, viewer: (value: typeof viewer) => { viewer = value; },
+  return { source, sessions, queries, memberReads, signed: () => signed, viewer: (value: typeof viewer) => { viewer = value; },
     rows: (value: typeof rows) => { rows = value; head++; }, relatedFailure: (value: typeof relatedFailure) => { relatedFailure = value; } };
 }
+
+// Invariant: identity resolution cannot disclose rows that a routed queue
+// withheld, or turn an unknown assignment into a member lookup.
+test("routed identity tables contain only the displayed row and unknown assignments make no member read", async () => {
+  const f = await fixture(rule, false, "accepted", true);
+  await f.sessions.open("member-queue", "queue");
+  const display = f.sessions.display("member-queue");
+  expect(Object.values(display.members!.records).map(record => record.ref.member)).toEqual(["@alice"]);
+  expect(JSON.stringify(display)).not.toContain("@bob");
+  expect(JSON.stringify(display)).not.toContain("@hidden");
+  expect(f.memberReads).toEqual([membership]);
+  const unknown = await fixture("item.missing", false, "accepted", true);
+  await unknown.sessions.open("unknown-queue", "queue");
+  expect(unknown.sessions.display("unknown-queue").members).toBeUndefined();
+  expect(unknown.memberReads).toEqual([]);
+});
 
 test("carousel routes from trusted member, grants and item state without exposing other rows; explicit records retain ordinary grants", async () => {
   const f = await fixture();

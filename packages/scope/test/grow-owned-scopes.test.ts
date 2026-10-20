@@ -3,13 +3,14 @@
  * clock and setup inspector; no browser, device/provider or deployment. */
 import { env, runInDurableObject } from "cloudflare:test";
 import { expect, inject, test } from "vitest";
-import { canonicalize, isScopeRef, isSeed, scopeIdOf, unb64url } from "@generalbusiness/artroom-bytes";
-import { readApplicationPackage2 } from "@generalbusiness/artroom-bytes/application-v2";
+import { canonicalize, isScopeRef, isSeed, scopeIdOf, textDigest, unb64url } from "@generalbusiness/artroom-bytes";
+import { isApplicationJournalSource, readApplicationPackage2 } from "@generalbusiness/artroom-bytes/application-v2";
 import { DEVICE_APPLICATION_COHORT as C, platform } from "@generalbusiness/dap-platform";
 import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-mcp";
 import { DEVICE_COMMAND, PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { ownerReservations, validateDefinition } from "@generalbusiness/dap-derive";
-import { SqliteStore } from "../src/sqlite.ts";
+import { SqliteStore, type SqlValue } from "../src/sqlite.ts";
+import { applicationProjectionData } from "../src/applications/projection-data.ts";
 import { CAPABILITY_CODE } from "../src/ports.ts";
 import { ScopeHandle, httpTransport, requestSession, secretSigner, sessionRequest } from "@generalbusiness/artroom-client";
 import { httpSource, verify } from "@generalbusiness/artroom-replay";
@@ -36,6 +37,7 @@ test("maintained Grow Site creates a native Room and opens its owned grid throug
     await life.wait(async () => M.did(rita, "first-key", { fields: { member: seat }, expected: await M.expected({ roster: 0, member: seat }) }));
     for (const node of [D, A]) { life.outside(node.name, (given, sql) => hostOutside(given, sql, bindings, peer.fetch)); await life.wait(() => node.restart()); }
     const membership = await life.wait(() => M.at()), directory = await life.wait(() => D.at());
+    const controller = { membership, member: "@rita" as const };
     const port: ServerPort = { mode: "generic", service: "https://scopes.test", signer: secretSigner(rita.secret), custody: memoryStore(), now: life.now,
       config: { read: async () => ({ service: "https://scopes.test", repository: { directory, membership, rules: A.name, destination: G.name } }), addRoot: async () => { throw Error("Use the installed Site."); } },
       applicationFetch: peer.fetch, fetch: (url, init) => life.wait(() => routed(url, init)) };
@@ -78,6 +80,50 @@ test("maintained Grow Site creates a native Room and opens its owned grid throug
     expect((await life.wait(() => views.call("view_site", { view: "site" }))).structuredContent).toMatchObject({ status: "ready", identity: { subject: { scope: site.name } } });
     expect((await life.wait(() => views.call("view_grid", { view: "room-grid", scope: roomAt }))).structuredContent).toMatchObject({ status: "ready" });
     expect((await life.wait(() => views.call("view_read", { view: "room-grid" }))).structuredContent).toMatchObject({ display: { query: { scope: roomAt }, card: { declared: { kind: "surface", data: layered.ok ? layered.value : null, surface: { opens: { bench: "bench-record" }, backScope: siteAt } } } } });
+    // The exact probe entry supplies its recorded person, through the real
+    // native owner and issued session. Default package/roster grants stay.
+    const probe = await life.wait(async () => room.did(rita, "probe", { on: bench, fields: { moisture: 31 }, expected: await room.expected({ on: bench }) }));
+    expect(await life.owner.required(() => handle.applicationProjection({ ...query, projection: "layers" })))
+      .toMatchObject({ ok: true, value: { sources: { bench: [{ fields: { lastProber: controller } }] } } });
+    // A plain read retains the opened snapshot. Open after the new fact to
+    // capture its head rather than treating the earlier card as refreshed.
+    expect((await life.wait(() => views.call("view_grid", { view: "native-person-prober", scope: roomAt }))).structuredContent).toMatchObject({ status: "ready" });
+    const memberView = (await life.wait(() => views.call("view_read", { view: "native-person-prober" }))).structuredContent;
+    expect(memberView).toMatchObject({ display: { members: { records: {
+      [canonicalize(controller)]: { identity: { handle: "@rita", kind: "person" } },
+    } } } });
+    // Exact native owner boundary over the actual maintained bench. Select
+    // only its declared signer field: unrelated journal/time completeness
+    // remains a separate obligation of a full Grow grid read.
+    await life.wait(() => runInDurableObject(room.object, (_instance, state) => {
+      const sql = { exec: (query: string, ...args: SqlValue[]) => state.storage.sql.exec(query, ...args), transaction: <T>(work: () => T) => state.storage.transactionSync(work) };
+      const store = new SqliteStore(sql), declared = packet.package.semantic.projections["layers"]!, source = declared.sources["bench"]!;
+      if (isApplicationJournalSource(source)) throw Error("The maintained bench source must be an item.");
+      const checked = validateDefinition(JSON.parse(packet.package.semantic.definitions.find(part => part.id === roomId)!.bytes), PROPOSED_BOUNDS);
+      if (!checked.ok) throw Error("The maintained Room must validate.");
+      const frame = { scope: store.scope()!, pinned: { definition: checked.definition } } as Parameters<typeof applicationProjectionData>[1];
+      const projection = { ...declared, sources: { bench: { ...source, fields: { lastProber: source.fields["lastProber"]! } } } };
+      const read = () => applicationProjectionData(sql, frame, projection, {}, () => true);
+      const before = read();
+      expect(before).toMatchObject({ ok: true, value: { sources: { bench: [{ fields: { lastProber: controller } }] } } });
+      const record = state.storage.sql.exec("SELECT record FROM item WHERE id=?", bench).one()["record"] as string;
+      for (const fault of ["hash", "retained", "legacy"]) {
+        const rollback = new Error("TEST rollback of signer evidence fault");
+        try { state.storage.transactionSync(() => {
+          if (fault === "hash") {
+            const item = JSON.parse(record); item.refs.lastProbe = { at: roomAt, seq: probe, hash: textDigest("PUBLIC TEST mismatched retained bench fact") };
+            state.storage.sql.exec("UPDATE item SET record=? WHERE id=?", canonicalize(item), bench).toArray();
+          } else if (fault === "retained") {
+            state.storage.sql.exec("DELETE FROM entry WHERE seq=?", probe).toArray();
+            expect(state.storage.sql.exec("SELECT seq FROM entry_fact_signer WHERE seq=?", probe).toArray()).toEqual([]);
+          } else state.storage.sql.exec("DELETE FROM entry_fact_signer WHERE seq=?", probe).toArray();
+          expect(read(), fault).toMatchObject({ ok: true, value: { sources: { bench: [{ fields: { lastProber: null } }] } } });
+          throw rollback;
+        }); } catch (error) { if (error !== rollback) throw error; }
+        expect(read()).toEqual(before);
+        expect(state.storage.sql.exec("SELECT record FROM item WHERE id=?", bench).one()["record"]).toBe(record);
+      }
+    }));
     // Exercise the production viewer adapter with an issued native session,
     // current membership grants and both declared related Site reads. There
     // is no task yet: no presence inference or synthetic task is needed.

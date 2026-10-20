@@ -1,19 +1,25 @@
 /** Trusted browser presentation integration, not a hostile-code boundary.
  * Package code receives a DOM root, native data and declared navigation. */
-import type { ApplicationProjectionData, ScopeRef } from "@generalbusiness/dap-contract";
+import type { ApplicationProjectionData, MemberRef, ScopeRef } from "@generalbusiness/dap-contract";
 import type { DeclaredSurface } from "../src/views/types.ts";
+import type { MemberTable } from "../src/views/member-types.ts";
+import { memberElement, memberStyleElement } from "./member.ts";
+
+export type SurfaceData = ApplicationProjectionData & { members: MemberTable };
 
 export interface SurfaceApi {
   readonly root: ShadowRoot;
   readonly signal: AbortSignal;
-  onData(render: (data: ApplicationProjectionData) => void): void;
+  onData(render: (data: SurfaceData) => void): void;
+  member(ref: MemberRef): HTMLElement;
   open(name: string, items?: Readonly<Record<string, number>>, scope?: ScopeRef): Promise<void>;
 }
 declare global { interface Window { dapSurface?: SurfaceApi } }
 interface Panel {
   element: HTMLElement;
   controller: AbortController;
-  render?: (data: ApplicationProjectionData) => void;
+  render?: (data: SurfaceData) => void;
+  members: MemberTable;
   last?: string;
   error?: Error;
 }
@@ -21,7 +27,7 @@ interface Panel {
 export class SurfacePanels {
   readonly #panels = new Map<string, Panel>();
   show(surface: DeclaredSurface, data: ApplicationProjectionData,
-    open: SurfaceApi["open"], current: () => boolean): HTMLElement {
+    open: SurfaceApi["open"], current: () => boolean, members: MemberTable = { records: {}, overflow: 0 }): HTMLElement {
     const key = JSON.stringify([surface.screen, surface.resource, surface.html, [data.scope.scope, data.scope.inc, data.scope.kind]]);
     let panel = this.#panels.get(key);
     if (!panel) {
@@ -31,11 +37,15 @@ export class SurfacePanels {
       scripts.forEach(script => script.remove());
       const element = document.createElement("section"), root = element.attachShadow({ mode: "open" }), controller = new AbortController();
       element.className = "declared-surface";
-      root.append(...[...documentOf.head.querySelectorAll("style"), ...documentOf.body.childNodes].map(node => document.importNode(node, true)));
-      panel = { element, controller };
+      root.append(memberStyleElement(), ...[...documentOf.head.querySelectorAll("style"), ...documentOf.body.childNodes].map(node => document.importNode(node, true)));
+      panel = { element, controller, members: structuredClone(members) };
       this.#panels.set(key, panel);
       const retained = panel;
       const api: SurfaceApi = Object.freeze({ root, signal: controller.signal,
+        member(ref: MemberRef) {
+          if (controller.signal.aborted || !current()) throw Error("This surface is no longer current.");
+          return memberElement(ref, retained.members);
+        },
         onData(render: Panel["render"]) {
           if (typeof render !== "function") throw Error("A surface renderer must be a function.");
           if (retained.render) throw Error("A surface registers one data renderer.");
@@ -64,9 +74,11 @@ export class SurfacePanels {
       finally { window.removeEventListener("error", failed); if (ownsSlot) delete window.dapSurface; }
     }
     if (panel.error) throw panel.error;
-    const encoded = JSON.stringify(data);
+    panel.members = structuredClone(members);
+    const currentData: SurfaceData = { ...data, members };
+    const encoded = JSON.stringify(currentData);
     if (encoded !== panel.last) {
-      panel.render?.(structuredClone(data));
+      panel.render?.(structuredClone(currentData));
       panel.last = encoded;
     }
     return panel.element;

@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 import { ItemQueryBudget, ItemQueryUnavailable } from "../src/item-query-budget.ts";
 import { applicationProjectionFactTimes } from "../src/applications/projection-fact-times.ts";
+import { applicationProjectionFactSigners } from "../src/applications/projection-fact-signers.ts";
 import { textDigest } from "@generalbusiness/artroom-bytes";
 import type { SqlValue } from "../src/sqlite.ts";
 
@@ -20,6 +21,29 @@ test("causal query SQL admits its 128th call and refuses the 129th before execut
   const session = new ItemQueryBudget("session", () => true);
   expect(() => session.sql("causal", raw).exec("SELECT 1")).toThrow(ItemQueryUnavailable);
   expect(calls).toBe(128);
+});
+
+// Invariant: signer metadata shares the existing source budget even after
+// a full item page; exhaustion prevents SQL. SQL answers are stand-ins.
+test("fact-signer metadata admits no entry bodies and cannot top up the source allowance", () => {
+  const scope = { scope: `sc_${"a".repeat(52)}`, inc: `in_${"a".repeat(26)}`, kind: "lane" as const };
+  const hash = textDigest("PUBLIC TEST exact recorded signer"), frame = { scope: { at: scope, head: { seq: 100, hash } } } as Parameters<typeof applicationProjectionFactSigners>[1];
+  const signer = { membership: { ...scope, kind: "membership" }, member: "@recorded" };
+  const refs = Array.from({ length: 100 }, (_, seq) => ({ seq, hash })), queries: string[] = [];
+  const sql = { exec(query: string, ...args: SqlValue[]) {
+    queries.push(query);
+    return { toArray: () => args.slice(0, -1).map(seq => ({ seq, hash, signer: JSON.stringify(signer) })) };
+  } };
+  const budget = new ItemQueryBudget("session", () => true);
+  budget.spend("page", { bodies: 100, payloadBytes: 200000, metadata: 16000 });
+  expect(applicationProjectionFactSigners(sql, frame, refs, budget)?.entries[99]?.signer).toEqual(signer);
+  expect(budget.admitted().total).toMatchObject({ bodies: 100, payloadBytes: 200000, metadata: 92800, candidates: 100, calls: 2 });
+  expect(queries.every(query => !/\bbytes\b/.test(query))).toBe(true);
+  queries.length = 0;
+  const exhausted = new ItemQueryBudget("session", () => true);
+  exhausted.spend("page", { metadata: 128 * 1024 - 76799 });
+  expect(() => applicationProjectionFactSigners(sql, frame, refs, exhausted)).toThrow(ItemQueryUnavailable);
+  expect(queries).toHaveLength(0);
 });
 
 // Invariant: composing G2p retains its unchanged local cap and also spends the parent allowance;

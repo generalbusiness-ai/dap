@@ -4,9 +4,9 @@ K3 replaces three copies of the browser storage protocol with `custodyKind`
 in `apps/room/page/src/custody.ts`. The connection, join and Start adapters
 declare their record kind, exact storage prefix, byte bound, decoder and
 public view. Their workflows and existing test assertions are unchanged.
-The current owned integration incorporates reviewed Main `13193f31`;
-its generated build and affected checks pass. The final gate and complete
-fresh review are still due. The original frozen implementation and its earlier passing
+The current owned integration incorporates reviewed and published Main
+`9c6d344c`. Its generated build and affected checks pass. The final gate
+and complete fresh review are still due. The original frozen implementation and its earlier passing
 gate below are historical, not approval or verification of this new tree.
 Its first required gate passed at code/test head `1e6aaa994c2a344d980746fbbcd1b5112ce2f370`, tree
 `3098ed1bb185f51160443ceab760433b5e3e36e5`: 1,927 Vitest cases passed,
@@ -15,9 +15,10 @@ The reporting candidate changes only this note after that run.
 
 Request: `1c59d16cf1513df9e038327aa8be6e56e96e4306`.
 Builder promise: `c837835c8cbd0f0c90040fea1ac16b668379f532`.
-Base: actual Main `dba3e76237250b6ce205d511691554de3d809baf`.
-This is interruptible consolidation work behind G5a, S2a and G5. It borrows
-no unreviewed Device or archive changes and grants no deployment authority.
+Original base: actual Main `dba3e76237250b6ce205d511691554de3d809baf`.
+This is interruptible consolidation behind the demo archive and P1 review.
+Its current integration imports reviewed Main changes and grants no
+deployment authority.
 
 ## Storage and validation
 
@@ -272,3 +273,49 @@ lock or permission changes. Exact original argv/log/closure and protected
 hashes are `/tmp/k3-integrate-tagline-main-20261020*`; shared preparation
 is `/tmp/builder-incorporate-tagline-main-20261020.py` and its closed result.
 The final source gate remains due at this clean integration checkpoint.
+
+
+## Published B1 and S2b Main integration
+
+The isolated merge of actual Main
+`9c6d344cbf498835c2811c98d9981e4a55930b36`, tree `d04e2d4b`, into
+`5bcfaf99` closes naturally one with one generated-asset conflict in
+0.057627625 wall / 0.056636 child CPU seconds. Main imports 67 changed
+paths since `248aab8f`; only `apps/room/page/assets.ts` overlaps K3's
+eight authored paths. All three original Git stages are saved before
+resolution, and all seven other authored files retain their original
+bytes and modes. Original command, log, closure and stages are
+`/tmp/k3-b1-main-integration-20261020*` and
+`/tmp/k3-b1-main-original-stages-20261020/manifest.json`.
+
+The actual Page generator rebuilds the sole conflicted module directly
+from merged source. No minified asset is hand-merged. The same original
+pipeline `9619` passes the shared-helper guard, all three Page compiler
+targets and twenty cases in eight selected files, including all custody
+kinds, old-writer compatibility, join/Start UI, sending and generated
+freshness. Whole pipeline time is 3.716923542 wall / 8.518613 child CPU
+seconds on shared warm macOS 27.0.1 arm64, starting load
+1.7915/2.4302/2.5044. The Page test phase alone takes 1.603441333 /
+3.894464 wall / CPU seconds. These are separate measured boundaries,
+not an exclusive-host result. All 2,592 tracked source bytes and modes
+stay exact during validation, the lock stamp matches and no package
+installs. Original generation and validation inputs, commands, logs,
+closure and regenerated module are
+`/tmp/k3-b1-main-owned-page-checks-20261020*`.
+
+Both full 2,592-file input snapshots are physically preserved at
+`/tmp/k3-b1-main-owned-inputs-20261020/{generation,validation}`, with
+exact bytes, hashes, modes and distinct regular inodes. The four custody
+implementation modules, compatibility case and old-writer fixture stay
+byte-exact to reviewed `ed140d42`. All 66 imported non-generated Main
+paths are exact to `9c6d344c`; only the generated combined asset requires
+rebuilding. Preservation receipt:
+`/tmp/k3-b1-main-preservation-20261020.json`.
+
+No decoder, storage key or byte, refusal, callback rule, assertion, grant,
+cohort or timeout changes. The scripted browser storage/service/lock
+boundary remains; this proves no browser persistence or native admission.
+No frozen review original, dependency or helper is edited or executed.
+This integration needs its own final ordinary gate and fresh complete
+eight-path review before a landing. P1's separate pending approval is
+not extended or imported here; no push or Cloudflare action occurs.
