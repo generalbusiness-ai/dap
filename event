@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:469931b694153e305467693fcf960cd23c47e1b3","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/support/grow-owned-session.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:46d9d446da7ed60883917f7b57493d22c4763273","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-19-k2-test-fixtures.md."}
