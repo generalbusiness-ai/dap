@@ -53,4 +53,32 @@ Dependencies are a verified physical copy of the current K1 finite grant:
 31 contained links. All originals are rechecked unchanged. The owned lock
 stamp matches; only the owned Vitest result cache is cleared. Zero installs.
 Receipt: `/tmp/g5-host-link-private-dependency-copy-20261020.json`.
-The full project gate is due once at the committed code head before review.
+The original `npm run gate` closes naturally zero at code head
+`2cafe68a568415ece40083d035356b0a83376b91`, tree
+`539455e8af84eeaa2d3e964c93c373fb6b2e7113`: 1,977 Vitest cases pass,
+three existing cases skip, and 31 Node checks and 55 Counter checks pass.
+The gate uses 553.540497292 seconds wall / 788.647495 seconds child CPU.
+Its outer wrapper uses 554.979235959 seconds including inventories.
+This is macOS 27.0.1 arm64, Node 26.12, npm 11.20, on a shared host with
+warm private dependencies; starting load averages are 2.113281, 1.839355
+and 1.882324. All 2,552 tracked source files keep their bytes and modes;
+only the owned Vitest result cache changes among dependencies. The lock
+stamp remains exact, the checkout remains clean, and no install occurs.
+
+The raw test log retains scripted reset and retention faults, four Git
+content-type warnings, an RPC disposal warning and an uncaught
+cross-Durable-Object I/O error involving `RefcountedCanceler`. The last
+two diagnostics remain unclassified. A passing exit does not establish
+runtime stability, disposal or drain completion.
+
+The closed gate log, preflight, postflight, closure and validation are
+`/tmp/g5-host-link-final-gate-20261020*`. The six phase files are in
+`/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.f8X22Fpv9m`;
+Counter output is in the exact `artroom-counting-node-0sz5nG` directory
+under that same temporary root. Review custody is limited to the explicit
+closed evidence map, not these path prefixes or adjacent files.
+
+Only this report changes after the code gate. Source and tests retain the
+gated tree's bytes; the final report commit records its separate tree.
+The document-only rule in `docs/testing.md` therefore keeps this original
+gate instead of repeating the whole suite.
