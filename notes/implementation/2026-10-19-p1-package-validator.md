@@ -902,3 +902,53 @@ this imports the native landing ancestry of code already present, with
 no regenerated, runtime or test change. Original command, pre-execution
 inventory and closure are `/tmp/p1-b1-actual-main-integration-20261020*`.
 This report update records that boundary before P1's first ordinary gate.
+
+
+## Repair raw Node loading after the first gate
+
+The first ordinary P1 gate at `2a817097`, tree `c2064455`, closes
+naturally one. All compiler, helper and whitespace checks pass. Vitest
+reports 2,012 passed, three failed and three skipped cases, in 420 passed,
+two failed and one skipped files. The three failures are the unchanged
+Replay raw Node executable checks: disconnected SHA-1 and SHA-256 clones,
+and no-argument usage. Node and Counting checks are not reached. Original
+`51343` takes 518.319865375 wall / 761.776017 CPU seconds on shared warm
+macOS 27.0.1 arm64, Node 26.12.0, npm 11.20.0; initial load is
+3.0986/2.0815/1.8838. All 2,611 source files remain exact, dependency
+changes are confined to the owned Vite cache, the lock stamp matches,
+and no packages install. Raw warnings are retained without attribution.
+Original records are `/tmp/p1-b1-main-gate-20261020*`; all gate inputs
+are preserved at `/tmp/p1-first-gate-inputs-20261020`.
+
+The new package-graph error uses a TypeScript parameter property, which
+Node's strip-only loader rejects. Explicit readonly fields and constructor
+assignments preserve its reason, path and message. The first focused
+repair then exposes another import issue: derive's new package validator
+makes Bytes' application error classes reachable from Replay's raw Node
+entrypoint. Five such classes also use parameter properties. That focused
+run closes naturally one with 30 passed and the same three failed CLI
+assertions; generators and package-graph typechecking pass. Its exact
+2,611-file generation and validation inputs are preserved separately at
+`/tmp/p1-node-strip-v1-inputs-20261020`, with original phase records at
+`/tmp/p1-node-strip-repair-focused-20261020*`. Nothing is replayed or
+classified as a passing combined pipeline.
+
+All five Bytes constructors now use explicit fields and assignments,
+with the same error class inheritance, defaults, messages and values.
+Bytes and package-graph enable `erasableSyntaxOnly` to reject this syntax
+during compilation. The separate changed-code focused run `18438` closes
+naturally zero: both actual generators, Bytes source/test typechecking,
+and 33 owning cases in six files pass. These include both raw Node clone
+cases, usage, package graphs, codecs and generated Page/MCP freshness.
+The owning test phase takes 13.051191459 wall / 16.412188 CPU seconds;
+initial load is 2.1274/1.8848/1.9233 on the same shared warm host. Source
+bytes/modes remain exact during validation, the lock stamp matches, and
+no packages install. Records are
+`/tmp/p1-node-strip-repair-focused-v2-20261020*`; exact generation and
+validation inputs are `/tmp/p1-node-strip-v2-inputs-20261020`.
+
+No CLI assertions, expected statuses, bounds, timeouts or cohorts change.
+The original real executable failures distinguish the loader fault; no
+mutation sweep is run. Actual generators rebuild served assets from the
+changed source. A new ordinary gate on the changed code and complete
+exact-head review remain due.

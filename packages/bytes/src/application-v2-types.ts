@@ -7,7 +7,8 @@ import { ApplicationPackageError } from "./application-types.ts";
 import type { PackageComposition, PackageFinding } from "@generalbusiness/artroom-package-graph";
 export type { PackageComposition, PackageFinding } from "@generalbusiness/artroom-package-graph";
 export class ApplicationPackageValidationError extends ApplicationPackageError {
-  constructor(readonly findings: readonly PackageFinding[]) { super("invalid"); }
+  readonly findings: readonly PackageFinding[];
+  constructor(findings: readonly PackageFinding[]) { super("invalid"); this.findings = findings; }
 }
 export interface ApplicationSemantics2 extends Omit<ApplicationSemantics, "v" | "projections">, PackageComposition {
   readonly v: 2;

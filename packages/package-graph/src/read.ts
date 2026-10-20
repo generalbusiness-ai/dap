@@ -4,8 +4,15 @@
 import type { Digest } from "@generalbusiness/dap-contract";
 import { PACKAGE_COMPOSITION_LIMITS as B, type PackageComposition } from "./types.ts";
 
+type CompositionReason = "bounds" | "unsupported-form";
 export class PackageCompositionError extends Error {
-  constructor(readonly reason: "bounds" | "unsupported-form", readonly path: string, detail: string) { super(`${reason} at ${path}: ${detail}`); }
+  readonly reason: CompositionReason;
+  readonly path: string;
+  constructor(reason: CompositionReason, path: string, detail: string) {
+    super(`${reason} at ${path}: ${detail}`);
+    this.reason = reason;
+    this.path = path;
+  }
 }
 const fail = (path: string, detail: string): never => { throw new PackageCompositionError("bounds", path, detail); };
 const object = (value: unknown, path: string): Record<string, unknown> => value !== null && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : fail(path, "is an object");

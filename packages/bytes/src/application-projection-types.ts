@@ -57,7 +57,8 @@ export interface ApplicationProjectionDeclaration {
   readonly definition: ApplicationDefinition;
 }
 export class ApplicationProjectionError extends Error {
-  constructor(readonly reason: "invalid" | "limit" | "binding" | "incomplete" | "stale" | "unavailable") { super("application-projection-" + reason); }
+  readonly reason: "invalid" | "limit" | "binding" | "incomplete" | "stale" | "unavailable";
+  constructor(reason: "invalid" | "limit" | "binding" | "incomplete" | "stale" | "unavailable") { super("application-projection-" + reason); this.reason = reason; }
 }
 
 /** The one constructor path for a refused application projection. */
