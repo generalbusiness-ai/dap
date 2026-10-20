@@ -347,7 +347,7 @@ inventory, not a claim that every domain scenario is duplicated.
 | Package | Before | Current | Change |
 | --- | ---: | ---: | ---: |
 | Derive | 10,312 | 10,309 | -3 |
-| Platform | 5,851 | 5,841 | -10 |
+| Platform | 5,851 | 5,848 | -3 |
 | Scope | 21,402 | 21,411 | +9 |
 | MCP | 7,829 | 7,852 | +23 |
 
@@ -355,7 +355,7 @@ The first peer extraction adds five lines overall; the portable shared
 MCP module now adds 21 in total, including explicit runtime ports and
 boundary comments. The Scope application builders add 29; the Platform
 helpers remove 10; the Derive helper adds four. The current combined
-increase is 19 after the Scope, MCP and Derive entry work. The Scope Node
+increase is 26 after the four packages' fixture-entry work. The Scope Node
 entry adds four lines and the Worker entry removes27 by coalescing imports;
 MCP signer sharing adds eight. No overall line reduction is claimed.
 Full per-file baseline counts/hashes are in
@@ -425,3 +425,45 @@ parser API; the transformation uses the checkout's already pinned
 Rolldown TypeScript parser, as the earlier K2 preservation tools do. No
 package was installed. Platform's internal entry and actual Main/G5
 integration remain ahead of the final gate and Source.
+
+
+## Platform internal fixture entry
+
+`packages/platform/test/fixtures-entry.ts` re-exports the small judgment
+core and the private domain builders used by cases. All nine original
+fixture/support modules remain byte-exact to this phase's saved Derive
+checkpoint `fc05a99a1`. Private modules continue importing their own core;
+the existing Platform `./testing` export is unchanged. The new entry is
+internal to this checkout's cases and is not a public SDK expansion.
+
+All 20 affected files use one entry, replacing 23 fixture imports. Actor
+bindings keep their original source: `membershipRita`, `creationRita` and
+`destinationRita`, with the corresponding other actors, explicitly
+re-export the original domain module's names. Each case aliases them back
+to its original locals. The rules-scope rules also retain their distinct
+name. The parser verifies every original module/name/type-only binding;
+all nonfixture-import source remains byte-exact. No case, assertion,
+clock, deadline, grant or domain data changes.
+
+Original process 61365 naturally exits zero. Platform's owning source/test
+compilers and all 20 affected files/179 existing cases pass. Cost is
+3.3492 seconds outer elapsed and 12.4888 seconds child CPU on the shared
+warm macOS arm64 host. Raw logs/closure use
+`/tmp/artroom-k2-platform-canonical-focused-20261020-`; the exact source and
+binding-preservation record is
+`/tmp/artroom-k2-platform-canonical-entry-20261020.json`.
+The new entry has ten lines and import coalescing removes three, adding
+seven in this phase. Platform now has 5,848 test TypeScript lines, three
+fewer than the original 5,851-line inventory. Across all four packages,
+K2 remains 26 lines larger before actual Main/G5 integration. Clarity of
+the supported entries, rather than an overall line reduction, is the result.
+
+The supported entries are now Derive/Platform `test/fixtures-entry.ts`,
+Scope `test/fixtures.ts` for portable Node consumers plus
+`test/fixtures-native.ts` for Worker lifetimes, and MCP `test/fixtures.ts`
+for Node consumers plus `test/fixtures-native.ts` for native consumers.
+Existing public testing entries and private domain modules retain their
+separate roles. Actual Main/S2a/G5 integration, accounting for their newer
+cases and import consumers, remains ahead of K2's final gate and complete
+Source. The earlier grouped MCP HTTP failure remains unclassified; its
+unchanged isolated file pass is a separate observation.

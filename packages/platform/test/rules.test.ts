@@ -6,7 +6,7 @@ import type { ActJudgment, Item, PlatformRule, RuleGiven } from "@generalbusines
 import { d, t } from "@generalbusiness/dap-derive/testing";
 import { definitions } from "../src/index.ts";
 import { FIRST_ACTIONS, MEMBERSHIP, NO_MEMBER, ROLE_LISTS, ROLE_TABLE, actionsIn, isActions, membershipRules, standingOf, type Role } from "../src/membership.ts";
-import { Roster, paul, rita, sam, una, vic } from "./support.ts";
+import { Roster, membershipPaul as paul, membershipRita as rita, membershipSam as sam, membershipUna as una, membershipVic as vic } from "./fixtures-entry.ts";
 
 // Every scope here is a `Roster` of test support: a membership scope in memory, below a made-up office, which is a STAND-IN for the
 // directory. Every rule of membership is the platform package's: the eleven of the authority note's table of marks, at its revision 28.

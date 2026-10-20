@@ -5,8 +5,7 @@ import { canonicalize, definitionDigest, factRefOf, intentDigest, newIncarnation
 import { clockOf, derivable, judgeGenesis, runnable, valueDigest, type Item, type Judgment, type OutcomeRule, type PlatformRule, type RuleGiven } from "@generalbusiness/dap-derive";
 import { Ledger, T0, creation, desk, deskDefinition, t, ticket, ticketDefinition } from "@generalbusiness/dap-derive/testing";
 import { DIRECTORY, directory, directoryMembership, directoryRules, membershipId, platform, repositoryName } from "../src/index.ts";
-import { rules as rulesScopeRules, rulesScopeDefinition } from "./support-rules.ts";
-import { Directory, directoryDefinition, rita, sam, scripted, una, vic } from "./support-creation.ts";
+import { rulesScopeRules, rulesScopeDefinition, Directory, directoryDefinition, creationRita as rita, creationSam as sam, scripted, creationUna as una, creationVic as vic } from "./fixtures-entry.ts";
 
 // Every directory here is a `Directory` of test support: a directory in memory that a register in memory created, by its own rules,
 // with children and lanes whose entries are SCRIPTED, made by hand. The rows and the rules that are tested are the platform

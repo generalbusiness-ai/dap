@@ -9,7 +9,7 @@ import { COLLECT_MOST, DESTINATION, DESTINATION_KINDS, NAMED_MOST, RECEIPTS_OWED
 import { firstExtents } from "../src/extents.ts";
 import { platform } from "../src/index.ts";
 import { judgeReservation, type JudgeEvidence, type ReservationRead, type Statement } from "../src/reservation.ts";
-import { Branch, CREATED, HEAD, NEXT, OTHER, RECEIPT, TREE, destinationDefinition, fetched, handMade, keyObserved, listed, reading, reportMade, rita, rulesObserved, said, una } from "./support-destination.ts";
+import { Branch, CREATED, HEAD, NEXT, OTHER, RECEIPT, TREE, destinationDefinition, fetched, handMade, keyObserved, listed, reading, reportMade, destinationRita as rita, rulesObserved, said, destinationUna as una } from "./fixtures-entry.ts";
 
 // Every scope here is a `Branch` of test support: a destination scope in memory, below a made-up bureau that stands for the
 // directory. Its rules are the platform package's, with a STAND-IN reader of what a lane's entries say for a reservation. The judge of an outcome is

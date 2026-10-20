@@ -11,7 +11,7 @@ import { platform, TRUSTED_APPLICATION_COHORT, SIBLINGS_OF, DIRECTORY_OF } from 
 import { APPLICATION_INSTALL_RULES } from "../src/application-install.ts";
 import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
-import { Rulebook } from "./support-rules.ts";
+import { Rulebook } from "./fixtures-entry.ts";
 
 async function fixture() {
   const id = definitionDigest(countingCommitments);

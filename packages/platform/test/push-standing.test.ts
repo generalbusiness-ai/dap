@@ -5,8 +5,7 @@ import { keys, T0, t, type Actor } from "@generalbusiness/dap-derive/testing";
 import { digestBytes, entryHash, factRefOf, keyIdOfSecret, newIncarnation, utf8 } from "@generalbusiness/artroom-bytes";
 import { DESTINATION_5, destination5, destination6, destinationReceipt, destinationRules5, destinationRules6, readFor, revokedToken } from "../src/destination.ts";
 import { NEWEST, platform } from "../src/index.ts";
-import { handMade, keyObserved, MEMBERSHIP, retained, HEAD } from "./support-destination.ts";
-import { publicationJourney } from "./support-publication-journey.ts";
+import { handMade, keyObserved, MEMBERSHIP, retained, HEAD, publicationJourney } from "./fixtures-entry.ts";
 
 // Actual validator, judges and fold, in memory. The creator and source
 // lane, membership/rules answers and Git replies remain scripted stand-ins.

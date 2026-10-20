@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 import type { Operation } from "@generalbusiness/dap-derive";
 import { t } from "@generalbusiness/dap-derive/testing";
 import { publicationOrigin } from "../src/destination.ts";
-import { Branch, NEXT } from "./support-destination.ts";
+import { Branch, NEXT } from "./fixtures-entry.ts";
 
 // Original Branch fixture: scripted lanes, observations and host answers,
 // real derive judges. No flag, origin facts, platform data or effect changes.

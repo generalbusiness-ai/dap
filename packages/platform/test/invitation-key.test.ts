@@ -4,7 +4,7 @@ import { b64url, keyIdOfSecret, signInvitationProof } from "@generalbusiness/art
 import { PROFILES, runnable, validateDefinition } from "@generalbusiness/dap-derive";
 import { t } from "@generalbusiness/dap-derive/testing";
 import { INVITATION_KEY_COHORT as C, DIRECTORY_OF, SIBLINGS_OF, platform } from "../src/index.ts";
-import { Roster, rita, una, vic, paul } from "./support.ts";
+import { Roster, membershipRita as rita, membershipUna as una, membershipVic as vic, membershipPaul as paul } from "./fixtures-entry.ts";
 
 // Roster's creator is a STAND-IN office; membership data, rules, judgments and
 // signatures are real, in memory. This proves neither native SQLite nor replay.

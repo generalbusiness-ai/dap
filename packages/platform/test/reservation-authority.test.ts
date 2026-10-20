@@ -5,8 +5,7 @@ import { observationOf } from "@generalbusiness/dap-derive";
 import { d, otherLane, t } from "@generalbusiness/dap-derive/testing";
 import { MEMBERSHIP, standingOf } from "../src/membership.ts";
 import { judgeReservation, judgeReservationWithStanding, type Statement } from "../src/reservation.ts";
-import { CREATED, HEAD, NEXT, reading, rulesObserved, keyObserved } from "./support-destination.ts";
-import { Roster, paul, rita, una } from "./support.ts";
+import { CREATED, HEAD, NEXT, reading, rulesObserved, keyObserved, Roster, membershipPaul as paul, membershipRita as rita, membershipUna as una } from "./fixtures-entry.ts";
 
 // Membership is judged in memory with its real rules below the made-up office of Roster. Its standing is the actual
 // platform projection. Lane facts, manifest evidence and rules observations are hand-written; no host or lane is reached.

@@ -4,7 +4,7 @@ import { definitionDigest } from "@generalbusiness/artroom-bytes";
 import type { PlatformRule, RuleGiven } from "@generalbusiness/dap-derive";
 import { d } from "@generalbusiness/dap-derive/testing";
 import { TRUSTED_APPLICATION_COHORT, INVITATION_KEY_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, PARTITION_COHORT, COUNTING_COHORT, DEMO_REGISTER, FIRST_ACTIONS_OF, NEWEST, ROLE_LISTS, ROLE_TABLE_OF, VERSIONS, WEB_DEMO_COHORT, WEB_DEMO_REGISTER, directorySeed, platform, versionOf, type Role } from "../src/index.ts";
-import { rita } from "./support-creation.ts";
+import { creationRita as rita } from "./fixtures-entry.ts";
 import { DECLARED_APPLICATION_RULES } from "../src/application-install-v2.ts";
 import { DECLARED_APPLICATION_COHORT } from "../src/application-install-v2-wire.ts";
 
