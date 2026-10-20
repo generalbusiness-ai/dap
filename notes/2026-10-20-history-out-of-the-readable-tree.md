@@ -73,27 +73,27 @@ lists. Examples: `packages/scope/src/worker.ts:432-433`,
 `authority.ts:332`, `delivery.ts:137`, `reads.ts:219`,
 `packages/replay/src/verify.ts:1671`, `packages/cli/src/commands.ts:1523`,
 `packages/client/src/invitation-fields.ts:7` and
-`packages/page/src/data.ts:461`. The destination lists stop at version
+`apps/room/page/src/data.ts:461`. The destination lists stop at version
 8, and the replay list stops at version 7, although versions 9 to 12 run
 the same rules.
 
 | Item | Disposition |
 |---|---|
-| The current cohort | One constant, `CURRENT`: register 17, directory 16, membership 8, rules 10, destination 12, inbox 1. The CLI creates on it by default. `NEWEST`, `REGISTER` and `DESTINATION` are deleted. |
+| The current cohort | One constant, `CURRENT`: register 17, directory 16, membership 8, rules 10, destination 12, inbox 1. The CLI creates on it by default, but only after the version questions of 3.4 answer for every path that these pins use (slice H4 before H5). `NEWEST`, `REGISTER` and `DESTINATION` are deleted. |
 | Each pin of the current cohort | Stays in `packages/platform/src`, in a file named for the definition, without a version number. |
 | Every other pin | Moves to the history home, `packages/platform/history/`. It stays in the versions table, so every journal and every hosted room still resolves it. |
-| The other eleven cohort constants | Move to the history home with their pins. The CLI keeps no option that creates on them. |
+| The other eleven cohort constants | Move to the history home with their pins. The CLI keeps no option that creates on them. It still recognizes and recovers a saved install plan on any of them (section 3.7). |
 | Version lists outside `packages/platform` | Replaced by questions to the versions table (section 3.4). |
-| Tests that exercise one history pin's own rules | Move to `packages/platform/history/test/` and still run in the gate. |
+| Tests that exercise one history pin's own rules | Move to `packages/platform/history/test/` and still run in the gate. A test that witnesses an older pin's own policy stays on that pin, even when it also uses that pin's cohort as a fixture. |
 | Tests that use a history cohort only as a fixture | Move to the current cohort, package by package. About 98 test files (18,500 lines) name only history pins and no `NEWEST` pin. |
 
 ### 2.2 Parallel forms
 
 | Item | Disposition |
 |---|---|
-| `packages/platform/src/application-install.ts` (314 lines) and `-wire.ts` (52), beside `application-install-v2.ts` (85) and `-v2-wire.ts` (7) | The current rules use parts of both. The parts that only history pins use move to the history home. The rest becomes one file, `application-install.ts`, with no suffix. |
-| `packages/bytes/src/application.ts` and `application-v2.ts`, `application-package.ts` and `-package-v2.ts`, `application-types.ts` and `application-v2-types.ts` | The current codec keeps the plain names. The earlier codec moves to the history home of the bytes package if a history pin needs it. Otherwise it is deleted. |
-| `packages/scope/test/support/legacy-lending-projection.ts`, `application-v2-fixture.ts` | Follow the forms above. |
+| `packages/platform/src/application-install.ts` (314 lines) and `-wire.ts` (52), beside `application-install-v2.ts` (85) and `-v2-wire.ts` (7) | Slice H6. The current rules (rules 10 through `archive-binding.ts` and `device-application-rules.ts`) use parts of both. Those parts are shared current code and stay in `src`, in one file with no suffix. The parts that only history pins use move to the history home. |
+| `packages/bytes/src/application.ts` and `application-v2.ts`, `application-package.ts` and `-package-v2.ts`, `application-types.ts` and `application-v2-types.ts` | Slice H6. Two classes. Shared current code, such as the semantic, presentation and release checks of `application-package-validation` that the v2 reader reuses (`application-package-v2.ts:6-8`, `:30-31`), stays in `src`. The superseded public codec moves to the bytes history home, and one dispatcher reads a retained packet by its own format. A stored packet is never read as a newer format. Signed release domains and canonical bytes do not change. |
+| `packages/scope/test/support/legacy-lending-projection.ts`, `application-v2-fixture.ts` | Follow the forms above in H6. |
 
 ### 2.3 Lane generations
 
@@ -124,7 +124,7 @@ home. It can be deleted with no compatibility decision.
 
 | Item | Disposition |
 |---|---|
-| `apps/counter/definition.json`, `definition.ts`, `definition-README.md`, `definition.test.ts`, `pin.ts` (the first definition, `counting`; no run-time reader) | Deleted. Eight test files in the CLI, MCP and scope packages read them. They move to `commitments.json` or to a test fixture named as one. `APPLICATION.md` loses the line on the earlier definition. |
+| `apps/counter/definition.json`, `definition.ts`, `definition-README.md`, `definition.test.ts`, `pin.ts` (the first definition, `counting`; no run-time reader) | Deleted. Eight test files in the CLI, MCP and scope packages read them. They move to `commitments.json` or to a test fixture named as one. `APPLICATION.md` loses the line on the earlier definition. The guides that send authors to these files move to the commitments example in the same slice: `docs/write-an-application.md:21`, `:132` and `:185-187`, `docs/what-is-dap.md:150` and `docs/roadmap.md:310`. A relative-link check of those guides runs in the slice. |
 | `apps/counter/commitments*` | Current. The application layout note gives the file names. |
 | `examples/grow/check/` (the data-only check fixture) | Not history. It is a fixture, and the layout note places it under the application's tests. |
 | `examples/grow/demo/` (the signed release and the simulator schedule) | Current. |
@@ -197,13 +197,21 @@ manifest's `cohort`, or a test compares the two.
 
 ### 3.2 History home
 
-- A history home is a directory named `history` inside the package that
-  owns the code.
-- Each file in it starts with one marker line:
-  `// History: judges platform:<name>@<n>. Do not copy. Current: <path>.`
-- Only the versions table of that package imports from it. Replay and
-  hosted rooms reach a history pin through the versions table, never by
-  path.
+- A history home is a directory named `history` inside the package or
+  application that owns the code.
+- Each source file in it (`.ts`, `.mjs`) starts with one marker line:
+  `// History: serves <pins or digests>. Do not copy. Current: <path>.`
+- Other files keep their bytes exactly. Canonical JSON, signed packets
+  and service configurations take no marker. The home's `README.md`
+  lists each such file, what it serves and its current replacement.
+- Inside a history home, a file can import another file of the same
+  home and the current shared helpers of its package. A test under
+  `history/test/` can import its home.
+- Outside the home, one entry module imports it, and nothing else does.
+  The entry is the versions table for `packages/platform`, the packet
+  dispatcher for `packages/bytes`, and the lane digest table for the
+  room host's lanes. Replay and hosted rooms reach a history pin through
+  that entry, never by path.
 - Nothing new is added to a history home except code that leaves the
   current set.
 
@@ -234,18 +242,36 @@ table, not 30 files.
 `scripts/active-tree.test.mjs` runs in the gate. It replaces
 `INACTIVE`, `REACHES` and the `spikes/` rules of
 `scripts/active-source.test.mjs`, and keeps that file's layering tests.
+
+The check puts each tracked file in one class. The first match wins:
+
+1. **record**: under `notes/`;
+2. **history**: under a `history/` directory of a package or application;
+3. **fixture**: under a `test/` directory, or named `*.test.*`;
+4. **active source**: every other file of a listed package or
+   application, and the root files that the manifest lists.
+
 It refuses:
 
-1. a tracked file that is not under a path of the manifest;
-2. an import of a history home from any file except its versions table;
-3. a file in a history home without the marker line;
+1. a tracked file in no class;
+2. an import of a history home from any file except the home's own files,
+   its `history/test/` files and its one entry module;
+3. a source file in a history home without the marker line, or a
+   non-source file that the home's `README.md` does not list;
 4. a dated note or plan without a status line, or a manifest plan whose
    status is not `current`;
-5. a literal `platform:<name>@<n>` outside `packages/platform`, outside
-   tests, and outside the manifest;
-6. a file name with a generation mark under an active package or
-   application: `-v<n>`, a lane generation such as `change3`, or
-   `legacy`.
+5. in active source only, a literal `platform:<name>@<n>` outside
+   `packages/platform`;
+6. in active source only, a file name with a generation mark: `-v<n>`,
+   a lane generation such as `change3`, or `legacy`.
+
+Examples. `notes/2026-10-05-x.md` names `platform:rules@4`: allowed, a
+record. `packages/scope/test/a.test.ts` names `platform:destination@3`:
+allowed, a fixture. `packages/scope/src/reads.ts` names
+`platform:destination@8`: refused by rule 5.
+`packages/platform/history/destination1.ts` without its marker: refused
+by rule 3. `packages/bytes/src/application-v2.ts` after H6: refused by
+rule 6.
 
 Each refusal names the file and the rule.
 
@@ -257,17 +283,48 @@ package, application, guide and plan, with one sentence each. The gate
 regenerates it and refuses a difference. `AGENTS.md` tells an agent to
 read it first.
 
+### 3.7 Saved install plans
+
+The CLI decides two things from one set today. `INSTALL_COHORTS`
+supplies the creation choices, and `selectedPlan` uses the same set to
+classify a saved plan (`packages/cli/src/commands.ts:397-398`). That
+class sets strict custody (`:544`) and the verified save before the
+first request (`:578-582`).
+
+After the history move these are separate:
+
+- Creation offers the current cohort only.
+- Recognition covers every cohort in the versions table, current and
+  history. A saved plan on a history cohort keeps strict custody,
+  recovery and readback. It is recovered on its own cohort, never
+  created again on another one.
+
 ## 4. Replay rule and witness
 
 **Rule.** Every pin that a hosted room, an archive or a committed
 journal fixture names resolves in the versions table, and judges as it
 did before the move.
 
-**Witness for moves.** `packages/platform/test/versions.test.ts` holds a
+**Witness for data.** `packages/platform/test/versions.test.ts` holds a
 digest of each version's data (the `DIGESTS` table at
-`versions.test.ts:24`). A slice that moves code to a history home
-leaves every digest unchanged. A2's committed replay fixtures pass
-unchanged.
+`versions.test.ts:24`, checked at `:100-102`). A slice that moves code
+to a history home leaves every digest unchanged.
+
+**Witness for behavior.** The data digest does not cover the code that
+each pin selects. `VERSION_DATA` also selects `rules`, `observed` and
+`observedValues`, `membership` or `rulesScope`, `declaredText`,
+`hostPreparationKinds`, `receiverIdentity` and
+`applicationPublicationOrigin`. Two pins can share rules and differ in
+one of these. A new test holds, for each of the 62 pins, the export
+name and a digest of the source text of each selected function and
+table. A move keeps every row. A change to a row is a change of a pin's
+meaning, and it needs its own review.
+
+The test does not reach the helpers that those functions call. So each
+pin family also keeps behavior witnesses: the existing tests of each
+pin's own policy, kept on that pin, and one native and one replay case
+for each moved special policy, such as the archive publication origin
+of destination 9 to 12. A2's committed replay fixtures pass unchanged.
 
 **Witness for deletions.** A pin is deleted only with a list of its
 users: hosted rooms from the operator's inventory, archives, and
@@ -292,13 +349,13 @@ The repository holds no list of live rooms. The operator's inventory is
 the source for section 4's deletion witness.
 
 Moving a pin to the history home breaks no hosted room. So slices H1 to
-H5 need no decision on these rooms. Deleting a pin does.
+H7 need no decision on these rooms. Deleting a pin does.
 
 The recommendation: keep every hosted room that the home page links
 running until the contest evaluation ends. Then found the library,
 Counter and room demos again on the current cohort, archive their
 earlier journals where the archive can hold them, and stop the other
-deployments. After that, slice H7 deletes each history pin whose user
+deployments. After that, slice H8 deletes each history pin whose user
 list is empty.
 
 ## 6. What a first reader sees
@@ -320,12 +377,13 @@ list is empty.
 | Slice | Content | Who | Size | Needs |
 |---|---|---|---|---|
 | H1 | Notes and plans: status lines; `notes/plans/retired/` and the index; the handoff log moved; `notes/README.md`; the three inactive guides moved; `AGENTS.md` and `docs/README.md` lines; `spikes/` mentions removed from guides; a gate test for status lines (rule 4) | planner | 1 day | this note |
-| H2 | Applications: the counter's first definition set deleted and its tests moved; `examples/demo-repo/` deleted | builder | 1 day | this note |
-| H3 | Active manifest, the gate check of 3.5 (rules 1 to 4), the generated index | builder | 2 days | H1, H2 |
-| H4 | Platform history home: every history pin, cohort and test moved; `CURRENT`; the CLI default; current files without version numbers; digests unchanged | builder | 3 days | H3 |
-| H5 | Version questions replace the literal lists outside `packages/platform`; gate rules 5 and 6 | builder | 3 days | H4 |
-| H6 | Lane generation 1 and the lending service configuration to their history homes | builder | 1 day | H4, the layout note's room-host slice |
-| H7 | Deletion of history pins with empty user lists | builder | 1 day | section 5's answer |
+| H2 | Applications: the counter's first definition set deleted and its tests moved; the five guide lines moved to the commitments example, with a relative-link check; `examples/demo-repo/` deleted | builder | 1 day | this note |
+| H3 | Active manifest, file classes, the gate check of 3.5 (rules 1 to 4), the generated index | builder | 2 days | H1, H2 |
+| H4 | Version questions replace the literal lists outside `packages/platform`. Each question answers for all 62 pins, and the lists that stop early today (`scope/src/reads.ts:219`, `apps/room/page/src/data.ts:461`, `cli/src/commands.ts:1523`, `replay/src/verify.ts:1671`) answer for the current pins, with native, CLI, page and replay acceptance on the current cohort. The behavior witness of section 4. Gate rule 5 | builder | 3 days | H3 |
+| H5 | Platform history home: every history pin, cohort and test moved; `CURRENT` and the CLI default; saved-plan recognition (3.7) with a saved-plan, restart and readback witness; current files without version numbers; data digests and behavior rows unchanged | builder | 3 days | H4 |
+| H6 | Install and bytes parallel forms (2.2): shared current code kept, the superseded codec to the bytes history home behind one dispatcher; the existing exact v1 and v2 packet and retained-input tests unchanged. Gate rule 6 | builder | 2 days | H5 |
+| H7 | Lane generation 1 and the lending service configuration to their history homes | builder | 1 day | H5, the layout note's room-host slice |
+| H8 | Deletion of history pins with empty user lists | builder | 1 day | section 5's answer |
 
 H1 and H2 go first. They need no compatibility decision, and they change
 what an evaluator and an agent read most. The builder's H slices come
