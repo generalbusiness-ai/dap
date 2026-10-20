@@ -8,7 +8,7 @@ export async function buildHome(output = resolve(home, "assets")) {
   await mkdir(dirname(output), { recursive: true });
   const staging = await mkdtemp(resolve(dirname(output), ".dap-home-build-"));
   try {
-    for (const file of ["index.html", "room/index.html", "library/index.html", "counter/index.html", "jam/index.html", "style.css", "_headers"]) {
+    for (const file of ["index.html", "room/index.html", "library/index.html", "counter/index.html", "grow/index.html", "jam/index.html", "style.css", "_headers"]) {
       await mkdir(dirname(resolve(staging, file)), { recursive: true });
       const source = file === "jam/index.html" ? resolve(root, "apps/jam/landing/index.html") : resolve(home, "src", file);
       await cp(source, resolve(staging, file));

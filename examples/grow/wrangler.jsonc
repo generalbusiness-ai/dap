@@ -1,0 +1,11 @@
+// Separate scheduled simulator. No scope bindings, operator key or host trust.
+// Operator supplies GROW_BINDING and both agent secrets after exact-head review.
+{
+  "name": "dap-grow-simulator",
+  "main": "simulator-worker.ts",
+  "compatibility_date": "2026-08-15",
+  "workers_dev": false,
+  "preview_urls": false,
+  "triggers": { "crons": ["* * * * *"] },
+  "rules": [{ "type": "Text", "globs": ["**/*.dap.json"], "fallthrough": true }]
+}
