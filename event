@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:66c13ed08a1add10657df3e09d83624a6895ace3","text":"Merge retired a covered predecessor; the successor is at packages/git/src/gitops.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:670109f6e2612b636611892887800b22c52f558c","text":"Merge retired a covered predecessor; the successor is at packages/git/src/journal-work.ts."}
