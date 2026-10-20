@@ -3,8 +3,7 @@ import type { FactRef } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest, textDigest } from "@generalbusiness/artroom-bytes";
 import { firstExtents } from "@generalbusiness/dap-platform";
 import { garden } from "./support/garden.ts";
-import { mcpRoom } from "./support/room.ts";
-import { exercises, created as createRoom } from "./support/story.ts";
+import { mcpRoom, exercises, created as createRoom } from "./fixtures-native.ts";
 
 // Invariant: an application the server has never seen, written in this test, gets its tools the moment the room holds it, with
 // no change to the server: they are listed with derived text, signed with a detached text and a presented fact, refused by the

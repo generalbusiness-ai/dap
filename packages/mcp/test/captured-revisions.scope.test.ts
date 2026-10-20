@@ -3,8 +3,7 @@ import type { Item, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, keyIdOfSecret } from "@generalbusiness/artroom-bytes";
 import { firstExtents } from "@generalbusiness/dap-platform";
 import { identityId, meaningOf } from "../src/index.ts";
-import { mcpRoom, SERVICE } from "./support/room.ts";
-import { created } from "./support/story.ts";
+import { mcpRoom, SERVICE, created } from "./fixtures-native.ts";
 
 // Invariant: a revision captured before another act moves the item is signed unchanged and refused by the real scope;
 // fresh captured revisions succeed, and custody re-reports each exact envelope without another signature or submission.

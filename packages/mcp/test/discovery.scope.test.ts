@@ -5,8 +5,7 @@ import { firstExtents } from "@generalbusiness/dap-platform";
 import { DEMO_DIGESTS, issueDemo } from "@generalbusiness/dap-lanes";
 import { ListRestart } from "../src/index.ts";
 import { garden } from "./support/garden.ts";
-import { mcpRoom } from "./support/room.ts";
-import { created } from "./support/story.ts";
+import { mcpRoom, created } from "./fixtures-native.ts";
 
 // Invariant: the list is a function of the configured inventory and the caller's standing, never of a connection: a scope created
 // on one connection is listed by a second and by a restarted one; an idle subscribed client is told of an activation made

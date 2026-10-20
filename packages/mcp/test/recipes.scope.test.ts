@@ -5,8 +5,7 @@ import { INVITATION_LINK } from "@generalbusiness/artroom-client";
 import { firstExtents } from "@generalbusiness/dap-platform";
 import { DEMO_DIGESTS, changeDemo, changeDemo3, issueDemo } from "@generalbusiness/dap-lanes";
 import DOC from "../../../docs/mcp.md?raw";
-import { mcpRoom, type Agent } from "./support/room.ts";
-import { created } from "./support/story.ts";
+import { mcpRoom, type Agent, created } from "./fixtures-native.ts";
 
 type Mode = "default" | "generic";
 interface Ran { calls: string[]; n: number; answers: string[] }

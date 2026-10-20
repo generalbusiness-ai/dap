@@ -2,8 +2,7 @@ import { expect, test } from "vitest";
 import type { Item, ScopeRef } from "@generalbusiness/dap-contract";
 import { firstExtents } from "@generalbusiness/dap-platform";
 import type { Card, Display, ViewSource } from "../src/index.ts";
-import { mcpRoom } from "./support/room.ts";
-import { created } from "./support/story.ts";
+import { mcpRoom, created } from "./fixtures-native.ts";
 
 // This projection is a FIXTURE, not a journey lane adapter. It reads and acts on the real rules scope through normal MCP
 // authorization. The room helper labels the external Git host, scheduler and clock stand-ins; no real publication is claimed.
