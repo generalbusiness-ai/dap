@@ -1,14 +1,16 @@
 # S2b: foreign archive inputs
 
 Request `c8c6ff6b6277fd103c30f80d0b76fd40a60ca8bb`, promise
-`ea3d761900e434f096adbb83e46ff1af3a86fe1f`. Development below is based on
-reviewed Main `3ed2a08a50f31e84ea42b4f6027684e14a8cedb8`. It adds explicit
-fixture source metadata, separate policy checks, direct-copy inventory,
-immutable rebuilds and structural archive readback. No whole gate, review
-or landing is claimed. Final installed-application integration on the
-required reviewed Main remains pending.
-Actual reviewed G5a and S2a landings must be incorporated before final
-S2b integration. Neither unreviewed branch is imported here.
+`ea3d761900e434f096adbb83e46ff1af3a86fe1f`. Current development incorporates
+actual reviewed Main `8aad37bb` in the separate owned worktree
+`/tmp/artroom-builder-s2b-main-integration-20261020`. Merge `18e15a75`
+includes the required G5a and S2a landings. The integrated metadata,
+foreign-copy and installed-scope checks pass. The installed witnesses now
+use actual Membership8 archive cohorts and native late directory binding;
+the maintained Grow Site and Room include a real DeviceCommand record and
+an explicit TEST owner answer. Policies and source configuration remain
+A2/A3 fixtures. No full gate, review, landing, provider action, deployment
+or production admission/consent is claimed at this checkpoint.
 
 The adopted S2 split `75060e2d` gives S2a the room binding and manifest
 requirement. S2b owes foreign-source privacy metadata, the reviewed policy
@@ -438,3 +440,76 @@ The unsubmitted review-conditions draft is
 `/tmp/artroom-review-s2b-draft-conditions-20261019.txt`. It grants no access
 and requests no review. Actual reviewed G5a/S2a Main, actual late directory
 binding and the final gate remain required.
+
+## Actual Main and late-bound Grow integration, 20 October
+
+The new integration starts from `d93cdd71` and merges actual Main
+`8aad37bb`. Its original merge naturally exits one in 0.265369959 seconds
+with one conflict, `archive-privacy.ts`. All three stages are retained in
+`/tmp/s2b-current-main-conflict-stages-20261020`. The resolution keeps S2b's
+shared local/foreign classifier and moves Main's complete, byte-exact
+`archiveSupportMetadata` function plus finite DeviceCommand record and
+preparation sets into that shared module. The public privacy exports stay
+available to Main's callers. Function SHA-256 is
+`61af7cfb298a1a1f38d47e7a6a849f993e78611a24501cceae8fefdc3c3dc27a`.
+No pass budget, credential-cohort refusal or privacy policy is widened.
+The raw merge, closure and exact resolution are
+`/tmp/s2b-integrate-current-main-20261020*` and
+`/tmp/s2b-current-main-conflict-resolution-20261020.json`.
+
+The current K1 finite dependency grant supplies an owned physical copy of
+5,499 regular leaves and 31 contained links. Bytes, hashes, modes and
+distinct inodes are checked; all original leaves are rechecked unchanged.
+Only the owned Vitest result cache is removed. The copied lock stamp
+matches this branch's unchanged lock. No package is installed. Receipt:
+`/tmp/s2b-private-dependency-copy-20261020.json`.
+
+Original `90494` naturally exits zero: Git, replay and Scope owning
+compiler commands pass, followed by five native archive files and all
+24 cases. These cover source pins, foreign metadata, local inventory,
+privacy including DeviceCommand, and the initial installed application.
+The native phase takes 6.257504833 seconds wall and 6.463397 CPU. Raw output
+and closure are `/tmp/s2b-integrated-focused-20261020*`.
+
+The installed witness now covers two actual native realms: Register15 /
+Directory14 and the combined Register17 / Directory16, both with
+Membership8. The first installs the existing root/child TEST application.
+The second installs the maintained Grow TEST packet through MCP custody,
+genuinely creates Site and Room, commissions a zone and heater, records a
+heater command and accepts a TEST owner answer. No physical device runs.
+
+Both scopes' genesis and later acts exist before the Directory's actual
+`bind-archive` act. The bind changes no Site/Room or root/child summary or
+journal head. An issued Membership8 session then reads each complete
+native history from genesis zero. Before archive inventory opens, that
+reader supplies the exact native births for the bounded source map.
+Separate exact-pin TEST policies use actual declarations and native owner
+rules; Grow's DeviceCommand support is the finite record/answer metadata
+already reviewed on Main. Planning includes the original genesis and all
+entries through the session head. The structural SHA-1 reader opens the
+objects and matches every entry byte and head to the native session read.
+This is structural readback, not a replay or provider claim. The direct
+membership-copy exclusion remains unchanged.
+
+Original `3161` naturally exits one: the generic Membership8 binding and
+export passes, but Grow stops at the TEST owner reply's missing
+idempotency key, before archive planning. Original `61795` naturally exits
+one again at preparation acceptance; the fixture used `message` where the
+real answer schema uses `description`. The pre-correction file is retained
+as `/tmp/s2b-installed-grow-v3-input-20261020.ts`. No production guard or
+acceptance assertion is weakened. Correcting those two fixture fields
+makes original `44739` naturally exit zero, both cases passing in
+5.769465625 seconds wall / 6.969375 CPU for the native phase. The logs and
+natural closures are `/tmp/s2b-integrated-focused-v2-20261020*`, `...v3...`
+and `...v4...`. Earlier failures remain failures; these are separate runs,
+not one passing gate.
+
+The final Grow-specific selection also asserts that its issued native
+history contains both the DeviceCommand `command` record effect and the
+`answer` preparation entry. Original `37534` naturally exits zero: the
+changed Grow case passes, while the other parameter case is outside the
+explicit `-t` selection and had already passed in v4. Scope's owning
+compiler projects pass. Native wall / CPU are 5.278303250 / 6.452376 seconds.
+Raw output and closure are `/tmp/s2b-integrated-focused-v5-20261020*`.
+A full gate remains due once before Source review. The checkpoint stays
+mutable while the builder returns to B1's now-decided source boundary.
