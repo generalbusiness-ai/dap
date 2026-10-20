@@ -20,10 +20,7 @@ import { rita, una, vic, routed } from "./repository.ts";
 import { reader } from "./support.ts";
 import type {} from "./support/maintained-applications.ts";
 
-// Invariant: a stateless tick uses the installed sensors owner's native grant,
-// keeps the two actual agents separate despite their shared role, recovers
-// after missed minutes/restart, and stops on the first native refusal.
-test("the separately installed Grow demo runs native owner ticks under its distinct enrolled agents and fences a concurrent refusal", async () => {
+async function fixture() {
   const captured = inject("maintainedApplications").growDemo, bytes = unb64url(captured.bytes);
   if (!bytes) throw Error("The separate TEST demo packet must be captured.");
   const packet = readApplicationPackage2(bytes, captured.release), siteId = packet.package.semantic.entry;
@@ -100,6 +97,16 @@ test("the separately installed Grow demo runs native owner ticks under its disti
         return response;
       }));
     };
+    return { life, room, site, scope, membership, port, members, settings, host, start, firstFan, tick, sessions };
+  } catch (error) { life.release(); throw error; }
+}
+
+// Invariant: a stateless tick uses the installed sensors owner's native grant,
+// keeps the two actual agents separate despite their shared role, recovers
+// after missed minutes/restart, and stops on the first native refusal.
+test("the separately installed Grow demo runs native owner ticks under its distinct enrolled agents and fences a concurrent refusal", async () => {
+  const { life, room, site, membership, port, settings, host, start, firstFan, tick, sessions } = await fixture();
+  try {
     const initial = await tick(0); expect(initial, JSON.stringify({ initial, sessions })).toMatchObject({ result: "complete" });
     const unchanged = (await life.wait(() => room.summary())).at;
     expect(await tick(0)).toMatchObject({ result: "complete", accepted: [], costs: { writes: 0 } });
@@ -162,5 +169,43 @@ test("the separately installed Grow demo runs native owner ticks under its disti
       const result = await life.wait(() => verify(source, { mode: "replay", platform, capabilities: CAPABILITY_CODE, owners: CAPABILITY_CODE, grants: "proven", scope: node.name, head }));
       expect([result.report.result, result.why], JSON.stringify(result.report)).toEqual(["consistent", null]);
     }
+  } finally { life.release(); }
+});
+
+// Invariant: an installed Room with more than one bounded history window
+// makes recorded forward progress without skipping an unanswered command;
+// one tick answers at most eight and stays inside the public HTTP allowance.
+test("a native demo tick crosses a long gap in bounded prefixes and drains its owner queue without a private cursor", async () => {
+  const { life, room, firstFan, start, tick } = await fixture();
+  try {
+    for (let n = 0; n < 811; n++) await life.wait(async () => room.did(una, "report-device", { on: firstFan,
+      expected: await room.expected({ on: firstFan }), fields: { reported: "off", level: 0, description: "" } }));
+    const commands: number[] = [];
+    for (let n = 0; n < 12; n++) commands.push(await life.wait(async () => room.did(vic, "set-fan", { on: firstFan,
+      expected: await room.expected({ on: firstFan }), fields: { target: n % 2 ? "off" : "on", level: n % 2 ? 0 : 100 } })));
+    const frontier = (await life.wait(() => room.summary())).at;
+    let previous = -1, bounded = false, ownerTicks = 0, answers = 0, complete = false;
+    for (let minute = 0; minute < 8; minute++) {
+      const result = await tick(minute);
+      expect(result, JSON.stringify(result)).toMatchObject({ result: "complete" });
+      if (!("accepted" in result)) throw Error("The native host must reach its tick.");
+      const count = result.accepted.filter(entry => entry.kind === "device-command@1:answer").length;
+      expect(count).toBeLessThanOrEqual(8);
+      if (count) ownerTicks++; answers += count;
+      expect(result.costs.reads).toBeLessThanOrEqual(96); expect(result.costs.writes).toBeLessThanOrEqual(48);
+      expect(result.costs.requestBytes).toBeLessThanOrEqual(256 * 1024); expect(result.costs.replyBytes).toBeLessThanOrEqual(4 * 1024 * 1024);
+      const root = await life.wait(() => room.item(0)), cursor = root.values["commandsAnsweredThrough"] as { seq: number; hash: string };
+      expect(root.values["lastSampledAt"]).toBe(timeOf(start + minute * 60_000));
+      expect(cursor.seq).toBeGreaterThan(previous); expect(cursor.seq - previous).toBeLessThanOrEqual(800);
+      const retained = await life.wait(() => room.stub.entry(reader, cursor.seq));
+      expect(retained).toMatchObject({ ok: true, value: { hash: cursor.hash } });
+      if (!result.completeWindow) { bounded = true; expect(result.scannedThrough!.seq).toBeLessThan(frontier.seq); }
+      if (result.pendingInWindow > 0) expect(cursor.seq).toBeLessThan(result.scannedThrough!.seq);
+      previous = cursor.seq;
+      if (result.completeWindow && result.pendingInWindow === 0) { complete = true; break; }
+    }
+    expect(bounded).toBe(true); expect(complete).toBe(true); expect(ownerTicks).toBeGreaterThanOrEqual(2); expect(answers).toBe(12);
+    const result = await life.wait(() => room.stub.entry(reader, commands.at(-1)!));
+    expect(result).toMatchObject({ ok: true, value: { entry: { seq: commands.at(-1)! } } });
   } finally { life.release(); }
 });

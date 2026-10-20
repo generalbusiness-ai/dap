@@ -628,3 +628,77 @@ remains reserved. No runtime, test, asset or configuration changed for this
 documentation update, so focused evidence at 12bf35bbe is unchanged.
 Actual native combined-cohort integration remains required. This is no
 gate, Source, deployment or live result. G5a's frozen views stay read-only.
+
+## Native owner ticks and Worker compatibility
+
+G5a Main `2fcd50ab` was integrated at `dadd7e48b`. The original four
+in-memory tick scenarios now use the real Device owner code and native
+preparation judgments over their scripted membership grant and in-memory
+journals. Their scenario bodies remain byte-exact; this is not native
+admission evidence. The owning four cases and compiler pass. The distinct
+installed demo packet is also captured through the maintained application
+fixture. Canonical JSON keeps it within the existing metadata-file bound;
+the maintained Site and Room files are not replaced.
+
+The new native lifecycle witness uses actual platform scopes, enrolled
+sensor and climate agents, a signed MCP installation whose sensors owner
+differs from its operator installer, native Site and Room creation, public
+HTTP sessions and the production driver. It commissions four zones and
+12 devices. Its fixed clock covers a duplicate callback, heat and native
+owner answers, wrong-agent refusals despite a shared role, SQLite restart,
+missed minutes and a real concurrent revision refusal. Recorded sample
+minutes are exactly 0, 10, 11 and 35. A concurrent native sensor act at
+minute 36 makes the driver's original request fail with `revision-moved`;
+no later request crosses that fence. Site and Room replay with proven
+grants. The scheduler, clock, packet signer and test peers are TEST ports;
+this remains local native evidence, not hosted acceptance.
+
+That witness found three production compatibility defects. The host now
+uses canonical `timeOf` for session expiry. The transport uses
+`redirect: "manual"` and explicitly refuses every 3xx response, because
+Workers rejects `redirect: "error"`. The original two-peer Node witness
+still proves that no signed request reaches the second origin. Finally,
+the driver reads the existing `lastSiteReport` reference before reporting
+the same reading again. Native delivery acknowledgments can follow that
+report, so the last journal entry alone cannot identify it. A duplicate
+callback submits zero writes; its later native delivery tail is checked
+separately. No allowance, declaration or private cursor was added.
+
+The native lifecycle and owning compiler passed in original process
+82124. The explicit sample-minute version passed in 67726; the original
+four Node tick cases passed in 6451. Three selected compatibility controls
+in original 64094 each remove one fix: the existing redirect assertion,
+native initial-session assertion and native zero-write duplicate assertion
+respectively fail, without a timeout. All source bytes were restored
+exactly. Raw results are under `/tmp/artroom-g5-native-compatibility-controls-20261020`.
+Earlier setup, compiler, transport and live-only alert-inspector failures
+remain in their original logs; they are not passing native evidence.
+
+## Bounded native history recovery
+
+A second native scenario shares the installation setup but owns a separate
+Room. It records 811 real sensor reports, then 12 real climate commands,
+and runs stateless ticks through public HTTP. Every tick checks the public
+read/write/byte allowances, at most eight owner answers, a retained cursor
+hash, strictly advancing prefixes of at most 800 entries, and a cursor
+that stays before any unanswered command. The scenario reaches the whole
+frontier and answers all 12 commands over at least two ticks. It reads no
+private cursor or native reservation table. The existing lifecycle body
+after setup remains byte-exact to `30bc7cc80`; the preservation report is
+`/tmp/artroom-g5-long-gap-lifecycle-preservation-20261020.json`.
+
+The first preparation stopped at an unused binding in the compiler; no
+native case ran. Corrected process 4661 passed the owning compiler and
+original lifecycle but refused the new fixture's first report: successful
+device reports require an empty description. Correcting that fixture field
+left every assertion and limit intact. Selected new-case process 8841
+then passed naturally: 6.82 seconds tests, 10.36 seconds outer elapsed,
+11.91 seconds CPU, on the shared warm macOS arm64 development host. The
+other lifecycle case was excluded by that selection, not rerun. Original
+logs use `/tmp/artroom-g5-native-long-gap-`, with v2 and v3 suffixes.
+
+These saved native observations use the local Device cohort. S2a has now
+landed at actual Main `fb390d88` with the exact approved combined cohort.
+The final G5 integration must merge that Main, use the combined cohort,
+run both native scenarios there and complete its own gate and review.
+No demo room has been provisioned or deployed.
