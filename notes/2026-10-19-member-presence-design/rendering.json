@@ -212,7 +212,7 @@
     }
   ],
   "source_files": {
-    "build.py": "e14a5b32edf359f12ffa9cff35304dc3eb006342be8c3eff0dd4357213e25f5d",
+    "build.py": "4295a621920a1c51bcd8f4b8e59a0c35558bda155a74a721caf2c449e5e4b0c3",
     "examples/agent-active-dark.html": "1a6c4ac09dd12a9749f55657166b262958140998b631e4be96294f1c9648c0cf",
     "examples/agent-active-light.html": "ed35862f24b5a139c24f1d44cbd7c23f16fd0b15abb6a6c9a748922999cd1613",
     "examples/agent-invited-dark.html": "e096209045eedf102b5fdc858fb8f686910691e94db176297ed97290879bd13b",
@@ -290,15 +290,15 @@
     "examples/record-agent-dark.html": "e570d0bb7b02ef1fbe4835776ba3a7744af2e8129494ec57250e2c7a13d7be0a",
     "examples/record-agent-invited-dark.html": "4b39c7a3bc9ecc155ef0bf83f6dce19ca6cd5d91a594942788e89eaafb1a900e",
     "examples/record-agent-invited-light.html": "7300859fcbfab026f1a7460512d5c0bbfedbeeebc027d5d523a4ef55dd8540ca",
-    "examples/record-agent-lapsed-dark.html": "c57ee8c1a8d14266954003d82507d1efc69cd822263e65d71b53b76a83becb0a",
-    "examples/record-agent-lapsed-light.html": "b4e195a393f311885cf0f9018731442fb321507d2e47907a2f34441189fb5df7",
+    "examples/record-agent-lapsed-dark.html": "64975384e650799958c1bdb38f6ba289b02314d159f42bbc35c64ba93a633595",
+    "examples/record-agent-lapsed-light.html": "186ba67045dca2491fbdb4250bce041dfb4cc1b115ed8a18aabb3295da5fb88a",
     "examples/record-agent-light.html": "49d506c8a1a8daec79b3eac4a1d2460eb63bb6ea03db2db264a1dfae0598ce0e",
     "examples/record-agent-removed-dark.html": "e24e8f50fe304306f727fe8f53a4420bcf21a779b76b5d6aa597b37589f68e88",
     "examples/record-agent-removed-light.html": "300a7d09ea619fc092aafaff1f44b85c85f06806d1b12f078051898c44b70e36",
     "examples/record-checker-invited-dark.html": "5c04565340e4fa32ab3be8f4c5372f43abafa61d623d0cfa0d135ff685f8c723",
     "examples/record-checker-invited-light.html": "ae7bb1cf7a14c36649ee9acd13f428ea6964f67e7b24ad8668640b7a27b8ee6b",
-    "examples/record-checker-lapsed-dark.html": "802ff49bed7b4db42452df63f5748f8ca1050cdef2eaf1e10d363e9f5228bdfb",
-    "examples/record-checker-lapsed-light.html": "2f7cf57fd086fe190e903401f5eab313e7d7daf334e99dc8366846913027b93d",
+    "examples/record-checker-lapsed-dark.html": "1943e91c8f5352561c24fc936800cdbc1ad0ffd18a599b278bc010217068268d",
+    "examples/record-checker-lapsed-light.html": "0363fb11579ff07c652f45cbd627693c1c70eca9ee1441861d587b33266335e2",
     "examples/record-checker-removed-dark.html": "a644d1c4fb6d39eba8fe775b463bd41dc0d75e43470060747ad1d16145fed387",
     "examples/record-checker-removed-light.html": "1fea269108b7f1dff620d2cc3bf0766663a8f89dcef9463a9fd5d20738d5dbdf",
     "examples/record-checks-dark.html": "cb626e86916580bb0fde4d827514383c76249d0ea0cf2ca1db76389fa7c935d1",
@@ -373,8 +373,8 @@
     "examples/record-irrigation-light.html": "f652a4171fcd37447fee0a0d8eaf376c4da6ed388d1d6bc7ab6d388eac488c1a",
     "examples/record-lina-dark.html": "fa472921e24f057cd13e77949fd26692c5fab98bd49355afabe86ed74b796877",
     "examples/record-lina-light.html": "b2bdcab46a608206633008cf8ac7ee89468e178aff4c8627f2a06b893433cf86",
-    "examples/record-noor-dark.html": "c184232ee4ec13907d35df13284bec29bd3ec6ca02ffd57290e837e150fb09d1",
-    "examples/record-noor-light.html": "05da45de66d7b4d624afa4507d549d1a53af541c1b3d6708da9b83a8a39a51d6",
+    "examples/record-noor-dark.html": "a29dc0971ae63f87f4064833f7b1b6d1a940193ac1d09d1b1243c94a72463745",
+    "examples/record-noor-light.html": "e8da03060e8282ed00df043594bf5ffa3833a0e7eb77e88f128c411723640003",
     "examples/record-person-dark.html": "6684b9c95b02ad2bcbf2442aaa67410fcd2570b2c72a5694216372c8f59a869a",
     "examples/record-person-light.html": "6e0da516f9438fded2bc3d3896e63b19a3a55a9041dc53c7da11cc6a3d7ed8d2",
     "examples/record-removed-found-dark.html": "6c562a3a19afe9269c9ffd61df0102e065be3972f9d411efc97fcc92c995fc3d",
@@ -1760,5 +1760,126 @@
     "change": "Removed the shortened aria-label so visible kind/controller words remain in the accessible name.",
     "matching_pngs": 192,
     "new_capture_pngs": 192
+  },
+  "lapsed_keys_correction": {
+    "review": "20ab767749dd56c82672af04897cd47ed51682ff",
+    "finding": "F1: lapsed records incorrectly called the member invited in Keys",
+    "previous_head": "972a2e1716a7d70cfd818e68fdddca2fd17f29eb",
+    "previous_source_hashes": {
+      "build.py": "e14a5b32edf359f12ffa9cff35304dc3eb006342be8c3eff0dd4357213e25f5d",
+      "examples/record-agent-lapsed-dark.html": "c57ee8c1a8d14266954003d82507d1efc69cd822263e65d71b53b76a83becb0a",
+      "examples/record-agent-lapsed-light.html": "b4e195a393f311885cf0f9018731442fb321507d2e47907a2f34441189fb5df7",
+      "examples/record-checker-lapsed-dark.html": "802ff49bed7b4db42452df63f5748f8ca1050cdef2eaf1e10d363e9f5228bdfb",
+      "examples/record-checker-lapsed-light.html": "2f7cf57fd086fe190e903401f5eab313e7d7daf334e99dc8366846913027b93d",
+      "examples/record-noor-dark.html": "c184232ee4ec13907d35df13284bec29bd3ec6ca02ffd57290e837e150fb09d1",
+      "examples/record-noor-light.html": "05da45de66d7b4d624afa4507d549d1a53af541c1b3d6708da9b83a8a39a51d6"
+    },
+    "current_source_files": "source_files contains the current hashes; only build.py and six supporting HTML records changed. All 192 previously captured primary crops and 12 committed previews have unchanged source inputs. The original full-page reports predate this correction. The six supporting records have 12 fresh full-page captures and click checks below.",
+    "baseline": "12 of12 checks fail only the Keys wording assertion, naturally exit1.",
+    "corrected": "12 of12 checks pass, naturally exit0. Each kind and theme at desktop and mobile; no console/resource/layout/target issues.",
+    "visual_inspection": [
+      "record-checker-lapsed-dark-390.png",
+      "record-agent-lapsed-light-1440.png"
+    ],
+    "evidence": [
+      {
+        "path": "/tmp/artroom-d1-lapsed-browser-20261019.mjs",
+        "sha256": "6ae312b559f29150ba87653f49bf237899918b44b919fe43d0982d04a6a48e59"
+      },
+      {
+        "path": "/tmp/artroom-d1-lapsed-before-20261019.log",
+        "sha256": "ebf301cc3ba2dfe7864bda4e210a5250e974d897103fc438a5524afd14f87d4d"
+      },
+      {
+        "path": "/tmp/artroom-d1-lapsed-before-20261019/report.json",
+        "sha256": "9d161b676712cdd9ef6970376833cc567ab269ecc9d890c2a3970294b7df5935"
+      },
+      {
+        "path": "/tmp/artroom-d1-lapsed-after-20261019.log",
+        "sha256": "65bdf3a42d5efc05ee5cb1e891d21ce35f5aa9fcfee33ae161dab3308a2c8438"
+      },
+      {
+        "path": "/tmp/artroom-d1-lapsed-after-20261019/report.json",
+        "sha256": "2054a87786d72f2f1314114b78df6edb5ed8f4458a45dae38c401db4ff552ff6"
+      },
+      {
+        "path": "/tmp/artroom-d1-lapsed-toolview-20261019.json",
+        "sha256": "6f029ebd59fcb31c01b852e6e0076842233f8daf45b12d0baea92ffbce0e64e3"
+      }
+    ],
+    "screenshots": [
+      {
+        "file": "/tmp/artroom-d1-lapsed-after-20261019/record-noor-light-1440.png",
+        "sha256": "d02d803d27c97848da4b4f3bf7dd73d2b3e7f0268b75db3d07175f233e0b6981",
+        "width": 1440,
+        "record": "record-noor-light.html"
+      },
+      {
+        "file": "/tmp/artroom-d1-lapsed-after-20261019/record-agent-lapsed-light-1440.png",
+        "sha256": "49ae9bc4f2f01dbb2b759f432c1e5d406edbea17911660c1370ab036f190f638",
+        "width": 1440,
+        "record": "record-agent-lapsed-light.html"
+      },
+      {
+        "file": "/tmp/artroom-d1-lapsed-after-20261019/record-checker-lapsed-light-1440.png",
+        "sha256": "344f9f07640a61b71554a7f4d7ba852a6c60cd0eb238a07366897a28ea5a9e14",
+        "width": 1440,
+        "record": "record-checker-lapsed-light.html"
+      },
+      {
+        "file": "/tmp/artroom-d1-lapsed-after-20261019/record-noor-dark-1440.png",
+        "sha256": "f8f71aebeb60a44b4755c74343c03e349192b874253bc7d0329b480958d475c8",
+        "width": 1440,
+        "record": "record-noor-dark.html"
+      },
+      {
+        "file": "/tmp/artroom-d1-lapsed-after-20261019/record-agent-lapsed-dark-1440.png",
+        "sha256": "4539a407d0419fc5f54b13259ab26ee37079099fd04f6e71d711848b97e16b1e",
+        "width": 1440,
+        "record": "record-agent-lapsed-dark.html"
+      },
+      {
+        "file": "/tmp/artroom-d1-lapsed-after-20261019/record-checker-lapsed-dark-1440.png",
+        "sha256": "365f1f45f39152b9e5381f4dea718a949e3843efaaa3f5aef2a23787c1e21bee",
+        "width": 1440,
+        "record": "record-checker-lapsed-dark.html"
+      },
+      {
+        "file": "/tmp/artroom-d1-lapsed-after-20261019/record-noor-light-390.png",
+        "sha256": "e2eecd276789356ab2ab154bd41d7f61cff0fe354bc5d25a734e8266d7ba295c",
+        "width": 390,
+        "record": "record-noor-light.html"
+      },
+      {
+        "file": "/tmp/artroom-d1-lapsed-after-20261019/record-agent-lapsed-light-390.png",
+        "sha256": "555c8d25d6d3854322a3bef2830388ef7ae465e95ffdc72b79d3d0e216b3a9a5",
+        "width": 390,
+        "record": "record-agent-lapsed-light.html"
+      },
+      {
+        "file": "/tmp/artroom-d1-lapsed-after-20261019/record-checker-lapsed-light-390.png",
+        "sha256": "e3a15f1de6efc64daee321234ab25437a19861595348f0dd395e57a51dfd8203",
+        "width": 390,
+        "record": "record-checker-lapsed-light.html"
+      },
+      {
+        "file": "/tmp/artroom-d1-lapsed-after-20261019/record-noor-dark-390.png",
+        "sha256": "c963140d7a1f9904b232298981f92859f424a3305c45732eeb46226126ad62e8",
+        "width": 390,
+        "record": "record-noor-dark.html"
+      },
+      {
+        "file": "/tmp/artroom-d1-lapsed-after-20261019/record-agent-lapsed-dark-390.png",
+        "sha256": "64ffcc509d72bb051e5d2a824b335c505e244fddfc7749c031a61ad73790cc65",
+        "width": 390,
+        "record": "record-agent-lapsed-dark.html"
+      },
+      {
+        "file": "/tmp/artroom-d1-lapsed-after-20261019/record-checker-lapsed-dark-390.png",
+        "sha256": "825e6a6f898172260357726465a113f5a939d8e414b7436b36f826a9dc6a94af",
+        "width": 390,
+        "record": "record-checker-lapsed-dark.html"
+      }
+    ]
   }
 }

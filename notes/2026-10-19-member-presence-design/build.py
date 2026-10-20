@@ -136,7 +136,7 @@ for theme in THEMES:
             continue
         role = "agent" if fixture["kind"] == "agent" else "checker" if fixture["kind"] == "checker" else "member"
         raw = E(json.dumps({"membership": MEMBERSHIP, "member": handle}, separators=(",", ":")))
-        keys = 'Retired key · removed member' if fixture["state"] == "removed" else 'No active key · invited member' if fixture["state"] in ["invited", "lapsed"] else 'One active '+('agent' if role == 'agent' else 'checker' if role == 'checker' else 'device')+' key'
+        keys = 'Retired key · removed member' if fixture["state"] == "removed" else 'No active key · invitation lapsed' if fixture["state"] == "lapsed" else 'No active key · invited member' if fixture["state"] == "invited" else 'One active '+('agent' if role == 'agent' else 'checker' if role == 'checker' else 'device')+' key'
         body = '<p class="eyebrow">Member record · kit-owned</p><h1>'+E(handle)+'</h1>'+member(theme, **fixture)+'<dl class="facts"><dt>Role</dt><dd>'+role+'</dd><dt>Member reference</dt><dd><code>'+raw+'</code></dd><dt>Keys</dt><dd>'+keys+'</dd></dl><p class="muted">Presence unavailable. No status, room or report entry is inferred.</p>'
         page('record-'+handle.lstrip('@'),handle+' member record',body,theme,back='members')
 

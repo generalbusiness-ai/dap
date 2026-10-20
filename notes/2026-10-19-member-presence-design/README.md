@@ -103,6 +103,11 @@ offers no live control. All live screens state that B4 execution is pending.
 
 The [rendering record](rendering.json) names the pinned tools, source hashes,
 raw screenshot hashes, dimensions, interactions and contrast measurements.
+Its lapsed-Keys correction records the later six supporting-record changes:
+all three member kinds, in both themes, now say invitation lapsed in Keys.
+All 12 desktop/phone click and layout checks pass on those records. The
+original full-page run below predates that correction; its primary crop
+inputs and the committed previews are unchanged.
 The committed contact sheets show every primary example in both themes
 at each viewport:
 
