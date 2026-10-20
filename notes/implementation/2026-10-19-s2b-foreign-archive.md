@@ -318,3 +318,29 @@ Exact source input inventories and natural closures are
 `/tmp/s2b-reader-repair-fixture-and-http-20261020*` and
 `/tmp/s2b-reader-repair-http-loopback-20261020*`. The changed fixture
 candidate still needs its own ordinary gate and complete fresh review.
+
+That changed-fixture gate now closes naturally zero at
+`889de2e5dc2caf30675038f0b6a84abacbd71361`, tree
+`dfe619dcb2779396937e590815a32dd735f71971`: 1,987 Vitest cases pass,
+three existing cases skip, 416 files pass and one skips, followed by 33
+Node and 55 Counter Node checks. Compiler, helper and whitespace phases
+all pass. It takes 525.288442208 wall and 763.572237 CPU seconds on shared
+warm macOS 27.0.1 arm64, Node 26.12/npm 11.20, starting load
+1.4951/1.8384/2.0415. All 2,576 tracked source bytes/modes remain exact;
+among 5,530 dependency rows only the owned Vitest results cache changes.
+The checkout stays clean, the lock stamp matches and no package installs.
+Original command, input/output inventories, eight raw phase files and
+natural closure are `/tmp/s2b-reader-repair-fixture-gate-20261020*`.
+
+Its output retains scripted reset and retention faults and four Git
+body-text warnings. The older failed gate's different-DO diagnostic
+remains separately unclassified; this passing run establishes no cause,
+infrastructure classification, stability or physical draining. The first
+failed gate is retained in full. The second gate follows the changed
+fixture code; it is not an unchanged whole-suite repeat. Four additional
+full physical source snapshots match the exact two later focused inputs
+and both gate input inventories, including the earlier report and fixture
+bytes where they differ. Receipt:
+`/tmp/s2b-reader-repair-final-input-reconstruction-20261020.json`.
+This final update changes only the primary report after the passing gate.
+Complete fresh review and native landing audit remain required.
