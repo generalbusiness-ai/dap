@@ -49,6 +49,7 @@
  * plan owns. They are written as the note has them.
  */
 
+import { stringOrNull as text } from "@generalbusiness/artroom-bytes";
 import type { HoldersObservation, KeyId, MemberId, MemberObservation, Observation, ObservationRequest, PlatformData, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
 import { textDigest } from "@generalbusiness/artroom-bytes";
 import { firstHolders } from "@generalbusiness/dap-derive";
@@ -572,7 +573,6 @@ function* itemsOf(state: Pick<StateView, "page">, type: string, states: readonly
 }
 
 const rosterOf = (state: Pick<StateView, "page">): Item | null => state.page("roster", ["open"], null, 1).items[0] ?? null;
-const text = (value: unknown): string | null => (typeof value === "string" ? value : null);
 const texts = (value: unknown): string[] => (Array.isArray(value) ? value.filter((element): element is string => typeof element === "string") : []);
 /** The key item that holds that key as the ID of a key that is, or was, a member's key. */
 const keyItem = (state: Pick<StateView, "page">, key: string): Item | null => {

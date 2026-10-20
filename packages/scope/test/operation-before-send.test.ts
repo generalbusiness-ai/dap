@@ -4,7 +4,7 @@ import type { EffectRequest, OperationStatus, Outside } from "../src/index.ts";
 import type { LateAnswers } from "../src/operations.ts";
 import { owners, wired } from "./outside.ts";
 import { open } from "./operation-opening.ts";
-import { create, reader } from "./support.ts";
+import { create, reader } from "./fixtures-native.ts";
 
 // Real ScopeObject and SQLite send/outcome rows; the owner and outside are
 // SCRIPTED. This shows the dispatch phase, not native file supersession.

@@ -2,6 +2,7 @@
  * privacy admission. The owning inventory must finish privacy/root policy
  * before value/rule/snapshot selection; declaration metadata is permitted
  * earlier. No entry-copy or detached-text body can be read here. */
+import { natural } from "@generalbusiness/artroom-bytes";
 import { DOMAINS, RETAINED_INPUT_BYTES, type Digest } from "@generalbusiness/dap-contract";
 import { canonicalize, domainRetainedJSON, rawRetainedJSON, utf8 } from "@generalbusiness/artroom-bytes";
 import { checkedRetainedKey, type ProbeDependency, type RetainedKey } from "@generalbusiness/dap-derive";
@@ -11,7 +12,6 @@ import type { Sql } from "./sqlite.ts";
 
 export interface ArchiveRetainedValue { readonly bytes: string; readonly value: unknown }
 const nativeDomains: ReadonlySet<string> = new Set(Object.values(DOMAINS));
-const natural = (n: unknown): n is number => typeof n === "number" && Number.isSafeInteger(n) && n >= 0 && !Object.is(n, -0);
 const keyName = (key: RetainedKey): string => JSON.stringify(key.kind === "value" ? [key.kind, key.domain, key.digest] : [key.kind, key.digest]);
 
 export class ArchiveRetainedReader {

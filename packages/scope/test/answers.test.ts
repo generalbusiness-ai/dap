@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { canonicalBytes, canonicalize, digestBytes, intentDigest, signIntent } from "@generalbusiness/artroom-bytes";
 import { Scope, grantOf, laneDefinition } from "@generalbusiness/dap-derive/testing";
-import { at, definition, create, rita, una } from "./support.ts";
+import { at, definition, create, rita, una } from "./fixtures-native.ts";
 
 describe("the answers to a submitted act, on real storage (section 4.2)", () => {
   test("accepted, with a receipt that an exact retry and a settlement return again; mismatch; refused, which writes nothing and consumes no key; and, with the test authority, a stand-in, silent, a new act is not judged while an accepted key keeps its receipt", async () => {

@@ -5,8 +5,7 @@ import { firstExtents, platform } from "@generalbusiness/dap-platform";
 import { change, change3 } from "@generalbusiness/dap-lanes";
 import { declarationDigest, variantOf, type DefinitionLike, type Tool } from "../src/index.ts";
 import { issueLike, roomLike } from "./support/collisions.ts";
-import { mcpRoom, type Agent } from "./support/room.ts";
-import { exercises, created } from "./support/story.ts";
+import { mcpRoom, type Agent, exercises, created } from "./fixtures-native.ts";
 
 /** The tools of an agent's list, with the binding each records. */
 async function tools(agent: Agent): Promise<Tool[]> {

@@ -1,6 +1,7 @@
 /** Bounded current-generation standing provenance for the explicit D1
  * cohort. This reads native own records, never a history range or host.
  * A record/key list supplied by a request is not provenance. */
+import { natural } from "@generalbusiness/artroom-bytes";
 import type { FactRef, KeyId, OperationId, PlatformDefinition, ScopeRef } from "@generalbusiness/dap-contract";
 import { canonicalize, entryHash, isFactRef, isKeyId, isRecord, isScopeRef, utf8 } from "@generalbusiness/artroom-bytes";
 import type { Item, Operation, Own } from "@generalbusiness/dap-derive";
@@ -28,8 +29,7 @@ export interface PublicationStandingContext {
   operation(id: OperationId): Operation | null;
 }
 export type PublicationStandingRead = { readonly ok: true; readonly keys: readonly KeyId[] } | { readonly ok: false; readonly reason: "unavailable" | "limit" };
-const same = (a: unknown, b: unknown): boolean => { try { return canonicalize(a) === canonicalize(b); } catch { return false; } };
-const natural = (n: unknown): n is number => typeof n === "number" && Number.isSafeInteger(n) && n >= 0 && !Object.is(n, -0);
+const sameCanonicalStanding = (a: unknown, b: unknown): boolean => { try { return canonicalize(a) === canonicalize(b); } catch { return false; } };
 const fields = (value: Record<string, unknown>, expected: string) => Object.keys(value).sort().join(",") === expected;
 const named = (value: unknown): value is string => typeof value === "string" && value.length > 0 && value.length <= 128 && utf8(value).length <= 128;
 
@@ -62,7 +62,7 @@ export function publicationStandingKeys(context: PublicationStandingContext, pub
       if (!cache.has(seq)) {
         if (cache.size >= 65) return null;
         const got = context.own(seq);
-        cache.set(seq, got && got.entry.seq === seq && same(got.entry.at, context.at) && entryHash(got.entry) === got.hash ? got : null);
+        cache.set(seq, got && got.entry.seq === seq && sameCanonicalStanding(got.entry.at, context.at) && entryHash(got.entry) === got.hash ? got : null);
       }
       return cache.get(seq) ?? null;
     };
@@ -74,7 +74,7 @@ export function publicationStandingKeys(context: PublicationStandingContext, pub
       const values = got.entry.effects.filter(effect => effect.effect === "value" && effect.item === publication.id && effect.slot === "passes");
       if (values.length !== 1 || values[0]?.effect !== "value") return null;
       const metadata = publicationStandingRecord(values[0].value);
-      return metadata?.reservation === record.reservation && same(metadata.base, record.base) ? { got, operation, metadata } : null;
+      return metadata?.reservation === record.reservation && sameCanonicalStanding(metadata.base, record.base) ? { got, operation, metadata } : null;
     };
     const reservation = accepted(record.reservation, "judge");
     if (!reservation || !reservation.got.entry.effects.some(effect => effect.effect === "value" && effect.item === publication.id && effect.slot === "reservedAt" && effect.value === record.reservation)) return unavailable();
@@ -82,28 +82,28 @@ export function publicationStandingKeys(context: PublicationStandingContext, pub
       const input = own(seq)?.entry.input;
       if (input?.type !== "outcome") return false;
       const observations = (input.observed ?? []).filter(use => !("subject" in use.observation) && use.observation.key === key);
-      return observations.length === 1 && same(observations[0]!.observation.of, context.membership);
+      return observations.length === 1 && sameCanonicalStanding(observations[0]!.observation.of, context.membership);
     };
     const keys = new Set<KeyId>();
     for (const base of [record.base.merger, ...record.base.approvals]) {
-      if (!same(base.from.at, lane) || !reservation.got.entry.uses.some(use => same(use.fact, base.from)) || !keyObserved(record.reservation, base.key)) return unavailable();
+      if (!sameCanonicalStanding(base.from.at, lane) || !reservation.got.entry.uses.some(use => sameCanonicalStanding(use.fact, base.from)) || !keyObserved(record.reservation, base.key)) return unavailable();
       keys.add(base.key);
     }
     const required: unknown = publication.values["requiredChecks"] ?? record.checks.map(check => check.name);
     if (!Array.isArray(required) || required.length > 32 || !required.every(named) || new Set(required).size !== required.length) return unavailable();
     for (const name of required) {
       const row = record.checks.find(check => check.name === name), proof = row?.proof;
-      if (!row?.passed || !proof || !same(row.job.at, lane) || !same(proof.result.at, lane)) return unavailable();
+      if (!row?.passed || !proof || !sameCanonicalStanding(row.job.at, lane) || !sameCanonicalStanding(proof.result.at, lane)) return unavailable();
       const decision = accepted(proof.decided, proof.decided === record.reservation ? "judge" : "check-judge");
-      if (!decision || !decision.metadata.checks.some(check => same(check, row)) || !keyObserved(proof.decided, proof.key)) return unavailable();
+      if (!decision || !decision.metadata.checks.some(check => sameCanonicalStanding(check, row)) || !keyObserved(proof.decided, proof.key)) return unavailable();
       if (proof.decided !== record.reservation) {
         const input = decision.got.entry.input;
-        if (input.type !== "outcome" || !isRecord(input.evidence.body) || !same(input.evidence.body["result"], proof.result)) return unavailable();
+        if (input.type !== "outcome" || !isRecord(input.evidence.body) || !sameCanonicalStanding(input.evidence.body["result"], proof.result)) return unavailable();
         const [openingSeq, ordinal] = decision.operation.id.split(":").map(Number), opening = own(openingSeq!)?.entry;
         const opened = opening?.effects.filter(effect => effect.effect === "operation" && effect.k === ordinal);
         if (opened?.length !== 1 || opened[0]?.effect !== "operation" || opened[0].owner !== context.owner || opened[0].kind !== "check-judge" || opened[0].for !== publication.id) return unavailable();
         const message = opening?.input.type === "delivery" ? opening.input.message : null;
-        if (message?.class !== "request" || message.type !== "tell" || !isRecord(message.body) || message.body["message"] !== "checked" || !isRecord(message.body["fields"]) || !same(message.body["fields"]["job"], row.job) || !same(message.body["fields"]["result"], proof.result)) return unavailable();
+        if (message?.class !== "request" || message.type !== "tell" || !isRecord(message.body) || message.body["message"] !== "checked" || !isRecord(message.body["fields"]) || !sameCanonicalStanding(message.body["fields"]["job"], row.job) || !sameCanonicalStanding(message.body["fields"]["result"], proof.result)) return unavailable();
       }
       keys.add(proof.key);
     }

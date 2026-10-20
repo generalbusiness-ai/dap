@@ -1,5 +1,6 @@
 /** Strict, explicit-format archive primitives. Legacy Reader, objectId,
  * idOf, snapshots and provider contracts retain their original behavior. */
+import { decodeGitText } from "./wire-text.ts";
 import { hex, sha1, sha256, utf8 } from "@generalbusiness/artroom-bytes";
 import { JournalWork, refuseJournal } from "./journal-work.ts";
 
@@ -17,7 +18,6 @@ export const JOURNAL_MESSAGE = "Archive journal.\n";
 /** Unix epoch through the final whole second of native four-digit UTC
  * years. Earlier native times are explicitly unavailable to this encoder. */
 export const JOURNAL_LAST_SECOND = 253_402_300_799;
-const text = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 const types: readonly string[] = ["blob", "tree", "commit"];
 const badName = /[^a-z0-9_.-]/;
 export function journalFormat(value: unknown): JournalFormat {
@@ -177,7 +177,7 @@ export class JournalObjectReader {
       const space = body.indexOf(32, at), nul = space < 0 ? -1 : body.indexOf(0, space + 1);
       if (space < 0 || space - at > 6 || nul < 0 || nul - space - 1 > 255 || nul + 1 + width > body.length) refuseJournal("tree");
       let mode: string, filename: string;
-      try { mode = text.decode(body.subarray(at, space)); filename = text.decode(body.subarray(space + 1, nul)); } catch { return refuseJournal("tree"); }
+      try { mode = decodeGitText(body.subarray(at, space)); filename = decodeGitText(body.subarray(space + 1, nul)); } catch { return refuseJournal("tree"); }
       if (mode !== "100644" && mode !== "40000") refuseJournal("tree");
       name(filename);
       const key = utf8(filename + (mode === "40000" ? "/" : ""));
@@ -191,7 +191,7 @@ export class JournalObjectReader {
   commit(body: Uint8Array): JournalCommit {
     this.work.size(body.length); this.work.input(body.length, 3);
     let value: string;
-    try { value = text.decode(body); } catch { return refuseJournal("commit"); }
+    try { value = decodeGitText(body); } catch { return refuseJournal("commit"); }
     const lines = value.split("\n"), parent = lines[1]?.startsWith("parent ") ? lines[1]!.slice(7) : null;
     const offset = parent === null ? 1 : 2;
     if (!lines[0]?.startsWith("tree ")) refuseJournal("commit");

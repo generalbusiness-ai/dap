@@ -4,8 +4,11 @@ K3 replaces three copies of the browser storage protocol with `custodyKind`
 in `apps/room/page/src/custody.ts`. The connection, join and Start adapters
 declare their record kind, exact storage prefix, byte bound, decoder and
 public view. Their workflows and existing test assertions are unchanged.
-The Page assets are rebuilt. Its first required gate passed at code/test
-head `1e6aaa994c2a344d980746fbbcd1b5112ce2f370`, tree
+The current owned integration incorporates reviewed Main `13193f31`;
+its generated build and affected checks pass. The final gate and complete
+fresh review are still due. The original frozen implementation and its earlier passing
+gate below are historical, not approval or verification of this new tree.
+Its first required gate passed at code/test head `1e6aaa994c2a344d980746fbbcd1b5112ce2f370`, tree
 `3098ed1bb185f51160443ceab760433b5e3e36e5`: 1,927 Vitest cases passed,
 three existing cases skipped, and all 31 Node and 55 Counter cases passed.
 The reporting candidate changes only this note after that run.
@@ -203,3 +206,56 @@ The new integrated-head gate and complete review remain ahead. K2 review
 remains separately open at frozen `cbe0d44d`.
 Actual hosted Grow acceptance remains Planner's separate `cc069da1` /
 `2fcf3c3a` milestone; this work performs no Cloudflare operation.
+
+
+## Current Main helper and fixture integration
+
+The original merge from `3a646b5b` to reviewed Main `13193f31`, tree
+`2bee1aff`, closes naturally one in 0.217410958 seconds. There are two
+conflicts, generated Page assets and `start-custody.ts`; all six original
+stages are retained under `/tmp/k3-k1-main-conflict-stages-20261020`.
+The original argv/log/closure are `/tmp/k3-integrate-k1-main-20261020*`.
+K1's independent native audit was already adopted as `2aa5c91b`.
+The later homepage wording Main `248aab8f` is not yet incorporated here.
+
+Main only renamed the old Start adapter's local storage-key function to
+`startStorageKey`, preserving the same `artroom-page-start:` prefix. K3
+already removes that complete local protocol in favor of `custodyKind`
+with the exact same prefix and decoder. The resolution therefore keeps
+stage two's complete shared adapter, not a second local implementation.
+All four implementation modules, the compatibility case and legacy fixture
+remain byte-exact to approved historical `ed140d42`, checked against Git.
+Receipt: `/tmp/k3-k1-main-approved-implementation-preservation-20261020.json`.
+No storage byte, refusal, current-callback rule, decoder, key-zeroing step,
+assertion or deadline changes.
+
+The exact Main stage-three generated module is only a temporary conflict
+resolution input. It has not been represented as the correct build of
+this merged source. The actual owned Page generator, helper guard, all
+Page compiler configurations and affected compatibility/workflow/freshness
+cases remain due after the higher-priority archive gate closes naturally.
+No frozen original source, dependency, helper or sealer is executed or
+edited; no package is installed and no Main ref changes. Resolution is
+recorded in `/tmp/k3-k1-main-conflict-resolution-prebuild-20261020.json`.
+This remains interruptible consolidation behind the demo and current
+priority work, not a landing or deployment result.
+
+
+The actual owned merged-source build now closes naturally zero and writes
+module SHA-256 `a9af5f5424131158478031c2f6982b48241c9e8969aaf2a088b386ca99f1e11f`.
+The temporary stage-three module is replaced by that real generated output.
+The same original process passes the shared-helper guard, all three Page
+compiler configurations and eight selected Page files with twenty cases:
+all three custody kinds, old-writer compatibility, join/Start UI, sending
+and generated freshness. No assertion, test body or deadline changes.
+All 2,572 tracked bytes/modes remain exact after the build throughout the
+checks; the lock stamp matches and zero packages install. Page test wall
+and child CPU are 1.646511042 / 3.975864 seconds, on shared warm macOS
+27.0.1 arm64, Node 26.12.0, initial load 1.18/2.83/3.32. These are that
+phase's measurements, not a total pipeline or exclusive-machine claim.
+The natural closure, argv, raw logs, actual source inventory and generated
+module are `/tmp/k3-k1-main-owned-page-checks-20261020*`. Original session
+`47902` naturally exits zero. No original frozen source or tool executes.
+The SCRIPTED service/storage/locks boundary remains; no browser persistence
+or native admission result follows. The final full gate and fresh complete
+review are still due at the eventual clean integration head.

@@ -13,9 +13,8 @@ import { site } from "../src/site/route.ts";
 import { ownHost } from "./hosts.ts";
 import { soon } from "./net.ts";
 import { Platform, rita, routed, sam } from "./repository.ts";
-import { reader } from "./support.ts";
+import { reader, dispatchFixture, driveFixture, nativeFixtureLifetime } from "./fixtures-native.ts";
 import { beginSessionFixture } from "./session-settings.ts";
-import { dispatchFixture, driveFixture, nativeFixtureLifetime } from "./support/native-fixture-lifetime.ts";
 
 // A made-up declared publisher deliberately uses the reserved word change.
 // Its acts and native factory are real; no change-lane role is granted.

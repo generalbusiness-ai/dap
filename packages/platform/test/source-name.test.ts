@@ -3,7 +3,7 @@ import type { Digest, Entry, ScopeRef, Seed } from "@generalbusiness/dap-contrac
 import { factRefOf, intentDigest, newIncarnation, scopeIdOf, signIntent } from "@generalbusiness/artroom-bytes";
 import { d, keys, T0, t } from "@generalbusiness/dap-derive/testing";
 import { applicationPublicationOrigin, sourceName, publishingLaneOrigin, publishingLaneAffiliation } from "../src/publishing-provenance.ts";
-import { scriptedApplicationOrigin, scriptedOrigin } from "./support-origin.ts";
+import { scriptedApplicationOrigin, scriptedOrigin } from "./fixtures-entry.ts";
 
 test("supported change and issue pins acquire native names only through their authenticated native factories", () => {
   for (const name of ["change", "issue"] as const) {

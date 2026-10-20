@@ -12,7 +12,7 @@ import type { Actor } from "@generalbusiness/dap-derive/testing";
 import { SqliteStore, Turns, Wakes, mintSession, production, sessionsOf } from "../src/index.ts";
 import { later, net, soon } from "./net.ts";
 import { office, repository, rita, routed, una, type Platform } from "./repository.ts";
-import { reader } from "./support.ts";
+import { reader } from "./fixtures-native.ts";
 import { beginSessionChild, beginSessionFixture, type SessionOwner } from "./session-settings.ts";
 import type { MetricPoint } from "../src/metrics.ts";
 import { TEST_DEPLOYMENT, metricBindings, platformNet, type PlatformScope } from "./worker.ts";

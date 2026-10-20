@@ -6,7 +6,7 @@ import { canonicalize, digestBytes, utf8 } from "@generalbusiness/artroom-bytes"
 import { ArchiveBudget } from "../src/archive-budget.ts";
 import { observationDependency } from "@generalbusiness/dap-derive";
 import { ArchiveRetainedReader, readArchiveProbe } from "../src/archive-retained.ts";
-import { definition, create } from "./support.ts";
+import { definition, create } from "./fixtures-native.ts";
 
 const missing = "sha256:" + "d".repeat(64) as `sha256:${string}`;
 test("native definition-key selection validates canonical bytes and charges cache hits without aliasing the value table", async () => {

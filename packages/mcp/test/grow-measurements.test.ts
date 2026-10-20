@@ -3,19 +3,19 @@
  * this is not an actual LLM invocation, provider or device witness. */
 import { expect, test } from "vitest";
 import { readFile, rm } from "node:fs/promises";
-import { secretSigner } from "@generalbusiness/artroom-client";
 import { prepareGrowCheck } from "../../../examples/grow/prepare-check.ts";
 import { prepareApplicationDirectory } from "../../cli/src/application-files.ts";
 import { openOwnedGrowScenario } from "./support/grow-owned-session.ts";
 import { growOperator } from "./support/grow-operator.ts";
 import { viewInputToolName, viewToolName } from "../src/views/names.ts";
 import type { Display } from "../src/views/types.ts";
+import { fixedSigner } from "./fixtures.ts";
 
 test("typed measurement fields produce one native probe and advance the oldest bench", async () => {
   const root = await prepareGrowCheck();
   let session: Awaited<ReturnType<typeof openOwnedGrowScenario>> | undefined;
   try {
-    const { packet } = await prepareApplicationDirectory(root, secretSigner(new Uint8Array(32).fill(254)));
+    const { packet } = await prepareApplicationDirectory(root, fixedSigner(254));
     const input = JSON.parse(await readFile(new URL("./support/grow-owned-fault-scenario.json", import.meta.url), "utf8")) as { time: string; steps: { act?: { kind: string } }[] };
     input.time = "2026-10-16T12:00:00Z";
     input.steps = input.steps.slice(0, input.steps.findIndex(step => step.act?.kind === "probe"));

@@ -21,11 +21,7 @@ import { applicationScreenPath, readApplicationScreenAddress, readApplicationScr
 import { secretSigner, signedApplicationInstall } from "@generalbusiness/artroom-client";
 import { outsideOf as hostOutside } from "../src/worker.ts";
 import nativeWorker from "../../../apps/room/worker.ts";
-import { applicationHttpPeer } from "./support/application-http-peer.ts";
-import { applicationResolverFixture } from "./support/application-fixture.ts";
-import { sessionRoom } from "./support/session-room.ts";
-import { dispatchFixture, driveFixture, effectFixture } from "./support/native-fixture-lifetime.ts";
-import { reader } from "./support.ts";
+import { applicationHttpPeer, applicationResolverFixture, sessionRoom, dispatchFixture, driveFixture, effectFixture, reader, applicationContentBindings, applicationWorkerBindings } from "./fixtures-native.ts";
 import { rita, sam, routed } from "./repository.ts";
 
 const refusesAtBirth = { ...countingCommitments, acts: { ...countingCommitments.acts, establish: { ...countingCommitments.acts["establish"]!, guards: [{ rule: "install-refusal" }] } }, rules: { ...countingCommitments.rules, "install-refusal": "false" } };
@@ -47,7 +43,7 @@ test.each(installations)("$name: one signed native install settles through Direc
     if (key === "put") return (...args: Parameters<R2Bucket["put"]>) => { puts++; return target.put(...args); };
     return typeof value === "function" ? value.bind(target) : value;
   } });
-  const peer = applicationHttpPeer(f), bindings = { APPLICATION_CONTENT: bucket, APPLICATION_TRUST: JSON.stringify(f.trust) };
+  const peer = applicationHttpPeer(f), bindings = applicationContentBindings(bucket, JSON.stringify(f.trust));
   let fetchSends = 0, admissionSends = 0, preparations = 0, recoveries = 0, forbiddenPreparations = 0;
   try {
     const seat = await life.wait(() => M.did(rita, "seat", { expected: { roster: 1 } }));
@@ -172,7 +168,7 @@ test.each(installations)("$name: one signed native install settles through Direc
       expect((await life.wait(() => A.summary())).value.items.find(item => item.type === "definition")).toMatchObject({ state: "active", values: { digest: f.packet.package.semantic.entry } });
       const birth = await life.wait(() => (C.object as unknown as { source(seq: number): Promise<Sourced> }).source(0));
       expect(parseStrict(birth.bytes!)).toMatchObject({ input: { type: "genesis", decision: "refused" } });
-      expect((await nativeWorker.fetch(new Request("https://scopes.test" + applicationScreenPath(D.name, job, f.packet.ids.presentation)), { SCOPES: env.PLATFORM, APPLICATION_CONTENT: env.APPLICATION_CONTENT, APPLICATION_TRUST: JSON.stringify(f.trust) })).status).toBe(404);
+      expect((await nativeWorker.fetch(new Request("https://scopes.test" + applicationScreenPath(D.name, job, f.packet.ids.presentation)), applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(f.trust)))).status).toBe(404);
       const history = await life.wait(() => A.entries());
       expect(history.filter(entry => entry.input.type === "act")).toHaveLength(1);
       expect(history.filter(entry => entry.input.type === "outcome")).toHaveLength(2);
@@ -222,7 +218,7 @@ test.each(installations)("$name: one signed native install settles through Direc
     expect(installedApplicationPublicationOrigin(from, { ...directory, inc: destination.inc }, destination, facts)).toBe(false);
     expect(installedApplicationPublicationOrigin(from, directory, { ...destination, scope: directory.scope }, facts)).toBe(false);
     await f.store.put(f.packet.bytes, f.packet.ids.release);
-    const screenEnv = { SCOPES: env.PLATFORM, APPLICATION_CONTENT: env.APPLICATION_CONTENT, APPLICATION_TRUST: JSON.stringify(f.trust), DEPLOYMENT: "native-install-screen-test" };
+    const screenEnv = { ...applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(f.trust)), DEPLOYMENT: "native-install-screen-test" };
     const base = applicationScreenPath(D.name, job, f.packet.ids.presentation), screen = (path: string, init?: RequestInit) => nativeWorker.fetch(new Request("https://scopes.test" + path, init), screenEnv);
     const routedHeads = await Promise.all([A, D, C, G].map(node => life.wait(() => node.summary()).then(summary => summary.at)));
     expect((await screen(base))!.headers.get("location")).toBe(base + "index.html");
@@ -266,7 +262,7 @@ test.each([
     const expected = await life.wait(() => M.expected({ roster: 0, member: seat }));
     await life.wait(() => M.did(rita, "first-key", { fields: { member: seat }, expected }));
     const earlier = (await life.wait(() => M.item(0))).values["adminActions"];
-    life.outside(A.name, (given, sql) => hostOutside(given, sql, { APPLICATION_CONTENT: env.APPLICATION_CONTENT, APPLICATION_TRUST: JSON.stringify(specimen.listed ? f.trust : []) }, async () => { calls++; throw Error("TEST refusal must precede network"); }));
+    life.outside(A.name, (given, sql) => hostOutside(given, sql, applicationContentBindings(env.APPLICATION_CONTENT, JSON.stringify(specimen.listed ? f.trust : [])), async () => { calls++; throw Error("TEST refusal must precede network"); }));
     await life.wait(() => A.restart());
     const signed = await life.wait(() => A.intent(rita, "install-application", { fields: { uri: f.uri, release: f.packet.ids.release, semantic: f.packet.ids.semantic,
       roles: ["admin"], values: '{"target":7}', ...Object.fromEntries(f.packet.package.semantic.definitions.map((part, index) => [`definitionText${index}`, textDigest(part.bytes)])),
@@ -286,8 +282,8 @@ test.each([
     const head = (await life.wait(() => A.summary())).at;
     const replay = await life.wait(() => verify(httpSource("https://scopes.test", { reader, fetch: (url, init) => life.wait(() => routed(url, init)) }), { mode: "replay", platform, grants: "proven", scope: A.name, head }));
     expect([replay.report.result, replay.why]).toEqual(["consistent", null]);
-    expect((await nativeWorker.fetch(new Request("https://scopes.test" + applicationScreenPath(D.name, history.find(entry => entry.input.type === "act")!.seq, f.packet.ids.presentation)), { SCOPES: env.PLATFORM, APPLICATION_CONTENT: env.APPLICATION_CONTENT, APPLICATION_TRUST: JSON.stringify(f.trust) })).status).toBe(404);
+    expect((await nativeWorker.fetch(new Request("https://scopes.test" + applicationScreenPath(D.name, history.find(entry => entry.input.type === "act")!.seq, f.packet.ids.presentation)), applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(f.trust)))).status).toBe(404);
     // The register is not an application room, even though it is native.
-    expect((await nativeWorker.fetch(new Request("https://scopes.test" + applicationScreenPath(R.name, 0, f.packet.ids.presentation)), { SCOPES: env.PLATFORM, APPLICATION_CONTENT: env.APPLICATION_CONTENT, APPLICATION_TRUST: JSON.stringify(f.trust) })).status).toBe(404);
+    expect((await nativeWorker.fetch(new Request("https://scopes.test" + applicationScreenPath(R.name, 0, f.packet.ids.presentation)), applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(f.trust)))).status).toBe(404);
   } finally { await env.APPLICATION_CONTENT.delete(f.key); life.release(); }
 }, 30_000);

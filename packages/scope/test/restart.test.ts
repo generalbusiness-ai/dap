@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { SqliteStore } from "../src/index.ts";
-import { create, reader, rita, vic } from "./support.ts";
+import { create, reader, rita, vic } from "./fixtures-native.ts";
 
 describe("a restart of the scope (sections 2.2 and 5.2)", () => {
   test("the reloaded scope has the same head, items, counts and idempotency index, runs its retained definition, and continues the sequence", async () => {

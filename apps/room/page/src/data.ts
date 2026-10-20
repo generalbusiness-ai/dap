@@ -1,3 +1,5 @@
+import { stringOrNull as text } from "@generalbusiness/artroom-bytes";
+import { isRecord as record } from "@generalbusiness/artroom-bytes";
 import { invitationRedemptionFields } from "@generalbusiness/artroom-client";
 /**
  * The page's data functions: what it reads from a room and the one thing it
@@ -165,12 +167,11 @@ async function textOf(handle: ScopeHandle, digest: FieldValue | null | undefined
 
 const memberOf = (party: unknown): string | null => (party && typeof party === "object" && "member" in party ? String((party as MemberRef).member) : null);
 const membersOf = (party: unknown): string[] => (Array.isArray(party) ? party.map(memberOf).filter((m): m is string => m !== null) : []);
-const text = (value: FieldValue | null | undefined): string | null => (typeof value === "string" ? value : null);
 const scopeOf = (ref: FieldValue | null | undefined): ScopeId | null => (ref && typeof ref === "object" && "scope" in ref ? (ref as { scope: ScopeId }).scope : null);
 
 // ---------------------------------------------------------------- the room
 
-const isScopeRef = (v: unknown): v is ScopeRef =>
+const hasScopeRefFields = (v: unknown): v is ScopeRef =>
   typeof v === "object" && v !== null && typeof (v as ScopeRef).scope === "string" && typeof (v as ScopeRef).inc === "string" && typeof (v as ScopeRef).kind === "string";
 
 /**
@@ -282,7 +283,7 @@ export async function openRoom(session: Session, place: Place): Promise<Room> {
   const M = repository?.refs["membership"];
   const rules = scopeOf(repository?.refs["rules"]);
   const destination = scopeOf(repository?.refs["destination"]);
-  if (!repository || !isScopeRef(M) || !rules || !destination) throw new Unreadable(`The directory ${place.directory} names no membership, rules scope and destination yet.`);
+  if (!repository || !hasScopeRefFields(M) || !rules || !destination) throw new Unreadable(`The directory ${place.directory} names no membership, rules scope and destination yet.`);
   if (M.scope !== place.membership.scope || M.inc !== place.membership.inc) throw new Unreadable(`The directory ${place.directory} names another membership scope than ${place.membership.scope}.`);
   room.rules = rules;
   room.destination = destination;
@@ -467,7 +468,6 @@ async function reviewPolicyOf(room: Room, change: ScopeRef, proposal: Item, held
     const entry = read.value.entry;
     if (entry.seq !== source.seq || canonicalize(entry.at) !== canonicalize(source.at)
       || entryHash(entry) !== source.hash || read.value.hash !== source.hash) return null;
-    const record = (value: unknown): value is Record<string, unknown> => !!value && typeof value === "object" && !Array.isArray(value);
     const sends = entry.sends.filter(send => canonicalize(send.to) === canonicalize(change) && send.message.class === "request"
       && send.message.type === "relate" && record(send.message.body) && send.message.body["name"] === "rules");
     if (sends.length !== 1) return null;

@@ -21,6 +21,7 @@ import { PROFILES, clockOf, grantFrom, judgeDelivery, judgeGenesis, observationO
 import type { ActJudgment, Judgment, PlatformRules, Presented, ValidDefinition } from "@generalbusiness/dap-derive";
 import { Ledger, T0, creation, created, keys, sent, type Actor, type Context, type Over } from "@generalbusiness/dap-derive/testing";
 import { MEMBERSHIP, membership, platform, standingOf, type Platform } from "../src/index.ts";
+import { checkedDefinition as checked, written } from "./fixtures.ts";
 
 /**
  * A CONTROL, and no stand-in: one version of a platform definition as the package supplies it, less one rule of membership. A runtime
@@ -72,10 +73,6 @@ export const office: DeclaredDefinition = {
   rules: {},
 };
 
-const checked = (result: ReturnType<typeof validateDefinition>): ValidDefinition => {
-  if (!result.ok) throw new Error(`a definition of test support is refused: ${JSON.stringify(result.problems)}`);
-  return result.definition;
-};
 export const officeDefinition = checked(validateDefinition(office, PROPOSED_BOUNDS));
 /** The same labelled creator with an explicitly selected native membership pin. */
 export function officeDefinitionFor(named: PlatformDefinition): ValidDefinition {
@@ -147,9 +144,4 @@ export class Roster extends Ledger {
     this.did(rita, "first-key", { fields: { member: 2 }, expected: { roster: 1, member: this.item(2).revision } });
     return this;
   }
-}
-
-function written(judgment: Judgment): Extract<Judgment, { result: "write" }>["draft"] {
-  if (judgment.result !== "write") throw new Error(`not written: ${JSON.stringify(judgment)}`);
-  return judgment.draft;
 }

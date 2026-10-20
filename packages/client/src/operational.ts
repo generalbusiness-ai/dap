@@ -1,4 +1,5 @@
 /** Operational read extensions. These are outside the native ScopeApi. */
+import { natural } from "@generalbusiness/artroom-bytes";
 import type { Cursor, Digest, OutboxItem, OutboxId, OperationId, Read, ScopeId, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
 import { isDigest, isOutboxItem, isOutboxId, isListOf, isOperationId, isRead, isRecord, isScopeRef, timeMs } from "@generalbusiness/artroom-bytes";
 
@@ -12,7 +13,6 @@ export interface OperationalApi {
   waiting(scope: ScopeId, reader: unknown, list: "diagnosed" | "unanswered", cursor?: Cursor): Promise<Read<readonly OutboxItem[]>>;
   requests(scope: ScopeId, reader: unknown, request: string, cursor?: Cursor): Promise<Read<RequestCorrelations>>;
 }
-const natural = (value: unknown): value is number => typeof value === "number" && Number.isSafeInteger(value) && value >= 0 && !Object.is(value, -0);
 const timestamp = (value: unknown): value is Timestamp => typeof value === "string" && timeMs(value) !== null;
 const kinds: readonly string[] = ["outcome-conflict", "ref-mismatch", "incarnation-conflict", "pin-confirm-no-pin", "unpin-never-admitted", "token-unowned", "branch-moved", "bad-input", "sent-again"];
 function reference(value: unknown): value is IncidentReference {

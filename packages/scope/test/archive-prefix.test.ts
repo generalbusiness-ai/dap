@@ -7,7 +7,7 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalize, newIncarnation, textDigest } from "@generalbusiness/artroom-bytes";
 import { ArchiveBudget } from "../src/archive-budget.ts";
 import { archivePrefixMetadata } from "../src/archive-prefix.ts";
-import { definition, create, rita } from "./support.ts";
+import { definition, create, rita } from "./fixtures-native.ts";
 
 const syntheticHash = textDigest("synthetic prefix row, not a verified entry");
 const certified = new Set([definition.digest]);

@@ -1,5 +1,6 @@
 /** Canonical bounded projection requests/replies. These forms authenticate
  * no viewer; a native read owner owes authorization and coverage. */
+import { freeze } from "./values.ts";
 import { APPLICATION_PROJECTION_REFUSALS, APPLICATION_PROJECTION_WIRE_BOUNDS as B, type ApplicationProjectionData, type ApplicationProjectionQuery, type ApplicationProjectionRead } from "@generalbusiness/dap-contract";
 import { b64url, canonicalize, digestBytes, isDigest, isFactRef, isFieldValue, isHead, isRecord, isScopeRef, parseStrict, parseStrictBytes, unb64url, utf8 } from "./index.ts";
 import { timeMs } from "./ids.ts";
@@ -9,9 +10,6 @@ const whole = (value: unknown): value is number => typeof value === "number" && 
 const name = (value: unknown): value is string => typeof value === "string" && /^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(value);
 const projectionName = (value: unknown): value is string => typeof value === "string" && /^[A-Za-z][A-Za-z0-9_.-]{0,127}$/.test(value);
 const only = (value: object, keys: string) => Object.keys(value).sort().join() === keys;
-function freeze(value: unknown): void {
-  if (value !== null && typeof value === "object") { for (const child of Object.values(value)) freeze(child); Object.freeze(value); }
-}
 function query(value: unknown): value is ApplicationProjectionQuery {
   return isRecord(value) && only(value, "directory,install,items,projection,scope,v") && value["v"] === 1
     && isScopeRef(value["scope"]) && isScopeRef(value["directory"]) && value["directory"].kind === "directory"

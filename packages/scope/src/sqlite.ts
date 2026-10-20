@@ -23,6 +23,9 @@ import { ARCHIVE_PIN_KEY, archivePinBytes } from "./archive-pin.ts";
 import { LocalSigners, SIGNER_INDEX_BOUNDS } from "./local-signers.ts";
 import type { Amount, ItemDuty } from "@generalbusiness/dap-derive";
 
+/** Bounded JSON text extraction for internally supplied SQL paths. */
+export const sqlJsonText = (path: string, max: number, source = "bytes") => `CASE WHEN typeof(json_extract(${source}, '${path}')) = 'text' AND octet_length(json_extract(${source}, '${path}')) <= ${max} THEN json_extract(${source}, '${path}') ELSE NULL END`;
+
 export type SqlValue = string | number | null | ArrayBuffer;
 export interface Sql {
   exec(query: string, ...bindings: SqlValue[]): { toArray(): Record<string, SqlValue>[] };
@@ -117,8 +120,8 @@ const REQUEST_ROWS = "SELECT o.seq, o.n, o.target, o.request, o.result, o.diagno
 type Row = Record<string, SqlValue>;
 /** The entry that opened an operation and its ordinal there, from its ID. */
 const partsOf = (id: OperationId): [seq: number, k: number] => id.split(":").map(Number) as [number, number];
-const json = <T>(text: SqlValue | undefined): T => JSON.parse(text as string) as T;
-const orNull = <T>(text: SqlValue | undefined): T | null => (text === null || text === undefined ? null : json<T>(text));
+const rowJson = <T>(text: SqlValue | undefined): T => JSON.parse(text as string) as T;
+const orNull = <T>(text: SqlValue | undefined): T | null => (text === null || text === undefined ? null : rowJson<T>(text));
 
 export class SqliteStore implements Store {
   readonly #sql: Sql;
@@ -229,7 +232,7 @@ export class SqliteStore implements Store {
   page(type: string, states: readonly string[], after: number | null, limit: number): Page {
     const matched: Item[] = [];
     for (const state of new Set(states)) {
-      for (const row of this.#all("SELECT record FROM item WHERE type = ? AND state = ? AND id > ? ORDER BY id LIMIT ?", type, state, after ?? -1, limit + 1)) matched.push(json<Item>(row["record"]));
+      for (const row of this.#all("SELECT record FROM item WHERE type = ? AND state = ? AND id > ? ORDER BY id LIMIT ?", type, state, after ?? -1, limit + 1)) matched.push(rowJson<Item>(row["record"]));
     }
     matched.sort((a, b) => a.id - b.id);
     return { items: matched.slice(0, limit), more: matched.length > limit };
@@ -286,7 +289,7 @@ export class SqliteStore implements Store {
   /** Section 6.11: read from the index by kind and state. A value is compared as its canonical bytes, in the rows that the index gives. */
   records(capability: CapabilityName, kind: string, where: RecordsWhere = {}): readonly RecordState[] {
     const among = where.states ? ` AND state IN (${where.states.map(() => "?").join(", ")})` : "";
-    const rows = this.#all(`SELECT value FROM record WHERE capability = ? AND kind = ?${among} ORDER BY CAST(key AS BLOB)`, capability, kind, ...(where.states ?? [])).map((row) => json<RecordState>(row["value"]));
+    const rows = this.#all(`SELECT value FROM record WHERE capability = ? AND kind = ?${among} ORDER BY CAST(key AS BLOB)`, capability, kind, ...(where.states ?? [])).map((row) => rowJson<RecordState>(row["value"]));
     const { member, value } = where;
     return member === undefined ? rows : rows.filter((r) => Object.hasOwn(r.values, member) && canonicalize(r.values[member]) === canonicalize(value));
   }
@@ -315,21 +318,21 @@ export class SqliteStore implements Store {
   // request. A holder that holds nothing has no row, so `holders` reads the reservations that are open. The operations of one
   // item are read by the item, from the index `operation_for`.
   holder(item: number): Held | null { return this.#folded<Holder>("holder", String(item))?.held ?? null; }
-  holders(): readonly Holder[] { return this.#all("SELECT value FROM folded WHERE kind = 'holder'").map((row) => json<Holder>(row["value"])).sort((a, b) => a.item - b.item); }
+  holders(): readonly Holder[] { return this.#all("SELECT value FROM folded WHERE kind = 'holder'").map((row) => rowJson<Holder>(row["value"])).sort((a, b) => a.item - b.item); }
   holderSettled(item: number): boolean { return this.#folded<boolean>("capacity-holder", String(item)) === true; }
   settleHolder(item: number): void { this.#fold("capacity-holder", String(item), true); }
   itemDuties(item?: number): readonly ItemDuty[] {
     if (item !== undefined) return this.#folded<readonly ItemDuty[]>("capacity-item", String(item)) ?? [];
-    return this.#all("SELECT value FROM folded WHERE kind = 'capacity-item'").flatMap(row => json<readonly ItemDuty[]>(row["value"])).sort((a, b) => a.item - b.item || byteOrder(canonicalize([a.kind, a.slot]), canonicalize([b.kind, b.slot])));
+    return this.#all("SELECT value FROM folded WHERE kind = 'capacity-item'").flatMap(row => rowJson<readonly ItemDuty[]>(row["value"])).sort((a, b) => a.item - b.item || byteOrder(canonicalize([a.kind, a.slot]), canonicalize([b.kind, b.slot])));
   }
   putItemDuties(item: number, duties: readonly ItemDuty[]): void {
     if (duties.length === 0) this.#run("DELETE FROM folded WHERE kind = 'capacity-item' AND key = ?", String(item));
     else this.#fold("capacity-item", String(item), duties);
   }
-  operationsFor(item: number): readonly Operation[] { return this.#all("SELECT value FROM operation WHERE json_extract(value, '$.for') = ? ORDER BY seq, k", item).map((row) => json<Operation>(row["value"])); }
+  operationsFor(item: number): readonly Operation[] { return this.#all("SELECT value FROM operation WHERE json_extract(value, '$.for') = ? ORDER BY seq, k", item).map((row) => rowJson<Operation>(row["value"])); }
   account(seq: number, n: number): number | null { return this.#folded<Account>("account", canonicalize([seq, n]))?.item ?? null; }
   accountsOf(item: number): readonly Account[] {
-    return this.#all("SELECT value FROM folded WHERE kind = 'account' AND json_extract(value, '$.item') = ?", item).map((row) => json<Account>(row["value"])).sort((a, b) => a.seq - b.seq || a.n - b.n);
+    return this.#all("SELECT value FROM folded WHERE kind = 'account' AND json_extract(value, '$.item') = ?", item).map((row) => rowJson<Account>(row["value"])).sort((a, b) => a.seq - b.seq || a.n - b.n);
   }
 
   /**
@@ -351,23 +354,23 @@ export class SqliteStore implements Store {
     const memory = new MemoryState();
     const scope = this.scope();
     if (scope) memory.setScope(scope);
-    for (const row of this.#all("SELECT record FROM item ORDER BY id")) memory.putItem(json<Item>(row["record"]));
+    for (const row of this.#all("SELECT record FROM item ORDER BY id")) memory.putItem(rowJson<Item>(row["record"]));
     for (const row of this.#all("SELECT type, state, n FROM item_count WHERE n <> 0")) memory.addCount(row["type"] as string, row["state"] as string, row["n"] as number);
     for (const row of this.#all("SELECT kind, key, value FROM folded")) {
-      if (row["kind"] === "relation") memory.putRelation(json(row["value"]));
-      else if (row["kind"] === "creation") memory.putCreation(row["key"] as Digest, json(row["value"]));
-      else if (row["kind"] === "observed") memory.putObserved(json(row["value"]));
-      else if (row["kind"] === "holder") { const holder = json<Holder>(row["value"]); memory.putHolder(holder.item, holder.held); }
-      else if (row["kind"] === "account") memory.putAccount(json<Account>(row["value"]));
-      else if (row["kind"] === "capacity-item") memory.putItemDuties(Number(row["key"]), json(row["value"]));
+      if (row["kind"] === "relation") memory.putRelation(rowJson(row["value"]));
+      else if (row["kind"] === "creation") memory.putCreation(row["key"] as Digest, rowJson(row["value"]));
+      else if (row["kind"] === "observed") memory.putObserved(rowJson(row["value"]));
+      else if (row["kind"] === "holder") { const holder = rowJson<Holder>(row["value"]); memory.putHolder(holder.item, holder.held); }
+      else if (row["kind"] === "account") memory.putAccount(rowJson<Account>(row["value"]));
+      else if (row["kind"] === "capacity-item") memory.putItemDuties(Number(row["key"]), rowJson(row["value"]));
       else if (row["kind"] === "capacity-holder") memory.settleHolder(Number(row["key"]));
       // Index counts are absent from checkpoints; request Amounts are
       // attached to their existing request below, rather than added twice.
       else if (row["kind"] === "keyed" || row["kind"] === "capacity-request") continue;
-      else memory.putTexts(...json<[number, string, Digest[]]>(row["value"]));
+      else memory.putTexts(...rowJson<[number, string, Digest[]]>(row["value"]));
     }
-    for (const row of this.#all("SELECT value FROM operation ORDER BY seq, k")) memory.putOperation(json(row["value"]));
-    for (const row of this.#all("SELECT value FROM record")) memory.putRecord(json(row["value"]));
+    for (const row of this.#all("SELECT value FROM operation ORDER BY seq, k")) memory.putOperation(rowJson(row["value"]));
+    for (const row of this.#all("SELECT value FROM record")) memory.putRecord(rowJson(row["value"]));
     for (const row of this.#all("SELECT intent, capability, step, seq FROM prepared")) memory.putPrepared({ intent: row["intent"] as Digest, capability: row["capability"] as CapabilityName, step: row["step"] as string, seq: row["seq"] as number });
     for (const row of this.#all("SELECT seq, actor, idem, intent FROM entry WHERE actor IS NOT NULL")) memory.putAccepted(row["actor"] as KeyId, row["idem"] as string, { seq: row["seq"] as number, intent: row["intent"] as Digest });
     for (const row of this.#all(`${REQUEST_ROWS} WHERE o.request IS NOT NULL`)) memory.putRequest(requestOf(row));
@@ -512,7 +515,7 @@ export class SqliteStore implements Store {
 
   outgoing(now: number, limit: number): Outgoing[] {
     return this.#all(`SELECT o.seq, o.n, o.target, o.message, o.attempts, e.hash FROM outbox o JOIN entry e ON e.seq = o.seq WHERE ${DUE} AND o.next <= ? ORDER BY o.next, o.seq, o.n LIMIT ?`, now, limit)
-      .map((row) => ({ seq: row["seq"] as number, n: row["n"] as number, hash: row["hash"] as Digest, to: json(row["target"]), message: json(row["message"]), attempts: json(row["attempts"]) }));
+      .map((row) => ({ seq: row["seq"] as number, n: row["n"] as number, hash: row["hash"] as Digest, to: rowJson(row["target"]), message: rowJson(row["message"]), attempts: rowJson(row["attempts"]) }));
   }
   nextDispatch(): number | null { return (this.#one(`SELECT MIN(o.next) AS next FROM outbox o WHERE ${DUE}`)?.["next"] as number | null | undefined) ?? null; }
   attempted(seq: number, n: number, attempts: readonly Dispatched[], next: number): void {
@@ -547,7 +550,7 @@ export class SqliteStore implements Store {
   }
   operations(after: { seq: number; k: number } | null, limit: number, open: boolean): { operations: OperationStatus[]; more: boolean } {
     const rows = this.#all(`SELECT value FROM operation WHERE (seq, k) > (?, ?)${open ? ` AND ${OPEN}` : ""} ORDER BY seq, k LIMIT ?`, after?.seq ?? -1, after?.k ?? -1, limit + 1);
-    return { operations: rows.slice(0, limit).map((row) => this.#status(json<Operation>(row["value"]))), more: rows.length > limit };
+    return { operations: rows.slice(0, limit).map((row) => this.#status(rowJson<Operation>(row["value"]))), more: rows.length > limit };
   }
   operationStatus(id: OperationId): OperationStatus | null {
     const operation = this.operation(id);
@@ -582,15 +585,15 @@ const OUTBOX = "seq, n, target, class, held, attempts, ack, result, diagnosis";
 
 function outboxItemOf(row: Row): OutboxItem {
   return {
-    outboxId: `${row["seq"] as number}.${row["n"] as number}`, to: json(row["target"]), class: row["class"] as OutboxItem["class"], held: row["held"] === 1,
-    attempts: json(row["attempts"]), acknowledged: orNull(row["ack"]), result: orNull(row["result"]), diagnosis: orNull(row["diagnosis"]),
+    outboxId: `${row["seq"] as number}.${row["n"] as number}`, to: rowJson(row["target"]), class: row["class"] as OutboxItem["class"], held: row["held"] === 1,
+    attempts: rowJson(row["attempts"]), acknowledged: orNull(row["ack"]), result: orNull(row["result"]), diagnosis: orNull(row["diagnosis"]),
   };
 }
 
 function requestOf(row: Row): OwnRequest {
   const reservation = orNull<Amount>(row["reservation"]);
   return {
-    seq: row["seq"] as number, n: row["n"] as number, hash: row["hash"] as Digest, type: row["request"] as OwnRequest["type"], to: json(row["target"]),
+    seq: row["seq"] as number, n: row["n"] as number, hash: row["hash"] as Digest, type: row["request"] as OwnRequest["type"], to: rowJson(row["target"]),
     result: orNull(row["result"]), diagnosis: orNull(row["diagnosis"]),
     ...(reservation === null ? {} : { reservation }),
   };

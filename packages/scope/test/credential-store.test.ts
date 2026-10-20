@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import type { OperationId } from "@generalbusiness/dap-contract";
 import { CredentialStore, type ExpectedRevocation, type MintedCredential } from "../src/credential-store.ts";
-import { START, at, create, reader } from "./support.ts";
+import { START, at, create, reader } from "./fixtures-native.ts";
 
 // The credential IDs, mint references and replies are written by hand: no
 // host runs and no scope judged a mint. Custody uses real Durable Object

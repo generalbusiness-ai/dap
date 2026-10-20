@@ -15,13 +15,8 @@ import { CAPABILITY_CODE } from "../src/ports.ts";
 import { ArchiveBudget } from "../src/archive-budget.ts";
 import { fixtureArchiveTargetIn } from "../src/archive-target.ts";
 import { mintSession, readerOf } from "../src/sessions.ts";
-import { deviceApplicationPacket } from "./support/device-application-fixture.ts";
-import { applicationResolverFixture } from "./support/application-fixture.ts";
-import { applicationHttpPeer } from "./support/application-http-peer.ts";
-import { sessionRoom } from "./support/session-room.ts";
-import { dispatchFixture, driveFixture, effectFixture } from "./support/native-fixture-lifetime.ts";
+import { deviceApplicationPacket, applicationResolverFixture, applicationHttpPeer, sessionRoom, dispatchFixture, driveFixture, effectFixture, reader, applicationWorkerBindings } from "./fixtures-native.ts";
 import { rita, routed } from "./repository.ts";
-import { reader } from "./support.ts";
 
 async function fixture(register: PlatformDefinition) {
   const packet = await deviceApplicationPacket(true), room = await sessionRoom(register);
@@ -31,7 +26,7 @@ async function fixture(register: PlatformDefinition) {
     const seat = await life.wait(async () => M.did(rita, "seat", { expected: await M.expected({ roster: 0 }) }));
     await life.wait(async () => M.did(rita, "first-key", { fields: { member: seat }, expected: await M.expected({ roster: 0, member: seat }) }));
     const f = await applicationResolverFixture("sha1", undefined, {}, undefined, packet), peer = applicationHttpPeer(f);
-    const bindings = { SCOPES: env.PLATFORM, APPLICATION_CONTENT: env.APPLICATION_CONTENT, APPLICATION_TRUST: JSON.stringify(f.trust) };
+    const bindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(f.trust));
     for (const node of [D, A]) { life.outside(node.name, (given, sql) => hostOutside(given, sql, bindings, peer.fetch)); await life.wait(() => node.restart()); }
     const membership = await life.wait(() => M.at()), directory = await life.wait(() => D.at());
     const owner = { membership, member: "@rita" as const }, signer = secretSigner(rita.secret);

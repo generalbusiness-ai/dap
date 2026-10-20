@@ -96,7 +96,7 @@ const error = (reason: ErrorReason): Outcome => ({ act: "check-error", reason })
 export const REPORT_BOUNDS = { variables: 1024, steps: 1024, textBytes: 64 * 1024 } as const;
 
 /** A string that canonical bytes can hold, within the bound: no lone surrogate. */
-const text = (v: unknown): v is string => typeof v === "string" && v.length <= REPORT_BOUNDS.textBytes && wellFormed(v) && utf8(v).length <= REPORT_BOUNDS.textBytes;
+const outcomeText = (v: unknown): v is string => typeof v === "string" && v.length <= REPORT_BOUNDS.textBytes && wellFormed(v) && utf8(v).length <= REPORT_BOUNDS.textBytes;
 /** A status that canonical bytes can hold: a safe integer, and never negative zero. */
 const status = (v: unknown): v is number => typeof v === "number" && Number.isSafeInteger(v) && !Object.is(v, -0);
 /** The elements of an array of at most `max`, each read once by its index, so that a hole is read as the absent value that it is. Null: no such array. */
@@ -130,14 +130,14 @@ export function readReport(v: unknown): RunReport | null {
     for (const x of variables) {
       if (!exactly(x, ["name", "value"])) return null;
       const { name, value } = x;
-      if (!text(name) || !text(value)) return null;
+      if (!outcomeText(name) || !outcomeText(value)) return null;
       environment.push({ name, value });
     }
     const steps: StepReport[] = [];
     for (const s of ran) {
       if (!exactly(s, ["status", "line"])) return null;
       const { status: ended, line } = s;
-      if (!(ended === null || status(ended)) || !(line === null || text(line))) return null;
+      if (!(ended === null || status(ended)) || !(line === null || outcomeText(line))) return null;
       steps.push({ status: ended, line });
     }
     return { started, image, environment, checkout, steps, end };

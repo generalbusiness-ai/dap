@@ -24,6 +24,7 @@
  * connection of one server is bound to the one key the process signs with.
  */
 
+import { isRecord } from "@generalbusiness/artroom-bytes";
 import type { Digest } from "@generalbusiness/dap-contract";
 import { utf8 } from "@generalbusiness/artroom-bytes";
 import { INSTRUCTIONS, ListRestart, SERVER_NAME, SERVER_VERSION, type McpService } from "./service.ts";
@@ -55,7 +56,6 @@ const MODERN_ADDED = { resultType: "complete", _meta: { [SERVER_INFO_META]: SERV
  * response bounds hold for the CallResult, as the service makes it; a client of 2026-07-28 receives this many bytes more.
  */
 export const MODERN_RESULT_EXTRA = new TextEncoder().encode(JSON.stringify(MODERN_ADDED)).length - 2 + 1;
-const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
 const reply = (id: Id, result: unknown): Message => ({ jsonrpc: "2.0", id, result });
 const error = (id: Id | null, code: number, message: string, data?: unknown): Message => ({ jsonrpc: "2.0", id, error: { code, message, ...(data !== undefined ? { data } : {}) } });
 

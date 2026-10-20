@@ -3,7 +3,7 @@ import { MAX_FIELD, MAX_TEXT, diagnosis, redact, report, toConsole } from "../sr
 // I3 merge: from the git package's `./testing` export, as in `hosted.ts`.
 import { secret } from "../../git/test/support/tokens.ts";
 import { hosted } from "./hosted.ts";
-import { reader } from "./support.ts";
+import { reader } from "./fixtures-native.ts";
 
 // Samples are put together at run time, so this file holds no text with the form of a credential.
 const join = (...parts: string[]) => parts.join("");

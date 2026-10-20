@@ -1,4 +1,5 @@
 /** One authenticated scope observation. Invalidation notices never settle pending commands or prove current authority. */
+import { same } from "@generalbusiness/artroom-bytes";
 import type { Digest, Head, KeyId, MemberId, PlatformDefinition, Read, ScopeRef, SessionRefusal, Summary } from "@generalbusiness/dap-contract";
 import { canonicalize, isHead, isScopeRef, timeMs, timeOf, type Expiry } from "@generalbusiness/artroom-bytes";
 import type { Session } from "./session.ts";
@@ -30,7 +31,6 @@ export function completeSummary(read: Read<Summary>): Read<CompleteSnapshot<Summ
   return { ...read, value: { scope: read.value.scope, definition: read.value.definition, at: read.at, value: read.value } };
 }
 
-const same = (a: unknown,b: unknown) => canonicalize(a)===canonicalize(b);
 class Stopped extends Error {}
 class ObservationFailure extends Error { constructor(readonly status: "unavailable"|"forbidden"|"expired"|"unsupported"|"error",readonly reason:string){super(reason);} }
 

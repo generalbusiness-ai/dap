@@ -2,7 +2,7 @@
 import { DEVICE_COMMAND } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest } from "@generalbusiness/artroom-bytes";
 import { packApplication2, readApplicationProjection } from "@generalbusiness/artroom-bytes/application-v2";
-import { secretSigner } from "@generalbusiness/artroom-client";
+import { fixedSigner } from "../fixtures-core.ts";
 import { deviceCommandFixture } from "../../../derive/test/fixtures-device-command.ts";
 
 export async function deviceApplicationPacket(requiresArchive = false, withView = false) {
@@ -16,5 +16,5 @@ export async function deviceApplicationPacket(requiresArchive = false, withView 
   }, presentation: { v: 2, entry: "index.html", assets: [{ path: "index.html", mediaType: "text/html", bytes: "VEVTVA" }], descriptions: {}, views: withView ? {
     root: { kind: "record", projection: "root", item: "root", title: "state", summary: null, actor: null, facts: ["revision"], revision: "revision",
       acts: [], context: "Device {id} v{revision}", fallback: "Device {id}: {state}", waiting: {}, refresh: 2000, display: "fullscreen", back: null },
-  } : {}, resources: {} } }, secretSigner(new Uint8Array(32).fill(81)));
+  } : {}, resources: {} } }, fixedSigner(81));
 }

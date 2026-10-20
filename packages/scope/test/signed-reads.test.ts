@@ -18,7 +18,7 @@ import { outsideOf, wired } from "./outside.ts";
 import { initialPublication } from "./publication.ts";
 import { Platform, rita, routed, settle } from "./repository.ts";
 import { beginSessionChild, beginSessionFixture, type SessionOwner } from "./session-settings.ts";
-import { reader } from "./support.ts";
+import { reader } from "./fixtures-native.ts";
 import type { MetricPoint } from "../src/metrics.ts";
 import { TEST_DEPLOYMENT, metricBindings, platformNet } from "./worker.ts";
 

@@ -11,11 +11,7 @@ import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-m
 import { httpSource, verify } from "@generalbusiness/artroom-replay";
 import nativeWorker from "../../../apps/room/worker.ts";
 import { outsideOf as hostOutside } from "../src/worker.ts";
-import { applicationOwnedScopesPacket } from "./support/application-owned-scopes-fixture.ts";
-import { applicationResolverFixture } from "./support/application-fixture.ts";
-import { applicationHttpPeer } from "./support/application-http-peer.ts";
-import { sessionRoom } from "./support/session-room.ts";
-import { dispatchFixture, driveFixture, effectFixture } from "./support/native-fixture-lifetime.ts";
+import { applicationOwnedScopesPacket, applicationWorkerBindings, applicationResolverFixture, applicationHttpPeer, sessionRoom, dispatchFixture, driveFixture, effectFixture } from "./fixtures-native.ts";
 import { rita, routed } from "./repository.ts";
 import { soon } from "./net.ts";
 
@@ -30,7 +26,7 @@ test("one native install creates and confirms the declared root and child with i
   const other = await applicationResolverFixture("sha1", undefined, {}, undefined, foreign.packet), otherPeer = applicationHttpPeer(other);
   let packageFetch = peer.fetch;
   const fetchPackage = (request: Request) => packageFetch(request);
-  const bindings = { SCOPES: env.PLATFORM, APPLICATION_CONTENT: env.APPLICATION_CONTENT, APPLICATION_TRUST: JSON.stringify([...f.trust, ...other.trust]) };
+  const bindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify([...f.trust, ...other.trust]));
   try {
     const seat = await life.wait(() => M.did(rita, "seat", { expected: { roster: 1 } }));
     await life.wait(async () => M.did(rita, "first-key", { fields: { member: seat }, expected: await M.expected({ roster: 0, member: seat }) }));

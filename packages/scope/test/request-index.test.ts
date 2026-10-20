@@ -2,7 +2,7 @@ import { runInDurableObject } from "cloudflare:test";
 import { expect, test } from "vitest";
 import { timeOf } from "@generalbusiness/dap-derive";
 import { REQUEST_AGE_MS, REQUEST_ROWS, RequestIndex, requestQuery } from "../src/request-index.ts";
-import { create } from "./support.ts";
+import { create } from "./fixtures-native.ts";
 
 // Actual SQLite, with directly seeded operational rows. This is a sidecar
 // boundary witness; it does not yet prove the production instrumentation.

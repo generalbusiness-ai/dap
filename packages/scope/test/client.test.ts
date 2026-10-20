@@ -6,7 +6,7 @@ import { newIncarnation } from "@generalbusiness/artroom-bytes";
 import { timeMs } from "@generalbusiness/dap-derive";
 import { deskDefinition, grantOf, ticketDefinition } from "@generalbusiness/dap-derive/testing";
 import { net, rita } from "./net.ts";
-import { reader } from "./support.ts";
+import { reader } from "./fixtures-native.ts";
 
 const transports: [string, () => Transport][] = [
   ["the Worker's fetch routes", () => httpTransport("https://scopes.test", { fetch: (url, init) => SELF.fetch(url, init) })],

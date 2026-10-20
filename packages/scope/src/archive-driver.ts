@@ -1,7 +1,8 @@
 /** One bounded asynchronous archive pass. No entry, operation or public RPC.
  * Configuration and reviewed policy belong to the trusted object owner. */
+import { same } from "@generalbusiness/artroom-bytes";
 import type { Bounds, Head, ScopeRef, Seed, Timestamp } from "@generalbusiness/dap-contract";
-import { canonicalize, isScopeRef, timeMs, timeOf } from "@generalbusiness/artroom-bytes";
+import { isScopeRef, timeMs, timeOf } from "@generalbusiness/artroom-bytes";
 import { journalId, journalRef, type JournalArchive, type JournalFormat, type JournalObject } from "@generalbusiness/artroom-git/journal";
 import { ArchiveBudget, ArchiveStopped } from "./archive-budget.ts";
 import { planArchive, rebuildArchive } from "./archive-build.ts";
@@ -48,7 +49,6 @@ export interface FixtureArchiveDriverOptions {
   readonly budget?: () => ArchiveBudget;
 }
 export interface ArchivePass { readonly state: "idle" | "disabled" | "retry" | "stopped" | "confirmed"; readonly next: Timestamp | null; readonly reason?: string }
-const same = (a: unknown, b: unknown): boolean => canonicalize(a) === canonicalize(b);
 
 export class ArchiveDriver {
   readonly #options: FixtureArchiveDriverOptions;

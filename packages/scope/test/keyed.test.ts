@@ -3,7 +3,7 @@ import { expect, test } from "vitest";
 import type { Item } from "@generalbusiness/dap-contract";
 import { stateDigest } from "@generalbusiness/dap-derive";
 import { SqliteStore } from "../src/sqlite.ts";
-import { objectOf } from "./support.ts";
+import { objectOf } from "./fixtures-native.ts";
 
 // Scope contract, revision 23, section 17.2a, "An index that an item type declares" (row I3-61; witness 18.53, cases 23 and 25, on
 // real storage). The store is the real one, on a Durable Object's SQLite. The items are written by hand, as the fold writes them:

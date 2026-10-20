@@ -9,7 +9,7 @@ import { gateRules, gateWith } from "../../derive/test/fixtures-marks.ts";
 import { SqliteStore } from "../src/index.ts";
 import { controls } from "../src/testing.ts";
 import { outsideOf, wired } from "./outside.ts";
-import { START, at, objectOf, reader, rita, stubOf, una } from "./support.ts";
+import { START, at, objectOf, reader, rita, stubOf, una } from "./fixtures-native.ts";
 
 // Scope contract, revision 23, section 17.2a; witness 18.47, cases 4 to 6 and 14, on real storage (B2). STAND-INS: the platform
 // data and its rules are derive's made-up fixture `gate`, under a name and version that no runtime holds, with one change: a ticket

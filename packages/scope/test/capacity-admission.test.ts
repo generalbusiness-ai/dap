@@ -11,7 +11,7 @@ import { metricBindings } from "./worker.ts";
 import type { MetricPoint } from "../src/metrics.ts";
 import { variant } from "@generalbusiness/dap-derive/testing";
 import { SqliteStore } from "../src/index.ts";
-import { create, creation, definition, objectOf, START, stubOf, reader, rita, una, vic } from "./support.ts";
+import { create, creation, definition, objectOf, START, stubOf, reader, rita, una, vic } from "./fixtures-native.ts";
 
 const nativeHistory = () => httpSource("https://scope.test", { reader, fetch: async (url, init) => {
   const response = await route(new Request(url, init), env.SCOPES);

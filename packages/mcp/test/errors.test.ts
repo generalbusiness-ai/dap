@@ -4,6 +4,7 @@ import { REFUSAL_REASONS, READ_REFUSALS, b64url, utf8 } from "@generalbusiness/a
 import { secretSigner } from "@generalbusiness/artroom-client";
 import { McpService, MISMATCH_NOTES, UNAVAILABLE_NOTES, answered, finding, guardSentences, memoryStore, type DefinitionLike, type Finding } from "../src/index.ts";
 import { READ_CREDENTIAL, SERVICE, SESSION_TOKEN, StandIn } from "./support/standin.ts";
+import { fixedSigner } from "./fixtures.ts";
 
 const head = { seq: 41, hash: `sha256:${"c".repeat(64)}` } as const;
 const asked = { scope: "sc_the_scope", kind: "close-own", on: 3, action: "issue.close-own" };
@@ -104,7 +105,7 @@ describe("errors say who said what, from what the judge returned", () => {
 
 // Invariant: invitation URL refusals happen before signing, transport, config or custody writes.
 test("join validates its service before signing or changing an empty configuration (STAND-IN transport)", async () => {
-  const real = secretSigner(new Uint8Array(32).fill(19));
+  const real = fixedSigner(19);
   const standIn = new StandIn(real.key);
   const repository = standIn.config().repository!;
   const { inbox: _inbox, ...shared } = repository;

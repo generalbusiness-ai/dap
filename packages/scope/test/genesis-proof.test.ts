@@ -7,7 +7,7 @@ import { ProofBytes, type ProofBody, type ProofSource } from "../src/proof-bytes
 import { rootOf } from "../src/signed-reads.ts";
 import { PreparationFlights } from "../src/preparation-flight.ts";
 import { SqliteStore, type Sql } from "../src/sqlite.ts";
-import { at, create, rita, una } from "./support.ts";
+import { at, create, rita, una } from "./fixtures-native.ts";
 
 const sqlOf = (state: DurableObjectState): Sql => ({ exec: (query, ...args) => state.storage.sql.exec(query, ...args), transaction: work => state.storage.transactionSync(work) });
 class Timer implements ProofTimer {

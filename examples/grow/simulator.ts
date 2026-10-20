@@ -42,24 +42,24 @@ export interface SimulatedReading {
   readonly zones: readonly ZoneSummary[];
   readonly devices: readonly DeviceReport[];
 }
-const integer = (value: number, min: number, max: number): boolean => Number.isSafeInteger(value) && value >= min && value <= max;
+const simulationIntegerInRange = (value: number, min: number, max: number): boolean => Number.isSafeInteger(value) && value >= min && value <= max;
 
 /** Validate the signed asset before accepting any clock or room input. */
 export function simulatorSchedule(value: unknown): SimulatorSchedule {
   if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error("invalid simulator schedule");
   const s = value as SimulatorSchedule;
   if (Object.keys(value).sort().join(",") !== "autonomousRecovery,cadenceMinutes,fanFault,faultZone,periodMinutes,v,ventFault" || s.v !== 1
-    || !integer(s.cadenceMinutes, 1, 60) || !integer(s.periodMinutes, 1, 1440) || s.periodMinutes % s.cadenceMinutes !== 0
-    || !integer(s.faultZone, 1, 4)) throw new Error("invalid simulator schedule");
+    || !simulationIntegerInRange(s.cadenceMinutes, 1, 60) || !simulationIntegerInRange(s.periodMinutes, 1, 1440) || s.periodMinutes % s.cadenceMinutes !== 0
+    || !simulationIntegerInRange(s.faultZone, 1, 4)) throw new Error("invalid simulator schedule");
   for (const range of [s.ventFault, s.fanFault]) {
     if (!range || typeof range !== "object" || Object.keys(range).sort().join(",") !== "fromMinute,untilMinute"
-      || !integer(range.fromMinute, 0, s.periodMinutes - 1) || !integer(range.untilMinute, range.fromMinute + 1, s.periodMinutes)
+      || !simulationIntegerInRange(range.fromMinute, 0, s.periodMinutes - 1) || !simulationIntegerInRange(range.untilMinute, range.fromMinute + 1, s.periodMinutes)
       || range.fromMinute % s.cadenceMinutes !== 0 || range.untilMinute % s.cadenceMinutes !== 0) throw new Error("invalid simulator fault period");
   }
   const recovery = s.autonomousRecovery;
   if (!recovery || typeof recovery !== "object" || Object.keys(recovery).sort().join(",") !== "description,fromMinute,restorationWindowMinutes"
-    || recovery.fromMinute !== s.ventFault.untilMinute || !integer(recovery.fromMinute, 0, s.periodMinutes - 1)
-    || !integer(recovery.restorationWindowMinutes, 1, s.periodMinutes - recovery.fromMinute) || recovery.restorationWindowMinutes % s.cadenceMinutes !== 0
+    || recovery.fromMinute !== s.ventFault.untilMinute || !simulationIntegerInRange(recovery.fromMinute, 0, s.periodMinutes - 1)
+    || !simulationIntegerInRange(recovery.restorationWindowMinutes, 1, s.periodMinutes - recovery.fromMinute) || recovery.restorationWindowMinutes % s.cadenceMinutes !== 0
     || typeof recovery.description !== "string" || recovery.description.length === 0 || new TextEncoder().encode(recovery.description).length > 1024) throw new Error("invalid simulator recovery schedule");
   return structuredClone(s);
 }
@@ -69,17 +69,17 @@ export function simulatorSchedule(value: unknown): SimulatorSchedule {
  * never invents intervening observations or a person's intervention. */
 export function simulateRoom(schedule: SimulatorSchedule, now: number, zones: readonly SimulatedZone[], devices: readonly SimulatedDevice[]): SimulatedReading {
   const s = simulatorSchedule(schedule);
-  if (!integer(now, 0, 8_640_000_000_000_000) || !integer(zones.length, 1, 4) || devices.length !== zones.length * 3) throw new Error("invalid simulated room");
+  if (!simulationIntegerInRange(now, 0, 8_640_000_000_000_000) || !simulationIntegerInRange(zones.length, 1, 4) || devices.length !== zones.length * 3) throw new Error("invalid simulated room");
   const ordered = [...zones].sort((a, b) => a.id - b.id), ids = new Set<number>(), deviceIds = new Set<number>();
   for (const zone of ordered) {
-    if (!integer(zone.id, 0, Number.MAX_SAFE_INTEGER) || ids.has(zone.id) || !integer(zone.setpoint, -4000, 8000) || !integer(zone.band, 1, 2000)) throw new Error("invalid simulated zone");
+    if (!simulationIntegerInRange(zone.id, 0, Number.MAX_SAFE_INTEGER) || ids.has(zone.id) || !simulationIntegerInRange(zone.setpoint, -4000, 8000) || !simulationIntegerInRange(zone.band, 1, 2000)) throw new Error("invalid simulated zone");
     ids.add(zone.id);
     for (const kind of ["vent", "fan", "heater"] as const) if (devices.filter(d => d.zone === zone.id && d.kind === kind).length !== 1) throw new Error("incomplete simulated devices");
   }
   for (const device of devices) {
     const off = device.target === "off" || device.target === "closed";
-    if (!integer(device.id, 0, Number.MAX_SAFE_INTEGER) || deviceIds.has(device.id) || !ids.has(device.zone)
-      || !["vent", "fan", "heater"].includes(device.kind) || !integer(device.level, 0, 100)
+    if (!simulationIntegerInRange(device.id, 0, Number.MAX_SAFE_INTEGER) || deviceIds.has(device.id) || !ids.has(device.zone)
+      || !["vent", "fan", "heater"].includes(device.kind) || !simulationIntegerInRange(device.level, 0, 100)
       || !(device.kind === "vent" ? ["open", "closed"] : ["on", "off"]).includes(device.target)
       || (off ? device.level !== 0 : device.level < 1 || (device.kind === "heater" && device.level !== 100))) throw new Error("invalid simulated target");
     deviceIds.add(device.id);

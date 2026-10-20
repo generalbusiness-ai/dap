@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 import { DOMAINS } from "@generalbusiness/dap-contract";
 import { requiredDependency, observationDependency, textDependency, UnsupportedConsumer } from "../src/index.ts";
 import type { DependencyOrigin } from "../src/index.ts";
-import { d, directory } from "./fixtures.ts";
+import { d, directory } from "./fixtures-entry.ts";
 
 const variants = ["genesis", "act", "delivery", "timed", "diagnosis", "outcome", "preparation", "checkpoint"] as const;
 const origin = (input: DependencyOrigin["input"]): DependencyOrigin => ({ at: { at: directory, seq: 0, hash: d("0") }, input });

@@ -3,8 +3,7 @@ import type { Entry, FactRef } from "@generalbusiness/dap-contract";
 import { intentDigest, utf8 } from "@generalbusiness/artroom-bytes";
 import { ANCESTRY_BOUNDS, ledgerOf, recordEffects, stagedRefName, walk } from "../src/index.ts";
 import type { AncestryCheck, GitObject, PriorCheck, WalkInput } from "../src/index.ts";
-import { d, directory, keys, membership, otherLane } from "./fixtures.ts";
-import { C, Staging, cap, clean, kept } from "./fixtures-hold.ts";
+import { d, directory, keys, membership, otherLane, C, Staging, cap, clean, kept } from "./fixtures-entry.ts";
 
 const { una } = keys;
 // The commits of the witness tables of section 6.2, by their letters. `Z` is the first commit of the branch.

@@ -12,7 +12,7 @@ import { CredentialStore } from "../src/credential-store.ts";
 import { DestinationHost, type DestinationBinding, type DestinationHostOptions, type DestinationInspection, type DestinationProvider, type DestinationRepository } from "../src/destination-host.ts";
 import type { OutsideGiven } from "../src/object.ts";
 import type { EffectAnswer, EffectRequest } from "../src/operations.ts";
-import { create } from "./support.ts";
+import { create } from "./fixtures-native.ts";
 
 /** STAND-IN: provider replies and object reads are scripts. No host or transport runs. */
 class Provider implements DestinationProvider {
