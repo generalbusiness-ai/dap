@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/replay/src/archive.ts","body":{"commit":"7bc1490c286a360a1198d144674998b704c167ad","path":"packages/replay/src/archive.ts"}}
+{"kind":"artifact","text":"Merge published the current artifact at packages/replay/test/archive-git-fixture.ts","body":{"commit":"7bc1490c286a360a1198d144674998b704c167ad","path":"packages/replay/test/archive-git-fixture.ts"}}
