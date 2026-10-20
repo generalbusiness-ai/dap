@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:c9b80aceb3567c47cfd1debd778a31a7ccbcde96"}
+{"kind":"promise","text":"The planner (this session, taking over from the session that filed the request) writes notes/2026-10-20-chat-composed-views.md to the twelve decisions, files it for checker review, and lands it when approved. Implementation requests follow only after it lands, ordered behind the grow demo, the journey MVP from J3 and the identifiers section 8."}
