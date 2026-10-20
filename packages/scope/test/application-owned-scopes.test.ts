@@ -11,14 +11,13 @@ import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-m
 import { httpSource, verify } from "@generalbusiness/artroom-replay";
 import nativeWorker from "../../../apps/room/worker.ts";
 import { outsideOf as hostOutside } from "../src/worker.ts";
-import { applicationOwnedScopesPacket } from "./support/application-owned-scopes-fixture.ts";
+import { applicationOwnedScopesPacket, applicationWorkerBindings } from "./fixtures.ts";
 import { applicationResolverFixture } from "./support/application-fixture.ts";
 import { applicationHttpPeer } from "./support/application-http-peer.ts";
 import { sessionRoom } from "./support/session-room.ts";
 import { dispatchFixture, driveFixture, effectFixture } from "./support/native-fixture-lifetime.ts";
 import { rita, routed } from "./repository.ts";
 import { soon } from "./net.ts";
-import { applicationWorkerBindings } from "./fixtures.ts";
 
 test("one native install creates and confirms the declared root and child with inherited session membership", async () => {
   const { packet, rootId, childId } = await applicationOwnedScopesPacket();

@@ -3,7 +3,7 @@
 import type { DeclaredDefinition, Digest } from "@generalbusiness/dap-contract";
 import { canonicalize, definitionDigest } from "@generalbusiness/artroom-bytes";
 import { packApplication2, readApplicationProjection } from "@generalbusiness/artroom-bytes/application-v2";
-import { fixedSigner } from "../fixtures.ts";
+import { fixedSigner } from "../fixtures-core.ts";
 
 const grant = "fixture.configure";
 function definition(name: string, child?: Digest): DeclaredDefinition {

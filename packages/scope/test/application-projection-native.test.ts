@@ -12,7 +12,7 @@ import { requestSession, sessionRequest, ScopeHandle, httpTransport, bindingTran
 import { McpService, memoryStore as custodyStore, type ServerPort } from "@generalbusiness/dap-mcp";
 import nativeWorker from "../../../apps/room/worker.ts";
 import { outsideOf as hostOutside } from "../src/worker.ts";
-import { applicationCounterFactTimePacket2 } from "./support/application-fact-time-fixture.ts";
+import { applicationCounterFactTimePacket2, applicationWorkerBindings } from "./fixtures.ts";
 import { applicationResolverFixture } from "./support/application-fixture.ts";
 import { applicationHttpPeer } from "./support/application-http-peer.ts";
 import { sessionRoom } from "./support/session-room.ts";
@@ -29,7 +29,6 @@ import { ApplicationProjections } from "../src/applications/projection.ts";
 import { applicationDeclarationsIn } from "../src/applications/projection-source.ts";
 import { SqliteStore, type SqlValue } from "../src/sqlite.ts";
 import { authenticateSession, mintSession, readerOf, type Sessions } from "../src/sessions.ts";
-import { applicationWorkerBindings } from "./fixtures.ts";
 
 test("native installed projection reads exact journal state and survives R2 deletion and eviction", async () => {
   const room = await sessionRoom(C.register), { life, R, D, children } = room, [M, A, G] = children;

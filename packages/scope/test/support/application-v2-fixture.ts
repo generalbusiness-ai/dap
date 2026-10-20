@@ -3,7 +3,7 @@
 import { b64url, canonicalize, definitionDigest, utf8 } from "@generalbusiness/artroom-bytes";
 import { packApplication2, readApplicationProjection } from "@generalbusiness/artroom-bytes/application-v2";
 import { countingCommitments } from "../../../../apps/counter/commitments.ts";
-import { fixedSigner } from "../fixtures.ts";
+import { fixedSigner } from "../fixtures-core.ts";
 const signer = fixedSigner(67);
 export async function applicationCounterPacket2(when = "state = 'open'", version = "1") {
   const id = definitionDigest(countingCommitments);

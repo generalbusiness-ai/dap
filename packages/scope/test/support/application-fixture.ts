@@ -9,7 +9,7 @@ import { countingCommitments } from "../../../../apps/counter/commitments.ts";
 import { readApplicationTrust } from "../../src/applications/admission.ts";
 import { ApplicationContentStore, applicationReleaseKey } from "../../src/applications/content.ts";
 import type { OpenApplicationSource } from "../../src/applications/resolve.ts";
-import { applicationTrust, fixedSigner } from "../fixtures.ts";
+import { applicationTrust, fixedSigner } from "../fixtures-core.ts";
 const signer = fixedSigner(64), utf8 = new TextEncoder();
 export async function applicationResolverFixture(format: "sha1" | "sha256", bytes?: Uint8Array, roles: Readonly<Record<string, readonly string[]>> = {}, declared: DeclaredDefinition = countingCommitments, provided?: AnyPackedApplication) {
   const definition = definitionDigest(declared), packet = provided ?? await packApplication({ name: "test.example.resolve", version: format, semantic: { v: 1, entry: definition,

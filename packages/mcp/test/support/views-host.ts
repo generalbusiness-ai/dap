@@ -8,7 +8,7 @@ import { DOMAINS } from "@generalbusiness/dap-contract";
 import { firstExtents } from "@generalbusiness/dap-platform";
 import { LEGACY, MODERN, McpService, Wire, memoryStore, newSession, type Card, type Message, type ResourcePolicy, type ViewSource } from "../../src/index.ts";
 import { StandIn, SERVICE } from "./standin.ts";
-import { applicationCounterNavigationPacket2 } from "../../../scope/test/support/application-v2-fixture.ts";
+import { applicationCounterNavigationPacket2 } from "../../../scope/test/fixtures.ts";
 import { viewToolName } from "../../src/views/names.ts";
 import { applicationProjectionId, applicationProjectionQueryDigest } from "@generalbusiness/artroom-bytes/application-v2";
 import { DeclaredViewSource } from "../../src/views/declared.ts";
