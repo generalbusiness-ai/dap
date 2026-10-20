@@ -213,3 +213,8 @@ export function archiveDeclaredApplicationPublicationOrigin(from: FactRef, direc
 export function deviceApplicationPublicationOrigin(from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly Fetched[]): boolean | null {
   return installedApplicationOrigin(from, directory, destination, facts, { directory: "platform:directory@15", rules: "platform:rules@9", destination: "platform:destination@11", deviceCommand: true });
 }
+
+/** Only Destination12 combines Directory16's device grant and Membership8 archive authority. */
+export function archiveDeviceApplicationPublicationOrigin(from: FactRef, directory: ScopeRef, destination: ScopeRef, facts: readonly Fetched[]): boolean | null {
+  return installedApplicationOrigin(from, directory, destination, facts, { directory: "platform:directory@16", rules: "platform:rules@10", destination: "platform:destination@12", membership: "platform:membership@8", deviceCommand: true });
+}

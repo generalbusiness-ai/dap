@@ -16,7 +16,7 @@ import { describe, expect, test } from "vitest";
 import type { Digest, Item, OperationId, Read, Receipt, ScopeRef, Seed, SignedIntent } from "@generalbusiness/dap-contract";
 import { b64url, keyIdOfSecret, scopeIdOf, timeOf } from "@generalbusiness/artroom-bytes";
 import { AGENT_KEY_LINK, agentKeyInvitationOf, encodeAgentKeyInvitation, requestSession, sessionRequest, type AgentKeyInvitation, type Fetch } from "@generalbusiness/artroom-client";
-import { APPLICATION_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, repositoryName } from "@generalbusiness/dap-platform";
+import { APPLICATION_COHORT, TRUSTED_APPLICATION_COHORT, DECLARED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, repositoryName } from "@generalbusiness/dap-platform";
 import { beginSessionFixture } from "../../scope/test/session-settings.ts";
 import { Platform, routed } from "../../scope/test/repository.ts";
 import { outsideOf } from "../../scope/test/outside.ts";
@@ -38,7 +38,7 @@ describe("tagged agent-key enrolment on the trusted application and historical a
     const lifetime=nativeFixtureLifetime(owner);
     try{await story(lifetime,"declared-application");}finally{lifetime.release();}
   },60_000);
-  test.each(["archive-application", "archive-declared-application"] as const)("%s: native Membership8 issues private person and agent invitations and enrolls both through its exact directory", async cohort => {
+  test.each(["archive-application", "archive-declared-application", "archive-device-application"] as const)("%s: native Membership8 issues private person and agent invitations and enrolls both through its exact directory", async cohort => {
     const owner = beginSessionFixture({ secret: b64url(crypto.getRandomValues(new Uint8Array(32))), sessions: true, inspector: reader });
     const lifetime = nativeFixtureLifetime(owner);
     try { await story(lifetime, cohort); } finally { lifetime.release(); }
@@ -47,7 +47,7 @@ describe("tagged agent-key enrolment on the trusted application and historical a
 
 type Lifetime = ReturnType<typeof nativeFixtureLifetime>;
 
-type SelectedCohort = "declared-application" | "archive-application" | "archive-declared-application";
+type SelectedCohort = "declared-application" | "archive-application" | "archive-declared-application" | "archive-device-application";
 async function story(lifetime: Lifetime, selected?: SelectedCohort): Promise<void> {
   const now = lifetime.now;
   const node = lifetime.platform;
@@ -183,7 +183,7 @@ async function story(lifetime: Lifetime, selected?: SelectedCohort): Promise<voi
   };
 
   if(selected){
-    const pins = { "declared-application": DECLARED_APPLICATION_COHORT, "archive-application": ARCHIVE_APPLICATION_COHORT, "archive-declared-application": ARCHIVE_DECLARED_APPLICATION_COHORT }[selected];
+    const pins = { "declared-application": DECLARED_APPLICATION_COHORT, "archive-application": ARCHIVE_APPLICATION_COHORT, "archive-declared-application": ARCHIVE_DECLARED_APPLICATION_COHORT, "archive-device-application": ARCHIVE_DEVICE_APPLICATION_COHORT }[selected];
     const admin=person(),room=await create(admin,selected,"artroom",selected,"@rita");
     const config=(await admin.store.config())!;
     for(const [scope,pin]of [[config.register!.scope,pins.register],[room.repository.directory.scope,pins.directory],[room.membership.scope,pins.membership],[room.repository.rules,pins.rules],[room.repository.destination,pins.destination]] as const){

@@ -7,16 +7,16 @@ import type { StateView } from "@generalbusiness/dap-derive";
 import type { ApplicationInstallation, ApplicationRoom } from "@generalbusiness/artroom-bytes/application";
 import { TRUSTED_APPLICATION_COHORT as C } from "./application-install-wire.ts";
 import { DECLARED_APPLICATION_COHORT as C2 } from "./application-install-v2-wire.ts";
-import { ARCHIVE_APPLICATION_COHORT as AC, ARCHIVE_DECLARED_APPLICATION_COHORT as AC2 } from "./archive-binding-wire.ts";
+import { ARCHIVE_APPLICATION_COHORT as AC, ARCHIVE_DECLARED_APPLICATION_COHORT as AC2, ARCHIVE_DEVICE_APPLICATION_COHORT as ADC } from "./archive-binding-wire.ts";
 export function applicationRoom(state: StateView, named: string): ApplicationRoom | null {
   const scope = state.scope();
-  if ((named !== C.directory && named !== C2.directory && named !== D.directory && named !== AC.directory && named !== AC2.directory) || scope?.status !== "active" || scope.at.kind !== "directory") return null;
+  if ((named !== C.directory && named !== C2.directory && named !== D.directory && named !== ADC.directory && named !== AC.directory && named !== AC2.directory) || scope?.status !== "active" || scope.at.kind !== "directory") return null;
   const rules = state.page("repository", ["open"], null, 1).items[0]?.refs["rules"];
   return isScopeRef(rules) && rules.kind === "rules" ? { directory: scope.at, rules } : null;
 }
 export function applicationInstallation(state: StateView, named: string, directory: ScopeRef, item: number): ApplicationInstallation | null {
   const scope = state.scope();
-  if ((named !== C.rules && named !== C2.rules && named !== D.rules && named !== AC.rules && named !== AC2.rules) || scope?.status !== "active" || scope.at.kind !== "rules" || !isScopeRef(directory) || directory.kind !== "directory"
+  if ((named !== C.rules && named !== C2.rules && named !== D.rules && named !== ADC.rules && named !== AC.rules && named !== AC2.rules) || scope?.status !== "active" || scope.at.kind !== "rules" || !isScopeRef(directory) || directory.kind !== "directory"
     || !Number.isSafeInteger(item) || item < 0 || item > scope.head.seq) return null;
   const room = state.page("rules", ["current"], null, 1).items[0], job = state.item(item);
   if (!room || !isScopeRef(room.refs["directory"]) || canonicalize(room.refs["directory"]) !== canonicalize(directory) || job?.type !== "installation" || job.state !== "active") return null;

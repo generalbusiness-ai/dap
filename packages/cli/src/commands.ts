@@ -1,4 +1,4 @@
-import { INVITATION_KEY_COHORT } from "@generalbusiness/dap-platform";
+import { INVITATION_KEY_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT } from "@generalbusiness/dap-platform";
 import { invitationIssueFields, invitationRedemptionFields } from "@generalbusiness/artroom-client";
 /**
  * The commands, as functions over a scope service's base URL and a signing
@@ -368,7 +368,7 @@ async function createdBy(handle: ScopeHandle, seq: number): Promise<{ n: number;
 // ---------------------------------------------------------------- the commands
 
 /** Explicit selection only; omission retains the installed default cohort. */
-export type InstallCohort = "application" | "application-publication" | "trusted-application" | "declared-application" | "device-application" | "archive-application" | "archive-declared-application" | "invitation-key";
+export type InstallCohort = "application" | "application-publication" | "trusted-application" | "declared-application" | "device-application" | "archive-application" | "archive-device-application" | "archive-declared-application" | "invitation-key";
 export interface InstallOptions { host?: string; namespace?: string; cohort?: InstallCohort }
 const INSTALL_COHORTS: Readonly<Record<InstallCohort, PlatformDefinition>> = {
   "invitation-key": INVITATION_KEY_COHORT.register,
@@ -378,6 +378,7 @@ const INSTALL_COHORTS: Readonly<Record<InstallCohort, PlatformDefinition>> = {
   "declared-application": DECLARED_APPLICATION_COHORT.register,
   "archive-application": ARCHIVE_APPLICATION_COHORT.register,
   "archive-declared-application": ARCHIVE_DECLARED_APPLICATION_COHORT.register,
+  "archive-device-application": ARCHIVE_DEVICE_APPLICATION_COHORT.register,
   "device-application": DEVICE_APPLICATION_COHORT.register,
 };
 function selectedRegister(cohort: unknown): PlatformDefinition | undefined {
@@ -390,7 +391,8 @@ function selectedRegister(cohort: unknown): PlatformDefinition | undefined {
   if (cohort === "declared-application") return INSTALL_COHORTS["declared-application"];
   if (cohort === "archive-application") return INSTALL_COHORTS["archive-application"];
   if (cohort === "archive-declared-application") return INSTALL_COHORTS["archive-declared-application"];
-  return stop(usage("--cohort takes exactly application, application-publication, trusted-application, declared-application, device-application, archive-application, archive-declared-application or invitation-key; nothing was signed or sent."));
+  if (cohort === "archive-device-application") return INSTALL_COHORTS["archive-device-application"];
+  return stop(usage("--cohort takes exactly application, application-publication, trusted-application, declared-application, device-application, archive-application, archive-declared-application, archive-device-application or invitation-key; nothing was signed or sent."));
 }
 const selectedPlan = (definition: PlatformDefinition): boolean =>
   Object.values(INSTALL_COHORTS).includes(definition);

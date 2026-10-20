@@ -2,7 +2,7 @@
  * and setup/read authority are sessionRoom's labelled fixture stand-ins.
  * This resolves a target only; it admits no room to archive export. */
 import { env } from "cloudflare:workers";
-import { ARCHIVE_APPLICATION_COHORT as C } from "@generalbusiness/dap-platform";
+import { ARCHIVE_APPLICATION_COHORT as C, ARCHIVE_DEVICE_APPLICATION_COHORT as DC } from "@generalbusiness/dap-platform";
 import { expect, test } from "vitest";
 import type { Seed } from "@generalbusiness/dap-contract";
 import { canonicalize, newIncarnation, parseStrict } from "@generalbusiness/artroom-bytes";
@@ -14,7 +14,7 @@ import { mintSession, readerOf } from "../src/sessions.ts";
 import { sessionRoom } from "./support/session-room.ts";
 import { rita } from "./repository.ts";
 
-test("native creator chain and fixed directory/destination records resolve the same single archive repository", async () => {
+test.each([["archive", C], ["device/archive", DC]] as const)("native creator chain and fixed directory/destination records resolve the same single archive repository (%s)", async (_label, C) => {
   const room = await sessionRoom(C.register);
   try {
     const reader = readerOf(mintSession(room.sessions, { ...room.claims, reads: ["summary", "items"] }));
@@ -45,7 +45,7 @@ test("native creator chain and fixed directory/destination records resolve the s
 
 // Corrupt only the scripted reply boundary after genuine native reads. A
 // missing/ambiguous/different target is unavailable, with no summary fallback.
-test("a claim-bound archive target refuses truncated or mismatched records and spends the original budget before RPC", async () => {
+test.each([["archive", C], ["device/archive", DC]] as const)("a claim-bound archive target refuses truncated or mismatched records and spends the original budget before RPC (%s)", async (_label, C) => {
   const room = await sessionRoom(C.register, "journal");
   try {
     const reader = readerOf(mintSession(room.sessions, { ...room.claims, reads: ["summary", "items"] }));

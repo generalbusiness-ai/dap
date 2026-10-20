@@ -80,6 +80,7 @@ export const SIBLINGS_OF: Readonly<Record<string, { membership: PlatformDefiniti
   "platform:directory@13": { membership: "platform:membership@8", rules: "platform:rules@7", destination: "platform:destination@9" },
   "platform:directory@14": { membership: "platform:membership@8", rules: "platform:rules@8", destination: "platform:destination@10" },
   "platform:directory@15": { membership: "platform:membership@7", rules: "platform:rules@9", destination: "platform:destination@11" },
+  "platform:directory@16": { membership: "platform:membership@8", rules: "platform:rules@10", destination: "platform:destination@12" },
   "platform:directory@12": { membership: "platform:membership@7", rules: "platform:rules@6", destination: "platform:destination@8" },
   "platform:directory@11": { membership: "platform:membership@7", rules: "platform:rules@5", destination: "platform:destination@7" },
   "platform:directory@10": { membership: "platform:membership@6", rules: "platform:rules@3", destination: "platform:destination@6" },

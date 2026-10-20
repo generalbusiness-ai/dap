@@ -10,9 +10,9 @@ import { DECLARED_APPLICATION_RULES, applicationInstallRulesScope2, applicationI
 export { DECLARED_APPLICATION_RULES } from "./application-install-v2.ts";
 import { DECLARED_APPLICATION_COHORT } from "./application-install-v2-wire.ts";
 export { DECLARED_APPLICATION_COHORT } from "./application-install-v2-wire.ts";
-import { ARCHIVE_APPLICATION_COHORT as AC, ARCHIVE_DECLARED_APPLICATION_COHORT as AC2 } from "./archive-binding-wire.ts";
-export { ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT } from "./archive-binding-wire.ts";
-import { archiveRegister, archiveDirectory, archiveDeclaredDirectory, archiveRulesScope, archiveDeclaredRulesScope } from "./archive-binding.ts";
+import { ARCHIVE_APPLICATION_COHORT as AC, ARCHIVE_DECLARED_APPLICATION_COHORT as AC2, ARCHIVE_DEVICE_APPLICATION_COHORT as ADC } from "./archive-binding-wire.ts";
+export { ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT } from "./archive-binding-wire.ts";
+import { archiveRegister, archiveDirectory, archiveDeclaredDirectory, archiveRulesScope, archiveDeclaredRulesScope, archiveDeviceDirectory, archiveDeviceRulesScope, archiveDeviceRules } from "./archive-binding.ts";
 import { DEVICE_APPLICATION_COHORT } from "./device-application-wire.ts";
 export { DEVICE_APPLICATION_COHORT } from "./device-application-wire.ts";
 export { deviceApplicationRequirement } from "./device-application-package.ts";
@@ -44,7 +44,7 @@ import { PARTITION_IDENTITY_POLICY } from "./partition-provenance.ts";
 export { PARTITION_IDENTITY_POLICY, PARTITION_IDENTITY_BOUNDS, partitionReceiverPolicy, partitionSourceName, partitionCreationPolicy, partitionDeclaredCreationPolicy, partitionNativeCreationPolicy, partitionPublicationOrigin, partitionProducerName, type PartitionCreationSelection, type PartitionCreation, type PartitionCreationPolicy, type PartitionNativeFrame, type PartitionReceiverLineage, type PartitionReceiverPolicy } from "./partition-provenance.ts";
 
 import type { Digest, ObservationRequest, PlatformData, PlatformDefinition } from "@generalbusiness/dap-contract";
-import { sourceName, applicationPublicationOrigin, installedApplicationPublicationOrigin, declaredApplicationPublicationOrigin, archiveApplicationPublicationOrigin, archiveDeclaredApplicationPublicationOrigin, deviceApplicationPublicationOrigin } from "./publishing-provenance.ts";
+import { sourceName, applicationPublicationOrigin, installedApplicationPublicationOrigin, declaredApplicationPublicationOrigin, archiveApplicationPublicationOrigin, archiveDeclaredApplicationPublicationOrigin, deviceApplicationPublicationOrigin, archiveDeviceApplicationPublicationOrigin } from "./publishing-provenance.ts";
 import { destination, destination2, destination3, destination4, destination5, destination6, destinationMembership, destinationRules, destinationRules2, destinationRules3, destinationRules4, destinationRules5, destinationRules6, destinationRulesScope } from "./destination.ts";
 import { inbox, inboxRules } from "./inbox.ts";
 import { MEMBERSHIP, MEMBERSHIP_1, membership, membership5, membershipRules, standingOf } from "./membership.ts";
@@ -167,6 +167,10 @@ const VERSION_DATA: Readonly<Record<string, Platform>> = {
   [AC2.rules]: { data: archiveDeclaredRulesScope, rules: applicationInstallRules2, hostPreparationKinds: ["fetch-application"], declaredText: (state, digest) => installDefinitionText(state, digest, "definition"), observed: (state, asked) => rulesAnswer(state, asked, AC2.rules), observedValues: rulesObservedValues, revised: PUBLISH, membership: rulesMembership },
   [AC.destination]: { data: destination4, rules: destinationRules4, membership: destinationMembership, rulesScope: destinationRulesScope, applicationPublicationOrigin: archiveApplicationPublicationOrigin },
   [AC2.destination]: { data: destination4, rules: destinationRules4, membership: destinationMembership, rulesScope: destinationRulesScope, applicationPublicationOrigin: archiveDeclaredApplicationPublicationOrigin },
+  [ADC.register]: { data: archiveRegister, rules: registerRules },
+  [ADC.directory]: { data: archiveDeviceDirectory, rules: deviceApplicationDirectoryRules, declaredText: (state, digest) => installDefinitionText(state, digest, "application-catalog"), membership: directoryMembership, rulesScope: directoryRulesScope },
+  [ADC.rules]: { data: archiveDeviceRulesScope, rules: archiveDeviceRules, hostPreparationKinds: ["fetch-application"], declaredText: (state, digest) => installDefinitionText(state, digest, "definition"), observed: (state, asked) => rulesAnswer(state, asked, ADC.rules), observedValues: rulesObservedValues, revised: PUBLISH, membership: rulesMembership },
+  [ADC.destination]: { data: destination4, rules: destinationRules4, membership: destinationMembership, rulesScope: destinationRulesScope, applicationPublicationOrigin: archiveDeviceApplicationPublicationOrigin },
   [DEVICE_APPLICATION_COHORT.register]: { data: register, rules: registerRules },
   [DEVICE_APPLICATION_COHORT.directory]: { data: deviceApplicationDirectory, rules: deviceApplicationDirectoryRules, declaredText: (state, digest) => installDefinitionText(state, digest, "application-catalog"), membership: directoryMembership, rulesScope: directoryRulesScope },
   [DEVICE_APPLICATION_COHORT.destination]: { data: destination4, rules: destinationRules4, membership: destinationMembership, rulesScope: destinationRulesScope, applicationPublicationOrigin: deviceApplicationPublicationOrigin },

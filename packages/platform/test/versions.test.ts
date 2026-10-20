@@ -3,7 +3,7 @@ import type { DeclaredDefinition, PlatformDefinition, Seed } from "@generalbusin
 import { definitionDigest } from "@generalbusiness/artroom-bytes";
 import type { PlatformRule, RuleGiven } from "@generalbusiness/dap-derive";
 import { d } from "@generalbusiness/dap-derive/testing";
-import { TRUSTED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, INVITATION_KEY_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, PARTITION_COHORT, COUNTING_COHORT, DEMO_REGISTER, FIRST_ACTIONS_OF, NEWEST, ROLE_LISTS, ROLE_TABLE_OF, VERSIONS, WEB_DEMO_COHORT, WEB_DEMO_REGISTER, directorySeed, platform, versionOf, type Role, DEVICE_APPLICATION_COHORT } from "../src/index.ts";
+import { TRUSTED_APPLICATION_COHORT, ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT, INVITATION_KEY_COHORT, APPLICATION_COHORT, FILE_PUBLICATION_COHORT, PARTITION_COHORT, COUNTING_COHORT, DEMO_REGISTER, FIRST_ACTIONS_OF, NEWEST, ROLE_LISTS, ROLE_TABLE_OF, VERSIONS, WEB_DEMO_COHORT, WEB_DEMO_REGISTER, directorySeed, platform, versionOf, type Role, DEVICE_APPLICATION_COHORT } from "../src/index.ts";
 import { rita } from "./support-creation.ts";
 import { DECLARED_APPLICATION_RULES } from "../src/application-install-v2.ts";
 import { DECLARED_APPLICATION_COHORT } from "../src/application-install-v2-wire.ts";
@@ -22,6 +22,12 @@ import { DECLARED_APPLICATION_COHORT } from "../src/application-install-v2-wire.
 // Evidence: /tmp/artroom-cohort25-generation-one/result.json
 // SHA-256: e2a2052d23705690ec4b884786f453718875f6505d515fdda88a20191eb64269.
 const DIGESTS: Readonly<Record<string, string>> = {
+  // Four combined Device/archive pins observed in the complete catalog; all58 earlier literals unchanged.
+  "platform:register@17": "sha256:af4c384cebbf4e9b9526bf939dee17b7faa370dc3026b54ae7a7b57c2a254091",
+  "platform:directory@16": "sha256:c8c40477f369a19213439eaa1a3263dad1ce16038e5df605b6f7322737380b55",
+  "platform:rules@10": "sha256:e10d8861dd5a80168437187a84d5bb3efe70d73825faa0c61ecc368da359a854",
+  "platform:destination@12": "sha256:f29353b2ca1f551ab6a7d622bbd57aa6dfc7fc3748358ce709ccee728e4c15df",
+
   // Nine archive pins observed and whole-catalog validated; all45 old literals unchanged.
   // /tmp/artroom-s2-archive-cohort-catalog-20261019.json SHA256 fea417f858d5ef4167a65de021091fc68763c67b1e637063ee20becdda428300.
   "platform:register@14": "sha256:af4c384cebbf4e9b9526bf939dee17b7faa370dc3026b54ae7a7b57c2a254091",
@@ -106,7 +112,7 @@ test("every shipped version resolves to its own data, pinned by digest, and vers
   // Explicit application and demo pins do not replace the existing default cohort.
   const supporting = new Set<string>([...Object.values(TRUSTED_APPLICATION_COHORT).filter(pin => pin !== "platform:inbox@1"), PARTITION_COHORT.register, PARTITION_COHORT.directory, PARTITION_COHORT.partition, PARTITION_COHORT.destination, ...Object.values(INVITATION_KEY_COHORT).filter(pin => pin !== "platform:inbox@1" && pin !== "platform:destination@2"), FILE_PUBLICATION_COHORT.register, FILE_PUBLICATION_COHORT.directory, FILE_PUBLICATION_COHORT.destination, APPLICATION_COHORT.register, APPLICATION_COHORT.directory, APPLICATION_COHORT.membership, APPLICATION_COHORT.rules, COUNTING_COHORT.register, COUNTING_COHORT.directory, COUNTING_COHORT.membership, "platform:rules@4", "platform:destination@5", DEMO_REGISTER, WEB_DEMO_REGISTER, WEB_DEMO_COHORT.directory]);
   supporting.add(DECLARED_APPLICATION_RULES);
-  for (const cohort of [ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT]) for (const pin of Object.values(cohort)) if (pin !== "platform:inbox@1") supporting.add(pin);
+  for (const cohort of [ARCHIVE_APPLICATION_COHORT, ARCHIVE_DECLARED_APPLICATION_COHORT, ARCHIVE_DEVICE_APPLICATION_COHORT]) for (const pin of Object.values(cohort)) if (pin !== "platform:inbox@1") supporting.add(pin);
   for (const pin of [...Object.values(DECLARED_APPLICATION_COHORT), ...Object.values(DEVICE_APPLICATION_COHORT)]) if (pin !== "platform:inbox@1") supporting.add(pin);
   const highest = Object.keys(VERSIONS).filter((named) => !supporting.has(named)).reduce<Record<string, number>>((most, named) => ({ ...most, [named.slice(0, named.lastIndexOf("@"))]: Math.max(most[named.slice(0, named.lastIndexOf("@"))] ?? 0, versionOf(named as PlatformDefinition)) }), {});
   expect(Object.fromEntries(Object.entries(NEWEST).map(([name, named]) => [name, versionOf(named)]))).toEqual(highest);

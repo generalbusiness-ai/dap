@@ -2,14 +2,16 @@
 
 Request `f54185fb5b7ccacdf932248552127e4985b3f956`, promise
 `7993405b993bd00d857cb0d0798b44125ebd4b74`. Current mutable preparation
-now incorporates reviewed G5a Main `a00eda3b`. It still needs the combined
-Device/archive cohort, a corrected whole gate, exact-head Source review and
-landing audit. The first gate failed five shipped-version assertions; it remains
-failed evidence. No S2a publication, deployment or completion is claimed.
+incorporates reviewed G5a Main `a00eda3b` and implements the combined Device
+and archive cohort. The focused native checks pass. A corrected whole gate,
+exact-head Source review and landing audit remain. The first gate failed
+five shipped-version assertions; it remains failed evidence. No S2a
+publication, deployment or completion is claimed.
 
-The current implementation adds nine explicit archive-cohort pins and
-preserves the 45 original shipped definition bodies and all four G5a pins. Existing rooms and
-default cohort choices keep their original meaning. Only the new cohorts
+The current implementation adds nine archive pins and four combined pins.
+It preserves the 45 original shipped definition bodies and all four G5a
+pins. Existing rooms and default cohort choices keep their original
+meaning. Only the new cohorts
 admit the binding and archive-required package workflow. S2a reservations
 remain Register14/15, Directory13/14, Membership8, Rules7/8 and
 Destination9/10; G5a's higher reservations are separate and may land first.
@@ -60,11 +62,87 @@ examples remain. That failed original is retained, with a whole-file
 follow-up after the fixture correction. These are focused integration
 checks, not a corrected full gate or combined-cohort acceptance.
 
-The new combined four pins are not implemented by this integration alone.
-Membership9 stays unused/reserved, and defaults are unchanged. Evidence
+The integration checkpoint is `d5fc458b91163e92b3caf19d0c3720c22b342a95`,
+tree `0a62663f2b51584197e742f4f4aa133d504d05d5`. That checkpoint precedes
+the combined implementation described below. Membership9 stays reserved
+and unused. Defaults are unchanged. Evidence
 uses `/tmp/artroom-s2a-g5a-*20261019*`. No sealed G5a project, dependency,
 tool or sealer was executed or edited; the integration reads its immutable
 Git commit into S2a's independent mutable checkout.
+
+## Combined Device and archive cohort
+
+Planner decision `7e93abadb8623a9ca10e9c4dca1857e07bc904c8` was adopted
+through `e02cbad6f7fe798e04d33ac62bd480b5cecca7df`. The public constant is
+`ARCHIVE_DEVICE_APPLICATION_COHORT`; the explicit CLI choice is
+`archive-device-application`. Its exact siblings are Register17,
+Directory16, Membership8, Rules10, Destination12 and Inbox1.
+
+Directory16 starts with the Device directory and then adds the archive
+binding. Rules10 keeps the Device owner's observation, proof, wrapped
+genesis and create relay. Its fixed `requirements` record replaces the
+old `needsDestination` value with two booleans, `destination` and
+`archive`. The installation still fits the existing 12-value bound.
+Rules9 explicitly refuses the newly decoded signed archive requirement,
+preserving the unsupported meaning of that old pin. The combined
+Destination accepts only its exact native lineage and Device grant.
+
+The focused checks use the existing pinned tools and genuine native
+Scope implementation. Their HTTP package and Git peers, clocks and
+setup read access remain explicit TEST fixtures. They do not establish
+provider writes or a hosted deployment. The current checks are:
+
+- Platform versions, archive binding and CLI cohort selection: three
+  files, seven cases pass. All 58 earlier catalog literals are unchanged;
+  the four new combined definitions also validate.
+- Native target resolution: one file, four cases pass, including the
+  combined cohort and the existing corruption and prefix-budget refusals.
+- Native CLI enrollment: the whole five-case file passes. The new cohort
+  uses the actual person and agent invitation flows with Membership8.
+- Native Device install: all three variants pass: old Device, combined
+  with a bound archive and a signed requirement, and combined without a
+  binding or requirement. Each retains the original owner, 16-entry
+  capacity, restart, answer and proven-replay assertions. The combined
+  variants also read the signed declared record through MCP using the
+  actual native installation, projection and membership standing.
+- Native archive refusal and late binding: both new cases pass. Old
+  Rules9 refuses a signed archive requirement. An unbound combined room
+  records `archive-unavailable` before grants or creation; the same
+  signed retry keeps that refusal after binding. A new request in that
+  same room installs, creates and answers a Device command, resolves the
+  actual installed archive target and passes proven native replay.
+- All owning Platform, CLI, MCP and Scope compiler targets pass. Page and
+  MCP resource modules are regenerated from the combined source.
+
+Two selected guard controls distinguish the refusals. Removing only the
+old Rules9 requirement check makes its unchanged selected assertion fail.
+Changing only the archive-stage bypass boolean makes the unchanged
+unbound-room assertion fail. Both processes naturally exit one without a
+timeout; both sources are restored byte for byte. These are two targeted
+controls, not a mutation sweep or another whole suite.
+
+The failed development runs remain part of the record. The first native
+late-binding case used the live-item helper to read a final refused
+installation. It failed with `no live item2`; reading the actual native
+installation rows fixes that test without changing runtime code. The
+first MCP record assertion expected a full scope reference directly on
+`CardIdentity`. Both combined variants reached a ready native record but
+failed that assertion. The corrected assertion uses the documented
+`subject: { scope: scope.scope, item: 0 }`, and separately checks the full
+scope reference in the signed projection. The original Device case
+passes in both runs. The corrected whole file naturally exits zero with
+three passing cases. No assertion from the original Device story is
+removed or weakened.
+
+The first combined catalog tool correctly observed 62 valid definitions,
+58 unchanged historical literals and four new pins, then naturally
+exited one because its final total still said 54. Its output and failed
+closure remain evidence; it is not called a passing tool run. The final
+catalog observation uses the immutable 58-literal integration commit as
+its baseline and expects 62. Its result will be recorded after the clean
+checkpoint. Evidence uses `/tmp/artroom-s2a-combined-*20261019*`, with
+the guard closure in
+`/tmp/artroom-s2a-combined-control-closure-20261019.json`.
 
 ## Historical checkpoints
 
