@@ -1,8 +1,8 @@
 /** Portable archive adaptation. The trusted read port owns object parsing
  * and I/O. This module imports neither Git nor Node and changes no judge. */
 import { natural } from "@generalbusiness/artroom-bytes";
-import { DOMAINS, type Digest, type FactRef, type Head, type PlatformDefinition, type RetainedInput, type ScopeId, type ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isEntry, isFactRef, isScopeId, rawRetainedJSON, utf8 } from "@generalbusiness/artroom-bytes";
+import { DOMAINS, type Digest, type Entry, type FactRef, type Head, type PlatformDefinition, type RetainedInput, type ScopeId, type ScopeRef } from "@generalbusiness/dap-contract";
+import { canonicalize, entryHash, isDigest, isEntry, isFactRef, isScopeId, platformName, rawRetainedJSON, utf8 } from "@generalbusiness/artroom-bytes";
 import { PAGE_ENTRIES, PAGE_REPLY_BYTES, READ_SECONDS, RETAINED_REPLY_BYTES, type Allow, type HistorySource, type Page, type Stored, type Unread } from "./source.ts";
 import { LIMITS, SourceError, TRUSTS, verify, type Limits, type Options, type Verification } from "./verify.ts";
 
@@ -120,11 +120,40 @@ function readFailure(error: unknown, scope: ScopeId): ArchiveFailure {
 
 class Session implements HistorySource {
   readonly #opened = new Map<ScopeId, Promise<ArchiveRead>>();
+  readonly #anchors = new Set<string>();
+  readonly #anchorScopes = new Set<ScopeId>();
+  readonly #privateNames = new Map<ScopeId, ReadonlyMap<string, string>>();
   failure: ArchiveFailure | null = null;
   readonly port: ArchiveReadPort;
   readonly work: Work;
   readonly texts: ArchiveTextPort | undefined;
-  constructor(port: ArchiveReadPort, work: Work, texts?: ArchiveTextPort) { this.port = port; this.work = work; this.texts = texts; }
+  constructor(port: ArchiveReadPort, work: Work, texts?: ArchiveTextPort, anchors?: Options["anchors"]) {
+    this.port = port; this.work = work; this.texts = texts;
+    for (const anchor of anchors ?? []) {
+      work.spend({ metadata: 256, inputWork: 512 });
+      this.#anchors.add(canonicalize([anchor.scope, anchor.seq, anchor.hash])); this.#anchorScopes.add(anchor.scope);
+    }
+  }
+  /** An exact caller anchor already leaves the retained definition name
+   * on trust. Only this commissioned native private cohort can use its
+   * descriptive archive basis; this proves no birth or source history. */
+  #anchoredPrivateName(archive: ArchiveData, entry: Entry, size: number): string | null {
+    if (!this.#anchorScopes.has(entry.at.scope)) return null;
+    this.work.spend({ inputWork: size * 8 + 512 });
+    if (!this.#anchors.has(canonicalize([entry.at.scope, entry.seq, entryHash(entry)]))) return null;
+    let names = this.#privateNames.get(archive.scope.scope);
+    if (!names) {
+      const selected = new Map<string, string>();
+      for (const source of archive.foreignSources ?? []) {
+        this.work.spend({ metadata: 256, inputWork: 512 });
+        if (!this.#anchorScopes.has(source.at.scope)) continue;
+        if (source.pin === "platform:membership@8" && source.at.kind === "membership"
+          || source.pin === "platform:register@17" && source.at.kind === "register") selected.set(canonicalize(source.at), platformName(source.pin));
+      }
+      names = selected; this.#privateNames.set(archive.scope.scope, names);
+    }
+    return names.get(canonicalize(entry.at)) ?? null;
+  }
   async open(scope: ScopeId): Promise<ArchiveRead> {
     if (this.failure) return this.failure;
     let pending = this.#opened.get(scope);
@@ -175,9 +204,13 @@ class Session implements HistorySource {
     if (kind === "entry") {
       const entry = rawRetainedJSON(digest, input.bytes);
       if (isEntry(entry)) {
-        const foreign = await this.open(entry.at.scope);
-        if (foreign.ok && foreign.archive.name !== null) input = { ...input, under: foreign.archive.name };
-        else if (!foreign.ok && foreign.result !== "not-found") return unread(foreign.result);
+        const anchored = this.#anchoredPrivateName(read.archive, entry, size);
+        if (anchored !== null) input = { ...input, under: anchored };
+        else {
+          const foreign = await this.open(entry.at.scope);
+          if (foreign.ok && foreign.archive.name !== null) input = { ...input, under: foreign.archive.name };
+          else if (!foreign.ok && foreign.result !== "not-found") return unread(foreign.result);
+        }
       }
     }
     this.work.check(); return { ok: true, input, bytes: size };
@@ -206,7 +239,7 @@ export class ArchiveSource implements HistorySource {
   readonly #options: ArchiveSourceOptions;
   readonly port: ArchiveReadPort;
   constructor(port: ArchiveReadPort, options: ArchiveSourceOptions = {}) { this.port = port; this.#options = { ...options, ...(options.limits ? { limits: { ...options.limits } } : {}) }; }
-  #session(limits?: Partial<Limits>): Session { return new Session(this.port, new Work({ ...LIMITS, ...this.#options.limits, ...limits }, this.#options.seconds), this.#options.texts); }
+  #session(limits?: Partial<Limits>, anchors?: Options["anchors"]): Session { return new Session(this.port, new Work({ ...LIMITS, ...this.#options.limits, ...limits }, this.#options.seconds), this.#options.texts, anchors); }
   #default(): Session { return this.#direct ??= this.#session(); }
   page(scope: ScopeId, from: number, allow: Allow): ReturnType<HistorySource["page"]> { return this.#default().page(scope, from, allow); }
   retained(scope: ScopeId, kind: RetainedInput["kind"], digest: Digest, allow: Pick<Allow, "bytes">, domain?: string): ReturnType<HistorySource["retained"]> { return this.#default().retained(scope, kind, digest, allow, domain); }
@@ -218,7 +251,7 @@ export class ArchiveSource implements HistorySource {
       if (options.head && (!natural(options.head.seq) || !isDigest(options.head.hash))) throw new Stopped("unavailable");
       if (options.receipt && !isFactRef(options.receipt.fact)) throw new Stopped("unavailable");
       const fact = options.receipt ? { ...options.receipt.fact, at: { ...options.receipt.fact.at } } : null;
-      session = this.#session(options.limits);
+      session = this.#session(options.limits, options.anchors);
       const read = await session.open(scope);
       if (!read.ok) outcome = { kind: "archive-failure", ...read, read: session.work.stats() };
       else {

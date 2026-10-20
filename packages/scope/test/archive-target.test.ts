@@ -23,6 +23,7 @@ test.each([["archive", C], ["device/archive", DC]] as const)("native creator cha
     if (genesis.input.type !== "genesis") return expect.fail("native directory birth missing");
     const expected = (await room.D.item(0)).values["repository"];
     expect(await resolver.resolve(directory, genesis.input.seed, new ArchiveBudget())).toBeNull();
+    expect(await resolver.discover(directory, genesis.input.seed, new ArchiveBudget())).toBeNull();
     const membership = room.children[0]!;
     // This fixture's manually minted read token enrolls no acting key.
     // Enroll the founder through the actual native Membership acts.
@@ -32,9 +33,21 @@ test.each([["archive", C], ["device/archive", DC]] as const)("native creator cha
     await room.D.did(rita, "bind-archive", { on: 0, expected: { on: (await room.D.item(0)).revision }, fields: { archive: "journal" } });
     const head = (await room.D.summary()).at;
     expect(await resolver.resolve(directory, genesis.input.seed, new ArchiveBudget())).toEqual(expected);
+    const discovered = await resolver.discover(directory, genesis.input.seed, new ArchiveBudget());
+    if (C === DC) {
+      expect(discovered?.repository).toEqual(expected);
+      expect(discovered?.scopes.map(scope => ({ kind: scope.at.kind, named: scope.named, via: scope.via }))).toEqual([
+        { kind: "directory", named: DC.directory, via: "self" },
+        { kind: "rules", named: DC.rules, via: "rules" },
+        { kind: "destination", named: DC.destination, via: "destination" },
+      ]);
+      expect(discovered?.scopes.slice(1).map(scope => scope.from)).toEqual([directory, directory]);
+    } else expect(discovered).toBeNull();
     const child = room.children[0]!, childBirth = (await child.entries())[0]!;
     if (childBirth.input.type !== "genesis") return expect.fail("native child birth missing");
     expect(await resolver.resolve(await child.at(), childBirth.input.seed, new ArchiveBudget())).toEqual(expected);
+    // Resolving the existing target never grants a Membership journal.
+    expect(await resolver.discover(await child.at(), childBirth.input.seed, new ArchiveBudget())).toBeNull();
     expect((await room.D.summary()).at).toEqual(head);
     expect(await resolver.resolve({ ...directory, inc: newIncarnation(new Uint8Array(16).fill(12)) }, genesis.input.seed, new ArchiveBudget())).toBeNull();
     const unowned = (await room.R.entries())[0]!;
@@ -64,6 +77,7 @@ test.each([["archive", C], ["device/archive", DC]] as const)("a claim-bound arch
         if (fault === "ambiguous") body.value.items.push({ ...body.value.items[0], id: body.value.items[0].id + 1 });
         if (fault === "repository" && at.kind === "destination") body.value.items[0].values.repository.id = "different-repository";
         if (fault === "directory" && at.kind === "destination") body.value.items[0].refs.directory.inc = newIncarnation(new Uint8Array(16).fill(2));
+        if (fault === "rules" && at.kind === "directory") body.value.items[0].refs.rules.inc = newIncarnation(new Uint8Array(16).fill(3));
         if (fault === "oversized") return { ok: true, serialized: "x".repeat(256 * 1024 + 1) };
         return { ok: true, serialized: canonicalize(body) };
       },
@@ -71,8 +85,15 @@ test.each([["archive", C], ["device/archive", DC]] as const)("a claim-bound arch
     const resolver = fixtureArchiveTarget(reads);
     expect(await resolver.resolve(directory, seed, new ArchiveBudget())).toEqual((await room.D.item(0)).values["repository"]);
     for (fault of ["truncated", "missing", "ambiguous", "repository", "directory", "oversized"]) expect(await resolver.resolve(directory, seed, new ArchiveBudget())).toBeNull();
+    if (C === DC) {
+      for (fault of ["truncated", "missing", "ambiguous", "repository", "directory", "oversized"]) expect(await resolver.discover(directory, seed, new ArchiveBudget())).toBeNull();
+      fault = "rules";
+      expect(await resolver.resolve(directory, seed, new ArchiveBudget())).toEqual((await room.D.item(0)).values["repository"]);
+      expect(await resolver.discover(directory, seed, new ArchiveBudget())).toBeNull();
+    }
     const before = calls;
     await expect(resolver.resolve(directory, seed, new ArchiveBudget({ calls: 0 }))).rejects.toThrow("archive-limit");
+    await expect(resolver.discover(directory, seed, new ArchiveBudget({ calls: 0 }))).rejects.toThrow("archive-limit");
     expect(calls).toBe(before);
   } finally { room.life.release(); }
 });

@@ -1,10 +1,11 @@
 /** Native metadata sizing before JSON inspection. This is not a complete
  * privacy inventory or permission to select/export payload bodies. */
 import { natural } from "@generalbusiness/artroom-bytes";
-import type { Bounds, Digest, Head, ScopeRef } from "@generalbusiness/dap-contract";
-import { canonicalize, isDigest, isFactRef, isHead, isRecord, isScopeRef, parseStrict, utf8 } from "@generalbusiness/artroom-bytes";
-import { admitArchivePin, type ArchiveExportRefusal } from "@generalbusiness/artroom-git/archive-policy";
+import { DOMAINS, type Bounds, type Digest, type Head, type ScopeRef } from "@generalbusiness/dap-contract";
+import { canonicalize, digestBytes, domainBytes, isDigest, isFactRef, isHead, isRecord, isScopeRef, parseStrict, utf8 } from "@generalbusiness/artroom-bytes";
+import { ARCHIVE_NATIVE_DATA, admitArchivePin, type ArchiveExportRefusal } from "@generalbusiness/artroom-git/archive-policy";
 import { JOURNAL_V2_LAST_POSITION } from "@generalbusiness/artroom-git/journal";
+import { platform } from "@generalbusiness/dap-platform";
 import { timeMs, type ScopeState } from "@generalbusiness/dap-derive";
 import { ARCHIVE_BOUNDS, ArchiveBudget } from "./archive-budget.ts";
 import { ARCHIVE_PIN_BYTES, ARCHIVE_SCOPE_METADATA_BYTES, readArchivePin, readArchivePinAfterReceipt, type ArchivePin } from "./archive-pin.ts";
@@ -30,7 +31,7 @@ export interface ArchivePrefix {
 
 /** `expected` and certificates come from native caller-owned context and
  * trusted reviewer configuration, never a request's claimed safe flags. */
-export function archivePrefixMetadata(sql: Pick<Sql, "exec">, expected: ScopeRef, through: Head, bounds: Pick<Bounds, "entryBytes" | "sendsPerEntry">, budget: ArchiveBudget, certified: Pick<ReadonlySet<Digest>, "has">, after?: Head | null): ArchivePrefix {
+export function archivePrefixMetadata(sql: Pick<Sql, "exec">, expected: ScopeRef, through: Head, bounds: Pick<Bounds, "entryBytes" | "sendsPerEntry" | "definitionBytes">, budget: ArchiveBudget, certified: Pick<ReadonlySet<Digest>, "has">, after?: Head | null): ArchivePrefix {
   budget.check();
   if (after !== undefined && after !== null && (!isHead(after) || after.seq >= JOURNAL_V2_LAST_POSITION)) return stopArchivePrefix("unavailable");
   const predecessor = after ? { ...after } : null, first = predecessor ? predecessor.seq + 1 : 0;
@@ -39,7 +40,14 @@ export function archivePrefixMetadata(sql: Pick<Sql, "exec">, expected: ScopeRef
   const pinSql = budget.native(sql, () => ({ metadata: ARCHIVE_PIN_BYTES + ARCHIVE_SCOPE_METADATA_BYTES, inputWork: 0 }));
   const pin = predecessor ? readArchivePinAfterReceipt(pinSql, expected) : readArchivePin(pinSql, expected);
   if (!pin) { budget.check(); return stopArchivePrefix("unavailable"); }
-  const admittedPin = admitArchivePin(pin.seed.definition, certified);
+  let nativeData: Digest | undefined;
+  if (Object.hasOwn(ARCHIVE_NATIVE_DATA, pin.seed.definition)) {
+    budget.spend({ nodes: 1, inputWork: bounds.definitionBytes * 16 });
+    const native = platform(pin.seed.definition);
+    if (!native || utf8(canonicalize(native.data)).length > bounds.definitionBytes) return stopArchivePrefix("unsupported-archive-cohort");
+    nativeData = digestBytes(domainBytes(DOMAINS.definition, native.data));
+  }
+  const admittedPin = admitArchivePin(pin.seed.definition, certified, nativeData);
   if (!admittedPin.ok) return stopArchivePrefix(admittedPin.reason);
   if (!natural(through.seq) || through.seq < first || !isDigest(through.hash) || !natural(bounds.entryBytes) || bounds.entryBytes === 0) return stopArchivePrefix("unavailable");
   // At most one overflow sentinel; never scan an arbitrary future range.

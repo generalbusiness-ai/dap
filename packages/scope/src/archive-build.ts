@@ -1,7 +1,7 @@
 /** Selection-to-layout boundary. A rebuild spends a new pass's finite
  * allowance on the stored manifest and exact immutable dependencies. */
 import { same } from "@generalbusiness/artroom-bytes";
-import type { Bounds, Head, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
+import type { Bounds, FactRef, Head, ScopeRef, Timestamp } from "@generalbusiness/dap-contract";
 import { canonicalize, isRecord, parseStrict, utf8 } from "@generalbusiness/artroom-bytes";
 import { buildJournalArchive, buildJournalPass, convertJournalArchiveV1, JOURNAL_SELECTION_BYTES, journalSelection, journalPassSelection, JournalWork, type JournalArchive, type JournalPassArchive, type JournalSelection, type JournalPassSelection, type JournalCost, type JournalFormat, type JournalLayoutResult, type JournalObjectSource } from "@generalbusiness/artroom-git/journal";
 import { ARCHIVE_BOUNDS, ArchiveBudget, ArchiveStopped } from "./archive-budget.ts";
@@ -11,6 +11,7 @@ import type { ArchiveMark, ArchiveRow } from "./archive-row.ts";
 import type { Sql } from "./sqlite.ts";
 import { ArchivePrefixStopped, type ArchivePrefixReason } from "./archive-prefix.ts";
 import type { FixtureArchiveSourcePins } from "./archive-source-pins.ts";
+import { ArchiveReplayAnchors } from "./archive-anchors.ts";
 
 type LayoutFailure = Extract<JournalLayoutResult, { ok: false }>;
 export type ArchiveBuildFailure = LayoutFailure | { readonly ok: false; readonly reason: ArchivePrefixReason | "rebuild-mismatch" | "manifest" };
@@ -107,17 +108,41 @@ export async function rebuildArchivePass(sql: Sql, row: ArchiveRow, parent: Pare
 
 /** Initial planning uses the native synchronous inventory and its explicit
  * caller-owned fixture/reviewed policy registry. It does not mark or send. */
-export async function planArchive(sql: Sql, context: { readonly at: ScopeRef; readonly through: Head; readonly bounds: Bounds; readonly policies: ArchivePolicyRegistry; readonly format: JournalFormat; readonly parent: Parent; readonly markedAt: Timestamp; readonly fixtureSources?: FixtureArchiveSourcePins }, budget: ArchiveBudget): Promise<ArchiveBuildFailure | { readonly ok: true; readonly archive: JournalArchive; readonly mark: ArchiveMark }> {
+export async function planArchive(sql: Sql, context: { readonly at: ScopeRef; readonly through: Head; readonly bounds: Bounds; readonly policies: ArchivePolicyRegistry; readonly format: JournalFormat; readonly parent: Parent; readonly markedAt: Timestamp; readonly fixtureSources?: FixtureArchiveSourcePins; readonly replayScopes?: readonly ScopeRef[] }, budget: ArchiveBudget): Promise<ArchiveBuildFailure | { readonly ok: true; readonly archive: JournalArchive; readonly mark: ArchiveMark; readonly anchors?: readonly FactRef[] }> {
   const at = { ...context.at }, through = { ...context.through }, parent = context.parent ? { ...context.parent } : null, format = context.format, markedAt = context.markedAt;
   const fixtureSources = context.fixtureSources;
   const selected = inventoryArchive(sql, at, through, context.bounds, context.policies, budget, fixtureSources);
   if (!selected.ok) return selected;
+  let collector: ArchiveReplayAnchors | undefined;
+  try { if (context.replayScopes) collector = new ArchiveReplayAnchors(selected.inventory, context.replayScopes, budget, fixtureSources); }
+  catch (error) {
+    if (error instanceof ArchivePrefixStopped || error instanceof ArchiveStopped) return { ok: false, reason: error.reason };
+    throw error;
+  }
   budget.spend({ inputWork: JOURNAL_SELECTION_BYTES * 3 });
   const manifest = canonicalize(selected.inventory);
   if (manifest.length > JOURNAL_SELECTION_BYTES || utf8(manifest).length > JOURNAL_SELECTION_BYTES) budget.stop("limit");
-  const built = await buildJournalArchive({ format, selection: manifest, input: archiveInput(sql, selected.inventory, budget, fixtureSources), parent, budget });
+  const native = archiveInput(sql, selected.inventory, budget, fixtureSources);
+  const gathered = collector, failed: { reason?: ArchiveBuildFailure["reason"] } = {};
+  const input = gathered ? { ...native, entry: async (seq: number, limit: number) => {
+    const bytes = await native.entry(seq, limit);
+    try { if (bytes !== null) gathered.entry(bytes, limit); }
+    catch (error) {
+      if (error instanceof ArchivePrefixStopped || error instanceof ArchiveStopped) failed.reason = error.reason;
+      throw error;
+    }
+    return bytes;
+  } } : native;
+  const built = await buildJournalArchive({ format, selection: manifest, input, parent, budget });
+  if (failed.reason) return { ok: false, reason: failed.reason };
   if (!built.ok) return built;
-  return { ...built, mark: { commit: built.archive.commit, parent: parent?.id ?? null, through: { ...selected.inventory.through }, manifest, markedAt } };
+  let anchors: readonly FactRef[] | undefined;
+  try { anchors = collector?.finish(); }
+  catch (error) {
+    if (error instanceof ArchivePrefixStopped || error instanceof ArchiveStopped) return { ok: false, reason: error.reason };
+    throw error;
+  }
+  return { ...built, mark: { commit: built.archive.commit, parent: parent?.id ?? null, through: { ...selected.inventory.through }, manifest, markedAt }, ...(anchors ? { anchors } : {}) };
 }
 
 /** No new inventory is computed after Mark. The caller supplies only the

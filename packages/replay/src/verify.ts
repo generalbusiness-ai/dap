@@ -238,7 +238,7 @@ export const TRUSTS = {
   outcomes: "each outcome's evidence, and that the outside write happened: the answer of the outside system is taken as the entry records it. `own-answer`: that an answer was that attempt's own. `host-read`: that a read returned what was recorded",
   dispatched: "that the outside effects which a preparation entry opened were dispatched only after that entry was sealed",
   staged: "staged-ref-read: that the Git host returned the snapshot of staged refs and the head that each ancestry record names, when the staging lane read them, and that the lane kept what was returned",
-  anchors: "each anchor as the caller supplied it, and the definition name retained with each anchored entry",
+  anchors: "the caller's anchors, including any value observed at an anchored head and each retained definition name",
   bounds: "the bounds: each scope is taken to run under the bounds this replay was given",
   redacted: "each redacted text: its bytes are gone, so nothing shows that they were the text its digest names, or that they were within the bound of their field",
 } as const;
@@ -1027,7 +1027,14 @@ class Verifier {
     if (depth >= this.#limits.depth) throw new Stop("incomplete", `the limit of ${this.#limits.depth} on the depth of foreign facts was reached`, user);
     const opened = run ?? await this.#open(fact.at.scope);
     const source = typeof opened === "string" ? null : opened;
-    if (!source) throw new Stop("missing-dependency", `the history of the source scope ${fact.at.scope} cannot be read, and no anchor names its entry ${fact.seq}`, user, fact);
+    if (!source) {
+      // An unused anchor does not constrain a readable, replayable history.
+      // When that history is absent, distinguish a conflicting caller hash
+      // at the required position from having no anchor for the position.
+      const conflict = this.#anchors.find(anchor => anchor.scope === fact.at.scope && anchor.seq === fact.seq);
+      if (conflict) throw new Stop("mismatch", `the caller's anchor for entry ${fact.seq} of ${fact.at.scope} names hash ${conflict.hash}, but the required reference names ${fact.hash}`, user);
+      throw new Stop("missing-dependency", `the history of the source scope ${fact.at.scope} cannot be read, and no anchor names its entry ${fact.seq}`, user, fact);
+    }
     try {
       await this.#advance(source, fact.seq, depth + 1, { hash: fact.hash, user });
     } catch (error) {
