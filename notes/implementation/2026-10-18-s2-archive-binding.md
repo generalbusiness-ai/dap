@@ -3,8 +3,11 @@
 Request `f54185fb5b7ccacdf932248552127e4985b3f956`, promise
 `7993405b993bd00d857cb0d0798b44125ebd4b74`. Current mutable preparation
 incorporates reviewed G5a Main `a00eda3b` and implements the combined Device
-and archive cohort. The focused native checks pass. A corrected whole gate,
-exact-head Source review and landing audit remain. The first gate failed
+and archive cohort. The focused native checks pass. The latest whole gate
+has one stale unsupported-version assertion failure. Its exact correction
+and the gate's unrun phases pass separately. Planner decision `2777f28e`
+must amend the gate condition before this composite can be used for review.
+Exact-head Source review and landing audit remain. The first gate failed
 five shipped-version assertions; it remains failed evidence. No S2a
 publication, deployment or completion is claimed.
 
@@ -162,6 +165,71 @@ Membership8 literal to that adapter's type. The existing scripted browser
 joining recovery story also exercises Membership8 with all original
 receipt, signature, custody and no-resend assertions unchanged. This
 typing correction does not change a runtime default or shipped data.
+
+## Original whole gate and focused next-pin correction
+
+The subsequent original gate process19006 naturally exits one at
+`462ec4e13794a1c42086fd15b94485f03156c69f`, tree
+`2202eda8ee0327fba146419c096f54fd4c6f1aaa`. Whitespace and the full
+repository typecheck pass. Vitest reports 406 files: 404 pass, one fails,
+and one skips. Of 1,966 cases, 1,962 pass, one fails and three existing
+cases skip. The later Node and Counting checks do not run. Its outer cost
+is 496.14 elapsed seconds and 719.51 CPU seconds on the warm shared
+machine recorded in the preflight. Every tracked byte, installed
+dependency byte and contained workspace link remains exact. Only the
+Vitest results cache changes. No install occurs.
+
+The sole failed assertion is in `platform/test/rules-scope.test.ts`: it
+expects `platform("platform:rules@7")` to be null. Rules7 now belongs to
+the explicit archive cohort. The correction changes that unsupported
+example to Rules11, beyond every currently shipped Rules pin, and updates
+the adjacent comment from Rules6 to Rules10. Its exact data/rules matcher,
+all runnable controls and every other assertion, case, limit and deadline
+remain unchanged. No production source changes.
+
+Original follow-up process38168 naturally exits zero. The Platform test
+compiler passes, the whole corrected Rules file passes nine cases, and
+the originally unrun Node and Counting phases pass 31 and 55 cases
+respectively. Its outer cost is 6.94 elapsed seconds and 9.13 CPU seconds.
+The maintained Rules test file has no imports from other tests. The only
+external filename reference is a comment in `extents.test.ts`.
+
+The checked correction is saved clean at
+`e85b2fa04935e1a7f4a6b32dd9253080348b701d`, tree
+`64eab69cbb3728d2894f4053611ecab9e091a77b`. Full byte comparison to the
+failed gate confirms that only those two test lines differ. The other
+2,314 tracked files and all installed dependency bytes and 31 contained
+links are exact. Again, only the Vitest results cache changes.
+
+This is a failed whole gate followed by a focused fixture correction and
+the originally unrun phases. It is not one passing gate, and no unchanged
+whole suite is repeated. Decision request
+`2777f28e1d940913be1f4aed1e8c2a85c0c844bb` asks the planner to amend
+the original gate-pass condition for this exact composite or name further
+affected verification. Complete exact-head independent review remains
+required. The earlier prepared
+`/tmp/artroom-s2a-seal-combined-review-20261019.py` assumes a passing gate
+and remains unrun. It must be replaced after the decision, not used to
+relabel the failed original.
+
+Evidence includes:
+
+- `/tmp/artroom-s2a-corrected-gate-20261019-{preflight,postflight,closure}.json`,
+  the original runner, gate log and timing, and raw gate directory
+  `/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.XmsxjBH2xz`.
+- `/tmp/artroom-s2a-rules-next-pin-*20261020*`, including the closed
+  follow-up manifest with exact log hashes and before/after test hashes.
+- `/tmp/artroom-s2a-composite-checked-view-20261020.json`, containing all
+  2,315 checked source paths and 5,527 installed-file/link rows.
+- Counting's closed output directory
+  `/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/artroom-counting-node-Mq90mc`.
+
+The later documentation update explains the combined cohort in the CLI
+and package guides and records these results here. Source, tests and
+installed dependencies remain exact to the checked correction. Under the
+document-only rule in `docs/testing.md`, these three documents do not
+justify repeating a whole gate. The Source record will give the checked
+tree and final report tree separately.
 
 ## Historical checkpoints
 
