@@ -4,13 +4,14 @@
  * headers, the legacy session rules, the cases both revisions share, and the methods across eras. The scope service is the
  * STAND-IN of test/support/standin.ts.
  */
-import { createServer, request, type Server } from "node:http";
+import { request, type Server } from "node:http";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { secretSigner } from "@generalbusiness/artroom-client";
 import { McpService, MODERN, LEGACY, memoryStore, type McpConfig } from "../src/index.ts";
 import { HEADER_MISMATCH, SESSIONS_MOST, STREAMS_MOST } from "../src/http.ts";
 import { serveHttp, type HttpServing } from "../src/node.ts";
 import { StandIn } from "./support/standin.ts";
+import { loopbackScopePeer } from "./fixtures.ts";
 
 const signer = secretSigner(new Uint8Array(32).fill(7));
 const META = { "io.modelcontextprotocol/protocolVersion": MODERN, "io.modelcontextprotocol/clientCapabilities": {} };
@@ -25,16 +26,9 @@ const holds: Promise<void>[] = [];
 
 beforeAll(async () => {
   standIn = new StandIn(signer.key);
-  scopes = createServer(async (req, res) => {
-    let body = ""; for await (const c of req) body += c;
-    const answer = await standIn.fetch(`http://scopes${req.url}`, { method: req.method ?? "GET", ...(body ? { body } : {}) });
-    res.writeHead(answer.status, { "content-type": "application/json" });
-    const reader = (answer.body as unknown as ReadableStream<Uint8Array>).getReader();
-    for (let r = await reader.read(); !r.done; r = await reader.read()) res.write(r.value);
-    res.end();
-  });
-  await new Promise<void>((resolve) => scopes.listen(0, "127.0.0.1", resolve));
-  service = `http://127.0.0.1:${(scopes.address() as { port: number }).port}`;
+  const peer = loopbackScopePeer(standIn);
+  scopes = peer.server;
+  service = await peer.ready;
   const config: McpConfig = { ...standIn.config(), service };
   const mcp = new McpService({ service, signer, config: { read: async () => { if (hold) await hold; const next = holds.shift(); if (next) await next; return config; }, addRoot: async () => {} }, custody: memoryStore(), every: () => () => {} });
   s = await serveHttp(mcp, "127.0.0.1", 0, () => {});

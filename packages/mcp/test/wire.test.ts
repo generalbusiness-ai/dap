@@ -1,5 +1,5 @@
 import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
-import { createServer, request, type Server } from "node:http";
+import { request, type Server } from "node:http";
 import { PassThrough } from "node:stream";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -13,6 +13,7 @@ import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import { McpService, MODERN, MODERN_RESULT_EXTRA, LEGACY, Wire, memoryStore, newSession, type McpConfig } from "../src/index.ts";
 import { serveHttp, serveStdio, type HttpServing } from "../src/node.ts";
 import { StandIn } from "./support/standin.ts";
+import { loopbackScopePeer } from "./fixtures.ts";
 
 // The scope service here is the STAND-IN of test/support/standin.ts, served over HTTP on loopback. The clients are real: the MCP
 // client 2.3.1, pinned in this package's development dependencies, once in each wire revision. They show the transports, the
@@ -28,18 +29,9 @@ let service: string;
 
 beforeAll(async () => {
   standIn = new StandIn(signer.key);
-  // The stand-in's routes over a real loopback HTTP server, for a child process to reach.
-  scopes = createServer(async (req, res) => {
-    let body = ""; for await (const c of req) body += c;
-    const answer = await standIn.fetch(`http://scopes${req.url}`, { method: req.method ?? "GET", ...(body ? { body } : {}) });
-    res.writeHead(answer.status, { "content-type": "application/json" });
-    const reader = (answer.body as unknown as ReadableStream<Uint8Array>).getReader();
-    for (let r = await reader.read(); !r.done; r = await reader.read()) res.write(r.value);
-    res.end();
-  });
-  await new Promise<void>((resolve) => scopes.listen(0, "127.0.0.1", resolve));
-  const at = scopes.address() as { port: number };
-  service = `http://127.0.0.1:${at.port}`;
+  const peer = loopbackScopePeer(standIn);
+  scopes = peer.server;
+  service = await peer.ready;
 });
 afterAll(() => { scopes.close(); });
 
