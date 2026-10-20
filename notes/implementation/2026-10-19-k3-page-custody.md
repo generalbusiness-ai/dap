@@ -6,8 +6,8 @@ declare their record kind, exact storage prefix, byte bound, decoder and
 public view. Their workflows and existing test assertions are unchanged.
 The new owned preparation incorporates P1 candidate `61a7feb3`, now
 independently approved and landed as Main `be63c49b`. Its actual generated
-build, three Page compiler targets and 20 focused cases pass. A new full
-gate and complete fresh eight-path review remain due. Approval `0707ac89`
+build, three Page compiler targets and 20 focused cases pass. The new full
+gate passes; complete fresh eight-path review remains due. Approval `0707ac89`
 covers the earlier exact K3 head `172978ac` only. The `9c6d344c` integration
 and its passing gate below are historical for this new tree.
 Its first required gate passed at code/test head `1e6aaa994c2a344d980746fbbcd1b5112ce2f370`, tree
@@ -16,6 +16,37 @@ three existing cases skipped, and all 31 Node and 55 Counter cases passed.
 The reporting candidate changes only this note after that run.
 
 ## Preparation with the P1 landing
+
+The original full gate `85523` passes at exact
+`3127f460a5db12ae381c0512c34e0c543ee22d73`, tree
+`d6c55869beeb001a6f7261880200c9f6d4247c1f`: 2,016 Vitest cases pass,
+three existing cases skip, and all 33 Node and 55 Counter cases pass.
+Whole gate: 554.118827083 wall / 804.226346 child CPU seconds. Its test
+phase alone: 544.8 wall / 769.8 CPU seconds, as rounded by the gate.
+These are shared warm macOS 27.0.1 arm64 measurements, Node 26.12 and
+npm 11.20, with OS caches and other host work uncontrolled. The input
+receipt records the initial load; no exclusive-host claim is made.
+
+Before launch, the gate saved every one of its 2,616 source files to a
+physically distinct input snapshot with exact bytes and modes. All source
+bytes/modes, the head, clean checkout and lock stamp stay exact after
+natural exit 0. The 5,499 regular dependency inputs and 32 contained links
+are recorded; only one Vitest results-cache leaf changes. There are zero
+installs. Inputs, original wrapper, raw log and closure use
+`/tmp/k3-p1-final-gate-20261020*`; the full source snapshot is
+`/tmp/k3-p1-final-gate-inputs-20261020`. Original phase logs are in
+`/var/folders/2x/wylr59t17ds36l1l7ng25y7w0000gn/T/tmp.f57EHsB8Qr`.
+
+After that gate, actual Main `aea7c42ccd053b11a01a60984b2f8558f1c15ead`
+added only `notes/reports/2026-10-20-sprint-report.md`. An ordinary local
+merge exits 0, in 0.346874250 wall / 0.030547 child CPU seconds, producing
+`30a8a159d538ea728875c13fdabd5345a0d0eb78`. All 2,616 gated source bytes
+and modes remain exact; the sole addition is that Main report. This note
+is then updated to record the result. No code, test or generated asset
+changes after the gate. The eventual reporting candidate is a distinct
+head, with this report delta and the single imported Main report explicitly
+separated from the original gated head. No whole-suite repeat is needed
+for these report-only changes. The earlier approval is not extended.
 
 The new worktree is `/tmp/artroom-builder-k3-p1-integration-20261020`,
 branch `request/k3-p1-integration-20261020`. It was created from exact
