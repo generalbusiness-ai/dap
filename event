@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/cli/test/invitations.test.ts","body":{"commit":"fb390d88efbbaaf54d9daed73788e52554d5601c","path":"packages/cli/test/invitations.test.ts"}}
+{"kind":"artifact","text":"Merge published the current artifact at packages/client/src/agent-key-invitation.ts","body":{"commit":"fb390d88efbbaaf54d9daed73788e52554d5601c","path":"packages/client/src/agent-key-invitation.ts"}}
