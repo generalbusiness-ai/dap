@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1e67040904064631b820e8b812c492e416e2bbde","text":"Merge retired a covered predecessor; the successor is at packages/bytes/src/item-query-read.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:1feca6ab92466551369c811b37171f1f1f6bf08d","text":"Merge retired a covered predecessor; the successor is at examples/grow/simulator-tick.ts."}
