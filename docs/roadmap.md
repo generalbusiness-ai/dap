@@ -57,14 +57,14 @@ In order, nearest first.
 
 | Capability | State | Use cases that need it |
 |---|---|---|
-| [An application's own messages between scopes](#an-applications-own-messages-between-scopes) | Can be declared; no application has two scopes of its own yet | 25, 31, 32, 33 |
+| [An application's own messages between scopes](#an-applications-own-messages-between-scopes) | Can be declared; no application has two scopes of its own yet | 21, 25, 31, 32, 33, 37, 39, 40, 41, 51, and parts of 08, 18, 19, 24 |
 | [Durability levels](#durability-levels) | Designed; not built | 36, 44, and the live part of every case |
 | [A fork for each hold](#a-fork-for-each-hold) | Planned; a first measurement ran | 34 |
 | [Offline work and propose from a branch](#offline-work-and-propose-from-a-branch) | Direction set; not designed | 34 |
-| [Private views in one record](#private-views-in-one-record) | Not designed in dap; tested in the dap-spike | 21, 32, 37, 39, 40, 41, 42, and parts of 08, 18, 19, 24, 25, 33 |
+| [Private views in one record](#private-views-in-one-record) | Not designed in dap; tested in the dap-spike | 42, and the club and the kanban board from the dap-spike's sweep |
 | [Evidence capture and private custody](#evidence-capture-and-private-custody) | Not designed | 01, 02, 04 to 19, 23, 24, 27, 28, and the custody part of every case |
-| [Outside parties and systems](#outside-parties-and-systems) | Runs for Git publication only | 35, 37, 38, 39, 43, and all of group 4 |
-| [A personal account across records](#a-personal-account-across-records) | Not designed | All of group 4 |
+| [Outside parties and systems](#outside-parties-and-systems) | Runs for Git publication only | 35, 37, 38, 39, 43, and all of group 5 |
+| [A personal account across records](#a-personal-account-across-records) | Not designed | All of group 5 |
 | [Rules that change after creation](#rules-that-change-after-creation) | Not designed in dap; tested in the dap-spike | 42; a sale that gains packages; a club that changes its policy |
 | [Expressions that compute effects](#expressions-that-compute-effects) | Not designed; a rule can check a proposed value today | Analytic pipelines such as Tailapps; chess and other games with many rules |
 | [Split and join](#split-and-join) | Not designed; a protocol is sketched in the dap-spike | A merger of two records |
@@ -83,7 +83,9 @@ rules, destination and lanes all work by messages. A declared definition
 may also declare a send to a scope that one of its slots holds. The
 lending library sends one kind of message, to its room's destination, to
 publish a page. No declared application yet consists of scopes of its own
-that ask one another.
+that ask one another. The brokered market (use case 51) would be the
+first: a roster room, one engagement room for each need, and a site
+that reads them.
 
 **Not offered.** One act cannot take effect in two scopes at once.
 Instead, one scope sends a request, the other answers with a result, and
@@ -163,10 +165,16 @@ can redact a detached text, and it can keep private material in another
 room. Neither lets two readers of one record see different parts and
 still check that they agree.
 
-**Use cases.** Group 3 of the [catalogue](use-cases.md#3-private-views):
-the guitar sale with private offers (32), community governance with
-private standing (42), childcare details (21), competing quotations (37),
-hiring (39), a school support plan (40) and research review (41).
+**Use cases.** Group 4 of the
+[catalogue](use-cases.md#4-private-views-in-one-record): community
+governance with private standing (42), and the club and the kanban board
+from the dap-spike's sweep. The guitar sale (32), childcare details (21),
+competing quotations (37), hiring (39), a school support plan (40) and
+research review (41) moved to the catalogue's group 3 on 20 October 2026.
+Each has one party whom the others trust to hold the shared decision, so
+each party's private part can be a scope of its own, and the decision is
+cited across scopes. That needs messages between an application's own
+scopes, not private views.
 
 **The dap-spike's contribution.** This was the spike's main subject
 ([visibility report](https://github.com/generalbusiness-ai/dap-spike/blob/main/spike/REPORT.md),
@@ -190,6 +198,15 @@ It wrote the conditions for failure before it ran.
 who writes the readers by hand is likely to get them wrong, so private
 views in dap should come with a check that the author cannot skip.
 
+**What separate scopes cover.** When one party holds the shared
+decision, each other party's private part is a scope of its own, and
+the decision is cited by its entry's hash and position. The authority's
+members replay it; the others hold the citation. Membership is the
+boundary, and dap checks it. Private views in one record remain for the
+cases in which the rule binds the group and nobody holds the whole: a
+tally over private standing, an admission rule, a limit over private
+cards.
+
 ### Evidence capture and private custody
 
 **What it is.** A participant brings in a bill, a photograph or a letter
@@ -203,8 +220,8 @@ and is kept by digest. There is no capture with a stated source, no store
 for larger or binary evidence, and no custody that is private to some
 members.
 
-**Use cases.** Group 4 of the
-[catalogue](use-cases.md#4-episodes-across-organisations), and the
+**Use cases.** Group 5 of the
+[catalogue](use-cases.md#5-episodes-across-organisations), and the
 custody part of every other card.
 
 **The dap-spike's contribution.** Its direction note names the three kinds
@@ -224,7 +241,7 @@ cannot declare its own operation. A fact from outside can enter only as a
 participant's signed report.
 
 **Use cases.** Release and deployment (35); a payment attempt (38); a
-tool executor's work (43); every counterparty in group 4.
+tool executor's work (43); every counterparty in group 5.
 
 **The dap-spike's contribution.** Its obligations experiment declared a
 task with a role, a performing act and a deadline. The controls for late,

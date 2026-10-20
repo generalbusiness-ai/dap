@@ -1,12 +1,12 @@
 # Use cases
 
-This page lists 45 situations that dap is meant to serve, and the cases
+This page lists 51 situations that dap is meant to serve, and the cases
 that the [dap-spike](https://github.com/generalbusiness-ai/dap-spike)
-swept. They are sorted into five groups by what each one needs from dap.
+swept. They are sorted into six groups by what each one needs from dap.
 You can build the first group today. The [roadmap](roadmap.md) describes
 each missing piece that this page names.
 
-The cases are proposals. Three of them exist, and their cards say
+The cases are proposals. Four of them exist, and their cards say
 **Built**. No case claims that an institution uses dap, that an outcome is
 fair or lawful, or that anyone saves money.
 
@@ -15,14 +15,18 @@ Cases 01 to 10 extend ten examples from a public thread by Jim Prosser
 [conclusion](https://x.com/jimprosser/status/2108279638007107616)). Each of
 those cards links the post it extends. Cases 01 to 44 come from a draft of
 9 October 2026. Case 45, the lending library, was added later as a demo.
+Cases 46 to 51 come from design notes written between 16 and 20 October
+2026: a grow operation, a learning project, three sales applications
+and a brokered market.
 
 | Group | Cases | What the group needs |
 |---|---|---|
-| [1. Buildable today](#1-buildable-today) | 03, 20, 22, 26, 29, 30, 34, 36, 38, 43, 44, 45 | Nothing more for the shared record |
-| [2. Nearly buildable](#2-nearly-buildable) | 25, 31, 33, 35 | Messages between an application's own scopes, or an outside operation that the application declares. Cases 25 and 33 also need private views for one part |
-| [3. Private views](#3-private-views) | 21, 32, 37, 39, 40, 41, 42 | One record that each participant reads only in part |
-| [4. Episodes across organisations](#4-episodes-across-organisations) | 01, 02, 04 to 19, 23, 24, 27, 28 | A personal account, captured documents kept privately, and parties outside the room |
-| [5. Changing rules and boundaries](#5-changing-rules-and-boundaries) | From the dap-spike's sweep, and Tailapps | Rules that change, expressions that compute what to write, and records that join |
+| [1. Buildable today](#1-buildable-today) | 03, 20, 22, 26, 29, 30, 34, 36, 38, 43, 44, 45, 46, 47, 48, 49, 50 | Nothing more for the shared record |
+| [2. Nearly buildable](#2-nearly-buildable) | 25, 31, 33, 35, 51 | Messages between an application's own scopes, or an outside operation that the application declares. Cases 25, 33 and 51 also keep one part in a scope of its own |
+| [3. Separate scopes, one authority](#3-separate-scopes-one-authority) | 21, 32, 37, 39, 40, 41 | Each party reads its own scope; one scope holds the shared decision and the others cite it |
+| [4. Private views in one record](#4-private-views-in-one-record) | 42 | One record that each participant reads only in part, and every member replays the decisions they share |
+| [5. Episodes across organisations](#5-episodes-across-organisations) | 01, 02, 04 to 19, 23, 24, 27, 28 | A personal account, captured documents kept privately, and parties outside the room |
+| [6. Changing rules and boundaries](#6-changing-rules-and-boundaries) | From the dap-spike's sweep, and Tailapps | Rules that change, expressions that compute what to write, and records that join |
 
 ## What the cases have in common
 
@@ -101,8 +105,10 @@ Each card describes three kinds of content:
   another keeper.
 
 The [roadmap](roadmap.md#durability-levels) distinguishes scope durability
-from the room's archive binding. Execution currently supports Recorded;
-Live and Sequenced remain unsupported. A journal entry that points at a
+from the room's archive binding. Execution supports Recorded. Live is
+not built. Sequenced is designed in
+[the sequenced level and the order scope](../notes/2026-10-18-sequenced-level-and-order-scope.md),
+and its first slices have landed. A journal entry that points at a
 document by its hash does not keep the document. Keeping it needs the bytes, rules
 about who may read them, and a retention period. Sensitive documents need
 private custody.
@@ -143,8 +149,11 @@ decision without forcing a single verdict.
 
 The same rules should decide what a screen shows and which acts are
 available. A store must not weaken a guard, and a screen must not show a
-task as complete from evidence it cannot see. Most of this is still
-design work. The dap-spike's
+task as complete from evidence it cannot see. The
+[self-contained applications](../notes/2026-10-15-self-contained-applications.md)
+note gives the package that declares all of it: definitions, rule
+expressions, read projections, presentation and act descriptions, with
+no server code. Most of the rest is still design work. The dap-spike's
 [capability table](https://github.com/generalbusiness-ai/dap-spike/blob/main/notes/2026-09-20-direction-and-next-steps.md)
 leaves the personal account, document capture and the cross-record
 anchor unfinished. Its
@@ -183,6 +192,56 @@ borrow, return or donate through dap's MCP server, as
 shows.
 
 **Built:** this is [dap-library](../examples/lending/README.md). [Build a lending library](build-a-lending-library.md) walks through it.
+
+### 46 A grow operation
+
+A site with three grow rooms. Sensors report readings on their own
+clock. A climate agent moves vents and fans within its grant and may
+not touch a heater. Tenders record what they measure at the bench. When
+the agent has done what it may and the room is still out of band, an
+alert needs the operator, who authorizes the heater from a card in
+their AI app or in the browser. The incident closes with its entry
+range.
+
+- **Who decides:** the operator holds the heaters, the setpoint and the
+  band. The head grower holds watering outside the schedule and
+  chemical applications. The climate agent holds vents and fans. Sensors
+  report and decide nothing.
+- **When it closes:** an alert closes when the room is back in band. A
+  hold on an alert expires by a timed rule and the alert reopens.
+- **What the record keeps:** readings, measurements, each command with
+  its signer, alerts and their entry ranges. Live presence keeps no
+  record.
+
+**Built:** this is the grow room of
+[plan 033](../notes/plans/033-2026-10-18-grow-room-demo.md), designed in
+[a grow operation as a dap application](../notes/2026-10-17-grow-operation-application-design.md)
+and hosted at [dap.generalbusiness.ai/grow](https://dap.generalbusiness.ai/grow/).
+The operation is fictional: no grower, device or site is real.
+
+### 47 A learning project in your AI app
+
+A learner practises with their own agent and invites a tutor or a peer
+to review selected work. The plan, the chosen submissions, who owes
+feedback and what comes next are the shared record. The private
+practice stays in the learner's own chat.
+
+- **Who decides:** the learner accepts the plan and chooses what to
+  share. The tutor gives feedback and decides nothing about the
+  learner's practice. The agent drafts.
+- **When it closes:** a submission closes when its feedback is given.
+  The project closes at its checkpoint. The learner can stop at any
+  time.
+- **What the record keeps:** the plan and its acceptance, each
+  submission by reference, and feedback owed and given. Custody keeps
+  the recordings.
+
+Proposed in
+[shared learning within your existing AI app](../notes/2026-10-16-learning-in-your-ai-app.md).
+**Also needs:** [evidence capture and private custody](roadmap.md#evidence-capture-and-private-custody),
+for recordings; and a person's access to the room from their own AI
+app, which the hosted endpoint's OAuth head covers
+([hosted endpoint note](../notes/2026-10-13-hosted-mcp-endpoint.md)).
 
 ### 44 Agents counting with attributed turns and speech
 
@@ -228,6 +287,11 @@ record of all of it.
 - Agents take part with their own keys, through the `dap` command or
   dap's [MCP server](mcp.md). They take the same acts as people, under
   the same rules, and every act names who took it.
+
+The same room reached from each person's own AI app, with coding agents
+in sessions of their own, is the
+[repo in your AI app](../notes/2026-10-16-repo-in-your-ai-app.md)
+proposal and its [MVP plan](../notes/2026-10-16-repo-in-ai-mvp-plan.md).
 
 For one change, a developer's agent prepares a patch and checks an exact
 candidate.
@@ -425,6 +489,80 @@ endless retries.
 
 **Also needs:** [outside parties and systems](roadmap.md#outside-parties-and-systems), for a payment that the scope sends. A participant's report works today. [Evidence capture and private custody](roadmap.md#evidence-capture-and-private-custody), for the contract.
 
+### 48 The prospect room
+
+One seller and their assistant work a list of accounts: research,
+outreach, replies, and a proposal the prospect accepts.
+
+- **Who decides:** the owner signs outreach, records replies and
+  proposes. The assistant and a researcher draft and write notes, each
+  refused without a source. A prospect who is a member accepts or
+  declines from their own AI app; otherwise the owner records their
+  answer with its source.
+- **When it closes:** the owner closes an account as won, lost or
+  dormant. A proposal closes accepted, declined or superseded, and a
+  changed proposal is a new one at a new revision.
+- **What the record keeps:** accounts, notes, touches and proposals at
+  exact revisions. Timed rules mark five days without a reply and
+  twenty-one days without a touch. Sending mail is the owner's
+  statement.
+
+Designed in
+[three sales applications](../notes/2026-10-19-sales-applications-design.md),
+section 5. **Also needs:** [evidence capture and private custody](roadmap.md#evidence-capture-and-private-custody),
+for a proposal document beyond its text.
+
+### 49 The bid response
+
+A team answers a formal request for proposals: an account executive, a
+sales engineer, product managers, legal, security, pricing and a
+manager, with agents decomposing the request and drafting answers.
+
+- **Who decides:** experts supply answers in their domain as their own
+  statements. The sales engineer reviews them into the response.
+  Pricing and legal approve the price and the terms at exact revisions.
+  Management decides go or no-go and submits. The buyer is outside the
+  room; their questions, answers and award enter as the owner's reports
+  with sources. The intake and drafting agents hold no supply, review
+  or approval grant.
+- **When it closes:** an assembly is complete or refused. A submission
+  seals the current assembly and sends it to the bid's Git destination.
+  A later supply makes an assembly stale, and a stale assembly is never
+  submitted.
+- **What the record keeps:** the import, one requirement per row,
+  questions, approvals, assemblies and submissions. Files stay outside
+  the record as links and digests.
+
+Designed in
+[three sales applications](../notes/2026-10-19-sales-applications-design.md),
+section 6. **Also needs:** [outside parties and systems](roadmap.md#outside-parties-and-systems),
+for the buyer's own acceptance and for the destination's receipt to
+reach the room as its own fact; [evidence capture and private custody](roadmap.md#evidence-capture-and-private-custody),
+for files. The intake agent as a hosted member waits for
+[hosted agent teams](../notes/2026-10-15-hosted-agent-teams-design.md)
+and runs from the owner's machine until then.
+
+### 50 The marketing calendar
+
+One or two people publish on a schedule with an agent that drafts.
+
+- **Who decides:** the owner plans, approves the exact text and
+  publishes. A reviewer comments and approves. The writer agent drafts
+  and revises, and a revision resets any approval.
+- **When it closes:** a post is admitted, refused with its reason, or
+  retired. Whether the file is on the site is a member's check, shown
+  with their name.
+- **What the record keeps:** campaigns, posts with their request
+  outcomes, and comments. Publication to the site is the repository
+  write dap runs today.
+
+Designed in
+[three sales applications](../notes/2026-10-19-sales-applications-design.md),
+section 7, as the smallest of the three and the first to build.
+**Also needs:** nothing for the shared record. A native completion
+protocol for publication, in which the destination's receipt reaches
+the room as its own fact, is named and deferred.
+
 ### From the dap-spike's sweep: buildable today
 
 The dap-spike's sweep found these cases too:
@@ -441,8 +579,10 @@ The dap-spike's sweep found these cases too:
 These cases need one piece that is designed or partly built. Either the
 application uses messages between its own scopes, or it declares an
 outside operation. dap-room's own scopes already work by messages.
-"Nearly" refers to the shared record: cases 25 and 33 also need private
-views for one part, as their cards say.
+"Nearly" refers to the shared record: cases 25, 33 and 51 also keep
+one part in a scope of its own, as
+[group 3](#3-separate-scopes-one-authority) describes and their cards
+say.
 
 ### 33 Booking a room or equipment, with event dependencies
 
@@ -461,7 +601,7 @@ An organiser's agent finds free slots and drafts a request.
 An expiry needs the recorded clock. A browser timer cannot cancel a
 commitment.
 
-**Needs:** [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes), for several rooms under one allocator and for the suppliers' separate agreements; [private views in one record](roadmap.md#private-views-in-one-record), to keep the purpose private.
+**Needs:** [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes), for several rooms under one allocator and for the suppliers' separate agreements, and for the booker's own scope that holds the purpose, as in [group 3](#3-separate-scopes-one-authority), so that the allocator sees the slot and not the reason.
 
 ### 25 A shared family budget for a purchase or repair
 
@@ -483,7 +623,7 @@ A price rise above someone's limit needs their approval again. A
 contribution's amount can be shared while the reason for it stays
 private.
 
-**Needs:** [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes), so that one scope owns the budget; [private views in one record](roadmap.md#private-views-in-one-record), to keep a contributor's reasons private.
+**Needs:** [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes), so that one scope owns the budget, and for a scope of each contributor's own that holds their reasons, as in [group 3](#3-separate-scopes-one-authority).
 
 ### 31 Buying a used car, with an inspection and handover
 
@@ -525,18 +665,65 @@ is a concrete example of approval before execution.
 
 **Needs:** [outside parties and systems](roadmap.md#outside-parties-and-systems), for a deployment that the scope sends and reconciles. The model runs today for publication to a Git host. [Evidence capture and private custody](roadmap.md#evidence-capture-and-private-custody), for released artifacts.
 
+### 51 A brokered market: night nurses in one city
+
+A person runs a small matching business. Their agent finds candidates
+in public groups and delivers the operator's invitation. Each provider
+enrolls their own offer, which is the consent record. A buyer's need
+enters as the operator's report with its source. The operator matches,
+the provider accepts from their own AI app, and the operator's
+introduction, guarded by both acceptances, exchanges contact details
+and opens the fee.
+
+- **Who decides:** the operator holds the invitation, the match, the
+  introduction and the fee. The provider holds their own offer and
+  their acceptance. The buyer is outside the record in the first
+  version. The sourcing agent proposes leads and drafts needs, and
+  signs nothing that commits anyone.
+- **When it closes:** a need closes filled or unfilled. A match closes
+  accepted, declined or introduced. A fee closes settled or waived. An
+  offer goes stale by a timed rule, and the provider is told.
+- **What the record keeps:** the roster room holds offers and leads.
+  Each need has an engagement room with the operator and the matched
+  providers as members, so a provider never reads another need's terms.
+  The site reads its rooms for the operator's roll-up.
+
+Designed in
+[a brokered market as a dap application](../notes/2026-10-20-market-application-design.md).
+**Needs:** [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes),
+so that recording a need creates its engagement room and the roster
+cites the introduction; [outside parties and systems](roadmap.md#outside-parties-and-systems),
+for the buyer's own acceptance; and a person's access to the room from
+their own AI app, which the hosted endpoint's OAuth head covers
+([hosted endpoint note](../notes/2026-10-13-hosted-mcp-endpoint.md)).
+Custody for payment and vetting evidence waits for
+[evidence capture and private custody](roadmap.md#evidence-capture-and-private-custody).
+
 ### From the dap-spike's sweep: nearly buildable
 
 Bookings across several rooms with one capacity for the whole building,
 and two projects that share one budget.
 
-## 3. Private views
+## 3. Separate scopes, one authority
 
-These cases need one record in which each participant reads a different
-part, and everyone still agrees on every shared decision. dap does not
-have that today: every member of a room reads the whole record. The
-dap-spike tested this property, and the
-[roadmap](roadmap.md#private-views-in-one-record) says what it found.
+These cases keep each party's private part in that party's own scope,
+and one scope holds the decision they share. The other scopes cite that
+decision by its entry's hash and position. The authority's members
+replay it; the others hold the citation. Membership is the privacy
+boundary, which dap checks on every act and every read, so there are no
+readers to write by hand. The brokered market (51) uses this shape for
+its engagement rooms. The dap-spike's repaired Sale and Booking models
+reached the same agreement by another route, at the cost the
+[roadmap](roadmap.md#private-views-in-one-record) records.
+
+The shape needs
+[an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes),
+which runs for dap-room's own scopes and which no declared application
+has used yet. What it does not give: a party outside the authority's
+scope cannot replay the comparison that produced the decision. In each
+case below one party is trusted to hold it: the seller, the parents,
+the buyer, the hiring manager, the school, the editor. Where no such
+party exists, the case belongs to group 4.
 
 ### 32 A guitar sale with private competing offers
 
@@ -555,27 +742,7 @@ buyer's conditions.
 
 Closing the sale does not reveal the private prices.
 
-**Also needs:** [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes), for the inspection.
-
-### 42 Membership and governance of a community budget
-
-A member's agent helps write a proposal and its budget options.
-
-- **Who decides:** members have competing priorities. The treasurer knows
-  the funds and private reasons about members' standing. A committee
-  applies the admission rules. A steward carries out decisions. Agents
-  advise their people. They are not extra votes.
-- **When it closes:** a motion or a membership decision closes only under
-  the pinned rules for eligibility, quorum and disclosure. Spending,
-  access and procedural challenges close separately.
-- **What the record keeps:** proposal versions, valid votes, dissent and
-  changed standing. Custody keeps rule versions, minutes and accounts.
-
-A public outcome need not reveal private reasons. The dap-spike's
-[Club counterexample](https://github.com/generalbusiness-ai/dap-spike/blob/main/spike/REPORT.md)
-shows that such a policy is still to be validated.
-
-**Also needs:** [rules that change after creation](roadmap.md#rules-that-change-after-creation), for rules that are amended under their own procedure.
+**Needs:** [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes), for each buyer's own scope and for the inspection. The seller's scope holds the one acceptance, and each buyer's scope cites it.
 
 ### 21 A childcare gap around work
 
@@ -596,6 +763,8 @@ be answered.
 Matching calendars is not enough. Private details about the child need
 not be visible to everyone discussing the parent's shifts.
 
+**Needs:** [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes), so that the child's details stay in the parents' own scope while the shifts are settled with the carer and the employer.
+
 ### 37 A procurement award and accepting the delivery
 
 A requester's agent drafts requirements and compares quotes.
@@ -615,7 +784,7 @@ A requester's agent drafts requirements and compares quotes.
 separates planning, tender, award, contract and delivery. A published
 award is not the supplier's order or a completed delivery.
 
-**Also needs:** [outside parties and systems](roadmap.md#outside-parties-and-systems), for the supplier's own acceptance.
+**Needs:** [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes), so that each supplier reads only its own offer and the award cites it; [outside parties and systems](roadmap.md#outside-parties-and-systems), for the supplier's own acceptance. A losing supplier holds the award's citation and the public notice, not the comparison.
 
 ### 39 A job application, offer and onboarding
 
@@ -637,7 +806,7 @@ offer. A recruiter's agent organises the criteria.
 Accounts set up and an actual first day need outside evidence. A dispute
 about a fact stays separate from disagreeing with the decision.
 
-**Also needs:** [outside parties and systems](roadmap.md#outside-parties-and-systems), for account setup and the actual start.
+**Needs:** [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes), so that the candidate reads their own application and the assessments stay in the hiring scope; [outside parties and systems](roadmap.md#outside-parties-and-systems), for account setup and the actual start.
 
 ### 40 A school support plan and whether it is delivered
 
@@ -660,7 +829,7 @@ questions.
 Private notes stay private even when they shaped a proposal. A signed
 plan does not prove the support happened.
 
-**Also needs:** [evidence capture and private custody](roadmap.md#evidence-capture-and-private-custody), for the official versions.
+**Needs:** [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes), so that a specialist's private notes stay in their own scope and the plan cites what they chose to put forward; [evidence capture and private custody](roadmap.md#evidence-capture-and-private-custody), for the official versions.
 
 ### 41 A research review and a reproducible result
 
@@ -683,19 +852,57 @@ expert advice from the funding decision. Git can hold code. Restricted
 data needs another keeper. Access for review is not permission to
 publish.
 
-**Also needs:** [evidence capture and private custody](roadmap.md#evidence-capture-and-private-custody), for restricted data.
+**Needs:** [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes), so that each review is a scope of its own that the editor's decision cites, and the author reads the decision and not the reviewer; [evidence capture and private custody](roadmap.md#evidence-capture-and-private-custody), for restricted data.
 
-### From the dap-spike's sweep: private views
+### From the dap-spike's sweep: separate scopes
 
 The dap-spike's sweep found these cases too:
 
 - A sale with private offers. Case 32 continues it.
-- One room's bookings, with a private purpose.
+- One room's bookings, with a private purpose: the booker's own scope
+  holds the purpose, and the allocator's scope holds the slot.
+- Poker, with a trusted dealer. The dealer's scope is the authority. A
+  commitment revealed later is a detached text's digest, posted before
+  the reveal.
+
+## 4. Private views in one record
+
+These cases need one record in which each participant reads a
+different part, and every member still replays the decisions they
+share. Group 3's shape does not serve them: the rule binds the group
+itself, and no one party is trusted to hold the whole. dap does not
+have that today: every member of a room reads the whole record. The
+dap-spike tested this property, and the
+[roadmap](roadmap.md#private-views-in-one-record) says what it found.
+
+### 42 Membership and governance of a community budget
+
+A member's agent helps write a proposal and its budget options.
+
+- **Who decides:** members have competing priorities. The treasurer knows
+  the funds and private reasons about members' standing. A committee
+  applies the admission rules. A steward carries out decisions. Agents
+  advise their people. They are not extra votes.
+- **When it closes:** a motion or a membership decision closes only under
+  the pinned rules for eligibility, quorum and disclosure. Spending,
+  access and procedural challenges close separately.
+- **What the record keeps:** proposal versions, valid votes, dissent and
+  changed standing. Custody keeps rule versions, minutes and accounts.
+
+A public outcome need not reveal private reasons. The dap-spike's
+[Club counterexample](https://github.com/generalbusiness-ai/dap-spike/blob/main/spike/REPORT.md)
+shows that such a policy is still to be validated.
+
+**Also needs:** [rules that change after creation](roadmap.md#rules-that-change-after-creation), for rules that are amended under their own procedure.
+
+### From the dap-spike's sweep: private views in one record
+
+The dap-spike's sweep found these cases too:
+
 - A club with private applications and dues.
 - A kanban board with private cards and a limit on work in progress.
-- Poker, which also needs commitments revealed later and a trusted dealer.
 
-## 4. Episodes across organisations
+## 5. Episodes across organisations
 
 Each case here starts as one person's account of dealing with
 organisations that have not joined. Each needs all three of
@@ -835,7 +1042,7 @@ extends Prosser's
 
 A receipt is not an approval, and an approval is not a payment.
 
-**Also needs:** [private views in one record](roadmap.md#private-views-in-one-record), because each household member controls what they disclose.
+**Also needs:** a scope of each household member's own, as in [group 3](#3-separate-scopes-one-authority), because each member controls what they disclose.
 
 ### 09 A lease renewal when the household disagrees
 
@@ -1012,7 +1219,7 @@ the appointment.
 Attending the appointment does not answer the patient's questions, or
 prove that a referral was accepted.
 
-**Also needs:** [private views in one record](roadmap.md#private-views-in-one-record), for records with restricted readers.
+**Also needs:** a scope of the patient's own for records with restricted readers, as in [group 3](#3-separate-scopes-one-authority).
 
 ### 19 The first week after leaving hospital
 
@@ -1032,7 +1239,7 @@ discharge papers.
 Incomplete papers stay incomplete. The agent does not invent medical
 instructions to make a checklist look finished.
 
-**Also needs:** [private views in one record](roadmap.md#private-views-in-one-record), for records with restricted readers.
+**Also needs:** a scope of the patient's own for records with restricted readers, as in [group 3](#3-separate-scopes-one-authority).
 
 ### 23 Moving house and handing over the property
 
@@ -1071,7 +1278,7 @@ itinerary.
 A changed flight reopens the connections it affects. It does not cancel
 other bookings or prove a right to a refund.
 
-**Also needs:** [private views in one record](roadmap.md#private-views-in-one-record), for each traveller's budget.
+**Also needs:** a scope of each traveller's own for their budget, as in [group 3](#3-separate-scopes-one-authority).
 
 ### 27 A home-damage claim and getting back into the house
 
@@ -1118,9 +1325,9 @@ The dap-spike's sweep found these cases too:
 - Trip planning. Case 24 continues it.
 - Feeds, sensors and other outside data sources.
 
-## 5. Changing rules and boundaries
+## 6. Changing rules and boundaries
 
-None of the 45 numbered cases needs this first. All but the last case
+None of the 51 numbered cases needs this first. All but the last case
 here come from the dap-spike's
 [sweep of its original use cases](https://github.com/generalbusiness-ai/dap-spike/blob/main/notes/2026-09-18-authoring-language-directions.md).
 
@@ -1194,6 +1401,10 @@ refresh the page or stage a turn out of order to show this.
 
 Written from a draft of 9 October 2026, regrouped on 13 October 2026
 against main `d1b845f8`, and revised on 14 October 2026 against main
-`f20df342` for plain language. The grouping is a judgement from reading
-the documentation and the definitions. No case was built or run for this
-page, except the three marked **Built**.
+`f20df342` for plain language. On 20 October 2026, against main
+`13193f31`, cases 46 to 51 were added from the design notes they cite,
+and the former private-views group was split into groups 3 and 4 by one
+test: whether one party holds the shared decision for the others. The
+grouping is a judgement from reading the documentation and the
+definitions. No case was built or run for this page, except the four
+marked **Built**.
