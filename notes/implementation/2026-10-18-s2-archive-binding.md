@@ -1,16 +1,14 @@
 # S2a: room archive binding
 
 Request `f54185fb5b7ccacdf932248552127e4985b3f956`, promise
-`7993405b993bd00d857cb0d0798b44125ebd4b74`. Current mutable preparation
-incorporates reviewed G5a Main `a00eda3b` and implements the combined Device
-and archive cohort. The focused native checks pass. The latest whole gate
-has one stale unsupported-version assertion failure. Its exact correction
-and the gate's unrun phases pass separately. Planner report `1186535b`,
-adopted through `cc0d3536`, amends the gate condition for this exact sum
-of runs. It does not turn the failed original into one passing gate.
-Exact-head Source review and landing audit remain. The first gate failed
-five shipped-version assertions; it remains failed evidence. No S2a
-publication, deployment or completion is claimed.
+`7993405b993bd00d857cb0d0798b44125ebd4b74`. The current mutable repair
+addresses the one required finding from complete review `5f7c1241` of
+Source `b83ca24c`. The combined room's real HTTP context now reports
+Membership8. The old Device control and both combined invitation cases
+pass. A new ordinary gate and complete exact-head review remain. The
+previous Source is unapproved and frozen forever. Its adopted composite
+is historical evidence, not a gate pass for this production repair. No
+S2a landing, publication, deployment or completion is claimed.
 
 The current implementation adds nine archive pins and four combined pins.
 It preserves the 45 original shipped definition bodies and all four G5a
@@ -38,7 +36,73 @@ fixture ports remain explicit; A0b production admission and consent remain
 outside both slices. Native replay and target resolution in S2a do not
 close the export obligation.
 
-## Actual G5a Main integration
+## Required HTTP context repair after complete review
+
+Complete checker report `5f7c1241c6addfd7dcc5ce5e0c93cdd0de17fec0`
+was read in full and adopted through
+`258129b6543129579b6a311355aded27b1f3c7f8`. The checker inspected all
+60 actual Source artifacts, all source mode/blob bindings and the adopted
+validation composite. It reported one required finding, F1: Rules10 was
+admitted by `applicationInstallation`, but its Membership8 selection
+omitted `ADC.rules`. The real HTTP screen context therefore returned
+Membership7. A legitimate Membership8 invitation was rejected as another
+room. The independent MCP declared-installation path already used the
+right pin, so the previous MCP witnesses did not cover this HTTP defect.
+
+The frozen candidate `b83ca24cd9ad63245b8a00a2278e0495b6b938bc`, tree
+`c854e0ca1c1dc1e6906db2fd64a808f29a961d06`, stays unchanged. The repair
+uses `/tmp/artroom-builder-s2a-http-membership8-20261020`, a new Git
+worktree at that exact commit. Its private dependency view independently
+copies 5,499 granted regular leaves and reconstructs 28 contained links.
+All copied files have distinct inodes and verified mode, size and hash.
+Only the new copy's one Vitest cache file is removed. No original source,
+dependency, tool or sealer is executed or edited, and no package is
+installed. The copied lock stamp still matches the unchanged lockfile.
+The receipt is `/tmp/artroom-s2a-http-private-view-20261020.json`.
+
+The exact repair adds `named === ADC.rules` to the existing Membership8
+selection. No definition data, version, native owner protocol, limit,
+default or legacy pin changes. The existing three-variant Device story
+now fetches its actual HTTP `_/context` before package-cache deletion,
+parses it through the production decoder, and checks the full directory,
+membership, application scope and the cohort's exact membership pin.
+The real Membership scope issues a person invitation. The production
+screen invitation reader accepts its matching link and refuses the other
+membership version. Reading the link here is not browser enrollment;
+the existing native CLI stories own actual person and agent enrollment.
+
+Before the repair, original process91529 naturally exits one: the legacy
+Device case passes; both combined cases return HTTP200 with Membership7
+and fail the exact Membership8 assertion. After the one-clause repair,
+original56953 naturally exits zero with all three cases passing, including
+matching native-issued invitations. The owning Scope compiler targets
+pass. All 35 original outer expect chains remain byte-for-byte exact and
+in order among 39 current chains. The original owner/capacity/restart/
+answer/replay assertions, case names and deadlines remain.
+
+Both ordinary archive MCP/native HTTP context cases also pass. The Page
+asset comparison passes after Page and MCP resource regeneration; both
+generated modules are byte-exact to the prior candidate. Evidence uses
+`/tmp/artroom-s2a-http-*20261020*`. The catalogue tool is independently
+copied and retargeted. Its first preparation guard expected seven root
+paths but found six, and stopped before writing or running any tool.
+That bookkeeping failure is retained; it changes no validation result.
+
+The checker-owned evidence grant is independently copied at
+`/tmp/artroom-s2a-http-checker-evidence-20261020/`: exactly the manifest
+and its twelve named report, metadata, log and probe leaves. Manifest
+SHA-256 is
+`2d49b088cf947ef3219ea7e116387673681fe81e47b40610467eaea5c50335c5`.
+The probe is read as evidence and never executed as an original. No
+adjacent checker path is accessed.
+
+The governing amendment requires a new gate for this production repair.
+The previous failed gate and accepted sum remain qualified history. The
+new gate result and final Source tree will be recorded separately after
+the clean repair checkpoint. S2b export and A0b production admission
+remain outside S2a.
+
+## Earlier G5a Main integration checkpoint
 
 G5a landed at `a00eda3bdb6796be6b67e6095b7ef97219363976`, tree
 `44e96bc437c00a4dbfacf1d24eb02f91318f84a4`, through native receipt
