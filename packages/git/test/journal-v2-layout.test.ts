@@ -3,8 +3,13 @@
 import { afterAll, expect, test } from "vitest";
 import { canonicalize, entryHash, parseStrict } from "@generalbusiness/artroom-bytes";
 import type { Entry } from "@generalbusiness/dap-contract";
+import { archiveSource, verifyArchive } from "@generalbusiness/artroom-replay";
+import { gitSource } from "@generalbusiness/artroom-replay/git";
 import { ArchiveBudget } from "../../scope/src/archive-budget.ts";
 import { buildJournalPass } from "../src/journal-v2-layout.ts";
+import { readJournalArchiveV2 } from "../src/journal-v2-reader.ts";
+import { journalRef } from "../src/journal-path.ts";
+import type { JournalReadResult } from "../src/journal-reader.ts";
 import { journalV2PassPath, journalV2SegmentPath } from "../src/journal-v2-path.ts";
 import { archiveObjectSource, archiveRepository, selectedInput, syntheticJournal, writeArchiveObjects } from "./support/journal.ts";
 import { cleanup, git } from "./support/repo.ts";
@@ -46,10 +51,33 @@ test("three v2 passes cover ten thousand entries without rereading old entries o
       const changed = JSON.parse(selection); changed.entries[0].hash = hash;
       for (const object of changed.objects) for (const consumer of object.consumers) consumer.origin.at.hash = hash;
       const control = new ArchiveBudget({}, () => 0); control.spend({ entries: entries.length, attempts: objects.length });
-      expect(await buildJournalPass({ format: "sha1", selection: canonicalize(changed), parent, budget: control,
+      const refused = await buildJournalPass({ format: "sha1", selection: canonicalize(changed), parent, budget: control,
         input: { ...input, entry: (seq, limit) => seq === first ? Promise.resolve(bytes) : input.entry(seq, limit) },
-      })).toEqual({ ok: false, reason: "input-mismatch", where: `entry:${first}` });
+      });
+      expect(refused.ok ? "accepted" : refused).toEqual({ ok: false, reason: "input-mismatch", where: `entry:${first}` });
     }
     previous = { commit: built.archive.commit, through: built.archive.manifest.through }; priorFiles = files;
   }
+  const captured: JournalReadResult[] = [], source = archiveObjectSource(directory);
+  const offline = await verifyArchive(archiveSource({ open: async (scope, work) => {
+    const read = await readJournalArchiveV2({ format: async () => "sha1", resolve: async () => previous!.commit,
+      object: (id, limit) => source.object(id, limit),
+    }, scope, work);
+    captured.push(read); return read;
+  } }), { mode: "integrity", scope: fixture.at.scope, head: fixture.description.through });
+  expect(offline.kind === "verification" ? offline.verification.report.result : offline).toBe("consistent");
+  const opened = captured[0]!;
+  expect(opened.ok, JSON.stringify(opened.ok ? { ok: true } : opened)).toBe(true);
+  if (opened.ok) {
+    expect(opened.archive.entries.map(entry => entry.bytes)).toEqual(fixture.bodies);
+    expect(opened.archive.head).toEqual(fixture.description.through);
+    expect(Object.isFrozen(opened.archive.entries[0])).toBe(true);
+  }
+  git(directory, ["update-ref", journalRef(fixture.at.scope), previous!.commit]);
+  const local = await verifyArchive(gitSource(directory), { mode: "integrity", scope: fixture.at.scope, head: fixture.description.through });
+  expect(local.kind === "verification" ? local.verification.report.result : local).toBe("consistent");
+  const limited = await verifyArchive(archiveSource({ open: (scope, work) => readJournalArchiveV2({
+    format: async () => "sha1", resolve: async () => previous!.commit, object: (id, limit) => source.object(id, limit),
+  }, scope, work, { entries: 9999 }) }), { mode: "integrity", scope: fixture.at.scope });
+  expect(limited).toMatchObject({ kind: "archive-failure", result: "limit" });
 }, 30_000);

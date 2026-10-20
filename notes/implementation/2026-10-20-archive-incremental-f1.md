@@ -6,7 +6,7 @@ starts from that Main in an isolated checkout. It contains no 9a admission
 changes and no floor entry or deployment configuration.
 
 This is work in progress. There is no full gate, review, landing, native
-confirmation, clone reader or offline replay acceptance yet.
+confirmation or native offline replay acceptance yet.
 
 ## Implemented boundary
 
@@ -56,9 +56,49 @@ OS caches are uncontrolled; each receipt records its observed load.
 
 ## Work remaining
 
-Connect the v2 reader and its total entry limit, native interval inventory,
+Connect native interval inventory,
 retained-row `pass` columns, atomic confirmation and deterministic rebuild.
 Replace the writer's whole-parent provider read with bounded object reads
 and verify unchanged parent edges at send. Implement v1 conversion, then
 run the commissioned native witnesses and the gate once before review.
 The separate 9a observation-head proof decision remains with planner.
+
+## Complete clone reader
+
+The v2 reader checks the complete pass tiling, canonical segment boundaries,
+the chain across passes and the original pass of every retained file. Each
+pass must carry its own foreign-source basis. Every file must be listed;
+extra or misplaced files refuse the clone. Its default total limit is
+1,000,000 entries. The reader's tree counters follow that explicit total
+limit, while native writers keep their original per-pass limits. All reads
+still spend the caller's one budget and deadline.
+
+The `gitSource` router resolves the ref once, inspects two bounded trees and
+pins that immutable commit for its selected reader. It makes no fallback
+between layout versions. The original v1 reader's checks are unchanged.
+
+- Reader attempt 1 passed both Git compilers and the 10,000-entry portable
+  reader/A2 integrity witness: 4.954823458 wall seconds, 5.729255 child CPU.
+- Attempt 2 passed four Git and Replay compiler configurations and eight
+  cases over the v2 writer/reader and existing disconnected v1 clone file:
+  17.305623666 wall seconds, 22.587915 child CPU. The actual local
+  `gitSource` reads all 10,000 entries and A2 integrity reports `consistent`.
+  A configured 9,999-entry reader limit refuses that archive.
+- The corruption fixture's first two attempts passed the valid two-pass
+  archive but stopped on bare-repository index commands before reaching
+  malformed inputs. Their natural failures remain preserved. Direct Git
+  tree-object edits replace those index commands.
+- The corrected fixture passed all nine commissioned structural variants:
+  gap, overlap, unlisted retained file, future retained pass, absent file in
+  the named pass, missing copied-fact source basis, wrong directory, position
+  overflow and broken cross-pass chain. It took 8.895107709 wall seconds,
+  8.455574 child CPU.
+- An additional malformed-entry-JSON witness failed by assertion on the
+  pre-fix reader: it reported `unavailable`, where corrupt bytes require
+  `mismatch`. After correction, that witness and all nine structural
+  variants pass: 9.737741291 wall seconds, 9.115754 child CPU. The baseline
+  and fixed attempts each preserve all inputs and their original exits.
+
+These are integrity and corruption checks over synthetic entry judgments
+and real Git objects. They do not establish native replay or confirmation,
+production export permission, provider behavior or deployment readiness.
