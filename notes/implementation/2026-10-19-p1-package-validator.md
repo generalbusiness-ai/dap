@@ -3,7 +3,8 @@
 Request `4e63c67c30e866555e9efcfdf49af75a2c2f92e1`, promise
 `0afa98af9294045f7906395d0bc8a206ebf1aa90`. This owned preparation
 incorporates reviewed Main `248aab8f`, with landed K1, K2, G5a, S2a and
-Grow host-link work. There is no P1 full gate, review or landing yet.
+Grow host-link work. Two ordinary P1 gates have failed; complete review
+and landing remain due.
 The earlier `32f7537e` integration on Main `8aad37bb` is historical.
 
 Planner decision `b966ef3f`, adopted as `48471bbb`, now governs the format
@@ -952,3 +953,53 @@ The original real executable failures distinguish the loader fault; no
 mutation sweep is run. Actual generators rebuild served assets from the
 changed source. A new ordinary gate on the changed code and complete
 exact-head review remain due.
+
+
+## Require a current projection before the refusal scenario
+
+The changed-code ordinary gate `32164` at `b24acf354`, tree `02281535`,
+closes naturally one. All three prior raw Node CLI assertions now pass.
+Compiler, helper and whitespace phases pass. Vitest reports 2,014 passed,
+one failed and three skipped cases, in 421 passed, one failed and one
+skipped files. The failure is the existing lending story at line 248:
+the gateway returns `nothing-sent` because its list is not current,
+where the scenario expects the unauthorized cancellation refusal. Node
+and Counting checks are not reached. Original wall / child CPU time is
+521.259619875 / 763.948453 seconds, with shared warm starting load
+1.8008/1.8677/1.9116. All 2,611 source files remain exact and clean;
+only the owned Vite cache changes among 5,531 dependency rows, the lock
+stamp matches, and no package installs. Original logs and closure are
+`/tmp/p1-b1-main-gate-v2-20261020*`; the exact source input is
+`/tmp/p1-changed-gate-inputs-20261020`. Raw warnings remain unclassified.
+
+One unchanged focused lending run then passes in 7.301891625 wall /
+8.802306 CPU seconds. The previously unreached 33 Node and 55 Counting
+checks pass separately in 3.698681125 / 3.914157 and 1.905248750 /
+3.058842 wall / CPU seconds. This is an honest composite of separate
+outcomes, not a passing original gate, a reproduced cause or stability
+evidence. Original `43887` records, exact source inventory and the
+Counting evidence path are
+`/tmp/p1-lending-gate-triage-and-remainder-20261020*`;
+`/tmp/p1-lending-unchanged-triage-inputs-20261020` preserves all inputs.
+
+The refusal segment previously called `g.look()` without asserting its
+result, then drained the donation's publication replies. The historical
+projection route makes several authenticated reads, so the scenario
+needs the drain before the projection. It now settles the same L/G
+fixture dispatcher first and asserts that `g.look()` is current before
+the original unauthorized-refusal, custody and unchanged-head assertions.
+There is no gateway, production, grant, cohort, retry, sleep or timeout
+change. This strengthens the scenario's precondition without claiming
+the original failure's cause. It is a narrow P1 integration prerequisite,
+not the broader queued gate-stability task.
+
+The corrected fixture's separate focused run `93995` passes Scope test
+typechecking and its one native scenario. The scenario takes
+7.342362417 wall / 8.858656 CPU seconds; initial shared warm load is
+2.0142/2.4399/2.3486. All source bytes/modes and checkout status remain
+unchanged during that run, the lock stamp matches, and no package
+installs. Records are `/tmp/p1-lending-ordered-refusal-focused-20261020*`;
+all 2,611 source inputs are preserved at
+`/tmp/p1-lending-ordered-refusal-inputs-20261020`. The new changed-code
+ordinary gate and complete review remain due; no unchanged whole-suite
+replay or mutation sweep is run.
