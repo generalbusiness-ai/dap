@@ -772,3 +772,23 @@ graph, pool and the signed native demo. No member-display case is claimed
 here. No frozen original, actual publisher key or provider was executed
 or accessed, and no whole gate was repeated. One final ordinary gate and
 complete Source review remain ahead.
+
+
+## Generated Page module before the final gate
+
+The owned Page generator closes naturally zero before this branch's first
+final gate. It refreshes `apps/room/page/assets.ts` for this combined source.
+The old Main module is retained at `/tmp/p1-k1-main-page-module-before-20261020.ts`,
+SHA-256 `d3ca772c082c78a456657eae9119d78b01d59290018427c1383f9ce449d4cab7`. The fresh module is SHA-256
+`353e8019cdb21c8e15e800299c6d5336d1eed6c9bc1e248a2ec2c416d7b2e672`. No Page source, test, assertion, budget,
+permission or signed package changes. Raw build output is
+`/tmp/p1-k1-main-page-build-20261020.log`; natural wall/child CPU are
+0.308653125 / 0.215249000 seconds.
+The closed preflight result is
+`/tmp/builder-current-main-page-assets-preflight-20261020.json`.
+
+This adds the generated module to this branch's changed paths. The earlier
+prepared gate helper still names the pre-refresh head and remains unrun;
+it must not be used as a result for this source. The one ordinary final
+gate and full exact-head Source review remain due. No failed full gate is
+claimed or concealed on this branch, and no unchanged suite is repeated.
