@@ -7,8 +7,7 @@ import { equal } from "../src/operand.ts";
 import { naming, type Defining } from "../src/validate/context.ts";
 import { operand as operandType } from "../src/validate/operands.ts";
 import { shapes } from "../src/validate/shape.ts";
-import { Scope, arrive, d, decided, fields, keys, on, otherLane, t, ticket } from "./fixtures.ts";
-import { board, boardDefinition } from "./fixtures-f.ts";
+import { Scope, arrive, d, decided, fields, keys, on, otherLane, t, ticket, board, boardDefinition } from "./fixtures-entry.ts";
 
 const { sam } = keys;
 /* eslint-disable @typescript-eslint/no-explicit-any */

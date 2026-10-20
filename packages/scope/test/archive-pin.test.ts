@@ -10,7 +10,7 @@ import { standingData } from "../../derive/test/fixtures-standing.ts";
 import { ARCHIVE_PIN_BYTES, ARCHIVE_PIN_KEY, ARCHIVE_SCOPE_METADATA_BYTES, readArchivePin } from "../src/archive-pin.ts";
 import { controls } from "../src/testing.ts";
 import { wired } from "./outside.ts";
-import { START, at, objectOf, rita, stubOf } from "./support.ts";
+import { START, at, objectOf, rita, stubOf } from "./fixtures-native.ts";
 
 async function fixture(entries = 8) {
   const named = "platform:task@1" as PlatformDefinition, data = standingData();

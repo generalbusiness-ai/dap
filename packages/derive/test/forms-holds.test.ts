@@ -3,8 +3,7 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import { canonicalBytes, entryHash, parseStrictBytes } from "@generalbusiness/artroom-bytes";
 import { AmountError, FoldError, MemoryState, NOTHING, applyEntry, evidenceValues, outcomeValueDomains, closure, drawsOf, heldEntries, holding, itemOf, one, outcomes, owed, pendingOf, requestOf, retainedBytes, starts, stateDigest, validateDefinition } from "../src/index.ts";
 import type { Amount, Counting, KindStated, Starts, Rules, OutcomeRule, RuleEffect } from "../src/index.ts";
-import { on, valid } from "./fixtures.ts";
-import { OWNER, TELL, Works, chain, chainDefinition, changed, opened, works, worksDefinition } from "./fixtures-holds.ts";
+import { on, valid, HOLDS_OWNER as OWNER, TELL, HoldsWorks as Works, chain, chainDefinition, changed, opened, holdsWorks as works, holdsWorksDefinition as worksDefinition } from "./fixtures-entry.ts";
 
 const EB = PROPOSED_BOUNDS.entryBytes;
 const codes = (v: ReturnType<typeof changed>) => (v.ok ? "valid" : v.problems.map((problem) => `${problem.code} ${problem.path}`));

@@ -6,7 +6,7 @@ import { PREPARATION_BOUNDS as B, PreparationBudget } from "../src/preparation-b
 import { preparationScope } from "../src/preparation-scope.ts";
 import { preparationView } from "../src/preparation-view.ts";
 import { SqliteStore, type Sql } from "../src/sqlite.ts";
-import { create } from "./support.ts";
+import { create } from "./fixtures-native.ts";
 
 const sqlOf = (state: DurableObjectState): Sql => ({ exec: (query, ...args) => state.storage.sql.exec(query, ...args), transaction: work => state.storage.transactionSync(work) });
 

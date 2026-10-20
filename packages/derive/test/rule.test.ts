@@ -4,7 +4,7 @@ import type { SignedIntent } from "@generalbusiness/dap-contract";
 import { digestBytes, utf8 } from "@generalbusiness/artroom-bytes";
 import { prepareRules, validateDefinition } from "../src/index.ts";
 import { ENGINE_FINGERPRINT, RULE_PROFILES, admit, evaluate, evaluateRules, probeResults, type RuleEvalError } from "../src/rule/index.ts";
-import { Scope, d, keys, on, ticket, ticketDefinition, type Actor } from "./fixtures.ts";
+import { Scope, d, keys, on, ticket, ticketDefinition, type Actor } from "./fixtures-entry.ts";
 
 const { rita, una, vic } = keys;
 

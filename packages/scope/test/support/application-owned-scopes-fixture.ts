@@ -2,8 +2,9 @@ import { emptyPackageComposition } from "@generalbusiness/artroom-package-graph"
 /** Public TEST package. Root genesis creates its child through the existing
  * native create form; no handmade genesis, identity or grant stands behind it. */
 import type { DeclaredDefinition, Digest } from "@generalbusiness/dap-contract";
-import { canonicalize, definitionDigest, keyIdOfSecret, sign } from "@generalbusiness/artroom-bytes";
+import { canonicalize, definitionDigest } from "@generalbusiness/artroom-bytes";
 import { packApplication2, readApplicationProjection } from "@generalbusiness/artroom-bytes/application-v2";
+import { fixedSigner } from "../fixtures-core.ts";
 
 const grant = "fixture.configure";
 function definition(name: string, child?: Digest): DeclaredDefinition {
@@ -36,7 +37,7 @@ export async function applicationOwnedScopesPacket(label = "test-owned-root", ve
   } });
   const view = { kind: "card" as const, item: "row", title: "count", summary: null, actor: null, facts: ["revision"], revision: "revision" as const,
     context: "Owned row {id} v{revision}: {count}", fallback: "Owned row {id}: {count}", waiting: {}, refresh: 2000, display: "inline" as const, back: null };
-  const secret = new Uint8Array(32).fill(67), signer = { key: keyIdOfSecret(secret), sign: (bytes: Uint8Array) => sign(secret, bytes) };
+  const signer = fixedSigner(67);
   const packet = await packApplication2({ name: "test.owned-scopes", version, semantic: {
     ...emptyPackageComposition(), v: 2, entry: rootId, definitions: [{ id: rootId, bytes: canonicalize(root) }, { id: childId, bytes: canonicalize(child) }],
     connections: [{ from: rootId, item: "root", slot: "child", to: childId }],

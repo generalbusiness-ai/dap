@@ -706,3 +706,29 @@ passes its two unchanged native cases naturally: 4.702404500 seconds wall,
 5.897221 seconds child CPU, original process 38627
 (`...archive-v10-20261020*`). This checks that consumer after its shared
 fixture changes; it repeats no whole suite.
+
+## Incorporate landed K2, 20 October
+
+Checkpoint `8a858e4c` records the bounded published-reader work above.
+Its mutable private branch then incorporates actual K2 Main `d2088d23`.
+The original no-commit merge naturally exits one with two import conflicts;
+all six original stages are retained in
+`/tmp/p1-k2-main-conflict-stages-20261020/manifest.json`.
+
+Both resolutions start from exact incoming Main. The native Device case
+keeps K2's complete `fixtures-native` imports and binding helper, with
+only P1's standalone package-definition alias. Its shared package fixture
+keeps K2's `fixedSigner` helper and original public TEST seed, plus P1's
+explicit composition members and definition alias. No assertion, matrix,
+deadline or production grant is removed. The resolution receipt is
+`/tmp/p1-k2-main-conflict-resolution-20261020.json`.
+
+The full project typecheck naturally passes, original process 23160
+(`/tmp/p1-k2-main-types-20261020.log`). After those actual integration
+changes, the owning graph file passes eleven cases and the two Device
+and archive native files pass five cases. Original process 73578 closes
+naturally zero: graph 1.818196208 seconds wall / 2.397470 child CPU;
+native 6.741912333 / 8.127650. Logs and natural closure are
+`/tmp/p1-k2-main-focused-20261020*`. These local checks preserve the
+existing TEST host/clock/actor boundaries and prove no hosted acceptance.
+Current-Main incorporation continues before the one final ordinary gate.

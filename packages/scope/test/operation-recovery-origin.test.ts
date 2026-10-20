@@ -6,7 +6,7 @@ import type { EffectAnswer, EffectRequest, OperationStatus, Outside } from "../s
 import type { LateAnswers } from "../src/operations.ts";
 import { owners, wired } from "./outside.ts";
 import { open } from "./operation-opening.ts";
-import { START, at, create, reader, rita } from "./support.ts";
+import { START, at, create, reader, rita } from "./fixtures-native.ts";
 
 // Real ScopeObject, SQLite operation/send rows, restart and accepted-act
 // notification. The owner metadata, resolver's immutable origin proof,

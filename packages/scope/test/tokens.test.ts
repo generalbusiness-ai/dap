@@ -3,7 +3,7 @@ import { PROPOSED_BOUNDS } from "@generalbusiness/dap-contract";
 import type { OperationId } from "@generalbusiness/dap-contract";
 import { timeMs } from "@generalbusiness/dap-derive";
 import { C, hosted } from "./hosted.ts";
-import { HOLD, at } from "./support.ts";
+import { HOLD, at } from "./fixtures-native.ts";
 
 const RETRY = PROPOSED_BOUNDS.dispatchRetrySeconds;
 const DAY = 86_400;

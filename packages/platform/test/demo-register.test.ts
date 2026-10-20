@@ -7,7 +7,7 @@ import { intentDigest, isDigest, newIncarnation, scopeIdOf, signIntent } from "@
 import { PROFILES, clockOf, judgeGenesis, judgeOutcome, validateDefinition } from "@generalbusiness/dap-derive";
 import { Ledger, T0, creation } from "@generalbusiness/dap-derive/testing";
 import { DEMO_PURPOSE, DEMO_REGISTER, WEB_DEMO_COHORT, WEB_DEMO_REGISTER, platform, repositoryName } from "../src/index.ts";
-import { installing, paul, rita } from "./support-creation.ts";
+import { installing, creationPaul as paul, creationRita as rita } from "./fixtures-entry.ts";
 
 test("demo install admits open founding without an allow-list and refuses a closed founding policy through the real genesis judge", () => {
   const supplied=platform(DEMO_REGISTER)!;

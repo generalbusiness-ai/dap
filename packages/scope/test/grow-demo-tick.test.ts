@@ -12,12 +12,8 @@ import { httpSource, verify } from "@generalbusiness/artroom-replay";
 import { simulatorHost } from "../../../examples/grow/simulator-host.ts";
 import { outsideOf as hostOutside } from "../src/worker.ts";
 import { CAPABILITY_CODE } from "../src/ports.ts";
-import { applicationResolverFixture } from "./support/application-fixture.ts";
-import { applicationHttpPeer } from "./support/application-http-peer.ts";
-import { sessionRoom } from "./support/session-room.ts";
-import { dispatchFixture, driveFixture, effectFixture } from "./support/native-fixture-lifetime.ts";
+import { applicationResolverFixture, applicationHttpPeer, sessionRoom, dispatchFixture, driveFixture, effectFixture, reader, applicationWorkerBindings } from "./fixtures-native.ts";
 import { rita, una, vic, routed } from "./repository.ts";
-import { reader } from "./support.ts";
 import type {} from "./support/maintained-applications.ts";
 
 async function fixture() {
@@ -28,7 +24,7 @@ async function fixture() {
   const { life, R, D, children } = await sessionRoom(C.register), [M, A, G] = children;
   if (!M || !A || !G) { life.release(); throw Error("The exact native siblings are required."); }
   const f = await applicationResolverFixture("sha1", undefined, {}, undefined, packet), peer = applicationHttpPeer(f);
-  const bindings = { SCOPES: env.PLATFORM, APPLICATION_CONTENT: env.APPLICATION_CONTENT, APPLICATION_TRUST: JSON.stringify(f.trust) };
+  const bindings = applicationWorkerBindings(env.PLATFORM, env.APPLICATION_CONTENT, JSON.stringify(f.trust));
   try {
     // Start on the next whole schedule boundary before issuing invitations.
     const start = Math.ceil(life.now() / 3_600_000) * 3_600_000;

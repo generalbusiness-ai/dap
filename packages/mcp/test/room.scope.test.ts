@@ -4,8 +4,7 @@ import { b64url, canonicalize, digestBytes, textDigest, timeOf, utf8 } from "@ge
 import { firstExtents } from "@generalbusiness/dap-platform";
 import { DEMO_DIGESTS, changeDemo, issueDemo } from "@generalbusiness/dap-lanes";
 import { INVITATION_LINK } from "@generalbusiness/artroom-client";
-import { GENERIC, mcpRoom, type Agent } from "./support/room.ts";
-import { exercises, created, offers, step } from "./support/story.ts";
+import { GENERIC, mcpRoom, type Agent, exercises, created, offers, step } from "./fixtures-native.ts";
 
 /**
  * The room story. Returns the number of list changes each agent was told, step by step, for the delivery note.

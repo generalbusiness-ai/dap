@@ -9,7 +9,7 @@ import { preparationScope } from "../src/preparation-scope.ts";
 import { ReadPreparation, type PreparationSupport } from "../src/read-preparation.ts";
 import { SqliteStore, type Sql } from "../src/sqlite.ts";
 import { testPorts } from "../src/testing.ts";
-import { create, type Lane } from "./support.ts";
+import { create, type Lane } from "./fixtures-native.ts";
 
 const sqlOf = (state: DurableObjectState): Sql => ({ exec: (query, ...args) => state.storage.sql.exec(query, ...args), transaction: work => state.storage.transactionSync(work) });
 function support(scope: Lane, store: SqliteStore): PreparationSupport {

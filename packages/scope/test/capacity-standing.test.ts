@@ -11,7 +11,7 @@ import { SqliteStore } from "../src/index.ts";
 import { controls } from "../src/testing.ts";
 import { route } from "../src/worker.ts";
 import { wired } from "./outside.ts";
-import { Lane, START, at, objectOf, reader, rita, stubOf } from "./support.ts";
+import { Lane, START, at, objectOf, reader, rita, stubOf } from "./fixtures-native.ts";
 
 const data: PlatformData = standingData(data => { data.capacity = { name: "whole-scope", version: 1 }; });
 // Close the fixture's unused dummy child edges. This tests standing slots,

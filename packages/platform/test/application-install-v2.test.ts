@@ -14,7 +14,7 @@ import { RULE_PROFILES } from "@generalbusiness/dap-derive/rule";
 import { countingCommitments } from "../../../apps/counter/commitments.ts";
 import { APPLICATION_RELEASE_VALUE2, APPLICATION_SEMANTIC_VALUE2, DECLARED_APPLICATION_RULES } from "../src/application-install-v2.ts";
 import { APPLICATION_INSTALL_RULES } from "../src/application-install.ts";
-import { Rulebook } from "./support-rules.ts";
+import { Rulebook } from "./fixtures-entry.ts";
 import { DECLARED_APPLICATION_COHORT } from "../src/application-install-v2-wire.ts";
 import { ARCHIVE_DECLARED_APPLICATION_COHORT } from "../src/archive-binding-wire.ts";
 import { declaredApplicationPublicationOrigin, installedApplicationPublicationOrigin, archiveDeclaredApplicationPublicationOrigin } from "../src/publishing-provenance.ts";

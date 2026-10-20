@@ -4,7 +4,7 @@ import type { DeclaredDefinition, PlatformData, PlatformDefinition, Subject } fr
 import { canonicalBytes, entryHash, factRefOf, parseStrictBytes } from "@generalbusiness/artroom-bytes";
 import { AmountError, PROFILES, applyEntry, clockOf, entryOf, fits, itemAwaits, judgeDelivery, markerAmounts, markerReservations, owed, reserved, validateDefinition } from "../src/index.ts";
 import type { Draft, PlatformRules, RuleEffect, ValidDefinition } from "../src/index.ts";
-import { Scope, arriving, directory, fields, forged, keys, on, valid, type Over } from "./fixtures.ts";
+import { Scope, arriving, directory, fields, forged, keys, on, valid, type Over } from "./fixtures-entry.ts";
 
 /**
  * Settlement by a mark, and pending marker work (scope contract, revision 22,
