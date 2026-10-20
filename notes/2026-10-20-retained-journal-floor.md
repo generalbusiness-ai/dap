@@ -161,10 +161,13 @@ file.
      pass writes them.
    - The confirmation of a v1 conversion (2.5) sets `pass` to 0 for each
      key that the v1 manifest lists.
-   - A new archive binding starts again from position 0 and sets every
-     `pass` to null.
+   The column starts null in every row, and a scope has one archive for
+   its life: the archive row refuses a changed repository or format with
+   `conflict` (`archive-row.ts:110-119`). So no step clears the column.
    The column and the archive row are in the same store, so a restart
-   keeps both, and they always agree.
+   keeps both, and they always agree. Moving a scope's archive to
+   another repository is not part of this note. It would have to carry
+   the archived prefix and the floor receipt to the new repository.
 
 ### 2.4 Reader rules
 
@@ -607,7 +610,9 @@ Each witness runs on a test host with the native store.
    position 3,700 wrote and a key that no pass wrote. It lists the first
    key with `pass` 3,700 and writes the second in its own directory. It
    reads two key rows and no manifest or tree of an older pass, and no
-   file is written twice or moved.
+   file is written twice or moved. Last, a request to archive the same
+   scope to another repository is refused `conflict`, and no `pass`
+   value changes.
 3. **v2 reader refusals.** A gap between passes, an overlap, a retained
    file that no pass lists, a retained input whose `pass` is later or
    does not hold its file, an entry copy without its `foreignSources`
