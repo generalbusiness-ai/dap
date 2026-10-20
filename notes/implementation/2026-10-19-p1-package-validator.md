@@ -1,14 +1,21 @@
 # P1: package validation
 
 Request `4e63c67c30e866555e9efcfdf49af75a2c2f92e1`, promise
-`0afa98af9294045f7906395d0bc8a206ebf1aa90`. This mutable preparation
-incorporates reviewed Main `8aad37bb` in a new owned integration worktree,
-`/tmp/artroom-builder-p1-main-integration-20261020`. Merge checkpoint
-`32f7537e` preserves the newer archive and native ownership checks.
-There is no P1 full gate, review or landing. Planner decision `b32b2f16`
-now governs the production demo's format cutover; the published packet is
-unchanged and currently fails the new strict reader. No frozen review
-original is edited or executed here.
+`0afa98af9294045f7906395d0bc8a206ebf1aa90`. This owned preparation
+incorporates reviewed Main `248aab8f`, with landed K1, K2, G5a, S2a and
+Grow host-link work. There is no P1 full gate, review or landing yet.
+The earlier `32f7537e` integration on Main `8aad37bb` is historical.
+
+Planner decision `b966ef3f`, adopted as `48471bbb`, now governs the format
+boundary. New pack/validation requires all seven explicit version 2
+composition places. Strict readers still refuse the old published packet.
+The separate published-packet reader accepts only the exact maintained
+release and publisher identity, with its existing signed bytes unchanged;
+actual consumers select that reader explicitly. There is no generic old
+format fallback, publisher-only exception, new publisher key, re-signing
+or release. Future replacement and retirement need a separate reviewed
+release, trust and upgrade commission. No frozen review original is edited
+or executed here.
 
 The implemented slice contains the seven explicit version 2 composition
 places, strict codec checks, the public byte-based `validatePackage`,
@@ -26,11 +33,12 @@ of ten entries and seven item keys for successful creation paths; lifetime
 traffic remains unproved. These figures establish no native admission,
 physical memory or provider quota.
 
-Latest integration checks pass ten graph cases, the Derive test compiler,
-and three local Core/Node SQLite routing and measurement cases. Earlier
-focused native peer-pin and reservation checks, controls and their stated
-stand-ins remain below. These separate runs are not a whole gate or a
-single measured pipeline.
+The current boundary's eleven graph cases and recorded owning byte,
+consumer, archive and native-demo checks pass, with affected compiler
+configurations. Their exact heads, failures, corrections and TEST limits
+are recorded below. Earlier peer-pin and reservation checks and controls
+remain separate. These runs are not one whole gate or a single measured
+pipeline; the one final ordinary gate and complete Source review are due.
 
 ## Historical checkpoints
 
@@ -792,3 +800,16 @@ prepared gate helper still names the pre-refresh head and remains unrun;
 it must not be used as a result for this source. The one ordinary final
 gate and full exact-head Source review remain due. No failed full gate is
 claimed or concealed on this branch, and no unchanged suite is repeated.
+
+
+## Reviewed homepage wording Main incorporation
+
+The owned merge of actual Main `248aab8f`, tree `ba40d47e`, closes
+naturally zero in 0.038027625 seconds, with no conflicts. All nine imported
+wording/preview paths match that reviewed Main exactly. All 79 authored
+source, test, generated and prior-report paths keep their bytes and modes
+during the merge. No runtime implementation, assertion, deadline, package,
+lock or permission changes. Exact original argv/log/closure and protected
+hashes are `/tmp/p1-integrate-tagline-main-20261020*`; shared preparation
+is `/tmp/builder-incorporate-tagline-main-20261020.py` and its closed result.
+The final source gate remains due at this clean integration checkpoint.
