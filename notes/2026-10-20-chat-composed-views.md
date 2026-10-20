@@ -104,6 +104,7 @@ section does not list.
   "v": 1,
   "title": "Moisture by bench",
   "installation": 2,
+  "scope": { "scope": "sc_2dn76oxe...", "inc": "in_utplzcz2...", "kind": "lane" },
   "blocks": [
     { "kind": "plan", "projection": "layers", "source": "bench",
       "position": "bench", "color": "moisture", "label": "label" }
@@ -116,6 +117,7 @@ section does not list.
 | `v` | `1`. |
 | `title` | Text, 1 to 80 bytes. |
 | `installation` | The item id of an active installation in the room's Rules scope. |
+| `scope` | The full reference of the one scope that every block reads: the installation's application scope, or a scope that it created (section 8.1). |
 | `refresh` | Optional. Milliseconds between reads, 5,000 to 60,000. The default is 15,000. |
 | `blocks` | A list of 1 to 6 blocks. |
 
@@ -127,6 +129,7 @@ Every block has these members:
 | `title` | Optional text, 1 to 80 bytes. |
 | `projection` | The name of a projection of the installation's package. |
 | `source` | The name of a source in that projection. |
+| `item` | Required when the source reads one chosen item (`read: "item"`): that item's id. Refused for other sources. |
 | `filter` | Optional. A list of 1 to 8 conditions (section 8). |
 
 Each kind adds its own members (section 5). A block names projections,
@@ -161,7 +164,7 @@ for each source shape (section 10).
 | `y` | An `int` field, or an aggregate `{ "op": ..., "field": ... }` when `bucket` is present. |
 | `bucket` | Optional. `hour`, `day`, `week` or `month`, in UTC. Weeks start on Monday. |
 | `color` | Optional. An `enum` field, or `"item"` for one series for each item. At most 4 series. |
-| `band` | Optional. `{ "source": ..., "low": ..., "high": ... }`: two `int` fields of a source of the same projection that reads one item. |
+| `band` | Optional. `{ "source": ..., "item": ..., "low": ..., "high": ... }`: two `int` fields of a source of the same projection that reads one item. `item` is required when that source reads a chosen item. |
 | `events` | Optional. `{ "source": ..., "label": ... }`: a journal source of the same projection. Each row draws a marker at its time. |
 
 Without `bucket`, each row is one point. With `bucket`, each bucket is one
@@ -199,6 +202,11 @@ at most 100 points.
 | `position` | The name of a position pair that the package declares (section 6), or `{ "x": ..., "y": ... }`. |
 | `color` | An `enum` field, the `state` of the row, or an `int` field. |
 | `label` | Optional. A `text` field. |
+
+Each position field has at most 64 values. An `int` field's declared range
+can span at most 64 integers, and an `enum` field has at most 64 values. A
+wider field is refused with `position-range`. A plan therefore has at most
+4,096 cells.
 
 A plan has no axes. Its cells keep equal width and height. An `enum` colour
 takes the fixed categorical palette. An `int` colour takes a sequential
@@ -241,9 +249,7 @@ are presentation changes only. They keep the semantic id.
 "outlines": { "house": "outlines/house.json" }
 ```
 
-An outline is an asset of at most 32 KiB. It holds paths in the plan's own
-cell units, so the frame can draw walls, doors and zones behind the cells.
-A package declares at most 8 outlines.
+A package declares at most 8 outlines. Section 6.1 gives their form.
 
 Grow is the test case. Each bench has `row`, an enum from `A` to `J`, and
 `column`, an int from 1 to 10 (`examples/grow/work.ts`). A plan over the
@@ -251,6 +257,39 @@ Grow is the test case. Each bench has `row`, an enum from `A` to `J`, and
 layout. Today a package surface draws that grid with its own HTML and
 script (`examples/grow/check/grid.html`). The plan answers the same question
 with no package code.
+
+### 6.1 Outline format
+
+An outline lets the frame draw walls, zones or borders behind the marks. An
+outline asset is one JSON object of at most 32 KiB of canonical JSON:
+
+```json
+{ "v": 1, "kind": "plan",
+  "paths": [ { "points": [[0, 0], [500, 0], [500, 1000], [0, 1000]], "closed": true, "label": "Zone 1" } ] }
+```
+
+| Member | Value |
+| --- | --- |
+| `v` | `1`. |
+| `kind` | `plan` or `geo`. |
+| `paths` | A list of 1 to 256 paths. |
+| `points` | A list of 2 to 4,096 points. Each point is a pair of integers. All paths together hold at most 8,192 points. |
+| `closed` | `true` joins the last point to the first. |
+| `label` | Optional text, 1 to 40 bytes. |
+
+The two kinds use different coordinates:
+
+- **`plan`.** A point is `[x, y]` in hundredths of a cell, from the top
+  left corner of the plan. x is from 0 to 100 times the number of columns.
+  y is from 0 to 100 times the number of rows. The position pair that names
+  the outline fixes the columns and rows.
+- **`geo`.** A point is `[lon, lat]` in microdegrees of longitude and
+  latitude, within the bounds of section 7.1. The coordinates are not
+  projected. The frame projects them for the map.
+
+Package validation checks each outline with the presentation. A point out of
+range, a wrong kind or an oversized asset is refused. A position pair names
+only a `plan` outline. A map block names only a `geo` outline.
 
 ## 7. Location values and maps
 
@@ -288,9 +327,11 @@ bytes (measured, minified). Together they add about 151 KB. That is 14% of the
 1 MiB resource budget (estimate from the measured parts).
 
 A package can declare a finer regional outline, such as states or sales
-territories, as an outline asset. The 32 KiB bound of section 6 applies.
-State borders of one large country at 1:10m scale are 82,031 to 114,554
-bytes (measured). A package outline of that kind must be simplified to fit.
+territories, as a `geo` outline. The 32 KiB bound of section 6.1 applies.
+The state borders of one large country at 1:10m scale are 114,554 bytes in
+longitude and latitude (measured). A package outline of that kind must be
+simplified to fit. The same borders also exist already projected to a plane,
+in 82,031 bytes (measured). Projected coordinates are not a `geo` outline.
 
 The map uses one projection, Equal Earth, for the bundled borders and for
 package outlines. The frame fits the view to the extent of the dots, with a
@@ -306,18 +347,37 @@ policy for every room on a host, so one room cannot opt in alone.
 
 ### 8.1 What a block reads
 
+Every block reads the declaration's `scope`. The view session accepts the
+scope only when both of these hold:
+
+- the scope's genesis pins the definition of every block's projection;
+- the scope belongs to the installation. It is the installation's
+  application scope, or its genesis names as creator a scope that belongs
+  to the installation.
+
+The session reads each genesis in that chain and follows at most 4 creator
+steps. It never searches for a scope or guesses one. Otherwise it refuses
+the declaration with `scope`. For Grow, the Site is the installation's
+application scope, and the Site created Room A, so Room A belongs to the
+installation.
+
+A source that reads one chosen item takes the block's `item` as its item
+selection. A missing or unknown item refuses the read with `item`.
+
 The view session reads the named projection through the current read
 path, at one head for all sources of the block. The current bounds apply
 (`packages/bytes/src/application-projection-types.ts`):
 
 - a `many` source returns at most 100 items, and a larger set refuses the
   read as `incomplete`;
-- a journal source reads at most the last 100 entries at the head;
+- a journal source reads at most the last entries of its declared window,
+  1 to 100, at the head;
 - one projection result is at most 256 KiB.
 
 A block covers only the rows that the read returns. A `line` or a time
-`bar` states the range it covers. When a journal source returns its full
-window of 100 entries, the block says that older entries are not shown.
+`bar` states the range it covers. When a journal source returns as many
+entries as its declared window, the block says that older entries are not
+shown.
 Longer history needs a history read. This design does not add one.
 
 ### 8.2 Filters
@@ -346,15 +406,24 @@ milliseconds since 1970-01-01T00:00:00Z. It also replaces each relative
 duration with a fixed bound. That bound is the session's read time minus
 the duration. The frame shows that read time as the view's "as of" time.
 
+Null values and times follow fixed rules. The compiler writes them into
+each expression, so the evaluator's own null handling never decides a
+result:
+
+- A condition on a null value is false. The one exception is `!=`: it is
+  true for a null value.
+- `within` passes a time t when bound ≤ t ≤ read time.
+- `older-than` passes a time t when t < bound.
+- A time after the read time passes neither `within` nor `older-than`.
+- `<` and `>` compare strictly.
+
 Filters are presentation only. They grant nothing and hide nothing that the
 viewer cannot read in another way.
 
 ### 8.3 Aggregation
 
 The view session aggregates. The frame receives buckets and marks, not raw
-rows. That keeps each mount inside its 64 KiB bound. At about 20 bytes for
-each point, 64 KiB holds about 2,000 to 3,000 points (estimate). That is
-more points than a block can read.
+rows.
 
 | Operation | Result |
 | --- | --- |
@@ -363,7 +432,34 @@ more points than a block can read.
 | `mean` | The sum divided by the count, rounded half away from zero to the field's native unit. |
 | `min`, `max` | The smallest or largest value. |
 
-Null values do not count. A bucket with no rows has no point.
+Edge rules:
+
+- `count` with no field counts rows. `count` with a field counts the rows that
+  have a value in that field. The other operations use only values that
+  are not null.
+- A bucket or group with no rows has no mark. For `sum`, `mean`, `min` and
+  `max`, a bucket or group whose values are all null has no mark either. The
+  block summary names it as having no values.
+- A bucket starts at its first instant and ends before the next bucket
+  starts, in UTC.
+- Line points sort by x. Equal x values sort by item id, then by journal
+  position. Series sort by the declared order of the colour field's values,
+  or by item id for `"item"`. More than 4 series refuses the block with
+  `series-limit`.
+- A row with a null x, y, position or location has no mark. A null colour
+  draws the mark in the neutral colour, labelled "none". The block summary
+  counts the rows that it leaves out.
+- A bar group with a null x is labelled "none" and sorts last.
+
+Byte bounds:
+
+- A mark label is cut to at most 80 bytes, at a character boundary, and ends
+  with an ellipsis.
+- A block summary is at most 1 KiB.
+- The session builds the whole mount, with its outlines, and then applies
+  the current 64 KiB check to its canonical JSON. A larger mount refuses the
+  view with `too-large`. The error states each block's size, so the model
+  can narrow its filters. The session drops nothing silently.
 
 ## 9. Freshness and marks
 
@@ -391,8 +487,10 @@ The package presentation can map an item type to one of its own views:
 
 A tap on a mark shows the mark's exact values, its time and its item label.
 When the mark stands for one item, the frame also offers to open that item
-in the mapped view. A mark that aggregates several items opens nothing. A
-type with no mapped view shows values only.
+in the mapped view. It opens the view through `view_read` with the
+declaration's scope and the item's id. It never looks an item up by its
+label. A mark that aggregates several items opens nothing. A type with no
+mapped view shows values only.
 
 ## 10. Catalogue, errors and repair
 
@@ -401,14 +499,18 @@ type with no mapped view shows values only.
 `view_catalogue` takes an installation item id. It returns only what a model
 needs to write a declaration:
 
+- the scopes that a declaration can name in `scope`. The first is the
+  installation's application scope. Then come the scopes that `scope`
+  references in items of listed scopes name, up to 4 steps and 32 scopes.
+  Each comes with its definition and a label;
 - each projection and source of the package, with the source's read form and
   row limit;
 - each field, with its type, bounds, enum values in declared order,
   nullability, and the label, scale and unit that the presentation gives;
 - the position pairs and location fields, and the outlines;
 - the default kind for each source (below);
-- the acts that the viewer holds, with their labels and parameters, so the
-  model can send a request to act to chat and the input tools;
+- the acts that the viewer holds, with their labels and parameters. The
+  model then sends a request to act to chat and the input tools;
 - one worked example for each kind, built from this installation's sources
   where it can.
 
@@ -438,27 +540,31 @@ pages.
 ### 10.2 Errors
 
 `view_compose` checks the whole declaration and returns every error at
-once. Each error has four members:
+once. Every error has the same five members:
 
 | Member | Value |
 | --- | --- |
 | `code` | One code from the list below. |
 | `pointer` | A JSON Pointer (RFC 6901) to the member at fault. |
 | `message` | One sentence. |
-| `allowed` | The allowed values, when the member takes one of a known set. At most 64 values. |
+| `allowed` | The allowed values, at most 64, in catalogue order. An empty list when the member has no finite set of values. |
+| `more` | The number of allowed values that the list leaves out. `0` when it lists them all. |
+
+The `more` member tells a model that the list is cut. It is the only member
+beyond the four that the request names.
 
 Codes: `version`, `unknown-member`, `missing-member`, `bytes`, `title`,
-`installation`, `block-limit`, `kind`, `projection`, `source`, `field`,
-`field-type`, `channel`, `series-limit`, `aggregate`, `bucket`,
-`filter-operator`, `filter-value`, `position`, `location`, `outline`,
-`overflow`.
+`installation`, `scope`, `item`, `block-limit`, `kind`, `projection`,
+`source`, `field`, `field-type`, `channel`, `series-limit`, `aggregate`,
+`bucket`, `filter-operator`, `filter-value`, `position`, `position-range`,
+`location`, `outline`, `overflow`, `too-large`.
 
 For example:
 
 ```json
 { "code": "field", "pointer": "/blocks/0/color",
   "message": "The source bench has no field moist.",
-  "allowed": ["moisture", "ec", "ph", "state", "label"] }
+  "allowed": ["moisture", "ec", "ph", "state", "label"], "more": 0 }
 ```
 
 ### 10.3 Repair
@@ -486,6 +592,9 @@ The next Rules version adds a `view` item type with three acts:
 
 A name is unique among the open views of one installation. A Rules scope
 holds at most 256 open views.
+
+The declaration holds its `scope` and any `item` values, so a kept view
+reads the same scope and items each time it opens.
 
 The native act stores the declaration as text. It does not check the
 declaration. `view_open` checks it each time it mounts the view, against the
@@ -583,8 +692,8 @@ reports are outside this repository.
 | 70% to 76% of surveyed practitioners use scatter plots. Scatter is 24.4% of charts in one public spreadsheet chart corpus. | survey; measured |
 | Status grid panels for operations tools have 67 million to 863 million downloads. | proxy |
 | Every surveyed industrial and device monitor tool offers a site or floor view. | catalog |
-| Maps are 15.1% of charts in one news chart service and appear in 25% of public business dashboards. They are under 1% of visualizations in one business service and on 1.1% of operational dashboards. | measured |
-| People changed the automatic chart kind in 6.8% of edits in one tool's usage logs. | measured |
+| In three public corpora of operational dashboards, a map is on 0.6%, 23.6% and 9.9% of dashboards. Maps are 15.1% of charts in one news chart service and appear in 25% of public business dashboards from one service. One business service reports maps as under 1% of its visualizations. | measured |
+| In one tool's usage logs, people changed the automatically chosen mark type in 560 of 8,248 field placements (6.8%). | measured |
 | A schema with actual enum values in the prompt raised accuracy by up to 8.6 points. Two unused tables in the prompt cost 9.4 points. | measured |
 | Errors that list the allowed values raised task success from 14 of 50 to 36 of 50. | measured |
 | One general chart grammar passed validity in 84.5% of first attempts, 95.3% after one repair and 96.1% after two. | measured |
@@ -602,8 +711,8 @@ dap.
 ## 16. Not in this design
 
 - **Code in a nested frame.** A view could run model-written code in a
-  nested frame with an opaque origin and no network, and talk to the kit by
-  message. Whether MCP Apps hosts allow that nested frame under their
+  nested frame with an opaque origin and no network. The code would talk to
+  the kit by message. Whether MCP Apps hosts allow that nested frame under their
   content security policies is not known. This design does not depend on
   it.
 - **Map tiles** (section 7.3).
@@ -611,4 +720,4 @@ dap.
   state changes over time.
 - **Cross-filtering, brushing, zoom, pan and drill-down.**
 - **Acts on many items at once.** The carousel takes items one at a time.
-- **History reads** beyond the last 100 journal entries (section 8.1).
+- **History reads** beyond a journal source's declared window (section 8.1).
