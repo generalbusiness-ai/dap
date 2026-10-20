@@ -1,4 +1,4 @@
-/** Complete maintained packages and separate demo built from source in Node. */
+/** Maintained TEST packages and the exact committed signed demo captured in Node. */
 import type { Digest } from "@generalbusiness/dap-contract";
 import type {} from "vitest";
 export interface MaintainedApplicationInput { bytes: string; release: Digest }

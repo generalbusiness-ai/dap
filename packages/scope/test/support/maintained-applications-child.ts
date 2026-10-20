@@ -1,9 +1,10 @@
-/** Fixed Node capture of three maintained packages and the separate Grow
- * demo. Public TEST key;
- * no operator config, network, checkout writes or package installation. */
-import { rm } from "node:fs/promises";
+/** Fixed Node capture of three maintained TEST packages and the committed
+ * signed Grow demo. No publisher custody, operator config, network, checkout
+ * writes or package installation. */
+import { readFile, rm } from "node:fs/promises";
 import { prepareGrowCheck } from "../../../../examples/grow/prepare-check.ts";
-import { prepareGrowDemo } from "../../../../examples/grow/prepare-demo.ts";
+import { DEMO_RELEASE, DEMO_PUBLISHER } from "../../../../examples/grow/demo-release.ts";
+import { simulatorRelease } from "../../../../examples/grow/simulator-release.ts";
 import { fileURLToPath } from "node:url";
 import { b64url } from "@generalbusiness/artroom-bytes";
 import { secretSigner } from "@generalbusiness/artroom-client";
@@ -18,12 +19,9 @@ const growRoot = await prepareGrowCheck();
 let grow;
 try { grow = await prepareApplicationDirectory(growRoot, signer); }
 finally { await rm(growRoot, { recursive: true, force: true }); }
-// Separate demo declarations and signed schedule. The same public TEST
-// publisher supplies no real host trust or agent identity.
-const demoRoot = await prepareGrowDemo();
-let growDemo;
-try { growDemo = await prepareApplicationDirectory(demoRoot, signer); }
-finally { await rm(demoRoot, { recursive: true, force: true }); }
+// Capture exactly the committed packet that the scheduled Worker consumes.
+// Native tests supply their own explicit local trust row and TEST agents.
+const growDemo = simulatorRelease(new Uint8Array(await readFile(new URL("../../../../examples/grow/demo/application.dap.json", import.meta.url))), DEMO_RELEASE, DEMO_PUBLISHER);
 process.stdout.write(JSON.stringify({
   counter: { bytes: b64url(counter.packet.bytes), release: counter.packet.ids.release },
   grow: { bytes: b64url(grow.packet.bytes), release: grow.packet.ids.release },

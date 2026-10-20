@@ -1,16 +1,25 @@
 # Provision and run the Grow demo
 
-Run status: preparation. No hosted Grow room, release packet, simulator
-Worker or live tick has been created by this work. Finish the signed packet,
-Worker entry/configuration and installed native tick witnesses before exact-head review.
+Run status: local implementation. The signed demo packet, separate Worker
+entry/configuration and installed native tick witnesses are prepared.
+No hosted Grow room, simulator deployment or live tick has been created.
+The final integrated gate and exact-head review remain required.
 The final head must include landed S2a and its combined Device/archive
 cohort. Provision no hosted room from the earlier Device-only cohort.
 Planner deploys and runs this procedure after that review. Local builder
 checks and dry runs create no Cloudflare resources.
 
 Use the reviewed, landed checkout and preserve each original request and
-receipt. The final implementation note must print the exact expected release
-and publisher from `dap pack`; neither has been produced for this demo yet.
+receipt. The committed packet is `examples/grow/demo/application.dap.json`.
+Its exact public `dap pack` output is:
+
+```text
+Release: sha256:71e10ca9499e926a4de1d8294ed83a772051dff677d8b1687bbd8e28e61802fa
+Publisher: key_gg4rXwy4v-kVqveN37_W_FW_-Wvsn3fgsal5z6gxfS0
+```
+
+Verify those values before supplying a trust row. The publisher key is
+separate from operator and simulator custody and is absent from the head.
 The current source repository is
 `https://github.com/generalbusiness-ai/artroom.git`. The maintained
 `examples/grow/check` package remains a local test fixture.
@@ -42,14 +51,13 @@ uses the verified references and selected nonsecret receipt fields.
    Device/archive cohort against the operator-selected hosting origin.
    Follow [deployment](../../docs/deploy.md) for the plan's exact register
    and provider configuration. The cohort is Register17, Directory16,
-   Membership8, Rules10, Destination12 and Inbox1. Set
-   `GROW_COMBINED_COHORT` to this cohort's selector from reviewed, landed
-   S2a; that selector is not implemented in this preparation head. Verify
+   Membership8, Rules10, Destination12 and Inbox1. Its selector is
+   `archive-device-application`, implemented by landed S2a `fb390d88`. Verify
    the plan's exact pins before any provisioning. This follows adopted
    planner decision `7e93abad`; it does not upgrade an earlier room.
 
    ```sh
-   node packages/cli/bin/dap.js install --plan "$GROW_SERVICE" --cohort "${GROW_COMBINED_COHORT:?Use the reviewed S2a combined cohort selector}" --host artifacts --namespace "$GROW_NAMESPACE"
+   node packages/cli/bin/dap.js install --plan "$GROW_SERVICE" --cohort archive-device-application --host artifacts --namespace "$GROW_NAMESPACE"
    ```
 
    Proving read: retain the plan's original signed identity and confirm the
@@ -60,7 +68,7 @@ uses the verified references and selected nonsecret receipt fields.
 2. Finish that original install and claim the room as its operator.
 
    ```sh
-   node packages/cli/bin/dap.js install --planned --cohort "${GROW_COMBINED_COHORT:?Use the reviewed S2a combined cohort selector}"
+   node packages/cli/bin/dap.js install --planned --cohort archive-device-application
    node packages/cli/bin/dap.js create grow-demo --handle @grow-operator
    ```
 
@@ -211,9 +219,11 @@ are never visitor credentials.
 
 ## Start the separate simulator
 
-The final Worker entry module and Wrangler configuration remain pending the
-actual reviewed G5a integration and signed packet. The prepared scheduled
-host uses `GROW_BINDING` for public configuration and
+The separate `simulator-worker.ts` entry loads the committed packet as a
+Text module and verifies its exact release, publisher, definitions and
+signed cadence. Its configuration is `examples/grow/wrangler.jsonc`, with
+UTC cron `* * * * *`. Local dry-run bundling and native entry checks create
+no deployment. The scheduled host uses `GROW_BINDING` for public configuration and
 `GROW_SENSORS_SECRET`/`GROW_CLIMATE_SECRET` for the two separate 32-byte agent
 secrets encoded as unpadded base64url. `GROW_BINDING` is a JSON object with
 `service` (HTTPS origin), `room` (full Room ScopeRef), and `members`
@@ -233,8 +243,21 @@ signed cadence. See Cloudflare's [Cron Triggers](https://developers.cloudflare.c
 and [scheduled handler](https://developers.cloudflare.com/workers/runtime-apis/handlers/scheduled/)
 documentation. No trigger or deployed handler is proved by these documents.
 
-After setting the agent secret and deploying, retain the actual Worker
-version and trigger readback. Proving read: observe an actual native reading
+After exact-head approval and Main publication, planner deploys from a
+scratch directory with the reviewed absolute checkout path in
+`GROW_CHECKOUT` and the verified public binding JSON in `GROW_BINDING`:
+
+```sh
+npx --yes --package wrangler@4.147.0 -- wrangler deploy --config "${GROW_CHECKOUT:?Set the reviewed checkout}/examples/grow/wrangler.jsonc" --var "GROW_BINDING:${GROW_BINDING:?Set the verified public Room binding}"
+npx --yes --package wrangler@4.147.0 -- wrangler secret put GROW_SENSORS_SECRET --config "$GROW_CHECKOUT/examples/grow/wrangler.jsonc"
+npx --yes --package wrangler@4.147.0 -- wrangler secret put GROW_CLIMATE_SECRET --config "$GROW_CHECKOUT/examples/grow/wrangler.jsonc"
+```
+
+Supply each distinct agent secret through Wrangler's private prompt or
+standard input, never a command argument or public log. Until both keys
+are set, scheduled callbacks stop before a room request. See Cloudflare's
+[secrets procedure](https://developers.cloudflare.com/workers/configuration/secrets/).
+Retain the actual Worker version and trigger readback. Proving read: observe an actual native reading
 summary, device reports and G5a owner preparation, with their sensors signer
 and command fact. Verify the independent reported, target and outcome slots,
 the reserved-answer count and the next recorded tick. Retain a missed-tick
@@ -245,9 +268,9 @@ The client allowance is 96 reads, 48 mutations, 256 KiB of request bodies,
 4 MiB of retained reply chunks and a 45-second window. The host uses a
 five-second per-request SDK deadline. Each tick answers at most eight open
 commands, scans at most four pages/800 entries/1 MiB of canonical prefix/64 command
-changes, and
-takes at most eight climate acts. The final installed integration must
-verify these limits. The sensors' observe transition records the durable
+changes, and takes at most eight climate acts. The installed native
+long-gap witness checks these allowances and cursor progress; the operator
+still checks their deployed readback. The sensors' observe transition records the durable
 scanned head in commandsAnsweredThrough, fenced by the Room revision;
 it never advances past an unanswered command. Only the native named
 device-command-closed refusal counts as an already covered answer.

@@ -1,5 +1,5 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": { "skipLibCheck": true, "types": ["node"] },
+  "compilerOptions": { "skipLibCheck": true, "resolveJsonModule": false, "types": ["node"] },
   "include": ["*.ts"]
 }

@@ -8,8 +8,15 @@ import { secretSigner } from "@generalbusiness/artroom-client";
 import { prepareApplicationDirectory } from "../../packages/cli/src/application-files.ts";
 import { prepareGrowCheck } from "./prepare-check.ts";
 import { simulatorRelease } from "./simulator-release.ts";
+import { simulatorHost } from "./simulator-host.ts";
+import { DEMO_PUBLISHER, DEMO_RELEASE } from "./demo-release.ts";
 
 test("the consumer takes cadence only from the exact signed release and publisher, and refuses an invalid signed schedule", async () => {
+  const committed = await readFile(new URL("./demo/application.dap.json", import.meta.url));
+  const verified = simulatorRelease(new Uint8Array(committed), DEMO_RELEASE, DEMO_PUBLISHER);
+  expect(verified.packet.package.release.manifest.name).toBe("ai.generalbusiness.grow-demo");
+  expect(verified.schedule.cadenceMinutes).toBe(1);
+  expect(simulatorHost(committed.toString("utf8"), DEMO_RELEASE, DEMO_PUBLISHER)).toMatchObject({ run: expect.any(Function), scheduled: expect.any(Function) });
   const root = await prepareGrowCheck(), secret = new Uint8Array(32).fill(254), signer = secretSigner(secret);
   try {
     const prepared = await prepareApplicationDirectory(root, signer), base = prepared.packet.package;

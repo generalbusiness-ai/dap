@@ -5,7 +5,7 @@ import { env } from "cloudflare:test";
 import { expect, inject, test } from "vitest";
 import { b64url, canonicalize, isSeed, scopeIdOf, timeOf, unb64url } from "@generalbusiness/artroom-bytes";
 import { readApplicationPackage2 } from "@generalbusiness/artroom-bytes/application-v2";
-import { DEVICE_APPLICATION_COHORT as C, platform } from "@generalbusiness/dap-platform";
+import { ARCHIVE_DEVICE_APPLICATION_COHORT as C, platform } from "@generalbusiness/dap-platform";
 import { McpService, memoryStore, type ServerPort } from "@generalbusiness/dap-mcp";
 import { invitationIssueFields, invitationRedemptionFields, requestSession, secretSigner, sessionRequest } from "@generalbusiness/artroom-client";
 import { httpSource, verify } from "@generalbusiness/artroom-replay";
@@ -36,6 +36,8 @@ async function fixture() {
     const seat = await life.wait(() => M.did(rita, "seat", { expected: { roster: 1 } }));
     await life.wait(async () => M.did(rita, "first-key", { fields: { member: seat }, expected: await M.expected({ roster: 0, member: seat }) }));
     const membership = await life.wait(() => M.at()), directory = await life.wait(() => D.at());
+    for (const [node, definition] of [[D, C.directory], [M, C.membership], [A, C.rules], [G, C.destination]] as const)
+      expect((await life.wait(() => node.summary())).value.definition).toBe(definition);
     const operator = { membership, member: "@rita" as const };
     for (const [actor, handle, fill] of [[una, "@demo-sensors", 92], [vic, "@demo-climate", 93]] as const) {
       const member = await life.wait(() => M.did(rita, "add-member", { fields: { handle, kind: "agent", controller: operator } }));

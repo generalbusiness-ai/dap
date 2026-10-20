@@ -1,16 +1,14 @@
 # G5: hosted Grow demo — preparation
 
 Request `78fba9fca56a28dc75cca37f88a0fbea334bdc2a`, promise
-`e60fe0660ce663c14afe242ad6614bacbe91610a`. This separate preparation
-starts from reviewed Main `3ed2a08a` and now integrates actual reviewed
-G5a Main through `2fcd50ab`. The frozen G5a original files and dependencies
-have not been executed or edited. This separate mutable checkout reads
-the reviewed Git commits. Landed S2a still precedes the final combined
-integration witness and gate. The static page, pure simulation, bounded public
-journal reconstruction, stateless tick and scheduled-host factory are prepared
-and checked below. The TEST release and local native tick path now pass.
-Production publisher, native long-gap catch-up, final combined integration,
-whole gate, Source/review, deployment and live acceptance remain pending.
+`e60fe0660ce663c14afe242ad6614bacbe91610a`. This separate development
+checkout integrates actual reviewed S2a Main `fb390d88`, including G5a,
+at clean merge `776ff23b`. S2a is independently audited and pushed.
+The combined-cohort native lifecycle and long-gap witnesses pass with the
+exact committed demo packet. The signed release, separate cron Worker,
+runbook and static homepage path are implemented and checked locally.
+The final whole gate, Source/review, actual deployment and hosted
+acceptance remain pending. No frozen original has been executed or edited.
 
 The commissioned Source contains a separate signed demo release, a stateless
 bounded cron Worker beside the package, an operator runbook, and the Grow
@@ -20,7 +18,84 @@ the nonsecret trust row, deploys after review, provisions the actual room
 and secrets, runs the runbook and records live acceptance. A person taking
 an operator act in their AI app is actual acceptance, never a fixture claim.
 
-## Native demo ticks on the local reviewed Device cohort
+## Current integrated release and local checks
+
+The immutable demo packet is `examples/grow/demo/application.dap.json`.
+A separate fresh publisher key was kept owner-only outside this checkout;
+no existing operator custody was read. The actual `dap pack` command
+completed naturally with exit 0. It printed:
+
+```text
+Semantic: sha256:bc098820edffe4061f7f0ff3d007ef67748307dd96fcbbe2dd5f464dfa7c9497
+Presentation: sha256:5bd818a796771c0b6bdd6eac7d5b0fe6ed70358ddc2c33dec82bfd11cd558cf4
+Release: sha256:71e10ca9499e926a4de1d8294ed83a772051dff677d8b1687bbd8e28e61802fa
+Publisher: key_gg4rXwy4v-kVqveN37_W_FW_-Wvsn3fgsal5z6gxfS0
+```
+
+`demo-release.ts` supplies those exact public pins to the separate Worker.
+No key or host trust setting is committed. Its Text module rule preserves
+the signed packet bytes. The maintained TEST packages still use their
+public TEST signer; only the distinct demo capture now reads and verifies
+this exact committed packet. Its local native trust row and agent keys are
+explicit fixtures. `examples/grow/check` is unchanged.
+
+The combined native fixture checks the actual Directory16, Membership8,
+Rules10 and Destination12 sibling digests. Owning Scope compilers and both
+native scenarios pass in original 51470. After switching the capture to
+the committed packet, both whole-file scenarios pass again in original
+2187: 11.28 seconds tests, 14.67 seconds outer elapsed, 16.37 seconds CPU,
+on the shared warm macOS arm64 host. The original lifecycle assertions
+and all public allowances remain. No earlier TEST release is presented as
+this signed release.
+
+The signed-release consumer and Grow/Scope compilers pass in original
+25313. An earlier compiler run stopped before tests: manifest name was
+read at the wrong property, and TypeScript inferred JSON rather than the
+explicit Worker Text module. The corrected test reads the release
+manifest; Grow's compiler explicitly disables JSON module inference so
+its text declaration matches Wrangler. No JSON data assertion was weakened.
+
+Pinned Wrangler 4.147.0 ran only from its new scratch directory, with
+`deploy --dry-run`. It bundled 421.57 KiB, gzip 93.42 KiB, with no bindings
+and no deployment. The exact resulting Text packet matches committed
+bytes, SHA-256
+`b1563c946435c2aad7173b5ae8a32da52c33d2a03b90faee80784c79ebcd96e9`.
+The bundle starts in local workerd, returns 404 from its fetch route and
+accepts a scheduled invocation. With no binding or secrets, that callback
+records `stopped` at configuration and makes zero outbound requests. This
+is an entry/configuration check, not a native admitted tick or a deployed
+cron claim. The first two scratch harnesses stopped at constructor
+validation before startup; the installed Miniflare 5 alpha requires its
+explicit `convertV4MiniflareOptions` adapter. The third harness passes.
+All three original logs remain under
+`/tmp/artroom-g5-wrangler-build-20261020/`.
+
+The built homepage test passes its six-page invariants and five destination
+cards. Rendered QA uses the frontend testing skill's Playwright fallback:
+Browser plugin not available. All 134 pinned tool leaves were independently
+copied and verified against the frozen D1 manifest; no original tool was
+executed. Playwright 1.63.0/Chromium 153.0.8010.12 ran the actual local built
+assets at `http://127.0.0.1:63766`, with outbound navigation blocked.
+At 1440×1000 and 390×844, clicking Grow opens `/grow/`, whose title, story,
+invitation URL and AI-app link are correct. Both viewports pass nonblank,
+overlay, console, asset and horizontal-overflow checks. Six screenshots
+are retained in `/tmp/artroom-g5-home-qa-v2-20261020/`; desktop home/Grow
+and mobile home/full Grow were visually inspected without a layout finding.
+The first scratch browser run timed out on a nonexistent homepage h1;
+the existing homepage uses a description paragraph. Correcting only that
+selector made the same checks pass; the original timeout remains retained.
+The external Room invitation was not opened. No tender enrollment,
+hosted navigation or person-in-AI acceptance is inferred. Public uninvited
+tender seats remain zero; the page asks for an operator-issued invitation.
+
+The runbook now uses landed `archive-device-application`, the committed
+release/publisher and the separate reviewed Worker configuration. Planner
+supplies public Room bindings and the two distinct agent secrets after
+review and publication. Its per-step proving reads, operator custody and
+hosted acceptance remain operational obligations. The first hosted Room
+must use the combined cohort; no Device-only room has been provisioned.
+
+## Earlier native demo ticks on the local reviewed Device cohort
 
 The separate demo now has one genuine native integration story in
 `scope/test/grow-demo-tick.test.ts`. It enrolls two distinct agents in
