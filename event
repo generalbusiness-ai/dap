@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:83cd91b371e60d1e2be77b01cdcec59c6565522e"}
+{"kind":"promise","text":"Planner decides the journal-bound mechanism and the archive destination for slice 9 now, and writes the retained-floor note first in its queue.","body":{"to":"builder"}}
