@@ -23,7 +23,7 @@ and a brokered market.
 |---|---|---|
 | [1. Buildable today](#1-buildable-today) | 03, 20, 22, 26, 29, 30, 34, 36, 38, 43, 44, 45, 46, 47, 48, 49, 50 | Nothing more for the shared record |
 | [2. Nearly buildable](#2-nearly-buildable) | 25, 31, 33, 35, 51 | Messages between an application's own scopes, or an outside operation that the application declares. Cases 25, 33 and 51 also keep one part in a scope of its own |
-| [3. Separate scopes, one authority](#3-separate-scopes-one-authority) | 21, 32, 37, 39, 40, 41 | Each party reads its own scope; one scope holds the shared decision and the others cite it |
+| [3. Separate rooms, one authority](#3-separate-rooms-one-authority) | 21, 32, 37, 39, 40, 41 | Each party reads its own room; one room holds the shared decision and sends each party only what that party may read |
 | [4. Private views in one record](#4-private-views-in-one-record) | 42 | One record that each participant reads only in part, and every member replays the decisions they share |
 | [5. Episodes across organisations](#5-episodes-across-organisations) | 01, 02, 04 to 19, 23, 24, 27, 28 | A personal account, captured documents kept privately, and parties outside the room |
 | [6. Changing rules and boundaries](#6-changing-rules-and-boundaries) | From the dap-spike's sweep, and Tailapps | Rules that change, expressions that compute what to write, and records that join |
@@ -210,8 +210,8 @@ range.
 - **When it closes:** an alert closes when the room is back in band. A
   hold on an alert expires by a timed rule and the alert reopens.
 - **What the record keeps:** readings, measurements, each command with
-  its signer, alerts and their entry ranges. Live presence keeps no
-  record.
+  its signer, alerts and their entry ranges. Presence is recorded too:
+  arrive and leave transitions with their times.
 
 **Built:** this is the grow room of
 [plan 033](../notes/plans/033-2026-10-18-grow-room-demo.md), designed in
@@ -580,8 +580,8 @@ These cases need one piece that is designed or partly built. Either the
 application uses messages between its own scopes, or it declares an
 outside operation. dap-room's own scopes already work by messages.
 "Nearly" refers to the shared record: cases 25, 33 and 51 also keep
-one part in a scope of its own, as
-[group 3](#3-separate-scopes-one-authority) describes and their cards
+one part in a room of its own, as
+[group 3](#3-separate-rooms-one-authority) describes and their cards
 say.
 
 ### 33 Booking a room or equipment, with event dependencies
@@ -601,7 +601,7 @@ An organiser's agent finds free slots and drafts a request.
 An expiry needs the recorded clock. A browser timer cannot cancel a
 commitment.
 
-**Needs:** [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes), for several rooms under one allocator and for the suppliers' separate agreements, and for the booker's own scope that holds the purpose, as in [group 3](#3-separate-scopes-one-authority), so that the allocator sees the slot and not the reason.
+**Needs:** [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes), for several rooms under one allocator and for the suppliers' separate agreements, and for the booker's own room that holds the purpose, as in [group 3](#3-separate-rooms-one-authority), so that the allocator sees the slot and not the reason.
 
 ### 25 A shared family budget for a purchase or repair
 
@@ -623,7 +623,7 @@ A price rise above someone's limit needs their approval again. A
 contribution's amount can be shared while the reason for it stays
 private.
 
-**Needs:** [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes), so that one scope owns the budget, and for a scope of each contributor's own that holds their reasons, as in [group 3](#3-separate-scopes-one-authority).
+**Needs:** [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes), so that one scope owns the budget, and for a room of each contributor's own that holds their reasons, as in [group 3](#3-separate-rooms-one-authority).
 
 ### 31 Buying a used car, with an inspection and handover
 
@@ -683,19 +683,22 @@ and opens the fee.
 - **When it closes:** a need closes filled or unfilled. A match closes
   accepted, declined or introduced. A fee closes settled or waived. An
   offer goes stale by a timed rule, and the provider is told.
-- **What the record keeps:** the roster room holds offers and leads.
-  Each need has an engagement room with the operator and the matched
-  providers as members, so a provider never reads another need's terms.
-  The site reads its rooms for the operator's roll-up.
+- **What the record keeps:** the market room, which only the operator
+  and their sourcing agent read, holds the leads, a listing for each
+  provider, the needs, the matches, the introductions and the fees. Each
+  provider has a room of their own with the operator, holding their
+  offer and the matches offered to them. No room is shared by all
+  providers, so a provider never reads another provider's price, another
+  need or a lead.
 
 Designed in
 [a brokered market as a dap application](../notes/2026-10-20-market-application-design.md).
 **Needs:** [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes),
-so that recording a need creates its engagement room and the roster
-cites the introduction; [outside parties and systems](roadmap.md#outside-parties-and-systems),
+across rooms, so that the market room sends each provider only what
+that provider may read, and each provider's answers return; [outside parties and systems](roadmap.md#outside-parties-and-systems),
 for the buyer's own acceptance; and a person's access to the room from
-their own AI app, which the hosted endpoint's OAuth head covers
-([hosted endpoint note](../notes/2026-10-13-hosted-mcp-endpoint.md)).
+their own AI app, which the OAuth work on the hosted endpoint covers
+(request `3f598e55`; [hosted endpoint note](../notes/2026-10-13-hosted-mcp-endpoint.md)).
 Custody for payment and vetting evidence waits for
 [evidence capture and private custody](roadmap.md#evidence-capture-and-private-custody).
 
@@ -704,26 +707,36 @@ Custody for payment and vetting evidence waits for
 Bookings across several rooms with one capacity for the whole building,
 and two projects that share one budget.
 
-## 3. Separate scopes, one authority
+## 3. Separate rooms, one authority
 
-These cases keep each party's private part in that party's own scope,
-and one scope holds the decision they share. The other scopes cite that
-decision by its entry's hash and position. The authority's members
-replay it; the others hold the citation. Membership is the privacy
-boundary, which dap checks on every act and every read, so there are no
-readers to write by hand. The brokered market (51) uses this shape for
-its engagement rooms. The dap-spike's repaired Sale and Booking models
-reached the same agreement by another route, at the cost the
+Every member of a room reads every scope in that room. So these cases
+keep each party's private part in a room of its own, which that party
+shares with the authority, and the authority's room holds the decision
+they share. The authority's room sends each party only what that party
+may read. Membership is the privacy boundary, which dap checks on every
+act and every read, so there are no readers to write by hand. The
+brokered market (51) uses this shape: one market room and one room for
+each provider. The dap-spike's repaired Sale and Booking models reached
+the same agreement by another route, at the cost the
 [roadmap](roadmap.md#private-views-in-one-record) records.
+
+A message is more than a reference. Native delivery retains the whole
+source entry in the receiving scope, and that room's readers can read
+it. So each act that sends to a party's room holds only what that party
+may read, and it uses no other scope's facts. The party's room then
+holds a fact reference to the sending act, `{ at: { scope, inc, kind },
+seq, hash }`, with that act's entry. That proves what the party was
+told and where it stands in the authority's record. It does not prove
+the comparison behind the decision, which the party never reads.
 
 The shape needs
 [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes),
-which runs for dap-room's own scopes and which no declared application
-has used yet. What it does not give: a party outside the authority's
-scope cannot replay the comparison that produced the decision. In each
-case below one party is trusted to hold it: the seller, the parents,
-the buyer, the hiring manager, the school, the editor. Where no such
-party exists, the case belongs to group 4.
+across rooms. Within one room they run today: the grow site creates its
+rooms and receives their summaries. Across rooms, no declared
+application sends yet. In each case below one party is trusted to hold
+the decision: the seller, the parents, the buyer, the hiring manager,
+the school, the editor. Where no such party exists, the case belongs to
+group 4.
 
 ### 32 A guitar sale with private competing offers
 
@@ -742,7 +755,7 @@ buyer's conditions.
 
 Closing the sale does not reveal the private prices.
 
-**Needs:** [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes), for each buyer's own scope and for the inspection. The seller's scope holds the one acceptance, and each buyer's scope cites it.
+**Needs:** [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes), for each buyer's own room and for the inspection. The seller's room holds the one acceptance and sends each buyer only that buyer's answer.
 
 ### 21 A childcare gap around work
 
@@ -763,7 +776,7 @@ be answered.
 Matching calendars is not enough. Private details about the child need
 not be visible to everyone discussing the parent's shifts.
 
-**Needs:** [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes), so that the child's details stay in the parents' own scope while the shifts are settled with the carer and the employer.
+**Needs:** [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes), so that the child's details stay in the parents' own room while the shifts are settled with the carer and the employer.
 
 ### 37 A procurement award and accepting the delivery
 
@@ -784,7 +797,7 @@ A requester's agent drafts requirements and compares quotes.
 separates planning, tender, award, contract and delivery. A published
 award is not the supplier's order or a completed delivery.
 
-**Needs:** [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes), so that each supplier reads only its own offer and the award cites it; [outside parties and systems](roadmap.md#outside-parties-and-systems), for the supplier's own acceptance. A losing supplier holds the award's citation and the public notice, not the comparison.
+**Needs:** [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes), so that each supplier reads only its own offer in its own room, and receives the award's notice; [outside parties and systems](roadmap.md#outside-parties-and-systems), for the supplier's own acceptance. A losing supplier holds the notice and its citation, not the comparison.
 
 ### 39 A job application, offer and onboarding
 
@@ -829,7 +842,7 @@ questions.
 Private notes stay private even when they shaped a proposal. A signed
 plan does not prove the support happened.
 
-**Needs:** [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes), so that a specialist's private notes stay in their own scope and the plan cites what they chose to put forward; [evidence capture and private custody](roadmap.md#evidence-capture-and-private-custody), for the official versions.
+**Needs:** [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes), so that a specialist's private notes stay in their own room and the plan receives only what they chose to put forward; [evidence capture and private custody](roadmap.md#evidence-capture-and-private-custody), for the official versions.
 
 ### 41 A research review and a reproducible result
 
@@ -852,14 +865,14 @@ expert advice from the funding decision. Git can hold code. Restricted
 data needs another keeper. Access for review is not permission to
 publish.
 
-**Needs:** [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes), so that each review is a scope of its own that the editor's decision cites, and the author reads the decision and not the reviewer; [evidence capture and private custody](roadmap.md#evidence-capture-and-private-custody), for restricted data.
+**Needs:** [an application's own messages between scopes](roadmap.md#an-applications-own-messages-between-scopes), so that each review is in a room of its own, the editor's room receives it, and the author reads the decision and not the reviewer; [evidence capture and private custody](roadmap.md#evidence-capture-and-private-custody), for restricted data.
 
-### From the dap-spike's sweep: separate scopes
+### From the dap-spike's sweep: separate rooms
 
 The dap-spike's sweep found these cases too:
 
 - A sale with private offers. Case 32 continues it.
-- One room's bookings, with a private purpose: the booker's own scope
+- One room's bookings, with a private purpose: the booker's own room
   holds the purpose, and the allocator's scope holds the slot.
 - Poker, with a trusted dealer. The dealer's scope is the authority. A
   commitment revealed later is a detached text's digest, posted before
@@ -1042,7 +1055,7 @@ extends Prosser's
 
 A receipt is not an approval, and an approval is not a payment.
 
-**Also needs:** a scope of each household member's own, as in [group 3](#3-separate-scopes-one-authority), because each member controls what they disclose.
+**Also needs:** a room of each household member's own, as in [group 3](#3-separate-rooms-one-authority), because each member controls what they disclose.
 
 ### 09 A lease renewal when the household disagrees
 
@@ -1219,7 +1232,7 @@ the appointment.
 Attending the appointment does not answer the patient's questions, or
 prove that a referral was accepted.
 
-**Also needs:** a scope of the patient's own for records with restricted readers, as in [group 3](#3-separate-scopes-one-authority).
+**Also needs:** a room of the patient's own for records with restricted readers, as in [group 3](#3-separate-rooms-one-authority).
 
 ### 19 The first week after leaving hospital
 
@@ -1239,7 +1252,7 @@ discharge papers.
 Incomplete papers stay incomplete. The agent does not invent medical
 instructions to make a checklist look finished.
 
-**Also needs:** a scope of the patient's own for records with restricted readers, as in [group 3](#3-separate-scopes-one-authority).
+**Also needs:** a room of the patient's own for records with restricted readers, as in [group 3](#3-separate-rooms-one-authority).
 
 ### 23 Moving house and handing over the property
 
@@ -1278,7 +1291,7 @@ itinerary.
 A changed flight reopens the connections it affects. It does not cancel
 other bookings or prove a right to a refund.
 
-**Also needs:** a scope of each traveller's own for their budget, as in [group 3](#3-separate-scopes-one-authority).
+**Also needs:** a room of each traveller's own for their budget, as in [group 3](#3-separate-rooms-one-authority).
 
 ### 27 A home-damage claim and getting back into the house
 

@@ -1,32 +1,31 @@
-# A brokered market as a dap application: the roster and the engagement
+# A brokered market as a dap application: the market room and the provider rooms
 
-Design note, 20 October 2026, draft 1. Proposed functionality: nothing
+Design note, 20 October 2026, draft 2. Proposed functionality: nothing
 here is built.
 
 A person runs a small matching business: night nurses in one city,
 plumbers in another, used instruments in a third. Buyers post needs and
 providers post offers in public groups and marketplaces, and the person
-brings the two together for a fee. This month's personal agents can do
-the finding: a pitch that circulated this week has an agent mine public
+brings the two together for a fee. Personal agents can now do the
+finding: a pitch published on 19 October 2026 has an agent mine public
 groups for night nurses at a given rate and hand back a list
 ([source](#sources)). The pitch says nothing about how the business is
 then run, and its own comment thread names the three ways it fails:
 nobody pays for a list they could ask their own agent for; a match is
 not a fee; and a list scraped from other people's posts is a liability,
 not an asset. This note designs the part the pitch leaves out. The
-agent finds; the room is the business.
+agent finds; the rooms are the business.
 
-The application is a package in the sense of the
+The application is a pair of packages in the sense of the
 [applications note](2026-10-15-self-contained-applications.md), built
 on the forms the grow room landed
 ([grow note](2026-10-17-grow-operation-application-design.md),
 [plan 033](plans/033-2026-10-18-grow-room-demo.md)) and the forms the
 [three sales applications](2026-10-19-sales-applications-design.md)
-share, in particular the prospect room, whose outside party accepts a
-proposal from their own AI app. Section 1 gives the pattern that every
-such market has; section 2 says what the room adds; sections 3 to 5
-design the application; section 6 places the personal agents; sections
-7 and 8 list what exists and order the work.
+share. Section 1 gives the pattern that every such market has; section 2
+says what the rooms add; sections 3 to 5 design the application;
+section 6 places the personal agents; sections 7 and 8 list what exists
+and order the work.
 
 ## 1. The pattern
 
@@ -53,7 +52,7 @@ comment thread under the pitch raised all three:
    broker out. The usual answers are to charge at the introduction, not
    the engagement; to hold the trust artifact, the vetted roster with
    its history, which is what one commenter called "own the list"; and
-   to own the room both sides return to.
+   to own the rooms both sides return to.
 2. **Fee capture.** A match is not a fee. The fee needs a moment at
    which both sides have accepted terms and contact details have not
    yet been exchanged.
@@ -62,10 +61,10 @@ comment thread under the pitch raised all three:
    terms on automated collection, and the privacy law of the city in
    the demo. The durable version of this business is not "scrape and
    resell" but "invite and enroll": the agent finds candidates, the
-   operator invites them, and the data the market holds is data each
-   party put there themselves.
+   operator invites them, and what a provider later reads is what they
+   and the operator put there.
 
-## 2. What the room adds
+## 2. What the rooms add
 
 The [sales note](2026-10-19-sales-applications-design.md), section 2,
 says what a room adds to a personal agent in general: an agent serves
@@ -75,11 +74,12 @@ exact facts that outlive any agent, with timed rules that fire whether
 or not an agent is up. For a market, three of those are the business:
 
 - **The roster is the asset, and it is consented.** A provider's offer
-  is their own signed act as a member. The record never holds a scraped
-  list; what it holds is an invitation the operator sent and an
-  enrollment the provider signed. That is the "own the list" level with
-  the consent trail that makes the list sellable, and it is what a
-  disintermediated broker still has.
+  is their own signed act, in a room they share only with the operator.
+  The candidate list that the sourcing agent builds stays in the
+  operator's own room. A provider enters the roster by an invitation the
+  operator sent and an enrollment the provider signed. That is the "own
+  the list" level with the consent trail that makes the list sellable,
+  and it is what a disintermediated broker still has.
 - **Two moments are signed by their holders.** The provider's
   acceptance of a match is the provider's act. The introduction is the
   operator's act, and its guard needs both acceptances. No agent holds
@@ -97,94 +97,114 @@ to sign, and showing the operator their day.
 
 ## 3. The application
 
-One package, **market**, installed once for each market: a niche and a
-city, such as night nurses in Montreal. An installation is a site with
-two kinds of room, after the grow site that reads its rooms.
+Every member of a room reads every scope in that room
+([roadmap](../docs/roadmap.md#private-views-in-one-record)). Read
+rights in this market therefore follow rooms, not scopes:
+
+| Room | Members | Holds | Who reads it |
+|---|---|---|---|
+| Market room | the operator and the operator's sourcing agent | the market's rules, the leads with their sources, a listing for each enrolled provider, the needs, the matches, the introductions and the fees | the operator and the sourcing agent |
+| Provider room, one for each enrolled provider | the operator and that provider | the provider's offer with its price and history, the matches offered to that provider, the provider's answers, and the introductions that concern them | the operator and that provider |
+
+There is no room that all providers share. A provider never reads
+another provider's price, another provider's matches, a need they were
+not offered, or a lead. The buyer is not a member in the first version
+(section 4).
+
+The application is two packages:
+
+- **`market`**, installed once in the market room for each market: a
+  niche and a city, such as night nurses in Montreal.
+- **`market-provider`**, installed in each provider room. Its genesis
+  names the market's scope by its full reference, so the provider scope
+  knows the one scope it answers to.
 
 | Member | Kind | Does |
 |---|---|---|
-| Operator | person | Runs the market; signs every invitation, match, introduction and fee |
-| Sourcing agent | agent, the operator's | Proposes leads with their source; drafts needs the operator signs; delivers invitations; signs nothing that commits anyone |
-| Provider | person, member of the roster room by invitation | Lists their own offer and keeps it current; accepts or declines a match from their own AI app |
+| Operator | person, member of every room | Runs the market; signs every invitation, match, introduction, export and fee |
+| Sourcing agent | agent, the operator's, member of the market room only | Proposes leads with their source; drafts needs the operator signs; delivers invitations; signs nothing that commits anyone |
+| Provider | person, member of their own provider room only | Lists their own offer and keeps it current; accepts or declines a match from their own AI app |
 | Buyer | not a member in the first version | Their need and their acceptance enter as the operator's recorded reports with sources, as the bid response treats the buyer |
 
-| Grant | Held by | Acts |
-|---|---|---|
-| `market.configure` | operator | `set-rules`: the vetting rule, the fee, the territory, the stale period |
-| `market.lead` | sourcing agent | `propose-lead`: a candidate with its source and no more than the invitation needs |
-| `market.invite` | operator | `invite`: issues the invitation for one lead; the agent may deliver it, and the act is the operator's |
-| `market.offer` | provider | `enroll-offer`, `update-offer`, `withdraw-offer` |
-| `market.need` | operator | `record-need`: a report with its source, a group post, a message or a call |
-| `market.match` | operator | `match`: one need, one offer, a reason; guarded by the offer being listed and by the vetting rule |
-| `market.accept` | provider | `accept-match`, `decline-match` |
-| `market.introduce` | operator | `introduce`: guarded by the provider's acceptance and the buyer's reported acceptance; writes the contact exchange and opens the fee |
-| `market.fee` | operator | `record-settlement`, `waive` |
+| Grant | Held by | Acts | Room |
+|---|---|---|---|
+| `market.configure` | operator | `set-rules`: the vetting rule, the fee, the territory, the stale period | market |
+| `market.lead` | sourcing agent | `propose-lead`: a candidate with its source and no more than the invitation needs | market |
+| `market.invite` | operator | `invite`: marks a lead as invited once its provider room exists | market |
+| `market.need` | operator | `record-need`: a report with its source | market |
+| `market.match` | operator | `match`: one need, one listing, a reason | market |
+| `market.export` | operator | `offer-match`, `send-introduction`, `close-offer`: the only acts that send to a provider room (section 5) | market |
+| `market.introduce` | operator | `introduce`: guarded by the provider's acceptance and the buyer's reported acceptance; writes the contact exchange and opens the fee | market |
+| `market.fee` | operator | `record-settlement`, `waive` | market |
+| `provider.offer` | provider | `enroll-offer`, `update-offer`, `withdraw-offer`; each sends the listing summary to the market | provider |
+| `provider.accept` | provider | `accept-match`, `decline-match`; each sends the answer to the market | provider |
 
 An act carries one fixed grant string, as in the bid response, so the
 provider's acceptance and the operator's introduction are two acts under
 two grants, and the record keeps both signatures. The sourcing agent
 holds `market.lead` and nothing else.
 
-**The two scopes.** The **roster room** holds what a public directory
-would show: each provider's offer, the leads, and the market's rules.
-Every provider is a member and reads all of it, which is the point of a
-roster. Each need gets an **engagement room** of its own, with the
-operator and the matched provider or providers as members, holding the
-need, its matches, the introduction and the fee. A provider never reads
-another need's terms or another provider's price, because they are not
-a member of that room. The site reads its rooms for the operator's
-roll-up, as the grow site reads its grow rooms. Section 5 says why this
-is the shape, and what it does not give.
-
 **The interaction.** The sourcing agent reads public groups and
 marketplaces and signs `propose-lead` for each candidate, with the post
-or profile as the source; a lead without a source is refused. The
-operator reads the leads in their carousel and signs `invite` for the
-ones that pass the vetting rule, which issues the invitation link. The
-agent delivers it over the channel the candidate uses. The candidate
-opens it in their own AI app or in the browser and signs `enroll-offer`:
-what they do, where, at what price, when. That act is the consent
-record, and the lead closes as enrolled. A lead not enrolled in fourteen
-days closes expired.
+or profile as the source; a lead without a source is refused. The lead
+stays in the market room, which no provider reads. The operator reads
+the leads in their carousel and chooses the ones that pass the vetting
+rule. For each, the operator's client creates a provider room through
+the current room creation path, installs `market-provider` there,
+issues a person invitation to that room, and then signs `invite` on the
+lead. The agent delivers the invitation link over the channel the
+candidate uses. The candidate opens it in their own AI app or in the
+browser and signs `enroll-offer`: what they do, where, at what price,
+when. That act is the consent record. It sends the listing summary to
+the market scope, where it opens the provider's listing, and the lead
+closes as enrolled. A lead not enrolled in fourteen days closes expired.
 
 A buyer's need arrives as a post, a message or a call. The agent drafts
-it; the operator signs `record-need` with the source, which creates the
-engagement room for that need with the operator as its first member.
-The operator signs `match`, naming one listed offer and the reason;
-the match adds that provider to the engagement room and appears in the
-provider's carousel with Accept and Decline. The provider signs
-`accept-match` at the match's revision. The operator records the
-buyer's acceptance of the terms with its source, then signs
+it; the operator signs `record-need` with the source. The operator signs
+`match`, naming one listing and the reason. Then the operator signs
+`offer-match`, whose fields are only what that provider may read: the
+need's what, where and when, and the fee that an introduction would
+cost. It sends them to that provider's scope, where they open an offered
+match with Accept and Decline. The provider signs `accept-match` at the
+offered match's revision, which sends the answer back. The operator
+records the buyer's acceptance of the terms with its source, then signs
 `introduce`, which refuses unless both acceptances stand at current
-revisions; its effect writes the contact exchange, closes the other
-matches of that need as declined, and opens the fee. The engagement
-room keeps the match history; the roster room's offer gains one
-engagement in its history, which is the trust signal the next match
-reads. The operator signs `record-settlement` when the fee is paid, as
-a report, since payment is outside the record.
+revisions. Its effect writes the contact exchange, closes the other
+matches of that need, and opens the fee. The operator then signs
+`send-introduction` to the chosen provider, with the buyer's contact
+details as disclosed, and `close-offer` to each other provider who was
+offered the need. The listing in the market room gains one engagement
+in its history, which is the trust signal the next match reads. The
+operator signs `record-settlement` when the fee is paid, as a report,
+since payment is outside the record.
 
-**Shape.** Items in the roster room: `rules`, `lead` (proposed,
-invited, enrolled, declined, expired), `offer` (listed, stale,
-withdrawn). Items in an engagement room: `need` (open, matched,
-introduced, filled, unfilled), `match` (proposed, accepted, declined,
-introduced), `fee` (owed, settled, waived). Rules: an offer not
-refreshed in thirty days; a match unanswered in two days; a need
-unmatched in seven days; a lead uninvited in seven days and unenrolled
-in fourteen. Views: the operator's carousel across the site (matches
-awaiting a provider, stale offers, fees owed, leads to invite); the
-provider's card in the roster room (their offer, with Refresh and
-Withdraw) and in each engagement room they are in (the match, with
-Accept and Decline, declared for the holders of `market.accept`); the
-need record; the offer record with its history; the site roll-up.
+**Shape.** Market scope items: `rules`, `lead` (proposed, invited,
+enrolled, declined, expired), `listing` (listed, stale, withdrawn),
+`need` (open, matched, introduced, filled, unfilled), `match`
+(proposed, offered, accepted, declined, introduced, closed), `fee`
+(owed, settled, waived). Provider scope items: `offer` (listed, stale,
+withdrawn), `offered` (open, accepted, declined, introduced, closed).
+Rules: an offer not refreshed in thirty days; a match unanswered in two
+days; a need unmatched in seven days; a lead uninvited in seven days and
+unenrolled in fourteen. Views: the operator's carousel in the market
+room (matches awaiting a provider, exports not yet sent, stale
+listings, fees owed, leads to invite); the provider's card in their
+room (their offer, with Refresh and Withdraw; each offered match, with
+Accept and Decline, declared for the holders of `provider.accept`); the
+need record; the listing record with its history.
 
-**Bounds of the first version.** One roster room of at most two hundred
-offers and five hundred leads; an engagement room of at most eight
-matches; a need's queried representation of at most two kibibytes, so
-the operator's carousel stays within the native query payload. A
-withdrawn offer keeps its history. A second market is a second
-installation. Payments, messaging and calendars are out of scope, as
-the sales note says of integrations: they enter as the operator's
-statements.
+**Bounds of the first version.** A declared view reads a complete set of
+at most 100 live items for each source
+(`packages/bytes/src/application-projection-types.ts`), and the
+operator's carousel reads the market scope's sources whole. So the first
+version admits at most 100 live items of each type in the market scope:
+100 open leads, 100 listings, 100 open needs, 100 open matches and 100
+open fees. The 101st is refused by name, and the operator's view never
+meets an incomplete read. A closed item is final and leaves the live
+read. A provider scope holds one offer and at most 100 open offered
+matches. A second market is a second installation, with its own market
+room. Payments, messaging and calendars are out of scope, as the sales
+note says of integrations: they enter as the operator's statements.
 
 ## 4. Why the buyer stays outside
 
@@ -192,60 +212,88 @@ The first version keeps the buyer outside the record for the reason the
 bid response does: inviting them brings the reader question with it,
 and a need is short-lived. Their words enter as the operator's reports
 with sources, and the record never shows a report as the buyer's act.
-A later version invites the buyer into the engagement room, where their
-acceptance is their own act; that room already has the right members
-and nothing else to hide from them, so the invitation is the only
-addition.
 
-## 5. Why two scopes, and what they do not give
+A later version can invite the buyer. They would not join the market
+room, which holds every need, lead and listing. Like a provider, a buyer
+would get a buyer room of their own with the operator, and the market
+scope would send to it only what that buyer may read: their own need,
+the offers matched to it, and the introduction. That needs the same
+exports as section 5, in the other direction.
 
-Every member of a room reads the whole record
-([roadmap](../docs/roadmap.md#private-views-in-one-record)). A market
-has three readers with different rights: the operator reads
+## 5. Why separate rooms, and what they do not give
+
+A market has three readers with different rights: the operator reads
 everything, a provider reads their own offer and their own matches, and
-a buyer reads their own need. The shape above gives each reader a scope
+a buyer reads their own need. The shape above gives each reader a room
 whose membership is their right to read. Nothing is redacted; the
 boundary is membership, which dap already checks on every act and every
 read. The dap-spike found that readers written by hand are where
 authors go wrong, and that writing a private-view model cost six
 repairs for the Sale alone; this shape has no readers to write.
 
-The shared decision, which match was introduced, lives in the
-engagement room, and the roster room's offer cites it by the entry's
-hash and position, which is the citation form the
-[sequenced level note](2026-10-18-sequenced-level-and-order-scope.md)
-gives. The operator's members replay it; a provider holds the citation
-and reads what their own room shows. What this does not give: a
-provider who lost a match cannot replay the comparison that chose the
-other offer. In a brokered market they do not need to. The operator is
-the party both sides trust to hold the whole; that trust is what the
-fee is for. Where no such party exists, such as a vote over private
-standing, the shape fails and private views in one record are needed.
-That is the split the [use cases](../docs/use-cases.md) now make
-between group 3 and group 4.
+**What a message carries.** A message from one scope to another is not
+only a reference. Native delivery reads and retains the full source
+entry in the receiving scope (`packages/scope/src/delivery.ts`), and
+the receiving room's readers can read retained entry inputs
+(`packages/scope/src/reads.ts`). A message therefore discloses its
+whole source entry to every reader of the receiving room. So in this
+design:
 
-What the shape needs is not private views but
-[an application's own messages between scopes](../docs/roadmap.md#an-applications-own-messages-between-scopes):
-`record-need` creates an engagement room and `match` adds a member to
-it, and `introduce` writes one line into the roster room's offer. The
-mechanism runs for dap-room's own scopes; this would be the first
-declared application to use it.
+- Only the export acts send from the market scope to a provider scope:
+  `offer-match`, `send-introduction` and `close-offer`.
+- An export act's fields hold only what that provider may read. Its
+  guards read only the one match it concerns, and its effects change
+  only that match's state. It uses no fact of another scope, so its
+  entry is the whole retained closure.
+- `match` and `introduce` send nothing. They hold the operator's reason,
+  the comparison, the contact exchange for the chosen provider and the
+  fee, and these stay in the market room.
+- In the other direction, every act in a provider scope sends to the
+  market scope, which the operator and the sourcing agent read. A
+  provider writes nothing in their room that the operator may not read.
+
+The first slice checks this with each provider room's readers: it reads
+every retained entry in a provider scope and finds no field of another
+provider, another need or a lead.
+
+**What a citation proves.** A native fact reference is
+`{ at: { scope, inc, kind }, seq, hash }` (`packages/contract/src/scope.ts`).
+A provider scope holds such a reference to each export it received, and
+the export's retained entry. That proves which act of the market scope
+the provider was told about, at which position. It does not prove the
+comparison that chose another offer, because the provider never reads
+the market room. A provider who lost a match cannot replay that choice.
+In a brokered market they do not need to. The operator is the party
+both sides trust to hold the whole; that trust is what the fee is for.
+Where no such party exists, such as a vote over private standing, the
+shape fails and private views in one record are needed. That is the
+split the [use cases](../docs/use-cases.md) now make between group 3
+and group 4.
+
+**What closing does not undo.** Closing an offered match or removing a
+member does not retract what that member already read. The first
+export to a provider is the first disclosure to them, so the operator
+sends `offer-match` only after deciding to offer.
 
 ## 6. Personal agents in the market
 
-Each member arrives with their own agent, and the one most likely to
-appear on each side this month is the one that runs in its maker's
-cloud and acts in the chat the person already uses. What each may do
-here, and how it reaches the room:
+Each member arrives with their own agent. A likely one in October 2026
+is a cloud agent that runs in its maker's cloud and acts in the chat
+the person already uses. What each may do here, and how it reaches the
+rooms:
 
 - **Sourcing** is the operator's agent reading public groups and
   marketplaces and signing `propose-lead`. It needs a key of its own,
   enrolled under the operator's control, and a tool surface: the hosted
   MCP endpoint serves one, with a bearer an admin mints
-  ([docs/mcp.md](../docs/mcp.md), "The hosted endpoint"). Reports from
-  this month say the cloud agent can write its own client for a public
-  streamable-HTTP MCP endpoint and keep it as a skill ([sources](#sources));
-  Meta's own documentation of that agent does not mention MCP.
+  ([docs/mcp.md](../docs/mcp.md), "The hosted endpoint"). Whether the
+  cloud agent named in the [sources](#sources) can reach a remote MCP
+  server is not settled. Two vendor reports from September 2026
+  describe different routes. One (26 September) describes writing an SDK
+  bridge and names no setting for adding a server. The other (checked
+  25 September) describes adding a server URL in its settings, with
+  OAuth. Neither is verified here. The maker's safety article of
+  8 September does not mention MCP.
 - **Outreach** is the same agent delivering the operator's invitation
   over the channel the candidate uses, with the connectors it has. The
   invitation is the operator's act; the delivery is the agent's
@@ -254,32 +302,37 @@ here, and how it reaches the room:
   the operator to sign: agent drafts, person signs, as the bid response
   has it.
 - **A provider's acceptance** is the provider's own act from their own
-  AI app. That needs the person to reach the engagement room from the
-  app they are in, in one step, as themselves, which is the OAuth head
-  of the hosted endpoint, not built
-  ([hosted endpoint note](2026-10-13-hosted-mcp-endpoint.md), section
-  1; request `b04b0e79`). Until then a provider joins in the browser
-  from the invitation link, which exists.
+  AI app. That needs the person to reach their provider room from the
+  app they are in, in one step, as themselves. That is the OAuth work on
+  the hosted endpoint, which is not built
+  ([hosted endpoint note](2026-10-13-hosted-mcp-endpoint.md), section 1;
+  request `3f598e55`). Until then a provider joins in the browser from
+  the invitation link, which exists.
 - **Views.** A host with the MCP Apps capability shows the card kit's
   cards; a host without it gets the text tool surface
-  ([docs/mcp.md](../docs/mcp.md), "Cards"). The cloud agent in question
-  shows no MCP Apps views; what it shows is tool output as text and a
-  browser pane the person can take over, so the room's screens must
-  work as plain pages, which the grow page already does.
+  ([docs/mcp.md](../docs/mcp.md), "Cards"). Whether the cloud agent
+  named in the sources renders MCP Apps views is not verified. The MCP
+  Apps announcement of 26 January 2026 lists the hosts that rendered
+  them then, and it predates that agent. A walkthrough of 13 September
+  2026 shows a browser pane, and it does not test MCP Apps. The room's
+  screens therefore also work as plain pages, as the grow page does.
 
-No agent holds `market.match`, `market.accept`, `market.introduce` or
-`market.fee`. A person who lets their agent take those acts is doing so
-in their agent's own approval record, outside this design.
+No agent holds `market.match`, `market.export`, `market.introduce`,
+`market.fee` or `provider.accept`. A person who lets their agent take
+those acts does so in their agent's own approval record, outside this
+design.
 
 ## 7. What exists and what is missing
 
 | Needed | State | Where |
 |---|---|---|
 | Items, states, acts with grants and guards, timed rules, views by grant, the per-member carousel | Landed | the grow room; plan 033 G1 to G3 |
-| A site that reads its rooms | Landed | the grow site's projection |
+| A declared application with scopes of its own that send to each other: one scope creates another, and a child sends summaries to its parent | Landed | Grow's Site creates Rooms and receives each Room's summary (`examples/grow/site.ts`, `examples/grow/room.ts`; `packages/scope/test/grow-demo-tick.test.ts`) |
+| One application whose scopes are in different rooms, with different members, and that send to each other across rooms | Not built; the first slice confirms whether a declared send can address a scope of another room and how the receiver admits it | [roadmap](../docs/roadmap.md#an-applications-own-messages-between-scopes) |
+| Exports whose retained entries are safe for the receiving room's readers | Designed here; nothing enforces it | section 5 |
+| A room created and a package installed for each enrolled provider | The pieces exist as person-run steps: room creation, package install by URI, person invitation | [docs/cli.md](../docs/cli.md) |
 | An outside party's word as a report with a source; an invited outside member who accepts from their own AI app | Designed, not built | sales note, sections 4 and 5; slice C2 |
-| An application's own messages between scopes: a room created by an act, a member added by an act, a line written across rooms | Mechanism runs; no declared application uses it | [roadmap](../docs/roadmap.md#an-applications-own-messages-between-scopes) |
-| A person's access from their own AI app by OAuth | Not built; requested | request `b04b0e79`; [hosted endpoint note](2026-10-13-hosted-mcp-endpoint.md) |
+| A person's access from their own AI app by OAuth | Not built; requested | request `3f598e55`; [hosted endpoint note](2026-10-13-hosted-mcp-endpoint.md) |
 | A hosted sourcing agent | Designed, not built; the agent runs in the operator's own cloud agent or machine until then | [hosted agent teams](2026-10-15-hosted-agent-teams-design.md) |
 | Custody for payment and vetting evidence | Not designed | [roadmap](../docs/roadmap.md#evidence-capture-and-private-custody) |
 | Private views in one record | Not needed here | section 5 |
@@ -292,31 +345,32 @@ estimates from the grow and sales slices.
 
 | Slice | What | Done when | Size |
 |---|---|---|---|
-| M1 | The roster room: rules, leads, offers; the sourcing agent as an enrolled member; invitation and enrollment; the stale rule | an agent's lead without a source is refused by name; the operator invites a lead and a person enrolls an offer from the invitation in the test host; an offer goes stale on the clock and the provider's carousel shows it; a two-hundred-and-first offer is refused by name | 2 days |
-| M2 | Needs and matches in one engagement room created by `record-need`; the provider added by `match`; acceptance; the introduction's guard and effects; the fee | `introduce` is refused while either acceptance is missing or stale, then admitted with both; the other matches close declined; the provider's card shows Accept and Decline only to the holder; the two-day rule reaches the operator | 3 days |
-| M3 | The site roll-up and the offer's engagement history written across rooms; the operator's carousel across the site | the roster offer cites the introduction's entry; the carousel lists matches awaiting a provider across three engagement rooms | 2 days |
-| M4 | The hosted market and a page on the homepage, after the demo-room pattern of plan 033 | a provider in their AI app accepts a match | 1 day, after the OAuth head |
+| M0 | A send from a declared scope in one room to a declared scope in another, and its admission | in a test host, a scope of one room sends to a scope of another room whose genesis names it; the receiver admits it only from that sender; a provider-room reader can read the retained entry and nothing else of the sender | 1 day |
+| M1 | The market room: rules, leads, listings; the sourcing agent as an enrolled member; provider room creation, install and invitation; `enroll-offer` and its listing summary; the stale rule | an agent's lead without a source is refused by name; the operator invites a lead and a person enrolls an offer in their own provider room; the listing appears in the market room; the 101st open lead is refused by name; an offer goes stale on the clock | 3 days |
+| M2 | Needs, matches and exports; acceptance; the introduction's guard and effects; the fee | `introduce` is refused while either acceptance is missing or stale, then admitted with both; each losing provider receives `close-offer`; a reader of each provider room reads every retained entry and finds no other provider's offer, no other need and no lead | 3 days |
+| M3 | The listing's engagement history and the operator's carousel | the carousel lists matches awaiting a provider, exports not yet sent and fees owed, within the 100-item bounds | 1 day |
+| M4 | The hosted market and a page on the homepage, after the demo-room pattern of plan 033 | a provider in their AI app accepts a match | 1 day, after the OAuth work |
 
-Named and deferred: the buyer as a member; custody; payments and
-messaging as operations; more than one roster room under a site; a
-provider's own agent taking acts under a grant the provider delegates;
-feedback after an engagement as an item of its own.
+Named and deferred: the buyer room; custody; payments and messaging as
+operations; more than one market room under a site; a provider's own
+agent taking acts under a grant the provider delegates; feedback after
+an engagement as an item of its own; a bounded read beyond 100 live
+items.
 
 ## 9. Open questions
 
 1. **Where the vetting rule reads.** Whether the rule that guards
-   `match` reads only the offer's own fields and history, or also the
+   `match` reads only the listing's own fields and history, or also the
    lead's source, which would keep a reference to the public post in
    the record longer than the invitation needs it.
 2. **Who refreshes an offer.** Whether a provider's agent may sign
    `update-offer` under a delegated grant, which is the first act in
    this design that a provider's agent would take.
-3. **The buyer's room.** Whether the later version that invites the
-   buyer puts them in the engagement room, as section 4 proposes, or
-   gives each need a buyer room of its own, as the sales note's open
-   question 1 asks of the bid.
+3. **Room cost.** Each provider room is a full room. Whether a market
+   with 100 providers wants 100 rooms, or a lighter room form without
+   its own repository.
 4. **One site, many markets.** Whether a second niche in the same city
-   is a second installation or a second roster room under one site, and
+   is a second installation or a second market scope in one room, and
    what the roll-up then shows.
 
 ## Sources
@@ -324,25 +378,30 @@ feedback after an engagement as an item of its own.
 The pitch and its comment thread: Greg Isenberg, "Meta Muse Will
 Create 1,000 Millionaires", video of 19 October 2026
 ([YouTube](https://www.youtube.com/watch?v=tpZOU1ugODQ)), read from its
-transcript and 164 comments on 20 October 2026. The business model,
+transcript and its comments on 20 October 2026. The business model,
 the four levels, and the objections in section 1 are from there; no
 claim about any law is made here beyond that the objection was raised.
+The comment count and which comment was most liked were not checked
+independently.
 
-The cloud agent, from its maker: Meta's safety write-up of 8 September
+The cloud agent, from its maker: Meta's safety article of 8 September
 2026 ([How we built safety into Muse](https://research.meta.ai/blog/security-and-safety-for-ai-agents-our-approach-with-muse)),
 which describes built-in and custom connectors and the permission
-model and does not mention MCP; the connector platform
-([platform.muse.ai](https://platform.muse.ai/)), whose submission form
-takes an existing MCP endpoint with API-key or OAuth authentication, as
-recorded by one submitter
+model and does not mention MCP; Meta's Help Center on custom connectors
+([meta.com/help](https://www.meta.com/help/artificial-intelligence/1687253048996149/)),
+which confirms custom connectors in general and names no MCP route; the
+connector platform ([platform.muse.ai](https://platform.muse.ai/)),
+whose submission form takes an existing MCP endpoint with API-key or
+OAuth authentication, as recorded by one submitter
 ([Stacktree, 19 September 2026](https://stacktr.ee/blog/muse-connector-platform));
 and Meta AI Connectors ([dev.meta.ai](https://dev.meta.ai/products/connectors)),
-a separate programme that offers MCP onboarding. Reports that the agent
-writes its own MCP client for a public endpoint:
-[Parallel](https://parallel.ai/articles/meta-muse-custom-integrations)
-and [AnythingMCP](https://anythingmcp.com/guides/clients/muse), both
-vendors, read 20 October 2026. What the agent's chat renders: a
-[walkthrough of 13 September 2026](https://memeburn.com/meta-muse-web-ui-walkthrough/).
-MCP Apps, the hosts that render them, and the absence of this agent
-among them: the
-[MCP blog, 26 January 2026](https://blog.modelcontextprotocol.io/posts/2026-01-26-mcp-apps/).
+a separate programme that offers MCP onboarding. Two vendor reports
+describe different routes to a remote MCP server:
+[Parallel, 26 September 2026](https://parallel.ai/articles/meta-muse-custom-integrations)
+(an SDK bridge, no add-server setting) and
+[AnythingMCP, checked 25 September 2026](https://anythingmcp.com/guides/clients/muse)
+(a server URL in settings, with OAuth). What the agent's chat showed on
+13 September 2026: a
+[walkthrough](https://memeburn.com/meta-muse-web-ui-walkthrough/).
+The hosts that rendered MCP Apps on 26 January 2026: the
+[MCP blog](https://blog.modelcontextprotocol.io/posts/2026-01-26-mcp-apps/).

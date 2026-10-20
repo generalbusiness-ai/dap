@@ -57,7 +57,7 @@ In order, nearest first.
 
 | Capability | State | Use cases that need it |
 |---|---|---|
-| [An application's own messages between scopes](#an-applications-own-messages-between-scopes) | Can be declared; no application has two scopes of its own yet | 21, 25, 31, 32, 33, 37, 39, 40, 41, 51, and parts of 08, 18, 19, 24 |
+| [An application's own messages between scopes](#an-applications-own-messages-between-scopes) | Runs within one room: the grow site and its rooms; not yet across rooms | 21, 25, 31, 32, 33, 37, 39, 40, 41, 51, and parts of 08, 18, 19, 24 |
 | [Durability levels](#durability-levels) | Designed; not built | 36, 44, and the live part of every case |
 | [A fork for each hold](#a-fork-for-each-hold) | Planned; a first measurement ran | 34 |
 | [Offline work and propose from a branch](#offline-work-and-propose-from-a-branch) | Direction set; not designed | 34 |
@@ -82,10 +82,12 @@ scope and returns a result to the sale.
 rules, destination and lanes all work by messages. A declared definition
 may also declare a send to a scope that one of its slots holds. The
 lending library sends one kind of message, to its room's destination, to
-publish a page. No declared application yet consists of scopes of its own
-that ask one another. The brokered market (use case 51) would be the
-first: a roster room, one engagement room for each need, and a site
-that reads them.
+publish a page. The grow application consists of scopes of its own that
+ask one another: its site creates grow rooms and receives each room's
+summary, all within one room. No declared application yet sends between
+scopes in different rooms, which have different members. The brokered
+market (use case 51) needs that: one market room and one room for each
+provider.
 
 **Not offered.** One act cannot take effect in two scopes at once.
 Instead, one scope sends a request, the other answers with a result, and
@@ -172,9 +174,10 @@ from the dap-spike's sweep. The guitar sale (32), childcare details (21),
 competing quotations (37), hiring (39), a school support plan (40) and
 research review (41) moved to the catalogue's group 3 on 20 October 2026.
 Each has one party whom the others trust to hold the shared decision, so
-each party's private part can be a scope of its own, and the decision is
-cited across scopes. That needs messages between an application's own
-scopes, not private views.
+each party's private part can be a room of its own, shared with that
+party, and the authority's room sends each party only what it may read.
+That needs messages between an application's own scopes across rooms,
+not private views.
 
 **The dap-spike's contribution.** This was the spike's main subject
 ([visibility report](https://github.com/generalbusiness-ai/dap-spike/blob/main/spike/REPORT.md),
@@ -198,11 +201,18 @@ It wrote the conditions for failure before it ran.
 who writes the readers by hand is likely to get them wrong, so private
 views in dap should come with a check that the author cannot skip.
 
-**What separate scopes cover.** When one party holds the shared
-decision, each other party's private part is a scope of its own, and
-the decision is cited by its entry's hash and position. The authority's
-members replay it; the others hold the citation. Membership is the
-boundary, and dap checks it. Private views in one record remain for the
+**What separate rooms cover.** Every member of a room reads every scope
+in it, so a private part needs a room of its own. When one party holds
+the shared decision, each other party's private part is a room that the
+party shares with the authority. The authority's room sends each party
+only what that party may read. A message retains its whole source entry
+in the receiving scope, and that room's readers can read it, so each
+sending act holds only that party's part and uses no other scope's
+facts. The party holds a fact reference to the sending act,
+`{ at: { scope, inc, kind }, seq, hash }`, with its entry. That proves
+what the party was told and where it stands. It does not let the party
+replay the comparison behind the decision. Membership is the boundary,
+and dap checks it. Private views in one record remain for the
 cases in which the rule binds the group and nobody holds the whole: a
 tally over private standing, an admission rule, a limit over private
 cards.
