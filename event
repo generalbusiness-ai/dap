@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"Merge published the current artifact at packages/scope/vitest.worker.config.ts","body":{"commit":"a00eda3bdb6796be6b67e6095b7ef97219363976","path":"packages/scope/vitest.worker.config.ts"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:001d2671590d1db958baa65df6f244c5868443f2","text":"Merge retired a covered predecessor; the successor is at packages/derive/src/validate/shape.ts."}
