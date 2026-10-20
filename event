@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:31b3316c4060525b43799860621da9b7c955f5a4","text":"Merge retired a covered predecessor; the successor is at packages/platform/test/application-install-v2.test.ts."}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:32b222a7ad67bdab3626a6544695a4e2d77359bd","text":"Merge retired a covered predecessor; the successor is at notes/implementation/2026-10-18-s2-archive-binding.md."}
