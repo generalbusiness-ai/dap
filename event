@@ -1,1 +1,1 @@
-{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:8e67966c109d1388d9d9d765d5cd428b4da21706"}
+{"kind":"artifact","text":"notes/2026-10-20-chat-composed-views.md at exact 912d492a8e90bc6436f403263a16f7f162310c6b on planner/chat-composed-views-20261020, under promise git:sha1…a2ae9d0 on request git:sha1…910cc3a\n\nDraft 2 of the chat-composed views note at exact 912d492a, answering checker report 8a471893 on draft 1. Documentation only.","body":{"commit":"912d492a8e90bc6436f403263a16f7f162310c6b","path":"notes/2026-10-20-chat-composed-views.md"}}
