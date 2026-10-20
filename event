@@ -1,1 +1,1 @@
-{"kind":"artifact","text":"docs/deploy.md at exact 59cb184810b15387ed7dbd1113ea99c5636e560f on request/g5-grow-host-link-20261020, under promise git:sha1…51eb168 on request git:sha1…75973a2","body":{"commit":"59cb184810b15387ed7dbd1113ea99c5636e560f","path":"docs/deploy.md"}}
+{"target":"git:sha1:589bca982736a2361d15d53f7572375ef2f7aaf3#git:sha1:29a3ac2964f0f8be2d2c419c6bb89caa3778b9e2","text":"Merge retired a covered predecessor; the successor is at packages/mcp/test/http-idle.test.ts."}
